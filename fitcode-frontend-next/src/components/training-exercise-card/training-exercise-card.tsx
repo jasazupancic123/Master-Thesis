@@ -4,10 +4,12 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useEffect, useRef, useState } from 'react';
 
+import MyModal from '../modal/modal';
 import type { TrainingExerciseCardProps } from '../trainer-day-view/props';
 import TrainingExerciseCardCollapsedSets from '../training-exercise-card-sets-collapsed/training-exercise-card-collapsed-sets';
 import TrainingExerciseCardExpandedSets from '../training-exercise-card-sets-expanded/training-exercise-card-expanded-sets';
 import { updateTraining } from './state';
+import type { Attribute } from '@/controller/attribute/type/attribute.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useGroup } from '@/store/group-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
@@ -19,7 +21,9 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   const theme = useTheme();
 
   const {
-    setSelectedExercise,
+    menuExercise,
+    setMenuExercise,
+    openVideoPlayerModal,
     setOpenVideoPlayerModal,
     setsNumbers,
     expandedExercisesView,
@@ -34,7 +38,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   } = useTrainerDayViewContext();
 
   const { setDetectedChanges } = useGroup();
-  const { setTraining, supersets, selectedExercises } =
+  const { setTraining, supersets, selectedExercises, setSelectedExercises } =
     useTrainerDayViewContext();
 
   const [isInited, setIsInited] = useState(false);
@@ -43,11 +47,14 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
 
   // const [exercise, setExercise] = useState(propsExercise);
   const [expandedSetsView, setExpandedSetsView] = useState(false);
+
   const isSetNumberInitedRef = useRef(false);
 
-  const i = training?.components.findIndex((c) => c.id === component?.id);
+  const componentIndex = training?.components.findIndex(
+    (c) => c.id === component?.id
+  );
   const selectedTrainingOrSubgroup =
-    selectedSubgroup?.subgroup || training?.components?.[i!];
+    selectedSubgroup || training?.components?.[componentIndex!];
   const k = selectedTrainingOrSubgroup?.supersets?.[
     supersetIndex!
   ]?.exercises?.findIndex((e) => e.id === exercise.id);
@@ -59,14 +66,16 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
     currentExercise?.sets?.[0]?.paramValuesL?.map((pv) =>
       Array.isArray(exercise.params)
         ? exercise?.params?.find((p) => p.field === pv.field)
-        : Object.values(exercise.params).find((p: any) => p.field === pv.field)
+        : Object.values<Attribute>(exercise.params).find(
+            (p: Attribute) => p.field === pv.field
+          )
     ) ||
     []?.filter((p) => p) ||
     [];
 
-  if (!training || !component || !params) return null;
-
   useEffect(() => {
+    if (!training || !component || !params) return;
+
     if (!isSetNumberInitedRef.current) {
       isSetNumberInitedRef.current = true;
       return;
@@ -188,6 +197,8 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
     }
   }, [setsNumbers]);
 
+  if (!training || !component || !params) return null;
+
   return (
     <Stack
       p={1}
@@ -210,6 +221,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
       <Box
         sx={{
           width: '100% !important',
+          cursor: 'pointer',
           position: 'absolute',
           top: 0,
           left: 0,
@@ -219,17 +231,20 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           zIndex: 0,
           opacity: 100,
         }}
+        onClick={(e) => {
+          if (e.target !== e.currentTarget) return; // Prevents click on child elements
+
+          if (!selectedExercises.some((ex) => ex.id === exercise.id)) {
+            setSelectedExercises((prev) => [...prev, exercise]);
+          } else {
+            setSelectedExercises((prev) =>
+              prev.filter((ex) => ex.id !== exercise.id)
+            );
+          }
+        }}
       />
 
-      <Stack
-        direction="row"
-        justifyContent="center"
-        sx={{ cursor: 'pointer', mt: 0 }}
-        onClick={() => {
-          setSelectedExercise(exercise);
-          setOpenVideoPlayerModal(true);
-        }}
-      >
+      <Stack direction="row" justifyContent="center" sx={{ mt: 0 }}>
         <Tooltip title={exercise.exercise?.name} placement="top">
           <Typography
             variant="body1"
@@ -246,6 +261,15 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
               zIndex: 1,
               textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
             }}
+            onClick={() => {
+              if (!selectedExercises.some((ex) => ex.id === exercise.id)) {
+                setSelectedExercises((prev) => [...prev, exercise]);
+              } else {
+                setSelectedExercises((prev) =>
+                  prev.filter((ex) => ex.id !== exercise.id)
+                );
+              }
+            }}
           >
             {exercise.exercise?.name}
           </Typography>
@@ -261,8 +285,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
             exercise={exercise}
             expandedSetsView={expandedSetsView}
             setExpandedSetsView={setExpandedSetsView}
-            supersetIndex={supersetIndex}
-            i={i}
+            componentIndex={componentIndex}
           />
         ) : (
           <TrainingExerciseCardExpandedSets
@@ -270,9 +293,49 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
             exercise={exercise}
             expandedSetsView={expandedSetsView}
             setExpandedSetsView={setExpandedSetsView}
-            supersetIndex={supersetIndex}
           />
         ))}
+      <MyModal
+        isOpen={openVideoPlayerModal}
+        setIsOpen={(open) => setOpenVideoPlayerModal(open)}
+        cancelText="Close"
+        onCancel={() => {
+          setMenuExercise(null);
+          setOpenVideoPlayerModal(false);
+        }}
+        sx={{
+          p:
+            menuExercise?.exercise?.videoUrl &&
+            menuExercise?.exercise?.videoUrl.length > 0
+              ? 0
+              : undefined,
+        }}
+        dialogueContentSx={{
+          p:
+            menuExercise?.exercise?.videoUrl &&
+            menuExercise?.exercise?.videoUrl.length > 0
+              ? 0
+              : undefined,
+        }}
+      >
+        {menuExercise?.exercise?.videoUrl &&
+        menuExercise?.exercise?.videoUrl.length > 0 ? (
+          <Box
+            component="video"
+            src={menuExercise?.exercise?.videoUrl}
+            controls
+            autoPlay
+            muted
+            loop
+            sx={{
+              width: '100%', // Make it responsive
+              maxWidth: screenSize.isLandscapeMobile ? 400 : 600, // Limit max width
+            }}
+          />
+        ) : (
+          <Typography variant="body2">No video available</Typography>
+        )}
+      </MyModal>
     </Stack>
   );
 }

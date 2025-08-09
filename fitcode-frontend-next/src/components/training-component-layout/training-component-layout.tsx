@@ -1,5 +1,4 @@
 import { Box, Collapse, Divider, Stack } from '@mui/material';
-import { useTheme } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
@@ -26,7 +25,6 @@ import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 export default function TrainingComponentLayout(props: TrainingComponentProps) {
   const screenSize = useScreenSize();
   const router = useRouter();
-  const theme = useTheme();
 
   const { training, trainingComponent, day } = props;
 
@@ -41,7 +39,6 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
 
   const [openAddExerciseModal, setOpenAddExerciseModal] = useState(false);
   const [openCalendarModal, setOpenCalendarModal] = useState(false);
-  const [openPeriodizationModal, setOpenPeriodizationModal] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [heatmapView, setHeatmapView] = useState(false);
   const [openOverwriteModal, setOpenOverwriteModal] = useState(false);
@@ -85,7 +82,6 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
             anchorEl={anchorEl}
             setAnchorEl={setAnchorEl}
             training={training}
-            setOpenPeriodizationModal={setOpenPeriodizationModal}
             setOpenCalendarModal={setOpenCalendarModal}
           />
           <Stack
@@ -224,7 +220,6 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
               training,
               trainingInPeriod: trainingInPeriodForModal,
               component: trainingComponent,
-              override: true,
             },
             {
               router,
@@ -232,7 +227,6 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
               allExercises,
               allMethods,
               setTrainings,
-              day,
             }
           );
           setTrainingInPeriodForModal(null);

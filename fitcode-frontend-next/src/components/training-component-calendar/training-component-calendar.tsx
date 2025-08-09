@@ -92,7 +92,6 @@ export default function TrainingComponentCalendar(
             {cycle.weeks.map((week, i) => (
               <Fragment key={i}>
                 <TrainingWeek
-                  index={i}
                   componentCalendarView
                   trainingComponent={trainingComponent}
                   week={week.map(({ date }) => dayjs(date!))}
@@ -100,8 +99,8 @@ export default function TrainingComponentCalendar(
                   setSelected={(component) =>
                     setSelectedComponents(component as Component[])
                   }
-                  addTrainingComponent={(trainingId, input) => {}}
-                  deleteTrainingComponent={(trainingId, componentId) => {
+                  addTrainingComponent={() => {}}
+                  deleteTrainingComponent={() => {
                     return Promise.resolve();
                   }}
                   training={training}

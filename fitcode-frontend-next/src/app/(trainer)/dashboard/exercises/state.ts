@@ -335,7 +335,7 @@ export async function handleCsvFileUpload(
       videoUrl,
       instruction: undefined,
       attributeValues: [] as ExerciseAttributeValue[],
-      valuesObject: {} as Record<string, unknown>,
+      valuesObject: {} as Record<string, any>,
       createdAt: new Date(),
       updatedAt: new Date(),
     } as Exercise;

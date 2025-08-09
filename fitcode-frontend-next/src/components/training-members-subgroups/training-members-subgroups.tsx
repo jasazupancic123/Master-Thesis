@@ -23,17 +23,14 @@ import type { SetState } from '@/common/type/state.type';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
 import type { User } from '@/controller/user/type/user.type';
 import { useGroup } from '@/store/group-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 interface TrainingMembersSubgroupProps {
   subgroup: Subgroup;
-  subgroups: Subgroup[];
   subgroupIndex: number;
   anchorEl: HTMLElement | null;
   setAnchorEl: SetState<HTMLElement | null>;
   members: User[];
-  borderColor: string;
   setEditSubgroupName: SetState<string>;
   setEditedSubgroup: SetState<Subgroup | null>;
   setModal: SetState<{ editSubgroup: boolean }>;
@@ -43,10 +40,10 @@ export default function TrainingMembersSubgroup(
   props: TrainingMembersSubgroupProps
 ) {
   const theme = useTheme();
-  const screenSize = useScreenSize();
 
-  const { setDetectedChanges } = useGroup();
-  const { setSelectedExercises } = useTrainerDayViewContext();
+  const { setTrainings, setDetectedChanges } = useGroup();
+  const { selectedExercises, setSelectedExercises } =
+    useTrainerDayViewContext();
 
   const {
     members: groupMembers,
@@ -63,12 +60,10 @@ export default function TrainingMembersSubgroup(
 
   const {
     subgroup,
-    subgroups,
     subgroupIndex,
     anchorEl,
     setAnchorEl,
     members,
-    borderColor,
     setEditSubgroupName,
     setEditedSubgroup,
     setModal,
@@ -79,7 +74,7 @@ export default function TrainingMembersSubgroup(
   };
 
   const isSubgroupSelected = (id: string): boolean => {
-    if (selectedSubgroup?.subgroup?.id === id) return true;
+    if (selectedSubgroup?.id === id) return true;
     else if (!selectedSubgroup && id === DEFAULT_SUBGROUP([], []).id)
       return true;
 
@@ -98,37 +93,46 @@ export default function TrainingMembersSubgroup(
         <div
           ref={provided.innerRef}
           {...provided.droppableProps}
-          onClick={(event) => {
+          onClick={() => {
+            if (
+              selectedSubgroup?.id === subgroup.id ||
+              (!selectedSubgroup &&
+                subgroupIndex === 0 &&
+                subgroup.id === DEFAULT_SUBGROUP([], []).id)
+            )
+              return;
             if (subgroupIndex > 0) {
-              setSelectedSubgroup({
-                subgroup: subgroup || null,
-                index: subgroupIndex - 1,
-              });
+              // subgroup
+              setSelectedSubgroup(subgroup);
+              setSelectedAthlete(undefined);
 
-              const exercisesIds = subgroup.supersets.flatMap((s) =>
-                s.exercises.map((e) => e.id)
-              );
-              setSelectedExercises((prev) =>
-                prev.filter((ex) => exercisesIds.includes(ex.id))
+              setSelectedExercises(
+                subgroup.supersets
+                  .flatMap((s) => s.exercises)
+                  .filter((e) =>
+                    selectedExercises.some((se) => se.id === e.id)
+                  ) || []
               );
             } else if (subgroupIndex === 0) {
+              // main group
               setSelectedSubgroup(null);
+              setSelectedAthlete(undefined);
 
               if (!component) return;
 
-              const exercisesIds = component.supersets.flatMap((s) =>
-                s.exercises.map((e) => e.id)
-              );
-              setSelectedExercises((prev) =>
-                prev.filter((ex) => exercisesIds.includes(ex.id))
+              setSelectedExercises(
+                component?.supersets
+                  .flatMap((s) => s.exercises)
+                  .filter((e) =>
+                    selectedExercises.some((se) => se.id === e.id)
+                  ) || []
               );
             }
           }}
           style={{
             display: 'inline-block',
             border:
-              (selectedSubgroup &&
-                subgroup.id === selectedSubgroup.subgroup?.id) ||
+              (selectedSubgroup && subgroup.id === selectedSubgroup.id) ||
               (!selectedSubgroup && subgroup.id === DEFAULT_SUBGROUP([], []).id)
                 ? `1.5px solid ${theme.palette.background.lightBorder}`
                 : undefined,
@@ -139,8 +143,8 @@ export default function TrainingMembersSubgroup(
           }}
         >
           {subgroup.id !== DEFAULT_SUBGROUP_ID &&
-            selectedSubgroup?.subgroup &&
-            subgroup.id === selectedSubgroup?.subgroup.id && (
+            selectedSubgroup &&
+            subgroup.id === selectedSubgroup.id && (
               <Box position="absolute" right={0} top={0}>
                 <IconButton
                   sx={{ p: 0, m: 0, zIndex: 1000 }}
@@ -158,45 +162,45 @@ export default function TrainingMembersSubgroup(
                   open={Boolean(anchorEl)}
                   onClose={handleMenuClose}
                 >
-                  {/* Edit Name Option */}
                   <MenuItem
                     onClick={() => {
-                      if (!selectedSubgroup?.subgroup) return;
-                      setModal({ editSubgroup: true });
-                      setEditSubgroupName(selectedSubgroup.subgroup.name);
-                      setEditedSubgroup(subgroup);
-                      handleMenuClose();
-                    }}
-                  >
-                    Edit Name
-                  </MenuItem>
-
-                  {/* Delete Option */}
-                  <MenuItem
-                    onClick={() => {
-                      if (!component || !selectedSubgroup?.subgroup) return;
+                      if (!component || !selectedSubgroup) return;
                       handleDeleteSubgroup(
                         {
-                          subgroupId: selectedSubgroup?.subgroup.id,
+                          subgroupId: selectedSubgroup.id,
                         },
                         {
                           training,
                           setTraining,
                           component,
                           setComponent,
+                          selectedExercises,
+                          setSelectedExercises,
+                          setTrainings,
+                          setSelectedSubgroup,
                           setDetectedChanges,
                         }
                       );
                       handleMenuClose();
                     }}
-                    sx={{ color: 'red' }}
+                    sx={{ color: theme.palette.error.main }}
                   >
-                    Delete
+                    Remove
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => {
+                      if (!selectedSubgroup) return;
+                      setModal({ editSubgroup: true });
+                      setEditSubgroupName(selectedSubgroup.name);
+                      setEditedSubgroup(subgroup);
+                      handleMenuClose();
+                    }}
+                  >
+                    Edit Name
                   </MenuItem>
                 </Menu>
               </Box>
             )}
-
           <Box
             display="flex"
             flexDirection="row"
@@ -206,8 +210,8 @@ export default function TrainingMembersSubgroup(
               borderRadius: 10,
               marginRight:
                 subgroup.id !== DEFAULT_SUBGROUP_ID &&
-                selectedSubgroup?.subgroup &&
-                selectedSubgroup.subgroup.id === subgroup.id
+                selectedSubgroup &&
+                selectedSubgroup.id === subgroup.id
                   ? '20px'
                   : undefined,
             }}
@@ -301,7 +305,7 @@ export default function TrainingMembersSubgroup(
                     draggableId={`${member.uid}`}
                     index={index}
                   >
-                    {(provided, snapshot) => (
+                    {(provided) => (
                       <Box
                         ref={provided.innerRef}
                         {...provided.draggableProps}

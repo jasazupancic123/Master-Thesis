@@ -194,7 +194,7 @@ export function handleDragEnd(
     { length: dayjs(to).diff(from, 'week') + 2 },
     (_, i) => {
       const startOfWeek = dayjs(from).add(i, 'w').startOf('w');
-      return Array.from({ length: 7 }, (_, j) => ({
+      return Array.from({ length: 7 }, (_) => ({
         date: startOfWeek.toDate(),
       }));
     }

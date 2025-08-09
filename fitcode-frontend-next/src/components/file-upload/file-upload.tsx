@@ -1,6 +1,7 @@
 import type { SxProps } from '@mui/material';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import Image from 'next/image';
 import type { ReactNode } from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import type { Accept } from 'react-dropzone';
@@ -150,12 +151,12 @@ export default function FileUpload(props: Props) {
                 }}
               />
             ) : (
-              <img
+              <Image
                 src={preview.url}
                 alt="Image Preview"
+                width={props.width || 140}
+                height={props.height || 140}
                 style={{
-                  width: props.width || 140,
-                  height: props.height || 140,
                   objectFit: 'cover',
                   borderRadius: props.makeRound ? '50%' : undefined,
                   overflow: 'hidden', // ensures overflow is hidden

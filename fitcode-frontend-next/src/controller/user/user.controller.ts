@@ -29,11 +29,11 @@ export class UserController {
   }
 
   static async updateClaims(id: string, input: CustomClaims) {
-    return api.patch<{}>(`/user/${id}`, input);
+    return api.patch<object>(`/user/${id}`, input);
   }
 
   static async updateProfile(input: UpdateProfile) {
-    return api.patch<{}>('/user/me/profile', input);
+    return api.patch<object>('/user/me/profile', input);
   }
 
   static async getMyMeta() {

@@ -29,15 +29,8 @@ export function updateExerciseAttributeValues(
     setTraining: SetStateNullable<Training>;
     supersets: Superset[];
     setDetectedChanges: SetState<boolean>;
-    selectedSubgroup: {
-      subgroup: Subgroup | null;
-      index: number;
-    } | null;
-    setSelectedSubgroup: SetState<{
-      subgroup: Subgroup | null;
-      index: number;
-    } | null>;
-    supersetIndex: number;
+    selectedSubgroup: Subgroup | null;
+    setSelectedSubgroup: SetState<Subgroup | null>;
   }
 ) {
   const { newValue, i, set, lOrR } = input;
@@ -52,7 +45,6 @@ export function updateExerciseAttributeValues(
     setDetectedChanges,
     selectedSubgroup,
     setSelectedSubgroup,
-    supersetIndex,
   } = state;
   // update only the changed exercise
   if (

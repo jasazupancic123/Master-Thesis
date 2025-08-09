@@ -18,7 +18,11 @@ interface Props {
 export default function FilterButton(props: Props) {
   const { value, disabled = false, dashboardView, numValues } = props;
 
-  const { filter } = dashboardView ? useDashboard() : useGroup();
+  const dashboard = useDashboard() ?? {};
+  const group = useGroup() ?? {};
+
+  const { filter } = dashboardView ? dashboard : group;
+
   const theme = useTheme();
   const screenSize = useScreenSize();
 

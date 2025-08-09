@@ -56,8 +56,12 @@ export default function SignInPage() {
       toast.success('Logged in successfully');
       router.replace(mapper[role].href);
       router.refresh();
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (e) {
+      if (e instanceof Error) {
+        toast.error(e.message);
+      } else {
+        toast.error('An unknown error occurred.');
+      }
     }
   }
 

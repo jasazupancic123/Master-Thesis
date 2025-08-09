@@ -44,7 +44,10 @@ export function TrainerDayViewProvider(
     pages: 1,
     total: 0,
   });
-  const [selectedPeriod, setSelectedPeriod] = useState<'AM' | 'PM'>('AM');
+  // check if it's after 12:00, then set to PM, else AM
+  const [selectedPeriod, setSelectedPeriod] = useState<'AM' | 'PM'>(
+    new Date().getHours() >= 12 ? 'PM' : 'AM'
+  );
 
   const [training, setTraining] = useState<Training | undefined>();
   const [component, setComponent] = useState<TrainingComponent | undefined>();
@@ -53,10 +56,9 @@ export function TrainerDayViewProvider(
   >([]);
   const [members, setMembers] = useState<UserEntity[]>([]);
   const [selectedAthlete, setSelectedAthlete] = useState<User | undefined>();
-  const [selectedSubgroup, setSelectedSubgroup] = useState<{
-    subgroup: Subgroup | null;
-    index: number;
-  } | null>(null);
+  const [selectedSubgroup, setSelectedSubgroup] = useState<Subgroup | null>(
+    null
+  );
   const [showAthleteReport, setShowAthleteReport] = useState(false);
   const [selectedAthleteWorkloads, setSelectedAthleteWorkloads] =
     useState<CompletedFutureWorkloads>({
@@ -72,12 +74,11 @@ export function TrainerDayViewProvider(
   const previousSelectedAthlete = useRef<User | undefined>(undefined);
 
   useEffect(() => {
-    if (selectedSubgroup?.subgroup)
-      setSupersets(selectedSubgroup.subgroup.supersets);
+    if (selectedSubgroup) setSupersets(selectedSubgroup.supersets);
     else if (component) {
       setSupersets(component.supersets);
     } else setSupersets([]);
-  }, [selectedSubgroup, selectedSubgroup?.subgroup, component]);
+  }, [selectedSubgroup, component]);
 
   useEffect(() => {
     if (selectedAthlete) {

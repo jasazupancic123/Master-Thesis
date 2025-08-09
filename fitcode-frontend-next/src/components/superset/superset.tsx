@@ -15,16 +15,16 @@ import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 interface SupersetComponentProps {
   superset: SupersetClass;
-  i: number;
+  supersetIndex: number;
 }
 
 export default function Superset(props: SupersetComponentProps) {
-  const { superset, i } = props;
+  const { superset, supersetIndex } = props;
 
   const screenSize = useScreenSize();
 
   const { selectedExercise, setOpenAddExerciseModal } = useSupersets();
-  const { setDetectedChanges } = useGroup();
+  const { setTrainings, setDetectedChanges } = useGroup();
   const {
     training,
     setTraining,
@@ -33,7 +33,7 @@ export default function Superset(props: SupersetComponentProps) {
     supersets,
     selectedSubgroup,
     setSelectedSubgroup,
-    setSupersets,
+    setCustomAthleteWorkloads,
   } = useTrainerDayViewContext();
 
   if (!component || !training) return null;
@@ -59,14 +59,14 @@ export default function Superset(props: SupersetComponentProps) {
               ? 4
               : 3,
       }}
-      key={`${component.id}-${i}`}
+      key={`${component.id}-${supersetIndex}`}
       sx={{
         px: 0.5,
       }}
     >
       <Droppable
-        key={`${component.id}-${i}`}
-        droppableId={`${component.id}-${i}`}
+        key={`${component.id}-${supersetIndex}`}
+        droppableId={`${component.id}-${supersetIndex}`}
         direction="vertical"
       >
         {(provided) => (
@@ -82,7 +82,7 @@ export default function Superset(props: SupersetComponentProps) {
               }}
               onClick={() =>
                 handleDeleteSuperset(
-                  { index: i },
+                  { index: supersetIndex },
                   {
                     training,
                     setTraining,
@@ -91,13 +91,15 @@ export default function Superset(props: SupersetComponentProps) {
                     setComponent,
                     selectedSubgroup,
                     setSelectedSubgroup,
+                    setTrainings,
                     setDetectedChanges,
+                    setCustomAthleteWorkloads,
                   }
                 )
               }
             >
               <BorderColor
-                color={COLOR[i % COLOR.length]}
+                color={COLOR[supersetIndex % COLOR.length]}
                 applyMargin
                 marginValue={superset.exercises.length === 0 ? '3px' : '5px'}
               />
@@ -121,13 +123,13 @@ export default function Superset(props: SupersetComponentProps) {
                   </Typography>
                 </Box>
               ) : (
-                superset.exercises.map((exercise, k) => (
+                superset.exercises.map((exercise, exerciseIndex) => (
                   <SupersetExercise
-                    key={`${component.id}-${i}-${k}`}
+                    key={`${component.id}-${supersetIndex}-${exerciseIndex}`}
                     exercise={exercise}
                     superset={superset}
-                    i={i}
-                    k={k}
+                    supersetIndex={supersetIndex}
+                    exerciseIndex={exerciseIndex}
                   />
                 ))
               )}
@@ -141,7 +143,7 @@ export default function Superset(props: SupersetComponentProps) {
               }}
               onClick={() =>
                 handleDeleteSuperset(
-                  { index: i },
+                  { index: supersetIndex },
                   {
                     training,
                     setTraining,
@@ -150,13 +152,15 @@ export default function Superset(props: SupersetComponentProps) {
                     setComponent,
                     selectedSubgroup,
                     setSelectedSubgroup,
+                    setTrainings,
                     setDetectedChanges,
+                    setCustomAthleteWorkloads,
                   }
                 )
               }
             >
               <BorderColor
-                color={COLOR[i % COLOR.length]}
+                color={COLOR[supersetIndex % COLOR.length]}
                 lower
                 applyMargin
                 marginValue={superset.exercises.length === 0 ? '3px' : '5px'}

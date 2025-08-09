@@ -48,8 +48,14 @@ export default function HorizontalItemsList(props: HorizontalItemsListProps) {
     scrollHorizontalListLeftRef,
   } = props;
 
-  const { detectedChanges, setDetectedChanges } =
-    dashboardView || dashboardInstitutionsView ? useDashboard() : useGroup();
+  const dashboard = useDashboard() ?? {};
+  const group = useGroup() ?? {};
+
+  const { cycle } = group;
+
+  const source = dashboardView || dashboardInstitutionsView ? dashboard : group;
+
+  const { detectedChanges, setDetectedChanges } = source;
 
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -80,7 +86,7 @@ export default function HorizontalItemsList(props: HorizontalItemsListProps) {
       justifyContent="space-between"
       marginX="auto"
       sx={{
-        py: yearView ? 2.3 : 1,
+        py: yearView || (cycleView && !cycle) ? 2.3 : 1,
         backgroundColor: theme.palette.background.dark,
         ml: cycleView ? 'auto' : undefined,
         width: screenSize.isMobile

@@ -39,6 +39,6 @@ export class ExerciseController {
   }
 
   static async delete(exerciseId: string) {
-    return api.delete<{}>(`/exercise/${exerciseId}`);
+    return api.delete<object>(`/exercise/${exerciseId}`);
   }
 }

@@ -12,11 +12,12 @@ import {
   YAxis,
 } from 'recharts';
 
+import type { UserEntity } from '@/controller/user/type/user.type';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 interface SelectedMemberReportProps {
-  groupMembers: any[];
+  groupMembers: UserEntity[];
 }
 
 const data = [

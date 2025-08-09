@@ -49,10 +49,10 @@ export function ExerciseParam(props: Props) {
     athleteView,
   } = props;
 
+  const group = useGroup() ?? {};
+
   const { setDetectedChanges } =
-    athleteView || !useGroup()
-      ? { setDetectedChanges: undefined }
-      : (useGroup() ?? {});
+    athleteView || !group ? { setDetectedChanges: undefined } : group;
 
   const nestedOption = param.options?.find((o) =>
     value.selected.includes(o.field)
@@ -216,7 +216,7 @@ export function ExerciseParam(props: Props) {
               onSubOptionChange(e.target.value as string);
               if (!athleteView && setDetectedChanges) setDetectedChanges(true);
             }}
-            onBlur={(e) => {
+            onBlur={() => {
               if (
                 value.field === 'volWorkSets' &&
                 setsNumbers !== undefined &&

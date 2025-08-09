@@ -19,7 +19,6 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
@@ -46,7 +45,6 @@ export interface TrainerGroupHeaderProps {
 export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
   const screenSize = useScreenSize();
   const theme = useTheme();
-  const router = useRouter();
 
   const { filter, setFilter } = props;
 
@@ -256,7 +254,7 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
           }}
         >
           {(['day', 'week', 'cycle', 'year'] as GroupDateFilter[]).map(
-            (val, index) => (
+            (val) => (
               <FilterButton key={val} value={val} />
             )
           )}

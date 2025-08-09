@@ -49,6 +49,7 @@ export default function ExercisesPage() {
     components,
     attributes,
     exercises: allExercises,
+    setExercises: setAllExercises,
     profile,
   } = useMain();
 
@@ -63,9 +64,11 @@ export default function ExercisesPage() {
     null
   );
 
-  const [exercises, setExercises] = useState([
-    ...allExercises.filter((e) => !e.deletedAt),
-  ]);
+  const [exercises, setExercises] = useState<Exercise[]>([]);
+
+  useEffect(() => {
+    setExercises([...allExercises.filter((e) => !e.deletedAt)]);
+  }, [allExercises]);
 
   const [filteredExercises, setFilteredExercises] = useState<Exercise[]>([]);
   const [search, setSearch] = useState('');
@@ -195,7 +198,7 @@ export default function ExercisesPage() {
         gap={2}
         mb={10}
       >
-        {filteredExercises.slice(0, 6).map((exercise, index) => (
+        {filteredExercises.slice(0, 6).map((exercise) => (
           <Box
             key={exercise.id}
             width={{
@@ -243,7 +246,7 @@ export default function ExercisesPage() {
               component: selectedComponent!,
               filteredExercises,
               setFilteredExercises,
-              setExercises,
+              setExercises: setAllExercises,
               setExercise,
               setModal,
             });
@@ -279,7 +282,7 @@ export default function ExercisesPage() {
                 components,
                 attributes,
                 setFilteredExercises,
-                setExercises,
+                setExercises: setAllExercises,
                 setExercise,
                 setModal,
               });
@@ -302,7 +305,7 @@ export default function ExercisesPage() {
           await handleDeleteExercise(exercise!.id!, {
             router,
             setFilteredExercises,
-            setExercises,
+            setExercises: setAllExercises,
           });
           setModal((prev) => ({ ...prev, confirmDelete: false }));
         }}
@@ -327,7 +330,7 @@ export default function ExercisesPage() {
                 attributeValues: exercise.attributeValues,
               })),
             },
-            { router, setExercises }
+            { router, setExercises: setAllExercises }
           );
 
           setModal((prev) => ({ ...prev, import: false }));

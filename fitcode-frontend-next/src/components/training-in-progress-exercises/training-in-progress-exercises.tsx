@@ -14,8 +14,6 @@ import { useTraining } from '@/store/training-provider';
 interface TrainingInProgressExercisesProps {
   selectedSuperset: Superset;
   setSelectedSuperset: SetState<Superset | undefined>;
-  setOpenVideoPlayerModal: SetState<boolean>;
-  setVideoUrl: SetState<string>;
 }
 
 export default function TrainingInProgressExercises(
@@ -27,12 +25,7 @@ export default function TrainingInProgressExercises(
   const { exercises } = useMain();
   const { trainingInProgress } = useTraining();
 
-  const {
-    selectedSuperset,
-    setSelectedSuperset,
-    setOpenVideoPlayerModal,
-    setVideoUrl,
-  } = props;
+  const { selectedSuperset, setSelectedSuperset } = props;
 
   if (!trainingInProgress) return null;
 
@@ -140,10 +133,6 @@ export default function TrainingInProgressExercises(
                 maxWidth: !screenSize.isMobile ? '200px' : '170px',
                 height: 'auto', // Maintains aspect ratio dynamically
                 borderRadius: 15,
-              }}
-              onClick={() => {
-                setOpenVideoPlayerModal(true);
-                setVideoUrl(exercise.exercise?.videoUrl || '');
               }}
             />
           </Grid2>

@@ -27,7 +27,6 @@ interface TrainingComponentMenuProps {
   anchorEl: HTMLElement | null;
   setAnchorEl: SetState<HTMLElement | null>;
   training: Training;
-  setOpenPeriodizationModal: SetState<boolean>;
   setOpenCalendarModal: SetState<boolean>;
 }
 

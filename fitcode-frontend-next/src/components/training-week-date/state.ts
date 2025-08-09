@@ -102,7 +102,6 @@ export async function handleClickDateCell(
             allExercises,
             allMethods: methods,
             setTrainings,
-            day,
           }
         );
       }

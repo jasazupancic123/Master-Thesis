@@ -22,7 +22,7 @@ interface TrainingInProgressSupersetProps {
   open: boolean;
   setOpenFinishTrainingModal: SetState<boolean>;
   handleCancel: () => void;
-  handleOpenMenu: (event: any) => void;
+  handleOpenMenu: (event: React.MouseEvent<HTMLElement>) => void;
   handleCloseMenu: () => void;
 }
 
@@ -46,8 +46,6 @@ export default function TrainingInProgressSuperset(
     handleCloseMenu,
   } = props;
 
-  const [openVideoPlayerModal, setOpenVideoPlayerModal] = useState(false);
-  const [videoUrl, setVideoUrl] = useState('');
   const [openNextSupersetModal, setOpenNextSupersetModal] = useState(false);
   const boxRef = useRef<HTMLDivElement | null>(null);
 
@@ -125,8 +123,6 @@ export default function TrainingInProgressSuperset(
         <TrainingInProgressExercises
           selectedSuperset={selectedSuperset}
           setSelectedSuperset={setSelectedSuperset}
-          setOpenVideoPlayerModal={setOpenVideoPlayerModal}
-          setVideoUrl={setVideoUrl}
         />
       </Box>
 
@@ -213,34 +209,6 @@ export default function TrainingInProgressSuperset(
         <Typography variant="h6" sx={{ width: '100%', textAlign: 'center' }}>
           Move to next superset?
         </Typography>
-      </MyModal>
-      <MyModal
-        isOpen={openVideoPlayerModal}
-        setIsOpen={(open) => setOpenVideoPlayerModal(open)}
-        cancelText="Close"
-        onCancel={() => {
-          setVideoUrl('');
-          setOpenVideoPlayerModal(false);
-        }}
-        sx={{ p: videoUrl.length > 0 ? 0 : undefined }}
-        dialogueContentSx={{ p: videoUrl.length > 0 ? 0 : undefined }}
-      >
-        {videoUrl.length > 0 ? (
-          <Box
-            component="video"
-            src={videoUrl}
-            controls
-            autoPlay
-            muted
-            loop
-            sx={{
-              width: '100%', // Make it responsive
-              maxWidth: screenSize.isLandscapeMobile ? 400 : 600, // Limit max width
-            }}
-          />
-        ) : (
-          <Typography variant="body2">No video available</Typography>
-        )}
       </MyModal>
     </Box>
   );
