@@ -299,6 +299,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
             exercise={exercise}
             expandedSetsView={expandedSetsView}
             setExpandedSetsView={setExpandedSetsView}
+            supersetIndex={supersetIndex}
           />
         ))}
       <MyModal

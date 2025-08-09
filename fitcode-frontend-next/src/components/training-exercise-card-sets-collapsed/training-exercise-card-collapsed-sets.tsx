@@ -512,7 +512,7 @@ export default function TrainingExerciseCardCollapsedSets(
                             }
                             return;
                           }
-                          
+
                           if (
                             !selectedExercises.length ||
                             !selectedExercises.some(
