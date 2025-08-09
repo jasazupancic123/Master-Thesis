@@ -265,7 +265,10 @@ export default function ExerciseModal(props: Props) {
                       control={
                         <Checkbox
                           checked={
-                            data.valuesObject?.[attribute.field] || false
+                            typeof data.valuesObject?.[attribute.field] ===
+                            'boolean'
+                              ? (data.valuesObject[attribute.field] as boolean)
+                              : false
                           }
                           onChange={(e) =>
                             handleSelectChange(

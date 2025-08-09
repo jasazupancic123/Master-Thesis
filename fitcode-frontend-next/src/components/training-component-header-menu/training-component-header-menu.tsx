@@ -164,17 +164,16 @@ export default function TrainingComponentHeaderMenu(
 
       <Tooltip
         title={
-          selectedSubgroup?.subgroup
-            ? selectedSubgroup.subgroup.periodizationType ||
-              'No Periodization Type'
+          selectedSubgroup
+            ? selectedSubgroup.periodizationType || 'No Periodization Type'
             : component.periodizationType || 'No Periodization Type'
         }
       >
         <SelectInput<PeriodizationType>
           label="Periodization"
           value={
-            selectedSubgroup?.subgroup
-              ? selectedSubgroup?.subgroup.periodizationType || ''
+            selectedSubgroup
+              ? selectedSubgroup.periodizationType || ''
               : component.periodizationType || ''
           }
           icon={null}
@@ -201,20 +200,17 @@ export default function TrainingComponentHeaderMenu(
             }
 
             if (!periodizationType) {
-              if (!selectedSubgroup?.subgroup) {
+              if (!selectedSubgroup) {
                 setComponent({
                   ...component,
                   periodizationType: undefined,
                 });
               } else {
                 setSelectedSubgroup((prev) => {
-                  if (!prev || !prev.subgroup) return prev;
+                  if (!prev) return prev;
                   return {
                     ...prev,
-                    subgroup: {
-                      ...prev.subgroup,
-                      periodizationType: undefined,
-                    },
+                    periodizationType: undefined,
                   };
                 });
               }
@@ -411,7 +407,7 @@ export default function TrainingComponentHeaderMenu(
                 periodizationType:
                   selectedPeriodizationType as PeriodizationType,
                 exerciseIds: selectedExercises.map((e) => e.id),
-                subgroupId: selectedSubgroup?.subgroup?.id,
+                subgroupId: selectedSubgroup?.id,
               }),
             (periodizedTrainings) => {
               periodizedTrainings.map((pt) => {
@@ -438,24 +434,21 @@ export default function TrainingComponentHeaderMenu(
                 })
               );
 
-              if (selectedSubgroup?.subgroup) {
+              if (selectedSubgroup) {
                 setSelectedSubgroup((prev) => {
-                  if (!prev || !prev.subgroup) return prev;
+                  if (!prev) return prev;
                   return {
                     ...prev,
-                    subgroup: {
-                      ...prev.subgroup,
-                      periodizationType: selectedPeriodizationType
-                        ? (selectedPeriodizationType as PeriodizationType)
-                        : undefined,
-                    },
+                    periodizationType: selectedPeriodizationType
+                      ? (selectedPeriodizationType as PeriodizationType)
+                      : undefined,
                   };
                 });
 
                 const updatedComponent: TrainingComponent = {
                   ...component,
                   subgroups: (component.subgroups || []).map((sg) => {
-                    if (sg.id === selectedSubgroup.subgroup?.id) {
+                    if (sg.id === selectedSubgroup?.id) {
                       return {
                         ...sg,
                         periodizationType: selectedPeriodizationType
@@ -484,7 +477,7 @@ export default function TrainingComponentHeaderMenu(
               setOpenModal(false);
 
               toast.success(
-                `${selectedSubgroup?.subgroup ? 'Subgroups' : 'Trainings'} periodized successfully`
+                `${selectedSubgroup ? 'Subgroups' : 'Trainings'} periodized successfully`
               );
             },
             undefined,
@@ -493,10 +486,9 @@ export default function TrainingComponentHeaderMenu(
         }}
         cancelText="Close"
       >
-        {selectedSubgroup?.subgroup && (
+        {selectedSubgroup && (
           <Typography variant="body1" textAlign="center" mb={1}>
-            {selectedSubgroup?.subgroup &&
-              `Periodizing subgroup ${selectedSubgroup.subgroup.name}`}
+            {`Periodizing subgroup ${selectedSubgroup.name}`}
           </Typography>
         )}
         <Typography variant="body1" textAlign="center">

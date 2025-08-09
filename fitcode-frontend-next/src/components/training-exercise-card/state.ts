@@ -176,14 +176,8 @@ export function updateTraining(
     component: TrainingComponent | null;
     supersets: Superset[];
     setDetectedChanges: SetState<boolean>;
-    selectedSubgroup: {
-      subgroup: Subgroup | null;
-      index: number;
-    } | null;
-    setSelectedSubgroup: SetState<{
-      subgroup: Subgroup | null;
-      index: number;
-    } | null>;
+    selectedSubgroup: Subgroup | null;
+    setSelectedSubgroup: SetState<Subgroup | null>;
     setTraining: SetStateNullable<Training>;
     setSupersets?: SetState<Superset[]>;
     isInited?: boolean;
@@ -215,12 +209,10 @@ export function updateTraining(
   }
 
   const newSupersets = [...supersets];
-  let updatedSubgroup = selectedSubgroup?.subgroup
-    ? { ...selectedSubgroup.subgroup }
-    : undefined;
+  let updatedSubgroup = selectedSubgroup ? { ...selectedSubgroup } : undefined;
   let updatedComponent = { ...component };
-  const newAvgFutureWorkloadValues = selectedSubgroup?.subgroup
-    ? [...selectedSubgroup.subgroup.prescribedStats]
+  const newAvgFutureWorkloadValues = selectedSubgroup
+    ? [...selectedSubgroup.prescribedStats]
     : [...training.prescribedStats];
   let detectedChanges = false;
 
@@ -250,8 +242,8 @@ export function updateTraining(
         (aw) => aw.exerciseId === exercise.id
       );
 
-      const numMembers = selectedSubgroup?.subgroup
-        ? selectedSubgroup.subgroup.membersIds.length
+      const numMembers = selectedSubgroup
+        ? selectedSubgroup.membersIds.length
         : (() => {
             const subgroupsMembersIds = component.subgroups.reduce(
               (acc, subgroup) => [...acc, ...subgroup.membersIds],
@@ -281,7 +273,7 @@ export function updateTraining(
     if (isInited) setDetectedChanges(true);
     else setIsInited?.(true);
 
-    if (selectedSubgroup?.subgroup) {
+    if (selectedSubgroup) {
       updatedSubgroup = {
         ...updatedSubgroup!,
         supersets: newSupersets,
@@ -290,8 +282,8 @@ export function updateTraining(
 
       updatedComponent = {
         ...updatedComponent,
-        subgroups: component.subgroups.map((s, i) =>
-          i === selectedSubgroup.index ? updatedSubgroup! : s
+        subgroups: component.subgroups.map((s) =>
+          s.id === updatedSubgroup?.id ? updatedSubgroup! : s
         ),
       };
 
@@ -305,10 +297,7 @@ export function updateTraining(
         setSupersets(newSupersets);
       }
 
-      setSelectedSubgroup({
-        subgroup: updatedSubgroup!,
-        index: selectedSubgroup.index,
-      });
+      setSelectedSubgroup(updatedSubgroup!);
 
       setTraining(newTraining);
     } else {

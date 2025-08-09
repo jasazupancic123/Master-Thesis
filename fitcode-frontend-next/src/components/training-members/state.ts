@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 
 import { handleAddSubgroup } from '../trainer-day-view/state';
 import type { SetState, SetStateNullable } from '@/common/type/state.type';
+import type { Subgroup } from '@/controller/training/type/subgroup.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { User } from '@/controller/user/type/user.type';
@@ -15,12 +16,21 @@ export async function handleAddMembersSubgroup(
     setTraining: SetStateNullable<Training>;
     component: TrainingComponent | undefined;
     setComponent: SetState<TrainingComponent | undefined>;
+    setSelectedSubgroup: SetState<Subgroup | null>;
+    setSelectedAthlete: SetStateNullable<User>;
     setDetectedChanges: SetState<boolean>;
   }
 ) {
   const { member } = input;
-  const { training, setTraining, component, setComponent, setDetectedChanges } =
-    state;
+  const {
+    training,
+    setTraining,
+    component,
+    setComponent,
+    setSelectedSubgroup,
+    setSelectedAthlete,
+    setDetectedChanges,
+  } = state;
 
   if (!training || !component) return;
 
@@ -115,6 +125,8 @@ export async function handleAddMembersSubgroup(
       createSubgroup,
       setCreateSubgroup: undefined,
       setDetectedChanges,
+      setSelectedSubgroup,
+      setSelectedAthlete,
     });
 
     return;
@@ -129,5 +141,7 @@ export async function handleAddMembersSubgroup(
     setCreateSubgroup: undefined,
     setDetectedChanges,
     updateTrainingsAvgFutureWorkload: true,
+    setSelectedSubgroup,
+    setSelectedAthlete,
   });
 }

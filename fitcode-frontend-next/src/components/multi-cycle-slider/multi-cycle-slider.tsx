@@ -4,7 +4,7 @@ import { Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import dayjs from 'dayjs';
 import dayOfYear from 'dayjs/plugin/dayOfYear';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Range } from 'react-range';
 
 import EditCycleForm from '../edit-cycle-form/edit-cycle-form';
@@ -26,8 +26,6 @@ interface MultiCycleSliderProps {
   setSelectedGroup: SetState<Group>;
   valuesReal: number[];
   setValuesReal: SetState<number[]>;
-  cycles: Cycle[];
-  setCycles: SetState<Cycle[]>;
   draggingIndex: number | null;
   setDraggingIndex: SetState<number | null>;
   sliderRef: React.RefObject<HTMLDivElement | null>;
@@ -35,7 +33,6 @@ interface MultiCycleSliderProps {
   sortedCycles: Cycle[];
   yearStart: number;
   yearEnd: number;
-  setSortedCycles: SetState<Cycle[]>;
   sliderProperties: {
     width: string;
     centerPosition: string;
@@ -55,15 +52,12 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
     sliderRef,
     yearStart,
     yearEnd,
-    setCycles,
-    setSortedCycles,
-    cycles,
     sliderProperties,
   } = props;
 
   const theme = useTheme();
 
-  const { group, setGroup, cycle, setCycle, setDetectedChanges } = useGroup();
+  const { cycle, setCycle, setDetectedChanges } = useGroup();
 
   const [draggedDay, setDraggedDay] = useState<number | null>(null);
   const [mouseX, setMouseX] = useState<number | null>(null);
@@ -74,7 +68,8 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
     setDraggingIndex(index);
   };
 
-  const onMouseMove = (e: any) => setMouseX(e.clientX);
+  const onMouseMove = (e: React.MouseEvent<HTMLDivElement>) =>
+    setMouseX(e.clientX);
 
   function handleDeleteCycle() {
     if (!editCycle || !selectedGroup) return;
@@ -129,30 +124,9 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
           )
         }
         renderTrack={({ props, children }) => {
-          const { ['key']: _, ...otherProps } = props as Record<string, any>;
-
-          const handleNameChange = (index: number, newName: string) => {
-            const newCycle = sortedCycles[index];
-            if (!newCycle) return;
-
-            const updatedCycles = [...cycles].map((cycle, i) =>
-              cycle.id === newCycle.id ? { ...cycle, name: newName } : cycle
-            );
-
-            setDetectedChanges(true);
-            setCycles(updatedCycles);
-            setGroup({ ...group, cycles: updatedCycles });
-            setSortedCycles((prevCycles) => {
-              const updatedCycles = prevCycles.map((cycle, i) =>
-                cycle.id === newCycle.id ? { ...cycle, name: newName } : cycle
-              );
-              return updatedCycles;
-            });
-          };
-
           return (
             <div
-              {...otherProps}
+              {...props}
               style={{
                 ...props.style,
                 height: 4,
@@ -243,9 +217,6 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
           );
         }}
         renderThumb={({ props, index }) => {
-          // avoid error when spreading key
-          const { ['key']: _, ...otherProps } = props as Record<string, any>;
-
           const value = valuesReal[index];
           const cycleIndex = Math.floor(index / 2);
           const cycle = sortedCycles[cycleIndex];
@@ -254,13 +225,15 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
           const cycleStartYear = dayjs(cycle.from).year();
           const cycleEndYear = dayjs(cycle.to).year();
 
+          const { key, ...rest } = props;
+
           if (value === yearStart && cycleStartYear < selectedYear)
             return (
               <div
-                key={index}
-                {...otherProps}
+                key={key}
+                {...rest}
                 style={{
-                  ...props.style,
+                  ...rest.style,
                   height: 0,
                   width: 0,
                   overflow: 'hidden',
@@ -272,10 +245,10 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
           if (value === yearEnd && cycleEndYear > selectedYear)
             return (
               <div
-                key={index}
-                {...otherProps}
+                key={key}
+                {...rest}
                 style={{
-                  ...props.style,
+                  ...rest.style,
                   height: 0,
                   width: 0,
                   overflow: 'hidden',
@@ -286,8 +259,8 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
 
           return (
             <div
-              key={index}
-              {...otherProps}
+              key={key}
+              {...rest}
               onMouseDown={() => handleDragStart(index)}
               onTouchStart={() => handleDragStart(index)}
               onMouseMove={() =>
@@ -298,7 +271,7 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
                 )
               }
               style={{
-                ...props.style,
+                ...rest.style,
                 height: 13,
                 width: 13,
                 borderRadius: '50%',

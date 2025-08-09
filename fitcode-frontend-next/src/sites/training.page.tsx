@@ -126,7 +126,7 @@ export default function TrainingPage() {
         ? plannedTrainingsPagination
         : completedTrainingsPagination;
 
-    const { page, pageSize, total } = currentPagination;
+    const { page, pageSize } = currentPagination;
 
     const nextPage = page + 1;
     const totalPages = Math.ceil(allTrainings.length / pageSize);

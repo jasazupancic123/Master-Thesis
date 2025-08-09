@@ -61,14 +61,8 @@ export type TrainerDayViewContextProps = {
   setSupersets: SetState<Superset[]>;
   selectedAthlete: User | undefined;
   setSelectedAthlete: SetStateNullable<User>;
-  selectedSubgroup: {
-    subgroup: Subgroup | null;
-    index: number;
-  } | null;
-  setSelectedSubgroup: SetState<{
-    subgroup: Subgroup | null;
-    index: number;
-  } | null>;
+  selectedSubgroup: Subgroup | null;
+  setSelectedSubgroup: SetState<Subgroup | null>;
   filteredExercises: Exercise[];
   setFilteredExercises: SetState<Exercise[]>;
   pagination: Pagination;

@@ -21,12 +21,10 @@ import { DEFAULT_SUBGROUP } from '../trainer-day-view/constant';
 import { onDragEndSubgroup } from '../trainer-day-view/state';
 import TrainingMembersSubgroup from '../training-members-subgroups/training-members-subgroups';
 import { handleAddMembersSubgroup } from './state';
-import { COLORS } from '@/common/constant/color.constant';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
 import type { User } from '@/controller/user/type/user.type';
 import { useGroup } from '@/store/group-provider';
 import { useMain } from '@/store/main-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 interface TrainingMembersProps {
@@ -36,7 +34,6 @@ interface TrainingMembersProps {
 export default function TrainingMembers(props: TrainingMembersProps) {
   const { isSticky } = props;
   const theme = useTheme();
-  const screenSize = useScreenSize();
 
   const { users } = useMain();
   const { group, setDetectedChanges } = useGroup();
@@ -99,7 +96,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
     const subgroups = component?.subgroups || [];
     const availableMembers = members.filter(
       (member) =>
-        !subgroups.some((subgroup: any) =>
+        !subgroups.some((subgroup: Subgroup) =>
           subgroup.membersIds.includes(member.uid)
         )
     );
@@ -126,6 +123,8 @@ export default function TrainingMembers(props: TrainingMembersProps) {
           setTraining,
           component,
           setComponent,
+          setSelectedSubgroup,
+          setSelectedAthlete,
           setDetectedChanges,
         }
       );
@@ -282,7 +281,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                   height: '100%',
                 }}
               >
-                {group.membersIds.map((memberId, index) => {
+                {group.membersIds.map((memberId) => {
                   const member = members.find((user) => user.uid === memberId);
 
                   if (!member) return null;
@@ -341,20 +340,14 @@ export default function TrainingMembers(props: TrainingMembersProps) {
           {training &&
             subgroups.map((subgroup, subgroupIndex) => {
               // Assign border color based on the subgroup index
-              const borderColor = subgroup.color
-                ? subgroup.color
-                : COLORS[(subgroupIndex % COLORS.length) - 1];
-
               return (
                 <TrainingMembersSubgroup
                   key={subgroup.id}
                   subgroup={subgroup}
-                  subgroups={subgroups}
                   subgroupIndex={subgroupIndex}
                   anchorEl={anchorEl}
                   setAnchorEl={setAnchorEl}
                   members={sortedMembers}
-                  borderColor={borderColor}
                   setEditSubgroupName={setEditSubgroupName}
                   setEditedSubgroup={setEditedSubgroup}
                   setModal={setModal}
@@ -396,14 +389,15 @@ export default function TrainingMembers(props: TrainingMembersProps) {
             ),
           };
 
-          if (
-            selectedSubgroup?.subgroup &&
-            updatedSubgroup.id === selectedSubgroup?.subgroup.id
-          )
-            setSelectedSubgroup((prev: any) => ({
-              ...prev,
-              subgroup: updatedSubgroup,
-            }));
+          if (selectedSubgroup && updatedSubgroup.id === selectedSubgroup.id)
+            setSelectedSubgroup((prev) => {
+              if (!prev) return prev;
+
+              return {
+                ...prev,
+                subgroup: updatedSubgroup,
+              };
+            });
           setSubgroups(updatedSubgroups);
           setComponent(newComponent);
           setTraining(newTraining);

@@ -1,4 +1,3 @@
-import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
@@ -10,15 +9,11 @@ import type { TrainingCycleViewWeekProps } from '../training-cycle-view-week/typ
 import TrainingWeekDates from '../training-week-date/training-week-date';
 import type { TrainingInfo } from '@/controller/training/type/training.type';
 import { useMain } from '@/store/main-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
 
 export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
-  const theme = useTheme();
-  const screenSize = useScreenSize();
   const { components } = useMain();
 
   const {
-    index,
     week,
     selected,
     componentCalendarView,

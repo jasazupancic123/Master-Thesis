@@ -2,6 +2,7 @@ import { isBefore } from 'date-fns';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import type { DropResult } from 'react-beautiful-dnd';
 import toast from 'react-hot-toast';
 
 import {
@@ -30,6 +31,7 @@ import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingInfo } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import type { TrainingExerciseAverageStats } from '@/controller/training/type/training-exercise-average-stats.type';
 import type { Workload } from '@/controller/training/type/workload.type';
 import type { User } from '@/controller/user/type/user.type';
@@ -56,7 +58,6 @@ export async function handleCopyTraining(
     training,
     cycle,
     setTrainings,
-    day,
     components,
     exercises,
     methods,
@@ -110,7 +111,7 @@ export async function handleCopyTraining(
 }
 
 export function onDragEndSubgroup(
-  { destination, draggableId }: any,
+  { destination, draggableId }: DropResult,
   state: {
     subgroups: Subgroup[];
     setSubgroups: SetState<Subgroup[]>;
@@ -285,6 +286,8 @@ export async function handleAddSubgroup(state: {
     | undefined;
   setDetectedChanges: SetState<boolean>;
   updateTrainingsAvgFutureWorkload?: boolean;
+  setSelectedSubgroup: SetState<Subgroup | null>;
+  setSelectedAthlete: SetStateNullable<User>;
 }) {
   const {
     training,
@@ -295,6 +298,8 @@ export async function handleAddSubgroup(state: {
     setCreateSubgroup,
     setDetectedChanges,
     updateTrainingsAvgFutureWorkload,
+    setSelectedSubgroup,
+    setSelectedAthlete,
   } = state;
 
   if (!training || !component) return;
@@ -333,6 +338,9 @@ export async function handleAddSubgroup(state: {
     subgroups: [...component.subgroups, newSubgroup],
   };
 
+  setSelectedAthlete(undefined);
+  setSelectedSubgroup(newSubgroup);
+
   setComponent(newComponent);
 
   // update training's avg future workload values's numMembers
@@ -365,12 +373,25 @@ export function handleDeleteSubgroup(
     setTraining: SetStateNullable<Training>;
     component: TrainingComponent;
     setComponent: SetStateNullable<TrainingComponent>;
+    selectedExercises: TrainingExercise[];
+    setSelectedExercises: SetState<TrainingExercise[]>;
+    setTrainings: SetState<TrainingInfo[]>;
+    setSelectedSubgroup: SetState<Subgroup | null>;
     setDetectedChanges: SetState<boolean>;
   }
 ) {
   const { subgroupId } = input;
-  const { training, setTraining, component, setComponent, setDetectedChanges } =
-    state;
+  const {
+    training,
+    setTraining,
+    component,
+    setComponent,
+    selectedExercises,
+    setSelectedExercises,
+    setTrainings,
+    setSelectedSubgroup,
+    setDetectedChanges,
+  } = state;
   if (!training || !component) return;
 
   setDetectedChanges(true);
@@ -411,24 +432,33 @@ export function handleDeleteSubgroup(
     components: updatedComponents,
     prescribedStats: stats,
   };
+
   setTraining(newTraining);
+  setTrainings((prev) =>
+    prev.map((t) => (t.id === training.id ? newTraining : t))
+  );
+
+  setSelectedSubgroup(null);
+  setSelectedExercises(
+    component?.supersets
+      .flatMap((s) => s.exercises)
+      .filter((e) => selectedExercises.some((se) => se.id === e.id)) || []
+  );
 }
 
 export async function onDragEnd(
-  input: any,
+  input: DropResult,
   state: {
     training: Training;
     setTraining: SetStateNullable<Training>;
     component: TrainingComponent;
     setComponent: SetStateNullable<TrainingComponent>;
-    selectedSubgroup: { subgroup: Subgroup | null; index: number } | null;
-    setSelectedSubgroup: SetState<{
-      subgroup: Subgroup | null;
-      index: number;
-    } | null>;
+    selectedSubgroup: Subgroup | null;
+    setSelectedSubgroup: SetState<Subgroup | null>;
     supersets: Superset[];
     setSupersets: SetState<Superset[]>;
     setDetectedChanges: SetState<boolean>;
+    setCustomAthleteWorkloads: SetState<Workload[]>;
   }
 ) {
   const { destination, draggableId } = input;
@@ -442,6 +472,7 @@ export async function onDragEnd(
     supersets,
     setSupersets,
     setDetectedChanges,
+    setCustomAthleteWorkloads,
   } = state;
 
   if (!destination || !training || !component) return;
@@ -472,21 +503,18 @@ export async function onDragEnd(
     setDetectedChanges(true);
 
     setSupersets([...newSupersets]);
-    if (selectedSubgroup?.subgroup) {
+    if (selectedSubgroup) {
       const updatedSubgroup = {
-        ...selectedSubgroup.subgroup,
+        ...selectedSubgroup,
         supersets: newSupersets,
       };
       const updatedComponent = {
         ...component,
-        subgroups: component.subgroups.map((s, i) =>
-          i === selectedSubgroup.index ? updatedSubgroup : s
+        subgroups: component.subgroups.map((s) =>
+          s.id === selectedSubgroup.id ? updatedSubgroup : s
         ),
       };
-      setSelectedSubgroup({
-        subgroup: updatedSubgroup,
-        index: selectedSubgroup.index,
-      });
+      setSelectedSubgroup(updatedSubgroup);
       setComponent(updatedComponent);
 
       updateGlobalStates(
@@ -514,6 +542,12 @@ export async function onDragEnd(
         component.id === WARMUP_ID || component.id === COOLDOWN_ID
       );
     }
+
+    updateCustomAthleteWorkloadsSupersetIndexes({
+      setCustomAthleteWorkloads,
+      component,
+      selectedSubgroup,
+    });
     return;
   }
 
@@ -543,9 +577,9 @@ export async function onDragEnd(
       exercises: sortedExercises,
     };
 
-    if (selectedSubgroup?.subgroup) {
+    if (selectedSubgroup) {
       const updatedSubgroup = {
-        ...selectedSubgroup.subgroup,
+        ...selectedSubgroup,
         supersets: supersetsCopy.map((superset) =>
           superset === supersetWithExercise ? newSuperset : superset
         ),
@@ -553,17 +587,14 @@ export async function onDragEnd(
 
       const updatedComponent = {
         ...component,
-        subgroups: component.subgroups.map((s, i) =>
-          i === selectedSubgroup.index ? updatedSubgroup : s
+        subgroups: component.subgroups.map((s) =>
+          s.id === selectedSubgroup.id ? updatedSubgroup : s
         ),
       };
 
       setDetectedChanges(true);
 
-      setSelectedSubgroup({
-        subgroup: updatedSubgroup,
-        index: selectedSubgroup.index,
-      });
+      setSelectedSubgroup(updatedSubgroup);
       setComponent(updatedComponent);
 
       updateGlobalStates(
@@ -601,6 +632,12 @@ export async function onDragEnd(
         supersets.map((s) => (s === supersetWithExercise ? newSuperset : s))
       );
     }
+
+    updateCustomAthleteWorkloadsSupersetIndexes({
+      setCustomAthleteWorkloads,
+      component,
+      selectedSubgroup,
+    });
     return;
   }
 
@@ -615,9 +652,9 @@ export async function onDragEnd(
 
   // ČORI TU MORE BIT UNDEFINED KER !exerciseIndex se kliče tudi te ko je 0!
   if (exerciseIndex === undefined || exerciseIndex === -1) return;
-  supersetWithNewExercise.exercises.push(
-    supersetWithExercise.exercises[exerciseIndex]
-  );
+
+  const exercise = supersetWithExercise.exercises[exerciseIndex];
+  supersetWithNewExercise.exercises.push(exercise);
 
   const newExercises = supersetWithNewExercise.exercises;
   const sortedExercises = newExercises
@@ -650,15 +687,15 @@ export async function onDragEnd(
   setDetectedChanges(true);
 
   setSupersets(finalSupersetsCopy);
-  if (selectedSubgroup?.subgroup) {
+  if (selectedSubgroup) {
     const updatedSubgroup = {
-      ...selectedSubgroup.subgroup,
+      ...selectedSubgroup,
       supersets: finalSupersetsCopy,
     };
     const updatedComponent = {
       ...component,
-      subgroups: component.subgroups.map((s, i) =>
-        i === selectedSubgroup.index ? updatedSubgroup : s
+      subgroups: component.subgroups.map((s) =>
+        s.id === selectedSubgroup.id ? updatedSubgroup : s
       ),
     };
 
@@ -672,10 +709,7 @@ export async function onDragEnd(
       component.id === WARMUP_ID || component.id === COOLDOWN_ID
     );
 
-    setSelectedSubgroup({
-      subgroup: updatedSubgroup,
-      index: selectedSubgroup.index,
-    });
+    setSelectedSubgroup(updatedSubgroup);
   } else {
     const updatedComponent = {
       ...component,
@@ -691,6 +725,13 @@ export async function onDragEnd(
       component.id === WARMUP_ID || component.id === COOLDOWN_ID
     );
   }
+
+  updateCustomAthleteWorkloadsSupersetIndexes({
+    setCustomAthleteWorkloads,
+    component,
+    selectedSubgroup,
+  });
+
   setDetectedChanges(true);
 }
 
@@ -701,12 +742,9 @@ export function handleDeleteExercise(
     setTraining: SetStateNullable<Training>;
     component: TrainingComponent;
     setComponent: SetStateNullable<TrainingComponent>;
-    selectedSubgroup: { subgroup: Subgroup | null; index: number } | null;
+    selectedSubgroup: Subgroup | null;
     supersets: Superset[];
-    setSelectedSubgroup: SetState<{
-      subgroup: Subgroup | null;
-      index: number;
-    } | null>;
+    setSelectedSubgroup: SetState<Subgroup | null>;
     setDetectedChanges: SetState<boolean>;
   }
 ) {
@@ -736,29 +774,25 @@ export function handleDeleteExercise(
     (superset) => superset.exercises.length > 0
   );
 
-  if (selectedSubgroup?.subgroup) {
+  if (selectedSubgroup) {
     // update selected subgroup's supersets
-    const newAvgFutureWorkloadValues =
-      selectedSubgroup.subgroup.prescribedStats.filter(
-        (avg) => avg.exerciseId !== exerciseId
-      );
+    const newAvgFutureWorkloadValues = selectedSubgroup.prescribedStats.filter(
+      (avg) => avg.exerciseId !== exerciseId
+    );
     const updatedSubgroup: Subgroup = {
-      ...selectedSubgroup.subgroup,
+      ...selectedSubgroup,
       supersets: updatedSupersets,
       prescribedStats: newAvgFutureWorkloadValues,
     };
 
     const updatedComponent = {
       ...component,
-      subgroups: component.subgroups.map((s, i) =>
-        i === selectedSubgroup.index ? updatedSubgroup : s
+      subgroups: component.subgroups.map((s) =>
+        s.id === selectedSubgroup.id ? updatedSubgroup : s
       ),
     };
 
-    setSelectedSubgroup({
-      subgroup: updatedSubgroup,
-      index: selectedSubgroup.index,
-    });
+    setSelectedSubgroup(updatedSubgroup);
 
     setComponent(updatedComponent);
     const updatedComponents = [...training.components].map((c) =>
@@ -799,12 +833,11 @@ export function handleDeleteSuperset(
     supersets: Superset[];
     component: TrainingComponent;
     setComponent: SetStateNullable<TrainingComponent>;
-    selectedSubgroup: { subgroup: Subgroup | null; index: number } | null;
-    setSelectedSubgroup: SetState<{
-      subgroup: Subgroup | null;
-      index: number;
-    } | null>;
+    selectedSubgroup: Subgroup | null;
+    setSelectedSubgroup: SetState<Subgroup | null>;
+    setTrainings: SetState<TrainingInfo[]>;
     setDetectedChanges: SetState<boolean>;
+    setCustomAthleteWorkloads: SetState<Workload[]>;
   }
 ) {
   const { index } = input;
@@ -816,77 +849,122 @@ export function handleDeleteSuperset(
     setComponent,
     selectedSubgroup,
     setSelectedSubgroup,
+    setTrainings,
     setDetectedChanges,
+    setCustomAthleteWorkloads,
   } = state;
 
   if (!component || !training) return;
 
   setDetectedChanges(true);
 
-  if (component.id === WARMUP_ID || component.id === COOLDOWN_ID) {
-    const updatedSupersets = [...supersets].filter((_, i) => i !== index);
+  if (selectedSubgroup) {
+    // update selected subgroup's supersets
+
+    const exercisesToDelete = selectedSubgroup.supersets[index].exercises;
+
+    const updatedSupersets = [...selectedSubgroup.supersets].filter(
+      (_, i) => i !== index
+    );
+
+    const prescribedStats = [...selectedSubgroup.prescribedStats].filter(
+      (avg) => !exercisesToDelete.some((e) => e.id === avg.exerciseId)
+    );
+
+    const updatedSubgroup = {
+      ...selectedSubgroup,
+      supersets: updatedSupersets,
+      prescribedStats,
+    };
 
     const updatedComponent = {
+      ...component,
+      subgroups: component.subgroups.map((s) =>
+        s.id === selectedSubgroup.id ? updatedSubgroup : s
+      ),
+    };
+
+    setSelectedSubgroup(updatedSubgroup);
+
+    setComponent(updatedComponent);
+
+    const newTraining = { ...training };
+
+    if (component.id === WARMUP_ID) newTraining.warmup = updatedComponent;
+    else if (component.id === COOLDOWN_ID)
+      newTraining.cooldown = updatedComponent;
+    else {
+      newTraining.components = [...training.components].map((c) =>
+        c.id === component.id ? updatedComponent : c
+      );
+    }
+
+    setTraining(newTraining);
+    setTrainings((prev) =>
+      prev.map((t) => (t.id === training.id ? newTraining : t))
+    );
+  } else {
+    // update component's supersets
+    const exercisesToDelete = supersets[index].exercises;
+
+    const updatedSupersets = [...supersets].filter((_, i) => i !== index);
+
+    const prescribedStats = [...training.prescribedStats].filter(
+      (avg) => !exercisesToDelete.some((e) => e.id === avg.exerciseId)
+    );
+
+    const updatedComponent: TrainingComponent = {
       ...component,
       supersets: updatedSupersets,
     };
 
-    const newTraining =
-      component.id === WARMUP_ID
-        ? { ...training, warmup: updatedComponent }
-        : { ...training, cooldown: updatedComponent };
-
     setComponent(updatedComponent);
-    setTraining(newTraining);
-  } else {
-    if (selectedSubgroup?.subgroup) {
-      // update selected subgroup's supersets
-      const updatedSupersets = [...selectedSubgroup.subgroup.supersets].filter(
-        (_, i) => i !== index
-      );
 
-      const updatedSubgroup = {
-        ...selectedSubgroup.subgroup,
-        supersets: updatedSupersets,
-      };
+    const newTraining = { ...training, prescribedStats };
 
-      const updatedComponent = {
-        ...component,
-        subgroups: component.subgroups.map((s, i) =>
-          i === selectedSubgroup.index ? updatedSubgroup : s
-        ),
-      };
-
-      setSelectedSubgroup({
-        subgroup: updatedSubgroup,
-        index: selectedSubgroup.index,
-      });
-
-      setComponent(updatedComponent);
-      const updatedComponents = [...training.components].map((c) =>
+    if (component.id === WARMUP_ID) newTraining.warmup = updatedComponent;
+    else if (component.id === COOLDOWN_ID)
+      newTraining.cooldown = updatedComponent;
+    else {
+      newTraining.components = [...training.components].map((c) =>
         c.id === component.id ? updatedComponent : c
       );
-
-      const newTraining = { ...training, components: updatedComponents };
-      setTraining(newTraining);
-    } else {
-      // update component's supersets
-      const updatedSupersets = [...supersets].filter((_, i) => i !== index);
-
-      const updatedComponent = {
-        ...component,
-        supersets: updatedSupersets,
-      };
-
-      setComponent(updatedComponent);
-      const updatedComponents = [...training.components].map((c) =>
-        c.id === component.id ? updatedComponent : c
-      );
-
-      const newTraining = { ...training, components: updatedComponents };
-      setTraining(newTraining);
     }
+
+    setTraining(newTraining);
+    setTrainings((prev) =>
+      prev.map((t) => (t.id === training.id ? newTraining : t))
+    );
   }
+
+  updateCustomAthleteWorkloadsSupersetIndexes({
+    setCustomAthleteWorkloads,
+    component,
+    selectedSubgroup,
+  });
+}
+
+export function updateCustomAthleteWorkloadsSupersetIndexes(input: {
+  setCustomAthleteWorkloads: SetState<Workload[]>;
+  component: TrainingComponent;
+  selectedSubgroup: Subgroup | null;
+}) {
+  const { setCustomAthleteWorkloads, component, selectedSubgroup } = input;
+  setCustomAthleteWorkloads((prev) => {
+    return prev.map((w) => {
+      const supersetIndex = (
+        selectedSubgroup ? selectedSubgroup.supersets : component.supersets
+      )
+        .map((s) => s.exercises)
+        .flat()
+        .findIndex((e) => e.id === w.exerciseId);
+
+      if (supersetIndex === -1) return w;
+
+      w.supersetIndex = supersetIndex;
+      return w;
+    });
+  });
 }
 
 function updateGlobalStates(
@@ -975,6 +1053,7 @@ export function prepareGroupAvgWorkloadsForChart(
   const futureWorkloadsData = [];
   for (const t of trainings) {
     if (completedWorkloadsData.find((w) => w.trainingId === t.id)) continue; // skip if already in completed workloads
+    if (!t.prescribedStats) continue; // skip if no prescribed stats
     if (!t.prescribedStats.find((w) => w.exerciseId === exerciseId)) continue; // skip if no future workloads for the selected exercise on this training
 
     let totalNumMembers = 0;
@@ -1072,7 +1151,6 @@ export function prepareSelectedAthleteAvgWorkloadsForChart(
   const numOfTotalWorkloads = numOfCompletedWorkloads + numOfFutureWorkloads;
 
   const newData = [];
-  let i = 0;
   for (const groupedWorkload of [
     groupedCompletedWorkloads,
     groupedFutureWorkloads,
@@ -1126,9 +1204,7 @@ export function prepareSelectedAthleteAvgWorkloadsForChart(
         completed: groupedCompletedWorkloads === groupedWorkload,
         plannedAt: workloads[0].plannedAt,
       });
-      i++;
     }
-    i = 0;
   }
 
   // sort by plannedAt

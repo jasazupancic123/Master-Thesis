@@ -23,9 +23,9 @@ const AuthContext = createContext<AuthContextType>({
   role: [],
   logout: () => Promise.resolve(),
   hasJustLoggedIn: false,
-  setHasJustLoggedIn: (value: boolean) => {},
+  setHasJustLoggedIn: () => {},
   profile: undefined,
-  setProfile: (profile: UserEntity) => {},
+  setProfile: () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);

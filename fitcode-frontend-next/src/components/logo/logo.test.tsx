@@ -1,8 +1,8 @@
 // logo.test.tsx
 jest.mock('next/image', () => ({
   __esModule: true,
-  default: (props: any) => {
-    return <img {...props} />;
+  default: (props: React.ComponentProps<'img'>) => {
+    return <img {...props} alt="logo" />;
   },
 }));
 

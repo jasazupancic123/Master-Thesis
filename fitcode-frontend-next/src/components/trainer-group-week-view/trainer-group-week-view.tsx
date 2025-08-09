@@ -5,35 +5,25 @@ import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid2';
 import Typography from '@mui/material/Typography';
 import dayjs from 'dayjs';
-import { useRouter } from 'next/navigation';
 import React, { Fragment, useEffect, useState } from 'react';
-import toast from 'react-hot-toast';
 
 import { CommonService } from '@/common/service/common.service';
-import { handleApiRequest } from '@/common/type/state.type';
 import Circles from '@/components/circles/circles';
 import TrainingItem from '@/components/training-week-view-item/training-week-view-item';
-import { TrainingController } from '@/controller/training/training.controller';
-import { TrainingService } from '@/controller/training/training.service';
+import type { Week } from '@/controller/group/type/cycle.type';
+import type {
+  Training,
+  TrainingInfo,
+} from '@/controller/training/type/training.type';
 import { useGroup } from '@/store/group-provider';
-import { useMain } from '@/store/main-provider';
 
 const commonService = CommonService.instance;
 
 export default function TrainerWeekView() {
   const theme = useTheme();
-  const { components, exercises, methods } = useMain();
 
-  const {
-    cycle,
-    trainings,
-    setTrainings,
-    setDateFrom,
-    setDateTo,
-    setDetectedChanges,
-  } = useGroup();
+  const { cycle, trainings, setDateFrom, setDateTo } = useGroup();
 
-  const router = useRouter();
   const [index, setIndex] = useState(0); // week index
   const weeks = cycle?.weeks || [];
 
@@ -83,7 +73,7 @@ export default function TrainerWeekView() {
 
             setIndex((prev) => (direction === 'left' ? prev - 1 : prev + 1));
           }}
-          items={weeks.map((_: any, i: number) => ({
+          items={weeks.map((_: Week[], i: number) => ({
             label: `W${i + 1}`,
             value: i.toString(),
           }))}
@@ -136,49 +126,9 @@ export default function TrainerWeekView() {
                     justifyContent: 'space-between',
                   }}
                 >
-                  {filtered.map((training: any) => (
+                  {filtered.map((training: TrainingInfo) => (
                     <Fragment key={training.id}>
-                      <TrainingItem
-                        training={training}
-                        updateTraining={async (training, input) => {
-                          if (!cycle) return;
-
-                          await handleApiRequest(
-                            router,
-                            () =>
-                              TrainingController.update(training.id, {
-                                /* components: input.components?.map((c) => ({
-                                  ...c,
-                                  from: new Date(c.from),
-                                  to: addMinutes(new Date(c.from), 30),
-                                })),
-                                warmup: training.warmup,
-                                cooldown: training.cooldown, */
-                                ...training,
-                                workloads: [],
-                              }),
-                            (training) => {
-                              TrainingService.mapData(training, {
-                                components,
-                                exercises,
-                                methods,
-                                prescribedStats: true,
-                              });
-
-                              setTrainings((prev) =>
-                                prev.map((t) =>
-                                  t.id === training.id ? training : t
-                                )
-                              );
-
-                              setDetectedChanges(false);
-                              toast.success('Training updated successfully');
-                            },
-                            undefined,
-                            'Error when updating training'
-                          );
-                        }}
-                      />
+                      <TrainingItem training={training as Training} />
                     </Fragment>
                   ))}
                 </Box>

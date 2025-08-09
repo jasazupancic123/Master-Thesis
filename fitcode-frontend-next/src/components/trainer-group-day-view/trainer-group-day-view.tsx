@@ -55,7 +55,6 @@ export default function TrainerDayView() {
     setComponent,
     setSelectedSubgroup,
     selectedAthlete,
-    setSelectedAthlete,
     setSelectedAthleteWorkloads,
     customAthleteWorkloads,
     setCustomAthleteWorkloads,
@@ -246,7 +245,6 @@ export default function TrainerDayView() {
                   components,
                   exercises,
                   methods,
-                  setSelectedAthlete,
                   setDetectedChanges,
                 })
               }
@@ -347,7 +345,6 @@ export default function TrainerDayView() {
                     components,
                     exercises,
                     methods,
-                    setSelectedAthlete,
                     setDetectedChanges,
                   });
                 }}

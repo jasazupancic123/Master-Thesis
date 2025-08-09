@@ -1,42 +1,61 @@
 'use client';
 
-import { Box, Checkbox, Grid2, IconButton, Typography } from '@mui/material';
+import { MoreVert } from '@mui/icons-material';
+import {
+  Box,
+  Grid2,
+  IconButton,
+  Menu,
+  MenuItem,
+  Typography,
+} from '@mui/material';
 import { useTheme } from '@mui/material';
+import { useState } from 'react';
 import { Draggable } from 'react-beautiful-dnd';
 
 import TrainingExerciseCardContainer from '../training-exercise-card-container/training-exercise-card-container';
+import deleteSupersetExercise from './state';
 import type { Superset } from '@/controller/training/type/superset.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { useScreenSize } from '@/store/screen-size-provider';
+import { useGroup } from '@/store/group-provider';
 import { useSupersets } from '@/store/supersets-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 interface SupersetExerciseProps {
   exercise: TrainingExercise;
   superset: Superset;
-  i: number;
-  k: number;
+  supersetIndex: number;
+  exerciseIndex: number;
 }
 
 export default function SupersetExercise(props: SupersetExerciseProps) {
-  const { exercise, superset, i, k } = props;
+  const { exercise, superset, supersetIndex, exerciseIndex } = props;
 
   const theme = useTheme();
-  const screenSize = useScreenSize();
 
   const {
     selectedExercise,
     setSelectedExercise,
     setMenuExercise,
-    anchorEl,
-    setAnchorEl,
     expandedExercisesView,
+    setOpenVideoPlayerModal,
   } = useSupersets();
 
-  const { training, component, selectedExercises, setSelectedExercises } =
-    useTrainerDayViewContext();
+  const {
+    training,
+    setTraining,
+    component,
+    setComponent,
+    selectedSubgroup,
+    setSelectedSubgroup,
+    selectedExercises,
+  } = useTrainerDayViewContext();
 
-  const handleMenuClick = (event: any) => {
+  const { setTrainings } = useGroup();
+
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+
+  const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
 
@@ -49,13 +68,13 @@ export default function SupersetExercise(props: SupersetExerciseProps) {
       size={{ xs: 12 }}
       key={exercise.id}
       sx={{
-        mb: superset.exercises.length - 1 !== k ? 0.4 : undefined,
+        mb: superset.exercises.length - 1 !== exerciseIndex ? 0.4 : undefined,
       }}
     >
       <Draggable
         key={exercise.id}
         draggableId={exercise.id.toString()}
-        index={k}
+        index={exerciseIndex}
         isDragDisabled={!!(selectedExercise?.id === exercise.id)} // Disable dragging
       >
         {(provided, snapshot) => (
@@ -102,7 +121,7 @@ export default function SupersetExercise(props: SupersetExerciseProps) {
                   color={theme.palette.background.lightBorder}
                   sx={{ zIndex: 1 }}
                 >
-                  {`${i + 1}${String.fromCharCode(65 + k)}`}
+                  {`${supersetIndex + 1}${String.fromCharCode(65 + exerciseIndex)}`}
                 </Typography>
               </Box>
 
@@ -110,7 +129,7 @@ export default function SupersetExercise(props: SupersetExerciseProps) {
                 <Box
                   position="absolute"
                   top={5}
-                  right={screenSize.isLandscapeMobile ? 0 : 10}
+                  right={0}
                   display={
                     selectedExercise?.id === exercise.id ? 'none' : 'flex'
                   }
@@ -130,44 +149,68 @@ export default function SupersetExercise(props: SupersetExerciseProps) {
                     }}
                     disableRipple
                   >
-                    <Checkbox
-                      size="small"
-                      checked={selectedExercises.some(
-                        (ex) => ex.id === exercise.id
-                      )}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedExercises((prev) => [...prev, exercise]);
-                        } else {
-                          setSelectedExercises((prev) =>
-                            prev.filter((ex) => ex.id !== exercise.id)
-                          );
-                        }
-                      }}
-                      sx={{
-                        transform: 'scale(0.9)',
-                        width: 16,
-                        height: 16,
-                        zIndex: 1000,
-                      }}
-                    />
+                    <MoreVert fontSize="small" />
                   </IconButton>
                 </Box>
               )}
 
               <TrainingExerciseCardContainer
-                supersetIndex={i}
+                supersetIndex={supersetIndex}
                 exercise={exercise}
                 superior={{
-                  row: i === 0,
-                  column: k === 0,
-                  all: i === 0 && k === 0,
+                  row: supersetIndex === 0,
+                  column: exerciseIndex === 0,
+                  all: supersetIndex === 0 && exerciseIndex === 0,
                 }}
               />
             </Box>
           </Box>
         )}
       </Draggable>
+      <Menu
+        anchorEl={anchorEl}
+        open={open}
+        onClose={() => {
+          setAnchorEl(null);
+        }}
+      >
+        <MenuItem
+          onClick={() => {
+            deleteSupersetExercise({
+              supersetIndex,
+              exerciseIndex,
+              exercise,
+              selectedSubgroup,
+              setSelectedSubgroup,
+              component,
+              setComponent,
+              training,
+              setTraining,
+              setTrainings,
+              setAnchorEl,
+            });
+          }}
+        >
+          <Typography
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.5,
+              color: theme.palette.error.main,
+            }}
+          >
+            Remove
+          </Typography>
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            setOpenVideoPlayerModal(true);
+            setAnchorEl(null);
+          }}
+        >
+          <Typography>Show Video</Typography>
+        </MenuItem>
+      </Menu>
     </Grid2>
   );
 }
