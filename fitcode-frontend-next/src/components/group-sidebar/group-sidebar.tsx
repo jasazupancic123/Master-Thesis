@@ -12,7 +12,6 @@ import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import { useTheme } from '@mui/material/styles';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
@@ -25,21 +24,17 @@ import {
 import type { Group } from '@/controller/group/type/group.type';
 import { useAuth } from '@/store/auth-provider';
 import { useGroup } from '@/store/group-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
 
 export interface TrainerGroupSidebarProps {
   group: Group | null; // selected group
-  groups?: Group[]; // all groups, if needed
 }
 
 export default function GroupSidebar(props: TrainerGroupSidebarProps) {
   const { filter, setFilter } = useGroup();
 
-  const { group, groups } = props;
+  const { group } = props;
 
-  const screenSize = useScreenSize();
   const theme = useTheme();
-  const router = useRouter();
 
   const { logout } = useAuth();
   const [open, setOpen] = useState(false);

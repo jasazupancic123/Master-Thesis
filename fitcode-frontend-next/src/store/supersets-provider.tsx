@@ -11,8 +11,6 @@ type SupersetsContextInputProps = {
   setSelectedExercise: SetState<TrainingExercise | null>;
   menuExercise: TrainingExercise | null;
   setMenuExercise: SetState<TrainingExercise | null>;
-  anchorEl: HTMLElement | null;
-  setAnchorEl: SetState<HTMLElement | null>;
   openVideoPlayerModal: boolean;
   setOpenVideoPlayerModal: SetState<boolean>;
   openAddExerciseModal: boolean;
@@ -48,8 +46,6 @@ export function SupersetsProvider(
     setSelectedExercise,
     menuExercise,
     setMenuExercise,
-    anchorEl,
-    setAnchorEl,
     openVideoPlayerModal,
     setOpenVideoPlayerModal,
     openAddExerciseModal,
@@ -60,7 +56,6 @@ export function SupersetsProvider(
 
   const handleMenuClose = () => {
     setMenuExercise(null);
-    setAnchorEl(null);
   };
 
   const value: SupersetsContextProps = {
@@ -70,8 +65,6 @@ export function SupersetsProvider(
     setSelectedExercise,
     menuExercise,
     setMenuExercise,
-    anchorEl,
-    setAnchorEl,
     openVideoPlayerModal,
     setOpenVideoPlayerModal,
     openAddExerciseModal,

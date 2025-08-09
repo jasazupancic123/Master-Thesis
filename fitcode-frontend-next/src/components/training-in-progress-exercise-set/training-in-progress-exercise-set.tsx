@@ -58,7 +58,7 @@ export default function TrainingInProgressExerciseSet(
       )}
 
       {Array.isArray(exercise.params) &&
-        exercise.params.map((param, j) => {
+        exercise.params.map((param) => {
           const valueL = set.paramValuesL.find(
             (pv) => pv.field === param.field
           ) || {
@@ -87,7 +87,7 @@ export default function TrainingInProgressExerciseSet(
                 disableSets
                 param={param}
                 value={valueL}
-                onOptionChange={(newValue) => {}}
+                onOptionChange={() => {}}
                 onSubOptionChange={(newValue) => {
                   if (+newValue < 0 || param.field === 'volWorkSets') return;
 
@@ -157,7 +157,7 @@ export default function TrainingInProgressExerciseSet(
                   disableSets
                   param={param}
                   value={valueR}
-                  onOptionChange={(newValue) => {}}
+                  onOptionChange={() => {}}
                   onSubOptionChange={(newValue) => {
                     if (+newValue < 0 || param.field === 'volWorkSets') return;
 
@@ -236,7 +236,7 @@ export default function TrainingInProgressExerciseSet(
                 disableSets
                 param={param}
                 value={value!}
-                onOptionChange={(newValue) => {}}
+                onOptionChange={() => {}}
                 onSubOptionChange={(newValue) => {
                   if (+newValue < 0 || param.field === 'volWorkSets') return;
 

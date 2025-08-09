@@ -20,7 +20,6 @@ import type { TrainingInfo } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { useGroup } from '@/store/group-provider';
 import { useMain } from '@/store/main-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
 
 interface TrainingWeekDatesProps {
   week: dayjs.Dayjs[];
@@ -56,7 +55,6 @@ interface TrainingWeekDatesProps {
 export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
   const router = useRouter();
   const theme = useTheme();
-  const screenSize = useScreenSize();
 
   const { components, exercises: allExercises, methods } = useMain();
   const { group, cycle, trainings, setCycle, setTrainings } = useGroup();

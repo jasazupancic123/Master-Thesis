@@ -41,11 +41,10 @@ export default function TrainerCycleView() {
   const [cyclesForSelect, setCyclesForSelect] = useState<
     { label: string; value: string }[]
   >([]);
-  const [startIndex, setStartIndex] = useState(0);
 
   useEffect(() => {
     setCyclesForSelect(GroupService.getCyclesForSelect(group.cycles));
-  }, [startIndex, group.cycles]);
+  }, [group.cycles]);
 
   useEffect(() => {
     if (!cycle) return;
@@ -107,7 +106,7 @@ export default function TrainerCycleView() {
         setValue={(value) => {
           setCycle(group.cycles.find((c) => c.id === value) || undefined);
         }}
-        onArrowClick={(direction) => {}}
+        onArrowClick={() => {}}
         cycleView
         checkIsSameValue={(value: string) => {
           return value === (cycle?.id || '');
@@ -348,7 +347,6 @@ export default function TrainerCycleView() {
             {cycle.weeks.map((week, i) => (
               <Fragment key={i}>
                 <TrainingWeek
-                  index={i}
                   week={week.map(({ date }) => dayjs(date!))}
                   selected={selectedComponents}
                   cycleView

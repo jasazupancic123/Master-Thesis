@@ -5,7 +5,6 @@ import { useTheme } from '@mui/material';
 import type { SetState } from '@/common/type/state.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { useScreenSize } from '@/store/screen-size-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 interface TrainingComponentProps {
@@ -25,8 +24,6 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
     expandedExercisesView,
     setExpandedExercisesView,
   } = props;
-
-  const screenSize = useScreenSize();
 
   const theme = useTheme();
 

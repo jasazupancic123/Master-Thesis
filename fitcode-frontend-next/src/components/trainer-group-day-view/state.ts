@@ -16,7 +16,6 @@ import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import type { Workload } from '@/controller/training/type/workload.type';
-import type { User } from '@/controller/user/type/user.type';
 
 export async function handleUpdateMultipleTrainings(state: {
   setTrainings: SetState<TrainingInfo[]>;
@@ -30,22 +29,18 @@ export async function handleUpdateMultipleTrainings(state: {
   components: Component[];
   exercises: Exercise[];
   methods: Method[];
-  setSelectedAthlete: SetState<User | undefined>;
   setDetectedChanges: SetState<boolean>;
 }) {
   const {
     setTrainings,
     training,
     setTraining,
-    group,
-    cycle,
     router,
     customAthleteWorkloads,
     setCustomAthleteWorkloads,
     components,
     exercises,
     methods,
-    setSelectedAthlete,
     setDetectedChanges,
   } = state;
 
@@ -79,8 +74,6 @@ export async function handleUpdateMultipleTrainings(state: {
         })
       );
 
-      setSelectedAthlete(undefined);
-
       setCustomAthleteWorkloads([]);
 
       setDetectedChanges(false);
@@ -101,14 +94,8 @@ export function deleteSelectedExercises(
     setComponent: SetState<TrainingComponent | undefined>;
     setTraining: SetState<Training | undefined>;
     setSelectedExercises: SetState<TrainingExercise[]>;
-    selectedSubgroup: {
-      subgroup: Subgroup | null;
-      index: number;
-    } | null;
-    setSelectedSubgroup: SetState<{
-      subgroup: Subgroup | null;
-      index: number;
-    } | null>;
+    selectedSubgroup: Subgroup | null;
+    setSelectedSubgroup: SetState<Subgroup | null>;
     setDetectedChanges: SetState<boolean>;
   }
 ) {
@@ -129,8 +116,8 @@ export function deleteSelectedExercises(
 
   const newComponent = { ...component };
 
-  if (selectedSubgroup?.subgroup) {
-    const newSubgroup = { ...selectedSubgroup.subgroup };
+  if (selectedSubgroup) {
+    const newSubgroup = { ...selectedSubgroup };
     newSubgroup.supersets = (newSubgroup.supersets || []).map((s) => ({
       ...s,
       exercises: s.exercises.filter(
@@ -142,16 +129,10 @@ export function deleteSelectedExercises(
       (s) => s.exercises.length > 0
     );
 
-    setSelectedSubgroup((prev) =>
-      !prev
-        ? null
-        : {
-            ...prev,
-            subgroup: newSubgroup,
-          }
-    );
+    setSelectedSubgroup((prev) => (!prev ? null : newSubgroup));
+
     newComponent.subgroups = (newComponent.subgroups || []).map((sg) =>
-      sg.id === selectedSubgroup.subgroup?.id ? newSubgroup : sg
+      sg.id === selectedSubgroup.id ? newSubgroup : sg
     );
   } else {
     newComponent.supersets = newComponent.supersets?.map((s) => ({

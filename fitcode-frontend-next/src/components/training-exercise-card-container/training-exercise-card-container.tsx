@@ -50,8 +50,8 @@ export default function TrainingExerciseCardContainer(
   useEffect(() => {
     const newSetsNumbers = [] as { exerciseId: string; setsNumber: number }[];
 
-    if (selectedSubgroup?.subgroup) {
-      selectedSubgroup.subgroup.supersets.forEach((superset) => {
+    if (selectedSubgroup) {
+      selectedSubgroup.supersets.forEach((superset) => {
         superset.exercises.forEach((exercise) => {
           const setsNumber = exercise.sets.length;
           newSetsNumbers.push({
@@ -83,7 +83,7 @@ export default function TrainingExerciseCardContainer(
       return;
 
     setSetsNumbers(newSetsNumbers);
-  }, [selectedSubgroup?.subgroup]);
+  }, [selectedSubgroup]);
   // }, [selectedSubgroup?.subgroup, training, component]);
 
   useEffect(() => {

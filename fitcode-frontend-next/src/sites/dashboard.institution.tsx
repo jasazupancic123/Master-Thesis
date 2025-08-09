@@ -63,22 +63,11 @@ export default function DashboardInstitutionPage() {
   });
   const [hoveredUser, setHoveredUser] = useState<User | null>(null);
   const [editUser, setEditUser] = useState<User | null>(null);
-  const [editUserImageUrl, setEditUserImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [csvUserEmails, setCsvUserEmails] = useState<string[]>([]);
   const [isUploadingMembers, setIsUploadingMembers] = useState(false);
 
   const roles = profile.customClaims.role || [];
-
-  useEffect(() => {
-    if (!editUser) {
-      setEditUserImageUrl(null);
-      return;
-    }
-    setEditUserImageUrl(
-      members.find((m) => m.id === editUser.uid)?.profileImageUrl || null
-    );
-  }, [editUser]);
 
   useEffect(() => {
     const current =
@@ -205,7 +194,7 @@ export default function DashboardInstitutionPage() {
           : InstitutionController.removeTrainers(selectedInstitution.id, {
               trainerIds: [userId],
             }),
-      (institution) => {
+      () => {
         setSelectedInstitution((prev) => {
           if (!prev) return null;
           const updatedUsers = (
@@ -309,7 +298,7 @@ export default function DashboardInstitutionPage() {
           return selectedView === value;
         }}
         alertOnChange
-        onArrowClick={(direction) => {}}
+        onArrowClick={() => {}}
       />
     );
   };

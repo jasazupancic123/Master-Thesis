@@ -21,6 +21,44 @@ import type { TrainingInfo } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 
+function updateSupersets(
+  supersets: Superset[],
+  exercisesToAdd: TrainingExercise[]
+): Superset[] | null {
+  if (!Array.isArray(supersets)) supersets = [];
+  if (supersets.length === 0)
+    supersets.push({ exercises: [], color: COLOR[supersets.length] });
+
+  for (const superset of supersets) {
+    while (
+      superset.exercises.length < NUM_MAX_EXERCISES_PER_SUPERSET &&
+      exercisesToAdd.length > 0
+    ) {
+      const exerciseToAdd = exercisesToAdd.shift(); // remove from the front
+      if (exerciseToAdd) superset.exercises.push({ ...exerciseToAdd });
+    }
+
+    if (exercisesToAdd.length === 0)
+      break; // stop if no exercises left
+    else if (supersets.indexOf(superset) === supersets.length - 1) {
+      // if this is the last superset, add a new one if there are still exercises to add
+      if (supersets.length === NUM_MAX_SUPERSETS) {
+        toast.error(
+          'Added exercises exceed the maximum number of exercises allowed'
+        );
+        return null;
+      }
+
+      supersets.push({
+        exercises: [],
+        color: COLOR[supersets.length],
+      });
+    }
+  }
+
+  return supersets;
+}
+
 export function handleAddExerciseToSupersetComponent(
   input: {
     selectedExercisesIds: string[];
@@ -32,14 +70,8 @@ export function handleAddExerciseToSupersetComponent(
     setTrainings: SetState<TrainingInfo[]>;
     component: TrainingComponent;
     setComponent: SetStateNullable<TrainingComponent>;
-    selectedSubgroup: {
-      index: number;
-      subgroup: Subgroup | null;
-    } | null;
-    setSelectedSubgroup: SetState<{
-      subgroup: Subgroup | null;
-      index: number;
-    } | null>;
+    selectedSubgroup: Subgroup | null;
+    setSelectedSubgroup: SetState<Subgroup | null>;
     setSearch: SetState<string>;
     supersets: Superset[];
     setSupersets: SetState<Superset[]>;
@@ -136,80 +168,53 @@ export function handleAddExerciseToSupersetComponent(
   });
 
   if (component.id === WARMUP_ID || component.id === COOLDOWN_ID) {
+    // handle warmup or cooldown component, don't update prescribed stats
     const wOrC =
       component.id === WARMUP_ID
         ? { ...training.warmup }
         : { ...training.cooldown };
 
-    let supersets = !selectedSubgroup?.subgroup
+    const oldSupersets = !selectedSubgroup
       ? wOrC.supersets
-      : selectedSubgroup?.subgroup.supersets;
+      : selectedSubgroup?.supersets;
 
-    if (!Array.isArray(supersets)) supersets = [];
-    if (supersets.length === 0)
-      supersets.push({ exercises: [], color: COLOR[supersets.length] });
+    const supersets = updateSupersets(oldSupersets, exercisesToAdd);
 
-    for (const superset of supersets) {
-      while (
-        superset.exercises.length < NUM_MAX_EXERCISES_PER_SUPERSET &&
-        exercisesToAdd.length > 0
-      ) {
-        const exerciseToAdd = exercisesToAdd.shift(); // remove from the front
-        if (exerciseToAdd) superset.exercises.push({ ...exerciseToAdd });
-      }
+    if (!supersets) return;
 
-      if (exercisesToAdd.length === 0) break; // stop if no exercises left
-    }
-
-    if (!selectedSubgroup?.subgroup) {
-      const updatedWOrC = {
-        ...wOrC,
-        supersets: [...supersets],
-      };
-
-      const updatedTraining =
-        component.id === WARMUP_ID
-          ? { ...training, warmup: updatedWOrC }
-          : { ...training, cooldown: updatedWOrC };
-
-      const minimalTraining = TrainingService.trainingToInfo(updatedTraining);
-
-      setComponent(updatedWOrC);
-      setTraining(updatedTraining);
-      setTrainings((prev) =>
-        prev.map((t) => (t.id === minimalTraining.id ? minimalTraining : t))
-      );
-      setOpenAddExerciseModal(false);
-      setDetectedChanges(true);
-    } else {
+    const updatedWOrC = {
+      ...wOrC,
+    };
+    if (!selectedSubgroup) updatedWOrC.supersets = [...supersets];
+    else {
       const updatedSubgroup = {
-        ...selectedSubgroup.subgroup,
+        ...selectedSubgroup,
         supersets: [...supersets],
       };
 
-      const updatedSubgroups = [...component.subgroups];
-      updatedSubgroups[selectedSubgroup.index] = updatedSubgroup;
+      const updatedSubgroups = [
+        ...component.subgroups.map((s) =>
+          s.id === selectedSubgroup.id ? updatedSubgroup : s
+        ),
+      ];
 
-      const updatedWOrC = {
-        ...wOrC,
-        subgroups: updatedSubgroups,
-      };
-
-      const updatedTraining =
-        component.id === WARMUP_ID
-          ? { ...training, warmup: updatedWOrC }
-          : { ...training, cooldown: updatedWOrC };
-
-      const minimalTraining = TrainingService.trainingToInfo(updatedTraining);
-
-      setComponent(updatedWOrC);
-      setTraining(updatedTraining);
-      setTrainings((prev) =>
-        prev.map((t) => (t.id === minimalTraining.id ? minimalTraining : t))
-      );
-      setOpenAddExerciseModal(false);
-      setDetectedChanges(true);
+      updatedWOrC.subgroups = updatedSubgroups;
     }
+
+    const updatedTraining =
+      component.id === WARMUP_ID
+        ? { ...training, warmup: updatedWOrC }
+        : { ...training, cooldown: updatedWOrC };
+
+    const minimalTraining = TrainingService.trainingToInfo(updatedTraining);
+
+    setComponent(updatedWOrC);
+    setTraining(updatedTraining);
+    setTrainings((prev) =>
+      prev.map((t) => (t.id === minimalTraining.id ? minimalTraining : t))
+    );
+    setOpenAddExerciseModal(false);
+    setDetectedChanges(true);
     return;
   }
 
@@ -219,61 +224,27 @@ export function handleAddExerciseToSupersetComponent(
   );
 
   // last superset index
-  let supersets = selectedSubgroup?.subgroup?.supersets
-    ? [...selectedSubgroup.subgroup.supersets]
+  const oldSupersets = selectedSubgroup?.supersets
+    ? [...selectedSubgroup.supersets]
     : component
       ? component.supersets
       : training.components[trainingComponentIndex]?.supersets
         ? [...training.components[trainingComponentIndex].supersets]
         : [];
 
-  if (!Array.isArray(supersets)) supersets = [];
-  if (supersets.length === 0)
-    supersets.push({ exercises: [], color: COLOR[supersets.length] });
+  const supersets = updateSupersets(oldSupersets, exercisesToAdd);
 
-  for (const superset of supersets) {
-    while (
-      superset.exercises.length < NUM_MAX_EXERCISES_PER_SUPERSET &&
-      exercisesToAdd.length > 0
-    ) {
-      const exerciseToAdd = exercisesToAdd.shift(); // remove from the front
-      if (exerciseToAdd) superset.exercises.push({ ...exerciseToAdd });
-    }
-
-    if (exercisesToAdd.length === 0) break; // stop if no exercises left
-  }
-
-  // Keep creating new supersets until all exercises are added
-  while (exercisesToAdd.length > 0) {
-    if (supersets.length === NUM_MAX_SUPERSETS) {
-      return toast.error(
-        'Added exercises exceed the maximum number of exercises allowed'
-      );
-    }
-
-    const newSuperset: Superset = {
-      exercises: [],
-      color: COLOR[supersets.length],
-    };
-
-    while (
-      newSuperset.exercises.length < NUM_MAX_EXERCISES_PER_SUPERSET &&
-      exercisesToAdd.length > 0
-    ) {
-      const exerciseToAdd = exercisesToAdd.shift();
-      if (exerciseToAdd) newSuperset.exercises.push({ ...exerciseToAdd });
-    }
-
-    supersets.push(newSuperset);
-  }
+  if (!supersets) return;
 
   const updatedComponents = [...training.components];
-  if (!selectedSubgroup?.subgroup) {
+  if (!selectedSubgroup) {
     // update training component's supersets
-    updatedComponents[trainingComponentIndex] = {
+    const updatedComponent = {
       ...updatedComponents[trainingComponentIndex],
       supersets: [...supersets],
     };
+
+    updatedComponents[trainingComponentIndex] = { ...updatedComponent };
 
     const numberOfAvailableMembers =
       training.membersIds.length -
@@ -305,7 +276,6 @@ export function handleAddExerciseToSupersetComponent(
       })
     );
 
-    setDetectedChanges(true);
     const newTraining: Training = {
       ...training,
       components: updatedComponents,
@@ -314,28 +284,30 @@ export function handleAddExerciseToSupersetComponent(
 
     const minimalTraining = TrainingService.trainingToInfo(newTraining);
 
+    setComponent(updatedComponent);
     setTraining(newTraining);
     setTrainings((prev) =>
       prev.map((t) => (t.id === minimalTraining.id ? minimalTraining : t))
     );
+    setDetectedChanges(true);
     setOpenAddExerciseModal(false);
   } else {
     // update subgroup's future workload values
-    const prescribedStats = [...selectedSubgroup.subgroup.prescribedStats];
+    const prescribedStats = [...selectedSubgroup.prescribedStats];
     supersets.map((s) =>
       s.exercises.map((e) => {
         const { intensity, volume } = TrainingService.getAverageIntVol(e.sets);
         const found = prescribedStats.find((v) => v.exerciseId === e.id);
 
         if (found) {
-          found.numMembers = selectedSubgroup.subgroup!.membersIds.length;
+          found.numMembers = selectedSubgroup.membersIds.length;
           found.intensity = intensity;
           found.volume = volume;
         } else {
           prescribedStats.push({
             exerciseId: e.id,
             rootComponentId: component.component?.id || '',
-            numMembers: selectedSubgroup.subgroup!.membersIds.length,
+            numMembers: selectedSubgroup.membersIds.length,
             intensity,
             volume,
           });
@@ -345,25 +317,44 @@ export function handleAddExerciseToSupersetComponent(
 
     // update subgroup's supersets
     const updatedSubgroup = {
-      ...selectedSubgroup.subgroup,
+      ...selectedSubgroup,
       supersets: [...supersets],
       prescribedStats,
     };
 
-    const updatedSubgroups = [...component.subgroups];
-    updatedSubgroups[selectedSubgroup.index] = updatedSubgroup;
+    const updatedSubgroups = [
+      ...component.subgroups.map((s) =>
+        s.id === selectedSubgroup.id ? updatedSubgroup : s
+      ),
+    ];
 
     const updatedComponents = [...training.components];
-    updatedComponents[trainingComponentIndex] = {
+
+    const updatedComponent = {
       ...updatedComponents[trainingComponentIndex],
       subgroups: updatedSubgroups,
     };
 
+    updatedComponents[trainingComponentIndex] = { ...updatedComponent };
+
+    const newTraining: Training = {
+      ...training,
+      components: updatedComponents,
+      prescribedStats,
+    };
+
+    const minimalTraining = TrainingService.trainingToInfo(newTraining);
+
+    setComponent(updatedComponent);
+    setTraining(newTraining);
+    setTrainings((prev) =>
+      prev.map((t) => (t.id === minimalTraining.id ? minimalTraining : t))
+    );
     setDetectedChanges(true);
     setOpenAddExerciseModal(false);
-    setSelectedSubgroup({
-      index: selectedSubgroup.index,
-      subgroup: updatedSubgroup,
-    });
+
+    setDetectedChanges(true);
+    setOpenAddExerciseModal(false);
+    setSelectedSubgroup(updatedSubgroup);
   }
 }
