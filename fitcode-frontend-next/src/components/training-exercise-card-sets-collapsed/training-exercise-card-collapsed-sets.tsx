@@ -33,8 +33,7 @@ interface TrainingExerciseCardCollapsedSetsProps {
   exercise: TrainingExercise;
   expandedSetsView: boolean;
   setExpandedSetsView: SetState<boolean>;
-  supersetIndex: number;
-  i: number | undefined;
+  componentIndex: number | undefined;
 }
 
 export default function TrainingExerciseCardCollapsedSets(
@@ -42,7 +41,7 @@ export default function TrainingExerciseCardCollapsedSets(
 ) {
   const screenSize = useScreenSize();
 
-  const { exercise, supersetIndex, expandedSetsView, setExpandedSetsView, i } =
+  const { exercise, expandedSetsView, setExpandedSetsView, componentIndex } =
     props;
 
   const { setsNumbers, setSetsNumbers } = useSupersets();
@@ -80,10 +79,10 @@ export default function TrainingExerciseCardCollapsedSets(
 
   return (
     <Grid2
+      key={componentIndex}
       container
       spacing={1}
       columns={11}
-      key={i}
       px={screenSize.isSmallerThanLaptop ? 1 : 0}
     >
       <Grid2 size={1}>
@@ -288,6 +287,10 @@ export default function TrainingExerciseCardCollapsedSets(
                     <ExerciseParam
                       key={`${param.field}-${lOrR}`}
                       param={param}
+                      disableSets={
+                        selectedAthlete !== undefined &&
+                        param.field === ParamType.VolWorkSets
+                      }
                       value={
                         param.field === ParamType.VolWorkSets
                           ? lOrR === 'L'
@@ -353,7 +356,7 @@ export default function TrainingExerciseCardCollapsedSets(
                       onSubOptionChange={(newValue) => {
                         if (+newValue < 0) return;
 
-                        if (param.field === 'volWorkSets') {
+                        if (param.field === ParamType.VolWorkSets) {
                           if (
                             selectedExercises.length &&
                             selectedExercises.some((e) => e.id === exercise.id)
@@ -402,79 +405,99 @@ export default function TrainingExerciseCardCollapsedSets(
 
                         // update only selected athletes workloads
                         if (selectedAthlete) {
-                          for (const set of exercise.sets) {
-                            const existingWorkload =
-                              selectedAthleteWorkloads.futureWorkloads.find(
-                                (w) =>
-                                  w.componentId === component.id &&
-                                  w.exerciseId === exercise.id &&
-                                  w.supersetIndex === supersetIndex &&
-                                  w.setNumber === set.setNumber &&
-                                  w.userId === selectedAthlete.uid
+                          const exercisesToUpdate = selectedExercises.some(
+                            (ex) => ex.id === exercise.id
+                          )
+                            ? selectedExercises
+                            : [exercise];
+
+                          for (const selectedExercise of exercisesToUpdate) {
+                            const exerciseSupersetIndex = supersets.findIndex(
+                              (s) =>
+                                s.exercises.some(
+                                  (ex) => ex.id === selectedExercise.id
+                                )
+                            );
+
+                            if (exerciseSupersetIndex === -1) {
+                              toast.error(
+                                `Superset for exercise ${selectedExercise.exercise?.name || 'Unknown Exercise'} not found`
                               );
+                              return;
+                            }
 
-                            const newCustomWorkload =
-                              existingWorkload ||
-                              TrainingService.getPrescribedWorkload(set);
+                            for (const set of selectedExercise.sets) {
+                              const existingWorkload =
+                                selectedAthleteWorkloads.futureWorkloads.find(
+                                  (w) =>
+                                    w.componentId === component.id &&
+                                    w.exerciseId === selectedExercise.id &&
+                                    w.setNumber === set.setNumber &&
+                                    w.userId === selectedAthlete.uid
+                                );
 
-                            const fieldName =
-                              TrainingService.getPerscribedFieldName(
-                                param,
-                                lOrR as 'L' | 'R'
-                              );
+                              const newCustomWorkload =
+                                existingWorkload ||
+                                TrainingService.getPrescribedWorkload(set);
 
-                            // edit the field that was changed
-                            newCustomWorkload[fieldName] =
-                              +newValue as unknown as undefined;
+                              const fieldName =
+                                TrainingService.getPerscribedFieldName(
+                                  param,
+                                  lOrR as 'L' | 'R'
+                                );
 
-                            // add the new workload to the custom athlete workloads
-                            setCustomAthleteWorkloads((prev) => {
-                              const existingIndex = prev.findIndex(
-                                (w) =>
-                                  w.componentId === component.id &&
-                                  w.exerciseId === exercise.id &&
-                                  w.supersetIndex === supersetIndex &&
-                                  w.setNumber === set.setNumber &&
-                                  w.userId === selectedAthlete.uid
-                              );
+                              // edit the field that was changed
+                              newCustomWorkload[fieldName] =
+                                +newValue as unknown as undefined;
 
-                              if (existingIndex !== -1) {
-                                const newWorkloads = [...prev];
-                                newWorkloads[existingIndex] = {
-                                  ...newWorkloads[existingIndex],
-                                  [fieldName]:
-                                    +newValue as unknown as undefined,
-                                };
+                              // add the new workload to the custom athlete workloads
+                              setCustomAthleteWorkloads((prev) => {
+                                const existingIndex = prev.findIndex(
+                                  (w) =>
+                                    w.componentId === component.id &&
+                                    w.exerciseId === selectedExercise.id &&
+                                    w.setNumber === set.setNumber &&
+                                    w.userId === selectedAthlete.uid
+                                );
 
-                                return newWorkloads;
-                              }
+                                if (existingIndex !== -1) {
+                                  const newWorkloads = [...prev];
+                                  newWorkloads[existingIndex] = {
+                                    ...newWorkloads[existingIndex],
+                                    supersetIndex: exerciseSupersetIndex,
+                                    [fieldName]:
+                                      +newValue as unknown as undefined,
+                                  };
 
-                              // if not found, add a new workload
-                              return [
-                                ...prev,
-                                {
-                                  ...newCustomWorkload,
-                                  id: v4(),
-                                  componentId: component.id,
-                                  exerciseId: exercise.id,
-                                  supersetIndex: supersetIndex,
-                                  setNumber: set.setNumber,
-                                  userId: selectedAthlete.uid,
-                                  institutionId: undefined,
-                                  groupId: undefined,
-                                  cycleId: undefined,
-                                  trainingId: training.id,
-                                  status: SetStatus.NOT_STARTED,
-                                  notes: '',
-                                  createdAt: new Date(),
-                                  updatedAt: new Date(),
-                                  plannedAt: component.from,
-                                  deletedAt: undefined,
-                                },
-                              ];
-                            });
+                                  return newWorkloads;
+                                }
+
+                                // if not found, add a new workload
+                                return [
+                                  ...prev,
+                                  {
+                                    ...newCustomWorkload,
+                                    id: v4(),
+                                    componentId: component.id,
+                                    exerciseId: selectedExercise.id,
+                                    supersetIndex: exerciseSupersetIndex,
+                                    setNumber: set.setNumber,
+                                    userId: selectedAthlete.uid,
+                                    institutionId: undefined,
+                                    groupId: undefined,
+                                    cycleId: undefined,
+                                    trainingId: training.id,
+                                    status: SetStatus.NOT_STARTED,
+                                    notes: '',
+                                    createdAt: new Date(),
+                                    updatedAt: new Date(),
+                                    plannedAt: component.from,
+                                    deletedAt: undefined,
+                                  },
+                                ];
+                              });
+                            }
                           }
-
                           return;
                         }
 

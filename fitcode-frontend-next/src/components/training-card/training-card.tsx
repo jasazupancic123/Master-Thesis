@@ -41,7 +41,6 @@ export default function TrainingCard(props: TrainingCardProps) {
     component,
     setComponent,
     selectedAthlete,
-    setSelectedAthlete,
   } = useTrainerDayViewContext();
 
   const theme = useTheme();
@@ -55,31 +54,17 @@ export default function TrainingCard(props: TrainingCardProps) {
   const [datePickerOpen, setDatePickerOpen] = useState(false); // Keep it open
 
   useEffect(() => {
-    if (!component || !selectedSubgroup || !selectedSubgroup?.subgroup) return;
+    if (!component || !selectedSubgroup || !selectedSubgroup) return;
     // check if subgroup is still inside the component.subgroups, cuz the selected one might get deleted
     if (
       selectedSubgroup &&
       component.subgroups.findIndex(
-        (subgroup) => subgroup.id === selectedSubgroup?.subgroup?.id
+        (subgroup) => subgroup.id === selectedSubgroup.id
       ) === -1
     ) {
       setSelectedSubgroup(null);
     }
   }, [component]);
-
-  useEffect(() => {
-    if (!selectedSubgroup?.subgroup) {
-      setSelectedAthlete(undefined);
-      return;
-    }
-
-    if (
-      selectedSubgroup.subgroup.membersIds?.findIndex(
-        (member) => member === selectedAthlete?.uid
-      ) === -1
-    )
-      setSelectedAthlete(undefined);
-  }, [training, selectedSubgroup?.subgroup]);
 
   const isDateUnavailable = (date: Dayjs): boolean => {
     const thisCycleTrainings = trainings.filter((t) => t.cycleId === cycle?.id);
@@ -141,9 +126,9 @@ export default function TrainingCard(props: TrainingCardProps) {
                 >
                   {selectedAthlete.displayName}
                 </Typography>
-              ) : selectedSubgroup?.subgroup ? (
+              ) : selectedSubgroup ? (
                 <TextField
-                  value={selectedSubgroup.subgroup.name}
+                  value={selectedSubgroup.name}
                   variant="standard"
                   size="small"
                   fullWidth
@@ -179,15 +164,15 @@ export default function TrainingCard(props: TrainingCardProps) {
                   }}
                   onChange={(e) => {
                     setSelectedSubgroup((prev) => {
-                      if (!prev || !prev.subgroup) return null;
+                      if (!prev) return null;
                       const updatedSubgroup = {
-                        ...prev.subgroup,
+                        ...prev,
                         name: e.target.value,
                       };
                       const updatedComponent = {
                         ...component,
                         subgroups: component.subgroups.map((sg) =>
-                          sg.id === prev.subgroup?.id ? updatedSubgroup : sg
+                          sg.id === prev.id ? updatedSubgroup : sg
                         ),
                       };
                       setComponent(updatedComponent);
@@ -201,10 +186,7 @@ export default function TrainingCard(props: TrainingCardProps) {
                         };
                       });
 
-                      return {
-                        ...prev,
-                        subgroup: updatedSubgroup,
-                      };
+                      return updatedSubgroup;
                     });
                   }}
                 />

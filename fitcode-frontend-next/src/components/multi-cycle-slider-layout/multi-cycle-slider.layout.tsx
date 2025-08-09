@@ -43,9 +43,7 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
   const { group, setDetectedChanges } = useGroup();
 
   const [selectedYear, setSelectedYear] = useState(dayjs().year());
-  const [yearsForSelect, setYearsForSelect] = useState<
-    { label: string; value: string }[]
-  >(() => {
+  const [yearsForSelect] = useState<{ label: string; value: string }[]>(() => {
     const currentYear = dayjs().year();
     const yearsBefore = Array.from(
       { length: 2 },
@@ -165,11 +163,6 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
     });
   }, [selectedYear, sortedCycles]);
 
-  useEffect(() => {
-    if (!sliderRef.current) return;
-    const sliderBounds = sliderRef.current.getBoundingClientRect();
-  }, [sliderRef.current]); // Runs when the sliderRef is set
-
   const HorizontalItems = () => {
     return (
       <HorizontalItemsList
@@ -178,7 +171,7 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
         setValue={(value) => {
           setSelectedYear(parseInt(value, 10));
         }}
-        onArrowClick={(direction) => {}}
+        onArrowClick={() => {}}
         cycleView
         yearView
         checkIsSameValue={(value: string) => {
@@ -399,8 +392,6 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
             setSelectedGroup={setSelectedGroup}
             valuesReal={valuesReal}
             setValuesReal={setValuesReal}
-            cycles={cycles}
-            setCycles={setCycles}
             draggingIndex={draggingIndex}
             setDraggingIndex={setDraggingIndex}
             sliderRef={sliderRef}
@@ -408,7 +399,6 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
             sortedCycles={sortedCycles}
             yearStart={yearStart}
             yearEnd={yearEnd}
-            setSortedCycles={setSortedCycles}
             sliderProperties={sliderProperties}
           />
 

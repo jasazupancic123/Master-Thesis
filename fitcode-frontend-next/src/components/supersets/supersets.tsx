@@ -47,6 +47,7 @@ export default function Supersets(props: SupersetsProps) {
     setComponent,
     selectedSubgroup,
     setSelectedSubgroup,
+    setCustomAthleteWorkloads,
     setSearch,
     supersets,
     setSupersets,
@@ -75,7 +76,6 @@ export default function Supersets(props: SupersetsProps) {
   const [menuExercise, setMenuExercise] = useState<TrainingExercise | null>(
     null
   );
-  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
     setSelectedExercisesIds(
@@ -86,8 +86,7 @@ export default function Supersets(props: SupersetsProps) {
   }, [supersets, supersets.length]);
 
   useEffect(() => {
-    if (!selectedSubgroup?.subgroup?.supersets && !component)
-      setSelectedExercisesIds([]);
+    if (!selectedSubgroup && !component) setSelectedExercisesIds([]);
   }, [component, selectedSubgroup]);
 
   if (!component || !training) return null;
@@ -105,6 +104,7 @@ export default function Supersets(props: SupersetsProps) {
           supersets,
           setSupersets,
           setDetectedChanges,
+          setCustomAthleteWorkloads,
         })
       }
     >
@@ -117,8 +117,6 @@ export default function Supersets(props: SupersetsProps) {
           setSelectedExercise={setSelectedExercise}
           menuExercise={menuExercise}
           setMenuExercise={setMenuExercise}
-          anchorEl={anchorEl}
-          setAnchorEl={setAnchorEl}
           openVideoPlayerModal={openVideoPlayerModal}
           setOpenVideoPlayerModal={setOpenVideoPlayerModal}
           openAddExerciseModal={openAddExerciseModal}
@@ -128,7 +126,7 @@ export default function Supersets(props: SupersetsProps) {
         >
           {supersets &&
             supersets.map((superset, i) => (
-              <Superset key={i} superset={superset} i={i} />
+              <Superset key={i} superset={superset} supersetIndex={i} />
             ))}
         </SupersetsProvider>
 
@@ -223,33 +221,6 @@ export default function Supersets(props: SupersetsProps) {
           setSelectedExercisesIds={setSelectedExercisesIds}
           component={component}
         />
-      </MyModal>
-
-      {/* Video Player Modal */}
-      <MyModal
-        isOpen={openVideoPlayerModal}
-        setIsOpen={(open) => setOpenVideoPlayerModal(open)}
-        cancelText="Close"
-        onCancel={() => {
-          setSelectedExercise(null);
-          setOpenVideoPlayerModal(false);
-        }}
-      >
-        {selectedExercise?.exercise?.videoUrl ? (
-          <Box
-            component="video"
-            src={selectedExercise?.exercise?.videoUrl}
-            controls
-            sx={{
-              width: '100%', // Make it responsive
-              maxWidth: 600, // Limit max width
-              borderRadius: 2, // Optional rounded corners
-              boxShadow: 3, // Optional shadow
-            }}
-          />
-        ) : (
-          <Typography variant="body2">No video available</Typography>
-        )}
       </MyModal>
     </DragDropContext>
   );

@@ -10,7 +10,6 @@ import type { TrainingInfo } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 
 export type TrainingCycleViewWeekProps = TrainingCycleViewCommonProps & {
-  index: number;
   week: Dayjs[];
   selected?: Component[];
   setSelected?: SetState<Component[]>;

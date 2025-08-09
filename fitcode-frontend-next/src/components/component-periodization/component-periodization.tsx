@@ -246,7 +246,6 @@ export default function ComponentPeriodization(
             {cycle.weeks.map((week, i) => (
               <Fragment key={i}>
                 <TrainingWeek
-                  index={i}
                   trainingComponent={selectedComponent}
                   week={week.map(({ date }) => dayjs(date!))}
                   addTrainingComponent={() => {}}

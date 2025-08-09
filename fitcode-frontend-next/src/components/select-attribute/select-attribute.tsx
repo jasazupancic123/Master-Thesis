@@ -11,7 +11,7 @@ import type { Attribute } from '@/controller/attribute/type/attribute.type';
 export default function SelectAttribute(props: {
   attribute: Attribute;
   onChange: (field: string, value: string) => void;
-  initialValue?: string | Record<string, any>;
+  initialValue?: string | Record<string, unknown>;
   label?: boolean;
 }) {
   const { attribute, onChange, initialValue, label } = props;
