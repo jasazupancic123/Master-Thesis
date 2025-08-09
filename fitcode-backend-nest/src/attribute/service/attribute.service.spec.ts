@@ -11,7 +11,7 @@ import { FirebaseModule } from '@src/firebase/firebase.module';
 import type { Attribute } from '../entity/attribute.entity';
 import type { AttributeValue } from '../entity/attribute-value.entity';
 import { AttributeRepository } from '../repository/attribute.repository';
-import { AttributeService } from './attribute.service';
+import { AttributeService } from '../service/attribute.service';
 
 describe('AttributeService (unit)', () => {
   let service: AttributeService;
@@ -362,7 +362,7 @@ describe('AttributeService (unit)', () => {
     );
 
     expect(() => service.validate(invalidValues, attributes)).toThrow(
-      `Attribute "Category cannot have multiple values`,
+      `Attribute "Category" cannot have multiple values`,
     );
   });
 

@@ -65,7 +65,7 @@ describe('Get Exercises (e2e)', () => {
     institutionService = moduleFixture.get(InstitutionService);
 
     component = await componentService.create(generateComponentStub());
-    globalExercises = await exerciseService.createMany(global.admin, [
+    globalExercises = await exerciseService.upsertMany(global.admin, [
       generateExerciseStub({ componentIds: [component.id] }),
       generateExerciseStub({ componentIds: [component.id] }),
       generateExerciseStub({ componentIds: [component.id] }),
@@ -78,10 +78,10 @@ describe('Get Exercises (e2e)', () => {
     );
 
     [institution1Exercises, institution2Exercises] = await Promise.all([
-      exerciseService.createMany(institution1.manager, [
+      exerciseService.upsertMany(institution1.manager, [
         generateExerciseStub({ componentIds: [component.id] }),
       ]),
-      exerciseService.createMany(institution2.manager, [
+      exerciseService.upsertMany(institution2.manager, [
         generateExerciseStub({ componentIds: [component.id] }),
         generateExerciseStub({ componentIds: [component.id] }),
       ]),
@@ -184,7 +184,7 @@ describe('Get Exercises (e2e)', () => {
       ];
 
       const exerciseIds = (
-        await exerciseService.createMany(global.admin, exercises)
+        await exerciseService.upsertMany(global.admin, exercises)
       ).map((e) => e.id);
 
       const filters: [string, number][] = [
@@ -227,7 +227,7 @@ describe('Get Exercises (e2e)', () => {
       ];
 
       const exerciseIds = (
-        await exerciseService.createMany(institution1.manager, exercises)
+        await exerciseService.upsertMany(institution1.manager, exercises)
       ).map((e) => e.id);
 
       const filters: [string, number][] = [
@@ -332,7 +332,7 @@ describe('Get Exercises (e2e)', () => {
       ];
 
       const exerciseIds = (
-        await exerciseService.createMany(global.admin, exercises)
+        await exerciseService.upsertMany(global.admin, exercises)
       ).map((e) => e.id);
 
       const attributeValues = (await exerciseService.findAllGlobal()).flatMap(
@@ -467,7 +467,7 @@ describe('Get Exercises (e2e)', () => {
       ];
 
       const exerciseIds = (
-        await exerciseService.createMany(global.admin, exercises)
+        await exerciseService.upsertMany(global.admin, exercises)
       ).map((e) => e.id);
 
       const attributeValues = (await exerciseService.findAllGlobal()).flatMap(

@@ -54,7 +54,7 @@ export function updateExerciseAttributeValues(
     const paramIndex = (
       lOrR === 'L'
         ? exercise.sets[i].paramValuesL
-        : exercise.sets[i].paramValuesR
+        : exercise.sets[i].paramValuesR || []
     ).findIndex((pv) => pv.field === param.field);
     const newExercise = { ...exercise };
 
@@ -67,43 +67,38 @@ export function updateExerciseAttributeValues(
         ? {
             setNumber: set.setNumber,
             paramValuesR: set.paramValuesR,
-            paramValuesL: [...set.paramValuesL].map((param, index) => {
-              if (index === paramIndex && setIndex === k) {
-                return {
+            paramValuesL: [...set.paramValuesL].map(
+              (param, index) =>
+                ({
                   field: param.field,
                   selected: param.selected,
-                  value: newValue as string,
-                } as AttributeValue;
-              }
-              return {
-                field: param.field,
-                selected: param.selected,
-                value: param.value,
-              } as AttributeValue;
-            }),
+                  value:
+                    index === paramIndex && setIndex === k
+                      ? (newValue as string)
+                      : param.value,
+                }) as AttributeValue
+            ),
           }
         : {
             setNumber: set.setNumber,
-            paramValuesR: [...set.paramValuesR].map((param, index) => {
-              if (index === paramIndex && setIndex === k) {
-                return {
-                  field: param.field,
-                  selected: param.selected,
-                  value: newValue as string,
-                } as AttributeValue;
-              }
-              return {
-                field: param.field,
-                selected: param.selected,
-                value: param.value,
-              } as AttributeValue;
-            }),
+            paramValuesR: set.paramValuesR
+              ? [...set.paramValuesR].map(
+                  (param, index) =>
+                    ({
+                      field: param.field,
+                      selected: param.selected,
+                      value:
+                        index === paramIndex && setIndex === k
+                          ? (newValue as string)
+                          : param.value,
+                    }) as AttributeValue
+                )
+              : undefined,
             paramValuesL: set.paramValuesL,
           };
     });
 
-    const intensityVolumeValue =
-      TrainingService.getIntensityVolumeValues(updatedSets);
+    const intensityVolumeValue = TrainingService.getAverageIntVol(updatedSets);
 
     newExercise.sets = [...updatedSets];
     updateTraining(
@@ -139,7 +134,7 @@ export function updateExerciseAttributeValues(
       const paramIndex = (
         lOrR === 'L'
           ? selectedExercise.sets[setIndex].paramValuesL
-          : selectedExercise.sets[setIndex].paramValuesR
+          : selectedExercise.sets[setIndex].paramValuesR || []
       ).findIndex((pv) => pv.field === param.field);
 
       if (paramIndex === undefined) continue;
@@ -149,43 +144,39 @@ export function updateExerciseAttributeValues(
           ? {
               setNumber: set.setNumber,
               paramValuesR: set.paramValuesR,
-              paramValuesL: [...set.paramValuesL].map((param, index) => {
-                if (index === paramIndex && setIndex === k) {
-                  return {
+              paramValuesL: [...set.paramValuesL].map(
+                (param, index) =>
+                  ({
                     field: param.field,
                     selected: param.selected,
-                    value: newValue as string,
-                  } as AttributeValue;
-                }
-                return {
-                  field: param.field,
-                  selected: param.selected,
-                  value: param.value,
-                } as AttributeValue;
-              }),
+                    value:
+                      index === paramIndex && setIndex === k
+                        ? (newValue as string)
+                        : param.value,
+                  }) as AttributeValue
+              ),
             }
           : {
               setNumber: set.setNumber,
-              paramValuesR: [...set.paramValuesR].map((param, index) => {
-                if (index === paramIndex && setIndex === k) {
-                  return {
-                    field: param.field,
-                    selected: param.selected,
-                    value: newValue as string,
-                  } as AttributeValue;
-                }
-                return {
-                  field: param.field,
-                  selected: param.selected,
-                  value: param.value,
-                } as AttributeValue;
-              }),
+              paramValuesR: set.paramValuesR
+                ? [...set.paramValuesR].map(
+                    (param, index) =>
+                      ({
+                        field: param.field,
+                        selected: param.selected,
+                        value:
+                          index === paramIndex && setIndex === k
+                            ? (newValue as string)
+                            : param.value,
+                      }) as AttributeValue
+                  )
+                : undefined,
               paramValuesL: set.paramValuesL,
             };
       });
 
       const intensityVolumeValue =
-        TrainingService.getIntensityVolumeValues(updatedSets);
+        TrainingService.getAverageIntVol(updatedSets);
 
       selectedExercise.sets = [...updatedSets];
       updatedExericises.push(selectedExercise);

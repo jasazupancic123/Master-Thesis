@@ -7,10 +7,14 @@ import type { SetState } from '@/common/type/state.type';
 import { handleApiRequest } from '@/common/type/state.type';
 import { AttributeType } from '@/controller/attribute/enum/attribute-value.enum';
 import type { Attribute } from '@/controller/attribute/type/attribute.type';
+import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import type { Component } from '@/controller/component/type/component.type';
 import { ExerciseController } from '@/controller/exercise/exercise.controller';
 import { ExerciseService } from '@/controller/exercise/exercise.service';
-import type { Exercise } from '@/controller/exercise/type/exercise.type';
+import type {
+  Exercise,
+  UpsertManyExercises,
+} from '@/controller/exercise/type/exercise.type';
 import type { ExerciseAttributeValue } from '@/controller/exercise/type/exercise-attribute-value.type';
 import { DEFAULT_EXERCISE } from '@/sites/exercises.page';
 
@@ -151,6 +155,7 @@ export async function handleAddExercise(
       ExerciseController.create({
         name: input.name!,
         componentIds: input.componentIds!,
+        isBilateral: input.isBilateral || false,
         imageUrl: input.imageUrl,
         videoUrl: input.videoUrl,
         instruction: input.instruction,
@@ -324,29 +329,22 @@ export async function handleCsvFileUpload(
   const text = await file.text();
   const rows = text.split('\n').filter((row) => row);
 
-  const importedExercises: Exercise[] = rows.map((row, i) => {
-    const [name, componentSlug, videoUrl, imageUrl] = row.split(',');
-    const exercise = {
-      id: i.toString(),
-      name,
-      componentIds: [componentSlug],
-      ownerId: 'global',
-      imageUrl,
-      videoUrl,
-      instruction: undefined,
-      attributeValues: [] as ExerciseAttributeValue[],
-      valuesObject: {} as Record<string, any>,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    } as Exercise;
-    return exercise;
+  // ignore first row if it contains headers
+  if (rows[0].toLowerCase().includes('name')) rows.shift();
+
+  const importedExercises: (Exercise | null)[] = rows.map((row) => {
+    return getExerciseFromCsvRow(row);
   });
 
-  setImportedExercises(importedExercises);
+  const validExercises = importedExercises.filter(
+    (e) => e !== null
+  ) as Exercise[];
+
+  setImportedExercises(validExercises);
 }
 
-export async function handleCreateManyExercises(
-  input: Parameters<typeof ExerciseController.createMany>[0],
+export async function handleUpsertManyExercises(
+  input: UpsertManyExercises,
   state: {
     router: AppRouterInstance;
     setExercises: SetState<Exercise[]>;
@@ -356,12 +354,187 @@ export async function handleCreateManyExercises(
 
   handleApiRequest(
     router,
-    () => ExerciseController.createMany(input),
+    () => ExerciseController.upsertMany(input),
     (exercises) => {
-      setExercises((prev) => [...prev, ...exercises]);
+      setExercises((prev) =>
+        // if exercise already exists, update it, otherwise add it
+        [
+          ...prev.filter((e) => !exercises.map((ex) => ex.id).includes(e.id)),
+          ...exercises,
+        ]
+      );
       toast.success('Successfully imported exercises!');
     },
     undefined,
     'Failed to import exercises'
   );
+}
+
+function getExerciseFromCsvRow(row: string): Exercise | null {
+  const columns = row.split(',');
+  if (columns.length !== 21) {
+    toast.error(
+      `Invalid row format. Expected 21 columns, got ${columns.length}.`
+    );
+
+    return null;
+  }
+
+  const [
+    name,
+    componentSlug,
+    videoUrl,
+    imageUrl,
+    isBilateral,
+    instruction,
+    coordination,
+    muscle,
+    region,
+    equipment,
+    // attributes below are optional
+    coeff,
+    diagnosis,
+    endOpts,
+    loadingSide,
+    location,
+    method,
+    movDir,
+    pattern,
+    prescr,
+    priority,
+    sportTask,
+  ] = columns;
+
+  const attributeValues: AttributeValue[] = [
+    {
+      field: 'instruction',
+      selected: '',
+      value: instruction,
+    },
+    {
+      field: 'coordination',
+      selected: '',
+      value: commonService.object.toBoolean(coordination) ? 'true' : 'false',
+    },
+    {
+      field: 'muscle',
+      selected: muscle,
+      value: muscle,
+    },
+    {
+      field: 'region',
+      selected: region,
+      value: region,
+    },
+    {
+      field: 'equipment',
+      selected: getBeforeLastColon(equipment),
+      value: getAfterLastColon(equipment),
+    },
+  ];
+
+  if (coeff)
+    attributeValues.push({
+      field: 'coeff',
+      selected: '',
+      value: commonService.object.toNumber(coeff).toString(),
+    });
+
+  if (diagnosis)
+    attributeValues.push({
+      field: 'diagnosis',
+      selected: diagnosis,
+      value: diagnosis,
+    });
+
+  if (endOpts) {
+    const option = commonService.object.toNumber(endOpts).toString();
+    attributeValues.push({
+      field: 'endOpts',
+      selected: option,
+      value: option,
+    });
+  }
+
+  if (loadingSide)
+    attributeValues.push({
+      field: 'loadingSide',
+      selected: loadingSide,
+      value: loadingSide,
+    });
+
+  if (location)
+    attributeValues.push({
+      field: 'location',
+      selected: location,
+      value: location,
+    });
+
+  if (method)
+    attributeValues.push({
+      field: 'method',
+      selected: method,
+      value: method,
+    });
+
+  if (movDir)
+    attributeValues.push({
+      field: 'movDir',
+      selected: movDir,
+      value: movDir,
+    });
+
+  if (pattern)
+    attributeValues.push({
+      field: 'pattern',
+      selected: pattern,
+      value: pattern,
+    });
+
+  if (prescr)
+    attributeValues.push({
+      field: 'prescr',
+      selected: prescr,
+      value: prescr,
+    });
+
+  if (priority)
+    attributeValues.push({
+      field: 'priority',
+      selected: priority,
+      value: priority,
+    });
+
+  if (sportTask !== '\r')
+    attributeValues.push({
+      field: 'sportTask',
+      selected: sportTask,
+      value: sportTask,
+    });
+
+  if (!name || !componentSlug) {
+    toast.error('Name and component slug are required.');
+    return null;
+  }
+
+  return {
+    id: '',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ownerId: '',
+    valuesObject: {},
+    name,
+    componentIds: [componentSlug],
+    videoUrl,
+    imageUrl,
+    isBilateral: commonService.object.toBoolean(isBilateral),
+    attributeValues: attributeValues.map((av) => ({
+      ...av,
+      id: '',
+      exerciseId: '',
+      ownerId: '',
+      componentIds: [],
+      isBilateral: false,
+    })),
+  };
 }
