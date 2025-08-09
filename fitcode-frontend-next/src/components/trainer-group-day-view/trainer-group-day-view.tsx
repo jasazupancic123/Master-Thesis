@@ -13,10 +13,10 @@ import GroupTrainerDayViewTrainings from '../trainer-group-day-view-trainings/gr
 import VerticalLinesBorder from '../vertical-lines-border/vertical-lines-border';
 import {
   deleteSelectedExercises,
+  fetchWorkloads,
   handleUpdateMultipleTrainings,
 } from './state';
 import { CommonService } from '@/common/service/common.service';
-import type { Day } from '@/common/service/util/date.util';
 import { handleApiRequest } from '@/common/type/state.type';
 import TrainingMembers from '@/components/training-members/training-members';
 import { COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE } from '@/controller/training/constant/completed-future-workloads-default-value.constant';
@@ -48,6 +48,7 @@ export default function TrainerDayView() {
   } = useGroup();
 
   const {
+    day,
     training,
     setTraining,
     selectedPeriod,
@@ -64,7 +65,6 @@ export default function TrainerDayView() {
     selectedSubgroup,
   } = useTrainerDayViewContext();
 
-  const [day, setDay] = useState<Day>(commonService.date.getToday());
   const [week, setWeek] = useState<number>(1);
   const [days, setDays] = useState(
     commonService.date.getWeekDays().map(({ label, date }) => ({
@@ -169,50 +169,15 @@ export default function TrainerDayView() {
   }, [day, selectedPeriod]);
 
   useEffect(() => {
-    const fetchWorkloads = async () => {
-      if (!selectedAthlete) return;
-
-      const combinedComponents = training?.components;
-
-      if (!combinedComponents || !combinedComponents.length) {
-        setSelectedAthleteWorkloads(COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE);
-        return;
-      }
-
-      const uniqueExerciseIds = [] as string[];
-      combinedComponents.forEach((c) => {
-        c.supersets.forEach((s) => {
-          s.exercises.forEach((e) => {
-            if (!uniqueExerciseIds.includes(e.id)) uniqueExerciseIds.push(e.id);
-          });
-        });
-      });
-
-      if (!uniqueExerciseIds.length) {
-        setSelectedAthleteWorkloads(COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE);
-        return;
-      }
-
-      isSettingAthleteWorkloads.current = true;
-      handleApiRequest(
-        router,
-        () =>
-          TrainingController.findAthleteWorkloads(
-            training.id,
-            selectedAthlete.uid
-          ),
-        (workloads) => {
-          setSelectedAthleteWorkloads(workloads);
-          isSettingAthleteWorkloads.current = false;
-        },
-        undefined,
-        'Failed to fetch workloads'
-      );
-      isSettingAthleteWorkloads.current = false;
-    };
-
     // fetch only for selectedAthlete, group avg is already on training itself
-    if (selectedAthlete) fetchWorkloads();
+    if (selectedAthlete)
+      fetchWorkloads({
+        selectedAthlete,
+        training,
+        setSelectedAthleteWorkloads,
+        isSettingAthleteWorkloads,
+        router,
+      });
     else setSelectedAthleteWorkloads(COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE);
   }, [selectedAthlete]);
 
@@ -246,6 +211,9 @@ export default function TrainerDayView() {
                   exercises,
                   methods,
                   setDetectedChanges,
+                  selectedAthlete,
+                  setSelectedAthleteWorkloads,
+                  isSettingAthleteWorkloads,
                 })
               }
             >
@@ -346,6 +314,9 @@ export default function TrainerDayView() {
                     exercises,
                     methods,
                     setDetectedChanges,
+                    selectedAthlete,
+                    setSelectedAthleteWorkloads,
+                    isSettingAthleteWorkloads,
                   });
                 }}
               >
@@ -417,8 +388,6 @@ export default function TrainerDayView() {
         >
           {/* Header with day and week selection */}
           <GroupTrainerDayViewHeader
-            day={day}
-            setDay={setDay}
             days={days}
             setDays={setDays}
             week={week}
@@ -458,7 +427,7 @@ export default function TrainerDayView() {
         </Box>
         {/* Trainings for the day */}
         <Box maxWidth={MAX_WIDTH} mx="auto">
-          <GroupTrainerDayViewTrainings day={day} loading={loading} />
+          <GroupTrainerDayViewTrainings loading={loading} />
         </Box>
       </Box>
     </Box>

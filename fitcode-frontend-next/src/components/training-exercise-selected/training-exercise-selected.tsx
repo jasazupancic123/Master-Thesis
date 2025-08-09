@@ -186,7 +186,7 @@ export default function TrainignExerciseSelected(
                 width={`${percentageForChartBackground}%`}
                 height="100%"
                 sx={{
-                  backgroundColor: theme.palette.background.paper,
+                  backgroundColor: theme.palette.background.dark,
                   zIndex: 0,
                 }}
               />

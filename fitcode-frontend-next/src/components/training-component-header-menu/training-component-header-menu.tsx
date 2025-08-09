@@ -260,7 +260,7 @@ export default function TrainingComponentHeaderMenu(
           icon={null}
           displayEmpty
           iconSize={17}
-          items={allMethods}
+          items={allMethods.filter((m) => m.componentId === component.id)}
           itemKey="id"
           itemName="name"
           disabled={[WARMUP_ID, COOLDOWN_ID].includes(component.id)}

@@ -48,6 +48,7 @@ export default function DashboardEditAthleteModal(
   const router = useRouter();
 
   const { isOpen, setModal, editUser, setEditUser } = props;
+  const [editedUser, setEditedUser] = useState(false);
   const [editedProfile, setEditedProfile] = useState(false);
 
   const [profile, setProfile] = useState<UserEntity | undefined>(undefined);
@@ -68,6 +69,14 @@ export default function DashboardEditAthleteModal(
     setEditedProfile(true);
   }
 
+  function handleChangeUser<K extends keyof User>(key: K, value: User[K]) {
+    if (!editUser) return;
+
+    const newUser = { ...editUser, [key]: value };
+    setEditUser(newUser);
+    setEditedUser(true);
+  }
+
   return (
     <MyModal
       isOpen={isOpen}
@@ -77,23 +86,26 @@ export default function DashboardEditAthleteModal(
       onCancel={() => {
         setModal((prev) => ({ ...prev, edit_athlete: false }));
         setEditedProfile(false);
+        setEditedUser(false);
         setEditUser(null);
       }}
-      onConfirm={
-        editedProfile
-          ? () =>
-              updateUserProfile({
-                editUser,
-                router,
-                selectedInstitution,
-                profile,
-                setModal,
-                setEditedProfile,
-                setEditUser,
-                refetchMembers,
-              })
-          : undefined
-      }
+      onConfirm={() => {
+        if (editedProfile) {
+          updateUserProfile({
+            editUser,
+            router,
+            selectedInstitution,
+            profile,
+            setModal,
+            setEditedProfile,
+            setEditUser,
+            refetchMembers,
+          });
+        }
+        if (editUser && editedUser) {
+          // here logic to update user, need BE route for it
+        }
+      }}
       cancelText="Close"
     >
       <Box display="flex" flexDirection="column" gap={2}>
@@ -135,19 +147,11 @@ export default function DashboardEditAthleteModal(
           gap={DEFAULT_MARGIN}
         >
           <TextField
-            label={!profile?.firstName ? 'First Name' : undefined}
+            label={!editUser?.displayName ? 'Display Name' : undefined}
             variant="outlined"
             sx={{ flex: 1 }}
-            value={profile?.firstName || ''}
-            onChange={(e) => handleChangeProfile('firstName', e.target.value)}
-          />
-
-          <TextField
-            label={!profile?.lastName ? 'Last Name' : undefined}
-            variant="outlined"
-            sx={{ flex: 1 }}
-            value={profile?.lastName || ''}
-            onChange={(e) => handleChangeProfile('lastName', e.target.value)}
+            value={editUser?.displayName || ''}
+            onChange={(e) => handleChangeUser('displayName', e.target.value)}
           />
         </Box>
 

@@ -20,6 +20,7 @@ const commonService = CommonService.instance;
 const AuthContext = createContext<AuthContextType>({
   loading: true,
   user: null,
+  setUser: () => {},
   role: [],
   logout: () => Promise.resolve(),
   hasJustLoggedIn: false,
@@ -102,6 +103,7 @@ export const AuthProvider = ({ children }: ChildrenProps) => {
       value={{
         loading,
         user,
+        setUser,
         role,
         logout,
         hasJustLoggedIn,

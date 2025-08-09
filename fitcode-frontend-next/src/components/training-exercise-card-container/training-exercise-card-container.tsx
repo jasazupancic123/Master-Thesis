@@ -1,6 +1,6 @@
 'use client';
 
-import { isBefore } from 'date-fns';
+import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 
 import {
@@ -27,13 +27,16 @@ export default function TrainingExerciseCardContainer(
   props: TrainingExerciseCardContainerProps
 ) {
   const { selectedExercise, setsNumbers, setSetsNumbers } = useSupersets();
+
   const {
+    day,
     training,
     selectedAthlete,
     selectedAthleteWorkloads,
     component,
     selectedSubgroup,
   } = useTrainerDayViewContext();
+
   const { trainings } = useGroup();
 
   const { supersetIndex, exercise, superior, onAthleteView } = props;
@@ -88,7 +91,7 @@ export default function TrainingExerciseCardContainer(
 
   useEffect(() => {
     if (exercise.id !== selectedExercise?.id || !training) return;
-    // useEffect to init avg workloads
+    // useEffect to init avg workloads for chart
     if (selectedAthlete) {
       // use fetched data for selected athlete from api
       prepareSelectedAthleteAvgWorkloadsForChart(
@@ -116,26 +119,14 @@ export default function TrainingExerciseCardContainer(
 
     const newDataInRange = data.slice(range[0] - 1, range[1]);
 
-    const numberOfCompletedWorkloads = newDataInRange.filter((workload) =>
-      isBefore(workload.plannedAt, new Date())
-    ).length;
+    const todayIndex = newDataInRange.findIndex((d) =>
+      dayjs(d.plannedAt).isSame(day.date, 'day')
+    );
 
-    const numberOfTotalWorkloads = newDataInRange.length;
+    if (todayIndex === -1 || newDataInRange.length < 2) return;
 
-    let percentage;
-    if (newDataInRange.length === 1) {
-      percentage = newDataInRange[0].completed ? 100 : 0;
-    } else if (
-      newDataInRange.length === 2 &&
-      newDataInRange[0].completed &&
-      !newDataInRange[1].completed
-    ) {
-      percentage = 50;
-    } else {
-      percentage =
-        0.5 + // 0.5% offset so that the last completed one is also in dark background
-        ((numberOfCompletedWorkloads - 1) / (numberOfTotalWorkloads - 1)) * 100;
-    }
+    const percentage = (todayIndex / (newDataInRange.length - 1)) * 100;
+
     setPercentageForChartBackground(percentage);
   }, [range]);
 
