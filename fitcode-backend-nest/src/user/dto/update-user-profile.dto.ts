@@ -13,7 +13,6 @@ export class UpdateUserProfileDto extends PartialType(
     'profileImageUrl',
     'firstName',
     'lastName',
-    'phone',
     'birthDate',
   ] as const),
 ) {

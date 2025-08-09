@@ -53,7 +53,7 @@ export class MethodService {
     const {
       id,
       name,
-      targetId,
+      componentId,
       ability,
       intensity,
       attributes: limits,
@@ -74,7 +74,7 @@ export class MethodService {
     const data: Create<Method> = {
       id,
       name,
-      targetId,
+      componentId,
       ability,
       intensity,
       repetition,

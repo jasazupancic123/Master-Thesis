@@ -1122,17 +1122,17 @@ export function prepareGroupAvgWorkloadsForChart(
 }
 
 export function prepareSelectedAthleteAvgWorkloadsForChart(
-  workloads: CompletedFutureWorkloads,
+  selectedAthleteWorkloads: CompletedFutureWorkloads,
   exerciseId: string,
   setData: SetState<ChartWorkloadData[]>,
   setMax: SetState<number>,
   setRange: SetState<number[]>
 ) {
-  const completedWorkloadsFiltered = workloads.completedWorkloads
+  const completedWorkloadsFiltered = selectedAthleteWorkloads.completedWorkloads
     .filter((workload) => workload.exerciseId === exerciseId)
     .sort((a, b) => (isBefore(a.plannedAt, b.plannedAt) ? -1 : 1));
 
-  const futureWorkloadsFiltered = workloads.futureWorkloads
+  const futureWorkloadsFiltered = selectedAthleteWorkloads.futureWorkloads
     .filter((workload) => workload.exerciseId === exerciseId)
     .sort((a, b) => (isBefore(a.plannedAt, b.plannedAt) ? -1 : 1));
 

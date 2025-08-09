@@ -1,5 +1,6 @@
 import type { Dayjs } from 'dayjs';
 
+import type { Day } from '@/common/service/util/date.util';
 import type { GroupDateFilter } from '@/common/type/filter.type';
 import type { Pagination } from '@/common/type/paginate.type';
 import type { SetState, SetStateNullable } from '@/common/type/state.type';
@@ -49,6 +50,8 @@ export type GroupContextProps = GroupIdPageProps & {
 
 export type TrainerDayViewContextProps = {
   members: UserEntity[]; // group members
+  day: Day;
+  setDay: SetState<Day>;
   training: Training | undefined;
   setTraining: SetStateNullable<Training>;
   selectedPeriod: 'AM' | 'PM'; // selected period for the training
