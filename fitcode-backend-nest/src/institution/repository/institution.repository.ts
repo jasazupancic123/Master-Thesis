@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import {
   CollectionReference,
   DocumentReference,
   Query,
 } from 'firebase-admin/firestore';
 
+import { ChangeLogManager } from '@src/change-log/change-log.manager';
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { Create, FirestoreEntity, Update } from '@src/common/type/entity.type';
 import { RootFirestoreCollectionRepository } from '@src/common/type/firestore.type';
@@ -16,7 +17,11 @@ import { Institution } from '../entity/institution.entity';
 export class InstitutionRepository
   implements RootFirestoreCollectionRepository<Institution>
 {
-  constructor(private readonly firebaseService: FirebaseService) {}
+  constructor(
+    private readonly firebaseService: FirebaseService,
+    @Inject(Institution)
+    readonly changeLog: ChangeLogManager<Institution>,
+  ) {}
 
   async getDocs(
     query: (query: Query) => Query = (query) => query,
@@ -49,7 +54,10 @@ export class InstitutionRepository
       imageUrl: input.imageUrl,
     });
 
-    await this.doc(id).set(query);
+    const ref = this.doc(id);
+    this.changeLog.trackCreate(ref);
+    await ref.set(query);
+
     return id;
   }
 
@@ -62,11 +70,15 @@ export class InstitutionRepository
       imageUrl: input.imageUrl,
     });
 
-    await this.doc(id).update(query);
+    const ref = this.doc(id);
+    await this.changeLog.trackUpdate(ref);
+    await ref.update(query);
   }
 
   async deleteDoc(id: string) {
-    await this.doc(id).delete();
+    const ref = this.doc(id);
+    await this.changeLog.trackDelete(ref);
+    await ref.delete();
   }
 
   doc(id: string): DocumentReference {

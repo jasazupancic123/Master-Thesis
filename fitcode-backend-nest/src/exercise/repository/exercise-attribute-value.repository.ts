@@ -58,14 +58,14 @@ export class ExerciseAttributeValueRepository
       );
   }
 
-  async deleteAllByExercise(ref: ExerciseRef) {
+  async deleteAllByExercise(
+    ref: ExerciseRef,
+    batch?: FirebaseFirestore.WriteBatch,
+  ) {
     const values = await this.getAllByExercise(ref);
     await Promise.all(
       values.map((v) =>
-        this.deleteDoc({
-          ...ref,
-          exerciseAttributeValueId: v.id,
-        }),
+        this.deleteDoc({ ...ref, exerciseAttributeValueId: v.id }, batch),
       ),
     );
   }
@@ -93,8 +93,12 @@ export class ExerciseAttributeValueRepository
     await this.doc(ref).update(query);
   }
 
-  async deleteDoc(ref: ExerciseAttributeValueRef): Promise<void> {
-    await this.doc(ref).delete();
+  async deleteDoc(
+    ref: ExerciseAttributeValueRef,
+    batch?: FirebaseFirestore.WriteBatch,
+  ): Promise<void> {
+    if (batch) batch.delete(this.doc(ref));
+    else await this.doc(ref).delete();
   }
 
   doc(ref: ExerciseAttributeValueRef) {

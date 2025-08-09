@@ -307,7 +307,7 @@ export async function handleAddSubgroup(state: {
   const stats: TrainingExerciseAverageStats[] = [];
   for (const superset of component.supersets) {
     for (const exercise of superset.exercises) {
-      const intensityVolumeValue = TrainingService.getIntensityVolumeValues(
+      const intensityVolumeValue = TrainingService.getAverageIntVol(
         exercise.sets
       );
 

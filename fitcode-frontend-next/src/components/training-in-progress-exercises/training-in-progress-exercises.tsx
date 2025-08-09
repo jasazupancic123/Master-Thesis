@@ -36,15 +36,9 @@ export default function TrainingInProgressExercises(
 
   return selectedSuperset.exercises.map((exercise, i) => {
     exercise.exercise = exercises.find((ex) => ex.id === exercise.id);
+    if (!exercise.exercise) return null;
 
-    let isBilateral = false;
-    exercise.sets.forEach((set) => {
-      set.paramValuesL.forEach((param, j) => {
-        if (param.value !== set.paramValuesR[j].value) {
-          isBilateral = true;
-        }
-      });
-    });
+    const isBilateral = exercise.exercise?.isBilateral || false;
 
     return (
       <Box

@@ -104,8 +104,14 @@ export default function TrainingExerciseCardExpandedSets(
                   flexDirection="column"
                   gap={0.9}
                 >
-                  <LeftRightExerciseText key="L" title="L" />
-                  <LeftRightExerciseText key="R" title="R" />
+                  {exercise.exercise?.isBilateral ? (
+                    <>
+                      <LeftRightExerciseText title="L" />
+                      <LeftRightExerciseText title="R" />
+                    </>
+                  ) : (
+                    <LeftRightExerciseText title="" />
+                  )}
                 </Box>
               </Box>
             </Grid2>
@@ -137,10 +143,10 @@ export default function TrainingExerciseCardExpandedSets(
                     }
                   );
 
-                  if (!valueL || !valueR) {
-                    toast.error(`Invalid parameter field: ${param.field}`);
-                    return null;
-                  }
+                  if (!valueL || (exercise.exercise?.isBilateral && !valueR))
+                    return toast.error(
+                      `Invalid parameter field: ${param.field}`
+                    );
 
                   let min: number | undefined;
                   let max: number | undefined;
@@ -174,48 +180,36 @@ export default function TrainingExerciseCardExpandedSets(
                         (100 / exercise.params.length).toString() + '%'
                       }
                     >
-                      {['L', 'R'].map((lOrR) => (
-                        <ExerciseParam
-                          key={`${param.field}-${lOrR}`}
-                          showOptions={set.setNumber === 1 && lOrR === 'L'}
-                          disableOptions
-                          disableSets
-                          param={param}
-                          value={lOrR === 'L' ? valueL : valueR}
-                          onOptionChange={() => {}}
-                          min={min}
-                          max={max}
-                          onSubOptionChange={(newValue) => {
-                            if (+newValue < 0) return;
+                      {['L']
+                        .concat(exercise.exercise?.isBilateral ? ['R'] : [])
+                        .map((lOrR) => (
+                          <ExerciseParam
+                            key={`${param.field}-${lOrR}`}
+                            showOptions={set.setNumber === 1 && lOrR === 'L'}
+                            disableOptions
+                            disableSets
+                            param={param}
+                            value={
+                              lOrR === 'L'
+                                ? valueL
+                                : valueR
+                                  ? valueR
+                                  : undefined
+                            }
+                            onOptionChange={(_newValue) => {}}
+                            min={min}
+                            max={max}
+                            onSubOptionChange={(newValue) => {
+                              if (+newValue < 0) return;
 
-                            // update only selected athletes workloads
-                            if (selectedAthlete) {
-                              const exercisesToUpdate = selectedExercises.some(
-                                (ex) => ex.id === exercise.id
-                              )
-                                ? selectedExercises
-                                : [exercise];
-
-                              for (const selectedExercise of exercisesToUpdate) {
-                                const exerciseSupersetIndex =
-                                  supersets.findIndex((s) =>
-                                    s.exercises.some(
-                                      (ex) => ex.id === selectedExercise.id
-                                    )
-                                  );
-
-                                if (exerciseSupersetIndex === -1) {
-                                  toast.error(
-                                    `Superset for exercise ${selectedExercise.exercise?.name || 'Unknown Exercise'} not found`
-                                  );
-                                  return;
-                                }
-
+                              // update only selected athletes workloads
+                              if (selectedAthlete) {
                                 const existingWorkload =
                                   selectedAthleteWorkloads.futureWorkloads.find(
                                     (w) =>
                                       w.componentId === component.id &&
-                                      w.exerciseId === selectedExercise.id &&
+                                      w.exerciseId === exercise.id &&
+                                      w.supersetIndex === supersetIndex &&
                                       w.setNumber === set.setNumber &&
                                       w.userId === selectedAthlete.uid
                                   );
@@ -239,7 +233,8 @@ export default function TrainingExerciseCardExpandedSets(
                                   const existingIndex = prev.findIndex(
                                     (w) =>
                                       w.componentId === component.id &&
-                                      w.exerciseId === selectedExercise.id &&
+                                      w.exerciseId === exercise.id &&
+                                      w.supersetIndex === supersetIndex &&
                                       w.setNumber === set.setNumber &&
                                       w.userId === selectedAthlete.uid
                                   );
@@ -248,7 +243,6 @@ export default function TrainingExerciseCardExpandedSets(
                                     const newWorkloads = [...prev];
                                     newWorkloads[existingIndex] = {
                                       ...newWorkloads[existingIndex],
-                                      supersetIndex: exerciseSupersetIndex,
                                       [fieldName]:
                                         +newValue as unknown as undefined,
                                     };
@@ -263,8 +257,8 @@ export default function TrainingExerciseCardExpandedSets(
                                       ...newCustomWorkload,
                                       id: v4(),
                                       componentId: component.id,
-                                      exerciseId: selectedExercise.id,
-                                      supersetIndex: exerciseSupersetIndex,
+                                      exerciseId: exercise.id,
+                                      supersetIndex: supersetIndex,
                                       setNumber: set.setNumber,
                                       userId: selectedAthlete.uid,
                                       institutionId: undefined,
@@ -280,35 +274,35 @@ export default function TrainingExerciseCardExpandedSets(
                                     },
                                   ];
                                 });
+
+                                return;
                               }
 
-                              return;
-                            }
-
-                            // update only the changed exercise
-                            updateExerciseAttributeValues(
-                              {
-                                newValue,
-                                i,
-                                set,
-                                lOrR: lOrR as 'L' | 'R',
-                              },
-                              {
-                                selectedExercises,
-                                exercise,
-                                param,
-                                training,
-                                component,
-                                setTraining,
-                                supersets,
-                                setDetectedChanges,
-                                selectedSubgroup,
-                                setSelectedSubgroup,
-                              }
-                            );
-                          }}
-                        />
-                      ))}
+                              // update only the changed exercise
+                              updateExerciseAttributeValues(
+                                {
+                                  newValue,
+                                  i,
+                                  set,
+                                  lOrR: lOrR as 'L' | 'R',
+                                },
+                                {
+                                  selectedExercises,
+                                  exercise,
+                                  param,
+                                  training,
+                                  component,
+                                  setTraining,
+                                  supersets,
+                                  setDetectedChanges,
+                                  selectedSubgroup,
+                                  setSelectedSubgroup,
+                                  supersetIndex,
+                                }
+                              );
+                            }}
+                          />
+                        ))}
                     </Box>
                   );
                 })}

@@ -320,7 +320,7 @@ export default function TrainingComponentHeaderMenu(
                         return p;
                       }
                     }),
-                    paramValuesR: set.paramValuesR.map((p) => {
+                    paramValuesR: set.paramValuesR?.map((p) => {
                       let attributeRange = method?.attributes.find(
                         (ar) => ar.field === p.field
                       );
@@ -352,7 +352,7 @@ export default function TrainingComponentHeaderMenu(
                           };
                         }
                         return p;
-                      } catch (e) {
+                      } catch (_: unknown) {
                         return p;
                       }
                     }),

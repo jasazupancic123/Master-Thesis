@@ -80,12 +80,10 @@ describe('Update Exercise (e2e)', () => {
 
   describe('Update Exercise', () => {
     it('should fail if exercise does not exist', async () => {
-      const updateData = { name: 'Non-existent Exercise' };
-
       const response = await request(app.getHttpServer())
         .patch('/exercise/non-existent-id')
         .set('Authorization', `Bearer ${global.manager.token}`)
-        .send(updateData);
+        .send({ name: 'Non-existent Exercise' });
 
       expect(response.status).toBe(404);
     });
@@ -214,6 +212,8 @@ describe('Update Exercise (e2e)', () => {
             value: 'test',
             exerciseId: exercise.id,
             ownerId: institution.id,
+            isBilateral: false,
+            componentIds: [component.id],
           },
         ]);
       }

@@ -45,7 +45,6 @@ export const createUserWithRole = https.onCall(async (data, context) => {
           createdAt: admin.firestore.Timestamp.now(),
           updatedAt: admin.firestore.Timestamp.now(),
           deletedAt: null,
-          groupsIds: [],
         });
 
       return newUser;
@@ -123,7 +122,6 @@ export const createUserWithRole = https.onCall(async (data, context) => {
       createdAt: admin.firestore.Timestamp.now(),
       updatedAt: admin.firestore.Timestamp.now(),
       deletedAt: null,
-      groupsIds: [],
     });
 
     return newUser;

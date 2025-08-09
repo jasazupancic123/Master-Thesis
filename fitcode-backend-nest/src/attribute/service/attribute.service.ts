@@ -3,6 +3,7 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { CacheManagerService } from '@src/cache-manager/cache-manager.service';
 import { AttributeType } from '@src/common/enum/attribute-type.enum';
 import { Create } from '@src/common/type/entity.type';
+import { ValidateError } from '@src/common/type/validate.type';
 
 import { CACHE_KEY_ATTRIBUTES } from '../constant/cache.constant';
 import { Attribute } from '../entity/attribute.entity';
@@ -42,7 +43,11 @@ export class AttributeService {
     return cached ? cached : await this.repository.getDocs();
   }
 
-  validate(values: AttributeValue[], attributes: Attribute[]) {
+  validate(
+    values: AttributeValue[],
+    attributes: Attribute[],
+    onError?: (error: ValidateError) => void,
+  ): AttributeValue[] {
     const vals: AttributeValue[] = [];
 
     for (const attribute of attributes) {
@@ -54,18 +59,24 @@ export class AttributeService {
         attribute.required &&
         (attributeValues[0]?.value === null ||
           attributeValues[0]?.value === undefined)
-      )
-        throw new BadRequestException(
-          `Attribute "${attribute.name}" is required`,
-        );
+      ) {
+        const message = `Attribute "${attribute.name}" is required`;
+        if (onError) {
+          onError({ field: attribute.field, message });
+          return [];
+        } else throw new BadRequestException(message);
+      }
 
       if (
         attribute.type !== AttributeType.Multiselect &&
         attributeValues.length > 1
-      )
-        throw new BadRequestException(
-          `Attribute "${attribute.name} cannot have multiple values`,
-        );
+      ) {
+        const message = `Attribute "${attribute.name}" cannot have multiple values`;
+        if (onError) {
+          onError({ field: attribute.field, message });
+          return [];
+        } else throw new BadRequestException(message);
+      }
 
       for (const v of attributeValues) {
         if (attribute.required && (v.value === null || v.value === undefined))
@@ -73,66 +84,63 @@ export class AttributeService {
             `Attribute "${attribute.name}" is required`,
           );
 
+        let message = '';
         switch (attribute.type) {
           case AttributeType.String:
             if (typeof v.value !== 'string')
-              throw new BadRequestException(
-                `Value for attribute "${attribute.name}" must be a string`,
-              );
-
+              message = `Value for attribute "${attribute.name}" must be a string`;
             break;
           case AttributeType.Number:
             if (isNaN(+v.value))
-              throw new BadRequestException(
-                `Value for attribute "${attribute.name}" must be a number`,
-              );
-
+              message = `Value for attribute "${attribute.name}" must be a number`;
             break;
           case AttributeType.Boolean:
             if (v.value !== 'true' && v.value !== 'false')
-              throw new BadRequestException(
-                `Value for attribute "${attribute.name}" must be a boolean`,
-              );
-
+              message = `Value for attribute "${attribute.name}" must be a boolean`;
             break;
           case AttributeType.Select:
           case AttributeType.Multiselect:
-            if (!attribute.options || attribute.options.length === 0)
-              throw new BadRequestException(
-                `Attribute "${attribute.name}" has no valid options`,
-              );
+            if (!attribute.options || attribute.options.length === 0) {
+              message = `Attribute "${attribute.name}" has no valid options`;
+              break;
+            }
 
             const matchedAttribute = this.validateSelection(
               v.selected,
               attribute.options,
             ); // returns leaf attribute of options, so its not select or multiselect type anymore and we can recurse this validate function to check it again
 
-            if (!matchedAttribute)
-              throw new BadRequestException(
-                `Value "${v.selected}" for attribute "${attribute.name}" is not a valid option`,
-              );
+            if (!matchedAttribute) {
+              const options = attribute.options
+                .map((opt) => opt.field)
+                .join(', ');
+
+              message = `Value "${v.selected}" for attribute "${attribute.name}" is not a valid option. Valid options are: ${options}`;
+              break;
+            }
 
             // validate leafs for custom types
             switch (matchedAttribute.type) {
               case AttributeType.Number:
                 if (isNaN(+v.value))
-                  throw new BadRequestException(
-                    `Value for attribute "${attribute.name}" must be a number`,
-                  );
-
+                  message = `Value for attribute "${attribute.name}" must be a number`;
                 break;
               case AttributeType.Boolean:
                 if (v.value !== 'true' && v.value !== 'false')
-                  throw new BadRequestException(
-                    `Value for attribute "${attribute.name}" must be a boolean`,
-                  );
-
+                  message = `Value for attribute "${attribute.name}" must be a boolean`;
                 break;
             }
 
             break;
           default:
             break;
+        }
+
+        if (message) {
+          if (onError) {
+            onError({ field: attribute.field, message });
+            return [];
+          } else throw new BadRequestException(message);
         }
 
         vals.push(v);

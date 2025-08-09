@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 
 import type { SetState, SetStateNullable } from '@/common/type/state.type';
 import type { Attribute } from '@/controller/attribute/type/attribute.type';
+import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import type { CompletedFutureWorkloads } from '@/controller/training/type/completed-future-workloads.type';
 import type { ExerciseSet } from '@/controller/training/type/exercise-set.type';
 import type { IntensityVolumeValues } from '@/controller/training/type/intensity-volume-values.type';
@@ -387,7 +388,10 @@ export const getLAndRValues = (
     customAthleteWorkloads: Workload[];
     selectedAthlete?: User;
   }
-) => {
+): {
+  valueL: AttributeValue | null;
+  valueR: AttributeValue | null;
+} => {
   const { set, param, setIndex, paramIndex } = input;
   const {
     training,
@@ -397,7 +401,8 @@ export const getLAndRValues = (
     selectedAthlete,
   } = state;
 
-  let valueL, valueR;
+  let valueL: AttributeValue | null = null;
+  let valueR: AttributeValue | null = null;
 
   // find the custom workload for the selected athlete
   const foundCustomFutureWorkload = customAthleteWorkloads.find(
@@ -457,7 +462,7 @@ export const getLAndRValues = (
       value: exercise.sets.length.toString(),
     };
 
-    valueR = exercise.sets[setIndex].paramValuesR.find(
+    valueR = exercise.sets[setIndex].paramValuesR?.find(
       (pv) => pv.field === param.field
     ) || {
       field: param.field,

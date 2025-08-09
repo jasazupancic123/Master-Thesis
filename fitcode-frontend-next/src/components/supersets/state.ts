@@ -161,7 +161,7 @@ export function handleAddExerciseToSupersetComponent(
         ? Array.from({ length: 3 }, (_, i) => ({
             setNumber: i + 1,
             paramValuesL: paramValues,
-            paramValuesR: paramValues,
+            ...(exercise.isBilateral && { paramValuesR: paramValues }),
           }))
         : [],
     };
@@ -257,10 +257,9 @@ export function handleAddExerciseToSupersetComponent(
     const prescribedStats = [...training.prescribedStats];
     supersets.map((s) =>
       s.exercises.map((e) => {
-        const { intensity, volume } = TrainingService.getIntensityVolumeValues(
-          e.sets
-        );
+        const { intensity, volume } = TrainingService.getAverageIntVol(e.sets);
         const found = prescribedStats.find((v) => v.exerciseId === e.id);
+
         if (found) {
           found.numMembers = numberOfAvailableMembers;
           found.intensity = intensity;
@@ -297,10 +296,9 @@ export function handleAddExerciseToSupersetComponent(
     const prescribedStats = [...selectedSubgroup.prescribedStats];
     supersets.map((s) =>
       s.exercises.map((e) => {
-        const { intensity, volume } = TrainingService.getIntensityVolumeValues(
-          e.sets
-        );
+        const { intensity, volume } = TrainingService.getAverageIntVol(e.sets);
         const found = prescribedStats.find((v) => v.exerciseId === e.id);
+
         if (found) {
           found.numMembers = selectedSubgroup.membersIds.length;
           found.intensity = intensity;

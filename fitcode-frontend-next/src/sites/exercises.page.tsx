@@ -12,11 +12,11 @@ import React, { useEffect, useState } from 'react';
 
 import {
   handleAddExercise,
-  handleCreateManyExercises,
   handleCsvFileUpload,
   handleDeleteExercise,
   handlePaginateExercises,
   handleUpdateExercise,
+  handleUpsertManyExercises,
 } from '@/app/(trainer)/dashboard/exercises/state';
 import {
   COOLDOWN_ID,
@@ -41,6 +41,7 @@ import { useScreenSize } from '@/store/screen-size-provider';
 export const DEFAULT_EXERCISE: Partial<Exercise> = {
   name: '',
   componentIds: [],
+  isBilateral: false,
   valuesObject: {},
 };
 
@@ -314,16 +315,18 @@ export default function ExercisesPage() {
           Delete exercise?
         </Typography>
       </MyModal>
+
       <MyModal
         isOpen={modal.import}
         setIsOpen={(open) => setModal((prev) => ({ ...prev, import: open }))}
         width={screenSize.isMobile ? undefined : 500}
         onConfirm={() => {
-          handleCreateManyExercises(
+          handleUpsertManyExercises(
             {
               exercises: importedExercises.map((exercise) => ({
                 name: exercise.name,
                 componentIds: exercise.componentIds,
+                isBilateral: exercise.isBilateral,
                 imageUrl: exercise.imageUrl,
                 videoUrl: exercise.videoUrl,
                 instruction: exercise.instruction,
