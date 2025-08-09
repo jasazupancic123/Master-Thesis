@@ -157,7 +157,7 @@ export default function TrainingInProgressExerciseSet(
                   disableSets
                   param={param}
                   value={valueR}
-                  onOptionChange={(newValue) => {}}
+                  onOptionChange={() => {}}
                   onSubOptionChange={(newValue) => {
                     if (+newValue < 0 || param.field === 'volWorkSets') return;
 

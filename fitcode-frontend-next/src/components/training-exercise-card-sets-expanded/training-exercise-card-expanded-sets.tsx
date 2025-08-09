@@ -22,6 +22,7 @@ interface TrainingExerciseCarExpandedSetsProps {
   exercise: TrainingExercise;
   expandedSetsView: boolean;
   setExpandedSetsView: SetState<boolean>;
+  supersetIndex: number;
 }
 
 export default function TrainingExerciseCardExpandedSets(
@@ -47,7 +48,8 @@ export default function TrainingExerciseCardExpandedSets(
   const { setDetectedChanges } = useGroup();
   const { setTraining } = useTrainerDayViewContext();
 
-  const { exercise, expandedSetsView, setExpandedSetsView } = props;
+  const { exercise, expandedSetsView, setExpandedSetsView, supersetIndex } =
+    props;
 
   if (!training || !component) return null;
 
@@ -297,7 +299,6 @@ export default function TrainingExerciseCardExpandedSets(
                                   setDetectedChanges,
                                   selectedSubgroup,
                                   setSelectedSubgroup,
-                                  supersetIndex,
                                 }
                               );
                             }}
