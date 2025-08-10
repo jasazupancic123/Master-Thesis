@@ -234,10 +234,10 @@ describe('validateSupersets', () => {
             ],
           },
         ],
+        componentId: 'strength',
         intensity: '100%',
         tempo: '1',
         recovery: '60',
-        targetId: 'power',
       },
       {
         id: 'm2',
@@ -255,10 +255,10 @@ describe('validateSupersets', () => {
             options: [{ field: 'set', defaultValue: 5, min: 1, max: 10 }],
           },
         ],
+        componentId: 'strength',
         intensity: '100%',
         tempo: '1',
         recovery: '60',
-        targetId: 'power',
       },
     ] as Method[];
 
