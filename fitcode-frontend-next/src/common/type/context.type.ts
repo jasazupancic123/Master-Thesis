@@ -36,7 +36,7 @@ export type AuthContextType = {
   user: User | null;
   setUser: SetState<User | null>;
   role: UserRole[];
-  logout: () => Promise<void>;
+  logout: (redirect?: boolean) => Promise<void>;
   hasJustLoggedIn: boolean;
   setHasJustLoggedIn: (value: boolean) => void;
   profile: UserEntity | undefined;

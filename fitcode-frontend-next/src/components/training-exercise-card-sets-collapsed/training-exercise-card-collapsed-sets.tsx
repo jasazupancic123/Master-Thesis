@@ -169,7 +169,7 @@ export default function TrainingExerciseCardCollapsedSets(
               if (setNumber === undefined || setNumber === null) return null;
 
               const method = methods.find((m) => m.id === component.methodId);
-              
+
               const attributeRange = method?.attributes
                 ?.map((a) =>
                   a.options?.find((o) => o.field === valueL.selected)
@@ -218,12 +218,11 @@ export default function TrainingExerciseCardCollapsedSets(
                           min={min}
                           max={max}
                           onOptionChange={(newValue) => {
-                            // Recompute min/max *now* so we don't use stale values
                             const attributeRangeFresh = method?.attributes
                               ?.map((a) =>
                                 a.options?.find((o) => o.field === newValue)
                               )
-                              .find(Boolean); // first matching option across attributes, or undefined
+                              .find(Boolean);
 
                             const { min: curMin, max: curMax } = getMinMax(
                               {

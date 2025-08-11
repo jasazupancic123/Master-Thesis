@@ -89,8 +89,8 @@ export default function TrainingsInitializer({ children }: ChildrenProps) {
     init();
   }, []);
 
-  if (!state) return <Alert type="loading" />;
   if (unauthorized) return <Alert type="unauthorized" />;
+  if (!state) return <Alert type="loading" />;
 
   return <TrainingProvider {...state}>{children}</TrainingProvider>;
 }

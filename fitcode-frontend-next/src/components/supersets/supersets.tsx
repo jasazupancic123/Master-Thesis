@@ -12,13 +12,13 @@ import { NUM_MAX_SUPERSETS } from '../trainer-day-view/constant';
 import { onDragEnd } from '../trainer-day-view/state';
 import { handleAddExerciseToSupersetComponent } from './state';
 import type { SetState } from '@/common/type/state.type';
+import { VolWorkSetType } from '@/controller/component/enum/param.enum';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useGroup } from '@/store/group-provider';
 import { useMain } from '@/store/main-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { SupersetsProvider } from '@/store/supersets-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
-import { VolWorkSetType } from '@/controller/component/enum/param.enum';
 
 interface SupersetsProps {
   openAddExerciseModal: boolean;

@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import MyModal from '../modal/modal';
 import SelectInput from '../select-input/select-input';
 import { AFTER_SETS, MAIN_SETS } from '../trainer-day-view/constant';
+import { onMethodChange } from './state';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
@@ -24,7 +25,6 @@ import { useGroup } from '@/store/group-provider';
 import { useMain } from '@/store/main-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
-import { onMethodChange } from './state';
 
 interface TrainingComponentExpandedProps {
   training: Training;

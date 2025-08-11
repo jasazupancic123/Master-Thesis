@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 
 import Logo from '../logo/logo';
 import { LINK_SIGN_IN } from '@/common/constant/navigation.constant';
+import { useAuth } from '@/store/auth-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 
 interface AlertProps {
@@ -15,6 +16,7 @@ export default function Alert(props: AlertProps) {
   const { type } = props;
 
   const screenSize = useScreenSize();
+  const { logout } = useAuth();
   return (
     <Box
       display="flex"
@@ -54,6 +56,7 @@ export default function Alert(props: AlertProps) {
           }}
           variant="contained"
           onClick={() => {
+            logout(false);
             redirect(LINK_SIGN_IN.href);
           }}
         >

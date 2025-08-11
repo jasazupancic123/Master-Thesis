@@ -1,4 +1,4 @@
-import { CopyAll, Delete, Save } from '@mui/icons-material';
+import { CopyAll, Save } from '@mui/icons-material';
 import { IconButton, Tooltip } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
@@ -11,11 +11,7 @@ import { MAX_WIDTH } from '../trainer-day-view/constant';
 import GroupTrainerDayViewHeader from '../trainer-group-day-view-header/trainer-group-day-view-header';
 import GroupTrainerDayViewTrainings from '../trainer-group-day-view-trainings/group-trainer-day-view-trainings';
 import VerticalLinesBorder from '../vertical-lines-border/vertical-lines-border';
-import {
-  deleteSelectedExercises,
-  fetchWorkloads,
-  handleUpdateMultipleTrainings,
-} from './state';
+import { fetchWorkloads, handleUpdateMultipleTrainings } from './state';
 import { CommonService } from '@/common/service/common.service';
 import { handleApiRequest } from '@/common/type/state.type';
 import TrainingMembers from '@/components/training-members/training-members';
@@ -60,9 +56,6 @@ export default function TrainerDayView() {
     customAthleteWorkloads,
     setCustomAthleteWorkloads,
     isSettingAthleteWorkloads,
-    selectedExercises,
-    setSelectedExercises,
-    selectedSubgroup,
   } = useTrainerDayViewContext();
 
   const [week, setWeek] = useState<number>(1);
@@ -226,40 +219,12 @@ export default function TrainerDayView() {
               mx: 0,
               m: screenSize.isSmallerThanLaptop ? 0 : undefined,
               p: screenSize.isSmallerThanLaptop ? 0 : undefined,
+              mr: screenSize.isSmallerThanLaptop ? 1 : 0,
               cursor: 'pointer',
             }}
           >
             <CopyAll fontSize="small" />
           </IconButton>
-
-          <Tooltip title="Delete selected exercises" placement="bottom">
-            <IconButton
-              sx={{
-                m: screenSize.isSmallerThanLaptop ? 0 : undefined,
-                p: screenSize.isSmallerThanLaptop ? 0 : undefined,
-                cursor: 'pointer',
-              }}
-              onClick={() => {
-                deleteSelectedExercises(
-                  {
-                    selectedExercises,
-                  },
-                  {
-                    component,
-                    training,
-                    setComponent,
-                    setTraining,
-                    setSelectedExercises,
-                    selectedSubgroup,
-                    setSelectedSubgroup,
-                    setDetectedChanges,
-                  }
-                );
-              }}
-            >
-              <Delete fontSize="small" />
-            </IconButton>
-          </Tooltip>
         </Box>
       )}
       <Box
@@ -279,7 +244,7 @@ export default function TrainerDayView() {
             alignItems="center"
             sx={{
               position: 'absolute',
-              right: screenSize.isSmallerThanLaptop ? 2 : 10,
+              right: screenSize.isSmallerThanLaptop ? 6 : 10,
               top: screenSize.isSmallerThanLaptop ? -38 : -43,
               zIndex: 1300,
             }}
@@ -342,35 +307,6 @@ export default function TrainerDayView() {
             >
               <CopyAll fontSize="small" />
             </IconButton>
-
-            <Tooltip title="Delete selected exercises" placement="bottom">
-              <IconButton
-                sx={{
-                  m: screenSize.isSmallerThanLaptop ? 0 : undefined,
-                  p: screenSize.isSmallerThanLaptop ? 0 : undefined,
-                  cursor: 'pointer',
-                }}
-                onClick={() => {
-                  deleteSelectedExercises(
-                    {
-                      selectedExercises,
-                    },
-                    {
-                      component,
-                      training,
-                      setComponent,
-                      setTraining,
-                      setSelectedExercises,
-                      selectedSubgroup,
-                      setSelectedSubgroup,
-                      setDetectedChanges,
-                    }
-                  );
-                }}
-              >
-                <Delete fontSize="small" />
-              </IconButton>
-            </Tooltip>
           </Box>
         )}
 

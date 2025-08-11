@@ -838,6 +838,7 @@ export function handleDeleteSuperset(
     setTrainings: SetState<TrainingInfo[]>;
     setDetectedChanges: SetState<boolean>;
     setCustomAthleteWorkloads: SetState<Workload[]>;
+    setSelectedExercises: SetState<TrainingExercise[]>;
   }
 ) {
   const { index } = input;
@@ -852,6 +853,7 @@ export function handleDeleteSuperset(
     setTrainings,
     setDetectedChanges,
     setCustomAthleteWorkloads,
+    setSelectedExercises,
   } = state;
 
   if (!component || !training) return;
@@ -883,6 +885,10 @@ export function handleDeleteSuperset(
         s.id === selectedSubgroup.id ? updatedSubgroup : s
       ),
     };
+
+    setSelectedExercises((prev) =>
+      prev.filter((e) => !exercisesToDelete.some((ex) => ex.id === e.id))
+    );
 
     setSelectedSubgroup(updatedSubgroup);
 
@@ -917,6 +923,10 @@ export function handleDeleteSuperset(
       ...component,
       supersets: updatedSupersets,
     };
+
+    setSelectedExercises((prev) =>
+      prev.filter((e) => !exercisesToDelete.some((ex) => ex.id === e.id))
+    );
 
     setComponent(updatedComponent);
 
