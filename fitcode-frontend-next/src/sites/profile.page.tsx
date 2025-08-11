@@ -15,6 +15,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
+import type { User } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
@@ -35,6 +36,7 @@ const DEFAULT_MARGIN = 1;
 export default function ProfilePage() {
   const {
     user,
+    setUser,
     profile: profileGlobal,
     setProfile: setProfileGlobal,
   } = useAuth();
@@ -46,48 +48,66 @@ export default function ProfilePage() {
     ...profileGlobal,
   } as UserEntity);
 
+  const [updatedProfile, setUpdatedProfile] = useState(false);
+  const [updatedUser, setUpdatedUser] = useState(false);
+
   function handleChangeProfile<K extends keyof UserEntity>(
     key: K,
     value: UserEntity[K]
   ) {
     const newProfile = { ...profile, [key]: value };
     setProfile(newProfile as UserEntity);
+    setUpdatedProfile(true);
+  }
+
+  function handleChangeUser<K extends keyof User>(key: K, value: User[K]) {
+    if (!user) return;
+
+    const newUser = { ...user, [key]: value };
+    setUser(newUser);
+    setUpdatedUser(true);
   }
 
   async function handleSaveProfile() {
-    if (!profile) return;
-    const {
-      sport,
-      level,
-      gender,
-      profileImageUrl,
-      firstName,
-      lastName,
-      phone,
-      birthDate,
-    } = profile;
+    if (updatedProfile) {
+      if (!profile) return;
+      const {
+        sport,
+        level,
+        gender,
+        profileImageUrl,
+        firstName,
+        lastName,
+        phone,
+        birthDate,
+      } = profile;
 
-    handleApiRequest(
-      router,
-      () =>
-        UserController.updateProfile({
-          sport,
-          level,
-          gender,
-          profileImageUrl,
-          firstName,
-          lastName,
-          phone,
-          birthDate,
-          userId: profile.id,
-        }),
-      (_) => {
-        setProfileGlobal(profile);
-        toast.success('Profile updated successfully');
-      },
-      undefined,
-      'Failed to update profile'
-    );
+      handleApiRequest(
+        router,
+        () =>
+          UserController.updateProfile({
+            sport,
+            level,
+            gender,
+            profileImageUrl,
+            firstName,
+            phone,
+            lastName,
+            birthDate,
+            userId: profile.id,
+          }),
+        (_) => {
+          setProfileGlobal(profile);
+          toast.success('Profile updated successfully');
+        },
+        undefined,
+        'Failed to update profile'
+      );
+    }
+
+    if (updatedUser) {
+      // logic here
+    }
   }
 
   if (!user) return null;
@@ -154,19 +174,11 @@ export default function ProfilePage() {
           gap={DEFAULT_MARGIN}
         >
           <TextField
-            label={!profile.firstName ? 'First Name' : undefined}
+            label={!user.displayName ? 'Display Name' : undefined}
             variant="outlined"
             sx={{ flex: 1 }}
-            value={profile?.firstName}
-            onChange={(e) => handleChangeProfile('firstName', e.target.value)}
-          />
-
-          <TextField
-            label={!profile.lastName ? 'Last Name' : undefined}
-            variant="outlined"
-            sx={{ flex: 1 }}
-            value={profile?.lastName}
-            onChange={(e) => handleChangeProfile('lastName', e.target.value)}
+            value={user?.displayName}
+            onChange={(e) => handleChangeUser('displayName', e.target.value)}
           />
         </Box>
 

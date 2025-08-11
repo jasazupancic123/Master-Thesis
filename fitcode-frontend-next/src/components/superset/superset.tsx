@@ -33,6 +33,7 @@ export default function Superset(props: SupersetComponentProps) {
     supersets,
     selectedSubgroup,
     setSelectedSubgroup,
+    setSelectedExercises,
     setCustomAthleteWorkloads,
   } = useTrainerDayViewContext();
 
@@ -94,6 +95,7 @@ export default function Superset(props: SupersetComponentProps) {
                     setTrainings,
                     setDetectedChanges,
                     setCustomAthleteWorkloads,
+                    setSelectedExercises,
                   }
                 )
               }
@@ -155,6 +157,7 @@ export default function Superset(props: SupersetComponentProps) {
                     setTrainings,
                     setDetectedChanges,
                     setCustomAthleteWorkloads,
+                    setSelectedExercises,
                   }
                 )
               }

@@ -14,6 +14,7 @@ import type { Training } from './type/training.type';
 import type { TrainingInfo } from './type/training.type';
 import type { TrainingComponentInfo } from './type/training-component.type';
 import type { TrainingComponent } from './type/training-component.type';
+import type { TrainingExercise } from './type/training-exercise.type';
 import type { TrainingExerciseAverageStats } from './type/training-exercise-average-stats.type';
 import type { PrescribedWorkload } from './type/workload-value.type';
 import {
@@ -26,6 +27,9 @@ function isTrainingComponent(
 ): item is TrainingComponent {
   return 'supersets' in item;
 }
+
+type PWKey = keyof PrescribedWorkload;
+type Triple = readonly [PWKey, PWKey, PWKey];
 
 export class TrainingService {
   static mapData<T extends Training | TrainingInfo>(
@@ -164,55 +168,210 @@ export class TrainingService {
     };
   }
 
-  static getPrescribedWorkload(prescribedSet: ExerciseSet): PrescribedWorkload {
-    const { paramValuesL, paramValuesR } = prescribedSet;
-    const volWork1L = paramValuesL.find((p) => p.field === ParamType.VolWork1);
-    const volWork1R = paramValuesR?.find((p) => p.field === ParamType.VolWork1);
-    const volWork2L = paramValuesL.find((p) => p.field === ParamType.VolWork2);
-    const volWork2R = paramValuesR?.find((p) => p.field === ParamType.VolWork2);
-    const volRecL = paramValuesL.find((p) => p.field === ParamType.VolRec1);
-    const volRecR = paramValuesR?.find((p) => p.field === ParamType.VolRec1);
-    const intWork1L = paramValuesL.find((p) => p.field === ParamType.IntWork1);
-    const intWork1R = paramValuesR?.find((p) => p.field === ParamType.IntWork1);
-    const intWork2L = paramValuesL.find((p) => p.field === ParamType.IntWork2);
-    const intWork2R = paramValuesR?.find((p) => p.field === ParamType.IntWork2);
-    const intRecL = paramValuesL.find((p) => p.field === ParamType.IntRec1);
-    const intRecR = paramValuesR?.find((p) => p.field === ParamType.IntRec1);
+  private static getFieldNames(field: string): Triple | undefined {
+    switch (field) {
+      case ParamType.VolWork1:
+        return [
+          'volWork1Type',
+          'prescribedVolWork1ValueL',
+          'prescribedVolWork1ValueR',
+        ];
+      case ParamType.VolWork2:
+        return [
+          'volWork2Type',
+          'prescribedVolWork2ValueL',
+          'prescribedVolWork2ValueR',
+        ];
+      case ParamType.VolRec1:
+        return [
+          'volRecType',
+          'prescribedVolRecValueL',
+          'prescribedVolRecValueR',
+        ];
+      case ParamType.IntWork1:
+        return [
+          'intWork1Type',
+          'prescribedIntWork1ValueL',
+          'prescribedIntWork1ValueR',
+        ];
+      case ParamType.IntWork2:
+        return [
+          'intWork2Type',
+          'prescribedIntWork2ValueL',
+          'prescribedIntWork2ValueR',
+        ];
+      case ParamType.IntRec1:
+        return [
+          'intRecType',
+          'prescribedIntRecValueL',
+          'prescribedIntRecValueR',
+        ];
+      default:
+        return undefined;
+    }
+  }
 
-    return {
-      volWork1Type: this.parseSelected<VolType>(volWork1L),
-      prescribedVolWork1ValueL: this.parseValue(volWork1L) as number,
-      prescribedVolWork1ValueR: volWork1R
-        ? (this.parseValue(volWork1R) as number)
-        : undefined,
-      volWork2Type: this.parseSelected<VolType>(volWork2L),
-      prescribedVolWork2ValueL: this.parseValue(volWork2L) as number,
-      prescribedVolWork2ValueR: volWork2R
-        ? (this.parseValue(volWork2R) as number)
-        : undefined,
-      volRecType: this.parseSelected<VolType>(volRecL),
-      prescribedVolRecValueL: this.parseValue(volRecL) as number,
-      prescribedVolRecValueR: volRecR
-        ? (this.parseValue(volRecR) as number)
-        : undefined,
-      intWork1Type: this.parseSelected<IntType>(intWork1L),
-      prescribedIntWork1ValueL: this.parseValue(intWork1L),
-      prescribedIntWork1ValueR: intWork1R
-        ? this.parseValue(intWork1R)
-        : undefined,
-      intWork2Type: this.parseSelected<IntType>(intWork2L),
-      prescribedIntWork2ValueL: this.parseValue(intWork2L),
-      prescribedIntWork2ValueR: intWork2R
-        ? this.parseValue(intWork2R)
-        : undefined,
-      intRecType: this.parseSelected<IntType>(intRecL),
-      prescribedIntRecValueL: this.parseValue(intRecL),
-      prescribedIntRecValueR: intRecR ? this.parseValue(intRecR) : undefined,
-    };
+  static getPrescribedWorkload(
+    exerciseToUpdate: TrainingExercise,
+    prescribedSet: ExerciseSet,
+    baseIsUnilatCurrentIsBilat = false
+  ): PrescribedWorkload {
+    /*
+      if base is unilat, it only updates L values and if the current exercise is billat,
+      then update L and R to the unilat's L
+    */
+    const paramValuesLToUpdate = exerciseToUpdate.sets[0].paramValuesL;
+    const paramValuesRToUpdate = exerciseToUpdate.sets[0].paramValuesR;
+
+    const prescribedValuesL = prescribedSet.paramValuesL;
+    const prescribedValuesR = prescribedSet.paramValuesR;
+
+    // paramValuesLToUpdate -> ['ref', 'eff', 'time']
+    // prescribedValuesL -> ['ref', 'kg', 'eff', 'time']
+
+    let workload: PrescribedWorkload = {};
+
+    // update L values and if baseIsUnilatCurrentIsBilat is true, then also R values
+    for (const updateParamValueL of paramValuesLToUpdate) {
+      const prescribedParamValueL = prescribedValuesL.find(
+        (p) => p.selected === updateParamValueL.selected
+      );
+      if (!prescribedParamValueL) continue;
+
+      const field = updateParamValueL.field;
+
+      const fieldNames = this.getFieldNames(field);
+      if (!fieldNames) continue;
+
+      const [typeField, valueLField, valueRField] = fieldNames; // all PWKey
+
+      workload = {
+        ...workload,
+        [typeField]: typeField.includes('int')
+          ? this.parseSelected<IntType>(prescribedParamValueL)
+          : this.parseSelected<VolType>(prescribedParamValueL),
+      };
+      workload = {
+        ...workload,
+        [valueLField]: this.parseValue(prescribedParamValueL) as number,
+      };
+      workload = {
+        ...workload,
+        [valueRField]: baseIsUnilatCurrentIsBilat
+          ? (this.parseValue(prescribedParamValueL) as number)
+          : undefined,
+      };
+    }
+
+    // already updated both L and R values, no need to update R values separately
+    if (baseIsUnilatCurrentIsBilat) return workload;
+
+    // update R values
+    if (paramValuesRToUpdate && prescribedValuesR) {
+      for (const updateParamValueR of paramValuesRToUpdate) {
+        const prescribedParamValueR = prescribedValuesR.find(
+          (p) => p.selected === updateParamValueR.selected
+        );
+        if (!prescribedParamValueR) continue;
+
+        const field = updateParamValueR.field;
+
+        const fieldNames = this.getFieldNames(field);
+        if (!fieldNames) continue;
+
+        const [typeField, valueLField, valueRField] = fieldNames; // all PWKey
+
+        workload = {
+          ...workload,
+          [valueRField]: baseIsUnilatCurrentIsBilat
+            ? (this.parseValue(prescribedParamValueR) as number)
+            : undefined,
+        };
+      }
+    }
+
+    return workload;
+
+    if (!exerciseToUpdate) {
+      const { paramValuesL, paramValuesR } = prescribedSet;
+      const volWork1L = paramValuesL.find(
+        (p) => p.field === ParamType.VolWork1
+      );
+      const volWork1R = paramValuesR?.find(
+        (p) => p.field === ParamType.VolWork1
+      );
+      const volWork2L = paramValuesL.find(
+        (p) => p.field === ParamType.VolWork2
+      );
+      const volWork2R = paramValuesR?.find(
+        (p) => p.field === ParamType.VolWork2
+      );
+      const volRecL = paramValuesL.find((p) => p.field === ParamType.VolRec1);
+      const volRecR = paramValuesR?.find((p) => p.field === ParamType.VolRec1);
+      const intWork1L = paramValuesL.find(
+        (p) => p.field === ParamType.IntWork1
+      );
+      const intWork1R = paramValuesR?.find(
+        (p) => p.field === ParamType.IntWork1
+      );
+      const intWork2L = paramValuesL.find(
+        (p) => p.field === ParamType.IntWork2
+      );
+      const intWork2R = paramValuesR?.find(
+        (p) => p.field === ParamType.IntWork2
+      );
+      const intRecL = paramValuesL.find((p) => p.field === ParamType.IntRec1);
+      const intRecR = paramValuesR?.find((p) => p.field === ParamType.IntRec1);
+
+      return {
+        volWork1Type: this.parseSelected<VolType>(volWork1L),
+        prescribedVolWork1ValueL: this.parseValue(volWork1L) as number,
+        prescribedVolWork1ValueR: baseIsUnilatCurrentIsBilat
+          ? (this.parseValue(volWork1L) as number)
+          : volWork1R
+            ? (this.parseValue(volWork1R) as number)
+            : undefined,
+        volWork2Type: this.parseSelected<VolType>(volWork2L),
+        prescribedVolWork2ValueL: this.parseValue(volWork2L) as number,
+        prescribedVolWork2ValueR: baseIsUnilatCurrentIsBilat
+          ? (this.parseValue(volWork2L) as number)
+          : volWork2R
+            ? (this.parseValue(volWork2R) as number)
+            : undefined,
+        volRecType: this.parseSelected<VolType>(volRecL),
+        prescribedVolRecValueL: this.parseValue(volRecL) as number,
+        prescribedVolRecValueR: baseIsUnilatCurrentIsBilat
+          ? (this.parseValue(volRecL) as number)
+          : volRecR
+            ? (this.parseValue(volRecR) as number)
+            : undefined,
+        intWork1Type: this.parseSelected<IntType>(intWork1L),
+        prescribedIntWork1ValueL: this.parseValue(intWork1L),
+        prescribedIntWork1ValueR: baseIsUnilatCurrentIsBilat
+          ? this.parseValue(intWork1L)
+          : intWork1R
+            ? this.parseValue(intWork1R)
+            : undefined,
+        intWork2Type: this.parseSelected<IntType>(intWork2L),
+        prescribedIntWork2ValueL: this.parseValue(intWork2L),
+        prescribedIntWork2ValueR: baseIsUnilatCurrentIsBilat
+          ? this.parseValue(intWork2L)
+          : intWork2R
+            ? this.parseValue(intWork2R)
+            : undefined,
+        intRecType: this.parseSelected<IntType>(intRecL),
+        prescribedIntRecValueL: this.parseValue(intRecL),
+        prescribedIntRecValueR: baseIsUnilatCurrentIsBilat
+          ? this.parseValue(intRecL)
+          : intRecR
+            ? this.parseValue(intRecR)
+            : undefined,
+      };
+    }
   }
 
   static getPerscribedFieldName(
-    param: Attribute,
+    param: Attribute | AttributeValue,
     leftOrRight: 'L' | 'R'
   ): keyof PrescribedWorkload {
     let perscribedFieldName;

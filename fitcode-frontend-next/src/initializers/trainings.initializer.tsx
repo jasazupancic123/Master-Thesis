@@ -48,17 +48,14 @@ export default function TrainingsInitializer({ children }: ChildrenProps) {
           })
         );
 
-        const compareDate =
-          dayjs().hour() < 12
-            ? dayjs().startOf('day')
-            : dayjs().set('hour', 12);
+        const compareDate = dayjs().startOf('day');
 
         // sort by ascending date
         const plannedTrainings = mappedTrainings
           .filter((t) => {
             if (
               dayjs(t.from).isAfter(compareDate) ||
-              dayjs(t.from).isSame(compareDate)
+              dayjs(t.from).isSame(compareDate, 'day')
             ) {
               return t;
             }
@@ -92,8 +89,8 @@ export default function TrainingsInitializer({ children }: ChildrenProps) {
     init();
   }, []);
 
-  if (!state) return <Alert type="loading" />;
   if (unauthorized) return <Alert type="unauthorized" />;
+  if (!state) return <Alert type="loading" />;
 
   return <TrainingProvider {...state}>{children}</TrainingProvider>;
 }

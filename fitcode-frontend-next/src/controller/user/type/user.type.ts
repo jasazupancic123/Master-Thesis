@@ -10,9 +10,9 @@ export type UserEntity = BaseEntity & {
   level?: SportLevel;
   gender?: Gender;
   profileImageUrl?: string;
+  phone?: string;
   firstName?: string;
   lastName?: string;
-  phone?: string;
   birthDate?: Date;
 };
 
@@ -23,6 +23,7 @@ export interface User {
   emailVerified: boolean;
   displayName?: string;
   customClaims: CustomClaims;
+  phoneNumber?: string;
 }
 
 export type AddAthlete = {

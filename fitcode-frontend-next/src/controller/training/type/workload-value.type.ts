@@ -4,28 +4,28 @@ export type WorkloadValue = PrescribedWorkload & CompletedWorkload;
 
 export type PrescribedWorkload = {
   volWork1Type?: VolType;
-  prescribedVolWork1ValueL?: number;
-  prescribedVolWork1ValueR?: number;
+  prescribedVolWork1ValueL?: number | undefined;
+  prescribedVolWork1ValueR?: number | undefined;
 
   volWork2Type?: VolType;
-  prescribedVolWork2ValueL?: number;
-  prescribedVolWork2ValueR?: number;
+  prescribedVolWork2ValueL?: number | undefined;
+  prescribedVolWork2ValueR?: number | undefined;
 
   volRecType?: VolType;
-  prescribedVolRecValueL?: number;
-  prescribedVolRecValueR?: number;
+  prescribedVolRecValueL?: number | undefined;
+  prescribedVolRecValueR?: number | undefined;
 
   intWork1Type?: IntType;
-  prescribedIntWork1ValueL?: number;
-  prescribedIntWork1ValueR?: number;
+  prescribedIntWork1ValueL?: number | undefined;
+  prescribedIntWork1ValueR?: number | undefined;
 
   intWork2Type?: IntType;
-  prescribedIntWork2ValueL?: number;
-  prescribedIntWork2ValueR?: number;
+  prescribedIntWork2ValueL?: number | undefined;
+  prescribedIntWork2ValueR?: number | undefined;
 
   intRecType?: IntType;
-  prescribedIntRecValueL?: number;
-  prescribedIntRecValueR?: number;
+  prescribedIntRecValueL?: number | undefined;
+  prescribedIntRecValueR?: number | undefined;
 };
 
 export type CompletedWorkload = {
