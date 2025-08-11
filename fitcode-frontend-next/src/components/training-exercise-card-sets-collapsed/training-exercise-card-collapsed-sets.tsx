@@ -169,22 +169,16 @@ export default function TrainingExerciseCardCollapsedSets(
               if (setNumber === undefined || setNumber === null) return null;
 
               const method = methods.find((m) => m.id === component.methodId);
-              const attributeRange = method?.attributes.find(
-                (a) => a.field === param.field
-              );
+              
+              const attributeRange = method?.attributes
+                ?.map((a) =>
+                  a.options?.find((o) => o.field === valueL.selected)
+                )
+                .find(Boolean);
 
               const { min, max } = getMinMax(
-                {
-                  exercise,
-                  attributeRange,
-                  valueL,
-                  setNumber,
-                },
-                {
-                  selectedExercises,
-                  setsNumbers,
-                  setSetsNumbers,
-                }
+                { exercise, attributeRange, valueL, setNumber },
+                { selectedExercises, setsNumbers, setSetsNumbers }
               );
 
               return (
@@ -192,112 +186,123 @@ export default function TrainingExerciseCardCollapsedSets(
                   key={param.field}
                   flexBasis={(100 / exercise.params.length).toString() + '%'}
                 >
-                  {['L']
-                    .concat(exercise.exercise?.isBilateral ? ['R'] : [])
-                    .map((lOrR) => (
-                      <ExerciseParam
-                        key={`${param.field}-${lOrR}`}
-                        param={param}
-                        value={
-                          param.field === ParamType.VolWorkSets
-                            ? lOrR === 'L'
-                              ? ({
-                                  field: valueL.field,
-                                  selected: valueL.selected,
-                                  value: setNumber.toString(),
-                                } as AttributeValue)
-                              : valueR
+                  {['L', ...(exercise.exercise?.isBilateral ? ['R'] : [])].map(
+                    (lOrR) => {
+                      return (
+                        <ExerciseParam
+                          key={`${param.field}-${lOrR}`}
+                          param={param}
+                          value={
+                            param.field === ParamType.VolWorkSets
+                              ? lOrR === 'L'
                                 ? ({
-                                    field: valueR.field,
-                                    selected: valueR.selected,
+                                    field: valueL.field,
+                                    selected: valueL.selected,
                                     value: setNumber.toString(),
                                   } as AttributeValue)
-                                : undefined
-                            : lOrR === 'L'
-                              ? valueL
-                              : valueR || undefined
-                        }
-                        showOptions={lOrR === 'L'}
-                        exercise={exercise}
-                        setsNumbers={setsNumbers}
-                        setSetsNumbers={setSetsNumbers}
-                        min={min}
-                        max={max}
-                        onOptionChange={(newValue) => {
-                          updateAttributeType(
-                            { exercise, param, newValue, lOrR },
-                            {
-                              selectedExercises,
-                              supersets,
-                              setSupersets,
-                              selectedAthlete,
-                              customAthleteWorkloads,
-                              setCustomAthleteWorkloads,
-                            }
-                          );
-                        }}
-                        onSubOptionChange={(newValue) => {
-                          if (+newValue < 0) return;
+                                : valueR
+                                  ? ({
+                                      field: valueR.field,
+                                      selected: valueR.selected,
+                                      value: setNumber.toString(),
+                                    } as AttributeValue)
+                                  : undefined
+                              : lOrR === 'L'
+                                ? valueL
+                                : valueR || undefined
+                          }
+                          showOptions={lOrR === 'L'}
+                          exercise={exercise}
+                          setsNumbers={setsNumbers}
+                          setSetsNumbers={setSetsNumbers}
+                          min={min}
+                          max={max}
+                          onOptionChange={(newValue) => {
+                            // Recompute min/max *now* so we don't use stale values
+                            const attributeRangeFresh = method?.attributes
+                              ?.map((a) =>
+                                a.options?.find((o) => o.field === newValue)
+                              )
+                              .find(Boolean); // first matching option across attributes, or undefined
 
-                          if (param.field === ParamType.VolWorkSets) {
-                            updateVolWorkSets(
+                            const { min: curMin, max: curMax } = getMinMax(
                               {
                                 exercise,
-                                newValue,
+                                attributeRange: attributeRangeFresh,
+                                valueL,
+                                setNumber,
                               },
-                              {
-                                setsNumbers,
-                                selectedExercises,
-                                setSetsNumbers,
-                              }
+                              { selectedExercises, setsNumbers, setSetsNumbers }
                             );
-                            return;
-                          }
 
-                          // update only selected athletes workloads
-                          if (selectedAthlete) {
-                            updateCollapsedSelectedAthleteValues(
+                            updateAttributeType(
                               {
                                 exercise,
                                 param,
                                 newValue,
                                 lOrR,
+                                min: curMin,
+                                max: curMax,
                               },
                               {
-                                training,
-                                component,
                                 selectedExercises,
                                 supersets,
-                                selectedAthleteWorkloads,
-                                setCustomAthleteWorkloads,
+                                setSupersets,
                                 selectedAthlete,
+                                customAthleteWorkloads,
+                                setCustomAthleteWorkloads,
                               }
                             );
-                            return;
-                          }
+                          }}
+                          onSubOptionChange={(newValue) => {
+                            if (+newValue < 0) return;
 
-                          // update all selected exercises or only one when none selected
-                          updateAttributeValue(
-                            {
-                              exercise,
-                              param,
-                              newValue,
-                              lOrR,
-                            },
-                            {
-                              selectedExercises,
-                              training,
-                              component,
-                              setTraining,
-                              supersets,
-                              setDetectedChanges,
-                              selectedSubgroup,
-                              setSelectedSubgroup,
+                            if (param.field === ParamType.VolWorkSets) {
+                              updateVolWorkSets(
+                                { exercise, newValue },
+                                {
+                                  setsNumbers,
+                                  selectedExercises,
+                                  setSetsNumbers,
+                                }
+                              );
+                              return;
                             }
-                          );
-                        }}
-                      />
-                    ))}
+
+                            if (selectedAthlete) {
+                              updateCollapsedSelectedAthleteValues(
+                                { exercise, param, newValue, lOrR },
+                                {
+                                  training,
+                                  component,
+                                  selectedExercises,
+                                  supersets,
+                                  selectedAthleteWorkloads,
+                                  setCustomAthleteWorkloads,
+                                  selectedAthlete,
+                                }
+                              );
+                              return;
+                            }
+
+                            updateAttributeValue(
+                              { exercise, param, newValue, lOrR },
+                              {
+                                selectedExercises,
+                                training,
+                                component,
+                                setTraining,
+                                supersets,
+                                setDetectedChanges,
+                                selectedSubgroup,
+                                setSelectedSubgroup,
+                              }
+                            );
+                          }}
+                        />
+                      );
+                    }
+                  )}
                 </Box>
               );
             })}

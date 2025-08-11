@@ -16,6 +16,8 @@ import { useGroup } from '@/store/group-provider';
 import { useMain } from '@/store/main-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
+import { ParamType } from '@/controller/component/enum/param.enum';
+import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 
 interface TrainingExerciseCarExpandedSetsProps {
   component: TrainingComponent;
@@ -157,9 +159,11 @@ export default function TrainingExerciseCardExpandedSets(
                     (m) => m.id === component.methodId
                   );
 
-                  const attributeRange = method?.attributes.find(
-                    (a) => a.field === param.field
-                  );
+                  const attributeRange = method?.attributes
+                    ?.map((a) =>
+                      a.options?.find((o) => o.field === valueL.selected)
+                    )
+                    .find(Boolean);
 
                   if (attributeRange) {
                     const foundInOptions = attributeRange.options?.find(
@@ -193,10 +197,18 @@ export default function TrainingExerciseCardExpandedSets(
                             param={param}
                             value={
                               lOrR === 'L'
-                                ? valueL
-                                : valueR
-                                  ? valueR
-                                  : undefined
+                                ? param.field === ParamType.VolWorkSets
+                                  ? ({
+                                      ...valueL,
+                                      value: set.setNumber.toString(),
+                                    } as AttributeValue)
+                                  : valueL
+                                : param.field === ParamType.VolWorkSets
+                                  ? ({
+                                      ...valueR,
+                                      value: set.setNumber.toString(),
+                                    } as AttributeValue)
+                                  : valueR || undefined
                             }
                             onOptionChange={(_newValue) => {}}
                             min={min}

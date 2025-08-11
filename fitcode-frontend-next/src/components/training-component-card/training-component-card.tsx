@@ -37,14 +37,6 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
           display="flex"
           alignItems="center"
           sx={{ cursor: 'pointer', p: 0, m: 0 }}
-          // onClick={() => {
-          //   alert('here2');
-          //   if (trainingComponent && !component) {
-          //     setTraining(training);
-          //     setComponent(trainingComponent);
-          //   }
-          //   setSelectedExercises([]);
-          // }}
         >
           {trainingComponent?.id === component?.id ? (
             <Tooltip

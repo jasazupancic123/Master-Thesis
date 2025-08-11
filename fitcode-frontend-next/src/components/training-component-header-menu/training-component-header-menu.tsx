@@ -24,6 +24,7 @@ import { useGroup } from '@/store/group-provider';
 import { useMain } from '@/store/main-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
+import { onMethodChange } from './state';
 
 interface TrainingComponentExpandedProps {
   training: Training;
@@ -253,7 +254,7 @@ export default function TrainingComponentHeaderMenu(
         />
       </Tooltip>
 
-      <Tooltip title={component.target ? component.target.name : 'No target'}>
+      <Tooltip title={component.method ? component.method.name : 'No method'}>
         <SelectInput<Method>
           label={'Method'}
           value={component.method?.id || ''}
@@ -271,120 +272,24 @@ export default function TrainingComponentHeaderMenu(
           selectedItemSize={12}
           selectSize="small"
           setValue={(methodId) => {
-            const method = allMethods.find((m) => m.id === methodId);
+            if (typeof methodId !== 'string') return;
 
-            const updatedComponent = {
-              ...component,
-              method: method,
-              methodId: method?.id,
-              supersets: component.supersets?.map((s) => ({
-                ...s,
-                exercises: s.exercises.map((e) => ({
-                  ...e,
-                  attributeRanges: method?.attributes || [],
-                  sets: e.sets.map((set) => ({
-                    ...set,
-                    paramValuesL: set.paramValuesL.map((p) => {
-                      let attributeRange = method?.attributes.find(
-                        (ar) => ar.field === p.field
-                      );
-                      if (!attributeRange) return p;
-
-                      const foundInOptions = attributeRange.options?.find(
-                        (o) => o.field === p.selected
-                      );
-                      if (foundInOptions) attributeRange = foundInOptions;
-
-                      try {
-                        const numValue = parseFloat(p.value);
-                        if (
-                          attributeRange.min !== undefined &&
-                          numValue < attributeRange.min
-                        ) {
-                          return {
-                            ...p,
-                            value: attributeRange.min.toString(),
-                          };
-                        }
-                        if (
-                          attributeRange.max !== undefined &&
-                          numValue > attributeRange.max
-                        ) {
-                          return {
-                            ...p,
-                            value: attributeRange.max.toString(),
-                          };
-                        }
-                        return p;
-                      } catch (e) {
-                        return p;
-                      }
-                    }),
-                    paramValuesR: set.paramValuesR?.map((p) => {
-                      let attributeRange = method?.attributes.find(
-                        (ar) => ar.field === p.field
-                      );
-                      if (!attributeRange) return p;
-
-                      const foundInOptions = attributeRange.options?.find(
-                        (o) => o.field === p.selected
-                      );
-                      if (foundInOptions) attributeRange = foundInOptions;
-
-                      try {
-                        const numValue = parseFloat(p.value);
-                        if (
-                          attributeRange.min !== undefined &&
-                          numValue < attributeRange.min
-                        ) {
-                          return {
-                            ...p,
-                            value: attributeRange.min.toString(),
-                          };
-                        }
-                        if (
-                          attributeRange.max !== undefined &&
-                          numValue > attributeRange.max
-                        ) {
-                          return {
-                            ...p,
-                            value: attributeRange.max.toString(),
-                          };
-                        }
-                        return p;
-                      } catch (_: unknown) {
-                        return p;
-                      }
-                    }),
-                  })),
-                })),
-              })),
-            };
-
-            setComponent(updatedComponent);
-
-            const updatedComponents = training.components.map((c) => {
-              if (
-                c.id === component.id ||
-                c.component?.id === component.component?.id
-              ) {
-                return {
-                  ...updatedComponent,
-                };
+            // in supersets.tsx, a useEffect gets called to update setsNumbers if method limits them
+            onMethodChange(
+              {
+                methodId,
+              },
+              {
+                training,
+                setTraining,
+                component,
+                setComponent,
+                allMethods,
+                setDetectedChanges,
+                selectedSubgroup,
+                setSelectedSubgroup,
               }
-              return c;
-            });
-
-            setTraining((prev) =>
-              !prev
-                ? prev
-                : {
-                    ...prev,
-                    components: updatedComponents,
-                  }
             );
-
-            setDetectedChanges(true);
           }}
         />
       </Tooltip>

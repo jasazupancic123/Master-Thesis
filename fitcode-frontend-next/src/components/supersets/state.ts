@@ -20,6 +20,7 @@ import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingInfo } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import { ParamType } from '@/controller/component/enum/param.enum';
 
 function updateSupersets(
   supersets: Superset[],
@@ -63,6 +64,8 @@ export function handleAddExerciseToSupersetComponent(
   input: {
     selectedExercisesIds: string[];
     allExercises: Exercise[];
+    minSets: number | undefined;
+    maxSets: number | undefined;
   },
   state: {
     training: Training;
@@ -80,7 +83,7 @@ export function handleAddExerciseToSupersetComponent(
     setPagination: SetState<Pagination>;
   }
 ) {
-  const { selectedExercisesIds, allExercises } = input;
+  const { selectedExercisesIds, allExercises, minSets, maxSets } = input;
 
   const {
     training,
@@ -121,17 +124,11 @@ export function handleAddExerciseToSupersetComponent(
       (exercise?.defaultParams &&
         (exercise?.defaultParams
           .map((p) => {
-            if (p.field === 'volWorkSets') return undefined;
+            if (p.field === ParamType.VolWorkSets) return undefined;
 
-            let attribute = method?.attributes.find(
-              (ar) => ar.field === p.field
-            );
-            if (attribute) {
-              const foundInOptions = attribute.options?.find(
-                (o) => o.field === p.defaultValue
-              );
-              if (foundInOptions) attribute = foundInOptions;
-            }
+            const attribute = method?.attributes
+              ?.map((a) => a.options?.find((o) => o.field === p.defaultValue))
+              .find(Boolean);
 
             return {
               field: p.field,
@@ -141,15 +138,17 @@ export function handleAddExerciseToSupersetComponent(
                 attribute.min !== undefined &&
                 attribute.max !== undefined
                   ? Math.ceil((attribute.min + attribute.max) / 2)
-                  : p.options?.find((o) => o.field === p.defaultValue)?.options
-                        ?.length
-                    ? '0' //picks the first element in the options array
-                    : p.options?.find((o) => o.field === p.defaultValue)
-                        ?.defaultValue,
+                  : p.options?.find((o) => o.field === p.defaultValue)
+                      ?.defaultValue,
             } as AttributeValue;
           })
           .filter((p) => p !== undefined) as AttributeValue[])) ||
       [];
+
+    const setsNumber =
+      minSets !== undefined && maxSets !== undefined
+        ? Math.floor((minSets + maxSets) / 2)
+        : minSets || maxSets || 3;
 
     return {
       id,
@@ -158,7 +157,7 @@ export function handleAddExerciseToSupersetComponent(
       attributes: component?.method?.attributes || [],
       params: exercise?.defaultParams || [],
       sets: exercise?.defaultParams
-        ? Array.from({ length: 3 }, (_, i) => ({
+        ? Array.from({ length: setsNumber }, (_, i) => ({
             setNumber: i + 1,
             paramValuesL: paramValues,
             ...(exercise.isBilateral && { paramValuesR: paramValues }),
