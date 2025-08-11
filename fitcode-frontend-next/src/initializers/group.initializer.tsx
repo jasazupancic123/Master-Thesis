@@ -77,8 +77,8 @@ export default function GroupInitializer({
     init();
   }, []);
 
-  if (!state) return <Alert type="loading" />;
   if (unauthorized) return <Alert type="unauthorized" />;
+  if (!state) return <Alert type="loading" />;
 
   return <GroupProvider {...state}>{children}</GroupProvider>;
 }

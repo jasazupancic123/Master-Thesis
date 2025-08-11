@@ -838,6 +838,7 @@ export function handleDeleteSuperset(
     setTrainings: SetState<TrainingInfo[]>;
     setDetectedChanges: SetState<boolean>;
     setCustomAthleteWorkloads: SetState<Workload[]>;
+    setSelectedExercises: SetState<TrainingExercise[]>;
   }
 ) {
   const { index } = input;
@@ -852,6 +853,7 @@ export function handleDeleteSuperset(
     setTrainings,
     setDetectedChanges,
     setCustomAthleteWorkloads,
+    setSelectedExercises,
   } = state;
 
   if (!component || !training) return;
@@ -883,6 +885,10 @@ export function handleDeleteSuperset(
         s.id === selectedSubgroup.id ? updatedSubgroup : s
       ),
     };
+
+    setSelectedExercises((prev) =>
+      prev.filter((e) => !exercisesToDelete.some((ex) => ex.id === e.id))
+    );
 
     setSelectedSubgroup(updatedSubgroup);
 
@@ -917,6 +923,10 @@ export function handleDeleteSuperset(
       ...component,
       supersets: updatedSupersets,
     };
+
+    setSelectedExercises((prev) =>
+      prev.filter((e) => !exercisesToDelete.some((ex) => ex.id === e.id))
+    );
 
     setComponent(updatedComponent);
 
@@ -1122,17 +1132,17 @@ export function prepareGroupAvgWorkloadsForChart(
 }
 
 export function prepareSelectedAthleteAvgWorkloadsForChart(
-  workloads: CompletedFutureWorkloads,
+  selectedAthleteWorkloads: CompletedFutureWorkloads,
   exerciseId: string,
   setData: SetState<ChartWorkloadData[]>,
   setMax: SetState<number>,
   setRange: SetState<number[]>
 ) {
-  const completedWorkloadsFiltered = workloads.completedWorkloads
+  const completedWorkloadsFiltered = selectedAthleteWorkloads.completedWorkloads
     .filter((workload) => workload.exerciseId === exerciseId)
     .sort((a, b) => (isBefore(a.plannedAt, b.plannedAt) ? -1 : 1));
 
-  const futureWorkloadsFiltered = workloads.futureWorkloads
+  const futureWorkloadsFiltered = selectedAthleteWorkloads.futureWorkloads
     .filter((workload) => workload.exerciseId === exerciseId)
     .sort((a, b) => (isBefore(a.plannedAt, b.plannedAt) ? -1 : 1));
 

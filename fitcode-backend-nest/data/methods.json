@@ -2,6 +2,7 @@
   {
     "id": "maximal-set-exhaustive",
     "name": "Maximal Set Exhaustive",
+    "componentId": "strength",
     "ability": "Muscle Hypertrophy",
     "attributes": [
       {
@@ -24,6 +25,7 @@
   {
     "id": "agility-strength",
     "name": "Agility Strength",
+    "componentId": "strength",
     "ability": "Sport Specific Pattern",
     "attributes": [
       {
@@ -44,6 +46,7 @@
   {
     "id": "heavy-power-heavy-rfd",
     "name": "Heavy Power / Heavy RFD",
+    "componentId": "strength",
     "ability": "Maximal Muscle Power / Late RFD",
     "attributes": [
       {
@@ -64,6 +67,7 @@
   {
     "id": "deceleration-breaking",
     "name": "Deceleration/Breaking",
+    "componentId": "strength",
     "ability": "Eccentric RFD",
     "attributes": [
       {
@@ -84,6 +88,7 @@
   {
     "id": "light-power-light-rfd",
     "name": "Light Power/Light RFD",
+    "componentId": "strength",
     "ability": "Maximal Muscular Power / Starting RFD",
     "attributes": [
       {
@@ -104,6 +109,7 @@
   {
     "id": "slow-tempo-exhaustive",
     "name": "Slow Tempo Exhaustive",
+    "componentId": "strength",
     "ability": "Muscle Hypertrophy",
     "attributes": [
       {
@@ -124,6 +130,7 @@
   {
     "id": "maximal-rep-exhaustive",
     "name": "Maximal Rep Exhaustive",
+    "componentId": "strength",
     "ability": "Muscle Hypertrophy",
     "attributes": [
       {
@@ -146,6 +153,7 @@
   {
     "id": "technical-development",
     "name": "Technical Development",
+    "componentId": "strength",
     "ability": "Safe Efficient Movement",
     "attributes": [
       {
@@ -166,6 +174,7 @@
   {
     "id": "corrective-strength",
     "name": "Corrective Strength",
+    "componentId": "strength",
     "ability": "Structural Balance",
     "attributes": [
       {
@@ -188,6 +197,7 @@
   {
     "id": "maximal-eccentric-strength",
     "name": "Maximal Eccentric Strength",
+    "componentId": "strength",
     "ability": "Maximal Eccentric Muscular Strength",
     "attributes": [
       {
@@ -208,6 +218,7 @@
   {
     "id": "maximal-strength",
     "name": "Maximal Strength",
+    "componentId": "strength",
     "ability": "Maximal Muscular Strength",
     "attributes": [
       {
@@ -228,6 +239,7 @@
   {
     "id": "reactive-strength",
     "name": "Reactive Strength",
+    "componentId": "strength",
     "ability": "Stretch Shortening Cycle",
     "attributes": [
       {
@@ -250,6 +262,7 @@
   {
     "id": "low-load-exhaustive",
     "name": "Low Load Exhaustive",
+    "componentId": "strength",
     "ability": "Muscle Hypertrophy/Strength Endurance",
     "attributes": [
       {
@@ -272,6 +285,7 @@
   {
     "id": "vo2max",
     "name": "VO2max",
+    "componentId": "endurance",
     "ability": "Long HIT",
     "attributes": [],
     "repetition": "2min",
@@ -282,6 +296,7 @@
   {
     "id": "repeat-sprints",
     "name": "Repeat Sprints",
+    "componentId": "endurance",
     "ability": "RST",
     "attributes": [],
     "repetition": "4-6sec",
@@ -292,6 +307,7 @@
   {
     "id": "extensive-intervals",
     "name": "Extensive Intervals",
+    "componentId": "endurance",
     "ability": "Long HIT",
     "attributes": [],
     "repetition": "4min",
@@ -302,6 +318,7 @@
   {
     "id": "lactic-power",
     "name": "Lactic Power",
+    "componentId": "endurance",
     "ability": "SIT",
     "attributes": [],
     "repetition": "30sec",
@@ -312,6 +329,7 @@
   {
     "id": "buchheit-tempo-1",
     "name": "Buchheit / Tempo 1",
+    "componentId": "endurance",
     "ability": "Short HIT",
     "attributes": [],
     "repetition": "10sec",
@@ -322,6 +340,7 @@
   {
     "id": "buchheit-tempo-2",
     "name": "Buchheit / Tempo 2",
+    "componentId": "endurance",
     "ability": "Short HIT",
     "attributes": [],
     "repetition": "10sec",
@@ -332,6 +351,7 @@
   {
     "id": "joel-jamieson-aerobic-explosive-repeat",
     "name": "Joel Jamieson Aerobic Explosive Repeat",
+    "componentId": "endurance",
     "ability": "Short HIT",
     "attributes": [],
     "repetition": "10sec",
@@ -342,6 +362,7 @@
   {
     "id": "lactate-threshold",
     "name": "Lactate Threshold",
+    "componentId": "endurance",
     "ability": "Threshold",
     "attributes": [],
     "repetition": "8min",
@@ -352,6 +373,7 @@
   {
     "id": "continuous-intensive-tempo",
     "name": "Continuous Intensive (Tempo)",
+    "componentId": "endurance",
     "ability": "Continuous",
     "attributes": [],
     "repetition": "30-90min",
@@ -362,6 +384,7 @@
   {
     "id": "vo2max-2",
     "name": "VO2max",
+    "componentId": "endurance",
     "ability": "Long HIT",
     "attributes": [],
     "repetition": "4min",
@@ -372,6 +395,7 @@
   {
     "id": "extensive-intervals-2",
     "name": "Extensive Intervals",
+    "componentId": "endurance",
     "ability": "Long HIT",
     "attributes": [],
     "repetition": "2min",
@@ -382,6 +406,7 @@
   {
     "id": "continuous-extensive",
     "name": "Continuous Extensive",
+    "componentId": "endurance",
     "ability": "Continuous",
     "attributes": [],
     "repetition": "40-120min",
@@ -392,6 +417,7 @@
   {
     "id": "billat",
     "name": "Billat",
+    "componentId": "endurance",
     "ability": "Short HIT",
     "attributes": [],
     "repetition": "15-30sec",
@@ -402,6 +428,7 @@
   {
     "id": "tabata",
     "name": "Tabata",
+    "componentId": "endurance",
     "ability": "Short HIT",
     "attributes": [],
     "repetition": "20sec",
@@ -412,6 +439,7 @@
   {
     "id": "baker-2",
     "name": "Baker 2",
+    "componentId": "endurance",
     "ability": "Short HIT",
     "attributes": [],
     "repetition": "30sec",
@@ -422,6 +450,7 @@
   {
     "id": "continuous-variable-fartlek",
     "name": "Continuous Variable (Fartlek)",
+    "componentId": "endurance",
     "ability": "Continuous",
     "attributes": [],
     "repetition": "20-120min",
@@ -432,6 +461,7 @@
   {
     "id": "joel-jamieson-alactic-capacity",
     "name": "Joel Jamieson Alactic Capacity",
+    "componentId": "endurance",
     "ability": "RST",
     "attributes": [],
     "repetition": "2-15sec",
@@ -441,6 +471,7 @@
   {
     "id": "baker-1",
     "name": "Baker 1",
+    "componentId": "endurance",
     "ability": "Short HIT",
     "attributes": [],
     "repetition": "30sec",
@@ -451,6 +482,7 @@
   {
     "id": "joel-jamieson-alactic-power",
     "name": "Joel Jamieson Alactic Power",
+    "componentId": "endurance",
     "ability": "RST",
     "attributes": [],
     "repetition": "2-10sec",
@@ -460,6 +492,7 @@
   {
     "id": "baker-5",
     "name": "Baker 5",
+    "componentId": "endurance",
     "ability": "Short HIT",
     "attributes": [],
     "repetition": "15sec",
@@ -470,6 +503,7 @@
   {
     "id": "eurofit",
     "name": "EUROFIT",
+    "componentId": "endurance",
     "ability": "Short HIT",
     "attributes": [],
     "repetition": "30sec",
@@ -480,6 +514,7 @@
   {
     "id": "joel-jamieson-lactic-explosive-repeat",
     "name": "Joel Jamieson Lactic Explosive Repeat",
+    "componentId": "endurance",
     "ability": "Short HIT",
     "attributes": [],
     "repetition": "15sec",
@@ -490,6 +525,7 @@
   {
     "id": "baker-3",
     "name": "Baker 3",
+    "componentId": "endurance",
     "ability": "Short HIT",
     "attributes": [],
     "repetition": "45sec",
@@ -500,6 +536,7 @@
   {
     "id": "lactic-capacity",
     "name": "Lactic Capacity",
+    "componentId": "endurance",
     "ability": "SIT",
     "attributes": [],
     "repetition": "60sec",
@@ -510,6 +547,7 @@
   {
     "id": "continuous-sweet-spot",
     "name": "Continuous Sweet Spot",
+    "componentId": "endurance",
     "ability": "Continuous",
     "attributes": [],
     "repetition": "30-90min",
@@ -520,6 +558,7 @@
   {
     "id": "dynamic-stretching",
     "name": "Dynamic Stretching",
+    "componentId": "rom",
     "ability": "Warm-up, improve dynamic flexibility",
     "attributes": [],
     "repetition": "10-15 per movement",
@@ -530,6 +569,7 @@
   {
     "id": "static-stretching",
     "name": "Static Stretching",
+    "componentId": "rom",
     "ability": "Improve overall flexibility",
     "attributes": [],
     "repetition": "15-60 seconds per stretch",
@@ -540,6 +580,7 @@
   {
     "id": "joint-circles-and-mobility-drills",
     "name": "Joint Circles and Mobility Drills",
+    "componentId": "rom",
     "ability": "Improve joint health and range of motion",
     "attributes": [],
     "repetition": "10-15 per joint",
@@ -550,6 +591,7 @@
   {
     "id": "active-isolated-stretching",
     "name": "Active Isolated Stretching",
+    "componentId": "rom",
     "ability": "Enhance flexibility, improve muscle function",
     "attributes": [],
     "repetition": "8-12 per movement",
@@ -560,6 +602,7 @@
   {
     "id": "yoga",
     "name": "Yoga",
+    "componentId": "rom",
     "ability": "Improve flexibility, balance, and mental focus",
     "attributes": [],
     "repetition": "30-90 minutes per session",
@@ -570,6 +613,7 @@
   {
     "id": "pnf-stretching",
     "name": "PNF Stretching",
+    "componentId": "rom",
     "ability": "Enhance flexibility and range of motion",
     "attributes": [],
     "repetition": "5-10 seconds contraction, followed by 10-30 seconds stretch",
@@ -580,6 +624,7 @@
   {
     "id": "foam-rolling",
     "name": "Foam Rolling",
+    "componentId": "rom",
     "ability": "Release muscle tightness, improve tissue quality",
     "attributes": [],
     "repetition": "1-2 minutes per muscle group",

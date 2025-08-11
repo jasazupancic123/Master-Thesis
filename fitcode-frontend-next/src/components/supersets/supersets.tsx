@@ -12,6 +12,7 @@ import { NUM_MAX_SUPERSETS } from '../trainer-day-view/constant';
 import { onDragEnd } from '../trainer-day-view/state';
 import { handleAddExerciseToSupersetComponent } from './state';
 import type { SetState } from '@/common/type/state.type';
+import { VolWorkSetType } from '@/controller/component/enum/param.enum';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useGroup } from '@/store/group-provider';
 import { useMain } from '@/store/main-provider';
@@ -88,6 +89,34 @@ export default function Supersets(props: SupersetsProps) {
   useEffect(() => {
     if (!selectedSubgroup && !component) setSelectedExercisesIds([]);
   }, [component, selectedSubgroup]);
+
+  // update setsNumbers on method change
+  useEffect(() => {
+    if (!component || !component.method) return;
+
+    const setsRange = component.method?.attributes
+      ?.map((a) => a.options?.find((o) => o.field === VolWorkSetType.Set))
+      .find(Boolean);
+
+    if (!setsRange) return;
+
+    const { min, max } = setsRange;
+
+    if (min === undefined && max === undefined) return;
+
+    setSetsNumbers((prev) => {
+      const newSetsNumbers = prev.map((item) => {
+        return {
+          ...item,
+          setsNumber: Math.max(
+            min || 0,
+            Math.min(max || 1000, item.setsNumber)
+          ),
+        };
+      });
+      return newSetsNumbers;
+    });
+  }, [component?.method]);
 
   if (!component || !training) return null;
 
@@ -193,10 +222,17 @@ export default function Supersets(props: SupersetsProps) {
             setOpenAddExerciseModal(false);
             return;
           }
+
+          const setsRange = component.method?.attributes
+            ?.map((a) => a.options?.find((o) => o.field === VolWorkSetType.Set))
+            .find(Boolean);
+
           handleAddExerciseToSupersetComponent(
             {
               selectedExercisesIds,
               allExercises,
+              minSets: setsRange?.min,
+              maxSets: setsRange?.max,
             },
             {
               training,

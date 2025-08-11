@@ -20,8 +20,9 @@ const commonService = CommonService.instance;
 const AuthContext = createContext<AuthContextType>({
   loading: true,
   user: null,
+  setUser: () => {},
   role: [],
-  logout: () => Promise.resolve(),
+  logout: (redirect = true) => Promise.resolve(),
   hasJustLoggedIn: false,
   setHasJustLoggedIn: () => {},
   profile: undefined,
@@ -87,10 +88,10 @@ export const AuthProvider = ({ children }: ChildrenProps) => {
     []
   );
 
-  async function logout(): Promise<void> {
+  async function logout(redirect = true): Promise<void> {
     await auth.signOut();
     commonService.browser.removeClientCookie(FIREBASE_COOKIE_NAME);
-    router.push(LINK_INDEX.href);
+    if (redirect) router.push(LINK_INDEX.href);
     setUser(null);
     setRole([]);
     await new Promise((resolve) => setTimeout(resolve, 5000)); //wait for 5 sec, then set
@@ -102,6 +103,7 @@ export const AuthProvider = ({ children }: ChildrenProps) => {
       value={{
         loading,
         user,
+        setUser,
         role,
         logout,
         hasJustLoggedIn,

@@ -6,6 +6,8 @@ import type {
   GroupContextProps,
   TrainerDayViewContextProps,
 } from '@/app/(trainer)/groups/[group_id]/props';
+import { CommonService } from '@/common/service/common.service';
+import type { Day } from '@/common/service/util/date.util';
 import type { Pagination } from '@/common/type/paginate.type';
 import type { ChildrenProps } from '@/common/type/props.type';
 import { handleApiRequest } from '@/common/type/state.type';
@@ -20,6 +22,8 @@ import type { TrainingComponent } from '@/controller/training/type/training-comp
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import type { Workload } from '@/controller/training/type/workload.type';
 import type { User, UserEntity } from '@/controller/user/type/user.type';
+
+const commonService = CommonService.instance;
 
 export const TrainerDayViewContext =
   createContext<TrainerDayViewContextProps | null>(null);
@@ -48,6 +52,8 @@ export function TrainerDayViewProvider(
   const [selectedPeriod, setSelectedPeriod] = useState<'AM' | 'PM'>(
     new Date().getHours() >= 12 ? 'PM' : 'AM'
   );
+
+  const [day, setDay] = useState<Day>(commonService.date.getToday());
 
   const [training, setTraining] = useState<Training | undefined>();
   const [component, setComponent] = useState<TrainingComponent | undefined>();
@@ -135,6 +141,8 @@ export function TrainerDayViewProvider(
   }, [component, pagination.page]);
 
   const value: TrainerDayViewContextProps = {
+    day,
+    setDay,
     training,
     setTraining,
     selectedPeriod,

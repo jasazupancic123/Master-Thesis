@@ -1,4 +1,4 @@
-import { Box, Collapse, Divider, Stack } from '@mui/material';
+import { Box, Collapse, Divider, Stack, Typography } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
@@ -16,6 +16,7 @@ import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
+import type { Method } from '@/controller/method/type/method.type';
 import type { TrainingInfo } from '@/controller/training/type/training.type';
 import { useGroup } from '@/store/group-provider';
 import { useMain } from '@/store/main-provider';
@@ -45,6 +46,18 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
   const [trainingInPeriodForModal, setTrainingInPeriodForModal] =
     useState<TrainingInfo | null>(null);
   const [expandedExercisesView, setExpandedExercisesView] = useState(false);
+
+  const getMethodsLimitsString = (method: Method): string => {
+    let methodString = 'Method limits:';
+
+    method.attributes.forEach((a) =>
+      a.options?.forEach(
+        (o) => (methodString += ` ${o.field} ${o.min ?? ''}-${o.max ?? ''},`)
+      )
+    );
+
+    return methodString === 'Method limits:' ? '' : methodString.slice(0, -1);
+  };
 
   return (
     <Box
@@ -148,18 +161,44 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
             p={2}
             pt={0}
             px={0}
-            mt={screenSize.isSmallerThanLaptop ? 0 : 2}
+            mt={
+              screenSize.isSmallerThanLaptop
+                ? 0
+                : component?.method !== undefined &&
+                    getMethodsLimitsString(component.method).length > 0
+                  ? 0
+                  : 2
+            }
             key={filter}
           >
             {heatmapView ? (
               <MuscleHeatmapView setHeatmapView={setHeatmapView} />
             ) : (
-              <Supersets
-                openAddExerciseModal={openAddExerciseModal}
-                setOpenAddExerciseModal={setOpenAddExerciseModal}
-                expandedExercisesView={expandedExercisesView}
-                setExpandedExercisesView={setExpandedExercisesView}
-              />
+              <>
+                {component?.method !== undefined && (
+                  <Box
+                    width="100%"
+                    display="flex"
+                    justifyContent={
+                      screenSize.isSmallerThanLaptop ? 'center' : 'flex-end'
+                    }
+                    sx={{
+                      py: 0.05,
+                    }}
+                  >
+                    <Typography fontSize={10}>
+                      {getMethodsLimitsString(component.method)}
+                    </Typography>
+                  </Box>
+                )}
+
+                <Supersets
+                  openAddExerciseModal={openAddExerciseModal}
+                  setOpenAddExerciseModal={setOpenAddExerciseModal}
+                  expandedExercisesView={expandedExercisesView}
+                  setExpandedExercisesView={setExpandedExercisesView}
+                />
+              </>
             )}
           </Box>
         </Collapse>

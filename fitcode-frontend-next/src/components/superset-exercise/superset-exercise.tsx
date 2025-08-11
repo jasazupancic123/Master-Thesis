@@ -49,6 +49,7 @@ export default function SupersetExercise(props: SupersetExerciseProps) {
     selectedSubgroup,
     setSelectedSubgroup,
     selectedExercises,
+    setSelectedExercises,
   } = useTrainerDayViewContext();
 
   const { setTrainings } = useGroup();
@@ -79,12 +80,21 @@ export default function SupersetExercise(props: SupersetExerciseProps) {
       >
         {(provided, snapshot) => (
           <Box
-            sx={{
-              // px: screenSize.isDesktop || screenSize.isMobile ? 0 : 0.5,
-              border: selectedExercises.some((ex) => ex.id === exercise.id)
-                ? `1px solid ${theme.palette.primary.main}`
-                : undefined,
-            }}
+            sx={
+              selectedExercises.some((ex) => ex.id === exercise.id)
+                ? {
+                    position: 'relative',
+                    '&::after': {
+                      content: '""',
+                      position: 'absolute',
+                      inset: 0,
+                      border: `1px solid ${theme.palette.primary.main}`,
+                      borderRadius: 'inherit',
+                      pointerEvents: 'none',
+                    },
+                  }
+                : {}
+            }
           >
             <Box
               id={exercise.id}
@@ -188,6 +198,7 @@ export default function SupersetExercise(props: SupersetExerciseProps) {
               setTraining,
               setTrainings,
               setAnchorEl,
+              setSelectedExercises,
             });
           }}
         >

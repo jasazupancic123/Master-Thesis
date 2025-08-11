@@ -21,7 +21,7 @@ export class Method extends IdEntity {
   @IsNotEmpty()
   @ApiProperty()
   @Expose()
-  targetId: string;
+  componentId: string;
 
   @ValidateNested({ each: true })
   @Type(() => Attribute)
