@@ -35,6 +35,8 @@ export function updateAttributeType(
     param: Attribute;
     newValue: SetStateAction<string>;
     lOrR: string;
+    min: number | undefined;
+    max: number | undefined;
   },
   state: {
     selectedExercises: TrainingExercise[];
@@ -45,7 +47,7 @@ export function updateAttributeType(
     setCustomAthleteWorkloads: (value: SetStateAction<Workload[]>) => void;
   }
 ) {
-  const { exercise, param, newValue, lOrR } = input;
+  const { exercise, param, newValue, lOrR, min, max } = input;
   const {
     selectedExercises,
     supersets,
@@ -136,11 +138,20 @@ export function updateAttributeType(
         )
           continue;
 
-        const defaultValue = exercise.exercise?.defaultParams
+        let defaultValue = exercise.exercise?.defaultParams
           ?.find((p) => p.field === possibleParam.field)
           ?.options?.find((o) => o.field === newValue)?.defaultValue;
 
         if (!defaultValue) continue;
+
+        if (min !== undefined) {
+          const num = Number(defaultValue);
+          if (!isNaN(num) && num < min) defaultValue = min.toString();
+        }
+        if (max !== undefined) {
+          const num = Number(defaultValue);
+          if (!isNaN(num) && num > max) defaultValue = max.toString();
+        }
 
         if (lOrR === 'L') {
           newExercise.sets.forEach((set) => {

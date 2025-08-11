@@ -18,6 +18,7 @@ import { useMain } from '@/store/main-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { SupersetsProvider } from '@/store/supersets-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
+import { VolWorkSetType } from '@/controller/component/enum/param.enum';
 
 interface SupersetsProps {
   openAddExerciseModal: boolean;
@@ -88,6 +89,34 @@ export default function Supersets(props: SupersetsProps) {
   useEffect(() => {
     if (!selectedSubgroup && !component) setSelectedExercisesIds([]);
   }, [component, selectedSubgroup]);
+
+  // update setsNumbers on method change
+  useEffect(() => {
+    if (!component || !component.method) return;
+
+    const setsRange = component.method?.attributes
+      ?.map((a) => a.options?.find((o) => o.field === VolWorkSetType.Set))
+      .find(Boolean);
+
+    if (!setsRange) return;
+
+    const { min, max } = setsRange;
+
+    if (min === undefined && max === undefined) return;
+
+    setSetsNumbers((prev) => {
+      const newSetsNumbers = prev.map((item) => {
+        return {
+          ...item,
+          setsNumber: Math.max(
+            min || 0,
+            Math.min(max || 1000, item.setsNumber)
+          ),
+        };
+      });
+      return newSetsNumbers;
+    });
+  }, [component?.method]);
 
   if (!component || !training) return null;
 
@@ -193,10 +222,17 @@ export default function Supersets(props: SupersetsProps) {
             setOpenAddExerciseModal(false);
             return;
           }
+
+          const setsRange = component.method?.attributes
+            ?.map((a) => a.options?.find((o) => o.field === VolWorkSetType.Set))
+            .find(Boolean);
+
           handleAddExerciseToSupersetComponent(
             {
               selectedExercisesIds,
               allExercises,
+              minSets: setsRange?.min,
+              maxSets: setsRange?.max,
             },
             {
               training,

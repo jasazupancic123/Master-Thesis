@@ -15,6 +15,7 @@ import type { TrainingExercise } from '@/controller/training/type/training-exerc
 import { useGroup } from '@/store/group-provider';
 import { useSupersets } from '@/store/supersets-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
+import { VolWorkSetType } from '@/controller/component/enum/param.enum';
 
 interface TrainingExerciseCardContainerProps {
   supersetIndex: number;
@@ -85,6 +86,31 @@ export default function TrainingExerciseCardContainer(
     )
       return;
 
+    // limit setsNumbers if method and ranges exists
+    // const setsRange = component?.method?.attributes
+    //   ?.map((a) => a.options?.find((o) => o.field === VolWorkSetType.Set))
+    //   .find(Boolean);
+
+    // if (!setsRange) return;
+
+    // const { min, max } = setsRange;
+
+    // if (min !== undefined || max !== undefined) {
+    //   setSetsNumbers(() => {
+    //     return newSetsNumbers.map((item) => {
+    //       return {
+    //         ...item,
+    //         setsNumber: Math.max(
+    //           min || 0,
+    //           Math.min(max || 1000, item.setsNumber)
+    //         ),
+    //       };
+    //     });
+    //   });
+    //   return;
+    // }
+
+    // update sets numbers if method and ranges do not exist
     setSetsNumbers(newSetsNumbers);
   }, [selectedSubgroup]);
   // }, [selectedSubgroup?.subgroup, training, component]);
