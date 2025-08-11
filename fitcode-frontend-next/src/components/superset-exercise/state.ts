@@ -23,6 +23,7 @@ export default function deleteSupersetExercise(input: {
   setTraining: SetStateNullable<Training>;
   setTrainings: SetState<TrainingInfo[]>;
   setAnchorEl: SetState<HTMLElement | null>;
+  setSelectedExercises: SetState<TrainingExercise[]>;
 }) {
   const {
     supersetIndex,
@@ -36,6 +37,7 @@ export default function deleteSupersetExercise(input: {
     setTraining,
     setTrainings,
     setAnchorEl,
+    setSelectedExercises,
   } = input;
 
   const updatedSubgroup: Subgroup | null = selectedSubgroup
@@ -100,5 +102,6 @@ export default function deleteSupersetExercise(input: {
     prev.map((t) => (t.id === updatedTraining.id ? updatedTraining : t))
   );
 
+  setSelectedExercises((prev) => prev.filter((ex) => ex.id !== exercise.id));
   setAnchorEl(null);
 }

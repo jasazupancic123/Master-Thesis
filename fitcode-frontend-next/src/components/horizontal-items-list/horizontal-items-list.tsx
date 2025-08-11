@@ -16,6 +16,7 @@ interface HorizontalItemsListProps {
   setValue: (value: string) => void;
   checkIsSameValue: (value: string) => boolean;
   onArrowClick?: (direction: 'left' | 'right') => void;
+  noItemsText?: string;
   dayView?: boolean;
   cycleView?: boolean;
   yearView?: boolean;
@@ -36,6 +37,7 @@ export default function HorizontalItemsList(props: HorizontalItemsListProps) {
     items,
     setValue,
     onArrowClick,
+    noItemsText,
     dayView,
     cycleView,
     yearView,
@@ -147,112 +149,121 @@ export default function HorizontalItemsList(props: HorizontalItemsListProps) {
           flexGrow: screenSize.isMobile ? 1 : undefined,
         }}
       >
-        {items.map((item, i) => {
-          const isSameValue = checkIsSameValue(item.value);
-          const isSameDay = dayjs(item.value).isSame(dayjs(new Date()), 'day');
+        {items.length === 0 ? (
+          <Typography>{noItemsText}</Typography>
+        ) : (
+          items.map((item, i) => {
+            const isSameValue = checkIsSameValue(item.value);
+            const isSameDay = dayjs(item.value).isSame(
+              dayjs(new Date()),
+              'day'
+            );
 
-          return (
-            <Box
-              key={i}
-              display="flex"
-              flexDirection="column"
-              alignItems="center"
-              justifyContent="center"
-              sx={{
-                px: dashboardView || isSameValue ? 0 : 2,
-                pl: i === 0 ? 0 : undefined,
-                pr: i === items.length - 1 ? 0 : undefined,
-                cursor: 'pointer',
-                flex: '0 0 auto', // important so it doesn't shrink
-              }}
-              onClick={() => {
-                if (alertOnChange && detectedChanges) {
-                  toast.error('Unsaved changes will be lost', {
-                    icon: '⚠️',
-                    duration: 2000,
-                  });
-
-                  setDetectedChanges(false);
-                  return;
-                }
-
-                if (scrollHorizontalListLeftRef)
-                  scrollHorizontalListLeftRef.current =
-                    scrollContainerRef.current?.scrollLeft ?? 0;
-
-                setValue(item.value);
-              }}
-            >
-              <Typography
-                key={`${item.value}-${i}`}
-                variant="subtitle2"
-                textAlign="center"
+            return (
+              <Box
+                key={i}
+                display="flex"
+                flexDirection="column"
+                alignItems="center"
+                justifyContent="center"
                 sx={{
-                  fontSize: isSameValue ? '13px' : '12px',
-                  fontWeight:
-                    dashboardView || dashboardInstitutionsView ? 400 : 250,
-                  p: isSameValue ? 0.5 : 0,
-                  m: 0,
-                  minWidth:
-                    isSameValue || dashboardView || dashboardInstitutionsView
-                      ? '50px'
-                      : undefined,
-                  border: isSameValue
-                    ? `1px solid ${theme.palette.primary.main}`
-                    : undefined,
-                  borderRadius:
-                    isSameValue || dashboardView || dashboardInstitutionsView
-                      ? 1.5
-                      : 0,
-                  color:
-                    isSameValue && !dashboardView && !dashboardInstitutionsView
-                      ? theme.palette.primary.main
-                      : undefined,
-                  py:
-                    dashboardView || dashboardInstitutionsView
-                      ? 1.5
-                      : undefined,
-                  px: dashboardInstitutionsView ? 1.5 : undefined,
-                  backgroundColor:
-                    dashboardView || dashboardInstitutionsView
-                      ? theme.palette.background.light
-                      : undefined,
+                  px: dashboardView || isSameValue ? 0 : 2,
+                  pl: i === 0 ? 0 : undefined,
+                  pr: i === items.length - 1 ? 0 : undefined,
+                  cursor: 'pointer',
+                  flex: '0 0 auto', // important so it doesn't shrink
+                }}
+                onClick={() => {
+                  if (alertOnChange && detectedChanges) {
+                    toast.error('Unsaved changes will be lost', {
+                      icon: '⚠️',
+                      duration: 2000,
+                    });
+
+                    setDetectedChanges(false);
+                    return;
+                  }
+
+                  if (scrollHorizontalListLeftRef)
+                    scrollHorizontalListLeftRef.current =
+                      scrollContainerRef.current?.scrollLeft ?? 0;
+
+                  setValue(item.value);
                 }}
               >
-                {cycleView ? (
-                  item.label.split(' ').map((word, index) => (
-                    <Box key={`${word}-${index}`}>
-                      {index < 2
-                        ? word +
-                          (index === 1 && item.label.split(' ').length > 2
-                            ? '...'
-                            : '')
-                        : undefined}
-                      {index < 2 &&
-                        index < item.label.split(' ').length - 1 && <br />}
-                    </Box>
-                  ))
-                ) : dashboardView ? (
-                  getShortGroupName(item.label)
-                ) : dashboardInstitutionsView ? (
-                  item.label.toUpperCase()
-                ) : isSameValue ? (
-                  <>
-                    {item.sublabel || ''}
-                    <br />
-                    {isSameDay ? 'Today' : item.label}
-                  </>
-                ) : (
-                  <>
-                    {item.label}
-                    <br />
-                    {isSameDay ? 'Today' : item.sublabel || ''}
-                  </>
-                )}
-              </Typography>
-            </Box>
-          );
-        })}
+                <Typography
+                  key={`${item.value}-${i}`}
+                  variant="subtitle2"
+                  textAlign="center"
+                  sx={{
+                    fontSize: isSameValue ? '13px' : '12px',
+                    fontWeight:
+                      dashboardView || dashboardInstitutionsView ? 400 : 250,
+                    p: isSameValue ? 0.5 : 0,
+                    m: 0,
+                    minWidth:
+                      isSameValue || dashboardView || dashboardInstitutionsView
+                        ? '50px'
+                        : undefined,
+                    border: isSameValue
+                      ? `1px solid ${theme.palette.primary.main}`
+                      : undefined,
+                    borderRadius:
+                      isSameValue || dashboardView || dashboardInstitutionsView
+                        ? 1.5
+                        : 0,
+                    color:
+                      isSameValue &&
+                      !dashboardView &&
+                      !dashboardInstitutionsView
+                        ? theme.palette.primary.main
+                        : undefined,
+                    py:
+                      dashboardView || dashboardInstitutionsView
+                        ? 1.5
+                        : undefined,
+                    px: dashboardInstitutionsView ? 1.5 : undefined,
+                    backgroundColor:
+                      dashboardView || dashboardInstitutionsView
+                        ? theme.palette.background.light
+                        : undefined,
+                  }}
+                >
+                  {cycleView ? (
+                    item.label.split(' ').map((word, index) => (
+                      <Box key={`${word}-${index}`}>
+                        {index < 2
+                          ? word +
+                            (index === 1 && item.label.split(' ').length > 2
+                              ? '...'
+                              : '')
+                          : undefined}
+                        {index < 2 &&
+                          index < item.label.split(' ').length - 1 && <br />}
+                      </Box>
+                    ))
+                  ) : dashboardView ? (
+                    getShortGroupName(item.label)
+                  ) : dashboardInstitutionsView ? (
+                    item.label.toUpperCase()
+                  ) : isSameValue ? (
+                    <>
+                      {item.sublabel || ''}
+                      <br />
+                      {isSameDay ? 'Today' : item.label}
+                    </>
+                  ) : (
+                    <>
+                      {item.label}
+                      <br />
+                      {isSameDay ? 'Today' : item.sublabel || ''}
+                    </>
+                  )}
+                </Typography>
+              </Box>
+            );
+          })
+        )}
       </Box>
 
       {addButtonOnEnd && (

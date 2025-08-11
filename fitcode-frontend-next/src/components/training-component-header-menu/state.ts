@@ -1,12 +1,12 @@
-import { SetState, SetStateNullable } from '@/common/type/state.type';
-import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
+import type { SetState, SetStateNullable } from '@/common/type/state.type';
+import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import { VolWorkSetType } from '@/controller/component/enum/param.enum';
-import { Method } from '@/controller/method/type/method.type';
-import { ExerciseSet } from '@/controller/training/type/exercise-set.type';
-import { Subgroup } from '@/controller/training/type/subgroup.type';
-import { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { Training } from '@/controller/training/type/training.type';
+import type { Method } from '@/controller/method/type/method.type';
+import type { ExerciseSet } from '@/controller/training/type/exercise-set.type';
+import type { Subgroup } from '@/controller/training/type/subgroup.type';
+import type { Training } from '@/controller/training/type/training.type';
+import type { TrainingComponent } from '@/controller/training/type/training-component.type';
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 
 function updateParamValuesWithMethodRanges(input: {
   method: Method | undefined;

@@ -12,6 +12,7 @@ import {
 import type { Pagination } from '@/common/type/paginate.type';
 import type { SetState, SetStateNullable } from '@/common/type/state.type';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
+import { ParamType } from '@/controller/component/enum/param.enum';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
 import { TrainingService } from '@/controller/training/training.service';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
@@ -20,7 +21,6 @@ import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingInfo } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { ParamType } from '@/controller/component/enum/param.enum';
 
 function updateSupersets(
   supersets: Superset[],

@@ -10,14 +10,14 @@ import {
   updateExpandedSelectedAthleteValues,
 } from './state';
 import type { SetState } from '@/common/type/state.type';
+import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
+import { ParamType } from '@/controller/component/enum/param.enum';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useGroup } from '@/store/group-provider';
 import { useMain } from '@/store/main-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
-import { ParamType } from '@/controller/component/enum/param.enum';
-import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 
 interface TrainingExerciseCarExpandedSetsProps {
   component: TrainingComponent;

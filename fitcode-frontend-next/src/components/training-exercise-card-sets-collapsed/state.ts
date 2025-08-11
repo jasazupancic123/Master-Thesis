@@ -29,6 +29,41 @@ function setWorkload<K extends keyof PrescribedWorkload>(
   w[key] = value;
 }
 
+function updateCustomAthleteWorkload(input: {
+  selectedAthlete: User;
+  exerciseToUpdate: TrainingExercise;
+  copyAthleteWorkloads: Workload[];
+  set: ExerciseSet;
+  possibleParam: AttributeValue;
+  lOrR: 'L' | 'R';
+  defaultValue: string;
+}) {
+  const {
+    selectedAthlete,
+    exerciseToUpdate,
+    copyAthleteWorkloads,
+    set,
+    possibleParam,
+    lOrR,
+    defaultValue,
+  } = input;
+
+  const workload = copyAthleteWorkloads.find(
+    (w) =>
+      w.userId === selectedAthlete.uid &&
+      w.exerciseId === exerciseToUpdate.id &&
+      w.setNumber === set.setNumber
+  );
+
+  if (!workload) return;
+  const fieldName = TrainingService.getPerscribedFieldName(possibleParam, lOrR);
+
+  const parsed = defaultValue === '' ? undefined : Number(defaultValue);
+  const value = Number.isNaN(parsed) ? undefined : parsed;
+
+  setWorkload(workload, fieldName, value);
+}
+
 export function updateAttributeType(
   input: {
     exercise: TrainingExercise;
@@ -138,92 +173,81 @@ export function updateAttributeType(
         )
           continue;
 
-        let defaultValue = exercise.exercise?.defaultParams
-          ?.find((p) => p.field === possibleParam.field)
-          ?.options?.find((o) => o.field === newValue)?.defaultValue;
+        const possibleParamsDefaultValue =
+          exercise.exercise?.defaultParams?.filter((p) =>
+            p.field.startsWith(baseParamField)
+          );
 
-        if (!defaultValue) continue;
+        if (!possibleParamsDefaultValue) continue;
 
-        if (min !== undefined) {
-          const num = Number(defaultValue);
-          if (!isNaN(num) && num < min) defaultValue = min.toString();
-        }
-        if (max !== undefined) {
-          const num = Number(defaultValue);
-          if (!isNaN(num) && num > max) defaultValue = max.toString();
-        }
+        for (const possibleParamDefaultValue of possibleParamsDefaultValue) {
+          let defaultValue = possibleParamDefaultValue.options?.find(
+            (o) => o.field === newValue
+          )?.defaultValue;
 
-        if (lOrR === 'L') {
-          newExercise.sets.forEach((set) => {
-            if (set.paramValuesL[paramIndex]) {
-              set.paramValuesL[paramIndex].selected = newValue as string;
-              set.paramValuesL[paramIndex].value = defaultValue;
-            }
+          if (!defaultValue) continue;
 
-            if (selectedAthlete) {
-              const workload = copyAthleteWorkloads.find(
-                (w) =>
-                  w.userId === selectedAthlete.uid &&
-                  w.exerciseId === exerciseToUpdate.id &&
-                  w.setNumber === set.setNumber
-              );
+          if (min !== undefined) {
+            const num = Number(defaultValue);
+            if (!isNaN(num) && num < min) defaultValue = min.toString();
+          }
+          if (max !== undefined) {
+            const num = Number(defaultValue);
+            if (!isNaN(num) && num > max) defaultValue = max.toString();
+          }
 
-              if (workload) {
-                const fieldName = TrainingService.getPerscribedFieldName(
-                  possibleParam,
-                  lOrR
-                );
-
-                const parsed =
-                  defaultValue === '' ? undefined : Number(defaultValue);
-                const value = Number.isNaN(parsed) ? undefined : parsed;
-
-                setWorkload(workload, fieldName, value);
+          if (lOrR === 'L') {
+            newExercise.sets.forEach((set) => {
+              if (set.paramValuesL[paramIndex]) {
+                set.paramValuesL[paramIndex].selected = newValue as string;
+                set.paramValuesL[paramIndex].value = defaultValue;
               }
-            }
-          });
-        } else {
-          newExercise.sets.forEach((set) => {
-            if (set.paramValuesR?.[paramIndex]) {
-              set.paramValuesR[paramIndex].selected = newValue as string;
-              set.paramValuesR[paramIndex].value = defaultValue;
-            }
 
-            if (selectedAthlete) {
-              const workload = copyAthleteWorkloads.find(
-                (w) =>
-                  w.userId === selectedAthlete.uid &&
-                  w.exerciseId === exerciseToUpdate.id &&
-                  w.setNumber === set.setNumber
-              );
-
-              if (workload) {
-                const fieldName = TrainingService.getPerscribedFieldName(
+              if (selectedAthlete) {
+                updateCustomAthleteWorkload({
+                  selectedAthlete,
+                  exerciseToUpdate,
+                  copyAthleteWorkloads,
+                  set,
                   possibleParam,
-                  lOrR
-                );
-
-                const parsed =
-                  defaultValue === '' ? undefined : Number(defaultValue);
-                const value = Number.isNaN(parsed) ? undefined : parsed;
-
-                setWorkload(workload, fieldName, value);
+                  lOrR,
+                  defaultValue,
+                });
               }
-            }
-          });
+            });
+          } else {
+            newExercise.sets.forEach((set) => {
+              if (set.paramValuesR?.[paramIndex]) {
+                set.paramValuesR[paramIndex].selected = newValue as string;
+                set.paramValuesR[paramIndex].value = defaultValue;
+              }
+
+              if (selectedAthlete) {
+                updateCustomAthleteWorkload({
+                  selectedAthlete,
+                  exerciseToUpdate,
+                  copyAthleteWorkloads,
+                  set,
+                  possibleParam,
+                  lOrR,
+                  defaultValue,
+                });
+              }
+            });
+          }
+
+          const existingIndex = supersetsCopy.findIndex((s) =>
+            s.exercises.some((ex) => ex.id === exerciseToUpdate.id)
+          );
+
+          if (existingIndex === -1 || !supersetsCopy[existingIndex]) continue;
+
+          supersetsCopy[existingIndex].exercises = supersetsCopy[
+            existingIndex
+          ].exercises.map((ex) =>
+            ex.id === exerciseToUpdate.id ? newExercise : ex
+          );
         }
-
-        const existingIndex = supersetsCopy.findIndex((s) =>
-          s.exercises.some((ex) => ex.id === exerciseToUpdate.id)
-        );
-
-        if (existingIndex === -1 || !supersetsCopy[existingIndex]) continue;
-
-        supersetsCopy[existingIndex].exercises = supersetsCopy[
-          existingIndex
-        ].exercises.map((ex) =>
-          ex.id === exerciseToUpdate.id ? newExercise : ex
-        );
       }
     }
   }

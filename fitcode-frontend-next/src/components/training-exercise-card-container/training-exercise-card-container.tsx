@@ -15,7 +15,6 @@ import type { TrainingExercise } from '@/controller/training/type/training-exerc
 import { useGroup } from '@/store/group-provider';
 import { useSupersets } from '@/store/supersets-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
-import { VolWorkSetType } from '@/controller/component/enum/param.enum';
 
 interface TrainingExerciseCardContainerProps {
   supersetIndex: number;

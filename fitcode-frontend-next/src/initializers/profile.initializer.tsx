@@ -33,8 +33,8 @@ export default function ProfileInitializer({ children }: ChildrenProps) {
     init();
   }, []);
 
-  if (!user) return <Alert type="loading" />;
   if (unauthorized) return <Alert type="unauthorized" />;
+  if (!user) return <Alert type="loading" />;
 
   return <ProfileProvider user={user}>{children}</ProfileProvider>;
 }
