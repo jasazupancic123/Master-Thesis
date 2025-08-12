@@ -78,7 +78,7 @@ export default function BottomNavigation() {
             }}
           />
         }
-        onClick={logout}
+        onClick={() => logout()}
         sx={{
           minWidth: '48px',
           padding: '4px',
