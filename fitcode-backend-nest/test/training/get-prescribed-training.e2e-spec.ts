@@ -32,6 +32,7 @@ import {
   generateSuperset,
   generateTrainingComponent,
   generateTrainingExercise,
+  generateTrainingStub,
 } from '@src/training/mock/training.stub';
 import { WorkloadService } from '@src/training/service/workload.service';
 
@@ -107,34 +108,37 @@ describe('Get prescribed training (e2e)', () => {
       generateExerciseSet(3, COMPONENT_PARAMS_OPT1),
     ];
 
-    const training = await db.trainings.create({
-      ownerId: global.trainer.uid,
-      groupId: group.id,
-      cycleId: group.cycles[1].id,
-      membersIds: [global.athlete.uid],
-      date: new Date(),
-      components: [
-        generateTrainingComponent({
-          id: component.id,
-          from: new Date(),
-          supersets: [
-            generateSuperset({
-              exercises: [
-                generateTrainingExercise({ id: 'squat', sets }),
-                generateTrainingExercise({ id: 'bench', sets }),
-              ],
-            }),
-            generateSuperset({
-              exercises: [
-                generateTrainingExercise({ id: 'squat', sets }),
-                generateTrainingExercise({ id: 'deadlift', sets }),
-              ],
-            }),
-          ],
-        }),
-      ],
-    });
+    const trainingId = await db.trainings.addDoc(
+      generateTrainingStub({
+        ownerId: global.trainer.uid,
+        groupId: group.id,
+        cycleId: group.cycles[1].id,
+        membersIds: [global.athlete.uid],
+        date: new Date(),
+        components: [
+          generateTrainingComponent({
+            id: component.id,
+            from: new Date(),
+            supersets: [
+              generateSuperset({
+                exercises: [
+                  generateTrainingExercise({ id: 'squat', sets }),
+                  generateTrainingExercise({ id: 'bench', sets }),
+                ],
+              }),
+              generateSuperset({
+                exercises: [
+                  generateTrainingExercise({ id: 'squat', sets }),
+                  generateTrainingExercise({ id: 'deadlift', sets }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      }),
+    );
 
+    const training = await db.trainings.getDoc(trainingId);
     const response = await request(app.getHttpServer())
       .get(url(training.id))
       .set('Authorization', `Bearer ${global.athlete.token}`)
@@ -164,7 +168,7 @@ describe('Get prescribed training (e2e)', () => {
     expect(kgField).toBeDefined();
     expect(+kgField.value).toBe(20);
 
-    await db.trainings.delete(training.id);
+    await db.trainings.deleteDoc(training.id);
   });
 
   it('should get prescribed training for athlete for subgroup', async () => {
@@ -174,43 +178,48 @@ describe('Get prescribed training (e2e)', () => {
       generateExerciseSet(3, COMPONENT_PARAMS_OPT1),
     ];
 
-    const training = await db.trainings.create({
-      ownerId: global.trainer.uid,
-      groupId: group.id,
-      cycleId: group.cycles[1].id,
-      membersIds: [global.athlete.uid],
-      date: new Date(),
-      components: [
-        generateTrainingComponent({
-          id: component.id,
-          from: new Date(),
-          supersets: [
-            // main group only 1 superset and 1 exercise
-            generateSuperset({
-              exercises: [generateTrainingExercise({ id: 'squat', sets })],
-            }),
-          ],
-          subgroups: [
-            generateSubgroup({
-              membersIds: [global.athlete.uid],
-              supersets: [
-                // subgroup has 2 supersets and 3 exercises
-                generateSuperset({
-                  exercises: [generateTrainingExercise({ id: 'squat', sets })],
-                }),
-                generateSuperset({
-                  exercises: [
-                    generateTrainingExercise({ id: 'bench', sets }),
-                    generateTrainingExercise({ id: 'deadlift', sets }),
-                  ],
-                }),
-              ],
-            }),
-          ],
-        }),
-      ],
-    });
+    const trainingId = await db.trainings.addDoc(
+      generateTrainingStub({
+        ownerId: global.trainer.uid,
+        groupId: group.id,
+        cycleId: group.cycles[1].id,
+        membersIds: [global.athlete.uid],
+        date: new Date(),
+        components: [
+          generateTrainingComponent({
+            id: component.id,
+            from: new Date(),
+            supersets: [
+              // main group only 1 superset and 1 exercise
+              generateSuperset({
+                exercises: [generateTrainingExercise({ id: 'squat', sets })],
+              }),
+            ],
+            subgroups: [
+              generateSubgroup({
+                membersIds: [global.athlete.uid],
+                supersets: [
+                  // subgroup has 2 supersets and 3 exercises
+                  generateSuperset({
+                    exercises: [
+                      generateTrainingExercise({ id: 'squat', sets }),
+                    ],
+                  }),
+                  generateSuperset({
+                    exercises: [
+                      generateTrainingExercise({ id: 'bench', sets }),
+                      generateTrainingExercise({ id: 'deadlift', sets }),
+                    ],
+                  }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      }),
+    );
 
+    const training = await db.trainings.getDoc(trainingId);
     const response = await request(app.getHttpServer())
       .get(url(training.id))
       .set('Authorization', `Bearer ${global.athlete.token}`)
@@ -274,7 +283,7 @@ describe('Get prescribed training (e2e)', () => {
     expect(thirdKgField).toBeDefined();
     expect(+thirdKgField.value).toBe(20);
 
-    await db.trainings.delete(training.id);
+    await db.trainings.deleteDoc(training.id);
   });
 
   it('should get prescribed training for athlete in main group with custom workloads', async () => {
@@ -284,27 +293,31 @@ describe('Get prescribed training (e2e)', () => {
       generateExerciseSet(3, COMPONENT_PARAMS_OPT1),
     ];
 
-    const training = await db.trainings.create({
-      ownerId: global.trainer.uid,
-      groupId: group.id,
-      cycleId: group.cycles[1].id,
-      membersIds: [global.athlete.uid],
-      date: new Date(),
-      components: [
-        generateTrainingComponent({
-          id: component.id,
-          from: new Date(),
-          supersets: [
-            generateSuperset({
-              exercises: [
-                generateTrainingExercise({ id: 'squat', sets }),
-                generateTrainingExercise({ id: 'bench', sets }),
-              ],
-            }),
-          ],
-        }),
-      ],
-    });
+    const trainingId = await db.trainings.addDoc(
+      generateTrainingStub({
+        ownerId: global.trainer.uid,
+        groupId: group.id,
+        cycleId: group.cycles[1].id,
+        membersIds: [global.athlete.uid],
+        date: new Date(),
+        components: [
+          generateTrainingComponent({
+            id: component.id,
+            from: new Date(),
+            supersets: [
+              generateSuperset({
+                exercises: [
+                  generateTrainingExercise({ id: 'squat', sets }),
+                  generateTrainingExercise({ id: 'bench', sets }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      }),
+    );
+
+    const training = await db.trainings.getDoc(trainingId);
 
     await db.workloads.createMany([
       {
@@ -408,7 +421,7 @@ describe('Get prescribed training (e2e)', () => {
       });
     });
 
-    await db.trainings.delete(training.id);
+    await db.trainings.deleteDoc(training.id);
   });
 
   it('should get prescribed training for athlete in subgroup with custom workloads', async () => {
@@ -418,39 +431,42 @@ describe('Get prescribed training (e2e)', () => {
       generateExerciseSet(3, COMPONENT_PARAMS_OPT1),
     ];
 
-    const training = await db.trainings.create({
-      ownerId: global.trainer.uid,
-      groupId: group.id,
-      cycleId: group.cycles[1].id,
-      membersIds: [global.athlete.uid],
-      date: new Date(),
-      components: [
-        generateTrainingComponent({
-          id: component.id,
-          from: new Date(),
-          supersets: [
-            generateSuperset({
-              exercises: [generateTrainingExercise({ id: 'deadlift', sets })],
-            }),
-          ],
-          subgroups: [
-            generateSubgroup({
-              id: component.id,
-              membersIds: [global.athlete.uid],
-              supersets: [
-                generateSuperset({
-                  exercises: [
-                    generateTrainingExercise({ id: 'squat', sets }),
-                    generateTrainingExercise({ id: 'bench', sets }),
-                  ],
-                }),
-              ],
-            }),
-          ],
-        }),
-      ],
-    });
+    const trainingId = await db.trainings.addDoc(
+      generateTrainingStub({
+        ownerId: global.trainer.uid,
+        groupId: group.id,
+        cycleId: group.cycles[1].id,
+        membersIds: [global.athlete.uid],
+        date: new Date(),
+        components: [
+          generateTrainingComponent({
+            id: component.id,
+            from: new Date(),
+            supersets: [
+              generateSuperset({
+                exercises: [generateTrainingExercise({ id: 'deadlift', sets })],
+              }),
+            ],
+            subgroups: [
+              generateSubgroup({
+                id: component.id,
+                membersIds: [global.athlete.uid],
+                supersets: [
+                  generateSuperset({
+                    exercises: [
+                      generateTrainingExercise({ id: 'squat', sets }),
+                      generateTrainingExercise({ id: 'bench', sets }),
+                    ],
+                  }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      }),
+    );
 
+    const training = await db.trainings.getDoc(trainingId);
     await db.workloads.createMany([
       {
         trainingId: training.id,
@@ -554,6 +570,6 @@ describe('Get prescribed training (e2e)', () => {
       if (p.selected === VolType.Rep) expect(p.value).toBe('12');
     });
 
-    await db.trainings.delete(training.id);
+    await db.trainings.deleteDoc(training.id);
   });
 });

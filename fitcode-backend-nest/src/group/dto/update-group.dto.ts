@@ -8,7 +8,7 @@ import { IdEntity } from '@src/common/entity/id.entity';
 import { Group } from '../entity/group.entity';
 
 export class UpdateGroupDto extends PartialType(
-  PickType(Group, ['ownerId', 'name', 'membersIds', 'cycles'] as const),
+  PickType(Group, ['ownerId', 'name', 'cycles'] as const),
 ) {}
 
 export class BatchUpdateOneGroupDto extends IntersectionType(

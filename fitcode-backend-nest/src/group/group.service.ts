@@ -1,26 +1,30 @@
 import {
   BadRequestException,
-  forwardRef,
-  Inject,
   Injectable,
   Logger,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { startOfDay } from 'date-fns';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { WriteBatch } from 'firebase-admin/firestore';
+
+import { UpdateMembersDto } from '@src/common/dto/user-id.dto';
+import { INSTITUTION_ATHLETE_EVENT } from '@src/institution/constant/update-institution-athlete-event.constant';
+import { UpdateInstitutionAthleteEvent } from '@src/institution/event/update-institution-athlete.event';
 
 import { LogMethod } from '../common/decorator/log-method.decorator';
 import { Permission } from '../common/interface/permission.interface';
 import { CommonService } from '../common/service/common.service';
 import { Create } from '../common/type/entity.type';
 import { User } from '../common/type/firebase-auth.type';
-import { GroupRef, InstitutionRef } from '../common/type/firestore.type';
-import { Wrapper } from '../common/type/wrapper.type';
+import {
+  BatchWriteOperation,
+  GroupRef,
+  InstitutionRef,
+} from '../common/type/firestore.type';
 import { FirebaseService } from '../firebase/firebase.service';
 import { Institution } from '../institution/entity/institution.entity';
 import { InstitutionService } from '../institution/service/institution.service';
-import { TrainingService } from '../training/service/training.service';
 import { UserService } from '../user/user.service';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { BatchUpdateOneGroupDto, UpdateGroupDto } from './dto/update-group.dto';
@@ -36,11 +40,14 @@ export class GroupService implements Permission<Group, Institution> {
     private readonly repository: GroupRepository,
     private readonly commonService: CommonService,
     private readonly firebaseService: FirebaseService,
+    private readonly eventEmitter: EventEmitter2,
     private readonly userService: UserService,
     private readonly institutionService: InstitutionService,
-    @Inject(forwardRef(() => TrainingService))
-    private readonly trainingService: Wrapper<TrainingService>,
   ) {}
+
+  getCollection() {
+    return this.repository.collection();
+  }
 
   async findAll(user: User): Promise<Group[]> {
     return await this.repository.getDocs((q) => {
@@ -128,10 +135,6 @@ export class GroupService implements Permission<Group, Institution> {
     if (!this.canEdit(user, group, institution))
       throw new UnauthorizedException('You are not allowed to edit this group');
 
-    // validate members
-    if (input.membersIds)
-      await this.userService.findAllOrFail({ ids: input.membersIds });
-
     // validate cycles
     if (input.cycles)
       if (this.isCycleOverlap(input.cycles))
@@ -160,11 +163,8 @@ export class GroupService implements Permission<Group, Institution> {
     return { ...updated, id: ref.groupId };
   }
 
+  @LogMethod()
   async batchUpdate(user: User, input: BatchUpdateOneGroupDto[]) {
-    this.logger.log(
-      `User ${user.uid} is updating multiple groups: ${input.length}`,
-    );
-
     // validate
     const groups = await this.validateBatch(input);
 
@@ -175,15 +175,6 @@ export class GroupService implements Permission<Group, Institution> {
         throw new UnauthorizedException(
           `You are not allowed to edit group ${group.name}`,
         );
-
-    // validate members
-    const allMembersIds = input.flatMap((i) => i.membersIds || []);
-    const _members = await this.userService.findAllOrFail({
-      ids: allMembersIds,
-    });
-
-    // for (const group of groups)
-    //   this.validateMembersInInstitution(members, group.institution);
 
     // validate cycles
     for (const group of input)
@@ -198,26 +189,73 @@ export class GroupService implements Permission<Group, Institution> {
     await batch.commit();
   }
 
+  @LogMethod()
+  async updateMembers(user: User, ref: GroupRef, input: UpdateMembersDto) {
+    const { userId: memberId, add } = input;
+
+    // validate
+    const group = await this.findOneByIdOrFail(user, ref);
+    if (!this.canEdit(user, group, group.institution))
+      throw new UnauthorizedException('You are not allowed to update members');
+
+    // check if member exists
+    const member = await this.userService.findOneBy('id', memberId);
+    if (!member) throw new BadRequestException('Member does not exist');
+    if (!this.firebaseService.isAthlete(member))
+      throw new BadRequestException('Member must be an athlete');
+
+    // check if member is already in group
+    if (group.membersIds.includes(member.uid) && add)
+      throw new BadRequestException(`Member is already in the group`);
+
+    // check if member is in institution
+    if (!group.institution.athleteIds.includes(member.uid))
+      throw new BadRequestException(`Member is not part of the institution`);
+
+    // update group members
+    const operations: BatchWriteOperation<{ membersIds: string[] }>[] = [
+      // update member in group
+      this.repository.getUpdateMemberOperation(group.id, member.uid, add),
+    ];
+
+    // update member in trainings
+    await this.eventEmitter.emitAsync(
+      INSTITUTION_ATHLETE_EVENT,
+      new UpdateInstitutionAthleteEvent({
+        operations,
+        institutionId: group.institutionId,
+        userId: member.uid,
+        add,
+        groupId: group.id,
+      }),
+    );
+
+    await this.firebaseService.paginateBatchWrites(operations);
+  }
+
+  @OnEvent(INSTITUTION_ATHLETE_EVENT, { async: true, promisify: true })
+  @LogMethod()
+  async handleUpdateInstitutionAthleteEvent(
+    event: UpdateInstitutionAthleteEvent,
+  ) {
+    // add or remove user from all groups in the institution
+    const { operations, institutionId, userId, add } = event;
+
+    const groups = await this.repository.getDocs((q) =>
+      q.where('institutionId', '==', institutionId),
+    );
+
+    for (const group of groups)
+      operations.push(
+        this.repository.getUpdateMemberOperation(group.id, userId, add),
+      );
+  }
+
   private async batchUpdateOne(
     batch: WriteBatch,
     input: BatchUpdateOneGroupDto,
   ) {
     const docRef = this.repository.doc(input.id);
-    if (input.membersIds) {
-      const trainingDocs = await this.trainingService.getDocs((q) =>
-        q
-          .where('groupId', '==', input.id)
-          .where('from', '>=', startOfDay(new Date())),
-      );
-
-      // update all trainings' members
-      trainingDocs.forEach((doc) => {
-        batch.update(doc.ref, { membersIds: input.membersIds });
-      });
-
-      // TODO - add new user meta to all trainings in the future
-      // TODO - calculate new workloads for all trainings in the future
-    }
 
     batch.update(
       docRef,
@@ -281,17 +319,6 @@ export class GroupService implements Permission<Group, Institution> {
 
     for (const group of groups) group.institution = institution;
     return groups;
-  }
-
-  private validateMembersInInstitution(
-    members: User[],
-    institution: Institution,
-  ) {
-    for (const member of members)
-      if (!institution.athleteIds.includes(member.uid))
-        throw new BadRequestException(
-          `User ${member.displayName || member.email} is not part of the institution and cannot be added`,
-        );
   }
 
   private isCycleOverlap(cycles: Cycle[]): boolean {

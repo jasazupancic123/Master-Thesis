@@ -85,7 +85,12 @@ describe('Create Training (e2e)', () => {
 
   describe('Create training', () => {
     it('should fail to create new training if group provided and not found', async () => {
-      const training = generateTrainingStub({ groupId: 'invalid-group-id' });
+      const training = generateTrainingStub({
+        ownerId: global.trainer.uid,
+        membersIds: [global.athlete.uid],
+        groupId: 'invalid-group-id',
+      });
+
       const response = await request(app.getHttpServer())
         .post('/training')
         .set('Authorization', `Bearer ${global.trainer.token}`)
@@ -97,6 +102,8 @@ describe('Create Training (e2e)', () => {
 
     it('should fail to create new training if group and cycle provided and cycle not found', async () => {
       const training = generateTrainingStub({
+        ownerId: global.trainer.uid,
+        membersIds: [global.athlete.uid],
         groupId: group.id,
         cycleId: 'invalid-cycle-id',
       });
@@ -112,6 +119,8 @@ describe('Create Training (e2e)', () => {
 
     it('should fail to create new training if cycle not found', async () => {
       const training = generateTrainingStub({
+        ownerId: global.trainer.uid,
+        membersIds: [global.athlete.uid],
         groupId: group.id,
         cycleId: 'invalid-cycle-id',
       });
@@ -127,6 +136,8 @@ describe('Create Training (e2e)', () => {
 
     it('should fail to create new training if training does not have atleast one component', async () => {
       const training = generateTrainingStub({
+        ownerId: global.trainer.uid,
+        membersIds: [global.athlete.uid],
         groupId: group.id,
         cycleId: group.cycles[0].id,
       });
@@ -144,6 +155,8 @@ describe('Create Training (e2e)', () => {
 
     it('should fail to create new training if user is not owner (trainer) of the group or manager of institution', async () => {
       const training = generateTrainingStub({
+        ownerId: global.trainer.uid,
+        membersIds: [global.athlete.uid],
         groupId: group.id,
         cycleId: group.cycles[0].id,
         components: [generateTrainingComponent()],
@@ -160,6 +173,8 @@ describe('Create Training (e2e)', () => {
 
     it('should fail to create new training if training falls outside of the cycle date range', async () => {
       const training = generateTrainingStub({
+        ownerId: global.trainer.uid,
+        membersIds: [global.athlete.uid],
         groupId: group.id,
         cycleId: group.cycles[0].id,
         date: addDays(new Date(), 100),
@@ -179,6 +194,8 @@ describe('Create Training (e2e)', () => {
 
     it('should fail to create new training if training is in the past', async () => {
       const training = generateTrainingStub({
+        ownerId: global.trainer.uid,
+        membersIds: [global.athlete.uid],
         groupId: group.id,
         cycleId: group.cycles[1].id,
         date: subDays(new Date(), 1),
@@ -200,12 +217,16 @@ describe('Create Training (e2e)', () => {
       const from = getTime(addDays(new Date(), 2), 8, 0);
       const trainings = [
         generateTrainingStub({
+          ownerId: global.trainer.uid,
+          membersIds: [global.athlete.uid],
           groupId: group.id,
           cycleId: group.cycles[1].id,
           date: from,
           components: [generateTrainingComponent({ id: component.id })],
         }),
         generateTrainingStub({
+          ownerId: global.trainer.uid,
+          membersIds: [global.athlete.uid],
           groupId: group.id,
           cycleId: group.cycles[1].id,
           date: addHours(from, 1),
@@ -220,6 +241,8 @@ describe('Create Training (e2e)', () => {
       ).map((t) => t.id);
 
       const training = generateTrainingStub({
+        ownerId: global.trainer.uid,
+        membersIds: [global.athlete.uid],
         groupId: group.id,
         cycleId: group.cycles[1].id,
         date: addHours(from, 2),
@@ -250,6 +273,8 @@ describe('Create Training (e2e)', () => {
           await trainingService.create(
             global.trainer,
             generateTrainingStub({
+              ownerId: global.trainer.uid,
+              membersIds: [global.athlete.uid],
               groupId: group.id,
               cycleId: group.cycles[1].id,
               date: from,
@@ -259,6 +284,8 @@ describe('Create Training (e2e)', () => {
         ).id;
 
         const training = generateTrainingStub({
+          ownerId: global.trainer.uid,
+          membersIds: [global.athlete.uid],
           groupId: group.id,
           cycleId: group.cycles[1].id,
           date: subHours(from, 1),
@@ -282,6 +309,8 @@ describe('Create Training (e2e)', () => {
     it('should fail to create new training if training has invalid training component', async () => {
       const from = getTime(addDays(new Date(), 2), 8, 0);
       const training = generateTrainingStub({
+        ownerId: global.trainer.uid,
+        membersIds: [global.athlete.uid],
         groupId: group.id,
         cycleId: group.cycles[1].id,
         components: [
@@ -317,6 +346,8 @@ describe('Create Training (e2e)', () => {
       ]);
 
       const training = generateTrainingStub({
+        ownerId: global.trainer.uid,
+        membersIds: [global.athlete.uid],
         groupId: group.id,
         cycleId: group.cycles[1].id,
         components: [
@@ -376,6 +407,8 @@ describe('Create Training (e2e)', () => {
       );
 
       const training = generateTrainingStub({
+        ownerId: global.trainer.uid,
+        membersIds: [global.athlete.uid],
         groupId: group.id,
         cycleId: group.cycles[1].id,
         components: [generateTrainingComponent({ id: leaf.id })],
@@ -397,6 +430,8 @@ describe('Create Training (e2e)', () => {
 
     it('should fail to create new training if it contains duplicate components', async () => {
       const training = generateTrainingStub({
+        ownerId: global.trainer.uid,
+        membersIds: [global.athlete.uid],
         groupId: group.id,
         cycleId: group.cycles[1].id,
         components: [
@@ -435,6 +470,8 @@ describe('Create Training (e2e)', () => {
 
       const training = generateTrainingStub(
         {
+          ownerId: global.trainer.uid,
+          membersIds: [global.athlete.uid],
           groupId: group.id,
           cycleId: group.cycles[1].id,
           date: getTime(addDays(new Date(), 2), 8, 0),
@@ -496,6 +533,8 @@ describe('Create Training (e2e)', () => {
 
         const from = addDays(new Date(), 1);
         const training = generateTrainingStub({
+          ownerId: global.trainer.uid,
+          membersIds: [global.athlete.uid],
           groupId: group.id,
           cycleId: group.cycles[1].id,
           from,
@@ -553,6 +592,8 @@ describe('Create Training (e2e)', () => {
       const training = await trainingService.create(
         global.trainer,
         generateTrainingStub({
+          ownerId: global.trainer.uid,
+          membersIds: [global.athlete.uid],
           groupId: group.id,
           cycleId: group.cycles[1].id,
           components: [
@@ -583,6 +624,8 @@ describe('Create Training (e2e)', () => {
         .add(
           firebase.buildCreateQuery(
             generateTrainingStub({
+              ownerId: global.trainer.uid,
+              membersIds: [global.athlete.uid],
               groupId: group.id,
               cycleId: group.cycles[0].id,
               from: subDays(new Date(), 2),
@@ -615,6 +658,8 @@ describe('Create Training (e2e)', () => {
       const training = await trainingService.create(
         global.trainer,
         generateTrainingStub({
+          ownerId: global.trainer.uid,
+          membersIds: [global.athlete.uid],
           groupId: group.id,
           cycleId: group.cycles[1].id,
           components: [
@@ -658,6 +703,8 @@ describe('Create Training (e2e)', () => {
         global.trainer,
         generateTrainingStub(
           {
+            ownerId: global.trainer.uid,
+            membersIds: [global.athlete.uid],
             groupId: group.id,
             cycleId: group.cycles[1].id,
             components: [
@@ -733,6 +780,8 @@ describe('Create Training (e2e)', () => {
       const training = await trainingService.create(
         global.trainer,
         generateTrainingStub({
+          ownerId: global.trainer.uid,
+          membersIds: [global.athlete.uid],
           groupId: group.id,
           cycleId: group.cycles[1].id,
           components: [
@@ -770,6 +819,8 @@ describe('Create Training (e2e)', () => {
       const training = await trainingService.create(
         global.trainer,
         generateTrainingStub({
+          ownerId: global.trainer.uid,
+          membersIds: [global.athlete.uid],
           groupId: group.id,
           cycleId: group.cycles[1].id,
           components: [
@@ -789,7 +840,7 @@ describe('Create Training (e2e)', () => {
       expect(response.body.id).toBe(training.id);
       expect(response.body.components).toHaveLength(0);
 
-      const trainings = await db.trainings.getAll();
+      const trainings = await db.trainings.getDocs();
       expect(trainings).toHaveLength(0);
 
       await Promise.all([deleteDoc(firebase, 'TRAINING', training.id)]);

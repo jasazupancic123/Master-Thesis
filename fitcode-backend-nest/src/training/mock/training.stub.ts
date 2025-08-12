@@ -30,10 +30,13 @@ import { generateParamAttributeValuesFromComponentParams } from './param-values.
  * the components in between them.
  */
 export function generateTrainingStub(
-  data?: Partial<Training> & { date?: Date },
-  options?: {
-    disableAutomaticallySetComponentsDates?: boolean;
+  data?: Partial<Training> & {
+    ownerId: string;
+    membersIds: string[];
+    components?: Omit<TrainingComponent, 'from' | 'to'>[];
+    date?: Date;
   },
+  options?: { disableAutomaticallySetComponentsDates?: boolean },
 ): Training {
   // evenly space components in between training's from and to dates
   const from = data?.from || data?.date || new Date();

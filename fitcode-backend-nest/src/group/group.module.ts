@@ -1,13 +1,15 @@
-import { forwardRef, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
+
+import { ChangeLogModule } from '@src/change-log/change-log.module';
 
 import { InstitutionModule } from '../institution/institution.module';
-import { TrainingModule } from '../training/training.module';
+import { Group } from './entity/group.entity';
 import { GroupController } from './group.controller';
 import { GroupService } from './group.service';
 import { GroupRepository } from './repository/group.repository';
 
 @Module({
-  imports: [forwardRef(() => TrainingModule), InstitutionModule],
+  imports: [ChangeLogModule.forEntity(Group), InstitutionModule],
   controllers: [GroupController],
   providers: [GroupRepository, GroupService],
   exports: [GroupService],

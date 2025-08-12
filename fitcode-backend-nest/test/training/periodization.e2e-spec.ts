@@ -79,6 +79,8 @@ describe('Periodization functions (e2e)', () => {
     const to = arrgTo || baseTo;
 
     return await createTraining(firebase, {
+      ownerId: global.trainer.uid,
+      membersIds: group.membersIds,
       group,
       cycleId: group.cycles[0].id,
       from,
