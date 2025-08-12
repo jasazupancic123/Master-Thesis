@@ -9,6 +9,8 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
+import { UserIdDto } from '@src/common/dto/user-id.dto';
+
 import { Auth } from '../common/decorator/auth.decorator';
 import { RequestUser } from '../common/decorator/request-user.decorator';
 import { User } from '../common/type/firebase-auth.type';
@@ -76,5 +78,33 @@ export class GroupController {
   async delete(@RequestUser() user: User, @Param('groupId') groupId: string) {
     await this.groupService.delete(user, { groupId });
     return {};
+  }
+
+  @Patch(':groupId/member')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER])
+  async addMember(
+    @RequestUser() user: User,
+    @Param('groupId') groupId: string,
+    @Body() { userId }: UserIdDto,
+  ) {
+    return await this.groupService.updateMembers(
+      user,
+      { groupId },
+      { userId, add: true },
+    );
+  }
+
+  @Delete(':groupId/member')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER])
+  async removeMember(
+    @RequestUser() user: User,
+    @Param('groupId') groupId: string,
+    @Body() { userId }: UserIdDto,
+  ) {
+    return await this.groupService.updateMembers(
+      user,
+      { groupId },
+      { userId, add: false },
+    );
   }
 }

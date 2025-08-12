@@ -645,6 +645,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
       );
 
     await this.repository.deleteDoc(ref.exerciseId);
+    await this.cacheManagerService.del(CACHE_KEY_EXERCISES);
   }
 
   /**

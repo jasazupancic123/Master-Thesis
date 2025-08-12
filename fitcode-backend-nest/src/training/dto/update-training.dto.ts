@@ -71,7 +71,7 @@ export class UpdateTrainingComponentDto
 }
 
 export class UpdateTrainingDto
-  extends PickType(Training, ['membersIds', 'warmup', 'cooldown'])
+  extends PickType(Training, ['warmup', 'cooldown'])
   implements UpdateTraining
 {
   @ValidateNested({ each: true })

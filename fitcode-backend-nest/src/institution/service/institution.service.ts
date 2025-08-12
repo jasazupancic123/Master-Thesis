@@ -2,25 +2,31 @@ import {
   BadRequestException,
   Injectable,
   Logger,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { FieldValue } from 'firebase-admin/firestore';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
+import { LogMethod } from '@src/common/decorator/log-method.decorator';
 import { Permission } from '@src/common/interface/permission.interface';
 import { CommonService } from '@src/common/service/common.service';
 import { Create } from '@src/common/type/entity.type';
 import { User } from '@src/common/type/firebase-auth.type';
-import { InstitutionRef } from '@src/common/type/firestore.type';
+import {
+  BatchWriteOperation,
+  InstitutionRef,
+} from '@src/common/type/firestore.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { UserEntity } from '@src/user/entity/user.entity';
-import { UserRole } from '@src/user/enum/user-role.enum';
 import { UserService } from '@src/user/user.service';
 
+import { INSTITUTION_ATHLETE_EVENT } from '../constant/update-institution-athlete-event.constant';
 import { CreateInstitutionDto } from '../dto/create-institution.dto';
 import { UpdateInstitutionDto } from '../dto/update-institution.dto';
 import { UpdateInstitutionMembersDto } from '../dto/update-institution-members.dto';
 import { Institution } from '../entity/institution.entity';
 import { GetMembersType } from '../enum/institution-get-members.enum';
+import { UpdateInstitutionAthleteEvent } from '../event/update-institution-athlete.event';
 import { InstitutionRepository } from '../repository/institution.repository';
 
 @Injectable()
@@ -30,6 +36,7 @@ export class InstitutionService implements Permission<Institution> {
   constructor(
     private readonly firebaseService: FirebaseService,
     private readonly commonService: CommonService,
+    private readonly eventEmitter: EventEmitter2,
     private readonly userService: UserService,
     private readonly repository: InstitutionRepository,
   ) {}
@@ -46,7 +53,7 @@ export class InstitutionService implements Permission<Institution> {
 
   async getDocByIdOrFail(ref: InstitutionRef): Promise<Institution> {
     const institution = await this.getDoc(ref);
-    if (!institution) throw new BadRequestException('Institution not found');
+    if (!institution) throw new NotFoundException('Institution not found');
     return institution;
   }
 
@@ -134,52 +141,56 @@ export class InstitutionService implements Permission<Institution> {
     return this.firebaseService.batchIn('id', ids, collection);
   }
 
+  @LogMethod()
   async updateMembers(
     user: User,
     ref: InstitutionRef,
     input: UpdateInstitutionMembersDto,
-  ): Promise<Institution> {
-    const { add, trainers } = input;
-    let { memberIds } = input;
-
-    this.logger.log(
-      `User ${user.uid} is ${add ? 'adding' : 'removing'} ${trainers ? 'trainers' : 'athletes'} to institution ${ref.institutionId}: ${JSON.stringify(
-        input,
-      )}`,
-    );
+  ) {
+    const { add, trainer } = input;
 
     const institution = await this.getDocByIdOrFail(ref);
     if (!this.canEdit(user, institution))
       throw new UnauthorizedException('You cannot edit this institution');
 
-    // filter out duplicates
-    if (add) {
-      memberIds = trainers
-        ? memberIds.filter((id) => !institution.trainerIds.includes(id))
-        : memberIds.filter((id) => !institution.athleteIds.includes(id));
+    const member = await this.userService.findOneBy('id', input.userId);
+    if (!member) throw new BadRequestException('Member does not exist');
+
+    if (trainer) {
+      if (!this.firebaseService.isTrainer(member))
+        throw new BadRequestException(
+          'Member must be a trainer to be added as a trainer',
+        );
+
+      // updating trainer
+      if (add) await this.repository.addTrainer(institution.id, member.uid);
+      else await this.repository.removeTrainer(institution.id, member.uid);
+    } else {
+      // updating athlete
+      const operations: BatchWriteOperation<
+        { athleteIds: string[] } | { membersIds: string[] }
+      >[] = [
+        // update athlete in institution
+        this.repository.getUpdateAthleteOperation(
+          institution.id,
+          member.uid,
+          add,
+        ),
+      ];
+
+      // update athlete in all groups & trainings
+      await this.eventEmitter.emitAsync(
+        INSTITUTION_ATHLETE_EVENT,
+        new UpdateInstitutionAthleteEvent({
+          operations,
+          institutionId: institution.id,
+          userId: member.uid,
+          add,
+        }),
+      );
+
+      await this.firebaseService.paginateBatchWrites(operations);
     }
-
-    await this.userService.findAllOrFail({
-      ids: memberIds,
-      role: trainers ? UserRole.TRAINER : UserRole.ATHLETE,
-    });
-
-    const membersField = trainers ? 'trainerIds' : 'athleteIds';
-    const firebaseAction = add ? 'arrayUnion' : 'arrayRemove';
-
-    if (memberIds.length) {
-      const docRef = this.repository.collection().doc(institution.id);
-      await docRef.update({
-        [membersField]: FieldValue[firebaseAction](...memberIds),
-      });
-    }
-
-    return {
-      ...institution,
-      [membersField]: add
-        ? [...institution[membersField], ...memberIds]
-        : institution[membersField].filter((id) => memberIds.includes(id)),
-    };
   }
 
   canView(user: User, institution: Institution) {

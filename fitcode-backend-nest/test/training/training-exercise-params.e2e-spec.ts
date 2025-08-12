@@ -38,6 +38,7 @@ import {
   generateSuperset,
   generateTrainingComponent,
   generateTrainingExercise,
+  generateTrainingStub,
 } from '@src/training/mock/training.stub';
 import { TrainingService } from '@src/training/service/training.service';
 
@@ -106,40 +107,44 @@ describe('Training Exercise Params (e2e)', () => {
   }
 
   async function createTraining(exerciseId: string) {
-    const training = await db.trainings.create({
-      ownerId: global.trainer.id,
-      membersIds: [global.athlete.id],
-      institutionId: institution.id,
-      groupId: group.id,
-      cycleId: group.cycles[1].id,
-      date: addDays(new Date(), 2),
-      components: [
-        generateTrainingComponent({
-          id: COMPONENT_ENDURANCE.id,
+    const trainingId = await db.trainings.addDoc(
+      generateTrainingStub({
+        ownerId: global.trainer.id,
+        membersIds: [global.athlete.id],
+        institutionId: institution.id,
+        groupId: group.id,
+        cycleId: group.cycles[1].id,
+        date: addDays(new Date(), 2),
+        components: [
+          generateTrainingComponent({
+            id: COMPONENT_ENDURANCE.id,
+            supersets: [
+              generateSuperset({
+                exercises: [generateTrainingExercise({ id: exerciseId })],
+              }),
+            ],
+          }),
+        ],
+        warmup: generateTrainingComponent({
+          id: WARMUP_COMPONENT_ID,
           supersets: [
             generateSuperset({
               exercises: [generateTrainingExercise({ id: exerciseId })],
             }),
           ],
         }),
-      ],
-      warmup: generateTrainingComponent({
-        id: WARMUP_COMPONENT_ID,
-        supersets: [
-          generateSuperset({
-            exercises: [generateTrainingExercise({ id: exerciseId })],
-          }),
-        ],
+        cooldown: generateTrainingComponent({
+          id: COOLDOWN_COMPONENT_ID,
+          supersets: [
+            generateSuperset({
+              exercises: [generateTrainingExercise({ id: exerciseId })],
+            }),
+          ],
+        }),
       }),
-      cooldown: generateTrainingComponent({
-        id: COOLDOWN_COMPONENT_ID,
-        supersets: [
-          generateSuperset({
-            exercises: [generateTrainingExercise({ id: exerciseId })],
-          }),
-        ],
-      }),
-    });
+    );
+
+    const training = await db.trainings.getDoc(trainingId);
 
     // populate params through service
     return await trainingService.update(
