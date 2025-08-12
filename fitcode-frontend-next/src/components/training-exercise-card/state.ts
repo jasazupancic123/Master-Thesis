@@ -6,7 +6,6 @@ import type { Attribute } from '@/controller/attribute/type/attribute.type';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import type { CompletedFutureWorkloads } from '@/controller/training/type/completed-future-workloads.type';
 import type { ExerciseSet } from '@/controller/training/type/exercise-set.type';
-import type { IntensityVolumeValues } from '@/controller/training/type/intensity-volume-values.type';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
 import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
@@ -169,7 +168,6 @@ export function handleAthleteWorkloadsChange(
 export function updateTraining(
   input: {
     exercises: TrainingExercise[];
-    intensityVolumeValues?: IntensityVolumeValues[];
   },
   state: {
     training: Training;
@@ -184,7 +182,8 @@ export function updateTraining(
     setIsInited?: SetState<boolean>;
   }
 ) {
-  const { exercises, intensityVolumeValues } = input;
+  const { exercises } = input;
+
   const {
     training,
     component,
@@ -198,29 +197,16 @@ export function updateTraining(
     setIsInited,
   } = state;
 
-  if (!training || !component) return;
 
-  if (
-    intensityVolumeValues &&
-    exercises.length !== intensityVolumeValues.length
-  ) {
-    toast.error('Error in exercise selection');
-    return;
-  }
+  if (!training || !component) return;
 
   const newSupersets = [...supersets];
   let updatedSubgroup = selectedSubgroup ? { ...selectedSubgroup } : undefined;
   let updatedComponent = { ...component };
-  const newAvgFutureWorkloadValues = selectedSubgroup
-    ? [...selectedSubgroup.prescribedStats]
-    : [...training.prescribedStats];
   let detectedChanges = false;
 
   for (let i = 0; i < exercises.length; i++) {
     const exercise = exercises[i];
-    const intensityVolumeValue = intensityVolumeValues
-      ? intensityVolumeValues[i]
-      : undefined;
 
     const supersetIndex = supersets.findIndex((s) =>
       s.exercises.some((e) => e.id === exercise.id)
@@ -236,35 +222,6 @@ export function updateTraining(
     newSuperset.exercises[exerciseIndex] = { ...exercise };
     newSupersets[supersetIndex] = newSuperset;
     detectedChanges = true;
-
-    if (intensityVolumeValue) {
-      const foundAvgWorkloadValue = newAvgFutureWorkloadValues.find(
-        (aw) => aw.exerciseId === exercise.id
-      );
-
-      const numMembers = selectedSubgroup
-        ? selectedSubgroup.membersIds.length
-        : (() => {
-            const subgroupsMembersIds = component.subgroups.reduce(
-              (acc, subgroup) => [...acc, ...subgroup.membersIds],
-              [] as string[]
-            );
-            return training.membersIds.length - subgroupsMembersIds.length;
-          })();
-
-      if (!foundAvgWorkloadValue) {
-        newAvgFutureWorkloadValues.push({
-          exerciseId: exercise.id,
-          rootComponentId: component.component?.id || '',
-          numMembers,
-          ...intensityVolumeValue,
-        });
-      } else {
-        foundAvgWorkloadValue.numMembers = numMembers;
-        foundAvgWorkloadValue.intensity = intensityVolumeValue.intensity;
-        foundAvgWorkloadValue.volume = intensityVolumeValue.volume;
-      }
-    }
   }
 
   if (!detectedChanges) return;
@@ -277,7 +234,6 @@ export function updateTraining(
       updatedSubgroup = {
         ...updatedSubgroup!,
         supersets: newSupersets,
-        prescribedStats: newAvgFutureWorkloadValues,
       };
 
       updatedComponent = {
@@ -313,7 +269,6 @@ export function updateTraining(
       const newTraining = {
         ...training,
         components: updatedComponents,
-        prescribedStats: newAvgFutureWorkloadValues,
       };
 
       if (setSupersets) {

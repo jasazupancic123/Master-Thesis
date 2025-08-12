@@ -43,7 +43,6 @@ export async function handleCopyComponentApiRequest(
         components: allComponents,
         exercises: allExercises,
         methods: allMethods,
-        prescribedStats: true,
       });
 
       setTrainings((prev) =>

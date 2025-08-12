@@ -48,9 +48,6 @@ export default function deleteSupersetExercise(input: {
                 exercises: s.exercises.filter((ex, k) => k !== exerciseIndex),
               }
         ),
-        prescribedStats: selectedSubgroup.prescribedStats.filter(
-          (ps) => ps.exerciseId !== exercise.id
-        ),
       }
     : null;
 
@@ -79,9 +76,6 @@ export default function deleteSupersetExercise(input: {
 
   const updatedTraining: Training = {
     ...training,
-    prescribedStats: !selectedSubgroup
-      ? training.prescribedStats.filter((ps) => ps.exerciseId !== exercise.id)
-      : training.prescribedStats,
   };
 
   if (component.id === WARMUP_ID) {

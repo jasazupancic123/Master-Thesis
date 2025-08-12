@@ -320,7 +320,6 @@ export default function TrainingComponentHeaderMenu(
                   components: allComponents,
                   exercises: allExercises,
                   methods: allMethods,
-                  prescribedStats: true,
                 });
 
                 return pt;

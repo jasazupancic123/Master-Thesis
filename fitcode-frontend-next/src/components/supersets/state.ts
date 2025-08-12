@@ -249,33 +249,9 @@ export function handleAddExerciseToSupersetComponent(
         0
       );
 
-    // insert future workload data
-    const prescribedStats = [...training.prescribedStats];
-    supersets.map((s) =>
-      s.exercises.map((e) => {
-        const { intensity, volume } = TrainingService.getAverageIntVol(e.sets);
-        const found = prescribedStats.find((v) => v.exerciseId === e.id);
-
-        if (found) {
-          found.numMembers = numberOfAvailableMembers;
-          found.intensity = intensity;
-          found.volume = volume;
-        } else {
-          prescribedStats.push({
-            exerciseId: e.id,
-            rootComponentId: component.component?.id || '',
-            numMembers: numberOfAvailableMembers,
-            intensity,
-            volume,
-          });
-        }
-      })
-    );
-
     const newTraining: Training = {
       ...training,
       components: updatedComponents,
-      prescribedStats,
     };
 
     setComponent(updatedComponent);
@@ -286,34 +262,10 @@ export function handleAddExerciseToSupersetComponent(
     setDetectedChanges(true);
     setOpenAddExerciseModal(false);
   } else {
-    // update subgroup's future workload values
-    const prescribedStats = [...selectedSubgroup.prescribedStats];
-    supersets.map((s) =>
-      s.exercises.map((e) => {
-        const { intensity, volume } = TrainingService.getAverageIntVol(e.sets);
-        const found = prescribedStats.find((v) => v.exerciseId === e.id);
-
-        if (found) {
-          found.numMembers = selectedSubgroup.membersIds.length;
-          found.intensity = intensity;
-          found.volume = volume;
-        } else {
-          prescribedStats.push({
-            exerciseId: e.id,
-            rootComponentId: component.component?.id || '',
-            numMembers: selectedSubgroup.membersIds.length,
-            intensity,
-            volume,
-          });
-        }
-      })
-    );
-
     // update subgroup's supersets
     const updatedSubgroup = {
       ...selectedSubgroup,
       supersets: [...supersets],
-      prescribedStats,
     };
 
     const updatedSubgroups = [
@@ -334,7 +286,6 @@ export function handleAddExerciseToSupersetComponent(
     const newTraining: Training = {
       ...training,
       components: updatedComponents,
-      prescribedStats,
     };
 
     setComponent(updatedComponent);

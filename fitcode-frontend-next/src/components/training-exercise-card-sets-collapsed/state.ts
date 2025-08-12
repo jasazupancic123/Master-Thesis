@@ -11,7 +11,6 @@ import { SetStatus } from '@/controller/training/enum/set-status.enum';
 import { TrainingService } from '@/controller/training/training.service';
 import type { CompletedFutureWorkloads } from '@/controller/training/type/completed-future-workloads.type';
 import type { ExerciseSet } from '@/controller/training/type/exercise-set.type';
-import type { IntensityVolumeValues } from '@/controller/training/type/intensity-volume-values.type';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
 import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
@@ -360,7 +359,6 @@ export function updateAttributeValue(
     : [exercise];
 
   const updatedExercises = [] as TrainingExercise[];
-  const intensityVolumeValues = [] as IntensityVolumeValues[];
 
   /* 
     Variable Name: baseParamField
@@ -474,18 +472,13 @@ export function updateAttributeValue(
               };
       });
 
-      const intensityVolumeValue =
-        TrainingService.getAverageIntVol(updatedSets);
-
       exerciseToUpdate.sets = [...updatedSets];
       updatedExercises.push(exerciseToUpdate);
-      intensityVolumeValues.push(intensityVolumeValue);
     }
 
     updateTraining(
       {
         exercises: updatedExercises,
-        intensityVolumeValues: intensityVolumeValues,
       },
       {
         training,
