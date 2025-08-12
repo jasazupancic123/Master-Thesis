@@ -29,7 +29,6 @@ import type { CompletedFutureWorkloads } from '@/controller/training/type/comple
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
 import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
-import type { TrainingInfo } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import type { TrainingExerciseAverageStats } from '@/controller/training/type/training-exercise-average-stats.type';
@@ -46,7 +45,7 @@ export async function handleCopyTraining(
     training: Training;
     cycle: Cycle;
     day: Day;
-    setTrainings: SetState<TrainingInfo[]>;
+    setTrainings: SetState<Training[]>;
     components: Component[];
     exercises: Exercise[];
     methods: Method[];
@@ -375,7 +374,7 @@ export function handleDeleteSubgroup(
     setComponent: SetStateNullable<TrainingComponent>;
     selectedExercises: TrainingExercise[];
     setSelectedExercises: SetState<TrainingExercise[]>;
-    setTrainings: SetState<TrainingInfo[]>;
+    setTrainings: SetState<Training[]>;
     setSelectedSubgroup: SetState<Subgroup | null>;
     setDetectedChanges: SetState<boolean>;
   }
@@ -835,7 +834,7 @@ export function handleDeleteSuperset(
     setComponent: SetStateNullable<TrainingComponent>;
     selectedSubgroup: Subgroup | null;
     setSelectedSubgroup: SetState<Subgroup | null>;
-    setTrainings: SetState<TrainingInfo[]>;
+    setTrainings: SetState<Training[]>;
     setDetectedChanges: SetState<boolean>;
     setCustomAthleteWorkloads: SetState<Workload[]>;
     setSelectedExercises: SetState<TrainingExercise[]>;
@@ -1035,7 +1034,7 @@ const getFormatedDate = (from: Date) => {
 };
 
 export function prepareGroupAvgWorkloadsForChart(
-  trainings: TrainingInfo[],
+  trainings: Training[],
   exerciseId: string,
   setData: SetState<ChartWorkloadData[]>,
   setMax: SetState<number>,

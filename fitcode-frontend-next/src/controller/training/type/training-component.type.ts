@@ -24,19 +24,6 @@ export type TrainingComponent = IdEntity &
     component?: Component;
   };
 
-export type TrainingComponentInfo = IdEntity &
-  ColorEntity &
-  Required<DateRange> & {
-    subgroups: SubgroupInfo[];
-    methodId?: string;
-
-    // mapped properties
-    method?: Method;
-    target?: Target; // selected target
-    component?: Component;
-    copiedFrom?: CopiedFrom; // used for copying components from other trainings
-  };
-
 export type CreateTrainingComponent = Pick<
   TrainingComponent,
   'id' | 'from' | 'to' | 'target' | 'methodId'

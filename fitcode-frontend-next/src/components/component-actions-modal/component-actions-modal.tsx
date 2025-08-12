@@ -8,7 +8,6 @@ import { ComponentModalAction } from '@/common/enum/component-modal-action.const
 import type { Day } from '@/common/service/util/date.util';
 import type { SetState } from '@/common/type/state.type';
 import type { Training } from '@/controller/training/type/training.type';
-import type { TrainingInfo } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 
 interface ComponentActionsModalProps {
@@ -16,7 +15,7 @@ interface ComponentActionsModalProps {
   training: Training; // Replace with actual type
   day: Day; // Replace with actual type
   setOpenOverwriteModal: SetState<boolean>;
-  setTrainingInPeriodForModal: SetState<TrainingInfo | null>;
+  setTrainingInPeriodForModal: SetState<Training | null>;
 }
 
 export default function ComponentActionsModal(

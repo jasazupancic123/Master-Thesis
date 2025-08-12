@@ -7,8 +7,8 @@ import React, { useState } from 'react';
 import MyModal from '../modal/modal';
 import type { TrainingCycleViewWeekProps } from '../training-cycle-view-week/type';
 import TrainingWeekDates from '../training-week-date/training-week-date';
-import type { TrainingInfo } from '@/controller/training/type/training.type';
 import { useMain } from '@/store/main-provider';
+import { Training } from '@/controller/training/type/training.type';
 
 export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
   const { components } = useMain();
@@ -34,7 +34,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
   } = props;
 
   const [openAreYouSureModal, setOpenAreYouSureModal] = useState(false);
-  const [selectedTraining, setSelectedTraining] = useState<TrainingInfo | null>(
+  const [selectedTraining, setSelectedTraining] = useState<Training | null>(
     null
   );
 
