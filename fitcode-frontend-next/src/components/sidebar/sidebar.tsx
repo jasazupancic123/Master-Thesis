@@ -52,7 +52,7 @@ export default function Sidebar() {
       <List>
         <ListItem disablePadding>
           <ListItemButton>
-            <ListItemText primary="Sign Out" onClick={logout} />
+            <ListItemText primary="Sign Out" onClick={() => logout()} />
           </ListItemButton>
         </ListItem>
       </List>
