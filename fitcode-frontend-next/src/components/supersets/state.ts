@@ -18,7 +18,6 @@ import { TrainingService } from '@/controller/training/training.service';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
 import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
-import type { TrainingInfo } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 
@@ -70,7 +69,7 @@ export function handleAddExerciseToSupersetComponent(
   state: {
     training: Training;
     setTraining: SetStateNullable<Training>;
-    setTrainings: SetState<TrainingInfo[]>;
+    setTrainings: SetState<Training[]>;
     component: TrainingComponent;
     setComponent: SetStateNullable<TrainingComponent>;
     selectedSubgroup: Subgroup | null;
@@ -205,12 +204,10 @@ export function handleAddExerciseToSupersetComponent(
         ? { ...training, warmup: updatedWOrC }
         : { ...training, cooldown: updatedWOrC };
 
-    const minimalTraining = TrainingService.trainingToInfo(updatedTraining);
-
     setComponent(updatedWOrC);
     setTraining(updatedTraining);
     setTrainings((prev) =>
-      prev.map((t) => (t.id === minimalTraining.id ? minimalTraining : t))
+      prev.map((t) => (t.id === updatedTraining.id ? updatedTraining : t))
     );
     setOpenAddExerciseModal(false);
     setDetectedChanges(true);
@@ -281,12 +278,10 @@ export function handleAddExerciseToSupersetComponent(
       prescribedStats,
     };
 
-    const minimalTraining = TrainingService.trainingToInfo(newTraining);
-
     setComponent(updatedComponent);
     setTraining(newTraining);
     setTrainings((prev) =>
-      prev.map((t) => (t.id === minimalTraining.id ? minimalTraining : t))
+      prev.map((t) => (t.id === newTraining.id ? newTraining : t))
     );
     setDetectedChanges(true);
     setOpenAddExerciseModal(false);
@@ -342,12 +337,10 @@ export function handleAddExerciseToSupersetComponent(
       prescribedStats,
     };
 
-    const minimalTraining = TrainingService.trainingToInfo(newTraining);
-
     setComponent(updatedComponent);
     setTraining(newTraining);
     setTrainings((prev) =>
-      prev.map((t) => (t.id === minimalTraining.id ? minimalTraining : t))
+      prev.map((t) => (t.id === newTraining.id ? newTraining : t))
     );
     setDetectedChanges(true);
     setOpenAddExerciseModal(false);

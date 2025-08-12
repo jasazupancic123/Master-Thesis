@@ -10,7 +10,6 @@ import type { SetState } from '@/common/type/state.type';
 import TrainingWeek from '@/components/training-week/training-week';
 import type { Component } from '@/controller/component/type/component.type';
 import type { Training } from '@/controller/training/type/training.type';
-import type { TrainingInfo } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { useGroup } from '@/store/group-provider';
 
@@ -18,7 +17,7 @@ interface TrainingComponentCalendarProps {
   trainingComponent: TrainingComponent;
   training: Training;
   setOpenOverwriteModal: SetState<boolean>;
-  setTrainingInPeriodForModal: SetState<TrainingInfo | null>;
+  setTrainingInPeriodForModal: SetState<Training | null>;
   copyComponent: boolean;
   day: Day;
 }

@@ -9,13 +9,12 @@ import type { Method } from '@/controller/method/type/method.type';
 import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
 import type { Training } from '@/controller/training/type/training.type';
-import type { TrainingInfo } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 
 export async function handleCopyComponentApiRequest(
   input: {
     training: Training;
-    trainingInPeriod: TrainingInfo;
+    trainingInPeriod: Training;
     component: TrainingComponent;
   },
   state: {
@@ -23,7 +22,7 @@ export async function handleCopyComponentApiRequest(
     allComponents: Component[];
     allExercises: Exercise[];
     allMethods: Method[];
-    setTrainings: SetState<TrainingInfo[]>;
+    setTrainings: SetState<Training[]>;
   }
 ) {
   const { training, trainingInPeriod, component } = input;
@@ -47,11 +46,9 @@ export async function handleCopyComponentApiRequest(
         prescribedStats: true,
       });
 
-      const minimalTraining = TrainingService.trainingToInfo(training);
-
       setTrainings((prev) =>
         prev.map((t) => {
-          if (t.id === minimalTraining.id) return minimalTraining;
+          if (t.id === training.id) return training;
           return t;
         })
       );

@@ -2,7 +2,6 @@ import type { PeriodizationType } from '../enum/periodization-type.enum';
 import type {
   CreateTrainingComponent,
   TrainingComponent,
-  TrainingComponentInfo,
   UpdateTrainingComponent,
 } from './training-component.type';
 import type { TrainingExerciseAverageStats } from './training-exercise-average-stats.type';
@@ -36,19 +35,6 @@ export type Training = BaseEntity &
     group?: Group;
     cycle?: Cycle;
     members?: User[];
-  };
-
-export type TrainingInfo = BaseEntity &
-  Required<DateRange> & {
-    institutionId?: string;
-    groupId?: string;
-    cycleId?: string;
-    copiedFromId?: string;
-    warmup: TrainingComponentInfo;
-    cooldown: TrainingComponentInfo;
-    components: TrainingComponentInfo[];
-    stats: TrainingExerciseAverageStats[];
-    prescribedStats: TrainingExerciseAverageStats[];
   };
 
 export type CreateTraining = Pick<

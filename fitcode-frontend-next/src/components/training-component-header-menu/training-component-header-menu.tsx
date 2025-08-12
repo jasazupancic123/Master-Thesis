@@ -326,13 +326,9 @@ export default function TrainingComponentHeaderMenu(
                 return pt;
               });
 
-              const minimalPeriodizedTrainings = periodizedTrainings.map((t) =>
-                TrainingService.trainingToInfo(t)
-              );
-
               setTrainings((prev) =>
                 prev.map((t) => {
-                  const newTraining = minimalPeriodizedTrainings.find(
+                  const newTraining = periodizedTrainings.find(
                     (nt) => nt.id === t.id
                   );
                   return newTraining ? newTraining : t;

@@ -11,8 +11,6 @@ import type { Subgroup } from './type/subgroup.type';
 import type { SubgroupInfo } from './type/subgroup.type';
 import type { Superset } from './type/superset.type';
 import type { Training } from './type/training.type';
-import type { TrainingInfo } from './type/training.type';
-import type { TrainingComponentInfo } from './type/training-component.type';
 import type { TrainingComponent } from './type/training-component.type';
 import type { TrainingExercise } from './type/training-exercise.type';
 import type { TrainingExerciseAverageStats } from './type/training-exercise-average-stats.type';
@@ -22,17 +20,11 @@ import {
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
 
-function isTrainingComponent(
-  item: TrainingComponent | TrainingComponentInfo
-): item is TrainingComponent {
-  return 'supersets' in item;
-}
-
 type PWKey = keyof PrescribedWorkload;
 type Triple = readonly [PWKey, PWKey, PWKey];
 
 export class TrainingService {
-  static mapData<T extends Training | TrainingInfo>(
+  static mapData<T extends Training>(
     item: T,
     data: {
       prescribedStats?: boolean;
@@ -60,8 +52,6 @@ export class TrainingService {
 
     if (data.exercises) {
       for (const tc of item.components) {
-        if (!isTrainingComponent(tc)) continue;
-
         for (const s of tc.supersets)
           for (const e of s.exercises) {
             e.exercise = data.exercises.find(({ id }) => id === e.id);
@@ -76,27 +66,24 @@ export class TrainingService {
             }
       }
 
-      if (isTrainingComponent(item.warmup))
-        for (const s of item.warmup.supersets)
-          for (const e of s.exercises) {
-            e.exercise = data.exercises.find(({ id }) => id === e.id);
-            if (!Array.isArray(e.params)) e.params = Object.values(e.params);
-          }
+      for (const s of item.warmup.supersets)
+        for (const e of s.exercises) {
+          e.exercise = data.exercises.find(({ id }) => id === e.id);
+          if (!Array.isArray(e.params)) e.params = Object.values(e.params);
+        }
 
-      if (isTrainingComponent(item.cooldown))
-        for (const s of item.cooldown.supersets)
-          for (const e of s.exercises) {
-            e.exercise = data.exercises.find(({ id }) => id === e.id);
-            if (!Array.isArray(e.params)) e.params = Object.values(e.params);
-          }
+      for (const s of item.cooldown.supersets)
+        for (const e of s.exercises) {
+          e.exercise = data.exercises.find(({ id }) => id === e.id);
+          if (!Array.isArray(e.params)) e.params = Object.values(e.params);
+        }
     }
 
     if (data.prescribedStats)
-      if (isTrainingComponent(item.components[0]))
-        this.mapPrescribedStats(
-          item as Training,
-          (item as Training).membersIds.length
-        );
+      this.mapPrescribedStats(
+        item as Training,
+        (item as Training).membersIds.length
+      );
   }
 
   static mapMembers(item: Training, users: User[]): Training {
@@ -120,45 +107,6 @@ export class TrainingService {
       if (subgroup.membersIds.includes(userId)) return subgroup.supersets;
 
     return component.supersets; // default group
-  }
-
-  static trainingToInfo(training: Training): TrainingInfo {
-    this.mapPrescribedStats(training, training.membersIds.length);
-
-    return {
-      id: training.id,
-      from: training.from,
-      to: training.to,
-      groupId: training.groupId,
-      cycleId: training.cycleId,
-      copiedFromId: training.copiedFromId,
-      warmup: this.componentToInfo(training.warmup),
-      cooldown: this.componentToInfo(training.cooldown),
-      components: training.components.map((component) =>
-        this.componentToInfo(component)
-      ),
-      stats: training.stats,
-      prescribedStats: training.prescribedStats,
-      createdAt: training.createdAt,
-      updatedAt: training.updatedAt,
-    };
-  }
-
-  static componentToInfo(component: TrainingComponent): TrainingComponentInfo {
-    return {
-      id: component.id,
-      color: component.color,
-      from: component.from,
-      to: component.to,
-      subgroups: component.subgroups.map((subgroup) =>
-        this.subgroupToInfo(subgroup)
-      ),
-      methodId: component.methodId,
-      method: component.method,
-      target: component.target,
-      component: component.component,
-      copiedFrom: component.copiedFrom,
-    };
   }
 
   static subgroupToInfo(subgroup: Subgroup): SubgroupInfo {
