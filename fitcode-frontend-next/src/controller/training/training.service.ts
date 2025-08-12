@@ -7,13 +7,10 @@ import type { Exercise } from '../exercise/type/exercise.type';
 import type { Method } from '../method/type/method.type';
 import type { User } from '../user/type/user.type';
 import type { ExerciseSet } from './type/exercise-set.type';
-import type { Subgroup } from './type/subgroup.type';
-import type { SubgroupInfo } from './type/subgroup.type';
 import type { Superset } from './type/superset.type';
 import type { Training } from './type/training.type';
 import type { TrainingComponent } from './type/training-component.type';
 import type { TrainingExercise } from './type/training-exercise.type';
-import type { TrainingExerciseAverageStats } from './type/training-exercise-average-stats.type';
 import type { PrescribedWorkload } from './type/workload-value.type';
 import {
   COOLDOWN_ID,
@@ -27,7 +24,6 @@ export class TrainingService {
   static mapData<T extends Training>(
     item: T,
     data: {
-      prescribedStats?: boolean;
       components?: Component[];
       exercises?: Exercise[];
       methods?: Method[];
@@ -78,12 +74,6 @@ export class TrainingService {
           if (!Array.isArray(e.params)) e.params = Object.values(e.params);
         }
     }
-
-    if (data.prescribedStats)
-      this.mapPrescribedStats(
-        item as Training,
-        (item as Training).membersIds.length
-      );
   }
 
   static mapMembers(item: Training, users: User[]): Training {
@@ -107,13 +97,6 @@ export class TrainingService {
       if (subgroup.membersIds.includes(userId)) return subgroup.supersets;
 
     return component.supersets; // default group
-  }
-
-  static subgroupToInfo(subgroup: Subgroup): SubgroupInfo {
-    return {
-      id: subgroup.id,
-      prescribedStats: subgroup.prescribedStats,
-    };
   }
 
   private static getFieldNames(field: string): Triple | undefined {
@@ -369,102 +352,6 @@ export class TrainingService {
     return perscribedFieldName as keyof PrescribedWorkload;
   }
 
-  /**
-   * Based on prescribed training, this method calculates average stats
-   * for intensity and volume for each exercise in the training components
-   * for all users in main group and subgroups.
-   */
-  static mapPrescribedStats(
-    training: Training,
-    numMembersTraining: number
-  ): void {
-    const stats: TrainingExerciseAverageStats[] = [];
-
-    for (const component of training.components) {
-      const numMembersMainGroup = // all members in training - members in all subgroups
-        numMembersTraining -
-        component.subgroups.reduce((sum, s) => sum + s.membersIds.length, 0);
-      if (numMembersMainGroup <= 0) continue; // skip if no members in main group
-
-      for (const superset of component.supersets) {
-        for (const { id, sets } of superset.exercises) {
-          const { intensity, volume } = this.getAverageIntVol(sets);
-          const foundStat = stats.find((s) => s.exerciseId === id);
-
-          if (foundStat) {
-            foundStat.intensity += intensity * numMembersMainGroup;
-            foundStat.volume += volume * numMembersMainGroup;
-            foundStat.numMembers += numMembersMainGroup;
-          } else {
-            stats.push({
-              intensity: intensity * numMembersMainGroup,
-              volume: volume * numMembersMainGroup,
-              numMembers: numMembersMainGroup,
-              exerciseId: id,
-              rootComponentId: component.id,
-            });
-          }
-        }
-      }
-
-      for (const subgroup of component.subgroups) {
-        const numMembersSubgroup = subgroup.membersIds.length;
-        if (numMembersSubgroup === 0) continue; // skip empty subgroups
-
-        const subgroupStats: TrainingExerciseAverageStats[] = [];
-        for (const superset of subgroup.supersets) {
-          for (const { id, sets } of superset.exercises) {
-            const { intensity, volume } = this.getAverageIntVol(sets);
-
-            const foundMain = stats.find((s) => s.exerciseId === id);
-            const foundSubgroup = subgroupStats.find(
-              (s) => s.exerciseId === id && s.rootComponentId === component.id
-            );
-
-            let subgroupStat: TrainingExerciseAverageStats | undefined;
-            if (foundMain) {
-              // "append" subgroup stats to main group stats to avoid duplicates
-              foundMain.intensity += intensity * numMembersSubgroup;
-              foundMain.volume += volume * numMembersSubgroup;
-              foundMain.numMembers += numMembersSubgroup;
-              subgroupStat = foundMain;
-            } else {
-              // create new stats for subgroup exercise
-              subgroupStat = {
-                intensity: intensity * numMembersSubgroup,
-                volume: volume * numMembersSubgroup,
-                numMembers: numMembersSubgroup,
-                exerciseId: id,
-                rootComponentId: component.id,
-              };
-
-              stats.push(subgroupStat);
-            }
-
-            // add subgroup stats to subgroupStats array
-            if (foundSubgroup) {
-              foundSubgroup.intensity += subgroupStat.intensity;
-              foundSubgroup.volume += subgroupStat.volume;
-              foundSubgroup.numMembers += subgroupStat.numMembers;
-            } else subgroupStats.push(subgroupStat);
-          }
-        }
-
-        subgroup.prescribedStats = subgroupStats.map((s) => {
-          const intensity = s.intensity / s.numMembers;
-          const volume = s.volume / s.numMembers;
-          return { ...s, intensity, volume };
-        });
-      }
-    }
-
-    training.prescribedStats = stats.map((s) => {
-      const intensity = s.intensity / s.numMembers; // average intensity
-      const volume = s.volume / s.numMembers; // average volume
-      return { ...s, intensity, volume };
-    });
-  }
-
   private static parseSelected<T = string>(
     attributeValue: AttributeValue | undefined
   ): T | undefined {
@@ -480,22 +367,6 @@ export class TrainingService {
       if (!isNaN(+attributeValue.value)) return +attributeValue.value;
 
     return NaN;
-  }
-
-  /**
-   * Calculates average intensity and volume for a list of sets.
-   * It takes into account both left and right param values.
-   * If there are no sets, it returns 0 for both intensity and volume.
-   */
-  static getAverageIntVol(
-    sets: ExerciseSet[]
-  ): Pick<TrainingExerciseAverageStats, 'intensity' | 'volume'> {
-    const averages = this.calculateParamTypeAverages(sets);
-
-    const intensity = parseFloat(averages[ParamType.IntWork1].toFixed(2));
-    const volume = parseFloat(averages[ParamType.VolWork1].toFixed(2));
-
-    return { intensity, volume };
   }
 
   private static calculateParamTypeAverages(

@@ -4,7 +4,6 @@ import type {
   TrainingComponent,
   UpdateTrainingComponent,
 } from './training-component.type';
-import type { TrainingExerciseAverageStats } from './training-exercise-average-stats.type';
 import type { CreatePrescribedWorkload } from './workload.type';
 import type { DateRange } from '@/common/type/date-range.type';
 import type { BaseEntity } from '@/common/type/entity.type';
@@ -26,11 +25,9 @@ export type Training = BaseEntity &
     warmup: TrainingComponent;
     cooldown: TrainingComponent;
     components: TrainingComponent[];
-    stats: TrainingExerciseAverageStats[];
     wellness: Wellness[];
 
     // mapped properties
-    prescribedStats: TrainingExerciseAverageStats[];
     institution?: Institution;
     group?: Group;
     cycle?: Cycle;

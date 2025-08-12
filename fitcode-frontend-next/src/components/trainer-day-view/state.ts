@@ -1,4 +1,3 @@
-import { isBefore } from 'date-fns';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
@@ -31,9 +30,18 @@ import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import type { TrainingExerciseAverageStats } from '@/controller/training/type/training-exercise-average-stats.type';
 import type { Workload } from '@/controller/training/type/workload.type';
 import type { User } from '@/controller/user/type/user.type';
+import { WorkloadValue } from '@/controller/training/type/workload-value.type';
+import {
+  IntType,
+  ParamType,
+  VolType,
+} from '@/controller/component/enum/param.enum';
+import { Attribute } from '@/controller/attribute/type/attribute.type';
+import { AttributeType } from '@/controller/attribute/enum/attribute-value.enum';
+import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
+import { SetStatus } from '@/controller/training/enum/set-status.enum';
 
 export async function handleCopyTraining(
   input: {
@@ -93,7 +101,6 @@ export async function handleCopyTraining(
         components,
         exercises,
         methods,
-        prescribedStats: true,
       });
 
       setTrainings((prev) =>
@@ -121,7 +128,6 @@ export function onDragEndSubgroup(
     users: User[];
     component: TrainingComponent | undefined;
     training: Training | undefined;
-    setTraining: SetStateNullable<Training>;
   }
 ) {
   const {
@@ -134,7 +140,6 @@ export function onDragEndSubgroup(
     users,
     component,
     training,
-    setTraining,
   } = state;
 
   if (!destination || !training || !component) return;
@@ -149,40 +154,16 @@ export function onDragEndSubgroup(
 
   if (fromSubgroup && fromSubgroup.id === destination.droppableId) return;
 
-  const newTraining = { ...training };
-
-  if (fromSubgroup && fromSubgroup.id !== DEFAULT_SUBGROUP([], []).id) {
-    fromSubgroup.prescribedStats = fromSubgroup.prescribedStats.map((avg) => {
-      avg.numMembers -= 1;
-      return avg;
-    });
-  } else if (fromSubgroup && fromSubgroup.id === DEFAULT_SUBGROUP([], []).id) {
-    newTraining.prescribedStats = newTraining.prescribedStats.map((avg) => {
-      if (avg.rootComponentId === component.component?.id) {
-        avg.numMembers -= 1;
-      }
-      return avg;
-    });
-  }
-
   if (fromSubgroup && !changedSubgroupIds.includes(fromSubgroup.id))
     setChangedSubgroupIds((prev) => [...prev, fromSubgroup.id]);
 
-  [
-    DEFAULT_SUBGROUP(availableMembers, newTraining.prescribedStats),
-    ...updatedSubgroups,
-  ].forEach((s) => {
+  [DEFAULT_SUBGROUP(availableMembers), ...updatedSubgroups].forEach((s) => {
     if (!s.membersIds) return;
     s.membersIds = s.membersIds.filter((id) => id !== draggableId);
   });
 
   // Add member to the new subgroup
-  if (destination.droppableId === DEFAULT_SUBGROUP([], []).id) {
-    newTraining.prescribedStats = newTraining.prescribedStats.map((avg) => {
-      avg.numMembers += 1;
-      return avg;
-    });
-
+  if (destination.droppableId === DEFAULT_SUBGROUP([]).id) {
     if (!availableMembers.some((user) => user.uid === draggableId)) {
       setAvailableMembers((prev) => [
         ...prev,
@@ -194,15 +175,7 @@ export function onDragEndSubgroup(
       (s) => s.id === destination.droppableId
     );
 
-    if (targetSubgroup) {
-      targetSubgroup.membersIds.push(draggableId);
-      targetSubgroup.prescribedStats = targetSubgroup.prescribedStats.map(
-        (avg) => {
-          avg.numMembers += 1;
-          return avg;
-        }
-      );
-    }
+    if (targetSubgroup) targetSubgroup.membersIds.push(draggableId);
 
     setAvailableMembers((prev) =>
       prev.filter((user) => user.uid !== draggableId)
@@ -211,14 +184,6 @@ export function onDragEndSubgroup(
     if (targetSubgroup && !changedSubgroupIds.includes(targetSubgroup.id))
       setChangedSubgroupIds((prev) => [...prev, targetSubgroup.id]);
   }
-
-  setTraining((prev: Training | undefined) => {
-    if (!prev) return undefined;
-    return {
-      ...prev,
-      prescribedStats: newTraining.prescribedStats,
-    };
-  });
 
   setSubgroups(updatedSubgroups);
 }
@@ -303,22 +268,6 @@ export async function handleAddSubgroup(state: {
 
   if (!training || !component) return;
 
-  const stats: TrainingExerciseAverageStats[] = [];
-  for (const superset of component.supersets) {
-    for (const exercise of superset.exercises) {
-      const intensityVolumeValue = TrainingService.getAverageIntVol(
-        exercise.sets
-      );
-
-      stats.push({
-        exerciseId: exercise.id,
-        rootComponentId: component.component?.id || '',
-        numMembers: createSubgroup.membersIds.length,
-        ...intensityVolumeValue,
-      });
-    }
-  }
-
   const newSubgroup: Subgroup = {
     id: `subgroup-${String(Date.now())}`,
     name: createSubgroup.name,
@@ -328,7 +277,6 @@ export async function handleAddSubgroup(state: {
         ...exercise,
       })),
     })),
-    prescribedStats: stats,
     membersIds: createSubgroup.membersIds || [],
   };
 
@@ -341,17 +289,6 @@ export async function handleAddSubgroup(state: {
   setSelectedSubgroup(newSubgroup);
 
   setComponent(newComponent);
-
-  // update training's avg future workload values's numMembers
-  if (updateTrainingsAvgFutureWorkload) {
-    // member was not in a subgroup before, therfore update numMembers for prescribedStats
-    training.prescribedStats = training.prescribedStats.map((avg) => {
-      if (avg.rootComponentId === component.component?.id) {
-        avg.numMembers -= newSubgroup.membersIds.length;
-      }
-      return avg;
-    });
-  }
 
   updateGlobalStates(
     training,
@@ -416,20 +353,10 @@ export function handleDeleteSubgroup(
   const numberOfMembers = component.subgroups.find(
     (subgroup) => subgroup.id === subgroupId
   )?.membersIds.length;
-  const stats = [...training.prescribedStats].map((avg) => {
-    if (avg.rootComponentId === component.component?.id) {
-      avg.numMembers = numberOfMembers
-        ? avg.numMembers + numberOfMembers
-        : avg.numMembers;
-    }
-
-    return avg;
-  });
 
   const newTraining = {
     ...training,
     components: updatedComponents,
-    prescribedStats: stats,
   };
 
   setTraining(newTraining);
@@ -775,13 +702,9 @@ export function handleDeleteExercise(
 
   if (selectedSubgroup) {
     // update selected subgroup's supersets
-    const newAvgFutureWorkloadValues = selectedSubgroup.prescribedStats.filter(
-      (avg) => avg.exerciseId !== exerciseId
-    );
     const updatedSubgroup: Subgroup = {
       ...selectedSubgroup,
       supersets: updatedSupersets,
-      prescribedStats: newAvgFutureWorkloadValues,
     };
 
     const updatedComponent = {
@@ -811,14 +734,9 @@ export function handleDeleteExercise(
       c.id === component.id ? updatedComponent : c
     );
 
-    const newAvgFutureWorkloadValues = training.prescribedStats.filter(
-      (avg) => avg.exerciseId !== exerciseId
-    );
-
     const newTraining: Training = {
       ...training,
       components: updatedComponents,
-      prescribedStats: newAvgFutureWorkloadValues,
     };
     setTraining(newTraining);
   }
@@ -868,14 +786,9 @@ export function handleDeleteSuperset(
       (_, i) => i !== index
     );
 
-    const prescribedStats = [...selectedSubgroup.prescribedStats].filter(
-      (avg) => !exercisesToDelete.some((e) => e.id === avg.exerciseId)
-    );
-
     const updatedSubgroup = {
       ...selectedSubgroup,
       supersets: updatedSupersets,
-      prescribedStats,
     };
 
     const updatedComponent = {
@@ -914,10 +827,6 @@ export function handleDeleteSuperset(
 
     const updatedSupersets = [...supersets].filter((_, i) => i !== index);
 
-    const prescribedStats = [...training.prescribedStats].filter(
-      (avg) => !exercisesToDelete.some((e) => e.id === avg.exerciseId)
-    );
-
     const updatedComponent: TrainingComponent = {
       ...component,
       supersets: updatedSupersets,
@@ -929,7 +838,7 @@ export function handleDeleteSuperset(
 
     setComponent(updatedComponent);
 
-    const newTraining = { ...training, prescribedStats };
+    const newTraining = { ...training };
 
     if (component.id === WARMUP_ID) newTraining.warmup = updatedComponent;
     else if (component.id === COOLDOWN_ID)
@@ -1035,11 +944,148 @@ const getFormatedDate = (from: Date) => {
 
 export function prepareGroupAvgWorkloadsForChart(
   trainings: Training[],
-  exerciseId: string,
+  training: Training,
+  componentId: string,
+  exercise: TrainingExercise,
+  selectedParams: ParamType[],
   setData: SetState<ChartWorkloadData[]>,
   setMax: SetState<number>,
   setRange: SetState<number[]>
 ) {
+  const newData: ChartWorkloadData[] = [];
+
+  trainings.forEach((t) => {
+    if(t.id === training.id) t = training;
+
+    const name = getFormatedName(t.from);
+
+    const chartWorkloadData: ChartWorkloadData = {
+      trainingId: t.id,
+      name,
+      plannedAt: t.from,
+    };
+
+    const workloads: Workload[] = [];
+
+    const component = t.components.find((c) => c.id === componentId);
+    if (!component) return;
+
+    const foundExercises: {
+      exercise: TrainingExercise;
+      membersIds: string[];
+      completedMembersIds: string[];
+    }[] = [];
+
+    const foundExerciseInComponent = component.supersets
+      .flatMap((s) => s.exercises)
+      .find((e) => e.id === exercise.id);
+
+    const membersIdsInMainComponent = t.membersIds.filter(
+      (id) => !component.subgroups.flatMap((s) => s.membersIds).includes(id)
+    );
+
+    if (foundExerciseInComponent)
+      foundExercises.push({
+        exercise: foundExerciseInComponent,
+        membersIds: membersIdsInMainComponent,
+        completedMembersIds: component.completedMembersIds,
+      });
+
+    component.subgroups.forEach((sg) => {
+      const foundSubgroupExercis = sg.supersets
+        .flatMap((s) => s.exercises)
+        .find((e) => e.id === exercise.id);
+
+      if (foundSubgroupExercis)
+        foundExercises.push({
+          exercise: foundSubgroupExercis,
+          membersIds: sg.membersIds,
+          completedMembersIds: component.completedMembersIds,
+        });
+    });
+
+    if (!foundExercises.length) return;
+
+    foundExercises.forEach((foundExercise) => {
+      foundExercise.exercise.sets.forEach((set) => {
+        // check if data is in the array already for the current set
+        for (const memberId of foundExercise.membersIds) {
+          if (
+            workloads.some(
+              (w) =>
+                w.setNumber === set.setNumber &&
+                w.exerciseId === foundExercise.exercise.id &&
+                w.componentId === componentId &&
+                w.trainingId === t.id &&
+                w.userId === memberId
+            )
+          )
+            return;
+          const completed =
+            foundExercise.completedMembersIds.includes(memberId);
+
+          const workload: Workload = {
+            trainingId: t.id,
+            componentId: componentId,
+            exerciseId: foundExercise.exercise.id,
+            setNumber: set.setNumber,
+            plannedAt: t.from,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            userId: memberId,
+            supersetIndex: 0,
+            status: completed ? SetStatus.COMPLETED : SetStatus.NOT_STARTED,
+            intWork1Type: set.paramValuesL.find(
+              (paramValue) => paramValue.field === ParamType.IntWork1
+            )?.selected as IntType,
+            intWork2Type: set.paramValuesL.find(
+              (paramValue) => paramValue.field === ParamType.IntWork2
+            )?.selected as IntType,
+            volWork1Type: set.paramValuesL.find(
+              (paramValue) => paramValue.field === ParamType.VolWork1
+            )?.selected as VolType,
+            volWork2Type: set.paramValuesL.find(
+              (paramValue) => paramValue.field === ParamType.VolWork2
+            )?.selected as VolType,
+          };
+
+          for (const paramValue of set.paramValuesL) {
+            const fieldName = getWorkloadFieldName(paramValue, completed);
+
+            if (!fieldName) continue;
+
+            workload[fieldName] = Number(paramValue.value);
+          }
+
+          workloads.push(workload);
+        }
+      });
+    });
+
+    console.log(t.from, 'workloads', workloads);
+
+    const workloadData = prepareWorkloadsForData(
+      workloads,
+      exercise,
+      selectedParams,
+      t.id,
+      chartWorkloadData
+    );
+    newData.push(workloadData);
+  });
+
+  // sort by plannedAt
+  newData.sort((a, b) => {
+    const dateA = new Date(a.plannedAt);
+    const dateB = new Date(b.plannedAt);
+    return dateA.getTime() - dateB.getTime();
+  });
+
+  setData(newData);
+  setMax(newData.length);
+  setRange([1, newData.length]);
+
+  /*
   const completedWorkloadsData = [];
 
   for (const t of trainings) {
@@ -1051,8 +1097,8 @@ export function prepareGroupAvgWorkloadsForChart(
     completedWorkloadsData.push({
       trainingId: t.id,
       name: formatted,
-      intensity: Math.round(foundExerciseEntry.intensity * 100) / 100,
-      volume: Math.round(foundExerciseEntry.volume * 100) / 100,
+      int1: Math.round(foundExerciseEntry.intensity * 100) / 100,
+      vol1: Math.round(foundExerciseEntry.volume * 100) / 100,
       completed: true,
       plannedAt: t.from,
     } as ChartWorkloadData);
@@ -1105,8 +1151,8 @@ export function prepareGroupAvgWorkloadsForChart(
     futureWorkloadsData.push({
       trainingId: t.id,
       name: formatted,
-      intensity: Math.round(avgIntensity * 100) / 100,
-      volume: Math.round(avgVolume * 100) / 100,
+      int1: Math.round(avgIntensity * 100) / 100,
+      vol1: Math.round(avgVolume * 100) / 100,
       completed: false,
       plannedAt: t.from,
     } as ChartWorkloadData);
@@ -1128,15 +1174,445 @@ export function prepareGroupAvgWorkloadsForChart(
   setData(newData);
   setMax(numOfTotalWorkloads);
   setRange([1, numOfTotalWorkloads]);
+  */
+}
+
+function getFormatedName(plannedAt: Date) {
+  const date = new Date(plannedAt);
+
+  const day = date.getDate().toString().padStart(2, '0');
+  let month = (date.getMonth() + 1).toString().padStart(2, '0');
+  if (month[0] === '0') month = month.slice(1);
+
+  const hours = date.getHours();
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+
+  // Final format: "DD MM, AM/PM"
+  const formatted = `${day}.${month}. ${ampm}`;
+
+  return formatted;
+}
+
+function getWorkloadFieldName(paramValue: AttributeValue, completed: boolean) {
+  let fieldName:
+    | keyof Pick<
+        WorkloadValue,
+        | 'intWork1ValueL'
+        | 'prescribedIntWork1ValueL'
+        | 'intWork2ValueL'
+        | 'prescribedIntWork2ValueL'
+        | 'volWork1ValueL'
+        | 'prescribedVolWork1ValueL'
+        | 'volWork2ValueL'
+        | 'prescribedVolWork2ValueL'
+      >
+    | undefined = undefined;
+
+  switch (paramValue.field) {
+    case ParamType.IntWork1:
+      fieldName = completed ? 'intWork1ValueL' : 'prescribedIntWork1ValueL';
+      break;
+    case ParamType.IntWork2:
+      fieldName = completed ? 'intWork2ValueL' : 'prescribedIntWork2ValueL';
+      break;
+    case ParamType.VolWork1:
+      fieldName = completed ? 'volWork1ValueL' : 'prescribedVolWork1ValueL';
+      break;
+    case ParamType.VolWork2:
+      fieldName = completed ? 'volWork2ValueL' : 'prescribedVolWork2ValueL';
+      break;
+  }
+
+  return fieldName;
+}
+
+function getWorkloadFields(paramValue: AttributeValue) {
+  let workloadFields:
+    | (keyof Pick<
+        WorkloadValue,
+        | 'intWork1ValueL'
+        | 'prescribedIntWork1ValueL'
+        | 'intWork2ValueL'
+        | 'prescribedIntWork2ValueL'
+        | 'volWork1ValueL'
+        | 'prescribedVolWork1ValueL'
+        | 'volWork2ValueL'
+        | 'prescribedVolWork2ValueL'
+      >)[]
+    | undefined = undefined;
+
+  switch (paramValue.field) {
+    case ParamType.IntWork1:
+      workloadFields = ['intWork1ValueL', 'prescribedIntWork1ValueL'];
+      break;
+    case ParamType.IntWork2:
+      workloadFields = ['intWork2ValueL', 'prescribedIntWork2ValueL'];
+      break;
+    case ParamType.VolWork1:
+      workloadFields = ['volWork1ValueL', 'prescribedVolWork1ValueL'];
+      break;
+    case ParamType.VolWork2:
+      workloadFields = ['volWork2ValueL', 'prescribedVolWork2ValueL'];
+      break;
+    default:
+      break;
+  }
+
+  return workloadFields;
+}
+
+function prepareWorkloadsForSingleParam(
+  workloads: Workload[],
+  selectedParam: Attribute,
+  paramFields: (keyof Pick<
+    WorkloadValue,
+    | 'intWork1ValueL'
+    | 'prescribedIntWork1ValueL'
+    | 'intWork2ValueL'
+    | 'prescribedIntWork2ValueL'
+    | 'volWork1ValueL'
+    | 'prescribedVolWork1ValueL'
+    | 'volWork2ValueL'
+    | 'prescribedVolWork2ValueL'
+  >)[]
+) {
+  if (
+    ![AttributeType.Number, AttributeType.Select].includes(
+      selectedParam.type
+    ) ||
+    !paramFields.length
+  )
+    return;
+
+  const validValues = workloads
+    .map((w) => w[paramFields[0]] || w[paramFields[1]])
+    .filter((v) => v !== undefined)
+    .map((w) => (!w ? w : parseFloat(w.toString())));
+
+  if (!validValues.length) return;
+
+  let avgValue: number | undefined = undefined;
+  let fullValue: string | undefined = undefined;
+
+  const paramName =
+    selectedParam.name[0].toUpperCase() +
+    selectedParam.name.slice(1).toLowerCase();
+  if (selectedParam.type === AttributeType.Number) {
+    // get the avg number
+    avgValue =
+      validValues.reduce((acc, val) => acc + val, 0) / validValues.length;
+    fullValue = `${paramName}: ${Math.round(avgValue * 100) / 100}`;
+  } else if (selectedParam.type === AttributeType.Select) {
+    // get the most represented value/index (as number)
+    const valueCounts = new Map<number, number>();
+
+    validValues.forEach((val) => {
+      valueCounts.set(val, (valueCounts.get(val) || 0) + 1);
+    });
+
+    const [mostCommonValue] = Array.from(valueCounts.entries()).reduce(
+      (acc, [val, count]) => (count > acc[1] ? [val, count] : acc),
+      [0, 0] as [number, number]
+    );
+
+    avgValue = mostCommonValue;
+    const valueName = selectedParam.options?.find(
+      (o) => o.field === mostCommonValue.toString()
+    )?.name;
+    fullValue = `${paramName}: ${valueName}`;
+  }
+
+  if (avgValue === undefined) return;
+
+  return {
+    avgValue: Math.round(avgValue * 100) / 100,
+    fullValue,
+  };
+}
+
+function prepareWorkloadsForData(
+  workloads: Workload[],
+  exercise: TrainingExercise,
+  selectedParams: ParamType[],
+  trainingId: string,
+  chartWorkloadData: ChartWorkloadData // has got trainingId, name, plannedAt, completed
+): ChartWorkloadData {
+  for (const param of exercise.params) {
+    if (!selectedParams.includes(param.field as ParamType)) continue;
+
+    // example: int1 param
+    const paramValue = exercise.sets[0].paramValuesL.find(
+      (p) => p.field === param.field
+    );
+    if (!paramValue) continue;
+
+    let field:
+      | keyof Pick<
+          WorkloadValue,
+          'intWork1Type' | 'intWork2Type' | 'volWork1Type' | 'volWork2Type'
+        >
+      | undefined = undefined;
+    if (param.field === ParamType.IntWork1) field = 'intWork1Type';
+    else if (param.field === ParamType.IntWork2) field = 'intWork2Type';
+    else if (param.field === ParamType.VolWork1) field = 'volWork1Type';
+    else if (param.field === ParamType.VolWork2) field = 'volWork2Type';
+
+    const foundWorkload = workloads.find((w) => w.trainingId === trainingId);
+
+    if (!field || !foundWorkload) continue;
+
+    // should return for example the whole eff/tempo param
+    let selectedParam = param.options?.find(
+      (o) => o.field === foundWorkload[field]
+    );
+    if (!selectedParam) continue;
+
+    const workloadFields = getWorkloadFields(paramValue);
+    if (!workloadFields) continue;
+
+    const preparedWorkloads = prepareWorkloadsForSingleParam(
+      workloads,
+      selectedParam,
+      workloadFields
+    );
+
+    if (!preparedWorkloads) continue;
+
+    const { avgValue, fullValue } = preparedWorkloads;
+
+    switch (paramValue.field) {
+      case ParamType.IntWork1:
+        chartWorkloadData.int1 = Math.round(avgValue * 100) / 100;
+        chartWorkloadData.int1FullValue = fullValue;
+        break;
+      case ParamType.IntWork2:
+        chartWorkloadData.int2 = avgValue;
+        chartWorkloadData.int2FullValue = fullValue;
+        break;
+      case ParamType.VolWork1:
+        chartWorkloadData.vol1 = avgValue;
+        chartWorkloadData.vol1FullValue = fullValue;
+        break;
+      case ParamType.VolWork2:
+        chartWorkloadData.vol2 = avgValue;
+        chartWorkloadData.vol2FullValue = fullValue;
+        break;
+      default:
+        break;
+    }
+  }
+
+  return chartWorkloadData;
+
+  /*
+  const validIntensity1Values = workloads
+    .map((w) => (completed ? w.intWork1ValueL : w.prescribedIntWork1ValueL))
+    .filter((v) => v !== undefined)
+    .map((w) => (!w ? w : parseFloat(w.toString())));
+
+  const validIntensity2Values = workloads
+    .map((w) => (completed ? w.intWork2ValueL : w.prescribedIntWork2ValueL))
+    .filter((v) => v !== undefined)
+    .map((w) => (!w ? w : parseFloat(w.toString())));
+
+  const validVolume1Values = workloads
+    .map((w) => (completed ? w.volWork1ValueL : w.prescribedVolWork1ValueL))
+    .filter((v) => v !== undefined)
+    .map((w) => (!w ? w : parseFloat(w.toString())));
+
+  const validVolume2Values = workloads
+    .map((w) => (completed ? w.volWork2ValueL : w.prescribedVolWork2ValueL))
+    .filter((v) => v !== undefined)
+    .map((w) => (!w ? w : parseFloat(w.toString())));
+
+  const avgIntensity =
+    validIntensity1Values.reduce((acc, val) => acc + val, 0) /
+    validIntensity1Values.length;
+
+  const avgVolume =
+    validVolume1Values.reduce((acc, val) => acc + val, 0) /
+    validVolume1Values.length;
+
+  const date = new Date(workloads[0].plannedAt);
+
+  const day = date.getDate().toString().padStart(2, '0');
+  let month = (date.getMonth() + 1).toString().padStart(2, '0');
+  if (month[0] === '0') month = month.slice(1);
+
+  const hours = date.getHours();
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+
+  // Final format: "DD MM, AM/PM"
+  const formatted = `${day}.${month}. ${ampm}`;
+
+  return {
+    trainingId: workloads.length ? workloads[0].trainingId : '',
+    name: formatted,
+    int1: Math.round(avgIntensity * 100) / 100,
+    vol1: Math.round(avgVolume * 100) / 100,
+    completed: completed,
+    plannedAt: workloads[0].plannedAt,
+  };
+  */
 }
 
 export function prepareSelectedAthleteAvgWorkloadsForChart(
-  selectedAthleteWorkloads: CompletedFutureWorkloads,
-  exerciseId: string,
+  customAthleteWorkloads: Workload[], // fetched
+  selectedAthleteWorkloads: CompletedFutureWorkloads, // in current session -> prioritize
+  trainings: Training[],
+  componentId: string,
+  exercise: TrainingExercise,
+  selectedAthlete: User,
+  selectedParams: ParamType[],
   setData: SetState<ChartWorkloadData[]>,
   setMax: SetState<number>,
   setRange: SetState<number[]>
 ) {
+  const newData: ChartWorkloadData[] = [];
+
+  trainings.forEach((t) => {
+    const name = getFormatedName(t.from);
+
+    const chartWorkloadData: ChartWorkloadData = {
+      trainingId: t.id,
+      name,
+      plannedAt: t.from,
+    };
+
+    // here are all of the customAthleteWorkloads and selectedAthleteWorkloads
+    const workloads: Workload[] = [];
+
+    // first check in selectedAthleteWorkloads, which are set in the current session
+    // completedWorkloads
+
+    const foundCompletedSelectedAthleteWorkloads =
+      selectedAthleteWorkloads.completedWorkloads.filter(
+        (w) =>
+          w.exerciseId === exercise.id &&
+          w.componentId === componentId &&
+          w.trainingId === t.id
+      );
+
+    if (foundCompletedSelectedAthleteWorkloads.length)
+      workloads.push(...foundCompletedSelectedAthleteWorkloads);
+
+    // futureWorkloads
+    const foundFutureSelectedAthleteWorkloads =
+      selectedAthleteWorkloads.futureWorkloads.filter(
+        (w) =>
+          w.exerciseId === exercise.id &&
+          w.componentId === componentId &&
+          w.trainingId === t.id
+      );
+
+    if (foundFutureSelectedAthleteWorkloads.length)
+      workloads.push(...foundFutureSelectedAthleteWorkloads);
+
+    // second check in customAthleteWorkloads, which are fetched from the BE
+    const foundCustomAthleteWorkloads = customAthleteWorkloads.filter(
+      (w) =>
+        w.exerciseId === exercise.id &&
+        w.componentId === componentId &&
+        w.trainingId === t.id
+    );
+
+    if (foundCustomAthleteWorkloads.length)
+      workloads.push(...foundCustomAthleteWorkloads);
+
+    // third check in main group or subgroup of the training
+
+    const component = t.components.find((c) => c.id === componentId);
+    if (!component) return;
+
+    const subgroup = component.subgroups.find((s) =>
+      s.membersIds.includes(selectedAthlete.uid)
+    );
+
+    const foundExercise: TrainingExercise | undefined = subgroup
+      ? subgroup.supersets
+          .flatMap((s) => s.exercises)
+          .find((e) => e.id === exercise.id)
+      : component.supersets
+          .flatMap((s) => s.exercises)
+          .find((e) => e.id === exercise.id);
+
+    if (!foundExercise) return;
+
+    foundExercise.sets.forEach((set) => {
+      // check if data is in the array already for the current set
+      if (
+        workloads.some(
+          (w) =>
+            w.setNumber === set.setNumber &&
+            w.exerciseId === foundExercise.id &&
+            w.componentId === componentId &&
+            w.trainingId === t.id
+        )
+      )
+        return;
+
+      const completed = component.completedMembersIds.includes(
+        selectedAthlete.uid
+      );
+
+      const workload: Workload = {
+        trainingId: t.id,
+        componentId: componentId,
+        exerciseId: foundExercise.id,
+        setNumber: set.setNumber,
+        plannedAt: t.from,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        userId: selectedAthlete.uid,
+        supersetIndex: 0,
+        status: completed ? SetStatus.COMPLETED : SetStatus.NOT_STARTED,
+        intWork1Type: set.paramValuesL.find(
+          (paramValue) => paramValue.field === ParamType.IntWork1
+        )?.selected as IntType,
+        intWork2Type: set.paramValuesL.find(
+          (paramValue) => paramValue.field === ParamType.IntWork2
+        )?.selected as IntType,
+        volWork1Type: set.paramValuesL.find(
+          (paramValue) => paramValue.field === ParamType.VolWork1
+        )?.selected as VolType,
+        volWork2Type: set.paramValuesL.find(
+          (paramValue) => paramValue.field === ParamType.VolWork2
+        )?.selected as VolType,
+      };
+
+      for (const paramValue of set.paramValuesL) {
+        const fieldName = getWorkloadFieldName(paramValue, completed);
+
+        if (!fieldName) continue;
+
+        workload[fieldName] = Number(paramValue.value);
+      }
+
+      workloads.push(workload);
+    });
+
+    const workloadData = prepareWorkloadsForData(
+      workloads,
+      exercise,
+      selectedParams,
+      t.id,
+      chartWorkloadData
+    );
+    newData.push(workloadData);
+  });
+
+  // sort by plannedAt
+  newData.sort((a, b) => {
+    const dateA = new Date(a.plannedAt);
+    const dateB = new Date(b.plannedAt);
+    return dateA.getTime() - dateB.getTime();
+  });
+
+  setData(newData);
+  setMax(newData.length);
+  setRange([1, newData.length]);
+
+  /*
   const completedWorkloadsFiltered = selectedAthleteWorkloads.completedWorkloads
     .filter((workload) => workload.exerciseId === exerciseId)
     .sort((a, b) => (isBefore(a.plannedAt, b.plannedAt) ? -1 : 1));
@@ -1226,4 +1702,5 @@ export function prepareSelectedAthleteAvgWorkloadsForChart(
   setData(newData);
   setMax(numOfTotalWorkloads);
   setRange([1, numOfTotalWorkloads]);
+  */
 }

@@ -1,6 +1,6 @@
 import type { PeriodizationType } from '../enum/periodization-type.enum';
 import type { CopiedFrom } from './copied-from.type';
-import type { Subgroup, SubgroupInfo, UpdateSubgroup } from './subgroup.type';
+import type { Subgroup, UpdateSubgroup } from './subgroup.type';
 import type { Superset, UpdateSuperset } from './superset.type';
 import type { DateRange } from '@/common/type/date-range.type';
 import type { ColorEntity, IdEntity } from '@/common/type/entity.type';

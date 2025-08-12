@@ -101,10 +101,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
         )
     );
 
-    setSubgroups([
-      DEFAULT_SUBGROUP(availableMembers, training.prescribedStats),
-      ...subgroups,
-    ]);
+    setSubgroups([DEFAULT_SUBGROUP(availableMembers), ...subgroups]);
   }, [training, component]);
 
   useEffect(() => {
@@ -139,7 +136,6 @@ export default function TrainingMembers(props: TrainingMembersProps) {
         users,
         component,
         training,
-        setTraining,
       });
     }
   };
