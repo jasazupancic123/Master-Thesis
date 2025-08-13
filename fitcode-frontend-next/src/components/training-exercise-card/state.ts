@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import type { SetState, SetStateNullable } from '@/common/type/state.type';
 import type { Attribute } from '@/controller/attribute/type/attribute.type';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
+import { ParamType } from '@/controller/component/enum/param.enum';
 import type { CompletedFutureWorkloads } from '@/controller/training/type/completed-future-workloads.type';
 import type { ExerciseSet } from '@/controller/training/type/exercise-set.type';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
@@ -197,7 +198,6 @@ export function updateTraining(
     setIsInited,
   } = state;
 
-
   if (!training || !component) return;
 
   const newSupersets = [...supersets];
@@ -359,7 +359,7 @@ export const getLAndRValues = (
   let valueL: AttributeValue | null = null;
   let valueR: AttributeValue | null = null;
 
-  // find the custom workload for the selected athlete
+  // find the custom workload for the selected athlete in the current session
   const foundCustomFutureWorkload = customAthleteWorkloads.find(
     (cw) =>
       cw.trainingId === training.id &&
@@ -368,7 +368,7 @@ export const getLAndRValues = (
       cw.userId === selectedAthlete?.uid
   );
 
-  // find the future workload for the selected athlete, not yet custom/modified
+  // find the fetched future custom workload for the selected athlete
   const foundFutureWorkload = selectedAthleteWorkloads.futureWorkloads.find(
     (fw) =>
       fw.trainingId === training.id &&
@@ -379,7 +379,7 @@ export const getLAndRValues = (
 
   if (
     (foundCustomFutureWorkload || foundFutureWorkload) &&
-    param.field !== 'volWorkSets'
+    param.field !== ParamType.VolWorkSets
   ) {
     const perscribedFieldNameL = getPerscribedFieldName(param, 'L');
     const perscribedFieldNameR = getPerscribedFieldName(param, 'R');
@@ -389,25 +389,37 @@ export const getLAndRValues = (
       return { valueL: null, valueR: null };
     }
 
-    const selected = exercise.sets[setIndex].paramValuesL[paramIndex].selected;
+    const selectedL = exercise.sets[setIndex].paramValuesL[paramIndex].selected;
+    const selectedR =
+      exercise.sets[setIndex].paramValuesR?.[paramIndex].selected;
 
     valueL = {
       field: param.field,
-      selected: selected,
+      selected: selectedL,
       value:
         (foundCustomFutureWorkload || foundFutureWorkload)?.[
           perscribedFieldNameL
-        ]?.toString() || '',
+        ]?.toString() ||
+        exercise.sets[setIndex].paramValuesL.find(
+          (pv) => pv.field === param.field
+        )?.value ||
+        '',
     };
 
-    valueR = {
-      field: param.field,
-      selected: selected,
-      value:
-        (foundCustomFutureWorkload || foundFutureWorkload)?.[
-          perscribedFieldNameR
-        ]?.toString() || '',
-    };
+    valueR = selectedR
+      ? {
+          field: param.field,
+          selected: selectedR,
+          value:
+            (foundCustomFutureWorkload || foundFutureWorkload)?.[
+              perscribedFieldNameR
+            ]?.toString() ||
+            exercise.sets[setIndex].paramValuesR?.find(
+              (pv) => pv.field === param.field
+            )?.value ||
+            '',
+        }
+      : null;
   } else {
     valueL = exercise.sets[setIndex].paramValuesL.find(
       (pv) => pv.field === param.field

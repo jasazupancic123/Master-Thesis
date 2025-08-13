@@ -4,6 +4,7 @@ import { ExerciseParam } from '../exercise-param/exercise-param';
 import LeftRightExerciseText from '../left-right-exercise-text/left-right-exercise-text';
 import type { SetState } from '@/common/type/state.type';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
+import { ParamType } from '@/controller/component/enum/param.enum';
 import type { ExerciseSet } from '@/controller/training/type/exercise-set.type';
 import type { Superset } from '@/controller/training/type/superset.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
@@ -89,7 +90,8 @@ export default function TrainingInProgressExerciseSet(
                 value={valueL}
                 onOptionChange={() => {}}
                 onSubOptionChange={(newValue) => {
-                  if (+newValue < 0 || param.field === 'volWorkSets') return;
+                  if (+newValue < 0 || param.field === ParamType.VolWorkSets)
+                    return;
 
                   const paramIndex = exercise.sets[0].paramValuesL.findIndex(
                     (pv) => pv.field === param.field
@@ -159,7 +161,8 @@ export default function TrainingInProgressExerciseSet(
                   value={valueR}
                   onOptionChange={() => {}}
                   onSubOptionChange={(newValue) => {
-                    if (+newValue < 0 || param.field === 'volWorkSets') return;
+                    if (+newValue < 0 || param.field === ParamType.VolWorkSets)
+                      return;
 
                     const paramIndex = exercise.sets[0].paramValuesL.findIndex(
                       (pv) => pv.field === param.field
@@ -238,7 +241,8 @@ export default function TrainingInProgressExerciseSet(
                 value={value!}
                 onOptionChange={() => {}}
                 onSubOptionChange={(newValue) => {
-                  if (+newValue < 0 || param.field === 'volWorkSets') return;
+                  if (+newValue < 0 || param.field === ParamType.VolWorkSets)
+                    return;
 
                   const paramIndex = exercise.sets[0].paramValuesL.findIndex(
                     (pv) => pv.field === param.field

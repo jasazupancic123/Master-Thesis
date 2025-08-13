@@ -14,7 +14,6 @@ import type { SetState, SetStateNullable } from '@/common/type/state.type';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import { ParamType } from '@/controller/component/enum/param.enum';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
-import { TrainingService } from '@/controller/training/training.service';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
 import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
@@ -241,13 +240,6 @@ export function handleAddExerciseToSupersetComponent(
     };
 
     updatedComponents[trainingComponentIndex] = { ...updatedComponent };
-
-    const numberOfAvailableMembers =
-      training.membersIds.length -
-      component.subgroups.reduce(
-        (acc, subgroup) => acc + subgroup.membersIds.length,
-        0
-      );
 
     const newTraining: Training = {
       ...training,

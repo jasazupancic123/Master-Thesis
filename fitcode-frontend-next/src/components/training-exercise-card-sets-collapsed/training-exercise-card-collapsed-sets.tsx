@@ -263,6 +263,7 @@ export default function TrainingExerciseCardCollapsedSets(
                                   setsNumbers,
                                   selectedExercises,
                                   setSetsNumbers,
+                                  setCustomAthleteWorkloads,
                                 }
                               );
                               return;

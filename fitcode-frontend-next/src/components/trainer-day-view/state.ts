@@ -17,10 +17,16 @@ import { CommonService } from '@/common/service/common.service';
 import type { Day } from '@/common/service/util/date.util';
 import type { SetState, SetStateNullable } from '@/common/type/state.type';
 import { handleApiRequest } from '@/common/type/state.type';
+import { AttributeType } from '@/controller/attribute/enum/attribute-value.enum';
+import type { Attribute } from '@/controller/attribute/type/attribute.type';
+import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
+import type { IntType, VolType } from '@/controller/component/enum/param.enum';
+import { ParamType } from '@/controller/component/enum/param.enum';
 import type { Component } from '@/controller/component/type/component.type';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
 import type { Cycle } from '@/controller/group/type/cycle.type';
 import type { Method } from '@/controller/method/type/method.type';
+import { SetStatus } from '@/controller/training/enum/set-status.enum';
 import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
 import type { ChartWorkloadData } from '@/controller/training/type/chart-workload-data.type';
@@ -31,17 +37,8 @@ import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import type { Workload } from '@/controller/training/type/workload.type';
+import type { WorkloadValue } from '@/controller/training/type/workload-value.type';
 import type { User } from '@/controller/user/type/user.type';
-import { WorkloadValue } from '@/controller/training/type/workload-value.type';
-import {
-  IntType,
-  ParamType,
-  VolType,
-} from '@/controller/component/enum/param.enum';
-import { Attribute } from '@/controller/attribute/type/attribute.type';
-import { AttributeType } from '@/controller/attribute/enum/attribute-value.enum';
-import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
-import { SetStatus } from '@/controller/training/enum/set-status.enum';
 
 export async function handleCopyTraining(
   input: {
@@ -249,7 +246,6 @@ export async function handleAddSubgroup(state: {
     | SetState<{ name: string; membersIds: string[] }>
     | undefined;
   setDetectedChanges: SetState<boolean>;
-  updateTrainingsAvgFutureWorkload?: boolean;
   setSelectedSubgroup: SetState<Subgroup | null>;
   setSelectedAthlete: SetStateNullable<User>;
 }) {
@@ -261,7 +257,6 @@ export async function handleAddSubgroup(state: {
     createSubgroup,
     setCreateSubgroup,
     setDetectedChanges,
-    updateTrainingsAvgFutureWorkload,
     setSelectedSubgroup,
     setSelectedAthlete,
   } = state;
@@ -348,11 +343,6 @@ export function handleDeleteSubgroup(
   const updatedComponents = [...training.components].map((c) =>
     c.id === component.id ? newComponent : c
   );
-
-  // update avg future workload values's numMembers
-  const numberOfMembers = component.subgroups.find(
-    (subgroup) => subgroup.id === subgroupId
-  )?.membersIds.length;
 
   const newTraining = {
     ...training,
@@ -908,40 +898,6 @@ function updateGlobalStates(
   }
 }
 
-const groupByTrainingId = (
-  workloads: Workload[],
-  skipIfAlreadyInOther: boolean = false,
-  otherWorkloads: {
-    [key: string]: Workload[];
-  } = {}
-) => {
-  return workloads.reduce((acc: { [key: string]: Workload[] }, workload) => {
-    // skip if already in completed workloads
-    if (skipIfAlreadyInOther && otherWorkloads[workload.trainingId]) return acc;
-    if (!acc[workload.trainingId]) {
-      acc[workload.trainingId] = [];
-    }
-    acc[workload.trainingId].push(workload);
-    return acc;
-  }, {});
-};
-
-const getFormatedDate = (from: Date) => {
-  // format: "DD MM, AM/PM"
-  const date = new Date(from);
-
-  const day = date.getDate().toString().padStart(2, '0');
-  let month = (date.getMonth() + 1).toString().padStart(2, '0');
-  if (month[0] === '0') month = month.slice(1);
-
-  const hours = date.getHours();
-  const ampm = hours >= 12 ? 'PM' : 'AM';
-
-  const formatted = `${day}.${month}. ${ampm}`;
-
-  return formatted;
-};
-
 export function prepareGroupAvgWorkloadsForChart(
   trainings: Training[],
   training: Training,
@@ -955,7 +911,7 @@ export function prepareGroupAvgWorkloadsForChart(
   const newData: ChartWorkloadData[] = [];
 
   trainings.forEach((t) => {
-    if(t.id === training.id) t = training;
+    if (t.id === training.id) t = training;
 
     const name = getFormatedName(t.from);
 
@@ -1061,8 +1017,6 @@ export function prepareGroupAvgWorkloadsForChart(
         }
       });
     });
-
-    console.log(t.from, 'workloads', workloads);
 
     const workloadData = prepareWorkloadsForData(
       workloads,
@@ -1362,7 +1316,7 @@ function prepareWorkloadsForData(
     if (!field || !foundWorkload) continue;
 
     // should return for example the whole eff/tempo param
-    let selectedParam = param.options?.find(
+    const selectedParam = param.options?.find(
       (o) => o.field === foundWorkload[field]
     );
     if (!selectedParam) continue;
