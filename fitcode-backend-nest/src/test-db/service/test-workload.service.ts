@@ -79,7 +79,7 @@ export class TestWorkloadService extends AbstractChangeLogService<Workload> {
       return { operation: 'set', ref, data: query };
     });
 
-    await this.firebase.paginateBatchWrites(operations);
+    await this.firebase.paginateBatches(operations);
   }
 
   async update(input: WorkloadMeta & Update<WorkloadValue>): Promise<Workload> {

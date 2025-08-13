@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
-import { UpdateMembersDto } from '@src/common/dto/user-id.dto';
+import { UserIdDto } from '@src/common/dto/user-id.dto';
 
 import { Auth } from '../common/decorator/auth.decorator';
 import { RequestUser } from '../common/decorator/request-user.decorator';
@@ -183,12 +183,12 @@ export class TrainingController {
   async addMember(
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
-    @Body() body: UpdateMembersDto,
+    @Body() { userId }: UserIdDto,
   ) {
     return await this.trainingService.updateMembers(
       user,
       { trainingId },
-      { userId: body.userId, add: true },
+      { userId, add: true },
     );
   }
 
@@ -197,12 +197,12 @@ export class TrainingController {
   async removeMember(
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
-    @Body() body: UpdateMembersDto,
+    @Body() { userId }: UserIdDto,
   ) {
     return await this.trainingService.updateMembers(
       user,
       { trainingId },
-      { userId: body.userId, add: false },
+      { userId, add: false },
     );
   }
 }

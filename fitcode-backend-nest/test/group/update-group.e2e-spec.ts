@@ -121,27 +121,25 @@ describe('Update Group (e2e)', () => {
       ]);
     });
 
-    /* it('should fail if not all users are valid', async () => {
-      const response = await batchUpdateRequest(trainer, [
-        { ...group, membersIds: ['invalid-member-id'] },
-      ]);
-
-      expect(response.status).toBe(400);
-      expect(response.body.message).toBe(`Invalid members provided`);
-    }); */
-
     it('should fail if cycles overlap', async () => {
       const response = await batchUpdateRequest(global.trainer, [
         {
           ...group,
           cycles: [
             generateCycleStub({
+              id: group.cycles[0].id,
               from: new Date(),
               to: addDays(new Date(), 7),
             }),
             generateCycleStub({
+              id: group.cycles[1].id,
               from: addDays(new Date(), 3),
               to: addDays(new Date(), 7),
+            }),
+            generateCycleStub({
+              id: group.cycles[2].id,
+              from: addDays(new Date(), 5),
+              to: addDays(new Date(), 10),
             }),
           ],
         },
@@ -169,12 +167,19 @@ describe('Update Group (e2e)', () => {
     it('should successfully update complex group field types - cycles', async () => {
       const cycles = [
         generateCycleStub({
+          id: group.cycles[0].id,
           from: addDays(new Date(), 7),
           to: addDays(new Date(), 14),
         }),
         generateCycleStub({
+          id: group.cycles[1].id,
           from: addDays(new Date(), 1),
           to: addDays(new Date(), 6),
+        }),
+        generateCycleStub({
+          id: group.cycles[2].id,
+          from: addDays(new Date(), 15),
+          to: addDays(new Date(), 20),
         }),
       ];
 
@@ -191,6 +196,24 @@ describe('Update Group (e2e)', () => {
       expect(found.cycles[1].id).toBe(cycles[0].id);
 
       group.cycles = cycles;
+    });
+
+    it('should throw an error if all net cycles are not the same as the original group cycles', async () => {
+      const cycles = [
+        generateCycleStub({
+          from: addDays(new Date(), 7),
+          to: addDays(new Date(), 14),
+        }),
+      ];
+
+      const response = await batchUpdateRequest(global.trainer, [
+        { ...group, cycles },
+      ]);
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(
+        `Cycles in group ${group.name} do not match. If you are trying to add or remove cycles, use separate route`,
+      );
     });
   });
 });

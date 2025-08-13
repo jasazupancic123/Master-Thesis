@@ -10,7 +10,7 @@ import type { Cycle } from '../entity/cycle.entity';
 
 export function generateCycleStub(data?: Partial<Cycle>): Cycle {
   return {
-    id: v4(),
+    id: data?.id || v4(),
     createdAt: new Date(),
     updatedAt: new Date(),
     deletedAt: null,

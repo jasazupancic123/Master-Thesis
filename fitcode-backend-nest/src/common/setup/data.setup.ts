@@ -223,7 +223,7 @@ export class DataSetup extends BaseSetup {
       {
         add: true,
         userId: this.trainer.uid,
-        trainer: false,
+        trainer: true,
       },
     );
 

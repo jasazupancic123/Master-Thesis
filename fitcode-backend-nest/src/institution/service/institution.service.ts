@@ -189,7 +189,7 @@ export class InstitutionService implements Permission<Institution> {
         }),
       );
 
-      await this.firebaseService.paginateBatchWrites(operations);
+      await this.firebaseService.paginateBatches(operations);
     }
   }
 

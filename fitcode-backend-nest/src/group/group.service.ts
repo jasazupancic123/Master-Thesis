@@ -1,12 +1,10 @@
 import {
   BadRequestException,
   Injectable,
-  Logger,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
-import { WriteBatch } from 'firebase-admin/firestore';
 
 import { UpdateMembersDto } from '@src/common/dto/user-id.dto';
 import { INSTITUTION_ATHLETE_EVENT } from '@src/institution/constant/update-institution-athlete-event.constant';
@@ -15,9 +13,11 @@ import { UpdateInstitutionAthleteEvent } from '@src/institution/event/update-ins
 import { LogMethod } from '../common/decorator/log-method.decorator';
 import { Permission } from '../common/interface/permission.interface';
 import { CommonService } from '../common/service/common.service';
-import { Create } from '../common/type/entity.type';
+import { Create, Update } from '../common/type/entity.type';
 import { User } from '../common/type/firebase-auth.type';
 import {
+  BatchDeleteOperation,
+  BatchOperation,
   BatchWriteOperation,
   GroupRef,
   InstitutionRef,
@@ -26,16 +26,16 @@ import { FirebaseService } from '../firebase/firebase.service';
 import { Institution } from '../institution/entity/institution.entity';
 import { InstitutionService } from '../institution/service/institution.service';
 import { UserService } from '../user/user.service';
+import { DELETE_GROUP_EVENT } from './constant/delete-group-event.constant';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { BatchUpdateOneGroupDto, UpdateGroupDto } from './dto/update-group.dto';
 import { Cycle } from './entity/cycle.entity';
 import { Group } from './entity/group.entity';
+import { DeleteGroupOrCycleEvent } from './event/delete-group.event';
 import { GroupRepository } from './repository/group.repository';
 
 @Injectable()
 export class GroupService implements Permission<Group, Institution> {
-  private logger = new Logger(GroupService.name);
-
   constructor(
     private readonly repository: GroupRepository,
     private readonly commonService: CommonService,
@@ -131,36 +131,35 @@ export class GroupService implements Permission<Group, Institution> {
   ): Promise<Group> {
     // validate
     const group = await this.findOneByIdOrFail(user, ref);
-    const institution = await this.institutionService.getDocByIdOrFail(group);
-    if (!this.canEdit(user, group, institution))
+    if (!this.canEdit(user, group, group.institution))
       throw new UnauthorizedException('You are not allowed to edit this group');
 
     // validate cycles
-    if (input.cycles)
-      if (this.isCycleOverlap(input.cycles))
-        throw new BadRequestException('Cycles overlap');
+    if (!input.cycles?.every((c) => group.cycles.some((ec) => ec.id === c.id)))
+      throw new BadRequestException(
+        `Cycles in group ${group.name} do not match. If you are trying to add or remove cycles, use separate route`,
+      );
+
+    if (this.isCycleOverlap(input.cycles))
+      throw new BadRequestException('Cycles overlap');
 
     // validate owner
     if (input.ownerId)
       if (
         !this.firebaseService.isManager(user) ||
-        institution.ownerId !== user.uid
+        group.institution.ownerId !== user.uid
       )
         throw new UnauthorizedException('You are not allowed to update owner');
 
-    const batch = this.firebaseService.firestore.batch();
-    await this.batchUpdateOne(batch, { ...input, id: ref.groupId });
-    await batch.commit();
+    // update group
+    const data: Update<Group> = {
+      name: input.name,
+      ownerId: input.ownerId,
+      cycles: input.cycles?.map(({ weeks, ...cycle }) => cycle),
+    };
 
-    const updated = { ...group, ...this.commonService.object.clean(input) };
-    updated.cycles = updated.cycles
-      .map((c) => ({
-        ...c,
-        weeks: this.commonService.date.weeks(c.from, c.to),
-      }))
-      .sort((a, b) => a.from.getMilliseconds() - b.from.getMilliseconds());
-
-    return { ...updated, id: ref.groupId };
+    await this.repository.updateDoc(ref.groupId, data);
+    return { ...group, ...data, updatedAt: new Date() };
   }
 
   @LogMethod()
@@ -177,16 +176,89 @@ export class GroupService implements Permission<Group, Institution> {
         );
 
     // validate cycles
-    for (const group of input)
-      if (group.cycles)
-        if (this.isCycleOverlap(group.cycles))
-          throw new BadRequestException(
-            `Cycles in group ${group.name} cannot overlap`,
-          );
+    const operations: BatchWriteOperation<Group>[] = [];
+    for (const { id, name, cycles: inputCycles } of input) {
+      const existingGroup = groups.find((g) => g.id === id)!;
+      const existingCycles = existingGroup.cycles;
 
-    const batch = this.firebaseService.firestore.batch();
-    await Promise.all(input.map((group) => this.batchUpdateOne(batch, group)));
-    await batch.commit();
+      // all input cycles must be the same as existing cycles, since separate route handles adding/removing cycles
+      if (
+        !inputCycles.every((c) => existingCycles.some((ec) => ec.id === c.id))
+      )
+        throw new BadRequestException(
+          `Cycles in group ${existingGroup.name} do not match. If you are trying to add or remove cycles, use separate route`,
+        );
+
+      if (this.isCycleOverlap(inputCycles))
+        throw new BadRequestException(
+          `Cycles in group ${existingGroup.name} cannot overlap`,
+        );
+
+      operations.push({
+        ref: this.repository.doc(id),
+        operation: 'update',
+        data: this.firebaseService.buildUpdateQuery<Group>({
+          ...existingGroup,
+          name,
+          cycles: inputCycles.map(({ weeks, ...cycle }) => cycle),
+        }),
+      });
+    }
+
+    await this.firebaseService.paginateBatches(operations);
+  }
+
+  @LogMethod()
+  async addCycle(user: User, ref: GroupRef, cycle: Cycle) {
+    // validate
+    const group = await this.findOneByIdOrFail(user, ref);
+    if (!this.canEdit(user, group, group.institution))
+      throw new UnauthorizedException('You are not allowed to edit this group');
+
+    if (this.findCycle(cycle.id, group))
+      throw new BadRequestException('Cycle already exists in the group');
+
+    // validate cycle
+    if (this.isCycleOverlap([...group.cycles, cycle]))
+      throw new BadRequestException(
+        'Cycle overlaps with existing cycles in the group',
+      );
+
+    // add cycle
+    await this.repository.addCycle(group, cycle);
+  }
+
+  @LogMethod()
+  async removeCycle(user: User, ref: GroupRef, cycleId: string): Promise<void> {
+    // validate
+    const group = await this.findOneByIdOrFail(user, ref);
+    if (!this.canEdit(user, group, group.institution))
+      throw new UnauthorizedException('You are not allowed to remove cycle');
+
+    // remove cycle from group & remove all trainings
+    const cycle = this.findCycleOrFail(cycleId, group);
+    const operations: BatchOperation<Group>[] = [
+      {
+        ref: this.repository.doc(ref.groupId),
+        operation: 'update',
+        data: this.firebaseService.buildUpdateQuery<Group>({
+          cycles: group.cycles
+            .filter((c) => c.id !== cycle.id)
+            .map(({ weeks, ...cycle }) => cycle),
+        }),
+      },
+    ];
+
+    await this.eventEmitter.emitAsync(
+      DELETE_GROUP_EVENT,
+      new DeleteGroupOrCycleEvent({
+        operations,
+        groupId: ref.groupId,
+        cycleId,
+      }),
+    );
+
+    await this.firebaseService.paginateBatches(operations);
   }
 
   @LogMethod()
@@ -230,7 +302,7 @@ export class GroupService implements Permission<Group, Institution> {
       }),
     );
 
-    await this.firebaseService.paginateBatchWrites(operations);
+    await this.firebaseService.paginateBatches(operations);
   }
 
   @OnEvent(INSTITUTION_ATHLETE_EVENT, { async: true, promisify: true })
@@ -251,32 +323,27 @@ export class GroupService implements Permission<Group, Institution> {
       );
   }
 
-  private async batchUpdateOne(
-    batch: WriteBatch,
-    input: BatchUpdateOneGroupDto,
-  ) {
-    const docRef = this.repository.doc(input.id);
-
-    batch.update(
-      docRef,
-      this.firebaseService.buildUpdateQuery<Group>({
-        ...input,
-        cycles: input.cycles?.map((c) => {
-          const { weeks: _, ...cycle } = c;
-          return cycle;
-        }),
-      }),
-    );
-  }
-
+  @LogMethod()
   async delete(user: User, ref: GroupRef): Promise<void> {
-    this.logger.log(`User ${user.uid} is removing group ${ref.groupId}`);
-
     const group = await this.findOneByIdOrFail(user, ref);
     const institution = await this.institutionService.getDocByIdOrFail(group);
-    this.canEdit(user, group, institution);
 
-    await this.repository.deleteDoc(group.id);
+    if (!this.canDelete(user, group, institution))
+      throw new UnauthorizedException(
+        'You are not allowed to delete this group',
+      );
+
+    const operations: BatchDeleteOperation[] = [
+      { ref: this.repository.doc(group.id), operation: 'delete' }, // delete group
+    ];
+
+    // delete all group trainings
+    await this.eventEmitter.emitAsync(
+      DELETE_GROUP_EVENT,
+      new DeleteGroupOrCycleEvent({ operations, groupId: group.id }),
+    );
+
+    await this.firebaseService.paginateBatches(operations);
   }
 
   findCycle(cycleId: string, group: Group) {
@@ -356,7 +423,10 @@ export class GroupService implements Permission<Group, Institution> {
   }
 
   canEdit(user: User, group: Group, institution: Institution) {
-    if (this.firebaseService.isTrainer(user) && group.ownerId === user.uid)
+    if (
+      this.firebaseService.isTrainer(user) &&
+      institution.trainerIds.includes(user.uid)
+    )
       return true; // owner of the group (trainer) can edit group
 
     if (
@@ -367,5 +437,11 @@ export class GroupService implements Permission<Group, Institution> {
       return true;
 
     return false;
+  }
+
+  canDelete(user: User, entity: Group, root?: Institution) {
+    // only if user is manager and institution owner
+    if (this.firebaseService.isManager(user) && root?.ownerId === user.uid)
+      return true;
   }
 }

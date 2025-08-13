@@ -77,17 +77,9 @@ export default function DashboardHeader() {
   const handleSaveGroups = () => {
     if (!selectedInstitution) return;
 
-    const inputs: { id: string; membersIds: string[]; ownerId: string }[] = [];
+    const inputs: { id: string; ownerId: string }[] = [];
     for (const group of selectedInstitution.groups) {
-      const membersIds = group.members
-        ? new Set([...group.membersIds, ...group.members.map((m) => m.uid)])
-        : group.membersIds;
-
-      inputs.push({
-        id: group.id,
-        ownerId: group.ownerId,
-        membersIds: Array.from(membersIds),
-      });
+      inputs.push({ id: group.id, ownerId: group.ownerId });
     }
 
     handleApiRequest(

@@ -16,6 +16,7 @@ import {
 import { FirebaseService } from '@src/firebase/firebase.service';
 
 import { Training } from '../entity/training.entity';
+import { TrainingComponent } from '../entity/training-component.entity';
 
 @Injectable()
 export class TrainingRepository
@@ -72,30 +73,63 @@ export class TrainingRepository
     await ref.delete();
   }
 
-  async addMember(id: string, memberId: string) {
-    const ref = this.doc(id);
+  async addMember(training: Training, memberId: string) {
+    const { ref, data } = this.getUpdateMemberOperation(
+      training,
+      memberId,
+      true,
+    );
+
     await this.changeLog.trackUpdate(ref);
-    await ref.update({ membersIds: FieldValue.arrayUnion(memberId) });
+    await ref.update(data);
   }
 
-  async removeMember(id: string, memberId: string) {
-    const ref = this.doc(id);
+  async removeMember(training: Training, memberId: string) {
+    const { ref, data } = this.getUpdateMemberOperation(
+      training,
+      memberId,
+      false,
+    );
+
     await this.changeLog.trackUpdate(ref);
-    await ref.update({ membersIds: FieldValue.arrayRemove(memberId) });
+    await ref.update(data);
   }
 
   getUpdateMemberOperation(
-    id: string,
+    training: Training,
     memberId: string,
     add: boolean,
   ): BatchWriteOperation<Training> {
     return {
-      ref: this.doc(id),
+      ref: this.doc(training.id),
       operation: 'update',
       data: {
+        ...(!add && {
+          completedMembersIds: FieldValue.arrayRemove(
+            memberId,
+          ) as unknown as string[],
+        }),
         membersIds: add
           ? (FieldValue.arrayUnion(memberId) as unknown as string[])
           : (FieldValue.arrayRemove(memberId) as unknown as string[]),
+        components: training.components.map((tc) =>
+          this.firebaseService.buildCreateQuery<TrainingComponent>({
+            ...tc,
+            ...(!add && {
+              completedMembersIds: tc.completedMembersIds.filter(
+                (id) => id !== memberId,
+              ),
+            }),
+            subgroups: tc.subgroups.map((sg) =>
+              !add && sg.membersIds.includes(memberId) // remove member from subgroup
+                ? {
+                    ...sg,
+                    membersIds: sg.membersIds.filter((id) => id !== memberId),
+                  }
+                : sg,
+            ),
+          }),
+        ),
       },
     };
   }

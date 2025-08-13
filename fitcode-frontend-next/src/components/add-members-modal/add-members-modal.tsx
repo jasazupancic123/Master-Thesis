@@ -6,11 +6,14 @@ import {
   Typography,
 } from '@mui/material';
 import Box from '@mui/material/Box';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 
 import { SearchBar } from '../search-bar/search-bar';
 import { theme } from '@/app/style';
-import type { SetState } from '@/common/type/state.type';
+import { handleApiRequest, type SetState } from '@/common/type/state.type';
+import { GroupController } from '@/controller/group/group.controller';
 import type { Group } from '@/controller/group/type/group.type';
 import type { Institution } from '@/controller/institution/type/institution.type';
 import type { User } from '@/controller/user/type/user.type';
@@ -35,6 +38,7 @@ export type AddMembersModalProps = {
 };
 
 export function AddMembersModal(props: AddMembersModalProps) {
+  const router = useRouter();
   const {
     users,
     members,
@@ -56,12 +60,23 @@ export function AddMembersModal(props: AddMembersModalProps) {
   const [searchQueryAddPlayer, setSearchQueryAddPlayer] = useState('');
   const [filteredUsers, setFilteredUsers] = useState<User[] | null>(null);
 
-  const handleAddMember = (user: User) => {
+  const handleAddMember = async (user: User) => {
     if (members.some((m) => m.uid === user.uid)) return;
 
     const updatedMembers = props.addUserToEnd
       ? [...members, user]
       : [user, ...members];
+
+    await handleApiRequest(
+      router,
+      () => GroupController.addMember(group!.id, { userId: user.uid }),
+      () => {
+        toast.success('Member added successfully');
+      },
+      (e) => {
+        toast.error((e as Error).message);
+      }
+    );
 
     if (dashboardView) {
       setDetectedChanges(true);
@@ -86,14 +101,26 @@ export function AddMembersModal(props: AddMembersModalProps) {
     setMembers(updatedMembers);
   };
 
-  const handleRemoveMember = (user: User) => {
+  const handleRemoveMember = async (user: User) => {
     if (setSingleMember) {
       setSingleMember(null);
       return;
     }
 
+    await handleApiRequest(
+      router,
+      () => GroupController.removeMember(group!.id, { userId: user.uid }),
+      () => {
+        toast.success('Member removed successfully');
+      },
+      (e) => {
+        toast.error((e as Error).message);
+      }
+    );
+
     const updatedMembers = members.filter((m) => m.uid !== user.uid);
     setMembers(updatedMembers);
+
     if (dashboardView) {
       setDetectedChanges(true);
       if (setSelectedInstitution && group) {
@@ -206,8 +233,8 @@ export function AddMembersModal(props: AddMembersModalProps) {
                             backgroundColor: theme.palette.grey[700],
                           },
                         }}
-                        onClick={() => {
-                          handleRemoveMember(user);
+                        onClick={async () => {
+                          await handleRemoveMember(user);
                         }}
                       >
                         <Typography variant="body2" color="white">

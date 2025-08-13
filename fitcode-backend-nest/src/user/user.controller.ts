@@ -61,8 +61,7 @@ export class UserController {
     @RequestUser() user: User,
     @Body() body: UpdateUserProfileDto,
   ) {
-    const ref = { uid: user.uid };
-    await this.userService.updateProfile(ref, body);
+    await this.userService.updateProfile(user, body);
     return {};
   }
 

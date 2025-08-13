@@ -134,8 +134,10 @@ export async function createGroupWithCycles(
     }),
   ];
 
-  group = await groupService.update(manager, { groupId: group.id }, { cycles });
-  return group;
+  for (const cycle of cycles)
+    await groupService.addCycle(manager, { groupId: group.id }, cycle);
+
+  return await groupService.findOneByIdOrFail(manager, { groupId: group.id });
 }
 
 /**
