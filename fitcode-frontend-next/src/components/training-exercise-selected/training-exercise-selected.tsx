@@ -10,6 +10,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import type { TooltipContentProps } from 'recharts';
 import {
   Line,
   LineChart,
@@ -20,16 +21,16 @@ import {
 } from 'recharts';
 
 import TrainingExerciseCard from '../training-exercise-card/training-exercise-card';
+import { COLORS } from '@/common/constant/color.constant';
 import type { Dimensions } from '@/common/type/dimensions.type';
 import type { SetState } from '@/common/type/state.type';
+import { ParamType } from '@/controller/component/enum/param.enum';
 import type { ChartWorkloadData } from '@/controller/training/type/chart-workload-data.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useGroup } from '@/store/group-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useSupersets } from '@/store/supersets-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
-import { COLORS } from '@/common/constant/color.constant';
-import { ParamType } from '@/controller/component/enum/param.enum';
 
 interface TrainingExerciseSelectedProps {
   supersetIndex: number;
@@ -46,6 +47,21 @@ interface TrainingExerciseSelectedProps {
   setSelectedParams: SetState<ParamType[]>;
 }
 
+const ALLOWED_PARAMS = [
+  ParamType.IntWork1,
+  ParamType.VolWork1,
+  ParamType.IntWork2,
+  ParamType.VolWork2,
+];
+
+type DotProps = {
+  cx?: number;
+  cy?: number;
+  stroke?: string;
+  payload?: any;
+  value?: number | string | null;
+};
+
 export default function TrainingExerciseSelected(
   props: TrainingExerciseSelectedProps
 ) {
@@ -53,9 +69,8 @@ export default function TrainingExerciseSelected(
   const theme = useTheme();
 
   const { setSelectedExercise } = useSupersets();
-  const { day, training, component, selectedAthlete } =
-    useTrainerDayViewContext();
-  const { group, trainings } = useGroup();
+  const { training, selectedAthlete } = useTrainerDayViewContext();
+  const { group } = useGroup();
 
   const {
     supersetIndex,
@@ -89,26 +104,8 @@ export default function TrainingExerciseSelected(
     return 'transparent';
   };
 
-  const isSameDay = (a: Date, b: Date) =>
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate();
-
-  type DotProps = {
-    cx?: number;
-    cy?: number;
-    stroke?: string;
-    payload?: any;
-    value?: number | string | null;
-  };
-
   const TodayDot: React.FC<DotProps> = ({ cx, cy, stroke, payload, value }) => {
-    if (cx == null || cy == null || value == null) return null;
-
-    const foundTraining = trainings.find((t) => t.id === payload?.trainingId);
-    const foundComponent = foundTraining?.components.find(
-      (c) => c.id === component?.id
-    );
+    if (cx === null || cy === null || value === null) return null;
 
     const big = payload?.trainingId === training?.id;
 
@@ -127,7 +124,11 @@ export default function TrainingExerciseSelected(
     );
   };
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({
+    active,
+    payload,
+    label,
+  }: TooltipContentProps<number, string>) => {
     const isVisible = active && payload && payload.length;
 
     return (
@@ -148,7 +149,7 @@ export default function TrainingExerciseSelected(
         }}
       >
         <Typography textAlign="center">{label}</Typography>
-        {payload.map((p: any, i: any) => {
+        {payload.map((p: any, i: number) => {
           const color = p.color;
 
           const fullValue =
@@ -332,18 +333,10 @@ export default function TrainingExerciseSelected(
             }}
           >
             {exercise.params.map((p) => {
-              if (
-                ![
-                  ParamType.IntWork1,
-                  ParamType.VolWork1,
-                  ParamType.IntWork2,
-                  ParamType.VolWork2,
-                ].includes(p.field as ParamType)
-              )
-                return null;
+              if (!ALLOWED_PARAMS.includes(p.field as ParamType)) return null;
 
               return (
-                <Box display="flex" alignItems="center" mr={2}>
+                <Box key={p.field} display="flex" alignItems="center" mr={2}>
                   <Checkbox
                     size="small"
                     checked={selectedParams.some((param) => param === p.field)} // your state

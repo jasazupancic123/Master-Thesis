@@ -1,6 +1,5 @@
 'use client';
 
-import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 
 import {
@@ -10,12 +9,12 @@ import {
 import TrainingExerciseCard from '../training-exercise-card/training-exercise-card';
 import TrainingExerciseSelected from '../training-exercise-selected/training-exercise-selected';
 import type { Dimensions } from '@/common/type/dimensions.type';
+import type { ParamType } from '@/controller/component/enum/param.enum';
 import type { ChartWorkloadData } from '@/controller/training/type/chart-workload-data.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useGroup } from '@/store/group-provider';
 import { useSupersets } from '@/store/supersets-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
-import { ParamType } from '@/controller/component/enum/param.enum';
 
 interface TrainingExerciseCardContainerProps {
   supersetIndex: number;
@@ -30,7 +29,6 @@ export default function TrainingExerciseCardContainer(
   const { selectedExercise, setsNumbers, setSetsNumbers } = useSupersets();
 
   const {
-    day,
     training,
     selectedAthlete,
     customAthleteWorkloads,
@@ -163,8 +161,8 @@ export default function TrainingExerciseCardContainer(
 
     const newDataInRange = data.slice(range[0] - 1, range[1]);
 
-    const todayIndex = newDataInRange.findIndex((d) =>
-      dayjs(d.plannedAt).isSame(day.date, 'day')
+    const todayIndex = newDataInRange.findIndex(
+      (d) => d.trainingId === training?.id
     );
 
     if (todayIndex === -1 || newDataInRange.length < 2) return;

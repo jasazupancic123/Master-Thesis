@@ -128,7 +128,6 @@ export async function handleAddMembersSubgroup(
     createSubgroup,
     setCreateSubgroup: undefined,
     setDetectedChanges,
-    updateTrainingsAvgFutureWorkload: true,
     setSelectedSubgroup,
     setSelectedAthlete,
   });

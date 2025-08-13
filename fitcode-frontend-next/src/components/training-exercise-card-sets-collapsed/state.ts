@@ -274,10 +274,16 @@ export function updateVolWorkSets(
         }[]
       >
     ) => void;
+    setCustomAthleteWorkloads: SetState<Workload[]>;
   }
 ) {
   const { exercise, newValue } = input;
-  const { setsNumbers, selectedExercises, setSetsNumbers } = state;
+  const {
+    setsNumbers,
+    selectedExercises,
+    setSetsNumbers,
+    setCustomAthleteWorkloads,
+  } = state;
 
   if (
     selectedExercises.length &&
@@ -320,6 +326,17 @@ export function updateVolWorkSets(
       return [...prev, newSetNumber];
     });
   }
+
+  setCustomAthleteWorkloads((prev) =>
+    prev.filter(
+      (fw) =>
+        !(
+          (selectedExercises.some((ex) => ex.id === fw.exerciseId) ||
+            exercise.id === fw.exerciseId) &&
+          fw.setNumber > +newValue
+        )
+    )
+  );
 }
 
 export function updateAttributeValue(
