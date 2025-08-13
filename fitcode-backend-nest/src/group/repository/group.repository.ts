@@ -18,6 +18,7 @@ import {
 } from '@src/common/type/firestore.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 
+import { Cycle } from '../entity/cycle.entity';
 import { Group } from '../entity/group.entity';
 
 @Injectable()
@@ -53,7 +54,7 @@ export class GroupRepository
         ownerId: input.ownerId,
         membersIds: input.membersIds,
         institutionId: input.institutionId,
-        cycles: [],
+        cycles: input.cycles.map(({ weeks, ...cycle }) => cycle),
       },
       { timestamps: true },
     );
@@ -107,6 +108,36 @@ export class GroupRepository
           : (FieldValue.arrayRemove(memberId) as unknown as string[]),
       },
     };
+  }
+
+  async addCycle(group: Group, cycle: Create<Cycle>) {
+    const ref = this.doc(group.id);
+    const query = this.firebaseService.buildUpdateQuery<Group>({
+      cycles: [
+        ...group.cycles.map(({ weeks, ...cycle }) => cycle),
+        {
+          ...cycle,
+          weeks: undefined,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ],
+    });
+
+    await this.changeLog.trackUpdate(ref);
+    await ref.update(query);
+  }
+
+  async removeCycle(group: Group, cycleId: string) {
+    const ref = this.doc(group.id);
+    const cycles = group.cycles.filter((cycle) => cycle.id !== cycleId);
+
+    const query = this.firebaseService.buildUpdateQuery<Group>({
+      cycles: cycles.map(({ weeks, ...cycle }) => cycle),
+    });
+
+    await this.changeLog.trackUpdate(ref);
+    await ref.update(query);
   }
 
   doc(id: string): DocumentReference {

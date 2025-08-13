@@ -41,8 +41,10 @@ import {
   WARMUP_COMPONENT_ID,
 } from '@src/component/constant/warmup-cooldown.constant';
 import { FirebaseService } from '@src/firebase/firebase.service';
+import { DELETE_GROUP_EVENT } from '@src/group/constant/delete-group-event.constant';
 import { Cycle } from '@src/group/entity/cycle.entity';
 import { Group } from '@src/group/entity/group.entity';
+import { DeleteGroupOrCycleEvent } from '@src/group/event/delete-group.event';
 import { GroupService } from '@src/group/group.service';
 import { INSTITUTION_ATHLETE_EVENT } from '@src/institution/constant/update-institution-athlete-event.constant';
 import { Institution } from '@src/institution/entity/institution.entity';
@@ -565,8 +567,8 @@ export class TrainingService implements Permission<Training, Institution> {
       throw new BadRequestException('Member is not part of the institution');
 
     // update members
-    if (add) await this.repository.addMember(ref.trainingId, member.uid);
-    else await this.repository.removeMember(ref.trainingId, member.uid);
+    if (add) await this.repository.addMember(training, member.uid);
+    else await this.repository.removeMember(training, member.uid);
   }
 
   @LogMethod()
@@ -1074,7 +1076,6 @@ export class TrainingService implements Permission<Training, Institution> {
   }
 
   @OnEvent(INSTITUTION_ATHLETE_EVENT, { async: true, promisify: true })
-  @LogMethod()
   async handleUpdateInstitutionAthleteEvent(
     event: UpdateInstitutionAthleteEvent,
   ) {
@@ -1088,8 +1089,25 @@ export class TrainingService implements Permission<Training, Institution> {
 
     for (const training of trainings)
       operations.push(
-        this.repository.getUpdateMemberOperation(training.id, userId, add),
+        this.repository.getUpdateMemberOperation(training, userId, add),
       );
+  }
+
+  @OnEvent(DELETE_GROUP_EVENT, { async: true, promisify: true })
+  async handleDeleteGroupEvent(event: DeleteGroupOrCycleEvent) {
+    // delete all trainings of the group
+    const { operations, groupId, cycleId } = event;
+    const trainings = await this.repository.getDocs((q) => {
+      q = q.where('groupId', '==', groupId);
+      if (cycleId) q = q.where('cycleId', '==', cycleId);
+      return q;
+    });
+
+    for (const training of trainings)
+      operations.push({
+        operation: 'delete',
+        ref: this.repository.doc(training.id),
+      });
   }
 
   /**

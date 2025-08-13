@@ -17,7 +17,11 @@ import { GroupService } from '@src/group/group.service';
 import { generateGroupStub } from '@src/group/mock/group.stub';
 import { generateInstitutionStub } from '@src/institution/mock/institution.mock';
 import { TestDbService } from '@src/test-db/test-db.service';
-import { generateTrainingStub } from '@src/training/mock/training.stub';
+import {
+  generateSubgroup,
+  generateTrainingComponent,
+  generateTrainingStub,
+} from '@src/training/mock/training.stub';
 import { TrainingService } from '@src/training/service/training.service';
 
 describe('Update Institution (e2e)', () => {
@@ -373,6 +377,79 @@ describe('Update Institution (e2e)', () => {
       const institution = await db.institutions.getDoc(institutionId);
       expect(institution.trainerIds).not.toContain(trainer.uid);
       expect(institution.trainerIds).toHaveLength(0);
+
+      await db.institutions.addTrainer(institutionId, trainer.uid);
+    });
+
+    it('should remove member from all subgroups and completed members for all components and trainings in the future', async () => {
+      const membersIds = athletes.map((a) => a.uid);
+      const athleteToRemove = athletes[0];
+
+      // create 3 trainings in the future
+      await Promise.all(
+        Array.from({ length: 3 }, (_, i) =>
+          db.trainings.addDoc(
+            generateTrainingStub({
+              ownerId: global.trainer.uid,
+              membersIds,
+              institutionId,
+              date: addDays(new Date(), i + 1),
+              completedMembersIds: [athleteToRemove.uid],
+              components: [
+                generateTrainingComponent({
+                  completedMembersIds: [athleteToRemove.uid],
+                  subgroups: [
+                    generateSubgroup({
+                      membersIds: [athleteToRemove.uid, athletes[1].uid],
+                    }),
+                  ],
+                }),
+              ],
+            }),
+          ),
+        ),
+      );
+
+      let trainings = await db.trainings.getDocs();
+      expect(trainings).toHaveLength(3);
+
+      for (const training of trainings) {
+        expect(training.membersIds).toHaveLength(3);
+        expect(training.completedMembersIds).toHaveLength(1);
+        expect(training.completedMembersIds).toContain(athleteToRemove.uid);
+        expect(training.components).toHaveLength(1);
+        expect(training.components[0].completedMembersIds).toContain(
+          athleteToRemove.uid,
+        );
+
+        expect(training.components[0].subgroups).toHaveLength(1);
+        expect(training.components[0].subgroups[0].membersIds).toContain(
+          athleteToRemove.uid,
+        );
+      }
+
+      const response1 = await request(app.getHttpServer())
+        .delete(`/institution/${institutionId}/athlete`)
+        .set('Authorization', `Bearer ${global.manager.token}`)
+        .send({ userId: athleteToRemove.uid });
+
+      expect(response1.status).toBe(200);
+
+      trainings = await db.trainings.getDocs();
+      expect(trainings).toHaveLength(3);
+
+      for (const training of trainings) {
+        expect(training.membersIds).toHaveLength(2);
+        expect(training.completedMembersIds).toHaveLength(0);
+        expect(training.components).toHaveLength(1);
+        expect(training.components[0].completedMembersIds).toHaveLength(0);
+
+        expect(training.components[0].subgroups).toHaveLength(1);
+        expect(training.components[0].subgroups[0].membersIds).toHaveLength(1);
+        expect(training.components[0].subgroups[0].membersIds).not.toContain(
+          athleteToRemove.uid,
+        );
+      }
     });
   });
 });

@@ -1,3 +1,4 @@
+import type { UserId } from '../institution/type/institution.type';
 import type { CompletedFutureWorkloads } from './type/completed-future-workloads.type';
 import type { CompletedTrainingComponent } from './type/completed-training.entity';
 import type {
@@ -83,5 +84,13 @@ export class TrainingController {
     return api.delete<Training>(
       `/training/${trainingId}/component/${componentId}`
     );
+  }
+
+  static async addMember(trainingId: string, body: UserId) {
+    return api.patch<void>(`/training/${trainingId}/member`, body);
+  }
+
+  static async removeMember(trainingId: string, body: UserId) {
+    return api.delete<void>(`/training/${trainingId}/member`, { body });
   }
 }

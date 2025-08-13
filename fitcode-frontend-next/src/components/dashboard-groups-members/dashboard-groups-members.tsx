@@ -1,14 +1,17 @@
 import { Add, Remove } from '@mui/icons-material';
 import { Avatar, Box, IconButton, Tooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 
 import { AddMembersModal } from '../add-members-modal/add-members-modal';
 import DashboardEditAthleteModal from '../dashboard-edit-athlete-modal/dashboard-edit-athlete-modal';
 import MyModal from '../modal/modal';
 import { SearchBar } from '../search-bar/search-bar';
 import { isManager, isTrainer } from '@/common/service/util/firebase-auth.util';
-import type { SetState } from '@/common/type/state.type';
+import { handleApiRequest, type SetState } from '@/common/type/state.type';
+import { GroupController } from '@/controller/group/group.controller';
 import type { User } from '@/controller/user/type/user.type';
 import { useDashboard } from '@/store/dashboard-provider';
 import { useMain } from '@/store/main-provider';
@@ -34,6 +37,7 @@ interface DashboardGroupsMembersProps {
 export default function DashboardGroupsMembers(
   props: DashboardGroupsMembersProps
 ) {
+  const router = useRouter();
   const {
     selectedInstitution,
     setSelectedInstitution,
@@ -66,8 +70,20 @@ export default function DashboardGroupsMembers(
     setSearch('');
   }, [selectedGroup]);
 
-  const handleRemoveAthleteFromGroup = (userId: string) => {
+  const handleRemoveAthleteFromGroup = async (userId: string) => {
     if (!selectedGroup) return;
+
+    await handleApiRequest(
+      router,
+      () => GroupController.removeMember(selectedGroup!.id, { userId: userId }),
+      () => {
+        toast.success('Member removed successfully');
+      },
+      (e) => {
+        toast.error((e as Error).message);
+      }
+    );
+
     setFilteredUsers((prev) => prev.filter((m) => m.uid !== userId));
     setSelectedInstitution((prev) => {
       if (!prev) return null;
@@ -245,6 +261,7 @@ export default function DashboardGroupsMembers(
           )}
         </Box>
       </Box>
+
       <MyModal
         isOpen={modal.add_member}
         setIsOpen={(open) =>
@@ -266,6 +283,7 @@ export default function DashboardGroupsMembers(
           enableScroll
         />
       </MyModal>
+
       <DashboardEditAthleteModal
         isOpen={modal.edit_athlete}
         setModal={setModal}

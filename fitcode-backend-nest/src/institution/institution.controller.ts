@@ -64,12 +64,12 @@ export class InstitutionController {
   async addAthlete(
     @RequestUser() user: User,
     @Param('institutionId') institutionId: string,
-    @Body() body: UserIdDto,
+    @Body() { userId }: UserIdDto,
   ) {
     return this.institutionService.updateMembers(
       user,
       { institutionId },
-      { add: true, userId: body.userId, trainer: false },
+      { add: true, userId, trainer: false },
     );
   }
 
@@ -78,12 +78,12 @@ export class InstitutionController {
   async removeAthlete(
     @RequestUser() user: User,
     @Param('institutionId') institutionId: string,
-    @Body() body: UserIdDto,
+    @Body() { userId }: UserIdDto,
   ) {
     return this.institutionService.updateMembers(
       user,
       { institutionId },
-      { add: false, userId: body.userId, trainer: false },
+      { add: false, userId, trainer: false },
     );
   }
 

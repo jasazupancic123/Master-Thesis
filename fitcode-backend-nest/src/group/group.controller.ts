@@ -17,6 +17,7 @@ import { User } from '../common/type/firebase-auth.type';
 import { UserRole } from '../user/enum/user-role.enum';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { BatchUpdateGroupsDto, UpdateGroupDto } from './dto/update-group.dto';
+import { Cycle } from './entity/cycle.entity';
 import { GroupService } from './group.service';
 
 @ApiTags('Group')
@@ -77,7 +78,6 @@ export class GroupController {
   @Auth([UserRole.MANAGER])
   async delete(@RequestUser() user: User, @Param('groupId') groupId: string) {
     await this.groupService.delete(user, { groupId });
-    return {};
   }
 
   @Patch(':groupId/member')
@@ -106,5 +106,25 @@ export class GroupController {
       { groupId },
       { userId, add: false },
     );
+  }
+
+  @Post(':groupId/cycle')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER])
+  async addCycle(
+    @RequestUser() user: User,
+    @Param('groupId') groupId: string,
+    @Body() body: Cycle,
+  ) {
+    return await this.groupService.addCycle(user, { groupId }, body);
+  }
+
+  @Delete(':groupId/cycle/:cycleId')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER])
+  async removeCycle(
+    @RequestUser() user: User,
+    @Param('groupId') groupId: string,
+    @Param('cycleId') cycleId: string,
+  ) {
+    return await this.groupService.removeCycle(user, { groupId }, cycleId);
   }
 }
