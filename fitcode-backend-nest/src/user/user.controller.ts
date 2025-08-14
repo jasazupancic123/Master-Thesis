@@ -6,7 +6,6 @@ import {
   Patch,
   Post,
   Query,
-  Req,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
@@ -43,7 +42,6 @@ export class UserController {
   async updateClaims(
     @Param('id') id: string,
     @Body() body: UpdateUserClaimsDto,
-    @Req() req: any,
   ) {
     await this.userService.updateClaims(id, body);
     return {};
