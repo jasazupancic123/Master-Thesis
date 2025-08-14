@@ -4,7 +4,9 @@ import { Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import dayjs from 'dayjs';
 import dayOfYear from 'dayjs/plugin/dayOfYear';
+import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 import { Range } from 'react-range';
 
 import EditCycleForm from '../edit-cycle-form/edit-cycle-form';
@@ -14,7 +16,8 @@ import {
   handleDrag,
   handleDragEnd,
 } from '../multi-cycle-slider-layout/state';
-import type { SetState } from '@/common/type/state.type';
+import { handleApiRequest, type SetState } from '@/common/type/state.type';
+import { GroupController } from '@/controller/group/group.controller';
 import type { Cycle } from '@/controller/group/type/cycle.type';
 import type { Group } from '@/controller/group/type/group.type';
 import { useGroup } from '@/store/group-provider';
@@ -55,6 +58,9 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
     sliderProperties,
   } = props;
 
+  const { setGroup } = useGroup();
+
+  const router = useRouter();
   const theme = useTheme();
 
   const { cycle, setCycle, setDetectedChanges } = useGroup();
@@ -71,17 +77,28 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
   const onMouseMove = (e: React.MouseEvent<HTMLDivElement>) =>
     setMouseX(e.clientX);
 
-  function handleDeleteCycle() {
+  async function handleDeleteCycle() {
     if (!editCycle || !selectedGroup) return;
 
-    const updatedCycles = [...selectedGroup.cycles].filter(
-      (cycle) => cycle.id !== editCycle.id
-    );
+    handleApiRequest(
+      router,
+      () => GroupController.removeCycle(selectedGroup.id, editCycle.id),
+      () => {
+        const updatedCycles = [...selectedGroup.cycles].filter(
+          (cycle) => cycle.id !== editCycle.id
+        );
 
-    if (cycle && editCycle.id === cycle?.id) setCycle(undefined);
-    setSelectedGroup({ ...selectedGroup, cycles: updatedCycles });
-    setEditCycle(null);
-    setDetectedChanges(true);
+        if (cycle && editCycle.id === cycle?.id) setCycle(undefined);
+        setSelectedGroup({ ...selectedGroup, cycles: updatedCycles });
+        setGroup({ ...selectedGroup, cycles: updatedCycles });
+        setEditCycle(null);
+
+        toast.success('Cycle deleted successfully');
+      },
+      (_e) => {
+        toast.error('An error occurred while deleting the cycle.');
+      }
+    );
   }
 
   return (

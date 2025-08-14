@@ -73,7 +73,11 @@ export class ApiUtil {
       } else throw new Error(error.message || 'An error occurred');
     }
 
-    return res.json() as T;
+    if (res.status === 204) return undefined as T; // No Content status
+    const text = await res.text();
+    if (!text) return undefined as T; // Empty response
+
+    return JSON.parse(text) as T;
   }
 
   async get<T>(

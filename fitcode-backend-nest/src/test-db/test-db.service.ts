@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
 
 import { FirebaseService } from '@src/firebase/firebase.service';
+import { GroupRepository } from '@src/group/repository/group.repository';
 import { InstitutionRepository } from '@src/institution/repository/institution.repository';
+import { TrainingRepository } from '@src/training/repository/training.repository';
 
 import { TestAttributeService } from './service/test-attribute.service';
 import { TestComponentService } from './service/test-component.service';
 import { TestExerciseService } from './service/test-exercise.service';
-import { TestTrainingService } from './service/test-training.service';
 import { TestWorkloadService } from './service/test-workload.service';
 
 @Injectable()
@@ -15,19 +16,21 @@ export class TestDbService {
     private readonly firebase: FirebaseService,
     readonly attributes: TestAttributeService,
     readonly components: TestComponentService,
-    readonly trainings: TestTrainingService,
     readonly workloads: TestWorkloadService,
     readonly exercises: TestExerciseService,
+    readonly trainings: TrainingRepository,
     readonly institutions: InstitutionRepository,
+    readonly groups: GroupRepository,
   ) {}
 
   private SERVICES = [
     this.attributes,
     this.components,
-    this.trainings,
     this.workloads,
     this.exercises,
+    this.trainings.changeLog,
     this.institutions.changeLog,
+    this.groups.changeLog,
   ];
 
   checkpoint() {

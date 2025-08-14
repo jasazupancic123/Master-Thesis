@@ -5,6 +5,7 @@ import { Box, IconButton, Stack, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import dayjs from 'dayjs';
 import dayOfYear from 'dayjs/plugin/dayOfYear';
+import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
 import HorizontalItemsList from '../horizontal-items-list/horizontal-items-list';
@@ -37,6 +38,7 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
     setSortedCycles,
   } = props;
 
+  const router = useRouter();
   const screenSize = useScreenSize();
   const theme = useTheme();
 
@@ -360,6 +362,7 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
                 : dayjs(lastCycle.to).add(1, 'w').endOf('w').add(1, 'day');
 
             handleAddCycle(
+              router,
               {
                 name: `Cycle ${selectedGroup.cycles.length + 1}`,
                 description: '',

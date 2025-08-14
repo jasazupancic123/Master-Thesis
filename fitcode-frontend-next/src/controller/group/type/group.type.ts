@@ -18,9 +18,7 @@ export type CreateGroup = Pick<
   'institutionId' | 'name' | 'ownerId' | 'membersIds'
 >;
 
-export type UpdateGroup = Partial<
-  Pick<Group, 'ownerId' | 'name' | 'membersIds' | 'cycles'>
->;
+export type UpdateGroup = Partial<Pick<Group, 'ownerId' | 'name' | 'cycles'>>;
 
 export type BatchUpdateOneGroup = IdEntity & UpdateGroup;
 

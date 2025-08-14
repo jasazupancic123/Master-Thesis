@@ -7,12 +7,34 @@ import type {
 
 import type { FirestoreEntity } from './entity.type';
 
-export interface BatchWriteOperation<T> {
+interface BatchOperationBase {
+  operation: string;
   ref: DocumentReference<DocumentData, DocumentData>;
-  data: FirestoreEntity<T> | FirestoreEntity<Partial<T>>;
-  operation: 'set' | 'update';
-  options?: { merge?: boolean }; // Only applicable for 'set' operations
 }
+
+export interface BatchSetOperation<T> extends BatchOperationBase {
+  operation: 'set';
+  data: FirestoreEntity<T>;
+  options?: { merge?: boolean };
+}
+
+export interface BatchUpdateOperation<T> extends BatchOperationBase {
+  operation: 'update';
+  data: FirestoreEntity<Partial<T>>;
+}
+
+export interface BatchDeleteOperation extends BatchOperationBase {
+  operation: 'delete';
+}
+
+export type BatchOperation<T> =
+  | BatchSetOperation<T>
+  | BatchUpdateOperation<T>
+  | BatchDeleteOperation;
+
+export type BatchWriteOperation<T> =
+  | BatchSetOperation<T>
+  | BatchUpdateOperation<T>;
 
 export interface FirestoreCollectionRepository<
   Model = unknown,

@@ -1,8 +1,15 @@
-import type { Day as DayDateFns } from 'date-fns';
+import {
+  addDays,
+  type Day as DayDateFns,
+  isBefore,
+  startOfWeek,
+} from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { getWeekStartByLocale } from 'weekstart';
+
+import type { Week } from '@/controller/group/type/cycle.type';
 
 export type Day = {
   label: string;
@@ -100,14 +107,33 @@ export class DateUtil {
     return weekStart === 0 ? 6 : ((weekStart - 1) as DayDateFns); // If week starts on Sunday, end on Saturday, otherwise end on the day before the start
   }
 
-  private getWeekEndDate(date: Dayjs): Dayjs {
-    const weekEnd = this.getWeekEndsOn();
-    const dayOfWeek = date.day();
+  /**
+   * Returns an array of weeks between the start and end date. Each week
+   * contains an array of days (7 days in a week), from Monday to Sunday.
+   *
+   * @example
+   * getWeeksBetween(new Date('2021-01-01'), new Date('2021-01-15'))
+   * // => [
+   * //   [ { date: '2021-01-04' }, { date: '2021-01-05' }, ... ],
+   * //   [ { date: '2021-01-11' }, { date: '2021-01-12' }, ... ],
+   * // ]
+   */
+  weeks(startDate: Date | undefined, endDate: Date | undefined): Week[][] {
+    if (!startDate || !endDate) return [];
 
-    // Calculate the difference to the end of the week
-    const diff = (weekEnd - dayOfWeek + 7) % 7;
+    const weeksArray: Week[][] = [];
+    let currentDate = startOfWeek(startDate, { weekStartsOn: 1 }); // 1 = Monday
 
-    // Add the difference to the current date
-    return date.add(diff, 'day').endOf('day');
+    while (isBefore(currentDate, endDate)) {
+      const week: Week[] = [];
+      for (let i = 0; i < 7; i++) {
+        week.push({ date: new Date(currentDate) });
+        currentDate = addDays(currentDate, 1);
+      }
+
+      weeksArray.push(week);
+    }
+
+    return weeksArray;
   }
 }

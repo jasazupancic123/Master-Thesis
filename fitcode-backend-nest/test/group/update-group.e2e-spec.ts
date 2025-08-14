@@ -1,18 +1,14 @@
 import type { INestApplication } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { createAthleteUserAndToken } from '@test/common/utils/auth.util';
 import {
   createGroupWithCycles,
   createInstitution,
   createInstitutionWithUsers,
-  createTraining,
   deleteDoc,
-  deleteDocs,
   deleteInstitution,
-  deleteUsers,
 } from '@test/common/utils/data.util';
-import { addDays, subDays } from 'date-fns';
+import { addDays } from 'date-fns';
 import * as request from 'supertest';
 
 import { AppModule } from '@src/app.module';
@@ -26,7 +22,6 @@ import { GroupService } from '@src/group/group.service';
 import { generateCycleStub } from '@src/group/mock/cycle.stub';
 import { generateGroupStub } from '@src/group/mock/group.stub';
 import { InstitutionService } from '@src/institution/service/institution.service';
-import { TrainingService } from '@src/training/service/training.service';
 
 import type { TestUser } from '../common/type/auth.type';
 import type { TestInstitution } from '../common/type/entity.type';
@@ -36,7 +31,6 @@ describe('Update Group (e2e)', () => {
   let firebase: FirebaseService;
   let groupService: GroupService;
   let institutionService: InstitutionService;
-  let trainingService: TrainingService;
   let componentService: ComponentService;
 
   let component: Component;
@@ -54,7 +48,6 @@ describe('Update Group (e2e)', () => {
     firebase = moduleFixture.get(FirebaseService);
     groupService = moduleFixture.get(GroupService);
     institutionService = moduleFixture.get(InstitutionService);
-    trainingService = moduleFixture.get(TrainingService);
     componentService = moduleFixture.get(ComponentService);
 
     component = await componentService.create(generateComponentStub());
@@ -128,27 +121,25 @@ describe('Update Group (e2e)', () => {
       ]);
     });
 
-    /* it('should fail if not all users are valid', async () => {
-      const response = await batchUpdateRequest(trainer, [
-        { ...group, membersIds: ['invalid-member-id'] },
-      ]);
-
-      expect(response.status).toBe(400);
-      expect(response.body.message).toBe(`Invalid members provided`);
-    }); */
-
     it('should fail if cycles overlap', async () => {
       const response = await batchUpdateRequest(global.trainer, [
         {
           ...group,
           cycles: [
             generateCycleStub({
+              id: group.cycles[0].id,
               from: new Date(),
               to: addDays(new Date(), 7),
             }),
             generateCycleStub({
+              id: group.cycles[1].id,
               from: addDays(new Date(), 3),
               to: addDays(new Date(), 7),
+            }),
+            generateCycleStub({
+              id: group.cycles[2].id,
+              from: addDays(new Date(), 5),
+              to: addDays(new Date(), 10),
             }),
           ],
         },
@@ -159,20 +150,6 @@ describe('Update Group (e2e)', () => {
         `Cycles in group ${group.name} cannot overlap`,
       );
     });
-
-    /* it('should fail if members are not in same institution', async () => {
-      const member = await createAthleteUserAndToken(firebase);
-      const response = await batchUpdateRequest(global.trainer, [
-        { ...group, membersIds: [...group.membersIds, member.uid] },
-      ]);
-
-      expect(response.status).toBe(400);
-      expect(response.body.message).toBe(
-        `User ${member.displayName || member.email} is not part of the institution and cannot be added`,
-      );
-
-      await deleteUsers(firebase, [member]);
-    }); */
 
     it('should successfully update primitive group field types', async () => {
       const response = await batchUpdateRequest(global.trainer, [
@@ -190,12 +167,19 @@ describe('Update Group (e2e)', () => {
     it('should successfully update complex group field types - cycles', async () => {
       const cycles = [
         generateCycleStub({
+          id: group.cycles[0].id,
           from: addDays(new Date(), 7),
           to: addDays(new Date(), 14),
         }),
         generateCycleStub({
+          id: group.cycles[1].id,
           from: addDays(new Date(), 1),
           to: addDays(new Date(), 6),
+        }),
+        generateCycleStub({
+          id: group.cycles[2].id,
+          from: addDays(new Date(), 15),
+          to: addDays(new Date(), 20),
         }),
       ];
 
@@ -208,81 +192,27 @@ describe('Update Group (e2e)', () => {
       });
 
       expect(response.status).toBe(200);
-      expect(found.cycles[0].id).toBe(cycles[1].id); // because of sorting, cycles must be reversed
-      expect(found.cycles[1].id).toBe(cycles[0].id);
+      expect(found.cycles.length).toBe(3);
 
       group.cycles = cycles;
     });
 
-    it('should successfully update complex group field types - members', async () => {
-      const newAthlete = await createAthleteUserAndToken(firebase);
-      await institutionService.updateMembers(
-        global.manager,
-        { institutionId: institution.id },
-        {
-          add: true,
-          memberIds: [newAthlete.uid],
-          trainers: false,
-        },
-      );
+    it('should throw an error if all net cycles are not the same as the original group cycles', async () => {
+      const cycles = [
+        generateCycleStub({
+          from: addDays(new Date(), 7),
+          to: addDays(new Date(), 14),
+        }),
+      ];
 
-      const trainingIds = (
-        await Promise.all([
-          // past trainings
-          createTraining(firebase, { group, from: subDays(new Date(), 1) }),
-          createTraining(firebase, { group, from: subDays(new Date(), 2) }),
-          createTraining(firebase, { group, from: subDays(new Date(), 3) }),
-          // future trainings
-          createTraining(firebase, { group, from: addDays(new Date(), 1) }),
-          createTraining(firebase, { group, from: addDays(new Date(), 2) }),
-          createTraining(firebase, { group, from: addDays(new Date(), 3) }),
-        ])
-      ).map((t) => t.id);
-
-      const foundTrainingsBefore = await trainingService.findAll(
-        global.trainer,
-      );
-
-      expect(foundTrainingsBefore).toHaveLength(6);
-      for (const t of foundTrainingsBefore) {
-        expect(t.membersIds).toHaveLength(1);
-        expect(t.membersIds[0]).toBe(global.athlete.uid);
-      }
-
-      const response = await batchUpdateRequest(institution.trainers[0], [
-        { ...group, membersIds: [...institution.athleteIds, newAthlete.uid] },
+      const response = await batchUpdateRequest(global.trainer, [
+        { ...group, cycles },
       ]);
 
-      const foundGroup = await groupService.findOneById(global.trainer, {
-        groupId: group.id,
-      });
-
-      const foundTrainingsAfter = await trainingService.findAll(global.trainer);
-      expect(foundTrainingsAfter).toHaveLength(6);
-
-      const past = foundTrainingsAfter.slice(0, 3);
-      const future = foundTrainingsAfter.slice(3, 6);
-
-      // trainings before should have only one member
-      for (const t of past) {
-        expect(t.membersIds).toHaveLength(1);
-        expect(t.membersIds).toEqual([global.athlete.uid]);
-      }
-
-      for (const t of future) {
-        expect(t.membersIds).toHaveLength(2);
-        expect(t.membersIds).toEqual([global.athlete.uid, newAthlete.uid]);
-      }
-
-      expect(response.status).toBe(200);
-      expect(foundGroup.membersIds).toHaveLength(2);
-      expect(foundGroup.membersIds).toEqual([
-        global.athlete.uid,
-        newAthlete.uid,
-      ]);
-
-      await deleteDocs(firebase, 'TRAINING', trainingIds);
-      await deleteUsers(firebase, [newAthlete]);
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(
+        `Cycles in group ${group.name} do not match. If you are trying to add or remove cycles, use separate route`,
+      );
     });
   });
 });

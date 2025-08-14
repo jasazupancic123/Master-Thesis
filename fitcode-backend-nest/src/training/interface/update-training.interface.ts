@@ -30,10 +30,7 @@ export type UpdateTrainingComponent = Pick<
   subgroups: UpdateSubgroup[];
 };
 
-export type UpdateTraining = Pick<
-  Training,
-  'membersIds' | 'warmup' | 'cooldown'
-> & {
+export type UpdateTraining = Pick<Training, 'warmup' | 'cooldown'> & {
   components: UpdateTrainingComponentDto[];
   workloads?: CreatePrescribedWorkloadDto[]; // custom workloads
 };

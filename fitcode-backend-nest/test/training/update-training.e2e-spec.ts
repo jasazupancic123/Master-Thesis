@@ -5,7 +5,6 @@ import {
   COMPONENT_PARAMS_OPT1,
   COMPONENT_PARAMS_OPT2,
 } from '@test/common/constant/component-params.constant';
-import { createAthleteUserAndToken } from '@test/common/utils/auth.util';
 import {
   createGroupWithCycles,
   createInstitution,
@@ -13,7 +12,6 @@ import {
   deleteDoc,
   deleteDocs,
   deleteInstitution,
-  deleteUsers,
 } from '@test/common/utils/data.util';
 import { addDays, subDays } from 'date-fns';
 import * as request from 'supertest';
@@ -124,16 +122,20 @@ describe('Update Training (e2e)', () => {
   });
 
   async function createTraining(data?: Partial<Training>) {
-    return await db.trainings.create({
-      ownerId: global.trainer.uid,
-      membersIds: [global.athlete.uid],
-      institutionId: institution.id,
-      groupId: group.id,
-      cycleId: group.cycles[1].id,
-      components: [generateTrainingComponent({ id: component1.id })],
-      date: data?.from,
-      ...data,
-    });
+    const trainingId = await db.trainings.addDoc(
+      generateTrainingStub({
+        ownerId: global.trainer.uid,
+        membersIds: [global.athlete.uid],
+        institutionId: institution.id,
+        groupId: group.id,
+        cycleId: group.cycles[1].id,
+        components: [generateTrainingComponent({ id: component1.id })],
+        date: data?.from,
+        ...data,
+      }),
+    );
+
+    return db.trainings.getDoc(trainingId);
   }
 
   describe('Update training', () => {
@@ -268,26 +270,6 @@ describe('Update Training (e2e)', () => {
       training = await createTraining();
     });
 
-    it('should fail to update training if training is in institution and trainer / manager wants to add members outside the institution', async () => {
-      const newAthlete = await createAthleteUserAndToken(firebase);
-      const response = await request(app.getHttpServer())
-        .patch(`/training/${training.id}`)
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send({ ...training, membersIds: [newAthlete.uid] });
-
-      expect(response.status).toBe(400);
-      expect(response.body.message).toBe(
-        `User ${newAthlete.displayName || newAthlete.email} is not part of institution`,
-      );
-
-      await Promise.all([
-        deleteUsers(firebase, [newAthlete]),
-        deleteDoc(firebase, 'TRAINING', training.id),
-      ]);
-
-      training = await createTraining();
-    });
-
     it('should fail if input has bilateral exercise with only one side set', async () => {
       const exercise = await db.exercises.create({
         name: 'Bilateral Exercise',
@@ -376,7 +358,7 @@ describe('Update Training (e2e)', () => {
         componentIds: [component2.id],
       });
 
-      await db.trainings.delete(training.id);
+      await db.trainings.deleteDoc(training.id);
 
       training = await createTraining({
         components: [

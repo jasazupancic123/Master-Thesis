@@ -83,8 +83,8 @@ export default function RegisterUsersDashboard(
       handleApiRequest(
         router,
         () =>
-          InstitutionController.addTrainers(selectedInstitution.id, {
-            trainerIds: [user.uid],
+          InstitutionController.addTrainer(selectedInstitution.id, {
+            userId: user.uid,
           }),
         () => {
           setSelectedInstitution((prev) => {
@@ -114,8 +114,8 @@ export default function RegisterUsersDashboard(
       handleApiRequest(
         router,
         () =>
-          InstitutionController.addAthletes(selectedInstitution.id, {
-            athleteIds: [user.uid],
+          InstitutionController.addAthlete(selectedInstitution.id, {
+            userId: user.uid,
           }),
         () => {
           setSelectedInstitution((prev) => {
@@ -153,8 +153,8 @@ export default function RegisterUsersDashboard(
       handleApiRequest(
         router,
         () =>
-          InstitutionController.addTrainers(selectedInstitution.id, {
-            trainerIds: [existingUser.uid],
+          InstitutionController.addTrainer(selectedInstitution.id, {
+            userId: existingUser.uid,
           }),
         () => {
           setSelectedInstitution((prev) => {
@@ -184,8 +184,8 @@ export default function RegisterUsersDashboard(
       handleApiRequest(
         router,
         () =>
-          InstitutionController.addAthletes(selectedInstitution.id, {
-            athleteIds: [existingUser.uid],
+          InstitutionController.addAthlete(selectedInstitution.id, {
+            userId: existingUser.uid,
           }),
         () => {
           setSelectedInstitution((prev) => {

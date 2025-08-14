@@ -10,6 +10,7 @@ import ExerciseChips from '../exercise-chips/exercise-chips';
 import HorizontalItemsList from '../horizontal-items-list/horizontal-items-list';
 import { MAX_WIDTH } from '../trainer-day-view/constant';
 import VerticalLinesBorder from '../vertical-lines-border/vertical-lines-border';
+import { CommonService } from '@/common/service/common.service';
 import {
   handleAddTrainingComponents,
   handleDeleteTrainingComponent,
@@ -23,6 +24,8 @@ import { TrainingService } from '@/controller/training/training.service';
 import { useGroup } from '@/store/group-provider';
 import { useMain } from '@/store/main-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
+
+const commonService = CommonService.instance;
 
 export default function TrainerCycleView() {
   const { components, exercises: allExercises, methods } = useMain();
@@ -199,7 +202,7 @@ export default function TrainerCycleView() {
                       }}
                     >
                       {cycle.from && cycle.to
-                        ? `${cycle.weeks.length} weeks`
+                        ? `${commonService.date.weeks(cycle.from, cycle.to).length} weeks`
                         : 'N/A'}
                     </Typography>
                   </Box>
@@ -260,7 +263,7 @@ export default function TrainerCycleView() {
                         }}
                       >
                         {cycle.from && cycle.to
-                          ? `${cycle.weeks.length} weeks`
+                          ? `${commonService.date.weeks(cycle.from, cycle.to).length} weeks`
                           : 'N/A'}
                       </Typography>
                     </Box>
@@ -345,7 +348,7 @@ export default function TrainerCycleView() {
               backgroundColor: theme.palette.background.dark,
             }}
           >
-            {cycle.weeks.map((week, i) => (
+            {commonService.date.weeks(cycle.from, cycle.to).map((week, i) => (
               <Fragment key={i}>
                 <TrainingWeek
                   week={week.map(({ date }) => dayjs(date!))}

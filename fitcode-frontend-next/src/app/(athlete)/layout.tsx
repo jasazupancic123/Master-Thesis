@@ -12,6 +12,7 @@ import Alert from '@/components/alert/alert';
 import { AttributeController } from '@/controller/attribute/attribute.controller';
 import { ComponentController } from '@/controller/component/component.controller';
 import { ExerciseController } from '@/controller/exercise/exercise.controller';
+import { InstitutionController } from '@/controller/institution/institution.controller';
 import { MethodController } from '@/controller/method/method.controller';
 import { UserController } from '@/controller/user/user.controller';
 import { AthleteProvider } from '@/store/athlete-provider';
@@ -32,15 +33,23 @@ export default async function Layout({ children }: ChildrenProps) {
 
   if (isAdmin(roles) || isManager(roles)) return notFound();
 
-  const [users, exercises, attributes, components, methods] = await Promise.all(
-    [
+  const [users, exercises, attributes, components, methods, institutions] =
+    await Promise.all([
       UserController.findAll(token),
       ExerciseController.findAllGlobal(token),
       AttributeController.findAll(),
       ComponentController.findAll(),
       MethodController.findAll(token),
-    ]
-  );
+      InstitutionController.findAll(token),
+    ]);
+
+  const institutionId = institutions?.[0]?.id || null; // currently, we only support 1 institution
+  if (institutionId) {
+    const institutionalExercises =
+      await ExerciseController.findAllByInstitution(token, institutionId);
+
+    exercises.push(...institutionalExercises);
+  }
 
   const context: MainProviderProps = {
     profile,
@@ -49,6 +58,7 @@ export default async function Layout({ children }: ChildrenProps) {
     attributes,
     components,
     methods,
+    institutions,
   };
 
   return (
