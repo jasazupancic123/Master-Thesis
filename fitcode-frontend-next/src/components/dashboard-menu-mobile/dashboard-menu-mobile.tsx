@@ -25,6 +25,7 @@ import {
   LINKS_DASHBOARD_SIDEBAR_SUB_ITEMS,
   LINKS_SIDEBAR,
 } from '@/common/constant/navigation.constant';
+import { isAdmin } from '@/common/service/util/firebase-auth.util';
 import type { Institution } from '@/controller/institution/type/institution.type';
 import { useAuth } from '@/store/auth-provider';
 import { useDashboard } from '@/store/dashboard-provider';
@@ -62,22 +63,25 @@ export default function DashboardMenuMobile() {
       {/* Side drawer from the right */}
       <Drawer anchor="left" open={open} onClose={() => setOpen(false)}>
         <List sx={{ mt: 5 }}>
-          <Box ml={screenSize.isMobile ? 2 : 0}>
-            <SelectInputHorizontal<Institution>
-              label={selectedInstitution?.name || 'Select institution'}
-              icon={<Groups />}
-              value={selectedInstitution?.id || ''}
-              items={institutions || []}
-              itemKey="id"
-              itemName="name"
-              setValue={(institutionId) => {
-                const institution = institutions?.find(
-                  (i) => i.id === institutionId
-                );
-                if (institution) setSelectedInstitution(institution);
-              }}
-            />
-          </Box>
+          {isAdmin(role) && (
+            <Box ml={screenSize.isMobile ? 2 : 0}>
+              <SelectInputHorizontal<Institution>
+                label={selectedInstitution?.name || 'Select institution'}
+                icon={<Groups />}
+                value={selectedInstitution?.id || ''}
+                items={institutions || []}
+                itemKey="id"
+                itemName="name"
+                setValue={(institutionId) => {
+                  const institution = institutions?.find(
+                    (i) => i.id === institutionId
+                  );
+                  if (institution) setSelectedInstitution(institution);
+                }}
+              />
+            </Box>
+          )}
+
           {role.length &&
             [
               ...Object.values(LINKS_SIDEBAR[role[0]]),
