@@ -1,6 +1,4 @@
 import {
-  CheckBox,
-  CheckBoxOutlineBlank,
   MonitorHeart,
   MoreVert,
   Visibility,
@@ -49,7 +47,6 @@ export default function TrainingComponentMenu(
     setTraining,
     component,
     setComponent,
-    selectedExercises,
     setSelectedExercises,
   } = useTrainerDayViewContext();
 
@@ -121,38 +118,6 @@ export default function TrainingComponentMenu(
           ) : (
             <>
               <Visibility sx={{ mr: 1 }} /> Show Component
-            </>
-          )}
-        </MenuItem>
-
-        <MenuItem
-          onClick={() => {
-            const allExercisesSelected = trainingComponent.supersets?.every(
-              (s) =>
-                s.exercises.every((e) =>
-                  selectedExercises.some((se) => se.id === e.id)
-                )
-            );
-            if (allExercisesSelected) {
-              setSelectedExercises([]);
-            } else {
-              setSelectedExercises(
-                trainingComponent.supersets?.flatMap((s) => s.exercises) || []
-              );
-            }
-          }}
-        >
-          {trainingComponent.supersets?.every((s) =>
-            s.exercises.every((e) =>
-              selectedExercises.some((se) => se.id === e.id)
-            )
-          ) ? (
-            <>
-              <CheckBoxOutlineBlank sx={{ mr: 1 }} /> Deselect All Exercises
-            </>
-          ) : (
-            <>
-              <CheckBox sx={{ mr: 1 }} /> Select All Exercises{' '}
             </>
           )}
         </MenuItem>

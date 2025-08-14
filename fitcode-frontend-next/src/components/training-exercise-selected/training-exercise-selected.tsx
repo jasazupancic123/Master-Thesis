@@ -1,8 +1,16 @@
 'use client';
 
 import RemoveIcon from '@mui/icons-material/Remove';
-import { Box, Grid2, IconButton, Slider, Typography } from '@mui/material';
+import {
+  Box,
+  Checkbox,
+  Grid2,
+  IconButton,
+  Slider,
+  Typography,
+} from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import type { TooltipContentProps } from 'recharts';
 import {
   Line,
   LineChart,
@@ -13,8 +21,10 @@ import {
 } from 'recharts';
 
 import TrainingExerciseCard from '../training-exercise-card/training-exercise-card';
+import { COLORS } from '@/common/constant/color.constant';
 import type { Dimensions } from '@/common/type/dimensions.type';
 import type { SetState } from '@/common/type/state.type';
+import { ParamType } from '@/controller/component/enum/param.enum';
 import type { ChartWorkloadData } from '@/controller/training/type/chart-workload-data.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useGroup } from '@/store/group-provider';
@@ -22,7 +32,7 @@ import { useScreenSize } from '@/store/screen-size-provider';
 import { useSupersets } from '@/store/supersets-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
-interface TrainignExerciseSelectedProps {
+interface TrainingExerciseSelectedProps {
   supersetIndex: number;
   exercise: TrainingExercise;
   range: number[];
@@ -33,16 +43,33 @@ interface TrainignExerciseSelectedProps {
   data: ChartWorkloadData[];
   onAthleteView?: boolean;
   superior?: { row: boolean; column: boolean; all: boolean };
+  selectedParams: ParamType[];
+  setSelectedParams: SetState<ParamType[]>;
 }
 
-export default function TrainignExerciseSelected(
-  props: TrainignExerciseSelectedProps
+const ALLOWED_PARAMS = [
+  ParamType.IntWork1,
+  ParamType.VolWork1,
+  ParamType.IntWork2,
+  ParamType.VolWork2,
+];
+
+type DotProps = {
+  cx?: number;
+  cy?: number;
+  stroke?: string;
+  payload?: any;
+  value?: number | string | null;
+};
+
+export default function TrainingExerciseSelected(
+  props: TrainingExerciseSelectedProps
 ) {
   const screenSize = useScreenSize();
   const theme = useTheme();
 
   const { setSelectedExercise } = useSupersets();
-  const { selectedAthlete } = useTrainerDayViewContext();
+  const { training, selectedAthlete } = useTrainerDayViewContext();
   const { group } = useGroup();
 
   const {
@@ -55,10 +82,101 @@ export default function TrainignExerciseSelected(
     paddingForChartBackground,
     percentageForChartBackground,
     data,
+    selectedParams,
+    setSelectedParams,
   } = props;
 
   const handleChange = (_event: Event, newValue: number | number[]) => {
     setRange(newValue as number[]);
+  };
+
+  const getParamTypeColor = (type: ParamType) => {
+    switch (type) {
+      case ParamType.IntWork1:
+        return COLORS[0];
+      case ParamType.VolWork1:
+        return COLORS[1];
+      case ParamType.IntWork2:
+        return COLORS[2];
+      case ParamType.VolWork2:
+        return COLORS[3];
+    }
+    return 'transparent';
+  };
+
+  const TodayDot: React.FC<DotProps> = ({ cx, cy, stroke, payload, value }) => {
+    if (cx === null || cy === null || value === null) return null;
+
+    const big = payload?.trainingId === training?.id;
+
+    const r = big ? 6 : 3; // bigger dot for today
+    const sw = 3;
+
+    return (
+      <circle
+        cx={cx}
+        cy={cy}
+        r={r}
+        stroke={stroke}
+        strokeWidth={sw}
+        fill="#fff" // white center; change if you want solid
+      />
+    );
+  };
+
+  const CustomTooltip = ({
+    active,
+    payload,
+    label,
+  }: TooltipContentProps<number, string>) => {
+    const isVisible = active && payload && payload.length;
+
+    return (
+      <Box
+        key={label}
+        display="flex"
+        flexDirection="column"
+        justifyContent="center"
+        alignItems="flex-start"
+        zIndex={100000}
+        sx={{
+          p: 1,
+          borderRadius: '4px',
+          backgroundColor: 'background.dark',
+          visibility: isVisible ? 'visible' : 'hidden',
+          textAlign: 'center',
+          border: '1px solid #FFFFFF',
+        }}
+      >
+        <Typography textAlign="center">{label}</Typography>
+        {payload.map((p: any, i: number) => {
+          const color = p.color;
+
+          const fullValue =
+            p.payload[`${p.dataKey}FullValue`] || p.payload[p.dataKey];
+
+          return (
+            <Box
+              key={i}
+              display="flex"
+              justifyContent="flex-start"
+              alignItems="center"
+              gap={1}
+            >
+              <Box
+                width={10}
+                height={10}
+                bgcolor={color}
+                sx={{
+                  borderRadius: '50%',
+                }}
+              />
+              <Typography sx={{ color: color }}>{fullValue}</Typography>
+            </Box>
+          );
+        })}
+      </Box>
+    );
   };
 
   return (
@@ -166,6 +284,7 @@ export default function TrainignExerciseSelected(
             alignItems: 'flex-start',
             justifyContent: 'flex-start',
             position: 'relative',
+            mt: screenSize.isSmallerThanLaptop ? 5 : undefined,
           }}
         >
           {/* Background */}
@@ -202,66 +321,87 @@ export default function TrainignExerciseSelected(
 
           {/* Custom Legend */}
           <Box
-            display="flex"
-            justifyContent="flex-end"
             width="100%"
+            display="flex"
+            justifyContent={
+              screenSize.isSmallerThanLaptop ? 'center' : 'flex-start'
+            }
             sx={{
               position: 'absolute',
-              top: -5,
-              right: 5,
+              top: -35,
+              left: 10,
             }}
           >
-            <Box display="flex" alignItems="center" mr={2}>
-              <Box
-                sx={{
-                  width: 12,
-                  height: 12,
-                  backgroundColor: '#FF5555',
-                  borderRadius: '50%',
-                  mr: 1,
-                }}
-              />
-              <Typography variant="body2">Intensity</Typography>
-            </Box>
-            <Box display="flex" alignItems="center">
-              <Box
-                sx={{
-                  width: 12,
-                  height: 12,
-                  backgroundColor: '#FFD700',
-                  borderRadius: '50%',
-                  mr: 1,
-                }}
-              />
-              <Typography variant="body2">Volume</Typography>
-            </Box>
+            {exercise.params.map((p) => {
+              if (!ALLOWED_PARAMS.includes(p.field as ParamType)) return null;
+
+              return (
+                <Box key={p.field} display="flex" alignItems="center" mr={2}>
+                  <Checkbox
+                    size="small"
+                    checked={selectedParams.some((param) => param === p.field)} // your state
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedParams((prev) => [
+                          ...prev,
+                          p.field as ParamType,
+                        ]);
+                      } else {
+                        setSelectedParams((prev) =>
+                          prev.filter((param) => param !== p.field)
+                        );
+                      }
+                    }} // your handler
+                    sx={{
+                      p: 0.5,
+                      color: getParamTypeColor(p.field as ParamType), // unchecked color
+                      '&.Mui-checked': {
+                        color: getParamTypeColor(p.field as ParamType), // checked color
+                      },
+                    }}
+                  />
+                  <Typography variant="body2">
+                    {p.field[0].toUpperCase() + p.field.slice(1)}
+                  </Typography>
+                </Box>
+              );
+            })}
           </Box>
 
           {/* Graph */}
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={data.slice(range[0] - 1, range[1])}>
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#222',
-                  borderRadius: '10px',
-                  color: '#fff',
-                }}
-              />
+              <Tooltip content={CustomTooltip} />
               <XAxis dataKey="name" />
               <YAxis domain={['dataMin - 3', 'dataMax + 3']} />
               <Line
                 type="monotone"
-                dataKey="intensity"
-                stroke="#FF5555"
+                dataKey="int1"
+                stroke={getParamTypeColor(ParamType.IntWork1)}
                 strokeWidth={3}
-                dot={true}
+                dot={<TodayDot />}
+              />
+
+              <Line
+                type="monotone"
+                dataKey="vol1"
+                stroke={getParamTypeColor(ParamType.VolWork1)}
+                strokeWidth={3}
+                dot={<TodayDot />}
               />
               <Line
                 type="monotone"
-                dataKey="volume"
-                stroke="#FFD700"
+                dataKey="int2"
+                stroke={getParamTypeColor(ParamType.IntWork2)}
                 strokeWidth={3}
-                dot={true}
+                dot={<TodayDot />}
+              />
+              <Line
+                type="monotone"
+                dataKey="vol2"
+                stroke={getParamTypeColor(ParamType.VolWork2)}
+                strokeWidth={3}
+                dot={<TodayDot />}
               />
             </LineChart>
           </ResponsiveContainer>

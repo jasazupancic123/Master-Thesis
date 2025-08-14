@@ -55,7 +55,6 @@ export default function GroupInitializer({
             components,
             exercises,
             methods,
-            prescribedStats: true,
           });
 
           return t;

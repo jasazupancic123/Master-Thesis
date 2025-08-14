@@ -75,8 +75,7 @@ export default function TrainingMembersSubgroup(
 
   const isSubgroupSelected = (id: string): boolean => {
     if (selectedSubgroup?.id === id) return true;
-    else if (!selectedSubgroup && id === DEFAULT_SUBGROUP([], []).id)
-      return true;
+    else if (!selectedSubgroup && id === DEFAULT_SUBGROUP([]).id) return true;
 
     return false;
   };
@@ -98,7 +97,7 @@ export default function TrainingMembersSubgroup(
               selectedSubgroup?.id === subgroup.id ||
               (!selectedSubgroup &&
                 subgroupIndex === 0 &&
-                subgroup.id === DEFAULT_SUBGROUP([], []).id)
+                subgroup.id === DEFAULT_SUBGROUP([]).id)
             )
               return;
             if (subgroupIndex > 0) {
@@ -133,7 +132,7 @@ export default function TrainingMembersSubgroup(
             display: 'inline-block',
             border:
               (selectedSubgroup && subgroup.id === selectedSubgroup.id) ||
-              (!selectedSubgroup && subgroup.id === DEFAULT_SUBGROUP([], []).id)
+              (!selectedSubgroup && subgroup.id === DEFAULT_SUBGROUP([]).id)
                 ? `1.5px solid ${theme.palette.background.lightBorder}`
                 : undefined,
             borderRadius: '5px',

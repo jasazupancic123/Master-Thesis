@@ -1,6 +1,5 @@
 'use client';
 
-import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 
 import {
@@ -8,8 +7,9 @@ import {
   prepareSelectedAthleteAvgWorkloadsForChart,
 } from '../trainer-day-view/state';
 import TrainingExerciseCard from '../training-exercise-card/training-exercise-card';
-import TrainignExerciseSelected from '../training-exercise-selected/training-exercise-selected';
+import TrainingExerciseSelected from '../training-exercise-selected/training-exercise-selected';
 import type { Dimensions } from '@/common/type/dimensions.type';
+import type { ParamType } from '@/controller/component/enum/param.enum';
 import type { ChartWorkloadData } from '@/controller/training/type/chart-workload-data.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useGroup } from '@/store/group-provider';
@@ -29,9 +29,9 @@ export default function TrainingExerciseCardContainer(
   const { selectedExercise, setsNumbers, setSetsNumbers } = useSupersets();
 
   const {
-    day,
     training,
     selectedAthlete,
+    customAthleteWorkloads,
     selectedAthleteWorkloads,
     component,
     selectedSubgroup,
@@ -49,6 +49,15 @@ export default function TrainingExerciseCardContainer(
 
   const [range, setRange] = useState<number[]>([1, 6]); // Example range
   const [max, setMax] = useState<number>(10);
+  const [selectedParams, setSelectedParams] = useState<ParamType[]>([]);
+
+  useEffect(() => {
+    if (!selectedExercise) return;
+
+    setSelectedParams(
+      selectedExercise.params.map((p) => p.field as ParamType) || []
+    );
+  }, [selectedExercise]);
 
   useEffect(() => {
     const newSetsNumbers = [] as { exerciseId: string; setsNumber: number }[];
@@ -115,13 +124,18 @@ export default function TrainingExerciseCardContainer(
   // }, [selectedSubgroup?.subgroup, training, component]);
 
   useEffect(() => {
-    if (exercise.id !== selectedExercise?.id || !training) return;
+    if (exercise.id !== selectedExercise?.id || !training || !component) return;
     // useEffect to init avg workloads for chart
     if (selectedAthlete) {
       // use fetched data for selected athlete from api
       prepareSelectedAthleteAvgWorkloadsForChart(
+        customAthleteWorkloads,
         selectedAthleteWorkloads,
-        exercise.id,
+        trainings,
+        component.id,
+        exercise,
+        selectedAthlete,
+        selectedParams,
         setData,
         setMax,
         setRange
@@ -130,13 +144,16 @@ export default function TrainingExerciseCardContainer(
       // group avg is already on training
       prepareGroupAvgWorkloadsForChart(
         trainings,
-        exercise.id,
+        training,
+        component.id,
+        exercise,
+        selectedParams,
         setData,
         setMax,
         setRange
       );
     }
-  }, [selectedExercise, selectedAthleteWorkloads, trainings]);
+  }, [selectedAthleteWorkloads, trainings, selectedParams]);
 
   useEffect(() => {
     // Set the percentage for the chart background (completed vs future) based on the range
@@ -144,8 +161,8 @@ export default function TrainingExerciseCardContainer(
 
     const newDataInRange = data.slice(range[0] - 1, range[1]);
 
-    const todayIndex = newDataInRange.findIndex((d) =>
-      dayjs(d.plannedAt).isSame(day.date, 'day')
+    const todayIndex = newDataInRange.findIndex(
+      (d) => d.trainingId === training?.id
     );
 
     if (todayIndex === -1 || newDataInRange.length < 2) return;
@@ -194,7 +211,7 @@ export default function TrainingExerciseCardContainer(
   }, [window.innerWidth]);
 
   return exercise.id === selectedExercise?.id ? (
-    <TrainignExerciseSelected
+    <TrainingExerciseSelected
       supersetIndex={supersetIndex}
       exercise={exercise}
       range={range}
@@ -205,6 +222,8 @@ export default function TrainingExerciseCardContainer(
       data={data}
       onAthleteView={onAthleteView}
       superior={superior}
+      selectedParams={selectedParams}
+      setSelectedParams={setSelectedParams}
     />
   ) : (
     <TrainingExerciseCard

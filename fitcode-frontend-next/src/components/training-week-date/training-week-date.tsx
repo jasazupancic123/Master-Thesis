@@ -16,7 +16,6 @@ import { TrainingGridItem } from '@/components/training-cycle-view-grid-item/tra
 import type { Component } from '@/controller/component/type/component.type';
 import type { Target } from '@/controller/target/type/target.type';
 import type { Training } from '@/controller/training/type/training.type';
-import type { TrainingInfo } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { useGroup } from '@/store/group-provider';
 import { useMain } from '@/store/main-provider';
@@ -29,8 +28,8 @@ interface TrainingWeekDatesProps {
   copyComponent?: boolean;
   trainingComponent?: TrainingComponent;
   training?: Training;
-  selectedTrainings?: TrainingInfo[];
-  setSelectedTrainings?: SetState<TrainingInfo[]>;
+  selectedTrainings?: Training[];
+  setSelectedTrainings?: SetState<Training[]>;
   selected?: Component[];
   selectedTarget?: Target;
   selectedTargets?: {
@@ -39,9 +38,9 @@ interface TrainingWeekDatesProps {
   }[];
   day?: Day;
   setOpenAreYouSureModal: SetState<boolean>;
-  setSelectedTraining: SetState<TrainingInfo | null>;
+  setSelectedTraining: SetState<Training | null>;
   setOpenOverwriteModal?: SetState<boolean>;
-  setTrainingInPeriodForModal?: SetState<TrainingInfo | null>;
+  setTrainingInPeriodForModal?: SetState<Training | null>;
   addTrainingComponent: (
     trainingId: string,
     data: AddTrainingComponents

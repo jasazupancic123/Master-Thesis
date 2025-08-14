@@ -14,7 +14,6 @@ import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
 import type { CompletedFutureWorkloads } from '@/controller/training/type/completed-future-workloads.type';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
-import type { TrainingInfo } from '@/controller/training/type/training.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
@@ -22,7 +21,7 @@ import type { Workload } from '@/controller/training/type/workload.type';
 import type { User } from '@/controller/user/type/user.type';
 
 export async function handleUpdateMultipleTrainings(state: {
-  setTrainings: SetState<TrainingInfo[]>;
+  setTrainings: SetState<Training[]>;
   training: Training | undefined;
   setTraining: SetState<Training | undefined>;
   group: Group;
@@ -73,13 +72,11 @@ export async function handleUpdateMultipleTrainings(state: {
         methods,
       });
 
-      const minimalTraining = TrainingService.trainingToInfo(newTraining);
-
       setTraining(newTraining);
 
       setTrainings((prev) =>
         prev.map((t) => {
-          if (t.id === minimalTraining.id) return minimalTraining;
+          if (t.id === newTraining.id) return newTraining;
           return t;
         })
       );

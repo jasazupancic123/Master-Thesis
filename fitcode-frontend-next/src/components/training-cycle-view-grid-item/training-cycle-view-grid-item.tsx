@@ -6,7 +6,6 @@ import toast from 'react-hot-toast';
 
 import type { TrainingCycleViewGridItemProps } from '../training-cycle-view-week/type';
 import { CommonService } from '@/common/service/common.service';
-import type { TrainingComponentInfo } from '@/controller/training/type/training-component.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { useGroup } from '@/store/group-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
@@ -33,7 +32,7 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [isWrapped, setIsWrapped] = useState(false);
-  const [components, setComponents] = useState<TrainingComponentInfo[]>(
+  const [components, setComponents] = useState<TrainingComponent[]>(
     (componentCalendarView || periodizationView) &&
       trainingComponent &&
       trainingComponent.component
@@ -46,7 +45,7 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
               return c;
             else return null;
           })
-          .filter((c) => c !== null) as TrainingComponentInfo[])
+          .filter((c) => c !== null) as TrainingComponent[])
       : training.components
   );
 

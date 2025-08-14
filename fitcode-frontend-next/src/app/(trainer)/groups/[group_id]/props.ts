@@ -12,7 +12,6 @@ import type { CompletedFutureWorkloads } from '@/controller/training/type/comple
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
 import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
-import type { TrainingInfo } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import type { Workload } from '@/controller/training/type/workload.type';
@@ -24,7 +23,7 @@ export interface GroupIdPageProps {
   group: Group;
   institution: Institution;
   groups: Group[];
-  trainings: TrainingInfo[];
+  trainings: Training[];
 }
 
 export type GroupContextProps = GroupIdPageProps & {
@@ -40,8 +39,8 @@ export type GroupContextProps = GroupIdPageProps & {
   setDateFrom: SetState<Dayjs>;
   dateTo: Dayjs;
   setDateTo: SetState<Dayjs>;
-  trainings: TrainingInfo[];
-  setTrainings: SetState<TrainingInfo[]>;
+  trainings: Training[];
+  setTrainings: SetState<Training[]>;
   filteredUsers: User[];
   setFilteredUsers: SetState<User[]>;
   detectedChanges: boolean;

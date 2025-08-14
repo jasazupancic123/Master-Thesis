@@ -50,10 +50,6 @@ export async function handleAddMembersSubgroup(
     const newSubgroup = {
       ...sameSubgroup,
       membersIds: [...sameSubgroup.membersIds, member.uid],
-      prescribedStats: [...sameSubgroup.prescribedStats].map((value) => ({
-        ...value,
-        numMembers: value.numMembers + 1,
-      })),
     };
 
     let newSubgroups = [...component.subgroups].map((subgroup) =>
@@ -61,10 +57,6 @@ export async function handleAddMembersSubgroup(
         ? {
             ...subgroup,
             membersIds: subgroup.membersIds.filter((id) => id !== member.uid),
-            prescribedStats: [...subgroup.prescribedStats].map((value) => ({
-              ...value,
-              numMembers: value.numMembers - 1,
-            })),
           }
         : subgroup
     );
@@ -98,10 +90,6 @@ export async function handleAddMembersSubgroup(
         ? {
             ...subgroup,
             membersIds: subgroup.membersIds.filter((id) => id !== member.uid),
-            prescribedStats: [...subgroup.prescribedStats].map((value) => ({
-              ...value,
-              numMembers: value.numMembers - 1,
-            })),
           }
         : subgroup
     );
@@ -140,7 +128,6 @@ export async function handleAddMembersSubgroup(
     createSubgroup,
     setCreateSubgroup: undefined,
     setDetectedChanges,
-    updateTrainingsAvgFutureWorkload: true,
     setSelectedSubgroup,
     setSelectedAthlete,
   });

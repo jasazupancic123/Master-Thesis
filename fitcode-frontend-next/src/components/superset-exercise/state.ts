@@ -4,10 +4,7 @@ import {
 } from '@/common/constant/warmup-cooldown-ids-constants';
 import type { SetState, SetStateNullable } from '@/common/type/state.type';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
-import type {
-  Training,
-  TrainingInfo,
-} from '@/controller/training/type/training.type';
+import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 
@@ -21,7 +18,7 @@ export default function deleteSupersetExercise(input: {
   setComponent: SetStateNullable<TrainingComponent>;
   training: Training;
   setTraining: SetStateNullable<Training>;
-  setTrainings: SetState<TrainingInfo[]>;
+  setTrainings: SetState<Training[]>;
   setAnchorEl: SetState<HTMLElement | null>;
   setSelectedExercises: SetState<TrainingExercise[]>;
 }) {
@@ -51,9 +48,6 @@ export default function deleteSupersetExercise(input: {
                 exercises: s.exercises.filter((ex, k) => k !== exerciseIndex),
               }
         ),
-        prescribedStats: selectedSubgroup.prescribedStats.filter(
-          (ps) => ps.exerciseId !== exercise.id
-        ),
       }
     : null;
 
@@ -82,9 +76,6 @@ export default function deleteSupersetExercise(input: {
 
   const updatedTraining: Training = {
     ...training,
-    prescribedStats: !selectedSubgroup
-      ? training.prescribedStats.filter((ps) => ps.exerciseId !== exercise.id)
-      : training.prescribedStats,
   };
 
   if (component.id === WARMUP_ID) {
