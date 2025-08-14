@@ -1,15 +1,18 @@
 import dayjs from 'dayjs';
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import type { RefObject } from 'react';
 import toast from 'react-hot-toast';
 import { v4 } from 'uuid';
 
-import type { SetState } from '@/common/type/state.type';
+import { handleApiRequest, type SetState } from '@/common/type/state.type';
+import { GroupController } from '@/controller/group/group.controller';
 import type { Cycle, Week } from '@/controller/group/type/cycle.type';
 import type { Group } from '@/controller/group/type/group.type';
 
 type AddCycleInput = Pick<Cycle, 'name' | 'from' | 'to' | 'description'>;
 
 export async function handleAddCycle(
+  router: AppRouterInstance,
   input: AddCycleInput,
   state: {
     selectedGroup: Group;
@@ -32,20 +35,29 @@ export async function handleAddCycle(
     return;
   }
 
-  const newCycles = [
-    ...state.selectedGroup.cycles,
-    {
-      id: v4(),
-      name,
-      from,
-      to,
-      description,
-      selectedTargets: [],
-      weeks: [],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    } as Cycle,
-  ];
+  const newCycle: Cycle = {
+    id: v4(),
+    name,
+    from,
+    to,
+    description,
+    selectedTargets: [],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
+  handleApiRequest(
+    router,
+    () => GroupController.addCycle(selectedGroup.id, newCycle),
+    () => {
+      toast.success('Cycle added successfully.');
+    },
+    (_e) => {
+      toast.error('An error occurred while adding the cycle.');
+    }
+  );
+
+  const newCycles = [...state.selectedGroup.cycles, newCycle];
   setDetectedChanges(true);
   setCycles(newCycles);
 
@@ -204,7 +216,7 @@ export function handleDragEnd(
     ...cycle,
     from: from,
     to: to,
-    weeks: weeks,
+    weeks,
   };
 
   const newCycles = [

@@ -155,7 +155,7 @@ export class GroupService implements Permission<Group, Institution> {
     const data: Update<Group> = {
       name: input.name,
       ownerId: input.ownerId,
-      cycles: input.cycles?.map(({ weeks, ...cycle }) => cycle),
+      cycles: input.cycles,
     };
 
     await this.repository.updateDoc(ref.groupId, data);
@@ -178,6 +178,8 @@ export class GroupService implements Permission<Group, Institution> {
     // validate cycles
     const operations: BatchWriteOperation<Group>[] = [];
     for (const { id, name, cycles: inputCycles } of input) {
+      if (!inputCycles) continue; // no cycles to update
+
       const existingGroup = groups.find((g) => g.id === id)!;
       const existingCycles = existingGroup.cycles;
 
@@ -200,7 +202,7 @@ export class GroupService implements Permission<Group, Institution> {
         data: this.firebaseService.buildUpdateQuery<Group>({
           ...existingGroup,
           name,
-          cycles: inputCycles.map(({ weeks, ...cycle }) => cycle),
+          cycles: inputCycles,
         }),
       });
     }
@@ -242,9 +244,7 @@ export class GroupService implements Permission<Group, Institution> {
         ref: this.repository.doc(ref.groupId),
         operation: 'update',
         data: this.firebaseService.buildUpdateQuery<Group>({
-          cycles: group.cycles
-            .filter((c) => c.id !== cycle.id)
-            .map(({ weeks, ...cycle }) => cycle),
+          cycles: group.cycles.filter((c) => c.id !== cycle.id),
         }),
       },
     ];

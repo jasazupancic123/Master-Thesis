@@ -14,9 +14,6 @@ export class GroupService {
   static getCyclesForSelect(
     cycles: Cycle[]
   ): { label: string; value: string }[] {
-    return cycles.map((cycle) => ({
-      label: cycle.name,
-      value: cycle.id,
-    }));
+    return cycles.map((cycle) => ({ label: cycle.name, value: cycle.id }));
   }
 }

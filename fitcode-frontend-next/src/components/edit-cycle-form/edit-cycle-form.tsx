@@ -13,7 +13,7 @@ import type { Cycle } from '@/controller/group/type/cycle.type';
 export interface EditCycleModalProps {
   selectedCycle: Cycle;
   setSelectedCycle: SetState<Cycle | null>;
-  handleDeleteCycle: () => void;
+  handleDeleteCycle: () => Promise<void>;
 }
 
 export default function EditCycleForm(props: EditCycleModalProps) {
@@ -74,8 +74,8 @@ export default function EditCycleForm(props: EditCycleModalProps) {
         <Button
           variant="contained"
           color="error"
-          onClick={() => {
-            handleDeleteCycle();
+          onClick={async () => {
+            await handleDeleteCycle();
           }}
         >
           Delete Cycle
