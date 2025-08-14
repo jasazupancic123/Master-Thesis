@@ -1,8 +1,3 @@
-if ! git diff --cached --name-only | grep -q '^fitcode-backend-nest/'; then
-  echo "No backend changes detected. Skipping backend pre-push hook."
-  exit 0
-fi
-
 cd fitcode-backend-nest || exit 1
 
 print_box() {
