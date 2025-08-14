@@ -9,8 +9,8 @@ import { CommonService } from '@/common/service/common.service';
 const api = CommonService.instance.api;
 
 export class InstitutionController {
-  static async findAll() {
-    return api.get<Institution[]>('/institution');
+  static async findAll(token: string) {
+    return api.get<Institution[]>('/institution', { token });
   }
 
   static async findById(id: string, token?: string) {
