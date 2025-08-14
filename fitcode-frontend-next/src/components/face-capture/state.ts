@@ -26,6 +26,17 @@ export async function createDetector(baseAssetUrl: string, modelUrl: string) {
   return detector;
 }
 
+export function resizeCanvasToDisplaySize(canvas: HTMLCanvasElement) {
+  const { clientWidth, clientHeight } = canvas;
+  const dpr = Math.max(1, window.devicePixelRatio || 1);
+  const displayWidth = Math.floor(clientWidth * dpr);
+  const displayHeight = Math.floor(clientHeight * dpr);
+  if (canvas.width !== displayWidth || canvas.height !== displayHeight) {
+    canvas.width = displayWidth;
+    canvas.height = displayHeight;
+  }
+}
+
 // ====== Helper math for pose checks ======
 export function computeBBoxFromLandmarks(
   landmarks: { x: number; y: number }[]
@@ -138,14 +149,10 @@ export function drawGuide(
     : step === Step.FRONT
       ? 'Face forward'
       : step === Step.RIGHT
-        ? 'Turn RIGHT (show right profile)'
-        : 'Turn LEFT (show left profile)';
-  ctx.fillStyle = '#ffffff';
-  ctx.strokeStyle = 'rgba(0,0,0,0.6)';
-  ctx.lineWidth = 4;
-  ctx.strokeText(label, cx, 12);
-  ctx.fillText(label, cx, 12);
-  ctx.restore();
+        ? 'Turn LEFT (show right profile)'
+        : 'Turn RIGHT (show left profile)';
+
+  return label;
 }
 
 export function drawProgress(
@@ -153,12 +160,12 @@ export function drawProgress(
   w: number,
   p: number
 ) {
-  const r = 24;
-  const cx = w - r - 16;
-  const cy = r + 16;
+  const l = 24;
+  const cx = l + 16;
+  const cy = l + 16;
   ctx.save();
   ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.arc(cx, cy, l, 0, Math.PI * 2);
   ctx.fillStyle = 'rgba(0,0,0,0.35)';
   ctx.fill();
   ctx.beginPath();
@@ -167,7 +174,7 @@ export function drawProgress(
   ctx.arc(
     cx,
     cy,
-    r - 4,
+    l - 4,
     -Math.PI / 2,
     -Math.PI / 2 + Math.PI * 2 * Math.min(1, Math.max(0, p))
   );
