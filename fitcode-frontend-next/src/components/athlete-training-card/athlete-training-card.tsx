@@ -11,7 +11,6 @@ import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
 
 import AthleteTrainingComponents from '../athlete-training-components/athlete-training-components';
-import { ExerciseController } from '@/controller/exercise/exercise.controller';
 import { TrainingService } from '@/controller/training/training.service';
 import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
@@ -63,27 +62,6 @@ export default function AthleteTrainingCard(props: AthleteTrainingCardProps) {
     trainingInProgress,
     trainingInProgress?.selectedComponent,
   ]);
-
-  useEffect(() => {
-    if (!training) return;
-
-    const institutionId = training.institutionId!;
-    if (!institutionId) return;
-
-    async function fetchInstitutionalExercises() {
-      try {
-        const exercises =
-          await ExerciseController.findAllByInstitution(institutionId);
-
-        // map exercises to training component exercises
-        TrainingService.mapData(training, { exercises });
-      } catch (e) {
-        console.error('Failed to fetch institutional exercises:', e);
-      }
-    }
-
-    fetchInstitutionalExercises();
-  }, [training]);
 
   const getDurationText = () => {
     const from = new Date(training.from);
