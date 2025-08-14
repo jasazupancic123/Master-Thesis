@@ -1,10 +1,18 @@
-import { KeyboardArrowDown, KeyboardArrowRight } from '@mui/icons-material';
+import {
+  CheckBox,
+  CheckBoxOutlineBlank,
+  Delete,
+  KeyboardArrowDown,
+  KeyboardArrowRight,
+} from '@mui/icons-material';
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 
+import { deleteSelectedExercises } from '../trainer-group-day-view/state';
 import type { SetState } from '@/common/type/state.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
+import { useGroup } from '@/store/group-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 interface TrainingComponentProps {
@@ -27,8 +35,17 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
 
   const theme = useTheme();
 
-  const { setTraining, component, setComponent, setSelectedExercises } =
-    useTrainerDayViewContext();
+  const {
+    setTraining,
+    component,
+    setComponent,
+    selectedExercises,
+    setSelectedExercises,
+    selectedSubgroup,
+    setSelectedSubgroup,
+  } = useTrainerDayViewContext();
+
+  const { setDetectedChanges } = useGroup();
 
   return (
     <Box display="flex" p={0}>
@@ -37,14 +54,6 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
           display="flex"
           alignItems="center"
           sx={{ cursor: 'pointer', p: 0, m: 0 }}
-          // onClick={() => {
-          //   alert('here2');
-          //   if (trainingComponent && !component) {
-          //     setTraining(training);
-          //     setComponent(trainingComponent);
-          //   }
-          //   setSelectedExercises([]);
-          // }}
         >
           {trainingComponent?.id === component?.id ? (
             <Tooltip
@@ -114,16 +123,95 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
               : trainingComponent.component.name}
           </Typography>
           {component?.id === trainingComponent.id && (
-            <IconButton
-              sx={{ p: 0, m: 0, ml: 1 }}
-              onClick={() => setExpandedExercisesView((prev) => !prev)}
-            >
-              {expandedExercisesView ? (
-                <KeyboardArrowDown sx={{ fontSize: 18 }} />
-              ) : (
-                <KeyboardArrowRight sx={{ fontSize: 18 }} />
+            <Box display="flex" justifyContent="flex-start" gap={0.5}>
+              <IconButton
+                sx={{ p: 0, m: 0, ml: 1 }}
+                onClick={() => setExpandedExercisesView((prev) => !prev)}
+              >
+                {expandedExercisesView ? (
+                  <KeyboardArrowDown sx={{ fontSize: 18 }} />
+                ) : (
+                  <KeyboardArrowRight sx={{ fontSize: 18 }} />
+                )}
+              </IconButton>
+              {expandedExercisesView && (
+                <>
+                  {trainingComponent.supersets.flatMap((s) => s.exercises)
+                    .length > 0 && (
+                    <Tooltip
+                      title={
+                        trainingComponent.supersets.flatMap((s) => s.exercises)
+                          .length > 0 &&
+                        trainingComponent.supersets?.every((s) =>
+                          s.exercises.every((e) =>
+                            selectedExercises.some((se) => se.id === e.id)
+                          )
+                        )
+                          ? 'Deselect all exercises'
+                          : 'Select all exercises'
+                      }
+                    >
+                      <IconButton
+                        sx={{ p: 0, m: 0 }}
+                        onClick={() => {
+                          const allExercisesSelected =
+                            trainingComponent.supersets?.every((s) =>
+                              s.exercises.every((e) =>
+                                selectedExercises.some((se) => se.id === e.id)
+                              )
+                            );
+                          if (allExercisesSelected) {
+                            setSelectedExercises([]);
+                          } else {
+                            setSelectedExercises(
+                              trainingComponent.supersets?.flatMap(
+                                (s) => s.exercises
+                              ) || []
+                            );
+                          }
+                        }}
+                      >
+                        {trainingComponent.supersets?.every((s) =>
+                          s.exercises.every((e) =>
+                            selectedExercises.some((se) => se.id === e.id)
+                          )
+                        ) ? (
+                          <CheckBox sx={{ fontSize: 16 }} />
+                        ) : (
+                          <CheckBoxOutlineBlank sx={{ fontSize: 16 }} />
+                        )}
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                  {selectedExercises.length > 0 && (
+                    <Tooltip title="Delete selected exercises">
+                      <IconButton
+                        sx={{ p: 0, m: 0 }}
+                        onClick={() => {
+                          deleteSelectedExercises(
+                            {
+                              selectedExercises,
+                            },
+                            {
+                              component,
+                              training,
+                              setComponent,
+                              setTraining,
+                              setSelectedExercises,
+                              selectedSubgroup,
+                              setSelectedSubgroup,
+                              setDetectedChanges,
+                            }
+                          );
+                        }}
+                      >
+                        <Delete sx={{ fontSize: 16 }} />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                </>
               )}
-            </IconButton>
+            </Box>
           )}
         </Box>
       )}

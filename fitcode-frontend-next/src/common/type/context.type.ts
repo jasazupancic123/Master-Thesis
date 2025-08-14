@@ -8,6 +8,7 @@ import type {
 } from '@/controller/component/type/component.type';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
 import type { UserRole } from '@/controller/user/enum/user-role.enum';
+import type { CustomClaims } from '@/controller/user/type/custom-claims.type';
 import type {
   User as CustomUser,
   UserEntity,
@@ -34,12 +35,15 @@ export type AppContextType = {
 export type AuthContextType = {
   loading: boolean;
   user: User | null;
+  setUser: SetState<User | null>;
   role: UserRole[];
-  logout: () => Promise<void>;
+  logout: (redirect?: boolean) => Promise<void>;
   hasJustLoggedIn: boolean;
   setHasJustLoggedIn: (value: boolean) => void;
   profile: UserEntity | undefined;
   setProfile: (profile: UserEntity) => void;
+  customClaims: CustomClaims | undefined;
+  setCustomClaims: (customClaims: CustomClaims | undefined) => void;
 };
 
 export type TrainerContextType = {

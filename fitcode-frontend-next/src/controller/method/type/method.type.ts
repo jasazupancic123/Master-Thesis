@@ -3,7 +3,7 @@ import type { Attribute } from '@/controller/attribute/type/attribute.type';
 
 export interface Method extends IdEntity {
   name: string;
-  targetId: string;
+  componentId: string;
   attributes: Attribute[];
   ability: string;
   intensity: string;

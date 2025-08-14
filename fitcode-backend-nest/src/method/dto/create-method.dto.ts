@@ -5,7 +5,7 @@ import { Method } from '../entity/method.entity';
 
 export class CreateMethodDto extends PickType(Method, [
   'name',
-  'targetId',
+  'componentId',
   'ability',
   'repetition',
   'intensity',

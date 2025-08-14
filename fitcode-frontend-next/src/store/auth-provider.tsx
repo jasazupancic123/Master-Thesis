@@ -20,12 +20,15 @@ const commonService = CommonService.instance;
 const AuthContext = createContext<AuthContextType>({
   loading: true,
   user: null,
+  setUser: () => {},
   role: [],
-  logout: () => Promise.resolve(),
+  logout: (redirect = true) => Promise.resolve(),
   hasJustLoggedIn: false,
   setHasJustLoggedIn: () => {},
   profile: undefined,
   setProfile: () => {},
+  customClaims: undefined,
+  setCustomClaims: () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -37,6 +40,9 @@ export const AuthProvider = ({ children }: ChildrenProps) => {
   const [profile, setProfile] = useState<UserEntity>({} as UserEntity);
 
   const [role, setRole] = useState<UserRole[]>([]);
+  const [customClaims, setCustomClaims] = useState<CustomClaims | undefined>({
+    role: [],
+  } as CustomClaims);
   const [hasJustLoggedIn, setHasJustLoggedIn] = useState<boolean>(true);
 
   // useEffect(() => {
@@ -72,14 +78,17 @@ export const AuthProvider = ({ children }: ChildrenProps) => {
           const token = await user.getIdTokenResult();
           const profile = await UserController.findProfile();
           const claims = token.claims as unknown as CustomClaims;
+          if (!claims.role) claims.role = [];
 
           setProfile(profile);
           setUser(user);
           setRole(claims.role || []);
+          setCustomClaims(claims);
         } else {
           // user logged out
           setUser(null);
           setRole([]);
+          setCustomClaims(undefined);
         }
 
         setLoading(false);
@@ -87,12 +96,13 @@ export const AuthProvider = ({ children }: ChildrenProps) => {
     []
   );
 
-  async function logout(): Promise<void> {
+  async function logout(redirect = true): Promise<void> {
     await auth.signOut();
     commonService.browser.removeClientCookie(FIREBASE_COOKIE_NAME);
-    router.push(LINK_INDEX.href);
+    if (redirect) router.push(LINK_INDEX.href);
     setUser(null);
     setRole([]);
+    setCustomClaims(undefined);
     await new Promise((resolve) => setTimeout(resolve, 5000)); //wait for 5 sec, then set
     setHasJustLoggedIn(true);
   }
@@ -102,12 +112,15 @@ export const AuthProvider = ({ children }: ChildrenProps) => {
       value={{
         loading,
         user,
+        setUser,
         role,
         logout,
         hasJustLoggedIn,
         setHasJustLoggedIn,
         profile,
         setProfile,
+        customClaims,
+        setCustomClaims,
       }}
     >
       {!loading && children}

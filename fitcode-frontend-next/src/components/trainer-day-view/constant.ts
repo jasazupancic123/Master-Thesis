@@ -1,7 +1,6 @@
 import type { AfterSet } from '@/controller/component/type/after-set.type';
 import type { MainSet } from '@/controller/component/type/main-set.type';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
-import type { TrainingExerciseAverageStats } from '@/controller/training/type/training-exercise-average-stats.type';
 import type { User } from '@/controller/user/type/user.type';
 
 export const MAX_WIDTH = '1340px';
@@ -27,15 +26,11 @@ export const AFTER_SETS: AfterSet[] = [
 export const DEFAULT_SUBGROUP_ID = 'default';
 export const ABSENT_SUBGRUP_ID = 'absent';
 
-export const DEFAULT_SUBGROUP = (
-  availableMembers: User[],
-  stats: TrainingExerciseAverageStats[]
-): Subgroup => ({
+export const DEFAULT_SUBGROUP = (availableMembers: User[]): Subgroup => ({
   id: DEFAULT_SUBGROUP_ID,
   name: 'Main Group',
   color: '#9e9e9e',
   membersIds: availableMembers.map((user) => user.uid),
-  prescribedStats: stats,
   supersets: [],
 });
 
@@ -43,7 +38,6 @@ export const ABSENT_SUBGROUP = (): Subgroup => ({
   id: ABSENT_SUBGRUP_ID,
   name: 'Absent',
   color: '#454545',
-  prescribedStats: [],
   membersIds: [],
   supersets: [],
 });

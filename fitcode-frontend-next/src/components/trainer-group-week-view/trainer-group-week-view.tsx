@@ -11,10 +11,7 @@ import { CommonService } from '@/common/service/common.service';
 import Circles from '@/components/circles/circles';
 import TrainingItem from '@/components/training-week-view-item/training-week-view-item';
 import type { Week } from '@/controller/group/type/cycle.type';
-import type {
-  Training,
-  TrainingInfo,
-} from '@/controller/training/type/training.type';
+import type { Training } from '@/controller/training/type/training.type';
 import { useGroup } from '@/store/group-provider';
 
 const commonService = CommonService.instance;
@@ -126,7 +123,7 @@ export default function TrainerWeekView() {
                     justifyContent: 'space-between',
                   }}
                 >
-                  {filtered.map((training: TrainingInfo) => (
+                  {filtered.map((training: Training) => (
                     <Fragment key={training.id}>
                       <TrainingItem training={training as Training} />
                     </Fragment>

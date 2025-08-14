@@ -76,7 +76,9 @@ export default function TrainerWeekComponentItem(
 
             const components = [...updatedComponents];
             const i = updatedComponents.findIndex((tc) => tc.id === c.id);
+
             if (i === -1) return;
+
             components[i] = { ...components[i], from };
             setUpdatedComponents(components);
           }}
