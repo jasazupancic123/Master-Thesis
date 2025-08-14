@@ -20,7 +20,6 @@ import type { Target } from '@/controller/target/type/target.type';
 import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
 import type { Training } from '@/controller/training/type/training.type';
-import type { TrainingInfo } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 
 export async function handleClickDateCell(
@@ -37,7 +36,7 @@ export async function handleClickDateCell(
     copyComponent?: boolean;
     trainingComponent?: TrainingComponent;
     training?: Training;
-    trainings: TrainingInfo[];
+    trainings: Training[];
     components: Component[];
     allExercises: Exercise[];
     methods: Method[];
@@ -47,10 +46,10 @@ export async function handleClickDateCell(
       target: Target;
     }[];
     day?: Day;
-    setTrainings: SetState<TrainingInfo[]>;
+    setTrainings: SetState<Training[]>;
     setCycle: SetStateNullable<Cycle>;
     setOpenOverwriteModal?: SetState<boolean>;
-    setTrainingInPeriodForModal?: SetState<TrainingInfo | null>;
+    setTrainingInPeriodForModal?: SetState<Training | null>;
   }
 ) {
   const { date, period } = input;
@@ -153,15 +152,11 @@ export async function handleClickDateCell(
             methods,
           });
 
-          const minimalTraining = TrainingService.trainingToInfo(training_);
-
-          const sortedTrainings = [...trainings, minimalTraining].sort(
-            (a, b) => {
-              const aDate = new Date(a.from);
-              const bDate = new Date(b.from);
-              return aDate.getTime() - bDate.getTime();
-            }
-          );
+          const sortedTrainings = [...trainings, training_].sort((a, b) => {
+            const aDate = new Date(a.from);
+            const bDate = new Date(b.from);
+            return aDate.getTime() - bDate.getTime();
+          });
 
           setTrainings(sortedTrainings);
           toast.success('Training with current component created successfully');
@@ -204,8 +199,8 @@ export function getFilteredTrainings(
   state: {
     periodizationView?: boolean;
     trainingComponent?: TrainingComponent;
-    trainings: TrainingInfo[];
-    selectedTrainings?: TrainingInfo[];
+    trainings: Training[];
+    selectedTrainings?: Training[];
     date: Dayjs;
     selected?: Component[];
     period: string;
@@ -309,8 +304,8 @@ function handleAddTraining(
     }[];
     router: AppRouterInstance;
     setCycle: SetStateNullable<Cycle>;
-    trainings: TrainingInfo[];
-    setTrainings: SetState<TrainingInfo[]>;
+    trainings: Training[];
+    setTrainings: SetState<Training[]>;
     components: Component[];
     allExercises: Exercise[];
     methods: Method[];

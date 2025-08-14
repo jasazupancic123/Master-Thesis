@@ -150,7 +150,6 @@ export default function TrainerDayView() {
           components,
           exercises,
           methods,
-          prescribedStats: true,
         });
 
         setTraining(foundTraining);

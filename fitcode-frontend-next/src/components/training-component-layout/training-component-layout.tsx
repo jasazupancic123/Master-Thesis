@@ -17,7 +17,7 @@ import {
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
 import type { Method } from '@/controller/method/type/method.type';
-import type { TrainingInfo } from '@/controller/training/type/training.type';
+import type { Training } from '@/controller/training/type/training.type';
 import { useGroup } from '@/store/group-provider';
 import { useMain } from '@/store/main-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
@@ -44,7 +44,7 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
   const [heatmapView, setHeatmapView] = useState(false);
   const [openOverwriteModal, setOpenOverwriteModal] = useState(false);
   const [trainingInPeriodForModal, setTrainingInPeriodForModal] =
-    useState<TrainingInfo | null>(null);
+    useState<Training | null>(null);
   const [expandedExercisesView, setExpandedExercisesView] = useState(false);
 
   const getMethodsLimitsString = (method: Method): string => {

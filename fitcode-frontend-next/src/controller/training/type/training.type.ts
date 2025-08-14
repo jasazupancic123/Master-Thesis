@@ -2,10 +2,8 @@ import type { PeriodizationType } from '../enum/periodization-type.enum';
 import type {
   CreateTrainingComponent,
   TrainingComponent,
-  TrainingComponentInfo,
   UpdateTrainingComponent,
 } from './training-component.type';
-import type { TrainingExerciseAverageStats } from './training-exercise-average-stats.type';
 import type { CreatePrescribedWorkload } from './workload.type';
 import type { DateRange } from '@/common/type/date-range.type';
 import type { BaseEntity } from '@/common/type/entity.type';
@@ -27,28 +25,13 @@ export type Training = BaseEntity &
     warmup: TrainingComponent;
     cooldown: TrainingComponent;
     components: TrainingComponent[];
-    stats: TrainingExerciseAverageStats[];
     wellness: Wellness[];
 
     // mapped properties
-    prescribedStats: TrainingExerciseAverageStats[];
     institution?: Institution;
     group?: Group;
     cycle?: Cycle;
     members?: User[];
-  };
-
-export type TrainingInfo = BaseEntity &
-  Required<DateRange> & {
-    institutionId?: string;
-    groupId?: string;
-    cycleId?: string;
-    copiedFromId?: string;
-    warmup: TrainingComponentInfo;
-    cooldown: TrainingComponentInfo;
-    components: TrainingComponentInfo[];
-    stats: TrainingExerciseAverageStats[];
-    prescribedStats: TrainingExerciseAverageStats[];
   };
 
 export type CreateTraining = Pick<

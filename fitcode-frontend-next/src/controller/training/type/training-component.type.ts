@@ -1,6 +1,6 @@
 import type { PeriodizationType } from '../enum/periodization-type.enum';
 import type { CopiedFrom } from './copied-from.type';
-import type { Subgroup, SubgroupInfo, UpdateSubgroup } from './subgroup.type';
+import type { Subgroup, UpdateSubgroup } from './subgroup.type';
 import type { Superset, UpdateSuperset } from './superset.type';
 import type { DateRange } from '@/common/type/date-range.type';
 import type { ColorEntity, IdEntity } from '@/common/type/entity.type';
@@ -22,19 +22,6 @@ export type TrainingComponent = IdEntity &
     // mapped properties
     method?: Method;
     component?: Component;
-  };
-
-export type TrainingComponentInfo = IdEntity &
-  ColorEntity &
-  Required<DateRange> & {
-    subgroups: SubgroupInfo[];
-    methodId?: string;
-
-    // mapped properties
-    method?: Method;
-    target?: Target; // selected target
-    component?: Component;
-    copiedFrom?: CopiedFrom; // used for copying components from other trainings
   };
 
 export type CreateTrainingComponent = Pick<
