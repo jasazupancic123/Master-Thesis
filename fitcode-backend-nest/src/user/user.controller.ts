@@ -39,6 +39,7 @@ export class UserController {
   }
 
   @Patch(':id')
+  @Auth()
   async updateClaims(
     @Param('id') id: string,
     @Body() body: UpdateUserClaimsDto,
