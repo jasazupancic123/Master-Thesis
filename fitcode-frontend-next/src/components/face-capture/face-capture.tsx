@@ -6,6 +6,7 @@ import type {
 } from '@mediapipe/tasks-vision';
 import { Close } from '@mui/icons-material';
 import { Box, IconButton, Typography } from '@mui/material';
+import { useTheme } from '@mui/material';
 import React, {
   useCallback,
   useEffect,
@@ -24,6 +25,7 @@ import {
   drawProgress,
   estimateYawFromNose,
   playSuccessSound,
+  resizeCanvasToDisplaySize,
 } from './state';
 import { Step } from '@/common/enum/step.enum';
 import type { SetState } from '@/common/type/state.type';
@@ -78,6 +80,9 @@ export default function FaceCapture({
   captures,
   setCaptures,
 }: FaceCaptureProps) {
+  const theme = useTheme();
+
+  const stageRef = useRef<HTMLDivElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const overlayRef = useRef<HTMLCanvasElement | null>(null);
   const drawRef = useRef<HTMLCanvasElement | null>(null);
@@ -86,19 +91,20 @@ export default function FaceCapture({
   const rafRef = useRef<number | null>(null);
   const isCapturingRef = useRef(false); // <-- NEW: lock
 
-  const [streamError, setStreamError] = useState<string | null>(null);
-
   // Face capture state
   const stepRef = useRef<Step>(Step.FRONT);
   const isDoneRef = useRef(false);
   const stabilityRef = useRef(0);
   const faceBigEnoughRef = useRef(true);
 
+  const [viewport, setViewport] = useState({ w: 0, h: 0 });
   const [isActive, setIsActive] = useState(false);
-
   const [openModal, setOpenModal] = useState<{ previews: boolean }>({
     previews: false,
   });
+  const [streamError, setStreamError] = useState<string | null>(null);
+  const [label, setLabel] = useState('Face forward');
+  const labelRef = useRef(label); // tracks last emitted label
 
   // tweak as needed
   const thresholds = useMemo(
@@ -155,6 +161,18 @@ export default function FaceCapture({
     setIsActive(true);
   };
 
+  useEffect(() => {
+    const update = () =>
+      setViewport({ w: window.innerWidth, h: window.innerHeight });
+    update();
+    window.addEventListener('resize', update);
+    window.addEventListener('orientationchange', update);
+    return () => {
+      window.removeEventListener('resize', update);
+      window.removeEventListener('orientationchange', update);
+    };
+  }, []);
+
   // Start camera + detector
   useEffect(() => {
     let cancelled = false;
@@ -169,7 +187,15 @@ export default function FaceCapture({
         }
 
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'user', width, height },
+          video: {
+            facingMode: { ideal: 'user' },
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
+            aspectRatio: {
+              ideal:
+                viewport.w && viewport.h ? viewport.w / viewport.h : 16 / 9,
+            },
+          },
           audio: false,
         });
 
@@ -252,13 +278,19 @@ export default function FaceCapture({
     }
 
     try {
-      drawGuide(
+      const newLabel = drawGuide(
         octx,
         overlay.width,
         overlay.height,
         stepRef.current,
         faceBigEnoughRef.current
       );
+
+      // only update react state if the text actually changed
+      if (labelRef.current !== newLabel) {
+        labelRef.current = newLabel;
+        setLabel(newLabel);
+      }
     } catch {}
     try {
       dctx.clearRect(0, 0, draw.width, draw.height);
@@ -313,8 +345,6 @@ export default function FaceCapture({
         stabilityRef.current >= thresholds.stableFrames - 1 &&
         !isCapturingRef.current
       ) {
-        playSuccessSound();
-
         isCapturingRef.current = true; // lock immediately to avoid re-entry on next RAF
         const stepAtCapture: Step = stepRef.current; // snapshot
         stabilityRef.current = 0; // reset right away
@@ -329,6 +359,8 @@ export default function FaceCapture({
             return next;
           });
           setPreviews((prev) => ({ ...prev, [stepAtCapture]: dataUrl }));
+
+          playSuccessSound();
 
           // Advance exactly one step
           if (stepAtCapture === Step.FRONT) {
@@ -376,16 +408,29 @@ export default function FaceCapture({
     }
   }, [thresholds, previews]);
 
+  // observe stage size and keep canvases in sync
+  useEffect(() => {
+    if (!stageRef.current) return;
+    const ro = new ResizeObserver(() => {
+      if (overlayRef.current) resizeCanvasToDisplaySize(overlayRef.current);
+      if (drawRef.current) resizeCanvasToDisplaySize(drawRef.current);
+    });
+    ro.observe(stageRef.current);
+    // kick once initially
+    if (overlayRef.current) resizeCanvasToDisplaySize(overlayRef.current);
+    if (drawRef.current) resizeCanvasToDisplaySize(drawRef.current);
+    return () => ro.disconnect();
+  }, []);
+
   // Capture current video frame as Blob + preview data URL
   const captureFrame = async () => {
     const video = videoRef.current!;
+    const W = video.videoWidth || viewport.w || 1280;
+    const H = video.videoHeight || viewport.h || 720;
     const tmp = document.createElement('canvas');
-    const W = width;
-    const H = height;
     tmp.width = W;
     tmp.height = H;
-    const ctx = tmp.getContext('2d');
-    if (!ctx) throw new Error('Canvas 2D context unavailable');
+    const ctx = tmp.getContext('2d')!;
     ctx.drawImage(video, 0, 0, W, H);
     const blob: Blob = await new Promise((res) =>
       tmp.toBlob((b) => res(b!), 'image/jpeg', 0.95)
@@ -393,18 +438,6 @@ export default function FaceCapture({
     const dataUrl = tmp.toDataURL('image/jpeg', 0.92);
     return { blob, dataUrl };
   };
-
-  // draw canvas sizes
-  useEffect(() => {
-    if (overlayRef.current) {
-      overlayRef.current.width = width;
-      overlayRef.current.height = height;
-    }
-    if (drawRef.current) {
-      drawRef.current.width = width;
-      drawRef.current.height = height;
-    }
-  }, [width, height]);
 
   useEffect(() => {
     if (openModal.previews) pauseProcessing(false);
@@ -421,18 +454,42 @@ export default function FaceCapture({
     >
       <div>
         <IconButton
-          sx={{ position: 'absolute', left: 0, top: 0, zIndex: 10000 }}
+          sx={{
+            position: 'absolute',
+            left: 5,
+            top: 5,
+            zIndex: 10000,
+            p: 0.2,
+            backgroundColor: theme.palette.background.default,
+          }}
           onClick={() => setIsCapturingFace(false)}
         >
           <Close />
         </IconButton>
 
+        {!openModal.previews && (
+          <Typography
+            sx={{
+              position: 'absolute',
+              left: '50%',
+              top: 0,
+              zIndex: 10000,
+              transform: 'translateX(-50%)',
+              backgroundColor: theme.palette.background.default,
+              p: 0.2,
+            }}
+          >
+            {labelRef.current}
+          </Typography>
+        )}
+
         {/* Stacked stage */}
         <div
+          ref={stageRef}
           className="relative rounded-2xl overflow-hidden shadow-xl"
           style={{
-            width,
-            height,
+            width: '100vw',
+            height: '100dvh', // dynamic viewport height on mobile (fallbacks below)
             background: '#000',
             position: 'relative',
             display: !isActive ? 'none' : undefined,
@@ -447,8 +504,9 @@ export default function FaceCapture({
               inset: 0,
               width: '100%',
               height: '100%',
-              objectFit: 'cover',
+              objectFit: 'contain', // 👈 no crop; may letterbox
               display: isActive ? 'block' : 'none',
+              transform: 'scaleX(-1)',
             }}
           />
 
@@ -458,29 +516,24 @@ export default function FaceCapture({
               position: 'absolute',
               inset: 0,
               pointerEvents: 'none',
+              objectFit: 'contain',
+              width: '100%',
+              height: '100%',
+              transform: 'scaleX(-1)',
             }}
           />
-
           <canvas
             ref={overlayRef}
             style={{
               position: 'absolute',
               inset: 0,
               pointerEvents: 'none',
+              objectFit: 'contain',
+              width: '100%',
+              height: '100%',
+              transform: 'scaleX(-1)',
             }}
           />
-
-          {/* Status badge */}
-          <Typography
-            style={{ position: 'absolute', right: 12, top: 12 }}
-            className="px-3 py-1 rounded-full text-xs font-semibold backdrop-blur bg-white/20 text-white shadow"
-          >
-            {!isDoneRef.current
-              ? isActive
-                ? 'Detecting…'
-                : 'Starting…'
-              : 'Completed'}
-          </Typography>
 
           {/* Bottom HUD */}
           <div
