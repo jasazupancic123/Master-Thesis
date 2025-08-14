@@ -1,14 +1,4 @@
-import {
-  addDays,
-  isAfter,
-  isBefore,
-  isEqual,
-  setHours,
-  setMinutes,
-  startOfWeek,
-} from 'date-fns';
-
-import type { Week } from '@src/group/entity/cycle.entity';
+import { isAfter, isBefore, isEqual, setHours, setMinutes } from 'date-fns';
 
 export class DateUtil {
   isBetween(date: Date, start: Date, end: Date): boolean {
@@ -56,34 +46,6 @@ export class DateUtil {
     range2End: Date,
   ): boolean {
     return isBefore(range1Start, range2End) && isAfter(range1End, range2Start);
-  }
-
-  /**
-   * Returns an array of weeks between the start and end date. Each week
-   * contains an array of days (7 days in a week), from Monday to Sunday.
-   *
-   * @example
-   * getWeeksBetween(new Date('2021-01-01'), new Date('2021-01-15'))
-   * // => [
-   * //   [ { date: '2021-01-04' }, { date: '2021-01-05' }, ... ],
-   * //   [ { date: '2021-01-11' }, { date: '2021-01-12' }, ... ],
-   * // ]
-   */
-  weeks(startDate: Date, endDate: Date): Week[][] {
-    const weeksArray: Week[][] = [];
-    let currentDate = startOfWeek(startDate, { weekStartsOn: 1 }); // 1 = Monday
-
-    while (isBefore(currentDate, endDate)) {
-      const week: Week[] = [];
-      for (let i = 0; i < 7; i++) {
-        week.push({ date: new Date(currentDate) });
-        currentDate = addDays(currentDate, 1);
-      }
-
-      weeksArray.push(week);
-    }
-
-    return weeksArray;
   }
 }
 

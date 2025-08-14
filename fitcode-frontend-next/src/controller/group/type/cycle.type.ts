@@ -8,9 +8,6 @@ export type Cycle = BaseEntity &
     name: string;
     description?: string;
     selectedTargets: SelectedTarget[];
-
-    // virtual
-    weeks: Week[][];
   };
 
 export interface Week {

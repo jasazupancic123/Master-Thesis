@@ -25,7 +25,7 @@ export default function TrainerWeekView() {
   const { cycle, trainings, setDateFrom, setDateTo } = useGroup();
 
   const [index, setIndex] = useState(0); // week index
-  const weeks = cycle?.weeks || [];
+  const weeks = commonService.date.weeks(cycle?.from, cycle?.to) || [];
 
   /**
    * Set date to cycle start and end when opening the page

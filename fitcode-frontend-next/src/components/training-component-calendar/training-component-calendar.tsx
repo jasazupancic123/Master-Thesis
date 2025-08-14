@@ -5,6 +5,7 @@ import Stack from '@mui/material/Stack';
 import dayjs from 'dayjs';
 import React, { Fragment, useEffect, useState } from 'react';
 
+import { CommonService } from '@/common/service/common.service';
 import type { Day } from '@/common/service/util/date.util';
 import type { SetState } from '@/common/type/state.type';
 import TrainingWeek from '@/components/training-week/training-week';
@@ -89,28 +90,30 @@ export default function TrainingComponentCalendar(
         <Box borderRadius={2} borderColor={theme.palette.primary.main}>
           {/* Training weeks */}
           <Stack spacing={1} mt={2}>
-            {cycle.weeks.map((week, i) => (
-              <Fragment key={i}>
-                <TrainingWeek
-                  componentCalendarView
-                  trainingComponent={trainingComponent}
-                  week={week.map(({ date }) => dayjs(date!))}
-                  selected={selectedComponents}
-                  setSelected={(component) =>
-                    setSelectedComponents(component as Component[])
-                  }
-                  addTrainingComponent={() => {}}
-                  deleteTrainingComponent={() => {
-                    return Promise.resolve();
-                  }}
-                  training={training}
-                  setOpenOverwriteModal={setOpenOverwriteModal}
-                  setTrainingInPeriodForModal={setTrainingInPeriodForModal}
-                  copyComponent={copyComponent}
-                  day={day}
-                />
-              </Fragment>
-            ))}
+            {CommonService.instance.date
+              .weeks(cycle.from, cycle.to)
+              .map((week, i) => (
+                <Fragment key={i}>
+                  <TrainingWeek
+                    componentCalendarView
+                    trainingComponent={trainingComponent}
+                    week={week.map(({ date }) => dayjs(date!))}
+                    selected={selectedComponents}
+                    setSelected={(component) =>
+                      setSelectedComponents(component as Component[])
+                    }
+                    addTrainingComponent={() => {}}
+                    deleteTrainingComponent={() => {
+                      return Promise.resolve();
+                    }}
+                    training={training}
+                    setOpenOverwriteModal={setOpenOverwriteModal}
+                    setTrainingInPeriodForModal={setTrainingInPeriodForModal}
+                    copyComponent={copyComponent}
+                    day={day}
+                  />
+                </Fragment>
+              ))}
           </Stack>
         </Box>
       )}

@@ -54,7 +54,7 @@ export class GroupRepository
         ownerId: input.ownerId,
         membersIds: input.membersIds,
         institutionId: input.institutionId,
-        cycles: input.cycles.map(({ weeks, ...cycle }) => cycle),
+        cycles: input.cycles,
       },
       { timestamps: true },
     );
@@ -114,13 +114,8 @@ export class GroupRepository
     const ref = this.doc(group.id);
     const query = this.firebaseService.buildUpdateQuery<Group>({
       cycles: [
-        ...group.cycles.map(({ weeks, ...cycle }) => cycle),
-        {
-          ...cycle,
-          weeks: undefined,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
+        ...group.cycles,
+        { ...cycle, createdAt: new Date(), updatedAt: new Date() },
       ],
     });
 
@@ -133,7 +128,7 @@ export class GroupRepository
     const cycles = group.cycles.filter((cycle) => cycle.id !== cycleId);
 
     const query = this.firebaseService.buildUpdateQuery<Group>({
-      cycles: cycles.map(({ weeks, ...cycle }) => cycle),
+      cycles: cycles,
     });
 
     await this.changeLog.trackUpdate(ref);
@@ -152,13 +147,6 @@ export class GroupRepository
     const serialized = this.firebaseService.serialize(
       snapshot.data() as FirestoreEntity<Group>,
     );
-
-    serialized.cycles = serialized.cycles
-      .map((c) => ({
-        ...c,
-        weeks: this.commonService.date.weeks(c.from, c.to),
-      }))
-      .sort((a, b) => new Date(a.from).getTime() - new Date(b.from).getTime());
 
     serialized.id = snapshot.id;
     return serialized;

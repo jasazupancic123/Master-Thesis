@@ -22,6 +22,8 @@ interface ComponentPeriodizationProps {
   training: Training;
 }
 
+const commonService = CommonService.instance;
+
 export default function ComponentPeriodization(
   props: ComponentPeriodizationProps
 ) {
@@ -243,7 +245,7 @@ export default function ComponentPeriodization(
         <Box borderRadius={2} borderColor={theme.palette.primary.main}>
           {/* Training weeks */}
           <Stack spacing={1} mt={2}>
-            {cycle.weeks.map((week, i) => (
+            {commonService.date.weeks(cycle.from, cycle.to).map((week, i) => (
               <Fragment key={i}>
                 <TrainingWeek
                   trainingComponent={selectedComponent}
