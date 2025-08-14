@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import MyModal from '../modal/modal';
 import SelectInput from '../select-input/select-input';
 import { AFTER_SETS, MAIN_SETS } from '../trainer-day-view/constant';
+import { onMethodChange } from './state';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
@@ -253,14 +254,14 @@ export default function TrainingComponentHeaderMenu(
         />
       </Tooltip>
 
-      <Tooltip title={component.target ? component.target.name : 'No target'}>
+      <Tooltip title={component.method ? component.method.name : 'No method'}>
         <SelectInput<Method>
           label={'Method'}
           value={component.method?.id || ''}
           icon={null}
           displayEmpty
           iconSize={17}
-          items={allMethods}
+          items={allMethods.filter((m) => m.componentId === component.id)}
           itemKey="id"
           itemName="name"
           disabled={[WARMUP_ID, COOLDOWN_ID].includes(component.id)}
@@ -271,120 +272,24 @@ export default function TrainingComponentHeaderMenu(
           selectedItemSize={12}
           selectSize="small"
           setValue={(methodId) => {
-            const method = allMethods.find((m) => m.id === methodId);
+            if (typeof methodId !== 'string') return;
 
-            const updatedComponent = {
-              ...component,
-              method: method,
-              methodId: method?.id,
-              supersets: component.supersets?.map((s) => ({
-                ...s,
-                exercises: s.exercises.map((e) => ({
-                  ...e,
-                  attributeRanges: method?.attributes || [],
-                  sets: e.sets.map((set) => ({
-                    ...set,
-                    paramValuesL: set.paramValuesL.map((p) => {
-                      let attributeRange = method?.attributes.find(
-                        (ar) => ar.field === p.field
-                      );
-                      if (!attributeRange) return p;
-
-                      const foundInOptions = attributeRange.options?.find(
-                        (o) => o.field === p.selected
-                      );
-                      if (foundInOptions) attributeRange = foundInOptions;
-
-                      try {
-                        const numValue = parseFloat(p.value);
-                        if (
-                          attributeRange.min !== undefined &&
-                          numValue < attributeRange.min
-                        ) {
-                          return {
-                            ...p,
-                            value: attributeRange.min.toString(),
-                          };
-                        }
-                        if (
-                          attributeRange.max !== undefined &&
-                          numValue > attributeRange.max
-                        ) {
-                          return {
-                            ...p,
-                            value: attributeRange.max.toString(),
-                          };
-                        }
-                        return p;
-                      } catch (e) {
-                        return p;
-                      }
-                    }),
-                    paramValuesR: set.paramValuesR?.map((p) => {
-                      let attributeRange = method?.attributes.find(
-                        (ar) => ar.field === p.field
-                      );
-                      if (!attributeRange) return p;
-
-                      const foundInOptions = attributeRange.options?.find(
-                        (o) => o.field === p.selected
-                      );
-                      if (foundInOptions) attributeRange = foundInOptions;
-
-                      try {
-                        const numValue = parseFloat(p.value);
-                        if (
-                          attributeRange.min !== undefined &&
-                          numValue < attributeRange.min
-                        ) {
-                          return {
-                            ...p,
-                            value: attributeRange.min.toString(),
-                          };
-                        }
-                        if (
-                          attributeRange.max !== undefined &&
-                          numValue > attributeRange.max
-                        ) {
-                          return {
-                            ...p,
-                            value: attributeRange.max.toString(),
-                          };
-                        }
-                        return p;
-                      } catch (_: unknown) {
-                        return p;
-                      }
-                    }),
-                  })),
-                })),
-              })),
-            };
-
-            setComponent(updatedComponent);
-
-            const updatedComponents = training.components.map((c) => {
-              if (
-                c.id === component.id ||
-                c.component?.id === component.component?.id
-              ) {
-                return {
-                  ...updatedComponent,
-                };
+            // in supersets.tsx, a useEffect gets called to update setsNumbers if method limits them
+            onMethodChange(
+              {
+                methodId,
+              },
+              {
+                training,
+                setTraining,
+                component,
+                setComponent,
+                allMethods,
+                setDetectedChanges,
+                selectedSubgroup,
+                setSelectedSubgroup,
               }
-              return c;
-            });
-
-            setTraining((prev) =>
-              !prev
-                ? prev
-                : {
-                    ...prev,
-                    components: updatedComponents,
-                  }
             );
-
-            setDetectedChanges(true);
           }}
         />
       </Tooltip>
@@ -415,19 +320,14 @@ export default function TrainingComponentHeaderMenu(
                   components: allComponents,
                   exercises: allExercises,
                   methods: allMethods,
-                  prescribedStats: true,
                 });
 
                 return pt;
               });
 
-              const minimalPeriodizedTrainings = periodizedTrainings.map((t) =>
-                TrainingService.trainingToInfo(t)
-              );
-
               setTrainings((prev) =>
                 prev.map((t) => {
-                  const newTraining = minimalPeriodizedTrainings.find(
+                  const newTraining = periodizedTrainings.find(
                     (nt) => nt.id === t.id
                   );
                   return newTraining ? newTraining : t;

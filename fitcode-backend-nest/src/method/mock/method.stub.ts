@@ -9,7 +9,7 @@ export function generateMethodStub(data?: Partial<Method>): Method {
     id: data?.id || v4(),
     name: data?.name || generateRandomName(),
     ability: data?.ability || generateRandomName(),
-    targetId: data?.targetId,
+    componentId: data?.componentId,
     attributes: data?.attributes || [],
     intensity: data?.intensity || '100%',
     tempo: data?.tempo || '1',

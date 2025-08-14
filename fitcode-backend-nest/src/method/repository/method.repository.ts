@@ -39,13 +39,13 @@ export class MethodRepository
   async addDoc(input: Create<Method>): Promise<string> {
     if (!input.name) throw new BadRequestException('Method must have a name');
 
-    if (!input.targetId)
-      throw new BadRequestException('Method must have a targetId');
+    if (!input.componentId)
+      throw new BadRequestException('Method must have a componentId');
 
     const query = this.firebaseService.buildCreateQuery<Method>({
       id: input.id,
       name: input.name,
-      targetId: input.targetId,
+      componentId: input.componentId,
       ability: input.ability,
       intensity: input.intensity,
       attributes: input.attributes,
@@ -62,7 +62,7 @@ export class MethodRepository
   async updateDoc(id: string, input: Update<Method>) {
     const query = this.firebaseService.buildUpdateQuery<Method>({
       name: input.name,
-      targetId: input.targetId,
+      componentId: input.componentId,
       ability: input.ability,
       intensity: input.intensity,
       attributes: input.attributes,

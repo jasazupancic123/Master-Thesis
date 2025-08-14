@@ -46,12 +46,6 @@ export class UserEntity extends BaseEntity {
   @Expose()
   lastName?: string;
 
-  @IsOptional()
-  @IsString()
-  @ApiPropertyOptional()
-  @Expose()
-  phone?: string;
-
   @ApiPropertyOptional()
   @IsOptional()
   @Expose()

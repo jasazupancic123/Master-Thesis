@@ -42,8 +42,8 @@ export default function WellnessInitializer({ children }: ChildrenProps) {
     init();
   }, [wellness]);
 
-  if (!wellness) return <Alert type="loading" />;
   if (unauthorized) return <Alert type="unauthorized" />;
+  if (!wellness) return <Alert type="loading" />;
 
   return <WellnessProvider wellness={wellness}>{children}</WellnessProvider>;
 }

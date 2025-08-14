@@ -91,8 +91,8 @@ export default function DashboardInitializer({ children }: ChildrenProps) {
     init();
   }, []);
 
-  if (!state) return <Alert type="loading" />;
   if (unauthorized) return <Alert type="unauthorized" />;
+  if (!state) return <Alert type="loading" />;
 
   return (
     <DashboardProvider {...state}>

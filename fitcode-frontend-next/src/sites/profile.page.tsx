@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowBack } from '@mui/icons-material';
+import { ArrowBack, CameraAlt, Check } from '@mui/icons-material';
 import {
   Box,
   Button,
@@ -10,11 +10,14 @@ import {
   MenuItem,
   Select,
   TextField,
+  Typography,
 } from '@mui/material';
+import { useTheme } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
+import type { User } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
@@ -22,6 +25,7 @@ import toast from 'react-hot-toast';
 import { SPORTS } from '@/common/constant/sport.constant';
 import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
 import { handleApiRequest } from '@/common/type/state.type';
+import FaceCapture from '@/components/face-capture/face-capture';
 import FileUpload from '@/components/file-upload/file-upload';
 import { Gender } from '@/controller/user/enum/gender.enum';
 import { SportLevel } from '@/controller/user/enum/sport-level.enum';
@@ -35,10 +39,13 @@ const DEFAULT_MARGIN = 1;
 export default function ProfilePage() {
   const {
     user,
+    setUser,
     profile: profileGlobal,
     setProfile: setProfileGlobal,
+    customClaims,
   } = useAuth();
 
+  const theme = useTheme();
   const router = useRouter();
   const screenSize = useScreenSize();
 
@@ -46,56 +53,94 @@ export default function ProfilePage() {
     ...profileGlobal,
   } as UserEntity);
 
+  const [isCapturingFace, setIsCapturingFace] = useState<boolean>(false);
+  const [captures, setCaptures] = useState<{
+    front?: Blob;
+    right?: Blob;
+    left?: Blob;
+  }>({});
+  const [previews, setPreviews] = useState<{
+    front?: string;
+    right?: string;
+    left?: string;
+  }>({});
+
+  const [updatedProfile, setUpdatedProfile] = useState(false);
+  const [updatedUser, setUpdatedUser] = useState(false);
+
   function handleChangeProfile<K extends keyof UserEntity>(
     key: K,
     value: UserEntity[K]
   ) {
     const newProfile = { ...profile, [key]: value };
     setProfile(newProfile as UserEntity);
+    setUpdatedProfile(true);
+  }
+
+  function handleChangeUser<K extends keyof User>(key: K, value: User[K]) {
+    if (!user) return;
+
+    const newUser = { ...user, [key]: value };
+    setUser(newUser);
+    setUpdatedUser(true);
   }
 
   async function handleSaveProfile() {
-    if (!profile) return;
-    const {
-      sport,
-      level,
-      gender,
-      profileImageUrl,
-      firstName,
-      lastName,
-      phone,
-      birthDate,
-    } = profile;
+    if (updatedProfile) {
+      if (!profile) return;
+      const {
+        sport,
+        level,
+        gender,
+        profileImageUrl,
+        firstName,
+        lastName,
+        phone,
+        birthDate,
+      } = profile;
 
-    handleApiRequest(
-      router,
-      () =>
-        UserController.updateProfile({
-          sport,
-          level,
-          gender,
-          profileImageUrl,
-          firstName,
-          lastName,
-          phone,
-          birthDate,
-          userId: profile.id,
-        }),
-      (_) => {
-        setProfileGlobal(profile);
-        toast.success('Profile updated successfully');
-      },
-      undefined,
-      'Failed to update profile'
-    );
+      handleApiRequest(
+        router,
+        () =>
+          UserController.updateProfile({
+            sport,
+            level,
+            gender,
+            profileImageUrl,
+            firstName,
+            phone,
+            lastName,
+            birthDate,
+            userId: profile.id,
+          }),
+        (_) => {
+          setProfileGlobal(profile);
+          toast.success('Profile updated successfully');
+        },
+        undefined,
+        'Failed to update profile'
+      );
+    }
+
+    if (updatedUser) {
+      // logic here
+    }
   }
 
   if (!user) return null;
 
-  return (
+  return isCapturingFace ? (
+    <FaceCapture
+      setIsCapturingFace={setIsCapturingFace}
+      previews={previews}
+      setPreviews={setPreviews}
+      captures={captures}
+      setCaptures={setCaptures}
+    />
+  ) : (
     <Box
       width="100%"
-      height="100vh"
+      minHeight="100vh"
       display="flex"
       flexDirection="column"
       alignItems="center"
@@ -142,10 +187,6 @@ export default function ProfilePage() {
           }}
         />
 
-        {/* <Button variant="contained" color="primary" sx={{ my: DEFAULT_MARGIN }}>
-        Upload Photo
-      </Button> */}
-
         {/* First & Last Name - Ensuring Equal Width */}
         <Box
           display="flex"
@@ -154,19 +195,11 @@ export default function ProfilePage() {
           gap={DEFAULT_MARGIN}
         >
           <TextField
-            label={!profile.firstName ? 'First Name' : undefined}
+            label={!user.displayName ? 'Display Name' : undefined}
             variant="outlined"
             sx={{ flex: 1 }}
-            value={profile?.firstName}
-            onChange={(e) => handleChangeProfile('firstName', e.target.value)}
-          />
-
-          <TextField
-            label={!profile.lastName ? 'Last Name' : undefined}
-            variant="outlined"
-            sx={{ flex: 1 }}
-            value={profile?.lastName}
-            onChange={(e) => handleChangeProfile('lastName', e.target.value)}
+            value={user?.displayName}
+            onChange={(e) => handleChangeUser('displayName', e.target.value)}
           />
         </Box>
 
@@ -259,6 +292,40 @@ export default function ProfilePage() {
             </Select>
           </FormControl>
         </Box>
+        {[
+          customClaims?.faceFrontUrl,
+          customClaims?.faceLeftUrl,
+          customClaims?.faceRightUrl,
+        ].some((url) => !url) ? (
+          <Box
+            width="100%"
+            display="flex"
+            justifyContent="center"
+            gap={1}
+            alignItems="center"
+          >
+            <Button
+              variant="contained"
+              color="primary"
+              sx={{ my: DEFAULT_MARGIN }}
+              onClick={() => setIsCapturingFace(true)}
+            >
+              <CameraAlt />
+            </Button>
+          </Box>
+        ) : (
+          <Typography
+            textAlign="center"
+            gap={0.5}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              color: theme.palette.success.main,
+            }}
+          >
+            Face recognition images already uploaded <Check />
+          </Typography>
+        )}
       </Box>
       <Button
         variant="contained"

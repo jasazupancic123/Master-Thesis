@@ -10,7 +10,6 @@ import toast from 'react-hot-toast';
 import HorizontalItemsList from '../horizontal-items-list/horizontal-items-list';
 import { MAX_WIDTH } from '../trainer-day-view/constant';
 import { CommonService } from '@/common/service/common.service';
-import type { Day } from '@/common/service/util/date.util';
 import { useGroup } from '@/store/group-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
@@ -20,8 +19,6 @@ dayjs.extend(weekOfYear);
 const commonService = CommonService.instance;
 
 interface GroupTrainerDayViewHeaderProps {
-  day: Day;
-  setDay: (day: Day) => void;
   days: { label: string; value: string; sublabel: string }[];
   setDays: (days: { label: string; value: string; sublabel: string }[]) => void;
   week: number;
@@ -33,7 +30,7 @@ export default function GroupTrainerDayViewHeader(
   const theme = useTheme();
   const screenSize = useScreenSize();
 
-  const { day, setDay, days, setDays, week } = props;
+  const { days, setDays, week } = props;
 
   const {
     group,
@@ -44,8 +41,13 @@ export default function GroupTrainerDayViewHeader(
     setDetectedChanges,
   } = useGroup();
 
-  const { selectedPeriod, setSelectedPeriod, setSelectedExercises } =
-    useTrainerDayViewContext();
+  const {
+    day,
+    setDay,
+    selectedPeriod,
+    setSelectedPeriod,
+    setSelectedExercises,
+  } = useTrainerDayViewContext();
 
   interface PeriodSelectProps {
     smallDisplay?: boolean;

@@ -10,7 +10,6 @@ import { CommonService } from '@/common/service/common.service';
 import type { Target } from '@/controller/target/type/target.type';
 import { PeriodizationType } from '@/controller/training/enum/periodization-type.enum';
 import type { Training } from '@/controller/training/type/training.type';
-import type { TrainingInfo } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useGroup } from '@/store/group-provider';
@@ -41,12 +40,10 @@ export default function ComponentPeriodization(
   );
   const [expandExerciseView, _setExpandExerciseView] = useState(false);
 
-  const [_allPossibleTrainings, setAllPossibleTrainings] = useState<
-    TrainingInfo[]
-  >([]);
-  const [selectedTrainings, setSelectedTrainings] = useState<TrainingInfo[]>(
+  const [_allPossibleTrainings, setAllPossibleTrainings] = useState<Training[]>(
     []
   );
+  const [selectedTrainings, setSelectedTrainings] = useState<Training[]>([]);
 
   const [selectedTarget, _setSelectedTarget] = useState(
     selectedComponent.target

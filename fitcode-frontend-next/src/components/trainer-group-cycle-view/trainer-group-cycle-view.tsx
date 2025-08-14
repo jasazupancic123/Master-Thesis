@@ -105,6 +105,7 @@ export default function TrainerCycleView() {
     return (
       <HorizontalItemsList
         items={cyclesForSelect}
+        noItemsText="No cycles available"
         value={cycle?.id || ''}
         setValue={(value) => {
           setCycle(group.cycles.find((c) => c.id === value) || undefined);
@@ -309,7 +310,7 @@ export default function TrainerCycleView() {
             cycleView
             selectedTargets={selectedTargets}
             setSelectedTargets={setSelectedTargets}
-            gap={4}
+            gap={screenSize.isReallySmall ? 1.5 : 3.5}
           />
         </Box>
       </Box>
