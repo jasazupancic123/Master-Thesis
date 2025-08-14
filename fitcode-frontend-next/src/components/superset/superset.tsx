@@ -6,7 +6,6 @@ import { Droppable } from 'react-beautiful-dnd';
 import SupersetExercise from '../superset-exercise/superset-exercise';
 import { handleDeleteSuperset } from '../trainer-day-view/state';
 import { COLOR } from '@/common/constant/browser.constant';
-import BorderColor from '@/components/border-color/border-color';
 import type { Superset as SupersetClass } from '@/controller/training/type/superset.type';
 import { useGroup } from '@/store/group-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
@@ -38,6 +37,15 @@ export default function Superset(props: SupersetComponentProps) {
   } = useTrainerDayViewContext();
 
   if (!component || !training) return null;
+
+  const getBorderGradient = (): string => {
+    const fromColor = COLOR[supersetIndex % COLOR.length];
+    const toColor =
+      supersets.length - 1 === supersetIndex
+        ? COLOR[0]
+        : COLOR[(supersetIndex + 1) % COLOR.length];
+    return `linear-gradient(to bottom, ${fromColor}, ${toColor}) 1`;
+  };
 
   return (
     <Grid2
@@ -76,6 +84,11 @@ export default function Superset(props: SupersetComponentProps) {
             {...provided.droppableProps}
             p={screenSize.isLandscapeMobile ? 0.5 : 0}
             pt={0}
+            sx={{
+              border: '1px solid',
+              borderRadius: 10,
+              borderImage: getBorderGradient(),
+            }}
           >
             <Box
               sx={{
@@ -99,13 +112,7 @@ export default function Superset(props: SupersetComponentProps) {
                   }
                 )
               }
-            >
-              <BorderColor
-                color={COLOR[supersetIndex % COLOR.length]}
-                applyMargin
-                marginValue={superset.exercises.length === 0 ? '3px' : '5px'}
-              />
-            </Box>
+            ></Box>
 
             <Grid2 container gap={0.5}>
               {supersets.length === 1 && superset.exercises.length === 0 ? (
@@ -161,14 +168,7 @@ export default function Superset(props: SupersetComponentProps) {
                   }
                 )
               }
-            >
-              <BorderColor
-                color={COLOR[supersetIndex % COLOR.length]}
-                lower
-                applyMargin
-                marginValue={superset.exercises.length === 0 ? '3px' : '5px'}
-              />
-            </Box>
+            />
           </Stack>
         )}
       </Droppable>

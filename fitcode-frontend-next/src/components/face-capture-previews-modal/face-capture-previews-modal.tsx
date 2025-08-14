@@ -147,7 +147,7 @@ export default function FaceCapturePreviewsModal(
               undefined,
               'Failed to post face recognition images'
             );
-          } catch (err) {
+          } catch (e) {
             toast.error('Failed to upload face images');
           }
         }}
