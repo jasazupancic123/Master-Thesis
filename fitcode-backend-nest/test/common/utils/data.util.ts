@@ -36,31 +36,30 @@ export async function createInstitution(
   const athletes = input?.athletes || [global.athlete];
   const trainers = input?.trainers || [global.trainer];
 
-  const athleteIds = athletes.map((a) => a.uid);
-  const trainerIds = trainers.map((a) => a.uid);
-
   const institution = await institutionService.create(
     global.admin,
     generateInstitutionStub({ ownerId: manager.uid }),
   );
 
-  await institutionService.updateMembers(
-    manager,
-    { institutionId: institution.id },
-    { add: true, trainers: false, memberIds: athleteIds },
-  );
+  for (const athlete of athletes)
+    await institutionService.updateMembers(
+      manager,
+      { institutionId: institution.id },
+      { add: true, userId: athlete.uid, trainer: false },
+    );
 
-  await institutionService.updateMembers(
-    manager,
-    { institutionId: institution.id },
-    { add: true, trainers: true, memberIds: trainerIds },
-  );
+  for (const trainer of trainers)
+    await institutionService.updateMembers(
+      manager,
+      { institutionId: institution.id },
+      { add: true, userId: trainer.uid, trainer: true },
+    );
 
   const data = await institutionService.getDoc({
     institutionId: institution.id,
   })!;
 
-  return { ...data, manager: manager, trainers, athletes };
+  return { ...data, manager, trainers, athletes };
 }
 
 /**
@@ -135,8 +134,10 @@ export async function createGroupWithCycles(
     }),
   ];
 
-  group = await groupService.update(manager, { groupId: group.id }, { cycles });
-  return group;
+  for (const cycle of cycles)
+    await groupService.addCycle(manager, { groupId: group.id }, cycle);
+
+  return await groupService.findOneByIdOrFail(manager, { groupId: group.id });
 }
 
 /**
@@ -145,7 +146,7 @@ export async function createGroupWithCycles(
  */
 export async function createTraining(
   firebase: FirebaseService,
-  input?: Partial<TestTraining>,
+  input?: Partial<TestTraining> & { ownerId: string; membersIds: string[] },
 ) {
   const data: TestTraining = {
     ...generateTrainingStub(input),

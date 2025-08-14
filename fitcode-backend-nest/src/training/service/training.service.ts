@@ -1,13 +1,12 @@
 import {
   BadRequestException,
   ConflictException,
-  forwardRef,
-  Inject,
   Injectable,
   Logger,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { OnEvent } from '@nestjs/event-emitter';
 import {
   addMinutes,
   differenceInMinutes,
@@ -21,6 +20,7 @@ import { Query, Timestamp } from 'firebase-admin/firestore';
 
 import { AttributeService } from '@src/attribute/service/attribute.service';
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
+import { UpdateMembersDto } from '@src/common/dto/user-id.dto';
 import { Permission } from '@src/common/interface/permission.interface';
 import { CommonService } from '@src/common/service/common.service';
 import { Create, Update } from '@src/common/type/entity.type';
@@ -35,18 +35,20 @@ import {
   WorkloadRef,
 } from '@src/common/type/firestore.type';
 import { Filter } from '@src/common/type/orm.type';
-import { Wrapper } from '@src/common/type/wrapper.type';
 import { ComponentService } from '@src/component/component.service';
 import {
   COOLDOWN_COMPONENT_ID,
   WARMUP_COMPONENT_ID,
 } from '@src/component/constant/warmup-cooldown.constant';
-import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
+import { DELETE_GROUP_EVENT } from '@src/group/constant/delete-group-event.constant';
 import { Cycle } from '@src/group/entity/cycle.entity';
 import { Group } from '@src/group/entity/group.entity';
+import { DeleteGroupOrCycleEvent } from '@src/group/event/delete-group.event';
 import { GroupService } from '@src/group/group.service';
+import { INSTITUTION_ATHLETE_EVENT } from '@src/institution/constant/update-institution-athlete-event.constant';
 import { Institution } from '@src/institution/entity/institution.entity';
+import { UpdateInstitutionAthleteEvent } from '@src/institution/event/update-institution-athlete.event';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { MethodService } from '@src/method/service/method.service';
 import { UserService } from '@src/user/user.service';
@@ -80,21 +82,18 @@ export class TrainingService implements Permission<Training, Institution> {
     private readonly attributeService: AttributeService,
     private readonly componentService: ComponentService,
     private readonly methodService: MethodService,
-    private readonly exerciseService: ExerciseService,
     private readonly userService: UserService,
     private readonly periodizationService: PeriodizationService,
-    private readonly trainingRepository: TrainingRepository,
+    private readonly repository: TrainingRepository,
     private readonly trainingPlanService: TrainingPlanService,
     private readonly workloadRepository: WorkloadRepository,
     private readonly workloadService: WorkloadService,
-    @Inject(forwardRef(() => GroupService))
-    private readonly groupService: Wrapper<GroupService>,
-    @Inject(forwardRef(() => InstitutionService))
-    private readonly institutionService: Wrapper<InstitutionService>,
+    private readonly groupService: GroupService,
+    private readonly institutionService: InstitutionService,
   ) {}
 
   async getDocs(query: (query: Query) => Query = (query) => query) {
-    return query(this.trainingRepository.collection()).get();
+    return query(this.repository.collection()).get();
   }
 
   async findOneById(
@@ -103,7 +102,7 @@ export class TrainingService implements Permission<Training, Institution> {
     options?: { skipInstitution?: boolean },
   ): Promise<Training | null> {
     // find training
-    const training = await this.trainingRepository.getDoc(ref.trainingId);
+    const training = await this.repository.getDoc(ref.trainingId);
     if (!training || training.deletedAt) return null;
 
     if (!options?.skipInstitution)
@@ -131,7 +130,7 @@ export class TrainingService implements Permission<Training, Institution> {
     filter?: Filter<Training>,
     options?: { limit?: number },
   ): Promise<Training[]> {
-    return await this.trainingRepository.getDocs((q) => {
+    return await this.repository.getDocs((q) => {
       // filter by roles
       if (
         this.firebaseService.isTrainer(user) ||
@@ -142,6 +141,8 @@ export class TrainingService implements Permission<Training, Institution> {
         q = q.where('membersIds', 'array-contains', user.uid);
 
       // filter by other params
+      if (filter?.institutionId)
+        q = q.where('institutionId', '==', filter.institutionId);
       if (filter?.groupId) q = q.where('groupId', '==', filter.groupId);
       if (filter?.cycleId) q = q.where('cycleId', '==', filter.cycleId);
 
@@ -260,7 +261,7 @@ export class TrainingService implements Permission<Training, Institution> {
         })),
     };
 
-    const id = await this.trainingRepository.addDoc(data);
+    const id = await this.repository.addDoc(data);
     return {
       ...data,
       id,
@@ -414,7 +415,7 @@ export class TrainingService implements Permission<Training, Institution> {
           ) as Training[])
         : filteredTrainings;
 
-    await this.trainingRepository.updateDoc(baseTrainingId, {
+    await this.repository.updateDoc(baseTrainingId, {
       components: baseTraining.components.map((c) =>
         c.id === componentId && !subgroupId ? { ...c, periodizationType } : c,
       ),
@@ -425,7 +426,7 @@ export class TrainingService implements Permission<Training, Institution> {
       const component = t.components.find((c) => c.id === componentId);
       if (!component) continue;
 
-      const ref = this.trainingRepository.doc(t.id);
+      const ref = this.repository.doc(t.id);
       batch.update(
         ref,
         this.firebaseService.buildUpdateQuery<Training>({ ...t }),
@@ -465,7 +466,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
     // if no components, delete training
     if (input.components.length === 0) {
-      await this.trainingRepository.deleteDoc(ref.trainingId);
+      await this.repository.deleteDoc(ref.trainingId);
       return { ...training, completedMembersIds: [] };
     }
 
@@ -490,10 +491,6 @@ export class TrainingService implements Permission<Training, Institution> {
     const components = await this.componentService.findAllFlat();
     const methods = await this.methodService.findAll();
 
-    const membersIds = input.membersIds || training.membersIds;
-    const members = await this.userService.findAllOrFail({ ids: membersIds });
-    this.validateMembersInInstitution(members, training.institution);
-
     const exercises = await this.trainingPlanService.getAllTrainingExercises(
       input.components,
     );
@@ -502,7 +499,7 @@ export class TrainingService implements Permission<Training, Institution> {
       this.trainingPlanService.validateTrainingComponents(
         training,
         input.components,
-        membersIds,
+        training.membersIds,
         { exercises, components, methods, attributes },
       );
 
@@ -534,7 +531,6 @@ export class TrainingService implements Permission<Training, Institution> {
     const updateTraining: Update<Training> = {
       from,
       to,
-      membersIds,
       components: trainingComponents.filter(
         (c) => c.id !== WARMUP_COMPONENT_ID && c.id !== COOLDOWN_COMPONENT_ID,
       ),
@@ -543,8 +539,36 @@ export class TrainingService implements Permission<Training, Institution> {
       completedMembersIds: training.completedMembersIds,
     };
 
-    await this.trainingRepository.updateDoc(ref.trainingId, updateTraining);
+    await this.repository.updateDoc(ref.trainingId, updateTraining);
     return { ...training, ...updateTraining };
+  }
+
+  @LogMethod()
+  async updateMembers(user: User, ref: TrainingRef, input: UpdateMembersDto) {
+    const { userId: memberId, add } = input;
+
+    // validate
+    const training = await this.findOneByIdOrFail(user, ref);
+    if (!this.canEdit(user, training, training.institution))
+      throw new UnauthorizedException('You are not allowed to update members');
+
+    // check if member exists
+    const member = await this.userService.findOneBy('id', memberId);
+    if (!member) throw new BadRequestException('Member does not exist');
+    if (!this.firebaseService.isAthlete(member))
+      throw new BadRequestException('Member must be an athlete');
+
+    // check if member is already in training
+    if (training.membersIds.includes(member.uid) && add)
+      throw new BadRequestException('Member is already in the training');
+
+    // check if member is in institution
+    if (!training.institution!.athleteIds.includes(member.uid))
+      throw new BadRequestException('Member is not part of the institution');
+
+    // update members
+    if (add) await this.repository.addMember(training, member.uid);
+    else await this.repository.removeMember(training, member.uid);
   }
 
   @LogMethod()
@@ -667,7 +691,7 @@ export class TrainingService implements Permission<Training, Institution> {
       );
 
     // create training, add trainer to users, create workloads
-    const id = await this.trainingRepository.addDoc({
+    const id = await this.repository.addDoc({
       ...data,
       components: trainingComponents,
     });
@@ -787,7 +811,7 @@ export class TrainingService implements Permission<Training, Institution> {
     this.validateCanEdit(user, training, training.institution);
     this.validateIsDateInFuture(training.from);
 
-    await this.trainingRepository.deleteDoc(ref.trainingId);
+    await this.repository.deleteDoc(ref.trainingId);
   }
 
   @LogMethod()
@@ -858,7 +882,7 @@ export class TrainingService implements Permission<Training, Institution> {
         uid: athlete.uid,
       });
 
-    await this.trainingRepository.updateDoc(trainingId, {
+    await this.repository.updateDoc(trainingId, {
       stats,
       ...addCompletedMembersQuery,
     });
@@ -915,7 +939,7 @@ export class TrainingService implements Permission<Training, Institution> {
       );
 
     // add components
-    await this.trainingRepository.updateDoc(training.id, query);
+    await this.repository.updateDoc(training.id, query);
 
     return updatedTraining;
   }
@@ -938,7 +962,7 @@ export class TrainingService implements Permission<Training, Institution> {
     );
 
     if (filtered.length === 0) {
-      await this.trainingRepository.deleteDoc(ref.trainingId);
+      await this.repository.deleteDoc(ref.trainingId);
       return { ...training, components: [] };
     }
 
@@ -955,7 +979,7 @@ export class TrainingService implements Permission<Training, Institution> {
       this.trainingPlanService.getDeleteComponentQuery(training, ref);
 
     // delete component
-    await this.trainingRepository.updateDoc(ref.trainingId, query);
+    await this.repository.updateDoc(ref.trainingId, query);
     return updatedTraining;
   }
 
@@ -1049,6 +1073,41 @@ export class TrainingService implements Permission<Training, Institution> {
       ...training,
       components: newPrescribedTrainingComponents,
     };
+  }
+
+  @OnEvent(INSTITUTION_ATHLETE_EVENT, { async: true, promisify: true })
+  async handleUpdateInstitutionAthleteEvent(
+    event: UpdateInstitutionAthleteEvent,
+  ) {
+    // add or remove user from all future trainings of the institution
+    const { operations, institutionId, groupId, userId, add } = event;
+    const trainings = await this.repository.getDocs((q) => {
+      q = q.where('institutionId', '==', institutionId);
+      if (groupId) q = q.where('groupId', '==', groupId);
+      return q.where('from', '>=', Timestamp.fromDate(startOfDay(new Date())));
+    });
+
+    for (const training of trainings)
+      operations.push(
+        this.repository.getUpdateMemberOperation(training, userId, add),
+      );
+  }
+
+  @OnEvent(DELETE_GROUP_EVENT, { async: true, promisify: true })
+  async handleDeleteGroupEvent(event: DeleteGroupOrCycleEvent) {
+    // delete all trainings of the group
+    const { operations, groupId, cycleId } = event;
+    const trainings = await this.repository.getDocs((q) => {
+      q = q.where('groupId', '==', groupId);
+      if (cycleId) q = q.where('cycleId', '==', cycleId);
+      return q;
+    });
+
+    for (const training of trainings)
+      operations.push({
+        operation: 'delete',
+        ref: this.repository.doc(training.id),
+      });
   }
 
   /**

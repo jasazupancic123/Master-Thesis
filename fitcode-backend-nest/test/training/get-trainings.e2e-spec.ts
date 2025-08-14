@@ -10,12 +10,14 @@ import {
   createGroupWithCycles,
   createInstitution,
   deleteDoc,
+  deleteUsers,
 } from '@test/common/utils/data.util';
 import { addDays, subDays } from 'date-fns';
 import { stringify } from 'qs';
 import * as request from 'supertest';
 
 import { AppModule } from '@src/app.module';
+import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { getTime } from '@src/common/service/util';
 import { ComponentService } from '@src/component/component.service';
 import type { Component } from '@src/component/entity/component.entity';
@@ -27,6 +29,7 @@ import { InstitutionService } from '@src/institution/service/institution.service
 import { TestDbService } from '@src/test-db/test-db.service';
 import type { FilterTrainingQueryDto } from '@src/training/dto/filter-training-query.dto';
 import type { Training } from '@src/training/entity/training.entity';
+import { generateTrainingStub } from '@src/training/mock/training.stub';
 
 import type { TestInstitution } from '../common/type/entity.type';
 
@@ -75,99 +78,118 @@ describe('Get Trainings (e2e)', () => {
     await Promise.all([
       // trainer1 trainings
       // past
-      db.trainings.create({
-        ownerId: trainer1.uid,
-        membersIds: [athlete1.uid, athlete2.uid],
-        institutionId: institution.id,
-        groupId: group.id,
-        cycleId: '1',
-        from: getTime(subDays(d, 2), 8, 0),
-        to: getTime(subDays(d, 2), 9, 0),
-      }),
-      db.trainings.create({
-        ownerId: trainer1.uid,
-        membersIds: [athlete1.uid],
-        institutionId: institution.id,
-        groupId: group.id,
-        cycleId: '1',
-        from: getTime(subDays(d, 1), 8, 0),
-        to: getTime(subDays(d, 1), 9, 0),
-      }),
+      db.trainings.addDoc(
+        generateTrainingStub({
+          ownerId: trainer1.uid,
+          membersIds: [athlete1.uid, athlete2.uid],
+          institutionId: institution.id,
+          groupId: group.id,
+          cycleId: '1',
+          from: getTime(subDays(d, 2), 8, 0),
+          to: getTime(subDays(d, 2), 9, 0),
+        }),
+      ),
+      db.trainings.addDoc(
+        generateTrainingStub({
+          ownerId: trainer1.uid,
+          membersIds: [athlete1.uid],
+          institutionId: institution.id,
+          groupId: group.id,
+          cycleId: '1',
+          from: getTime(subDays(d, 1), 8, 0),
+          to: getTime(subDays(d, 1), 9, 0),
+        }),
+      ),
       // today
-      db.trainings.create({
-        ownerId: trainer1.uid,
-        membersIds: [athlete1.uid, athlete2.uid],
-        institutionId: institution.id,
-        groupId: group.id,
-        cycleId: '2',
-        from: getTime(d, 8, 0),
-        to: getTime(d, 9, 0),
-      }),
-      db.trainings.create({
-        ownerId: trainer1.uid,
-        membersIds: [athlete1.uid],
-        institutionId: institution.id,
-        groupId: 'test-group',
-        cycleId: '2',
-        from: getTime(d, 13, 0),
-        to: getTime(d, 14, 0),
-      }),
+      db.trainings.addDoc(
+        generateTrainingStub({
+          ownerId: trainer1.uid,
+          membersIds: [athlete1.uid, athlete2.uid],
+          institutionId: institution.id,
+          groupId: group.id,
+          cycleId: '2',
+          from: getTime(d, 8, 0),
+          to: getTime(d, 9, 0),
+        }),
+      ),
+      db.trainings.addDoc(
+        generateTrainingStub({
+          ownerId: trainer1.uid,
+          membersIds: [athlete1.uid],
+          institutionId: institution.id,
+          groupId: 'test-group',
+          cycleId: '2',
+          from: getTime(d, 13, 0),
+          to: getTime(d, 14, 0),
+        }),
+      ),
       // future
-      db.trainings.create({
-        ownerId: trainer1.uid,
-        membersIds: [athlete1.uid, athlete2.uid],
-        institutionId: institution.id,
-        groupId: 'test-group',
-        cycleId: '3',
-        from: getTime(addDays(d, 1), 8, 0),
-        to: getTime(addDays(d, 1), 9, 0),
-      }),
-      db.trainings.create({
-        ownerId: trainer1.uid,
-        membersIds: [athlete1.uid],
-        institutionId: institution.id,
-        groupId: 'test-group',
-        cycleId: '3',
-        from: getTime(addDays(d, 1), 10, 0),
-        to: getTime(addDays(d, 1), 11, 0),
-      }),
-      db.trainings.create({
-        ownerId: trainer1.uid,
-        membersIds: [athlete1.uid, athlete2.uid],
-        institutionId: institution.id,
-        groupId: 'test-group',
-        cycleId: '3',
-        from: getTime(addDays(d, 2), 18, 0),
-        to: getTime(addDays(d, 2), 19, 0),
-      }),
+      db.trainings.addDoc(
+        generateTrainingStub({
+          ownerId: trainer1.uid,
+          membersIds: [athlete1.uid, athlete2.uid],
+          institutionId: institution.id,
+          groupId: 'test-group',
+          cycleId: '3',
+          from: getTime(addDays(d, 1), 8, 0),
+          to: getTime(addDays(d, 1), 9, 0),
+        }),
+      ),
+      db.trainings.addDoc(
+        generateTrainingStub({
+          ownerId: trainer1.uid,
+          membersIds: [athlete1.uid],
+          institutionId: institution.id,
+          groupId: 'test-group',
+          cycleId: '3',
+          from: getTime(addDays(d, 1), 10, 0),
+          to: getTime(addDays(d, 1), 11, 0),
+        }),
+      ),
+      db.trainings.addDoc(
+        generateTrainingStub({
+          ownerId: trainer1.uid,
+          membersIds: [athlete1.uid, athlete2.uid],
+          institutionId: institution.id,
+          groupId: 'test-group',
+          cycleId: '3',
+          from: getTime(addDays(d, 2), 18, 0),
+          to: getTime(addDays(d, 2), 19, 0),
+        }),
+      ),
       // trainer2 trainings
-      db.trainings.create({
-        ownerId: trainer2.uid,
-        membersIds: [athlete2.uid],
-        institutionId: institution.id,
-        groupId: group.id,
-        cycleId: '1',
-        from: getTime(subDays(d, 2), 10, 0),
-        to: getTime(subDays(d, 2), 11, 0),
-      }),
-      db.trainings.create({
-        ownerId: trainer2.uid,
-        membersIds: [athlete2.uid],
-        institutionId: institution.id,
-        groupId: group.id,
-        cycleId: '2',
-        from: getTime(d, 15, 0),
-        to: getTime(d, 16, 0),
-      }),
+      db.trainings.addDoc(
+        generateTrainingStub({
+          ownerId: trainer2.uid,
+          membersIds: [athlete2.uid],
+          institutionId: institution.id,
+          groupId: group.id,
+          cycleId: '1',
+          from: getTime(subDays(d, 2), 10, 0),
+          to: getTime(subDays(d, 2), 11, 0),
+        }),
+      ),
+      db.trainings.addDoc(
+        generateTrainingStub({
+          ownerId: trainer2.uid,
+          membersIds: [athlete2.uid],
+          institutionId: institution.id,
+          groupId: group.id,
+          cycleId: '2',
+          from: getTime(d, 15, 0),
+          to: getTime(d, 16, 0),
+        }),
+      ),
     ]);
   });
 
   afterAll(async () => {
     await Promise.all([
-      db.trainings.delete(),
+      firebase.deleteCollection(FirestoreCollection.TRAINING),
       deleteDoc(firebase, 'GROUP', group.id),
       deleteDoc(firebase, 'COMPONENT', component.id),
       deleteDoc(firebase, 'INSTITUTION', institution.id),
+      deleteUsers(firebase, [trainer2, athlete2]),
     ]);
 
     await app.close();

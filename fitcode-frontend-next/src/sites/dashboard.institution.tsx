@@ -113,11 +113,11 @@ export default function DashboardInstitutionPage() {
       return;
     }
 
-    if (trainers.length) {
+    /* if (trainers.length) {
       handleApiRequest(
         router,
         () =>
-          InstitutionController.addTrainers(selectedInstitution.id, {
+          InstitutionController.addTrainer(selectedInstitution.id, {
             trainerIds: trainers.map((user) => user.uid),
           }),
         () => {
@@ -142,13 +142,13 @@ export default function DashboardInstitutionPage() {
         undefined,
         'Failed to register trainers'
       );
-    }
+    } */
 
-    if (athletes.length) {
+    /* if (athletes.length) {
       handleApiRequest(
         router,
         () =>
-          InstitutionController.addAthletes(selectedInstitution.id, {
+          InstitutionController.addAthlete(selectedInstitution.id, {
             athleteIds: athletes.map((user) => user.uid),
           }),
         () => {
@@ -173,7 +173,7 @@ export default function DashboardInstitutionPage() {
         undefined,
         'Failed to register athletes'
       );
-    }
+    } */
 
     toast.success('Successfully added users');
 
@@ -188,11 +188,11 @@ export default function DashboardInstitutionPage() {
       router,
       () =>
         view === AthletesTrainers.ATHLETES
-          ? InstitutionController.removeAthletes(selectedInstitution.id, {
-              athleteIds: [userId],
+          ? InstitutionController.removeAthlete(selectedInstitution.id, {
+              userId,
             })
-          : InstitutionController.removeTrainers(selectedInstitution.id, {
-              trainerIds: [userId],
+          : InstitutionController.removeTrainer(selectedInstitution.id, {
+              userId,
             }),
       () => {
         setSelectedInstitution((prev) => {

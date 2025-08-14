@@ -3,6 +3,10 @@ import { ConfigService } from '@nestjs/config';
 import { Query } from 'firebase-admin/firestore';
 import { UserRecord } from 'firebase-admin/lib/auth';
 
+import { LogMethod } from '@src/common/decorator/log-method.decorator';
+import { Permission } from '@src/common/interface/permission.interface';
+import { Institution } from '@src/institution/entity/institution.entity';
+
 import { FirestoreCollection } from '../common/enum/firestore-collection.enum';
 import { CustomClaims, User } from '../common/type/firebase-auth.type';
 import { UserRef, WellnessRef } from '../common/type/firestore.type';
@@ -22,7 +26,7 @@ type CreateUser = Pick<User, 'email' | 'displayName'> & {
 } & { customClaims: CustomClaims };
 
 @Injectable()
-export class UserService {
+export class UserService implements Permission<UserEntity, Institution> {
   private logger = new Logger(UserService.name);
 
   constructor(
@@ -121,14 +125,6 @@ export class UserService {
     return user?.uid ? ((await auth.getUser(user.uid)) as User) : null;
   }
 
-  async getAdminId(): Promise<string> {
-    const users = await this.findAll({
-      emails: [this.configService.get('FIREBASE_ADMIN_EMAIL')],
-    });
-
-    return users[0].uid;
-  }
-
   async updateClaims(uid: string, claims: UpdateUserClaimsDto): Promise<void> {
     const customClaims = (await this.firebaseService.auth.getUser(uid))
       .customClaims;
@@ -139,12 +135,9 @@ export class UserService {
     });
   }
 
-  async updateProfile(ref: UserRef, input: UpdateUserProfileDto) {
+  @LogMethod()
+  async updateProfile(user: User, input: UpdateUserProfileDto) {
     const { userId } = input;
-    this.logger.log(
-      `User ${ref.uid} is updating profile for ${userId}: ${JSON.stringify(input)}`,
-    );
-
     delete input.userId;
     await this.userRepository.updateDoc(userId, input);
   }
@@ -212,5 +205,47 @@ export class UserService {
     } catch (_) {
       return [];
     }
+  }
+
+  canView(user: User, entity: UserEntity, institution?: Institution) {
+    if (this.firebaseService.isAdmin(user)) return true; // admin can view any user
+    if (user.uid === entity.id) return true; // user can view their own profile
+
+    if (institution) {
+      const members = institution.trainerIds
+        .concat(institution.athleteIds)
+        .concat([institution.ownerId]);
+
+      if (!members.includes(user.uid) || !members.includes(entity.id))
+        return false;
+
+      return true; // institution members can view each other
+    }
+
+    return false;
+  }
+
+  canEdit(user: User, entity: UserEntity, institution?: Institution) {
+    if (this.firebaseService.isAdmin(user)) return true; // admin can edit any user
+    if (user.uid === entity.id) return true; // user can edit their own profile
+
+    if (institution) {
+      const members = institution.trainerIds.concat(institution.athleteIds); // no owner
+
+      if (
+        this.firebaseService.isManager(user) &&
+        institution.ownerId === user.uid &&
+        members.includes(entity.id)
+      )
+        return true; // manager can edit institution members
+
+      if (
+        this.firebaseService.isTrainer(user) &&
+        institution.athleteIds.includes(entity.id)
+      )
+        return true; // trainer can edit athletes
+    }
+
+    return false;
   }
 }

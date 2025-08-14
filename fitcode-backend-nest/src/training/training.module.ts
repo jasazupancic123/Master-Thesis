@@ -1,4 +1,6 @@
-import { forwardRef, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
+
+import { ChangeLogModule } from '@src/change-log/change-log.module';
 
 import { AttributeModule } from '../attribute/attribute.module';
 import { ComponentModule } from '../component/component.module';
@@ -6,6 +8,7 @@ import { ExerciseModule } from '../exercise/exercise.module';
 import { GroupModule } from '../group/group.module';
 import { InstitutionModule } from '../institution/institution.module';
 import { MethodModule } from '../method/method.module';
+import { Training } from './entity/training.entity';
 import { TrainingRepository } from './repository/training.repository';
 import { WorkloadRepository } from './repository/workload.repository';
 import { PeriodizationService } from './service/periodization.service';
@@ -16,12 +19,13 @@ import { TrainingController } from './training.controller';
 
 @Module({
   imports: [
+    ChangeLogModule.forEntity(Training),
     AttributeModule,
     MethodModule,
     ComponentModule,
     InstitutionModule,
     ExerciseModule,
-    forwardRef(() => GroupModule),
+    GroupModule,
   ],
   providers: [
     PeriodizationService,

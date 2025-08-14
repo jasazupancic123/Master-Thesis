@@ -8,6 +8,7 @@ import type { Attribute } from '@/controller/attribute/type/attribute.type';
 import type { Component } from '@/controller/component/type/component.type';
 import { ExerciseService } from '@/controller/exercise/exercise.service';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
+import type { Institution } from '@/controller/institution/type/institution.type';
 import type { Method } from '@/controller/method/type/method.type';
 import type { User } from '@/controller/user/type/user.type';
 
@@ -18,6 +19,7 @@ export interface MainProviderProps {
   exercises: Exercise[];
   attributes: Attribute[];
   methods: Method[];
+  institutions: Institution[];
 }
 
 interface MainContextProps extends MainProviderProps {
@@ -42,6 +44,7 @@ export function MainProvider(props: MainProviderProps & ChildrenProps) {
     exercises: initialExercises,
     attributes: initialAttributes,
     methods: initialMethods,
+    institutions,
   } = props;
 
   const [profile, setProfile] = useState<User>(initialProfile);
@@ -72,6 +75,7 @@ export function MainProvider(props: MainProviderProps & ChildrenProps) {
     setAttributes,
     methods,
     setMethods,
+    institutions,
   };
 
   return <MainContext.Provider value={value}>{children}</MainContext.Provider>;

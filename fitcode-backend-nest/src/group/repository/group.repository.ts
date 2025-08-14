@@ -1,18 +1,24 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import {
   CollectionReference,
   DocumentReference,
   DocumentSnapshot,
+  FieldValue,
   Query,
   QueryDocumentSnapshot,
 } from 'firebase-admin/firestore';
 
+import { ChangeLogManager } from '@src/change-log/change-log.manager';
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { CommonService } from '@src/common/service/common.service';
 import { Create, FirestoreEntity, Update } from '@src/common/type/entity.type';
-import { RootFirestoreCollectionRepository } from '@src/common/type/firestore.type';
+import {
+  BatchWriteOperation,
+  RootFirestoreCollectionRepository,
+} from '@src/common/type/firestore.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 
+import { Cycle } from '../entity/cycle.entity';
 import { Group } from '../entity/group.entity';
 
 @Injectable()
@@ -22,6 +28,8 @@ export class GroupRepository
   constructor(
     private readonly commonService: CommonService,
     private readonly firebaseService: FirebaseService,
+    @Inject(Group)
+    readonly changeLog: ChangeLogManager<Group>,
   ) {}
 
   async getDocs(
@@ -46,22 +54,85 @@ export class GroupRepository
         ownerId: input.ownerId,
         membersIds: input.membersIds,
         institutionId: input.institutionId,
-        cycles: [],
+        cycles: input.cycles,
       },
       { timestamps: true },
     );
 
-    await this.doc(id).set(query);
+    const ref = this.doc(id);
+    this.changeLog.trackCreate(ref);
+    await ref.set(query);
     return id;
   }
 
   async updateDoc(id: string, input: Update<Group>) {
-    const query = this.firebaseService.buildUpdateQuery(input);
-    await this.doc(id).update(query);
+    const query = this.firebaseService.buildUpdateQuery<Group>({
+      name: input.name,
+      cycles: input.cycles,
+    });
+
+    const ref = this.doc(id);
+    await this.changeLog.trackUpdate(ref);
+    await ref.update(query);
   }
 
   async deleteDoc(id: string) {
-    await this.doc(id).delete();
+    const ref = this.doc(id);
+    await this.changeLog.trackDelete(ref);
+    await ref.delete();
+  }
+
+  async addMember(id: string, memberId: string) {
+    const ref = this.doc(id);
+    await this.changeLog.trackUpdate(ref);
+    await ref.update({ membersIds: FieldValue.arrayUnion(memberId) });
+  }
+
+  async removeMember(id: string, memberId: string) {
+    const ref = this.doc(id);
+    await this.changeLog.trackUpdate(ref);
+    await ref.update({ membersIds: FieldValue.arrayRemove(memberId) });
+  }
+
+  getUpdateMemberOperation(
+    id: string,
+    memberId: string,
+    add: boolean,
+  ): BatchWriteOperation<Group> {
+    return {
+      ref: this.doc(id),
+      operation: 'update',
+      data: {
+        membersIds: add
+          ? (FieldValue.arrayUnion(memberId) as unknown as string[])
+          : (FieldValue.arrayRemove(memberId) as unknown as string[]),
+      },
+    };
+  }
+
+  async addCycle(group: Group, cycle: Create<Cycle>) {
+    const ref = this.doc(group.id);
+    const query = this.firebaseService.buildUpdateQuery<Group>({
+      cycles: [
+        ...group.cycles,
+        { ...cycle, createdAt: new Date(), updatedAt: new Date() },
+      ],
+    });
+
+    await this.changeLog.trackUpdate(ref);
+    await ref.update(query);
+  }
+
+  async removeCycle(group: Group, cycleId: string) {
+    const ref = this.doc(group.id);
+    const cycles = group.cycles.filter((cycle) => cycle.id !== cycleId);
+
+    const query = this.firebaseService.buildUpdateQuery<Group>({
+      cycles: cycles,
+    });
+
+    await this.changeLog.trackUpdate(ref);
+    await ref.update(query);
   }
 
   doc(id: string): DocumentReference {
@@ -76,13 +147,6 @@ export class GroupRepository
     const serialized = this.firebaseService.serialize(
       snapshot.data() as FirestoreEntity<Group>,
     );
-
-    serialized.cycles = serialized.cycles
-      .map((c) => ({
-        ...c,
-        weeks: this.commonService.date.weeks(c.from, c.to),
-      }))
-      .sort((a, b) => new Date(a.from).getTime() - new Date(b.from).getTime());
 
     serialized.id = snapshot.id;
     return serialized;

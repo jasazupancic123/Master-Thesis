@@ -2,18 +2,20 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   Param,
+  Patch,
   Post,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+
+import { UserIdDto } from '@src/common/dto/user-id.dto';
 
 import { Auth } from '../common/decorator/auth.decorator';
 import { RequestUser } from '../common/decorator/request-user.decorator';
 import { User } from '../common/type/firebase-auth.type';
 import { UserRole } from '../user/enum/user-role.enum';
-import { AddAthletesDto } from './dto/add-athletes.dto';
-import { AddTrainersDto } from './dto/add-trainers.dto';
 import { CreateInstitutionDto } from './dto/create-institution.dto';
 import { GetMembersType } from './enum/institution-get-members.enum';
 import { InstitutionService } from './service/institution.service';
@@ -57,59 +59,59 @@ export class InstitutionController {
     return this.institutionService.create(user, body);
   }
 
-  @Post(':institutionId/athletes')
+  @Patch(':institutionId/athlete')
   @Auth([UserRole.MANAGER])
-  async addAthletes(
+  async addAthlete(
     @RequestUser() user: User,
     @Param('institutionId') institutionId: string,
-    @Body() body: AddAthletesDto,
+    @Body() { userId }: UserIdDto,
   ) {
     return this.institutionService.updateMembers(
       user,
       { institutionId },
-      { add: true, memberIds: body.athleteIds, trainers: false },
+      { add: true, userId, trainer: false },
     );
   }
 
-  @Post(':institutionId/athletes/delete')
+  @Delete(':institutionId/athlete')
   @Auth([UserRole.MANAGER])
-  async removeAthletes(
+  async removeAthlete(
     @RequestUser() user: User,
     @Param('institutionId') institutionId: string,
-    @Body() body: AddAthletesDto,
+    @Body() { userId }: UserIdDto,
   ) {
     return this.institutionService.updateMembers(
       user,
       { institutionId },
-      { add: false, memberIds: body.athleteIds, trainers: false },
+      { add: false, userId, trainer: false },
     );
   }
 
-  @Post(':institutionId/trainers')
+  @Patch(':institutionId/trainer')
   @Auth([UserRole.MANAGER])
-  async addTrainers(
+  async addTrainer(
     @RequestUser() user: User,
     @Param('institutionId') institutionId: string,
-    @Body() body: AddTrainersDto,
+    @Body() { userId }: UserIdDto,
   ) {
     return this.institutionService.updateMembers(
       user,
       { institutionId },
-      { add: true, memberIds: body.trainerIds, trainers: true },
+      { add: true, userId, trainer: true },
     );
   }
 
-  @Post(':institutionId/trainers/delete')
+  @Delete(':institutionId/trainer')
   @Auth([UserRole.MANAGER])
-  async removeTrainers(
+  async removeTrainer(
     @RequestUser() user: User,
     @Param('institutionId') institutionId: string,
-    @Body() body: AddTrainersDto,
+    @Body() { userId }: UserIdDto,
   ) {
     return this.institutionService.updateMembers(
       user,
       { institutionId },
-      { add: false, memberIds: body.trainerIds, trainers: true },
+      { add: false, userId, trainer: true },
     );
   }
 }

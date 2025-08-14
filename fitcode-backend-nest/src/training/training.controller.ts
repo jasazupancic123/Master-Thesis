@@ -10,6 +10,8 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
+import { UserIdDto } from '@src/common/dto/user-id.dto';
+
 import { Auth } from '../common/decorator/auth.decorator';
 import { RequestUser } from '../common/decorator/request-user.decorator';
 import { CommonService } from '../common/service/common.service';
@@ -174,5 +176,33 @@ export class TrainingController {
   ) {
     const ref = { trainingId, componentId };
     return await this.trainingService.deleteComponent(ref, user);
+  }
+
+  @Patch(':trainingId/member')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER])
+  async addMember(
+    @RequestUser() user: User,
+    @Param('trainingId') trainingId: string,
+    @Body() { userId }: UserIdDto,
+  ) {
+    return await this.trainingService.updateMembers(
+      user,
+      { trainingId },
+      { userId, add: true },
+    );
+  }
+
+  @Delete(':trainingId/member')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER])
+  async removeMember(
+    @RequestUser() user: User,
+    @Param('trainingId') trainingId: string,
+    @Body() { userId }: UserIdDto,
+  ) {
+    return await this.trainingService.updateMembers(
+      user,
+      { trainingId },
+      { userId, add: false },
+    );
   }
 }

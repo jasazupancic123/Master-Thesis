@@ -209,23 +209,21 @@ export class DataSetup extends BaseSetup {
       imageUrl: 'https://img.sofascore.com/api/v1/team/2420/image',
     });
 
-    await institutionService.updateMembers(
-      this.admin,
-      { institutionId: institution.id },
-      {
-        add: true,
-        memberIds: athletes.map((u) => u.uid),
-        trainers: false,
-      },
-    );
+    for (const user of athletes)
+      await institutionService.updateMembers(
+        this.admin,
+        { institutionId: institution.id },
+        { add: true, userId: user.uid, trainer: false },
+      );
 
+    // add trainer
     await institutionService.updateMembers(
       this.admin,
       { institutionId: institution.id },
       {
         add: true,
-        memberIds: [this.trainer.uid],
-        trainers: true,
+        userId: this.trainer.uid,
+        trainer: true,
       },
     );
 

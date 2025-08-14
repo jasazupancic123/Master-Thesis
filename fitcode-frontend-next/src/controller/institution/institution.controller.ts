@@ -1,17 +1,16 @@
 import type { UserEntity } from '../user/type/user.type';
 import type {
-  AddAthletesToInstitution,
-  AddTrainersToInstitution,
   CreateInstitution,
   Institution,
+  UserId,
 } from './type/institution.type';
 import { CommonService } from '@/common/service/common.service';
 
 const api = CommonService.instance.api;
 
 export class InstitutionController {
-  static async findAll() {
-    return api.get<Institution[]>('/institution');
+  static async findAll(token: string) {
+    return api.get<Institution[]>('/institution', { token });
   }
 
   static async findById(id: string, token?: string) {
@@ -30,43 +29,19 @@ export class InstitutionController {
     return api.post<Institution>('/institution', body);
   }
 
-  static async addAthletes(
-    institutionId: string,
-    body: AddAthletesToInstitution
-  ) {
-    return api.post<Institution>(
-      `/institution/${institutionId}/athletes`,
-      body
-    );
+  static async addAthlete(institutionId: string, body: UserId) {
+    return api.patch<void>(`/institution/${institutionId}/athlete`, body);
   }
 
-  static async removeAthletes(
-    institutionId: string,
-    body: AddAthletesToInstitution
-  ) {
-    return api.post<Institution>(
-      `/institution/${institutionId}/athletes/delete`,
-      body
-    );
+  static async removeAthlete(institutionId: string, body: UserId) {
+    return api.delete<void>(`/institution/${institutionId}/athlete`, { body });
   }
 
-  static async addTrainers(
-    institutionId: string,
-    body: AddTrainersToInstitution
-  ) {
-    return api.post<Institution>(
-      `/institution/${institutionId}/trainers`,
-      body
-    );
+  static async addTrainer(institutionId: string, body: UserId) {
+    return api.patch<void>(`/institution/${institutionId}/trainer`, body);
   }
 
-  static async removeTrainers(
-    institutionId: string,
-    body: AddTrainersToInstitution
-  ) {
-    return api.post<Institution>(
-      `/institution/${institutionId}/trainers/delete`,
-      body
-    );
+  static async removeTrainer(institutionId: string, body: UserId) {
+    return api.delete<void>(`/institution/${institutionId}/trainer`, { body });
   }
 }

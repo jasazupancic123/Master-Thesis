@@ -8,7 +8,6 @@ import { useFetch } from '@/common/hooks/use-fetch.hook';
 import type { ChildrenProps } from '@/common/type/props.type';
 import { GroupController } from '@/controller/group/group.controller';
 import { GroupService } from '@/controller/group/group.service';
-import { InstitutionController } from '@/controller/institution/institution.controller';
 import { InstitutionService } from '@/controller/institution/institution.service';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import type { UserEntity } from '@/controller/user/type/user.type';
@@ -21,7 +20,7 @@ export default function DashboardInitializer({ children }: ChildrenProps) {
   const [state, setState] = useState<DashboardPageProps | null>(null);
   const [unauthorized, setUnauthorized] = useState(false);
 
-  const { profile, users } = useMain();
+  const { profile, users, institutions: allInstitutions } = useMain();
 
   const [institutionId, setInstitutionId] = useState<string | null>(null);
   const [members, setMembers] = useState<UserEntity[]>([]);
@@ -59,10 +58,9 @@ export default function DashboardInitializer({ children }: ChildrenProps) {
           return setUnauthorized(true);
 
         const institutions = InstitutionService.mapUsers(
-          await InstitutionController.findAll(),
+          allInstitutions,
           users
         );
-
         const selectedInstitution = institutions?.[0] ?? null;
 
         if (selectedInstitution) {

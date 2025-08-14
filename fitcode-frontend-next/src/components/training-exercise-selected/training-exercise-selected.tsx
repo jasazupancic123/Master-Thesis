@@ -151,7 +151,6 @@ export default function TrainingExerciseSelected(
         <Typography textAlign="center">{label}</Typography>
         {payload.map((p: any, i: number) => {
           const color = p.color;
-
           const fullValue =
             p.payload[`${p.dataKey}FullValue`] || p.payload[p.dataKey];
 

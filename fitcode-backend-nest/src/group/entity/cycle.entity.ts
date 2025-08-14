@@ -40,7 +40,4 @@ export class Cycle extends IntersectionType(BaseEntity, ColorEntity) {
   @ApiProperty({ type: () => PartialTarget, isArray: true })
   @Expose()
   selectedTargets: PartialTarget[];
-
-  // virtual
-  weeks?: Week[][];
 }

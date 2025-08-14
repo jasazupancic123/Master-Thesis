@@ -1,17 +1,22 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import {
   CollectionReference,
   DocumentReference,
+  FieldValue,
   Query,
 } from 'firebase-admin/firestore';
 
+import { ChangeLogManager } from '@src/change-log/change-log.manager';
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
-import { CommonService } from '@src/common/service/common.service';
 import { Create, FirestoreEntity, Update } from '@src/common/type/entity.type';
-import { RootFirestoreCollectionRepository } from '@src/common/type/firestore.type';
+import {
+  BatchWriteOperation,
+  RootFirestoreCollectionRepository,
+} from '@src/common/type/firestore.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 
 import { Training } from '../entity/training.entity';
+import { TrainingComponent } from '../entity/training-component.entity';
 
 @Injectable()
 export class TrainingRepository
@@ -19,7 +24,8 @@ export class TrainingRepository
 {
   constructor(
     private readonly firebaseService: FirebaseService,
-    private readonly commonService: CommonService,
+    @Inject(Training)
+    readonly changeLog: ChangeLogManager<Training>,
   ) {}
 
   async getDocs(
@@ -47,17 +53,85 @@ export class TrainingRepository
       { timestamps: true },
     );
 
-    await this.doc(id).set(query);
+    const ref = this.doc(id);
+    this.changeLog.trackCreate(ref);
+    await ref.set(query);
+
     return id;
   }
 
   async updateDoc(id: string, input: Update<Training>) {
     const query = this.firebaseService.buildUpdateQuery<Training>(input);
-    await this.doc(id).update(query);
+    const ref = this.doc(id);
+    await this.changeLog.trackUpdate(ref);
+    await ref.update(query);
   }
 
   async deleteDoc(id: string) {
-    await this.doc(id).delete();
+    const ref = this.doc(id);
+    await this.changeLog.trackDelete(ref);
+    await ref.delete();
+  }
+
+  async addMember(training: Training, memberId: string) {
+    const { ref, data } = this.getUpdateMemberOperation(
+      training,
+      memberId,
+      true,
+    );
+
+    await this.changeLog.trackUpdate(ref);
+    await ref.update(data);
+  }
+
+  async removeMember(training: Training, memberId: string) {
+    const { ref, data } = this.getUpdateMemberOperation(
+      training,
+      memberId,
+      false,
+    );
+
+    await this.changeLog.trackUpdate(ref);
+    await ref.update(data);
+  }
+
+  getUpdateMemberOperation(
+    training: Training,
+    memberId: string,
+    add: boolean,
+  ): BatchWriteOperation<Training> {
+    return {
+      ref: this.doc(training.id),
+      operation: 'update',
+      data: {
+        ...(!add && {
+          completedMembersIds: FieldValue.arrayRemove(
+            memberId,
+          ) as unknown as string[],
+        }),
+        membersIds: add
+          ? (FieldValue.arrayUnion(memberId) as unknown as string[])
+          : (FieldValue.arrayRemove(memberId) as unknown as string[]),
+        components: training.components.map((tc) =>
+          this.firebaseService.buildCreateQuery<TrainingComponent>({
+            ...tc,
+            ...(!add && {
+              completedMembersIds: tc.completedMembersIds.filter(
+                (id) => id !== memberId,
+              ),
+            }),
+            subgroups: tc.subgroups.map((sg) =>
+              !add && sg.membersIds.includes(memberId) // remove member from subgroup
+                ? {
+                    ...sg,
+                    membersIds: sg.membersIds.filter((id) => id !== memberId),
+                  }
+                : sg,
+            ),
+          }),
+        ),
+      },
+    };
   }
 
   doc(id: string): DocumentReference {

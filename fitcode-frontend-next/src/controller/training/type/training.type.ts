@@ -41,10 +41,7 @@ export type CreateTraining = Pick<
   components: CreateTrainingComponent[];
 };
 
-export type UpdateTraining = Pick<
-  Training,
-  'membersIds' | 'warmup' | 'cooldown'
-> & {
+export type UpdateTraining = Pick<Training, 'warmup' | 'cooldown'> & {
   components: UpdateTrainingComponent[];
   workloads?: CreatePrescribedWorkload[]; // custom workloads
 };

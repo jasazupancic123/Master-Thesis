@@ -11,18 +11,17 @@ const api = CommonService.instance.api;
 
 export class ExerciseController {
   static async findAllGlobal(token?: string, query?: FilterExercises) {
-    return api.get<Exercise[]>('/exercise/global', {
-      token,
-      query,
-    });
+    return api.get<Exercise[]>('/exercise/global', { token, query });
   }
 
   static async findAllByInstitution(
+    token: string,
     institutionId: string,
     query?: FilterExercises
   ) {
     return api.get<Exercise[]>(`/exercise/institution/${institutionId}`, {
       query,
+      token,
     });
   }
 

@@ -16,7 +16,7 @@ import { TimestampEntity } from '../common/entity/timestamp.entity';
 import { CommonService } from '../common/service/common.service';
 import { Create, FirestoreEntity, Update } from '../common/type/entity.type';
 import { DecodedUser, User } from '../common/type/firebase-auth.type';
-import { BatchWriteOperation } from '../common/type/firestore.type';
+import { BatchOperation } from '../common/type/firestore.type';
 import { Environment } from '../config/environment-validation-schema';
 import { UserRole } from '../user/enum/user-role.enum';
 import { FirebaseClient, InjectFirebaseAdmin } from './get-firebase-client';
@@ -113,8 +113,8 @@ export class FirebaseService implements OnApplicationBootstrap {
    * @param operations Array of write operations to execute
    * @param options Configuration options
    */
-  async paginateBatchWrites<T>(
-    operations: BatchWriteOperation<T>[],
+  async paginateBatches<T>(
+    operations: BatchOperation<T>[],
     options?: {
       batchSize?: number;
       maxRetries?: number;
@@ -142,10 +142,26 @@ export class FirebaseService implements OnApplicationBootstrap {
         try {
           const batch = db.batch();
 
-          chunk.forEach(({ ref, data, operation, options }) => {
-            if (operation === 'set')
-              batch.set(ref, data as PartialWithFieldValue<T>, options || {});
-            else batch.update(ref, data as unknown);
+          chunk.forEach((chunk) => {
+            const { ref, operation } = chunk;
+
+            switch (operation) {
+              case 'set':
+                batch.set(
+                  ref,
+                  chunk.data as PartialWithFieldValue<T>,
+                  chunk.options || {},
+                );
+                break;
+              case 'update':
+                batch.update(ref, chunk.data as unknown);
+                break;
+              case 'delete':
+                batch.delete(ref);
+                break;
+              default:
+                throw new Error(`Unsupported batch operation: ${operation}`);
+            }
           });
 
           await batch.commit();
@@ -156,7 +172,6 @@ export class FirebaseService implements OnApplicationBootstrap {
           retryAttempt++;
           if (retryAttempt > maxRetries) {
             failureCount += chunk.length;
-
             console.error(
               `Failed batch ${chunkIndex} after ${maxRetries} attempts`,
               e,
