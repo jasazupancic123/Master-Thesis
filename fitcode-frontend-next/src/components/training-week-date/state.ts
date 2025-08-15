@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 
 import { handleCreateTraining } from '../trainer-cycle-view/state';
 import { handleCopyComponentApiRequest } from '../training-component-layout/state';
-import { COLORS } from '@/common/constant/color.constant';
+import { COLOR } from '@/common/constant/color.constant';
 import { CommonService } from '@/common/service/common.service';
 import type { Day } from '@/common/service/util/date.util';
 import type { SetState, SetStateNullable } from '@/common/type/state.type';
@@ -251,7 +251,7 @@ export function getFilteredTrainings(
       );
 
       if (evaluatedTrainingId)
-        tc.color = COLORS[evaluatedTrainingId.colorIndex];
+        tc.color = COLOR[evaluatedTrainingId.colorIndex];
       else {
         evaluatedTrainingIds.push({
           trainingId: copiedFromTraining.id,
@@ -264,8 +264,8 @@ export function getFilteredTrainings(
 
         if (!rootTrainingComponent) continue;
 
-        rootTrainingComponent.color = COLORS[colorIndex];
-        tc.color = COLORS[colorIndex];
+        rootTrainingComponent.color = COLOR[colorIndex];
+        tc.color = COLOR[colorIndex];
         colorIndex++;
       }
     }

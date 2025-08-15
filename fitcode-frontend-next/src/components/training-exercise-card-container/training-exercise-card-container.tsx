@@ -7,7 +7,9 @@ import {
   prepareSelectedAthleteAvgWorkloadsForChart,
 } from '../trainer-day-view/state';
 import TrainingExerciseCard from '../training-exercise-card/training-exercise-card';
-import TrainingExerciseSelected from '../training-exercise-selected/training-exercise-selected';
+import TrainingExerciseSelected, {
+  ALLOWED_PARAMS,
+} from '../training-exercise-selected/training-exercise-selected';
 import type { Dimensions } from '@/common/type/dimensions.type';
 import type { ParamType } from '@/controller/component/enum/param.enum';
 import type { ChartWorkloadData } from '@/controller/training/type/chart-workload-data.type';
@@ -15,6 +17,7 @@ import type { TrainingExercise } from '@/controller/training/type/training-exerc
 import { useGroup } from '@/store/group-provider';
 import { useSupersets } from '@/store/supersets-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
+import { isNumber } from '../training-exercise-selected/state';
 
 interface TrainingExerciseCardContainerProps {
   supersetIndex: number;
@@ -54,9 +57,15 @@ export default function TrainingExerciseCardContainer(
   useEffect(() => {
     if (!selectedExercise) return;
 
-    setSelectedParams(
-      selectedExercise.params.map((p) => p.field as ParamType) || []
+    const numberParams = selectedExercise.params.filter((p) =>
+      isNumber(
+        selectedExercise,
+        p.field as ParamType,
+        exercise.sets[0].paramValuesL
+      )
     );
+
+    setSelectedParams(numberParams.map((p) => p.field as ParamType) || []);
   }, [selectedExercise]);
 
   useEffect(() => {
