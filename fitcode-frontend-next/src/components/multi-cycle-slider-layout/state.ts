@@ -18,10 +18,9 @@ export async function handleAddCycle(
     selectedGroup: Group;
     setSelectedGroup: SetState<Group>;
     setCycles: SetState<Cycle[]>;
-    setDetectedChanges: SetState<boolean>;
   }
 ) {
-  const { selectedGroup, setSelectedGroup, setCycles, setDetectedChanges } =
+  const { selectedGroup, setSelectedGroup, setCycles } =
     state;
   const { name, description, from, to } = input;
 
@@ -50,19 +49,16 @@ export async function handleAddCycle(
     router,
     () => GroupController.addCycle(selectedGroup.id, newCycle),
     () => {
+      const newCycles = [...selectedGroup.cycles, newCycle];
+      setCycles(newCycles);
+
+      const newGroup = { ...selectedGroup, cycles: newCycles };
+      setSelectedGroup(newGroup);
       toast.success('Cycle added successfully.');
     },
-    (_e) => {
-      toast.error('An error occurred while adding the cycle.');
-    }
+    undefined,
+    'An error occurred while adding the cycle'
   );
-
-  const newCycles = [...state.selectedGroup.cycles, newCycle];
-  setDetectedChanges(true);
-  setCycles(newCycles);
-
-  const newGroup = { ...selectedGroup, cycles: newCycles };
-  setSelectedGroup(newGroup);
 }
 
 export function changeYear(

@@ -4,7 +4,6 @@ import {
   NUM_MAX_EXERCISES_PER_SUPERSET,
   NUM_MAX_SUPERSETS,
 } from '../trainer-day-view/constant';
-import { COLOR } from '@/common/constant/browser.constant';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
@@ -19,6 +18,7 @@ import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import { COLOR } from '@/common/constant/color.constant';
 
 function updateSupersets(
   supersets: Superset[],
