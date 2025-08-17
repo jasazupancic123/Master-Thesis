@@ -1,15 +1,229 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 
+import { CommonService } from '@src/common/service/common.service';
+import type {
+  SubgroupRef,
+  TrainingComponentRef,
+} from '@src/common/type/firestore.type';
 import { ParamType } from '@src/component/enum/param.enum';
 
 import { DUP_SCHEDULE } from '../constant/periodization.constant';
+import { ExerciseSet } from '../entity/exercise-set.entity';
 import type { Subgroup } from '../entity/subgroup.entity';
 import type { Training } from '../entity/training.entity';
 import type { TrainingComponent } from '../entity/training-component.entity';
 import type { TrainingExercise } from '../entity/training-exercise.entity';
 import { PeriodizationType } from '../enum/periodization-type.enum';
 
+type ExercisePeriodization = {
+  id: string; // exercise ID
+  lr: 'L' | 'R';
+  value: number;
+};
+
+@Injectable()
 export class PeriodizationService {
+  constructor(private readonly commonService: CommonService) {}
+
+  periodizeV2(
+    periodizationType: PeriodizationType,
+    ref: TrainingComponentRef & SubgroupRef,
+    trainings: Training[],
+    exerciseIds: string[],
+  ) {
+    if (
+      !trainings ||
+      trainings.length === 0 ||
+      !exerciseIds ||
+      exerciseIds.length === 0
+    )
+      return;
+
+    const { componentId, subgroupId } = ref;
+    const baseComponent = trainings[0].components.find(
+      (c) => c.id === componentId,
+    );
+
+    if (!baseComponent) return; // no component to periodize, return original trainings
+
+    const baseExercises = subgroupId
+      ? baseComponent.subgroups
+          .find((s) => s.id === subgroupId)
+          ?.supersets.flatMap((s) => s.exercises) || []
+      : baseComponent.supersets.flatMap((s) => s.exercises);
+
+    const weeks = this.getSpacedTrainingsByWeek(trainings);
+    for (const exerciseId of exerciseIds) {
+      const baseExercise = baseExercises.find((e) => e.id === exerciseId);
+      if (!baseExercise) continue; // no base exercise to periodize, skip
+
+      const prevIntL = [] as { setIndex: number; value: number }[];
+      const prevVolL = [] as { setIndex: number; value: number }[];
+      const prevIntR = [] as { setIndex: number; value: number }[];
+      const prevVolR = [] as { setIndex: number; value: number }[];
+
+      for (const week of weeks) {
+        for (const t of week) {
+          const component = t.components.find((c) => c.id === componentId);
+          if (!component) continue;
+
+          // get exercises to periodize
+          const exercises = subgroupId
+            ? component.subgroups
+                .find((s) => s.id === subgroupId)
+                ?.supersets?.flatMap((s) => s.exercises) || []
+            : component.supersets.flatMap((s) => s.exercises);
+
+          // find exercise to periodize
+          const exercise = exercises.find((e) => e.id === exerciseId);
+          if (!exercise) continue;
+
+          const ints: ExercisePeriodization[] = [];
+          const vols: ExercisePeriodization[] = [];
+
+          const readinessFactor = Math.random() * 0.2 + 0.9; // simulate readiness factor between 0.9 and 1.1
+          for (const baseSet of baseExercise.sets) {
+            const set: ExerciseSet = exercise.sets[baseSet.setNumber - 1] || {
+              setNumber: baseSet.setNumber,
+              paramValuesL: [],
+              paramValuesR: [],
+            };
+
+            const baseParamValues = [
+              baseSet.paramValuesL,
+              baseSet.paramValuesR || [],
+            ];
+
+            // TODO - convert this into 2 loops, for L and R separate and create helper function
+
+            for (const basePv of baseParamValues) {
+              const lr = basePv === baseSet.paramValuesL ? 'L' : 'R';
+              const pvInt = basePv.find((p) => p.field === ParamType.IntWork1);
+              const pvVol = basePv.find((p) => p.field === ParamType.VolWork1);
+              if (!pvInt || !pvVol) continue;
+
+              const pvIntValue = parseFloat(pvInt.value);
+              const pvVolValue = parseFloat(pvVol.value);
+
+              let int = ints.find((e) => e.id === exerciseId && e.lr === lr);
+              let vol = vols.find((e) => e.id === exerciseId && e.lr === lr);
+
+              // if not found in exercise periodization "history", create new entry
+              if (!int) {
+                int = { id: exerciseId, lr, value: parseFloat(pvInt.value) };
+                ints.push(int);
+              }
+
+              if (!vol) {
+                vol = { id: exerciseId, lr, value: parseFloat(pvVol.value) };
+                vols.push(vol);
+              }
+
+              int.value = pvIntValue;
+              vol.value = pvVolValue;
+
+              const prevIntValue =
+                lr === 'L'
+                  ? prevIntL.find((e) => e.setIndex === baseSet.setNumber - 1)
+                      ?.value ||
+                    parseFloat(
+                      baseSet.paramValuesL.find(
+                        (p) => p.field === ParamType.IntWork1,
+                      )?.value,
+                    )
+                  : prevIntR.find((e) => e.setIndex === baseSet.setNumber - 1)
+                      ?.value ||
+                    parseFloat(
+                      baseSet.paramValuesR?.find(
+                        (p) => p.field === ParamType.IntWork1,
+                      )?.value,
+                    );
+
+              const prevVolValue =
+                lr === 'L'
+                  ? prevVolL.find(
+                      (e) => e.setIndex === baseExercise.sets.indexOf(set),
+                    )?.value ||
+                    parseFloat(
+                      set.paramValuesL.find(
+                        (p) => p.field === ParamType.VolWork1,
+                      )?.value,
+                    )
+                  : prevVolR.find(
+                      (e) => e.setIndex === baseExercise.sets.indexOf(set),
+                    )?.value ||
+                    parseFloat(
+                      set.paramValuesR?.find(
+                        (p) => p.field === ParamType.VolWork1,
+                      )?.value,
+                    );
+
+              const { periodizedIntensityValue, periodizedVolumeValue } =
+                this.getPeriodizedIntVolValue(
+                  periodizationType,
+                  0,
+                  weeks.indexOf(week),
+                  week.indexOf(t),
+                  int.value,
+                  vol.value,
+                  prevIntValue,
+                  prevVolValue,
+                  weeks.length,
+                  readinessFactor,
+                );
+
+              const periodizedInt =
+                lr === 'L'
+                  ? set.paramValuesL.find((p) => p.field === ParamType.IntWork1)
+                  : set.paramValuesR?.find(
+                      (p) => p.field === ParamType.IntWork1,
+                    );
+
+              const periodizedVol =
+                lr === 'L'
+                  ? set.paramValuesL.find((p) => p.field === ParamType.VolWork1)
+                  : set.paramValuesR?.find(
+                      (p) => p.field === ParamType.VolWork1,
+                    );
+
+              if (!periodizedInt || !periodizedVol) continue;
+              periodizedInt.value = periodizedIntensityValue;
+              periodizedVol.value = periodizedVolumeValue;
+
+              const foundPrevInt =
+                lr === 'L'
+                  ? prevIntL.find((e) => e.setIndex === baseSet.setNumber - 1)
+                  : prevIntR.find((e) => e.setIndex === baseSet.setNumber - 1);
+
+              const foundPrevVol =
+                lr === 'L'
+                  ? prevVolL.find((e) => e.setIndex === baseSet.setNumber - 1)
+                  : prevVolR.find((e) => e.setIndex === baseSet.setNumber - 1);
+
+              if (foundPrevInt)
+                foundPrevInt.value = parseFloat(periodizedIntensityValue);
+              else {
+                (lr === 'L' ? prevIntL : prevIntR).push({
+                  setIndex: baseSet.setNumber - 1,
+                  value: parseFloat(periodizedIntensityValue),
+                });
+              }
+
+              if (foundPrevVol)
+                foundPrevVol.value = parseFloat(periodizedVolumeValue);
+              else {
+                (lr === 'L' ? prevVolL : prevVolR).push({
+                  setIndex: baseSet.setNumber - 1,
+                  value: parseFloat(periodizedVolumeValue),
+                });
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
   periodize(
     baseItem: TrainingComponent | Subgroup,
     trainings: Training[],
@@ -266,18 +480,63 @@ export class PeriodizationService {
     return trainings;
   }
 
-  private isTrainingComponent(
-    item: TrainingComponent | Subgroup,
-  ): item is TrainingComponent {
-    return (item as TrainingComponent)?.from !== undefined;
-  }
+  /**
+   * Generates weeks between first and last training and fills in all
+   * of the trainings. For example, we have 3 trainings, 2 in first
+   * week and one in the second week. Returns array of 2 elements,
+   * first containing the first 2 trainings and the second containing
+   * the last training.
+   *
+   * @example
+   * ```ts
+   * const trainings = [
+   *  { from: '2025-10-01' },
+   *  { from: '2025-14-01' },
+   *  { from: '2025-21-01' },
+   * ]
+   *
+   * const firstTraining = trainings[0];
+   * const lastTraining = trainings[trainings.length - 1];
+   *
+   * const result = getSpacedTrainingsByWeek(
+   *  firstTraining,
+   *  lastTraining,
+   *  trainings,
+   * );
+   * // => [
+   * //   [{ from: '2025-10-01' }, { from: '2025-14-01' }],
+   * //   [{ from: '2025-21-01' }]
+   * // ]
+   * ```
+   */
+  getSpacedTrainingsByWeek(trainings: Training[]): Training[][] {
+    const firstTraining = trainings[0];
+    const lastTraining = trainings[trainings.length - 1];
 
-  private getExercisesOrFail(item: TrainingComponent | Subgroup) {
-    const exercises = item.supersets.flatMap((s) => s.exercises);
-    if (exercises.length === 0)
-      throw new BadRequestException('No exercises found in the base component');
+    const startWeek = this.commonService.date.getIsoWeek(firstTraining.from);
+    const lastWeek = this.commonService.date.getIsoWeek(lastTraining.from);
+    const numWeeks = lastWeek - startWeek + 1;
 
-    return exercises;
+    const weeks = Array.from({ length: numWeeks }, () => [] as Training[]);
+
+    // fill the trainings in weeks
+    for (const training of trainings) {
+      const weekIndex =
+        this.commonService.date.getIsoWeek(training.from) - startWeek;
+
+      if (weekIndex >= 0 && weekIndex < weeks.length)
+        weeks[weekIndex].push(training);
+    }
+
+    // sort trainings in week by date
+    for (const week of weeks)
+      week.sort((a, b) => a.from.getTime() - b.from.getTime());
+
+    const numTrainingInWeeks = weeks.flat().length;
+    if (trainings.length !== numTrainingInWeeks)
+      throw new BadRequestException('Some trainings are missing or not found');
+
+    return weeks;
   }
 
   getPeriodizedIntVolValue(
@@ -335,15 +594,29 @@ export class PeriodizationService {
           prevVol,
         );
       }
-      case PeriodizationType.DUP_TABLE_BASED: {
+      /* case PeriodizationType.DUP_TABLE_BASED: {
         return this.dupTableBased(startIntensityValue, weekIndex, dayIndex);
-      }
+      } */
       default: {
         throw new BadRequestException(
           `Periodization type ${type} is not implemented`,
         );
       }
     }
+  }
+
+  private isTrainingComponent(
+    item: TrainingComponent | Subgroup,
+  ): item is TrainingComponent {
+    return (item as TrainingComponent)?.from !== undefined;
+  }
+
+  private getExercisesOrFail(item: TrainingComponent | Subgroup) {
+    const exercises = item.supersets.flatMap((s) => s.exercises);
+    if (exercises.length === 0)
+      throw new BadRequestException('No exercises found in the base component');
+
+    return exercises;
   }
 
   private linear(

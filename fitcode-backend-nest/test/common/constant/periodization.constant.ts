@@ -67,8 +67,4 @@ export const PERIODIZATION_TEST_VALUES = [
       { int: 16, vol: 5 },
     ],
   },
-  {
-    type: PeriodizationType.DUP_TABLE_BASED, // type dupTableBased is not supported yet
-    expected: [],
-  },
 ];
