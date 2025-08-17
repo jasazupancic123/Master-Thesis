@@ -90,7 +90,6 @@ export function generateTrainingComponent(
     from: data?.from || getTime(addDays(new Date(), 2), 8, 0),
     to: data?.to || addHours(from, 1),
     target: data?.target || null,
-    periodizationType: data?.periodizationType || null,
     methodId: data?.methodId || null,
     completedMembersIds: data?.completedMembersIds || [],
     supersets: data?.supersets || [],
@@ -108,11 +107,10 @@ export function generateSuperset(data?: Partial<Superset>): Superset {
 export function generateSubgroup(data?: Partial<Subgroup>): Subgroup {
   return {
     id: data?.id ?? v4(),
-    color: data?.color || generateRandomColor(),
     name: data?.name || generateRandomName(),
-    periodizationType: data?.periodizationType || null,
     membersIds: data?.membersIds || [],
     supersets: data?.supersets || [],
+    parentId: data?.parentId || null,
   };
 }
 
