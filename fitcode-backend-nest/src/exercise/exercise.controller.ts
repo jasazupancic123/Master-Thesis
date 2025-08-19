@@ -19,7 +19,7 @@ import {
   CreateExerciseDto,
   UpsertManyExercisesDto,
 } from './dto/create-exercise.dto';
-import { UpsertManyExerciseMuscleValuesDto } from './dto/create-muscle-value.dto';
+import { UpsertManyExerciseMuscleValuesDto } from './dto/create-exercise-muscle-value.dto';
 import { UpdateExerciseDto } from './dto/update-exercise.dto';
 import { ExerciseService } from './service/exercise.service';
 
@@ -61,7 +61,7 @@ export class ExerciseController {
     );
   }
 
-  @Post('muscle-values/many')
+  @Patch('muscle-values/many')
   @Auth()
   async updateManyMuscleValues(
     @RequestUser() user: User,

@@ -37,7 +37,7 @@ import { InstitutionService } from '@src/institution/service/institution.service
 import { CACHE_KEY_EXERCISES } from '../constant/get-exercises-cache-key.constant';
 import { GLOBAL_EXERCISE_OWNER } from '../constant/global-exercise-owner.constant';
 import { CreateExerciseDto } from '../dto/create-exercise.dto';
-import { CreateExerciseMuscleValueDto } from '../dto/create-muscle-value.dto';
+import { CreateExerciseMuscleValueDto } from '../dto/create-exercise-muscle-value.dto';
 import { UpdateExerciseDto } from '../dto/update-exercise.dto';
 import { Exercise } from '../entity/exercise.entity';
 import { ExerciseAttributeValue } from '../entity/exercise-attribute-value.entity';
