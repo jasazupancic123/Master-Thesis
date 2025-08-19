@@ -12,11 +12,13 @@ import React, { useEffect, useState } from 'react';
 
 import {
   handleAddExercise,
-  handleCsvFileUpload,
   handleDeleteExercise,
+  handleExerciseCsvFileUpload,
+  handleMuscleValuesCsvFileUpload,
   handlePaginateExercises,
   handleUpdateExercise,
   handleUpsertManyExercises,
+  handleUpsertMuscleValues,
 } from '@/app/(trainer)/dashboard/exercises/state';
 import {
   COOLDOWN_ID,
@@ -33,7 +35,10 @@ import PageTitle from '@/components/page-title/page-title';
 import { SearchBar } from '@/components/search-bar/search-bar';
 import { ComponentService } from '@/controller/component/component.service';
 import type { Component } from '@/controller/component/type/component.type';
-import type { Exercise } from '@/controller/exercise/type/exercise.type';
+import type {
+  CreateExerciseMuscleValues,
+  Exercise,
+} from '@/controller/exercise/type/exercise.type';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { useMain } from '@/store/main-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
@@ -83,10 +88,13 @@ export default function ExercisesPage() {
   // modals
   const [exercise, setExercise] = useState<Partial<Exercise>>(DEFAULT_EXERCISE);
   const [importedExercises, setImportedExercises] = useState<Exercise[]>([]);
+  const [importedMuscleValueExercises, setImportedMuscleValueExercises] =
+    useState<CreateExerciseMuscleValues[]>([]);
   const [modal, setModal] = useState({
     add: false,
     edit: false,
     import: false,
+    muscleValues: false,
     confirmDelete: false,
   });
 
@@ -123,15 +131,50 @@ export default function ExercisesPage() {
     <Box p={2} px={screenSize.isMobile ? 0 : undefined}>
       {/* Import Button */}
       {isAdmin(roles) && (
-        <Tooltip title="Import">
-          <IconButton
+        <Box
+          width="100%"
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          gap={4}
+        >
+          <Box
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+            justifyContent="center"
+            gap={1}
+            sx={{
+              cursor: 'pointer',
+            }}
             onClick={() => {
               setModal({ ...modal, import: true });
             }}
           >
-            <Publish />
-          </IconButton>
-        </Tooltip>
+            <IconButton>
+              <Publish />
+            </IconButton>
+            <Typography>Import Exercises</Typography>
+          </Box>
+          <Box
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+            justifyContent="center"
+            gap={1}
+            onClick={() => {
+              setModal({ ...modal, muscleValues: true });
+            }}
+            sx={{
+              cursor: 'pointer',
+            }}
+          >
+            <IconButton>
+              <Publish />
+            </IconButton>
+            <Typography>Import Muscle Values</Typography>
+          </Box>
+        </Box>
       )}
       <Box
         display="flex"
@@ -340,10 +383,42 @@ export default function ExercisesPage() {
         }}
       >
         <FileUpload
-          label="Import Exercises"
+          label="Exercises"
           input="csv"
           onFileUpload={async (file) => {
-            handleCsvFileUpload(file, { setImportedExercises });
+            handleExerciseCsvFileUpload(file, { setImportedExercises });
+          }}
+        />
+      </MyModal>
+      <MyModal
+        isOpen={modal.muscleValues}
+        setIsOpen={(open) =>
+          setModal((prev) => ({ ...prev, muscleValues: open }))
+        }
+        width={screenSize.isMobile ? undefined : 500}
+        onConfirm={() => {
+          handleUpsertMuscleValues(
+            {
+              exercises: importedMuscleValueExercises.map(
+                (muscleValuesExercise) => ({
+                  name: muscleValuesExercise.name,
+                  muscleValues: muscleValuesExercise.muscleValues,
+                })
+              ),
+            },
+            { router, setExercises: setAllExercises }
+          );
+
+          setModal((prev) => ({ ...prev, muscleValues: false }));
+        }}
+      >
+        <FileUpload
+          label="Muscle Values"
+          input="csv"
+          onFileUpload={async (file) => {
+            handleMuscleValuesCsvFileUpload(file, exercises, {
+              setImportedMuscleValueExercises,
+            });
           }}
         />
       </MyModal>

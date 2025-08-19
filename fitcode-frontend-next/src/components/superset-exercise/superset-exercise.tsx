@@ -84,16 +84,19 @@ export default function SupersetExercise(props: SupersetExerciseProps) {
               selectedExercises.some((ex) => ex.id === exercise.id)
                 ? {
                     position: 'relative',
-                    '&::after': {
-                      content: '""',
-                      position: 'absolute',
-                      inset: 0,
-                      border: `1px solid ${theme.palette.primary.main}`,
-                      borderRadius: 'inherit',
-                      pointerEvents: 'none',
-                    },
                   }
-                : {}
+                : // ? {
+                  //     position: 'relative',
+                  //     '&::after': {
+                  //       content: '""',
+                  //       position: 'absolute',
+                  //       inset: 0,
+                  //       border: `1px solid ${theme.palette.primary.main}`,
+                  //       borderRadius: 0,
+                  //       pointerEvents: 'none',
+                  //     },
+                  //   }
+                  {}
             }
           >
             <Box
