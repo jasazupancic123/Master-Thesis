@@ -232,11 +232,8 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           left: 0,
           right: 0,
           bottom: 0,
-          opacity: selectedExercises.some((ex) => ex.id === exercise.id)
-            ? 0.25
-            : 100,
           backgroundColor: selectedExercises.some((ex) => ex.id === exercise.id)
-            ? theme.palette.primary.main
+            ? theme.palette.background.light
             : theme.palette.background.dark,
           zIndex: 0,
         }}

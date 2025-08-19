@@ -1,6 +1,6 @@
-import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
-import { ParamType } from '@/controller/component/enum/param.enum';
-import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
+import type { ParamType } from '@/controller/component/enum/param.enum';
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 
 export function isNumber(
   exercise: TrainingExercise,

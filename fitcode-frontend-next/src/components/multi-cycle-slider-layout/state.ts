@@ -20,8 +20,7 @@ export async function handleAddCycle(
     setCycles: SetState<Cycle[]>;
   }
 ) {
-  const { selectedGroup, setSelectedGroup, setCycles } =
-    state;
+  const { selectedGroup, setSelectedGroup, setCycles } = state;
   const { name, description, from, to } = input;
 
   if (!name || !from || !to) {

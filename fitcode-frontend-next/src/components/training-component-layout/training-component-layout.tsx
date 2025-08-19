@@ -172,7 +172,7 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
             key={filter}
           >
             {heatmapView ? (
-              <MuscleHeatmapView setHeatmapView={setHeatmapView} />
+              <MuscleHeatmapView />
             ) : (
               <>
                 {component?.method !== undefined && (

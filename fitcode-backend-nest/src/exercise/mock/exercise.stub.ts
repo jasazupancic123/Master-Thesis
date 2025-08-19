@@ -21,6 +21,7 @@ export function generateExerciseStub(data?: Partial<Exercise>): Exercise {
     videoUrl: data?.videoUrl || undefined,
     instruction: data?.instruction || '',
     attributeValues: data?.attributeValues || [],
+    muscleValues: data?.muscleValues || [],
     createdAt: new Date(),
     updatedAt: new Date(),
     deletedAt: undefined,

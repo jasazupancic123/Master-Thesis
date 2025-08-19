@@ -5,12 +5,12 @@ import { Droppable } from 'react-beautiful-dnd';
 
 import SupersetExercise from '../superset-exercise/superset-exercise';
 import { handleDeleteSuperset } from '../trainer-day-view/state';
+import { COLOR } from '@/common/constant/color.constant';
 import type { Superset as SupersetClass } from '@/controller/training/type/superset.type';
 import { useGroup } from '@/store/group-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useSupersets } from '@/store/supersets-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
-import { COLOR } from '@/common/constant/color.constant';
 
 interface SupersetComponentProps {
   superset: SupersetClass;
@@ -38,13 +38,16 @@ export default function Superset(props: SupersetComponentProps) {
 
   if (!component || !training) return null;
 
-  const getBorderGradient = (toTop: boolean): string => {
+  const getBorderGradient = (
+    toTop: boolean,
+    onlyOneSuperset: boolean = false
+  ): string => {
     const fromColor = COLOR[supersetIndex % COLOR.length];
-    const toColor =
-      supersets.length - 1 === supersetIndex
-        ? COLOR[0]
-        : COLOR[(supersetIndex + 1) % COLOR.length];
-    const dirrection = toTop ? 'to top' : 'to bottom';
+    const toColor = onlyOneSuperset
+      ? COLOR[(supersetIndex + 1) % COLOR.length]
+      : COLOR[(supersetIndex + 1) % COLOR.length];
+    // const dirrection = toTop ? 'to top' : 'to bottom';
+    const dirrection = 'to bottom';
     return `linear-gradient(${dirrection}, ${fromColor}, ${toColor})`;
   };
 
@@ -84,10 +87,13 @@ export default function Superset(props: SupersetComponentProps) {
             ref={provided.innerRef}
             {...provided.droppableProps}
             sx={{
-              // acts like the border
               p: '1px',
               borderRadius: '5px',
-              background: getBorderGradient(supersetIndex > 3),
+              background: getBorderGradient(
+                supersetIndex > 3,
+                supersets.length === 1 ||
+                  (supersets.length === 5 && supersetIndex === 4)
+              ),
             }}
           >
             <Stack

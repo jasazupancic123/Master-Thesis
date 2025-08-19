@@ -250,8 +250,7 @@ export function getFilteredTrainings(
         (t) => t.trainingId === copiedFromTraining.id
       );
 
-      if (evaluatedTrainingId)
-        tc.color = COLOR[evaluatedTrainingId.colorIndex];
+      if (evaluatedTrainingId) tc.color = COLOR[evaluatedTrainingId.colorIndex];
       else {
         evaluatedTrainingIds.push({
           trainingId: copiedFromTraining.id,
