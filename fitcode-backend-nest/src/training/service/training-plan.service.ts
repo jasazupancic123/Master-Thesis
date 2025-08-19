@@ -635,18 +635,20 @@ export class TrainingPlanService {
     return { warmup, cooldown };
   }
 
-  copyComponent(
+  copyComponentIntoTraining(
     sourceTrainingComponent: TrainingComponent,
     targetTraining: Training,
-  ) {
+  ): void {
+    const foundTargetTrainingComponent = targetTraining.components.find(
+      (c) => c.id === sourceTrainingComponent.id,
+    );
+
     // find existing component in target training or create a new one
     const lastTargetTrainingComponent =
       targetTraining.components[targetTraining.components.length - 1];
 
     const targetTrainingComponent: TrainingComponent =
-      targetTraining.components.find(
-        (c) => c.id === sourceTrainingComponent.id,
-      ) || {
+      foundTargetTrainingComponent || {
         id: sourceTrainingComponent.id,
         from: lastTargetTrainingComponent.from,
         to: addMinutes(lastTargetTrainingComponent.from, 30),
@@ -663,23 +665,26 @@ export class TrainingPlanService {
         ? sourceTrainingComponent.copiedFrom.rootCopiedFromTrainingId
         : sourceTrainingComponent.id,
     };
-  }
 
-  copySupersets(supersets: Superset[]): Superset[] {
-    return supersets.map((s) => ({
-      ...s,
-      exercises: s.exercises.map((e) => ({
-        ...e,
-        params: e.params.map((p) => ({ ...p })),
-        sets: e.sets.map((set) => ({
-          ...set,
-          paramValuesL: set.paramValuesL.map((pv) => ({ ...pv })),
-          ...(set.paramValuesR && {
-            paramValuesR: set.paramValuesR.map((pv) => ({ ...pv })),
-          }),
-        })),
-      })),
-    }));
+    targetTrainingComponent.methodId = sourceTrainingComponent.methodId;
+    targetTrainingComponent.target = sourceTrainingComponent.target;
+    targetTrainingComponent.color = sourceTrainingComponent.color;
+    targetTrainingComponent.completedMembersIds = []; // reset completed members
+
+    targetTrainingComponent.supersets = structuredClone(
+      sourceTrainingComponent.supersets,
+    );
+
+    targetTrainingComponent.subgroups = structuredClone(
+      sourceTrainingComponent.subgroups,
+    );
+
+    if (!foundTargetTrainingComponent)
+      targetTraining.components.push(targetTrainingComponent);
+    else
+      targetTraining.components = targetTraining.components.map((c) =>
+        c.id === sourceTrainingComponent.id ? targetTrainingComponent : c,
+      );
   }
 
   /**
@@ -720,11 +725,20 @@ export class TrainingPlanService {
    * root subgroup, we also need to find its children and copy them to (all subgroups are saved in a
    * flat array), that's why this parameter is needed.
    */
-  copySubgroup(
+  copySubgroupIntoTraining(
     subgroupId: string,
     sourceTrainingComponent: TrainingComponent,
-    targetTrainingComponent: TrainingComponent,
+    targetTraining: Training,
   ) {
+    const targetTrainingComponent = targetTraining.components.find(
+      (c) => c.id === sourceTrainingComponent.id,
+    );
+
+    if (!targetTrainingComponent)
+      throw new NotFoundException(
+        `Target training component with id ${sourceTrainingComponent.id} not found`,
+      );
+
     const sourceSubgroup = sourceTrainingComponent.subgroups.find(
       (s) => s.id === subgroupId,
     );
@@ -752,11 +766,7 @@ export class TrainingPlanService {
     }
 
     // clone before modifying
-    subgroupsToCopy = subgroupsToCopy.map((s) => ({
-      ...s,
-      supersets: this.copySupersets(s.supersets),
-      membersIds: [...s.membersIds],
-    }));
+    subgroupsToCopy = subgroupsToCopy.map((s) => structuredClone(s));
 
     const rootSubgroup = subgroupsToCopy[0]; // contains all members
 

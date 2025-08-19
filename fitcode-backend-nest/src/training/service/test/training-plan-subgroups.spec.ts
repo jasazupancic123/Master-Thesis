@@ -13,10 +13,12 @@ import { ExerciseAttributeValueRepository } from '@src/exercise/repository/exerc
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
+import type { Training } from '@src/training/entity/training.entity';
 import type { TrainingComponent } from '@src/training/entity/training-component.entity';
 import {
   generateSubgroup,
   generateTrainingComponent,
+  generateTrainingStub,
 } from '@src/training/mock/training.stub';
 import { WorkloadRepository } from '@src/training/repository/workload.repository';
 
@@ -27,7 +29,7 @@ describe('copySubgroup', () => {
   let service: TrainingPlanService;
 
   let source: TrainingComponent;
-  let target: TrainingComponent;
+  let target: Training;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -103,24 +105,38 @@ describe('copySubgroup', () => {
       ],
     });
 
-    target = generateTrainingComponent({
-      subgroups: [
-        generateSubgroup({ id: 's3', membersIds: ['a', 'b', 'h', 'i'] }), // existing subgroup in target
+    target = generateTrainingStub({
+      ownerId: 'test-owner',
+      membersIds: [],
+      components: [
+        generateTrainingComponent({
+          subgroups: [
+            generateSubgroup({ id: 's3', membersIds: ['a', 'b', 'h', 'i'] }), // existing subgroup in target
+          ],
+        }),
       ],
     });
   });
 
   it('should not copy subgroup if subgroup does not exist in provided training component', async () => {
     expect(() => {
-      service.copySubgroup('invalid', source, source);
+      service.copySubgroupIntoTraining(
+        'invalid',
+        source,
+        generateTrainingStub({
+          ownerId: 'test',
+          membersIds: [],
+          components: [source],
+        }),
+      );
     }).toThrow('Subgroup with id invalid not found');
   });
 
   it('should copy root subgroup and remove overlapping members from target', () => {
-    service.copySubgroup('s1', source, target);
+    service.copySubgroupIntoTraining('s1', source, target);
 
-    expect(target.subgroups).toHaveLength(4); // 1 original + 3 copied (1 root, 2 children)
-    expect(target.subgroups).toEqual(
+    expect(target.components[0].subgroups).toHaveLength(4); // 1 original + 3 copied (1 root, 2 children)
+    expect(target.components[0].subgroups).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: 's3', membersIds: ['h', 'i'] }), // a and b are in source
         expect.objectContaining({ id: 's1', membersIds: ['a', 'b', 'c', 'd'] }),
@@ -131,10 +147,10 @@ describe('copySubgroup', () => {
   });
 
   it('should copy child subgroup and its parent if parent exists', () => {
-    service.copySubgroup('s1.1', source, target);
+    service.copySubgroupIntoTraining('s1.1', source, target);
 
-    expect(target.subgroups).toHaveLength(3);
-    expect(target.subgroups).toEqual(
+    expect(target.components[0].subgroups).toHaveLength(3);
+    expect(target.components[0].subgroups).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: 's3', membersIds: ['h', 'i'] }),
         expect.objectContaining({ id: 's1', membersIds: ['a', 'b', 'c', 'd'] }),
@@ -144,10 +160,10 @@ describe('copySubgroup', () => {
   });
 
   it('should copy child subgroup and make it root if parent does not exist', () => {
-    service.copySubgroup('invalid-child', source, target);
+    service.copySubgroupIntoTraining('invalid-child', source, target);
 
-    expect(target.subgroups).toHaveLength(2);
-    expect(target.subgroups).toEqual(
+    expect(target.components[0].subgroups).toHaveLength(2);
+    expect(target.components[0].subgroups).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: 's3', membersIds: ['a', 'b', 'h', 'i'] }),
         expect.objectContaining({
@@ -160,17 +176,23 @@ describe('copySubgroup', () => {
   });
 
   it('should remove empty subgroups after copying', () => {
-    const targetWithEmpty = generateTrainingComponent({
-      subgroups: [
-        generateSubgroup({ id: 's4', membersIds: ['e', 'f'] }), // empty subgroup
-        generateSubgroup({ id: 's5', membersIds: ['g'] }), // non-empty subgroup
+    const targetWithEmpty = generateTrainingStub({
+      ownerId: 'test-owner',
+      membersIds: [],
+      components: [
+        generateTrainingComponent({
+          subgroups: [
+            generateSubgroup({ id: 's4', membersIds: ['e', 'f'] }), // empty subgroup
+            generateSubgroup({ id: 's5', membersIds: ['g'] }), // non-empty subgroup
+          ],
+        }),
       ],
     });
 
-    service.copySubgroup('s2', source, targetWithEmpty);
+    service.copySubgroupIntoTraining('s2', source, targetWithEmpty);
 
-    expect(targetWithEmpty.subgroups).toHaveLength(1); // only copied subgroup should remain
-    expect(targetWithEmpty.subgroups).toEqual(
+    expect(targetWithEmpty.components[0].subgroups).toHaveLength(1); // only copied subgroup should remain
+    expect(targetWithEmpty.components[0].subgroups).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: 's2', membersIds: ['e', 'f', 'g'] }),
       ]),
@@ -178,18 +200,24 @@ describe('copySubgroup', () => {
   });
 
   it('should correctly copy source subgroup if target already has nested subgroups', () => {
-    const nestedTarget = generateTrainingComponent({
-      subgroups: [
-        generateSubgroup({ id: 's6', membersIds: ['f', 'g', 'c'] }), // existing subgroup in target
-        generateSubgroup({ id: 's6.1', membersIds: ['f'], parentId: 's6' }),
-        generateSubgroup({ id: 's6.2', membersIds: ['g'], parentId: 's6' }),
+    const nestedTarget = generateTrainingStub({
+      ownerId: 'test-owner',
+      membersIds: [],
+      components: [
+        generateTrainingComponent({
+          subgroups: [
+            generateSubgroup({ id: 's6', membersIds: ['f', 'g', 'c'] }), // existing subgroup in target
+            generateSubgroup({ id: 's6.1', membersIds: ['f'], parentId: 's6' }),
+            generateSubgroup({ id: 's6.2', membersIds: ['g'], parentId: 's6' }),
+          ],
+        }),
       ],
     });
 
-    service.copySubgroup('s2', source, nestedTarget);
+    service.copySubgroupIntoTraining('s2', source, nestedTarget);
 
-    expect(nestedTarget.subgroups).toHaveLength(2);
-    expect(nestedTarget.subgroups).toEqual(
+    expect(nestedTarget.components[0].subgroups).toHaveLength(2);
+    expect(nestedTarget.components[0].subgroups).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: 's6', membersIds: ['c'] }), // c is not in source
         expect.objectContaining({ id: 's2', membersIds: ['e', 'f', 'g'] }),

@@ -48,12 +48,7 @@ export abstract class PeriodizationStrategy {
    */
   protected roundIntensity(int: number, baseline: number) {
     if (baseline < 20 || int <= 10) return Math.round(int); // Round to nearest integer (1 kg steps)
-
-    if (int <= 40) {
-      let evenApprox = Math.round(int / 2) * 2; // Round to the nearest multiple of 2
-      return evenApprox < 12 ? 12 : evenApprox > 40 ? 40 : evenApprox; // Clamp between 12 and 40
-    }
-
-    return Math.round(int / 5) * 5; // Above 40 => round to nearest multiple of 5
+    const evenApprox = Math.round(int / 2) * 2; // Round to the nearest multiple of 2
+    return evenApprox < 12 ? 12 : evenApprox;
   }
 }

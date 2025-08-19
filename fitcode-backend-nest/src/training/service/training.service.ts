@@ -30,6 +30,7 @@ import {
   BatchWriteOperation,
   ComponentRef,
   CycleRef,
+  SubgroupRef,
   TrainingComponentRef,
   TrainingRef,
   UserRef,
@@ -271,25 +272,20 @@ export class TrainingService implements Permission<Training, Institution> {
   }
 
   @LogMethod()
-  async periodize(user: User, input: PeriodizeTrainingsDto) {
-    const {
-      baseTrainingId,
-      componentId,
-      periodizationType,
-      exerciseIds,
-      subgroupId,
-    } = input;
+  async periodize(
+    user: User,
+    ref: TrainingComponentRef & SubgroupRef,
+    input: PeriodizeTrainingsDto,
+  ) {
+    const { periodizationType, exerciseIds } = input;
 
-    if ([WARMUP_COMPONENT_ID, COOLDOWN_COMPONENT_ID].includes(componentId))
+    if ([WARMUP_COMPONENT_ID, COOLDOWN_COMPONENT_ID].includes(ref.componentId))
       throw new BadRequestException(
         'You cannot periodize warmup or cooldown components',
       );
 
-    const baseTraining = await this.findOneByIdOrFail(user, {
-      trainingId: baseTrainingId,
-    });
-
     // if base training in the past, throw error
+    const baseTraining = await this.findOneByIdOrFail(user, ref);
     if (this.isInPast(startOfDay(baseTraining.from)))
       throw new BadRequestException(
         'You can only periodize upcoming trainings',
@@ -297,10 +293,9 @@ export class TrainingService implements Permission<Training, Institution> {
 
     const baseComponent = this.trainingPlanService.findComponentOrFail(
       baseTraining,
-      componentId,
+      ref.componentId,
     );
 
-    const mainTarget = baseComponent.target; // if target exists, it will only look for that target in future trainings
     const futureTrainings = await this.findAll(
       user,
       {
@@ -314,44 +309,33 @@ export class TrainingService implements Permission<Training, Institution> {
     // target can be null / undefined, then just get the trainings without a target
     const trainings = futureTrainings.filter((t) =>
       t.components.some((c) =>
-        c.id === componentId && mainTarget
-          ? c.target?.id === mainTarget.id
+        c.id === ref.componentId && baseComponent.target
+          ? c.target?.id === baseComponent.target.id
           : !c.target,
       ),
     );
 
     if (trainings.length === 0) return [];
-
     trainings.unshift(baseTraining); // add base training to the beginning of the list
-    for (const t of trainings) {
-      const component = t.components.find((c) => c.id === componentId);
-      if (!component) continue; // future training does not have the component
 
-      if (!subgroupId) {
+    for (const training of trainings)
+      if (!ref.subgroupId)
         // no subgroup is selected, override all supersets and subgroups
-        this.trainingPlanService.copyComponent(baseComponent, t);
-
-        component.supersets = this.trainingPlanService.copySupersets(
-          baseComponent.supersets,
-        );
-
-        component.subgroups = baseComponent.subgroups.map((s) => ({
-          ...s,
-          supersets: this.trainingPlanService.copySupersets(s.supersets),
-        }));
-      } else {
-        // override only subgroups
-        this.trainingPlanService.copySubgroup(
-          subgroupId,
+        this.trainingPlanService.copyComponentIntoTraining(
           baseComponent,
-          component,
+          training,
         );
-      }
-    }
+      else
+        // override only subgroups
+        this.trainingPlanService.copySubgroupIntoTraining(
+          ref.subgroupId,
+          baseComponent,
+          training,
+        );
 
     const periodized = this.periodizationService.periodize(
       periodizationType,
-      { trainingId: baseTrainingId, componentId, subgroupId },
+      ref,
       trainings,
       exerciseIds,
     );

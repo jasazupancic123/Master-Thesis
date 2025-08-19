@@ -165,17 +165,19 @@ export function generateExerciseSet(
         ? random
         : false;
 
-  const paramValues = !paramValuesOrComponentParamsOrRandom
-    ? generateParamAttributeValuesFromComponentParams(PARAMS, isRandom)
-    : typeof paramValuesOrComponentParamsOrRandom !== 'boolean' &&
-        isAttributeValueArray(paramValuesOrComponentParamsOrRandom)
-      ? paramValuesOrComponentParamsOrRandom
-      : typeof paramValuesOrComponentParamsOrRandom !== 'boolean'
-        ? generateParamAttributeValuesFromComponentParams(
-            paramValuesOrComponentParamsOrRandom,
-            isRandom,
-          )
-        : [];
+  const paramValues =
+    typeof paramValuesOrComponentParamsOrRandom === 'boolean' ||
+    !paramValuesOrComponentParamsOrRandom
+      ? generateParamAttributeValuesFromComponentParams(PARAMS, isRandom)
+      : typeof paramValuesOrComponentParamsOrRandom !== 'boolean' &&
+          isAttributeValueArray(paramValuesOrComponentParamsOrRandom)
+        ? paramValuesOrComponentParamsOrRandom
+        : typeof paramValuesOrComponentParamsOrRandom !== 'boolean'
+          ? generateParamAttributeValuesFromComponentParams(
+              paramValuesOrComponentParamsOrRandom,
+              isRandom,
+            )
+          : [];
 
   return {
     setNumber,
