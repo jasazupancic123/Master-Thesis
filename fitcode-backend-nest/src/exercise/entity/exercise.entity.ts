@@ -9,6 +9,7 @@ import {
 } from 'class-validator';
 
 import { Attribute } from '@src/attribute/entity/attribute.entity';
+import { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
 import { BaseEntity } from '@src/common/entity/base.entity';
 import { ExerciseAttributeValue } from '@src/exercise/entity/exercise-attribute-value.entity';
 
@@ -67,4 +68,10 @@ export class Exercise extends BaseEntity {
   @Type(() => Attribute)
   @IsOptional()
   defaultParams?: Attribute[];
+
+  @ValidateNested({ each: true })
+  @Type(() => AttributeValue)
+  @ApiProperty({ type: () => AttributeValue, isArray: true })
+  @Expose()
+  muscleValues: AttributeValue[];
 }

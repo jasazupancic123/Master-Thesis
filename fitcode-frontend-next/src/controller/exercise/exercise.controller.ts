@@ -4,6 +4,7 @@ import type {
   FilterExercises,
   UpdateExercise,
   UpsertManyExercises,
+  UpsertManyMuscleValues,
 } from './type/exercise.type';
 import { CommonService } from '@/common/service/common.service';
 
@@ -31,6 +32,10 @@ export class ExerciseController {
 
   static async upsertMany(body: UpsertManyExercises) {
     return api.post<Exercise[]>(`/exercise/many`, body);
+  }
+
+  static async upsertManyMuscleValues(body: UpsertManyMuscleValues) {
+    return api.post<null>(`/exercise/muscle-values/many`, body);
   }
 
   static async update(exerciseId: string, body: UpdateExercise) {

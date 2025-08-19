@@ -43,7 +43,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
       <Box>
         {/* Render days of the week */}
         <Stack
-          width="90%"
+          width="100%"
           direction="row"
           p={2}
           sx={{

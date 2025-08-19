@@ -19,6 +19,7 @@ import {
   CreateExerciseDto,
   UpsertManyExercisesDto,
 } from './dto/create-exercise.dto';
+import { UpsertManyExerciseMuscleValuesDto } from './dto/create-muscle-value.dto';
 import { UpdateExerciseDto } from './dto/update-exercise.dto';
 import { ExerciseService } from './service/exercise.service';
 
@@ -58,6 +59,15 @@ export class ExerciseController {
       user,
       data.exercises.map((e) => ({ ...e, ownerId: user.uid })),
     );
+  }
+
+  @Post('muscle-values/many')
+  @Auth()
+  async updateManyMuscleValues(
+    @RequestUser() user: User,
+    @Body() data: UpsertManyExerciseMuscleValuesDto,
+  ) {
+    await this.exerciseService.updateManyMuscleValues(user, data.exercises);
   }
 
   @Patch(':exerciseId')

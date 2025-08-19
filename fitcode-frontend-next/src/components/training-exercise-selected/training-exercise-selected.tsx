@@ -21,6 +21,7 @@ import {
 } from 'recharts';
 
 import TrainingExerciseCard from '../training-exercise-card/training-exercise-card';
+import { isNumber } from './state';
 import { GRAPH_COLORS } from '@/common/constant/color.constant';
 import type { Dimensions } from '@/common/type/dimensions.type';
 import type { SetState } from '@/common/type/state.type';
@@ -31,8 +32,6 @@ import { useGroup } from '@/store/group-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useSupersets } from '@/store/supersets-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
-import { isNumber } from './state';
-import { useState } from 'react';
 
 interface TrainingExerciseSelectedProps {
   supersetIndex: number;
