@@ -14,6 +14,7 @@ export class CreateExerciseDto extends PickType(Exercise, [
   'imageUrl',
   'videoUrl',
   'instruction',
+  'muscleValues',
 ] as const) {
   @ValidateNested({ each: true })
   @Type(() => AttributeValue)

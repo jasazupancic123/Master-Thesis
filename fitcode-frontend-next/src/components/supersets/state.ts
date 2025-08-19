@@ -4,7 +4,7 @@ import {
   NUM_MAX_EXERCISES_PER_SUPERSET,
   NUM_MAX_SUPERSETS,
 } from '../trainer-day-view/constant';
-import { COLOR } from '@/common/constant/browser.constant';
+import { COLOR } from '@/common/constant/color.constant';
 import {
   COOLDOWN_ID,
   WARMUP_ID,

@@ -55,6 +55,7 @@ export class ExerciseRepository
         videoUrl: input.videoUrl,
         instruction: input.instruction || '',
         attributeValues: undefined,
+        muscleValues: input.muscleValues || [],
       },
       { timestamps: true },
     );

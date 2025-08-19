@@ -214,9 +214,8 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
       sx={{
         width: '100% !important',
         position: 'relative',
-        backgroundColor: chartView
-          ? 'transparent'
-          : theme.palette.background.default,
+        backgroundColor: chartView ? 'transparent' : undefined,
+        borderRadius: '5px',
         backgroundPosition: 'center',
         backgroundSize: '100% auto',
         backgroundRepeat: 'no-repeat',
@@ -233,9 +232,10 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: theme.palette.background.dark,
+          backgroundColor: selectedExercises.some((ex) => ex.id === exercise.id)
+            ? theme.palette.background.light
+            : theme.palette.background.dark,
           zIndex: 0,
-          opacity: 100,
         }}
         onClick={(e) => {
           if (e.target !== e.currentTarget) return; // Prevents click on child elements
