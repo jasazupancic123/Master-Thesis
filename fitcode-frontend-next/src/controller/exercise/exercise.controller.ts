@@ -35,7 +35,7 @@ export class ExerciseController {
   }
 
   static async upsertManyMuscleValues(body: UpsertManyMuscleValues) {
-    return api.post<null>(`/exercise/muscle-values/many`, body);
+    return api.patch<null>(`/exercise/muscle-values/many`, body);
   }
 
   static async update(exerciseId: string, body: UpdateExercise) {

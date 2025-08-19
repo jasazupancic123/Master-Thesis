@@ -12,8 +12,8 @@ import {
   YAxis,
 } from 'recharts';
 
-import HeatmapBack from '@/assets/svg/heatmap_back.svg';
-import HeatmapFront from '@/assets/svg/heatmap_front.svg';
+import HeatmapBack from '@/assets/svg/heatmap-back.svg';
+import HeatmapFront from '@/assets/svg/heatmap-front.svg';
 import { MuscleService } from '@/controller/exercise/muscle.service';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useScreenSize } from '@/store/screen-size-provider';
