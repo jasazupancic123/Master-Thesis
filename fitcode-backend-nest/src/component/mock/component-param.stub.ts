@@ -20,7 +20,7 @@ export function generateComponentParamStub(field: ParamType): ComponentParam {
 }
 
 export function generateComponentParamsStub(
-  fields: ParamType[],
+  fields: ParamType[] = PARAMS.map((p) => p.field as ParamType),
 ): ComponentParam[] {
   return fields.map((field) => generateComponentParamStub(field));
 }

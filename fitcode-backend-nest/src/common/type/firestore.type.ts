@@ -99,7 +99,9 @@ export type CycleRef = GroupRef & { cycleId: string };
 export type TrainingRef = { trainingId: string };
 export type SubgroupRef = TrainingRef & { subgroupId?: string };
 export type TrainingComponentRef = TrainingRef & ComponentRef;
-export type TrainingSupersetRef = TrainingComponentRef & { superset: number };
+export type TrainingSupersetRef = TrainingComponentRef & {
+  supersetIndex: number;
+};
 export type TrainingExerciseRef = Omit<
   TrainingSupersetRef & ExerciseRef,
   'superset'

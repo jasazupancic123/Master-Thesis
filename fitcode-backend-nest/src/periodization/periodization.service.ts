@@ -8,7 +8,9 @@ import type {
 } from '@src/common/type/firestore.type';
 import { ParamType } from '@src/component/enum/param.enum';
 import { ExerciseSet } from '@src/training/entity/exercise-set.entity';
+import { Subgroup } from '@src/training/entity/subgroup.entity';
 import { Training } from '@src/training/entity/training.entity';
+import { TrainingComponent } from '@src/training/entity/training-component.entity';
 import { TrainingExercise } from '@src/training/entity/training-exercise.entity';
 import { PeriodizationType } from '@src/training/enum/periodization-type.enum';
 
@@ -17,6 +19,7 @@ import { AutoregulatoryPeriodizationStrategy } from './strategy/periodization-au
 import { BlockPeriodizationStrategy } from './strategy/periodization-block.strategy';
 import { DayUndulatingPeriodizationStrategy } from './strategy/periodization-day-undulating.strategy';
 import { LinearPeriodizationStrategy } from './strategy/periodization-linear.strategy';
+import { ReplicatePeriodizationStrategy } from './strategy/periodization-replicate.strategy';
 import { WavePeriodizationStrategy } from './strategy/periodization-wave.strategy';
 import { WeekUndulatingPeriodizationStrategy } from './strategy/periodization-week-undulating.strategy';
 
@@ -26,6 +29,7 @@ export class PeriodizationService {
 
   constructor(private readonly commonService: CommonService) {
     const strategies: PeriodizationStrategy[] = [
+      new ReplicatePeriodizationStrategy(),
       new LinearPeriodizationStrategy(),
       new WeekUndulatingPeriodizationStrategy(),
       new DayUndulatingPeriodizationStrategy(),
@@ -52,82 +56,133 @@ export class PeriodizationService {
     type: PeriodizationType,
     ref: TrainingComponentRef & SubgroupRef,
     trainings: Training[],
-    exerciseIds: string[],
+    exerciseIds?: string[], // if not provided, will use all exercises from the base training
+    options?: {
+      createExerciseIfNotExistsInTrainings?: boolean; // if true, will create new exercise in upcoming trainings if not found
+      dontPeriodizeChildSubgroups?: boolean; // if true, will not periodize subgroups of the base training
+    },
   ) {
-    if (trainings.length <= 1 || exerciseIds.length === 0) return trainings;
+    if (trainings.length <= 1) return trainings;
 
     const periodized: Training[] = structuredClone(trainings);
-    const baseExercises = this.getExercises(periodized[0], ref);
     const weeks = this.getSpacedTrainingsByWeek(periodized);
     const strategy = this.getStrategy(type);
 
-    for (const exerciseId of exerciseIds) {
-      const baseExercise = baseExercises.find((e) => e.id === exerciseId);
-      if (!baseExercise) continue; // no base exercise to periodize, skip
+    const baseTraining = periodized[0];
+    const baseItems: (TrainingComponent | Subgroup)[] = [];
+    const baseItem = this.getRefItem(baseTraining, ref);
+    if (!baseItem) return periodized;
+    baseItems.push(baseItem);
 
-      // initialize previous intensity and volume for each set as base values
-      const baseSetValues = this.getBaseSetValues(baseExercise);
-      let prevIntL = baseSetValues.map((s, i) => ({ i, value: s.baseIntL }));
-      let prevVolL = baseSetValues.map((s, i) => ({ i, value: s.baseVolL }));
-      let prevIntR = baseSetValues.map((s, i) => ({ i, value: s.baseIntR }));
-      let prevVolR = baseSetValues.map((s, i) => ({ i, value: s.baseVolR }));
+    // periodize all child subgroups of provided subgroup
+    if (ref.subgroupId && !options?.dontPeriodizeChildSubgroups) {
+      const baseComponent = this.getComponent(baseTraining, ref)!;
 
-      for (let weekIndex = 0; weekIndex < weeks.length; weekIndex++) {
-        for (let dayIndex = 0; dayIndex < weeks[weekIndex].length; dayIndex++) {
-          // find exercise to periodize
-          const training = weeks[weekIndex][dayIndex];
-          const exercises = this.getExercises(training, ref);
-          const exercise = exercises.find((e) => e.id === exerciseId);
-          if (!exercise) continue; // no exercise to periodize, skip
+      for (let i = 0; i < baseComponent.subgroups.length; i++) {
+        const child = baseComponent.subgroups[i];
+        if (child.id !== ref.subgroupId && child.parentId === ref.subgroupId)
+          baseItems.push(child);
+      }
+    }
 
-          // override upcoming exercise
-          exercise.sets = structuredClone(baseExercise.sets);
-          const readinessFactor = Math.random() * 0.2 + 0.9; // simulate readiness factor between 0.9 and 1.1
+    for (const baseItem of baseItems) {
+      const baseExercises = this.getExercises(baseItem);
 
-          for (const baseSet of baseExercise.sets) {
-            const exerciseSet = exercise.sets[baseSet.setNumber - 1];
+      // if no exercises provided, use all exercises from the base training
+      if (!exerciseIds || exerciseIds.length === 0)
+        exerciseIds = baseExercises.map((e) => e.id);
 
-            const { setIndex, baseIntL, baseVolL, baseIntR, baseVolR } =
-              baseSetValues.find((s) => s.setIndex === baseSet.setNumber - 1)!;
+      for (const exerciseId of exerciseIds) {
+        const baseExercise = baseExercises.find((e) => e.id === exerciseId);
+        if (!baseExercise) continue; // no base exercise to periodize, skip
 
-            for (const lr of ['L', 'R'] as const) {
-              const baseIntensity = lr === 'L' ? baseIntL : baseIntR;
-              const baseVolume = lr === 'L' ? baseVolL : baseVolR;
+        // initialize previous intensity and volume for each set as base values
+        const baseSetValues = this.getBaseSetValues(baseExercise);
+        let prevIntL = baseSetValues.map((s, i) => ({ i, value: s.baseIntL }));
+        let prevVolL = baseSetValues.map((s, i) => ({ i, value: s.baseVolL }));
+        let prevIntR = baseSetValues.map((s, i) => ({ i, value: s.baseIntR }));
+        let prevVolR = baseSetValues.map((s, i) => ({ i, value: s.baseVolR }));
 
-              const prevInt = lr === 'L' ? prevIntL : prevIntR;
-              const prevVol = lr === 'L' ? prevVolL : prevVolR;
+        for (let weekIndex = 0; weekIndex < weeks.length; weekIndex++) {
+          for (
+            let dayIndex = 0;
+            dayIndex < weeks[weekIndex].length;
+            dayIndex++
+          ) {
+            // find exercise to periodize
+            const training = weeks[weekIndex][dayIndex];
+            const item = this.getRefItem(training, ref);
+            if (!item) continue; // component / subgroup not found in upcoming training, skip
 
-              const { intensity, volume } = strategy.periodize({
-                weekIndex,
-                dayIndex,
-                weeksLength: weeks.length,
-                baseIntensity,
-                baseVolume,
-                readinessFactor,
-                prevIntensity: prevInt.find((int) => int.i === setIndex)?.value,
-                prevVolume: prevVol.find((int) => int.i === setIndex)?.value,
-              });
+            const exercises = this.getExercises(item);
+            const foundExercise = exercises.find((e) => e.id === exerciseId);
+            const exercise = foundExercise
+              ? foundExercise
+              : options?.createExerciseIfNotExistsInTrainings
+                ? structuredClone(baseExercise)
+                : undefined;
 
-              const foundInt = this.getIntParamValue(lr, exerciseSet);
-              const foundVol = this.getVolParamValue(lr, exerciseSet);
+            if (!exercise) continue; // skip if no exercise to periodize
 
-              if (foundInt) {
-                foundInt.value = intensity.toString();
-                updatePreviousValue(prevInt, intensity);
+            // override upcoming exercise
+            exercise.sets = structuredClone(baseExercise.sets);
+            const readinessFactor = Math.random() * 0.2 + 0.9; // simulate readiness factor between 0.9 and 1.1
+
+            for (const baseSet of baseExercise.sets) {
+              const exerciseSet = exercise.sets[baseSet.setNumber - 1];
+
+              const { setIndex, baseIntL, baseVolL, baseIntR, baseVolR } =
+                baseSetValues.find(
+                  (s) => s.setIndex === baseSet.setNumber - 1,
+                )!;
+
+              for (const lr of ['L', 'R'] as const) {
+                const baseIntensity = lr === 'L' ? baseIntL : baseIntR;
+                const baseVolume = lr === 'L' ? baseVolL : baseVolR;
+
+                const prevInt = lr === 'L' ? prevIntL : prevIntR;
+                const prevVol = lr === 'L' ? prevVolL : prevVolR;
+
+                const { intensity, volume } = strategy.periodize({
+                  weekIndex,
+                  dayIndex,
+                  weeksLength: weeks.length,
+                  baseIntensity,
+                  baseVolume,
+                  readinessFactor,
+                  prevIntensity: prevInt.find((int) => int.i === setIndex)
+                    ?.value,
+                  prevVolume: prevVol.find((int) => int.i === setIndex)?.value,
+                });
+
+                const foundInt = this.getIntParamValue(lr, exerciseSet);
+                const foundVol = this.getVolParamValue(lr, exerciseSet);
+
+                if (foundInt) {
+                  foundInt.value = intensity.toString();
+                  updatePreviousValue(prevInt, intensity);
+                }
+
+                if (foundVol) {
+                  foundVol.value = volume.toString();
+                  updatePreviousValue(prevVol, volume);
+                }
+
+                function updatePreviousValue(
+                  item: { i: number; value: number }[],
+                  newValue: number,
+                ) {
+                  const foundItem = item.find((v) => v.i === setIndex);
+                  if (foundItem) foundItem.value = newValue;
+                }
               }
+            }
 
-              if (foundVol) {
-                foundVol.value = volume.toString();
-                updatePreviousValue(prevVol, volume);
-              }
-
-              function updatePreviousValue(
-                item: { i: number; value: number }[],
-                newValue: number,
-              ) {
-                const foundItem = item.find((v) => v.i === setIndex);
-                if (foundItem) foundItem.value = newValue;
-              }
+            // if exercise not found in training and option to create is enabled, insert training exercise
+            if (!foundExercise && exercise) {
+              const superset = this.getAvailableSuperset(item);
+              if (superset !== -1)
+                item.supersets[superset].exercises.push(exercise);
             }
           }
         }
@@ -137,23 +192,42 @@ export class PeriodizationService {
     return periodized;
   }
 
-  private getExercises(
+  getComponent(
+    training: Training,
+    ref: TrainingComponentRef,
+  ): TrainingComponent {
+    return training.components.find((c) => c.id === ref.componentId);
+  }
+
+  getRefItem(
     training: Training,
     ref: TrainingComponentRef & SubgroupRef,
-  ): TrainingExercise[] {
-    const { componentId, subgroupId } = ref;
+  ): TrainingComponent | Subgroup | null {
+    const component = this.getComponent(training, ref);
+    if (!component) return null;
+    if (!ref.subgroupId) return component;
 
-    const component = training.components.find((c) => c.id === componentId);
-    if (!component) return [];
+    const subgroup = component.subgroups.find((s) => s.id === ref.subgroupId);
+    return subgroup || null;
+  }
 
-    if (subgroupId) {
-      const subgroup = component.subgroups.find((s) => s.id === subgroupId);
-      if (!subgroup) return [];
+  getAvailableSuperset(item: TrainingComponent | Subgroup): number {
+    // each superset can have max 4 exercises, so find first superset with less than 4 exercises
+    for (let i = 0; i < item.supersets.length; i++)
+      if (item.supersets[i].exercises.length < 4) return i;
 
-      return subgroup.supersets.flatMap((s) => s.exercises);
+    // if all supersets are full, check if we can create a new one (max 8 supersets) and create it
+    if (item.supersets.length < 8) {
+      item.supersets = [...item.supersets, { exercises: [] }];
+      return item.supersets.length - 1; // return index of the newly created superset
     }
 
-    return component.supersets.flatMap((s) => s.exercises);
+    // no available superset found, do not create a new one
+    return -1;
+  }
+
+  getExercises(item: TrainingComponent | Subgroup): TrainingExercise[] {
+    return item.supersets.flatMap((s) => s.exercises);
   }
 
   /**
