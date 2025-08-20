@@ -12,14 +12,10 @@ export const GRAPH_COLORS = [
 ];
 
 export const HEATMAP_COLORS = [
-  '#7dd3f3',
-  '#9ed2c8',
-  '#bed29c',
-  '#ded170',
-  '#ffd045',
-  '#fcbb4a',
-  '#faa74e',
-  '#f79253',
-  '#f57e57',
-  '#f2695c',
+  '#FFD734',
+  '#FFA14E',
+  '#FF6B34',
+  '#FF34A8',
+  '#A275F7',
+  '#4EA8FF',
 ];

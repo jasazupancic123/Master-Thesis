@@ -660,7 +660,7 @@ function getMuscleValuesFromCsvRow(
 
       if (!load || !load.length) return;
 
-      muscleValues.push(getMuscleValue(load, i, headers));
+      muscleValues.push(getMuscleValue(load, i + 1, headers));
     }
   });
 
