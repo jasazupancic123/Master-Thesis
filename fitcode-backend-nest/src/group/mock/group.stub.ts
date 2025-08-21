@@ -6,7 +6,7 @@ import type { Group } from '../entity/group.entity';
 
 export function generateGroupStub(data?: Partial<Group>): Group {
   return {
-    id: v4(),
+    id: data?.id || v4(),
     createdAt: new Date(),
     updatedAt: new Date(),
     deletedAt: null,

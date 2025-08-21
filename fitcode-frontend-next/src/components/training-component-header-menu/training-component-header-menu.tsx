@@ -306,9 +306,7 @@ export default function TrainingComponentHeaderMenu(
           handleApiRequest(
             router,
             () =>
-              TrainingController.periodize({
-                baseTrainingId: training.id,
-                componentId: component.id,
+              TrainingController.periodize(training.id, component.id, {
                 periodizationType:
                   selectedPeriodizationType as PeriodizationType,
                 exerciseIds: selectedExercises.map((e) => e.id),
@@ -330,6 +328,7 @@ export default function TrainingComponentHeaderMenu(
                   const newTraining = periodizedTrainings.find(
                     (nt) => nt.id === t.id
                   );
+
                   return newTraining ? newTraining : t;
                 })
               );

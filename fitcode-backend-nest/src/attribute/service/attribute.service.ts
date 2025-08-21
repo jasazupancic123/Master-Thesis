@@ -21,17 +21,17 @@ export class AttributeService {
 
   async create(data: Create<Attribute>): Promise<Attribute> {
     this.logger.debug(`Creating attribute with data ${JSON.stringify(data)}`);
-    await this.repository.addDoc(data);
+    await this.repository.save(data);
     await this.cacheManagerService.del(CACHE_KEY_ATTRIBUTES);
     return data;
   }
 
   async findOneBySlug(slug: string): Promise<Attribute> {
-    return await this.repository.getDoc(slug);
+    return await this.repository.findById(slug);
   }
 
   async findOneBySlugOrFail(slug: string): Promise<Attribute> {
-    const item = await this.repository.getDoc(slug);
+    const item = await this.repository.findById(slug);
     if (!item) throw new BadRequestException('Attribute not found');
     return item;
   }
@@ -40,7 +40,7 @@ export class AttributeService {
     const cached =
       await this.cacheManagerService.get<Attribute[]>(CACHE_KEY_ATTRIBUTES);
 
-    return cached ? cached : await this.repository.getDocs();
+    return cached ? cached : await this.repository.findAll();
   }
 
   validate(

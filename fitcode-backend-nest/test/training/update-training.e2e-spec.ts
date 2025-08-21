@@ -122,7 +122,7 @@ describe('Update Training (e2e)', () => {
   });
 
   async function createTraining(data?: Partial<Training>) {
-    const trainingId = await db.trainings.addDoc(
+    const trainingId = await db.trainings.save(
       generateTrainingStub({
         ownerId: global.trainer.uid,
         membersIds: [global.athlete.uid],
@@ -135,7 +135,7 @@ describe('Update Training (e2e)', () => {
       }),
     );
 
-    return db.trainings.getDoc(trainingId);
+    return db.trainings.findById(trainingId);
   }
 
   describe('Update training', () => {
@@ -358,7 +358,7 @@ describe('Update Training (e2e)', () => {
         componentIds: [component2.id],
       });
 
-      await db.trainings.deleteDoc(training.id);
+      await db.trainings.delete(training.id);
 
       training = await createTraining({
         components: [

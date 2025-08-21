@@ -24,7 +24,7 @@ export class UserRepository
     private readonly firebaseService: FirebaseService,
   ) {}
 
-  async getDocs(
+  async findAll(
     query: (query: Query) => Query = (query) => query,
   ): Promise<UserEntity[]> {
     const snapshot = await query(this.collection()).get();
@@ -34,7 +34,7 @@ export class UserRepository
     );
   }
 
-  async getDoc(id: string): Promise<UserEntity | null> {
+  async findById(id: string): Promise<UserEntity | null> {
     const snapshot = await this.doc(id).get();
     if (!snapshot.exists) return null;
 
@@ -43,7 +43,7 @@ export class UserRepository
     );
   }
 
-  async addDoc(input: Partial<UserEntity>) {
+  async save(input: Partial<UserEntity>) {
     if (!input.id) throw new Error('User ID is required');
 
     const query = this.firebaseService.buildCreateQuery<UserEntity>(
@@ -55,12 +55,12 @@ export class UserRepository
     return input.id;
   }
 
-  async updateDoc(id: string, input: Update<UserEntity>) {
+  async update(id: string, input: Update<UserEntity>) {
     const query = this.firebaseService.buildUpdateQuery(input);
     await this.doc(id).update(query);
   }
 
-  async deleteDoc(id: string) {
+  async delete(id: string) {
     await this.doc(id).update({ deletedAt: Timestamp.now() });
   }
 
