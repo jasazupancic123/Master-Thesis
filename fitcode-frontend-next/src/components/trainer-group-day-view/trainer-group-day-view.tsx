@@ -47,9 +47,9 @@ export default function TrainerDayView() {
     day,
     training,
     setTraining,
-    selectedPeriod,
     component,
     setComponent,
+    selectedPeriod,
     setSelectedSubgroup,
     selectedAthlete,
     setSelectedAthleteWorkloads,
@@ -328,6 +328,7 @@ export default function TrainerDayView() {
             week={week}
           />
           <Box
+            width="100%"
             display="flex"
             flexDirection={screenSize.isSmallerThanLaptop ? 'column' : 'row'}
             maxWidth={MAX_WIDTH}
@@ -335,7 +336,8 @@ export default function TrainerDayView() {
             alignItems="center"
             sx={{
               p: isSticky ? 0 : undefined,
-              py: 5,
+              py: selectedAthlete ? 0 : 5,
+              pt: selectedAthlete ? 1 : undefined,
               backgroundColor: theme.palette.background.default,
             }}
           >

@@ -48,8 +48,6 @@ export default function TrainingMembers(props: TrainingMembersProps) {
     selectedSubgroup,
     selectedAthlete,
     setSelectedAthlete,
-    showAthleteReport,
-    setShowAthleteReport,
   } = useTrainerDayViewContext();
 
   const [availableMembers, setAvailableMembers] = useState<User[]>([]);
@@ -104,10 +102,6 @@ export default function TrainingMembers(props: TrainingMembersProps) {
     setSubgroups([DEFAULT_SUBGROUP(availableMembers), ...subgroups]);
   }, [training, component]);
 
-  useEffect(() => {
-    if (!selectedAthlete) setShowAthleteReport(false);
-  }, [selectedAthlete]);
-
   const handleOnDragEnd = async (result: DropResult) => {
     const { draggableId, destination } = result;
     if (!destination) {
@@ -140,7 +134,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
     }
   };
 
-  return selectedAthlete && showAthleteReport ? (
+  return selectedAthlete ? (
     <SelectedMemberReport groupMembers={groupMembers} />
   ) : (
     <Stack
@@ -298,11 +292,6 @@ export default function TrainingMembers(props: TrainingMembersProps) {
 
                           setSelectedAthlete(member);
                         }}
-                        onContextMenu={(e) => {
-                          e.preventDefault();
-                          setSelectedAthlete(member);
-                          setShowAthleteReport(true);
-                        }}
                         borderRadius={selectedAthlete === member ? '50%' : 0}
                         border={
                           selectedAthlete === member
@@ -321,10 +310,9 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                             width: 50,
                             height: 50,
                             m: selectedAthlete === member ? 0.25 : 0.5,
+                            cursor: 'pointer',
                           }}
-                        >
-                          {/* {member.email[0].toUpperCase()} */}
-                        </Avatar>
+                        />
                       </Box>
                     </Tooltip>
                   );

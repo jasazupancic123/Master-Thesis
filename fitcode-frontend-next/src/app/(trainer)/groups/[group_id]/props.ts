@@ -16,6 +16,7 @@ import type { TrainingComponent } from '@/controller/training/type/training-comp
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import type { Workload } from '@/controller/training/type/workload.type';
 import type { User, UserEntity } from '@/controller/user/type/user.type';
+import type { WellnessZScore } from '@/controller/user/type/wellness.type';
 
 export type GroupIdPageParams = { params: Promise<{ group_id: string }> };
 
@@ -57,6 +58,8 @@ export type TrainerDayViewContextProps = {
   setSelectedPeriod: SetState<'AM' | 'PM'>;
   component: TrainingComponent | undefined; // selected training component
   setComponent: SetStateNullable<TrainingComponent>;
+  wellness: WellnessZScore[];
+  setWellness: SetState<WellnessZScore[]>;
   selectedExercises: TrainingExercise[]; // selected exercises in the component
   setSelectedExercises: SetState<TrainingExercise[]>;
   supersets: Superset[]; // supersets of the selected component
@@ -71,8 +74,6 @@ export type TrainerDayViewContextProps = {
   setPagination: SetState<Pagination>;
   search: string;
   setSearch: SetState<string>;
-  showAthleteReport: boolean;
-  setShowAthleteReport: SetState<boolean>;
   selectedAthleteWorkloads: CompletedFutureWorkloads;
   setSelectedAthleteWorkloads: SetState<CompletedFutureWorkloads>;
   customAthleteWorkloads: Workload[];

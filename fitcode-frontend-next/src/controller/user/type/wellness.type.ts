@@ -1,3 +1,5 @@
+import type { WellnessChartDataType } from '../enum/wellness-chart-data-type.enum';
+
 export interface Wellness {
   userId: string;
   date: Date;
@@ -7,6 +9,25 @@ export interface Wellness {
   soreness?: number;
   comment?: string;
 }
+
+export interface WellnessZScore extends Wellness {
+  sleepZScore?: number;
+  fatigueZScore?: number;
+  sorenessZScore?: number;
+}
+
+export interface WellnessChartData {
+  metric: WellnessChartDataType;
+  today: number | null;
+  yesterday: number | null;
+  zScoreToday: number | null;
+  zScoreYesterday: number | null;
+}
+
+export type ChartDataWellness = Pick<
+  Wellness,
+  'fatigue' | 'sleep' | 'soreness'
+>;
 
 export type CreateWellness = Pick<
   Wellness,
