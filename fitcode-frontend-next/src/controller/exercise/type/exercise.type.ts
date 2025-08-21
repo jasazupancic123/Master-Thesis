@@ -14,6 +14,7 @@ export type Exercise = BaseEntity & {
   instruction?: string;
   attributeValues: ExerciseAttributeValue[];
   defaultParams?: Attribute[];
+  muscleValues?: AttributeValue[];
 
   // mapped properties
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -34,12 +35,22 @@ export type CreateExercise = Pick<
   | 'videoUrl'
   | 'instruction'
   | 'attributeValues'
+  | 'muscleValues'
+>;
+
+export type CreateExerciseMuscleValues = Pick<
+  Exercise,
+  'name' | 'muscleValues'
 >;
 
 export type CreateExerciseAttributeValue = AttributeValue;
 
 export type UpsertManyExercises = {
   exercises: CreateExercise[];
+};
+
+export type UpsertManyMuscleValues = {
+  exercises: CreateExerciseMuscleValues[];
 };
 
 export type UpdateExercise = Omit<CreateExercise, 'isBilateral'>;

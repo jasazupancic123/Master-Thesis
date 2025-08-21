@@ -21,7 +21,8 @@ import {
 } from 'recharts';
 
 import TrainingExerciseCard from '../training-exercise-card/training-exercise-card';
-import { COLORS } from '@/common/constant/color.constant';
+import { isNumber } from './state';
+import { GRAPH_COLORS } from '@/common/constant/color.constant';
 import type { Dimensions } from '@/common/type/dimensions.type';
 import type { SetState } from '@/common/type/state.type';
 import { ParamType } from '@/controller/component/enum/param.enum';
@@ -47,7 +48,7 @@ interface TrainingExerciseSelectedProps {
   setSelectedParams: SetState<ParamType[]>;
 }
 
-const ALLOWED_PARAMS = [
+export const ALLOWED_PARAMS = [
   ParamType.IntWork1,
   ParamType.VolWork1,
   ParamType.IntWork2,
@@ -93,13 +94,13 @@ export default function TrainingExerciseSelected(
   const getParamTypeColor = (type: ParamType) => {
     switch (type) {
       case ParamType.IntWork1:
-        return COLORS[0];
+        return GRAPH_COLORS[0];
       case ParamType.VolWork1:
-        return COLORS[1];
+        return GRAPH_COLORS[1];
       case ParamType.IntWork2:
-        return COLORS[2];
+        return GRAPH_COLORS[2];
       case ParamType.VolWork2:
-        return COLORS[3];
+        return GRAPH_COLORS[3];
     }
     return 'transparent';
   };
@@ -131,6 +132,9 @@ export default function TrainingExerciseSelected(
   }: TooltipContentProps<number, string>) => {
     const isVisible = active && payload && payload.length;
 
+    const p = payload[0];
+    if (!p || !p.payload) return null;
+
     return (
       <Box
         key={label}
@@ -149,30 +153,44 @@ export default function TrainingExerciseSelected(
         }}
       >
         <Typography textAlign="center">{label}</Typography>
-        {payload.map((p: any, i: number) => {
-          const color = p.color;
-          const fullValue =
-            p.payload[`${p.dataKey}FullValue`] || p.payload[p.dataKey];
+        {Array.from({ length: 4 }).map((_, i) => {
+          let found = false;
+          for (const dataKey of [
+            ParamType.IntWork1,
+            ParamType.VolWork1,
+            ParamType.IntWork2,
+            ParamType.VolWork2,
+          ].slice(i)) {
+            if (found) return null;
 
-          return (
-            <Box
-              key={i}
-              display="flex"
-              justifyContent="flex-start"
-              alignItems="center"
-              gap={1}
-            >
+            const fullValue =
+              p.payload[`${dataKey}FullValue`] || p.payload[dataKey];
+
+            if (!fullValue) return null;
+
+            const color = getParamTypeColor(dataKey);
+            found = true;
+
+            return (
               <Box
-                width={10}
-                height={10}
-                bgcolor={color}
-                sx={{
-                  borderRadius: '50%',
-                }}
-              />
-              <Typography sx={{ color: color }}>{fullValue}</Typography>
-            </Box>
-          );
+                key={i}
+                display="flex"
+                justifyContent="flex-start"
+                alignItems="center"
+                gap={1}
+              >
+                <Box
+                  width={10}
+                  height={10}
+                  bgcolor={color}
+                  sx={{
+                    borderRadius: '50%',
+                  }}
+                />
+                <Typography sx={{ color: color }}>{fullValue}</Typography>
+              </Box>
+            );
+          }
         })}
       </Box>
     );
@@ -332,7 +350,15 @@ export default function TrainingExerciseSelected(
             }}
           >
             {exercise.params.map((p) => {
-              if (!ALLOWED_PARAMS.includes(p.field as ParamType)) return null;
+              if (
+                !ALLOWED_PARAMS.includes(p.field as ParamType) ||
+                !isNumber(
+                  exercise,
+                  p.field as ParamType,
+                  exercise.sets[0].paramValuesL
+                )
+              )
+                return null;
 
               return (
                 <Box key={p.field} display="flex" alignItems="center" mr={2}>
@@ -373,35 +399,62 @@ export default function TrainingExerciseSelected(
               <Tooltip content={CustomTooltip} />
               <XAxis dataKey="name" />
               <YAxis domain={['dataMin - 3', 'dataMax + 3']} />
-              <Line
-                type="monotone"
-                dataKey="int1"
-                stroke={getParamTypeColor(ParamType.IntWork1)}
-                strokeWidth={3}
-                dot={<TodayDot />}
-              />
+              {isNumber(
+                exercise,
+                ParamType.IntWork1,
+                exercise.sets[0].paramValuesL
+              ) && (
+                <Line
+                  type="monotone"
+                  dataKey={ParamType.IntWork1}
+                  stroke={getParamTypeColor(ParamType.IntWork1)}
+                  strokeWidth={3}
+                  dot={<TodayDot />}
+                />
+              )}
 
-              <Line
-                type="monotone"
-                dataKey="vol1"
-                stroke={getParamTypeColor(ParamType.VolWork1)}
-                strokeWidth={3}
-                dot={<TodayDot />}
-              />
-              <Line
-                type="monotone"
-                dataKey="int2"
-                stroke={getParamTypeColor(ParamType.IntWork2)}
-                strokeWidth={3}
-                dot={<TodayDot />}
-              />
-              <Line
-                type="monotone"
-                dataKey="vol2"
-                stroke={getParamTypeColor(ParamType.VolWork2)}
-                strokeWidth={3}
-                dot={<TodayDot />}
-              />
+              {isNumber(
+                exercise,
+                ParamType.VolWork1,
+                exercise.sets[0].paramValuesL
+              ) && (
+                <Line
+                  type="monotone"
+                  dataKey={ParamType.VolWork1}
+                  stroke={getParamTypeColor(ParamType.VolWork1)}
+                  strokeWidth={3}
+                  dot={<TodayDot />}
+                />
+              )}
+
+              {isNumber(
+                exercise,
+                ParamType.IntWork2,
+                exercise.sets[0].paramValuesL
+              ) && (
+                <Line
+                  type="monotone"
+                  dataKey={ParamType.IntWork2}
+                  stroke={getParamTypeColor(ParamType.IntWork2)}
+                  strokeWidth={3}
+                  display={'none'}
+                  dot={<TodayDot />}
+                />
+              )}
+
+              {isNumber(
+                exercise,
+                ParamType.VolWork2,
+                exercise.sets[0].paramValuesL
+              ) && (
+                <Line
+                  type="monotone"
+                  dataKey={ParamType.VolWork2}
+                  stroke={getParamTypeColor(ParamType.VolWork2)}
+                  strokeWidth={3}
+                  dot={<TodayDot />}
+                />
+              )}
             </LineChart>
           </ResponsiveContainer>
         </Box>

@@ -94,7 +94,8 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
         cursor:
           components.length &&
           cycle &&
-          CommonService.instance.date.isBetween(date, cycle.from, cycle.to)
+          CommonService.instance.date.isBetween(date, cycle.from, cycle.to) &&
+          !dayjs(date).isBefore(dayjs(), 'day')
             ? 'pointer'
             : 'default',
       }}
@@ -103,6 +104,8 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
 
       {['AM', 'PM'].map((period) => {
         const dateString = dayjs(date).format('D. M.');
+        const isSameDayAsToday = dayjs(date).isSame(dayjs(), 'day');
+        const isBeforeToday = dayjs(date).isBefore(dayjs(), 'day');
 
         return (
           <React.Fragment key={period}>
@@ -112,8 +115,14 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
               sx={{
                 position: 'relative',
                 minHeight: '70px',
-                borderRight:
-                  j < 6 ? `2px solid ${theme.palette.background.dark}` : 'none',
+                borderRight: isBeforeToday
+                  ? 'none'
+                  : j < 6
+                    ? `2px solid ${theme.palette.background.dark}`
+                    : 'none',
+                backgroundColor: isBeforeToday
+                  ? theme.palette.background.light
+                  : undefined,
               }}
               onClick={() => {
                 handleClickDateCell(
@@ -151,6 +160,7 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
                     fontSize: '0.7rem',
                     opacity: 0.7,
                     zIndex: 1,
+                    fontWeight: isSameDayAsToday ? 1000 : undefined,
                   }}
                 >
                   {dateString}
