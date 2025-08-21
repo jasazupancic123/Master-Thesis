@@ -1,7 +1,5 @@
-import { Close } from '@mui/icons-material';
-import { Box, Grid2, IconButton, TextField } from '@mui/material';
-import { useTheme } from '@mui/material';
-import Image from 'next/image';
+import { Box, Slider, Typography } from '@mui/material';
+import { useEffect, useState } from 'react';
 import {
   Area,
   AreaChart,
@@ -14,7 +12,12 @@ import {
   YAxis,
 } from 'recharts';
 
+import HeatmapBack from '@/assets/svg/heatmap-back.svg';
+import HeatmapFront from '@/assets/svg/heatmap-front.svg';
+import { MuscleService } from '@/controller/exercise/muscle.service';
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useScreenSize } from '@/store/screen-size-provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 const data = [
   { time: '', value: 0 },
@@ -56,139 +59,178 @@ const CustomTooltip: React.FC<TooltipProps> = ({ active, payload }) => {
   return null;
 };
 
-interface MuscleHeatmapViewProps {
-  setHeatmapView: React.Dispatch<React.SetStateAction<boolean>>;
-}
-
-export default function MuscleHeatmapView(props: MuscleHeatmapViewProps) {
+export default function MuscleHeatmapView() {
   const screenSize = useScreenSize();
-  const theme = useTheme();
+
+  const { supersets } = useTrainerDayViewContext();
+
+  const [exercises] = useState<TrainingExercise[]>(
+    supersets.flatMap((s) => s.exercises)
+  );
+
+  const [heatmapLevel, setHeatmapLevel] = useState<number>(1);
+
+  // type [Muscle(enum), color(string)]
+  const [muscleLoads, setMuscleLoads] = useState<[string, number][]>([]);
+
+  useEffect(() => {
+    // Generate muscle loads
+    if (heatmapLevel < 1 || heatmapLevel > 3) return; // levels 1-3
+
+    const loads = MuscleService.generateMuscleLoads(exercises, heatmapLevel);
+    setMuscleLoads(loads);
+  }, [exercises, heatmapLevel]);
+
+  useEffect(() => {
+    // Reset heatmap colors
+    const resetContainers = ['heatmap-front', 'heatmap-back'];
+    resetContainers.forEach((id) => {
+      const container = document.getElementById(id);
+      if (container) {
+        container.querySelectorAll<HTMLElement>('*').forEach((el) => {
+          (el as HTMLElement).style.fill = '';
+        });
+      }
+    });
+
+    // Update the heatmap colors based on the muscleColors state
+    muscleLoads.forEach((load) => {
+      const muscleType = load[0];
+      const muscleLoad = load[1];
+      // find all elements with the id as prefix
+      const elements = document.querySelectorAll<HTMLElement>(
+        `[id^="${muscleType}"]`
+      );
+      if (!elements || elements.length === 0) return;
+
+      const color = getMuscleColor(muscleLoad);
+      if (!color) return;
+
+      elements.forEach((el) => {
+        el.style.fill = color;
+      });
+    });
+  }, [muscleLoads]);
+
+  const getMuscleColor = (load: number) => {
+    let color = undefined;
+    if (load >= 5 && load <= 10) color = '#FFD734';
+    else if (load >= 11 && load <= 25) color = '#FFA14E';
+    else if (load >= 26 && load <= 35) color = '#FF6B34';
+    else if (load >= 36 && load <= 50) color = '#FF34A8';
+    else if (load >= 51 && load <= 55) color = '#A275F7';
+    else if (load >= 56) color = '#4EA8FF';
+
+    return color;
+  };
 
   return (
-    <>
-      <Grid2
-        size={12}
-        direction={screenSize.isSmallerThanLaptop ? 'column' : 'row'}
-        container
-        gap={1}
+    <Box
+      width="100%"
+      display="flex"
+      flexDirection="column"
+      alignItems="center"
+      justifyContent="center"
+    >
+      {/* Slider here */}
+      <Box
+        width={
+          screenSize.isMobile
+            ? '75%'
+            : screenSize.isSmallerThanLaptop
+              ? '50%'
+              : '25%'
+        }
+        mb={2}
+      >
+        <Typography gutterBottom align="center">
+          Heatmap Level: {heatmapLevel}
+        </Typography>
+        <Slider
+          value={heatmapLevel}
+          onChange={(_, value) => setHeatmapLevel(value as number)}
+          step={1}
+          min={1}
+          max={3}
+          valueLabelDisplay="auto"
+        />
+      </Box>
+      <Box
+        width="100%"
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        gap={5}
         sx={{
-          position: 'relative',
+          flexDirection: screenSize.isSmallerThanLaptop ? 'column' : 'row',
         }}
       >
-        <IconButton
-          sx={{ p: 0, m: 0, position: 'absolute', right: 0 }}
-          onClick={() => props.setHeatmapView(false)}
+        <Box
+          sx={
+            screenSize.isSmallerThanLaptop
+              ? {
+                  width: '100%',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  maxHeight: screenSize.isReallySmall ? 350 : undefined,
+                }
+              : {}
+          }
         >
-          <Close />
-        </IconButton>
-        <Grid2
-          size={screenSize.isSmallerThanLaptop ? 12 : 5.5}
-          sx={{
-            ml: screenSize.isMobile
-              ? 3
-              : screenSize.isSmallerThanLaptop
-                ? '1%'
-                : 0,
-          }}
+          <HeatmapFront
+            id="heatmap-front"
+            role="img"
+            aria-label="Front muscle map"
+            style={{ maxHeight: 500 }}
+          />
+          <HeatmapBack
+            id="heatmap-back"
+            role="img"
+            aria-label="Back muscle map"
+            style={{ maxHeight: 500 }}
+          />
+        </Box>
+        <ResponsiveContainer
+          width={screenSize.isSmallerThanLaptop ? '100%' : '35%'}
+          height={400}
         >
-          <Grid2 container size={12}>
-            <Grid2 size={9}>
-              <Image
-                src="/bodyHeat_2.png"
-                alt="HeatMap"
-                layout="responsive" // Ensures it scales correctly
-                width={100} // Placeholder value
-                height={50} // Placeholder value (adjust based on aspect ratio)
-              />
-            </Grid2>
-            <Grid2 size={2}>
-              <Box
-                display="flex"
-                flexDirection="column"
-                width="100%"
-                justifyContent="center"
-                alignItems="center"
-              >
-                <TextField
-                  variant="standard"
-                  value="5.5"
-                  sx={{
-                    mt: screenSize.isMobile ? 3 : 0,
-                  }}
-                  InputProps={{
-                    sx: {
-                      fontSize: 20,
-                      textAlign: 'center',
-                      color: 'hsl(0, 0.00%, 79.20%)',
-                      '& input': {
-                        textAlign: 'center', // Center the text inside
-                      },
-                      '&:before': {
-                        borderBottom: `1px solid ${theme.palette.primary.main}`, // Default underline color
-                      },
-                      '&:hover:not(.Mui-disabled):before': {
-                        borderBottom: `1px solid ${theme.palette.primary.main}`, // Hover color
-                      },
-                      '&:after': {
-                        borderBottom: `1px solid ${theme.palette.primary.main}`, // Focused underline color
-                      },
-                    },
-                  }}
-                />
-                <Image
-                  src="/bodyHeatTable.png"
-                  alt="HeatMap"
-                  layout="responsive"
-                  width={100} // Placeholder value
-                  height={50} // Placeholder value (adjust based on aspect ratio)
-                  style={{ marginTop: 10 }}
-                />
-              </Box>
-            </Grid2>
-          </Grid2>
-        </Grid2>
-        <Grid2
-          size={screenSize.isSmallerThanLaptop ? 12 : 6}
-          sx={{ mt: !screenSize.isSmallerThanLaptop ? 3 : 0 }}
-        >
-          <ResponsiveContainer width="100%" height={400}>
-            <AreaChart data={data}>
-              <defs>
-                <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#00aaff" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#00aaff" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-              <XAxis dataKey="time" stroke="#aaa" />
-              <YAxis stroke="#aaa" />
-              <Tooltip content={<CustomTooltip />} />
+          <AreaChart data={data}>
+            <defs>
+              <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#00aaff" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="#00aaff" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+            <XAxis dataKey="time" stroke="#aaa" />
+            <YAxis stroke="#aaa" />
+            <Tooltip content={<CustomTooltip />} />
 
-              <Area
-                type="monotone"
-                dataKey="value"
-                stroke="#00aaff"
-                fillOpacity={1}
-                fill="url(#colorUv)"
-              />
-              <Line
-                type="monotone"
-                dataKey="value"
-                stroke="#ffffff"
-                strokeWidth={2}
-                dot={false}
-              />
-              <Scatter
-                data={data}
-                dataKey="value"
-                fill="#fff"
-                stroke="#000"
-                strokeWidth={2}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </Grid2>
-      </Grid2>
-    </>
+            <Area
+              type="monotone"
+              dataKey="value"
+              stroke="#00aaff"
+              fillOpacity={1}
+              fill="url(#colorUv)"
+            />
+            <Line
+              type="monotone"
+              dataKey="value"
+              stroke="#ffffff"
+              strokeWidth={2}
+              dot={false}
+            />
+            <Scatter
+              data={data}
+              dataKey="value"
+              fill="#fff"
+              stroke="#000"
+              strokeWidth={2}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </Box>
+    </Box>
   );
 }

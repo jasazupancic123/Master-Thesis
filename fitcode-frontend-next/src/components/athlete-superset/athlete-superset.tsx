@@ -2,7 +2,7 @@ import Box from '@mui/material/Box/Box';
 
 import AthleteTrainingExerciseCollapsed from '../athlete-training-exercise-collapsed/athlete-training-exercise-collapsed';
 import BorderColor from '../border-color/border-color';
-import { COLOR } from '@/common/constant/browser.constant';
+import { COLOR } from '@/common/constant/color.constant';
 import type { Superset } from '@/controller/training/type/superset.type';
 
 interface AthleteSupersetProps {

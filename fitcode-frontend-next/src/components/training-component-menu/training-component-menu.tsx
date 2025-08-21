@@ -1,17 +1,13 @@
-import {
-  MonitorHeart,
-  MoreVert,
-  Visibility,
-  VisibilityOff,
-} from '@mui/icons-material';
+import { MonitorHeart, Visibility, VisibilityOff } from '@mui/icons-material';
 import { DoNotDisturb } from '@mui/icons-material';
-import { Box, IconButton, Menu, MenuItem } from '@mui/material';
+import { Box, Menu, MenuItem } from '@mui/material';
 
 import TrainingComponentHeaderMenu from '../training-component-header-menu/training-component-header-menu';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
+import { ComponentIds } from '@/common/enum/component-ids.enum';
 import type { SetState } from '@/common/type/state.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent as TrainingComponentClass } from '@/controller/training/type/training-component.type';
@@ -98,9 +94,55 @@ export default function TrainingComponentMenu(
         </Box>
       )}
 
-      <IconButton sx={{ p: 0 }} onClick={handleMenuOpen}>
-        <MoreVert fontSize="small" />
-      </IconButton>
+      {component?.id === trainingComponent.id &&
+        trainingComponent.id === ComponentIds.STRENGTH && (
+          <Box
+            sx={{
+              cursor: 'pointer',
+              px: 1,
+            }}
+            onClick={() => {
+              if (
+                trainingComponent &&
+                component &&
+                training.id === selectedTraining?.id &&
+                trainingComponent.id === component.id &&
+                heatmapView
+              ) {
+                setHeatmapView(false);
+                handleMenuClose();
+                return;
+              }
+              if (!component || trainingComponent.id !== component.id) {
+                setTraining(training);
+                setComponent(trainingComponent);
+              }
+
+              setHeatmapView(true);
+              handleMenuClose();
+            }}
+          >
+            {trainingComponent &&
+            component &&
+            training.id === selectedTraining?.id &&
+            trainingComponent.id === component.id &&
+            heatmapView ? (
+              <>
+                <DoNotDisturb
+                  sx={{
+                    position: 'absolute',
+                    fontSize: 20,
+                  }}
+                />
+                <MonitorHeart sx={{ fontSize: 20, opacity: 0.5 }} />
+              </>
+            ) : (
+              <>
+                <MonitorHeart sx={{ fontSize: 20 }} />
+              </>
+            )}
+          </Box>
+        )}
 
       <Menu
         anchorEl={anchorEl}
@@ -121,53 +163,6 @@ export default function TrainingComponentMenu(
             </>
           )}
         </MenuItem>
-
-        {!isWarmupOrCooldown(trainingComponent) && (
-          <Box>
-            <MenuItem
-              onClick={() => {
-                if (
-                  trainingComponent &&
-                  component &&
-                  training.id === selectedTraining?.id &&
-                  trainingComponent.id === component.id &&
-                  heatmapView
-                ) {
-                  setHeatmapView(false);
-                  handleMenuClose();
-                  return;
-                }
-                if (!component || trainingComponent.id !== component.id) {
-                  setTraining(training);
-                  setComponent(trainingComponent);
-                }
-
-                setHeatmapView(true);
-                handleMenuClose();
-              }}
-            >
-              {trainingComponent &&
-              component &&
-              training.id === selectedTraining?.id &&
-              trainingComponent.id === component.id &&
-              heatmapView ? (
-                <>
-                  <DoNotDisturb
-                    sx={{
-                      position: 'absolute',
-                      fontSize: 22,
-                    }}
-                  />
-                  <MonitorHeart sx={{ mr: 1, opacity: 0.5 }} /> Hide Heatmap
-                </>
-              ) : (
-                <>
-                  <MonitorHeart sx={{ mr: 1 }} /> Workout Heatmap
-                </>
-              )}
-            </MenuItem>
-          </Box>
-        )}
       </Menu>
     </Box>
   );

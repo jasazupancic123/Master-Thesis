@@ -5,7 +5,7 @@ import { Droppable } from 'react-beautiful-dnd';
 
 import SupersetExercise from '../superset-exercise/superset-exercise';
 import { handleDeleteSuperset } from '../trainer-day-view/state';
-import { COLOR } from '@/common/constant/browser.constant';
+import { COLOR } from '@/common/constant/color.constant';
 import type { Superset as SupersetClass } from '@/controller/training/type/superset.type';
 import { useGroup } from '@/store/group-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
@@ -38,13 +38,17 @@ export default function Superset(props: SupersetComponentProps) {
 
   if (!component || !training) return null;
 
-  const getBorderGradient = (): string => {
+  const getBorderGradient = (
+    toTop: boolean,
+    onlyOneSuperset: boolean = false
+  ): string => {
     const fromColor = COLOR[supersetIndex % COLOR.length];
-    const toColor =
-      supersets.length - 1 === supersetIndex
-        ? COLOR[0]
-        : COLOR[(supersetIndex + 1) % COLOR.length];
-    return `linear-gradient(to bottom, ${fromColor}, ${toColor}) 1`;
+    const toColor = onlyOneSuperset
+      ? COLOR[(supersetIndex + 1) % COLOR.length]
+      : COLOR[(supersetIndex + 1) % COLOR.length];
+    // const dirrection = toTop ? 'to top' : 'to bottom';
+    const dirrection = 'to bottom';
+    return `linear-gradient(${dirrection}, ${fromColor}, ${toColor})`;
   };
 
   return (
@@ -79,97 +83,104 @@ export default function Superset(props: SupersetComponentProps) {
         direction="vertical"
       >
         {(provided) => (
-          <Stack
+          <Box
             ref={provided.innerRef}
             {...provided.droppableProps}
-            p={screenSize.isLandscapeMobile ? 0.5 : 0}
-            pt={0}
             sx={{
-              border: '1px solid',
-              borderRadius: 10,
-              borderImage: getBorderGradient(),
+              p: '1px',
+              borderRadius: '5px',
+              background: getBorderGradient(
+                supersetIndex > 3,
+                supersets.length === 1 ||
+                  (supersets.length === 5 && supersetIndex === 4)
+              ),
             }}
           >
-            <Box
+            <Stack
+              p={screenSize.isLandscapeMobile ? 0.5 : 0}
+              pt={0}
               sx={{
-                cursor: 'pointer',
+                bgcolor: 'background.default',
+                borderRadius: '5px',
               }}
-              onClick={() =>
-                handleDeleteSuperset(
-                  { index: supersetIndex },
-                  {
-                    training,
-                    setTraining,
-                    supersets,
-                    component,
-                    setComponent,
-                    selectedSubgroup,
-                    setSelectedSubgroup,
-                    setTrainings,
-                    setDetectedChanges,
-                    setCustomAthleteWorkloads,
-                    setSelectedExercises,
-                  }
-                )
-              }
-            ></Box>
+            >
+              <Box
+                sx={{ cursor: 'pointer' }}
+                onClick={() =>
+                  handleDeleteSuperset(
+                    { index: supersetIndex },
+                    {
+                      training,
+                      setTraining,
+                      supersets,
+                      component,
+                      setComponent,
+                      selectedSubgroup,
+                      setSelectedSubgroup,
+                      setTrainings,
+                      setDetectedChanges,
+                      setCustomAthleteWorkloads,
+                      setSelectedExercises,
+                    }
+                  )
+                }
+              />
 
-            <Grid2 container gap={0.5}>
-              {supersets.length === 1 && superset.exercises.length === 0 ? (
-                <Box
-                  border="1px dashed #B2B3B7"
-                  borderRadius={2}
-                  sx={{ cursor: 'pointer' }}
-                  p={1}
-                  py={3}
-                  width="100%"
-                  height="100%"
-                  textAlign="center"
-                  onClick={() => setOpenAddExerciseModal(true)}
-                >
-                  <Typography variant="body2" align="center">
-                    Add exercise
-                  </Typography>
-                </Box>
-              ) : (
-                superset.exercises.map((exercise, exerciseIndex) => (
-                  <SupersetExercise
-                    key={`${component.id}-${supersetIndex}-${exerciseIndex}`}
-                    exercise={exercise}
-                    superset={superset}
-                    supersetIndex={supersetIndex}
-                    exerciseIndex={exerciseIndex}
-                  />
-                ))
-              )}
+              <Grid2 container>
+                {supersets.length === 1 && superset.exercises.length === 0 ? (
+                  <Box
+                    border="1px dashed #B2B3B7"
+                    borderRadius={2}
+                    sx={{ cursor: 'pointer' }}
+                    p={1}
+                    py={3}
+                    width="100%"
+                    height="100%"
+                    textAlign="center"
+                    onClick={() => setOpenAddExerciseModal(true)}
+                  >
+                    <Typography variant="body2" align="center">
+                      Add exercise
+                    </Typography>
+                  </Box>
+                ) : (
+                  superset.exercises.map((exercise, exerciseIndex) => (
+                    <SupersetExercise
+                      key={`${component.id}-${supersetIndex}-${exerciseIndex}`}
+                      exercise={exercise}
+                      superset={superset}
+                      supersetIndex={supersetIndex}
+                      exerciseIndex={exerciseIndex}
+                    />
+                  ))
+                )}
 
-              {provided.placeholder}
-            </Grid2>
+                {provided.placeholder}
+              </Grid2>
 
-            <Box
-              sx={{
-                cursor: 'pointer',
-              }}
-              onClick={() =>
-                handleDeleteSuperset(
-                  { index: supersetIndex },
-                  {
-                    training,
-                    setTraining,
-                    supersets,
-                    component,
-                    setComponent,
-                    selectedSubgroup,
-                    setSelectedSubgroup,
-                    setTrainings,
-                    setDetectedChanges,
-                    setCustomAthleteWorkloads,
-                    setSelectedExercises,
-                  }
-                )
-              }
-            />
-          </Stack>
+              <Box
+                sx={{ cursor: 'pointer' }}
+                onClick={() =>
+                  handleDeleteSuperset(
+                    { index: supersetIndex },
+                    {
+                      training,
+                      setTraining,
+                      supersets,
+                      component,
+                      setComponent,
+                      selectedSubgroup,
+                      setSelectedSubgroup,
+                      setTrainings,
+                      setDetectedChanges,
+                      setCustomAthleteWorkloads,
+                      setSelectedExercises,
+                    }
+                  )
+                }
+              />
+            </Stack>
+          </Box>
         )}
       </Droppable>
     </Grid2>

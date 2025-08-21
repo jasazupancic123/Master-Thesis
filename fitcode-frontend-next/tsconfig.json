@@ -45,6 +45,7 @@
     "src/components/mediapipe-react-app/components/CameraSquat/Utils.js",
     "src/components/mediapipe-react-app/components/CameraSquat/CameraSquat.js",
     "src/components/mediapipe-react-app/components/CameraSquat/CameraSquat.js",
+    "src/common/type/svgr.d.ts",
     "jest.setup.js",
     "jest.config.ts"
   ],
