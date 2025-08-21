@@ -1,21 +1,31 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { Query } from 'firebase-admin/firestore';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
+import { Query, Timestamp } from 'firebase-admin/firestore';
 import { UserRecord } from 'firebase-admin/lib/auth';
+import { DateTime } from 'luxon';
 
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
 import { Permission } from '@src/common/interface/permission.interface';
+import { CommonService } from '@src/common/service/common.service';
 import { Institution } from '@src/institution/entity/institution.entity';
+import { InstitutionRepository } from '@src/institution/repository/institution.repository';
 
-import { FirestoreCollection } from '../common/enum/firestore-collection.enum';
 import { CustomClaims, User } from '../common/type/firebase-auth.type';
-import { UserRef, WellnessRef } from '../common/type/firestore.type';
-import { Environment } from '../config/environment-validation-schema';
+import {
+  InstitutionRef,
+  UserRef,
+  WellnessRef,
+} from '../common/type/firestore.type';
 import { FirebaseService } from '../firebase/firebase.service';
 import { FilterUserQueryDto } from './dto/filter-user-query.dto';
 import { UpdateUserClaimsDto } from './dto/update-user-claims.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { UserEntity } from './entity/user.entity';
+import { WellnessZScore } from './entity/wellnes-z-score.entity';
 import { Wellness } from './entity/wellness.entity';
 import { UserRepository } from './repository/user.repository';
 import { WellnessRepository } from './repository/wellness.repository';
@@ -30,8 +40,9 @@ export class UserService implements Permission<UserEntity, Institution> {
   private logger = new Logger(UserService.name);
 
   constructor(
-    private readonly configService: ConfigService<Environment>,
+    private readonly commonService: CommonService,
     private readonly firebaseService: FirebaseService,
+    private readonly institutionRepository: InstitutionRepository,
     private readonly userRepository: UserRepository,
     private readonly wellnessRepository: WellnessRepository,
   ) {}
@@ -190,21 +201,122 @@ export class UserService implements Permission<UserEntity, Institution> {
     return this.wellnessRepository.serialize(snapshot.docs[0]);
   }
 
-  async getRecentWellnessForMany(userIds: string[]): Promise<Wellness[]> {
-    try {
-      const collectionGroup = this.firebaseService.firestore.collectionGroup(
-        FirestoreCollection.WELLNESS,
-      );
+  async getWellnessByInstitutionId(
+    ref: InstitutionRef,
+  ): Promise<WellnessZScore[]> {
+    const institution = await this.institutionRepository.findById(
+      ref.institutionId,
+    );
 
-      return await this.firebaseService.batchIn(
-        'userId',
-        userIds,
-        collectionGroup,
-        (q) => q.orderBy('date', 'desc'),
-      );
-    } catch (_) {
-      return [];
-    }
+    if (!institution) throw new NotFoundException('Institution not found');
+
+    const userIds: UserRef[] = institution.athleteIds.map((id) => ({
+      uid: id,
+    }));
+
+    const now = DateTime.now();
+    const startOfToday = now.startOf('day').toJSDate();
+    const startOfYesterday = now
+      .startOf('day')
+      .minus({ days: 1 })
+      .startOf('day')
+      .toJSDate();
+
+    const startOf10DaysBefore = now
+      .startOf('day')
+      .minus({ days: 10 })
+      .startOf('day')
+      .toJSDate();
+
+    const wellness = userIds.length
+      ? await Promise.all(
+          userIds.map(async (userRef) => {
+            const wellnessDocs = await this.wellnessRepository.getDocs(
+              userRef,
+              (q) =>
+                q
+                  .where('userId', '==', userRef.uid)
+                  .where('date', '>=', Timestamp.fromDate(startOf10DaysBefore)),
+            );
+
+            const yesterdayZ = this.getWellnessZScore(
+              wellnessDocs,
+              startOfYesterday,
+            );
+            const todayZ = this.getWellnessZScore(wellnessDocs, startOfToday);
+
+            return [yesterdayZ, todayZ].filter((z) => z !== null);
+          }),
+        )
+      : [];
+
+    return wellness.flat();
+  }
+
+  getWellnessZScore(
+    wellnessDocs: Wellness[],
+    date: Date,
+  ): WellnessZScore | null {
+    const dayStart = DateTime.fromJSDate(date).startOf('day');
+
+    const foundWellness = wellnessDocs.find((wd) =>
+      DateTime.fromJSDate(wd.date).hasSame(dayStart, 'day'),
+    );
+    if (!foundWellness) return null;
+
+    if (wellnessDocs.length < 2) return foundWellness;
+
+    const history = wellnessDocs.filter(
+      (wd) => DateTime.fromJSDate(wd.date) < dayStart,
+    );
+
+    const sleepHist = history
+      .map((w) => w.sleep)
+      .filter(this.commonService.number.isNumber);
+    const fatigueHist = history
+      .map((w) => w.fatigue)
+      .filter(this.commonService.number.isNumber);
+    const sorenessHist = history
+      .map((w) => w.soreness)
+      .filter(this.commonService.number.isNumber);
+
+    const sleepMean =
+      sleepHist.length >= 1
+        ? this.commonService.number.getMean(sleepHist)
+        : null;
+    const fatigueMean =
+      fatigueHist.length >= 1
+        ? this.commonService.number.getMean(fatigueHist)
+        : null;
+    const sorenessMean =
+      sorenessHist.length >= 1
+        ? this.commonService.number.getMean(sorenessHist)
+        : null;
+
+    const sleepSD = this.commonService.number.getStandardDeviation(sleepHist);
+    const fatigueSD =
+      this.commonService.number.getStandardDeviation(fatigueHist);
+    const sorenessSD =
+      this.commonService.number.getStandardDeviation(sorenessHist);
+
+    return {
+      ...foundWellness,
+      sleepZScore: this.commonService.number.getZScore(
+        foundWellness.sleep,
+        sleepMean,
+        sleepSD,
+      ),
+      fatigueZScore: this.commonService.number.getZScore(
+        foundWellness.fatigue,
+        fatigueMean,
+        fatigueSD,
+      ),
+      sorenessZScore: this.commonService.number.getZScore(
+        foundWellness.soreness,
+        sorenessMean,
+        sorenessSD,
+      ),
+    };
   }
 
   canView(user: User, entity: UserEntity, institution?: Institution) {
