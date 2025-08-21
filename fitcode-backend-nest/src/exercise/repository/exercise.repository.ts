@@ -1,48 +1,25 @@
 import { Injectable } from '@nestjs/common';
-import {
-  CollectionReference,
-  DocumentReference,
-  Query,
-} from 'firebase-admin/firestore';
 
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { CommonService } from '@src/common/service/common.service';
-import { Create, FirestoreEntity, Update } from '@src/common/type/entity.type';
-import { RootFirestoreCollectionRepository } from '@src/common/type/firestore.type';
+import { Create, Update } from '@src/common/type/entity.type';
+import { FirestoreRootRepository } from '@src/common/type/firestore.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 
 import { Exercise } from '../entity/exercise.entity';
 
 @Injectable()
-export class ExerciseRepository
-  implements RootFirestoreCollectionRepository<Exercise>
-{
+export class ExerciseRepository extends FirestoreRootRepository<Exercise> {
+  collectionName = FirestoreCollection.EXERCISE;
+
   constructor(
-    private readonly firebaseService: FirebaseService,
+    readonly firebaseService: FirebaseService,
     private readonly commonService: CommonService,
-  ) {}
-
-  async getDocs(
-    query: (query: Query) => Query = (query) => query,
-  ): Promise<Exercise[]> {
-    const snapshot = await query(this.collection())
-      // .where('deletedAt', '==', null)
-      .get();
-
-    return snapshot.docs.map((doc) =>
-      this.firebaseService.serialize(doc.data() as FirestoreEntity<Exercise>),
-    );
+  ) {
+    super(firebaseService);
   }
 
-  async getDoc(exerciseId: string): Promise<Exercise> {
-    const snapshot = await this.doc(exerciseId).get();
-    if (!snapshot.exists) return null;
-    return this.firebaseService.serialize(
-      snapshot.data() as FirestoreEntity<Exercise>,
-    );
-  }
-
-  async addDoc(input: Create<Omit<Exercise, 'attributeValues'>>) {
+  async save(input: Create<Omit<Exercise, 'attributeValues'>>) {
     const { id } = this.collection().doc();
     const query = this.firebaseService.buildCreateQuery<Exercise>(
       {
@@ -64,28 +41,18 @@ export class ExerciseRepository
     return id;
   }
 
-  async updateDoc(exerciseId: string, input: Update<Exercise>) {
+  async update(exerciseId: string, input: Update<Exercise>) {
     const data = this.firebaseService.buildUpdateQuery(input);
     await this.doc(exerciseId).update(data);
   }
 
-  async deleteDoc(exerciseId: string) {
+  async delete(exerciseId: string) {
     // soft delete
     const query = this.firebaseService.buildUpdateQuery<Exercise>({
       deletedAt: new Date(),
     });
 
     await this.doc(exerciseId).update(query);
-  }
-
-  doc(exerciseId: string): DocumentReference {
-    return this.collection().doc(exerciseId);
-  }
-
-  collection(): CollectionReference {
-    return this.firebaseService.firestore.collection(
-      FirestoreCollection.EXERCISE,
-    );
   }
 
   slug(name: string, institutionTitle?: string): string {

@@ -840,7 +840,7 @@ describe('Create Training (e2e)', () => {
       expect(response.body.id).toBe(training.id);
       expect(response.body.components).toHaveLength(0);
 
-      const trainings = await db.trainings.getDocs();
+      const trainings = await db.trainings.findAll();
       expect(trainings).toHaveLength(0);
 
       await Promise.all([deleteDoc(firebase, 'TRAINING', training.id)]);

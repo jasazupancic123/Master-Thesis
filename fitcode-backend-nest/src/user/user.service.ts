@@ -48,11 +48,11 @@ export class UserService implements Permission<UserEntity, Institution> {
   ) {}
 
   async findOne(id: string): Promise<UserEntity | null> {
-    return await this.userRepository.getDoc(id);
+    return await this.userRepository.findById(id);
   }
 
   async findOneByIdOrFail(id: string): Promise<UserEntity> {
-    const item = await this.userRepository.getDoc(id);
+    const item = await this.userRepository.findById(id);
     if (!item) throw new BadRequestException('User not found');
     return item;
   }
@@ -66,7 +66,7 @@ export class UserService implements Permission<UserEntity, Institution> {
   }
 
   async getDocs(query: (query: Query) => Query = (query) => query) {
-    return await this.userRepository.getDocs(query);
+    return await this.userRepository.findAll(query);
   }
 
   async findOneOrFail(id: string): Promise<UserEntity> {
@@ -93,7 +93,7 @@ export class UserService implements Permission<UserEntity, Institution> {
   }
 
   async findProfile(ref: UserRef) {
-    return await this.userRepository.getDoc(ref.uid);
+    return await this.userRepository.findById(ref.uid);
   }
 
   async findAll(filter?: FilterUserQueryDto): Promise<User[]> {
@@ -132,7 +132,7 @@ export class UserService implements Permission<UserEntity, Institution> {
       if (user?.uid) await auth.setCustomUserClaims(user.uid, customClaims);
     }
 
-    await this.userRepository.addDoc({ id: user.uid });
+    await this.userRepository.save({ id: user.uid });
     return user?.uid ? ((await auth.getUser(user.uid)) as User) : null;
   }
 
@@ -150,7 +150,7 @@ export class UserService implements Permission<UserEntity, Institution> {
   async updateProfile(user: User, input: UpdateUserProfileDto) {
     const { userId } = input;
     delete input.userId;
-    await this.userRepository.updateDoc(userId, input);
+    await this.userRepository.update(userId, input);
   }
 
   async addAthlete(user: User, input: Omit<CreateUser, 'customClaims'>) {

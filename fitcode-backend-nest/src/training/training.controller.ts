@@ -95,13 +95,26 @@ export class TrainingController {
     return await this.trainingService.copyComponent(user, body);
   }
 
-  @Post('/periodize/trainings')
+  @Patch('/:baseTrainingId/periodize/component/:componentId')
   @Auth()
   async periodize(
     @RequestUser() user: User,
+    @Param('baseTrainingId') baseTrainingId: string,
+    @Param('componentId') componentId: string,
     @Body() body: PeriodizeTrainingsDto,
   ) {
-    return await this.trainingService.periodize(user, body);
+    return await this.trainingService.periodize(
+      user,
+      {
+        trainingId: baseTrainingId,
+        componentId,
+        subgroupId: body.subgroupId,
+      },
+      {
+        periodizationType: body.periodizationType,
+        exerciseIds: body.exerciseIds,
+      },
+    );
   }
 
   @Patch(':trainingId')
