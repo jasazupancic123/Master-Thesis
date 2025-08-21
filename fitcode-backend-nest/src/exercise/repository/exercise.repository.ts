@@ -32,6 +32,7 @@ export class ExerciseRepository extends FirestoreRootRepository<Exercise> {
         videoUrl: input.videoUrl,
         instruction: input.instruction || '',
         attributeValues: undefined,
+        muscleValues: input.muscleValues || [],
       },
       { timestamps: true },
     );

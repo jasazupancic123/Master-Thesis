@@ -18,7 +18,10 @@ import { Permission } from '@src/common/interface/permission.interface';
 import { CommonService } from '@src/common/service/common.service';
 import { Create, FirestoreEntity } from '@src/common/type/entity.type';
 import { User } from '@src/common/type/firebase-auth.type';
-import { ExerciseRef } from '@src/common/type/firestore.type';
+import {
+  BatchUpdateOperation,
+  ExerciseRef,
+} from '@src/common/type/firestore.type';
 import {
   ValidateError,
   ValidateRowError,
@@ -34,6 +37,7 @@ import { InstitutionService } from '@src/institution/service/institution.service
 import { CACHE_KEY_EXERCISES } from '../constant/get-exercises-cache-key.constant';
 import { GLOBAL_EXERCISE_OWNER } from '../constant/global-exercise-owner.constant';
 import { CreateExerciseDto } from '../dto/create-exercise.dto';
+import { CreateExerciseMuscleValueDto } from '../dto/create-exercise-muscle-value.dto';
 import { UpdateExerciseDto } from '../dto/update-exercise.dto';
 import { Exercise } from '../entity/exercise.entity';
 import { ExerciseAttributeValue } from '../entity/exercise-attribute-value.entity';
@@ -253,6 +257,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
         imageUrl: data.imageUrl,
         instruction: data.instruction || '',
         attributeValues: undefined,
+        muscleValues: data.muscleValues || [],
       },
     );
 
@@ -393,6 +398,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
         imageUrl: e.imageUrl,
         instruction: e.instruction || '',
         attributeValues: undefined,
+        muscleValues: e.muscleValues || [],
       };
 
       const query = this.firebaseService.buildCreateQuery<Exercise>(item, {
@@ -441,6 +447,43 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     await this.cacheManagerService.del(CACHE_KEY_EXERCISES);
 
     return result;
+  }
+
+  @LogMethod()
+  async updateManyMuscleValues(
+    user: User,
+    exercises: CreateExerciseMuscleValueDto[],
+  ) {
+    const isAdmin = this.firebaseService.isAdmin(user);
+    const isManager = this.firebaseService.isManager(user);
+
+    const institution = isManager
+      ? await this.institutionService.getDocByOwner(user.uid)
+      : null;
+
+    const ownerId = isAdmin
+      ? GLOBAL_EXERCISE_OWNER // if user is admin, exercise is global
+      : institution
+        ? institution.id
+        : null;
+
+    if ((!institution && !isAdmin) || !ownerId || !this.canAdd(user))
+      throw new UnauthorizedException(
+        'You are not allowed to create exercises',
+      );
+
+    const operations: BatchUpdateOperation<Exercise>[] = exercises.map((e) => {
+      const id = this.commonService.string.slug(e.name);
+      const ref = this.repository.collection().doc(id);
+      const query = this.firebaseService.buildUpdateQuery({
+        id: ref.id,
+        muscleValues: e.muscleValues,
+      });
+
+      return { ref, data: query, operation: 'update' };
+    });
+
+    await this.firebaseService.paginateBatches(operations);
   }
 
   private validateCreateExercise(

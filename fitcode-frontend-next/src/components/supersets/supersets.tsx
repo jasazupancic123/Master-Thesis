@@ -180,7 +180,7 @@ export default function Supersets(props: SupersetsProps) {
                     backgroundColor: theme.palette.background.dark,
                   }}
                   p={1}
-                  py={!expandedExercisesView ? 2.25 : 8.75}
+                  py={!expandedExercisesView ? 2.25 : 3}
                   mx={1}
                   onClick={() => setOpenAddExerciseModal(true)}
                 >

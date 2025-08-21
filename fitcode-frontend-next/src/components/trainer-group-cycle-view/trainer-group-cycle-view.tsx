@@ -326,7 +326,7 @@ export default function TrainerCycleView() {
           }}
         >
           <Box
-            width="90%"
+            width="100%"
             display="flex"
             alignItems="center"
             justifyContent="space-around"
@@ -343,7 +343,6 @@ export default function TrainerCycleView() {
           </Box>
           {/* Training weeks */}
           <Stack
-            pb={1}
             sx={{
               backgroundColor: theme.palette.background.dark,
             }}
