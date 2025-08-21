@@ -1,7 +1,8 @@
 'use client';
-import { useRef, useState, useEffect, useCallback } from 'react';
 import { Box, Typography, useTheme } from '@mui/material';
-import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 
 type SvgC = React.ForwardRefExoticComponent<
   React.SVGProps<SVGSVGElement> & React.RefAttributes<SVGSVGElement>
@@ -139,7 +140,7 @@ export default function MuscleMapWithTooltip({
       // pointer coords or center on element (for keyboard focus)
       let x = px ?? 0;
       let y = py ?? 0;
-      if (px == null || py == null) {
+      if (px === null || py === null) {
         const rect = el.getBoundingClientRect();
         const crect = containerRef.current.getBoundingClientRect();
         x = rect.left - crect.left + rect.width / 2;

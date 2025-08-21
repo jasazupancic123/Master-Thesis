@@ -40,7 +40,6 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
 
   const [openAddExerciseModal, setOpenAddExerciseModal] = useState(false);
   const [openCalendarModal, setOpenCalendarModal] = useState(false);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [heatmapView, setHeatmapView] = useState(false);
   const [openOverwriteModal, setOpenOverwriteModal] = useState(false);
   const [trainingInPeriodForModal, setTrainingInPeriodForModal] =
@@ -92,10 +91,7 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
             trainingComponent={trainingComponent}
             heatmapView={heatmapView}
             setHeatmapView={setHeatmapView}
-            anchorEl={anchorEl}
-            setAnchorEl={setAnchorEl}
             training={training}
-            setOpenCalendarModal={setOpenCalendarModal}
           />
           <Stack
             direction={

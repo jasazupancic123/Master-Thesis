@@ -1,5 +1,12 @@
 export const COLOR = ['#34FFBE', '#A275F7', '#FFA14E', '#FF5C8D'];
 
+export const COMMON_COLORS = {
+  blue: '#3b82f6',
+  yellow: '#FFD734',
+  red: '#ef4444',
+  orange: '#FF6B34',
+};
+
 export const GRAPH_COLORS = [
   '#FF6859',
   '#FFCF44',
@@ -12,10 +19,10 @@ export const GRAPH_COLORS = [
 ];
 
 export const HEATMAP_COLORS = [
-  '#FFD734',
+  COMMON_COLORS.yellow,
   '#FFA14E',
-  '#FF6B34',
+  COMMON_COLORS.orange,
   '#FF34A8',
   '#A275F7',
-  '#4EA8FF',
+  COMMON_COLORS.blue,
 ];

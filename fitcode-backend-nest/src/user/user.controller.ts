@@ -77,6 +77,16 @@ export class UserController {
     );
   }
 
+  @Get('/wellness/institution/:institutionId')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER])
+  async getWellnessByInstitutionId(
+    @Param('institutionId') institutionId: string,
+  ) {
+    return await this.userService.getWellnessByInstitutionId({
+      institutionId,
+    });
+  }
+
   @Post('me/meta')
   @Auth([UserRole.ATHLETE])
   async saveMeta(@RequestUser() user: User, @Body() body: SaveUserWellnessDto) {

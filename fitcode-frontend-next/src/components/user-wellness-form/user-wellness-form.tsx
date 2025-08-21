@@ -155,8 +155,37 @@ export default function UserWellnessForm(props: Props) {
         disabled={props.disabled}
       />
 
-      {/* Submit button */}
+      {/* Weight in kg */}
+      <TextField
+        label="Weight (kg)"
+        type="number"
+        value={state.weight}
+        onChange={(event) => {
+          if (isNaN(Number(event.target.value))) return;
 
+          setState((prev) => ({
+            ...prev,
+            weight: Number(event.target.value),
+          }));
+        }}
+        sx={{
+          mt: 2,
+          backgroundColor: 'background.default',
+          borderRadius: '10px',
+        }}
+        inputProps={{
+          min: 0,
+          step: 0.5,
+          style: {
+            padding: '5px 10px',
+            display: 'flex',
+            alignItems: 'center',
+          },
+        }}
+        disabled={props.disabled}
+      />
+
+      {/* Submit button */}
       <Button
         variant="contained"
         onClick={() => {

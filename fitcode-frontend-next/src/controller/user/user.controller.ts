@@ -6,7 +6,11 @@ import type {
   User,
   UserEntity,
 } from './type/user.type';
-import type { CreateWellness, Wellness } from './type/wellness.type';
+import type {
+  CreateWellness,
+  Wellness,
+  WellnessZScore,
+} from './type/wellness.type';
 import { CommonService } from '@/common/service/common.service';
 
 const api = CommonService.instance.api;
@@ -38,6 +42,12 @@ export class UserController {
 
   static async getMyMeta() {
     return api.get<Wellness>('/user/me/meta');
+  }
+
+  static async getWellnessByInstitutionId(institutionId: string) {
+    return api.get<WellnessZScore[]>(
+      `/user/wellness/institution/${institutionId}`
+    );
   }
 
   static async saveMeta(body: CreateWellness) {

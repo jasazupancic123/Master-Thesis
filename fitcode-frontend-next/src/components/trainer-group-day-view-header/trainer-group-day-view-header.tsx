@@ -52,6 +52,7 @@ export default function GroupTrainerDayViewHeader(
   interface PeriodSelectProps {
     smallDisplay?: boolean;
   }
+
   function PeriodSelect(props: PeriodSelectProps) {
     const { smallDisplay } = props;
     return (
@@ -116,6 +117,7 @@ export default function GroupTrainerDayViewHeader(
   interface GroupInfoProps {
     smallDisplay?: boolean;
   }
+
   function GroupCycleInfo(props: GroupInfoProps) {
     const { smallDisplay } = props;
     return (
