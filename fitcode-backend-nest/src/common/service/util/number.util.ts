@@ -34,4 +34,35 @@ export class NumberUtil {
       oneRM /
       (formula === RepMaxFormula.BRZYCKI ? 1.0278 - 0.0278 * n : 1 + n / 30);
   }
+
+  isNumber(v: unknown): v is number {
+    return typeof v === 'number' && Number.isFinite(v);
+  }
+
+  getStandardDeviation(xs: number[]) {
+    const n = xs.length;
+    if (n < 2) return NaN; // not enough history
+    const mean = xs.reduce((a, b) => a + b, 0) / n;
+    const sse = xs.reduce((a, x) => a + (x - mean) ** 2, 0);
+    return Math.sqrt(sse / (n - 1));
+  }
+
+  getMean(xs: number[]) {
+    const n = xs.length;
+    if (n === 0) return 0;
+    return xs.reduce((a, b) => a + b, 0) / n;
+  }
+
+  getZScore(
+    current: number | null | undefined,
+    mean: number | null,
+    sd: number | null,
+  ) {
+    return this.isNumber(current) &&
+      this.isNumber(mean) &&
+      this.isNumber(sd) &&
+      sd > 0
+      ? (current - mean) / sd
+      : null;
+  }
 }

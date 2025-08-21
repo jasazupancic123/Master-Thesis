@@ -213,10 +213,8 @@ export default function SelectedMemberReport(props: SelectedMemberReportProps) {
         >
           {wellnessChartData.some(
             (w) =>
-              w.zScoreToday !== null &&
-              w.zScoreToday !== undefined &&
-              w.zScoreYesterday !== null &&
-              w.zScoreYesterday !== undefined
+              (w.zScoreToday !== null && w.zScoreToday !== undefined) ||
+              (w.zScoreYesterday !== null && w.zScoreYesterday !== undefined)
           )
             ? [
                 { color: COMMON_COLORS.blue, label: 'Stable' },
