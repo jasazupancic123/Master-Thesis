@@ -2,8 +2,12 @@ import type {
   CollectionReference,
   DocumentData,
   DocumentReference,
+  DocumentSnapshot,
   Query,
+  QueryDocumentSnapshot,
 } from 'firebase-admin/firestore';
+
+import type { FirebaseService } from '@src/firebase/firebase.service';
 
 import type { FirestoreEntity } from './entity.type';
 
@@ -67,20 +71,116 @@ export interface RootFirestoreCollectionRepository<Model = unknown> {
 
   collection(): CollectionReference;
 
-  getDocs(query?: (ref: Query) => Query): Promise<Model[]>;
+  findAll(query?: (ref: Query) => Query): Promise<Model[]>;
 
-  getDoc(id: string): Promise<Model | null>;
+  findById(id: string): Promise<Model | null>;
 
-  addDoc(
+  save(
     input: Model | (Partial<Model> & Record<string, unknown>),
   ): Promise<string>;
 
-  updateDoc(
+  update(
     id: string,
     input: Partial<Model> & Record<string, unknown>,
   ): Promise<void>;
 
-  deleteDoc(id: string): Promise<void>;
+  delete(id: string): Promise<void>;
+}
+
+export abstract class FirestoreRepository<
+  Model extends object,
+  Ref = Record<string, string>,
+> implements FirestoreCollectionRepository<Model, Ref>
+{
+  protected readonly firebaseService: FirebaseService;
+  protected readonly parentRepository:
+    | FirestoreCollectionRepository<Model, Ref>
+    | FirestoreRootRepository<Model> = null;
+
+  constructor(
+    firebaseService: FirebaseService,
+    parentRepository:
+      | FirestoreCollectionRepository<Model, Ref>
+      | FirestoreRootRepository<Model> = null,
+  ) {
+    this.firebaseService = firebaseService;
+    this.parentRepository = parentRepository;
+  }
+
+  abstract collectionName: string;
+
+  abstract doc(ref: Ref): DocumentReference;
+
+  abstract collection(ref: Ref): CollectionReference;
+
+  abstract getDoc(ref: Ref): Promise<Model | null>;
+
+  abstract getDocs(ref: Ref, query?: (ref: Query) => Query): Promise<Model[]>;
+
+  abstract addDoc(
+    ref: Ref,
+    input: Model | (Partial<Model> & Record<string, unknown>),
+  ): Promise<string>;
+
+  abstract updateDoc(
+    ref: Ref,
+    input: Partial<Model> & Record<string, any>,
+  ): Promise<void>;
+
+  abstract deleteDoc(ref: Ref): Promise<void>;
+}
+
+export abstract class FirestoreRootRepository<Model extends object>
+  implements RootFirestoreCollectionRepository<Model>
+{
+  abstract collectionName: string;
+
+  readonly firebaseService: FirebaseService;
+
+  constructor(firebaseService: FirebaseService) {
+    this.firebaseService = firebaseService;
+  }
+
+  collection(): CollectionReference {
+    return this.firebaseService.firestore.collection(this.collectionName);
+  }
+
+  serialize(snapshot: DocumentSnapshot | QueryDocumentSnapshot): Model {
+    const serialized = this.firebaseService.serialize(
+      snapshot.data() as FirestoreEntity<Model>,
+    );
+
+    if ('id' in serialized) serialized.id = snapshot.id;
+    return serialized;
+  }
+
+  doc(id: string): DocumentReference {
+    return this.collection().doc(id);
+  }
+
+  async findById(id: string): Promise<Model | null> {
+    const snapshot = await this.doc(id).get();
+    if (!snapshot.exists) return null;
+    return this.serialize(snapshot);
+  }
+
+  async findAll(
+    query: (ref: Query) => Query = (query) => query,
+  ): Promise<Model[]> {
+    const snapshot = await query(this.collection()).get();
+    return snapshot.docs.map((doc) => this.serialize(doc));
+  }
+
+  abstract save(
+    input: Model | (Partial<Model> & Record<string, unknown>),
+  ): Promise<string>;
+
+  abstract update(
+    id: string,
+    input: Partial<Model> & Record<string, unknown>,
+  ): Promise<void>;
+
+  abstract delete(id: string): Promise<void>;
 }
 
 export type ComponentRef = { componentId: string };

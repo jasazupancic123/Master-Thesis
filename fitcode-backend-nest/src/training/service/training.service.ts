@@ -103,7 +103,7 @@ export class TrainingService implements Permission<Training, Institution> {
     options?: { skipInstitution?: boolean },
   ): Promise<Training | null> {
     // find training
-    const training = await this.repository.getDoc(ref.trainingId);
+    const training = await this.repository.findById(ref.trainingId);
     if (!training || training.deletedAt) return null;
 
     if (!options?.skipInstitution)
@@ -131,7 +131,7 @@ export class TrainingService implements Permission<Training, Institution> {
     filter?: Filter<Training>,
     options?: { limit?: number },
   ): Promise<Training[]> {
-    return await this.repository.getDocs((q) => {
+    return await this.repository.findAll((q) => {
       // filter by roles
       if (
         this.firebaseService.isTrainer(user) ||
@@ -262,94 +262,13 @@ export class TrainingService implements Permission<Training, Institution> {
         })),
     };
 
-    const id = await this.repository.addDoc(data);
+    const id = await this.repository.save(data);
     return {
       ...data,
       id,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
-  }
-
-  @LogMethod()
-  async periodize(
-    user: User,
-    ref: TrainingComponentRef & SubgroupRef,
-    input: PeriodizeTrainingsDto,
-  ) {
-    const { periodizationType, exerciseIds } = input;
-
-    if ([WARMUP_COMPONENT_ID, COOLDOWN_COMPONENT_ID].includes(ref.componentId))
-      throw new BadRequestException(
-        'You cannot periodize warmup or cooldown components',
-      );
-
-    // if base training in the past, throw error
-    const baseTraining = await this.findOneByIdOrFail(user, ref);
-    if (this.isInPast(startOfDay(baseTraining.from)))
-      throw new BadRequestException(
-        'You can only periodize upcoming trainings',
-      );
-
-    const baseComponent = this.trainingPlanService.findComponentOrFail(
-      baseTraining,
-      ref.componentId,
-    );
-
-    const futureTrainings = await this.findAll(
-      user,
-      {
-        groupId: baseTraining.groupId,
-        cycleId: baseTraining.cycleId,
-        from: baseTraining.to, // start from next training
-      },
-      { limit: 100 },
-    );
-
-    // target can be null / undefined, then just get the trainings without a target
-    const trainings = futureTrainings.filter((t) =>
-      t.components.some((c) =>
-        c.id === ref.componentId && baseComponent.target
-          ? c.target?.id === baseComponent.target.id
-          : !c.target,
-      ),
-    );
-
-    if (trainings.length === 0) return [];
-    trainings.unshift(baseTraining); // add base training to the beginning of the list
-
-    for (const training of trainings)
-      if (!ref.subgroupId)
-        // no subgroup is selected, override all supersets and subgroups
-        this.trainingPlanService.copyComponentIntoTraining(
-          baseComponent,
-          training,
-        );
-      else
-        // override only subgroups
-        this.trainingPlanService.copySubgroupIntoTraining(
-          ref.subgroupId,
-          baseComponent,
-          training,
-        );
-
-    const periodized = this.periodizationService.periodize(
-      periodizationType,
-      ref,
-      trainings,
-      exerciseIds,
-    );
-
-    const operations: BatchUpdateOperation<Training>[] = periodized.map(
-      (t) => ({
-        operation: 'update',
-        ref: this.repository.doc(t.id),
-        data: this.firebaseService.buildUpdateQuery(t),
-      }),
-    );
-
-    await this.firebaseService.paginateBatches(operations);
-    return periodized;
   }
 
   @LogMethod()
@@ -374,7 +293,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
     // if no components, delete training
     if (input.components.length === 0) {
-      await this.repository.deleteDoc(ref.trainingId);
+      await this.repository.delete(ref.trainingId);
       return { ...training, completedMembersIds: [] };
     }
 
@@ -447,7 +366,7 @@ export class TrainingService implements Permission<Training, Institution> {
       completedMembersIds: training.completedMembersIds,
     };
 
-    await this.repository.updateDoc(ref.trainingId, updateTraining);
+    await this.repository.update(ref.trainingId, updateTraining);
     return { ...training, ...updateTraining };
   }
 
@@ -598,7 +517,7 @@ export class TrainingService implements Permission<Training, Institution> {
       );
 
     // create training, add trainer to users, create workloads
-    const id = await this.repository.addDoc({
+    const id = await this.repository.save({
       ...data,
       components: trainingComponents,
     });
@@ -718,7 +637,191 @@ export class TrainingService implements Permission<Training, Institution> {
     this.validateCanEdit(user, training, training.institution);
     this.validateIsDateInFuture(training.from);
 
-    await this.repository.deleteDoc(ref.trainingId);
+    await this.repository.delete(ref.trainingId);
+  }
+
+  @LogMethod()
+  async addComponents(
+    user: User,
+    ref: TrainingRef,
+    input: TrainingComponent[],
+  ): Promise<Training> {
+    const training = await this.findOneByIdOrFail(user, ref);
+    this.validateCanEdit(user, training, training.institution);
+    this.validateIsDateInFuture(training.from);
+
+    // validate components & exercises
+    const components = await this.componentService.findAllFlat();
+    const methods = await this.methodService.findAll();
+    const attributes = await this.attributeService.findAll();
+
+    const exercises =
+      await this.trainingPlanService.getAllTrainingExercises(input);
+
+    const trainingComponents = [
+      training.warmup,
+      ...training.components,
+      ...input,
+      training.cooldown,
+    ];
+
+    this.updateTrainingTimes(trainingComponents);
+
+    const validTrainingComponents =
+      this.trainingPlanService.validateTrainingComponents(
+        training,
+        trainingComponents,
+        training.membersIds,
+        { exercises, components, methods, attributes },
+      );
+
+    const inputTrainingComponents = validTrainingComponents
+      .filter(
+        (c) => c.id !== WARMUP_COMPONENT_ID && c.id !== COOLDOWN_COMPONENT_ID,
+      )
+      .filter((c) => input.some((ic) => ic.id === c.id));
+
+    // get query for training
+    const [query, updatedTraining] =
+      this.trainingPlanService.getAddComponentsQuery(
+        training,
+        inputTrainingComponents,
+      );
+
+    // add components
+    await this.repository.update(training.id, query);
+
+    return updatedTraining;
+  }
+
+  async deleteComponent(
+    ref: TrainingComponentRef,
+    user: User,
+  ): Promise<Training> {
+    this.logger.log(
+      `User ${user.uid} is deleting component ${ref.componentId} from training ${ref.trainingId}`,
+    );
+
+    // validate ownership
+    const training = await this.findOneByIdOrFail(user, ref);
+    this.validateCanEdit(user, training, training.institution);
+    this.validateIsDateInFuture(training.from);
+
+    const filtered = training.components.filter(
+      (c) => c.id !== ref.componentId,
+    );
+
+    if (filtered.length === 0) {
+      await this.repository.delete(ref.trainingId);
+      return { ...training, components: [] };
+    }
+
+    filtered.unshift(training.warmup);
+    filtered.push(training.cooldown);
+    this.updateTrainingTimes(filtered);
+
+    training.components = filtered.filter(
+      (c) => c.id !== WARMUP_COMPONENT_ID && c.id !== COOLDOWN_COMPONENT_ID,
+    );
+
+    // get query for training
+    const [query, updatedTraining] =
+      this.trainingPlanService.getDeleteComponentQuery(training, ref);
+
+    // delete component
+    await this.repository.update(ref.trainingId, query);
+    return updatedTraining;
+  }
+
+  @LogMethod()
+  async periodize(
+    user: User,
+    ref: TrainingComponentRef & SubgroupRef,
+    input: PeriodizeTrainingsDto,
+  ) {
+    const { periodizationType, exerciseIds } = input;
+
+    if ([WARMUP_COMPONENT_ID, COOLDOWN_COMPONENT_ID].includes(ref.componentId))
+      throw new BadRequestException(
+        'You cannot periodize warmup or cooldown components',
+      );
+
+    // if base training in the past, throw error
+    const baseTraining = await this.findOneByIdOrFail(user, ref);
+    if (this.isInPast(startOfDay(baseTraining.from)))
+      throw new BadRequestException(
+        'You can only periodize upcoming trainings',
+      );
+
+    const baseComponent = this.trainingPlanService.findComponentOrFail(
+      baseTraining,
+      ref.componentId,
+    );
+
+    const futureTrainings = await this.findAll(
+      user,
+      {
+        groupId: baseTraining.groupId,
+        cycleId: baseTraining.cycleId,
+        from: baseTraining.to, // start from next training
+      },
+      { limit: 100 },
+    );
+
+    // target can be null / undefined, then just get the trainings without a target
+    const filtered = futureTrainings.filter((t) => {
+      const component = t.components.find((c) => c.id === ref.componentId);
+      if (!component) return false;
+
+      const target = baseComponent.target;
+      if (!target) return true; // no target, return all trainings with that component
+
+      // targets must match
+      return component.target?.id === target.id;
+    });
+
+    if (filtered.length === 0) return [];
+
+    // if no subgroup is selected, override all filtered trainings' component with the base component
+    // if subgroup is selected, override only that subgroup
+    for (const training of filtered) {
+      this.trainingPlanService.copyComponentIntoTraining(
+        ref,
+        baseTraining,
+        training,
+        { skipSupersets: true, skipSubgroups: true, skipTimes: true },
+      );
+
+      if (ref.subgroupId)
+        // override only subgroups
+        this.trainingPlanService.copySubgroupIntoTraining(
+          ref.subgroupId,
+          baseComponent,
+          training,
+        );
+    }
+
+    filtered.unshift(baseTraining); // add base training to the beginning of the list
+    const periodized = this.periodizationService.periodize(
+      periodizationType,
+      ref,
+      filtered,
+      exerciseIds,
+      { createExerciseIfNotExistsInTrainings: true },
+    );
+
+    const operations: BatchUpdateOperation<Training>[] = periodized.map(
+      (t) => ({
+        operation: 'update',
+        ref: this.repository.doc(t.id),
+        data: this.firebaseService.buildUpdateQuery(t),
+      }),
+    );
+
+    await this.firebaseService.paginateBatches(operations);
+    return periodized.sort(
+      (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime(),
+    );
   }
 
   @LogMethod()
@@ -789,104 +892,11 @@ export class TrainingService implements Permission<Training, Institution> {
         uid: athlete.uid,
       });
 
-    await this.repository.updateDoc(trainingId, {
+    await this.repository.update(trainingId, {
       stats,
       ...addCompletedMembersQuery,
     });
 
-    return updatedTraining;
-  }
-
-  @LogMethod()
-  async addComponents(
-    user: User,
-    ref: TrainingRef,
-    input: TrainingComponent[],
-  ): Promise<Training> {
-    const training = await this.findOneByIdOrFail(user, ref);
-    this.validateCanEdit(user, training, training.institution);
-    this.validateIsDateInFuture(training.from);
-
-    // validate components & exercises
-    const components = await this.componentService.findAllFlat();
-    const methods = await this.methodService.findAll();
-    const attributes = await this.attributeService.findAll();
-
-    const exercises =
-      await this.trainingPlanService.getAllTrainingExercises(input);
-
-    const trainingComponents = [
-      training.warmup,
-      ...training.components,
-      ...input,
-      training.cooldown,
-    ];
-
-    this.updateTrainingTimes(trainingComponents);
-
-    const validTrainingComponents =
-      this.trainingPlanService.validateTrainingComponents(
-        training,
-        trainingComponents,
-        training.membersIds,
-        { exercises, components, methods, attributes },
-      );
-
-    const inputTrainingComponents = validTrainingComponents
-      .filter(
-        (c) => c.id !== WARMUP_COMPONENT_ID && c.id !== COOLDOWN_COMPONENT_ID,
-      )
-      .filter((c) => input.some((ic) => ic.id === c.id));
-
-    // get query for training
-    const [query, updatedTraining] =
-      this.trainingPlanService.getAddComponentsQuery(
-        training,
-        inputTrainingComponents,
-      );
-
-    // add components
-    await this.repository.updateDoc(training.id, query);
-
-    return updatedTraining;
-  }
-
-  async deleteComponent(
-    ref: TrainingComponentRef,
-    user: User,
-  ): Promise<Training> {
-    this.logger.log(
-      `User ${user.uid} is deleting component ${ref.componentId} from training ${ref.trainingId}`,
-    );
-
-    // validate ownership
-    const training = await this.findOneByIdOrFail(user, ref);
-    this.validateCanEdit(user, training, training.institution);
-    this.validateIsDateInFuture(training.from);
-
-    const filtered = training.components.filter(
-      (c) => c.id !== ref.componentId,
-    );
-
-    if (filtered.length === 0) {
-      await this.repository.deleteDoc(ref.trainingId);
-      return { ...training, components: [] };
-    }
-
-    filtered.unshift(training.warmup);
-    filtered.push(training.cooldown);
-    this.updateTrainingTimes(filtered);
-
-    training.components = filtered.filter(
-      (c) => c.id !== WARMUP_COMPONENT_ID && c.id !== COOLDOWN_COMPONENT_ID,
-    );
-
-    // get query for training
-    const [query, updatedTraining] =
-      this.trainingPlanService.getDeleteComponentQuery(training, ref);
-
-    // delete component
-    await this.repository.updateDoc(ref.trainingId, query);
     return updatedTraining;
   }
 
@@ -987,7 +997,7 @@ export class TrainingService implements Permission<Training, Institution> {
   ) {
     // add or remove user from all future trainings of the institution
     const { operations, institutionId, groupId, userId, add } = event;
-    const trainings = await this.repository.getDocs((q) => {
+    const trainings = await this.repository.findAll((q) => {
       q = q.where('institutionId', '==', institutionId);
       if (groupId) q = q.where('groupId', '==', groupId);
       return q.where('from', '>=', Timestamp.fromDate(startOfDay(new Date())));
@@ -1003,7 +1013,7 @@ export class TrainingService implements Permission<Training, Institution> {
   async handleDeleteGroupEvent(event: DeleteGroupOrCycleEvent) {
     // delete all trainings of the group
     const { operations, groupId, cycleId } = event;
-    const trainings = await this.repository.getDocs((q) => {
+    const trainings = await this.repository.findAll((q) => {
       q = q.where('groupId', '==', groupId);
       if (cycleId) q = q.where('cycleId', '==', cycleId);
       return q;

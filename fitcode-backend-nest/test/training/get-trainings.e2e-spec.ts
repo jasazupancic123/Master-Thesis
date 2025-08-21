@@ -78,7 +78,7 @@ describe('Get Trainings (e2e)', () => {
     await Promise.all([
       // trainer1 trainings
       // past
-      db.trainings.addDoc(
+      db.trainings.save(
         generateTrainingStub({
           ownerId: trainer1.uid,
           membersIds: [athlete1.uid, athlete2.uid],
@@ -89,7 +89,7 @@ describe('Get Trainings (e2e)', () => {
           to: getTime(subDays(d, 2), 9, 0),
         }),
       ),
-      db.trainings.addDoc(
+      db.trainings.save(
         generateTrainingStub({
           ownerId: trainer1.uid,
           membersIds: [athlete1.uid],
@@ -101,7 +101,7 @@ describe('Get Trainings (e2e)', () => {
         }),
       ),
       // today
-      db.trainings.addDoc(
+      db.trainings.save(
         generateTrainingStub({
           ownerId: trainer1.uid,
           membersIds: [athlete1.uid, athlete2.uid],
@@ -112,7 +112,7 @@ describe('Get Trainings (e2e)', () => {
           to: getTime(d, 9, 0),
         }),
       ),
-      db.trainings.addDoc(
+      db.trainings.save(
         generateTrainingStub({
           ownerId: trainer1.uid,
           membersIds: [athlete1.uid],
@@ -124,7 +124,7 @@ describe('Get Trainings (e2e)', () => {
         }),
       ),
       // future
-      db.trainings.addDoc(
+      db.trainings.save(
         generateTrainingStub({
           ownerId: trainer1.uid,
           membersIds: [athlete1.uid, athlete2.uid],
@@ -135,7 +135,7 @@ describe('Get Trainings (e2e)', () => {
           to: getTime(addDays(d, 1), 9, 0),
         }),
       ),
-      db.trainings.addDoc(
+      db.trainings.save(
         generateTrainingStub({
           ownerId: trainer1.uid,
           membersIds: [athlete1.uid],
@@ -146,7 +146,7 @@ describe('Get Trainings (e2e)', () => {
           to: getTime(addDays(d, 1), 11, 0),
         }),
       ),
-      db.trainings.addDoc(
+      db.trainings.save(
         generateTrainingStub({
           ownerId: trainer1.uid,
           membersIds: [athlete1.uid, athlete2.uid],
@@ -158,7 +158,7 @@ describe('Get Trainings (e2e)', () => {
         }),
       ),
       // trainer2 trainings
-      db.trainings.addDoc(
+      db.trainings.save(
         generateTrainingStub({
           ownerId: trainer2.uid,
           membersIds: [athlete2.uid],
@@ -169,7 +169,7 @@ describe('Get Trainings (e2e)', () => {
           to: getTime(subDays(d, 2), 11, 0),
         }),
       ),
-      db.trainings.addDoc(
+      db.trainings.save(
         generateTrainingStub({
           ownerId: trainer2.uid,
           membersIds: [athlete2.uid],

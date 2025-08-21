@@ -29,12 +29,12 @@ export class ComponentService {
 
   @LogMethod()
   async create(data: Create<Component>): Promise<Component> {
-    const componentSlug = await this.componentRepository.addDoc(data);
+    const componentSlug = await this.componentRepository.save(data);
 
     // TODO - if newly created component is leaf node, move all parent exercises to "Other" component
 
     await this.cacheManagerService.del(CACHE_KEY_FLAT_COMPONENTS);
-    return await this.componentRepository.getDoc(componentSlug);
+    return await this.componentRepository.findById(componentSlug);
   }
 
   async createFromTree(
@@ -60,11 +60,11 @@ export class ComponentService {
   }
 
   async findOneBySlug(slug: string): Promise<Component> {
-    return await this.componentRepository.getDoc(slug);
+    return await this.componentRepository.findById(slug);
   }
 
   async findOneBySlugOrFail(slug: string): Promise<Component> {
-    const component = await this.componentRepository.getDoc(slug);
+    const component = await this.componentRepository.findById(slug);
     if (!component) throw new BadRequestException('Component not found');
     return component;
   }
@@ -74,7 +74,7 @@ export class ComponentService {
       CACHE_KEY_FLAT_COMPONENTS,
     );
 
-    if (!components) components = await this.componentRepository.getDocs();
+    if (!components) components = await this.componentRepository.findAll();
     if (!excludeHardcoded)
       components.push(WARMUP_COMPONENT, COOLDOWN_COMPONENT);
 
@@ -131,10 +131,10 @@ export class ComponentService {
       `Updating component #${id} with data ${JSON.stringify(data)}`,
     );
 
-    const component = await this.componentRepository.getDoc(id);
+    const component = await this.componentRepository.findById(id);
     if (!component) throw new BadRequestException('Component not found');
 
-    await this.componentRepository.updateDoc(id, data);
+    await this.componentRepository.update(id, data);
     await this.cacheManagerService.del(CACHE_KEY_FLAT_COMPONENTS);
 
     return component;

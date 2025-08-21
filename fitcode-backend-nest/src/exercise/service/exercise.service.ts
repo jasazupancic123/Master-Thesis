@@ -74,7 +74,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
       await this.cacheManagerService.get<Exercise[]>(CACHE_KEY_EXERCISES);
 
     if (!exercises) {
-      exercises = await this.repository.getDocs();
+      exercises = await this.repository.findAll();
       await this.cacheManagerService.set(CACHE_KEY_EXERCISES, exercises);
     }
 
@@ -183,7 +183,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
 
   async findOneById(user: User, ref: ExerciseRef): Promise<Exercise | null> {
     // find exercise
-    const exercise = await this.repository.getDoc(ref.exerciseId);
+    const exercise = await this.repository.findById(ref.exerciseId);
     if (!exercise) return null;
 
     if (exercise.ownerId !== GLOBAL_EXERCISE_OWNER) {
@@ -644,7 +644,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
         'You are not allowed to edit this exercise',
       );
 
-    await this.repository.deleteDoc(ref.exerciseId);
+    await this.repository.delete(ref.exerciseId);
     await this.cacheManagerService.del(CACHE_KEY_EXERCISES);
   }
 

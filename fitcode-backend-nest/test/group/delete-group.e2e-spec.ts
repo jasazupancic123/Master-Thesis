@@ -25,8 +25,8 @@ describe('Delete Group (e2e)', () => {
     await app.init();
 
     db = moduleFixture.get(TestDbService);
-    institutionId = await db.institutions.addDoc(generateInstitutionStub());
-    groupId = await db.groups.addDoc(generateGroupStub({ institutionId }));
+    institutionId = await db.institutions.save(generateInstitutionStub());
+    groupId = await db.groups.save(generateGroupStub({ institutionId }));
   });
 
   afterAll(async () => {
@@ -54,20 +54,20 @@ describe('Delete Group (e2e)', () => {
 
     expect(response.status).toBe(200);
 
-    const groups = await db.groups.getDocs();
+    const groups = await db.groups.findAll();
     expect(groups.length).toBe(0);
 
-    groupId = await db.groups.addDoc(generateGroupStub({ institutionId }));
+    groupId = await db.groups.save(generateGroupStub({ institutionId }));
   });
 
   it('should delete group and all trainings', async () => {
-    const otherGroupId = await db.groups.addDoc(
+    const otherGroupId = await db.groups.save(
       generateGroupStub({ institutionId }),
     );
 
     // create 5 trainings for groupId and 5 for otherGroupId
     for (let i = 0; i < 10; i++)
-      await db.trainings.addDoc(
+      await db.trainings.save(
         generateTrainingStub({
           groupId: i < 5 ? groupId : otherGroupId,
           ownerId: global.trainer.uid,
@@ -75,7 +75,7 @@ describe('Delete Group (e2e)', () => {
         }),
       );
 
-    const trainings = await db.trainings.getDocs();
+    const trainings = await db.trainings.findAll();
     expect(trainings.length).toBe(10);
 
     const groupTrainingsBefore = trainings.filter(
@@ -94,10 +94,10 @@ describe('Delete Group (e2e)', () => {
 
     expect(response.status).toBe(200);
 
-    const groups = await db.groups.getDocs();
+    const groups = await db.groups.findAll();
     expect(groups.length).toBe(1);
 
-    const trainingsAfterDelete = await db.trainings.getDocs();
+    const trainingsAfterDelete = await db.trainings.findAll();
     expect(trainingsAfterDelete.length).toBe(5);
 
     const groupTrainingsAfter = trainingsAfterDelete.filter(
@@ -110,7 +110,7 @@ describe('Delete Group (e2e)', () => {
     );
     expect(otherGroupTrainingsAfter.length).toBe(5);
 
-    groupId = await db.groups.addDoc(generateGroupStub({ institutionId }));
-    await db.groups.deleteDoc(otherGroupId);
+    groupId = await db.groups.save(generateGroupStub({ institutionId }));
+    await db.groups.delete(otherGroupId);
   });
 });
