@@ -42,11 +42,11 @@ describe('Update Group (e2e)', () => {
     ]);
 
     const membersIds = athletes.map((a) => a.uid);
-    institutionId = await db.institutions.addDoc(
+    institutionId = await db.institutions.save(
       generateInstitutionStub({ athleteIds: membersIds }),
     );
 
-    groupId = await db.groups.addDoc(
+    groupId = await db.groups.save(
       generateGroupStub({
         institutionId,
         ownerId: global.trainer.uid,
@@ -54,7 +54,7 @@ describe('Update Group (e2e)', () => {
       }),
     );
 
-    trainingId = await db.trainings.addDoc(
+    trainingId = await db.trainings.save(
       generateTrainingStub({
         ownerId: global.trainer.uid,
         membersIds,
@@ -148,7 +148,7 @@ describe('Update Group (e2e)', () => {
 
     expect(response.status).toBe(200);
 
-    const training = await db.trainings.getDoc(trainingId);
+    const training = await db.trainings.findById(trainingId);
     expect(training.membersIds).toHaveLength(4);
     expect(training.membersIds).toContain(newAthlete.uid);
 
@@ -164,7 +164,7 @@ describe('Update Group (e2e)', () => {
 
     expect(response.status).toBe(200);
 
-    const training = await db.trainings.getDoc(trainingId);
+    const training = await db.trainings.findById(trainingId);
     expect(training.membersIds).toHaveLength(2);
     expect(training.membersIds).not.toContain(athletes[0].uid);
     expect(training.membersIds).toContain(athletes[1].uid);

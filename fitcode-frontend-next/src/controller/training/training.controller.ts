@@ -45,10 +45,6 @@ export class TrainingController {
     return api.post<Training>('/training/copy/component', body);
   }
 
-  static async periodize(body: PeriodizeTrainings) {
-    return api.post<Training[]>('/training/periodize/trainings', body);
-  }
-
   static async update(trainingId: string, body: UpdateTraining) {
     return api.patch<Training>(`/training/${trainingId}`, body);
   }
@@ -60,6 +56,17 @@ export class TrainingController {
   static async delete(trainingId: string) {
     await api.delete<null>(`/training/${trainingId}`);
     return null;
+  }
+
+  static async periodize(
+    baseTrainingId: string,
+    componentId: string,
+    body: PeriodizeTrainings
+  ) {
+    return api.patch<Training[]>(
+      `/training/${baseTrainingId}/periodize/component/${componentId}`,
+      body
+    );
   }
 
   static async completeTrainingComponent(

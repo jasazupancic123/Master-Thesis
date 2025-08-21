@@ -1,4 +1,4 @@
-import { endOfMonth, startOfMonth } from 'date-fns';
+import { addDays, endOfMonth, startOfMonth } from 'date-fns';
 import { v4 } from 'uuid';
 
 import {
@@ -20,4 +20,21 @@ export function generateCycleStub(data?: Partial<Cycle>): Cycle {
     to: data?.to ?? endOfMonth(new Date()),
     selectedTargets: data?.selectedTargets ?? [],
   };
+}
+
+export function generateCyclesStub(
+  count: number,
+  from: Date = new Date(),
+  lengthInDays: number = 7,
+): Cycle[] {
+  return Array.from({ length: count }, (_, i) =>
+    generateCycleStub({
+      id: v4(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      from: addDays(from, i * lengthInDays),
+      to: addDays(from, (i + 1) * lengthInDays),
+      name: generateRandomName(),
+    }),
+  );
 }

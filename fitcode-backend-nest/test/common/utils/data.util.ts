@@ -1,7 +1,6 @@
 import { addDays, addWeeks, subDays } from 'date-fns';
 
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
-import type { FirestoreEntity } from '@src/common/type/entity.type';
 import type { FirebaseService } from '@src/firebase/firebase.service';
 import type { GroupService } from '@src/group/group.service';
 import { generateCycleStub } from '@src/group/mock/cycle.stub';
@@ -9,11 +8,9 @@ import { generateGroupStub } from '@src/group/mock/group.stub';
 import type { Institution } from '@src/institution/entity/institution.entity';
 import { generateInstitutionStub } from '@src/institution/mock/institution.mock';
 import type { InstitutionService } from '@src/institution/service/institution.service';
-import type { Training } from '@src/training/entity/training.entity';
-import { generateTrainingStub } from '@src/training/mock/training.stub';
 
 import type { TestUser } from '../type/auth.type';
-import type { TestInstitution, TestTraining } from '../type/entity.type';
+import type { TestInstitution } from '../type/entity.type';
 import {
   createAthleteUserAndToken,
   createManagerUserAndToken,
@@ -138,51 +135,6 @@ export async function createGroupWithCycles(
     await groupService.addCycle(manager, { groupId: group.id }, cycle);
 
   return await groupService.findOneByIdOrFail(manager, { groupId: group.id });
-}
-
-/**
- * Creates training in database. It doesn't use separate service,
- * but instead inserts raw data into database, so be careful.
- */
-export async function createTraining(
-  firebase: FirebaseService,
-  input?: Partial<TestTraining> & { ownerId: string; membersIds: string[] },
-) {
-  const data: TestTraining = {
-    ...generateTrainingStub(input),
-    group: input?.group,
-  };
-
-  const collection = firebase.firestore.collection(
-    FirestoreCollection.TRAINING,
-  );
-
-  const { id } = collection.doc();
-
-  const query = firebase.buildCreateQuery<Training>(
-    generateTrainingStub({
-      ...input,
-      id,
-      institutionId: data.institutionId || input?.group?.institutionId,
-      groupId: data.groupId || input?.group?.id,
-      ownerId: data?.ownerId || global.trainer.uid,
-      membersIds: data?.group?.membersIds ||
-        data?.membersIds || [global.athlete.uid],
-    }),
-  );
-
-  await firebase.firestore
-    .collection(FirestoreCollection.TRAINING)
-    .doc(id)
-    .set(query);
-
-  return await firebase.firestore
-    .collection(FirestoreCollection.TRAINING)
-    .doc(id)
-    .get()
-    .then((result) =>
-      firebase.serialize(result.data() as FirestoreEntity<Training>),
-    );
 }
 
 export async function deleteDoc(

@@ -107,7 +107,7 @@ describe('Training Exercise Params (e2e)', () => {
   }
 
   async function createTraining(exerciseId: string) {
-    const trainingId = await db.trainings.addDoc(
+    const trainingId = await db.trainings.save(
       generateTrainingStub({
         ownerId: global.trainer.id,
         membersIds: [global.athlete.id],
@@ -144,7 +144,7 @@ describe('Training Exercise Params (e2e)', () => {
       }),
     );
 
-    const training = await db.trainings.getDoc(trainingId);
+    const training = await db.trainings.findById(trainingId);
 
     // populate params through service
     return await trainingService.update(

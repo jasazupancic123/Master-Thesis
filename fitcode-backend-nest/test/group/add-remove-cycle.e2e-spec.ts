@@ -32,11 +32,9 @@ describe('Add / Remove Group Cycle (e2e)', () => {
     db = moduleFixture.get(TestDbService);
     firebase = moduleFixture.get(FirebaseService);
 
-    const institutionId = await db.institutions.addDoc(
-      generateInstitutionStub(),
-    );
+    const institutionId = await db.institutions.save(generateInstitutionStub());
 
-    groupId = await db.groups.addDoc(
+    groupId = await db.groups.save(
       generateGroupStub({
         institutionId,
         cycles: [generateCycleStub({ id: 'existing-cycle-id' })],
@@ -120,7 +118,7 @@ describe('Add / Remove Group Cycle (e2e)', () => {
 
       expect(response.status).toBe(201);
 
-      const group = await db.groups.getDoc(groupId);
+      const group = await db.groups.findById(groupId);
       expect(group.cycles.length).toBe(2);
       expect(group.cycles[1].name).toBe(newCycle.name);
 
@@ -162,23 +160,23 @@ describe('Add / Remove Group Cycle (e2e)', () => {
 
       expect(response.status).toBe(200);
 
-      const group = await db.groups.getDoc(groupId);
+      const group = await db.groups.findById(groupId);
       expect(group.cycles.length).toBe(0);
 
-      await db.groups.updateDoc(groupId, {
+      await db.groups.update(groupId, {
         cycles: [generateCycleStub({ id: 'existing-cycle-id' })],
       });
     });
 
     it('should successfully remove cycle and all trainings', async () => {
       const cycleId = 'existing-cycle-id';
-      const otherGroupId = await db.groups.addDoc(
+      const otherGroupId = await db.groups.save(
         generateGroupStub({ institutionId: groupId }),
       );
 
       // create 5 trainings for groupId and 5 for otherGroupId
       for (let i = 0; i < 10; i++)
-        await db.trainings.addDoc(
+        await db.trainings.save(
           generateTrainingStub({
             groupId: i < 5 ? groupId : otherGroupId,
             ownerId: global.trainer.uid,
@@ -187,7 +185,7 @@ describe('Add / Remove Group Cycle (e2e)', () => {
           }),
         );
 
-      const trainings = await db.trainings.getDocs();
+      const trainings = await db.trainings.findAll();
       expect(trainings.length).toBe(10);
 
       const groupTrainingsBefore = trainings.filter(
@@ -207,10 +205,10 @@ describe('Add / Remove Group Cycle (e2e)', () => {
 
       expect(response.status).toBe(200);
 
-      const groups = await db.groups.getDocs();
+      const groups = await db.groups.findAll();
       expect(groups.length).toBe(2); // otherGroupId should still exist
 
-      const trainingsAfterDelete = await db.trainings.getDocs();
+      const trainingsAfterDelete = await db.trainings.findAll();
       expect(trainingsAfterDelete.length).toBe(5);
 
       const groupTrainingsAfter = trainingsAfterDelete.filter(

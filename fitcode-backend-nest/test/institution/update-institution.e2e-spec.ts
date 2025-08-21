@@ -48,7 +48,7 @@ describe('Update Institution (e2e)', () => {
     groupService = moduleFixture.get(GroupService);
     trainingService = moduleFixture.get(TrainingService);
 
-    institutionId = await db.institutions.addDoc(generateInstitutionStub());
+    institutionId = await db.institutions.save(generateInstitutionStub());
     athletes = await Promise.all([
       createAthleteUserAndToken(firebase),
       createAthleteUserAndToken(firebase),
@@ -107,7 +107,7 @@ describe('Update Institution (e2e)', () => {
 
       expect(response.status).toBe(200);
 
-      const institution = await db.institutions.getDoc(institutionId);
+      const institution = await db.institutions.findById(institutionId);
       expect(institution.athleteIds).toHaveLength(2);
       expect(institution.athleteIds).toContain(userId);
     });
@@ -119,9 +119,9 @@ describe('Update Institution (e2e)', () => {
       db.checkpoint();
 
       const existingGroups = await Promise.all([
-        db.groups.addDoc(generateGroupStub({ institutionId, membersIds })),
-        db.groups.addDoc(generateGroupStub({ institutionId, membersIds })),
-        db.groups.addDoc(generateGroupStub({ institutionId, membersIds })),
+        db.groups.save(generateGroupStub({ institutionId, membersIds })),
+        db.groups.save(generateGroupStub({ institutionId, membersIds })),
+        db.groups.save(generateGroupStub({ institutionId, membersIds })),
       ]);
 
       const training = {
@@ -132,35 +132,35 @@ describe('Update Institution (e2e)', () => {
 
       // 2 past and 3 future trainings
       await Promise.all([
-        db.trainings.addDoc(
+        db.trainings.save(
           generateTrainingStub({
             ...training,
             groupId: existingGroups[0],
             date: subDays(new Date(), 3),
           }),
         ),
-        db.trainings.addDoc(
+        db.trainings.save(
           generateTrainingStub({
             ...training,
             groupId: existingGroups[0],
             date: subDays(new Date(), 2),
           }),
         ),
-        db.trainings.addDoc(
+        db.trainings.save(
           generateTrainingStub({
             ...training,
             groupId: existingGroups[1],
             date: new Date(),
           }),
         ),
-        db.trainings.addDoc(
+        db.trainings.save(
           generateTrainingStub({
             ...training,
             groupId: existingGroups[1],
             date: new Date(),
           }),
         ),
-        db.trainings.addDoc(
+        db.trainings.save(
           generateTrainingStub({
             ...training,
             groupId: existingGroups[2],
@@ -186,7 +186,7 @@ describe('Update Institution (e2e)', () => {
 
       expect(response.status).toBe(200);
 
-      const institution = await db.institutions.getDoc(institutionId);
+      const institution = await db.institutions.findById(institutionId);
       expect(institution.athleteIds).toHaveLength(3);
       expect(institution.athleteIds).toContain(newAthlete.uid);
 
@@ -202,14 +202,14 @@ describe('Update Institution (e2e)', () => {
         serviceSpy.mockClear();
       }
 
-      const groups = await db.groups.getDocs();
+      const groups = await db.groups.findAll();
       expect(groups).toHaveLength(3);
       for (const group of groups) {
         expect(group.membersIds).toHaveLength(3);
         expect(group.membersIds).toContain(newAthlete.uid);
       }
 
-      const trainings = await db.trainings.getDocs();
+      const trainings = await db.trainings.findAll();
       expect(trainings).toHaveLength(5);
 
       const date = startOfDay(new Date());
@@ -237,17 +237,17 @@ describe('Update Institution (e2e)', () => {
       const userId = athletes[0].uid; // user to remove
 
       // delete institution and recreate it to reset the state
-      await db.institutions.deleteDoc(institutionId);
-      institutionId = await db.institutions.addDoc(
+      await db.institutions.delete(institutionId);
+      institutionId = await db.institutions.save(
         generateInstitutionStub({ athleteIds: membersIds }),
       );
 
       db.checkpoint();
 
       const existingGroups = await Promise.all([
-        db.groups.addDoc(generateGroupStub({ institutionId, membersIds })),
-        db.groups.addDoc(generateGroupStub({ institutionId, membersIds })),
-        db.groups.addDoc(generateGroupStub({ institutionId, membersIds })),
+        db.groups.save(generateGroupStub({ institutionId, membersIds })),
+        db.groups.save(generateGroupStub({ institutionId, membersIds })),
+        db.groups.save(generateGroupStub({ institutionId, membersIds })),
       ]);
 
       const training = {
@@ -258,35 +258,35 @@ describe('Update Institution (e2e)', () => {
 
       // 2 past and 3 future trainings
       await Promise.all([
-        db.trainings.addDoc(
+        db.trainings.save(
           generateTrainingStub({
             ...training,
             groupId: existingGroups[0],
             date: subDays(new Date(), 3),
           }),
         ),
-        db.trainings.addDoc(
+        db.trainings.save(
           generateTrainingStub({
             ...training,
             groupId: existingGroups[0],
             date: subDays(new Date(), 3),
           }),
         ),
-        db.trainings.addDoc(
+        db.trainings.save(
           generateTrainingStub({
             ...training,
             groupId: existingGroups[1],
             date: new Date(),
           }),
         ),
-        db.trainings.addDoc(
+        db.trainings.save(
           generateTrainingStub({
             ...training,
             groupId: existingGroups[1],
             date: new Date(),
           }),
         ),
-        db.trainings.addDoc(
+        db.trainings.save(
           generateTrainingStub({
             ...training,
             groupId: existingGroups[2],
@@ -301,18 +301,18 @@ describe('Update Institution (e2e)', () => {
         .send({ userId });
 
       expect(response.status).toBe(200);
-      const institution = await db.institutions.getDoc(institutionId);
+      const institution = await db.institutions.findById(institutionId);
       expect(institution.athleteIds).toHaveLength(1);
       expect(institution.athleteIds).not.toContain(userId);
 
-      const groups = await db.groups.getDocs();
+      const groups = await db.groups.findAll();
       expect(groups).toHaveLength(3);
       for (const group of groups) {
         expect(group.membersIds).toHaveLength(1);
         expect(group.membersIds).not.toContain(userId);
       }
 
-      const trainings = await db.trainings.getDocs();
+      const trainings = await db.trainings.findAll();
       expect(trainings).toHaveLength(5);
 
       const date = startOfDay(new Date());
@@ -358,7 +358,7 @@ describe('Update Institution (e2e)', () => {
         .send({ userId: newTrainer.uid });
 
       expect(response.status).toBe(200);
-      const institution = await db.institutions.getDoc(institutionId);
+      const institution = await db.institutions.findById(institutionId);
       expect(institution.trainerIds).toContain(newTrainer.uid);
       expect(institution.trainerIds).toHaveLength(2);
 
@@ -374,7 +374,7 @@ describe('Update Institution (e2e)', () => {
         .send({ userId: trainer.uid });
 
       expect(response.status).toBe(200);
-      const institution = await db.institutions.getDoc(institutionId);
+      const institution = await db.institutions.findById(institutionId);
       expect(institution.trainerIds).not.toContain(trainer.uid);
       expect(institution.trainerIds).toHaveLength(0);
 
@@ -388,7 +388,7 @@ describe('Update Institution (e2e)', () => {
       // create 3 trainings in the future
       await Promise.all(
         Array.from({ length: 3 }, (_, i) =>
-          db.trainings.addDoc(
+          db.trainings.save(
             generateTrainingStub({
               ownerId: global.trainer.uid,
               membersIds,
@@ -410,7 +410,7 @@ describe('Update Institution (e2e)', () => {
         ),
       );
 
-      let trainings = await db.trainings.getDocs();
+      let trainings = await db.trainings.findAll();
       expect(trainings).toHaveLength(3);
 
       for (const training of trainings) {
@@ -435,7 +435,7 @@ describe('Update Institution (e2e)', () => {
 
       expect(response1.status).toBe(200);
 
-      trainings = await db.trainings.getDocs();
+      trainings = await db.trainings.findAll();
       expect(trainings).toHaveLength(3);
 
       for (const training of trainings) {

@@ -50,7 +50,7 @@ export class GroupService implements Permission<Group, Institution> {
   }
 
   async findAll(user: User): Promise<Group[]> {
-    return await this.repository.getDocs((q) => {
+    return await this.repository.findAll((q) => {
       return this.firebaseService.isTrainer(user)
         ? q.where('ownerId', '==', user.uid)
         : this.firebaseService.isAthlete(user)
@@ -61,7 +61,7 @@ export class GroupService implements Permission<Group, Institution> {
 
   async findOneById(user: User, ref: GroupRef): Promise<Group | null> {
     // find group
-    const group = await this.repository.getDoc(ref.groupId);
+    const group = await this.repository.findById(ref.groupId);
     if (!group || group.deletedAt) return null;
 
     // authorize
@@ -88,7 +88,7 @@ export class GroupService implements Permission<Group, Institution> {
         'You are not allowed to view this institution',
       );
 
-    return await this.repository.getDocs((q) =>
+    return await this.repository.findAll((q) =>
       q.where('institutionId', '==', ref.institutionId),
     );
   }
@@ -114,7 +114,7 @@ export class GroupService implements Permission<Group, Institution> {
       cycles: [],
     };
 
-    const groupId = await this.repository.addDoc(data);
+    const groupId = await this.repository.save(data);
     return {
       ...data,
       id: groupId,
@@ -158,7 +158,7 @@ export class GroupService implements Permission<Group, Institution> {
       cycles: input.cycles,
     };
 
-    await this.repository.updateDoc(ref.groupId, data);
+    await this.repository.update(ref.groupId, data);
     return { ...group, ...data, updatedAt: new Date() };
   }
 
@@ -313,7 +313,7 @@ export class GroupService implements Permission<Group, Institution> {
     // add or remove user from all groups in the institution
     const { operations, institutionId, userId, add } = event;
 
-    const groups = await this.repository.getDocs((q) =>
+    const groups = await this.repository.findAll((q) =>
       q.where('institutionId', '==', institutionId),
     );
 
