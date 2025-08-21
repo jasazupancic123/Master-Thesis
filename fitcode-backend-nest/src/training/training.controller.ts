@@ -95,7 +95,7 @@ export class TrainingController {
     return await this.trainingService.copyComponent(user, body);
   }
 
-  @Post('/periodize/:baseTrainingId/component/:componentId')
+  @Patch('/:baseTrainingId/periodize/component/:componentId')
   @Auth()
   async periodize(
     @RequestUser() user: User,

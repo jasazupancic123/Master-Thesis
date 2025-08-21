@@ -151,7 +151,7 @@ describe('Complete training component (e2e)', () => {
 
   afterAll(async () => {
     await Promise.all([
-      db.trainings.deleteDoc(training.id),
+      db.trainings.delete(training.id),
       deleteCollection(firebase, 'EXERCISE'),
       deleteDoc(firebase, 'GROUP', group.id),
       deleteDoc(firebase, 'INSTITUTION', institution.id),
@@ -163,7 +163,7 @@ describe('Complete training component (e2e)', () => {
   });
 
   async function createTraining(): Promise<Training> {
-    if (training) await db.trainings.deleteDoc(training.id);
+    if (training) await db.trainings.delete(training.id);
 
     const newTraining = await trainingService.create(
       global.trainer,
@@ -275,7 +275,7 @@ describe('Complete training component (e2e)', () => {
   });
 
   it('should throw error if training is in the future', async () => {
-    const trainingTomorrowId = await db.trainings.addDoc(
+    const trainingTomorrowId = await db.trainings.save(
       generateTrainingStub({
         ownerId: global.trainer.uid,
         membersIds: [athlete1.uid],
@@ -293,11 +293,11 @@ describe('Complete training component (e2e)', () => {
       'You cannot complete trainings that are not on the same day',
     );
 
-    await db.trainings.deleteDoc(trainingTomorrowId);
+    await db.trainings.delete(trainingTomorrowId);
   });
 
   it('should throw error if training is in the past', async () => {
-    const trainingYesterdayId = await db.trainings.addDoc(
+    const trainingYesterdayId = await db.trainings.save(
       generateTrainingStub({
         ownerId: global.trainer.uid,
         membersIds: [athlete1.uid],
@@ -315,7 +315,7 @@ describe('Complete training component (e2e)', () => {
       'You cannot complete trainings that are not on the same day',
     );
 
-    await db.trainings.deleteDoc(trainingYesterdayId);
+    await db.trainings.delete(trainingYesterdayId);
   });
 
   it('should throw error if training component does not exist', async () => {
@@ -560,7 +560,7 @@ describe('Complete training component (e2e)', () => {
       expect(spyResult).toEqual(12); // 4 exercises * 3 sets each
       spy.mockRestore();
 
-      const dbTraining = await db.trainings.getDoc(training.id);
+      const dbTraining = await db.trainings.findById(training.id);
       const completedComponent = dbTraining.components.find(
         (c) => c.id === component1.id,
       );
@@ -680,7 +680,7 @@ describe('Complete training component (e2e)', () => {
 
     expect(response2.status).toBe(200);
 
-    const dbTraining = await db.trainings.getDoc(training.id);
+    const dbTraining = await db.trainings.findById(training.id);
     const completedComponent = dbTraining.components.find(
       (c) => c.id === component1.id,
     );
@@ -750,7 +750,7 @@ describe('Complete training component (e2e)', () => {
 
     expect(response2.status).toBe(200);
 
-    const dbTraining = await db.trainings.getDoc(training.id);
+    const dbTraining = await db.trainings.findById(training.id);
     const completedComponent1 = dbTraining.components.find(
       (c) => c.id === component1.id,
     );
@@ -850,7 +850,7 @@ describe('Complete training component (e2e)', () => {
 
     expect(response4.status).toBe(200);
 
-    const dbTraining = await db.trainings.getDoc(training.id);
+    const dbTraining = await db.trainings.findById(training.id);
     expect(dbTraining.components).toHaveLength(2);
     expect(dbTraining.completedMembersIds).toHaveLength(2);
     expect(dbTraining.completedMembersIds).toContain(athlete1.uid);

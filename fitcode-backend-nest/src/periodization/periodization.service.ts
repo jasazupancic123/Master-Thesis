@@ -61,7 +61,7 @@ export class PeriodizationService {
       createExerciseIfNotExistsInTrainings?: boolean; // if true, will create new exercise in upcoming trainings if not found
       dontPeriodizeChildSubgroups?: boolean; // if true, will not periodize subgroups of the base training
     },
-  ) {
+  ): Training[] {
     if (trainings.length <= 1) return trainings;
 
     const periodized: Training[] = structuredClone(trainings);
@@ -111,7 +111,11 @@ export class PeriodizationService {
           ) {
             // find exercise to periodize
             const training = weeks[weekIndex][dayIndex];
-            const item = this.getRefItem(training, ref);
+            const item = this.getRefItem(training, {
+              ...ref,
+              subgroupId: ref.subgroupId ? baseItem.id : undefined, // base item is either component, root subgroup or child subgroup
+            });
+
             if (!item) continue; // component / subgroup not found in upcoming training, skip
 
             const exercises = this.getExercises(item);
@@ -150,9 +154,9 @@ export class PeriodizationService {
                   baseIntensity,
                   baseVolume,
                   readinessFactor,
+                  prevVolume: prevVol.find((int) => int.i === setIndex)?.value,
                   prevIntensity: prevInt.find((int) => int.i === setIndex)
                     ?.value,
-                  prevVolume: prevVol.find((int) => int.i === setIndex)?.value,
                 });
 
                 const foundInt = this.getIntParamValue(lr, exerciseSet);

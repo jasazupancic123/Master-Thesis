@@ -1,53 +1,30 @@
 import { Inject, Injectable } from '@nestjs/common';
-import {
-  CollectionReference,
-  DocumentReference,
-  FieldValue,
-  Query,
-} from 'firebase-admin/firestore';
+import { FieldValue } from 'firebase-admin/firestore';
 
 import { ChangeLogManager } from '@src/change-log/change-log.manager';
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
-import { Create, FirestoreEntity, Update } from '@src/common/type/entity.type';
+import { Create, Update } from '@src/common/type/entity.type';
 import {
   BatchWriteOperation,
-  RootFirestoreCollectionRepository,
+  FirestoreRootRepository,
 } from '@src/common/type/firestore.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 
 import { Institution } from '../entity/institution.entity';
 
 @Injectable()
-export class InstitutionRepository
-  implements RootFirestoreCollectionRepository<Institution>
-{
+export class InstitutionRepository extends FirestoreRootRepository<Institution> {
+  collectionName = FirestoreCollection.INSTITUTION;
+
   constructor(
-    private readonly firebaseService: FirebaseService,
+    readonly firebaseService: FirebaseService,
     @Inject(Institution)
     readonly changeLog: ChangeLogManager<Institution>,
-  ) {}
-
-  async getDocs(
-    query: (query: Query) => Query = (query) => query,
-  ): Promise<Institution[]> {
-    const snapshot = await query(this.collection()).get();
-    return snapshot.docs.map((doc) =>
-      this.firebaseService.serialize(
-        doc.data() as FirestoreEntity<Institution>,
-      ),
-    );
+  ) {
+    super(firebaseService);
   }
 
-  async getDoc(id: string): Promise<Institution | null> {
-    const snapshot = await this.doc(id).get();
-    if (!snapshot.exists) return null;
-
-    return this.firebaseService.serialize(
-      snapshot.data() as FirestoreEntity<Institution>,
-    );
-  }
-
-  async addDoc(input: Create<Institution>): Promise<string> {
+  async save(input: Create<Institution>): Promise<string> {
     const { id } = this.collection().doc();
     const query = this.firebaseService.buildCreateQuery<Institution>({
       id,
@@ -65,7 +42,7 @@ export class InstitutionRepository
     return id;
   }
 
-  async updateDoc(id: string, input: Update<Institution>) {
+  async update(id: string, input: Update<Institution>) {
     const query = this.firebaseService.buildUpdateQuery<Institution>({
       ownerId: input.ownerId,
       name: input.name,
@@ -77,7 +54,7 @@ export class InstitutionRepository
     await ref.update(query);
   }
 
-  async deleteDoc(id: string) {
+  async delete(id: string) {
     const ref = this.doc(id);
     await this.changeLog.trackDelete(ref);
     await ref.delete();
@@ -121,15 +98,5 @@ export class InstitutionRepository
           : (FieldValue.arrayRemove(athleteId) as unknown as string[]),
       },
     };
-  }
-
-  doc(id: string): DocumentReference {
-    return this.collection().doc(id);
-  }
-
-  collection(): CollectionReference {
-    return this.firebaseService.firestore.collection(
-      FirestoreCollection.INSTITUTION,
-    );
   }
 }

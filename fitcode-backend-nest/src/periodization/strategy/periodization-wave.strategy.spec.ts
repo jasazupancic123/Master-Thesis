@@ -18,7 +18,7 @@ const ref: TrainingComponentRef = {
 const EXPECTED_VALUES = [
   { int: 16, vol: 5 },
   { int: 16, vol: 5 },
-  { int: 16, vol: 5 },
+  { int: 18, vol: 3 },
   { int: 18, vol: 3 },
   { int: 16, vol: 5 },
   { int: 16, vol: 5 },
@@ -46,11 +46,12 @@ describe('WavePeriodizationStrategy', () => {
       type,
       ref,
       TestPeriodizationUtil.TRAININGS,
+      ['e1'],
     );
 
     expect(result).toHaveLength(TestPeriodizationUtil.TRAININGS.length);
 
-    for (let i = 1; i < result.length; i++) {
+    for (let i = 0; i < result.length; i++) {
       const training = result[i];
 
       TestPeriodizationUtil.expectExerciseSetValueToBe(

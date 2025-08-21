@@ -1,45 +1,25 @@
 import { Injectable } from '@nestjs/common';
-import {
-  CollectionReference,
-  DocumentReference,
-  Query,
-} from 'firebase-admin/lib/firestore';
 
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { CommonService } from '@src/common/service/common.service';
-import { Create, FirestoreEntity, Update } from '@src/common/type/entity.type';
-import { RootFirestoreCollectionRepository } from '@src/common/type/firestore.type';
+import { Create, Update } from '@src/common/type/entity.type';
+import { FirestoreRootRepository } from '@src/common/type/firestore.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 
 import { Component } from '../entity/component.entity';
 
 @Injectable()
-export class ComponentRepository
-  implements RootFirestoreCollectionRepository<Component>
-{
+export class ComponentRepository extends FirestoreRootRepository<Component> {
+  collectionName = FirestoreCollection.COMPONENT;
+
   constructor(
     private readonly commonService: CommonService,
-    private readonly firebaseService: FirebaseService,
-  ) {}
-
-  async getDocs(
-    query: (query: Query) => Query = (query) => query,
-  ): Promise<Component[]> {
-    const snapshot = await query(this.collection()).get();
-    return snapshot.docs.map((doc) =>
-      this.firebaseService.serialize(doc.data() as FirestoreEntity<Component>),
-    );
+    readonly firebaseService: FirebaseService,
+  ) {
+    super(firebaseService);
   }
 
-  async getDoc(slug: string): Promise<Component | null> {
-    const snapshot = await this.doc(slug).get();
-    if (!snapshot.exists) return null;
-
-    const data = snapshot.data() as FirestoreEntity<Component>;
-    return this.firebaseService.serialize(data);
-  }
-
-  async addDoc(input: Create<Component>) {
+  async save(input: Create<Component>) {
     const slug = await this.slug(input.name);
 
     const query = this.firebaseService.buildCreateQuery<Component>({
@@ -56,7 +36,7 @@ export class ComponentRepository
     return slug;
   }
 
-  async updateDoc(
+  async update(
     slug: string,
     input: Update<Component, 'name' | 'parentId' | 'slug'>,
   ) {
@@ -64,23 +44,13 @@ export class ComponentRepository
     await this.doc(slug).update(query);
   }
 
-  async deleteDoc(slug: string) {
+  async delete(slug: string) {
     await this.doc(slug).delete();
-  }
-
-  doc(slug: string): DocumentReference {
-    return this.collection().doc(slug);
-  }
-
-  collection(): CollectionReference {
-    return this.firebaseService.firestore.collection(
-      FirestoreCollection.COMPONENT,
-    );
   }
 
   private async slug(name: string): Promise<string> {
     const slug = this.commonService.string.slug(name);
-    const snapshot = await this.getDoc(slug);
+    const snapshot = await this.findById(slug);
 
     if (snapshot) {
       // slug already exists, add number to the end

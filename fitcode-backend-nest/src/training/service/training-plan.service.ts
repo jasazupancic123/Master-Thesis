@@ -17,7 +17,10 @@ import { DeepPick } from '@src/common/interface/deep-pick.interface';
 import { CommonService } from '@src/common/service/common.service';
 import { Update } from '@src/common/type/entity.type';
 import { User } from '@src/common/type/firebase-auth.type';
-import { TrainingComponentRef } from '@src/common/type/firestore.type';
+import {
+  ComponentRef,
+  TrainingComponentRef,
+} from '@src/common/type/firestore.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
 import { ComponentService } from '@src/component/component.service';
 import { DEFAULT_PARAMS_KEY } from '@src/component/constant/param.constant';
@@ -636,14 +639,25 @@ export class TrainingPlanService {
   }
 
   copyComponentIntoTraining(
-    sourceTrainingComponent: TrainingComponent,
+    ref: ComponentRef,
+    sourceTraining: Training,
     targetTraining: Training,
+    options?: {
+      skipSupersets?: boolean;
+      skipSubgroups?: boolean;
+      skipTimes?: boolean;
+    },
   ): void {
+    const sourceTrainingComponent = this.findComponentOrFail(
+      sourceTraining,
+      ref.componentId,
+    );
+
+    // find existing component in target training or create a new one
     const foundTargetTrainingComponent = targetTraining.components.find(
       (c) => c.id === sourceTrainingComponent.id,
     );
 
-    // find existing component in target training or create a new one
     const lastTargetTrainingComponent =
       targetTraining.components[targetTraining.components.length - 1];
 
@@ -660,10 +674,10 @@ export class TrainingPlanService {
       };
 
     targetTrainingComponent.copiedFrom = {
-      lastCopiedFromTrainingId: sourceTrainingComponent.id,
+      lastCopiedFromTrainingId: sourceTraining.id,
       rootCopiedFromTrainingId: sourceTrainingComponent.copiedFrom
         ? sourceTrainingComponent.copiedFrom.rootCopiedFromTrainingId
-        : sourceTrainingComponent.id,
+        : sourceTraining.id,
     };
 
     targetTrainingComponent.methodId = sourceTrainingComponent.methodId;
@@ -671,13 +685,22 @@ export class TrainingPlanService {
     targetTrainingComponent.color = sourceTrainingComponent.color;
     targetTrainingComponent.completedMembersIds = []; // reset completed members
 
-    targetTrainingComponent.supersets = structuredClone(
-      sourceTrainingComponent.supersets,
-    );
+    if (options) {
+      if (!options.skipSupersets)
+        targetTrainingComponent.supersets = structuredClone(
+          sourceTrainingComponent.supersets,
+        );
 
-    targetTrainingComponent.subgroups = structuredClone(
-      sourceTrainingComponent.subgroups,
-    );
+      if (!options.skipSubgroups)
+        targetTrainingComponent.subgroups = structuredClone(
+          sourceTrainingComponent.subgroups,
+        );
+
+      if (!options.skipTimes) {
+        targetTrainingComponent.from = sourceTrainingComponent.from;
+        targetTrainingComponent.to = sourceTrainingComponent.to;
+      }
+    }
 
     if (!foundTargetTrainingComponent)
       targetTraining.components.push(targetTrainingComponent);
@@ -734,10 +757,8 @@ export class TrainingPlanService {
       (c) => c.id === sourceTrainingComponent.id,
     );
 
-    if (!targetTrainingComponent)
-      throw new NotFoundException(
-        `Target training component with id ${sourceTrainingComponent.id} not found`,
-      );
+    // only copy subgroups if target training component exists
+    if (!targetTrainingComponent) return;
 
     const sourceSubgroup = sourceTrainingComponent.subgroups.find(
       (s) => s.id === subgroupId,

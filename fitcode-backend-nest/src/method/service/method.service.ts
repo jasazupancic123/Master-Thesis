@@ -31,7 +31,7 @@ export class MethodService {
   }
 
   async findOne(ref: MethodRef): Promise<Method | null> {
-    const method = await this.repository.getDoc(ref.methodId);
+    const method = await this.repository.findById(ref.methodId);
     if (!method) return null;
     return method;
   }
@@ -46,7 +46,7 @@ export class MethodService {
     const cached =
       await this.cacheManagerService.get<Method[]>(CACHE_KEY_METHODS);
 
-    return cached ? cached : await this.repository.getDocs();
+    return cached ? cached : await this.repository.findAll();
   }
 
   async create(user: User, input: Create<Method>): Promise<Method> {

@@ -92,6 +92,7 @@ describe('copySubgroup', () => {
   beforeEach(() => {
     // Reset target subgroups before each test
     source = generateTrainingComponent({
+      id: 'c1',
       subgroups: [
         generateSubgroup({ id: 's1', membersIds: ['a', 'b', 'c', 'd'] }), // root subgroup 1
         generateSubgroup({ id: 's1.1', membersIds: ['b'], parentId: 's1' }), // child 1
@@ -110,6 +111,7 @@ describe('copySubgroup', () => {
       membersIds: [],
       components: [
         generateTrainingComponent({
+          id: 'c1',
           subgroups: [
             generateSubgroup({ id: 's3', membersIds: ['a', 'b', 'h', 'i'] }), // existing subgroup in target
           ],
@@ -181,6 +183,7 @@ describe('copySubgroup', () => {
       membersIds: [],
       components: [
         generateTrainingComponent({
+          id: 'c1',
           subgroups: [
             generateSubgroup({ id: 's4', membersIds: ['e', 'f'] }), // empty subgroup
             generateSubgroup({ id: 's5', membersIds: ['g'] }), // non-empty subgroup
@@ -205,6 +208,7 @@ describe('copySubgroup', () => {
       membersIds: [],
       components: [
         generateTrainingComponent({
+          id: 'c1',
           subgroups: [
             generateSubgroup({ id: 's6', membersIds: ['f', 'g', 'c'] }), // existing subgroup in target
             generateSubgroup({ id: 's6.1', membersIds: ['f'], parentId: 's6' }),

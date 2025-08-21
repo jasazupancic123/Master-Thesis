@@ -108,7 +108,7 @@ describe('Get prescribed training (e2e)', () => {
       generateExerciseSet(3, COMPONENT_PARAMS_OPT1),
     ];
 
-    const trainingId = await db.trainings.addDoc(
+    const trainingId = await db.trainings.save(
       generateTrainingStub({
         ownerId: global.trainer.uid,
         groupId: group.id,
@@ -138,7 +138,7 @@ describe('Get prescribed training (e2e)', () => {
       }),
     );
 
-    const training = await db.trainings.getDoc(trainingId);
+    const training = await db.trainings.findById(trainingId);
     const response = await request(app.getHttpServer())
       .get(url(training.id))
       .set('Authorization', `Bearer ${global.athlete.token}`)
@@ -168,7 +168,7 @@ describe('Get prescribed training (e2e)', () => {
     expect(kgField).toBeDefined();
     expect(+kgField.value).toBe(20);
 
-    await db.trainings.deleteDoc(training.id);
+    await db.trainings.delete(training.id);
   });
 
   it('should get prescribed training for athlete for subgroup', async () => {
@@ -178,7 +178,7 @@ describe('Get prescribed training (e2e)', () => {
       generateExerciseSet(3, COMPONENT_PARAMS_OPT1),
     ];
 
-    const trainingId = await db.trainings.addDoc(
+    const trainingId = await db.trainings.save(
       generateTrainingStub({
         ownerId: global.trainer.uid,
         groupId: group.id,
@@ -219,7 +219,7 @@ describe('Get prescribed training (e2e)', () => {
       }),
     );
 
-    const training = await db.trainings.getDoc(trainingId);
+    const training = await db.trainings.findById(trainingId);
     const response = await request(app.getHttpServer())
       .get(url(training.id))
       .set('Authorization', `Bearer ${global.athlete.token}`)
@@ -283,7 +283,7 @@ describe('Get prescribed training (e2e)', () => {
     expect(thirdKgField).toBeDefined();
     expect(+thirdKgField.value).toBe(20);
 
-    await db.trainings.deleteDoc(training.id);
+    await db.trainings.delete(training.id);
   });
 
   it('should get prescribed training for athlete in main group with custom workloads', async () => {
@@ -293,7 +293,7 @@ describe('Get prescribed training (e2e)', () => {
       generateExerciseSet(3, COMPONENT_PARAMS_OPT1),
     ];
 
-    const trainingId = await db.trainings.addDoc(
+    const trainingId = await db.trainings.save(
       generateTrainingStub({
         ownerId: global.trainer.uid,
         groupId: group.id,
@@ -317,7 +317,7 @@ describe('Get prescribed training (e2e)', () => {
       }),
     );
 
-    const training = await db.trainings.getDoc(trainingId);
+    const training = await db.trainings.findById(trainingId);
 
     await db.workloads.createMany([
       {
@@ -421,7 +421,7 @@ describe('Get prescribed training (e2e)', () => {
       });
     });
 
-    await db.trainings.deleteDoc(training.id);
+    await db.trainings.delete(training.id);
   });
 
   it('should get prescribed training for athlete in subgroup with custom workloads', async () => {
@@ -431,7 +431,7 @@ describe('Get prescribed training (e2e)', () => {
       generateExerciseSet(3, COMPONENT_PARAMS_OPT1),
     ];
 
-    const trainingId = await db.trainings.addDoc(
+    const trainingId = await db.trainings.save(
       generateTrainingStub({
         ownerId: global.trainer.uid,
         groupId: group.id,
@@ -466,7 +466,7 @@ describe('Get prescribed training (e2e)', () => {
       }),
     );
 
-    const training = await db.trainings.getDoc(trainingId);
+    const training = await db.trainings.findById(trainingId);
     await db.workloads.createMany([
       {
         trainingId: training.id,
@@ -570,6 +570,6 @@ describe('Get prescribed training (e2e)', () => {
       if (p.selected === VolType.Rep) expect(p.value).toBe('12');
     });
 
-    await db.trainings.deleteDoc(training.id);
+    await db.trainings.delete(training.id);
   });
 });

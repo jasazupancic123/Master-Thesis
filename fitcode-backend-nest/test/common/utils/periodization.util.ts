@@ -29,7 +29,10 @@ export class TestPeriodizationUtil {
     this.generateTraining(28),
   ];
 
-  static generateTraining(addDaysFromToday: number) {
+  static generateTraining(
+    addDaysFromToday: number,
+    data?: Partial<Training>,
+  ): Training {
     // same param values for all sets for both left and right side
     const SETS_ALL_PARAMS = [
       generateExerciseSet(1),
@@ -96,6 +99,7 @@ export class TestPeriodizationUtil {
           ],
         }),
       ],
+      ...(data || {}),
     });
   }
 
