@@ -4,13 +4,13 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { Query } from 'firebase-admin/firestore';
+import { Query, Timestamp } from 'firebase-admin/firestore';
 import { UserRecord } from 'firebase-admin/lib/auth';
 import { DateTime } from 'luxon';
 
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
 import { Permission } from '@src/common/interface/permission.interface';
+import { CommonService } from '@src/common/service/common.service';
 import { Institution } from '@src/institution/entity/institution.entity';
 import { InstitutionRepository } from '@src/institution/repository/institution.repository';
 
@@ -20,7 +20,6 @@ import {
   UserRef,
   WellnessRef,
 } from '../common/type/firestore.type';
-import { Environment } from '../config/environment-validation-schema';
 import { FirebaseService } from '../firebase/firebase.service';
 import { FilterUserQueryDto } from './dto/filter-user-query.dto';
 import { UpdateUserClaimsDto } from './dto/update-user-claims.dto';
@@ -41,7 +40,7 @@ export class UserService implements Permission<UserEntity, Institution> {
   private logger = new Logger(UserService.name);
 
   constructor(
-    private readonly configService: ConfigService<Environment>,
+    private readonly commonService: CommonService,
     private readonly firebaseService: FirebaseService,
     private readonly institutionRepository: InstitutionRepository,
     private readonly userRepository: UserRepository,
@@ -223,12 +222,21 @@ export class UserService implements Permission<UserEntity, Institution> {
       .startOf('day')
       .toJSDate();
 
+    const startOf10DaysBefore = now
+      .startOf('day')
+      .minus({ days: 10 })
+      .startOf('day')
+      .toJSDate();
+
     const wellness = userIds.length
       ? await Promise.all(
           userIds.map(async (userRef) => {
             const wellnessDocs = await this.wellnessRepository.getDocs(
               userRef,
-              (q) => q.where('userId', '==', userRef.uid),
+              (q) =>
+                q
+                  .where('userId', '==', userRef.uid)
+                  .where('date', '>=', Timestamp.fromDate(startOf10DaysBefore)),
             );
 
             const yesterdayZ = this.getWellnessZScore(
@@ -243,6 +251,72 @@ export class UserService implements Permission<UserEntity, Institution> {
       : [];
 
     return wellness.flat();
+  }
+
+  getWellnessZScore(
+    wellnessDocs: Wellness[],
+    date: Date,
+  ): WellnessZScore | null {
+    const dayStart = DateTime.fromJSDate(date).startOf('day');
+
+    const foundWellness = wellnessDocs.find((wd) =>
+      DateTime.fromJSDate(wd.date).hasSame(dayStart, 'day'),
+    );
+    if (!foundWellness) return null;
+
+    if (wellnessDocs.length < 2) return foundWellness;
+
+    const history = wellnessDocs.filter(
+      (wd) => DateTime.fromJSDate(wd.date) < dayStart,
+    );
+
+    const sleepHist = history
+      .map((w) => w.sleep)
+      .filter(this.commonService.number.isNumber);
+    const fatigueHist = history
+      .map((w) => w.fatigue)
+      .filter(this.commonService.number.isNumber);
+    const sorenessHist = history
+      .map((w) => w.soreness)
+      .filter(this.commonService.number.isNumber);
+
+    const sleepMean =
+      sleepHist.length >= 1
+        ? this.commonService.number.getMean(sleepHist)
+        : null;
+    const fatigueMean =
+      fatigueHist.length >= 1
+        ? this.commonService.number.getMean(fatigueHist)
+        : null;
+    const sorenessMean =
+      sorenessHist.length >= 1
+        ? this.commonService.number.getMean(sorenessHist)
+        : null;
+
+    const sleepSD = this.commonService.number.getStandardDeviation(sleepHist);
+    const fatigueSD =
+      this.commonService.number.getStandardDeviation(fatigueHist);
+    const sorenessSD =
+      this.commonService.number.getStandardDeviation(sorenessHist);
+
+    return {
+      ...foundWellness,
+      sleepZScore: this.commonService.number.getZScore(
+        foundWellness.sleep,
+        sleepMean,
+        sleepSD,
+      ),
+      fatigueZScore: this.commonService.number.getZScore(
+        foundWellness.fatigue,
+        fatigueMean,
+        fatigueSD,
+      ),
+      sorenessZScore: this.commonService.number.getZScore(
+        foundWellness.soreness,
+        sorenessMean,
+        sorenessSD,
+      ),
+    };
   }
 
   canView(user: User, entity: UserEntity, institution?: Institution) {
@@ -286,77 +360,4 @@ export class UserService implements Permission<UserEntity, Institution> {
 
     return false;
   }
-
-  getWellnessZScore(
-    wellnessDocs: Wellness[],
-    date: Date,
-  ): WellnessZScore | null {
-    const dayStart = DateTime.fromJSDate(date).startOf('day');
-
-    const foundWellness = wellnessDocs.find((wd) =>
-      DateTime.fromJSDate(wd.date).hasSame(dayStart, 'day'),
-    );
-    if (!foundWellness) return null;
-
-    if (wellnessDocs.length < 2) return foundWellness;
-
-    const history = wellnessDocs.filter(
-      (wd) => DateTime.fromJSDate(wd.date) < dayStart,
-    );
-
-    const sleepHist = history.map((w) => w.sleep).filter(this.isNum);
-    const fatigueHist = history.map((w) => w.fatigue).filter(this.isNum);
-    const sorenessHist = history.map((w) => w.soreness).filter(this.isNum);
-
-    const sleepMean = sleepHist.length >= 1 ? this.mean(sleepHist) : null;
-    const fatigueMean = fatigueHist.length >= 1 ? this.mean(fatigueHist) : null;
-    const sorenessMean =
-      sorenessHist.length >= 1 ? this.mean(sorenessHist) : null;
-
-    const sleepSD = this.stdev(sleepHist);
-    const fatigueSD = this.stdev(fatigueHist);
-    const sorenessSD = this.stdev(sorenessHist);
-
-    return {
-      ...foundWellness,
-      sleepZScore: this.z(foundWellness.sleep, sleepMean, sleepSD),
-      fatigueZScore: this.z(foundWellness.fatigue, fatigueMean, fatigueSD),
-      sorenessZScore: this.z(foundWellness.soreness, sorenessMean, sorenessSD),
-    };
-  }
-
-  getAttributesStdev(sleep: number[], fatigue: number[], soreness: number[]) {
-    return {
-      sleepStdev: this.stdev(sleep),
-      fatigueStdev: this.stdev(fatigue),
-      sorenessStdev: this.stdev(soreness),
-    };
-  }
-
-  stdev(xs: number[]) {
-    const n = xs.length;
-    if (n < 2) return NaN; // not enough history
-    const mean = xs.reduce((a, b) => a + b, 0) / n;
-    const sse = xs.reduce((a, x) => a + (x - mean) ** 2, 0);
-    return Math.sqrt(sse / (n - 1));
-  }
-
-  mean(xs: number[]) {
-    const n = xs.length;
-    if (n === 0) return 0;
-    return xs.reduce((a, b) => a + b, 0) / n;
-  }
-
-  z = (
-    current: number | null | undefined,
-    mean: number | null,
-    sd: number | null,
-  ) => {
-    return this.isNum(current) && this.isNum(mean) && this.isNum(sd) && sd > 0
-      ? (current - mean) / sd
-      : null;
-  };
-
-  isNum = (v: unknown): v is number =>
-    typeof v === 'number' && Number.isFinite(v);
 }
