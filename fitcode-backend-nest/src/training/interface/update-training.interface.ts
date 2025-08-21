@@ -15,16 +15,13 @@ export type UpdateSuperset = Pick<Superset, 'color'> & {
   exercises: UpdateTrainingExercise[];
 };
 
-export type UpdateSubgroup = Pick<
-  Subgroup,
-  'id' | 'name' | 'color' | 'membersIds' | 'periodizationType'
-> & {
+export type UpdateSubgroup = Pick<Subgroup, 'id' | 'name' | 'membersIds'> & {
   supersets: UpdateSuperset[];
 };
 
 export type UpdateTrainingComponent = Pick<
   TrainingComponent,
-  'id' | 'color' | 'from' | 'to' | 'target' | 'periodizationType' | 'methodId'
+  'id' | 'color' | 'from' | 'to' | 'target' | 'methodId'
 > & {
   supersets: UpdateSuperset[];
   subgroups: UpdateSubgroup[];

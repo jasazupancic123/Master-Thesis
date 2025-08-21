@@ -5,18 +5,6 @@ import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { PeriodizationType } from '../enum/periodization-type.enum';
 
 export class PeriodizeTrainingsDto {
-  @IsString()
-  @IsNotEmpty()
-  @ApiProperty()
-  @Expose()
-  baseTrainingId: string; // base training to periodize others
-
-  @IsString()
-  @IsNotEmpty()
-  @ApiProperty()
-  @Expose()
-  componentId: string; // ID of the component to periodize
-
   @ApiProperty({ enum: PeriodizationType })
   @IsNotEmpty()
   @IsEnum(PeriodizationType)

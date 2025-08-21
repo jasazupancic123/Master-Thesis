@@ -1,32 +1,22 @@
 import type { INestApplication } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import {
-  createGroupWithCycles,
-  createInstitution,
-  createTraining,
-  deleteCollection,
-  deleteDoc,
-  deleteInstitution,
-} from '@test/common/utils/data.util';
-import { addDays, addMinutes } from 'date-fns';
-import * as request from 'supertest';
+import { deleteCollection } from '@test/common/utils/data.util';
+import { TestPeriodizationUtil } from '@test/common/utils/periodization.util';
+import { addDays } from 'date-fns';
+import * as req from 'supertest';
 
 import { AppModule } from '@src/app.module';
-import { ComponentService } from '@src/component/component.service';
 import type { Component } from '@src/component/entity/component.entity';
-import { ParamType } from '@src/component/enum/param.enum';
 import { generateComponentStub } from '@src/component/mock/component.stub';
-import type { Exercise } from '@src/exercise/entity/exercise.entity';
-import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
-import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
-import type { Group } from '@src/group/entity/group.entity';
-import { GroupService } from '@src/group/group.service';
-import { InstitutionService } from '@src/institution/service/institution.service';
+import { generateCyclesStub } from '@src/group/mock/cycle.stub';
+import { generateGroupStub } from '@src/group/mock/group.stub';
+import { generateInstitutionStub } from '@src/institution/mock/institution.mock';
 import type { Target } from '@src/target/entity/target.entity';
 import { generateTargetStub } from '@src/target/mock/target.stub';
-import type { ExerciseSet } from '@src/training/entity/exercise-set.entity';
+import { TestDbService } from '@src/test-db/test-db.service';
+import type { PeriodizeTrainingsDto } from '@src/training/dto/periodize-training.dto';
 import type { Training } from '@src/training/entity/training.entity';
 import { PeriodizationType } from '@src/training/enum/periodization-type.enum';
 import {
@@ -35,136 +25,19 @@ import {
   generateSuperset,
   generateTrainingComponent,
   generateTrainingExercise,
+  generateTrainingStub,
 } from '@src/training/mock/training.stub';
-import { TrainingRepository } from '@src/training/repository/training.repository';
-
-import { PERIODIZATION_TEST_VALUES } from '../common/constant/periodization.constant';
-import type { TestInstitution, TestTraining } from '../common/type/entity.type';
 
 describe('Periodization functions (e2e)', () => {
   let app: INestApplication;
+  let db: TestDbService;
   let firebase: FirebaseService;
-  let componentService: ComponentService;
-  let exerciseService: ExerciseService;
-  let institutionService: InstitutionService;
-  let trainingRepository: TrainingRepository;
-  let groupService: GroupService;
 
-  let institution: TestInstitution;
-  let group: Group;
+  let institutionId: string;
+  let groupId: string;
+  let target: Target;
   let component: Component;
-  let baseTraining: TestTraining;
-  let exercises: Exercise[];
-
-  let targetStrength: Target;
-  let targetPower: Target;
-  let targetPlyometric: Target;
-
-  // set date to 21th july (Mon) of 2025 at 12:00 noon
-  const baseFrom = new Date('2025-07-21T12:00:00Z');
-  const baseTo = addMinutes(baseFrom, 30);
-
-  const SUBGROUP_ID = 'subgroup';
-
-  async function createBaseTraining(
-    group: Group,
-    options?: {
-      numSubgroups?: number;
-      arrgFrom?: Date;
-      arrgTo?: Date;
-    },
-  ) {
-    const { numSubgroups, arrgFrom, arrgTo } = options ? options : {};
-    const from = arrgFrom || baseFrom;
-    const to = arrgTo || baseTo;
-
-    return await createTraining(firebase, {
-      ownerId: global.trainer.uid,
-      membersIds: group.membersIds,
-      group,
-      cycleId: group.cycles[0].id,
-      from,
-      to,
-      components: [
-        generateTrainingComponent({
-          id: component.id,
-          from: from,
-          to: addMinutes(from, 1),
-          target: targetPower,
-          supersets: [
-            generateSuperset({
-              exercises: [
-                generateTrainingExercise({
-                  id: exercises[0].id,
-                  sets: [
-                    generateExerciseSet(1),
-                    generateExerciseSet(2),
-                    generateExerciseSet(3),
-                  ],
-                }),
-                generateTrainingExercise({
-                  id: exercises[1].id,
-                  sets: [
-                    generateExerciseSet(1),
-                    generateExerciseSet(2),
-                    generateExerciseSet(3),
-                  ],
-                }),
-                generateTrainingExercise({
-                  id: exercises[2].id,
-                  sets: [
-                    generateExerciseSet(1),
-                    generateExerciseSet(2),
-                    generateExerciseSet(3),
-                  ],
-                }),
-              ],
-            }),
-          ],
-          subgroups:
-            numSubgroups > 0
-              ? Array.from({ length: numSubgroups }, (_, i) =>
-                  generateSubgroup({
-                    id: `${SUBGROUP_ID}_${i + 1}`,
-                    name: `Subgroup ${i + 1}`,
-                    membersIds: group.membersIds.slice(0, 2),
-                    supersets: [
-                      generateSuperset({
-                        exercises: [
-                          generateTrainingExercise({
-                            id: exercises[0].id,
-                            sets: [
-                              generateExerciseSet(1),
-                              generateExerciseSet(2),
-                              generateExerciseSet(3),
-                            ],
-                          }),
-                          generateTrainingExercise({
-                            id: exercises[1].id,
-                            sets: [
-                              generateExerciseSet(1),
-                              generateExerciseSet(2),
-                              generateExerciseSet(3),
-                            ],
-                          }),
-                          generateTrainingExercise({
-                            id: exercises[2].id,
-                            sets: [
-                              generateExerciseSet(1),
-                              generateExerciseSet(2),
-                              generateExerciseSet(3),
-                            ],
-                          }),
-                        ],
-                      }),
-                    ],
-                  }),
-                )
-              : undefined,
-        }),
-      ],
-    });
-  }
+  let baseTrainingId: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -174,386 +47,512 @@ describe('Periodization functions (e2e)', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
 
+    db = moduleFixture.get(TestDbService);
     firebase = moduleFixture.get(FirebaseService);
-    componentService = moduleFixture.get(ComponentService);
-    exerciseService = moduleFixture.get(ExerciseService);
-    institutionService = moduleFixture.get(InstitutionService);
-    trainingRepository = moduleFixture.get(TrainingRepository);
-    groupService = moduleFixture.get(GroupService);
 
-    [targetStrength, targetPower, targetPlyometric] = [
-      generateTargetStub({
-        id: 'strength',
-        componentId: 'strength',
-      }),
-      generateTargetStub({ id: 'power', componentId: 'strength' }),
-      generateTargetStub({
-        id: 'plyometric',
-        componentId: 'strength',
-      }),
-    ];
-
-    institution = await createInstitution(institutionService);
-    component = await componentService.create(
-      generateComponentStub({
-        id: 'strength',
-        targets: [targetStrength, targetPower, targetPlyometric],
-      }),
-    );
-
-    group = await createGroupWithCycles(groupService, institution, {
-      cycleLengthInWeeks: 60,
+    target = generateTargetStub({
+      id: 'strength',
+      componentId: 'strength',
     });
 
-    exercises = await exerciseService.upsertMany(global.admin, [
-      generateExerciseStub({ id: 'deadlift', componentIds: [component.id] }),
-      generateExerciseStub({ id: 'squat', componentIds: [component.id] }),
-      generateExerciseStub({ id: 'bench', componentIds: [component.id] }),
-    ]);
+    institutionId = await db.institutions.save(generateInstitutionStub());
+    groupId = await db.groups.save(
+      generateGroupStub({ institutionId, cycles: generateCyclesStub(3) }),
+    );
+
+    component = await db.components.create(
+      generateComponentStub({ id: 'c1', targets: [target] }),
+    );
+
+    baseTrainingId = await db.trainings.save(
+      TestPeriodizationUtil.generateTraining(0, {
+        ownerId: global.trainer.id,
+        institutionId,
+        groupId,
+      }),
+    );
   });
 
   afterAll(async () => {
     await Promise.all([
       deleteCollection(firebase, 'TRAINING'),
-      deleteDoc(firebase, 'GROUP', group.id),
+      db.groups.delete(groupId),
       deleteCollection(firebase, 'EXERCISE'),
-      deleteInstitution(firebase, institution),
-      deleteDoc(firebase, 'COMPONENT', component.id),
+      db.institutions.delete(institutionId),
+      db.components.delete(component.id),
     ]);
 
     await app.close();
   });
 
-  function getOffsetTrainingByNDays(
-    baseTraining: Training,
-    numDays: number,
-    target?: Target,
-  ): Training {
-    return {
-      ...baseTraining,
-      id: null,
-      from: addDays(baseTraining.from, numDays),
-      to: addDays(baseTraining.to, numDays),
-      components: [
-        {
-          ...baseTraining.components[0],
-          target,
-          from: addDays(baseTraining.from, numDays),
-          to: addDays(baseTraining.to, numDays),
-        },
-      ],
-    };
+  async function request(
+    trainingId: string,
+    componentId: string,
+    body: PeriodizeTrainingsDto = {
+      exerciseIds: [],
+      periodizationType: PeriodizationType.REPLICATE,
+    },
+  ) {
+    return await req(app.getHttpServer())
+      .patch(`/training/${trainingId}/periodize/component/${componentId}`)
+      .set('Authorization', `Bearer ${global.trainer.token}`)
+      .send(body);
   }
 
-  describe('Periodization functions', () => {
-    afterEach(async () => {
-      await deleteCollection(firebase, 'TRAINING');
-    });
-    // dates: baseTraining(+0d), training1(+2d), training2(+4d), training3(+7d), training4(+14d),
-    // differentTargetTraining(+21d), training5(+28d)
-
-    // perscribed values can be set in generateExerciseSet functions on base training,
-    // first value in expected is also the perscribed value, as the first training is the base training and it does not change,
-    // except for types: block, wave
-    // cannot test type autoregulatory, because it uses a random number
-    // type dupTableBased is not supported yet
-
-    it.each(PERIODIZATION_TEST_VALUES)(
-      'should successfully use all the periodization functions for the trainings with the same target',
-      async ({ type, expected }) => {
-        if (type === PeriodizationType.DUP_TABLE_BASED) {
-          const response = await request(app.getHttpServer())
-            .post(`/training/periodize/trainings`)
-            .set('Authorization', `Bearer ${global.trainer.token}`)
-            .send({
-              baseTrainingId: baseTraining.id,
-              componentId: component.id,
-              exerciseIds: exercises.map((e) => e.id),
-              periodizationType: type,
-            });
-
-          expect(response.status).toBe(400);
-          expect(response.body.message).toBe(
-            'Dup Table Based periodization is not supported yet',
-          );
-
-          return;
-        }
-
-        baseTraining = await createBaseTraining(group, { numSubgroups: 3 });
-        const differentTargetTraining = getOffsetTrainingByNDays(
-          baseTraining,
-          21,
-          targetStrength,
-        );
-
-        await Promise.all(
-          [
-            getOffsetTrainingByNDays(baseTraining, 2, targetPower),
-            getOffsetTrainingByNDays(baseTraining, 4, targetPower),
-            getOffsetTrainingByNDays(baseTraining, 7, targetPower),
-            getOffsetTrainingByNDays(baseTraining, 14, targetPower),
-            getOffsetTrainingByNDays(baseTraining, 28, targetPower),
-            differentTargetTraining,
-          ].map((t) => createTraining(firebase, t)),
-        );
-
-        const foundTrainings = await trainingRepository.getDocs();
-        expect(foundTrainings).toHaveLength(6 + 1); // 6 created + 1 base training
-
-        const response = await request(app.getHttpServer())
-          .post(`/training/periodize/trainings`)
-          .set('Authorization', `Bearer ${global.trainer.token}`)
-          .send({
-            baseTrainingId: baseTraining.id,
-            componentId: component.id,
-            exerciseIds: exercises.map((e) => e.id),
-            periodizationType: type,
-          });
-
-        expect(response.status).toBe(201);
-
-        const periodizedTrainings = response.body;
-
-        // base training + 5 periodized trainings, skips the training with different target
-        expect(periodizedTrainings.length).toBe(6);
-
-        for (const periodizedTraining of periodizedTrainings) {
-          const trainingIndex = periodizedTrainings.indexOf(periodizedTraining);
-
-          expect(periodizedTraining.components[0].id).toBe(component.id);
-
-          // all subgroups should have the same values as in base training
-          for (const sg of periodizedTraining.components[0].subgroups) {
-            expect(sg.supersets.map((s) => s.exercises.map((e) => e))).toEqual(
-              baseTraining.components[0].subgroups
-                .find((subgroup) => subgroup.id === sg.id)
-                ?.supersets.map((s) => s.exercises.map((e) => e)),
-            );
-          }
-
-          for (const exercise of periodizedTraining.components[0].supersets[0]
-            .exercises) {
-            for (const set of exercise.sets) {
-              const { int, vol } = getBaseIntVolValuesFromSet(set);
-              expect(parseFloat(int.value)).toBe(expected[trainingIndex].int);
-              expect(parseFloat(vol.value)).toBe(expected[trainingIndex].vol);
-            }
-          }
-        }
-
-        await deleteCollection(firebase, 'TRAINING');
-      },
+  it('should throw error if warmup / cooldown are passed as components', async () => {
+    const response = await request(baseTrainingId, 'warmup');
+    expect(response.status).toBe(400);
+    expect(response.body.message).toContain(
+      'You cannot periodize warmup or cooldown components',
     );
   });
 
-  /*
-  describe('Periodize transaction', () => {
-    const NUM_USERS = 19; // +1 default global athlete
-    const NUM_TRAININGS = 49; // + 1 base training
-
-    let users: TestUser[];
-    let institution: TestInstitution;
-    let group: Group;
-
-    beforeAll(async () => {
-      users = await Promise.all(
-        Array.from({ length: NUM_USERS }, () =>
-          createAthleteUserAndToken(firebase),
-        ),
-      );
-
-      institution = await createInstitutionWithUsers(
-        firebase,
-        institutionService,
-        { additionalAthletes: users },
-      );
-
-      group = await createGroupWithCycles(groupService, institution, {
-        cycleLengthInWeeks: 60,
-      });
-    });
-
-    afterAll(async () => {
-      await Promise.all([
-        deleteCollection(firebase, 'TRAINING'),
-        deleteDoc(firebase, 'GROUP', group.id),
-        deleteInstitution(firebase, institution),
-        deleteUsers(firebase, users),
-      ]);
-    }, 60 * 1000);
-
-    it('should handle load for 100 trainings being periodized (not throw error)', async () => {
-      baseTraining = await createBaseTraining(group);
-
-      // create trainings
-      await Promise.all(
-        Array.from({ length: NUM_TRAININGS }, (_, i) =>
-          createTraining(firebase, {
-            group,
-            ...getOffsetTrainingByNDays(baseTraining, i + 1, targetPower),
-          }),
-        ),
-      );
-
-      const foundTrainings = await trainingRepository.getDocs();
-      expect(foundTrainings).toHaveLength(NUM_TRAININGS + 1); // one base training
-
-      const response = await request(app.getHttpServer())
-        .post(`/training/periodize/trainings`)
-        .set('Authorization', `Bearer ${institution.trainers[0].token}`)
-        .send({
-          baseTrainingId: baseTraining.id,
-          componentId: component.id,
-          exerciseIds: exercises.map((e) => e.id),
-          periodizationType: PeriodizationType.LINEAR,
-        });
-
-      expect(response.status).toBe(201);
-      expect(response.body).toHaveLength(50);
-    });
-  }); */
-
-  describe('Subgroup periodization', () => {
-    afterEach(async () => {
-      await deleteCollection(firebase, 'TRAINING');
-    });
-
-    it('should return that it cannot periodize, because the base subgroup does not exist in future trainings', async () => {
-      const trainings = [];
-      for (let i = 0; i < 6; i++) {
-        trainings.push(
-          await createBaseTraining(group, {
-            numSubgroups: i === 0 ? 1 : 0, // only first training has subgroup
-            arrgFrom: addDays(baseFrom, i),
-            arrgTo: addDays(baseTo, i),
-          }),
-        );
-      }
-
-      const response = await request(app.getHttpServer())
-        .post(`/training/periodize/trainings`)
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send({
-          baseTrainingId: trainings[0].id,
-          componentId: component.id,
-          periodizationType: PeriodizationType.LINEAR,
-          exerciseIds: exercises.map((e) => e.id),
-          subgroupId: `${SUBGROUP_ID}_1`,
-        });
-
-      expect(response.status).toBe(400);
-      expect(response.body.message).toBe(
-        `Selected subgroup not found in any future training`,
-      );
-    });
-
-    it.each(PERIODIZATION_TEST_VALUES)(
-      'should successfully periodize subgroup trainings and ignore main group and other subgroups',
-      async ({ type, expected }) => {
-        const SUBGROUP_1_ID = `${SUBGROUP_ID}_1`;
-
-        if (type === PeriodizationType.DUP_TABLE_BASED) {
-          const response = await request(app.getHttpServer())
-            .post(`/training/periodize/trainings`)
-            .set('Authorization', `Bearer ${global.trainer.token}`)
-            .send({
-              baseTrainingId: baseTraining.id,
-              componentId: component.id,
-              exerciseIds: exercises.map((e) => e.id),
-              periodizationType: type,
-              subgroupId: SUBGROUP_1_ID,
-            });
-
-          expect(response.status).toBe(400);
-          expect(response.body.message).toBe(
-            'Dup Table Based periodization is not supported yet',
-          );
-
-          return;
-        }
-
-        baseTraining = await createBaseTraining(group, { numSubgroups: 3 });
-        await Promise.all(
-          [
-            getOffsetTrainingByNDays(baseTraining, 2, targetPower),
-            getOffsetTrainingByNDays(baseTraining, 4, targetPower),
-            getOffsetTrainingByNDays(baseTraining, 7, targetPower),
-            getOffsetTrainingByNDays(baseTraining, 14, targetPower),
-            getOffsetTrainingByNDays(baseTraining, 28, targetPower),
-          ].map((t) => createTraining(firebase, t)),
-        );
-
-        const foundTrainings = await trainingRepository.getDocs();
-        expect(foundTrainings).toHaveLength(5 + 1); // 5 created + 1 base training
-
-        const response = await request(app.getHttpServer())
-          .post(`/training/periodize/trainings`)
-          .set('Authorization', `Bearer ${global.trainer.token}`)
-          .send({
-            baseTrainingId: baseTraining.id,
-            componentId: component.id,
-            periodizationType: type,
-            exerciseIds: exercises.map((e) => e.id),
-            subgroupId: SUBGROUP_1_ID,
-          });
-
-        expect(response.status).toBe(201);
-
-        const periodizedTrainings = response.body;
-
-        expect(periodizedTrainings.length).toBe(6); // base training + 5 periodized trainings
-
-        for (const periodizedTraining of periodizedTrainings) {
-          const trainingIndex = periodizedTrainings.indexOf(periodizedTraining);
-
-          expect(periodizedTraining.components[0].id).toBe(component.id);
-
-          // main group has the same exercises as base training
-          expect(
-            periodizedTraining.components.map((c) =>
-              c.supersets.map((s) => s.exercises.map((e) => e)),
-            ),
-          ).toEqual(
-            baseTraining.components.map((c) =>
-              c.supersets.map((s) => s.exercises.map((e) => e)),
-            ),
-          );
-
-          // subgroups with different id have the same values as in base training
-          periodizedTraining.components[0].subgroups.forEach((sg) => {
-            expect(sg.id).toBe(`${SUBGROUP_ID}_${sg.id.split('_')[1]}`);
-            if (sg.id === SUBGROUP_1_ID) return; // skip the subgroup we are periodizing
-            expect(sg.supersets[0].exercises.map((e) => e)).toEqual(
-              baseTraining.components[0].subgroups
-                .find((subgroup) => subgroup.id === sg.id)
-                ?.supersets[0].exercises.map((e) => e),
-            );
-          });
-
-          const subgroup = periodizedTraining.components[0].subgroups.find(
-            (sg) => sg.id === SUBGROUP_1_ID,
-          );
-          if (!subgroup)
-            throw new Error(`Subgroup ${SUBGROUP_1_ID} not found in training`);
-
-          for (const exercise of subgroup.supersets[0].exercises) {
-            for (const set of exercise.sets) {
-              const { int, vol } = getBaseIntVolValuesFromSet(set);
-              expect(parseFloat(int.value)).toBe(expected[trainingIndex].int);
-              expect(parseFloat(vol.value)).toBe(expected[trainingIndex].vol);
-            }
-          }
-        }
-
-        await deleteCollection(firebase, 'TRAINING');
-      },
+  it('should throw error if base training in the past', async () => {
+    const pastTrainingId = await db.trainings.save(
+      TestPeriodizationUtil.generateTraining(-1, {
+        ownerId: global.trainer.id,
+        institutionId,
+        groupId,
+      }),
     );
+
+    const response = await request(pastTrainingId, component.id);
+    expect(response.status).toBe(400);
+    expect(response.body.message).toContain(
+      'You can only periodize upcoming trainings',
+    );
+
+    await db.trainings.delete(pastTrainingId);
+  });
+
+  it('should fail if component not found', async () => {
+    const response = await request(baseTrainingId, 'nonexistent');
+    expect(response.status).toBe(404);
+    expect(response.body.message).toContain('Training component not found');
+  });
+
+  it('should periodize trainings successfully', async () => {
+    // create 3 trainings for periodization
+    const dataWithC1: Partial<Training> = {
+      ownerId: global.trainer.id,
+      institutionId,
+      groupId,
+      components: [
+        generateTrainingComponent({
+          id: 'c1',
+          supersets: [
+            generateSuperset({
+              exercises: [
+                generateTrainingExercise({ id: 'different-exercise-1' }),
+              ],
+            }),
+            generateSuperset({
+              exercises: [
+                generateTrainingExercise({ id: 'different-exercise-2' }),
+              ],
+            }),
+          ],
+        }), // should be periodized
+      ],
+    };
+
+    const dataWithoutC1: Partial<Training> = {
+      ownerId: global.trainer.id,
+      institutionId,
+      groupId,
+      components: [
+        generateTrainingComponent({ id: 'unknown' }), // should not be periodized
+      ],
+    };
+
+    const trainings = [
+      TestPeriodizationUtil.generateTraining(0, dataWithC1),
+      TestPeriodizationUtil.generateTraining(1, dataWithoutC1),
+      TestPeriodizationUtil.generateTraining(2, dataWithC1),
+    ];
+
+    await Promise.all(trainings.map((t) => db.trainings.save(t)));
+
+    const response = await request(baseTrainingId, component.id, {
+      exerciseIds: ['e1', 'e2'],
+      periodizationType: PeriodizationType.REPLICATE,
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveLength(2); // not 3 since one training has no c1 component
+    const result = response.body as Training[];
+
+    // base training has only 1 component with 1 superset of 5 exercises
+    const baseTraining = result[0];
+    expect(baseTraining.id).toBe(baseTrainingId);
+    expect(baseTraining.components).toHaveLength(1);
+
+    const baseComponent = baseTraining.components[0];
+    expect(baseComponent.id).toBe(component.id);
+    expect(baseComponent.supersets).toHaveLength(1);
+    expect(baseComponent.supersets[0].exercises).toHaveLength(5);
+
+    for (let i = 1; i < result.length; i++) {
+      const training = result[i];
+      const componentC1 = training.components.find((c) => c.id === 'c1');
+      const componentUnknown = training.components.find(
+        (c) => c.id === 'unknown',
+      );
+
+      expect(componentC1).toBeDefined();
+      expect(componentUnknown).toBeUndefined();
+
+      // exercises did not exist in future trainings and they should be added now since they are copied
+      // base component should override result trainings' component
+      expect(componentC1?.supersets).toHaveLength(2);
+      expect(componentC1?.supersets[0].exercises).toHaveLength(3); // 2 from base (e1, e2) + 1 from future training (different-exercise-1)
+      expect(componentC1?.supersets[1].exercises).toHaveLength(1); // 1 from future training (different-exercise-2)
+    }
+
+    await deleteCollection(firebase, 'TRAINING');
+  });
+
+  it('should periodize subgroups successfully', async () => {
+    const newBaseTraining = generateTrainingStub({
+      ownerId: global.trainer.id,
+      membersIds: ['a', 'b', 'c'],
+      date: new Date(),
+      components: [
+        generateTrainingComponent({
+          id: 'c1',
+          supersets: [
+            generateSuperset({
+              exercises: [
+                generateTrainingExercise({
+                  id: 'e1',
+                  sets: [generateExerciseSet(1), generateExerciseSet(2)],
+                }),
+                generateTrainingExercise({
+                  id: 'e2',
+                  sets: [generateExerciseSet(1)],
+                }),
+              ],
+            }),
+          ],
+          subgroups: [
+            generateSubgroup({
+              id: 'sg1',
+              membersIds: ['a', 'b'],
+              supersets: [
+                generateSuperset({
+                  exercises: [
+                    generateTrainingExercise({
+                      id: 'e3',
+                      sets: [
+                        generateExerciseSet(1),
+                        generateExerciseSet(2),
+                        generateExerciseSet(3),
+                      ],
+                    }),
+                  ],
+                }),
+              ],
+            }),
+            generateSubgroup({
+              id: 'sg1-child-1',
+              parentId: 'sg1',
+              membersIds: ['a'],
+              supersets: [
+                generateSuperset({
+                  exercises: [
+                    generateTrainingExercise({
+                      id: 'e3',
+                      sets: [
+                        generateExerciseSet(1),
+                        generateExerciseSet(2),
+                        generateExerciseSet(3),
+                        generateExerciseSet(4),
+                      ],
+                    }),
+                  ],
+                }),
+              ],
+            }),
+          ],
+        }),
+      ],
+    });
+
+    const newBaseTrainingId = await db.trainings.save(newBaseTraining);
+
+    // check that sets are correctly saved -> unique length of sets will be our baseline for verifying that
+    // periodization works correctly and copies / overrides sets
+    const foundBaseTraining = await db.trainings.findById(newBaseTrainingId);
+    expect(
+      foundBaseTraining.components[0].supersets[0].exercises[0].sets,
+    ).toHaveLength(2);
+    expect(
+      foundBaseTraining.components[0].supersets[0].exercises[1].sets,
+    ).toHaveLength(1);
+    expect(
+      foundBaseTraining.components[0].subgroups[0].supersets[0].exercises[0]
+        .sets,
+    ).toHaveLength(3);
+    expect(
+      foundBaseTraining.components[0].subgroups[1].supersets[0].exercises[0]
+        .sets,
+    ).toHaveLength(4);
+
+    const trainings = [
+      // 1st training (no subgroups), subgroup should be created after periodization
+      generateTrainingStub({
+        ownerId: global.trainer.id,
+        membersIds: ['a', 'b', 'c'],
+        date: addDays(new Date(), 1),
+        components: [
+          generateTrainingComponent({
+            id: 'c1',
+            supersets: [
+              generateSuperset({
+                exercises: [
+                  generateTrainingExercise({ id: 'e1' }),
+                  generateTrainingExercise({ id: 'e2' }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      }),
+      // 2nd training (with 1 same subgroup that should be overridden and 1 new subgroup)
+      generateTrainingStub({
+        ownerId: global.trainer.id,
+        membersIds: ['a', 'b', 'c'],
+        date: addDays(new Date(), 2),
+        components: [
+          generateTrainingComponent({
+            id: 'c1',
+            supersets: [
+              generateSuperset({
+                exercises: [generateTrainingExercise({ id: 'e3' })],
+              }),
+            ],
+            subgroups: [
+              generateSubgroup({
+                id: 'sg1',
+                name: 'Subgroup 1',
+                membersIds: ['a', 'b'],
+                supersets: [
+                  generateSuperset({
+                    exercises: [
+                      generateTrainingExercise({ id: 'e1' }),
+                      generateTrainingExercise({ id: 'e2' }),
+                    ],
+                  }),
+                ],
+              }),
+              generateSubgroup({
+                id: 'sg2',
+                name: 'Subgroup 2',
+                membersIds: ['c'],
+                supersets: [
+                  generateSuperset({
+                    exercises: [generateTrainingExercise({ id: 'e4' })],
+                  }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      }),
+      // 3rd training (with 1 same subgroup that now has child subgroups)
+      generateTrainingStub({
+        ownerId: global.trainer.id,
+        membersIds: ['a', 'b', 'c'],
+        date: addDays(new Date(), 3),
+        components: [
+          generateTrainingComponent({
+            id: 'c1',
+            supersets: [
+              generateSuperset({
+                exercises: [generateTrainingExercise({ id: 'e5' })],
+              }),
+            ],
+            subgroups: [
+              generateSubgroup({
+                id: 'sg1',
+                membersIds: ['a', 'b'],
+                supersets: [
+                  generateSuperset({
+                    exercises: [
+                      generateTrainingExercise({ id: 'e1' }),
+                      generateTrainingExercise({ id: 'e2' }),
+                    ],
+                  }),
+                ],
+              }),
+              generateSubgroup({
+                id: 'sg1.1',
+                parentId: 'sg1',
+                membersIds: ['a'],
+                supersets: [
+                  generateSuperset({
+                    exercises: [generateTrainingExercise({ id: 'e4' })],
+                  }),
+                ],
+              }),
+              generateSubgroup({
+                id: 'sg1.2',
+                parentId: 'sg1',
+                membersIds: ['b'],
+                supersets: [
+                  generateSuperset({
+                    exercises: [generateTrainingExercise({ id: 'e5' })],
+                  }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      }),
+      // 4th training (with 1 different subgroup that should be overridden)
+      generateTrainingStub({
+        ownerId: global.trainer.id,
+        membersIds: ['a', 'b', 'c'],
+        date: addDays(new Date(), 4),
+        components: [
+          generateTrainingComponent({
+            id: 'c1',
+            supersets: [
+              generateSuperset({
+                exercises: [generateTrainingExercise({ id: 'e6' })],
+              }),
+            ],
+            subgroups: [
+              generateSubgroup({
+                id: 'sg3',
+                name: 'Subgroup 3',
+                membersIds: ['a', 'b'],
+                supersets: [
+                  generateSuperset({
+                    exercises: [
+                      generateTrainingExercise({ id: 'e1' }),
+                      generateTrainingExercise({ id: 'e2' }),
+                    ],
+                  }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      }),
+    ];
+
+    const ids = await Promise.all(trainings.map((t) => db.trainings.save(t)));
+
+    // check that each exercise has sets of length 0, since only base training has sets which will override them
+    const foundTrainings = await db.trainings.findAll((q) =>
+      q.where('id', 'in', ids).orderBy('from', 'asc'),
+    );
+
+    expect(foundTrainings).toHaveLength(4);
+    for (const training of foundTrainings) {
+      const componentC1 = training.components.find((c) => c.id === 'c1');
+      expect(componentC1).toBeDefined();
+      expect(componentC1.supersets).toHaveLength(1);
+
+      const exercises = componentC1.supersets[0].exercises.concat(
+        componentC1.subgroups.flatMap((sg) =>
+          sg.supersets.flatMap((s) => s.exercises),
+        ),
+      );
+
+      for (const exercise of exercises) expect(exercise.sets).toHaveLength(0);
+    }
+
+    const response = await request(newBaseTrainingId, 'c1', {
+      exerciseIds: ['e3'],
+      periodizationType: PeriodizationType.REPLICATE,
+      subgroupId: 'sg1',
+    });
+
+    const result = response.body as Training[];
+    const resultBaseTraining = result[0];
+    expect(resultBaseTraining.id).toBe(newBaseTrainingId);
+    expect(resultBaseTraining.components).toHaveLength(1);
+
+    const resultComponent = resultBaseTraining.components[0];
+    expect(resultComponent.id).toBe('c1');
+    expect(resultComponent.copiedFrom).toBeFalsy();
+    expect(resultComponent.supersets).toHaveLength(1);
+    expect(resultComponent.subgroups).toHaveLength(2);
+    expect(resultComponent.supersets[0].exercises).toHaveLength(2); // e1, e2
+    expect(resultComponent.supersets[0].exercises[0].sets).toHaveLength(2); // e1 sets
+    expect(resultComponent.supersets[0].exercises[0].sets).toEqual(
+      foundBaseTraining.components[0].supersets[0].exercises[0].sets,
+    );
+    expect(resultComponent.supersets[0].exercises[1].sets).toHaveLength(1); // e2 sets
+    expect(resultComponent.supersets[0].exercises[1].sets).toEqual(
+      foundBaseTraining.components[0].supersets[0].exercises[1].sets,
+    );
+
+    const resultRootSubgroup = resultComponent.subgroups[0];
+    expect(resultRootSubgroup.id).toBe('sg1');
+    expect(resultRootSubgroup.parentId).toBeFalsy();
+    expect(resultRootSubgroup.membersIds).toHaveLength(2);
+    expect(resultRootSubgroup.supersets).toHaveLength(1);
+    expect(resultRootSubgroup.supersets[0].exercises).toHaveLength(1); // e3
+    expect(resultRootSubgroup.supersets[0].exercises[0].sets).toHaveLength(3); // e3 sets
+    expect(resultRootSubgroup.supersets[0].exercises[0].sets).toEqual(
+      foundBaseTraining.components[0].subgroups[0].supersets[0].exercises[0]
+        .sets,
+    );
+
+    const resultChildSubgroup = resultComponent.subgroups[1];
+    expect(resultChildSubgroup.id).toBe('sg1-child-1');
+    expect(resultChildSubgroup.parentId).toBe('sg1');
+    expect(resultChildSubgroup.membersIds).toHaveLength(1);
+    expect(resultChildSubgroup.supersets).toHaveLength(1);
+    expect(resultChildSubgroup.supersets[0].exercises).toHaveLength(1); // e3
+    expect(resultChildSubgroup.supersets[0].exercises[0].sets).toHaveLength(4); // e3 sets
+    expect(resultChildSubgroup.supersets[0].exercises[0].sets).toEqual(
+      foundBaseTraining.components[0].subgroups[1].supersets[0].exercises[0]
+        .sets,
+    );
+
+    const NEW_SUBGROUP_COUNT = {
+      1: 2, // 1st training new subgroup sg1 and sg1-child-1
+      2: 3, // 2nd has old sg2, sg1 which is overridden and new sg1-child-1
+      3: 2, // 3rd has sg1 which is overridden (and its children are also deleted) and new sg1-child-1
+      4: 2, // 4th has old sg3 (now its deleted because members are the same as in sg1) and new sg1 and sg1-child-1
+    };
+
+    for (let i = 1; i < result.length; i++) {
+      const training = result[i];
+      expect(training.components).toHaveLength(1);
+
+      const componentC1 = training.components[0];
+      expect(componentC1.id).toBe('c1');
+      expect(componentC1.completedMembersIds).toHaveLength(0);
+      expect(componentC1.supersets).toHaveLength(1);
+      expect(componentC1.copiedFrom).toEqual({
+        lastCopiedFromTrainingId: newBaseTrainingId,
+        rootCopiedFromTrainingId: newBaseTrainingId,
+      });
+
+      expect(componentC1.subgroups).toHaveLength(NEW_SUBGROUP_COUNT[i]);
+
+      const rootSubgroup = componentC1.subgroups.find((sg) => sg.id === 'sg1');
+      expect(rootSubgroup).toBeDefined();
+      expect(rootSubgroup.membersIds).toHaveLength(2);
+      expect(rootSubgroup.supersets).toHaveLength(1);
+      expect(rootSubgroup.supersets[0].exercises).toHaveLength(1);
+      expect(rootSubgroup.supersets[0].exercises[0].sets).toHaveLength(3); // e3 sets
+
+      const childSubgroup = componentC1.subgroups.find(
+        (sg) => sg.id === 'sg1-child-1',
+      );
+      expect(childSubgroup).toBeDefined();
+      expect(childSubgroup.membersIds).toHaveLength(1);
+      expect(childSubgroup.supersets).toHaveLength(1);
+      expect(childSubgroup.supersets[0].exercises).toHaveLength(1);
+      expect(childSubgroup.supersets[0].exercises[0].sets).toHaveLength(4); // e3 sets
+    }
+
+    await deleteCollection(firebase, 'TRAINING');
   });
 });
-
-function getBaseIntVolValuesFromSet(set: ExerciseSet) {
-  const int = set.paramValuesL.find((p) => p.field === ParamType.IntWork1);
-  const vol = set.paramValuesL.find((p) => p.field === ParamType.VolWork1);
-  return { int, vol };
-}

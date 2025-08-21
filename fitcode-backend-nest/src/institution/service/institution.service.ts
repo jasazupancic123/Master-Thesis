@@ -42,12 +42,12 @@ export class InstitutionService implements Permission<Institution> {
   ) {}
 
   async getDoc(ref: InstitutionRef): Promise<Institution | null> {
-    return await this.repository.getDoc(ref.institutionId);
+    return await this.repository.findById(ref.institutionId);
   }
 
   async getDocByOwner(ownerId: string): Promise<Institution | null> {
     return (
-      await this.repository.getDocs((q) => q.where('ownerId', '==', ownerId))
+      await this.repository.findAll((q) => q.where('ownerId', '==', ownerId))
     )?.[0];
   }
 
@@ -58,7 +58,7 @@ export class InstitutionService implements Permission<Institution> {
   }
 
   async findAll(user: User): Promise<Institution[]> {
-    return await this.repository.getDocs((q) =>
+    return await this.repository.findAll((q) =>
       this.firebaseService.isAdmin(user) // admin sees all institutions
         ? q
         : this.firebaseService.isManager(user) // institution owner
@@ -98,7 +98,7 @@ export class InstitutionService implements Permission<Institution> {
       timestamps: true,
     });
 
-    const id = await this.repository.addDoc(query);
+    const id = await this.repository.save(query);
     return {
       ...data,
       id,
@@ -120,7 +120,7 @@ export class InstitutionService implements Permission<Institution> {
     if (!this.canEdit(user, institution))
       throw new UnauthorizedException('You cannot edit this institution');
 
-    await this.repository.updateDoc(ref.institutionId, input);
+    await this.repository.update(ref.institutionId, input);
     return { ...institution, ...this.commonService.object.clean(input) };
   }
 

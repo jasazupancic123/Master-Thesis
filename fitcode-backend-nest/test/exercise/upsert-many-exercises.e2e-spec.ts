@@ -55,7 +55,7 @@ describe('Upsert Many Exercises (e2e)', () => {
       { field: 'isCool', name: 'Movement', type: AttributeType.Boolean },
     ]);
 
-    institutionId = await db.institutions.addDoc(generateInstitutionStub());
+    institutionId = await db.institutions.save(generateInstitutionStub());
     component = await db.components.create({
       attributes: ['eq', 'muscle', 'isCool'],
     });

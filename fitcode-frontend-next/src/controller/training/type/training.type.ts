@@ -50,8 +50,6 @@ export type FilterTrainings = DateRange &
   Partial<Pick<Training, 'groupId' | 'cycleId'>>;
 
 export type PeriodizeTrainings = {
-  baseTrainingId: string;
-  componentId: string;
   periodizationType: PeriodizationType;
   exerciseIds: string[];
   subgroupId?: string;

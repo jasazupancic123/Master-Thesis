@@ -1,20 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
-import {
-  CollectionReference,
-  DocumentReference,
-  DocumentSnapshot,
-  FieldValue,
-  Query,
-  QueryDocumentSnapshot,
-} from 'firebase-admin/firestore';
+import { FieldValue } from 'firebase-admin/firestore';
 
 import { ChangeLogManager } from '@src/change-log/change-log.manager';
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
-import { CommonService } from '@src/common/service/common.service';
-import { Create, FirestoreEntity, Update } from '@src/common/type/entity.type';
+import { Create, Update } from '@src/common/type/entity.type';
 import {
   BatchWriteOperation,
-  RootFirestoreCollectionRepository,
+  FirestoreRootRepository,
 } from '@src/common/type/firestore.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 
@@ -22,30 +14,18 @@ import { Cycle } from '../entity/cycle.entity';
 import { Group } from '../entity/group.entity';
 
 @Injectable()
-export class GroupRepository
-  implements RootFirestoreCollectionRepository<Group>
-{
+export class GroupRepository extends FirestoreRootRepository<Group> {
+  collectionName = FirestoreCollection.GROUP;
+
   constructor(
-    private readonly commonService: CommonService,
-    private readonly firebaseService: FirebaseService,
+    readonly firebaseService: FirebaseService,
     @Inject(Group)
     readonly changeLog: ChangeLogManager<Group>,
-  ) {}
-
-  async getDocs(
-    query: (query: Query) => Query = (query) => query,
-  ): Promise<Group[]> {
-    const snapshot = await query(this.collection()).get();
-    return snapshot.docs.map((doc) => this.serialize(doc));
+  ) {
+    super(firebaseService);
   }
 
-  async getDoc(id: string): Promise<Group | null> {
-    const snapshot = await this.doc(id).get();
-    if (!snapshot.exists) return null;
-    return this.serialize(snapshot);
-  }
-
-  async addDoc(input: Create<Group>) {
+  async save(input: Create<Group>) {
     const { id } = this.collection().doc();
     const query = this.firebaseService.buildCreateQuery<Group>(
       {
@@ -65,7 +45,7 @@ export class GroupRepository
     return id;
   }
 
-  async updateDoc(id: string, input: Update<Group>) {
+  async update(id: string, input: Update<Group>) {
     const query = this.firebaseService.buildUpdateQuery<Group>({
       name: input.name,
       cycles: input.cycles,
@@ -76,7 +56,7 @@ export class GroupRepository
     await ref.update(query);
   }
 
-  async deleteDoc(id: string) {
+  async delete(id: string) {
     const ref = this.doc(id);
     await this.changeLog.trackDelete(ref);
     await ref.delete();
@@ -133,22 +113,5 @@ export class GroupRepository
 
     await this.changeLog.trackUpdate(ref);
     await ref.update(query);
-  }
-
-  doc(id: string): DocumentReference {
-    return this.collection().doc(id);
-  }
-
-  collection(): CollectionReference {
-    return this.firebaseService.firestore.collection(FirestoreCollection.GROUP);
-  }
-
-  serialize(snapshot: DocumentSnapshot | QueryDocumentSnapshot): Group {
-    const serialized = this.firebaseService.serialize(
-      snapshot.data() as FirestoreEntity<Group>,
-    );
-
-    serialized.id = snapshot.id;
-    return serialized;
   }
 }

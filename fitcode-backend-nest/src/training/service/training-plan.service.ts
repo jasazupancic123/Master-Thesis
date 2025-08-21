@@ -17,7 +17,10 @@ import { DeepPick } from '@src/common/interface/deep-pick.interface';
 import { CommonService } from '@src/common/service/common.service';
 import { Update } from '@src/common/type/entity.type';
 import { User } from '@src/common/type/firebase-auth.type';
-import { TrainingComponentRef } from '@src/common/type/firestore.type';
+import {
+  ComponentRef,
+  TrainingComponentRef,
+} from '@src/common/type/firestore.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
 import { ComponentService } from '@src/component/component.service';
 import { DEFAULT_PARAMS_KEY } from '@src/component/constant/param.constant';
@@ -42,7 +45,6 @@ import { Training } from '../entity/training.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
 import { TrainingExerciseAverageStats } from '../entity/training-exercise-average-stats.entity';
-import { PeriodizationType } from '../enum/periodization-type.enum';
 import {
   UpdateSuperset,
   UpdateTrainingComponent,
@@ -102,7 +104,6 @@ export class TrainingPlanService {
           to: c.to ? c.to : addMinutes(lastComponent.from, 60),
           completedMembersIds: [],
           target: c.target,
-          periodizationType: c.periodizationType,
           methodId: c.methodId,
           subgroups: [],
           supersets: [],
@@ -320,76 +321,6 @@ export class TrainingPlanService {
       );
 
     return validTrainingComponents;
-  }
-
-  /**
-   * Generates weeks between first and last training and fills in all
-   * of the trainings. For example, we have 3 trainings, 2 in first
-   * week and one in the second week. Returns array of 2 elements,
-   * first containing the first 2 trainings and the second containing
-   * the last training.
-   *
-   * @example
-   * ```ts
-   * const trainings = [
-   *  { from: '2025-10-01' },
-   *  { from: '2025-14-01' },
-   *  { from: '2025-21-01' },
-   * ]
-   *
-   * const firstTraining = trainings[0];
-   * const lastTraining = trainings[trainings.length - 1];
-   *
-   * const result = getSpacedTrainingsByWeek(
-   *  firstTraining,
-   *  lastTraining,
-   *  trainings,
-   * ); // => [
-   * // [
-   * //  { from: '2025-10-01' },
-   * //  { from: '2025-14-01' },
-   * // ],
-   * // [
-   * //  { from: '2025-21-01' },
-   * // ]
-   * //]
-   * ```
-   */
-  getSpacedTrainingsByWeek(
-    firstTraining: Training,
-    lastTraining: Training,
-    trainings: Training[],
-  ): Training[][] {
-    const startWeek = this.commonService.date.getIsoWeek(firstTraining.from);
-    const lastWeek = this.commonService.date.getIsoWeek(lastTraining.from);
-    const numWeeks = lastWeek - startWeek + 1;
-    const weeks = Array.from({ length: numWeeks }, () => [] as Training[]);
-
-    // fill the trainings in weeks
-    for (const training of trainings) {
-      const weekIndex =
-        this.commonService.date.getIsoWeek(training.from) - startWeek;
-
-      if (weekIndex >= 0 && weekIndex < weeks.length)
-        weeks[weekIndex].push(training);
-    }
-
-    // sort trainings in week by date
-    for (const week of weeks)
-      week.sort((a, b) => a.from.getTime() - b.from.getTime());
-
-    const numTrainingInWeeks = weeks.flat().length;
-    if (trainings.length !== numTrainingInWeeks)
-      throw new BadRequestException('Some trainings are missing or not found');
-
-    return weeks;
-  }
-
-  checkPeriodizationType(type: PeriodizationType) {
-    if (type === PeriodizationType.DUP_TABLE_BASED)
-      throw new BadRequestException(
-        'Dup Table Based periodization is not supported yet',
-      );
   }
 
   populateTrainingExerciseParams(
@@ -705,6 +636,184 @@ export class TrainingPlanService {
     };
 
     return { warmup, cooldown };
+  }
+
+  copyComponentIntoTraining(
+    ref: ComponentRef,
+    sourceTraining: Training,
+    targetTraining: Training,
+    options?: {
+      skipSupersets?: boolean;
+      skipSubgroups?: boolean;
+      skipTimes?: boolean;
+    },
+  ): void {
+    const sourceTrainingComponent = this.findComponentOrFail(
+      sourceTraining,
+      ref.componentId,
+    );
+
+    // find existing component in target training or create a new one
+    const foundTargetTrainingComponent = targetTraining.components.find(
+      (c) => c.id === sourceTrainingComponent.id,
+    );
+
+    const lastTargetTrainingComponent =
+      targetTraining.components[targetTraining.components.length - 1];
+
+    const targetTrainingComponent: TrainingComponent =
+      foundTargetTrainingComponent || {
+        id: sourceTrainingComponent.id,
+        from: lastTargetTrainingComponent.from,
+        to: addMinutes(lastTargetTrainingComponent.from, 30),
+        target: sourceTrainingComponent.target,
+        methodId: sourceTrainingComponent.methodId,
+        supersets: [],
+        subgroups: [],
+        completedMembersIds: [],
+      };
+
+    targetTrainingComponent.copiedFrom = {
+      lastCopiedFromTrainingId: sourceTraining.id,
+      rootCopiedFromTrainingId: sourceTrainingComponent.copiedFrom
+        ? sourceTrainingComponent.copiedFrom.rootCopiedFromTrainingId
+        : sourceTraining.id,
+    };
+
+    targetTrainingComponent.methodId = sourceTrainingComponent.methodId;
+    targetTrainingComponent.target = sourceTrainingComponent.target;
+    targetTrainingComponent.color = sourceTrainingComponent.color;
+    targetTrainingComponent.completedMembersIds = []; // reset completed members
+
+    if (options) {
+      if (!options.skipSupersets)
+        targetTrainingComponent.supersets = structuredClone(
+          sourceTrainingComponent.supersets,
+        );
+
+      if (!options.skipSubgroups)
+        targetTrainingComponent.subgroups = structuredClone(
+          sourceTrainingComponent.subgroups,
+        );
+
+      if (!options.skipTimes) {
+        targetTrainingComponent.from = sourceTrainingComponent.from;
+        targetTrainingComponent.to = sourceTrainingComponent.to;
+      }
+    }
+
+    if (!foundTargetTrainingComponent)
+      targetTraining.components.push(targetTrainingComponent);
+    else
+      targetTraining.components = targetTraining.components.map((c) =>
+        c.id === sourceTrainingComponent.id ? targetTrainingComponent : c,
+      );
+  }
+
+  /**
+   * Copies a subgroup from the source training component to the target training component. If
+   * subgroup already exists in the target training component, it overrides it, else it creates
+   * a new one. It also arranges members correctly (member of a training can be exactly in 0, 1
+   * or 2 subgroups - 1 for root subgroups and 2 for child subgroups where member is duplicated).
+   * If any new rearrange subgroup has no members, it will be removed from the target training.
+   *
+   * @example
+   * ```ts
+   * const sourceTrainingComponent = {
+   *   id: 'c1',
+   *   subgroups: [
+   *     { id: 's1', membersIds: ['anna', 'bob', 'charlie'] },
+   *     { id: 's2', membersIds: ['bob'], parentId: 's1' },
+   *   ]
+   * }
+   *
+   * const targetTrainingComponent = {
+   *   id: 'c1',
+   *   subgroups: [
+   *     { id: 's3', membersIds: ['anna', 'tina'] }
+   *   ]
+   * }
+   *
+   * copySubgroup('s1', sourceTrainingComponent, targetTrainingComponent);
+   * // targetTrainingComponent.subgroups will now contain:
+   * // [
+   * //   { id: 's1', membersIds: ['anna', 'bob', 'charlie'] }, // copied from source
+   * //   { id: 's3', membersIds: ['tina'] }, // 'anna' is already in 's1', so it is removed
+   * // ]
+   * ```
+   *
+   * @note
+   * Source training component is needed as an argument since subgroups are nested 2 levels deep - they
+   * can be root subgroups or child subgroups (with another root subgroup as parent). When copying
+   * root subgroup, we also need to find its children and copy them to (all subgroups are saved in a
+   * flat array), that's why this parameter is needed.
+   */
+  copySubgroupIntoTraining(
+    subgroupId: string,
+    sourceTrainingComponent: TrainingComponent,
+    targetTraining: Training,
+  ) {
+    const targetTrainingComponent = targetTraining.components.find(
+      (c) => c.id === sourceTrainingComponent.id,
+    );
+
+    // only copy subgroups if target training component exists
+    if (!targetTrainingComponent) return;
+
+    const sourceSubgroup = sourceTrainingComponent.subgroups.find(
+      (s) => s.id === subgroupId,
+    );
+
+    if (!sourceSubgroup)
+      throw new NotFoundException(`Subgroup with id ${subgroupId} not found`);
+
+    let subgroupsToCopy: Subgroup[] = [];
+    if (!sourceSubgroup.parentId) {
+      // root → copy root + children
+      const children = sourceTrainingComponent.subgroups.filter(
+        (s) => s.parentId === sourceSubgroup.id,
+      );
+
+      subgroupsToCopy = [sourceSubgroup, ...children];
+    } else {
+      // child → copy parent + child
+      const parent = sourceTrainingComponent.subgroups.find(
+        (s) => s.id === sourceSubgroup.parentId,
+      );
+
+      subgroupsToCopy = parent
+        ? [parent, sourceSubgroup]
+        : [{ ...sourceSubgroup, parentId: undefined }]; // if parent not found, make it root
+    }
+
+    // clone before modifying
+    subgroupsToCopy = subgroupsToCopy.map((s) => structuredClone(s));
+
+    const rootSubgroup = subgroupsToCopy[0]; // contains all members
+
+    // remove existing subgroups with same IDs from target
+    targetTrainingComponent.subgroups =
+      targetTrainingComponent.subgroups.filter(
+        (s) => !subgroupsToCopy.some((c) => c.id === s.id),
+      );
+
+    // remove overlapping members from other target subgroups
+    targetTrainingComponent.subgroups.forEach((t) => {
+      t.membersIds = t.membersIds.filter(
+        (m) => !rootSubgroup.membersIds.includes(m),
+      );
+    });
+
+    // remove empty subgroups
+    targetTrainingComponent.subgroups =
+      targetTrainingComponent.subgroups.filter((s) => s.membersIds.length > 0);
+
+    // add subgroups to target training component
+    targetTrainingComponent.subgroups.push(...subgroupsToCopy);
+
+    // final cleanup for any empty subgroups
+    targetTrainingComponent.subgroups =
+      targetTrainingComponent.subgroups.filter((s) => s.membersIds.length > 0);
   }
 
   private validateMethodParamValues(

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { ChangeLogModule } from '@src/change-log/change-log.module';
+import { PeriodizationModule } from '@src/periodization/periodization.module';
 
 import { AttributeModule } from '../attribute/attribute.module';
 import { ComponentModule } from '../component/component.module';
@@ -11,7 +12,6 @@ import { MethodModule } from '../method/method.module';
 import { Training } from './entity/training.entity';
 import { TrainingRepository } from './repository/training.repository';
 import { WorkloadRepository } from './repository/workload.repository';
-import { PeriodizationService } from './service/periodization.service';
 import { TrainingService } from './service/training.service';
 import { TrainingPlanService } from './service/training-plan.service';
 import { WorkloadService } from './service/workload.service';
@@ -26,9 +26,9 @@ import { TrainingController } from './training.controller';
     InstitutionModule,
     ExerciseModule,
     GroupModule,
+    PeriodizationModule,
   ],
   providers: [
-    PeriodizationService,
     WorkloadRepository,
     TrainingService,
     TrainingRepository,

@@ -176,7 +176,7 @@ export class DataSetup extends BaseSetup {
     await Promise.all(
       createdUsers.map(async (user, i) => {
         const u = data.find((u) => u.email === user.email);
-        await userRepository.addDoc({
+        await userRepository.save({
           id: user.uid,
           level: (u?.level as SportLevel) || SportLevel.BEGINNER,
         });

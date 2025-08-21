@@ -43,11 +43,11 @@ describe('Update Group (e2e)', () => {
       createAthleteUserAndToken(firebase),
     ]);
 
-    institutionId = await db.institutions.addDoc(
+    institutionId = await db.institutions.save(
       generateInstitutionStub({ athleteIds: athletes.map((a) => a.uid) }),
     );
 
-    groupId = await db.groups.addDoc(
+    groupId = await db.groups.save(
       generateGroupStub({
         institutionId,
         ownerId: global.trainer.uid,
@@ -156,11 +156,11 @@ describe('Update Group (e2e)', () => {
 
     // 2 past and 3 future trainings
     await Promise.all([
-      db.trainings.addDoc(training(subDays(new Date(), 3))),
-      db.trainings.addDoc(training(subDays(new Date(), 3))),
-      db.trainings.addDoc(training(new Date())),
-      db.trainings.addDoc(training(new Date())),
-      db.trainings.addDoc(training(addDays(new Date(), 3))),
+      db.trainings.save(training(subDays(new Date(), 3))),
+      db.trainings.save(training(subDays(new Date(), 3))),
+      db.trainings.save(training(new Date())),
+      db.trainings.save(training(new Date())),
+      db.trainings.save(training(addDays(new Date(), 3))),
     ]);
 
     const newAthlete = await createAthleteUserAndToken(firebase);
@@ -173,11 +173,11 @@ describe('Update Group (e2e)', () => {
 
     expect(response.status).toBe(200);
 
-    const group = await db.groups.getDoc(groupId);
+    const group = await db.groups.findById(groupId);
     expect(group.membersIds).toContain(newAthlete.uid);
     expect(group.membersIds).toHaveLength(4);
 
-    const trainings = await db.trainings.getDocs();
+    const trainings = await db.trainings.findAll();
     expect(trainings).toHaveLength(5);
 
     const date = startOfDay(new Date());
@@ -219,11 +219,11 @@ describe('Update Group (e2e)', () => {
 
     // 2 past and 3 future trainings
     await Promise.all([
-      db.trainings.addDoc(training(subDays(new Date(), 3))),
-      db.trainings.addDoc(training(subDays(new Date(), 3))),
-      db.trainings.addDoc(training(new Date())),
-      db.trainings.addDoc(training(new Date())),
-      db.trainings.addDoc(training(addDays(new Date(), 3))),
+      db.trainings.save(training(subDays(new Date(), 3))),
+      db.trainings.save(training(subDays(new Date(), 3))),
+      db.trainings.save(training(new Date())),
+      db.trainings.save(training(new Date())),
+      db.trainings.save(training(addDays(new Date(), 3))),
     ]);
 
     const response = await request(app.getHttpServer())
@@ -233,11 +233,11 @@ describe('Update Group (e2e)', () => {
 
     expect(response.status).toBe(200);
 
-    const group = await db.groups.getDoc(groupId);
+    const group = await db.groups.findById(groupId);
     expect(group.membersIds).not.toContain(athletes[0].uid);
     expect(group.membersIds).toHaveLength(2);
 
-    const trainings = await db.trainings.getDocs();
+    const trainings = await db.trainings.findAll();
     expect(trainings).toHaveLength(5);
 
     const date = startOfDay(new Date());
@@ -275,7 +275,7 @@ describe('Update Group (e2e)', () => {
 
     db.checkpoint();
 
-    const otherGroupId = await db.groups.addDoc(
+    const otherGroupId = await db.groups.save(
       generateGroupStub({
         institutionId,
         ownerId: global.trainer.uid,
@@ -295,20 +295,20 @@ describe('Update Group (e2e)', () => {
 
     // 2 past and 3 future trainings for the other group
     await Promise.all([
-      db.trainings.addDoc(other(subDays(new Date(), 3))),
-      db.trainings.addDoc(other(subDays(new Date(), 3))),
-      db.trainings.addDoc(other(new Date())),
-      db.trainings.addDoc(other(new Date())),
-      db.trainings.addDoc(other(addDays(new Date(), 3))),
+      db.trainings.save(other(subDays(new Date(), 3))),
+      db.trainings.save(other(subDays(new Date(), 3))),
+      db.trainings.save(other(new Date())),
+      db.trainings.save(other(new Date())),
+      db.trainings.save(other(addDays(new Date(), 3))),
     ]);
 
     // 2 past and 3 future trainings for the original group
     await Promise.all([
-      db.trainings.addDoc(training(subDays(new Date(), 3))),
-      db.trainings.addDoc(training(subDays(new Date(), 3))),
-      db.trainings.addDoc(training(new Date())),
-      db.trainings.addDoc(training(new Date())),
-      db.trainings.addDoc(training(addDays(new Date(), 3))),
+      db.trainings.save(training(subDays(new Date(), 3))),
+      db.trainings.save(training(subDays(new Date(), 3))),
+      db.trainings.save(training(new Date())),
+      db.trainings.save(training(new Date())),
+      db.trainings.save(training(addDays(new Date(), 3))),
     ]);
 
     const newAthlete = await createAthleteUserAndToken(firebase);
@@ -321,11 +321,11 @@ describe('Update Group (e2e)', () => {
 
     expect(response.status).toBe(200);
 
-    const group = await db.groups.getDoc(groupId);
+    const group = await db.groups.findById(groupId);
     expect(group.membersIds).toContain(newAthlete.uid);
     expect(group.membersIds).toHaveLength(4);
 
-    const trainings = await db.trainings.getDocs();
+    const trainings = await db.trainings.findAll();
     expect(trainings).toHaveLength(10);
 
     const date = startOfDay(new Date());

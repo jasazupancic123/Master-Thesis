@@ -6,7 +6,6 @@ import {
 import { Expose, Transform, Type } from 'class-transformer';
 import {
   IsDate,
-  IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -16,7 +15,6 @@ import {
 import { ColorEntity } from '@src/common/entity/color.entity';
 import { IdEntity } from '@src/common/entity/id.entity';
 import { Target } from '@src/target/entity/target.entity';
-import { PeriodizationType } from '@src/training/enum/periodization-type.enum';
 
 import { CopiedFrom } from './copied-from.entity';
 import { Subgroup } from './subgroup.entity';
@@ -41,13 +39,6 @@ export class TrainingComponent extends IntersectionType(IdEntity, ColorEntity) {
   @IsOptional()
   @Expose()
   target?: Target; // selected target id which the component uses
-
-  @ApiProperty({ enum: PeriodizationType })
-  @IsOptional()
-  @IsNotEmpty()
-  @IsEnum(PeriodizationType)
-  @Expose()
-  periodizationType?: PeriodizationType;
 
   @IsString()
   @IsOptional()
