@@ -1,4 +1,5 @@
 import type { INestApplication } from '@nestjs/common';
+import { DateTime } from 'luxon';
 import { readFile } from 'node:fs/promises';
 
 import { GLOBAL_EXERCISE_OWNER } from '@src//exercise/constant/global-exercise-owner.constant';
@@ -173,25 +174,33 @@ export class DataSetup extends BaseSetup {
     }
 
     await Promise.all(
-      createdUsers.map(async (user) => {
+      createdUsers.map(async (user, i) => {
         const u = data.find((u) => u.email === user.email);
         await userRepository.save({
           id: user.uid,
           level: (u?.level as SportLevel) || SportLevel.BEGINNER,
         });
 
-        await this.userService.addOrUpdateWellness(
-          { uid: user.uid, date: new Date() },
-          {
-            userId: user.uid,
-            date: new Date(),
-            weight: u.weight,
-            sleep: 5,
-            fatigue: 5,
-            soreness: 5,
-            comment: 'Average day today',
-          },
-        );
+        // 10 wellness data for each user
+        Array.from({
+          length: user.email === 'mike.tyson@mail.com' ? 1 : 10,
+        }).forEach(async (_, j) => {
+          await this.userService.addOrUpdateWellness(
+            {
+              uid: user.uid,
+              date: DateTime.now().minus({ days: j }).toJSDate(),
+            },
+            {
+              userId: user.uid,
+              date: DateTime.now().minus({ days: j }).toJSDate(),
+              weight: u.weight,
+              sleep: Math.floor(Math.random() * 10) + 1,
+              fatigue: Math.floor(Math.random() * 10) + 1,
+              soreness: Math.floor(Math.random() * 10) + 1,
+              comment: 'Average day today',
+            },
+          );
+        });
       }),
     );
 

@@ -1,12 +1,8 @@
-import { MonitorHeart, Visibility, VisibilityOff } from '@mui/icons-material';
+import { MonitorHeart } from '@mui/icons-material';
 import { DoNotDisturb } from '@mui/icons-material';
-import { Box, Menu, MenuItem } from '@mui/material';
+import { Box } from '@mui/material';
 
 import TrainingComponentHeaderMenu from '../training-component-header-menu/training-component-header-menu';
-import {
-  COOLDOWN_ID,
-  WARMUP_ID,
-} from '@/common/constant/warmup-cooldown-ids-constants';
 import { ComponentIds } from '@/common/enum/component-ids.enum';
 import type { SetState } from '@/common/type/state.type';
 import type { Training } from '@/controller/training/type/training.type';
@@ -18,23 +14,13 @@ interface TrainingComponentMenuProps {
   trainingComponent: TrainingComponentClass;
   heatmapView: boolean;
   setHeatmapView: SetState<boolean>;
-  anchorEl: HTMLElement | null;
-  setAnchorEl: SetState<HTMLElement | null>;
   training: Training;
-  setOpenCalendarModal: SetState<boolean>;
 }
 
 export default function TrainingComponentMenu(
   props: TrainingComponentMenuProps
 ) {
-  const {
-    trainingComponent,
-    heatmapView,
-    setHeatmapView,
-    anchorEl,
-    setAnchorEl,
-    training,
-  } = props;
+  const { trainingComponent, heatmapView, setHeatmapView, training } = props;
 
   const screenSize = useScreenSize();
 
@@ -43,37 +29,7 @@ export default function TrainingComponentMenu(
     setTraining,
     component,
     setComponent,
-    setSelectedExercises,
   } = useTrainerDayViewContext();
-
-  const handleMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const isWarmupOrCooldown = (component: TrainingComponentClass) => {
-    return component.id === WARMUP_ID || component.id === COOLDOWN_ID;
-  };
-
-  const handleToggleVisibility = () => {
-    if (
-      trainingComponent &&
-      component &&
-      trainingComponent.id === component.id
-    ) {
-      setComponent(undefined);
-      setSelectedExercises([]);
-    } else {
-      setTraining(training);
-      setComponent(trainingComponent);
-      setSelectedExercises([]);
-    }
-    setHeatmapView(false);
-    handleMenuClose();
-  };
 
   return (
     <Box display="flex" alignItems="center" position="absolute" right={-11.5}>
@@ -97,9 +53,15 @@ export default function TrainingComponentMenu(
       {component?.id === trainingComponent.id &&
         trainingComponent.id === ComponentIds.STRENGTH && (
           <Box
+            id="strength-menu"
+            display="flex"
+            alignItems="center"
             sx={{
               cursor: 'pointer',
               px: 1,
+              position: screenSize.isSmallerThanLaptop ? 'absolute' : undefined,
+              right: screenSize.isSmallerThanLaptop ? 0 : undefined,
+              top: screenSize.isSmallerThanLaptop ? -36 : undefined,
             }}
             onClick={() => {
               if (
@@ -110,7 +72,6 @@ export default function TrainingComponentMenu(
                 heatmapView
               ) {
                 setHeatmapView(false);
-                handleMenuClose();
                 return;
               }
               if (!component || trainingComponent.id !== component.id) {
@@ -119,7 +80,6 @@ export default function TrainingComponentMenu(
               }
 
               setHeatmapView(true);
-              handleMenuClose();
             }}
           >
             {trainingComponent &&
@@ -143,27 +103,6 @@ export default function TrainingComponentMenu(
             )}
           </Box>
         )}
-
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-      >
-        <MenuItem onClick={() => handleToggleVisibility()}>
-          {trainingComponent &&
-          component &&
-          training.id === selectedTraining?.id &&
-          trainingComponent.id === component.id ? (
-            <>
-              <VisibilityOff sx={{ mr: 1 }} /> Hide Component
-            </>
-          ) : (
-            <>
-              <Visibility sx={{ mr: 1 }} /> Show Component
-            </>
-          )}
-        </MenuItem>
-      </Menu>
     </Box>
   );
 }

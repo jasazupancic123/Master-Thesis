@@ -22,6 +22,8 @@ import type { TrainingComponent } from '@/controller/training/type/training-comp
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import type { Workload } from '@/controller/training/type/workload.type';
 import type { User, UserEntity } from '@/controller/user/type/user.type';
+import type { WellnessZScore } from '@/controller/user/type/wellness.type';
+import { UserController } from '@/controller/user/user.controller';
 
 const commonService = CommonService.instance;
 
@@ -48,6 +50,7 @@ export function TrainerDayViewProvider(
     pages: 1,
     total: 0,
   });
+
   // check if it's after 12:00, then set to PM, else AM
   const [selectedPeriod, setSelectedPeriod] = useState<'AM' | 'PM'>(
     new Date().getHours() >= 12 ? 'PM' : 'AM'
@@ -57,15 +60,19 @@ export function TrainerDayViewProvider(
 
   const [training, setTraining] = useState<Training | undefined>();
   const [component, setComponent] = useState<TrainingComponent | undefined>();
+  const [supersets, setSupersets] = useState<Superset[]>([]);
+  const [members, setMembers] = useState<UserEntity[]>([]);
+
+  const [wellness, setWellness] = useState<WellnessZScore[]>([]);
+
   const [selectedExercises, setSelectedExercises] = useState<
     TrainingExercise[]
   >([]);
-  const [members, setMembers] = useState<UserEntity[]>([]);
   const [selectedAthlete, setSelectedAthlete] = useState<User | undefined>();
   const [selectedSubgroup, setSelectedSubgroup] = useState<Subgroup | null>(
     null
   );
-  const [showAthleteReport, setShowAthleteReport] = useState(false);
+
   const [selectedAthleteWorkloads, setSelectedAthleteWorkloads] =
     useState<CompletedFutureWorkloads>({
       futureWorkloads: [],
@@ -74,7 +81,6 @@ export function TrainerDayViewProvider(
   const [customAthleteWorkloads, setCustomAthleteWorkloads] = useState<
     Workload[]
   >([]);
-  const [supersets, setSupersets] = useState<Superset[]>([]);
 
   const isSettingAthleteWorkloads = useRef(false);
   const previousSelectedAthlete = useRef<User | undefined>(undefined);
@@ -105,8 +111,18 @@ export function TrainerDayViewProvider(
       );
     }
 
+    async function fetchWellness() {
+      handleApiRequest(
+        router,
+        () => UserController.getWellnessByInstitutionId(group.institutionId),
+        (wellness) => setWellness(wellness),
+        undefined
+      );
+    }
+
     fetchMembers().then();
-  }, [group.id]);
+    fetchWellness().then();
+  }, [group.institutionId]);
 
   /**
    * Reset selected training and its children on certain changes
@@ -149,6 +165,8 @@ export function TrainerDayViewProvider(
     setSelectedPeriod,
     component,
     setComponent,
+    wellness,
+    setWellness,
     selectedExercises,
     setSelectedExercises,
     supersets,
@@ -164,8 +182,6 @@ export function TrainerDayViewProvider(
     setPagination,
     search,
     setSearch,
-    showAthleteReport,
-    setShowAthleteReport,
     selectedAthleteWorkloads,
     setSelectedAthleteWorkloads,
     customAthleteWorkloads,
