@@ -55,7 +55,6 @@ export default function TrainingMembersSubgroup(
     selectedSubgroup,
     selectedAthlete,
     setSelectedAthlete,
-    setShowAthleteReport,
   } = useTrainerDayViewContext();
 
   const {
@@ -322,7 +321,6 @@ export default function TrainingMembersSubgroup(
                         onContextMenu={(e) => {
                           e.preventDefault();
                           setSelectedAthlete(member);
-                          setShowAthleteReport(true);
                         }}
                         borderRadius={selectedAthlete === member ? '50%' : 0}
                         border={
