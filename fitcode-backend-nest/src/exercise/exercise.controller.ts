@@ -63,11 +63,11 @@ export class ExerciseController {
 
   @Patch('muscle-values/many')
   @Auth()
-  async updateManyMuscleValues(
+  async updateMuscleValues(
     @RequestUser() user: User,
     @Body() data: UpsertManyExerciseMuscleValuesDto,
   ) {
-    await this.exerciseService.updateManyMuscleValues(user, data.exercises);
+    await this.exerciseService.updateMuscleValues(user, data.exercises);
   }
 
   @Patch(':exerciseId')

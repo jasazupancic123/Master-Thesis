@@ -450,7 +450,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
   }
 
   @LogMethod()
-  async updateManyMuscleValues(
+  async updateMuscleValues(
     user: User,
     exercises: CreateExerciseMuscleValueDto[],
   ) {
