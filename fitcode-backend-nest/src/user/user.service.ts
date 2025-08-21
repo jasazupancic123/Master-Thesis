@@ -204,7 +204,7 @@ export class UserService implements Permission<UserEntity, Institution> {
   async getWellnessByInstitutionId(
     ref: InstitutionRef,
   ): Promise<WellnessZScore[]> {
-    const institution = await this.institutionRepository.getDoc(
+    const institution = await this.institutionRepository.findById(
       ref.institutionId,
     );
 
