@@ -202,11 +202,9 @@ describe('Periodization functions (e2e)', () => {
       expect(componentC1).toBeDefined();
       expect(componentUnknown).toBeUndefined();
 
-      // exercises did not exist in future trainings and they should be added now since they are copied
-      // base component should override result trainings' component
-      expect(componentC1?.supersets).toHaveLength(2);
-      expect(componentC1?.supersets[0].exercises).toHaveLength(3); // 2 from base (e1, e2) + 1 from future training (different-exercise-1)
-      expect(componentC1?.supersets[1].exercises).toHaveLength(1); // 1 from future training (different-exercise-2)
+      // component should override supersets in future trainings
+      expect(componentC1?.supersets).toHaveLength(1);
+      expect(componentC1?.supersets[0].exercises).toHaveLength(5); // 5 from base component
     }
 
     await deleteCollection(firebase, 'TRAINING');
