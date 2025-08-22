@@ -238,7 +238,7 @@ describe('copySubgroup', () => {
         generateTrainingComponent({
           id: 'c1',
           subgroups: [
-            generateSubgroup({ mainSet: MainSet.CIRCUIT }), // existing subgroup in target
+            generateSubgroup({ id: 's2', mainSet: MainSet.CIRCUIT }), // existing subgroup in target
           ],
         }),
       ],
