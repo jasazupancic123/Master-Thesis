@@ -112,7 +112,7 @@ export function generateSubgroup(data?: Partial<Subgroup>): Subgroup {
     name: data?.name || generateRandomName(),
     membersIds: data?.membersIds || [],
     supersets: data?.supersets || [],
-    mainSet: MainSet.BLOCK,
+    mainSet: data?.mainSet || MainSet.BLOCK,
     parentId: data?.parentId || null,
   };
 }
