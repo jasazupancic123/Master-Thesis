@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 
 import MyModal from '../modal/modal';
 import SelectInput from '../select-input/select-input';
-import { AFTER_SETS, MAIN_SETS } from '../trainer-day-view/constant';
+import { AFTER_SETS } from '../trainer-day-view/constant';
 import { onMethodChange } from './state';
 import {
   COOLDOWN_ID,
@@ -14,12 +14,11 @@ import {
 } from '@/common/constant/warmup-cooldown-ids-constants';
 import { handleApiRequest } from '@/common/type/state.type';
 import type { AfterSet } from '@/controller/component/type/after-set.type';
-import type { MainSet } from '@/controller/component/type/main-set.type';
 import type { Method } from '@/controller/method/type/method.type';
+import { MainSet } from '@/controller/training/enum/main-set.enum';
 import { PeriodizationType } from '@/controller/training/enum/periodization-type.enum';
 import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
-import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { useGroup } from '@/store/group-provider';
 import { useMain } from '@/store/main-provider';
@@ -49,7 +48,6 @@ export default function TrainingComponentHeaderMenu() {
     setSelectedSubgroup,
   } = useTrainerDayViewContext();
 
-  const [mainSet, setMainSet] = useState<MainSet | null>();
   const [afterSet, setAfterSet] = useState<AfterSet | null>();
   const [selectedPeriodizationType, setSelectedPeriodizationType] =
     useState<PeriodizationType | null>(null);
@@ -107,23 +105,79 @@ export default function TrainingComponentHeaderMenu() {
       <Tooltip title="Main Set">
         <SelectInput<MainSet>
           label={'Main Set'}
-          value={mainSet?.id || ''}
+          value={selectedSubgroup?.mainSet || component.mainSet}
           icon={null}
           displayEmpty
+          disableNoneChoice
           iconSize={17}
-          items={MAIN_SETS}
-          itemKey="id"
-          itemName="name"
+          items={Object.values(MainSet)}
+          itemKey={undefined}
+          itemName={undefined}
           sx={{
             maxWidth: 75,
           }}
-          placeholder="None"
           disableInputLabel={false}
-          setValue={(mainSetId) => {
+          setValue={(newMainSet) => {
             setDetectedChanges(true);
-            const mainSet = MAIN_SETS.find((g) => g.id === mainSetId)!;
+            const mainSet = Object.values(MainSet).find(
+              (g) => g === newMainSet
+            );
 
-            setMainSet(mainSet);
+            if (!mainSet) return;
+
+            if (!selectedSubgroup && component.mainSet === mainSet) return;
+
+            if (selectedSubgroup && selectedSubgroup.mainSet === mainSet)
+              return;
+
+            let updatedComponent = { ...component };
+
+            if (selectedSubgroup) {
+              const updatedSubgroup = {
+                ...selectedSubgroup,
+                mainSet,
+              };
+
+              setSelectedSubgroup((prev) => {
+                if (!prev) return prev;
+
+                return updatedSubgroup;
+              });
+
+              updatedComponent.subgroups = updatedComponent.subgroups?.map(
+                (sg) => {
+                  if (sg.id === updatedSubgroup.id) return updatedSubgroup;
+                  return sg;
+                }
+              );
+            } else {
+              updatedComponent = {
+                ...component,
+                mainSet,
+              };
+            }
+
+            setComponent((prev) => {
+              if (!prev) return prev;
+
+              return updatedComponent;
+            });
+
+            setTraining((prev) => {
+              if (!prev) return prev;
+              return {
+                ...prev,
+                components: prev.components.map((c) => {
+                  if (c.id === updatedComponent.id) {
+                    return {
+                      ...c,
+                      mainSet,
+                    };
+                  }
+                  return c;
+                }),
+              };
+            });
           }}
           selectSize="small"
           inputLabelSize={'12px'}

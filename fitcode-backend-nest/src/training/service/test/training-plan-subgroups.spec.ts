@@ -15,6 +15,7 @@ import { FirebaseService } from '@src/firebase/firebase.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import type { Training } from '@src/training/entity/training.entity';
 import type { TrainingComponent } from '@src/training/entity/training-component.entity';
+import { MainSet } from '@src/training/enum/main-set.enum';
 import {
   generateSubgroup,
   generateTrainingComponent,
@@ -226,6 +227,28 @@ describe('copySubgroup', () => {
         expect.objectContaining({ id: 's6', membersIds: ['c'] }), // c is not in source
         expect.objectContaining({ id: 's2', membersIds: ['e', 'f', 'g'] }),
       ]),
+    );
+  });
+
+  it('should override main set', () => {
+    const nestedTarget = generateTrainingStub({
+      ownerId: 'test-owner',
+      membersIds: [],
+      components: [
+        generateTrainingComponent({
+          id: 'c1',
+          subgroups: [
+            generateSubgroup({ mainSet: MainSet.CIRCUIT }), // existing subgroup in target
+          ],
+        }),
+      ],
+    });
+
+    service.copySubgroupIntoTraining('s2', source, nestedTarget);
+
+    expect(nestedTarget.components[0].subgroups).toHaveLength(1);
+    expect(nestedTarget.components[0].subgroups[0].mainSet).toBe(
+      MainSet.CIRCUIT,
     );
   });
 });

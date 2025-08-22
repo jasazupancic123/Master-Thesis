@@ -14,6 +14,7 @@ import type { SetState, SetStateNullable } from '@/common/type/state.type';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import { ParamType } from '@/controller/component/enum/param.enum';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
+import { MainSet } from '@/controller/training/enum/main-set.enum';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
 import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
@@ -22,15 +23,20 @@ import type { TrainingExercise } from '@/controller/training/type/training-exerc
 
 function updateSupersets(
   supersets: Superset[],
-  exercisesToAdd: TrainingExercise[]
+  exercisesToAdd: TrainingExercise[],
+  mainSet: MainSet
 ): Superset[] | null {
   if (!Array.isArray(supersets)) supersets = [];
   if (supersets.length === 0)
     supersets.push({ exercises: [], color: COLOR[supersets.length] });
 
+  const maxExercisesPerSuperset =
+    mainSet === MainSet.CIRCUIT ? 32 : NUM_MAX_EXERCISES_PER_SUPERSET;
+  const maxSupersets = mainSet === MainSet.CIRCUIT ? 1 : NUM_MAX_SUPERSETS;
+
   for (const superset of supersets) {
     while (
-      superset.exercises.length < NUM_MAX_EXERCISES_PER_SUPERSET &&
+      superset.exercises.length < maxExercisesPerSuperset &&
       exercisesToAdd.length > 0
     ) {
       const exerciseToAdd = exercisesToAdd.shift(); // remove from the front
@@ -41,17 +47,19 @@ function updateSupersets(
       break; // stop if no exercises left
     else if (supersets.indexOf(superset) === supersets.length - 1) {
       // if this is the last superset, add a new one if there are still exercises to add
-      if (supersets.length === NUM_MAX_SUPERSETS) {
+      if (supersets.length === maxSupersets) {
         toast.error(
           'Added exercises exceed the maximum number of exercises allowed'
         );
         return null;
       }
 
-      supersets.push({
-        exercises: [],
-        color: COLOR[supersets.length],
-      });
+      if (mainSet === MainSet.BLOCK) {
+        supersets.push({
+          exercises: [],
+          color: COLOR[supersets.length],
+        });
+      }
     }
   }
 
@@ -175,7 +183,11 @@ export function handleAddExerciseToSupersetComponent(
       ? wOrC.supersets
       : selectedSubgroup?.supersets;
 
-    const supersets = updateSupersets(oldSupersets, exercisesToAdd);
+    const supersets = updateSupersets(
+      oldSupersets,
+      exercisesToAdd,
+      wOrC.mainSet
+    );
 
     if (!supersets) return;
 
@@ -227,7 +239,11 @@ export function handleAddExerciseToSupersetComponent(
         ? [...training.components[trainingComponentIndex].supersets]
         : [];
 
-  const supersets = updateSupersets(oldSupersets, exercisesToAdd);
+  const supersets = updateSupersets(
+    oldSupersets,
+    exercisesToAdd,
+    (selectedSubgroup || component).mainSet
+  );
 
   if (!supersets) return;
 

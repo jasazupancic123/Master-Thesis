@@ -12,6 +12,7 @@ import { Subgroup } from '@src/training/entity/subgroup.entity';
 import { Training } from '@src/training/entity/training.entity';
 import { TrainingComponent } from '@src/training/entity/training-component.entity';
 import { TrainingExercise } from '@src/training/entity/training-exercise.entity';
+import { MainSet } from '@src/training/enum/main-set.enum';
 import { PeriodizationType } from '@src/training/enum/periodization-type.enum';
 
 import { PeriodizationStrategy } from './strategy/periodization.strategy';
@@ -196,6 +197,29 @@ export class PeriodizationService {
     return periodized;
   }
 
+  getAvailableSuperset(item: TrainingComponent | Subgroup): number {
+    // circuit can have max 1 superset and max 32 exercises in it
+    if (item.mainSet === MainSet.CIRCUIT) {
+      if (item.supersets.length && item.supersets[0].exercises.length < 32)
+        return 0;
+
+      return -1;
+    }
+
+    // each superset can have max 4 exercises, so find first superset with less than 4 exercises
+    for (let i = 0; i < item.supersets.length; i++)
+      if (item.supersets[i].exercises.length < 4) return i;
+
+    // if all supersets are full, check if we can create a new one (max 8 supersets) and create it
+    if (item.supersets.length < 8) {
+      item.supersets = [...item.supersets, { exercises: [] }];
+      return item.supersets.length - 1; // return index of the newly created superset
+    }
+
+    // no available superset found, do not create a new one
+    return -1;
+  }
+
   getComponent(
     training: Training,
     ref: TrainingComponentRef,
@@ -213,21 +237,6 @@ export class PeriodizationService {
 
     const subgroup = component.subgroups.find((s) => s.id === ref.subgroupId);
     return subgroup || null;
-  }
-
-  getAvailableSuperset(item: TrainingComponent | Subgroup): number {
-    // each superset can have max 4 exercises, so find first superset with less than 4 exercises
-    for (let i = 0; i < item.supersets.length; i++)
-      if (item.supersets[i].exercises.length < 4) return i;
-
-    // if all supersets are full, check if we can create a new one (max 8 supersets) and create it
-    if (item.supersets.length < 8) {
-      item.supersets = [...item.supersets, { exercises: [] }];
-      return item.supersets.length - 1; // return index of the newly created superset
-    }
-
-    // no available superset found, do not create a new one
-    return -1;
   }
 
   getExercises(item: TrainingComponent | Subgroup): TrainingExercise[] {

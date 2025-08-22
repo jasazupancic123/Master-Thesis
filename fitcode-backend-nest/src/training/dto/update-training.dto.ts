@@ -29,7 +29,7 @@ export class UpdateSupersetDto implements UpdateSuperset {
 }
 
 export class UpdateSubgroupDto
-  extends PickType(Subgroup, ['id', 'name', 'membersIds'] as const)
+  extends PickType(Subgroup, ['id', 'name', 'membersIds', 'mainSet'] as const)
   implements UpdateSubgroup
 {
   @ValidateNested({ each: true })
@@ -46,6 +46,7 @@ export class UpdateTrainingComponentDto
     'to',
     'target',
     'methodId',
+    'mainSet',
   ] as const)
   implements UpdateTrainingComponent
 {

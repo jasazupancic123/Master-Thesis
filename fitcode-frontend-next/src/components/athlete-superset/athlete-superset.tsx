@@ -1,8 +1,8 @@
 import Box from '@mui/material/Box/Box';
 
 import AthleteTrainingExerciseCollapsed from '../athlete-training-exercise-collapsed/athlete-training-exercise-collapsed';
-import type { Superset } from '@/controller/training/type/superset.type';
 import { getBorderGradient } from '../superset/state';
+import type { Superset } from '@/controller/training/type/superset.type';
 
 interface AthleteSupersetProps {
   superset: Superset;

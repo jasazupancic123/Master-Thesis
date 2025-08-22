@@ -9,7 +9,6 @@ import type { Day } from '@/common/service/util/date.util';
 import type { SetState } from '@/common/type/state.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 interface ComponentActionsModalProps {
   trainingComponent: TrainingComponent; // Replace with actual type
@@ -29,8 +28,6 @@ export default function ComponentActionsModal(
   } = props;
 
   const theme = useTheme();
-
-  const { training } = useTrainerDayViewContext();
 
   const [action, setAction] = useState<ComponentModalAction>(
     ComponentModalAction.COPY_COMPONENT
