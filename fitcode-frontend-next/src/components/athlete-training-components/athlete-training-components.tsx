@@ -12,12 +12,12 @@ import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
 import type { SetState } from '@/common/type/state.type';
 import { handleApiRequest } from '@/common/type/state.type';
 import { TrainingController } from '@/controller/training/training.controller';
+import { TrainingService } from '@/controller/training/training.service';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
 import { useAuth } from '@/store/auth-provider';
 import { useTraining } from '@/store/training-provider';
-import { TrainingService } from '@/controller/training/training.service';
 
 const commonService = CommonService.instance;
 

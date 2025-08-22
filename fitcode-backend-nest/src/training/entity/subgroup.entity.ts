@@ -1,10 +1,11 @@
 import { IntersectionType } from '@nestjs/mapped-types';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
-import { IsNotEmpty, IsString, ValidateNested } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsString, ValidateNested } from 'class-validator';
 
 import { IdEntity } from '@src/common/entity/id.entity';
 
+import { MainSet } from '../enum/main-set.enum';
 import { Superset } from './superset.entity';
 
 export class Subgroup extends IntersectionType(IdEntity) {
@@ -31,4 +32,10 @@ export class Subgroup extends IntersectionType(IdEntity) {
   @ApiProperty({ type: () => Superset, isArray: true })
   @Expose()
   supersets: Superset[];
+
+  @IsEnum(MainSet)
+  @IsString()
+  @ApiProperty({ type: () => MainSet })
+  @Expose()
+  mainSet: MainSet; // defaults to "block"
 }

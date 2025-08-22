@@ -5,7 +5,6 @@ import { Box } from '@mui/material';
 import TrainingComponentHeaderMenu from '../training-component-header-menu/training-component-header-menu';
 import { ComponentIds } from '@/common/enum/component-ids.enum';
 import type { SetState } from '@/common/type/state.type';
-import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent as TrainingComponentClass } from '@/controller/training/type/training-component.type';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';

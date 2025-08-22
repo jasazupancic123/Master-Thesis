@@ -45,6 +45,7 @@ import { Training } from '../entity/training.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
 import { TrainingExerciseAverageStats } from '../entity/training-exercise-average-stats.entity';
+import { MainSet } from '../enum/main-set.enum';
 import {
   UpdateSuperset,
   UpdateTrainingComponent,
@@ -103,6 +104,7 @@ export class TrainingPlanService {
           from: c.from ? c.from : addMinutes(lastComponent.from, 30),
           to: c.to ? c.to : addMinutes(lastComponent.from, 60),
           completedMembersIds: [],
+          mainSet: c.mainSet || MainSet.BLOCK,
           target: c.target,
           methodId: c.methodId,
           subgroups: [],
@@ -402,11 +404,14 @@ export class TrainingPlanService {
     const root = this.componentService.getRoot(component, components);
     const componentParams = root.params || { [DEFAULT_PARAMS_KEY]: [] };
 
+    const maxSupersetExercises =
+      trainingComponent.mainSet === MainSet.BLOCK ? 4 : 32;
+
     const validSupersets: Superset[] = [];
     for (const superset of newSupersets) {
-      if (superset.exercises.length > 4)
+      if (superset.exercises.length > maxSupersetExercises)
         throw new ConflictException(
-          'You can only have up to 4 exercises per superset',
+          `You can only have up to ${maxSupersetExercises} exercises per superset`,
         );
 
       /* // don't check exercises for warmup and cooldown
@@ -538,6 +543,7 @@ export class TrainingPlanService {
         name: subgroup.name,
         membersIds: subgroup.membersIds,
         supersets: validSupersets,
+        mainSet: subgroup.mainSet,
       });
     }
 
@@ -621,6 +627,7 @@ export class TrainingPlanService {
       id: WARMUP_COMPONENT_ID,
       from: subMinutes(startTime, DEFAULT_WARMUP_AND_COOLDOWN_DURATION),
       to: startTime,
+      mainSet: MainSet.BLOCK,
       supersets: [],
       subgroups: [],
       completedMembersIds: [],
@@ -630,6 +637,7 @@ export class TrainingPlanService {
       id: COOLDOWN_COMPONENT_ID,
       from: endTime,
       to: addMinutes(endTime, DEFAULT_WARMUP_AND_COOLDOWN_DURATION),
+      mainSet: MainSet.BLOCK,
       supersets: [],
       subgroups: [],
       completedMembersIds: [],
@@ -668,6 +676,7 @@ export class TrainingPlanService {
         to: addMinutes(lastTargetTrainingComponent.from, 30),
         target: sourceTrainingComponent.target,
         methodId: sourceTrainingComponent.methodId,
+        mainSet: sourceTrainingComponent.mainSet,
         supersets: [],
         subgroups: [],
         completedMembersIds: [],
@@ -684,6 +693,7 @@ export class TrainingPlanService {
     targetTrainingComponent.target = sourceTrainingComponent.target;
     targetTrainingComponent.color = sourceTrainingComponent.color;
     targetTrainingComponent.completedMembersIds = []; // reset completed members
+    targetTrainingComponent.mainSet = sourceTrainingComponent.mainSet;
 
     if (options) {
       if (!options.skipSupersets)

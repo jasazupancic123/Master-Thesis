@@ -15,6 +15,7 @@ import type { SetState } from '@/common/type/state.type';
 import { TrainingGridItem } from '@/components/training-cycle-view-grid-item/training-cycle-view-grid-item';
 import type { Component } from '@/controller/component/type/component.type';
 import type { Target } from '@/controller/target/type/target.type';
+import { MainSet } from '@/controller/training/enum/main-set.enum';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { useGroup } from '@/store/group-provider';
@@ -226,6 +227,7 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
                           subgroups: [],
                           supersets: [],
                           completedMembersIds: [],
+                          mainSet: MainSet.BLOCK,
                           from: addMinutes(lastTo, i * 30),
                           to: addMinutes(addMinutes(lastTo, i * 30), 30),
                         })),

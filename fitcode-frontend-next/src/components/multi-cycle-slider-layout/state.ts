@@ -4,11 +4,8 @@ import type { RefObject } from 'react';
 import toast from 'react-hot-toast';
 import { v4 } from 'uuid';
 
-import {
-  handleApiRequest,
-  SetStateNullable,
-  type SetState,
-} from '@/common/type/state.type';
+import type { SetStateNullable } from '@/common/type/state.type';
+import { handleApiRequest, type SetState } from '@/common/type/state.type';
 import { GroupController } from '@/controller/group/group.controller';
 import type { Cycle, Week } from '@/controller/group/type/cycle.type';
 import type { Group } from '@/controller/group/type/group.type';

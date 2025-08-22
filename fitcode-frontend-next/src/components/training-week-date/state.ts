@@ -17,6 +17,7 @@ import type { Cycle } from '@/controller/group/type/cycle.type';
 import type { Group } from '@/controller/group/type/group.type';
 import type { Method } from '@/controller/method/type/method.type';
 import type { Target } from '@/controller/target/type/target.type';
+import { MainSet } from '@/controller/training/enum/main-set.enum';
 import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
 import type { Training } from '@/controller/training/type/training.type';
@@ -343,6 +344,7 @@ function handleAddTraining(
         subgroups: [],
         completedMembersIds: [],
         supersets: [],
+        mainSet: MainSet.BLOCK,
         from: addMinutes(from, i * 30),
         to: addMinutes(addMinutes(from, i * 30), 30),
         target: selectedTargets?.find((m) => m.componentId === c.id)?.target,

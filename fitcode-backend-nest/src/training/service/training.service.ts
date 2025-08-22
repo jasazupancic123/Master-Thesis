@@ -67,6 +67,7 @@ import { Training } from '../entity/training.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
 import { Workload } from '../entity/workload.entity';
+import { MainSet } from '../enum/main-set.enum';
 import { UpdateTraining } from '../interface/update-training.interface';
 import { TrainingRepository } from '../repository/training.repository';
 import { WorkloadRepository } from '../repository/workload.repository';
@@ -193,6 +194,7 @@ export class TrainingService implements Permission<Training, Institution> {
       to: new Date(c.to),
       supersets: [],
       subgroups: [],
+      mainSet: MainSet.BLOCK,
       completedMembersIds: [],
     }));
 
@@ -256,6 +258,7 @@ export class TrainingService implements Permission<Training, Institution> {
           target: c.target,
           methodId: c.methodId,
           copiedFrom: c.copiedFrom,
+          mainSet: c.mainSet,
           subgroups: [],
           supersets: [],
           completedMembersIds: [],
@@ -472,6 +475,7 @@ export class TrainingService implements Permission<Training, Institution> {
           target: c.target || null,
           methodId: c.methodId || null,
           completedMembersIds: [],
+          mainSet: c.mainSet,
         };
       }),
       warmup: {
@@ -789,7 +793,7 @@ export class TrainingService implements Permission<Training, Institution> {
         ref,
         baseTraining,
         training,
-        { skipSupersets: true, skipSubgroups: true, skipTimes: true },
+        { skipSupersets: false, skipSubgroups: true, skipTimes: true },
       );
 
       if (ref.subgroupId)
@@ -982,6 +986,7 @@ export class TrainingService implements Permission<Training, Institution> {
         supersets: newPrescribedSupersets,
         completedMembersIds: [],
         subgroups: [],
+        mainSet: trainingComponent.mainSet,
       });
     }
 

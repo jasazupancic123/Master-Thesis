@@ -1,5 +1,5 @@
 import type { AfterSet } from '@/controller/component/type/after-set.type';
-import type { MainSet } from '@/controller/component/type/main-set.type';
+import { MainSet } from '@/controller/training/enum/main-set.enum';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
 import type { User } from '@/controller/user/type/user.type';
 
@@ -8,11 +8,6 @@ export const MAX_WIDTH = '1340px';
 export const NUM_MAX_SUPERSETS = 8;
 
 export const NUM_MAX_EXERCISES_PER_SUPERSET = 4;
-
-export const MAIN_SETS: MainSet[] = [
-  { id: '1', name: 'Circuit' },
-  { id: '2', name: 'Block' },
-];
 
 export const AFTER_SETS: AfterSet[] = [
   { id: '1', name: 'Plus Sets' },
@@ -30,6 +25,7 @@ export const DEFAULT_SUBGROUP = (availableMembers: User[]): Subgroup => ({
   id: DEFAULT_SUBGROUP_ID,
   name: 'Main Group',
   color: '#9e9e9e',
+  mainSet: MainSet.BLOCK,
   membersIds: availableMembers.map((user) => user.uid),
   supersets: [],
 });
@@ -38,6 +34,7 @@ export const ABSENT_SUBGROUP = (): Subgroup => ({
   id: ABSENT_SUBGRUP_ID,
   name: 'Absent',
   color: '#454545',
+  mainSet: MainSet.BLOCK,
   membersIds: [],
   supersets: [],
 });

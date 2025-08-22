@@ -24,7 +24,7 @@ import { useScreenSize } from '@/store/screen-size-provider';
 import { useSupersets } from '@/store/supersets-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
-interface TrainingExerciseCardCollapsedSetsProps {
+export interface TrainingExerciseCardCollapsedSetsProps {
   component: TrainingComponent;
   exercise: TrainingExercise;
   expandedSetsView: boolean;

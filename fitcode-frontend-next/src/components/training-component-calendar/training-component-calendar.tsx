@@ -3,7 +3,7 @@ import { Typography, useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import dayjs from 'dayjs';
-import React, { Fragment, use, useEffect, useState } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 
 import { CommonService } from '@/common/service/common.service';
 import type { Day } from '@/common/service/util/date.util';
