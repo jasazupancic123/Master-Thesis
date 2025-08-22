@@ -98,7 +98,11 @@ describe('copySubgroup', () => {
         generateSubgroup({ id: 's1', membersIds: ['a', 'b', 'c', 'd'] }), // root subgroup 1
         generateSubgroup({ id: 's1.1', membersIds: ['b'], parentId: 's1' }), // child 1
         generateSubgroup({ id: 's1.2', membersIds: ['d'], parentId: 's1' }), // child 2
-        generateSubgroup({ id: 's2', membersIds: ['e', 'f', 'g'] }), // root subgroup 2 (without children)
+        generateSubgroup({
+          id: 's2',
+          mainSet: MainSet.CIRCUIT,
+          membersIds: ['e', 'f', 'g'],
+        }), // root subgroup 2 (without children)
         generateSubgroup({
           id: 'invalid-child',
           membersIds: ['x'],
@@ -238,7 +242,7 @@ describe('copySubgroup', () => {
         generateTrainingComponent({
           id: 'c1',
           subgroups: [
-            generateSubgroup({ id: 's2', mainSet: MainSet.CIRCUIT }), // existing subgroup in target
+            generateSubgroup({ mainSet: MainSet.CIRCUIT }), // existing subgroup in target
           ],
         }),
       ],

@@ -799,6 +799,8 @@ export class TrainingPlanService {
     // clone before modifying
     subgroupsToCopy = subgroupsToCopy.map((s) => structuredClone(s));
 
+    console.log('subgroupsToCopy', subgroupsToCopy);
+
     const rootSubgroup = subgroupsToCopy[0]; // contains all members
 
     // remove existing subgroups with same IDs from target
