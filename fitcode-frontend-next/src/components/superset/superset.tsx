@@ -11,6 +11,7 @@ import { useGroup } from '@/store/group-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useSupersets } from '@/store/supersets-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
+import { getBorderGradient } from './state';
 
 interface SupersetComponentProps {
   superset: SupersetClass;
@@ -37,19 +38,6 @@ export default function Superset(props: SupersetComponentProps) {
   } = useTrainerDayViewContext();
 
   if (!component || !training) return null;
-
-  const getBorderGradient = (
-    toTop: boolean,
-    onlyOneSuperset: boolean = false
-  ): string => {
-    const fromColor = COLOR[supersetIndex % COLOR.length];
-    const toColor = onlyOneSuperset
-      ? COLOR[(supersetIndex + 1) % COLOR.length]
-      : COLOR[(supersetIndex + 1) % COLOR.length];
-    // const dirrection = toTop ? 'to top' : 'to bottom';
-    const dirrection = 'to bottom';
-    return `linear-gradient(${dirrection}, ${fromColor}, ${toColor})`;
-  };
 
   return (
     <Grid2
@@ -90,7 +78,7 @@ export default function Superset(props: SupersetComponentProps) {
               p: '1px',
               borderRadius: '5px',
               background: getBorderGradient(
-                supersetIndex > 3,
+                supersetIndex,
                 supersets.length === 1 ||
                   (supersets.length === 5 && supersetIndex === 4)
               ),

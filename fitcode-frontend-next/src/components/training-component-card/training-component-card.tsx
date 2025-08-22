@@ -17,7 +17,6 @@ import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 interface TrainingComponentProps {
   trainingComponent: TrainingComponent;
-  training: Training;
   setOpenAddExerciseModal: SetState<boolean>;
   setOpenCalendarModal: SetState<boolean>;
   expandedExercisesView: boolean;
@@ -27,7 +26,6 @@ interface TrainingComponentProps {
 export default function TrainingComponentCard(props: TrainingComponentProps) {
   const {
     trainingComponent,
-    training,
     setOpenAddExerciseModal,
     expandedExercisesView,
     setExpandedExercisesView,
@@ -36,6 +34,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
   const theme = useTheme();
 
   const {
+    training,
     setTraining,
     component,
     setComponent,

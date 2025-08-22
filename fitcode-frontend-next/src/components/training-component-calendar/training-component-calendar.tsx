@@ -3,7 +3,7 @@ import { Typography, useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import dayjs from 'dayjs';
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, use, useEffect, useState } from 'react';
 
 import { CommonService } from '@/common/service/common.service';
 import type { Day } from '@/common/service/util/date.util';
@@ -13,10 +13,10 @@ import type { Component } from '@/controller/component/type/component.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { useGroup } from '@/store/group-provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 interface TrainingComponentCalendarProps {
   trainingComponent: TrainingComponent;
-  training: Training;
   setOpenOverwriteModal: SetState<boolean>;
   setTrainingInPeriodForModal: SetState<Training | null>;
   copyComponent: boolean;
@@ -28,7 +28,6 @@ export default function TrainingComponentCalendar(
 ) {
   const {
     trainingComponent,
-    training,
     setOpenOverwriteModal,
     setTrainingInPeriodForModal,
     copyComponent,
@@ -36,6 +35,8 @@ export default function TrainingComponentCalendar(
   } = props;
 
   const { cycle, setDateFrom, setDateTo } = useGroup();
+
+  const { training } = useTrainerDayViewContext();
 
   const theme = useTheme();
   const [selectedComponents, setSelectedComponents] = useState<Component[]>([]);

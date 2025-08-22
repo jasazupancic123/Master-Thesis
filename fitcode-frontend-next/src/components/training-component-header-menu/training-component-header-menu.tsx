@@ -26,15 +26,7 @@ import { useMain } from '@/store/main-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
-interface TrainingComponentExpandedProps {
-  training: Training;
-}
-
-export default function TrainingComponentHeaderMenu(
-  props: TrainingComponentExpandedProps
-) {
-  const { training } = props;
-
+export default function TrainingComponentHeaderMenu() {
   const router = useRouter();
   const screenSize = useScreenSize();
 
@@ -48,6 +40,7 @@ export default function TrainingComponentHeaderMenu(
     useGroup();
 
   const {
+    training,
     setTraining,
     component,
     setComponent,
@@ -65,6 +58,8 @@ export default function TrainingComponentHeaderMenu(
   const [openModal, setOpenModal] = useState(false);
 
   const stateUpdate = (updatedComponent: TrainingComponent) => {
+    if (!training) return;
+
     setComponent(updatedComponent);
 
     const updatedComponents = training.components.map((c) => {
@@ -218,6 +213,8 @@ export default function TrainingComponentHeaderMenu(
               return;
             }
 
+            if (!training) return;
+
             if (
               periodizationType !== PeriodizationType.REPLICATE &&
               !selectedExercises.length
@@ -272,7 +269,7 @@ export default function TrainingComponentHeaderMenu(
           selectedItemSize={12}
           selectSize="small"
           setValue={(methodId) => {
-            if (typeof methodId !== 'string') return;
+            if (typeof methodId !== 'string' || !training) return;
 
             // in supersets.tsx, a useEffect gets called to update setsNumbers if method limits them
             onMethodChange(
@@ -303,6 +300,8 @@ export default function TrainingComponentHeaderMenu(
           setOpenModal(false);
         }}
         onConfirm={() => {
+          if (!training) return;
+
           handleApiRequest(
             router,
             () =>
@@ -322,6 +321,11 @@ export default function TrainingComponentHeaderMenu(
 
                 return pt;
               });
+
+              const currentTraining = periodizedTrainings.find(
+                (t) => t.id === training.id
+              );
+              if (currentTraining) setTraining(currentTraining);
 
               setTrainings((prev) =>
                 prev.map((t) => {

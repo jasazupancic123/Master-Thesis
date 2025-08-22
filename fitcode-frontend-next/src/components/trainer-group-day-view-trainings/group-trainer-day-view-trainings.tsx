@@ -64,9 +64,7 @@ export default function GroupTrainerDayViewTrainings(
         </Box>
       ) : (
         <Box width="100%">
-          {training && (
-            <TrainingCard key={training.id} day={day} training={training} />
-          )}
+          {training && <TrainingCard key={training.id} day={day} />}
         </Box>
       )}
     </Box>
