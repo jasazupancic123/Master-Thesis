@@ -18,7 +18,6 @@ import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 interface ComponentPeriodizationProps {
   selectedComponent: TrainingComponent;
-  training: Training;
 }
 
 const commonService = CommonService.instance;
@@ -26,14 +25,14 @@ const commonService = CommonService.instance;
 export default function ComponentPeriodization(
   props: ComponentPeriodizationProps
 ) {
-  const { selectedComponent, training } = props;
+  const { selectedComponent } = props;
 
   const theme = useTheme();
   const screenSize = useScreenSize();
 
   const { cycle, trainings, setDateFrom, setDateTo } = useGroup();
 
-  const { selectedExercises } = useTrainerDayViewContext();
+  const { training, selectedExercises } = useTrainerDayViewContext();
 
   const [allExercises, _setAllExercises] = useState<TrainingExercise[]>(
     selectedComponent.supersets.map((s) => s.exercises.map((e) => e)).flat()
@@ -50,6 +49,8 @@ export default function ComponentPeriodization(
   );
 
   useEffect(() => {
+    if (!training) return;
+
     if (!selectedTarget) {
       // set to all
 

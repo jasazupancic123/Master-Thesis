@@ -1,36 +1,39 @@
 import Box from '@mui/material/Box/Box';
 
 import AthleteTrainingExerciseCollapsed from '../athlete-training-exercise-collapsed/athlete-training-exercise-collapsed';
-import BorderColor from '../border-color/border-color';
-import { COLOR } from '@/common/constant/color.constant';
 import type { Superset } from '@/controller/training/type/superset.type';
+import { getBorderGradient } from '../superset/state';
 
 interface AthleteSupersetProps {
   superset: Superset;
   supersetIndex: number;
+  supersets: Superset[];
 }
 
 export default function AthleteSuperset(props: AthleteSupersetProps) {
-  const { superset, supersetIndex } = props;
+  const { superset, supersetIndex, supersets } = props;
   return (
     <Box width="100%" display="flex" flexDirection="column">
-      <BorderColor
-        color={COLOR[supersetIndex % COLOR.length]}
-        applyMargin
-        marginValue={superset.exercises.length === 0 ? '3px' : '5px'}
-      />
-      {superset.exercises.map((exercise) => (
-        <AthleteTrainingExerciseCollapsed
-          key={exercise.id}
-          exercise={exercise}
-        />
-      ))}
-      <BorderColor
-        lower
-        color={COLOR[supersetIndex % COLOR.length]}
-        applyMargin
-        marginValue={superset.exercises.length === 0 ? '3px' : '5px'}
-      />
+      <Box
+        sx={{
+          p: '1px',
+          borderRadius: '5px',
+          background: getBorderGradient(
+            supersetIndex,
+            supersets.length === 1 ||
+              (supersets.length === 5 && supersetIndex === 4)
+          ),
+        }}
+      >
+        {superset.exercises.map((exercise, i) => (
+          <AthleteTrainingExerciseCollapsed
+            key={exercise.id}
+            exercise={exercise}
+            borderTopRadius={i === 0}
+            borderBottomRadius={i === superset.exercises.length - 1}
+          />
+        ))}
+      </Box>
     </Box>
   );
 }

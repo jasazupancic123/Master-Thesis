@@ -50,6 +50,8 @@ export default function SupersetExercise(props: SupersetExerciseProps) {
     setSelectedSubgroup,
     selectedExercises,
     setSelectedExercises,
+    supersets,
+    setSupersets,
   } = useTrainerDayViewContext();
 
   const { setTrainings } = useGroup();

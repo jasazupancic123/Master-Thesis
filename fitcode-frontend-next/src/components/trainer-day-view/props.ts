@@ -8,11 +8,9 @@ import type { TrainingExercise } from '@/controller/training/type/training-exerc
 
 export interface TrainingCardProps {
   day: Day;
-  training: Training;
 }
 
 export interface TrainingComponentProps {
-  training: Training;
   trainingComponent: TrainingComponent;
   day: Day;
 }

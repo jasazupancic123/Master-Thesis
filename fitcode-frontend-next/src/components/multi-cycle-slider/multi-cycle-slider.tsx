@@ -40,6 +40,8 @@ interface MultiCycleSliderProps {
     width: string;
     centerPosition: string;
   }[];
+  setSortedCycles: SetState<Cycle[]>;
+  setCycles: SetState<Cycle[]>;
 }
 
 export default function MultiCycleSlider(props: MultiCycleSliderProps) {
@@ -56,6 +58,8 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
     yearStart,
     yearEnd,
     sliderProperties,
+    setSortedCycles,
+    setCycles,
   } = props;
 
   const { setGroup } = useGroup();
@@ -84,13 +88,20 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
       router,
       () => GroupController.removeCycle(selectedGroup.id, editCycle.id),
       () => {
-        const updatedCycles = [...selectedGroup.cycles].filter(
-          (cycle) => cycle.id !== editCycle.id
-        );
-
         if (cycle && editCycle.id === cycle?.id) setCycle(undefined);
-        setSelectedGroup({ ...selectedGroup, cycles: updatedCycles });
-        setGroup({ ...selectedGroup, cycles: updatedCycles });
+
+        setSortedCycles((prev) => prev.filter((c) => c.id !== editCycle.id));
+        setCycles((prev) => prev.filter((c) => c.id !== editCycle.id));
+
+        setSelectedGroup((prev) => ({
+          ...prev,
+          cycles: prev.cycles.filter((c) => c.id !== editCycle.id),
+        }));
+        setGroup((prev) => ({
+          ...prev,
+          cycles: prev.cycles.filter((c) => c.id !== editCycle.id),
+        }));
+
         setEditCycle(null);
 
         toast.success('Cycle deleted successfully');

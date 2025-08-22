@@ -51,6 +51,12 @@ export default function deleteSupersetExercise(input: {
       }
     : null;
 
+  if (updatedSubgroup) {
+    updatedSubgroup.supersets = updatedSubgroup.supersets.filter(
+      (s) => s.exercises.length > 0
+    );
+  }
+
   if (updatedSubgroup) setSelectedSubgroup(updatedSubgroup);
 
   const updatedComponent = updatedSubgroup
@@ -62,14 +68,16 @@ export default function deleteSupersetExercise(input: {
       }
     : {
         ...component,
-        supersets: component.supersets.map((s, i) =>
-          i !== supersetIndex
-            ? s
-            : {
-                ...s,
-                exercises: s.exercises.filter((ex, k) => k !== exerciseIndex),
-              }
-        ),
+        supersets: component.supersets
+          .map((s, i) =>
+            i !== supersetIndex
+              ? s
+              : {
+                  ...s,
+                  exercises: s.exercises.filter((ex, k) => k !== exerciseIndex),
+                }
+          )
+          .filter((s) => s.exercises.length > 0),
       };
 
   setComponent(updatedComponent);

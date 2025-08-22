@@ -27,7 +27,7 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
   const screenSize = useScreenSize();
   const router = useRouter();
 
-  const { training, trainingComponent, day } = props;
+  const { trainingComponent, day } = props;
 
   const {
     components: allComponents,
@@ -36,7 +36,7 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
   } = useMain();
   const { filter, setTrainings } = useGroup();
 
-  const { training: selectedTraining, component } = useTrainerDayViewContext();
+  const { training, component } = useTrainerDayViewContext();
 
   const [openAddExerciseModal, setOpenAddExerciseModal] = useState(false);
   const [openCalendarModal, setOpenCalendarModal] = useState(false);
@@ -57,6 +57,8 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
 
     return methodString === 'Method limits:' ? '' : methodString.slice(0, -1);
   };
+
+  if (!training) return null;
 
   return (
     <Box
@@ -80,18 +82,12 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
             justifyContent: 'space-between',
           }}
           position="relative"
-          mb={
-            component?.id === trainingComponent.id &&
-            training.id === selectedTraining?.id
-              ? 1
-              : 0
-          }
+          mb={component?.id === trainingComponent.id ? 1 : 0}
         >
           <TrainingComponentMenu
             trainingComponent={trainingComponent}
             heatmapView={heatmapView}
             setHeatmapView={setHeatmapView}
-            training={training}
           />
           <Stack
             direction={
@@ -115,7 +111,6 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
             >
               <TrainingComponentCard
                 trainingComponent={trainingComponent}
-                training={training}
                 setOpenAddExerciseModal={setOpenAddExerciseModal}
                 setOpenCalendarModal={setOpenAddExerciseModal}
                 expandedExercisesView={expandedExercisesView}
@@ -131,9 +126,8 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
                 {screenSize.isSmallerThanLaptop &&
                   trainingComponent &&
                   component &&
-                  selectedTraining?.id === training.id &&
                   trainingComponent.id === component.id && (
-                    <TrainingComponentHeaderMenu training={training} />
+                    <TrainingComponentHeaderMenu />
                   )}
               </Box>
             </Box>
@@ -145,11 +139,7 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
         )}
 
         <Collapse
-          in={
-            component &&
-            trainingComponent.id === component.id &&
-            training.id === selectedTraining?.id
-          }
+          in={component && trainingComponent.id === component.id}
           timeout="auto"
           unmountOnExit
         >
@@ -229,7 +219,6 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
       >
         <ComponentActionsModal
           trainingComponent={trainingComponent}
-          training={training}
           setOpenOverwriteModal={setOpenOverwriteModal}
           setTrainingInPeriodForModal={setTrainingInPeriodForModal}
           day={day}

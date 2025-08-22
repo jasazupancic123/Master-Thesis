@@ -14,22 +14,17 @@ interface TrainingComponentMenuProps {
   trainingComponent: TrainingComponentClass;
   heatmapView: boolean;
   setHeatmapView: SetState<boolean>;
-  training: Training;
 }
 
 export default function TrainingComponentMenu(
   props: TrainingComponentMenuProps
 ) {
-  const { trainingComponent, heatmapView, setHeatmapView, training } = props;
+  const { trainingComponent, heatmapView, setHeatmapView } = props;
 
   const screenSize = useScreenSize();
 
-  const {
-    training: selectedTraining,
-    setTraining,
-    component,
-    setComponent,
-  } = useTrainerDayViewContext();
+  const { training, setTraining, component, setComponent } =
+    useTrainerDayViewContext();
 
   return (
     <Box display="flex" alignItems="center" position="absolute" right={-11.5}>
@@ -43,9 +38,8 @@ export default function TrainingComponentMenu(
         >
           {trainingComponent &&
             component &&
-            selectedTraining?.id === training.id &&
             trainingComponent.id === component.id && (
-              <TrainingComponentHeaderMenu training={training} />
+              <TrainingComponentHeaderMenu />
             )}
         </Box>
       )}
@@ -67,7 +61,6 @@ export default function TrainingComponentMenu(
               if (
                 trainingComponent &&
                 component &&
-                training.id === selectedTraining?.id &&
                 trainingComponent.id === component.id &&
                 heatmapView
               ) {
@@ -84,7 +77,6 @@ export default function TrainingComponentMenu(
           >
             {trainingComponent &&
             component &&
-            training.id === selectedTraining?.id &&
             trainingComponent.id === component.id &&
             heatmapView ? (
               <>

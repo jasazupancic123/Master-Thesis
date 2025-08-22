@@ -101,7 +101,7 @@ export default function SelectedMemberReport(props: SelectedMemberReportProps) {
       >
         <Typography
           textAlign="center"
-          fontSize={20}
+          fontSize={16}
           sx={{
             maxWidth: '100%',
             overflow: 'hidden',
@@ -114,6 +114,7 @@ export default function SelectedMemberReport(props: SelectedMemberReportProps) {
         </Typography>
         <Typography
           textAlign="center"
+          fontSize={12}
           sx={{
             maxWidth: '100%',
             overflow: 'hidden',
@@ -126,6 +127,7 @@ export default function SelectedMemberReport(props: SelectedMemberReportProps) {
         </Typography>
         <Typography
           textAlign="center"
+          fontSize={12}
           sx={{
             borderRadius: 2,
             color: theme.palette.text.secondary,
