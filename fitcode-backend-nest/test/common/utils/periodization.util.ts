@@ -82,7 +82,7 @@ export class TestPeriodizationUtil {
     return generateTrainingStub({
       ownerId: 'owner',
       membersIds: [],
-      date: addDays(new Date(), addDaysFromToday),
+      date: addDays(new Date('2025-08-22'), addDaysFromToday),
       components: [
         generateTrainingComponent({
           id: 'c1',
