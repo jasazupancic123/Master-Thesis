@@ -6,6 +6,8 @@ import { useScreenSize } from '@/store/screen-size-provider';
 
 interface AthleteTrainingExerciseCollapsedProps {
   exercise: TrainingExercise;
+  borderTopRadius: boolean;
+  borderBottomRadius: boolean;
 }
 
 export default function AthleteTrainingExerciseCollapsed(
@@ -14,7 +16,7 @@ export default function AthleteTrainingExerciseCollapsed(
   const theme = useTheme();
   const screenSize = useScreenSize();
 
-  const { exercise } = props;
+  const { exercise, borderTopRadius, borderBottomRadius } = props;
 
   return (
     <Stack
@@ -30,6 +32,10 @@ export default function AthleteTrainingExerciseCollapsed(
         backgroundSize: '100% auto',
         backgroundRepeat: 'no-repeat',
         overflow: 'hidden',
+        borderTopRightRadius: borderTopRadius ? '5px' : 0,
+        borderTopLeftRadius: borderTopRadius ? '5px' : 0,
+        borderBottomRightRadius: borderBottomRadius ? '5px' : 0,
+        borderBottomLeftRadius: borderBottomRadius ? '5px' : 0,
       }}
     >
       {/* Background Overlay */}

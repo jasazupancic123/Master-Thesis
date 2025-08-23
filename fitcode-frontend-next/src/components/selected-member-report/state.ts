@@ -13,7 +13,6 @@ import type {
 export default function setupChartData(
   wellness: WellnessZScore[],
   selectedAthlete: User,
-  setUserWeight: SetState<number | null>,
   setWellnessChartData: SetState<WellnessChartData[]>
 ) {
   const currentWellness =
@@ -29,8 +28,6 @@ export default function setupChartData(
     )
   );
 
-  setUserWeight(todayWellness?.weight || yesterdayWellness?.weight || null);
-
   setWellnessChartData((prev) =>
     prev.map((data) => {
       if (data.metric === WellnessChartDataType.FATIGUE) {
@@ -38,7 +35,7 @@ export default function setupChartData(
           ...data,
           today: todayWellness?.fatigue ?? null,
           yesterday: yesterdayWellness?.fatigue ?? null,
-          zScoreToday: todayWellness?.fatigueZScore ?? null,
+          zScore: todayWellness?.fatigueZScore ?? null,
           zScoreYesterday: yesterdayWellness?.fatigueZScore ?? null,
         };
       }
@@ -47,7 +44,7 @@ export default function setupChartData(
           ...data,
           today: todayWellness?.soreness ?? null,
           yesterday: yesterdayWellness?.soreness ?? null,
-          zScoreToday: todayWellness?.sorenessZScore ?? null,
+          zScore: todayWellness?.sorenessZScore ?? null,
           zScoreYesterday: yesterdayWellness?.sorenessZScore ?? null,
         };
       }
@@ -56,7 +53,7 @@ export default function setupChartData(
           ...data,
           today: todayWellness?.sleep ?? null,
           yesterday: yesterdayWellness?.sleep ?? null,
-          zScoreToday: todayWellness?.sleepZScore ?? null,
+          zScore: todayWellness?.sleepZScore ?? null,
           zScoreYesterday: yesterdayWellness?.sleepZScore ?? null,
         };
       }
@@ -65,12 +62,8 @@ export default function setupChartData(
   );
 }
 
-export const colorForZ = (
-  metric: WellnessChartData,
-  period: 'today' | 'yesterday',
-  theme: Theme
-) => {
-  let zValue = period === 'today' ? metric.zScoreToday : metric.zScoreYesterday;
+export const colorForZ = (metric: WellnessChartData, theme: Theme) => {
+  let zValue = metric.zScore;
   if (zValue === null) return theme.palette.text.primary; // Default color if no z-score
 
   zValue = Math.abs(zValue);

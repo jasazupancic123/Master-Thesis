@@ -11,10 +11,12 @@ export default function CustomBarTooltip({
   if (!active || !payload || payload.length === 0) return null;
 
   const metric = label as string; // "SORENESS" / "FATIGUE" / "SLEEP"
+  const value = payload[0].value;
 
   return (
     <div
       style={{
+        width: 100,
         background: theme.palette.background.paper,
         padding: '6px 8px',
         borderRadius: 8,
@@ -24,20 +26,9 @@ export default function CustomBarTooltip({
         sx={{ width: '100%', opacity: 0.8, textAlign: 'center' }}
         fontSize={14}
       >
-        {metric}
+        {metric[0] + metric.slice(1).toLowerCase()}:{' '}
+        <strong>{value === null ? '—' : value}</strong>
       </Typography>
-
-      {payload.map((p) => {
-        const item = p;
-        const value = item.value as number | null;
-        const seriesName = item.name as string; // "Today" / "Yesterday"
-
-        return (
-          <Typography key={item.name} fontSize={12}>
-            <strong>{seriesName}:</strong> {value === null ? '—' : value}
-          </Typography>
-        );
-      })}
     </div>
   );
 }

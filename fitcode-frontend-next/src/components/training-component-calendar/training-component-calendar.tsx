@@ -13,10 +13,10 @@ import type { Component } from '@/controller/component/type/component.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { useGroup } from '@/store/group-provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 interface TrainingComponentCalendarProps {
   trainingComponent: TrainingComponent;
-  training: Training;
   setOpenOverwriteModal: SetState<boolean>;
   setTrainingInPeriodForModal: SetState<Training | null>;
   copyComponent: boolean;
@@ -28,7 +28,6 @@ export default function TrainingComponentCalendar(
 ) {
   const {
     trainingComponent,
-    training,
     setOpenOverwriteModal,
     setTrainingInPeriodForModal,
     copyComponent,
@@ -36,6 +35,8 @@ export default function TrainingComponentCalendar(
   } = props;
 
   const { cycle, setDateFrom, setDateTo } = useGroup();
+
+  const { training } = useTrainerDayViewContext();
 
   const theme = useTheme();
   const [selectedComponents, setSelectedComponents] = useState<Component[]>([]);

@@ -17,7 +17,7 @@ import { useGroup } from '@/store/group-provider';
 import { useSupersets } from '@/store/supersets-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
-interface TrainingExerciseCardContainerProps {
+export interface TrainingExerciseCardContainerProps {
   supersetIndex: number;
   exercise: TrainingExercise;
   onAthleteView?: boolean;

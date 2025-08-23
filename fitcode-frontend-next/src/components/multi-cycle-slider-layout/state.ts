@@ -4,6 +4,7 @@ import type { RefObject } from 'react';
 import toast from 'react-hot-toast';
 import { v4 } from 'uuid';
 
+import type { SetStateNullable } from '@/common/type/state.type';
 import { handleApiRequest, type SetState } from '@/common/type/state.type';
 import { GroupController } from '@/controller/group/group.controller';
 import type { Cycle, Week } from '@/controller/group/type/cycle.type';
@@ -17,10 +18,20 @@ export async function handleAddCycle(
   state: {
     selectedGroup: Group;
     setSelectedGroup: SetState<Group>;
+    setGroup: SetState<Group>;
+    setSortedCycles: SetState<Cycle[]>;
     setCycles: SetState<Cycle[]>;
+    setCycle: SetStateNullable<Cycle>;
   }
 ) {
-  const { selectedGroup, setSelectedGroup, setCycles } = state;
+  const {
+    selectedGroup,
+    setSelectedGroup,
+    setGroup,
+    setSortedCycles,
+    setCycles,
+    setCycle,
+  } = state;
   const { name, description, from, to } = input;
 
   if (!name || !from || !to) {
@@ -49,9 +60,14 @@ export async function handleAddCycle(
     () => GroupController.addCycle(selectedGroup.id, newCycle),
     () => {
       const newCycles = [...selectedGroup.cycles, newCycle];
+
+      if (newCycles.length === 1) setCycle(newCycle);
+
+      setSortedCycles(newCycles);
       setCycles(newCycles);
 
       const newGroup = { ...selectedGroup, cycles: newCycles };
+      setGroup(newGroup);
       setSelectedGroup(newGroup);
       toast.success('Cycle added successfully.');
     },

@@ -6,6 +6,7 @@ import {
 import { Expose, Transform, Type } from 'class-transformer';
 import {
   IsDate,
+  IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -16,6 +17,7 @@ import { ColorEntity } from '@src/common/entity/color.entity';
 import { IdEntity } from '@src/common/entity/id.entity';
 import { Target } from '@src/target/entity/target.entity';
 
+import { MainSet } from '../enum/main-set.enum';
 import { CopiedFrom } from './copied-from.entity';
 import { Subgroup } from './subgroup.entity';
 import { Superset } from './superset.entity';
@@ -32,6 +34,12 @@ export class TrainingComponent extends IntersectionType(IdEntity, ColorEntity) {
   @Expose()
   @Transform(({ value }) => new Date(value))
   to: Date;
+
+  @IsEnum(MainSet)
+  @IsString()
+  @ApiProperty({ type: () => MainSet })
+  @Expose()
+  mainSet: MainSet; // defaults to "block"
 
   @Type(() => Target)
   @ValidateNested()

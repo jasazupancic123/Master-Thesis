@@ -10,14 +10,12 @@ import { useTheme } from '@mui/material';
 
 import { deleteSelectedExercises } from '../trainer-group-day-view/state';
 import type { SetState } from '@/common/type/state.type';
-import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { useGroup } from '@/store/group-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 interface TrainingComponentProps {
   trainingComponent: TrainingComponent;
-  training: Training;
   setOpenAddExerciseModal: SetState<boolean>;
   setOpenCalendarModal: SetState<boolean>;
   expandedExercisesView: boolean;
@@ -27,7 +25,6 @@ interface TrainingComponentProps {
 export default function TrainingComponentCard(props: TrainingComponentProps) {
   const {
     trainingComponent,
-    training,
     setOpenAddExerciseModal,
     expandedExercisesView,
     setExpandedExercisesView,
@@ -36,6 +33,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
   const theme = useTheme();
 
   const {
+    training,
     setTraining,
     component,
     setComponent,

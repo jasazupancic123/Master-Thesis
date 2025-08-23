@@ -215,13 +215,8 @@ export class UserService implements Permission<UserEntity, Institution> {
     }));
 
     const now = DateTime.now();
-    const startOfToday = now.startOf('day').toJSDate();
-    const startOfYesterday = now
-      .startOf('day')
-      .minus({ days: 1 })
-      .startOf('day')
-      .toJSDate();
 
+    const startOfToday = now.startOf('day').toJSDate();
     const startOf10DaysBefore = now
       .startOf('day')
       .minus({ days: 10 })
@@ -239,13 +234,9 @@ export class UserService implements Permission<UserEntity, Institution> {
                   .where('date', '>=', Timestamp.fromDate(startOf10DaysBefore)),
             );
 
-            const yesterdayZ = this.getWellnessZScore(
-              wellnessDocs,
-              startOfYesterday,
-            );
             const todayZ = this.getWellnessZScore(wellnessDocs, startOfToday);
 
-            return [yesterdayZ, todayZ].filter((z) => z !== null);
+            return [todayZ].filter((z) => z !== null);
           }),
         )
       : [];

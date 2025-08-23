@@ -9,6 +9,7 @@ import toast from 'react-hot-toast';
 
 import HorizontalItemsList from '../horizontal-items-list/horizontal-items-list';
 import { MAX_WIDTH } from '../trainer-day-view/constant';
+import { COLOR } from '@/common/constant/color.constant';
 import { CommonService } from '@/common/service/common.service';
 import { useGroup } from '@/store/group-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
@@ -46,6 +47,8 @@ export default function GroupTrainerDayViewHeader(
     setDay,
     selectedPeriod,
     setSelectedPeriod,
+    selectedAthlete,
+    wellness,
     setSelectedExercises,
   } = useTrainerDayViewContext();
 
@@ -201,7 +204,31 @@ export default function GroupTrainerDayViewHeader(
   }
 
   const HorizontalItems = () => {
-    return (
+    return selectedAthlete ? (
+      <HorizontalItemsList
+        items={[
+          {
+            label: 'BW (kg)',
+            value:
+              wellness
+                .find((w) => w.userId === selectedAthlete.uid)
+                ?.weight?.toString() || 'N/A',
+            sublabel: COLOR[3],
+          },
+          {
+            label: 'Att (%)',
+            value: '99',
+            sublabel: theme.palette.primary.main,
+          },
+        ]}
+        value={day.date.toString()}
+        setValue={() => {}}
+        selectedAthlete={selectedAthlete}
+        checkIsSameValue={() => {
+          return false;
+        }}
+      />
+    ) : (
       <HorizontalItemsList
         items={days}
         value={day.date.toString()}

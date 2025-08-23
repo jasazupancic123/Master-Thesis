@@ -42,7 +42,7 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
   const screenSize = useScreenSize();
   const theme = useTheme();
 
-  const { group } = useGroup();
+  const { group, setGroup, setCycle } = useGroup();
 
   const [selectedYear, setSelectedYear] = useState(dayjs().year());
   const [yearsForSelect] = useState<{ label: string; value: string }[]>(() => {
@@ -372,7 +372,10 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
               {
                 selectedGroup,
                 setSelectedGroup,
+                setGroup,
+                setSortedCycles,
                 setCycles,
+                setCycle,
               }
             );
           }}
@@ -402,6 +405,8 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
             yearStart={yearStart}
             yearEnd={yearEnd}
             sliderProperties={sliderProperties}
+            setSortedCycles={setSortedCycles}
+            setCycles={setCycles}
           />
 
           {/* Month Labels */}

@@ -6,6 +6,7 @@ import type { RefObject } from 'react';
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 
+import type { User } from '@/controller/user/type/user.type';
 import { useDashboard } from '@/store/dashboard-provider';
 import { useGroup } from '@/store/group-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
@@ -26,6 +27,7 @@ interface HorizontalItemsListProps {
   addButtonOnEnd?: boolean;
   onButtonClick?: () => void;
   scrollHorizontalListLeftRef?: RefObject<number>;
+  selectedAthlete?: User;
 }
 
 export default function HorizontalItemsList(props: HorizontalItemsListProps) {
@@ -48,6 +50,7 @@ export default function HorizontalItemsList(props: HorizontalItemsListProps) {
     addButtonOnEnd,
     onButtonClick,
     scrollHorizontalListLeftRef,
+    selectedAthlete,
   } = props;
 
   const dashboard = useDashboard() ?? {};
@@ -98,11 +101,13 @@ export default function HorizontalItemsList(props: HorizontalItemsListProps) {
               ? '50% !important'
               : '100% !important'
             : '66% !important',
+        borderBottomLeftRadius: 5,
+        borderBottomRightRadius: 5,
       }}
     >
       {/* Left Arrow */}
       <IconButton
-        sx={{ p: 0, m: 0 }}
+        sx={{ p: 0, m: 0, display: selectedAthlete ? 'none' : undefined }}
         onClick={() => {
           if (cycleView || dashboardView) {
             scrollContainerRef.current?.scrollBy({
@@ -145,8 +150,13 @@ export default function HorizontalItemsList(props: HorizontalItemsListProps) {
             display: 'none',
           },
           mx: dayView ? 0 : 1,
-          justifyContent: items.length <= 3 ? 'space-around' : 'space-between',
+          justifyContent: selectedAthlete
+            ? 'center'
+            : items.length <= 3
+              ? 'space-around'
+              : 'space-between',
           flexGrow: screenSize.isMobile ? 1 : undefined,
+          gap: selectedAthlete ? 2 : undefined,
         }}
       >
         {items.length === 0 ? (
@@ -158,6 +168,42 @@ export default function HorizontalItemsList(props: HorizontalItemsListProps) {
               dayjs(new Date()),
               'day'
             );
+
+            if (selectedAthlete) {
+              return (
+                <Box
+                  key={`${i}-${item.value}`}
+                  width={50}
+                  display="flex"
+                  flexDirection="column"
+                  alignItems="center"
+                  gap={0.1}
+                  sx={{
+                    backgroundColor: theme.palette.background.default,
+                    border: `1px solid ${theme.palette.primary.main}`,
+                    borderRadius: 1.5,
+                    p: 0.5,
+                    py: 0.25,
+                    my: 0.2,
+                  }}
+                >
+                  <Typography color={theme.palette.primary.main} fontSize={14}>
+                    {item.value}
+                  </Typography>
+                  <Box
+                    width="50%"
+                    height={4}
+                    sx={{
+                      backgroundColor: item.sublabel,
+                      borderRadius: 5,
+                    }}
+                  />
+                  <Typography color={theme.palette.primary.main} fontSize={10}>
+                    {item.label}
+                  </Typography>
+                </Box>
+              );
+            }
 
             return (
               <Box
@@ -294,7 +340,7 @@ export default function HorizontalItemsList(props: HorizontalItemsListProps) {
 
       {/* Right Arrow */}
       <IconButton
-        sx={{ p: 0, m: 0 }}
+        sx={{ p: 0, m: 0, display: selectedAthlete ? 'none' : undefined }}
         onClick={() => {
           if (cycleView || dashboardView) {
             scrollContainerRef.current?.scrollBy({

@@ -1,18 +1,31 @@
 'use client';
 
+import type { DragEndEvent } from '@dnd-kit/core';
+import {
+  closestCenter,
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  useDroppable,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
 import { Box, Grid2, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
-import { useEffect, useState } from 'react';
-import { DragDropContext, Droppable } from 'react-beautiful-dnd';
+import { useEffect, useMemo, useState } from 'react';
 
 import AddExerciseForm from '../add-exercise-form/add-exercise-form';
 import MyModal from '../modal/modal';
 import Superset from '../superset/superset';
 import { NUM_MAX_SUPERSETS } from '../trainer-day-view/constant';
-import { onDragEnd } from '../trainer-day-view/state';
+import { onDragEnd as onRBDDragEnd } from '../trainer-day-view/state';
+import StubTrainingExerciseCard from '../training-exercise-card/stub-training-exercise-card';
 import { handleAddExerciseToSupersetComponent } from './state';
+import { ADD_SUPERSET_DROPPABLE_ID } from '@/common/constant/add-superset-droppable-id.constant';
 import type { SetState } from '@/common/type/state.type';
 import { VolWorkSetType } from '@/controller/component/enum/param.enum';
+import { MainSet } from '@/controller/training/enum/main-set.enum';
+import type { Superset as SupersetType } from '@/controller/training/type/superset.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useGroup } from '@/store/group-provider';
 import { useMain } from '@/store/main-provider';
@@ -25,6 +38,28 @@ interface SupersetsProps {
   setOpenAddExerciseModal: SetState<boolean>;
   expandedExercisesView: boolean;
   setExpandedExercisesView: SetState<boolean>;
+}
+
+// Simple droppable wrapper for areas that aren't Sortable containers
+function DroppableArea({
+  id,
+  children,
+  disabled,
+}: {
+  id: string;
+  children: React.ReactNode;
+  disabled?: boolean;
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id, disabled });
+  return (
+    <div
+      ref={setNodeRef}
+      data-droppableid={id}
+      style={{ outline: isOver ? '1px dashed rgba(0,0,0,0.2)' : undefined }}
+    >
+      {children}
+    </div>
+  );
 }
 
 export default function Supersets(props: SupersetsProps) {
@@ -78,6 +113,75 @@ export default function Supersets(props: SupersetsProps) {
     null
   );
 
+  const [activeExercise, setActiveExercise] = useState<TrainingExercise | null>(
+    null
+  );
+
+  const isCircuit =
+    (selectedSubgroup || component)?.mainSet === MainSet.CIRCUIT;
+
+  useEffect(() => {
+    if (!component) return;
+
+    const updatedSupersets = [{ exercises: [] }] as SupersetType[];
+
+    const mainSet = selectedSubgroup?.mainSet || component.mainSet;
+
+    const exercises = (selectedSubgroup || component).supersets.flatMap(
+      (s) => s.exercises
+    );
+
+    if (mainSet === MainSet.BLOCK) {
+      exercises.forEach((e, i) => {
+        // limit to 32 exercises
+        if (i > 31) return;
+
+        if (
+          updatedSupersets[updatedSupersets.length - 1].exercises.length === 4
+        )
+          updatedSupersets.push({
+            exercises: [],
+          });
+
+        updatedSupersets[updatedSupersets.length - 1].exercises.push(e);
+      });
+    } else {
+      // circuit
+      exercises.forEach((e, i) => {
+        // limit to 32 exercises
+        if (i > 31) return;
+
+        updatedSupersets[0].exercises.push(e);
+      });
+    }
+
+    const updatedComponent = { ...component };
+    if (selectedSubgroup) {
+      const updatedSubgroup = {
+        ...selectedSubgroup,
+        supersets: updatedSupersets,
+      };
+      setSelectedSubgroup(updatedSubgroup);
+
+      component.subgroups = component.subgroups.map((s) =>
+        s.id === updatedSubgroup.id ? updatedSubgroup : s
+      );
+    } else updatedComponent.supersets = updatedSupersets;
+
+    setComponent(updatedComponent);
+
+    setTraining((prev) => {
+      if (!prev) return prev;
+
+      return {
+        ...prev,
+        components: prev.components.map((c) =>
+          c.id === updatedComponent.id ? updatedComponent : c
+        ),
+      };
+    });
+  }, [component?.mainSet, selectedSubgroup?.mainSet]);
+
   useEffect(() => {
     setSelectedExercisesIds(
       supersets && supersets.length
@@ -118,24 +222,124 @@ export default function Supersets(props: SupersetsProps) {
     });
   }, [component?.method]);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  );
+
+  const getContainerIdForSupersetIndex = (i: number) => `${component!.id}-${i}`;
+
+  const itemsByContainer = useMemo(() => {
+    if (!component) return {} as Record<string, string[]>;
+    const map: Record<string, string[]> = {};
+    supersets?.forEach((s, i) => {
+      map[getContainerIdForSupersetIndex(i)] = s.exercises.map((e) => e.id);
+    });
+    return map;
+  }, [supersets, component]);
+
   if (!component || !training) return null;
 
+  // Adapter: convert dnd-kit events to react-beautiful-dnd DropResult shape our existing onDragEnd expects
+  function adaptAndCallOnDragEnd(e: DragEndEvent) {
+    if (!training || !component) return;
+
+    setActiveExercise(null);
+
+    const { active, over } = e;
+    if (!over) return; // dropped outside
+
+    // Source info comes from sortable data
+    const srcSortable = active.data.current?.sortable;
+    const sourceDroppableId = srcSortable?.containerId as string | undefined;
+    const sourceIndex = srcSortable?.index as number | undefined;
+
+    // Destination can be an item or a container
+    let destinationDroppableId: string | undefined;
+    let destinationIndex: number | undefined;
+
+    const overSortable = over.data.current?.sortable;
+    if (
+      overSortable &&
+      overSortable.containerId &&
+      typeof overSortable.index === 'number'
+    ) {
+      destinationDroppableId = overSortable.containerId;
+      destinationIndex = overSortable.index;
+    } else {
+      // over a container (empty space) — append to end
+      destinationDroppableId = String(over.id);
+      const destItems = itemsByContainer[destinationDroppableId] || [];
+      destinationIndex = destItems.length;
+    }
+
+    // Special case: add-superset droppable
+    if (destinationDroppableId === ADD_SUPERSET_DROPPABLE_ID) {
+      // mimic RBD shape where droppableId is the add area
+      const input = {
+        draggableId: String(active.id),
+        destination: {
+          droppableId: destinationDroppableId,
+          index: destinationIndex!,
+        },
+      };
+
+      onRBDDragEnd(input, {
+        training,
+        setTraining,
+        component,
+        setComponent,
+        selectedSubgroup,
+        setSelectedSubgroup,
+        supersets,
+        setSupersets,
+        setDetectedChanges,
+        setCustomAthleteWorkloads,
+      });
+      return;
+    }
+
+    if (
+      !sourceDroppableId ||
+      destinationDroppableId === undefined ||
+      sourceIndex === undefined ||
+      destinationIndex === undefined
+    )
+      return;
+
+    const input = {
+      draggableId: String(active.id),
+      destination: {
+        droppableId: destinationDroppableId,
+        index: destinationIndex,
+      },
+    };
+
+    onRBDDragEnd(input, {
+      training,
+      setTraining,
+      component,
+      setComponent,
+      selectedSubgroup,
+      setSelectedSubgroup,
+      supersets,
+      setSupersets,
+      setDetectedChanges,
+      setCustomAthleteWorkloads,
+    });
+  }
+
   return (
-    <DragDropContext
-      onDragEnd={(input) =>
-        onDragEnd(input, {
-          training,
-          setTraining,
-          component,
-          setComponent,
-          selectedSubgroup,
-          setSelectedSubgroup,
-          supersets,
-          setSupersets,
-          setDetectedChanges,
-          setCustomAthleteWorkloads,
-        })
-      }
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={(e) => {
+        const id = String(e.active.id);
+        const found =
+          supersets.flatMap((s) => s.exercises).find((ex) => ex.id === id) ||
+          null;
+        setActiveExercise(found);
+      }}
+      onDragEnd={adaptAndCallOnDragEnd}
     >
       <Grid2 container rowSpacing={2}>
         {/* Supersets */}
@@ -162,37 +366,53 @@ export default function Supersets(props: SupersetsProps) {
         {/* Add new superset field */}
         {supersets.length < NUM_MAX_SUPERSETS && (
           <Grid2
-            size={{ xs: 12, sm: screenSize.isLandscapeMobile ? 4 : 6, md: 3 }}
+            size={{
+              xs: 12,
+              sm: screenSize.isLandscapeMobile ? 4 : 6,
+              md: 3,
+            }}
+            sx={{
+              mx: isCircuit ? 'auto' : undefined,
+            }}
           >
-            <Droppable
-              key="addSupersetDroppable"
-              droppableId="addSupersetDroppable"
-              direction="vertical"
-            >
-              {(provided) => (
-                <Box
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-                  border="1px dashed #B2B3B7"
-                  borderRadius={2}
-                  sx={{
-                    cursor: 'pointer',
-                    backgroundColor: theme.palette.background.dark,
-                  }}
-                  p={1}
-                  py={!expandedExercisesView ? 2.25 : 3}
-                  mx={1}
-                  onClick={() => setOpenAddExerciseModal(true)}
-                >
-                  <Typography variant="body2" align="center" fontSize={12}>
-                    Add/drop exercise
-                  </Typography>
-                </Box>
-              )}
-            </Droppable>
+            <DroppableArea id={ADD_SUPERSET_DROPPABLE_ID} disabled={isCircuit}>
+              <Box
+                border="1px dashed #B2B3B7"
+                borderRadius={2}
+                sx={{
+                  cursor: 'pointer',
+                  backgroundColor: theme.palette.background.dark,
+                  mx: isCircuit ? 0 : 1,
+                }}
+                p={1}
+                py={!expandedExercisesView ? 2.25 : 3}
+                onClick={() => setOpenAddExerciseModal(true)}
+              >
+                <Typography variant="body2" align="center" fontSize={12}>
+                  {isCircuit ? 'Add exercise' : 'Add/drop exercise'}
+                </Typography>
+              </Box>
+            </DroppableArea>
           </Grid2>
         )}
       </Grid2>
+
+      <DragOverlay>
+        {activeExercise ? (
+          <Box
+            sx={{
+              bgcolor: 'background.default',
+              borderRadius: 1,
+              boxShadow: '0 1px 1px rgba(0,0,0,0.25)',
+            }}
+          >
+            <StubTrainingExerciseCard
+              exercise={activeExercise}
+              expandedExercisesView={expandedExercisesView}
+            />
+          </Box>
+        ) : null}
+      </DragOverlay>
 
       {/* Component exercises modal */}
       <MyModal
@@ -258,6 +478,6 @@ export default function Supersets(props: SupersetsProps) {
           component={component}
         />
       </MyModal>
-    </DragDropContext>
+    </DndContext>
   );
 }
