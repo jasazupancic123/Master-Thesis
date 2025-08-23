@@ -20,6 +20,7 @@ import type { Superset } from '../entity/superset.entity';
 import type { Training } from '../entity/training.entity';
 import type { TrainingComponent } from '../entity/training-component.entity';
 import type { TrainingExercise } from '../entity/training-exercise.entity';
+import { MainSet } from '../enum/main-set.enum';
 import { generateParamAttributeValuesFromComponentParams } from './param-values.stub';
 
 /**
@@ -91,6 +92,7 @@ export function generateTrainingComponent(
     to: data?.to || addHours(from, 1),
     target: data?.target || null,
     methodId: data?.methodId || null,
+    mainSet: data?.mainSet || MainSet.BLOCK,
     completedMembersIds: data?.completedMembersIds || [],
     supersets: data?.supersets || [],
     subgroups: data?.subgroups || [],
@@ -110,6 +112,7 @@ export function generateSubgroup(data?: Partial<Subgroup>): Subgroup {
     name: data?.name || generateRandomName(),
     membersIds: data?.membersIds || [],
     supersets: data?.supersets || [],
+    mainSet: data?.mainSet || MainSet.BLOCK,
     parentId: data?.parentId || null,
   };
 }

@@ -29,6 +29,7 @@ interface Props<T> {
   sameValueAction?: boolean;
   minWidth?: string | number | undefined;
   maxWidth?: string | number;
+  disableNoneChoice?: boolean;
 }
 
 export default function SelectInput<T>(props: Props<T>) {
@@ -116,13 +117,18 @@ export default function SelectInput<T>(props: Props<T>) {
           fontSize: props.selectedItemSize,
         }}
       >
-        <MenuItem
-          value={props.enableRemove ? props.placeholder : ''}
-          sx={{ minHeight: 20 }}
-          onClick={props.sameValueAction ? () => props.setValue('') : undefined}
-        >
-          {props.placeholder ? props.placeholder : <>None</>}
-        </MenuItem>
+        {!props.disableNoneChoice && (
+          <MenuItem
+            value={props.enableRemove ? props.placeholder : ''}
+            sx={{ minHeight: 20 }}
+            onClick={
+              props.sameValueAction ? () => props.setValue('') : undefined
+            }
+          >
+            {props.placeholder ? props.placeholder : <>None</>}
+          </MenuItem>
+        )}
+
         {props.items.map((item, i) => (
           <MenuItem
             key={i}

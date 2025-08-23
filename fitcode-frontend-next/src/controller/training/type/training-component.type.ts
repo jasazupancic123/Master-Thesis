@@ -7,6 +7,7 @@ import type { ColorEntity, IdEntity } from '@/common/type/entity.type';
 import type { Component } from '@/controller/component/type/component.type';
 import type { Method } from '@/controller/method/type/method.type';
 import type { Target } from '@/controller/target/type/target.type';
+import type { MainSet } from '@/controller/training/enum/main-set.enum';
 
 export type TrainingComponent = IdEntity &
   ColorEntity &
@@ -15,6 +16,7 @@ export type TrainingComponent = IdEntity &
     subgroups: Subgroup[];
     completedMembersIds: string[]; // members who completed the component
     methodId?: string;
+    mainSet: MainSet;
     target?: Target; // selected target
     periodizationType?: PeriodizationType;
     copiedFrom?: CopiedFrom; // used for copying components from other trainings

@@ -33,6 +33,7 @@ export default function TrainingCard(props: TrainingCardProps) {
   const { trainings, cycle, setTrainings } = useGroup();
 
   const {
+    training,
     setTraining,
     selectedPeriod,
     setSelectedPeriod,
@@ -45,7 +46,7 @@ export default function TrainingCard(props: TrainingCardProps) {
 
   const theme = useTheme();
 
-  const { training, day } = props;
+  const { day } = props;
 
   const screenSize = useScreenSize();
   const router = useRouter();
@@ -82,6 +83,8 @@ export default function TrainingCard(props: TrainingCardProps) {
           (dayjs(t.from).hour() >= 12 && selectedPeriod === 'PM'))
     );
   };
+
+  if (!training) return null;
 
   return (
     <Box width="100%">
@@ -217,21 +220,18 @@ export default function TrainingCard(props: TrainingCardProps) {
           <>
             <TrainingComponentLayout
               key={0}
-              training={training}
               trainingComponent={training.warmup}
               day={day}
             />
             {training.components.map((trainingComponent, i) => (
               <TrainingComponentLayout
                 key={i + 1}
-                training={training}
                 trainingComponent={trainingComponent}
                 day={day}
               />
             ))}
             <TrainingComponentLayout
               key={training.components.length + 1}
-              training={training}
               trainingComponent={training.cooldown}
               day={day}
             />

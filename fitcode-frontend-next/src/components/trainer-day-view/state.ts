@@ -1,7 +1,7 @@
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
-import type { DropResult } from 'react-beautiful-dnd';
+import type { DraggableLocation, DropResult } from 'react-beautiful-dnd';
 import toast from 'react-hot-toast';
 
 import {
@@ -9,6 +9,7 @@ import {
   DEFAULT_SUBGROUP_ID,
   NUM_MAX_SUPERSETS,
 } from './constant';
+import { ADD_SUPERSET_DROPPABLE_ID } from '@/common/constant/add-superset-droppable-id.constant';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
@@ -26,6 +27,7 @@ import type { Component } from '@/controller/component/type/component.type';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
 import type { Cycle } from '@/controller/group/type/cycle.type';
 import type { Method } from '@/controller/method/type/method.type';
+import { MainSet } from '@/controller/training/enum/main-set.enum';
 import { SetStatus } from '@/controller/training/enum/set-status.enum';
 import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
@@ -272,6 +274,7 @@ export async function handleAddSubgroup(state: {
         ...exercise,
       })),
     })),
+    mainSet: component.mainSet,
     membersIds: createSubgroup.membersIds || [],
   };
 
@@ -363,7 +366,10 @@ export function handleDeleteSubgroup(
 }
 
 export async function onDragEnd(
-  input: DropResult,
+  input: {
+    draggableId: string;
+    destination: DraggableLocation | null | undefined;
+  },
   state: {
     training: Training;
     setTraining: SetStateNullable<Training>;
@@ -393,7 +399,7 @@ export async function onDragEnd(
 
   if (!destination || !training || !component) return;
 
-  if (destination.droppableId === 'addSupersetDroppable') {
+  if (destination.droppableId === ADD_SUPERSET_DROPPABLE_ID) {
     if (supersets.length >= NUM_MAX_SUPERSETS)
       return toast.error(
         `You can only have ${NUM_MAX_SUPERSETS} supersets per component`
@@ -478,15 +484,37 @@ export async function onDragEnd(
 
   if (supersetWithExercise === supersetWithNewExercise) {
     // Get y coordinates of all exercises in the superset
-    const sortedExercises = supersetWithExercise.exercises
-      .map((e) => ({
-        exercise: e,
-        y:
-          document.getElementById(e.id)?.getBoundingClientRect().top ??
-          Infinity, // Default to Infinity if not found
-      }))
-      .sort((a, b) => a.y - b.y) // Sort by y coordinate
-      .map((item) => item.exercise); // Extract only exercises
+    const sortedExercises =
+      (selectedSubgroup || component).mainSet === MainSet.BLOCK
+        ? supersetWithExercise.exercises
+            .map((e) => ({
+              exercise: e,
+              y:
+                document.getElementById(e.id)?.getBoundingClientRect().top ??
+                Infinity, // Default to Infinity if not found
+            }))
+            .sort((a, b) => a.y - b.y) // Sort by y coordinate
+            .map((item) => item.exercise) // Extract only exercises
+        : supersetWithExercise.exercises
+            .map((e) => {
+              const rect = document
+                .getElementById(e.id)
+                ?.getBoundingClientRect();
+              const top = rect?.top ?? Infinity;
+              const left = rect?.left ?? Infinity;
+              const height = rect?.height ?? 0;
+              const yCenter = isFinite(top) ? top + height / 2 : Infinity;
+              return { exercise: e, top, left, height, yCenter };
+            })
+            .sort((a, b) => {
+              // Treat items as same row if their vertical centers are close
+              const tol = Math.min(a.height, b.height) * 0.5; // adjust 0.4–0.7 if needed
+              if (Math.abs(a.yCenter - b.yCenter) > tol) {
+                return a.yCenter - b.yCenter; // different rows → sort by Y
+              }
+              return a.left - b.left; // same row    → sort by X
+            })
+            .map((i) => i.exercise);
 
     const newSuperset = {
       ...supersetWithExercise,

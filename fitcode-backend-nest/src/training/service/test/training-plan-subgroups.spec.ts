@@ -15,6 +15,7 @@ import { FirebaseService } from '@src/firebase/firebase.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import type { Training } from '@src/training/entity/training.entity';
 import type { TrainingComponent } from '@src/training/entity/training-component.entity';
+import { MainSet } from '@src/training/enum/main-set.enum';
 import {
   generateSubgroup,
   generateTrainingComponent,
@@ -97,7 +98,11 @@ describe('copySubgroup', () => {
         generateSubgroup({ id: 's1', membersIds: ['a', 'b', 'c', 'd'] }), // root subgroup 1
         generateSubgroup({ id: 's1.1', membersIds: ['b'], parentId: 's1' }), // child 1
         generateSubgroup({ id: 's1.2', membersIds: ['d'], parentId: 's1' }), // child 2
-        generateSubgroup({ id: 's2', membersIds: ['e', 'f', 'g'] }), // root subgroup 2 (without children)
+        generateSubgroup({
+          id: 's2',
+          mainSet: MainSet.CIRCUIT,
+          membersIds: ['e', 'f', 'g'],
+        }), // root subgroup 2 (without children)
         generateSubgroup({
           id: 'invalid-child',
           membersIds: ['x'],
@@ -226,6 +231,63 @@ describe('copySubgroup', () => {
         expect.objectContaining({ id: 's6', membersIds: ['c'] }), // c is not in source
         expect.objectContaining({ id: 's2', membersIds: ['e', 'f', 'g'] }),
       ]),
+    );
+  });
+
+  it('should override main set', () => {
+    const nestedTarget = generateTrainingStub({
+      ownerId: 'test-owner',
+      membersIds: [],
+      components: [
+        generateTrainingComponent({
+          id: 'c1',
+          subgroups: [
+            generateSubgroup({ mainSet: MainSet.BLOCK }), // existing subgroup in target
+          ],
+        }),
+      ],
+    });
+
+    service.copySubgroupIntoTraining('s2', source, nestedTarget);
+
+    expect(nestedTarget.components[0].subgroups).toHaveLength(1);
+    expect(nestedTarget.components[0].subgroups[0].mainSet).toBe(
+      MainSet.CIRCUIT,
+    );
+  });
+
+  it('should override and keep the same main sets of main group and subgroups', () => {
+    const newSource = generateTrainingComponent({
+      id: 'c1',
+      subgroups: [
+        generateSubgroup({
+          id: 's1',
+          membersIds: ['a', 'b', 'c', 'd'],
+          mainSet: MainSet.CIRCUIT,
+        }),
+      ],
+    });
+
+    const nestedTarget = generateTrainingStub({
+      ownerId: 'test-owner',
+      membersIds: [],
+      components: [
+        generateTrainingComponent({
+          id: 'c1',
+          mainSet: MainSet.CIRCUIT,
+          subgroups: [generateSubgroup({ mainSet: MainSet.BLOCK })],
+        }),
+      ],
+    });
+
+    service.copySubgroupIntoTraining('s1', newSource, nestedTarget);
+
+    expect(nestedTarget.components).toHaveLength(1);
+    expect(nestedTarget.components[0].mainSet).toBe(MainSet.CIRCUIT);
+
+    expect(nestedTarget.components[0].subgroups).toHaveLength(1);
+    expect(nestedTarget.components[0].subgroups[0].mainSet).toBe(
+      MainSet.CIRCUIT,
     );
   });
 });

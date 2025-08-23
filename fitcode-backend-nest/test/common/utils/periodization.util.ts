@@ -17,6 +17,8 @@ import {
   generateTrainingStub,
 } from '@src/training/mock/training.stub';
 
+import { getNextFriday } from './date.util';
+
 export class TestPeriodizationUtil {
   static readonly TRAININGS = [
     // base training
@@ -79,10 +81,13 @@ export class TestPeriodizationUtil {
       i++;
     }
 
+    // get the next upcoming friday
+    const nextFriday = getNextFriday();
+
     return generateTrainingStub({
       ownerId: 'owner',
       membersIds: [],
-      date: addDays(new Date(), addDaysFromToday),
+      date: addDays(nextFriday, addDaysFromToday),
       components: [
         generateTrainingComponent({
           id: 'c1',

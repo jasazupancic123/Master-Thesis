@@ -158,16 +158,21 @@ export default function AthleteTrainingComponents(
               No supersets available
             </Typography>
           ) : (
-            TrainingService.getPrescribedSupersetsByUser(
-              user.uid,
-              selectedComponent
-            ).map((superset, i) => (
-              <AthleteSuperset
-                superset={superset}
-                supersetIndex={i}
-                key={`superset-${i}`}
-              />
-            ))
+            (() => {
+              const supersets = TrainingService.getPrescribedSupersetsByUser(
+                user.uid,
+                selectedComponent
+              );
+
+              return supersets.map((superset, i) => (
+                <AthleteSuperset
+                  key={`superset-${i}`}
+                  superset={superset}
+                  supersetIndex={i}
+                  supersets={supersets}
+                />
+              ));
+            })()
           )}
         </Box>
       </Collapse>

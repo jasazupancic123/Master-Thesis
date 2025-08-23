@@ -5,7 +5,6 @@ import { Box } from '@mui/material';
 import TrainingComponentHeaderMenu from '../training-component-header-menu/training-component-header-menu';
 import { ComponentIds } from '@/common/enum/component-ids.enum';
 import type { SetState } from '@/common/type/state.type';
-import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent as TrainingComponentClass } from '@/controller/training/type/training-component.type';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
@@ -14,22 +13,17 @@ interface TrainingComponentMenuProps {
   trainingComponent: TrainingComponentClass;
   heatmapView: boolean;
   setHeatmapView: SetState<boolean>;
-  training: Training;
 }
 
 export default function TrainingComponentMenu(
   props: TrainingComponentMenuProps
 ) {
-  const { trainingComponent, heatmapView, setHeatmapView, training } = props;
+  const { trainingComponent, heatmapView, setHeatmapView } = props;
 
   const screenSize = useScreenSize();
 
-  const {
-    training: selectedTraining,
-    setTraining,
-    component,
-    setComponent,
-  } = useTrainerDayViewContext();
+  const { training, setTraining, component, setComponent } =
+    useTrainerDayViewContext();
 
   return (
     <Box display="flex" alignItems="center" position="absolute" right={-11.5}>
@@ -43,9 +37,8 @@ export default function TrainingComponentMenu(
         >
           {trainingComponent &&
             component &&
-            selectedTraining?.id === training.id &&
             trainingComponent.id === component.id && (
-              <TrainingComponentHeaderMenu training={training} />
+              <TrainingComponentHeaderMenu />
             )}
         </Box>
       )}
@@ -67,7 +60,6 @@ export default function TrainingComponentMenu(
               if (
                 trainingComponent &&
                 component &&
-                training.id === selectedTraining?.id &&
                 trainingComponent.id === component.id &&
                 heatmapView
               ) {
@@ -84,7 +76,6 @@ export default function TrainingComponentMenu(
           >
             {trainingComponent &&
             component &&
-            training.id === selectedTraining?.id &&
             trainingComponent.id === component.id &&
             heatmapView ? (
               <>

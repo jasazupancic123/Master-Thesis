@@ -12,7 +12,6 @@ import type { TrainingComponent } from '@/controller/training/type/training-comp
 
 interface ComponentActionsModalProps {
   trainingComponent: TrainingComponent; // Replace with actual type
-  training: Training; // Replace with actual type
   day: Day; // Replace with actual type
   setOpenOverwriteModal: SetState<boolean>;
   setTrainingInPeriodForModal: SetState<Training | null>;
@@ -23,7 +22,6 @@ export default function ComponentActionsModal(
 ) {
   const {
     trainingComponent,
-    training,
     day,
     setOpenOverwriteModal,
     setTrainingInPeriodForModal,
@@ -41,7 +39,6 @@ export default function ComponentActionsModal(
         return (
           <TrainingComponentCalendar
             trainingComponent={trainingComponent}
-            training={training}
             setOpenOverwriteModal={setOpenOverwriteModal}
             setTrainingInPeriodForModal={setTrainingInPeriodForModal}
             copyComponent={true}
@@ -49,12 +46,7 @@ export default function ComponentActionsModal(
           />
         );
       case ComponentModalAction.PERIODIZE_COMPONENT:
-        return (
-          <ComponentPeriodization
-            selectedComponent={trainingComponent}
-            training={training}
-          />
-        );
+        return <ComponentPeriodization selectedComponent={trainingComponent} />;
       default:
         return null;
     }
