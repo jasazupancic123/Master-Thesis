@@ -19,9 +19,7 @@ export interface WellnessZScore extends Wellness {
 export interface WellnessChartData {
   metric: WellnessChartDataType;
   today: number | null;
-  yesterday: number | null;
-  zScoreToday: number | null;
-  zScoreYesterday: number | null;
+  zScore: number | null;
 }
 
 export type ChartDataWellness = Pick<

@@ -1,5 +1,5 @@
 import CloseIcon from '@mui/icons-material/Close';
-import { Avatar, Box, Typography } from '@mui/material';
+import { Avatar, Box, Tooltip as MuiTooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import { useEffect, useState } from 'react';
 import {
@@ -13,8 +13,11 @@ import {
 } from 'recharts';
 
 import CustomBarTooltip from '../selected-member-report-custom-tooltip/selected-member-report-custom-tooltip';
-import setupChartData, { colorForZ } from './state';
-import { COMMON_COLORS } from '@/common/constant/color.constant';
+import setupChartData from './state';
+import FatigueIcon from '@/assets/icons/fatigue.svg';
+import SleepIcon from '@/assets/icons/sleep.svg';
+import SorenessIcon from '@/assets/icons/soreness.svg';
+import { COLOR } from '@/common/constant/color.constant';
 import { WellnessChartDataType } from '@/controller/user/enum/wellness-chart-data-type.enum';
 import type { UserEntity } from '@/controller/user/type/user.type';
 import type { WellnessChartData } from '@/controller/user/type/wellness.type';
@@ -34,217 +37,223 @@ export default function SelectedMemberReport(props: SelectedMemberReportProps) {
   const { wellness, selectedAthlete, setSelectedAthlete } =
     useTrainerDayViewContext();
 
-  const [userWeight, setUserWeight] = useState<number | null>(null);
   const [wellnessChartData, setWellnessChartData] = useState<
     WellnessChartData[]
   >(
     [
-      WellnessChartDataType.FATIGUE,
-      WellnessChartDataType.SORENESS,
       WellnessChartDataType.SLEEP,
+      WellnessChartDataType.SORENESS,
+      WellnessChartDataType.FATIGUE,
     ].map((metric) => ({
       metric,
       today: null,
-      yesterday: null,
-      zScoreToday: null,
-      zScoreYesterday: null,
+      zScore: null,
     }))
   );
 
   useEffect(() => {
     if (!selectedAthlete) return;
 
-    setupChartData(
-      wellness,
-      selectedAthlete,
-      setUserWeight,
-      setWellnessChartData
-    );
+    setupChartData(wellness, selectedAthlete, setWellnessChartData);
   }, [selectedAthlete]);
+
+  const getBarChartBorderColor = (metric: WellnessChartDataType) => {
+    switch (metric) {
+      case WellnessChartDataType.SLEEP:
+        return COLOR[0];
+      case WellnessChartDataType.SORENESS:
+        return COLOR[1];
+      case WellnessChartDataType.FATIGUE:
+        return COLOR[2];
+      default:
+        return '';
+    }
+  };
 
   return (
     <Box
-      width={screenSize.isSmallerThanLaptop ? '100%' : '70%'}
+      width="100%"
       display="flex"
-      flexDirection={screenSize.isSmallerThanLaptop ? 'column' : 'row'}
       justifyContent="center"
       alignItems="center"
-      px={screenSize.isSmallerThanLaptop ? 0 : 7}
       position="relative"
       gap={1}
-      my={screenSize.isSmallerThanLaptop ? 1 : 0}
+      my={screenSize.isMobile ? 1 : 0}
+      flexDirection={screenSize.isMobile ? 'column' : 'row'}
     >
       <Box
+        width={screenSize.isMobile ? '100%' : `${100 / 3}%`}
         display="flex"
-        flexDirection="column"
+      ></Box>
+      <Box
+        width={screenSize.isMobile ? '100%' : `${100 / 3}%`}
+        display="flex"
         alignItems="center"
         justifyContent="center"
-        mr={screenSize.isSmallerThanLaptop ? 0 : 0.5}
       >
-        <Avatar
-          className="avatar-border"
-          src={
-            groupMembers.find((m) => m.id === selectedAthlete?.uid)
-              ?.profileImageUrl || '/user_avatar.png'
-          }
-          sx={{
-            width: 60,
-            height: 60,
-          }}
-        />
+        <MuiTooltip title={selectedAthlete?.email}>
+          <Avatar
+            className="avatar-border"
+            src={
+              groupMembers.find((m) => m.id === selectedAthlete?.uid)
+                ?.profileImageUrl || '/user_avatar.png'
+            }
+            sx={{
+              width: 80,
+              height: 80,
+              cursor: 'pointer',
+            }}
+            onClick={() => setSelectedAthlete(undefined)}
+          />
+        </MuiTooltip>
       </Box>
       <Box
+        width={screenSize.isMobile ? '100%' : `${100 / 3}%`}
         display="flex"
-        flexDirection="column"
+        justifyContent={screenSize.isMobile ? 'center' : 'flex-end'}
         alignItems="center"
-        justifyContent="center"
       >
-        <Typography
-          textAlign="center"
-          fontSize={16}
-          sx={{
-            maxWidth: '100%',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-            fontWeight: 500,
-          }}
-        >
-          {selectedAthlete?.displayName}
-        </Typography>
-        <Typography
-          textAlign="center"
-          fontSize={12}
-          sx={{
-            maxWidth: '100%',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-            color: theme.palette.text.secondary,
-          }}
-        >
-          {selectedAthlete?.email}
-        </Typography>
-        <Typography
-          textAlign="center"
-          fontSize={12}
-          sx={{
-            borderRadius: 2,
-            color: theme.palette.text.secondary,
-          }}
-        >
-          {userWeight || 'N/A'}
-          {'\n'}kg
-        </Typography>
-      </Box>
-      <Box
-        width={screenSize.isMobile ? `${window.innerWidth - 50}px` : 350}
-        display="flex"
-        flexDirection={screenSize.isSmallerThanLaptop ? 'column' : 'row'}
-        alignItems="center"
-        justifyContent="center"
-      >
-        <ResponsiveContainer
-          height={133.5}
-          style={{ marginRight: screenSize.isMobile ? 20 : 0 }}
-        >
-          <BarChart
-            data={wellnessChartData}
-            margin={{ top: 8, right: 12, bottom: 0, left: 0 }}
-            barGap={4}
-            barCategoryGap="0%"
-          >
-            <XAxis
-              dataKey="metric"
-              interval={0}
-              padding={{ left: 0, right: 0 }} // kill extra side padding
-              tick={{ fill: '#FFFFFF', fontSize: 12 }}
-              allowDuplicatedCategory={false}
-            />
-            <YAxis
-              type="number"
-              domain={[0, 10]}
-              ticks={[2, 4, 6, 8, 10]}
-              interval={0}
-              allowDecimals={false}
-              tick={{ fill: '#FFFFFF', fontSize: 12 }}
-              tickMargin={6}
-              width={28} // keep Y-axis compact so it doesn’t eat space
-            />
-
-            <Tooltip
-              content={CustomBarTooltip}
-              wrapperStyle={{ outline: 'none' }}
-              cursor={false}
-            />
-
-            <Bar
-              dataKey="yesterday"
-              name="Yesterday"
-              barSize={10}
-              radius={[4, 4, 0, 0]}
-            >
-              {wellnessChartData.map((row) => (
-                <Cell
-                  key={`y-${row.metric}`}
-                  fill={colorForZ(row, 'yesterday', theme)}
-                />
-              ))}
-            </Bar>
-
-            <Bar
-              dataKey="today"
-              name="Today"
-              barSize={10}
-              radius={[4, 4, 0, 0]}
-            >
-              {wellnessChartData.map((row) => (
-                <Cell
-                  key={`t-${row.metric}`}
-                  fill={colorForZ(row, 'today', theme)}
-                />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-
         <Box
+          width={90}
           display="flex"
-          flexDirection={screenSize.isSmallerThanLaptop ? 'row' : 'column'}
-          gap={1}
+          justifyContent="center"
+          alignItems="center"
+          position="relative"
+          sx={{
+            mt: screenSize.isMobile ? 2 : 0,
+          }}
         >
-          {wellnessChartData.some(
-            (w) =>
-              (w.zScoreToday !== null && w.zScoreToday !== undefined) ||
-              (w.zScoreYesterday !== null && w.zScoreYesterday !== undefined)
-          )
-            ? [
-                { color: COMMON_COLORS.blue, label: 'Stable' },
-                { color: COMMON_COLORS.yellow, label: 'Moderate' },
-                { color: COMMON_COLORS.red, label: 'Outlier' },
-              ].map((item) => (
-                <Box
-                  key={item.label}
-                  display="flex"
-                  alignItems="center"
-                  gap={0.5}
+          <Box
+            width={`100%`}
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            position="absolute"
+            sx={{
+              top: -12,
+              right: 0,
+              transform: screenSize.isMobile ? undefined : 'translateX(-50%)',
+            }}
+            gap={0.9}
+          >
+            <Typography
+              textAlign="center"
+              fontWeight="medium"
+              fontSize={12}
+              color={theme.palette.background.lightBorder}
+            >
+              Wellness
+            </Typography>
+          </Box>
+          {wellnessChartData.some((data) => data.today !== null) ? (
+            <>
+              <ResponsiveContainer
+                height={133.5}
+                style={{
+                  transform: screenSize.isMobile
+                    ? undefined
+                    : 'translateX(-50%)',
+                }}
+              >
+                <BarChart
+                  data={wellnessChartData}
+                  margin={{ top: 8, bottom: 0 }}
+                  barGap={0}
+                  barCategoryGap="0px"
+                  style={{
+                    position: 'relative',
+                  }}
                 >
-                  <Box
-                    width={10}
-                    height={10}
-                    borderRadius="50%"
-                    bgcolor={item.color}
+                  <YAxis
+                    type="number"
+                    domain={[0, 10]}
+                    ticks={[2, 4, 6, 8, 10]}
+                    interval={0}
+                    allowDecimals={false}
+                    tick={<></>}
+                    width={0}
                   />
-                  <Typography fontSize={14}>{item.label}</Typography>
-                </Box>
-              ))
-            : null}
+                  <XAxis
+                    dataKey="metric"
+                    interval={0}
+                    padding={{ left: 0, right: 0 }}
+                    tick={<></>}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+
+                  <Tooltip
+                    content={CustomBarTooltip}
+                    wrapperStyle={{ outline: 'none' }}
+                    cursor={false}
+                  />
+
+                  <Bar
+                    dataKey="today"
+                    name="Today"
+                    barSize={10}
+                    radius={[2, 2, 0, 0]}
+                  >
+                    {wellnessChartData.map((row) => (
+                      <Cell
+                        id={`t-${row.metric}`}
+                        key={`t-${row.metric}`}
+                        fill={theme.palette.background.light}
+                        stroke={getBarChartBorderColor(row.metric)}
+                        strokeWidth={1}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+              <Box
+                width={`100%`}
+                display="flex"
+                justifyContent="center"
+                alignItems="center"
+                position="absolute"
+                sx={{
+                  bottom: 5,
+                  right: 0,
+                  transform: screenSize.isMobile
+                    ? undefined
+                    : 'translateX(-50%)',
+                }}
+                gap={0.9}
+              >
+                <SleepIcon
+                  fontSize="small"
+                  style={{ transform: 'translateX(-50%)' }}
+                />
+                <SorenessIcon fontSize="small" />
+                <FatigueIcon
+                  fontSize="small"
+                  style={{ transform: 'translateX(+50%)' }}
+                />
+              </Box>
+            </>
+          ) : (
+            <Box
+              width="100%"
+              height={screenSize.isMobile ? 60 : 133.5}
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              style={{
+                transform: screenSize.isMobile ? undefined : 'translateX(-50%)',
+              }}
+            >
+              <Typography textAlign="center" fontWeight="medium" fontSize={12}>
+                No wellness today
+              </Typography>
+            </Box>
+          )}
         </Box>
       </Box>
       <Box
         position="absolute"
-        top={0}
-        right={screenSize.isSmallerThanLaptop ? 20 : 100}
+        top={-10}
+        right={screenSize.isMobile ? 20 : 5}
         onClick={() => setSelectedAthlete(undefined)}
         sx={{ cursor: 'pointer' }}
       >
