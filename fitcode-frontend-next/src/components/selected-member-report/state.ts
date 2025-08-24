@@ -1,7 +1,7 @@
 import type { Theme } from '@mui/material';
 import dayjs from 'dayjs';
 
-import { COMMON_COLORS } from '@/common/constant/color.constant';
+import { COLOR, COMMON_COLORS } from '@/common/constant/color.constant';
 import type { SetState } from '@/common/type/state.type';
 import { WellnessChartDataType } from '@/controller/user/enum/wellness-chart-data-type.enum';
 import type { User } from '@/controller/user/type/user.type';
@@ -62,14 +62,10 @@ export default function setupChartData(
   );
 }
 
-export const colorForZ = (metric: WellnessChartData, theme: Theme) => {
+export const colorForZ = (metric: WellnessChartData) => {
   let zValue = metric.zScore;
-  if (zValue === null) return theme.palette.text.primary; // Default color if no z-score
+  if (zValue === null) return COLOR[0]; // Default color if no z-score
 
   zValue = Math.abs(zValue);
-  return zValue < 1
-    ? COMMON_COLORS.blue
-    : zValue < 2
-      ? COMMON_COLORS.yellow
-      : COMMON_COLORS.red;
+  return zValue < 1 ? COLOR[0] : zValue < 2 ? COLOR[1] : COLOR[2];
 };
