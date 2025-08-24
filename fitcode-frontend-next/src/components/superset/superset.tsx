@@ -120,7 +120,12 @@ export default function Superset(props: SupersetComponentProps) {
               container
               columnSpacing={
                 (selectedSubgroup || component).mainSet === MainSet.CIRCUIT
-                  ? 0.3
+                  ? 0.4
+                  : undefined
+              }
+              rowSpacing={
+                (selectedSubgroup || component).mainSet === MainSet.CIRCUIT
+                  ? 0.4
                   : undefined
               }
             >

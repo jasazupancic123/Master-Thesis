@@ -364,37 +364,42 @@ export default function Supersets(props: SupersetsProps) {
         </SupersetsProvider>
 
         {/* Add new superset field */}
-        {supersets.length < NUM_MAX_SUPERSETS && (
-          <Grid2
-            size={{
-              xs: 12,
-              sm: screenSize.isLandscapeMobile ? 4 : 6,
-              md: 3,
-            }}
-            sx={{
-              mx: isCircuit ? 'auto' : undefined,
-            }}
-          >
-            <DroppableArea id={ADD_SUPERSET_DROPPABLE_ID} disabled={isCircuit}>
-              <Box
-                border="1px dashed #B2B3B7"
-                borderRadius={2}
-                sx={{
-                  cursor: 'pointer',
-                  backgroundColor: theme.palette.background.dark,
-                  mx: isCircuit ? 0 : 1,
+        {supersets.length === 1 && supersets[0].exercises.length === 0
+          ? null
+          : supersets.length < NUM_MAX_SUPERSETS && (
+              <Grid2
+                size={{
+                  xs: 12,
+                  sm: screenSize.isLandscapeMobile ? 4 : 6,
+                  md: 3,
                 }}
-                p={1}
-                py={!expandedExercisesView ? 2.25 : 3}
-                onClick={() => setOpenAddExerciseModal(true)}
+                sx={{
+                  mx: isCircuit ? 'auto' : undefined,
+                }}
               >
-                <Typography variant="body2" align="center" fontSize={12}>
-                  {isCircuit ? 'Add exercise' : 'Add/drop exercise'}
-                </Typography>
-              </Box>
-            </DroppableArea>
-          </Grid2>
-        )}
+                <DroppableArea
+                  id={ADD_SUPERSET_DROPPABLE_ID}
+                  disabled={isCircuit}
+                >
+                  <Box
+                    border="1px dashed #B2B3B7"
+                    borderRadius={2}
+                    sx={{
+                      cursor: 'pointer',
+                      backgroundColor: theme.palette.background.dark,
+                      mx: isCircuit ? 0 : 1,
+                    }}
+                    p={1}
+                    py={!expandedExercisesView ? 2.25 : 3}
+                    onClick={() => setOpenAddExerciseModal(true)}
+                  >
+                    <Typography variant="body2" align="center" fontSize={12}>
+                      {isCircuit ? 'Add exercise' : 'Add/drop exercise'}
+                    </Typography>
+                  </Box>
+                </DroppableArea>
+              </Grid2>
+            )}
       </Grid2>
 
       <DragOverlay>

@@ -104,7 +104,7 @@ export default function TrainingCard(props: TrainingCardProps) {
             {selectedPeriod === 'AM' ? 'Morning' : 'Afternoon'}
           </Typography>
 
-          {cycle && component && (
+          {cycle && component ? (
             <Box
               sx={{
                 height: 22,
@@ -204,7 +204,32 @@ export default function TrainingCard(props: TrainingCardProps) {
                 </Typography>
               )}
             </Box>
-          )}
+          ) : selectedAthlete ? (
+            <Box
+              sx={{
+                height: 22,
+                maxHeight: 22,
+                minWidth: 150,
+                position: 'absolute',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                textAlign: 'center',
+                backgroundColor: theme.palette.background.dark,
+                borderBottomLeftRadius: 100,
+                borderBottomRightRadius: 100,
+                px: screenSize.isMobile ? 2 : 4,
+              }}
+            >
+              <Typography
+                textAlign="center"
+                variant="body2"
+                fontSize={12}
+                sx={{ pb: 0.5, color: theme.palette.background.lightText }}
+              >
+                {selectedAthlete.displayName}
+              </Typography>
+            </Box>
+          ) : null}
         </Box>
       </Box>
       <Box

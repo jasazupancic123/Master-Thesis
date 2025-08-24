@@ -90,8 +90,8 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
           cycle &&
           dayjs(cycle.from).isBefore(date.endOf('day')) &&
           dayjs(cycle.to).isAfter(date.endOf('day'))
-            ? theme.palette.background.default
-            : theme.palette.background.paper,
+            ? theme.palette.background.dark
+            : theme.palette.background.default,
         cursor:
           components.length &&
           cycle &&
@@ -116,13 +116,12 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
               sx={{
                 position: 'relative',
                 minHeight: '70px',
-                borderRight: isBeforeToday
-                  ? 'none'
-                  : j < 6
-                    ? `2px solid ${theme.palette.background.dark}`
+                borderRight:
+                  j < 6
+                    ? `2px solid ${theme.palette.background.light}`
                     : 'none',
                 backgroundColor: isBeforeToday
-                  ? theme.palette.background.light
+                  ? theme.palette.background.default
                   : undefined,
               }}
               onClick={() => {
@@ -268,7 +267,6 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
             </Box>
             {period === 'PM' && (
               <>
-                <Divider />
                 <Divider />
               </>
             )}
