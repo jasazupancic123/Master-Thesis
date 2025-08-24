@@ -14,9 +14,9 @@ import {
 
 import CustomBarTooltip from '../selected-member-report-custom-tooltip/selected-member-report-custom-tooltip';
 import setupChartData from './state';
-import FatigueIcon from '@/assets/icons/fatigue.svg';
-import SleepIcon from '@/assets/icons/sleep.svg';
-import SorenessIcon from '@/assets/icons/soreness.svg';
+import FatigueIcon from '../../assets/icons/fatigue.svg';
+import SleepIcon from '../../assets/icons/sleep.svg';
+import SorenessIcon from '../../assets/icons/soreness.svg';
 import { COLOR } from '@/common/constant/color.constant';
 import { WellnessChartDataType } from '@/controller/user/enum/wellness-chart-data-type.enum';
 import type { UserEntity } from '@/controller/user/type/user.type';
