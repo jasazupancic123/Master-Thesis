@@ -13,7 +13,7 @@ import {
 } from 'recharts';
 
 import CustomBarTooltip from '../selected-member-report-custom-tooltip/selected-member-report-custom-tooltip';
-import setupChartData from './state';
+import setupChartData, { colorForZ } from './state';
 import FatigueIcon from '../../assets/icons/Fatigue.svg';
 import SleepIcon from '../../assets/icons/Sleep.svg';
 import SorenessIcon from '../../assets/icons/Soreness.svg';
@@ -56,19 +56,6 @@ export default function SelectedMemberReport(props: SelectedMemberReportProps) {
 
     setupChartData(wellness, selectedAthlete, setWellnessChartData);
   }, [selectedAthlete]);
-
-  const getBarChartBorderColor = (metric: WellnessChartDataType) => {
-    switch (metric) {
-      case WellnessChartDataType.SLEEP:
-        return COLOR[0];
-      case WellnessChartDataType.SORENESS:
-        return COLOR[1];
-      case WellnessChartDataType.FATIGUE:
-        return COLOR[2];
-      default:
-        return '';
-    }
-  };
 
   return (
     <Box
@@ -199,7 +186,7 @@ export default function SelectedMemberReport(props: SelectedMemberReportProps) {
                         id={`t-${row.metric}`}
                         key={`t-${row.metric}`}
                         fill={theme.palette.background.light}
-                        stroke={getBarChartBorderColor(row.metric)}
+                        stroke={colorForZ(row)}
                         strokeWidth={1}
                       />
                     ))}
