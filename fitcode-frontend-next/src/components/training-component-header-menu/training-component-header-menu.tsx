@@ -170,8 +170,6 @@ export default function TrainingComponentHeaderMenu() {
                 mainSet,
               };
 
-              console.log(updatedSubgroup);
-
               setSelectedSubgroup(updatedSubgroup);
 
               updatedComponent.subgroups = component.subgroups.map((s) =>
@@ -181,8 +179,6 @@ export default function TrainingComponentHeaderMenu() {
               updatedComponent.supersets = updatedSupersets;
               updatedComponent.mainSet = mainSet;
             }
-
-            console.log(updatedComponent);
 
             setComponent(updatedComponent);
 
