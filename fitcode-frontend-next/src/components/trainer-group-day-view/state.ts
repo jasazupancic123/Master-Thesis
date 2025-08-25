@@ -19,6 +19,10 @@ import type { TrainingComponent } from '@/controller/training/type/training-comp
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import type { Workload } from '@/controller/training/type/workload.type';
 import type { User } from '@/controller/user/type/user.type';
+import {
+  COOLDOWN_ID,
+  WARMUP_ID,
+} from '@/common/constant/warmup-cooldown-ids-constants';
 
 export async function handleUpdateMultipleTrainings(state: {
   setTrainings: SetState<Training[]>;
@@ -163,9 +167,13 @@ export function deleteSelectedExercises(
   }
 
   const newTraining = { ...training };
-  newTraining.components = newTraining.components.map((c) =>
-    c.id === component.id ? newComponent : c
-  );
+
+  if (newComponent.id === WARMUP_ID) newTraining.warmup = newComponent;
+  else if (newComponent.id === COOLDOWN_ID) newTraining.cooldown = newComponent;
+  else
+    newTraining.components = newTraining.components.map((c) =>
+      c.id === component.id ? newComponent : c
+    );
 
   setComponent(newComponent);
   setTraining(newTraining);

@@ -1,8 +1,17 @@
 'use client';
-import { Box, Typography, useTheme } from '@mui/material';
+import { Box, IconButton, Typography, useTheme } from '@mui/material';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import {
+  HEATMAP_BACK_ID,
+  HEATMAP_FRONT_ID,
+} from '@/common/constant/heatmap.constant';
+import { useMain } from '@/store/main-provider';
+import { Exercise } from '@/controller/exercise/type/exercise.type';
+import { Close } from '@mui/icons-material';
+import { MuscleTip } from '@/controller/exercise/type/muscle-tip.type';
+import { SetState } from '@/common/type/state.type';
 
 type SvgC = React.ForwardRefExoticComponent<
   React.SVGProps<SVGSVGElement> & React.RefAttributes<SVGSVGElement>
@@ -15,32 +24,23 @@ const formatName = (id: string) =>
   id.replaceAll('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
 interface MuscleMapWithTooltipProps {
-  id: string;
   Svg: SvgC;
-  exercises: TrainingExercise[];
+  exercisesInComponent: TrainingExercise[];
   heatmapLevel: number;
+  tip: MuscleTip;
+  setTip: SetState<MuscleTip>;
 }
 
-export default function MuscleMapWithTooltip({
-  id,
-  Svg,
-  exercises,
-  heatmapLevel,
-}: MuscleMapWithTooltipProps) {
+export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
   const theme = useTheme();
+
+  const { exercises: allExercises } = useMain();
+
+  const { Svg, exercisesInComponent, heatmapLevel, tip, setTip } = props;
 
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const hideTimer = useRef<number | null>(null);
-
-  const [tip, setTip] = useState<{
-    show: boolean;
-    x: number;
-    y: number;
-    id?: string;
-    name?: string;
-    exercises: TrainingExercise[];
-  }>({ show: false, x: 0, y: 0, exercises: [] });
 
   // Make labeled shapes keyboard-focusable for a11y tooltips
   useEffect(() => {
@@ -53,9 +53,10 @@ export default function MuscleMapWithTooltip({
 
   // style attribute contains an explicit fill (and not fill:none)
   const hasExplicitFill = (el: Element) => {
-    const style = el.getAttribute('style') || '';
-    if (!/fill\s*:/.test(style)) return false;
-    return !/fill\s*:\s*none/i.test(style);
+    const fill = el.getAttribute('fill');
+
+    if (!fill) return false;
+    return fill !== 'none';
   };
 
   // find nearest ancestor <g> with explicit fill
@@ -63,47 +64,52 @@ export default function MuscleMapWithTooltip({
     start: Element,
     svg: SVGSVGElement
   ): SVGGraphicsElement | null => {
+    let i = 4; // because first element is path, which we skip, so it becomes 3 when going to <g>'s
     let el: Element | null = start;
-    while (el && el !== svg) {
+    while (el) {
       if (
         el instanceof SVGGraphicsElement &&
         el.tagName.toLowerCase() === 'g' &&
-        hasExplicitFill(el)
+        (i === heatmapLevel ||
+          [HEATMAP_FRONT_ID, HEATMAP_BACK_ID].includes(
+            el.parentElement?.id || ''
+          ))
       ) {
         return el;
       }
+
       el = el.parentElement;
+      i--;
     }
     return null;
   };
 
   const computeExercises = useCallback(
-    (muscleId: string) => {
-      const filteredExercises = exercises.filter((e) =>
-        e.exercise?.muscleValues?.some((mv) =>
-          heatmapLevel === 1
-            ? mv.field === muscleId
-            : heatmapLevel === 2
-              ? mv.selected.startsWith(`${muscleId}:`)
-              : mv.selected.endsWith(`:${muscleId}`)
+    (muscleIds: string[]) => {
+      const componentExercises = exercisesInComponent.filter((e) =>
+        e.exercise?.muscleValues?.some(
+          (mv) =>
+            muscleIds.includes(mv.field) ||
+            muscleIds.some((mid) => mv.selected.startsWith(`${mid}:`)) ||
+            muscleIds.some((mid) => mv.selected.endsWith(`:${mid}`))
         )
       );
 
-      filteredExercises.sort((a, b) => {
+      componentExercises.sort((a, b) => {
         const aMuscle = a.exercise?.muscleValues?.find((mv) =>
           heatmapLevel === 1
-            ? mv.field === muscleId
+            ? muscleIds.includes(mv.field)
             : heatmapLevel === 2
-              ? mv.selected.startsWith(`${muscleId}:`)
-              : mv.selected.endsWith(`:${muscleId}`)
+              ? muscleIds.some((mid) => mv.selected.startsWith(`${mid}:`))
+              : muscleIds.some((mid) => mv.selected.endsWith(`:${mid}`))
         );
 
         const bMuscle = b.exercise?.muscleValues?.find((mv) =>
           heatmapLevel === 1
-            ? mv.field === muscleId
+            ? muscleIds.includes(mv.field)
             : heatmapLevel === 2
-              ? mv.selected.startsWith(`${muscleId}:`)
-              : mv.selected.endsWith(`:${muscleId}`)
+              ? muscleIds.some((mid) => mv.selected.startsWith(`${mid}:`))
+              : muscleIds.some((mid) => mv.selected.endsWith(`:${mid}`))
         );
 
         if (!aMuscle || !bMuscle) return 0;
@@ -123,19 +129,39 @@ export default function MuscleMapWithTooltip({
         return 1;
       });
 
-      return filteredExercises;
+      const possibleExercises = allExercises.filter((e) =>
+        e.muscleValues?.some(
+          (mv) =>
+            muscleIds.includes(mv.field) ||
+            muscleIds.some((mid) => mv.selected.startsWith(`${mid}:`)) ||
+            muscleIds.some((mid) => mv.selected.endsWith(`:${mid}`))
+        )
+      );
+
+      return { componentExercises, possibleExercises };
     },
-    [exercises, heatmapLevel]
+    [exercisesInComponent, heatmapLevel]
   );
 
   const showForEl = useCallback(
     (el: SVGGraphicsElement, px?: number, py?: number) => {
-      if (!containerRef.current) return;
+      if (!containerRef.current || tip.focus) return;
+
+      const children = Array.from(el.children);
 
       // id → display name
       const key = normId(el.id); // includes -r/-l if present
+
       const muscleId = key.replace('-r', '').replace('-l', '');
       const muscleName = formatName(muscleId);
+
+      const muscleIds = [muscleId];
+      children.forEach((child) => {
+        const childKey = normId(child.id);
+        const childMuscleId = childKey.replace('-r', '').replace('-l', '');
+        if (!childMuscleId.length) return;
+        if (!muscleIds.includes(childMuscleId)) muscleIds.push(childMuscleId);
+      });
 
       // pointer coords or center on element (for keyboard focus)
       let x = px ?? 0;
@@ -153,6 +179,10 @@ export default function MuscleMapWithTooltip({
           if (prev.x === x && prev.y === y) return prev; // no-op
           return { ...prev, x, y };
         }
+
+        const { componentExercises, possibleExercises } =
+          computeExercises(muscleIds);
+
         // New muscle → compute exercises once
         return {
           show: true,
@@ -160,7 +190,9 @@ export default function MuscleMapWithTooltip({
           y,
           id: key,
           name: muscleName,
-          exercises: computeExercises(muscleId),
+          componentExercises,
+          possibleExercises,
+          focus: false,
         };
       });
     },
@@ -175,7 +207,7 @@ export default function MuscleMapWithTooltip({
   };
 
   const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
-    if (!svgRef.current || !containerRef.current) return;
+    if (!svgRef.current || !containerRef.current || tip.focus) return;
     clearHideTimer();
 
     const svg = svgRef.current;
@@ -208,6 +240,7 @@ export default function MuscleMapWithTooltip({
 
   const handleMouseLeave = () => {
     clearHideTimer();
+    if (tip.focus) return;
     setTip((t) => (t.show ? { ...t, show: false } : t));
   };
 
@@ -238,49 +271,121 @@ export default function MuscleMapWithTooltip({
       }}
     >
       <Svg
-        id={id}
         ref={svgRef}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         onFocus={handleFocus}
         onBlur={handleBlur}
+        onClick={() => {
+          if (!tip.show) return;
+          setTip((t) => ({ ...t, focus: true, x: 0, y: 0 }));
+        }}
         role="img"
-        style={{ maxHeight: 500, display: 'block' }}
+        style={{ maxHeight: 500, display: 'block', cursor: 'pointer' }}
       />
 
       {tip.show && (
         <Box
+          id="muscle-tip"
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          justifyContent="flex-start"
           sx={{
+            width: 'fit-content',
             position: 'absolute',
             left: tip.x,
             top: tip.y,
             transform: 'translate(0, -100%)', // bottom-left at the cursor
-            zIndex: 1000,
-            pointerEvents: 'none', // <-- prevents flicker by not stealing the mouse
+            zIndex: 1000000,
+            backgroundColor: theme.palette.background.paper,
+            p: 1,
+            border: `1px solid ${theme.palette.divider}`,
+            boxShadow: 3,
+            borderRadius: 1,
           }}
           aria-hidden
         >
+          {tip.focus && (
+            <IconButton
+              sx={{
+                position: 'absolute',
+                top: 0,
+                right: 5,
+              }}
+              onClick={(e) => {
+                e.preventDefault();
+                setTip((t) => ({ ...t, focus: false, show: false }));
+              }}
+            >
+              <Close fontSize="small" />
+            </IconButton>
+          )}
+
+          <Typography fontWeight={600} noWrap textAlign="center">
+            {tip.name}
+          </Typography>
           <Box
             display="flex"
-            flexDirection="column"
-            alignItems="center"
+            justifyContent="center"
+            alignItems="flex-start"
+            gap={1}
             sx={{
-              backgroundColor: theme.palette.background.paper,
-              p: 1,
-              border: `1px solid ${theme.palette.divider}`,
-              boxShadow: 3,
-              borderRadius: 1,
-              maxWidth: 260,
+              maxHeight: 300,
+              overflowY: 'auto',
             }}
           >
-            <Typography fontWeight={600} noWrap>
-              {tip.name}
-            </Typography>
-            {tip.exercises.map((ex) => (
-              <Typography key={ex.id} fontSize={14} noWrap>
-                {ex.exercise?.name}
+            <Box
+              maxWidth="50%"
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              sx={{
+                minWidth: 150,
+              }}
+            >
+              <Typography fontSize={14} noWrap>
+                Current
               </Typography>
-            ))}
+              <Box
+                width="100%"
+                display="flex"
+                flexDirection="column"
+                alignItems="flex-start"
+              >
+                {tip.componentExercises.map((ex) => (
+                  <Typography key={ex.id} fontSize={14} textAlign="start">
+                    • {ex.exercise?.name}
+                  </Typography>
+                ))}
+              </Box>
+            </Box>
+
+            <Box
+              maxWidth="50%"
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              sx={{
+                minWidth: 150,
+              }}
+            >
+              <Typography fontSize={14} noWrap>
+                Suggested
+              </Typography>
+              <Box
+                width="100%"
+                display="flex"
+                flexDirection="column"
+                alignItems="flex-start"
+              >
+                {tip.possibleExercises.map((ex) => (
+                  <Typography key={ex.id} fontSize={14} textAlign="start">
+                    • {ex.name}
+                  </Typography>
+                ))}
+              </Box>
+            </Box>
           </Box>
         </Box>
       )}
