@@ -12,10 +12,8 @@ import { Permission } from '@src/common/interface/permission.interface';
 import { CommonService } from '@src/common/service/common.service';
 import { Create } from '@src/common/type/entity.type';
 import { User } from '@src/common/type/firebase-auth.type';
-import {
-  BatchWriteOperation,
-  InstitutionRef,
-} from '@src/common/type/firestore.type';
+import { InstitutionRef } from '@src/common/type/firestore.type';
+import { BatchWriteOperation } from '@src/common/type/orm.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { UserEntity } from '@src/user/entity/user.entity';
 import { UserService } from '@src/user/user.service';

@@ -1,20 +1,22 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { FieldValue } from 'firebase-admin/firestore';
+import {
+  CollectionReference,
+  DocumentReference,
+  FieldValue,
+} from 'firebase-admin/firestore';
 
 import { ChangeLogManager } from '@src/change-log/change-log.manager';
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { Create, Update } from '@src/common/type/entity.type';
-import {
-  BatchWriteOperation,
-  FirestoreRootRepository,
-} from '@src/common/type/firestore.type';
+import { FirestoreRepository } from '@src/common/type/firestore.type';
+import { BatchWriteOperation } from '@src/common/type/orm.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 
 import { Training } from '../entity/training.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
 
 @Injectable()
-export class TrainingRepository extends FirestoreRootRepository<Training> {
+export class TrainingRepository extends FirestoreRepository<Training> {
   collectionName = FirestoreCollection.TRAINING;
 
   constructor(
@@ -23,6 +25,14 @@ export class TrainingRepository extends FirestoreRootRepository<Training> {
     readonly changeLog: ChangeLogManager<Training>,
   ) {
     super(firebaseService);
+  }
+
+  collection(): CollectionReference {
+    return this.firebaseService.firestore.collection(this.collectionName);
+  }
+
+  doc(ref: string): DocumentReference {
+    return this.collection().doc(ref);
   }
 
   async save(input: Create<Training>): Promise<string> {
