@@ -24,6 +24,7 @@ import { useGroup } from '@/store/group-provider';
 import { useMain } from '@/store/main-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
+import { Superset } from '@/controller/training/type/superset.type';
 
 export default function TrainingComponentHeaderMenu() {
   const router = useRouter();
@@ -130,52 +131,65 @@ export default function TrainingComponentHeaderMenu() {
             if (selectedSubgroup && selectedSubgroup.mainSet === mainSet)
               return;
 
-            let updatedComponent = { ...component };
+            const updatedSupersets = [{ exercises: [] }] as Superset[];
 
+            const exercises = (selectedSubgroup || component).supersets.flatMap(
+              (s) => s.exercises
+            );
+
+            if (mainSet === MainSet.BLOCK) {
+              exercises.forEach((e, i) => {
+                // limit to 32 exercises
+                if (i > 31) return;
+
+                if (
+                  updatedSupersets[updatedSupersets.length - 1].exercises
+                    .length === 4
+                )
+                  updatedSupersets.push({
+                    exercises: [],
+                  });
+
+                updatedSupersets[updatedSupersets.length - 1].exercises.push(e);
+              });
+            } else {
+              // circuit
+              exercises.forEach((e, i) => {
+                // limit to 32 exercises
+                if (i > 31) return;
+
+                updatedSupersets[0].exercises.push(e);
+              });
+            }
+
+            const updatedComponent = { ...component };
             if (selectedSubgroup) {
               const updatedSubgroup = {
                 ...selectedSubgroup,
+                supersets: updatedSupersets,
                 mainSet,
               };
 
-              setSelectedSubgroup((prev) => {
-                if (!prev) return prev;
+              setSelectedSubgroup(updatedSubgroup);
 
-                return updatedSubgroup;
-              });
-
-              updatedComponent.subgroups = updatedComponent.subgroups?.map(
-                (sg) => {
-                  if (sg.id === updatedSubgroup.id) return updatedSubgroup;
-                  return sg;
-                }
+              updatedComponent.subgroups = component.subgroups.map((s) =>
+                s.id === updatedSubgroup.id ? updatedSubgroup : s
               );
             } else {
-              updatedComponent = {
-                ...component,
-                mainSet,
-              };
+              updatedComponent.supersets = updatedSupersets;
+              updatedComponent.mainSet = mainSet;
             }
 
-            setComponent((prev) => {
-              if (!prev) return prev;
-
-              return updatedComponent;
-            });
+            setComponent(updatedComponent);
 
             setTraining((prev) => {
               if (!prev) return prev;
+
               return {
                 ...prev,
-                components: prev.components.map((c) => {
-                  if (c.id === updatedComponent.id) {
-                    return {
-                      ...c,
-                      mainSet,
-                    };
-                  }
-                  return c;
-                }),
+                components: prev.components.map((c) =>
+                  c.id === updatedComponent.id ? updatedComponent : c
+                ),
               };
             });
           }}

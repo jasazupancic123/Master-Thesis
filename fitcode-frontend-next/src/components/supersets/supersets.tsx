@@ -120,67 +120,67 @@ export default function Supersets(props: SupersetsProps) {
   const isCircuit =
     (selectedSubgroup || component)?.mainSet === MainSet.CIRCUIT;
 
-  useEffect(() => {
-    if (!component) return;
+  // useEffect(() => {
+  //   if (!component) return;
 
-    const updatedSupersets = [{ exercises: [] }] as SupersetType[];
+  //   const updatedSupersets = [{ exercises: [] }] as SupersetType[];
 
-    const mainSet = selectedSubgroup?.mainSet || component.mainSet;
+  //   const mainSet = selectedSubgroup?.mainSet || component.mainSet;
 
-    const exercises = (selectedSubgroup || component).supersets.flatMap(
-      (s) => s.exercises
-    );
+  //   const exercises = (selectedSubgroup || component).supersets.flatMap(
+  //     (s) => s.exercises
+  //   );
 
-    if (mainSet === MainSet.BLOCK) {
-      exercises.forEach((e, i) => {
-        // limit to 32 exercises
-        if (i > 31) return;
+  //   if (mainSet === MainSet.BLOCK) {
+  //     exercises.forEach((e, i) => {
+  //       // limit to 32 exercises
+  //       if (i > 31) return;
 
-        if (
-          updatedSupersets[updatedSupersets.length - 1].exercises.length === 4
-        )
-          updatedSupersets.push({
-            exercises: [],
-          });
+  //       if (
+  //         updatedSupersets[updatedSupersets.length - 1].exercises.length === 4
+  //       )
+  //         updatedSupersets.push({
+  //           exercises: [],
+  //         });
 
-        updatedSupersets[updatedSupersets.length - 1].exercises.push(e);
-      });
-    } else {
-      // circuit
-      exercises.forEach((e, i) => {
-        // limit to 32 exercises
-        if (i > 31) return;
+  //       updatedSupersets[updatedSupersets.length - 1].exercises.push(e);
+  //     });
+  //   } else {
+  //     // circuit
+  //     exercises.forEach((e, i) => {
+  //       // limit to 32 exercises
+  //       if (i > 31) return;
 
-        updatedSupersets[0].exercises.push(e);
-      });
-    }
+  //       updatedSupersets[0].exercises.push(e);
+  //     });
+  //   }
 
-    const updatedComponent = { ...component };
-    if (selectedSubgroup) {
-      const updatedSubgroup = {
-        ...selectedSubgroup,
-        supersets: updatedSupersets,
-      };
-      setSelectedSubgroup(updatedSubgroup);
+  //   const updatedComponent = { ...component };
+  //   if (selectedSubgroup) {
+  //     const updatedSubgroup = {
+  //       ...selectedSubgroup,
+  //       supersets: updatedSupersets,
+  //     };
+  //     setSelectedSubgroup(updatedSubgroup);
 
-      component.subgroups = component.subgroups.map((s) =>
-        s.id === updatedSubgroup.id ? updatedSubgroup : s
-      );
-    } else updatedComponent.supersets = updatedSupersets;
+  //     component.subgroups = component.subgroups.map((s) =>
+  //       s.id === updatedSubgroup.id ? updatedSubgroup : s
+  //     );
+  //   } else updatedComponent.supersets = updatedSupersets;
 
-    setComponent(updatedComponent);
+  //   setComponent(updatedComponent);
 
-    setTraining((prev) => {
-      if (!prev) return prev;
+  //   setTraining((prev) => {
+  //     if (!prev) return prev;
 
-      return {
-        ...prev,
-        components: prev.components.map((c) =>
-          c.id === updatedComponent.id ? updatedComponent : c
-        ),
-      };
-    });
-  }, [component?.mainSet, selectedSubgroup?.mainSet]);
+  //     return {
+  //       ...prev,
+  //       components: prev.components.map((c) =>
+  //         c.id === updatedComponent.id ? updatedComponent : c
+  //       ),
+  //     };
+  //   });
+  // }, [component?.mainSet, selectedSubgroup?.mainSet]);
 
   useEffect(() => {
     setSelectedExercisesIds(
