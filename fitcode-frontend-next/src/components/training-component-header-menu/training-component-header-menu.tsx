@@ -185,6 +185,18 @@ export default function TrainingComponentHeaderMenu() {
             setTraining((prev) => {
               if (!prev) return prev;
 
+              if (updatedComponent.id === WARMUP_ID) {
+                return {
+                  ...prev,
+                  warmup: updatedComponent,
+                };
+              } else if (updatedComponent.id === COOLDOWN_ID) {
+                return {
+                  ...prev,
+                  cooldown: updatedComponent,
+                };
+              }
+
               return {
                 ...prev,
                 components: prev.components.map((c) =>
