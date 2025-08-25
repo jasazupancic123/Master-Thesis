@@ -4,6 +4,7 @@ import {
   forwardRef,
   Inject,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { addMinutes, subMinutes } from 'date-fns';
@@ -29,7 +30,12 @@ import {
   WARMUP_COMPONENT_ID,
 } from '@src/component/constant/warmup-cooldown.constant';
 import { Component } from '@src/component/entity/component.entity';
-import { ParamType, VolWorkSetType } from '@src/component/enum/param.enum';
+import {
+  IntType,
+  ParamType,
+  VolType,
+  VolWorkSetType,
+} from '@src/component/enum/param.enum';
 import { Exercise } from '@src/exercise/entity/exercise.entity';
 import { ExerciseAttributeValueRepository } from '@src/exercise/repository/exercise-attribute-value.repository';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
@@ -53,6 +59,8 @@ import {
 
 @Injectable()
 export class TrainingPlanService {
+  private readonly logger = new Logger(TrainingPlanService.name);
+
   constructor(
     private readonly commonService: CommonService,
     private readonly attributeService: AttributeService,
@@ -84,6 +92,111 @@ export class TrainingPlanService {
   getTrainingComponents(training: Training): TrainingComponent[] {
     const { warmup, cooldown, components } = training;
     return [warmup, ...components, cooldown];
+  }
+
+  getSupersetsByAthlete(
+    athleteId: string,
+    trainingComponent: TrainingComponent,
+  ): Superset[] {
+    // athlete can be member of the following:
+    //    - main group -> 0 subgroups
+    //    - 1 root subgroup -> 1 subgroup, can be shared with other members in training
+    //    - 1 child subgroup of root subgroup -> 2 subgroups (root & child), root can be shared with other members in training but child cannot
+    //    - direct child of main group -> 1 subgroup, only this athlete is in it
+
+    const subgroups = trainingComponent.subgroups.filter((s) =>
+      s.membersIds.includes(athleteId),
+    );
+
+    if (subgroups.length === 1) {
+      // root subgroup OR direct child of main group
+      const subgroup = subgroups[0];
+      if (subgroup.parentId === trainingComponent.id) return subgroup.supersets; // direct child of main group
+      if (!subgroup.parentId) return subgroup.supersets; // root subgroup
+      return subgroup.supersets; // case of child subgroup without correct parent
+    }
+
+    if (subgroups.length === 2) {
+      // 2 subgroups - root and child
+      const root = subgroups.find((s) => !s.parentId);
+      if (!root) return trainingComponent.supersets; // case of 2 child subgroups without root
+
+      const child = subgroups.find((s) => s.parentId === root.id);
+      if (!child) return trainingComponent.supersets; // case of root subgroup without child
+
+      return child.supersets;
+    }
+
+    return trainingComponent.supersets; // no subgroups, return all supersets
+  }
+
+  getTrainingByAthlete(athleteId: string, training: Training): Training {
+    const components = this.getTrainingComponents(training);
+    const athleteComponents: TrainingComponent[] = [];
+
+    for (const component of components) {
+      const athleteComponent = structuredClone(component);
+      athleteComponent.supersets = this.getSupersetsByAthlete(
+        athleteId,
+        athleteComponent,
+      );
+
+      athleteComponents.push({ ...athleteComponent, subgroups: [] });
+    }
+
+    return {
+      ...training,
+      components: athleteComponents.filter(
+        (c) => c.id !== WARMUP_COMPONENT_ID && c.id !== COOLDOWN_COMPONENT_ID,
+      ),
+      warmup: athleteComponents.find((c) => c.id === WARMUP_COMPONENT_ID)!,
+      cooldown: athleteComponents.find((c) => c.id === COOLDOWN_COMPONENT_ID)!,
+      membersIds: training.membersIds.filter((uid) => uid === athleteId),
+      completedMembersIds: training.completedMembersIds.filter(
+        (uid) => uid === athleteId,
+      ),
+    };
+  }
+
+  getTrainingExercisesByParamType(
+    training: Training,
+    paramType: ParamType,
+    selected: IntType | VolType,
+  ): TrainingExercise[] {
+    const exercises: TrainingExercise[] = [];
+    const components = this.getTrainingComponents(training);
+
+    for (const component of components)
+      for (const superset of component.supersets)
+        for (const exercise of superset.exercises)
+          for (const set of exercise.sets)
+            if (
+              set.paramValuesL.find(
+                (p) => p.field === paramType && p.selected === selected,
+              )
+            )
+              exercises.push(exercise);
+
+    return exercises;
+  }
+
+  updateSetValues(
+    exercise: TrainingExercise,
+    condition: (paramValue: AttributeValue) => boolean,
+    update: (previousValue: number) => number,
+  ) {
+    for (const set of exercise.sets) {
+      set.paramValuesL = set.paramValuesL.map((p) =>
+        condition(p) ? { ...p, value: update(Number(p.value)).toString() } : p,
+      );
+
+      if (set.paramValuesR)
+        set.paramValuesR = set.paramValuesR.map((p) =>
+          condition(p)
+            ? { ...p, value: update(Number(p.value)).toString() }
+            : p,
+        );
+    }
   }
 
   getAddComponentsQuery(

@@ -6,10 +6,8 @@ import type {
 
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { Create, FirestoreEntity, Update } from '@src/common/type/entity.type';
-import {
-  BatchWriteOperation,
-  WorkloadRef,
-} from '@src/common/type/firestore.type';
+import { WorkloadRef } from '@src/common/type/firestore.type';
+import { BatchWriteOperation } from '@src/common/type/orm.type';
 import { Component } from '@src/component/entity/component.entity';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { Workload, WorkloadMeta } from '@src/training/entity/workload.entity';

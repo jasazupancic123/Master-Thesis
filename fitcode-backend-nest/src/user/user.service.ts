@@ -168,7 +168,7 @@ export class UserService implements Permission<UserEntity, Institution> {
   }
 
   async getWellness(ref: WellnessRef): Promise<Wellness> {
-    return await this.wellnessRepository.getDoc(ref);
+    return await this.wellnessRepository.findById(ref);
   }
 
   async addOrUpdateWellness(
@@ -179,15 +179,15 @@ export class UserService implements Permission<UserEntity, Institution> {
       `User ${ref.uid} is adding / updating wellness: ${JSON.stringify(input)}`,
     );
 
-    const meta = await this.wellnessRepository.getDoc(ref);
-    if (!meta) await this.wellnessRepository.addDoc(ref, input);
-    else await this.wellnessRepository.updateDoc(ref, input);
+    const meta = await this.wellnessRepository.findById(ref);
+    if (!meta) await this.wellnessRepository.save(input, ref);
+    else await this.wellnessRepository.update(ref, input);
 
     return input;
   }
 
   async updateWellness(ref: WellnessRef, input: Wellness): Promise<void> {
-    return await this.wellnessRepository.updateDoc(ref, input);
+    return await this.wellnessRepository.update(ref, input);
   }
 
   async getRecentWellness(ref: UserRef): Promise<Wellness> {
@@ -226,12 +226,12 @@ export class UserService implements Permission<UserEntity, Institution> {
     const wellness = userIds.length
       ? await Promise.all(
           userIds.map(async (userRef) => {
-            const wellnessDocs = await this.wellnessRepository.getDocs(
-              userRef,
+            const wellnessDocs = await this.wellnessRepository.findAll(
               (q) =>
                 q
                   .where('userId', '==', userRef.uid)
                   .where('date', '>=', Timestamp.fromDate(startOf10DaysBefore)),
+              { ...userRef, date: null },
             );
 
             const todayZ = this.getWellnessZScore(wellnessDocs, startOfToday);

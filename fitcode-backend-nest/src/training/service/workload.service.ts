@@ -6,7 +6,6 @@ import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum'
 import { CommonService } from '@src/common/service/common.service';
 import { Create, FirestoreEntity } from '@src/common/type/entity.type';
 import {
-  BatchWriteOperation,
   CycleRef,
   ExerciseRef,
   GroupRef,
@@ -16,6 +15,7 @@ import {
   UserRef,
   WorkloadRef,
 } from '@src/common/type/firestore.type';
+import { BatchWriteOperation } from '@src/common/type/orm.type';
 import { PARAMS } from '@src/component/constant/param.constant';
 import { IntType, ParamType, VolType } from '@src/component/enum/param.enum';
 import { ExerciseService } from '@src/exercise/service/exercise.service';

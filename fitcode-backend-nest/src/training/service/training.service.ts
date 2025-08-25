@@ -26,8 +26,6 @@ import { CommonService } from '@src/common/service/common.service';
 import { Create, Update } from '@src/common/type/entity.type';
 import { User } from '@src/common/type/firebase-auth.type';
 import {
-  BatchUpdateOperation,
-  BatchWriteOperation,
   ComponentRef,
   CycleRef,
   SubgroupRef,
@@ -36,12 +34,17 @@ import {
   UserRef,
   WorkloadRef,
 } from '@src/common/type/firestore.type';
+import {
+  BatchUpdateOperation,
+  BatchWriteOperation,
+} from '@src/common/type/orm.type';
 import { Filter } from '@src/common/type/orm.type';
 import { ComponentService } from '@src/component/component.service';
 import {
   COOLDOWN_COMPONENT_ID,
   WARMUP_COMPONENT_ID,
 } from '@src/component/constant/warmup-cooldown.constant';
+import { IntType, ParamType } from '@src/component/enum/param.enum';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { DELETE_GROUP_EVENT } from '@src/group/constant/delete-group-event.constant';
 import { Cycle } from '@src/group/entity/cycle.entity';
@@ -917,21 +920,78 @@ export class TrainingService implements Permission<Training, Institution> {
     )
       this.validateCanView(user, training, training.institution);
 
+    const athleteTraining = this.trainingPlanService.getTrainingByAthlete(
+      athlete.uid,
+      training,
+    );
+
+    // fetch data history for RM and latest bodyweight for BW
+    const bwExercises =
+      this.trainingPlanService.getTrainingExercisesByParamType(
+        athleteTraining,
+        ParamType.IntRec1,
+        IntType.Bw,
+      );
+
+    const rmExercises =
+      this.trainingPlanService.getTrainingExercisesByParamType(
+        athleteTraining,
+        ParamType.IntRec1,
+        IntType.Rm,
+      );
+
+    // update BW param values
+    if (bwExercises.length > 0) {
+      const { weight } =
+        (await this.userService.getRecentWellness(athlete)) || {};
+
+      if (weight && weight > 20)
+        for (const exercise of bwExercises) {
+          this.trainingPlanService.updateSetValues(
+            exercise,
+            (paramValue) =>
+              paramValue.field === ParamType.IntRec1 &&
+              paramValue.selected === IntType.Bw,
+            (previousValue) => (previousValue * weight) / 100, // convert % previous value to kg
+          );
+        }
+    }
+
+    // update RM param values
+    if (rmExercises.length > 0) {
+      const exercisesMax = await Promise.all(
+        rmExercises.map((exercise) =>
+          this.workloadRepository.findExerciseMax(athlete.uid, exercise.id),
+        ),
+      );
+
+      for (const exercise of rmExercises) {
+        this.trainingPlanService.updateSetValues(
+          exercise,
+          (paramValue) =>
+            paramValue.field === ParamType.IntRec1 &&
+            paramValue.selected === IntType.Rm,
+          (rm) => {
+            const best = exercisesMax.find(
+              (max) => max.exerciseId === exercise.id,
+            );
+
+            const reps = best?.volWork1ValueL; // latest reps for max
+            const kg = best?.intWork1ValueL; // latest max in kg
+
+            return reps && kg ? this.commonService.number.rm(kg, reps)(rm) : 20; // default kg value if no max found
+          },
+        );
+      }
+    }
+
     const customPrescribedWorkloads =
       await this.workloadService.findAllCustomByTraining(training.id);
 
     const newPrescribedTrainingComponents: TrainingComponent[] = [];
-    for (const trainingComponent of training.components) {
+    for (const trainingComponent of athleteTraining.components) {
       const newPrescribedSupersets: Superset[] = [];
-
-      // find prescribed supersets (either from subgroup or main group)
-      const subgroup = trainingComponent.subgroups.find((s) =>
-        s.membersIds.includes(ref.uid),
-      );
-
-      const prescribedSupersets = subgroup
-        ? subgroup.supersets
-        : trainingComponent.supersets;
+      const prescribedSupersets = trainingComponent.supersets;
 
       prescribedSupersets.forEach(
         ({ exercises: prescribedExercises }, supersetIndex) => {
