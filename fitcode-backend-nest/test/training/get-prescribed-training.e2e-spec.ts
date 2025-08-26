@@ -11,6 +11,7 @@ import {
   deleteDoc,
   deleteUsers,
 } from '@test/common/utils/data.util';
+import { subDays } from 'date-fns';
 import * as request from 'supertest';
 
 import { AppModule } from '@src/app.module';
@@ -27,8 +28,9 @@ import type { Group } from '@src/group/entity/group.entity';
 import { GroupService } from '@src/group/group.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { TestDbService } from '@src/test-db/test-db.service';
+import type { Training } from '@src/training/entity/training.entity';
 import type { TrainingComponent } from '@src/training/entity/training-component.entity';
-import type { TrainingExercise } from '@src/training/entity/training-exercise.entity';
+import type { Workload } from '@src/training/entity/workload.entity';
 import { SetStatus } from '@src/training/enum/set-status.enum';
 import { generateParamAttributeValuesFromComponentParams } from '@src/training/mock/param-values.stub';
 import {
@@ -39,8 +41,10 @@ import {
   generateTrainingExercise,
   generateTrainingStub,
 } from '@src/training/mock/training.stub';
-import { TrainingPlanService } from '@src/training/service/training-plan.service';
+import { WorkloadRepository } from '@src/training/repository/workload.repository';
 import { WorkloadService } from '@src/training/service/workload.service';
+import type { Wellness } from '@src/user/entity/wellness.entity';
+import { UserService } from '@src/user/user.service';
 
 describe('Get prescribed training (e2e)', () => {
   let app: INestApplication;
@@ -50,7 +54,7 @@ describe('Get prescribed training (e2e)', () => {
   let componentService: ComponentService;
   let exerciseService: ExerciseService;
   let workloadService: WorkloadService;
-  let trainingPlanService: TrainingPlanService;
+  let userService: UserService;
 
   let component: Component;
   let exercises: Exercise[];
@@ -73,7 +77,7 @@ describe('Get prescribed training (e2e)', () => {
     componentService = app.get(ComponentService);
     exerciseService = app.get(ExerciseService);
     workloadService = app.get(WorkloadService);
-    trainingPlanService = app.get(TrainingPlanService);
+    userService = app.get(UserService);
 
     const institutionService = app.get(InstitutionService);
     const groupService = app.get(GroupService);
@@ -187,7 +191,7 @@ describe('Get prescribed training (e2e)', () => {
   afterAll(async () => {
     await Promise.all([
       db.exercises.clear(),
-      db.trainings.delete(trainingId),
+      db.trainings.clear(),
       deleteDoc(firebase, 'GROUP', group.id),
       deleteDoc(firebase, 'INSTITUTION', institution.id),
       deleteCollection(firebase, 'COMPONENT'),
@@ -196,6 +200,28 @@ describe('Get prescribed training (e2e)', () => {
 
     await app.close();
   });
+
+  function generateSet(n: number, type: IntType, value: number) {
+    if (!type) return generateExerciseSet(n);
+
+    const paramValues = generateParamAttributeValuesFromComponentParams([
+      {
+        field: ParamType.IntWork1,
+        defaultValue: type,
+      },
+    ]);
+
+    for (const paramValue of paramValues)
+      if (paramValue.selected === type) paramValue.value = value.toString();
+
+    return generateExerciseSet(n, paramValues);
+  }
+
+  function findExercise(training: Training, id: string) {
+    return training.components[0].supersets[0].exercises.find(
+      (e) => e.id === id,
+    );
+  }
 
   async function req(user: TestUser, trainingId: string) {
     return await request(app.getHttpServer())
@@ -600,20 +626,32 @@ describe('Get prescribed training (e2e)', () => {
   });
 
   it('should populate weight for exercises with bodyweight param', async () => {
-    function generateSet(n: number) {
-      return generateExerciseSet(
-        n,
-        generateParamAttributeValuesFromComponentParams(
-          [
-            {
-              field: ParamType.IntWork1,
-              defaultValue: IntType.Bw,
-            },
-          ],
-          true,
-        ),
-      );
-    }
+    db.checkpoint();
+
+    const wellnessRefToday = { uid: global.athlete.uid, date: new Date() };
+    const wellnessRefYesterday = {
+      ...wellnessRefToday,
+      date: subDays(new Date(), 2),
+    };
+
+    // it should use this weight since it is more recent
+    await db.wellness.save(
+      {
+        userId: global.athlete.uid,
+        date: wellnessRefToday.date,
+        weight: 85,
+      },
+      wellnessRefToday,
+    );
+
+    await db.wellness.save(
+      {
+        userId: global.athlete.uid,
+        date: wellnessRefYesterday.date,
+        weight: 60,
+      },
+      wellnessRefYesterday,
+    );
 
     const trainingId = await db.trainings.save(
       generateTrainingStub({
@@ -631,7 +669,11 @@ describe('Get prescribed training (e2e)', () => {
                 exercises: [
                   generateTrainingExercise({
                     id: 'deadlift', // deadlift has bodyweight param
-                    sets: [generateSet(1), generateSet(2), generateSet(3)],
+                    sets: [
+                      generateSet(1, IntType.Bw, 75),
+                      generateSet(2, IntType.Bw, 75),
+                      generateSet(3, IntType.Bw, 75),
+                    ],
                   }),
                   generateTrainingExercise({
                     id: 'squat', // squat does not have bodyweight param
@@ -643,7 +685,11 @@ describe('Get prescribed training (e2e)', () => {
                   }),
                   generateTrainingExercise({
                     id: 'bench', // bench has bodyweight param
-                    sets: [generateSet(1), generateSet(2), generateSet(3)],
+                    sets: [
+                      generateSet(1, IntType.Bw, 65),
+                      generateSet(2, IntType.Bw, 65),
+                      generateSet(3, IntType.Bw, 65),
+                    ],
                   }),
                 ],
               }),
@@ -653,20 +699,248 @@ describe('Get prescribed training (e2e)', () => {
       }),
     );
 
-    const spy = jest.spyOn(
-      trainingPlanService,
-      'getTrainingExercisesByParamType',
-    );
+    const trainingBefore = await db.trainings.findById(trainingId);
+    let deadlift = findExercise(trainingBefore, 'deadlift');
+    let bench = findExercise(trainingBefore, 'bench');
+
+    // all sets must have bw param of value 75 (% of bodyweight) for deadlift
+    deadlift.sets.forEach((set) => {
+      const bw = set.paramValuesL.find((p) => p.selected === IntType.Bw);
+      expect(bw).toBeDefined();
+      expect(+bw.value).toBe(75);
+    });
+
+    // all sets must have bw param of value 65 for bench
+    bench.sets.forEach((set) => {
+      const bw = set.paramValuesL.find((p) => p.selected === IntType.Bw);
+      expect(bw).toBeDefined();
+      expect(+bw.value).toBe(65);
+    });
+
+    const spy = jest.spyOn(userService, 'getLatestWellnessByUser');
 
     // insert wellness weight for athlete
     const response = await req(global.athlete, trainingId);
     expect(response.status).toBe(200);
 
-    const spyResult = spy.mock.results[0].value as TrainingExercise[];
-    expect(spyResult).toHaveLength(2);
-    expect(spyResult.map((e) => e.id).sort()).toEqual(['bench', 'deadlift']);
+    const spyResult = (await spy.mock.results[0].value) as Wellness;
+    expect(spyResult.weight).toBe(85);
+    spy.mockRestore();
+
+    const trainingAfter = response.body as Training;
+    deadlift = findExercise(trainingAfter, 'deadlift');
+    bench = findExercise(trainingAfter, 'bench');
+
+    // new deadlift param value should be 63.75 (85 * 0.75)
+    deadlift.sets.forEach((set) => {
+      const bw = set.paramValuesL.find((p) => p.selected === IntType.Bw);
+      expect(bw).toBeDefined();
+      expect(+bw.value).toBe(63.75);
+    });
+
+    // new bench param value should be 55.25 (85 * 0.65)
+    bench.sets.forEach((set) => {
+      const bw = set.paramValuesL.find((p) => p.selected === IntType.Bw);
+      expect(bw).toBeDefined();
+      expect(+bw.value).toBe(55.25);
+    });
+
+    await db.checkpointRestore();
+  });
+
+  it('should not call "getLatestWellnessByUser" if no bodyweight param', async () => {
+    const trainingId = await db.trainings.save(
+      generateTrainingStub({
+        ownerId: global.trainer.uid,
+        groupId: group.id,
+        cycleId: group.cycles[1].id,
+        membersIds: [global.athlete.uid],
+        date: new Date(),
+        components: [
+          generateTrainingComponent({
+            id: component.id,
+            from: new Date(),
+            supersets: [
+              generateSuperset({
+                exercises: [
+                  generateTrainingExercise({
+                    id: 'squat', // squat does not have bodyweight param
+                    sets: [generateExerciseSet(1)],
+                  }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      }),
+    );
+
+    const spy = jest.spyOn(userService, 'getLatestWellnessByUser');
+    const response = await req(global.athlete, trainingId);
+    expect(response.status).toBe(200);
+    expect(spy).not.toHaveBeenCalled();
     spy.mockRestore();
 
     await db.trainings.delete(trainingId);
+  });
+
+  it('should populate weight for exercises with rep max param', async () => {
+    db.checkpoint();
+
+    // create another (different) training before with workloads completed
+    const otherTrainingId = await db.trainings.save(
+      generateTrainingStub({
+        ownerId: global.trainer.uid,
+        membersIds: [global.athlete.uid],
+      }),
+    );
+
+    function generateWorkload(
+      exerciseId: string,
+      date: Date,
+      reps: number,
+      weight: number,
+    ) {
+      const workloadMeta = {
+        component,
+        trainingId: otherTrainingId,
+        userId: global.athlete.uid,
+        supersetIndex: 0,
+        setNumber: 1,
+        status: SetStatus.NOT_STARTED,
+      };
+
+      return {
+        ...workloadMeta,
+        exerciseId,
+        createdAt: date,
+        intWork1ValueL: weight,
+        volWork1ValueL: reps,
+      };
+    }
+
+    const trainingId = await db.trainings.save(
+      generateTrainingStub({
+        ownerId: global.trainer.uid,
+        groupId: group.id,
+        cycleId: group.cycles[1].id,
+        membersIds: [global.athlete.uid],
+        date: new Date(),
+        components: [
+          generateTrainingComponent({
+            id: component.id,
+            from: new Date(),
+            supersets: [
+              generateSuperset({
+                exercises: [
+                  generateTrainingExercise({
+                    id: 'deadlift',
+                    sets: [
+                      generateSet(1, IntType.Rm, 80), // rep max 80%
+                      generateSet(2, IntType.Rm, 80),
+                      generateSet(3, IntType.Rm, 80),
+                    ],
+                  }),
+                  generateTrainingExercise({
+                    id: 'bench',
+                    sets: [
+                      generateSet(2, IntType.Rm, 65),
+                      generateSet(3, IntType.Rm, 65),
+                    ],
+                  }),
+                  generateTrainingExercise({
+                    id: 'squat',
+                    sets: [
+                      generateSet(1, IntType.Rm, 40),
+                      generateSet(2, IntType.Rm, 40),
+                      generateSet(3, IntType.Rm, 40),
+                    ],
+                  }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      }),
+    );
+
+    await db.workloads.createMany([
+      generateWorkload('deadlift', subDays(new Date(), 7), 10, 130),
+      generateWorkload('deadlift', subDays(new Date(), 3), 10, 140), // most recent
+      generateWorkload('deadlift', subDays(new Date(), 5), 8, 150), // it should take this one since it has most weight
+      generateWorkload('bench', subDays(new Date(), 10), 6, 70),
+    ]);
+
+    const trainingBefore = await db.trainings.findById(trainingId);
+    let deadlift = findExercise(trainingBefore, 'deadlift');
+    let bench = findExercise(trainingBefore, 'bench');
+    let squat = findExercise(trainingBefore, 'squat');
+
+    // all sets must have rm param of value 80 for deadlift
+    deadlift.sets.forEach((set) => {
+      const rm = set.paramValuesL.find((p) => p.selected === IntType.Rm);
+      expect(rm).toBeDefined();
+      expect(+rm.value).toBe(80);
+    });
+
+    // all sets must have rm param of value 65 for bench
+    bench.sets.forEach((set) => {
+      const rm = set.paramValuesL.find((p) => p.selected === IntType.Rm);
+      expect(rm).toBeDefined();
+      expect(+rm.value).toBe(65);
+    });
+
+    // all sets must have rm param of value 40 for squat
+    squat.sets.forEach((set) => {
+      const rm = set.paramValuesL.find((p) => p.selected === IntType.Rm);
+      expect(rm).toBeDefined();
+      expect(+rm.value).toBe(40);
+    });
+
+    const workloadRepository = app.get(WorkloadRepository);
+    const spy = jest.spyOn(workloadRepository, 'findExerciseMax');
+    const response = await req(global.athlete, trainingId);
+    expect(response.status).toBe(200);
+
+    expect(spy).toHaveBeenCalledTimes(3); // deadlift, bench, and squat
+    const spyResults = await Promise.all(
+      spy.mock.results.map((r) => r.value as Workload),
+    );
+
+    expect(
+      spyResults.find((r) => r.exerciseId === 'deadlift').intWork1ValueL,
+    ).toBe(150);
+    expect(
+      spyResults.find((r) => r.exerciseId === 'bench').intWork1ValueL,
+    ).toBe(70);
+    spy.mockRestore();
+
+    // 150 * 0.8 = 120 for deadlift
+    // 70 * 0.65 = 45.5 for bench
+    const trainingAfter = response.body as Training;
+    deadlift = findExercise(trainingAfter, 'deadlift');
+    bench = findExercise(trainingAfter, 'bench');
+    squat = findExercise(trainingAfter, 'squat');
+
+    deadlift.sets.forEach((set) => {
+      const rm = set.paramValuesL.find((p) => p.selected === IntType.Rm);
+      expect(rm).toBeDefined();
+      expect(+rm.value).toBe(152);
+    });
+
+    bench.sets.forEach((set) => {
+      const rm = set.paramValuesL.find((p) => p.selected === IntType.Rm);
+      expect(rm).toBeDefined();
+      expect(+rm.value).toBe(54.6);
+    });
+
+    // squat should remain with default value since there is no previous workload
+    squat.sets.forEach((set) => {
+      const rm = set.paramValuesL.find((p) => p.selected === IntType.Rm);
+      expect(rm).toBeDefined();
+      expect(+rm.value).toBe(20); // no data, so default value of 20 kg is used
+    });
+
+    await db.checkpointRestore();
   });
 });

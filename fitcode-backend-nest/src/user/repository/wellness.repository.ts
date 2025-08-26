@@ -1,12 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { startOfDay } from 'date-fns';
-import {
-  DocumentSnapshot,
-  QueryDocumentSnapshot,
-  Timestamp,
-} from 'firebase-admin/firestore';
 
+import { ChangeLogManager } from '@src/change-log/change-log.manager';
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
+import { FirestoreEntity } from '@src/common/type/entity.type';
 import {
   FirestoreRepository,
   UserRef,
@@ -27,6 +24,8 @@ export class WellnessRepository extends FirestoreRepository<
   constructor(
     readonly firebaseService: FirebaseService,
     private readonly parentRepository: UserRepository,
+    @Inject(Wellness)
+    readonly changeLog: ChangeLogManager<Wellness>,
   ) {
     super(firebaseService);
   }
@@ -46,39 +45,40 @@ export class WellnessRepository extends FirestoreRepository<
   }
 
   async save(input: Omit<Wellness, 'date'>, ref: WellnessRef): Promise<string> {
-    await this.doc(ref).set({
-      userId: ref.uid,
-      date: startOfDay(ref.date),
-      weight: input.weight || null,
-      sleep: input.sleep || null,
-      fatigue: input.fatigue || null,
-      soreness: input.soreness || null,
-      comment: input.comment || null,
-    });
+    const query = this.firebaseService.buildCreateQuery<Wellness>(
+      { ...input, date: startOfDay(ref.date) },
+      { timestamps: true },
+    );
+
+    const docRef = this.doc(ref);
+    this.changeLog.trackCreate(docRef);
+    await docRef.set(query);
 
     return this.getKey(ref);
   }
 
   async update(ref: WellnessRef, input: Wellness): Promise<void> {
     const query = this.firebaseService.buildUpdateQuery(input);
-    await this.doc(ref).update(query);
+    const docRef = this.doc(ref);
+    await this.changeLog.trackUpdate(docRef);
+    await docRef.update(query);
   }
 
   async delete(ref: WellnessRef): Promise<void> {
-    await this.doc(ref).delete();
+    const docRef = this.doc(ref);
+    await this.changeLog.trackDelete(docRef);
+    await docRef.delete();
   }
 
-  serialize(snapshot: DocumentSnapshot | QueryDocumentSnapshot): Wellness {
-    const data = snapshot.data();
+  async getLatestByUser(ref: UserRef): Promise<Wellness | null> {
+    const snapshot = await this.collection(ref)
+      .orderBy('date', 'desc')
+      .limit(1)
+      .get();
 
-    return {
-      userId: data.userId,
-      date: (data.date as Timestamp).toDate(),
-      weight: data.weight || null,
-      sleep: data.sleep || null,
-      fatigue: data.fatigue || null,
-      soreness: data.soreness || null,
-      comment: data.comment || null,
-    };
+    if (snapshot.empty) return null;
+    return this.firebaseService.serialize(
+      snapshot.docs[0].data() as FirestoreEntity<Wellness>,
+    );
   }
 }

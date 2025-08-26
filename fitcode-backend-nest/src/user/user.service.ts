@@ -190,15 +190,8 @@ export class UserService implements Permission<UserEntity, Institution> {
     return await this.wellnessRepository.update(ref, input);
   }
 
-  async getRecentWellness(ref: UserRef): Promise<Wellness> {
-    const snapshot = await this.wellnessRepository
-      .collection(ref)
-      .orderBy('date', 'desc')
-      .limit(1)
-      .get();
-
-    if (snapshot.empty) return null;
-    return this.wellnessRepository.serialize(snapshot.docs[0]);
+  async getLatestWellnessByUser(ref: UserRef): Promise<Wellness> {
+    return await this.wellnessRepository.getLatestByUser(ref);
   }
 
   async getWellnessByInstitutionId(
