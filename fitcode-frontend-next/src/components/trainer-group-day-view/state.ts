@@ -2,6 +2,10 @@ import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.
 import type React from 'react';
 import toast from 'react-hot-toast';
 
+import {
+  COOLDOWN_ID,
+  WARMUP_ID,
+} from '@/common/constant/warmup-cooldown-ids-constants';
 import type { SetState } from '@/common/type/state.type';
 import { handleApiRequest } from '@/common/type/state.type';
 import type { Component } from '@/controller/component/type/component.type';
@@ -163,9 +167,13 @@ export function deleteSelectedExercises(
   }
 
   const newTraining = { ...training };
-  newTraining.components = newTraining.components.map((c) =>
-    c.id === component.id ? newComponent : c
-  );
+
+  if (newComponent.id === WARMUP_ID) newTraining.warmup = newComponent;
+  else if (newComponent.id === COOLDOWN_ID) newTraining.cooldown = newComponent;
+  else
+    newTraining.components = newTraining.components.map((c) =>
+      c.id === component.id ? newComponent : c
+    );
 
   setComponent(newComponent);
   setTraining(newTraining);

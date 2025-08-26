@@ -1,7 +1,6 @@
-import type { Theme } from '@mui/material';
 import dayjs from 'dayjs';
 
-import { COLOR, COMMON_COLORS } from '@/common/constant/color.constant';
+import { COLOR } from '@/common/constant/color.constant';
 import type { SetState } from '@/common/type/state.type';
 import { WellnessChartDataType } from '@/controller/user/enum/wellness-chart-data-type.enum';
 import type { User } from '@/controller/user/type/user.type';

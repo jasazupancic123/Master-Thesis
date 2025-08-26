@@ -25,7 +25,6 @@ import { ADD_SUPERSET_DROPPABLE_ID } from '@/common/constant/add-superset-droppa
 import type { SetState } from '@/common/type/state.type';
 import { VolWorkSetType } from '@/controller/component/enum/param.enum';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
-import type { Superset as SupersetType } from '@/controller/training/type/superset.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useGroup } from '@/store/group-provider';
 import { useMain } from '@/store/main-provider';

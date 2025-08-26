@@ -14,10 +14,15 @@ import {
 
 import MuscleMapWithTooltip from '../muscle-map-with-tooltip/muscle-map-with-tooltip';
 import { theme } from '@/app/style';
-import HeatmapBack from '../../assets/svg/heatmap-back.svg';
-import HeatmapFront from '../../assets/svg/heatmap-front.svg';
+import HeatmapBack from '@/assets/svg/heatmap-back.svg';
+import HeatmapFront from '@/assets/svg/heatmap-front.svg';
 import { HEATMAP_COLORS } from '@/common/constant/color.constant';
+import {
+  HEATMAP_BACK_ID,
+  HEATMAP_FRONT_ID,
+} from '@/common/constant/heatmap.constant';
 import { MuscleService } from '@/controller/exercise/muscle.service';
+import type { MuscleTip } from '@/controller/exercise/type/muscle-tip.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
@@ -74,6 +79,31 @@ export default function MuscleHeatmapView() {
   // type [Muscle(enum), color(string)]
   const [muscleLoads, setMuscleLoads] = useState<[string, number][]>([]);
 
+  const [tipHeatmapFront, setTipHeatmapFront] = useState<MuscleTip>({
+    show: false,
+    x: 0,
+    y: 0,
+    componentExercises: [],
+    possibleExercises: [],
+    focus: false,
+  });
+
+  const [tipHeatmapBack, setTipHeatmapBack] = useState<MuscleTip>({
+    show: false,
+    x: 0,
+    y: 0,
+    componentExercises: [],
+    possibleExercises: [],
+    focus: false,
+  });
+
+  useEffect(() => {
+    if (tipHeatmapBack.show && tipHeatmapFront.show) {
+      setTipHeatmapFront((prev) => ({ ...prev, show: false, focus: false }));
+      setTipHeatmapBack((prev) => ({ ...prev, show: false, focus: false }));
+    }
+  }, [tipHeatmapFront, tipHeatmapBack]);
+
   useEffect(() => {
     setExercises(supersets.flatMap((s) => s.exercises));
   }, [supersets]);
@@ -87,33 +117,38 @@ export default function MuscleHeatmapView() {
   }, [exercises, heatmapLevel]);
 
   useEffect(() => {
-    // Reset heatmap colors
-    const resetContainers = ['heatmap-front', 'heatmap-back'];
+    // Limit to actual shapes
+    const resetContainers = [HEATMAP_FRONT_ID, HEATMAP_BACK_ID];
+
+    // Reset
     resetContainers.forEach((id) => {
       const container = document.getElementById(id);
       if (container) {
         container.querySelectorAll<HTMLElement>('*').forEach((el) => {
-          (el as HTMLElement).style.fill = '';
+          el.style.setProperty('fill', 'transparent', 'important');
         });
       }
     });
 
-    // Update the heatmap colors based on the muscleColors state
-    muscleLoads.forEach((load) => {
-      const muscleType = load[0];
-      const muscleLoad = load[1];
-
-      // find all elements with the id
-      const elements = document.querySelectorAll<HTMLElement>(
-        `[id="${muscleType}"]`
-      );
-      if (!elements || elements.length === 0) return;
-
+    // Paint
+    muscleLoads.forEach(([muscleType, muscleLoad]) => {
       const color = getMuscleColor(muscleLoad);
       if (!color) return;
 
+      // Find the actual shapes by id
+      const elements = document.querySelectorAll<HTMLElement>(
+        `[id="${muscleType}"]`
+      );
+      if (!elements.length) return;
+
       elements.forEach((el) => {
-        el.style.fill = color;
+        // If your id is on a <g>, paint its children shapes
+        const isGroup = el.tagName.toLowerCase() === 'g';
+        const targets = isGroup ? el.querySelectorAll<HTMLElement>('*') : [el];
+
+        targets.forEach((t) => {
+          t.style.setProperty('fill', color, 'important');
+        });
       });
     });
   }, [muscleLoads]);
@@ -182,12 +217,31 @@ export default function MuscleHeatmapView() {
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center',
+                  textAlign: 'center',
+                  flexWrap: 'nowrap',
                   maxHeight: screenSize.isReallySmall ? 350 : undefined,
                 }
               : {}
           }
           position="relative"
         >
+          <MuscleMapWithTooltip
+            front={true}
+            Svg={HeatmapFront}
+            exercisesInComponent={supersets.flatMap((s) => s.exercises)}
+            heatmapLevel={heatmapLevel}
+            tip={tipHeatmapFront}
+            setTip={setTipHeatmapFront}
+          />
+          <MuscleMapWithTooltip
+            front={false}
+            Svg={HeatmapBack}
+            exercisesInComponent={supersets.flatMap((s) => s.exercises)}
+            heatmapLevel={heatmapLevel}
+            tip={tipHeatmapBack}
+            setTip={setTipHeatmapBack}
+          />
+
           {/* Legend */}
           <Box
             display="flex"
@@ -211,32 +265,6 @@ export default function MuscleHeatmapView() {
               />
             ))}
           </Box>
-
-          <MuscleMapWithTooltip
-            id="heatmap-front"
-            Svg={HeatmapFront}
-            exercises={supersets.flatMap((s) => s.exercises)}
-            heatmapLevel={heatmapLevel}
-          />
-          <MuscleMapWithTooltip
-            id="heatmap-back"
-            Svg={HeatmapBack}
-            exercises={supersets.flatMap((s) => s.exercises)}
-            heatmapLevel={heatmapLevel}
-          />
-
-          {/* <HeatmapFront
-            id="heatmap-front"
-            role="img"
-            aria-label="Front muscle map"
-            style={{ maxHeight: 500 }}
-          />
-          <HeatmapBack
-            id="heatmap-back"
-            role="img"
-            aria-label="Back muscle map"
-            style={{ maxHeight: 500 }}
-          /> */}
         </Box>
         <ResponsiveContainer
           width={screenSize.isSmallerThanLaptop ? '100%' : '35%'}
