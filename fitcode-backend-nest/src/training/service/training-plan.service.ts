@@ -158,45 +158,58 @@ export class TrainingPlanService {
     };
   }
 
-  getTrainingExercisesByParamType(
+  hasParamType(
     training: Training,
-    paramType: ParamType,
-    selected: IntType | VolType,
-  ): TrainingExercise[] {
-    const exercises: TrainingExercise[] = [];
-    const components = this.getTrainingComponents(training);
-
-    for (const component of components)
+    filter: { field: ParamType; selected: IntType | VolType },
+  ): boolean {
+    for (const component of training.components)
       for (const superset of component.supersets)
         for (const exercise of superset.exercises)
           for (const set of exercise.sets)
             if (
-              set.paramValuesL.find(
-                (p) => p.field === paramType && p.selected === selected,
-              )
+              set.paramValuesL.find((pv) => this.matchesParamType(pv, filter))
             )
-              exercises.push(exercise);
+              return true;
 
-    return exercises;
+    return false;
   }
 
-  updateSetValues(
-    exercise: TrainingExercise,
-    condition: (paramValue: AttributeValue) => boolean,
-    update: (previousValue: number) => number,
+  modifyPrescribedParamValuesByType(
+    training: Training,
+    filter: { field: ParamType; selected: IntType | VolType },
+    modify: (value: number, exerciseId?: string) => number,
   ) {
-    for (const set of exercise.sets) {
-      set.paramValuesL = set.paramValuesL.map((p) =>
-        condition(p) ? { ...p, value: update(Number(p.value)).toString() } : p,
-      );
+    for (const component of training.components) {
+      for (const superset of component.supersets)
+        this.modifySupersetValuesByParamType(superset, filter, modify);
 
-      if (set.paramValuesR)
-        set.paramValuesR = set.paramValuesR.map((p) =>
-          condition(p)
-            ? { ...p, value: update(Number(p.value)).toString() }
-            : p,
-        );
+      for (const subgroup of component.subgroups)
+        for (const superset of subgroup.supersets)
+          this.modifySupersetValuesByParamType(superset, filter, modify);
     }
+  }
+
+  findExercisesByParamType(
+    training: Training,
+    filter: { field: ParamType; selected: IntType | VolType },
+  ): TrainingExercise[] {
+    const exercises: TrainingExercise[] = [];
+
+    for (const component of training.components)
+      for (const superset of component.supersets)
+        for (const exercise of superset.exercises) {
+          if (exercises.find((e) => e.id === exercise.id)) continue;
+
+          for (const set of exercise.sets)
+            if (
+              set.paramValuesL.find((pv) => this.matchesParamType(pv, filter))
+            ) {
+              exercises.push(exercise);
+              break;
+            }
+        }
+
+    return exercises;
   }
 
   getAddComponentsQuery(
@@ -941,6 +954,24 @@ export class TrainingPlanService {
       targetTrainingComponent.subgroups.filter((s) => s.membersIds.length > 0);
   }
 
+  private modifySupersetValuesByParamType(
+    superset: Superset,
+    filter: { field: ParamType; selected: IntType | VolType },
+    modify: (value: number, exerciseId?: string) => number,
+  ) {
+    for (const exercise of superset.exercises)
+      for (const set of exercise.sets) {
+        for (const pv of set.paramValuesL)
+          if (this.matchesParamType(pv, filter))
+            pv.value = modify(parseFloat(pv.value), exercise.id).toString();
+
+        if (set.paramValuesR)
+          for (const pv of set.paramValuesR)
+            if (this.matchesParamType(pv, filter))
+              pv.value = modify(parseFloat(pv.value), exercise.id).toString();
+      }
+  }
+
   private validateMethodParamValues(
     method: Method,
     paramValues: AttributeValue[],
@@ -1021,5 +1052,15 @@ export class TrainingPlanService {
     });
 
     return averages;
+  }
+
+  private matchesParamType(
+    paramValue: AttributeValue,
+    filter: { field: ParamType; selected: IntType | VolType },
+  ): boolean {
+    return (
+      paramValue.field === filter.field &&
+      paramValue.selected === filter.selected
+    );
   }
 }

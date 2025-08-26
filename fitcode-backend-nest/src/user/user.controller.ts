@@ -67,10 +67,10 @@ export class UserController {
 
   @Get('me/meta')
   @Auth([UserRole.ATHLETE])
-  async getMyMeta(@RequestUser() user: User) {
+  async getLatestWellnessByUser(@RequestUser() user: User) {
     const ref = { uid: user.uid };
     return (
-      (await this.userService.getRecentWellness(ref)) || {
+      (await this.userService.getLatestWellnessByUser(ref)) || {
         date: new Date(),
         userId: user.uid,
       }

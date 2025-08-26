@@ -109,7 +109,7 @@ describe('Periodization functions (e2e)', () => {
 
   it('should throw error if base training in the past', async () => {
     const pastTrainingId = await db.trainings.save(
-      TestPeriodizationUtil.generateTraining(-8, {
+      TestPeriodizationUtil.generateTraining(-10, {
         ownerId: global.trainer.id,
         institutionId,
         groupId,

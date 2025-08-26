@@ -46,6 +46,7 @@ export class TestWorkloadService extends AbstractChangeLogService<Workload> {
 
   async createMany(
     input: (Create<Omit<WorkloadMeta, 'id' | 'plannedAt' | 'componentId'>> &
+      Partial<Pick<Workload, 'createdAt'>> &
       WorkloadValue & {
         component: Component;
         randomValues?: boolean;
@@ -53,10 +54,11 @@ export class TestWorkloadService extends AbstractChangeLogService<Workload> {
       })[],
   ): Promise<void> {
     const operations: BatchWriteOperation<Workload>[] = input.map((item) => {
+      const timestamp = item.createdAt ?? new Date();
       const workload: Create<Workload> = {
         ...item,
         id: null,
-        plannedAt: new Date(),
+        plannedAt: timestamp,
         componentId: item.component.id,
       };
 
@@ -69,8 +71,8 @@ export class TestWorkloadService extends AbstractChangeLogService<Workload> {
           ...workload,
           randomValues: item.randomValues,
           defaultParamsKey: item.defaultParamsKey,
+          createdAt: timestamp,
         }),
-        { timestamps: true },
       );
 
       this.trackCreate(ref);

@@ -925,65 +925,9 @@ export class TrainingService implements Permission<Training, Institution> {
       training,
     );
 
-    // fetch data history for RM and latest bodyweight for BW
-    const bwExercises =
-      this.trainingPlanService.getTrainingExercisesByParamType(
-        athleteTraining,
-        ParamType.IntRec1,
-        IntType.Bw,
-      );
-
-    const rmExercises =
-      this.trainingPlanService.getTrainingExercisesByParamType(
-        athleteTraining,
-        ParamType.IntRec1,
-        IntType.Rm,
-      );
-
-    // update BW param values
-    if (bwExercises.length > 0) {
-      const { weight } =
-        (await this.userService.getRecentWellness(athlete)) || {};
-
-      if (weight && weight > 20)
-        for (const exercise of bwExercises) {
-          this.trainingPlanService.updateSetValues(
-            exercise,
-            (paramValue) =>
-              paramValue.field === ParamType.IntRec1 &&
-              paramValue.selected === IntType.Bw,
-            (previousValue) => (previousValue * weight) / 100, // convert % previous value to kg
-          );
-        }
-    }
-
-    // update RM param values
-    if (rmExercises.length > 0) {
-      const exercisesMax = await Promise.all(
-        rmExercises.map((exercise) =>
-          this.workloadRepository.findExerciseMax(athlete.uid, exercise.id),
-        ),
-      );
-
-      for (const exercise of rmExercises) {
-        this.trainingPlanService.updateSetValues(
-          exercise,
-          (paramValue) =>
-            paramValue.field === ParamType.IntRec1 &&
-            paramValue.selected === IntType.Rm,
-          (rm) => {
-            const best = exercisesMax.find(
-              (max) => max.exerciseId === exercise.id,
-            );
-
-            const reps = best?.volWork1ValueL; // latest reps for max
-            const kg = best?.intWork1ValueL; // latest max in kg
-
-            return reps && kg ? this.commonService.number.rm(kg, reps)(rm) : 20; // default kg value if no max found
-          },
-        );
-      }
-    }
+    // calculate param based sets
+    await this.updateBodyweightSets(athlete.uid, athleteTraining);
+    await this.updateRepMaxSets(athlete.uid, athleteTraining);
 
     const customPrescribedWorkloads =
       await this.workloadService.findAllCustomByTraining(training.id);
@@ -1056,6 +1000,62 @@ export class TrainingService implements Permission<Training, Institution> {
       ...training,
       components: newPrescribedTrainingComponents,
     };
+  }
+
+  async updateBodyweightSets(athleteId: string, training: Training) {
+    const bwParam = { field: ParamType.IntWork1, selected: IntType.Bw };
+    const hasBwParamType = this.trainingPlanService.hasParamType(
+      training,
+      bwParam,
+    );
+
+    if (!hasBwParamType) return;
+
+    const ref = { uid: athleteId };
+    const { weight } =
+      (await this.userService.getLatestWellnessByUser(ref)) || {};
+
+    if (!weight || weight < 20) return;
+
+    this.trainingPlanService.modifyPrescribedParamValuesByType(
+      training,
+      bwParam,
+      (value) => this.commonService.number.round((value * weight) / 100, 2), // convert % value to kg and round to 2 decimals
+    );
+  }
+
+  async updateRepMaxSets(athleteId: string, training: Training) {
+    const rmParam = { field: ParamType.IntWork1, selected: IntType.Rm };
+    const exercises = this.trainingPlanService.findExercisesByParamType(
+      training,
+      rmParam,
+    );
+
+    if (!exercises.length) return;
+
+    const maxes: Workload[] = (
+      await Promise.all(
+        exercises.map((e) =>
+          this.workloadRepository.findExerciseMax(athleteId, e.id),
+        ),
+      )
+    ).filter(Boolean);
+
+    this.trainingPlanService.modifyPrescribedParamValuesByType(
+      training,
+      rmParam,
+      (value, exerciseId) => {
+        // prescribed value is in % of 1RM (between 1 and 100)
+        const best = maxes.find((max) => max.exerciseId === exerciseId);
+        if (!best || !best.intWork1ValueL || !best.volWork1ValueL) return 20;
+
+        const reps = best.volWork1ValueL;
+        const weight = best.intWork1ValueL;
+        const oneRM = this.commonService.number.rm(weight, reps);
+
+        return this.commonService.number.round((value * oneRM) / 100, 2);
+      },
+    );
   }
 
   @OnEvent(INSTITUTION_ATHLETE_EVENT, { async: true, promisify: true })
