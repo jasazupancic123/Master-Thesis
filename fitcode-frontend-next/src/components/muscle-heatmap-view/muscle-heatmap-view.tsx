@@ -14,19 +14,18 @@ import {
 
 import MuscleMapWithTooltip from '../muscle-map-with-tooltip/muscle-map-with-tooltip';
 import { theme } from '@/app/style';
-import HeatmapBack from '../../assets/svg/heatmap-back.svg';
-import HeatmapFront from '../../assets/svg/heatmap-front.svg';
+import HeatmapBack from '@/assets/svg/heatmap-back.svg';
+import HeatmapFront from '@/assets/svg/heatmap-front.svg';
 import { HEATMAP_COLORS } from '@/common/constant/color.constant';
-import { MuscleService } from '@/controller/exercise/muscle.service';
-import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 import {
   HEATMAP_BACK_ID,
   HEATMAP_FRONT_ID,
 } from '@/common/constant/heatmap.constant';
-import { Exercise } from '@/controller/exercise/type/exercise.type';
-import { MuscleTip } from '@/controller/exercise/type/muscle-tip.type';
+import { MuscleService } from '@/controller/exercise/muscle.service';
+import type { MuscleTip } from '@/controller/exercise/type/muscle-tip.type';
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import { useScreenSize } from '@/store/screen-size-provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 const data = [
   { time: '', value: 0 },
@@ -218,12 +217,31 @@ export default function MuscleHeatmapView() {
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center',
+                  textAlign: 'center',
+                  flexWrap: 'nowrap',
                   maxHeight: screenSize.isReallySmall ? 350 : undefined,
                 }
               : {}
           }
           position="relative"
         >
+          <MuscleMapWithTooltip
+            front={true}
+            Svg={HeatmapFront}
+            exercisesInComponent={supersets.flatMap((s) => s.exercises)}
+            heatmapLevel={heatmapLevel}
+            tip={tipHeatmapFront}
+            setTip={setTipHeatmapFront}
+          />
+          <MuscleMapWithTooltip
+            front={false}
+            Svg={HeatmapBack}
+            exercisesInComponent={supersets.flatMap((s) => s.exercises)}
+            heatmapLevel={heatmapLevel}
+            tip={tipHeatmapBack}
+            setTip={setTipHeatmapBack}
+          />
+
           {/* Legend */}
           <Box
             display="flex"
@@ -247,21 +265,6 @@ export default function MuscleHeatmapView() {
               />
             ))}
           </Box>
-
-          <MuscleMapWithTooltip
-            Svg={HeatmapFront}
-            exercisesInComponent={supersets.flatMap((s) => s.exercises)}
-            heatmapLevel={heatmapLevel}
-            tip={tipHeatmapFront}
-            setTip={setTipHeatmapFront}
-          />
-          <MuscleMapWithTooltip
-            Svg={HeatmapBack}
-            exercisesInComponent={supersets.flatMap((s) => s.exercises)}
-            heatmapLevel={heatmapLevel}
-            tip={tipHeatmapBack}
-            setTip={setTipHeatmapBack}
-          />
         </Box>
         <ResponsiveContainer
           width={screenSize.isSmallerThanLaptop ? '100%' : '35%'}

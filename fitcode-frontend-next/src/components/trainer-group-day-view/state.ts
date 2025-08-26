@@ -2,6 +2,10 @@ import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.
 import type React from 'react';
 import toast from 'react-hot-toast';
 
+import {
+  COOLDOWN_ID,
+  WARMUP_ID,
+} from '@/common/constant/warmup-cooldown-ids-constants';
 import type { SetState } from '@/common/type/state.type';
 import { handleApiRequest } from '@/common/type/state.type';
 import type { Component } from '@/controller/component/type/component.type';
@@ -19,10 +23,6 @@ import type { TrainingComponent } from '@/controller/training/type/training-comp
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import type { Workload } from '@/controller/training/type/workload.type';
 import type { User } from '@/controller/user/type/user.type';
-import {
-  COOLDOWN_ID,
-  WARMUP_ID,
-} from '@/common/constant/warmup-cooldown-ids-constants';
 
 export async function handleUpdateMultipleTrainings(state: {
   setTrainings: SetState<Training[]>;
