@@ -14,6 +14,7 @@ import type { SetState, SetStateNullable } from '@/common/type/state.type';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import { ParamType } from '@/controller/component/enum/param.enum';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
+import type { Method } from '@/controller/method/type/method.type';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
 import type { Superset } from '@/controller/training/type/superset.type';
@@ -64,6 +65,63 @@ function updateSupersets(
   }
 
   return supersets;
+}
+
+export function getTrainingExercisesFromExercises(
+  exercisesIdsToAdd: string[],
+  allExercises: Exercise[],
+  component: TrainingComponent,
+  method?: Method,
+  minSets?: number,
+  maxSets?: number
+): TrainingExercise[] {
+  return exercisesIdsToAdd.map((id) => {
+    const exercise = allExercises.find((e) => e.id === id);
+    const paramValues =
+      (exercise?.defaultParams &&
+        (exercise?.defaultParams
+          .map((p) => {
+            if (p.field === ParamType.VolWorkSets) return undefined;
+
+            const attribute = method?.attributes
+              ?.map((a) => a.options?.find((o) => o.field === p.defaultValue))
+              .find(Boolean);
+
+            return {
+              field: p.field,
+              selected: p.defaultValue,
+              value:
+                attribute &&
+                attribute.min !== undefined &&
+                attribute.max !== undefined
+                  ? Math.ceil((attribute.min + attribute.max) / 2)
+                  : p.options?.find((o) => o.field === p.defaultValue)
+                      ?.defaultValue,
+            } as AttributeValue;
+          })
+          .filter((p) => p !== undefined) as AttributeValue[])) ||
+      [];
+
+    const setsNumber =
+      minSets !== undefined && maxSets !== undefined
+        ? Math.floor((minSets + maxSets) / 2)
+        : minSets || maxSets || 3;
+
+    return {
+      id,
+      exercise: exercise,
+      periodized: false,
+      attributes: component?.method?.attributes || [],
+      params: exercise?.defaultParams || [],
+      sets: exercise?.defaultParams
+        ? Array.from({ length: setsNumber }, (_, i) => ({
+            setNumber: i + 1,
+            paramValuesL: paramValues,
+            ...(exercise.isBilateral && { paramValuesR: paramValues }),
+          }))
+        : [],
+    };
+  });
 }
 
 export function handleAddExerciseToSupersetComponent(
@@ -124,53 +182,14 @@ export function handleAddExerciseToSupersetComponent(
       : selectedExercisesIds;
 
   const method = component?.method;
-  const exercisesToAdd: TrainingExercise[] = exercisesIdsToAdd.map((id) => {
-    const exercise = allExercises.find((e) => e.id === id);
-    const paramValues =
-      (exercise?.defaultParams &&
-        (exercise?.defaultParams
-          .map((p) => {
-            if (p.field === ParamType.VolWorkSets) return undefined;
-
-            const attribute = method?.attributes
-              ?.map((a) => a.options?.find((o) => o.field === p.defaultValue))
-              .find(Boolean);
-
-            return {
-              field: p.field,
-              selected: p.defaultValue,
-              value:
-                attribute &&
-                attribute.min !== undefined &&
-                attribute.max !== undefined
-                  ? Math.ceil((attribute.min + attribute.max) / 2)
-                  : p.options?.find((o) => o.field === p.defaultValue)
-                      ?.defaultValue,
-            } as AttributeValue;
-          })
-          .filter((p) => p !== undefined) as AttributeValue[])) ||
-      [];
-
-    const setsNumber =
-      minSets !== undefined && maxSets !== undefined
-        ? Math.floor((minSets + maxSets) / 2)
-        : minSets || maxSets || 3;
-
-    return {
-      id,
-      exercise: exercise,
-      periodized: false,
-      attributes: component?.method?.attributes || [],
-      params: exercise?.defaultParams || [],
-      sets: exercise?.defaultParams
-        ? Array.from({ length: setsNumber }, (_, i) => ({
-            setNumber: i + 1,
-            paramValuesL: paramValues,
-            ...(exercise.isBilateral && { paramValuesR: paramValues }),
-          }))
-        : [],
-    };
-  });
+  const exercisesToAdd = getTrainingExercisesFromExercises(
+    exercisesIdsToAdd,
+    allExercises,
+    component,
+    method,
+    minSets,
+    maxSets
+  );
 
   if (component.id === WARMUP_ID || component.id === COOLDOWN_ID) {
     // handle warmup or cooldown component, don't update prescribed stats
