@@ -1,29 +1,35 @@
 'use client';
-import { Box, IconButton, Typography, useTheme } from '@mui/material';
-import { useCallback, useEffect, useRef, useState } from 'react';
-
-import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import {
-  HEATMAP_BACK_ID,
-  HEATMAP_FRONT_ID,
-} from '@/common/constant/heatmap.constant';
-import { useMain } from '@/store/main-provider';
-import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { Close } from '@mui/icons-material';
-import { MuscleTip } from '@/controller/exercise/type/muscle-tip.type';
-import { SetState } from '@/common/type/state.type';
+import { Box, IconButton, Typography, useTheme } from '@mui/material';
+import { useCallback, useEffect, useRef } from 'react';
+import toast from 'react-hot-toast';
+
+import {
+  getTrainingExercisesFromExercises,
+  handleAddExerciseToSupersetComponent,
+} from '../supersets/state';
+import {
+  clearHideTimer,
+  findFilledGroup,
+  formatName,
+  hasExplicitFill,
+  normId,
+} from './state';
+import type { SetState } from '@/common/type/state.type';
+import { VolWorkSetType } from '@/controller/component/enum/param.enum';
+import type { MuscleTip } from '@/controller/exercise/type/muscle-tip.type';
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import { useGroup } from '@/store/group-provider';
+import { useMain } from '@/store/main-provider';
+import { useScreenSize } from '@/store/screen-size-provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 type SvgC = React.ForwardRefExoticComponent<
   React.SVGProps<SVGSVGElement> & React.RefAttributes<SVGSVGElement>
 >;
 
-// normalize ids like `upper_pectoralis_major-l_3` → `upper_pectoralis_major-l`
-const normId = (id: string) => id.replace(/_\d+$/, '');
-
-const formatName = (id: string) =>
-  id.replaceAll('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-
 interface MuscleMapWithTooltipProps {
+  front: boolean;
   Svg: SvgC;
   exercisesInComponent: TrainingExercise[];
   heatmapLevel: number;
@@ -33,10 +39,22 @@ interface MuscleMapWithTooltipProps {
 
 export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
   const theme = useTheme();
+  const screenSize = useScreenSize();
 
+  const { setTrainings } = useGroup();
   const { exercises: allExercises } = useMain();
+  const {
+    training,
+    setTraining,
+    component,
+    setComponent,
+    supersets,
+    setSupersets,
+    selectedSubgroup,
+    setSelectedSubgroup,
+  } = useTrainerDayViewContext();
 
-  const { Svg, exercisesInComponent, heatmapLevel, tip, setTip } = props;
+  const { front, Svg, exercisesInComponent, heatmapLevel, tip, setTip } = props;
 
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -51,38 +69,54 @@ export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
     });
   }, []);
 
-  // style attribute contains an explicit fill (and not fill:none)
-  const hasExplicitFill = (el: Element) => {
-    const fill = el.getAttribute('fill');
+  const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (!containerRef.current || tip.focus) return;
+    clearHideTimer(hideTimer);
 
-    if (!fill) return false;
-    return fill !== 'none';
-  };
+    const raw = e.target as Element;
 
-  // find nearest ancestor <g> with explicit fill
-  const findFilledGroup = (
-    start: Element,
-    svg: SVGSVGElement
-  ): SVGGraphicsElement | null => {
-    let i = 4; // because first element is path, which we skip, so it becomes 3 when going to <g>'s
-    let el: Element | null = start;
-    while (el) {
-      if (
-        el instanceof SVGGraphicsElement &&
-        el.tagName.toLowerCase() === 'g' &&
-        (i === heatmapLevel ||
-          [HEATMAP_FRONT_ID, HEATMAP_BACK_ID].includes(
-            el.parentElement?.id || ''
-          ))
-      ) {
-        return el;
-      }
+    // Resolve a stable target:
+    // 1) nearest filled <g>, or
+    // 2) the hovered element itself if it has explicit fill,
+    // 3) otherwise nothing (we'll maybe hide below).
+    const group = findFilledGroup(raw, heatmapLevel);
+    const target =
+      group ??
+      (raw instanceof SVGGraphicsElement && hasExplicitFill(raw) ? raw : null);
 
-      el = el.parentElement;
-      i--;
+    if (!target) {
+      // Don’t insta-hide; small grace to avoid flicker on tiny gaps
+      hideTimer.current = window.setTimeout(() => {
+        setTip((t) => (t.show ? { ...t, show: false } : t));
+      }, 60);
+      return;
     }
-    return null;
+
+    // pointer position relative to container
+    const crect = containerRef.current.getBoundingClientRect();
+    const px = e.clientX - crect.left;
+    const py = e.clientY - crect.top;
+
+    showForEl(target, px, py);
   };
+
+  const handleMouseLeave = () => {
+    clearHideTimer(hideTimer);
+    if (tip.focus) return;
+    setTip((t) => (t.show ? { ...t, show: false } : t));
+  };
+
+  // keyboard support: focus/blur show/hide tooltip
+  const handleFocus = (e: React.FocusEvent<SVGSVGElement>) => {
+    const el = (e.target as Element).closest<SVGGraphicsElement>('[id]');
+    if (!el) return;
+    // Only show for nodes that actually have/are within a filled region
+    const group = findFilledGroup(el, heatmapLevel);
+    const target = group ?? (hasExplicitFill(el) ? el : null);
+    if (target) showForEl(target); // centers on element
+  };
+
+  const handleBlur = () => handleMouseLeave();
 
   const computeExercises = useCallback(
     (muscleIds: string[]) => {
@@ -199,75 +233,22 @@ export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
     [computeExercises]
   );
 
-  const clearHideTimer = () => {
-    if (hideTimer.current) {
-      window.clearTimeout(hideTimer.current);
-      hideTimer.current = null;
-    }
-  };
-
-  const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
-    if (!svgRef.current || !containerRef.current || tip.focus) return;
-    clearHideTimer();
-
-    const svg = svgRef.current;
-    const raw = e.target as Element;
-
-    // Resolve a stable target:
-    // 1) nearest filled <g>, or
-    // 2) the hovered element itself if it has explicit fill,
-    // 3) otherwise nothing (we'll maybe hide below).
-    const group = findFilledGroup(raw, svg);
-    const target =
-      group ??
-      (raw instanceof SVGGraphicsElement && hasExplicitFill(raw) ? raw : null);
-
-    if (!target) {
-      // Don’t insta-hide; small grace to avoid flicker on tiny gaps
-      hideTimer.current = window.setTimeout(() => {
-        setTip((t) => (t.show ? { ...t, show: false } : t));
-      }, 60);
-      return;
-    }
-
-    // pointer position relative to container
-    const crect = containerRef.current.getBoundingClientRect();
-    const px = e.clientX - crect.left;
-    const py = e.clientY - crect.top;
-
-    showForEl(target, px, py);
-  };
-
-  const handleMouseLeave = () => {
-    clearHideTimer();
-    if (tip.focus) return;
-    setTip((t) => (t.show ? { ...t, show: false } : t));
-  };
-
-  // keyboard support: focus/blur show/hide tooltip
-  const handleFocus = (e: React.FocusEvent<SVGSVGElement>) => {
-    const el = (e.target as Element).closest<SVGGraphicsElement>('[id]');
-    if (!el) return;
-    // Only show for nodes that actually have/are within a filled region
-    const svg = svgRef.current!;
-    const group = findFilledGroup(el, svg);
-    const target = group ?? (hasExplicitFill(el) ? el : null);
-    if (target) showForEl(target); // centers on element
-  };
-  const handleBlur = () => handleMouseLeave();
-
   return (
     <Box
       ref={containerRef}
       component="span"
       sx={{
         position: 'relative',
-        display: 'inline-block',
+        display: screenSize.isSmallerThanLaptop ? 'flex' : 'inline-block',
         flex: '0 0 auto',
         lineHeight: 0,
         userSelect: 'none',
         WebkitTapHighlightColor: 'transparent',
         '& [tabindex]:focus:not(:focus-visible)': { outline: 'none' },
+        justifyContent: 'center',
+        maxWidth: screenSize.isSmallerThanLaptop
+          ? window.innerWidth * 0.4
+          : undefined,
       }}
     >
       <Svg
@@ -281,7 +262,11 @@ export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
           setTip((t) => ({ ...t, focus: true, x: 0, y: 0 }));
         }}
         role="img"
-        style={{ maxHeight: 500, display: 'block', cursor: 'pointer' }}
+        style={{
+          maxHeight: screenSize.isMobile ? 300 : 500,
+          display: 'block',
+          cursor: 'pointer',
+        }}
       />
 
       {tip.show && (
@@ -294,9 +279,12 @@ export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
           sx={{
             width: 'fit-content',
             position: 'absolute',
-            left: tip.x,
+            left: screenSize.isMobile ? (front ? undefined : '0%') : tip.x,
+            right: screenSize.isMobile && front ? '0%' : undefined,
             top: tip.y,
-            transform: 'translate(0, -100%)', // bottom-left at the cursor
+            transform: screenSize.isMobile
+              ? `translate(${front ? '50%' : '-50%'}, -100%)`
+              : 'translate(0, -100%)', // bottom-left at the cursor
             zIndex: 1000000,
             backgroundColor: theme.palette.background.paper,
             p: 1,
@@ -341,11 +329,16 @@ export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
               flexDirection="column"
               alignItems="center"
               sx={{
-                minWidth: 150,
+                minWidth: screenSize.isUltraSmall
+                  ? 80
+                  : screenSize.isMobile
+                    ? 100
+                    : 150,
+                maxWidth: screenSize.isUltraSmall ? 80 : undefined,
               }}
             >
               <Typography fontSize={14} noWrap>
-                Current
+                In training
               </Typography>
               <Box
                 width="100%"
@@ -367,7 +360,12 @@ export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
               flexDirection="column"
               alignItems="center"
               sx={{
-                minWidth: 150,
+                minWidth: screenSize.isUltraSmall
+                  ? 80
+                  : screenSize.isMobile
+                    ? 100
+                    : 150,
+                maxWidth: screenSize.isUltraSmall ? 80 : undefined,
               }}
             >
               <Typography fontSize={14} noWrap>
@@ -380,13 +378,95 @@ export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
                 alignItems="flex-start"
               >
                 {tip.possibleExercises.map((ex) => (
-                  <Typography key={ex.id} fontSize={14} textAlign="start">
-                    • {ex.name}
-                  </Typography>
+                  <Box
+                    width="100%"
+                    key={ex.id}
+                    sx={{
+                      '&:hover': {
+                        border: `1px solid ${theme.palette.text.primary}`,
+                        borderRadius: 1,
+                        p: 0.1,
+                      },
+                      cursor: 'pointer',
+                    }}
+                    onClick={() => {
+                      if (!training || !component) return;
+
+                      const setsRange = component.method?.attributes
+                        ?.map((a) =>
+                          a.options?.find((o) => o.field === VolWorkSetType.Set)
+                        )
+                        .find(Boolean);
+
+                      const trainingExercises =
+                        getTrainingExercisesFromExercises(
+                          [ex.id],
+                          allExercises,
+                          component,
+                          component.method,
+                          setsRange?.min,
+                          setsRange?.max
+                        );
+
+                      if (trainingExercises.length !== 1) {
+                        toast.error('Error adding exercise');
+                        return;
+                      }
+
+                      const trainingExercise = trainingExercises[0];
+
+                      try {
+                        handleAddExerciseToSupersetComponent(
+                          {
+                            selectedExercisesIds: [ex.id],
+                            allExercises,
+                            minSets: setsRange?.min,
+                            maxSets: setsRange?.max,
+                          },
+                          {
+                            training,
+                            setTraining,
+                            setTrainings,
+                            component,
+                            setComponent,
+                            supersets,
+                            setSupersets,
+                            setOpenAddExerciseModal: () => {},
+                            setDetectedChanges: () => {},
+                            setSearch: () => {},
+                            selectedSubgroup,
+                            setSelectedSubgroup,
+                            setPagination: () => {},
+                          }
+                        );
+
+                        tip.possibleExercises = tip.possibleExercises.filter(
+                          (e) => e.id !== ex.id
+                        );
+
+                        tip.componentExercises.push(trainingExercise);
+                      } catch (e) {
+                        toast.error('Error adding exercise');
+                      }
+                    }}
+                  >
+                    <Typography fontSize={14} textAlign="start">
+                      • {ex.name}
+                    </Typography>
+                  </Box>
                 ))}
               </Box>
             </Box>
           </Box>
+
+          <Typography
+            noWrap
+            textAlign="center"
+            fontSize={10}
+            color={theme.palette.text.secondary}
+          >
+            {!tip.focus ? 'Click to focus' : 'Click exercise to add'}
+          </Typography>
         </Box>
       )}
     </Box>

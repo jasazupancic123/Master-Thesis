@@ -1,5 +1,5 @@
-import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { Exercise } from './exercise.type';
+import type { Exercise } from './exercise.type';
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 
 export type MuscleTip = {
   show: boolean;
