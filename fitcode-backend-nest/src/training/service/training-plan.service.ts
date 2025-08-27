@@ -640,23 +640,74 @@ export class TrainingPlanService {
       methods: Method[];
     },
   ): Subgroup[] {
-    // validate all subgroups have unique members (one member cannot be in multiple subgroups)
-    const trainingMemberIdsSet = new Set(trainingMemberIds);
-    const membersIdsSet = new Set<string>();
+    // member can be in exactly:
+    //   - main group -> 0 subgroups
+    //   - 1 root subgroup -> 1 subgroup, can be shared with other members in training
+    //   - 1 child subgroup of root subgroup -> 2 subgroups (root & child), root can be shared with other members in training but child cannot
+    //   - 1 direct child of main group -> 1 subgroup, only this athlete is in it
 
+    const trainingMemberIdsSet = new Set(trainingMemberIds);
     const validSubgroups: Subgroup[] = [];
+
     for (const subgroup of trainingComponent.subgroups) {
       // validate members
-      for (const userId of subgroup.membersIds) {
+      for (const userId of subgroup.membersIds)
         if (!trainingMemberIdsSet.has(userId))
           throw new ConflictException('Invalid member');
 
-        // if (membersIdsSet.has(userId))
-        //   throw new ConflictException(
-        //     'Member cannot be part of multiple subgroups simultaneously',
-        //   );
+      const otherSubgroups = trainingComponent.subgroups.filter(
+        (s) => s.id !== subgroup.id,
+      );
 
-        membersIdsSet.add(userId);
+      if (subgroup.parentId) {
+        // either child subgroup or direct child of main group
+        if (subgroup.parentId === MAIN_GROUP_PARENT_ID) {
+          // direct child of main group
+          if (subgroup.membersIds.length !== 1)
+            throw new BadRequestException('Only one member can be selected');
+
+          // check that no other subgroup has this member
+          for (const other of otherSubgroups)
+            if (other.membersIds.some((m) => subgroup.membersIds.includes(m)))
+              throw new ConflictException(
+                'Member is already in another subgroup',
+              );
+
+          // check that supersets are the same as in main group
+          this.checkSupersetsEquality(
+            subgroup.supersets,
+            trainingComponent.supersets,
+          );
+        } else {
+          // child of root subgroup
+          const parent = otherSubgroups.find((s) => s.id === subgroup.parentId);
+          if (!parent) throw new NotFoundException('Parent subgroup not found');
+
+          // only 1 member allowed
+          if (subgroup.membersIds.length !== 1)
+            throw new BadRequestException('Only one member can be selected');
+
+          // check that no other subgroup has this member
+          for (const other of otherSubgroups.filter((s) => s.id !== parent.id))
+            if (other.membersIds.some((m) => subgroup.membersIds.includes(m)))
+              throw new ConflictException(
+                'Member is already in another subgroup',
+              );
+
+          // check that supersets are the same as in main group
+          this.checkSupersetsEquality(
+            subgroup.supersets,
+            trainingComponent.supersets,
+          );
+        }
+      } else {
+        // root subgroup
+        // check that no other subgroup has these members
+        for (const other of otherSubgroups)
+          if (other.membersIds.some((m) => subgroup.membersIds.includes(m)))
+            throw new ConflictException(
+              'Member is already in another subgroup',
+            );
       }
 
       // validate supersets
@@ -668,12 +719,11 @@ export class TrainingPlanService {
 
       validSubgroups.push({
         id: subgroup.id,
+        parentId: subgroup.parentId,
         name: subgroup.name,
         membersIds: subgroup.membersIds,
-        parentId: subgroup.parentId,
         supersets: validSupersets,
         mainSet: subgroup.mainSet,
-        parentId: subgroup.parentId,
       });
     }
 
@@ -978,6 +1028,37 @@ export class TrainingPlanService {
     // final cleanup for any empty subgroups
     targetTrainingComponent.subgroups =
       targetTrainingComponent.subgroups.filter((s) => s.membersIds.length > 0);
+  }
+
+  private checkSupersetsEquality(
+    sup1: DeepPick<Superset, 'exercises.id' | 'exercises.sets'>[],
+    sup2: DeepPick<Superset, 'exercises.id' | 'exercises.sets'>[],
+  ) {
+    const error = new BadRequestException(
+      'Training prescription must be the same for all members in the selected group',
+    );
+
+    if (sup1.length !== sup2.length) throw error;
+
+    for (let supersetIndex = 0; supersetIndex < sup1.length; supersetIndex++) {
+      const s1 = sup1[supersetIndex];
+      const s2 = sup2[supersetIndex];
+
+      if (!s2) throw error;
+      if (s1.exercises.length !== s2.exercises.length) throw error;
+
+      for (
+        let exerciseIndex = 0;
+        exerciseIndex < s1.exercises.length;
+        exerciseIndex++
+      ) {
+        const e1 = s1.exercises[exerciseIndex];
+        const e2 = s2.exercises[exerciseIndex];
+
+        if (!e2 || e1.id !== e2.id) throw error;
+        if (e1.sets.length !== e2.sets.length) throw error;
+      }
+    }
   }
 
   private modifySupersetValuesByParamType(
