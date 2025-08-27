@@ -133,6 +133,8 @@ describe('Periodization functions (e2e)', () => {
   });
 
   it('should periodize trainings successfully', async () => {
+    await db.trainings.clear();
+
     // create 3 trainings for periodization
     const dataWithC1: Partial<Training> = {
       ownerId: global.trainer.id,
