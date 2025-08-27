@@ -133,8 +133,6 @@ describe('Periodization functions (e2e)', () => {
   });
 
   it('should periodize trainings successfully', async () => {
-    await db.trainings.clear();
-
     // create 3 trainings for periodization
     const dataWithC1: Partial<Training> = {
       ownerId: global.trainer.id,
@@ -447,7 +445,7 @@ describe('Periodization functions (e2e)', () => {
       generateTrainingStub({
         ownerId: global.trainer.id,
         membersIds: ['a', 'b', 'c'],
-        date: addDays(new Date(), 4),
+        date: addDays(new Date(), 5),
         components: [
           generateTrainingComponent({
             id: 'c1',
@@ -577,16 +575,6 @@ describe('Periodization functions (e2e)', () => {
     for (let i = 1; i < result.length; i++) {
       const training = result[i];
       expect(training.components).toHaveLength(1);
-
-      // log all subgroups (id, members, parent)
-      /*   console.log(
-        `Training ${i} subgroups:`,
-        training.components[0].subgroups.map((sg) => ({
-          id: sg.id,
-          members: sg.membersIds,
-          parent: sg.parentId,
-        })),
-      ); */
 
       const componentC1 = training.components[0];
       expect(componentC1.id).toBe('c1');
