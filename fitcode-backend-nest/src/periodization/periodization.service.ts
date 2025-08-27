@@ -7,6 +7,7 @@ import type {
   TrainingComponentRef,
 } from '@src/common/type/firestore.type';
 import { ParamType } from '@src/component/enum/param.enum';
+import { MAIN_GROUP_PARENT_ID } from '@src/training/constant/main-group-parent-id.constant';
 import { ExerciseSet } from '@src/training/entity/exercise-set.entity';
 import { Subgroup } from '@src/training/entity/subgroup.entity';
 import { Training } from '@src/training/entity/training.entity';
@@ -75,16 +76,22 @@ export class PeriodizationService {
     if (!baseItem) return periodized;
     baseItems.push(baseItem);
 
-    // periodize all child subgroups of provided subgroup
-    if (ref.subgroupId && !options?.dontPeriodizeChildSubgroups) {
-      const baseComponent = this.getComponent(baseTraining, ref)!;
+    // special case - periodize direct children of the main group (component itself) with special id
+    const baseComponent = this.getComponent(baseTraining, ref)!;
 
+    // periodize all child subgroups of provided subgroup
+    if (!options?.dontPeriodizeChildSubgroups)
       for (let i = 0; i < baseComponent.subgroups.length; i++) {
         const child = baseComponent.subgroups[i];
-        if (child.id !== ref.subgroupId && child.parentId === ref.subgroupId)
+
+        if (!ref.subgroupId && child.parentId === MAIN_GROUP_PARENT_ID)
+          baseItems.push(child); // periodize direct child subgroups of the component (main group)
+        else if (
+          child.id !== ref.subgroupId &&
+          child.parentId === ref.subgroupId
+        )
           baseItems.push(child);
       }
-    }
 
     for (const baseItem of baseItems) {
       const baseExercises = this.getExercises(baseItem);
@@ -114,7 +121,7 @@ export class PeriodizationService {
             const training = weeks[weekIndex][dayIndex];
             const item = this.getRefItem(training, {
               ...ref,
-              subgroupId: ref.subgroupId ? baseItem.id : undefined, // base item is either component, root subgroup or child subgroup
+              subgroupId: this.isSubgroup(baseItem) ? baseItem.id : undefined,
             });
 
             if (!item) continue; // component / subgroup not found in upcoming training, skip
@@ -357,5 +364,9 @@ export class PeriodizationService {
   private getVolParamValue(lr: 'L' | 'R', set: ExerciseSet): AttributeValue {
     const paramValues = this.getParamValuesBySide(lr, set);
     return paramValues.find((pv) => pv.field === ParamType.VolWork1);
+  }
+
+  private isSubgroup(item: TrainingComponent | Subgroup): item is Subgroup {
+    return (item as Subgroup).name !== undefined;
   }
 }

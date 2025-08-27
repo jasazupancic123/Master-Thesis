@@ -743,7 +743,7 @@ export class TrainingService implements Permission<Training, Institution> {
   }
 
   @LogMethod()
-  async periodize(
+  async copyAndPeriodize(
     user: User,
     ref: TrainingComponentRef & SubgroupRef,
     input: PeriodizeTrainingsDto,
@@ -782,28 +782,27 @@ export class TrainingService implements Permission<Training, Institution> {
       const component = t.components.find((c) => c.id === ref.componentId);
       if (!component) return false;
 
-      const target = baseComponent.target;
-      if (!target) return true; // no target, return all trainings with that component
-
-      // targets must match
-      return component.target?.id === target.id;
+      if (!baseComponent.target) return true; // no target, return all trainings with that component
+      return component.target?.id === baseComponent.target.id;
     });
 
-    if (filtered.length === 0) return [];
-
-    // if no subgroup is selected, override all filtered trainings' component with the base component
+    // if no subgroup is selected, override all filtered trainings' components with the base component
     // if subgroup is selected, override only that subgroup
     for (const training of filtered) {
-      this.trainingPlanService.copyComponentIntoTraining(
+      // override component (supersets and if no subgroup selected also all subgroups) in future trainings
+      this.trainingPlanService.copyOrOverrideComponent(
         ref,
         baseTraining,
         training,
-        { skipSupersets: false, skipSubgroups: true, skipTimes: true },
+        {
+          overrideSupersets: true,
+          overrideDirectSubgroups: !ref.subgroupId ? true : false,
+          overrideOtherSubgroups: !ref.subgroupId ? true : false,
+        },
       );
 
       if (ref.subgroupId)
-        // override only subgroups
-        this.trainingPlanService.copySubgroupIntoTraining(
+        this.trainingPlanService.copyOrOverrideSubgroup(
           ref.subgroupId,
           baseComponent,
           training,
@@ -811,6 +810,7 @@ export class TrainingService implements Permission<Training, Institution> {
     }
 
     filtered.unshift(baseTraining); // add base training to the beginning of the list
+
     const periodized = this.periodizationService.periodize(
       periodizationType,
       ref,
