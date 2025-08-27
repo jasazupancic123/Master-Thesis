@@ -7,6 +7,7 @@ import type { TrainingComponentRef } from '@src/common/type/firestore.type';
 import { ParamType } from '@src/component/enum/param.enum';
 import { generateComponentParamsStub } from '@src/component/mock/component-param.stub';
 import { validationSchema } from '@src/config/environment-validation-schema';
+import { MAIN_GROUP_PARENT_ID } from '@src/training/constant/main-group-parent-id.constant';
 import type { TrainingExercise } from '@src/training/entity/training-exercise.entity';
 import { PeriodizationType } from '@src/training/enum/periodization-type.enum';
 import {
@@ -657,6 +658,293 @@ describe('periodize', () => {
           expect(childSubgroup2).toBeDefined();
           expect(childSubgroup2).not.toEqual(baseChildSubgroup2);
         }
+      }
+    });
+  });
+
+  describe('Direct subgroup periodization', () => {
+    it('should periodize main group and all its direct children with special id', () => {
+      const directSubgroup = generateSubgroup({
+        id: 's1',
+        parentId: MAIN_GROUP_PARENT_ID, // direct child of main group
+        supersets: [
+          generateSuperset({
+            exercises: [
+              generateTrainingExercise({
+                id: 'e1',
+                sets: [
+                  // random values for L and R params
+                  generateExerciseSet(1, true),
+                  generateExerciseSet(2, true),
+                ],
+              }),
+            ],
+          }),
+        ],
+      });
+
+      const otherSubgroup = generateSubgroup({
+        id: 'some-other-subgroup',
+        supersets: [
+          generateSuperset({
+            exercises: [
+              generateTrainingExercise({
+                id: 'e1',
+                sets: [
+                  // random values for L and R params
+                  generateExerciseSet(1, true),
+                  generateExerciseSet(2, true),
+                  generateExerciseSet(3, true),
+                ],
+              }),
+            ],
+          }),
+        ],
+      });
+
+      function generateTraining() {
+        return generateTrainingStub({
+          ownerId: 'owner',
+          membersIds: [],
+          date: new Date(),
+          components: [
+            generateTrainingComponent({
+              id: 'c1',
+              supersets: [
+                generateSuperset({
+                  exercises: [
+                    generateTrainingExercise({
+                      id: 'e1',
+                      sets: [
+                        // default values for L and R params
+                        generateExerciseSet(
+                          1,
+                          generateComponentParamsStub([ParamType.IntRec1]),
+                        ),
+                        generateExerciseSet(
+                          2,
+                          generateComponentParamsStub([ParamType.IntRec1]),
+                        ),
+                        generateExerciseSet(
+                          3,
+                          generateComponentParamsStub([ParamType.IntRec1]),
+                        ),
+                      ],
+                    }),
+                  ],
+                }),
+              ],
+              subgroups: [directSubgroup, otherSubgroup],
+            }),
+          ],
+        });
+      }
+
+      const trainings = [
+        generateTraining(),
+        generateTraining(),
+        generateTraining(),
+      ];
+
+      const periodizationType = PeriodizationType.LINEAR;
+      const result = service.periodize(periodizationType, ref, trainings, [
+        'e1',
+      ]);
+
+      // it should periodize main group & subgroup s1 but not "some-other-subgroup"
+      expect(result.length).toBe(trainings.length);
+      const baseMainComponent = result[0].components[0];
+
+      for (let i = 1; i < result.length; i++) {
+        const training = result[i];
+        expect(training).not.toEqual(trainings[i]);
+
+        const mainComponent = training.components[0];
+        expect(mainComponent).toBeDefined();
+        expect(mainComponent).not.toEqual(baseMainComponent);
+
+        const subgroup2 = mainComponent.subgroups.find(
+          (sg) => sg.id === 'some-other-subgroup',
+        );
+        expect(subgroup2).toBeDefined();
+        expect(subgroup2).toEqual(otherSubgroup); // should not be periodized
+        expect(subgroup2.supersets[0].exercises[0].sets).toHaveLength(3); // should have same number of sets
+
+        const subgroup1 = mainComponent.subgroups.find((sg) => sg.id === 's1');
+        expect(subgroup1).toBeDefined();
+        expect(subgroup1).not.toEqual(directSubgroup);
+        expect(subgroup1?.supersets[0].exercises[0].sets).toHaveLength(2); // should have same number of sets
+
+        // expect values to be different than in base training
+        for (let setIndex = 0; setIndex < 2; setIndex++)
+          TestPeriodizationUtil.expectExerciseSetValueToBe(
+            training,
+            {
+              exerciseId: 'e1',
+              componentId: 'c1',
+              supersetIndex: 0,
+              setIndex,
+              subgroupId: 's1',
+            },
+            ({ intL, intR }) => {
+              const directSubgroupIntL =
+                +directSubgroup.supersets[0].exercises[0].sets[setIndex]
+                  .paramValuesL[0].value;
+              const directSubgroupIntR =
+                +directSubgroup.supersets[0].exercises[0].sets[setIndex]
+                  .paramValuesR[0].value;
+
+              expect(intL).toBeGreaterThan(directSubgroupIntL);
+              expect(intR).toBeGreaterThan(directSubgroupIntR);
+            },
+          );
+      }
+    });
+
+    it('should periodize only selected direct subgroup', () => {
+      const directSubgroup1 = generateSubgroup({
+        id: 's1',
+        parentId: MAIN_GROUP_PARENT_ID, // direct child of main group
+        supersets: [
+          generateSuperset({
+            exercises: [
+              generateTrainingExercise({
+                id: 'e1',
+                sets: [
+                  // random values for L and R params
+                  generateExerciseSet(1, true),
+                  generateExerciseSet(2, true),
+                ],
+              }),
+            ],
+          }),
+        ],
+      });
+
+      const directSubgroup2 = generateSubgroup({
+        id: 's2',
+        parentId: MAIN_GROUP_PARENT_ID, // direct child of main group
+        supersets: [
+          generateSuperset({
+            exercises: [
+              generateTrainingExercise({
+                id: 'e1',
+                sets: [
+                  // random values for L and R params
+                  generateExerciseSet(1, true),
+                  generateExerciseSet(2, true),
+                  generateExerciseSet(3, true),
+                ],
+              }),
+            ],
+          }),
+        ],
+      });
+
+      function generateTraining() {
+        return generateTrainingStub({
+          ownerId: 'owner',
+          membersIds: [],
+          date: new Date(),
+          components: [
+            generateTrainingComponent({
+              id: 'c1',
+              supersets: [
+                generateSuperset({
+                  exercises: [
+                    generateTrainingExercise({
+                      id: 'e1',
+                      sets: [
+                        // default values for L and R params
+                        generateExerciseSet(
+                          1,
+                          generateComponentParamsStub([ParamType.IntRec1]),
+                        ),
+                        generateExerciseSet(
+                          2,
+                          generateComponentParamsStub([ParamType.IntRec1]),
+                        ),
+                        generateExerciseSet(
+                          3,
+                          generateComponentParamsStub([ParamType.IntRec1]),
+                        ),
+                      ],
+                    }),
+                  ],
+                }),
+              ],
+              subgroups: [directSubgroup1, directSubgroup2],
+            }),
+          ],
+        });
+      }
+
+      const trainings = [
+        generateTraining(),
+        generateTraining(),
+        generateTraining(),
+      ];
+
+      const periodizationType = PeriodizationType.LINEAR;
+      const result = service.periodize(
+        periodizationType,
+        { ...ref, subgroupId: 's2' },
+        trainings,
+        ['e1'],
+      );
+
+      // it should periodize only subgroup s2 but not s1
+      expect(result.length).toBe(trainings.length);
+
+      const baseMainComponent = result[0].components[0];
+      expect(baseMainComponent.subgroups).toHaveLength(2);
+      expect(baseMainComponent.subgroups[0].id).toBe('s1');
+      expect(baseMainComponent.subgroups[1].id).toBe('s2');
+
+      for (let i = 1; i < result.length; i++) {
+        const training = result[i];
+        expect(training).not.toEqual(trainings[i]);
+
+        const mainComponent = training.components[0];
+        expect(mainComponent).toBeDefined();
+        expect(mainComponent).not.toEqual(baseMainComponent);
+        expect(mainComponent.subgroups).toHaveLength(2);
+        expect(mainComponent.subgroups[0].id).toBe('s1');
+        expect(mainComponent.subgroups[1].id).toBe('s2');
+
+        const subgroup1 = mainComponent.subgroups.find((sg) => sg.id === 's1');
+        expect(subgroup1).toBeDefined();
+        expect(subgroup1).toEqual(directSubgroup1); // should not be periodized
+        expect(subgroup1?.supersets[0].exercises[0].sets).toHaveLength(2); // should have same number of sets
+
+        const subgroup2 = mainComponent.subgroups.find((sg) => sg.id === 's2');
+        expect(subgroup2).toBeDefined();
+        expect(subgroup2).not.toEqual(directSubgroup2);
+        expect(subgroup2?.supersets[0].exercises[0].sets).toHaveLength(3); // should have same number of sets
+
+        // expect values to be different than in base training
+        for (let setIndex = 0; setIndex < 3; setIndex++)
+          TestPeriodizationUtil.expectExerciseSetValueToBe(
+            training,
+            {
+              exerciseId: 'e1',
+              componentId: 'c1',
+              supersetIndex: 0,
+              setIndex,
+              subgroupId: 's2',
+            },
+            ({ intL, intR }) => {
+              const directSubgroupIntL =
+                +directSubgroup2.supersets[0].exercises[0].sets[setIndex]
+                  .paramValuesL[0].value;
+              const directSubgroupIntR =
+                +directSubgroup2.supersets[0].exercises[0].sets[setIndex]
+                  .paramValuesR[0].value;
+
+              expect(intL).toBeGreaterThan(directSubgroupIntL);
+              expect(intR).toBeGreaterThan(directSubgroupIntR);
+            },
+          );
       }
     });
   });

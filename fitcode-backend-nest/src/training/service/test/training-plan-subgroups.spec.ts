@@ -127,7 +127,7 @@ describe('copySubgroup', () => {
 
   it('should not copy subgroup if subgroup does not exist in provided training component', async () => {
     expect(() => {
-      service.copySubgroupIntoTraining(
+      service.copyOrOverrideSubgroup(
         'invalid',
         source,
         generateTrainingStub({
@@ -140,7 +140,7 @@ describe('copySubgroup', () => {
   });
 
   it('should copy root subgroup and remove overlapping members from target', () => {
-    service.copySubgroupIntoTraining('s1', source, target);
+    service.copyOrOverrideSubgroup('s1', source, target);
 
     expect(target.components[0].subgroups).toHaveLength(4); // 1 original + 3 copied (1 root, 2 children)
     expect(target.components[0].subgroups).toEqual(
@@ -154,7 +154,7 @@ describe('copySubgroup', () => {
   });
 
   it('should copy child subgroup and its parent if parent exists', () => {
-    service.copySubgroupIntoTraining('s1.1', source, target);
+    service.copyOrOverrideSubgroup('s1.1', source, target);
 
     expect(target.components[0].subgroups).toHaveLength(3);
     expect(target.components[0].subgroups).toEqual(
@@ -167,7 +167,7 @@ describe('copySubgroup', () => {
   });
 
   it('should copy child subgroup and make it root if parent does not exist', () => {
-    service.copySubgroupIntoTraining('invalid-child', source, target);
+    service.copyOrOverrideSubgroup('invalid-child', source, target);
 
     expect(target.components[0].subgroups).toHaveLength(2);
     expect(target.components[0].subgroups).toEqual(
@@ -197,7 +197,7 @@ describe('copySubgroup', () => {
       ],
     });
 
-    service.copySubgroupIntoTraining('s2', source, targetWithEmpty);
+    service.copyOrOverrideSubgroup('s2', source, targetWithEmpty);
 
     expect(targetWithEmpty.components[0].subgroups).toHaveLength(1); // only copied subgroup should remain
     expect(targetWithEmpty.components[0].subgroups).toEqual(
@@ -223,7 +223,7 @@ describe('copySubgroup', () => {
       ],
     });
 
-    service.copySubgroupIntoTraining('s2', source, nestedTarget);
+    service.copyOrOverrideSubgroup('s2', source, nestedTarget);
 
     expect(nestedTarget.components[0].subgroups).toHaveLength(2);
     expect(nestedTarget.components[0].subgroups).toEqual(
@@ -248,7 +248,7 @@ describe('copySubgroup', () => {
       ],
     });
 
-    service.copySubgroupIntoTraining('s2', source, nestedTarget);
+    service.copyOrOverrideSubgroup('s2', source, nestedTarget);
 
     expect(nestedTarget.components[0].subgroups).toHaveLength(1);
     expect(nestedTarget.components[0].subgroups[0].mainSet).toBe(
@@ -280,7 +280,7 @@ describe('copySubgroup', () => {
       ],
     });
 
-    service.copySubgroupIntoTraining('s1', newSource, nestedTarget);
+    service.copyOrOverrideSubgroup('s1', newSource, nestedTarget);
 
     expect(nestedTarget.components).toHaveLength(1);
     expect(nestedTarget.components[0].mainSet).toBe(MainSet.CIRCUIT);

@@ -93,6 +93,15 @@ export const INT_OPTIONS: Attribute[] = [
     defaultValue: '100',
   },
   {
+    field: IntType.VBT,
+    name: 'VBT',
+    description: 'velocity based training',
+    unit: 'm/s',
+    type: AttributeType.Number,
+    options: [],
+    defaultValue: '1.0',
+  },
+  {
     field: IntType.Tempo,
     name: 'Tempo',
     description: 'tempo',

@@ -42,6 +42,7 @@ import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { Method } from '@src/method/entity/method.entity';
 
+import { MAIN_GROUP_PARENT_ID } from '../constant/main-group-parent-id.constant';
 import { DEFAULT_WARMUP_AND_COOLDOWN_DURATION } from '../constant/training-component-duration.constant';
 import { CompletedTrainingExercise } from '../entity/completed-training.entity';
 import { ExerciseSet } from '../entity/exercise-set.entity';
@@ -672,6 +673,7 @@ export class TrainingPlanService {
         parentId: subgroup.parentId,
         supersets: validSupersets,
         mainSet: subgroup.mainSet,
+        parentId: subgroup.parentId,
       });
     }
 
@@ -774,14 +776,21 @@ export class TrainingPlanService {
     return { warmup, cooldown };
   }
 
-  copyComponentIntoTraining(
+  copyOrOverrideComponent(
     ref: ComponentRef,
     sourceTraining: Training,
     targetTraining: Training,
-    options?: {
-      skipSupersets?: boolean;
-      skipSubgroups?: boolean;
-      skipTimes?: boolean;
+    options: {
+      overrideSupersets?: boolean;
+      overrideDirectSubgroups?: boolean;
+      overrideOtherSubgroups?: boolean;
+      overrideTimes?: boolean;
+    } = {
+      // by default, override supersets, but not subgroups or times
+      overrideSupersets: true,
+      overrideDirectSubgroups: false,
+      overrideOtherSubgroups: false,
+      overrideTimes: false,
     },
   ): void {
     const sourceTrainingComponent = this.findComponentOrFail(
@@ -820,21 +829,36 @@ export class TrainingPlanService {
     targetTrainingComponent.methodId = sourceTrainingComponent.methodId;
     targetTrainingComponent.target = sourceTrainingComponent.target;
     targetTrainingComponent.color = sourceTrainingComponent.color;
-    targetTrainingComponent.completedMembersIds = []; // reset completed members
     targetTrainingComponent.mainSet = sourceTrainingComponent.mainSet;
+    targetTrainingComponent.completedMembersIds = []; // reset completed members
 
     if (options) {
-      if (!options.skipSupersets)
+      if (options.overrideSupersets)
         targetTrainingComponent.supersets = structuredClone(
           sourceTrainingComponent.supersets,
         );
 
-      if (!options.skipSubgroups)
-        targetTrainingComponent.subgroups = structuredClone(
-          sourceTrainingComponent.subgroups,
-        );
+      // direct subgroups are subgroups with main group as parent
+      if (options.overrideDirectSubgroups || options.overrideOtherSubgroups) {
+        const directSubgroups = options?.overrideDirectSubgroups
+          ? sourceTrainingComponent.subgroups.filter(
+              (s) => s.parentId === MAIN_GROUP_PARENT_ID,
+            )
+          : [];
 
-      if (!options.skipTimes) {
+        // other subgroups are root subgroups or their children
+        const otherSubgroups = options?.overrideOtherSubgroups
+          ? sourceTrainingComponent.subgroups.filter(
+              (s) => !s.parentId || s.parentId !== MAIN_GROUP_PARENT_ID,
+            )
+          : [];
+
+        targetTrainingComponent.subgroups = structuredClone(
+          directSubgroups.concat(otherSubgroups),
+        );
+      }
+
+      if (options.overrideTimes) {
         targetTrainingComponent.from = sourceTrainingComponent.from;
         targetTrainingComponent.to = sourceTrainingComponent.to;
       }
@@ -886,7 +910,7 @@ export class TrainingPlanService {
    * root subgroup, we also need to find its children and copy them to (all subgroups are saved in a
    * flat array), that's why this parameter is needed.
    */
-  copySubgroupIntoTraining(
+  copyOrOverrideSubgroup(
     subgroupId: string,
     sourceTrainingComponent: TrainingComponent,
     targetTraining: Training,
@@ -913,6 +937,9 @@ export class TrainingPlanService {
       );
 
       subgroupsToCopy = [sourceSubgroup, ...children];
+    } else if (sourceSubgroup.parentId === MAIN_GROUP_PARENT_ID) {
+      // direct child of main group → copy only child
+      subgroupsToCopy = [sourceSubgroup];
     } else {
       // child → copy parent + child
       const parent = sourceTrainingComponent.subgroups.find(
@@ -926,7 +953,6 @@ export class TrainingPlanService {
 
     // clone before modifying
     subgroupsToCopy = subgroupsToCopy.map((s) => structuredClone(s));
-
     const rootSubgroup = subgroupsToCopy[0]; // contains all members
 
     // remove existing subgroups with same IDs from target
