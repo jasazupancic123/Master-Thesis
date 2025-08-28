@@ -11,6 +11,7 @@ export type Subgroup = IdEntity &
     supersets: Superset[];
     mainSet: MainSet;
     periodizationType?: PeriodizationType;
+    parentId?: string;
 
     // mapped properties
     members?: User[];

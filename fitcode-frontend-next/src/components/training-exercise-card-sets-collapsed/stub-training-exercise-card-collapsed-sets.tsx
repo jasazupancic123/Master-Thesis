@@ -19,13 +19,8 @@ export default function StubTrainingExerciseCardCollapsedSets(
   const { exercise, expandedSetsView, setExpandedSetsView, componentIndex } =
     props;
 
-  const {
-    training,
-    component,
-    selectedAthlete,
-    selectedAthleteWorkloads,
-    customAthleteWorkloads,
-  } = useTrainerDayViewContext();
+  const { training, component, selectedAthlete, selectedAthleteWorkloads } =
+    useTrainerDayViewContext();
 
   if (!training || !component) return null;
 
@@ -111,7 +106,6 @@ export default function StubTrainingExerciseCardCollapsedSets(
                   training,
                   exercise,
                   selectedAthleteWorkloads,
-                  customAthleteWorkloads,
                   selectedAthlete,
                 }
               );

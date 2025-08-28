@@ -5,6 +5,7 @@ import type { SetState, SetStateNullable } from '@/common/type/state.type';
 import type { Attribute } from '@/controller/attribute/type/attribute.type';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import { ParamType } from '@/controller/component/enum/param.enum';
+import type { Exercise } from '@/controller/exercise/type/exercise.type';
 import type { CompletedFutureWorkloads } from '@/controller/training/type/completed-future-workloads.type';
 import type { ExerciseSet } from '@/controller/training/type/exercise-set.type';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
@@ -15,155 +16,95 @@ import type { TrainingExercise } from '@/controller/training/type/training-exerc
 import type { Workload } from '@/controller/training/type/workload.type';
 import type { User } from '@/controller/user/type/user.type';
 
-export function handleAthleteWorkloadsChange(
-  input: {
-    exercise: TrainingExercise;
-    setNumber: number;
-    param: Attribute;
-    newValue: string;
-    leftOrRight: 'L' | 'R';
-  },
-  state: {
-    training: Training;
-    selectedAthleteWorkloads: CompletedFutureWorkloads;
-    setCustomAthleteWorkloads: SetState<Workload[]>;
-    selectedAthlete?: User;
-    customAthleteWorkloads: Workload[];
-  },
-  updateAllSets: boolean = false
-) {
-  const { exercise, setNumber, param, newValue, leftOrRight } = input;
-  const {
-    training,
-    selectedAthleteWorkloads,
-    setCustomAthleteWorkloads,
-    selectedAthlete,
-    customAthleteWorkloads,
-  } = state;
-  if (!selectedAthlete) return;
+export function updateSelectedExercisesVolWorkSets(input: {
+  updatedExercises?: TrainingExercise[];
+  selectedExercises: TrainingExercise[];
+  setsNumbers: {
+    exerciseId: string;
+    setsNumber: number;
+  }[];
+  exercises: Exercise[];
+}) {
+  const { updatedExercises, selectedExercises, setsNumbers, exercises } = input;
 
-  if (updateAllSets) {
-    // if workload not in selected athlete workloads (future), add it and retunr
-    if (
-      !selectedAthleteWorkloads.futureWorkloads.some(
-        (fw) =>
-          fw.trainingId === training.id &&
-          fw.exerciseId === exercise.id &&
-          fw.userId === selectedAthlete.uid &&
-          fw.setNumber === setNumber
-      )
-    ) {
-      return;
-    }
+  for (const selectedExercise of selectedExercises) {
+    const foundExercise = exercises.find((e) => e.id === selectedExercise.id);
+    if (!foundExercise) continue;
 
-    // the first set has been updated on non expanded view, update all sets
-    let foundFutureWorkloads = selectedAthleteWorkloads.futureWorkloads.filter(
-      (fw) =>
-        fw.trainingId === training.id &&
-        fw.exerciseId === exercise.id &&
-        fw.userId === selectedAthlete.uid
-    );
+    const newSets = setsNumbers.find(
+      (s) => s.exerciseId === selectedExercise.id
+    )?.setsNumber;
 
-    const perscribedFieldName = getPerscribedFieldName(param, leftOrRight);
-    if (!perscribedFieldName) {
-      toast.error(`Invalid parameter field: ${param.field}`);
-      return;
-    }
+    if (newSets === undefined || newSets === null) return;
 
-    const foundAlreadyCustomWorkloads = customAthleteWorkloads.filter(
-      (cw) =>
-        cw.trainingId === training.id &&
-        cw.exerciseId === exercise.id &&
-        cw.userId === selectedAthlete.uid
-    );
+    if (newSets > 16 || newSets < 1) return;
 
-    const newCustomAthleteWorkloads = [] as Workload[];
-    if (foundAlreadyCustomWorkloads.length) {
-      foundFutureWorkloads = foundFutureWorkloads.filter(
-        (fw) =>
-          !foundAlreadyCustomWorkloads.some(
-            (cw) =>
-              cw.trainingId === fw.trainingId &&
-              cw.exerciseId === fw.exerciseId &&
-              cw.setNumber === fw.setNumber &&
-              cw.userId === fw.userId
-          )
-      );
+    const prevSets = selectedExercise.sets.length;
 
-      for (const w of foundAlreadyCustomWorkloads) {
-        const newCustomWorkload = {
-          ...w,
-          [perscribedFieldName]: newValue,
-        };
-        newCustomAthleteWorkloads.push(newCustomWorkload);
-      }
-    }
-
-    for (const w of foundFutureWorkloads) {
-      const newCustomWorkload = {
-        ...w,
-        [perscribedFieldName]: newValue,
-      };
-      newCustomAthleteWorkloads.push(newCustomWorkload);
-    }
-
-    setCustomAthleteWorkloads(newCustomAthleteWorkloads);
-  } else {
-    const foundFutureWorkload = selectedAthleteWorkloads.futureWorkloads.find(
-      (fw) =>
-        fw.trainingId === training.id &&
-        fw.exerciseId === exercise.id &&
-        fw.setNumber === setNumber &&
-        fw.userId === selectedAthlete.uid
-    );
-
-    if (!foundFutureWorkload) {
-      toast.error("Save the training to update athlete's workloads", {
-        icon: '⚠️',
-        duration: 3000,
-      });
-      return;
-    }
-
-    const perscribedFieldName = getPerscribedFieldName(param, leftOrRight);
-    if (!perscribedFieldName) {
-      toast.error(`Invalid parameter field: ${param.field}`);
-      return;
-    }
-
-    const foundAlreadyCustomWorkload = customAthleteWorkloads.find(
-      (cw) =>
-        cw.trainingId === training.id &&
-        cw.exerciseId === exercise.id &&
-        cw.setNumber === setNumber &&
-        cw.userId === selectedAthlete.uid
-    );
-
-    if (foundAlreadyCustomWorkload) {
-      // if the workload is already custom, update it
-      const newCustomWorkload = {
-        ...foundAlreadyCustomWorkload,
-        [perscribedFieldName]: newValue,
-      };
-      setCustomAthleteWorkloads((prev) =>
-        prev.map((cw) =>
-          cw.trainingId === newCustomWorkload.trainingId &&
-          cw.exerciseId === newCustomWorkload.exerciseId &&
-          cw.setNumber === newCustomWorkload.setNumber &&
-          cw.userId === selectedAthlete.uid
-            ? newCustomWorkload
-            : cw
-        )
-      );
+    if (prevSets > newSets) {
+      // remove sets
+      selectedExercise.sets = [...selectedExercise.sets].slice(0, newSets);
     } else {
-      // if the workload is not already custom, create a new one
-      const newFutureWorkload = {
-        ...foundFutureWorkload,
-        [perscribedFieldName]: newValue,
-      };
-      setCustomAthleteWorkloads((prev) => [...prev, newFutureWorkload]);
+      // add sets to the end
+      const paramValues = selectedExercise.sets[
+        selectedExercise.sets.length - 1
+      ].paramValuesL.map((pv) => ({ ...pv }));
+
+      selectedExercise.sets = [
+        ...selectedExercise.sets,
+        ...Array.from({ length: newSets - prevSets }, (_, i) => ({
+          setNumber: prevSets + i + 1,
+          paramValuesL: paramValues,
+          ...(foundExercise.isBilateral && { paramValuesR: paramValues }),
+        })),
+      ];
     }
+
+    if (updatedExercises) updatedExercises.push(selectedExercise);
   }
+}
+
+export function updateSingleExerciseVolWorkSets(input: {
+  updatedExercises?: TrainingExercise[];
+  exercise: TrainingExercise;
+  setsNumbers: {
+    exerciseId: string;
+    setsNumber: number;
+  }[];
+  foundExercise: Exercise;
+}) {
+  const { updatedExercises, exercise, setsNumbers, foundExercise } = input;
+
+  const newSets = setsNumbers.find(
+    (s) => s.exerciseId === exercise.id
+  )?.setsNumber;
+
+  if (newSets === undefined || newSets === null) return;
+
+  if (newSets > 16 || newSets < 1) return;
+
+  const prevSets = exercise.sets.length;
+
+  if (prevSets > newSets) {
+    // remove sets
+    exercise.sets = [...exercise.sets].slice(0, newSets);
+  } else {
+    // add sets to the end
+    const paramValues = exercise.sets[
+      exercise.sets.length - 1
+    ].paramValuesL.map((pv) => ({ ...pv }));
+
+    exercise.sets = [
+      ...exercise.sets,
+      ...Array.from({ length: newSets - prevSets }, (_, i) => ({
+        setNumber: prevSets + i + 1,
+        paramValuesL: paramValues,
+        ...(foundExercise.isBilateral && { paramValuesR: paramValues }),
+      })),
+    ];
+  }
+
+  if (updatedExercises) updatedExercises.push(exercise);
 }
 
 export function updateTraining(
@@ -238,13 +179,13 @@ export function updateTraining(
 
       updatedComponent = {
         ...updatedComponent,
-        subgroups: component.subgroups.map((s) =>
+        subgroups: updatedComponent.subgroups.map((s) =>
           s.id === updatedSubgroup?.id ? updatedSubgroup! : s
         ),
       };
 
       const updatedComponents = training.components.map((c) =>
-        c.id === component.id ? updatedComponent : c
+        c.id === updatedComponent.id ? updatedComponent : c
       );
 
       const newTraining = { ...training, components: updatedComponents };
@@ -263,7 +204,7 @@ export function updateTraining(
       };
 
       const updatedComponents = training.components.map((c) =>
-        c.id === component.id ? updatedComponent : c
+        c.id === updatedComponent.id ? updatedComponent : c
       );
 
       const newTraining = {
@@ -340,7 +281,6 @@ export const getLAndRValues = (
     training: Training;
     exercise: TrainingExercise;
     selectedAthleteWorkloads: CompletedFutureWorkloads;
-    customAthleteWorkloads: Workload[];
     selectedAthlete?: User;
   }
 ): {
@@ -348,25 +288,11 @@ export const getLAndRValues = (
   valueR: AttributeValue | null;
 } => {
   const { set, param, setIndex, paramIndex } = input;
-  const {
-    training,
-    exercise,
-    selectedAthleteWorkloads,
-    customAthleteWorkloads,
-    selectedAthlete,
-  } = state;
+  const { training, exercise, selectedAthleteWorkloads, selectedAthlete } =
+    state;
 
   let valueL: AttributeValue | null = null;
   let valueR: AttributeValue | null = null;
-
-  // find the custom workload for the selected athlete in the current session
-  const foundCustomFutureWorkload = customAthleteWorkloads.find(
-    (cw) =>
-      cw.trainingId === training.id &&
-      cw.exerciseId === exercise.id &&
-      cw.setNumber === set.setNumber &&
-      cw.userId === selectedAthlete?.uid
-  );
 
   // find the fetched future custom workload for the selected athlete
   const foundFutureWorkload = selectedAthleteWorkloads.futureWorkloads.find(
@@ -377,10 +303,7 @@ export const getLAndRValues = (
       fw.userId === selectedAthlete?.uid
   );
 
-  if (
-    (foundCustomFutureWorkload || foundFutureWorkload) &&
-    param.field !== ParamType.VolWorkSets
-  ) {
+  if (foundFutureWorkload && param.field !== ParamType.VolWorkSets) {
     const perscribedFieldNameL = getPerscribedFieldName(param, 'L');
     const perscribedFieldNameR = getPerscribedFieldName(param, 'R');
 
@@ -397,9 +320,7 @@ export const getLAndRValues = (
       field: param.field,
       selected: selectedL,
       value:
-        (foundCustomFutureWorkload || foundFutureWorkload)?.[
-          perscribedFieldNameL
-        ]?.toString() ||
+        foundFutureWorkload?.[perscribedFieldNameL]?.toString() ||
         exercise.sets[setIndex].paramValuesL.find(
           (pv) => pv.field === param.field
         )?.value ||
@@ -411,9 +332,7 @@ export const getLAndRValues = (
           field: param.field,
           selected: selectedR,
           value:
-            (foundCustomFutureWorkload || foundFutureWorkload)?.[
-              perscribedFieldNameR
-            ]?.toString() ||
+            foundFutureWorkload?.[perscribedFieldNameR]?.toString() ||
             exercise.sets[setIndex].paramValuesR?.find(
               (pv) => pv.field === param.field
             )?.value ||
