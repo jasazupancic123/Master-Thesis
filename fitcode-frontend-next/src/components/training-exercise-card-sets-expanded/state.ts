@@ -1,5 +1,6 @@
 import type { SetStateAction } from 'react';
 
+import { DEFAULT_SUBGROUP_ID } from '../trainer-day-view/constant';
 import { updateTraining } from '../training-exercise-card/state';
 import type { SetState, SetStateNullable } from '@/common/type/state.type';
 import type { Attribute } from '@/controller/attribute/type/attribute.type';
@@ -239,4 +240,61 @@ export function updateExerciseAttributeValues(
       setSelectedSubgroup,
     }
   );
+
+  if (!selectedSubgroup?.parentId) {
+    // if it's not a custom workload subgroup, find all custom workload subgroups and update them to the same value
+    const customSubgroups = component.subgroups.filter(
+      (sg) => sg.parentId === selectedSubgroup?.id || DEFAULT_SUBGROUP_ID
+    );
+
+    for (const subgroup of customSubgroups) {
+      const subgroupExercises = subgroup.supersets.flatMap((s) => s.exercises);
+
+      const subgroupExercisesToUpdate = subgroupExercises.filter((ex) =>
+        exercisesToUpdate.some((e) => e.id === ex.id)
+      );
+
+      const subgroupExercise = subgroupExercises.find(
+        (ex) => ex.id === exercise.id
+      );
+
+      const subgroupSet = subgroupExercise?.sets.find(
+        (s) => s.setNumber === set.setNumber
+      );
+
+      if (!subgroupExercise || !subgroupSet) continue;
+
+      updateSelectedExercisesExpandedSets(
+        {
+          exercisesToUpdate: subgroupExercisesToUpdate,
+          exercise: subgroupExercise,
+          param,
+          set: subgroupSet,
+        },
+        {
+          i,
+          lOrR,
+          baseParamField,
+          baseParamDefaultValue,
+          baseSelected,
+          newValue,
+        }
+      );
+    }
+
+    updateTraining(
+      {
+        exercises: updatedExercises,
+      },
+      {
+        training,
+        component,
+        setTraining,
+        supersets,
+        setDetectedChanges,
+        selectedSubgroup,
+        setSelectedSubgroup,
+      }
+    );
+  }
 }
