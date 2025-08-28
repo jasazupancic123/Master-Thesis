@@ -1,4 +1,4 @@
-import { Add, ArrowLeft, ArrowRight } from '@mui/icons-material';
+import { Add, ArrowLeft, ArrowRight, Circle } from '@mui/icons-material';
 import { Box, IconButton, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import dayjs from 'dayjs';
@@ -6,6 +6,8 @@ import type { RefObject } from 'react';
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 
+import type { Day } from '@/common/service/util/date.util';
+import type { Training } from '@/controller/training/type/training.type';
 import type { User } from '@/controller/user/type/user.type';
 import { useDashboard } from '@/store/dashboard-provider';
 import { useGroup } from '@/store/group-provider';
@@ -28,6 +30,8 @@ interface HorizontalItemsListProps {
   onButtonClick?: () => void;
   scrollHorizontalListLeftRef?: RefObject<number>;
   selectedAthlete?: User;
+  trainings?: Training[];
+  day?: Day;
 }
 
 export default function HorizontalItemsList(props: HorizontalItemsListProps) {
@@ -51,6 +55,8 @@ export default function HorizontalItemsList(props: HorizontalItemsListProps) {
     onButtonClick,
     scrollHorizontalListLeftRef,
     selectedAthlete,
+    trainings,
+    day,
   } = props;
 
   const dashboard = useDashboard() ?? {};
@@ -83,6 +89,39 @@ export default function HorizontalItemsList(props: HorizontalItemsListProps) {
 
     el.scrollLeft = scrollHorizontalListLeftRef.current;
   }, [props.value]);
+
+  const isTrainingInPeriod = (
+    period: 'AM' | 'PM',
+    item: { label: string; value: string; sublabel?: string }
+  ) => {
+    return (
+      dayView &&
+      trainings &&
+      day &&
+      !dayjs(day.date).isSame(item.value, 'day') &&
+      trainings.some(
+        (t) =>
+          dayjs(new Date(item.value)).isSame(t.from, 'day') &&
+          (period === 'AM' ? dayjs(t.to).hour() < 12 : dayjs(t.to).hour() >= 12)
+      )
+    );
+  };
+
+  const TrainingDot = ({ i, top }: { i: number; top: boolean }) => {
+    return (
+      <Circle
+        sx={{
+          position: 'absolute',
+          left: i === items.length - 1 ? '70%' : i === 0 ? '35%' : '50%',
+          top: top ? 0 : undefined,
+          bottom: !top ? 0 : undefined,
+          transform: 'translateX(-50%)',
+          color: theme.palette.text.secondary,
+          fontSize: 4,
+        }}
+      />
+    );
+  };
 
   return (
     <Box
@@ -218,6 +257,7 @@ export default function HorizontalItemsList(props: HorizontalItemsListProps) {
                   pr: i === items.length - 1 ? 0 : undefined,
                   cursor: 'pointer',
                   flex: '0 0 auto', // important so it doesn't shrink
+                  position: 'relative',
                 }}
                 onClick={() => {
                   if (alertOnChange && detectedChanges) {
@@ -237,6 +277,9 @@ export default function HorizontalItemsList(props: HorizontalItemsListProps) {
                   setValue(item.value);
                 }}
               >
+                {isTrainingInPeriod('AM', item) && (
+                  <TrainingDot i={i} top={true} />
+                )}
                 <Typography
                   key={`${item.value}-${i}`}
                   variant="subtitle2"
@@ -306,6 +349,9 @@ export default function HorizontalItemsList(props: HorizontalItemsListProps) {
                     </>
                   )}
                 </Typography>
+                {isTrainingInPeriod('PM', item) && (
+                  <TrainingDot i={i} top={false} />
+                )}
               </Box>
             );
           })

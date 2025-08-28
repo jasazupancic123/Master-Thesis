@@ -15,7 +15,7 @@ import { useTheme } from '@mui/material';
 import { useState } from 'react';
 
 import TrainingExerciseCardContainer from '../training-exercise-card-container/training-exercise-card-container';
-import deleteSupersetExercise from './state';
+import { deleteSupersetExercise } from './state';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
 import type { Superset } from '@/controller/training/type/superset.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
@@ -54,6 +54,7 @@ export default function SupersetExercise(props: SupersetExerciseProps) {
     setSelectedSubgroup,
     selectedExercises,
     setSelectedExercises,
+    selectedAthlete,
   } = useTrainerDayViewContext();
 
   const { setTrainings } = useGroup();
@@ -96,30 +97,26 @@ export default function SupersetExercise(props: SupersetExerciseProps) {
 
   const isCircuit = (selectedSubgroup || component).mainSet === MainSet.CIRCUIT;
 
+  const numExercises = (selectedSubgroup || component).supersets.flatMap(
+    (s) => s.exercises
+  ).length;
+
   return (
     <Grid2
       size={
-        (selectedSubgroup || component).mainSet === MainSet.BLOCK
-          ? { xs: 12 }
-          : {
-              xs: 12,
-              sm:
-                selectedExercise &&
-                superset.exercises.some((e) => e.id === selectedExercise.id)
-                  ? 12
-                  : screenSize.isLandscapeMobile
-                    ? 4
-                    : 6,
-              md:
-                selectedExercise &&
-                superset.exercises.some((e) => e.id === selectedExercise.id)
-                  ? screenSize.isLandscapeMobile
-                    ? 4
-                    : 6
-                  : screenSize.isLandscapeMobile
-                    ? 4
-                    : 3,
-            }
+        (selectedSubgroup || component).mainSet === MainSet.CIRCUIT
+          ? screenSize.isSmallerThanLaptop
+            ? 12
+            : numExercises === 1
+              ? 12
+              : numExercises === 2
+                ? 6
+                : numExercises === 3
+                  ? 4
+                  : 3
+          : screenSize.isSmallerThanLaptop
+            ? 12
+            : { xs: 12 }
       }
       key={exercise.id}
       sx={{
@@ -170,7 +167,7 @@ export default function SupersetExercise(props: SupersetExerciseProps) {
             </Typography>
           </Box>
 
-          {expandedExercisesView && (
+          {!selectedAthlete && expandedExercisesView && (
             <Box
               position="absolute"
               top={5}

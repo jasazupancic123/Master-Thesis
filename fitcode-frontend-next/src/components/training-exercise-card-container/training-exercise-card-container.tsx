@@ -32,7 +32,6 @@ export default function TrainingExerciseCardContainer(
   const {
     training,
     selectedAthlete,
-    customAthleteWorkloads,
     selectedAthleteWorkloads,
     component,
     selectedSubgroup,
@@ -135,18 +134,19 @@ export default function TrainingExerciseCardContainer(
     // useEffect to init avg workloads for chart
     if (selectedAthlete) {
       // use fetched data for selected athlete from api
-      prepareSelectedAthleteAvgWorkloadsForChart(
-        customAthleteWorkloads,
+      prepareSelectedAthleteAvgWorkloadsForChart({
         selectedAthleteWorkloads,
         trainings,
-        component.id,
+        training,
+        component,
         exercise,
         selectedAthlete,
+        selectedSubgroup,
         selectedParams,
         setData,
         setMax,
-        setRange
-      );
+        setRange,
+      });
     } else {
       // group avg is already on training
       prepareGroupAvgWorkloadsForChart(

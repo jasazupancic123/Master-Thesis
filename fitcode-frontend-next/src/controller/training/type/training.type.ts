@@ -4,7 +4,6 @@ import type {
   TrainingComponent,
   UpdateTrainingComponent,
 } from './training-component.type';
-import type { CreatePrescribedWorkload } from './workload.type';
 import type { DateRange } from '@/common/type/date-range.type';
 import type { BaseEntity } from '@/common/type/entity.type';
 import type { Cycle } from '@/controller/group/type/cycle.type';
@@ -43,7 +42,6 @@ export type CreateTraining = Pick<
 
 export type UpdateTraining = Pick<Training, 'warmup' | 'cooldown'> & {
   components: UpdateTrainingComponent[];
-  workloads?: CreatePrescribedWorkload[]; // custom workloads
 };
 
 export type FilterTrainings = DateRange &

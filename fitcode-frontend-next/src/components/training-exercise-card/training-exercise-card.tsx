@@ -5,10 +5,15 @@ import Typography from '@mui/material/Typography';
 import { useEffect, useRef, useState } from 'react';
 
 import MyModal from '../modal/modal';
+import { DEFAULT_SUBGROUP_ID } from '../trainer-day-view/constant';
 import type { TrainingExerciseCardProps } from '../trainer-day-view/props';
 import TrainingExerciseCardCollapsedSets from '../training-exercise-card-sets-collapsed/training-exercise-card-collapsed-sets';
 import TrainingExerciseCardExpandedSets from '../training-exercise-card-sets-expanded/training-exercise-card-expanded-sets';
-import { updateTraining } from './state';
+import {
+  updateSelectedExercisesVolWorkSets,
+  updateSingleExerciseVolWorkSets,
+  updateTraining,
+} from './state';
 import type { Attribute } from '@/controller/attribute/type/attribute.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useGroup } from '@/store/group-provider';
@@ -92,45 +97,36 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
       selectedExercises.some((e) => e.id === exercise.id)
     ) {
       const updatedExercises = [] as TrainingExercise[];
-      for (const selectedExercise of selectedExercises) {
-        const newSets = setsNumbers.find(
-          (s) => s.exerciseId === selectedExercise.id
-        )?.setsNumber;
 
-        if (newSets === undefined || newSets === null) return;
+      updateSelectedExercisesVolWorkSets({
+        updatedExercises,
+        selectedExercises,
+        setsNumbers,
+        exercises,
+      });
 
-        if (newSets > 16 || newSets < 1) return;
+      // if it's not a custom workload subgroup, find all custom workload subgroups and update
+      // number of sets to the same value
+      if (!selectedSubgroup?.parentId) {
+        const customSubgroups = component.subgroups.filter(
+          (sg) => sg.parentId === selectedSubgroup?.id || DEFAULT_SUBGROUP_ID
+        );
 
-        const prevSets = selectedExercise.sets.length;
+        for (const subgroup of customSubgroups) {
+          const subgroupExercises = subgroup.supersets.flatMap(
+            (s) => s.exercises
+          );
 
-        let newExercise;
-        if (prevSets > newSets) {
-          // remove sets
-          newExercise = {
-            ...selectedExercise,
-            sets: [...selectedExercise.sets].slice(0, newSets),
-            params: [...selectedExercise.params],
-          };
-        } else {
-          // add sets to the end
-          const paramValues = selectedExercise.sets[
-            selectedExercise.sets.length - 1
-          ].paramValuesL.map((pv) => ({ ...pv }));
+          const subgroupSelectedExercises = subgroupExercises.filter((ex) =>
+            selectedExercises.some((e) => e.id === ex.id)
+          );
 
-          newExercise = {
-            ...selectedExercise,
-            sets: [
-              ...selectedExercise.sets,
-              ...Array.from({ length: newSets - prevSets }, (_, i) => ({
-                setNumber: prevSets + i + 1,
-                paramValuesL: paramValues,
-                ...(foundExercise.isBilateral && { paramValuesR: paramValues }),
-              })),
-            ],
-          };
+          updateSelectedExercisesVolWorkSets({
+            selectedExercises: subgroupSelectedExercises,
+            setsNumbers,
+            exercises,
+          });
         }
-
-        updatedExercises.push(newExercise);
       }
 
       updateTraining(
@@ -148,45 +144,45 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
         }
       );
     } else {
-      const newSets = setsNumbers.find(
-        (s) => s.exerciseId === exercise.id
-      )?.setsNumber;
+      // paste here
 
-      if (newSets === undefined || newSets === null) return;
+      const updatedExercises = [] as TrainingExercise[]; // will contain only 1
 
-      if (newSets > 16 || newSets < 1) return;
+      updateSingleExerciseVolWorkSets({
+        updatedExercises,
+        exercise,
+        setsNumbers,
+        foundExercise,
+      });
 
-      const prevSets = exercise.sets.length;
+      // if it's not a custom workload subgroup, find all custom workload subgroups and update
+      // number of sets to the same value
+      if (!selectedSubgroup?.parentId) {
+        const customSubgroups = component.subgroups.filter(
+          (sg) => sg.parentId === selectedSubgroup?.id || DEFAULT_SUBGROUP_ID
+        );
 
-      let newExercise: TrainingExercise;
-      if (prevSets > newSets) {
-        // remove sets
-        newExercise = {
-          ...exercise,
-          sets: [...exercise.sets].slice(0, newSets),
-          params: [...exercise.params],
-        };
-      } else {
-        // add sets to the end
-        const paramValues = exercise.sets[
-          exercise.sets.length - 1
-        ].paramValuesL.map((pv) => ({ ...pv }));
+        for (const subgroup of customSubgroups) {
+          const subgroupExercises = subgroup.supersets.flatMap(
+            (s) => s.exercises
+          );
 
-        newExercise = {
-          ...exercise,
-          sets: [
-            ...exercise.sets,
-            ...Array.from({ length: newSets - prevSets }, (_, i) => ({
-              setNumber: prevSets + i + 1,
-              paramValuesL: paramValues,
-              ...(foundExercise.isBilateral && { paramValuesR: paramValues }),
-            })),
-          ],
-        };
+          const subgroupExercise = subgroupExercises.find(
+            (ex) => ex.id === exercise.id
+          );
+
+          if (!subgroupExercise) continue;
+
+          updateSingleExerciseVolWorkSets({
+            exercise: subgroupExercise,
+            setsNumbers,
+            foundExercise,
+          });
+        }
       }
 
       updateTraining(
-        { exercises: [newExercise] },
+        { exercises: updatedExercises },
         {
           training,
           component,

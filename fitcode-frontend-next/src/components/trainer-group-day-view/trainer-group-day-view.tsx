@@ -53,8 +53,6 @@ export default function TrainerDayView() {
     setSelectedSubgroup,
     selectedAthlete,
     setSelectedAthleteWorkloads,
-    customAthleteWorkloads,
-    setCustomAthleteWorkloads,
     isSettingAthleteWorkloads,
   } = useTrainerDayViewContext();
 
@@ -197,8 +195,6 @@ export default function TrainerDayView() {
                   group,
                   cycle,
                   router,
-                  customAthleteWorkloads,
-                  setCustomAthleteWorkloads,
                   components,
                   exercises,
                   methods,
@@ -272,8 +268,6 @@ export default function TrainerDayView() {
                     group,
                     cycle,
                     router,
-                    customAthleteWorkloads,
-                    setCustomAthleteWorkloads,
                     components,
                     exercises,
                     methods,

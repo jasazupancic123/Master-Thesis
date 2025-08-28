@@ -5,10 +5,8 @@ import toast from 'react-hot-toast';
 import { ExerciseParam } from '../exercise-param/exercise-param';
 import LeftRightExerciseText from '../left-right-exercise-text/left-right-exercise-text';
 import { getLAndRValues } from '../training-exercise-card/state';
-import {
-  updateExerciseAttributeValues,
-  updateExpandedSelectedAthleteValues,
-} from './state';
+import { getCorrectValuesForExerciseParam } from '../training-exercise-card-container/state';
+import { updateExerciseAttributeValues } from './state';
 import type { SetState } from '@/common/type/state.type';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import { ParamType } from '@/controller/component/enum/param.enum';
@@ -17,6 +15,7 @@ import type { TrainingExercise } from '@/controller/training/type/training-exerc
 import { useGroup } from '@/store/group-provider';
 import { useMain } from '@/store/main-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
+import { useSupersets } from '@/store/supersets-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 interface TrainingExerciseCarExpandedSetsProps {
@@ -34,21 +33,24 @@ export default function TrainingExerciseCardExpandedSets(
 
   const { methods } = useMain();
 
+  const { setsNumbers, setSetsNumbers } = useSupersets();
+
   const {
     training,
+    setTraining,
     component,
+    setComponent,
     supersets,
+    setSupersets,
     selectedSubgroup,
     setSelectedSubgroup,
+    selectedExercises,
+    setSelectedExercises,
     selectedAthlete,
     selectedAthleteWorkloads,
-    customAthleteWorkloads,
-    setCustomAthleteWorkloads,
-    selectedExercises,
   } = useTrainerDayViewContext();
 
   const { setDetectedChanges } = useGroup();
-  const { setTraining } = useTrainerDayViewContext();
 
   const { exercise, expandedSetsView, setExpandedSetsView, supersetIndex } =
     props;
@@ -142,7 +144,6 @@ export default function TrainingExerciseCardExpandedSets(
                       training,
                       exercise,
                       selectedAthleteWorkloads,
-                      customAthleteWorkloads,
                       selectedAthlete,
                     }
                   );
@@ -216,46 +217,49 @@ export default function TrainingExerciseCardExpandedSets(
                             onSubOptionChange={(newValue) => {
                               if (+newValue < 0) return;
 
-                              // update only selected athletes workloads
-                              if (selectedAthlete) {
-                                updateExpandedSelectedAthleteValues(
-                                  {
-                                    exercise,
-                                    param,
-                                    set,
-                                    lOrR,
-                                    newValue,
-                                  },
-                                  {
-                                    training,
-                                    component,
-                                    supersets,
-                                    selectedExercises,
-                                    selectedAthlete,
-                                    selectedAthleteWorkloads,
-                                    setCustomAthleteWorkloads,
-                                  }
-                                );
-                              }
+                              const {
+                                correctSelectedSubgroup,
+                                correctSupersets,
+                                correctSelectedExercises,
+                                correctExercise,
+                                correctSet,
+                                correctParam,
+                              } = getCorrectValuesForExerciseParam(
+                                selectedAthlete,
+                                { exercise },
+                                {
+                                  component,
+                                  supersets,
+                                  selectedExercises,
+                                  setsNumbers,
+                                  selectedSubgroup,
+                                  setComponent,
+                                  setSelectedSubgroup,
+                                  setTraining,
+                                  setSupersets,
+                                  setSelectedExercises,
+                                  setSetsNumbers,
+                                }
+                              );
 
                               // update only the changed exercise
                               updateExerciseAttributeValues(
                                 {
                                   newValue,
                                   i,
-                                  set,
+                                  set: correctSet || set,
                                   lOrR: lOrR as 'L' | 'R',
                                 },
                                 {
-                                  selectedExercises,
-                                  exercise,
-                                  param,
+                                  selectedExercises: correctSelectedExercises,
+                                  exercise: correctExercise,
+                                  param: correctParam || param,
                                   training,
                                   component,
                                   setTraining,
-                                  supersets,
+                                  supersets: correctSupersets,
                                   setDetectedChanges,
-                                  selectedSubgroup,
+                                  selectedSubgroup: correctSelectedSubgroup,
                                   setSelectedSubgroup,
                                 }
                               );
