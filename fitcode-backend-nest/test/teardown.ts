@@ -14,7 +14,7 @@ export default async function () {
   const commonService = new CommonService();
   const configService = new ConfigService<Environment>();
 
-  const credential = JSON.parse(configService.get('FIREBASE_CREDENTIALS'));
+  const credential = JSON.parse(configService.get('FIREBASE_CONFIG'));
   const firebaseAdminClient = getFirebaseClient({ credential });
   const firebase = new FirebaseService(
     configService,
