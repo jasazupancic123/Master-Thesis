@@ -694,27 +694,33 @@ export class TrainingPlanService {
           if (subgroup.membersIds.length !== 1)
             throw new BadRequestException('Only one member can be selected');
 
-          // check that no other subgroup has this member
-          for (const other of otherSubgroups.filter((s) => s.id !== parent.id))
+          // check that no other subgroup has this member (except for parent)
+          const filteredOtherSubgroups = otherSubgroups.filter(
+            (s) => s.id !== parent.id,
+          );
+
+          for (const other of filteredOtherSubgroups)
             if (other.membersIds.some((m) => subgroup.membersIds.includes(m)))
               throw new ConflictException(
                 'Member is already in another subgroup',
               );
 
           // check that supersets are the same as in main group
-          this.checkSupersetsEquality(
-            subgroup.supersets,
-            trainingComponent.supersets,
-          );
+          this.checkSupersetsEquality(subgroup.supersets, parent.supersets);
         }
-      } else
+      } else {
         // root subgroup
-        // check that no other subgroup has these members
-        for (const other of otherSubgroups)
+        // check that no other subgroup has these members (expect for child subgroups)
+        const filteredOtherSubgroups = otherSubgroups.filter(
+          (s) => s.parentId !== subgroup.id,
+        );
+
+        for (const other of filteredOtherSubgroups)
           if (other.membersIds.some((m) => subgroup.membersIds.includes(m)))
             throw new ConflictException(
               'Member is already in another subgroup',
             );
+      }
 
       // validate supersets
       const validSupersets = this.validateSupersets(
@@ -1062,7 +1068,6 @@ export class TrainingPlanService {
         const e2 = s2.exercises[exerciseIndex];
 
         if (!e2 || e1.id !== e2.id) throw error;
-        if (e1.sets.length !== e2.sets.length) throw error;
       }
     }
   }

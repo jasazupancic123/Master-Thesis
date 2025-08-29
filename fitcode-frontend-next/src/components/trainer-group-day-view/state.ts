@@ -13,7 +13,6 @@ import type { Exercise } from '@/controller/exercise/type/exercise.type';
 import type { Cycle } from '@/controller/group/type/cycle.type';
 import type { Group } from '@/controller/group/type/group.type';
 import type { Method } from '@/controller/method/type/method.type';
-import { COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE } from '@/controller/training/constant/completed-future-workloads-default-value.constant';
 import { CustomWorkloadsSubgroupsService } from '@/controller/training/custom-workloads-subgroups.service';
 import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
@@ -49,9 +48,6 @@ export async function handleUpdateMultipleTrainings(state: {
     exercises,
     methods,
     setDetectedChanges,
-    selectedAthlete,
-    setSelectedAthleteWorkloads,
-    isSettingAthleteWorkloads,
   } = state;
 
   if (!training) {
@@ -80,16 +76,6 @@ export async function handleUpdateMultipleTrainings(state: {
           return t;
         })
       );
-
-      if (selectedAthlete) {
-        fetchWorkloads({
-          selectedAthlete,
-          training,
-          setSelectedAthleteWorkloads,
-          isSettingAthleteWorkloads,
-          router,
-        });
-      }
 
       setDetectedChanges(false);
       toast.success('Training updated successfully');
@@ -187,56 +173,4 @@ export function deleteSelectedExercises(
   setTraining(newTraining);
   setSelectedExercises([]);
   setDetectedChanges(true);
-}
-
-export async function fetchWorkloads(input: {
-  selectedAthlete: User | undefined;
-  training: Training | undefined;
-  setSelectedAthleteWorkloads: SetState<CompletedFutureWorkloads>;
-  isSettingAthleteWorkloads: React.RefObject<boolean>;
-  router: AppRouterInstance;
-}) {
-  const {
-    selectedAthlete,
-    training,
-    setSelectedAthleteWorkloads,
-    isSettingAthleteWorkloads,
-    router,
-  } = input;
-  if (!selectedAthlete) return;
-
-  const combinedComponents = training?.components;
-
-  if (!combinedComponents || !combinedComponents.length) {
-    setSelectedAthleteWorkloads(COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE);
-    return;
-  }
-
-  const uniqueExerciseIds = [] as string[];
-  combinedComponents.forEach((c) => {
-    c.supersets.forEach((s) => {
-      s.exercises.forEach((e) => {
-        if (!uniqueExerciseIds.includes(e.id)) uniqueExerciseIds.push(e.id);
-      });
-    });
-  });
-
-  if (!uniqueExerciseIds.length) {
-    setSelectedAthleteWorkloads(COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE);
-    return;
-  }
-
-  isSettingAthleteWorkloads.current = true;
-  handleApiRequest(
-    router,
-    () =>
-      TrainingController.findAthleteWorkloads(training.id, selectedAthlete.uid),
-    (workloads) => {
-      setSelectedAthleteWorkloads(workloads);
-      isSettingAthleteWorkloads.current = false;
-    },
-    undefined,
-    'Failed to fetch workloads'
-  );
-  isSettingAthleteWorkloads.current = false;
 }

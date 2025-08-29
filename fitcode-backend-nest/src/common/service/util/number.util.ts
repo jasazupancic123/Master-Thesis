@@ -42,6 +42,14 @@ export class NumberUtil {
     return Math.round(v * factor) / factor;
   }
 
+  /**
+   * Rounds the intensity based on the user's baseline.
+   */
+  roundIntensity(int: number, baseline: number) {
+    if (baseline < 20 || int <= 10) return Math.round(int * 4) / 4; // round to nearest 0.25 kg
+    return Math.round(int * 2) / 2; // round to the nearest 0.5 kg
+  }
+
   getStandardDeviation(xs: number[]) {
     const n = xs.length;
     if (n < 2) return NaN; // not enough history
