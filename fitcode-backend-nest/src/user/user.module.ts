@@ -6,8 +6,8 @@ import { InstitutionRepository } from '@src/institution/repository/institution.r
 import { Wellness } from './entity/wellness.entity';
 import { UserRepository } from './repository/user.repository';
 import { WellnessRepository } from './repository/wellness.repository';
+import { UserService } from './service/user.service';
 import { UserController } from './user.controller';
-import { UserService } from './user.service';
 
 @Global()
 @Module({

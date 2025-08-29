@@ -44,7 +44,7 @@ import {
 import { WorkloadRepository } from '@src/training/repository/workload.repository';
 import { WorkloadService } from '@src/training/service/workload.service';
 import type { Wellness } from '@src/user/entity/wellness.entity';
-import { UserService } from '@src/user/user.service';
+import { UserService } from '@src/user/service/user.service';
 
 describe('Get prescribed training (e2e)', () => {
   let app: INestApplication;

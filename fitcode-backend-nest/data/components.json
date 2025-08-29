@@ -304,7 +304,10 @@
         {
           "field": "int1",
           "defaultValue": "eff",
-          "options": [{ "field": "eff", "defaultValue": "1" }]
+          "options": [
+            { "field": "eff", "defaultValue": "1" },
+            { "field": "vbt", "defaultValue": "1" }
+          ]
         },
         {
           "field": "volRec",

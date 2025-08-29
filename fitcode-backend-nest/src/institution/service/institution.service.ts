@@ -16,7 +16,7 @@ import { InstitutionRef } from '@src/common/type/firestore.type';
 import { BatchWriteOperation } from '@src/common/type/orm.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { UserEntity } from '@src/user/entity/user.entity';
-import { UserService } from '@src/user/user.service';
+import { UserService } from '@src/user/service/user.service';
 
 import { INSTITUTION_ATHLETE_EVENT } from '../constant/update-institution-athlete-event.constant';
 import { CreateInstitutionDto } from '../dto/create-institution.dto';
