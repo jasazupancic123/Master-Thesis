@@ -1018,7 +1018,8 @@ export class TrainingService implements Permission<Training, Institution> {
     this.trainingPlanService.modifyPrescribedParamValuesByType(
       training,
       bwParam,
-      (value) => this.commonService.number.round((value * bw) / 100, 2), // convert % value to kg and round to 2 decimals
+      (value) =>
+        this.commonService.number.roundIntensity((value * bw) / 100, bw), // convert % value to kg and round to 2 decimals
     );
   }
 
@@ -1051,7 +1052,10 @@ export class TrainingService implements Permission<Training, Institution> {
         const weight = best.intWork1ValueL;
         const oneRM = this.commonService.number.rm(weight, reps);
 
-        return this.commonService.number.round((value * oneRM) / 100, 2);
+        return this.commonService.number.roundIntensity(
+          (value * oneRM) / 100,
+          oneRM,
+        );
       },
     );
   }
