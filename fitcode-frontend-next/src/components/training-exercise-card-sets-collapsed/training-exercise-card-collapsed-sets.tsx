@@ -42,7 +42,7 @@ export default function TrainingExerciseCardCollapsedSets(
 
   const { setsNumbers, setSetsNumbers } = useSupersets();
 
-  const { methods } = useMain();
+  const { exercises, methods } = useMain();
 
   const {
     training,
@@ -287,6 +287,16 @@ export default function TrainingExerciseCardCollapsedSets(
                                   setsNumbers: correctSetsNumbers,
                                   selectedExercises: correctSelectedExercises,
                                   setSetsNumbers,
+                                  exercise,
+                                  exercises,
+                                  selectedSubgroup: correctSelectedSubgroup,
+                                  component,
+                                  training,
+                                  supersets: correctSupersets,
+                                  setSupersets,
+                                  setDetectedChanges,
+                                  setSelectedSubgroup,
+                                  setTraining,
                                 }
                               );
                               return;

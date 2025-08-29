@@ -163,7 +163,9 @@ export default function Supersets(props: SupersetsProps) {
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
 
-  const disabledSensors = useSensors(); // <- empty
+  const disabledSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 999999 } })
+  );
 
   const getContainerIdForSupersetIndex = (i: number) => `${component!.id}-${i}`;
 

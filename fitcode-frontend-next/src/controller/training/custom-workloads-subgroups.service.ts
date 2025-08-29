@@ -1,6 +1,10 @@
+import type { SetStateAction } from 'react';
 import type { DraggableLocation } from 'react-beautiful-dnd';
 
+import type { Attribute } from '../attribute/type/attribute.type';
+import type { Exercise } from '../exercise/type/exercise.type';
 import type { MainSet } from './enum/main-set.enum';
+import type { ExerciseSet } from './type/exercise-set.type';
 import type { Subgroup } from './type/subgroup.type';
 import type { TrainingComponent } from './type/training-component.type';
 import type { TrainingExercise } from './type/training-exercise.type';
@@ -13,6 +17,12 @@ import {
 } from '@/components/trainer-day-view/state';
 import { removeSelectedExercisesFromSupersets } from '@/components/trainer-group-day-view/state';
 import { onMainSetChange } from '@/components/training-component-header-menu/state';
+import {
+  updateSelectedExercisesVolWorkSets,
+  updateSingleExerciseVolWorkSets as updateSingleExerciseVolWorkSetsTrainingExerciseCard,
+} from '@/components/training-exercise-card/state';
+import { updateSelectedExercisesCollapsedSets } from '@/components/training-exercise-card-sets-collapsed/state';
+import { updateSelectedExercisesExpandedSets } from '@/components/training-exercise-card-sets-expanded/state';
 
 export class CustomWorkloadsSubgroupsService {
   // when exercise is dropped on 'Add/drop exercise' area
@@ -107,6 +117,196 @@ export class CustomWorkloadsSubgroupsService {
     });
 
     return component.subgroups;
+  };
+
+  static updateSelectedExercisesVolWorkSets = (
+    component: TrainingComponent,
+    selectedSubgroup: Subgroup | null,
+    selectedExercises: TrainingExercise[],
+    setsNumbers: { exerciseId: string; setsNumber: number }[],
+    exercises: Exercise[]
+  ) => {
+    const customSubgroups = component.subgroups.filter(
+      (sg) => sg.parentId === selectedSubgroup?.id || DEFAULT_SUBGROUP_ID
+    );
+
+    for (const subgroup of customSubgroups) {
+      const subgroupExercises = subgroup.supersets.flatMap((s) => s.exercises);
+
+      const subgroupSelectedExercises = subgroupExercises.filter((ex) =>
+        selectedExercises.some((e) => e.id === ex.id)
+      );
+
+      updateSelectedExercisesVolWorkSets({
+        selectedExercises: subgroupSelectedExercises,
+        setsNumbers,
+        exercises,
+      });
+    }
+  };
+
+  static updateSingleExerciseVolWorkSets = (
+    component: TrainingComponent,
+    selectedSubgroup: Subgroup | null,
+    exercise: TrainingExercise,
+    setsNumbers: { exerciseId: string; setsNumber: number }[],
+    foundExercise: Exercise
+  ) => {
+    const customSubgroups = component.subgroups.filter(
+      (sg) => sg.parentId === selectedSubgroup?.id || DEFAULT_SUBGROUP_ID
+    );
+
+    for (const subgroup of customSubgroups) {
+      const subgroupExercises = subgroup.supersets.flatMap((s) => s.exercises);
+
+      const subgroupExercise = subgroupExercises.find(
+        (ex) => ex.id === exercise.id
+      );
+
+      if (!subgroupExercise) continue;
+
+      updateSingleExerciseVolWorkSetsTrainingExerciseCard({
+        exercise: subgroupExercise,
+        setsNumbers,
+        foundExercise,
+      });
+    }
+  };
+
+  static updateSelectedExercisesCollapsedSets = (
+    input: {
+      component: TrainingComponent;
+      exercise: TrainingExercise;
+      selectedSubgroup: Subgroup | null;
+      exercisesToUpdate: TrainingExercise[];
+      param: Attribute;
+    },
+    state: {
+      lOrR: string;
+      baseParamField: string;
+      baseParamDefaultValue: string;
+      baseSelected: string;
+      newValue: SetStateAction<string>;
+    }
+  ) => {
+    const { component, exercise, selectedSubgroup, exercisesToUpdate, param } =
+      input;
+    const {
+      lOrR,
+      baseParamField,
+      baseParamDefaultValue,
+      baseSelected,
+      newValue,
+    } = state;
+
+    const customSubgroups = component.subgroups.filter(
+      (sg) => sg.parentId === selectedSubgroup?.id || DEFAULT_SUBGROUP_ID
+    );
+
+    for (const subgroup of customSubgroups) {
+      const subgroupExercises = subgroup.supersets.flatMap((s) => s.exercises);
+
+      const subgroupExercisesToUpdate = subgroupExercises.filter((ex) =>
+        exercisesToUpdate.some((e) => e.id === ex.id)
+      );
+
+      const subgroupExercise = subgroupExercises.find(
+        (ex) => ex.id === exercise.id
+      );
+
+      if (!subgroupExercise) continue;
+
+      updateSelectedExercisesCollapsedSets(
+        {
+          exercisesToUpdate: subgroupExercisesToUpdate,
+          exercise: subgroupExercise,
+          param,
+        },
+        {
+          lOrR,
+          baseParamField,
+          baseParamDefaultValue,
+          baseSelected,
+          newValue,
+        }
+      );
+    }
+  };
+
+  static updateExerciseAttributeValues = (
+    input: {
+      component: TrainingComponent;
+      exercise: TrainingExercise;
+      selectedSubgroup: Subgroup | null;
+      exercisesToUpdate: TrainingExercise[];
+      param: Attribute;
+      set: ExerciseSet;
+    },
+    state: {
+      i: number;
+      lOrR: 'L' | 'R';
+      baseParamField: string;
+      baseParamDefaultValue: string;
+      baseSelected: string;
+      newValue: SetStateAction<string>;
+    }
+  ) => {
+    const {
+      component,
+      exercise,
+      selectedSubgroup,
+      exercisesToUpdate,
+      param,
+      set,
+    } = input;
+
+    const {
+      i,
+      lOrR,
+      baseParamField,
+      baseParamDefaultValue,
+      baseSelected,
+      newValue,
+    } = state;
+
+    const customSubgroups = component.subgroups.filter(
+      (sg) => sg.parentId === selectedSubgroup?.id || DEFAULT_SUBGROUP_ID
+    );
+
+    for (const subgroup of customSubgroups) {
+      const subgroupExercises = subgroup.supersets.flatMap((s) => s.exercises);
+
+      const subgroupExercisesToUpdate = subgroupExercises.filter((ex) =>
+        exercisesToUpdate.some((e) => e.id === ex.id)
+      );
+
+      const subgroupExercise = subgroupExercises.find(
+        (ex) => ex.id === exercise.id
+      );
+
+      const subgroupSet = subgroupExercise?.sets.find(
+        (s) => s.setNumber === set.setNumber
+      );
+
+      if (!subgroupExercise || !subgroupSet) continue;
+
+      updateSelectedExercisesExpandedSets(
+        {
+          exercisesToUpdate: subgroupExercisesToUpdate,
+          exercise: subgroupExercise,
+          param,
+          set: subgroupSet,
+        },
+        {
+          i,
+          lOrR,
+          baseParamField,
+          baseParamDefaultValue,
+          baseSelected,
+          newValue,
+        }
+      );
+    }
   };
 
   static removeExerciseFromSuperset = (

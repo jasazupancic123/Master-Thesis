@@ -6,6 +6,7 @@ import type { Attribute } from '@/controller/attribute/type/attribute.type';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import { ParamType } from '@/controller/component/enum/param.enum';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
+import { CustomWorkloadsSubgroupsService } from '@/controller/training/custom-workloads-subgroups.service';
 import type { CompletedFutureWorkloads } from '@/controller/training/type/completed-future-workloads.type';
 import type { ExerciseSet } from '@/controller/training/type/exercise-set.type';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
@@ -15,6 +16,115 @@ import type { TrainingComponent } from '@/controller/training/type/training-comp
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import type { Workload } from '@/controller/training/type/workload.type';
 import type { User } from '@/controller/user/type/user.type';
+
+export function updateVolWorkSets(input: {
+  exercise: TrainingExercise;
+  exercises: Exercise[];
+  selectedExercises: TrainingExercise[];
+  setsNumbers: { exerciseId: string; setsNumber: number }[];
+  selectedSubgroup: Subgroup | null;
+  component: TrainingComponent;
+  training: Training;
+  supersets: Superset[];
+  setSupersets: SetState<Superset[]>;
+  setDetectedChanges: SetState<boolean>;
+  setSelectedSubgroup: SetState<Subgroup | null>;
+  setTraining: SetStateNullable<Training>;
+}) {
+  const {
+    training,
+    setTraining,
+    component,
+    exercise,
+    exercises,
+    selectedExercises,
+    setsNumbers,
+    selectedSubgroup,
+    setSelectedSubgroup,
+    supersets,
+    setSupersets,
+    setDetectedChanges,
+  } = input;
+
+  const foundExercise = exercises.find((e) => e.id === exercise.id);
+  if (!foundExercise) return;
+
+  if (
+    selectedExercises.length &&
+    selectedExercises.some((e) => e.id === exercise.id)
+  ) {
+    // update multiple selected exercises
+    const updatedExercises = [] as TrainingExercise[];
+
+    updateSelectedExercisesVolWorkSets({
+      updatedExercises,
+      selectedExercises,
+      setsNumbers,
+      exercises,
+    });
+
+    // if it's not a custom workload subgroup, find all custom workload subgroups and update
+    // number of sets to the same value
+    if (!selectedSubgroup?.parentId) {
+      CustomWorkloadsSubgroupsService.updateSelectedExercisesVolWorkSets(
+        component,
+        selectedSubgroup,
+        selectedExercises,
+        setsNumbers,
+        exercises
+      );
+    }
+
+    updateTraining(
+      { exercises: updatedExercises },
+      {
+        training,
+        component,
+        supersets,
+        setDetectedChanges,
+        selectedSubgroup,
+        setSelectedSubgroup,
+        setTraining,
+      }
+    );
+  } else {
+    // update single exercise
+    const updatedExercises = [] as TrainingExercise[]; // will contain only 1
+
+    updateSingleExerciseVolWorkSets({
+      updatedExercises,
+      exercise,
+      setsNumbers,
+      foundExercise,
+    });
+
+    // if it's not a custom workload subgroup, find all custom workload subgroups and update
+    // number of sets to the same value
+    if (!selectedSubgroup?.parentId) {
+      CustomWorkloadsSubgroupsService.updateSingleExerciseVolWorkSets(
+        component,
+        selectedSubgroup,
+        exercise,
+        setsNumbers,
+        foundExercise
+      );
+    }
+
+    updateTraining(
+      { exercises: updatedExercises },
+      {
+        training,
+        component,
+        setTraining,
+        supersets,
+        setDetectedChanges,
+        selectedSubgroup,
+        setSelectedSubgroup,
+        setSupersets,
+      }
+    );
+  }
+}
 
 export function updateSelectedExercisesVolWorkSets(input: {
   updatedExercises?: TrainingExercise[];
@@ -120,8 +230,6 @@ export function updateTraining(
     setSelectedSubgroup: SetState<Subgroup | null>;
     setTraining: SetStateNullable<Training>;
     setSupersets?: SetState<Superset[]>;
-    isInited?: boolean;
-    setIsInited?: SetState<boolean>;
   }
 ) {
   const { exercises } = input;
@@ -135,8 +243,6 @@ export function updateTraining(
     setSelectedSubgroup,
     setTraining,
     setSupersets,
-    isInited,
-    setIsInited,
   } = state;
 
   if (!training || !component) return;
@@ -168,8 +274,7 @@ export function updateTraining(
   if (!detectedChanges) return;
 
   ReactDOM.unstable_batchedUpdates(() => {
-    if (isInited) setDetectedChanges(true);
-    else setIsInited?.(true);
+    setDetectedChanges(true);
 
     if (selectedSubgroup) {
       updatedSubgroup = {
