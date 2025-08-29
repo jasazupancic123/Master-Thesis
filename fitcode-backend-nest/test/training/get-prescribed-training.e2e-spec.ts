@@ -742,7 +742,7 @@ describe('Get prescribed training (e2e)', () => {
     bench.sets.forEach((set) => {
       const bw = set.paramValuesL.find((p) => p.selected === IntType.Bw);
       expect(bw).toBeDefined();
-      expect(+bw.value).toBe(55);
+      expect(+bw.value).toBe(55.5);
     });
 
     await db.checkpointRestore();
