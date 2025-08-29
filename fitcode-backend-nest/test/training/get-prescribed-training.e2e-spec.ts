@@ -717,7 +717,7 @@ describe('Get prescribed training (e2e)', () => {
       expect(+bw.value).toBe(65);
     });
 
-    const spy = jest.spyOn(userService, 'getLatestWellnessByUser');
+    const spy = jest.spyOn(userService, 'getLastBodyweight');
 
     // insert wellness weight for athlete
     const response = await req(global.athlete, trainingId);
