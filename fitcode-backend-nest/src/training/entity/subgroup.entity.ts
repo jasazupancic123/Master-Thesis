@@ -18,7 +18,6 @@ export class Subgroup extends IntersectionType(IdEntity) {
   @IsString()
   @IsOptional()
   @IsNotEmpty()
-  @IsOptional()
   @ApiPropertyOptional()
   @Expose()
   parentId?: string;

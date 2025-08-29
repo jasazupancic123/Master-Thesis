@@ -19,6 +19,10 @@ import {
 import { Query, Timestamp } from 'firebase-admin/firestore';
 
 import { AttributeService } from '@src/attribute/service/attribute.service';
+import {
+  DEFAULT_WEIGHT_KG,
+  MIN_BODYWEIGHT_KG,
+} from '@src/common/constant/weight.constant';
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
 import { UpdateMembersDto } from '@src/common/dto/user-id.dto';
 import { Permission } from '@src/common/interface/permission.interface';
@@ -1013,7 +1017,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
     const ref = { uid: athleteId };
     const bw = await this.userService.getLastBodyweight(ref);
-    if (!bw || bw < 20) return;
+    if (!bw || bw < MIN_BODYWEIGHT_KG) return; // no valid bodyweight found
 
     this.trainingPlanService.modifyPrescribedParamValuesByType(
       training,
@@ -1046,7 +1050,8 @@ export class TrainingService implements Permission<Training, Institution> {
       (value, exerciseId) => {
         // prescribed value is in % of 1RM (between 1 and 100)
         const best = maxes.find((max) => max.exerciseId === exerciseId);
-        if (!best || !best.intWork1ValueL || !best.volWork1ValueL) return 20;
+        if (!best || !best.intWork1ValueL || !best.volWork1ValueL)
+          return DEFAULT_WEIGHT_KG;
 
         const reps = best.volWork1ValueL;
         const weight = best.intWork1ValueL;
