@@ -14,7 +14,6 @@ import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import type { Workload } from '@/controller/training/type/workload.type';
 import type { User, UserEntity } from '@/controller/user/type/user.type';
 import type { WellnessZScore } from '@/controller/user/type/wellness.type';
 
@@ -76,8 +75,6 @@ export type TrainerDayViewContextProps = {
   setSearch: SetState<string>;
   selectedAthleteWorkloads: CompletedFutureWorkloads;
   setSelectedAthleteWorkloads: SetState<CompletedFutureWorkloads>;
-  customAthleteWorkloads: Workload[];
-  setCustomAthleteWorkloads: SetState<Workload[]>;
   isSettingAthleteWorkloads: React.RefObject<boolean>;
   previousSelectedAthlete: React.RefObject<User | undefined>;
 };

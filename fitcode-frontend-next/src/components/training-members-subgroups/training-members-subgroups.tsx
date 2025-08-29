@@ -14,11 +14,9 @@ import {
 import { useTheme } from '@mui/material';
 import { Draggable, Droppable } from 'react-beautiful-dnd';
 
-import {
-  DEFAULT_SUBGROUP,
-  DEFAULT_SUBGROUP_ID,
-} from '../trainer-day-view/constant';
+import { DEFAULT_SUBGROUP_ID } from '../trainer-day-view/constant';
 import { handleDeleteSubgroup } from '../trainer-day-view/state';
+import { updateSelectedAthlete } from '../training-members/state';
 import type { SetState } from '@/common/type/state.type';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
 import type { User } from '@/controller/user/type/user.type';
@@ -74,7 +72,7 @@ export default function TrainingMembersSubgroup(
 
   const isSubgroupSelected = (id: string): boolean => {
     if (selectedSubgroup?.id === id) return true;
-    else if (!selectedSubgroup && id === DEFAULT_SUBGROUP([]).id) return true;
+    else if (!selectedSubgroup && id === DEFAULT_SUBGROUP_ID) return true;
 
     return false;
   };
@@ -96,7 +94,7 @@ export default function TrainingMembersSubgroup(
               selectedSubgroup?.id === subgroup.id ||
               (!selectedSubgroup &&
                 subgroupIndex === 0 &&
-                subgroup.id === DEFAULT_SUBGROUP([]).id)
+                subgroup.id === DEFAULT_SUBGROUP_ID)
             )
               return;
             if (subgroupIndex > 0) {
@@ -131,7 +129,7 @@ export default function TrainingMembersSubgroup(
             display: 'inline-block',
             border:
               (selectedSubgroup && subgroup.id === selectedSubgroup.id) ||
-              (!selectedSubgroup && subgroup.id === DEFAULT_SUBGROUP([]).id)
+              (!selectedSubgroup && subgroup.id === DEFAULT_SUBGROUP_ID)
                 ? `1.5px solid ${theme.palette.background.lightBorder}`
                 : undefined,
             borderRadius: '5px',
@@ -311,16 +309,17 @@ export default function TrainingMembersSubgroup(
                         key={`${subgroup.id}-${member.uid}-tooltip`}
                         sx={{ p: 0, m: 0 }}
                         onClick={() => {
-                          if (selectedAthlete === member) {
-                            setSelectedAthlete(undefined);
-                            return;
-                          }
+                          if (!component) return;
 
-                          setSelectedAthlete(member);
-                        }}
-                        onContextMenu={(e) => {
-                          e.preventDefault();
-                          setSelectedAthlete(member);
+                          updateSelectedAthlete({
+                            member,
+                            selectedAthlete,
+                            setSelectedAthlete,
+                            component,
+                            selectedSubgroup,
+                            setSelectedSubgroup,
+                            subgroupId: subgroup.id,
+                          });
                         }}
                         borderRadius={selectedAthlete === member ? '50%' : 0}
                         border={

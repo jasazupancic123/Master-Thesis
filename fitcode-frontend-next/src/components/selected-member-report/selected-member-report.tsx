@@ -13,6 +13,7 @@ import {
 } from 'recharts';
 
 import CustomBarTooltip from '../selected-member-report-custom-tooltip/selected-member-report-custom-tooltip';
+import { DEFAULT_SUBGROUP_ID } from '../trainer-day-view/constant';
 import setupChartData, { colorForZ } from './state';
 import FatigueIcon from '@/assets/icons/Fatigue.svg';
 import SleepIcon from '@/assets/icons/Sleep.svg';
@@ -33,8 +34,14 @@ export default function SelectedMemberReport(props: SelectedMemberReportProps) {
   const theme = useTheme();
   const screenSize = useScreenSize();
 
-  const { wellness, selectedAthlete, setSelectedAthlete } =
-    useTrainerDayViewContext();
+  const {
+    wellness,
+    component,
+    selectedAthlete,
+    setSelectedAthlete,
+    selectedSubgroup,
+    setSelectedSubgroup,
+  } = useTrainerDayViewContext();
 
   const [wellnessChartData, setWellnessChartData] = useState<
     WellnessChartData[]
@@ -55,6 +62,19 @@ export default function SelectedMemberReport(props: SelectedMemberReportProps) {
 
     setupChartData(wellness, selectedAthlete, setWellnessChartData);
   }, [selectedAthlete]);
+
+  const deselectAthlete = () => {
+    setSelectedAthlete(undefined);
+
+    if (selectedSubgroup && selectedSubgroup.parentId && component) {
+      const parentSubgroup = component.subgroups.find(
+        (sg) => sg.id === selectedSubgroup.parentId
+      );
+      if (parentSubgroup && parentSubgroup.id !== DEFAULT_SUBGROUP_ID)
+        setSelectedSubgroup(parentSubgroup);
+      else setSelectedSubgroup(null);
+    }
+  };
 
   return (
     <Box
@@ -89,7 +109,7 @@ export default function SelectedMemberReport(props: SelectedMemberReportProps) {
               height: 80,
               cursor: 'pointer',
             }}
-            onClick={() => setSelectedAthlete(undefined)}
+            onClick={deselectAthlete}
           />
         </MuiTooltip>
       </Box>
@@ -240,7 +260,7 @@ export default function SelectedMemberReport(props: SelectedMemberReportProps) {
         position="absolute"
         top={-10}
         right={screenSize.isMobile ? 20 : 5}
-        onClick={() => setSelectedAthlete(undefined)}
+        onClick={deselectAthlete}
         sx={{ cursor: 'pointer' }}
       >
         <CloseIcon />

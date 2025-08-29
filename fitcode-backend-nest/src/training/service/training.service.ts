@@ -659,15 +659,17 @@ export class TrainingService implements Permission<Training, Institution> {
     const methods = await this.methodService.findAll();
     const attributes = await this.attributeService.findAll();
 
-    const exercises =
-      await this.trainingPlanService.getAllTrainingExercises(input);
-
     const trainingComponents = [
       training.warmup,
       ...training.components,
       ...input,
       training.cooldown,
     ];
+
+    const exercises =
+      await this.trainingPlanService.getAllTrainingExercises(
+        trainingComponents,
+      );
 
     this.updateTrainingTimes(trainingComponents);
 

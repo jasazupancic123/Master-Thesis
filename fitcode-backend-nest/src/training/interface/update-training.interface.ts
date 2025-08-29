@@ -17,7 +17,7 @@ export type UpdateSuperset = Pick<Superset, 'color'> & {
 
 export type UpdateSubgroup = Pick<
   Subgroup,
-  'id' | 'name' | 'membersIds' | 'mainSet'
+  'id' | 'parentId' | 'name' | 'membersIds' | 'mainSet'
 > & {
   supersets: UpdateSuperset[];
 };
