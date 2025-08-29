@@ -135,26 +135,26 @@ describe('validateSupersets', () => {
     ).toThrow('You can only have up to 8 supersets per training component');
   });
 
-  it('should throw error if there are more than 4 exercises in a superset', () => {
-    const trainingComponent = generateTrainingComponent({
-      id: 'c1',
-      supersets: [
-        generateSuperset({
-          exercises: Array.from({ length: 5 }, (_, i) =>
-            generateTrainingExercise({ id: `e${i + 1}` }),
-          ),
-        }),
-      ],
-    });
+  // it('should throw error if there are more than 4 exercises in a superset', () => {
+  //   const trainingComponent = generateTrainingComponent({
+  //     id: 'c1',
+  //     supersets: [
+  //       generateSuperset({
+  //         exercises: Array.from({ length: 5 }, (_, i) =>
+  //           generateTrainingExercise({ id: `e${i + 1}` }),
+  //         ),
+  //       }),
+  //     ],
+  //   });
 
-    expect(() =>
-      service.validateSupersets(
-        trainingComponent,
-        trainingComponent.supersets,
-        data,
-      ),
-    ).toThrow('You can only have up to 4 exercises per superset');
-  });
+  //   expect(() =>
+  //     service.validateSupersets(
+  //       trainingComponent,
+  //       trainingComponent.supersets,
+  //       data,
+  //     ),
+  //   ).toThrow('You can only have up to 4 exercises per superset');
+  // });
 
   it('should throw error if there is a invalid exercise in a superset', () => {
     const trainingComponent = generateTrainingComponent({

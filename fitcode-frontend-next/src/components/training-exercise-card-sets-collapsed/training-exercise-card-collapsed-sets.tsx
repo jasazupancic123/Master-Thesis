@@ -6,11 +6,11 @@ import toast from 'react-hot-toast';
 import { ExerciseParam } from '../exercise-param/exercise-param';
 import LeftRightExerciseText from '../left-right-exercise-text/left-right-exercise-text';
 import { getLAndRValues } from '../training-exercise-card/state';
+import { getCorrectValuesForExerciseParam } from '../training-exercise-card-container/state';
 import {
   getMinMax,
   updateAttributeType,
   updateAttributeValue,
-  updateCollapsedSelectedAthleteValues,
   updateVolWorkSets,
 } from './state';
 import type { SetState } from '@/common/type/state.type';
@@ -42,19 +42,19 @@ export default function TrainingExerciseCardCollapsedSets(
 
   const { setsNumbers, setSetsNumbers } = useSupersets();
 
-  const { methods } = useMain();
+  const { exercises, methods } = useMain();
 
   const {
     training,
     setTraining,
     component,
+    setComponent,
     selectedSubgroup,
     setSelectedSubgroup,
     selectedAthlete,
     selectedAthleteWorkloads,
-    customAthleteWorkloads,
-    setCustomAthleteWorkloads,
     selectedExercises,
+    setSelectedExercises,
     supersets,
     setSupersets,
   } = useTrainerDayViewContext();
@@ -156,7 +156,6 @@ export default function TrainingExerciseCardCollapsedSets(
                   training,
                   exercise,
                   selectedAthleteWorkloads,
-                  customAthleteWorkloads,
                   selectedAthlete,
                 }
               );
@@ -217,7 +216,11 @@ export default function TrainingExerciseCardCollapsedSets(
                           setSetsNumbers={setSetsNumbers}
                           min={min}
                           max={max}
+                          disableOptions={selectedAthlete !== undefined}
                           onOptionChange={(newValue) => {
+                            // dissable for custom workloads subgroup
+                            if (selectedSubgroup?.parentId) return;
+
                             const attributeRangeFresh = method?.attributes
                               ?.map((a) =>
                                 a.options?.find((o) => o.field === newValue)
@@ -247,54 +250,73 @@ export default function TrainingExerciseCardCollapsedSets(
                                 selectedExercises,
                                 supersets,
                                 setSupersets,
-                                selectedAthlete,
-                                customAthleteWorkloads,
-                                setCustomAthleteWorkloads,
                               }
                             );
                           }}
                           onSubOptionChange={(newValue) => {
                             if (+newValue < 0) return;
 
+                            const {
+                              correctSelectedSubgroup,
+                              correctSupersets,
+                              correctSelectedExercises,
+                              correctSetsNumbers,
+                              correctExercise,
+                            } = getCorrectValuesForExerciseParam(
+                              selectedAthlete,
+                              { exercise },
+                              {
+                                component,
+                                supersets,
+                                selectedExercises,
+                                setsNumbers,
+                                selectedSubgroup,
+                                setComponent,
+                                setSelectedSubgroup,
+                                setTraining,
+                                setSupersets,
+                                setSelectedExercises,
+                                setSetsNumbers,
+                              }
+                            );
+
                             if (param.field === ParamType.VolWorkSets) {
                               updateVolWorkSets(
-                                { exercise, newValue },
+                                { exercise: correctExercise, newValue },
                                 {
-                                  setsNumbers,
-                                  selectedExercises,
+                                  setsNumbers: correctSetsNumbers,
+                                  selectedExercises: correctSelectedExercises,
                                   setSetsNumbers,
-                                  setCustomAthleteWorkloads,
-                                }
-                              );
-                              return;
-                            }
-
-                            if (selectedAthlete) {
-                              updateCollapsedSelectedAthleteValues(
-                                { exercise, param, newValue, lOrR },
-                                {
-                                  training,
+                                  exercise,
+                                  exercises,
+                                  selectedSubgroup: correctSelectedSubgroup,
                                   component,
-                                  selectedExercises,
-                                  supersets,
-                                  selectedAthleteWorkloads,
-                                  setCustomAthleteWorkloads,
-                                  selectedAthlete,
+                                  training,
+                                  supersets: correctSupersets,
+                                  setSupersets,
+                                  setDetectedChanges,
+                                  setSelectedSubgroup,
+                                  setTraining,
                                 }
                               );
                               return;
                             }
 
                             updateAttributeValue(
-                              { exercise, param, newValue, lOrR },
                               {
-                                selectedExercises,
+                                exercise: correctExercise,
+                                param,
+                                newValue,
+                                lOrR,
+                              },
+                              {
+                                selectedExercises: correctSelectedExercises,
                                 training,
                                 component,
                                 setTraining,
-                                supersets,
+                                supersets: correctSupersets,
                                 setDetectedChanges,
-                                selectedSubgroup,
+                                selectedSubgroup: correctSelectedSubgroup,
                                 setSelectedSubgroup,
                               }
                             );

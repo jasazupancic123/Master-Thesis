@@ -278,37 +278,37 @@ describe('validateTrainingComponents', () => {
     ).toThrow('Invalid member');
   });
 
-  it('should throw error if some member is in multiple subgroups simultaneously', () => {
-    const memberIds = ['m1', 'm2', 'm3'];
-    const now = new Date();
-    const trainingComponents = [
-      generateTrainingComponent({
-        id: WARMUP_COMPONENT_ID,
-        from: subMinutes(now, 5),
-      }),
-      generateTrainingComponent({
-        id: 'c1',
-        from: now,
-        subgroups: [
-          generateSubgroup({ membersIds: ['m1', 'm2'] }),
-          generateSubgroup({ membersIds: ['m3', 'm1'] }),
-        ],
-      }),
-      generateTrainingComponent({
-        id: COOLDOWN_COMPONENT_ID,
-        from: addMinutes(now, 5),
-      }),
-    ];
+  // it('should throw error if some member is in multiple subgroups simultaneously', () => {
+  //   const memberIds = ['m1', 'm2', 'm3'];
+  //   const now = new Date();
+  //   const trainingComponents = [
+  //     generateTrainingComponent({
+  //       id: WARMUP_COMPONENT_ID,
+  //       from: subMinutes(now, 5),
+  //     }),
+  //     generateTrainingComponent({
+  //       id: 'c1',
+  //       from: now,
+  //       subgroups: [
+  //         generateSubgroup({ membersIds: ['m1', 'm2'] }),
+  //         generateSubgroup({ membersIds: ['m3', 'm1'] }),
+  //       ],
+  //     }),
+  //     generateTrainingComponent({
+  //       id: COOLDOWN_COMPONENT_ID,
+  //       from: addMinutes(now, 5),
+  //     }),
+  //   ];
 
-    expect(() =>
-      service.validateTrainingComponents(
-        null,
-        trainingComponents,
-        memberIds,
-        data,
-      ),
-    ).toThrow('Member cannot be part of multiple subgroups simultaneously');
-  });
+  //   expect(() =>
+  //     service.validateTrainingComponents(
+  //       null,
+  //       trainingComponents,
+  //       memberIds,
+  //       data,
+  //     ),
+  //   ).toThrow('Member cannot be part of multiple subgroups simultaneously');
+  // });
 
   it('should throw error if there are more than 5 components', () => {
     const now = new Date();

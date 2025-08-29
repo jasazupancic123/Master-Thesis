@@ -17,12 +17,14 @@ import toast from 'react-hot-toast';
 
 import MyModal from '../modal/modal';
 import SelectedMemberReport from '../selected-member-report/selected-member-report';
-import { DEFAULT_SUBGROUP } from '../trainer-day-view/constant';
+import {
+  DEFAULT_SUBGROUP,
+  DEFAULT_SUBGROUP_ID,
+} from '../trainer-day-view/constant';
 import { onDragEndSubgroup } from '../trainer-day-view/state';
 import TrainingMembersSubgroup from '../training-members-subgroups/training-members-subgroups';
-import { handleAddMembersSubgroup } from './state';
+import { handleAddMembersSubgroup, updateSelectedAthlete } from './state';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
-import type { User } from '@/controller/user/type/user.type';
 import { useGroup } from '@/store/group-provider';
 import { useMain } from '@/store/main-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
@@ -50,7 +52,6 @@ export default function TrainingMembers(props: TrainingMembersProps) {
     setSelectedAthlete,
   } = useTrainerDayViewContext();
 
-  const [availableMembers, setAvailableMembers] = useState<User[]>([]);
   const [changedSubgroupIds, setChangedSubgroupIds] = useState<string[]>([]);
 
   const members = users.filter((user) => group.membersIds.includes(user.uid));
@@ -61,11 +62,8 @@ export default function TrainingMembers(props: TrainingMembersProps) {
   const [editSubgroupName, setEditSubgroupName] = useState<string>('');
   const [editedSubgroup, setEditedSubgroup] = useState<Subgroup | null>(null);
 
-  // Sort members:
-  // 1. Members without a subgroup come first
-  // 2. Members in the same subgroup stay together
   const sortedMembers = [...members].sort((a, b) => {
-    if (!training) return 0; // If no training data, return original order
+    if (!training) return 0;
 
     const getSubgroupIndex = (uid: string) =>
       training.components
@@ -91,16 +89,76 @@ export default function TrainingMembers(props: TrainingMembersProps) {
       return;
     }
 
-    const subgroups = component?.subgroups || [];
+    let subgroups = component.subgroups || [];
     const availableMembers = members.filter(
       (member) =>
-        !subgroups.some((subgroup: Subgroup) =>
-          subgroup.membersIds.includes(member.uid)
+        !subgroups.some(
+          (subgroup: Subgroup) =>
+            subgroup.membersIds.includes(member.uid) && !subgroup.parentId
         )
     );
 
-    setSubgroups([DEFAULT_SUBGROUP(availableMembers), ...subgroups]);
-  }, [training, component]);
+    const defaultSubgroup = subgroups.find(
+      (sg) => sg.id === DEFAULT_SUBGROUP_ID
+    );
+
+    if (defaultSubgroup) {
+      const defaultSubgroupMembers = members.filter((member) =>
+        defaultSubgroup.membersIds.includes(member.uid)
+      );
+      availableMembers.push(...defaultSubgroupMembers);
+    }
+
+    subgroups = subgroups.map((sg) => {
+      const leafSubgroup = component.subgroups.find(
+        (s) => s.parentId === sg.id
+      );
+      if (leafSubgroup) {
+        const mergedMembers = [
+          ...(sg.members || []),
+          ...(leafSubgroup.members || []),
+        ];
+        const uniqueMembers = mergedMembers.filter(
+          (m, index, self) => index === self.findIndex((t) => t.uid === m.uid)
+        );
+
+        return {
+          ...sg,
+          membersIds: [...sg.membersIds, ...leafSubgroup.membersIds].filter(
+            (id, index, self) => self.indexOf(id) === index
+          ),
+          members: uniqueMembers,
+        } as Subgroup;
+      }
+
+      if (sg.parentId === DEFAULT_SUBGROUP_ID) {
+        const newMembers = (sg.members || []).filter(
+          (m) =>
+            !subgroups.some(
+              (s) => s.id !== sg.id && s.membersIds.includes(m.uid)
+            ) && !availableMembers.some((am) => am.uid === m.uid)
+        );
+        availableMembers.push(...newMembers);
+      }
+
+      return sg;
+    });
+
+    const newSubgroups = !subgroups.some((sg) => sg.id === DEFAULT_SUBGROUP_ID)
+      ? [DEFAULT_SUBGROUP(availableMembers), ...subgroups]
+      : subgroups.map((sg) => {
+          if (sg.id === DEFAULT_SUBGROUP_ID) {
+            return {
+              ...sg,
+              membersIds: availableMembers.map((m) => m.uid),
+              members: availableMembers,
+            };
+          }
+          return sg;
+        });
+
+    setSubgroups(newSubgroups);
+  }, [training, component, selectedSubgroup]);
 
   const handleOnDragEnd = async (result: DropResult) => {
     const { draggableId, destination } = result;
@@ -125,11 +183,11 @@ export default function TrainingMembers(props: TrainingMembersProps) {
         setSubgroups,
         changedSubgroupIds,
         setChangedSubgroupIds,
-        availableMembers,
-        setAvailableMembers,
         users,
         component,
+        setComponent,
         training,
+        setTraining,
       });
     }
   };
@@ -285,12 +343,17 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                       <Box
                         sx={{ p: 0, m: 0 }}
                         onClick={() => {
-                          if (selectedAthlete === member) {
-                            setSelectedAthlete(undefined);
-                            return;
-                          }
+                          if (!component) return;
 
-                          setSelectedAthlete(member);
+                          updateSelectedAthlete({
+                            member,
+                            selectedAthlete,
+                            setSelectedAthlete,
+                            component,
+                            selectedSubgroup,
+                            setSelectedSubgroup,
+                            subgroupId: DEFAULT_SUBGROUP_ID,
+                          });
                         }}
                         borderRadius={selectedAthlete === member ? '50%' : 0}
                         border={
@@ -322,22 +385,24 @@ export default function TrainingMembers(props: TrainingMembersProps) {
           )}
 
           {training &&
-            subgroups.map((subgroup, subgroupIndex) => {
-              // Assign border color based on the subgroup index
-              return (
-                <TrainingMembersSubgroup
-                  key={subgroup.id}
-                  subgroup={subgroup}
-                  subgroupIndex={subgroupIndex}
-                  anchorEl={anchorEl}
-                  setAnchorEl={setAnchorEl}
-                  members={sortedMembers}
-                  setEditSubgroupName={setEditSubgroupName}
-                  setEditedSubgroup={setEditedSubgroup}
-                  setModal={setModal}
-                />
-              );
-            })}
+            subgroups
+              .filter((sg) => !sg.parentId) // display only top-level subgroups
+              .map((subgroup, subgroupIndex) => {
+                // Assign border color based on the subgroup index
+                return (
+                  <TrainingMembersSubgroup
+                    key={subgroup.id}
+                    subgroup={subgroup}
+                    subgroupIndex={subgroupIndex}
+                    anchorEl={anchorEl}
+                    setAnchorEl={setAnchorEl}
+                    members={sortedMembers}
+                    setEditSubgroupName={setEditSubgroupName}
+                    setEditedSubgroup={setEditedSubgroup}
+                    setModal={setModal}
+                  />
+                );
+              })}
         </DragDropContext>
       </Stack>
       <MyModal
@@ -361,9 +426,11 @@ export default function TrainingMembers(props: TrainingMembersProps) {
             name: editSubgroupName,
           };
 
-          const updatedSubgroups = [...component.subgroups].map((subgroup) =>
-            subgroup.id === updatedSubgroup.id ? updatedSubgroup : subgroup
-          );
+          const updatedSubgroups = subgroups
+            .map((subgroup) =>
+              subgroup.id === updatedSubgroup.id ? updatedSubgroup : subgroup
+            )
+            .filter((sg) => sg.id !== DEFAULT_SUBGROUP_ID);
 
           const newComponent = { ...component!, subgroups: updatedSubgroups };
           const newTraining = {

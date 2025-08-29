@@ -15,6 +15,7 @@ import type { AttributeValue } from '@/controller/attribute/type/attribute-value
 import { ParamType } from '@/controller/component/enum/param.enum';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
 import type { Method } from '@/controller/method/type/method.type';
+import { CustomWorkloadsSubgroupsService } from '@/controller/training/custom-workloads-subgroups.service';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
 import type { Superset } from '@/controller/training/type/superset.type';
@@ -22,11 +23,11 @@ import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 
-function updateSupersets(
+export const updateSupersets = (
   supersets: Superset[],
   exercisesToAdd: TrainingExercise[],
   mainSet: MainSet
-): Superset[] | null {
+): Superset[] | null => {
   if (!Array.isArray(supersets)) supersets = [];
   if (supersets.length === 0)
     supersets.push({ exercises: [], color: COLOR[supersets.length] });
@@ -65,7 +66,7 @@ function updateSupersets(
   }
 
   return supersets;
-}
+};
 
 export function getTrainingExercisesFromExercises(
   exercisesIdsToAdd: string[],
@@ -164,11 +165,15 @@ export function handleAddExerciseToSupersetComponent(
     setPagination,
   } = state;
 
+  // if it's custom workloads subgroup, then dissable
+  if (selectedSubgroup?.parentId) return;
+
   setSearch('');
   setPagination((prev) => ({
     ...prev,
     page: 1,
   }));
+
   // get only new exercises
   const exercisesIdsToAdd =
     supersetsState && supersetsState.length
@@ -204,7 +209,7 @@ export function handleAddExerciseToSupersetComponent(
 
     const supersets = updateSupersets(
       oldSupersets,
-      exercisesToAdd,
+      [...exercisesToAdd],
       wOrC.mainSet
     );
 
@@ -228,6 +233,12 @@ export function handleAddExerciseToSupersetComponent(
 
       updatedWOrC.subgroups = updatedSubgroups;
     }
+
+    updatedWOrC.subgroups = CustomWorkloadsSubgroupsService.addExercises(
+      updatedWOrC,
+      selectedSubgroup,
+      [...exercisesToAdd]
+    );
 
     const updatedTraining =
       component.id === WARMUP_ID
@@ -260,7 +271,7 @@ export function handleAddExerciseToSupersetComponent(
 
   const supersets = updateSupersets(
     oldSupersets,
-    exercisesToAdd,
+    [...exercisesToAdd],
     (selectedSubgroup || component).mainSet
   );
 
@@ -273,6 +284,12 @@ export function handleAddExerciseToSupersetComponent(
       ...updatedComponents[trainingComponentIndex],
       supersets: [...supersets],
     };
+
+    updatedComponent.subgroups = CustomWorkloadsSubgroupsService.addExercises(
+      updatedComponent,
+      selectedSubgroup,
+      [...exercisesToAdd]
+    );
 
     updatedComponents[trainingComponentIndex] = { ...updatedComponent };
 
@@ -307,6 +324,12 @@ export function handleAddExerciseToSupersetComponent(
       ...updatedComponents[trainingComponentIndex],
       subgroups: updatedSubgroups,
     };
+
+    updatedComponent.subgroups = CustomWorkloadsSubgroupsService.addExercises(
+      updatedComponent,
+      selectedSubgroup,
+      [...exercisesToAdd]
+    );
 
     updatedComponents[trainingComponentIndex] = { ...updatedComponent };
 

@@ -409,10 +409,11 @@ export class TrainingPlanService {
 
     const validSupersets: Superset[] = [];
     for (const superset of newSupersets) {
-      if (superset.exercises.length > maxSupersetExercises)
-        throw new ConflictException(
-          `You can only have up to ${maxSupersetExercises} exercises per superset`,
-        );
+      if (superset.exercises.length > maxSupersetExercises) {
+        // throw new ConflictException(
+        //   `You can only have up to ${maxSupersetExercises} exercises per superset`,
+        // );
+      }
 
       /* // don't check exercises for warmup and cooldown
       if (
@@ -523,10 +524,10 @@ export class TrainingPlanService {
         if (!trainingMemberIdsSet.has(userId))
           throw new ConflictException('Invalid member');
 
-        if (membersIdsSet.has(userId))
-          throw new ConflictException(
-            'Member cannot be part of multiple subgroups simultaneously',
-          );
+        // if (membersIdsSet.has(userId))
+        //   throw new ConflictException(
+        //     'Member cannot be part of multiple subgroups simultaneously',
+        //   );
 
         membersIdsSet.add(userId);
       }
@@ -542,6 +543,7 @@ export class TrainingPlanService {
         id: subgroup.id,
         name: subgroup.name,
         membersIds: subgroup.membersIds,
+        parentId: subgroup.parentId,
         supersets: validSupersets,
         mainSet: subgroup.mainSet,
       });

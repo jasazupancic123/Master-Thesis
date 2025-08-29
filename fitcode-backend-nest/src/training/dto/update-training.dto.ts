@@ -29,7 +29,13 @@ export class UpdateSupersetDto implements UpdateSuperset {
 }
 
 export class UpdateSubgroupDto
-  extends PickType(Subgroup, ['id', 'name', 'membersIds', 'mainSet'] as const)
+  extends PickType(Subgroup, [
+    'id',
+    'parentId',
+    'name',
+    'membersIds',
+    'mainSet',
+  ] as const)
   implements UpdateSubgroup
 {
   @ValidateNested({ each: true })
