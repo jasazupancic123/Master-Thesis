@@ -724,7 +724,7 @@ describe('Get prescribed training (e2e)', () => {
     expect(response.status).toBe(200);
 
     const spyResult = (await spy.mock.results[0].value) as Wellness;
-    expect(spyResult.weight).toBe(85);
+    expect(spyResult).toBe(85);
     spy.mockRestore();
 
     const trainingAfter = response.body as Training;
