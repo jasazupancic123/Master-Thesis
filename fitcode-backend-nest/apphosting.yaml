@@ -5,9 +5,9 @@ runConfig:
 
 env:
   - variable: FIREBASE_ADMIN_EMAIL
-    secret: FIREBASE_ADMIN_EMAIL
+    secret: projects/630576200743/secrets/FIREBASE_ADMIN_EMAIL
   - variable: FIREBASE_ADMIN_PASSWORD
-    secret: FIREBASE_ADMIN_PASSWORD
+    secret: projects/630576200743/secrets/FIREBASE_ADMIN_PASSWORD
 
 scripts:
   buildCommand: npm i && npm run build
