@@ -2,22 +2,13 @@ import { Box, Tooltip } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 
 import MyModal from '../modal/modal';
-import { DEFAULT_SUBGROUP_ID } from '../trainer-day-view/constant';
 import type { TrainingExerciseCardProps } from '../trainer-day-view/props';
 import TrainingExerciseCardCollapsedSets from '../training-exercise-card-sets-collapsed/training-exercise-card-collapsed-sets';
 import TrainingExerciseCardExpandedSets from '../training-exercise-card-sets-expanded/training-exercise-card-expanded-sets';
-import {
-  updateSelectedExercisesVolWorkSets,
-  updateSingleExerciseVolWorkSets,
-  updateTraining,
-} from './state';
 import type { Attribute } from '@/controller/attribute/type/attribute.type';
-import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { useGroup } from '@/store/group-provider';
-import { useMain } from '@/store/main-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useSupersets } from '@/store/supersets-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
@@ -26,37 +17,23 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   const screenSize = useScreenSize();
   const theme = useTheme();
 
-  const { exercises } = useMain();
-
   const {
     menuExercise,
     setMenuExercise,
     openVideoPlayerModal,
     setOpenVideoPlayerModal,
-    setsNumbers,
     expandedExercisesView,
   } = useSupersets();
 
-  const {
-    training,
-    component,
-    selectedSubgroup,
-    setSelectedSubgroup,
-    setSupersets,
-  } = useTrainerDayViewContext();
+  const { training, component, selectedSubgroup } = useTrainerDayViewContext();
 
-  const { setDetectedChanges } = useGroup();
-  const { setTraining, supersets, selectedExercises, setSelectedExercises } =
+  const { selectedExercises, setSelectedExercises } =
     useTrainerDayViewContext();
-
-  const [isInited, setIsInited] = useState(false);
 
   const { supersetIndex, chartView, exercise } = props;
 
   // const [exercise, setExercise] = useState(propsExercise);
   const [expandedSetsView, setExpandedSetsView] = useState(false);
-
-  const isSetNumberInitedRef = useRef(false);
 
   const componentIndex = training?.components.findIndex(
     (c) => c.id === component?.id
@@ -80,124 +57,6 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
     ) ||
     []?.filter((p) => p) ||
     [];
-
-  useEffect(() => {
-    if (!training || !component || !params) return;
-
-    if (!isSetNumberInitedRef.current) {
-      isSetNumberInitedRef.current = true;
-      return;
-    }
-
-    const foundExercise = exercises.find((e) => e.id === exercise.id);
-    if (!foundExercise) return;
-
-    if (
-      selectedExercises.length &&
-      selectedExercises.some((e) => e.id === exercise.id)
-    ) {
-      const updatedExercises = [] as TrainingExercise[];
-
-      updateSelectedExercisesVolWorkSets({
-        updatedExercises,
-        selectedExercises,
-        setsNumbers,
-        exercises,
-      });
-
-      // if it's not a custom workload subgroup, find all custom workload subgroups and update
-      // number of sets to the same value
-      if (!selectedSubgroup?.parentId) {
-        const customSubgroups = component.subgroups.filter(
-          (sg) => sg.parentId === selectedSubgroup?.id || DEFAULT_SUBGROUP_ID
-        );
-
-        for (const subgroup of customSubgroups) {
-          const subgroupExercises = subgroup.supersets.flatMap(
-            (s) => s.exercises
-          );
-
-          const subgroupSelectedExercises = subgroupExercises.filter((ex) =>
-            selectedExercises.some((e) => e.id === ex.id)
-          );
-
-          updateSelectedExercisesVolWorkSets({
-            selectedExercises: subgroupSelectedExercises,
-            setsNumbers,
-            exercises,
-          });
-        }
-      }
-
-      updateTraining(
-        { exercises: updatedExercises },
-        {
-          training,
-          component,
-          supersets,
-          setDetectedChanges,
-          selectedSubgroup,
-          setSelectedSubgroup,
-          setTraining,
-          isInited,
-          setIsInited,
-        }
-      );
-    } else {
-      // paste here
-
-      const updatedExercises = [] as TrainingExercise[]; // will contain only 1
-
-      updateSingleExerciseVolWorkSets({
-        updatedExercises,
-        exercise,
-        setsNumbers,
-        foundExercise,
-      });
-
-      // if it's not a custom workload subgroup, find all custom workload subgroups and update
-      // number of sets to the same value
-      if (!selectedSubgroup?.parentId) {
-        const customSubgroups = component.subgroups.filter(
-          (sg) => sg.parentId === selectedSubgroup?.id || DEFAULT_SUBGROUP_ID
-        );
-
-        for (const subgroup of customSubgroups) {
-          const subgroupExercises = subgroup.supersets.flatMap(
-            (s) => s.exercises
-          );
-
-          const subgroupExercise = subgroupExercises.find(
-            (ex) => ex.id === exercise.id
-          );
-
-          if (!subgroupExercise) continue;
-
-          updateSingleExerciseVolWorkSets({
-            exercise: subgroupExercise,
-            setsNumbers,
-            foundExercise,
-          });
-        }
-      }
-
-      updateTraining(
-        { exercises: updatedExercises },
-        {
-          training,
-          component,
-          setTraining,
-          supersets,
-          setDetectedChanges,
-          selectedSubgroup,
-          setSelectedSubgroup,
-          setSupersets,
-          isInited,
-          setIsInited,
-        }
-      );
-    }
-  }, [setsNumbers]);
 
   if (!training || !component || !params) return null;
 
