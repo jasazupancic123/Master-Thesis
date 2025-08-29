@@ -1,0 +1,8 @@
+runConfig:
+  minInstances: 1
+  cpu: 2
+  memoryMiB: 1024
+
+scripts:
+  buildCommand: npm i && npm run build
+  runCommand: npm run start:prod
