@@ -47,19 +47,8 @@
   ],
   "apphosting": [
     {
-      "backendId": "fitcode-backend-nest",
+      "backendId": "fitcode-backend",
       "rootDir": "/fitcode-backend-nest",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "functions"
-      ]
-    },
-    {
-      "backendId": "fitcode-backend-nest",
-      "rootDir": "/",
       "ignore": [
         "node_modules",
         ".git",

@@ -3,6 +3,12 @@ runConfig:
   cpu: 2
   memoryMiB: 1024
 
+env:
+  - variable: FIREBASE_ADMIN_EMAIL
+    secret: FIREBASE_ADMIN_EMAIL:latest
+  - variable: FIREBASE_ADMIN_PASSWORD
+    secret: FIREBASE_ADMIN_PASSWORD:latest
+
 scripts:
   buildCommand: npm i && npm run build
   runCommand: npm run start:prod
