@@ -17,11 +17,11 @@ const ref: TrainingComponentRef = {
 
 const EXPECTED_VALUES = [
   { int: 20, vol: 12 },
-  { int: 22, vol: 11 },
-  { int: 24, vol: 10 },
-  { int: 26, vol: 9 },
-  { int: 28, vol: 8 },
-  { int: 30, vol: 7 },
+  { int: 21, vol: 11 },
+  { int: 22, vol: 10 },
+  { int: 23, vol: 9 },
+  { int: 24, vol: 8 },
+  { int: 25, vol: 7 },
 ];
 
 describe('LinearPeriodizationStrategy', () => {

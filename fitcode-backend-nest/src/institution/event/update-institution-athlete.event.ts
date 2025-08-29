@@ -1,7 +1,7 @@
 import { Expose } from 'class-transformer';
 import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
-import { BatchWriteOperation } from '@src/common/type/firestore.type';
+import { BatchWriteOperation } from '@src/common/type/orm.type';
 
 export class UpdateInstitutionAthleteEvent {
   @Expose()

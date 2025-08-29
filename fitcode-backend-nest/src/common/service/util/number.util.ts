@@ -6,12 +6,12 @@ export class NumberUtil {
    * percent(50, { min: 0, max: 100 }) returns 0.5.
    */
   percent(value: number, limit = { min: 0, max: 100 }): number {
-    return (value - limit.min) / (limit.max - limit.min);
+    const newValues = (value - limit.min) / (limit.max - limit.min);
+    return Math.round(newValues * 100) / 100;
   }
 
   /**
    * Calculates the 1RM (one-rep max) based on the weight and reps.
-   * It returns callback function for n-RM.
    */
   rm(weight: number, reps: number, formula = RepMaxFormula.EPLEY) {
     // formula from https://en.wikipedia.org/wiki/One-repetition_maximum
@@ -23,20 +23,31 @@ export class NumberUtil {
         oneRM = weight * (1 + reps / 30);
         break;
       case RepMaxFormula.BRZYCKI:
-        oneRM = weight / (1.0278 - 0.0278 * reps);
+        oneRM = (weight * 36) / (37 - reps);
         break;
       case RepMaxFormula.LANDER:
         oneRM = (100 * weight) / (101.3 - 2.67123 * reps);
         break;
     }
 
-    return (n: number) =>
-      oneRM /
-      (formula === RepMaxFormula.BRZYCKI ? 1.0278 - 0.0278 * n : 1 + n / 30);
+    return oneRM;
   }
 
   isNumber(v: unknown): v is number {
     return typeof v === 'number' && Number.isFinite(v);
+  }
+
+  round(v: number, digits = 0) {
+    const factor = 10 ** digits;
+    return Math.round(v * factor) / factor;
+  }
+
+  /**
+   * Rounds the intensity based on the user's baseline.
+   */
+  roundIntensity(int: number, baseline: number) {
+    if (baseline < 20 || int <= 10) return Math.round(int * 4) / 4; // round to nearest 0.25 kg
+    return Math.round(int * 2) / 2; // round to the nearest 0.5 kg
   }
 
   getStandardDeviation(xs: number[]) {
