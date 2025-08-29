@@ -2,6 +2,7 @@ runConfig:
   minInstances: 1
   cpu: 2
   memoryMiB: 1024
+  ingress: internal-and-cloud-load-balancing
 
 env:
   - variable: FIREBASE_ADMIN_EMAIL
