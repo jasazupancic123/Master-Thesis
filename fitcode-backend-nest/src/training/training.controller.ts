@@ -103,7 +103,7 @@ export class TrainingController {
     @Param('componentId') componentId: string,
     @Body() body: PeriodizeTrainingsDto,
   ) {
-    return await this.trainingService.periodize(
+    return await this.trainingService.copyAndPeriodize(
       user,
       {
         trainingId: baseTrainingId,

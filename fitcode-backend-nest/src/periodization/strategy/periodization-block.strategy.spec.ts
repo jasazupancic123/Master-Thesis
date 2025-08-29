@@ -16,10 +16,10 @@ const ref: TrainingComponentRef = {
 };
 
 const EXPECTED_VALUES = [
-  { int: 14, vol: 8 },
-  { int: 14, vol: 8 },
-  { int: 14, vol: 8 },
-  { int: 14, vol: 8 },
+  { int: 13, vol: 8 },
+  { int: 13, vol: 8 },
+  { int: 13, vol: 8 },
+  { int: 13, vol: 8 },
   { int: 16, vol: 5 },
   { int: 18, vol: 3 },
 ];

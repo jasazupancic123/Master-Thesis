@@ -26,4 +26,5 @@ export enum IntType {
   Eff = 'eff',
   Mas = 'mas',
   Hrmax = 'hrmax',
+  VBT = 'vbt',
 }

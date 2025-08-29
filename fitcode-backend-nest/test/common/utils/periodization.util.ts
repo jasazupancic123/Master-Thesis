@@ -1,4 +1,4 @@
-import { addDays } from 'date-fns';
+import { addDays, nextWednesday } from 'date-fns';
 
 import type {
   SubgroupRef,
@@ -16,8 +16,6 @@ import {
   generateTrainingExercise,
   generateTrainingStub,
 } from '@src/training/mock/training.stub';
-
-import { getNextFriday } from './date.util';
 
 export class TestPeriodizationUtil {
   static readonly TRAININGS = [
@@ -81,13 +79,11 @@ export class TestPeriodizationUtil {
       i++;
     }
 
-    // get the next upcoming friday
-    const nextFriday = getNextFriday();
-
+    const baseDay = nextWednesday(new Date());
     return generateTrainingStub({
       ownerId: 'owner',
       membersIds: [],
-      date: addDays(nextFriday, addDaysFromToday),
+      date: addDays(baseDay, addDaysFromToday),
       components: [
         generateTrainingComponent({
           id: 'c1',
