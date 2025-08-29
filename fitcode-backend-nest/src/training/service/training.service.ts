@@ -57,7 +57,7 @@ import { UpdateInstitutionAthleteEvent } from '@src/institution/event/update-ins
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { MethodService } from '@src/method/service/method.service';
 import { PeriodizationService } from '@src/periodization/periodization.service';
-import { UserService } from '@src/user/user.service';
+import { UserService } from '@src/user/service/user.service';
 
 import { CopyComponentDto } from '../dto/copy-component.dto';
 import { CopyTrainingDto } from '../dto/copy-training.dto';
@@ -1012,15 +1012,13 @@ export class TrainingService implements Permission<Training, Institution> {
     if (!hasBwParamType) return;
 
     const ref = { uid: athleteId };
-    const { weight } =
-      (await this.userService.getLatestWellnessByUser(ref)) || {};
-
-    if (!weight || weight < 20) return;
+    const bw = await this.userService.getLastBodyweight(ref);
+    if (!bw || bw < 20) return;
 
     this.trainingPlanService.modifyPrescribedParamValuesByType(
       training,
       bwParam,
-      (value) => this.commonService.number.round((value * weight) / 100, 2), // convert % value to kg and round to 2 decimals
+      (value) => this.commonService.number.round((value * bw) / 100, 2), // convert % value to kg and round to 2 decimals
     );
   }
 

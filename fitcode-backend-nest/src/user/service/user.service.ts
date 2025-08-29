@@ -11,24 +11,24 @@ import { DateTime } from 'luxon';
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
 import { Permission } from '@src/common/interface/permission.interface';
 import { CommonService } from '@src/common/service/common.service';
-import { Institution } from '@src/institution/entity/institution.entity';
-import { InstitutionRepository } from '@src/institution/repository/institution.repository';
-
-import { CustomClaims, User } from '../common/type/firebase-auth.type';
+import { CustomClaims, User } from '@src/common/type/firebase-auth.type';
 import {
   InstitutionRef,
   UserRef,
   WellnessRef,
-} from '../common/type/firestore.type';
-import { FirebaseService } from '../firebase/firebase.service';
-import { FilterUserQueryDto } from './dto/filter-user-query.dto';
-import { UpdateUserClaimsDto } from './dto/update-user-claims.dto';
-import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
-import { UserEntity } from './entity/user.entity';
-import { WellnessZScore } from './entity/wellnes-z-score.entity';
-import { Wellness } from './entity/wellness.entity';
-import { UserRepository } from './repository/user.repository';
-import { WellnessRepository } from './repository/wellness.repository';
+} from '@src/common/type/firestore.type';
+import { FirebaseService } from '@src/firebase/firebase.service';
+import { Institution } from '@src/institution/entity/institution.entity';
+import { InstitutionRepository } from '@src/institution/repository/institution.repository';
+
+import { FilterUserQueryDto } from '../dto/filter-user-query.dto';
+import { UpdateUserClaimsDto } from '../dto/update-user-claims.dto';
+import { UpdateUserProfileDto } from '../dto/update-user-profile.dto';
+import { UserEntity } from '../entity/user.entity';
+import { WellnessZScore } from '../entity/wellnes-z-score.entity';
+import { Wellness } from '../entity/wellness.entity';
+import { UserRepository } from '../repository/user.repository';
+import { WellnessRepository } from '../repository/wellness.repository';
 
 type CreateUser = Pick<User, 'email' | 'displayName'> & {
   password: string;
@@ -192,6 +192,10 @@ export class UserService implements Permission<UserEntity, Institution> {
 
   async getLatestWellnessByUser(ref: UserRef): Promise<Wellness> {
     return await this.wellnessRepository.getLatestByUser(ref);
+  }
+
+  async getLastBodyweight(ref: UserRef): Promise<number | null> {
+    return await this.wellnessRepository.getLastBodyweight(ref);
   }
 
   async getWellnessByInstitutionId(

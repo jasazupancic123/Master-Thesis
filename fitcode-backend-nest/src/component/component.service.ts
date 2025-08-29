@@ -157,7 +157,7 @@ export class ComponentService {
 
       selectedAttributes.push({
         ...attribute,
-        options,
+        ...(options.length > 0 ? { options } : {}),
         defaultValue: param.defaultValue || attribute.defaultValue,
       });
     }
@@ -328,7 +328,7 @@ export class ComponentService {
 
       mappedOptions.push({
         ...attributeOption,
-        options: nestedOptions,
+        ...(nestedOptions.length > 0 ? { options: nestedOptions } : {}),
         defaultValue: paramOption.defaultValue || attributeOption.defaultValue,
       });
     }

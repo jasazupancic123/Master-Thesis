@@ -18,6 +18,7 @@ import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import type { Method } from '@src/method/entity/method.entity';
+import { MainSet } from '@src/training/enum/main-set.enum';
 import {
   generateExerciseSet,
   generateSubgroup,
@@ -116,45 +117,57 @@ describe('validateSupersets', () => {
     attributes: [],
   };
 
-  it('should throw error if there are more than 8 supersets in a training component', () => {
-    const trainingComponent = generateTrainingComponent({
-      id: 'c1',
-      supersets: Array.from({ length: 9 }, (_, i) =>
-        generateSuperset({
-          exercises: [generateTrainingExercise({ id: `e${i + 1}` })],
-        }),
-      ),
-    });
+  it.each([
+    [
+      MainSet.BLOCK,
+      8,
+      'You can only have up to 8 supersets per training component for block sets',
+    ],
+    [MainSet.CIRCUIT, 1, 'You can only have one circuit set'],
+  ])(
+    'should throw error if there are more than %i supersets in a training component for %s main set type',
+    (mainSet, maxSupersets, errorMessage) => {
+      const trainingComponent = generateTrainingComponent({
+        id: 'c1',
+        mainSet,
+        supersets: Array.from({ length: maxSupersets + 1 }, (_, i) =>
+          generateSuperset({
+            exercises: [generateTrainingExercise({ id: `e${i + 1}` })],
+          }),
+        ),
+      });
 
-    expect(() =>
-      service.validateSupersets(
-        trainingComponent,
-        trainingComponent.supersets,
-        data,
-      ),
-    ).toThrow('You can only have up to 8 supersets per training component');
-  });
+      expect(() =>
+        service.validateSupersets(trainingComponent, trainingComponent, data),
+      ).toThrow(errorMessage);
+    },
+  );
 
-  // it('should throw error if there are more than 4 exercises in a superset', () => {
-  //   const trainingComponent = generateTrainingComponent({
-  //     id: 'c1',
-  //     supersets: [
-  //       generateSuperset({
-  //         exercises: Array.from({ length: 5 }, (_, i) =>
-  //           generateTrainingExercise({ id: `e${i + 1}` }),
-  //         ),
-  //       }),
-  //     ],
-  //   });
+  it.each([
+    [MainSet.BLOCK, 4],
+    [MainSet.CIRCUIT, 16],
+  ])(
+    'should throw error if there are more than %i exercises in a superset for main set type of %s',
+    (mainSet, maxExercises) => {
+      const trainingComponent = generateTrainingComponent({
+        id: 'c1',
+        mainSet,
+        supersets: [
+          generateSuperset({
+            exercises: Array.from({ length: maxExercises + 1 }, (_, i) =>
+              generateTrainingExercise({ id: `e${i + 1}` }),
+            ),
+          }),
+        ],
+      });
 
-  //   expect(() =>
-  //     service.validateSupersets(
-  //       trainingComponent,
-  //       trainingComponent.supersets,
-  //       data,
-  //     ),
-  //   ).toThrow('You can only have up to 4 exercises per superset');
-  // });
+      expect(() =>
+        service.validateSupersets(trainingComponent, trainingComponent, data),
+      ).toThrow(
+        `You can only have up to ${maxExercises} exercises per superset for ${mainSet.toLowerCase()} sets`,
+      );
+    },
+  );
 
   it('should throw error if there is a invalid exercise in a superset', () => {
     const trainingComponent = generateTrainingComponent({
@@ -171,11 +184,7 @@ describe('validateSupersets', () => {
     });
 
     expect(() =>
-      service.validateSupersets(
-        trainingComponent,
-        trainingComponent.supersets,
-        data,
-      ),
+      service.validateSupersets(trainingComponent, trainingComponent, data),
     ).toThrow('Training exercise not found');
   });
 
@@ -269,7 +278,7 @@ describe('validateSupersets', () => {
       expect(() =>
         service.validateSupersets(
           copyTrainingComponent,
-          copyTrainingComponent.supersets,
+          copyTrainingComponent,
           { ...data, methods },
         ),
       ).not.toThrow(); // If no error is thrown, the test passes
@@ -282,7 +291,7 @@ describe('validateSupersets', () => {
       expect(() => {
         service.validateSupersets(
           copyTrainingComponent,
-          copyTrainingComponent.supersets,
+          copyTrainingComponent,
           { ...data, methods },
         );
       }).toThrow('Method not found for training component');
@@ -290,11 +299,10 @@ describe('validateSupersets', () => {
 
     it('should throw error if attribute value is out of range', () => {
       expect(() => {
-        service.validateSupersets(
-          trainingComponent,
-          trainingComponent.supersets,
-          { ...data, methods },
-        );
+        service.validateSupersets(trainingComponent, trainingComponent, {
+          ...data,
+          methods,
+        });
       }).toThrow(`Value for vol1 cannot be less than ${MIN_REP}`);
     });
 
@@ -305,7 +313,7 @@ describe('validateSupersets', () => {
       expect(() =>
         service.validateSupersets(
           copyTrainingComponent,
-          copyTrainingComponent.supersets,
+          copyTrainingComponent,
           { ...data, methods },
         ),
       ).not.toThrow(); // If no error is thrown, the test passes
@@ -344,11 +352,7 @@ describe('validateSupersets', () => {
     });
 
     expect(() =>
-      service.validateSupersets(
-        trainingComponent,
-        trainingComponent.supersets,
-        data,
-      ),
+      service.validateSupersets(trainingComponent, trainingComponent, data),
     ).not.toThrow();
   });
 });

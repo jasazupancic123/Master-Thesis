@@ -208,7 +208,6 @@ describe('TrainingPlanService (unit)', () => {
             name: 'Set',
             type: AttributeType.Number,
             defaultValue: '4',
-            options: [],
           },
         ],
       },
@@ -226,7 +225,6 @@ describe('TrainingPlanService (unit)', () => {
             unit: 'kg',
             type: AttributeType.Number,
             defaultValue: '30',
-            options: [],
           },
           {
             field: IntType.Eff,
@@ -239,7 +237,6 @@ describe('TrainingPlanService (unit)', () => {
                 field: '0',
                 name: 'Easy',
                 type: AttributeType.Value,
-                options: [],
                 defaultValue: '0',
               },
             ],
@@ -264,7 +261,6 @@ describe('TrainingPlanService (unit)', () => {
                 field: '0',
                 name: 'Easy',
                 type: AttributeType.Value,
-                options: [],
                 defaultValue: '0',
               },
             ],
@@ -394,7 +390,6 @@ describe('TrainingPlanService (unit)', () => {
             unit: 'kg',
             type: AttributeType.Number,
             defaultValue: '20',
-            options: [],
           },
         ],
       },
@@ -489,7 +484,6 @@ describe('TrainingPlanService (unit)', () => {
           {
             ...VOL_WORK_SET_OPTIONS.find((o) => o.field === VolWorkSetType.Set),
             defaultValue: '12',
-            options: [],
           },
         ],
       },
@@ -947,7 +941,7 @@ describe('TrainingPlanService (unit)', () => {
       );
 
       expect(trainingComponent.supersets[0].exercises[0].params).toEqual([
-        targetParams,
+        expect.objectContaining(targetParams),
       ]);
     },
   );

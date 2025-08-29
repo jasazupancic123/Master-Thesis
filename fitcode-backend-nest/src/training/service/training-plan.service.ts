@@ -431,7 +431,7 @@ export class TrainingPlanService {
       }
 
       // validate supersets and subgroups
-      const supersets = this.validateSupersets(curr, curr.supersets, data);
+      const supersets = this.validateSupersets(curr, curr, data);
       const subgroups = this.validateSubgroups(curr, trainingMemberIds, data);
 
       validTrainingComponents.push({
@@ -512,7 +512,7 @@ export class TrainingPlanService {
 
   validateSupersets(
     trainingComponent: UpdateTrainingComponent,
-    newSupersets: UpdateSuperset[],
+    item: { supersets: UpdateSuperset[]; mainSet: MainSet },
     data: {
       components: Component[];
       exercises: Exercise[];
@@ -520,35 +520,42 @@ export class TrainingPlanService {
       methods: Method[];
     },
   ): Superset[] {
+    const newSupersets = item.supersets || [];
+    const mainSet = item.mainSet || trainingComponent.mainSet;
     const { components, exercises, attributes, methods } = data;
 
-    if (newSupersets.length > 8)
-      throw new ConflictException(
-        'You can only have up to 8 supersets per training component',
-      );
+    switch (mainSet) {
+      case MainSet.BLOCK:
+        if (newSupersets.length > 8)
+          throw new ConflictException(
+            'You can only have up to 8 supersets per training component for block sets',
+          );
+        break;
+      case MainSet.CIRCUIT:
+        if (newSupersets.length > 1)
+          throw new ConflictException('You can only have one circuit set');
+    }
 
     const component = components.find((c) => c.id === trainingComponent.id)!;
     const root = this.componentService.getRoot(component, components);
     const componentParams = root.params || { [DEFAULT_PARAMS_KEY]: [] };
 
-    const maxSupersetExercises =
-      trainingComponent.mainSet === MainSet.BLOCK ? 4 : 32;
-
     const validSupersets: Superset[] = [];
     for (const superset of newSupersets) {
-      if (superset.exercises.length > maxSupersetExercises) {
-        // throw new ConflictException(
-        //   `You can only have up to ${maxSupersetExercises} exercises per superset`,
-        // );
+      // validate max exercises per superset
+      switch (mainSet) {
+        case MainSet.BLOCK:
+          if (superset.exercises.length > 4)
+            throw new ConflictException(
+              'You can only have up to 4 exercises per superset for block sets',
+            );
+          break;
+        case MainSet.CIRCUIT:
+          if (superset.exercises.length > 16)
+            throw new ConflictException(
+              'You can only have up to 16 exercises per superset for circuit sets',
+            );
       }
-
-      /* // don't check exercises for warmup and cooldown
-      if (
-        [WARMUP_COMPONENT_ID, COOLDOWN_COMPONENT_ID].includes(
-          trainingComponent.id,
-        )
-      )
-        continue; */
 
       // validate exercises
       const validTrainingExercises: TrainingExercise[] = [];
@@ -700,7 +707,7 @@ export class TrainingPlanService {
             trainingComponent.supersets,
           );
         }
-      } else {
+      } else
         // root subgroup
         // check that no other subgroup has these members
         for (const other of otherSubgroups)
@@ -708,12 +715,11 @@ export class TrainingPlanService {
             throw new ConflictException(
               'Member is already in another subgroup',
             );
-      }
 
       // validate supersets
       const validSupersets = this.validateSupersets(
         trainingComponent,
-        subgroup.supersets,
+        subgroup,
         data,
       );
 

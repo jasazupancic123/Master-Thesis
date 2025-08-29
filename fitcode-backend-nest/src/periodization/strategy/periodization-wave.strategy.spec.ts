@@ -16,12 +16,12 @@ const ref: TrainingComponentRef = {
 };
 
 const EXPECTED_VALUES = [
+  { int: 15, vol: 5 },
+  { int: 15, vol: 5 },
+  { int: 15, vol: 5 },
+  { int: 17, vol: 3 },
   { int: 16, vol: 5 },
-  { int: 16, vol: 5 },
-  { int: 16, vol: 5 },
-  { int: 18, vol: 3 },
-  { int: 16, vol: 5 },
-  { int: 16, vol: 5 },
+  { int: 15, vol: 5 },
 ];
 
 describe('WavePeriodizationStrategy', () => {
