@@ -7,7 +7,7 @@
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "nest start",
+    "start": "node dist/main",
     "firebase:dev": "firebase emulators:start --only firestore,auth,storage,functions",
     "start:dev": "nest start -b swc --watch",
     "start:debug": "nest start --debug --watch",
