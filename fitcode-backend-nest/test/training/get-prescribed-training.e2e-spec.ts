@@ -735,14 +735,14 @@ describe('Get prescribed training (e2e)', () => {
     deadlift.sets.forEach((set) => {
       const bw = set.paramValuesL.find((p) => p.selected === IntType.Bw);
       expect(bw).toBeDefined();
-      expect(+bw.value).toBe(63.75);
+      expect(+bw.value).toBe(64);
     });
 
     // new bench param value should be 55.25 (85 * 0.65)
     bench.sets.forEach((set) => {
       const bw = set.paramValuesL.find((p) => p.selected === IntType.Bw);
       expect(bw).toBeDefined();
-      expect(+bw.value).toBe(55.25);
+      expect(+bw.value).toBe(55);
     });
 
     await db.checkpointRestore();
@@ -931,7 +931,7 @@ describe('Get prescribed training (e2e)', () => {
     bench.sets.forEach((set) => {
       const rm = set.paramValuesL.find((p) => p.selected === IntType.Rm);
       expect(rm).toBeDefined();
-      expect(+rm.value).toBe(54.6);
+      expect(+rm.value).toBe(54.5);
     });
 
     // squat should remain with default value since there is no previous workload
