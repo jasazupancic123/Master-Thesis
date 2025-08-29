@@ -10,5 +10,5 @@ env:
     secret: projects/630576200743/secrets/FIREBASE_ADMIN_PASSWORD
 
 scripts:
-  buildCommand: npm install -g @nestjs/cli &&npm i && npm run build
-  runCommand: cross-env NODE_ENV=prod node dist/main
+  buildCommand: npm run build
+  runCommand: cross-env NODE_ENV=production node dist/main
