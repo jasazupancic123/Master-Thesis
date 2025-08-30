@@ -1,0 +1,22 @@
+services:
+  # --- Frontend (Next.js) ---
+  - id: fitcode-frontend-next
+    source: ./fitcode-frontend-next
+    scripts:
+      buildCommand: npm run build
+      runCommand: npm run start
+    env:
+      - variable: NEXT_PUBLIC_API_URL
+        value: "/api"
+
+  # --- Backend (NestJS) ---
+  - id: fitcode-backend-nest
+    source: ./fitcode-backend-nest
+    scripts:
+      buildCommand: npm run build
+      runCommand: node dist/main.js
+    env:
+      - variable: FIREBASE_ADMIN_EMAIL
+        secret: FIREBASE_ADMIN_EMAIL
+      - variable: FIREBASE_ADMIN_PASSWORD
+        secret: FIREBASE_ADMIN_PASSWORD
