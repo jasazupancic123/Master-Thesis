@@ -1,7 +1,10 @@
+import type { DocumentData, DocumentReference } from '@google-cloud/firestore';
 import type {
   OrderByDirection,
   WhereFilterOp,
 } from 'firebase-admin/lib/firestore';
+
+import type { FirestoreEntity } from './entity.type';
 
 export interface PaginateOptions<T> {
   orderBy?: { field: keyof T; value: OrderByDirection };
@@ -90,3 +93,31 @@ type FilterableFields<T, V> = {
 export type Filter<T, V = unknown> = { ids?: string[] } & {
   [K in FilterableFields<T, V>]?: T[K];
 };
+interface BatchOperationBase {
+  operation: string;
+  ref: DocumentReference<DocumentData, DocumentData>;
+}
+
+export interface BatchSetOperation<T> extends BatchOperationBase {
+  operation: 'set';
+  data: FirestoreEntity<T>;
+  options?: { merge?: boolean };
+}
+
+export interface BatchUpdateOperation<T> extends BatchOperationBase {
+  operation: 'update';
+  data: FirestoreEntity<Partial<T>>;
+}
+
+export interface BatchDeleteOperation extends BatchOperationBase {
+  operation: 'delete';
+}
+
+export type BatchOperation<T> =
+  | BatchSetOperation<T>
+  | BatchUpdateOperation<T>
+  | BatchDeleteOperation;
+
+export type BatchWriteOperation<T> =
+  | BatchSetOperation<T>
+  | BatchUpdateOperation<T>;

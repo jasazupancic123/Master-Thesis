@@ -1,67 +1,19 @@
 import type { SetStateAction } from 'react';
-import toast from 'react-hot-toast';
-import { v4 } from 'uuid';
 
 import { updateTraining } from '../training-exercise-card/state';
+import { updateVolWorkSets as updateVolWorkSetsExerciseCard } from '../training-exercise-card/state';
 import type { SetState, SetStateNullable } from '@/common/type/state.type';
 import type { Attribute } from '@/controller/attribute/type/attribute.type';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import { VolWorkSetType } from '@/controller/component/enum/param.enum';
-import { SetStatus } from '@/controller/training/enum/set-status.enum';
-import { TrainingService } from '@/controller/training/training.service';
-import type { CompletedFutureWorkloads } from '@/controller/training/type/completed-future-workloads.type';
+import type { Exercise } from '@/controller/exercise/type/exercise.type';
+import { CustomWorkloadsSubgroupsService } from '@/controller/training/custom-workloads-subgroups.service';
 import type { ExerciseSet } from '@/controller/training/type/exercise-set.type';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
 import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import type { Workload } from '@/controller/training/type/workload.type';
-import type { PrescribedWorkload } from '@/controller/training/type/workload-value.type';
-import type { User } from '@/controller/user/type/user.type';
-
-function setWorkload<K extends keyof PrescribedWorkload>(
-  w: PrescribedWorkload,
-  key: K,
-  value: PrescribedWorkload[K]
-) {
-  w[key] = value;
-}
-
-function updateCustomAthleteWorkload(input: {
-  selectedAthlete: User;
-  exerciseToUpdate: TrainingExercise;
-  copyAthleteWorkloads: Workload[];
-  set: ExerciseSet;
-  possibleParam: AttributeValue;
-  lOrR: 'L' | 'R';
-  defaultValue: string;
-}) {
-  const {
-    selectedAthlete,
-    exerciseToUpdate,
-    copyAthleteWorkloads,
-    set,
-    possibleParam,
-    lOrR,
-    defaultValue,
-  } = input;
-
-  const workload = copyAthleteWorkloads.find(
-    (w) =>
-      w.userId === selectedAthlete.uid &&
-      w.exerciseId === exerciseToUpdate.id &&
-      w.setNumber === set.setNumber
-  );
-
-  if (!workload) return;
-  const fieldName = TrainingService.getPerscribedFieldName(possibleParam, lOrR);
-
-  const parsed = defaultValue === '' ? undefined : Number(defaultValue);
-  const value = Number.isNaN(parsed) ? undefined : parsed;
-
-  setWorkload(workload, fieldName, value);
-}
 
 export function updateAttributeType(
   input: {
@@ -76,20 +28,10 @@ export function updateAttributeType(
     selectedExercises: TrainingExercise[];
     supersets: Superset[];
     setSupersets: SetState<Superset[]>;
-    selectedAthlete: User | undefined;
-    customAthleteWorkloads: Workload[];
-    setCustomAthleteWorkloads: (value: SetStateAction<Workload[]>) => void;
   }
 ) {
   const { exercise, param, newValue, lOrR, min, max } = input;
-  const {
-    selectedExercises,
-    supersets,
-    setSupersets,
-    selectedAthlete,
-    customAthleteWorkloads,
-    setCustomAthleteWorkloads,
-  } = state;
+  const { selectedExercises, supersets, setSupersets } = state;
 
   const exercisesToUpdate = selectedExercises.some(
     (ex) => ex.id === exercise.id
@@ -116,8 +58,6 @@ export function updateAttributeType(
     and means that the int's are of the same type, if not, it skips
   */
   const baseParamField = param.field.replace(/\d+/, '');
-
-  const copyAthleteWorkloads = [...customAthleteWorkloads];
 
   for (const exerciseToUpdate of exercisesToUpdate) {
     const possibleParams = (
@@ -201,36 +141,12 @@ export function updateAttributeType(
                 set.paramValuesL[paramIndex].selected = newValue as string;
                 set.paramValuesL[paramIndex].value = defaultValue;
               }
-
-              if (selectedAthlete) {
-                updateCustomAthleteWorkload({
-                  selectedAthlete,
-                  exerciseToUpdate,
-                  copyAthleteWorkloads,
-                  set,
-                  possibleParam,
-                  lOrR,
-                  defaultValue,
-                });
-              }
             });
           } else {
             newExercise.sets.forEach((set) => {
               if (set.paramValuesR?.[paramIndex]) {
                 set.paramValuesR[paramIndex].selected = newValue as string;
                 set.paramValuesR[paramIndex].value = defaultValue;
-              }
-
-              if (selectedAthlete) {
-                updateCustomAthleteWorkload({
-                  selectedAthlete,
-                  exerciseToUpdate,
-                  copyAthleteWorkloads,
-                  set,
-                  possibleParam,
-                  lOrR,
-                  defaultValue,
-                });
               }
             });
           }
@@ -252,7 +168,6 @@ export function updateAttributeType(
   }
 
   setSupersets(supersetsCopy);
-  setCustomAthleteWorkloads(copyAthleteWorkloads);
 }
 
 export function updateVolWorkSets(
@@ -274,7 +189,16 @@ export function updateVolWorkSets(
         }[]
       >
     ) => void;
-    setCustomAthleteWorkloads: SetState<Workload[]>;
+    exercise: TrainingExercise;
+    exercises: Exercise[];
+    selectedSubgroup: Subgroup | null;
+    component: TrainingComponent;
+    training: Training;
+    supersets: Superset[];
+    setSupersets: SetState<Superset[]>;
+    setDetectedChanges: SetState<boolean>;
+    setSelectedSubgroup: SetState<Subgroup | null>;
+    setTraining: SetStateNullable<Training>;
   }
 ) {
   const { exercise, newValue } = input;
@@ -282,14 +206,24 @@ export function updateVolWorkSets(
     setsNumbers,
     selectedExercises,
     setSetsNumbers,
-    setCustomAthleteWorkloads,
+    exercises,
+    selectedSubgroup,
+    component,
+    training,
+    supersets,
+    setSupersets,
+    setDetectedChanges,
+    setSelectedSubgroup,
+    setTraining,
   } = state;
+
+  let updatedSetsNumbers;
 
   if (
     selectedExercises.length &&
     selectedExercises.some((e) => e.id === exercise.id)
   ) {
-    const updatedSetsNumbers = [...setsNumbers];
+    updatedSetsNumbers = [...setsNumbers];
 
     for (const selectedExercise of selectedExercises) {
       const existingIndex = updatedSetsNumbers.findIndex(
@@ -307,101 +241,65 @@ export function updateVolWorkSets(
         updatedSetsNumbers.push(newSetNumber);
       }
     }
-
-    setSetsNumbers(updatedSetsNumbers);
   } else {
     const newSetNumber = {
       exerciseId: exercise.id,
       setsNumber: +newValue,
     };
-    setSetsNumbers((prev) => {
-      const existingIndex = prev.findIndex(
-        (sn) => sn.exerciseId === exercise.id
-      );
-      if (existingIndex !== -1) {
-        const newSetsNumber = [...prev];
-        newSetsNumber[existingIndex] = newSetNumber;
-        return newSetsNumber;
-      }
-      return [...prev, newSetNumber];
-    });
+    const existingIndex = setsNumbers.findIndex(
+      (sn) => sn.exerciseId === exercise.id
+    );
+    if (existingIndex !== -1) {
+      const newSetsNumber = [...setsNumbers];
+      newSetsNumber[existingIndex] = newSetNumber;
+      updatedSetsNumbers = newSetsNumber;
+    } else {
+      updatedSetsNumbers = [...setsNumbers, newSetNumber];
+    }
   }
 
-  setCustomAthleteWorkloads((prev) =>
-    prev.filter(
-      (fw) =>
-        !(
-          (selectedExercises.some((ex) => ex.id === fw.exerciseId) ||
-            exercise.id === fw.exerciseId) &&
-          fw.setNumber > +newValue
-        )
-    )
-  );
+  setSetsNumbers(updatedSetsNumbers);
+
+  updateVolWorkSetsExerciseCard({
+    exercise,
+    selectedExercises,
+    setsNumbers: updatedSetsNumbers,
+    exercises,
+    selectedSubgroup,
+    component,
+    training,
+    supersets,
+    setSupersets,
+    setDetectedChanges,
+    setSelectedSubgroup,
+    setTraining,
+  });
 }
 
-export function updateAttributeValue(
+export const updateSelectedExercisesCollapsedSets = (
   input: {
+    updatedExercises?: TrainingExercise[];
+    exercisesToUpdate: TrainingExercise[];
     exercise: TrainingExercise;
     param: Attribute;
-    newValue: SetStateAction<string>;
-    lOrR: string;
   },
   state: {
-    selectedExercises: TrainingExercise[];
-    training: Training;
-    component: TrainingComponent;
-    setTraining: SetStateNullable<Training>;
-    supersets: Superset[];
-    setDetectedChanges: SetState<boolean>;
-    selectedSubgroup: Subgroup | null;
-    setSelectedSubgroup: SetState<Subgroup | null>;
+    lOrR: string;
+    baseParamField: string;
+    baseParamDefaultValue: string;
+    baseSelected: string;
+    newValue: SetStateAction<string>;
   }
-) {
-  const { exercise, param, newValue, lOrR } = input;
+) => {
+  const { updatedExercises, exercisesToUpdate, exercise, param } = input;
+
   const {
-    selectedExercises,
-    training,
-    component,
-    setTraining,
-    supersets,
-    setDetectedChanges,
-    selectedSubgroup,
-    setSelectedSubgroup,
+    lOrR,
+    baseParamField,
+    baseParamDefaultValue,
+    baseSelected,
+    newValue,
   } = state;
-
-  const exercisesToUpdate = selectedExercises.some(
-    (ex) => ex.id === exercise.id
-  )
-    ? selectedExercises
-    : [exercise];
-
-  const updatedExercises = [] as TrainingExercise[];
-
-  /* 
-    Variable Name: baseParamField
-
-    Functionality: Get attribute name as everything but numbers
-
-    Example: 'int2' returns 'int'
-    
-    Description: We need this, because some exercise can have 2 intensities 
-    and lets say we update int2, and one exercise only has 1 intensity,
-    so only int1 and it can happen that int1 is the same param type as 
-    int2, so we need to check all int's in this example, because direct 
-    matching by param.field will not work: "int1" !== "int2". 
-    We later check in attributes.options if newValue is even possible, 
-    so if new selected value is in options of an attribute, it works 
-    and means that the int's are of the same type, if not, it skips
-  */
-  const baseParamField = param.field.replace(/\d+/, '');
-  const baseParamDefaultValue = exercise.exercise?.defaultParams?.find(
-    (p) => p.field === param.field
-  )?.defaultValue;
-  const baseSelected = exercise.sets[0].paramValuesL.find(
-    (p) => p.field === param.field
-  )?.selected;
-
-  if (!baseParamDefaultValue || !baseSelected) return;
 
   for (const exerciseToUpdate of exercisesToUpdate) {
     const possibleParams = (
@@ -490,27 +388,12 @@ export function updateAttributeValue(
       });
 
       exerciseToUpdate.sets = [...updatedSets];
-      updatedExercises.push(exerciseToUpdate);
+      if (updatedExercises) updatedExercises.push(exerciseToUpdate);
     }
-
-    updateTraining(
-      {
-        exercises: updatedExercises,
-      },
-      {
-        training,
-        component,
-        setTraining,
-        supersets,
-        setDetectedChanges,
-        selectedSubgroup,
-        setSelectedSubgroup,
-      }
-    );
   }
-}
+};
 
-export function updateCollapsedSelectedAthleteValues(
+export function updateAttributeValue(
   input: {
     exercise: TrainingExercise;
     param: Attribute;
@@ -518,24 +401,26 @@ export function updateCollapsedSelectedAthleteValues(
     lOrR: string;
   },
   state: {
+    selectedExercises: TrainingExercise[];
     training: Training;
     component: TrainingComponent;
-    selectedExercises: TrainingExercise[];
+    setTraining: SetStateNullable<Training>;
     supersets: Superset[];
-    selectedAthleteWorkloads: CompletedFutureWorkloads;
-    setCustomAthleteWorkloads: (value: SetStateAction<Workload[]>) => void;
-    selectedAthlete: User;
+    setDetectedChanges: SetState<boolean>;
+    selectedSubgroup: Subgroup | null;
+    setSelectedSubgroup: SetState<Subgroup | null>;
   }
 ) {
   const { exercise, param, newValue, lOrR } = input;
   const {
+    selectedExercises,
     training,
     component,
-    selectedExercises,
+    setTraining,
     supersets,
-    selectedAthleteWorkloads,
-    setCustomAthleteWorkloads,
-    selectedAthlete,
+    setDetectedChanges,
+    selectedSubgroup,
+    setSelectedSubgroup,
   } = state;
 
   const exercisesToUpdate = selectedExercises.some(
@@ -544,6 +429,24 @@ export function updateCollapsedSelectedAthleteValues(
     ? selectedExercises
     : [exercise];
 
+  const updatedExercises = [] as TrainingExercise[];
+
+  /* 
+    Variable Name: baseParamField
+
+    Functionality: Get attribute name as everything but numbers
+
+    Example: 'int2' returns 'int'
+    
+    Description: We need this, because some exercise can have 2 intensities 
+    and lets say we update int2, and one exercise only has 1 intensity,
+    so only int1 and it can happen that int1 is the same param type as 
+    int2, so we need to check all int's in this example, because direct 
+    matching by param.field will not work: "int1" !== "int2". 
+    We later check in attributes.options if newValue is even possible, 
+    so if new selected value is in options of an attribute, it works 
+    and means that the int's are of the same type, if not, it skips
+  */
   const baseParamField = param.field.replace(/\d+/, '');
   const baseParamDefaultValue = exercise.exercise?.defaultParams?.find(
     (p) => p.field === param.field
@@ -554,137 +457,46 @@ export function updateCollapsedSelectedAthleteValues(
 
   if (!baseParamDefaultValue || !baseSelected) return;
 
-  for (const exerciseToUpdate of exercisesToUpdate) {
-    const exerciseSupersetIndex = supersets.findIndex((s) =>
-      s.exercises.some((ex) => ex.id === exerciseToUpdate.id)
-    );
+  updateSelectedExercisesCollapsedSets(
+    { updatedExercises, exercisesToUpdate, exercise, param },
+    { lOrR, baseParamField, baseParamDefaultValue, baseSelected, newValue }
+  );
 
-    if (exerciseSupersetIndex === -1) {
-      toast.error(
-        `Superset for exercise ${exerciseToUpdate.exercise?.name || 'Unknown Exercise'} not found`
-      );
-      return;
-    }
-
-    const possibleParams = (
-      lOrR === 'L'
-        ? exerciseToUpdate.sets[0].paramValuesL
-        : exerciseToUpdate.sets[0].paramValuesR || []
-    ).filter((p) => p.field.startsWith(baseParamField));
-
-    for (const possibleParam of possibleParams) {
-      if (
-        exerciseToUpdate.id === exercise.id &&
-        possibleParam.field !== param.field
-      )
-        continue;
-
-      const paramDefaultValue = exerciseToUpdate.exercise?.defaultParams?.find(
-        (p) => p.field === possibleParam.field
-      )?.defaultValue;
-      const paramSelected = exerciseToUpdate.sets[0].paramValuesL.find(
-        (p) => p.field === possibleParam.field
-      )?.selected;
-
-      if (
-        baseParamDefaultValue !== paramDefaultValue ||
-        baseSelected !== paramSelected
-      )
-        continue;
-
-      for (const set of exerciseToUpdate.sets) {
-        const existingWorkload = selectedAthleteWorkloads.futureWorkloads.find(
-          (w) =>
-            w.componentId === component.id &&
-            w.exerciseId === exerciseToUpdate.id &&
-            w.setNumber === set.setNumber &&
-            w.userId === selectedAthlete.uid
-        );
-
-        const newCustomWorkload =
-          existingWorkload ||
-          TrainingService.getPrescribedWorkload(
-            exerciseToUpdate,
-            set,
-            !exercise.exercise?.isBilateral &&
-              exerciseToUpdate.exercise?.isBilateral
-          );
-
-        const fieldNames =
-          !exercise.exercise?.isBilateral &&
-          exerciseToUpdate.exercise?.isBilateral
-            ? [
-                TrainingService.getPerscribedFieldName(possibleParam, 'L'),
-                TrainingService.getPerscribedFieldName(possibleParam, 'R'),
-              ]
-            : [
-                TrainingService.getPerscribedFieldName(
-                  possibleParam,
-                  lOrR as 'L' | 'R'
-                ),
-              ];
-
-        // edit the field that was changed
-        for (const fieldName of fieldNames)
-          newCustomWorkload[fieldName] = +newValue as unknown as undefined;
-
-        // add the new workload to the custom athlete workloads
-        setCustomAthleteWorkloads((prev) => {
-          const existingIndex = prev.findIndex(
-            (w) =>
-              w.componentId === component.id &&
-              w.exerciseId === exerciseToUpdate.id &&
-              w.setNumber === set.setNumber &&
-              w.userId === selectedAthlete.uid
-          );
-
-          if (existingIndex !== -1) {
-            const newWorkloads = [...prev];
-
-            const parsed = newValue === '' ? undefined : Number(newValue);
-            const value: number | undefined =
-              parsed === undefined || Number.isNaN(parsed) ? undefined : parsed;
-
-            const patch = Object.fromEntries(
-              fieldNames.map((k) => [k, value])
-            ) as Partial<Pick<PrescribedWorkload, (typeof fieldNames)[number]>>;
-
-            newWorkloads[existingIndex] = {
-              ...newWorkloads[existingIndex],
-              supersetIndex: exerciseSupersetIndex,
-              ...patch,
-            };
-
-            return newWorkloads;
-          }
-
-          // if not found, add a new workload
-          return [
-            ...prev,
-            {
-              ...newCustomWorkload,
-              id: v4(),
-              componentId: component.id,
-              exerciseId: exerciseToUpdate.id,
-              supersetIndex: exerciseSupersetIndex,
-              setNumber: set.setNumber,
-              userId: selectedAthlete.uid,
-              institutionId: undefined,
-              groupId: undefined,
-              cycleId: undefined,
-              trainingId: training.id,
-              status: SetStatus.NOT_STARTED,
-              notes: '',
-              createdAt: new Date(),
-              updatedAt: new Date(),
-              plannedAt: component.from,
-              deletedAt: undefined,
-            },
-          ];
-        });
+  // if it's not a custom workload subgroup, find all custom workload subgroups and update them
+  // to the same value
+  if (!selectedSubgroup?.parentId) {
+    CustomWorkloadsSubgroupsService.updateSelectedExercisesCollapsedSets(
+      {
+        component,
+        exercise,
+        selectedSubgroup,
+        exercisesToUpdate,
+        param,
+      },
+      {
+        lOrR,
+        baseParamField,
+        baseParamDefaultValue,
+        baseSelected,
+        newValue,
       }
-    }
+    );
   }
+
+  updateTraining(
+    {
+      exercises: updatedExercises,
+    },
+    {
+      training,
+      component,
+      setTraining,
+      supersets,
+      setDetectedChanges,
+      selectedSubgroup,
+      setSelectedSubgroup,
+    }
+  );
 }
 
 export function getMinMax(

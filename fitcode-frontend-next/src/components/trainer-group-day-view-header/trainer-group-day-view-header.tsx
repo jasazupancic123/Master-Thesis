@@ -3,7 +3,7 @@ import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import dayjs from 'dayjs';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
-import React from 'react';
+import React, { useEffect } from 'react';
 import toast from 'react-hot-toast';
 
 import GroupCycleInfo from '../group-cycle-info/group-cycle-info';
@@ -36,6 +36,7 @@ export default function GroupTrainerDayViewHeader(
   const {
     group,
     cycle,
+    trainings,
     setDateFrom,
     setDateTo,
     detectedChanges,
@@ -51,6 +52,19 @@ export default function GroupTrainerDayViewHeader(
     wellness,
     setSelectedExercises,
   } = useTrainerDayViewContext();
+
+  useEffect(() => {
+    // if there's only one training on day, always first show the period with the training
+    const todaysTrainings = trainings.filter((t) =>
+      dayjs(t.from).isSame(day.date, 'day')
+    );
+    let period: 'AM' | 'PM' = new Date().getHours() >= 12 ? 'PM' : 'AM';
+    if (todaysTrainings.length === 1) {
+      period = new Date(todaysTrainings[0].from).getHours() >= 12 ? 'PM' : 'AM';
+    }
+
+    setSelectedPeriod(period);
+  }, [day]);
 
   interface PeriodSelectProps {
     smallDisplay?: boolean;
@@ -156,6 +170,8 @@ export default function GroupTrainerDayViewHeader(
           return dayjs(value).isSame(dayjs(day.date), 'day');
         }}
         dayView
+        trainings={trainings}
+        day={day}
         alertOnChange
         onArrowClick={(direction) => {
           const newDay =

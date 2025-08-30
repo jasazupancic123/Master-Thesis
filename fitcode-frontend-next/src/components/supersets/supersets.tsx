@@ -18,7 +18,7 @@ import AddExerciseForm from '../add-exercise-form/add-exercise-form';
 import MyModal from '../modal/modal';
 import Superset from '../superset/superset';
 import { NUM_MAX_SUPERSETS } from '../trainer-day-view/constant';
-import { onDragEnd as onRBDDragEnd } from '../trainer-day-view/state';
+import { onDragEndExercise as onRBDDragEnd } from '../trainer-day-view/state';
 import StubTrainingExerciseCard from '../training-exercise-card/stub-training-exercise-card';
 import { handleAddExerciseToSupersetComponent } from './state';
 import { ADD_SUPERSET_DROPPABLE_ID } from '@/common/constant/add-superset-droppable-id.constant';
@@ -82,9 +82,9 @@ export default function Supersets(props: SupersetsProps) {
     setComponent,
     selectedSubgroup,
     setSelectedSubgroup,
-    setCustomAthleteWorkloads,
-    setSearch,
     supersets,
+    selectedAthlete,
+    setSearch,
     setSupersets,
     setPagination,
   } = useTrainerDayViewContext();
@@ -163,6 +163,10 @@ export default function Supersets(props: SupersetsProps) {
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
 
+  const disabledSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 999999 } })
+  );
+
   const getContainerIdForSupersetIndex = (i: number) => `${component!.id}-${i}`;
 
   const itemsByContainer = useMemo(() => {
@@ -230,7 +234,6 @@ export default function Supersets(props: SupersetsProps) {
         supersets,
         setSupersets,
         setDetectedChanges,
-        setCustomAthleteWorkloads,
       });
       return;
     }
@@ -261,24 +264,34 @@ export default function Supersets(props: SupersetsProps) {
       supersets,
       setSupersets,
       setDetectedChanges,
-      setCustomAthleteWorkloads,
     });
   }
 
   return (
     <DndContext
-      sensors={sensors}
+      sensors={selectedAthlete ? disabledSensors : sensors}
       collisionDetection={closestCenter}
-      onDragStart={(e) => {
-        const id = String(e.active.id);
-        const found =
-          supersets.flatMap((s) => s.exercises).find((ex) => ex.id === id) ||
-          null;
-        setActiveExercise(found);
-      }}
-      onDragEnd={adaptAndCallOnDragEnd}
+      onDragStart={
+        selectedAthlete
+          ? undefined
+          : (e) => {
+              const id = String(e.active.id);
+              const found =
+                supersets
+                  .flatMap((s) => s.exercises)
+                  .find((ex) => ex.id === id) || null;
+              setActiveExercise(found);
+            }
+      }
+      onDragEnd={selectedAthlete ? undefined : adaptAndCallOnDragEnd}
     >
-      <Grid2 container rowSpacing={2}>
+      <Grid2
+        container
+        rowSpacing={2}
+        sx={{
+          mt: screenSize.isSmallerThanLaptop ? 2 : undefined,
+        }}
+      >
         {/* Supersets */}
         <SupersetsProvider
           expandedExercisesView={expandedExercisesView}
@@ -301,7 +314,8 @@ export default function Supersets(props: SupersetsProps) {
         </SupersetsProvider>
 
         {/* Add new superset field */}
-        {supersets.length === 1 && supersets[0].exercises.length === 0
+        {selectedAthlete ||
+        (supersets.length === 1 && supersets[0].exercises.length === 0)
           ? null
           : supersets.length < NUM_MAX_SUPERSETS && (
               <Grid2
@@ -311,7 +325,20 @@ export default function Supersets(props: SupersetsProps) {
                   md: 3,
                 }}
                 sx={{
-                  mx: isCircuit ? 'auto' : undefined,
+                  mx:
+                    isCircuit &&
+                    supersets.flatMap((s) => s.exercises).length >= 3 &&
+                    !screenSize.isSmallerThanLaptop
+                      ? 'auto'
+                      : isCircuit && screenSize.isSmallerThanLaptop
+                        ? 'auto'
+                        : undefined,
+                  my:
+                    isCircuit &&
+                    supersets.flatMap((s) => s.exercises).length < 4 &&
+                    !screenSize.isSmallerThanLaptop
+                      ? 'auto'
+                      : undefined,
                 }}
               >
                 <DroppableArea
@@ -324,14 +351,18 @@ export default function Supersets(props: SupersetsProps) {
                     sx={{
                       cursor: 'pointer',
                       backgroundColor: theme.palette.background.dark,
-                      mx: isCircuit ? 0 : 1,
+                      mx:
+                        isCircuit &&
+                        supersets.flatMap((s) => s.exercises).length > 3
+                          ? 0
+                          : 1,
                     }}
                     p={1}
                     py={!expandedExercisesView ? 2.25 : 3}
                     onClick={() => setOpenAddExerciseModal(true)}
                   >
                     <Typography variant="body2" align="center" fontSize={12}>
-                      {isCircuit ? 'Add exercise' : 'Add/drop exercise'}
+                      {isCircuit ? 'Add exercises' : 'Add/drop exercises'}
                     </Typography>
                   </Box>
                 </DroppableArea>

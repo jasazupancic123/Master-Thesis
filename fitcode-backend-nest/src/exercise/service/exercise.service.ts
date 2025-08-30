@@ -18,10 +18,8 @@ import { Permission } from '@src/common/interface/permission.interface';
 import { CommonService } from '@src/common/service/common.service';
 import { Create, FirestoreEntity } from '@src/common/type/entity.type';
 import { User } from '@src/common/type/firebase-auth.type';
-import {
-  BatchUpdateOperation,
-  ExerciseRef,
-} from '@src/common/type/firestore.type';
+import { ExerciseRef } from '@src/common/type/firestore.type';
+import { BatchUpdateOperation } from '@src/common/type/orm.type';
 import {
   ValidateError,
   ValidateRowError,

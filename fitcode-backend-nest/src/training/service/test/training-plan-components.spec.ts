@@ -22,6 +22,7 @@ import { ExerciseAttributeValueRepository } from '@src/exercise/repository/exerc
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
+import { MAIN_GROUP_PARENT_ID } from '@src/training/constant/main-group-parent-id.constant';
 import {
   generateSubgroup,
   generateSuperset,
@@ -112,7 +113,7 @@ describe('validateTrainingComponents', () => {
   ];
 
   const data = {
-    exercises: [],
+    exercises,
     components,
     methods: [],
     attributes: [],
@@ -307,7 +308,7 @@ describe('validateTrainingComponents', () => {
         memberIds,
         data,
       ),
-    ).toThrow('Member cannot be part of multiple subgroups simultaneously');
+    ).toThrow('Member is already in another subgroup');
   });
 
   it('should throw error if there are more than 5 components', () => {
@@ -386,5 +387,123 @@ describe('validateTrainingComponents', () => {
         data,
       ),
     ).not.toThrow();
+  });
+
+  it('should throw error if subgroup is direct child of main component and does not have only 1 member', () => {
+    const memberIds = ['m1', 'm2', 'm3'];
+    const now = new Date();
+    const trainingComponents = [
+      generateTrainingComponent({
+        id: WARMUP_COMPONENT_ID,
+        from: subMinutes(now, 5),
+      }),
+      generateTrainingComponent({
+        id: 'c1',
+        from: now,
+        subgroups: [
+          generateSubgroup({
+            membersIds: ['m1', 'm2'],
+            parentId: MAIN_GROUP_PARENT_ID,
+          }),
+        ],
+      }),
+      generateTrainingComponent({
+        id: COOLDOWN_COMPONENT_ID,
+        from: addMinutes(now, 5),
+      }),
+    ];
+
+    expect(() =>
+      service.validateTrainingComponents(
+        null,
+        trainingComponents,
+        memberIds,
+        data,
+      ),
+    ).toThrow('Only one member can be selected');
+  });
+
+  it('should throw error if direct subgroup has member that is already in another subgroup', () => {
+    const memberIds = ['m1', 'm2', 'm3'];
+    const now = new Date();
+    const trainingComponents = [
+      generateTrainingComponent({
+        id: WARMUP_COMPONENT_ID,
+        from: subMinutes(now, 5),
+      }),
+      generateTrainingComponent({
+        id: 'c1',
+        from: now,
+        subgroups: [
+          generateSubgroup({
+            membersIds: ['m1'],
+            parentId: MAIN_GROUP_PARENT_ID,
+          }),
+          generateSubgroup({ membersIds: ['m1', 'm2'] }),
+        ],
+      }),
+      generateTrainingComponent({
+        id: COOLDOWN_COMPONENT_ID,
+        from: addMinutes(now, 5),
+      }),
+    ];
+
+    expect(() =>
+      service.validateTrainingComponents(
+        null,
+        trainingComponents,
+        memberIds,
+        data,
+      ),
+    ).toThrow('Member is already in another subgroup');
+  });
+
+  it('should throw error if direct subgroup training prescription is different than main component', () => {
+    const memberIds = ['m1', 'm2', 'm3'];
+    const now = new Date();
+    const trainingComponents = [
+      generateTrainingComponent({
+        id: WARMUP_COMPONENT_ID,
+        from: subMinutes(now, 5),
+      }),
+      generateTrainingComponent({
+        id: 'c1',
+        from: now,
+        supersets: [
+          generateSuperset({
+            exercises: [
+              generateTrainingExercise({ id: 'e1' }),
+              generateTrainingExercise({ id: 'e2' }),
+            ],
+          }),
+        ],
+        subgroups: [
+          generateSubgroup({
+            membersIds: ['m1'],
+            parentId: MAIN_GROUP_PARENT_ID,
+            supersets: [
+              generateSuperset({
+                exercises: [generateTrainingExercise({ id: 'e1' })],
+              }),
+            ],
+          }),
+        ],
+      }),
+      generateTrainingComponent({
+        id: COOLDOWN_COMPONENT_ID,
+        from: addMinutes(now, 5),
+      }),
+    ];
+
+    expect(() =>
+      service.validateTrainingComponents(
+        null,
+        trainingComponents,
+        memberIds,
+        data,
+      ),
+    ).toThrow(
+      'Training prescription must be the same for all members in the selected group',
+    );
   });
 });

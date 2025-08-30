@@ -17,7 +17,7 @@ import { MethodService } from '@src/method/service/method.service';
 import { SportLevel } from '@src/user/enum/sport-level.enum';
 import { UserRole } from '@src/user/enum/user-role.enum';
 import { UserRepository } from '@src/user/repository/user.repository';
-import { UserService } from '@src/user/user.service';
+import { UserService } from '@src/user/service/user.service';
 
 import { FirestoreCollection } from '../enum/firestore-collection.enum';
 import type { User } from '../type/firebase-auth.type';

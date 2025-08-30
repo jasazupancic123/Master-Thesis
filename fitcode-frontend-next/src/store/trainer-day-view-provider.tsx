@@ -20,7 +20,6 @@ import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import type { Workload } from '@/controller/training/type/workload.type';
 import type { User, UserEntity } from '@/controller/user/type/user.type';
 import type { WellnessZScore } from '@/controller/user/type/wellness.type';
 import { UserController } from '@/controller/user/user.controller';
@@ -51,12 +50,12 @@ export function TrainerDayViewProvider(
     total: 0,
   });
 
+  const [day, setDay] = useState<Day>(commonService.date.getToday());
+
   // check if it's after 12:00, then set to PM, else AM
   const [selectedPeriod, setSelectedPeriod] = useState<'AM' | 'PM'>(
     new Date().getHours() >= 12 ? 'PM' : 'AM'
   );
-
-  const [day, setDay] = useState<Day>(commonService.date.getToday());
 
   const [training, setTraining] = useState<Training | undefined>();
   const [component, setComponent] = useState<TrainingComponent | undefined>();
@@ -78,9 +77,6 @@ export function TrainerDayViewProvider(
       futureWorkloads: [],
       completedWorkloads: [],
     });
-  const [customAthleteWorkloads, setCustomAthleteWorkloads] = useState<
-    Workload[]
-  >([]);
 
   const isSettingAthleteWorkloads = useRef(false);
   const previousSelectedAthlete = useRef<User | undefined>(undefined);
@@ -184,8 +180,6 @@ export function TrainerDayViewProvider(
     setSearch,
     selectedAthleteWorkloads,
     setSelectedAthleteWorkloads,
-    customAthleteWorkloads,
-    setCustomAthleteWorkloads,
     isSettingAthleteWorkloads,
     previousSelectedAthlete,
   };

@@ -14,6 +14,8 @@ import type { SetState, SetStateNullable } from '@/common/type/state.type';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import { ParamType } from '@/controller/component/enum/param.enum';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
+import type { Method } from '@/controller/method/type/method.type';
+import { CustomWorkloadsSubgroupsService } from '@/controller/training/custom-workloads-subgroups.service';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
 import type { Superset } from '@/controller/training/type/superset.type';
@@ -21,11 +23,11 @@ import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 
-function updateSupersets(
+export const updateSupersets = (
   supersets: Superset[],
   exercisesToAdd: TrainingExercise[],
   mainSet: MainSet
-): Superset[] | null {
+): Superset[] | null => {
   if (!Array.isArray(supersets)) supersets = [];
   if (supersets.length === 0)
     supersets.push({ exercises: [], color: COLOR[supersets.length] });
@@ -64,67 +66,17 @@ function updateSupersets(
   }
 
   return supersets;
-}
+};
 
-export function handleAddExerciseToSupersetComponent(
-  input: {
-    selectedExercisesIds: string[];
-    allExercises: Exercise[];
-    minSets: number | undefined;
-    maxSets: number | undefined;
-  },
-  state: {
-    training: Training;
-    setTraining: SetStateNullable<Training>;
-    setTrainings: SetState<Training[]>;
-    component: TrainingComponent;
-    setComponent: SetStateNullable<TrainingComponent>;
-    selectedSubgroup: Subgroup | null;
-    setSelectedSubgroup: SetState<Subgroup | null>;
-    setSearch: SetState<string>;
-    supersets: Superset[];
-    setSupersets: SetState<Superset[]>;
-    setOpenAddExerciseModal: SetState<boolean>;
-    setDetectedChanges: SetState<boolean>;
-    setPagination: SetState<Pagination>;
-  }
-) {
-  const { selectedExercisesIds, allExercises, minSets, maxSets } = input;
-
-  const {
-    training,
-    setTraining,
-    setTrainings,
-    component,
-    setComponent,
-    selectedSubgroup,
-    setSearch,
-    supersets: supersetsState,
-    setOpenAddExerciseModal,
-    setDetectedChanges,
-    setSelectedSubgroup,
-    setPagination,
-  } = state;
-
-  setSearch('');
-  setPagination((prev) => ({
-    ...prev,
-    page: 1,
-  }));
-  // get only new exercises
-  const exercisesIdsToAdd =
-    supersetsState && supersetsState.length
-      ? [...selectedExercisesIds].filter(
-          (id) =>
-            !supersetsState
-              .map((s) => s.exercises.map((e) => e.id))
-              .flat()
-              .includes(id)
-        )
-      : selectedExercisesIds;
-
-  const method = component?.method;
-  const exercisesToAdd: TrainingExercise[] = exercisesIdsToAdd.map((id) => {
+export function getTrainingExercisesFromExercises(
+  exercisesIdsToAdd: string[],
+  allExercises: Exercise[],
+  component: TrainingComponent,
+  method?: Method,
+  minSets?: number,
+  maxSets?: number
+): TrainingExercise[] {
+  return exercisesIdsToAdd.map((id) => {
     const exercise = allExercises.find((e) => e.id === id);
     const paramValues =
       (exercise?.defaultParams &&
@@ -171,6 +123,78 @@ export function handleAddExerciseToSupersetComponent(
         : [],
     };
   });
+}
+
+export function handleAddExerciseToSupersetComponent(
+  input: {
+    selectedExercisesIds: string[];
+    allExercises: Exercise[];
+    minSets: number | undefined;
+    maxSets: number | undefined;
+  },
+  state: {
+    training: Training;
+    setTraining: SetStateNullable<Training>;
+    setTrainings: SetState<Training[]>;
+    component: TrainingComponent;
+    setComponent: SetStateNullable<TrainingComponent>;
+    selectedSubgroup: Subgroup | null;
+    setSelectedSubgroup: SetState<Subgroup | null>;
+    setSearch: SetState<string>;
+    supersets: Superset[];
+    setSupersets: SetState<Superset[]>;
+    setOpenAddExerciseModal: SetState<boolean>;
+    setDetectedChanges: SetState<boolean>;
+    setPagination: SetState<Pagination>;
+  }
+) {
+  const { selectedExercisesIds, allExercises, minSets, maxSets } = input;
+
+  const {
+    training,
+    setTraining,
+    setTrainings,
+    component,
+    setComponent,
+    selectedSubgroup,
+    setSearch,
+    supersets: supersetsState,
+    setOpenAddExerciseModal,
+    setDetectedChanges,
+    setSelectedSubgroup,
+    setPagination,
+  } = state;
+
+  // if it's custom workloads subgroup, then dissable
+  if (selectedSubgroup?.parentId) return;
+
+  setSearch('');
+  setPagination((prev) => ({
+    ...prev,
+    page: 1,
+  }));
+
+  // get only new exercises
+  const exercisesIdsToAdd =
+    supersetsState && supersetsState.length
+      ? [...selectedExercisesIds].filter(
+          (id) =>
+            !supersetsState
+              .map((s) => s.exercises.map((e) => e.id))
+              .flat()
+              .includes(id)
+        )
+      : selectedExercisesIds;
+
+  const method = component?.method;
+  const exercisesToAdd = getTrainingExercisesFromExercises(
+    exercisesIdsToAdd,
+    allExercises,
+    component,
+    method,
+    minSets,
+    maxSets
+  );
 
   if (component.id === WARMUP_ID || component.id === COOLDOWN_ID) {
     // handle warmup or cooldown component, don't update prescribed stats
@@ -185,7 +209,7 @@ export function handleAddExerciseToSupersetComponent(
 
     const supersets = updateSupersets(
       oldSupersets,
-      exercisesToAdd,
+      [...exercisesToAdd],
       wOrC.mainSet
     );
 
@@ -209,6 +233,12 @@ export function handleAddExerciseToSupersetComponent(
 
       updatedWOrC.subgroups = updatedSubgroups;
     }
+
+    updatedWOrC.subgroups = CustomWorkloadsSubgroupsService.addExercises(
+      updatedWOrC,
+      selectedSubgroup,
+      [...exercisesToAdd]
+    );
 
     const updatedTraining =
       component.id === WARMUP_ID
@@ -241,7 +271,7 @@ export function handleAddExerciseToSupersetComponent(
 
   const supersets = updateSupersets(
     oldSupersets,
-    exercisesToAdd,
+    [...exercisesToAdd],
     (selectedSubgroup || component).mainSet
   );
 
@@ -254,6 +284,12 @@ export function handleAddExerciseToSupersetComponent(
       ...updatedComponents[trainingComponentIndex],
       supersets: [...supersets],
     };
+
+    updatedComponent.subgroups = CustomWorkloadsSubgroupsService.addExercises(
+      updatedComponent,
+      selectedSubgroup,
+      [...exercisesToAdd]
+    );
 
     updatedComponents[trainingComponentIndex] = { ...updatedComponent };
 
@@ -288,6 +324,12 @@ export function handleAddExerciseToSupersetComponent(
       ...updatedComponents[trainingComponentIndex],
       subgroups: updatedSubgroups,
     };
+
+    updatedComponent.subgroups = CustomWorkloadsSubgroupsService.addExercises(
+      updatedComponent,
+      selectedSubgroup,
+      [...exercisesToAdd]
+    );
 
     updatedComponents[trainingComponentIndex] = { ...updatedComponent };
 

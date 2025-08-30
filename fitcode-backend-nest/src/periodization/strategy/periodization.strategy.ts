@@ -41,12 +41,9 @@ export abstract class PeriodizationStrategy {
 
   /**
    * Rounds the intensity based on the user's baseline.
-   * If baseline is < 20 kg or intensity is <= 10 kg, rounds to nearest integer (1 kg steps).
-   * If intensity is above 10 kg, rounds to nearest even number (2 kg steps).
    */
   protected roundIntensity(int: number, baseline: number) {
-    if (baseline < 20 || int <= 10) return Math.round(int); // 1 kg steps
-    const evenApprox = Math.round(int / 2) * 2; // multiple of 2
-    return evenApprox < 12 ? 12 : evenApprox;
+    if (baseline < 20 || int <= 10) return Math.round(int * 4) / 4; // round to nearest 0.25 kg
+    return Math.round(int * 2) / 2; // round to the nearest 0.5 kg
   }
 }

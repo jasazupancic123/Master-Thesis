@@ -9,6 +9,7 @@ import { TestComponentService } from './service/test-component.service';
 import { TestExerciseService } from './service/test-exercise.service';
 import { TestWorkloadService } from './service/test-workload.service';
 import { TrainingTestRepository } from './service/training-test.repository';
+import { WellnessTestRepository } from './service/wellness-test.repository';
 
 @Injectable()
 export class TestDbService {
@@ -21,6 +22,7 @@ export class TestDbService {
     readonly trainings: TrainingTestRepository,
     readonly institutions: InstitutionRepository,
     readonly groups: GroupRepository,
+    readonly wellness: WellnessTestRepository,
   ) {}
 
   private SERVICES = [
@@ -31,6 +33,7 @@ export class TestDbService {
     this.trainings.changeLog,
     this.institutions.changeLog,
     this.groups.changeLog,
+    this.wellness.changeLog,
   ];
 
   checkpoint() {

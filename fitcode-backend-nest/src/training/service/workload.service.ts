@@ -6,7 +6,6 @@ import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum'
 import { CommonService } from '@src/common/service/common.service';
 import { Create, FirestoreEntity } from '@src/common/type/entity.type';
 import {
-  BatchWriteOperation,
   CycleRef,
   ExerciseRef,
   GroupRef,
@@ -16,6 +15,7 @@ import {
   UserRef,
   WorkloadRef,
 } from '@src/common/type/firestore.type';
+import { BatchWriteOperation } from '@src/common/type/orm.type';
 import { PARAMS } from '@src/component/constant/param.constant';
 import { IntType, ParamType, VolType } from '@src/component/enum/param.enum';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
@@ -267,10 +267,10 @@ export class WorkloadService {
               operations.push({
                 operation: 'set',
                 ref: collection.doc(key),
-                data: this.firebaseService.buildCreateQuery({
-                  ...workloadMeta,
-                  ...prescribedWorkload,
-                }),
+                data: this.firebaseService.buildCreateQuery(
+                  { ...workloadMeta, ...prescribedWorkload },
+                  { timestamps: true },
+                ),
               });
             else {
               const { added, removed } = this.commonService.array.diff(
@@ -302,11 +302,14 @@ export class WorkloadService {
               operations.push({
                 operation: 'set',
                 ref: collection.doc(key),
-                data: this.firebaseService.buildCreateQuery({
-                  ...workloadMeta,
-                  ...workloadValue,
-                  status: this.getStatus(workloadValue),
-                }),
+                data: this.firebaseService.buildCreateQuery(
+                  {
+                    ...workloadMeta,
+                    ...workloadValue,
+                    status: this.getStatus(workloadValue),
+                  },
+                  { timestamps: true },
+                ),
               });
             }
           });
@@ -528,34 +531,6 @@ export class WorkloadService {
     if (completedValue < prescribedValue) return SetStatus.PARTIAL; // partial set
     if (completedValue === prescribedValue) return SetStatus.COMPLETED; // completed set
     if (completedValue > prescribedValue) return SetStatus.OVER; // over-completed set
-  }
-
-  private calculateRM(n: number, data: Workload[]) {
-    // fetch 1RM from last month of user exercises, use formula and save value as KG
-    const values = data
-      .filter(
-        (w) =>
-          (w.volWork1Type === VolType.Rep && w.volWork1ValueL) ||
-          (w.volWork2Type === VolType.Rep && w.volWork2ValueL),
-      )
-      .flatMap((w) => {
-        const reps: { reps: number; weight: number }[] = [];
-        if (w.volWork1ValueL && w.intWork1ValueL)
-          reps.push({ reps: w.volWork1ValueL, weight: w.intWork1ValueL });
-
-        if (w.volWork2ValueL && w.intWork2ValueL)
-          reps.push({ reps: w.volWork2ValueL, weight: w.intWork2ValueL });
-
-        return reps;
-      });
-
-    // find max weight lifted
-    const { reps, weight } = values.sort((a, b) => b.weight - a.weight)[0] || {
-      reps: 1,
-      weight: 0,
-    };
-
-    return this.commonService.number.rm(weight, reps <= 0 ? 1 : reps)(n);
   }
 
   getWorkloadValue(
@@ -817,55 +792,6 @@ export class WorkloadService {
     }
 
     return set;
-  }
-
-  calculateIntValues(
-    paramValues: AttributeValue[],
-    bodyweight: number,
-    history: Workload[],
-  ): Pick<
-    Workload,
-    | 'prescribedIntWork1ValueL'
-    | 'prescribedIntWork1ValueR'
-    | 'prescribedIntWork2ValueL'
-    | 'prescribedIntWork2ValueR'
-  > {
-    const intWork1 = paramValues.find((p) => p.field === ParamType.IntWork1);
-    const intWork1Field = this.parseSelected<IntType>(intWork1);
-    const intWork1Value = this.parseValue(intWork1);
-
-    const intWork2 = paramValues.find((p) => p.field === ParamType.IntWork2);
-    const intWork2Field = this.parseSelected<IntType>(intWork2);
-    const intWork2Value = this.parseValue(intWork2);
-
-    const prescribedIntWork1Value = isNaN(intWork1Value)
-      ? undefined
-      : intWork1Field === IntType.Rm && !isNaN(intWork1Value)
-        ? this.calculateRM(intWork1Value, history)
-        : intWork1Field === IntType.Bw && !isNaN(intWork1Value)
-          ? bodyweight * this.commonService.number.percent(intWork1Value)
-          : [IntType.Mas, IntType.Hrmax].includes(intWork1Field) &&
-              !isNaN(intWork1Value)
-            ? this.commonService.number.percent(intWork1Value)
-            : intWork1Value;
-
-    const prescribedIntWork2Value = isNaN(intWork1Value)
-      ? undefined
-      : intWork2Field === IntType.Rm && !isNaN(intWork2Value)
-        ? this.calculateRM(intWork2Value, history)
-        : intWork2Field === IntType.Bw && !isNaN(intWork2Value)
-          ? bodyweight * this.commonService.number.percent(intWork2Value)
-          : [IntType.Mas, IntType.Hrmax].includes(intWork2Field) &&
-              !isNaN(intWork1Value)
-            ? this.commonService.number.percent(intWork2Value)
-            : intWork2Value;
-
-    return {
-      prescribedIntWork1ValueL: prescribedIntWork1Value,
-      prescribedIntWork1ValueR: prescribedIntWork1Value,
-      prescribedIntWork2ValueL: prescribedIntWork2Value,
-      prescribedIntWork2ValueR: prescribedIntWork2Value,
-    };
   }
 
   private parseSelected<T = string>(

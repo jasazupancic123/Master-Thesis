@@ -1,15 +1,19 @@
 import { Injectable } from '@nestjs/common';
+import {
+  CollectionReference,
+  DocumentReference,
+} from 'firebase-admin/firestore';
 
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { CommonService } from '@src/common/service/common.service';
 import { Create, Update } from '@src/common/type/entity.type';
-import { FirestoreRootRepository } from '@src/common/type/firestore.type';
+import { FirestoreRepository } from '@src/common/type/firestore.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 
 import { Exercise } from '../entity/exercise.entity';
 
 @Injectable()
-export class ExerciseRepository extends FirestoreRootRepository<Exercise> {
+export class ExerciseRepository extends FirestoreRepository<Exercise> {
   collectionName = FirestoreCollection.EXERCISE;
 
   constructor(
@@ -17,6 +21,14 @@ export class ExerciseRepository extends FirestoreRootRepository<Exercise> {
     private readonly commonService: CommonService,
   ) {
     super(firebaseService);
+  }
+
+  collection(): CollectionReference {
+    return this.firebaseService.firestore.collection(this.collectionName);
+  }
+
+  doc(ref: string): DocumentReference {
+    return this.collection().doc(ref);
   }
 
   async save(input: Create<Omit<Exercise, 'attributeValues'>>) {
