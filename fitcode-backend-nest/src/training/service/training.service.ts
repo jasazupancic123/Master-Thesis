@@ -19,6 +19,10 @@ import {
 import { Query, Timestamp } from 'firebase-admin/firestore';
 
 import { AttributeService } from '@src/attribute/service/attribute.service';
+import {
+  DEFAULT_WEIGHT_KG,
+  MIN_BODYWEIGHT_KG,
+} from '@src/common/constant/weight.constant';
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
 import { UpdateMembersDto } from '@src/common/dto/user-id.dto';
 import { Permission } from '@src/common/interface/permission.interface';
@@ -26,8 +30,6 @@ import { CommonService } from '@src/common/service/common.service';
 import { Create, Update } from '@src/common/type/entity.type';
 import { User } from '@src/common/type/firebase-auth.type';
 import {
-  BatchUpdateOperation,
-  BatchWriteOperation,
   ComponentRef,
   CycleRef,
   SubgroupRef,
@@ -36,12 +38,17 @@ import {
   UserRef,
   WorkloadRef,
 } from '@src/common/type/firestore.type';
+import {
+  BatchUpdateOperation,
+  BatchWriteOperation,
+} from '@src/common/type/orm.type';
 import { Filter } from '@src/common/type/orm.type';
 import { ComponentService } from '@src/component/component.service';
 import {
   COOLDOWN_COMPONENT_ID,
   WARMUP_COMPONENT_ID,
 } from '@src/component/constant/warmup-cooldown.constant';
+import { IntType, ParamType } from '@src/component/enum/param.enum';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { DELETE_GROUP_EVENT } from '@src/group/constant/delete-group-event.constant';
 import { Cycle } from '@src/group/entity/cycle.entity';
@@ -54,7 +61,7 @@ import { UpdateInstitutionAthleteEvent } from '@src/institution/event/update-ins
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { MethodService } from '@src/method/service/method.service';
 import { PeriodizationService } from '@src/periodization/periodization.service';
-import { UserService } from '@src/user/user.service';
+import { UserService } from '@src/user/service/user.service';
 
 import { CopyComponentDto } from '../dto/copy-component.dto';
 import { CopyTrainingDto } from '../dto/copy-training.dto';
@@ -659,15 +666,17 @@ export class TrainingService implements Permission<Training, Institution> {
     const methods = await this.methodService.findAll();
     const attributes = await this.attributeService.findAll();
 
-    const exercises =
-      await this.trainingPlanService.getAllTrainingExercises(input);
-
     const trainingComponents = [
       training.warmup,
       ...training.components,
       ...input,
       training.cooldown,
     ];
+
+    const exercises =
+      await this.trainingPlanService.getAllTrainingExercises(
+        trainingComponents,
+      );
 
     this.updateTrainingTimes(trainingComponents);
 
@@ -738,7 +747,7 @@ export class TrainingService implements Permission<Training, Institution> {
   }
 
   @LogMethod()
-  async periodize(
+  async copyAndPeriodize(
     user: User,
     ref: TrainingComponentRef & SubgroupRef,
     input: PeriodizeTrainingsDto,
@@ -777,28 +786,27 @@ export class TrainingService implements Permission<Training, Institution> {
       const component = t.components.find((c) => c.id === ref.componentId);
       if (!component) return false;
 
-      const target = baseComponent.target;
-      if (!target) return true; // no target, return all trainings with that component
-
-      // targets must match
-      return component.target?.id === target.id;
+      if (!baseComponent.target) return true; // no target, return all trainings with that component
+      return component.target?.id === baseComponent.target.id;
     });
 
-    if (filtered.length === 0) return [];
-
-    // if no subgroup is selected, override all filtered trainings' component with the base component
+    // if no subgroup is selected, override all filtered trainings' components with the base component
     // if subgroup is selected, override only that subgroup
     for (const training of filtered) {
-      this.trainingPlanService.copyComponentIntoTraining(
+      // override component (supersets and if no subgroup selected also all subgroups) in future trainings
+      this.trainingPlanService.copyOrOverrideComponent(
         ref,
         baseTraining,
         training,
-        { skipSupersets: false, skipSubgroups: true, skipTimes: true },
+        {
+          overrideSupersets: true,
+          overrideDirectSubgroups: !ref.subgroupId ? true : false,
+          overrideOtherSubgroups: !ref.subgroupId ? true : false,
+        },
       );
 
       if (ref.subgroupId)
-        // override only subgroups
-        this.trainingPlanService.copySubgroupIntoTraining(
+        this.trainingPlanService.copyOrOverrideSubgroup(
           ref.subgroupId,
           baseComponent,
           training,
@@ -806,6 +814,7 @@ export class TrainingService implements Permission<Training, Institution> {
     }
 
     filtered.unshift(baseTraining); // add base training to the beginning of the list
+
     const periodized = this.periodizationService.periodize(
       periodizationType,
       ref,
@@ -915,21 +924,22 @@ export class TrainingService implements Permission<Training, Institution> {
     )
       this.validateCanView(user, training, training.institution);
 
+    const athleteTraining = this.trainingPlanService.getTrainingByAthlete(
+      athlete.uid,
+      training,
+    );
+
+    // calculate param based sets
+    await this.updateBodyweightSets(athlete.uid, athleteTraining);
+    await this.updateRepMaxSets(athlete.uid, athleteTraining);
+
     const customPrescribedWorkloads =
       await this.workloadService.findAllCustomByTraining(training.id);
 
     const newPrescribedTrainingComponents: TrainingComponent[] = [];
-    for (const trainingComponent of training.components) {
+    for (const trainingComponent of athleteTraining.components) {
       const newPrescribedSupersets: Superset[] = [];
-
-      // find prescribed supersets (either from subgroup or main group)
-      const subgroup = trainingComponent.subgroups.find((s) =>
-        s.membersIds.includes(ref.uid),
-      );
-
-      const prescribedSupersets = subgroup
-        ? subgroup.supersets
-        : trainingComponent.supersets;
+      const prescribedSupersets = trainingComponent.supersets;
 
       prescribedSupersets.forEach(
         ({ exercises: prescribedExercises }, supersetIndex) => {
@@ -994,6 +1004,65 @@ export class TrainingService implements Permission<Training, Institution> {
       ...training,
       components: newPrescribedTrainingComponents,
     };
+  }
+
+  async updateBodyweightSets(athleteId: string, training: Training) {
+    const bwParam = { field: ParamType.IntWork1, selected: IntType.Bw };
+    const hasBwParamType = this.trainingPlanService.hasParamType(
+      training,
+      bwParam,
+    );
+
+    if (!hasBwParamType) return;
+
+    const ref = { uid: athleteId };
+    const bw = await this.userService.getLastBodyweight(ref);
+    if (!bw || bw < MIN_BODYWEIGHT_KG) return; // no valid bodyweight found
+
+    this.trainingPlanService.modifyPrescribedParamValuesByType(
+      training,
+      bwParam,
+      (value) =>
+        this.commonService.number.roundIntensity((value * bw) / 100, bw), // convert % value to kg and round to 2 decimals
+    );
+  }
+
+  async updateRepMaxSets(athleteId: string, training: Training) {
+    const rmParam = { field: ParamType.IntWork1, selected: IntType.Rm };
+    const exercises = this.trainingPlanService.findExercisesByParamType(
+      training,
+      rmParam,
+    );
+
+    if (!exercises.length) return;
+
+    const maxes: Workload[] = (
+      await Promise.all(
+        exercises.map((e) =>
+          this.workloadRepository.findExerciseMax(athleteId, e.id),
+        ),
+      )
+    ).filter(Boolean);
+
+    this.trainingPlanService.modifyPrescribedParamValuesByType(
+      training,
+      rmParam,
+      (value, exerciseId) => {
+        // prescribed value is in % of 1RM (between 1 and 100)
+        const best = maxes.find((max) => max.exerciseId === exerciseId);
+        if (!best || !best.intWork1ValueL || !best.volWork1ValueL)
+          return DEFAULT_WEIGHT_KG;
+
+        const reps = best.volWork1ValueL;
+        const weight = best.intWork1ValueL;
+        const oneRM = this.commonService.number.rm(weight, reps);
+
+        return this.commonService.number.roundIntensity(
+          (value * oneRM) / 100,
+          oneRM,
+        );
+      },
+    );
   }
 
   @OnEvent(INSTITUTION_ATHLETE_EVENT, { async: true, promisify: true })

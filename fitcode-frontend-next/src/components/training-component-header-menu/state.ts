@@ -2,8 +2,10 @@ import type { SetState, SetStateNullable } from '@/common/type/state.type';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import { VolWorkSetType } from '@/controller/component/enum/param.enum';
 import type { Method } from '@/controller/method/type/method.type';
+import { MainSet } from '@/controller/training/enum/main-set.enum';
 import type { ExerciseSet } from '@/controller/training/type/exercise-set.type';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
+import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
@@ -229,3 +231,39 @@ export function onMethodChange(
 
   setDetectedChanges(true);
 }
+
+export const onMainSetChange = (
+  component: TrainingComponent,
+  selectedSubgroup: Subgroup | null,
+  mainSet: MainSet
+): Superset[] => {
+  const updatedSupersets = [{ exercises: [] }] as Superset[];
+
+  const exercises = (selectedSubgroup || component).supersets.flatMap(
+    (s) => s.exercises
+  );
+
+  if (mainSet === MainSet.BLOCK) {
+    exercises.forEach((e, i) => {
+      // limit to 32 exercises
+      if (i > 31) return;
+
+      if (updatedSupersets[updatedSupersets.length - 1].exercises.length === 4)
+        updatedSupersets.push({
+          exercises: [],
+        });
+
+      updatedSupersets[updatedSupersets.length - 1].exercises.push(e);
+    });
+  } else {
+    // circuit
+    exercises.forEach((e, i) => {
+      // limit to 32 exercises
+      if (i > 31) return;
+
+      updatedSupersets[0].exercises.push(e);
+    });
+  }
+
+  return updatedSupersets;
+};

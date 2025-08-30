@@ -2,6 +2,7 @@ import {
   CheckBox,
   CheckBoxOutlineBlank,
   Delete,
+  IndeterminateCheckBox,
   KeyboardArrowDown,
   KeyboardArrowRight,
 } from '@mui/icons-material';
@@ -41,6 +42,8 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
     setSelectedExercises,
     selectedSubgroup,
     setSelectedSubgroup,
+    selectedAthlete,
+    supersets,
   } = useTrainerDayViewContext();
 
   const { setDetectedChanges } = useGroup();
@@ -51,9 +54,13 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
         <Box
           display="flex"
           alignItems="center"
-          sx={{ cursor: 'pointer', p: 0, m: 0 }}
+          sx={{
+            cursor: selectedAthlete ? undefined : 'pointer',
+            p: 0,
+            m: 0,
+          }}
         >
-          {trainingComponent?.id === component?.id ? (
+          {!selectedAthlete && trainingComponent?.id === component?.id ? (
             <Tooltip
               title="Add exercise"
               sx={{
@@ -134,13 +141,11 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
               </IconButton>
               {expandedExercisesView && (
                 <>
-                  {trainingComponent.supersets.flatMap((s) => s.exercises)
-                    .length > 0 && (
+                  {supersets.flatMap((s) => s.exercises).length > 0 && (
                     <Tooltip
                       title={
-                        trainingComponent.supersets.flatMap((s) => s.exercises)
-                          .length > 0 &&
-                        trainingComponent.supersets?.every((s) =>
+                        supersets.flatMap((s) => s.exercises).length > 0 &&
+                        supersets.every((s) =>
                           s.exercises.every((e) =>
                             selectedExercises.some((se) => se.id === e.id)
                           )
@@ -152,36 +157,39 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                       <IconButton
                         sx={{ p: 0, m: 0 }}
                         onClick={() => {
-                          const allExercisesSelected =
-                            trainingComponent.supersets?.every((s) =>
-                              s.exercises.every((e) =>
-                                selectedExercises.some((se) => se.id === e.id)
-                              )
-                            );
+                          const allExercisesSelected = supersets.every((s) =>
+                            s.exercises.every((e) =>
+                              selectedExercises.some((se) => se.id === e.id)
+                            )
+                          );
                           if (allExercisesSelected) {
                             setSelectedExercises([]);
                           } else {
                             setSelectedExercises(
-                              trainingComponent.supersets?.flatMap(
-                                (s) => s.exercises
-                              ) || []
+                              supersets.flatMap((s) => s.exercises) || []
                             );
                           }
                         }}
                       >
-                        {trainingComponent.supersets?.every((s) =>
+                        {supersets.every((s) =>
                           s.exercises.every((e) =>
                             selectedExercises.some((se) => se.id === e.id)
                           )
                         ) ? (
                           <CheckBox sx={{ fontSize: 16 }} />
+                        ) : supersets.some((s) =>
+                            s.exercises.some((e) =>
+                              selectedExercises.some((se) => se.id === e.id)
+                            )
+                          ) ? (
+                          <IndeterminateCheckBox sx={{ fontSize: 16 }} />
                         ) : (
                           <CheckBoxOutlineBlank sx={{ fontSize: 16 }} />
                         )}
                       </IconButton>
                     </Tooltip>
                   )}
-                  {selectedExercises.length > 0 && (
+                  {!selectedAthlete && selectedExercises.length > 0 && (
                     <Tooltip title="Delete selected exercises">
                       <IconButton
                         sx={{ p: 0, m: 0 }}

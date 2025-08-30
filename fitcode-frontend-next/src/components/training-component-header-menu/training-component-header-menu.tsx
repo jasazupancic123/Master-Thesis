@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 import MyModal from '../modal/modal';
 import SelectInput from '../select-input/select-input';
 import { AFTER_SETS } from '../trainer-day-view/constant';
-import { onMethodChange } from './state';
+import { onMainSetChange, onMethodChange } from './state';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
@@ -15,6 +15,7 @@ import {
 import { handleApiRequest } from '@/common/type/state.type';
 import type { AfterSet } from '@/controller/component/type/after-set.type';
 import type { Method } from '@/controller/method/type/method.type';
+import { CustomWorkloadsSubgroupsService } from '@/controller/training/custom-workloads-subgroups.service';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
 import { PeriodizationType } from '@/controller/training/enum/periodization-type.enum';
 import { TrainingController } from '@/controller/training/training.controller';
@@ -47,6 +48,7 @@ export default function TrainingComponentHeaderMenu() {
     selectedExercises,
     selectedSubgroup,
     setSelectedSubgroup,
+    selectedAthlete,
   } = useTrainerDayViewContext();
 
   const [afterSet, setAfterSet] = useState<AfterSet | null>();
@@ -108,12 +110,16 @@ export default function TrainingComponentHeaderMenu() {
           label={'Main Set'}
           value={selectedSubgroup?.mainSet || component.mainSet}
           icon={null}
+          disabled={selectedAthlete !== undefined}
           displayEmpty
           disableNoneChoice
           iconSize={17}
           items={Object.values(MainSet)}
           itemKey={undefined}
           itemName={undefined}
+          selectSize="small"
+          inputLabelSize={'12px'}
+          selectedItemSize={12}
           sx={{
             maxWidth: 75,
           }}
@@ -131,36 +137,11 @@ export default function TrainingComponentHeaderMenu() {
             if (selectedSubgroup && selectedSubgroup.mainSet === mainSet)
               return;
 
-            const updatedSupersets = [{ exercises: [] }] as Superset[];
-
-            const exercises = (selectedSubgroup || component).supersets.flatMap(
-              (s) => s.exercises
+            const updatedSupersets = onMainSetChange(
+              component,
+              selectedSubgroup,
+              mainSet
             );
-
-            if (mainSet === MainSet.BLOCK) {
-              exercises.forEach((e, i) => {
-                // limit to 32 exercises
-                if (i > 31) return;
-
-                if (
-                  updatedSupersets[updatedSupersets.length - 1].exercises
-                    .length === 4
-                )
-                  updatedSupersets.push({
-                    exercises: [],
-                  });
-
-                updatedSupersets[updatedSupersets.length - 1].exercises.push(e);
-              });
-            } else {
-              // circuit
-              exercises.forEach((e, i) => {
-                // limit to 32 exercises
-                if (i > 31) return;
-
-                updatedSupersets[0].exercises.push(e);
-              });
-            }
 
             const updatedComponent = { ...component };
             if (selectedSubgroup) {
@@ -175,15 +156,41 @@ export default function TrainingComponentHeaderMenu() {
               updatedComponent.subgroups = component.subgroups.map((s) =>
                 s.id === updatedSubgroup.id ? updatedSubgroup : s
               );
+
+              updatedComponent.subgroups =
+                CustomWorkloadsSubgroupsService.updateMainSet(
+                  updatedComponent,
+                  updatedSubgroup,
+                  mainSet
+                );
             } else {
               updatedComponent.supersets = updatedSupersets;
               updatedComponent.mainSet = mainSet;
+
+              updatedComponent.subgroups =
+                CustomWorkloadsSubgroupsService.updateMainSet(
+                  component,
+                  null,
+                  mainSet
+                );
             }
 
             setComponent(updatedComponent);
 
             setTraining((prev) => {
               if (!prev) return prev;
+
+              if (updatedComponent.id === WARMUP_ID) {
+                return {
+                  ...prev,
+                  warmup: updatedComponent,
+                };
+              } else if (updatedComponent.id === COOLDOWN_ID) {
+                return {
+                  ...prev,
+                  cooldown: updatedComponent,
+                };
+              }
 
               return {
                 ...prev,
@@ -193,9 +200,6 @@ export default function TrainingComponentHeaderMenu() {
               };
             });
           }}
-          selectSize="small"
-          inputLabelSize={'12px'}
-          selectedItemSize={12}
         />
       </Tooltip>
 
@@ -205,6 +209,7 @@ export default function TrainingComponentHeaderMenu() {
           value={afterSet?.id || ''}
           icon={null}
           displayEmpty
+          disabled={selectedAthlete !== undefined}
           iconSize={17}
           inputLabelSize={'12px'}
           selectedItemSize={12}
@@ -246,7 +251,10 @@ export default function TrainingComponentHeaderMenu() {
           displayEmpty
           iconSize={17}
           itemName={undefined}
-          disabled={[WARMUP_ID, COOLDOWN_ID].includes(component.id)}
+          disabled={
+            selectedAthlete !== undefined ||
+            [WARMUP_ID, COOLDOWN_ID].includes(component.id)
+          }
           sx={{
             maxWidth: 75,
           }}
@@ -329,7 +337,10 @@ export default function TrainingComponentHeaderMenu() {
           items={allMethods.filter((m) => m.componentId === component.id)}
           itemKey="id"
           itemName="name"
-          disabled={[WARMUP_ID, COOLDOWN_ID].includes(component.id)}
+          disabled={
+            selectedAthlete !== undefined ||
+            [WARMUP_ID, COOLDOWN_ID].includes(component.id)
+          }
           sx={{
             maxWidth: 75,
           }}

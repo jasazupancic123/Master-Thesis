@@ -2,6 +2,10 @@ import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.
 import type React from 'react';
 import toast from 'react-hot-toast';
 
+import {
+  COOLDOWN_ID,
+  WARMUP_ID,
+} from '@/common/constant/warmup-cooldown-ids-constants';
 import type { SetState } from '@/common/type/state.type';
 import { handleApiRequest } from '@/common/type/state.type';
 import type { Component } from '@/controller/component/type/component.type';
@@ -9,15 +13,15 @@ import type { Exercise } from '@/controller/exercise/type/exercise.type';
 import type { Cycle } from '@/controller/group/type/cycle.type';
 import type { Group } from '@/controller/group/type/group.type';
 import type { Method } from '@/controller/method/type/method.type';
-import { COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE } from '@/controller/training/constant/completed-future-workloads-default-value.constant';
+import { CustomWorkloadsSubgroupsService } from '@/controller/training/custom-workloads-subgroups.service';
 import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
 import type { CompletedFutureWorkloads } from '@/controller/training/type/completed-future-workloads.type';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
+import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import type { Workload } from '@/controller/training/type/workload.type';
 import type { User } from '@/controller/user/type/user.type';
 
 export async function handleUpdateMultipleTrainings(state: {
@@ -27,8 +31,6 @@ export async function handleUpdateMultipleTrainings(state: {
   group: Group;
   cycle: Cycle | undefined;
   router: AppRouterInstance;
-  customAthleteWorkloads: Workload[];
-  setCustomAthleteWorkloads: SetState<Workload[]>;
   components: Component[];
   exercises: Exercise[];
   methods: Method[];
@@ -42,15 +44,10 @@ export async function handleUpdateMultipleTrainings(state: {
     training,
     setTraining,
     router,
-    customAthleteWorkloads,
-    setCustomAthleteWorkloads,
     components,
     exercises,
     methods,
     setDetectedChanges,
-    selectedAthlete,
-    setSelectedAthleteWorkloads,
-    isSettingAthleteWorkloads,
   } = state;
 
   if (!training) {
@@ -63,7 +60,6 @@ export async function handleUpdateMultipleTrainings(state: {
     () =>
       TrainingController.update(training.id, {
         ...training,
-        workloads: customAthleteWorkloads,
       }),
     (newTraining) => {
       TrainingService.mapData(newTraining, {
@@ -81,16 +77,6 @@ export async function handleUpdateMultipleTrainings(state: {
         })
       );
 
-      if (selectedAthlete) {
-        fetchWorkloads({
-          selectedAthlete,
-          training,
-          setSelectedAthleteWorkloads,
-          isSettingAthleteWorkloads,
-          router,
-        });
-      } else setCustomAthleteWorkloads([]);
-
       setDetectedChanges(false);
       toast.success('Training updated successfully');
     },
@@ -98,6 +84,20 @@ export async function handleUpdateMultipleTrainings(state: {
     'Error when updating training'
   );
 }
+
+export const removeSelectedExercisesFromSupersets = (
+  supersets: Superset[],
+  selectedExercises: TrainingExercise[]
+): Superset[] => {
+  supersets = supersets.map((s) => ({
+    ...s,
+    exercises: s.exercises.filter(
+      (e) => !selectedExercises.some((se) => se.id === e.id)
+    ),
+  }));
+
+  return supersets.filter((s) => s.exercises.length > 0);
+};
 
 export function deleteSelectedExercises(
   input: {
@@ -129,19 +129,16 @@ export function deleteSelectedExercises(
 
   if (!selectedExercises.length || !component || !training) return;
 
+  // if it's custom workloads subgroup, then dissable
+  if (selectedSubgroup?.parentId) return;
+
   const newComponent = { ...component };
 
   if (selectedSubgroup) {
     const newSubgroup = { ...selectedSubgroup };
-    newSubgroup.supersets = (newSubgroup.supersets || []).map((s) => ({
-      ...s,
-      exercises: s.exercises.filter(
-        (e) => !selectedExercises.some((se) => se.id === e.id)
-      ),
-    }));
-
-    newSubgroup.supersets = newSubgroup.supersets.filter(
-      (s) => s.exercises.length > 0
+    newSubgroup.supersets = removeSelectedExercisesFromSupersets(
+      newSubgroup.supersets,
+      selectedExercises
     );
 
     setSelectedSubgroup((prev) => (!prev ? null : newSubgroup));
@@ -150,77 +147,30 @@ export function deleteSelectedExercises(
       sg.id === selectedSubgroup.id ? newSubgroup : sg
     );
   } else {
-    newComponent.supersets = newComponent.supersets?.map((s) => ({
-      ...s,
-      exercises: s.exercises.filter(
-        (e) => !selectedExercises.some((se) => se.id === e.id)
-      ),
-    }));
-
-    newComponent.supersets = newComponent.supersets?.filter(
-      (s) => s.exercises.length > 0
+    newComponent.supersets = removeSelectedExercisesFromSupersets(
+      newComponent.supersets,
+      selectedExercises
     );
   }
 
+  newComponent.subgroups =
+    CustomWorkloadsSubgroupsService.removeSelectedExercises(
+      newComponent,
+      selectedSubgroup,
+      selectedExercises
+    );
+
   const newTraining = { ...training };
-  newTraining.components = newTraining.components.map((c) =>
-    c.id === component.id ? newComponent : c
-  );
+
+  if (newComponent.id === WARMUP_ID) newTraining.warmup = newComponent;
+  else if (newComponent.id === COOLDOWN_ID) newTraining.cooldown = newComponent;
+  else
+    newTraining.components = newTraining.components.map((c) =>
+      c.id === component.id ? newComponent : c
+    );
 
   setComponent(newComponent);
   setTraining(newTraining);
   setSelectedExercises([]);
   setDetectedChanges(true);
-}
-
-export async function fetchWorkloads(input: {
-  selectedAthlete: User | undefined;
-  training: Training | undefined;
-  setSelectedAthleteWorkloads: SetState<CompletedFutureWorkloads>;
-  isSettingAthleteWorkloads: React.RefObject<boolean>;
-  router: AppRouterInstance;
-}) {
-  const {
-    selectedAthlete,
-    training,
-    setSelectedAthleteWorkloads,
-    isSettingAthleteWorkloads,
-    router,
-  } = input;
-  if (!selectedAthlete) return;
-
-  const combinedComponents = training?.components;
-
-  if (!combinedComponents || !combinedComponents.length) {
-    setSelectedAthleteWorkloads(COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE);
-    return;
-  }
-
-  const uniqueExerciseIds = [] as string[];
-  combinedComponents.forEach((c) => {
-    c.supersets.forEach((s) => {
-      s.exercises.forEach((e) => {
-        if (!uniqueExerciseIds.includes(e.id)) uniqueExerciseIds.push(e.id);
-      });
-    });
-  });
-
-  if (!uniqueExerciseIds.length) {
-    setSelectedAthleteWorkloads(COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE);
-    return;
-  }
-
-  isSettingAthleteWorkloads.current = true;
-  handleApiRequest(
-    router,
-    () =>
-      TrainingController.findAthleteWorkloads(training.id, selectedAthlete.uid),
-    (workloads) => {
-      setSelectedAthleteWorkloads(workloads);
-      isSettingAthleteWorkloads.current = false;
-    },
-    undefined,
-    'Failed to fetch workloads'
-  );
-  isSettingAthleteWorkloads.current = false;
 }

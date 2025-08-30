@@ -3,12 +3,31 @@ import {
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
 import type { SetState, SetStateNullable } from '@/common/type/state.type';
+import { CustomWorkloadsSubgroupsService } from '@/controller/training/custom-workloads-subgroups.service';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
+import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 
-export default function deleteSupersetExercise(input: {
+export const removeExerciseFromSuperset = (
+  supersets: Superset[],
+  supersetIndex: number,
+  exerciseIndex: number
+): Superset[] => {
+  return supersets
+    .map((s, i) =>
+      i !== supersetIndex
+        ? s
+        : {
+            ...s,
+            exercises: s.exercises.filter((ex, k) => k !== exerciseIndex),
+          }
+    )
+    .filter((s) => s.exercises.length > 0);
+};
+
+export function deleteSupersetExercise(input: {
   supersetIndex: number;
   exerciseIndex: number;
   exercise: TrainingExercise;
@@ -37,16 +56,16 @@ export default function deleteSupersetExercise(input: {
     setSelectedExercises,
   } = input;
 
+  // if it's custom workloads subgroup, then dissable
+  if (selectedSubgroup?.parentId) return;
+
   const updatedSubgroup: Subgroup | null = selectedSubgroup
     ? {
         ...selectedSubgroup,
-        supersets: selectedSubgroup.supersets.map((s, i) =>
-          i !== supersetIndex
-            ? s
-            : {
-                ...s,
-                exercises: s.exercises.filter((ex, k) => k !== exerciseIndex),
-              }
+        supersets: removeExerciseFromSuperset(
+          selectedSubgroup.supersets,
+          supersetIndex,
+          exerciseIndex
         ),
       }
     : null;
@@ -55,9 +74,9 @@ export default function deleteSupersetExercise(input: {
     updatedSubgroup.supersets = updatedSubgroup.supersets.filter(
       (s) => s.exercises.length > 0
     );
-  }
 
-  if (updatedSubgroup) setSelectedSubgroup(updatedSubgroup);
+    setSelectedSubgroup(updatedSubgroup);
+  }
 
   const updatedComponent = updatedSubgroup
     ? {
@@ -68,17 +87,20 @@ export default function deleteSupersetExercise(input: {
       }
     : {
         ...component,
-        supersets: component.supersets
-          .map((s, i) =>
-            i !== supersetIndex
-              ? s
-              : {
-                  ...s,
-                  exercises: s.exercises.filter((ex, k) => k !== exerciseIndex),
-                }
-          )
-          .filter((s) => s.exercises.length > 0),
+        supersets: removeExerciseFromSuperset(
+          component.supersets,
+          supersetIndex,
+          exerciseIndex
+        ),
       };
+
+  updatedComponent.subgroups =
+    CustomWorkloadsSubgroupsService.removeExerciseFromSuperset(
+      updatedComponent,
+      updatedSubgroup,
+      supersetIndex,
+      exerciseIndex
+    );
 
   setComponent(updatedComponent);
 

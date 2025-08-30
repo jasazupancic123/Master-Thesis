@@ -7,6 +7,11 @@ import {
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 
 import { UpdateMembersDto } from '@src/common/dto/user-id.dto';
+import {
+  BatchDeleteOperation,
+  BatchOperation,
+  BatchWriteOperation,
+} from '@src/common/type/orm.type';
 import { INSTITUTION_ATHLETE_EVENT } from '@src/institution/constant/update-institution-athlete-event.constant';
 import { UpdateInstitutionAthleteEvent } from '@src/institution/event/update-institution-athlete.event';
 
@@ -15,17 +20,11 @@ import { Permission } from '../common/interface/permission.interface';
 import { CommonService } from '../common/service/common.service';
 import { Create, Update } from '../common/type/entity.type';
 import { User } from '../common/type/firebase-auth.type';
-import {
-  BatchDeleteOperation,
-  BatchOperation,
-  BatchWriteOperation,
-  GroupRef,
-  InstitutionRef,
-} from '../common/type/firestore.type';
+import { GroupRef, InstitutionRef } from '../common/type/firestore.type';
 import { FirebaseService } from '../firebase/firebase.service';
 import { Institution } from '../institution/entity/institution.entity';
 import { InstitutionService } from '../institution/service/institution.service';
-import { UserService } from '../user/user.service';
+import { UserService } from '../user/service/user.service';
 import { DELETE_GROUP_EVENT } from './constant/delete-group-event.constant';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { BatchUpdateOneGroupDto, UpdateGroupDto } from './dto/update-group.dto';

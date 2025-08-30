@@ -12,7 +12,7 @@ import { DIVIDER_HEIGHT, MAX_WIDTH } from '../trainer-day-view/constant';
 import GroupTrainerDayViewHeader from '../trainer-group-day-view-header/trainer-group-day-view-header';
 import GroupTrainerDayViewTrainings from '../trainer-group-day-view-trainings/group-trainer-day-view-trainings';
 import VerticalLinesBorders from '../vertical-lines-borders/vertical-lines-borders';
-import { fetchWorkloads, handleUpdateMultipleTrainings } from './state';
+import { handleUpdateMultipleTrainings } from './state';
 import { CommonService } from '@/common/service/common.service';
 import { handleApiRequest } from '@/common/type/state.type';
 import TrainingMembers from '@/components/training-members/training-members';
@@ -54,8 +54,6 @@ export default function TrainerDayView() {
     setSelectedSubgroup,
     selectedAthlete,
     setSelectedAthleteWorkloads,
-    customAthleteWorkloads,
-    setCustomAthleteWorkloads,
     isSettingAthleteWorkloads,
   } = useTrainerDayViewContext();
 
@@ -163,15 +161,7 @@ export default function TrainerDayView() {
 
   useEffect(() => {
     // fetch only for selectedAthlete, group avg is already on training itself
-    if (selectedAthlete)
-      fetchWorkloads({
-        selectedAthlete,
-        training,
-        setSelectedAthleteWorkloads,
-        isSettingAthleteWorkloads,
-        router,
-      });
-    else setSelectedAthleteWorkloads(COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE);
+    setSelectedAthleteWorkloads(COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE);
   }, [selectedAthlete]);
 
   return (
@@ -198,8 +188,6 @@ export default function TrainerDayView() {
                   group,
                   cycle,
                   router,
-                  customAthleteWorkloads,
-                  setCustomAthleteWorkloads,
                   components,
                   exercises,
                   methods,
@@ -273,8 +261,6 @@ export default function TrainerDayView() {
                     group,
                     cycle,
                     router,
-                    customAthleteWorkloads,
-                    setCustomAthleteWorkloads,
                     components,
                     exercises,
                     methods,

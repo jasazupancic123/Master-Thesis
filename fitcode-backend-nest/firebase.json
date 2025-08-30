@@ -5,7 +5,16 @@
   },
   "hosting": {
     "public": "public",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"]
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [
+      {
+        "source": "/api/**",
+        "run": {
+          "serviceId": "fitcode-backend",
+          "region": "europe-west4"
+        }
+      }
+    ]
   },
   "storage": {
     "rules": "storage.rules"

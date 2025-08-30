@@ -18,7 +18,7 @@ import { SaveUserWellnessDto } from './dto/save-user-wellness.dto';
 import { UpdateUserClaimsDto } from './dto/update-user-claims.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { UserRole } from './enum/user-role.enum';
-import { UserService } from './user.service';
+import { UserService } from './service/user.service';
 
 @ApiTags('User')
 @Controller('user')
@@ -67,10 +67,10 @@ export class UserController {
 
   @Get('me/meta')
   @Auth([UserRole.ATHLETE])
-  async getMyMeta(@RequestUser() user: User) {
+  async getLatestWellnessByUser(@RequestUser() user: User) {
     const ref = { uid: user.uid };
     return (
-      (await this.userService.getRecentWellness(ref)) || {
+      (await this.userService.getLatestWellnessByUser(ref)) || {
         date: new Date(),
         userId: user.uid,
       }

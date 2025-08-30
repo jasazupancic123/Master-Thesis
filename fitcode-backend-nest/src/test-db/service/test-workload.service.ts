@@ -6,10 +6,8 @@ import type {
 
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { Create, FirestoreEntity, Update } from '@src/common/type/entity.type';
-import {
-  BatchWriteOperation,
-  WorkloadRef,
-} from '@src/common/type/firestore.type';
+import { WorkloadRef } from '@src/common/type/firestore.type';
+import { BatchWriteOperation } from '@src/common/type/orm.type';
 import { Component } from '@src/component/entity/component.entity';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { Workload, WorkloadMeta } from '@src/training/entity/workload.entity';
@@ -48,6 +46,7 @@ export class TestWorkloadService extends AbstractChangeLogService<Workload> {
 
   async createMany(
     input: (Create<Omit<WorkloadMeta, 'id' | 'plannedAt' | 'componentId'>> &
+      Partial<Pick<Workload, 'createdAt'>> &
       WorkloadValue & {
         component: Component;
         randomValues?: boolean;
@@ -55,10 +54,11 @@ export class TestWorkloadService extends AbstractChangeLogService<Workload> {
       })[],
   ): Promise<void> {
     const operations: BatchWriteOperation<Workload>[] = input.map((item) => {
+      const timestamp = item.createdAt ?? new Date();
       const workload: Create<Workload> = {
         ...item,
         id: null,
-        plannedAt: new Date(),
+        plannedAt: timestamp,
         componentId: item.component.id,
       };
 
@@ -71,8 +71,8 @@ export class TestWorkloadService extends AbstractChangeLogService<Workload> {
           ...workload,
           randomValues: item.randomValues,
           defaultParamsKey: item.defaultParamsKey,
+          createdAt: timestamp,
         }),
-        { timestamps: true },
       );
 
       this.trackCreate(ref);

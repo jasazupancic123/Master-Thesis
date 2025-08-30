@@ -5,11 +5,9 @@ import { rectSortingStrategy, SortableContext } from '@dnd-kit/sortable';
 import { Box, Grid2, Stack, Typography } from '@mui/material';
 
 import SupersetExercise from '../superset-exercise/superset-exercise';
-import { handleDeleteSuperset } from '../trainer-day-view/state';
 import { getBorderGradient } from './state';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
 import type { Superset as SupersetClass } from '@/controller/training/type/superset.type';
-import { useGroup } from '@/store/group-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useSupersets } from '@/store/supersets-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
@@ -25,18 +23,8 @@ export default function Superset(props: SupersetComponentProps) {
   const screenSize = useScreenSize();
 
   const { selectedExercise, setOpenAddExerciseModal } = useSupersets();
-  const { setTrainings, setDetectedChanges } = useGroup();
-  const {
-    training,
-    setTraining,
-    component,
-    setComponent,
-    supersets,
-    selectedSubgroup,
-    setSelectedSubgroup,
-    setSelectedExercises,
-    setCustomAthleteWorkloads,
-  } = useTrainerDayViewContext();
+  const { training, component, supersets, selectedSubgroup } =
+    useTrainerDayViewContext();
 
   const containerId = `${component?.id}-${supersetIndex}`;
   const items = superset.exercises.map((e) => e.id);
@@ -44,12 +32,24 @@ export default function Superset(props: SupersetComponentProps) {
 
   if (!component || !training) return null;
 
+  const numExercises = (selectedSubgroup || component).supersets.flatMap(
+    (s) => s.exercises
+  ).length;
+
   return (
     <Grid2
       key={`${component.id}-${supersetIndex}`}
       size={
         (selectedSubgroup || component).mainSet === MainSet.CIRCUIT
-          ? 12
+          ? screenSize.isSmallerThanLaptop
+            ? 12
+            : numExercises === 1
+              ? 3
+              : numExercises === 2
+                ? 6
+                : numExercises === 3
+                  ? 9
+                  : 12
           : {
               xs: 12,
               sm:
@@ -87,36 +87,18 @@ export default function Superset(props: SupersetComponentProps) {
         <Stack
           p={screenSize.isLandscapeMobile ? 0.5 : 0}
           pt={0}
-          sx={{ bgcolor: 'background.default', borderRadius: '5px' }}
+          sx={{
+            bgcolor: 'background.default',
+            borderRadius: '5px',
+          }}
         >
-          <Box
-            sx={{ cursor: 'pointer' }}
-            onClick={() =>
-              handleDeleteSuperset(
-                { index: supersetIndex },
-                {
-                  training,
-                  setTraining,
-                  supersets,
-                  component,
-                  setComponent,
-                  selectedSubgroup,
-                  setSelectedSubgroup,
-                  setTrainings,
-                  setDetectedChanges,
-                  setCustomAthleteWorkloads,
-                  setSelectedExercises,
-                }
-              )
-            }
-          />
-
           <SortableContext
             id={containerId}
             items={items}
             strategy={rectSortingStrategy}
           >
             <Grid2
+              id="exercises-container"
               container
               columnSpacing={
                 (selectedSubgroup || component).mainSet === MainSet.CIRCUIT
@@ -158,28 +140,6 @@ export default function Superset(props: SupersetComponentProps) {
               )}
             </Grid2>
           </SortableContext>
-
-          <Box
-            sx={{ cursor: 'pointer' }}
-            onClick={() =>
-              handleDeleteSuperset(
-                { index: supersetIndex },
-                {
-                  training,
-                  setTraining,
-                  supersets,
-                  component,
-                  setComponent,
-                  selectedSubgroup,
-                  setSelectedSubgroup,
-                  setTrainings,
-                  setDetectedChanges,
-                  setCustomAthleteWorkloads,
-                  setSelectedExercises,
-                }
-              )
-            }
-          />
         </Stack>
       </Box>
     </Grid2>

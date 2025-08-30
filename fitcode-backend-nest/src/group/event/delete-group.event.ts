@@ -1,7 +1,7 @@
 import { Expose } from 'class-transformer';
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
-import { BatchOperation } from '@src/common/type/firestore.type';
+import { BatchOperation } from '@src/common/type/orm.type';
 
 import { Group } from '../entity/group.entity';
 

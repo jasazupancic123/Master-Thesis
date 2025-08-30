@@ -1,7 +1,13 @@
 import { IntersectionType } from '@nestjs/mapped-types';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
-import { IsEnum, IsNotEmpty, IsString, ValidateNested } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 
 import { IdEntity } from '@src/common/entity/id.entity';
 
@@ -10,6 +16,7 @@ import { Superset } from './superset.entity';
 
 export class Subgroup extends IntersectionType(IdEntity) {
   @IsString()
+  @IsOptional()
   @IsNotEmpty()
   @ApiPropertyOptional()
   @Expose()
