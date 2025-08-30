@@ -12,10 +12,10 @@ import {
   YAxis,
 } from 'recharts';
 
-import MuscleMapWithTooltip from '../muscle-map-with-tooltip/muscle-map-with-tooltip';
-import { theme } from '@/app/style';
 import HeatmapBack from '../../assets/svg/heatmap-back.svg';
 import HeatmapFront from '../../assets/svg/heatmap-front.svg';
+import MuscleMapWithTooltip from '../muscle-map-with-tooltip/muscle-map-with-tooltip';
+import { theme } from '@/app/style';
 import { HEATMAP_COLORS } from '@/common/constant/color.constant';
 import { MuscleService } from '@/controller/exercise/muscle.service';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';

@@ -1,5 +1,4 @@
-import { MoreVert } from '@mui/icons-material';
-import { IconButton, Typography } from '@mui/material';
+import { Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import dayjs from 'dayjs';
@@ -7,6 +6,7 @@ import weekOfYear from 'dayjs/plugin/weekOfYear';
 import React from 'react';
 import toast from 'react-hot-toast';
 
+import GroupCycleInfo from '../group-cycle-info/group-cycle-info';
 import HorizontalItemsList from '../horizontal-items-list/horizontal-items-list';
 import { MAX_WIDTH } from '../trainer-day-view/constant';
 import { COLOR } from '@/common/constant/color.constant';
@@ -117,92 +117,6 @@ export default function GroupTrainerDayViewHeader(
     );
   }
 
-  interface GroupInfoProps {
-    smallDisplay?: boolean;
-  }
-
-  function GroupCycleInfo(props: GroupInfoProps) {
-    const { smallDisplay } = props;
-    return (
-      <Box
-        width="100%"
-        display="flex"
-        justifyContent={smallDisplay ? 'center' : 'flex-end'}
-        gap={screenSize.isSmallerThanLaptop ? 0 : 4}
-        position="relative"
-      >
-        <Box display="flex" flexDirection="column" mt={1}>
-          <Box
-            display="flex"
-            flexDirection="column"
-            alignItems={
-              screenSize.isMobile || screenSize.isSmallTablet
-                ? 'center'
-                : 'flex-end'
-            }
-            justifyContent="flex-start"
-            gap={0.5}
-            sx={{
-              px: smallDisplay ? 2 : undefined,
-            }}
-          >
-            <Typography
-              variant="body2"
-              fontWeight={500}
-              textAlign="right"
-              fontSize={12}
-              sx={{
-                wordWrap: 'break-word',
-                overflowWrap: 'break-word',
-                maxWidth: '100%',
-                letterSpacing: 2,
-                textTransform: 'uppercase',
-              }}
-            >
-              {group.name}
-            </Typography>
-            <Typography
-              variant="body2"
-              fontWeight={500}
-              textAlign="right"
-              fontSize={12}
-              sx={{
-                wordWrap: 'break-word',
-                overflowWrap: 'break-word',
-                maxWidth: '100%',
-                letterSpacing: 2,
-                textTransform: 'uppercase',
-              }}
-            >
-              Week {week} / {cycle?.name || 'No cycle'}
-            </Typography>
-          </Box>
-        </Box>
-        <Box
-          display="flex"
-          flexDirection="column"
-          sx={{
-            mt: !smallDisplay ? -1.33 : 0,
-            position: smallDisplay ? 'absolute' : undefined,
-            right: smallDisplay ? 1 : undefined,
-            top: smallDisplay ? 6 : undefined,
-          }}
-          gap={0.5}
-        >
-          <IconButton
-            sx={{
-              p: 0,
-              m: 0,
-              mt: screenSize.isMobile ? undefined : 2.3,
-            }}
-          >
-            <MoreVert fontSize="medium" />
-          </IconButton>
-        </Box>
-      </Box>
-    );
-  }
-
   const HorizontalItems = () => {
     return selectedAthlete ? (
       <HorizontalItemsList
@@ -282,7 +196,12 @@ export default function GroupTrainerDayViewHeader(
       {screenSize.isSmallTablet || screenSize.isMobile ? (
         <>
           <HorizontalItems />
-          <GroupCycleInfo smallDisplay />
+          <GroupCycleInfo
+            smallDisplay
+            group={group}
+            cycle={cycle}
+            week={week}
+          />
           <PeriodSelect smallDisplay />
         </>
       ) : (
@@ -299,7 +218,7 @@ export default function GroupTrainerDayViewHeader(
             <HorizontalItems />
           </Box>
           <Box width="25%">
-            <GroupCycleInfo />
+            <GroupCycleInfo group={group} cycle={cycle} week={week} />
           </Box>
         </Box>
       )}

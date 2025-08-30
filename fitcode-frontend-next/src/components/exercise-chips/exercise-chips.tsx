@@ -145,11 +145,13 @@ export default function ExerciseChips(props: ExerciseChipsProps) {
                       : 'transparent',
                 }}
               >
-                <IconComponent
-                  sx={{
-                    fontSize: screenSize.isMobile ? 20 : 30,
-                  }}
-                />
+                {IconComponent && (
+                  <IconComponent
+                    sx={{
+                      fontSize: screenSize.isMobile ? 20 : 30,
+                    }}
+                  />
+                )}
               </div>
             </Box>
             {cycleView && selectedTargets && setSelectedTargets ? (

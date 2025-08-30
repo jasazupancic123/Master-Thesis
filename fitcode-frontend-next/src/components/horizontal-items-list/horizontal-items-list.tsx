@@ -19,7 +19,6 @@ interface HorizontalItemsListProps {
   onArrowClick?: (direction: 'left' | 'right') => void;
   noItemsText?: string;
   dayView?: boolean;
-  weekView?: boolean;
   cycleView?: boolean;
   yearView?: boolean;
   alertOnChange?: boolean;
@@ -42,7 +41,6 @@ export default function HorizontalItemsList(props: HorizontalItemsListProps) {
     onArrowClick,
     noItemsText,
     dayView,
-    weekView,
     cycleView,
     yearView,
     checkIsSameValue,

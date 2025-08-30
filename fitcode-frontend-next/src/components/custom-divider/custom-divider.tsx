@@ -1,5 +1,4 @@
 import { Box } from '@mui/material';
-import { MAX_WIDTH } from '../trainer-day-view/constant';
 import { useTheme } from '@mui/material';
 
 export default function CustomDivider() {
@@ -7,21 +6,11 @@ export default function CustomDivider() {
 
   return (
     <Box
-      display="flex"
-      flexDirection="column"
-      justifyContent="center"
-      maxWidth={MAX_WIDTH}
+      width="100%"
       sx={{
-        mx: 'auto',
+        backgroundColor: theme.palette.background.dark,
+        height: '5px',
       }}
-    >
-      <Box
-        width="100%"
-        sx={{
-          backgroundColor: theme.palette.background.dark,
-          height: '5px',
-        }}
-      />
-    </Box>
+    />
   );
 }

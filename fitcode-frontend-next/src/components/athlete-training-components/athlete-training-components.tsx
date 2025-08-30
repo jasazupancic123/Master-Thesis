@@ -114,16 +114,19 @@ export default function AthleteTrainingComponents(
                     setSelectedComponent(component);
                   }}
                 >
-                  <IconComponent
-                    sx={{
-                      fontSize: 26,
-                      cursor: 'pointer',
-                      color:
-                        selectedComponent?.id === component.id
-                          ? theme.palette.primary.main
-                          : undefined,
-                    }}
-                  />
+                  {IconComponent && (
+                    <IconComponent
+                      sx={{
+                        fontSize: 26,
+                        cursor: 'pointer',
+                        color:
+                          selectedComponent?.id === component.id
+                            ? theme.palette.primary.main
+                            : undefined,
+                      }}
+                    />
+                  )}
+
                   {user && component.completedMembersIds.includes(user.uid) && (
                     <Check
                       sx={{

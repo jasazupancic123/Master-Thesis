@@ -151,7 +151,7 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
         {components.map((trainingComponent) => {
           const component = trainingComponent.component;
           if (!component) return null;
-          const IconComponent: SvgIconComponent =
+          const IconComponent: SvgIconComponent | null =
             commonService.navigation.getComponentIcon(component?.name);
 
           return (
@@ -171,115 +171,121 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
               key={component!.id}
             >
               <div>
-                <IconComponent
-                  onClick={async (e) => {
-                    if (
-                      periodizationView &&
-                      selectedTrainings &&
-                      setSelectedTrainings &&
-                      basePeriodizationTraining?.id !== training.id
-                    ) {
-                      if (selectedTrainings.some((t) => t.id === training.id)) {
-                        setSelectedTrainings((prev) =>
-                          prev.filter((t) => t.id !== training.id)
-                        );
-                      } else if (
-                        trainingComponent.target &&
-                        trainingComponent.target.id !== selectedTarget?.id
+                {IconComponent && (
+                  <IconComponent
+                    onClick={async (e) => {
+                      if (
+                        periodizationView &&
+                        selectedTrainings &&
+                        setSelectedTrainings &&
+                        basePeriodizationTraining?.id !== training.id
                       ) {
-                        toast.error(
-                          'Cannot periodize trainings with different targets'
-                        );
-                      } else if (
-                        trainingComponent.target &&
-                        trainingComponent.target.id === selectedTarget?.id &&
-                        cycle &&
-                        basePeriodizationTraining &&
-                        CommonService.instance.date.isBetween(
-                          training.to,
-                          basePeriodizationTraining.to,
-                          cycle?.to
-                        )
-                      ) {
-                        setSelectedTrainings((prev) => [...prev, training]);
-                      } else if (
-                        cycle &&
-                        basePeriodizationTraining &&
-                        !CommonService.instance.date.isBetween(
-                          training.to,
-                          basePeriodizationTraining.to,
-                          cycle?.to
-                        )
-                      ) {
-                        toast.error(
-                          'Cannot periodize trainings before the base training'
-                        );
+                        if (
+                          selectedTrainings.some((t) => t.id === training.id)
+                        ) {
+                          setSelectedTrainings((prev) =>
+                            prev.filter((t) => t.id !== training.id)
+                          );
+                        } else if (
+                          trainingComponent.target &&
+                          trainingComponent.target.id !== selectedTarget?.id
+                        ) {
+                          toast.error(
+                            'Cannot periodize trainings with different targets'
+                          );
+                        } else if (
+                          trainingComponent.target &&
+                          trainingComponent.target.id === selectedTarget?.id &&
+                          cycle &&
+                          basePeriodizationTraining &&
+                          CommonService.instance.date.isBetween(
+                            training.to,
+                            basePeriodizationTraining.to,
+                            cycle?.to
+                          )
+                        ) {
+                          setSelectedTrainings((prev) => [...prev, training]);
+                        } else if (
+                          cycle &&
+                          basePeriodizationTraining &&
+                          !CommonService.instance.date.isBetween(
+                            training.to,
+                            basePeriodizationTraining.to,
+                            cycle?.to
+                          )
+                        ) {
+                          toast.error(
+                            'Cannot periodize trainings before the base training'
+                          );
+                        }
+                        return;
                       }
-                      return;
-                    }
-                    e.stopPropagation();
-                    await props.deleteTrainingComponent(
-                      training.id,
-                      component!.id
-                    );
-                  }}
-                  sx={{
-                    color: cycleView
-                      ? trainingComponent.target?.color
-                      : componentCalendarView
-                        ? trainingComponent.color
-                        : selected && selectedTarget
-                          ? selectedTarget.color
-                          : undefined,
-                    fontSize:
-                      (componentCalendarView || periodizationView) &&
-                      isSameDayAsSelectedComponent
-                        ? screenSize.isMobile
-                          ? 20
-                          : 25
-                        : fontSize,
-                    margin: !componentCalendarView
-                      ? !screenSize.isMobile &&
-                        !screenSize.isLandscapeMobile &&
-                        !isSameDayAsSelectedComponent
-                        ? 1
-                        : isSameDayAsSelectedComponent
-                          ? 0.5
-                          : 0
-                      : !screenSize.isMobile &&
+                      e.stopPropagation();
+                      await props.deleteTrainingComponent(
+                        training.id,
+                        component!.id
+                      );
+                    }}
+                    sx={{
+                      color: cycleView
+                        ? trainingComponent.target?.color
+                        : componentCalendarView
+                          ? trainingComponent.color
+                          : selected && selectedTarget
+                            ? selectedTarget.color
+                            : undefined,
+                      fontSize:
+                        (componentCalendarView || periodizationView) &&
+                        isSameDayAsSelectedComponent
+                          ? screenSize.isMobile
+                            ? 20
+                            : 25
+                          : fontSize,
+                      margin: !componentCalendarView
+                        ? !screenSize.isMobile &&
                           !screenSize.isLandscapeMobile &&
-                          !screenSize.isTablet &&
                           !isSameDayAsSelectedComponent
-                        ? 1
-                        : !isSameDayAsSelectedComponent && screenSize.isTablet
-                          ? 2
-                          : isSameDayAsSelectedComponent && screenSize.isTablet
-                            ? 1.5
+                          ? 1
+                          : isSameDayAsSelectedComponent
+                            ? 0.5
+                            : 0
+                        : !screenSize.isMobile &&
+                            !screenSize.isLandscapeMobile &&
+                            !screenSize.isTablet &&
+                            !isSameDayAsSelectedComponent
+                          ? 1
+                          : !isSameDayAsSelectedComponent && screenSize.isTablet
+                            ? 2
                             : isSameDayAsSelectedComponent &&
-                                !screenSize.isMobile
-                              ? 0.5
-                              : !isSameDayAsSelectedComponent &&
-                                  screenSize.isMobile
+                                screenSize.isTablet
+                              ? 1.5
+                              : isSameDayAsSelectedComponent &&
+                                  !screenSize.isMobile
                                 ? 0.5
-                                : 0,
-                    mx:
-                      screenSize.isMobile || screenSize.isLandscapeMobile
-                        ? 1
+                                : !isSameDayAsSelectedComponent &&
+                                    screenSize.isMobile
+                                  ? 0.5
+                                  : 0,
+                      mx:
+                        screenSize.isMobile || screenSize.isLandscapeMobile
+                          ? 1
+                          : undefined,
+                      mb:
+                        periodizationView || componentCalendarView
+                          ? 0
+                          : undefined,
+                      cursor: 'pointer',
+                      border: isSameDayAsSelectedComponent
+                        ? '1px solid'
                         : undefined,
-                    mb:
-                      periodizationView || componentCalendarView
-                        ? 0
+                      borderRadius: isSameDayAsSelectedComponent
+                        ? '50%'
                         : undefined,
-                    cursor: 'pointer',
-                    border: isSameDayAsSelectedComponent
-                      ? '1px solid'
-                      : undefined,
-                    borderRadius: isSameDayAsSelectedComponent
-                      ? '50%'
-                      : undefined,
-                    p: isSameDayAsSelectedComponent ? 0.5 : undefined,
-                  }}
-                />
+                      p: isSameDayAsSelectedComponent ? 0.5 : undefined,
+                    }}
+                  />
+                )}
+
                 {(periodizationView || componentCalendarView) &&
                   trainingComponent.target && (
                     <Typography

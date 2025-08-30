@@ -7,10 +7,11 @@ import weekOfYear from 'dayjs/plugin/weekOfYear';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 
-import { MAX_WIDTH } from '../trainer-day-view/constant';
+import CustomDivider from '../custom-divider/custom-divider';
+import { DIVIDER_HEIGHT, MAX_WIDTH } from '../trainer-day-view/constant';
 import GroupTrainerDayViewHeader from '../trainer-group-day-view-header/trainer-group-day-view-header';
 import GroupTrainerDayViewTrainings from '../trainer-group-day-view-trainings/group-trainer-day-view-trainings';
-import VerticalLinesBorder from '../vertical-lines-border/vertical-lines-border';
+import VerticalLinesBorders from '../vertical-lines-borders/vertical-lines-borders';
 import { fetchWorkloads, handleUpdateMultipleTrainings } from './state';
 import { CommonService } from '@/common/service/common.service';
 import { handleApiRequest } from '@/common/type/state.type';
@@ -235,7 +236,7 @@ export default function TrainerDayView() {
           overflowY: 'none',
         }}
       >
-        <VerticalLinesBorder />
+        <VerticalLinesBorders />
 
         {screenSize.isSmallerThanLaptop && (
           <Box
@@ -314,6 +315,7 @@ export default function TrainerDayView() {
           flexDirection="column"
           alignItems="center"
           width="100%"
+          height={!screenSize.isSmallerThanLaptop ? DIVIDER_HEIGHT : undefined}
           sx={{
             borderBottomRightRadius: !training || !cycle ? 0 : 10,
             borderBottomLeftRadius: !training || !cycle ? 0 : 10,
@@ -336,8 +338,11 @@ export default function TrainerDayView() {
             alignItems="center"
             sx={{
               p: isSticky ? 0 : undefined,
-              py: selectedAthlete ? 0 : 5,
-              pt: selectedAthlete ? 1 : undefined,
+              py: selectedAthlete ? 0 : screenSize.isSmallerThanLaptop ? 2 : 5,
+              pt:
+                selectedAthlete && !screenSize.isSmallerThanLaptop
+                  ? 1
+                  : undefined,
               backgroundColor: theme.palette.background.default,
             }}
           >
@@ -354,13 +359,7 @@ export default function TrainerDayView() {
             mx: 'auto',
           }}
         >
-          <Box
-            width="100%"
-            sx={{
-              backgroundColor: theme.palette.background.dark,
-              height: '5px',
-            }}
-          />
+          <CustomDivider />
         </Box>
         {/* Trainings for the day */}
         <Box maxWidth={MAX_WIDTH} mx="auto">
