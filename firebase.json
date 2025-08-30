@@ -4,21 +4,27 @@
     "indexes": "firestore.indexes.json"
   },
   "hosting": {
+    "public": "fitcode-frontend-next/public",
     "rewrites": [
       {
         "source": "/api/**",
         "run": {
           "serviceId": "fitcode-backend-nest",
-          "region": "europe-west4"
+          "region": "us-central1"
         }
       },
       {
         "source": "**",
         "run": {
           "serviceId": "fitcode-frontend-next",
-          "region": "europe-west4"
+          "region": "us-central1"
         }
       }
+    ],
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
     ]
   },
   "storage": {
