@@ -1,5 +1,4 @@
-import { MoreVert } from '@mui/icons-material';
-import { IconButton, Typography, useTheme } from '@mui/material';
+import { Typography, useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import dayjs from 'dayjs';
@@ -8,8 +7,8 @@ import React, { Fragment, useEffect, useState } from 'react';
 
 import ExerciseChips from '../exercise-chips/exercise-chips';
 import HorizontalItemsList from '../horizontal-items-list/horizontal-items-list';
-import { MAX_WIDTH } from '../trainer-day-view/constant';
-import VerticalLinesBorder from '../vertical-lines-border/vertical-lines-border';
+import { DIVIDER_HEIGHT, MAX_WIDTH } from '../trainer-day-view/constant';
+import VerticalLinesBorders from '../vertical-lines-borders/vertical-lines-borders';
 import { CommonService } from '@/common/service/common.service';
 import {
   handleAddTrainingComponents,
@@ -130,7 +129,7 @@ export default function TrainerCycleView() {
         overflowY: 'none',
       }}
     >
-      <VerticalLinesBorder />
+      <VerticalLinesBorders />
 
       <Box
         display="flex"
@@ -140,6 +139,7 @@ export default function TrainerCycleView() {
           backgroundColor: theme.palette.background.default,
           position: 'relative',
         }}
+        minHeight={DIVIDER_HEIGHT}
         gap={1}
       >
         <Box
@@ -150,26 +150,39 @@ export default function TrainerCycleView() {
           {screenSize.isSmallerThanLaptop ? (
             <Box width="100%" display="flex" flexDirection="column">
               <HorizontalItems />
-              <Box display="flex" justifyContent="center" gap={4} mt={0.75}>
-                <Box display="flex" flexDirection="column" alignItems="center">
+              <Box
+                display="flex"
+                width="40%"
+                justifyContent="center"
+                gap={4}
+                mt={0.75}
+                sx={{
+                  mx: 'auto',
+                }}
+              >
+                <Box
+                  display="flex"
+                  flexDirection="column"
+                  width="50%"
+                  alignItems="center"
+                >
                   <Typography
-                    variant="body2"
+                    textAlign="center"
                     sx={{
                       fontSize: '12px',
                       fontWeight: 400,
-                      textAlign: 'right',
                     }}
                   >
                     Group
                   </Typography>
                   <Typography
                     textTransform="uppercase"
+                    textAlign="center"
                     sx={{
                       fontSize: screenSize.isSmallerThanLaptop
                         ? '14px'
                         : '16px',
                       fontWeight: 600,
-                      textAlign: 'right',
                     }}
                   >
                     {group.name}
@@ -179,26 +192,26 @@ export default function TrainerCycleView() {
                   <Box
                     display="flex"
                     flexDirection="column"
+                    width="50%"
                     alignItems="center"
                   >
                     <Typography
-                      variant="body2"
+                      textAlign="center"
                       sx={{
                         fontSize: '12px',
                         fontWeight: 400,
-                        textAlign: 'right',
                       }}
                     >
                       Duration
                     </Typography>
                     <Typography
+                      textAlign="center"
                       textTransform="uppercase"
                       sx={{
                         fontSize: screenSize.isSmallerThanLaptop
                           ? '14px'
                           : '16px',
                         fontWeight: 600,
-                        textAlign: 'right',
                       }}
                     >
                       {cycle.from && cycle.to
@@ -211,11 +224,51 @@ export default function TrainerCycleView() {
             </Box>
           ) : (
             <>
-              <Box width="25%" display="flex" />
+              <Box width="25%" display="flex" sx={{ mt: 0.75 }}>
+                {cycle && (
+                  <Box
+                    display="flex"
+                    flexDirection="column"
+                    alignItems="flex-start"
+                    sx={{
+                      ml: 2,
+                    }}
+                  >
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        fontSize: '12px',
+                        fontWeight: 400,
+                        textAlign: 'left',
+                      }}
+                    >
+                      Duration
+                    </Typography>
+                    <Typography
+                      textTransform="uppercase"
+                      sx={{
+                        fontSize: '16px',
+                        fontWeight: 600,
+                        textAlign: 'left',
+                      }}
+                    >
+                      {cycle.from && cycle.to
+                        ? `${commonService.date.weeks(cycle.from, cycle.to).length} weeks`
+                        : 'N/A'}
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
               <Box width="50%" display="flex" maxHeight={67}>
                 <HorizontalItems />
               </Box>
-              <Box width="25%" display="flex" justifyContent="flex-end" gap={5}>
+              <Box
+                width="25%"
+                display="flex"
+                justifyContent="flex-end"
+                gap={5}
+                pr={2}
+              >
                 <Box
                   display="flex"
                   flexDirection="column"
@@ -242,36 +295,7 @@ export default function TrainerCycleView() {
                   >
                     {group.name}
                   </Typography>
-                  {cycle && (
-                    <Box mt={1}>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          fontSize: '12px',
-                          fontWeight: 400,
-                          textAlign: 'right',
-                        }}
-                      >
-                        Duration
-                      </Typography>
-                      <Typography
-                        textTransform="uppercase"
-                        sx={{
-                          fontSize: '16px',
-                          fontWeight: 600,
-                          textAlign: 'right',
-                        }}
-                      >
-                        {cycle.from && cycle.to
-                          ? `${commonService.date.weeks(cycle.from, cycle.to).length} weeks`
-                          : 'N/A'}
-                      </Typography>
-                    </Box>
-                  )}
                 </Box>
-                <IconButton sx={{ p: 0, m: 0, mt: -3 }} disableRipple>
-                  <MoreVert fontSize="large" />
-                </IconButton>
               </Box>
             </>
           )}
@@ -320,7 +344,6 @@ export default function TrainerCycleView() {
           width="100%"
           display="flex"
           flexDirection="column"
-          mt={2}
           sx={{
             backgroundColor: theme.palette.background.dark,
           }}

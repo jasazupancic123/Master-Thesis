@@ -12,12 +12,11 @@ import {
   YAxis,
 } from 'recharts';
 
-import CustomBarTooltip from '../selected-member-report-custom-tooltip/selected-member-report-custom-tooltip';
-import setupChartData, { colorForZ } from './state';
 import FatigueIcon from '../../assets/icons/Fatigue.svg';
 import SleepIcon from '../../assets/icons/Sleep.svg';
 import SorenessIcon from '../../assets/icons/Soreness.svg';
-import { COLOR } from '@/common/constant/color.constant';
+import CustomBarTooltip from '../selected-member-report-custom-tooltip/selected-member-report-custom-tooltip';
+import setupChartData, { colorForZ } from './state';
 import { WellnessChartDataType } from '@/controller/user/enum/wellness-chart-data-type.enum';
 import type { UserEntity } from '@/controller/user/type/user.type';
 import type { WellnessChartData } from '@/controller/user/type/wellness.type';

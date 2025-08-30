@@ -87,13 +87,6 @@ export default function CycleComponents(props: CycleComponentsProps) {
       mt={3}
       position="relative"
     >
-      <Box
-        width="100%"
-        sx={{
-          backgroundColor: theme.palette.background.dark,
-          height: '5px',
-        }}
-      />
       {parentComponents.toReversed().map((component) => {
         const IconComponent = commonService.navigation.getComponentIcon(
           component.name
@@ -127,11 +120,13 @@ export default function CycleComponents(props: CycleComponentsProps) {
                     borderRadius: 1,
                   }}
                 >
-                  <IconComponent
-                    sx={{
-                      fontSize: screenSize.isMobile ? 15 : 25,
-                    }}
-                  />
+                  {IconComponent && (
+                    <IconComponent
+                      sx={{
+                        fontSize: screenSize.isMobile ? 15 : 25,
+                      }}
+                    />
+                  )}
                 </Box>
               </Box>
               <Box

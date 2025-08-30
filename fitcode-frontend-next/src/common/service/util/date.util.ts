@@ -22,9 +22,8 @@ export class DateUtil {
     options: { withYear?: boolean; withMonth?: boolean; withoutDots?: boolean },
     formula?: string
   ): string {
-    if (formula)
-      return dayjs(date).format(formula);
-    
+    if (formula) return dayjs(date).format(formula);
+
     const format =
       `DD${options.withMonth ? '. MM.' : ''}${options.withYear ? '. YYYY' : ''}`.replace(
         '.',

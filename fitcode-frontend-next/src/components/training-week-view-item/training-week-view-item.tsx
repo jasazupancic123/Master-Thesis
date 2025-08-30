@@ -1,29 +1,24 @@
 'use client';
 
-import { Save } from '@mui/icons-material';
-import { Box, IconButton, Tooltip } from '@mui/material';
+import { Box } from '@mui/material';
 import { useEffect, useState } from 'react';
 
 import TrainerWeekComponentItem from '../training-week-component-item/training-week-component-item';
-import {
-  COOLDOWN_ID,
-  WARMUP_ID,
-} from '@/common/constant/warmup-cooldown-ids-constants';
 import type { Training } from '@/controller/training/type/training.type';
 import { useGroup } from '@/store/group-provider';
+import { useScreenSize } from '@/store/screen-size-provider';
 
 export type TrainingWeekViewItemProps = {
   training: Training;
 };
 
 export default function TrainingItem(props: TrainingWeekViewItemProps) {
+  const screenSize = useScreenSize();
+
   const { training } = props;
   const { setTrainings } = useGroup();
 
-  const [isChanged, setIsChanged] = useState(false);
-  const [updatedComponents, setUpdatedComponents] = useState(
-    training.components
-  );
+  const [updatedComponents] = useState(training.components);
 
   useEffect(() => {
     // only update current filtered trainings (in week view, max 7 of them are in array)
@@ -43,49 +38,21 @@ export default function TrainingItem(props: TrainingWeekViewItemProps) {
       <Box
         sx={{
           flex: 1,
-          p: 1,
-          backgroundColor: 'rgba(255, 255, 255, 0.2)',
+          p: screenSize.isMobile || screenSize.isSmallTablet ? 0 : 1,
+          mt: screenSize.isMobile || screenSize.isSmallTablet ? 0.5 : undefined,
           display: 'flex',
           flexDirection: 'column',
+          alignItems:
+            screenSize.isMobile || screenSize.isSmallTablet
+              ? 'center'
+              : undefined,
         }}
+        gap={1}
       >
-        {[training.warmup, ...training.components, training.cooldown].map(
-          (c) => (
-            <TrainerWeekComponentItem
-              key={c.id}
-              component={c}
-              training={training}
-              setIsChanged={setIsChanged}
-              updatedComponents={updatedComponents}
-              setUpdatedComponents={setUpdatedComponents}
-              warmupOrCooldown={
-                c.id === WARMUP_ID
-                  ? WARMUP_ID
-                  : c.id === COOLDOWN_ID
-                    ? COOLDOWN_ID
-                    : undefined
-              }
-            />
-          )
-        )}
+        {training.components.map((c) => (
+          <TrainerWeekComponentItem key={c.id} component={c} />
+        ))}
       </Box>
-      {isChanged && (
-        <IconButton
-          onClick={() => {
-            /* updateTraining(training, {
-              from: training.from,
-              to: training.to,
-              components: updatedComponents,
-            }); */
-
-            setIsChanged(false);
-          }}
-        >
-          <Tooltip title="Save Training">
-            <Save />
-          </Tooltip>
-        </IconButton>
-      )}
     </Box>
   );
 }
