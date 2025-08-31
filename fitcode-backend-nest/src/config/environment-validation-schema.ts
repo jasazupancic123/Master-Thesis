@@ -2,12 +2,12 @@ import * as Joi from 'joi';
 
 export const validationSchema = Joi.object({
   // Environment
-  NODE_ENV: Joi.string().valid('dev', 'prod', 'test').default('development'),
-  PORT: Joi.number().default(3000),
+  NODE_ENV: Joi.string().valid('dev', 'prod', 'test').default('dev'),
+  PORT: Joi.number().default(8080),
 
   // Firebase Admin
-  FIREBASE_ADMIN_EMAIL: Joi.string().required(),
-  FIREBASE_ADMIN_PASSWORD: Joi.string().required(),
+  ADMIN_EMAIL: Joi.string().required(),
+  ADMIN_PASSWORD: Joi.string().required(),
   FIREBASE_CONFIG: Joi.string().required(),
 
   // Firebase Emulator
@@ -20,8 +20,8 @@ export const validationSchema = Joi.object({
 export type Environment = {
   NODE_ENV: 'dev' | 'prod' | 'test';
   PORT: number;
-  FIREBASE_ADMIN_EMAIL: string;
-  FIREBASE_ADMIN_PASSWORD: string;
+  ADMIN_EMAIL: string;
+  ADMIN_PASSWORD: string;
   FIREBASE_CONFIG: string;
   FIRESTORE_EMULATOR_HOST: string | undefined;
   FIREBASE_AUTH_EMULATOR_HOST: string | undefined;

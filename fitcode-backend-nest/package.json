@@ -7,18 +7,17 @@
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "cross-env NODE_ENV=production node dist/main",
+    "start": "cross-env NODE_ENV=prod node dist/main",
     "firebase:dev": "firebase emulators:start --only firestore,auth,storage,functions",
     "start:dev": "nest start -b swc --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "cross-env NODE_ENV=production node dist/main",
     "lint": "npx eslint . --ext .ts --fix",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/jest/bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json --runInBand",
-    "prepare": "cd .. && husky fitcode-backend-nest/.husky"
+    "prepare": "if [ \"$CI\" != \"true\" ]; then cd .. && husky fitcode-backend-nest/.husky; fi"
   },
   "dependencies": {
     "@golevelup/ts-jest": "^0.7.0",

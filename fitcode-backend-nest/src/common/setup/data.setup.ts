@@ -48,8 +48,8 @@ export class DataSetup extends BaseSetup {
 
     // create / update admin user
     this.admin = await this.userService.upsert({
-      email: this.configService.getOrThrow('FIREBASE_ADMIN_EMAIL'),
-      password: this.configService.getOrThrow('FIREBASE_ADMIN_PASSWORD'),
+      email: this.configService.getOrThrow('ADMIN_EMAIL'),
+      password: this.configService.getOrThrow('ADMIN_PASSWORD'),
       displayName: 'Admin',
       customClaims: { role: [UserRole.ADMIN] },
     });
@@ -174,7 +174,7 @@ export class DataSetup extends BaseSetup {
     }
 
     await Promise.all(
-      createdUsers.map(async (user, i) => {
+      createdUsers.map(async (user) => {
         const u = data.find((u) => u.email === user.email);
         await userRepository.save({
           id: user.uid,

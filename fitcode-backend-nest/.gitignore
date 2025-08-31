@@ -394,11 +394,12 @@ Temporary Items
 
 =======
 # Local
+.env.prod
 .env
 dist
 .webpack
 .serverless/**/*.zip
 
 # Firebase
-service-account.json
+serviceAccount.json
 *debug.log

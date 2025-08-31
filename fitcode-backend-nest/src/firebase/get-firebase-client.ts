@@ -7,6 +7,8 @@ import { getStorage } from 'firebase-admin/storage';
 
 export const FIREBASE_ADMIN = Symbol('FirebaseAdmin');
 
+const serviceAccount = require('../../serviceAccount.json');
+
 export function InjectFirebaseAdmin() {
   return Inject(FIREBASE_ADMIN);
 }
@@ -27,7 +29,7 @@ export function getFirebaseClient(
 ): FirebaseClient {
   const apps = getApps();
   const config = {
-    credential: admin.credential.cert(options.credential),
+    credential: admin.credential.cert(serviceAccount),
   };
 
   const app = (!apps.length ? initializeApp(config) : apps[0]) as admin.app.App;
