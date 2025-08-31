@@ -20,7 +20,6 @@ export class FirebaseModule {
             // commonService: CommonService,
           ) => {
             const credential = JSON.parse(configService.get('FIREBASE_CONFIG'));
-
             // if (commonService.env.isProd()) await client.storage.bucket('media').makePublic();
             return getFirebaseClient({ credential });
           },
