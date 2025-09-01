@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
   reactStrictMode: false,
   images: {
     remotePatterns: [
@@ -19,12 +20,6 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'img.sofascore.com',
       },
-    ],
-    domains: [
-      'fitcode-testing.appspot.com',
-      'localhost',
-      'iamaspire.aspire.qa',
-      'img.sofascore.com',
     ],
   },
   eslint: {
