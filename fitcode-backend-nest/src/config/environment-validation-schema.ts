@@ -8,7 +8,6 @@ export const validationSchema = Joi.object({
   // Firebase Admin
   ADMIN_EMAIL: Joi.string().required(),
   ADMIN_PASSWORD: Joi.string().required(),
-  FIREBASE_CONFIG: Joi.string().required(),
 
   // Firebase Emulator
   FIRESTORE_EMULATOR_HOST: Joi.string().optional(),

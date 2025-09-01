@@ -64,7 +64,7 @@ async function initApp(app: INestApplication): Promise<void> {
 
   // start server
   const port = configService.get('PORT');
-  await app.listen(port);
+  await app.listen(port, commonService.env.isProd() ? '0.0.0.0' : undefined);
   logger.log(`Application started on http://localhost:${port}`);
 }
 
