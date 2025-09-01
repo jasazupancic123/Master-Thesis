@@ -5,9 +5,9 @@ import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 
-export const FIREBASE_ADMIN = Symbol('FirebaseAdmin');
+import type { CommonService } from '@src/common/service/common.service';
 
-const serviceAccount = require('../../serviceAccount.json');
+export const FIREBASE_ADMIN = Symbol('FirebaseAdmin');
 
 export function InjectFirebaseAdmin() {
   return Inject(FIREBASE_ADMIN);
@@ -20,16 +20,14 @@ export interface FirebaseClient {
   storage: admin.storage.Storage;
 }
 
-export interface FirebaseClientOptions {
-  credential: string;
-}
-
 export function getFirebaseClient(
-  options: FirebaseClientOptions,
+  commonService: CommonService,
 ): FirebaseClient {
   const apps = getApps();
   const config = {
-    credential: admin.credential.cert(serviceAccount),
+    credential: commonService.env.isProd()
+      ? admin.credential.applicationDefault()
+      : admin.credential.cert(require('../../serviceAccount.json')),
   };
 
   const app = (!apps.length ? initializeApp(config) : apps[0]) as admin.app.App;
