@@ -6,6 +6,7 @@ import type { Exercise } from '../exercise/type/exercise.type';
 import type { MainSet } from './enum/main-set.enum';
 import type { ExerciseSet } from './type/exercise-set.type';
 import type { Subgroup } from './type/subgroup.type';
+import type { Superset } from './type/superset.type';
 import type { TrainingComponent } from './type/training-component.type';
 import type { TrainingExercise } from './type/training-exercise.type';
 import { removeExerciseFromSuperset } from '@/components/superset-exercise/state';
@@ -34,7 +35,7 @@ export class CustomWorkloadsSubgroupsService {
     const parentId = selectedSubgroup?.id || DEFAULT_SUBGROUP_ID;
 
     component.subgroups = component.subgroups.map((sg) => {
-      if (sg.parentId === parentId) {
+      if (sg.parentId && sg.parentId === parentId) {
         return {
           ...sg,
           supersets:
@@ -57,7 +58,7 @@ export class CustomWorkloadsSubgroupsService {
     const parentId = selectedSubgroup?.id || DEFAULT_SUBGROUP_ID;
 
     component.subgroups = component.subgroups.map((sg) => {
-      if (sg.parentId === parentId) {
+      if (sg.parentId && sg.parentId === parentId) {
         const newSupersets = updateSupersets(
           sg.supersets,
           exercisesToAdd,
@@ -81,7 +82,7 @@ export class CustomWorkloadsSubgroupsService {
     const parentId = selectedSubgroup?.id || DEFAULT_SUBGROUP_ID;
 
     component.subgroups = component.subgroups.map((sg) => {
-      if (sg.parentId === parentId) {
+      if (sg.parentId && sg.parentId === parentId) {
         const newSupersets = onDragEndExerciseToExistingSuperset(
           { draggableId, destination },
           {
@@ -107,7 +108,7 @@ export class CustomWorkloadsSubgroupsService {
     const parentId = selectedSubgroup?.id || DEFAULT_SUBGROUP_ID;
 
     component.subgroups = component.subgroups.map((sg) => {
-      if (sg.parentId === parentId) {
+      if (sg.parentId && sg.parentId === parentId) {
         const newSupersets = onMainSetChange(component, sg, mainSet);
 
         return { ...sg, supersets: newSupersets, mainSet };
@@ -119,6 +120,54 @@ export class CustomWorkloadsSubgroupsService {
     return component.subgroups;
   };
 
+  static updateExercisesAttributeTypes(
+    component: TrainingComponent,
+    selectedSubgroup: Subgroup | null,
+    supersets: Superset[],
+    param: Attribute
+  ) {
+    const customSubgroups = component.subgroups.filter(
+      (sg) => sg.parentId === (selectedSubgroup?.id || DEFAULT_SUBGROUP_ID)
+    );
+
+    customSubgroups.forEach((sg) => {
+      sg.supersets.forEach((s, i) => {
+        s.exercises.forEach((ex, j) => {
+          ex.sets.forEach((set, k) => {
+            const matchingSet = supersets[i]?.exercises[j]?.sets[k];
+            if (!matchingSet) return;
+
+            const oldParamValueL = set.paramValuesL.find(
+              (pv) => pv.field === param.field
+            );
+            const newParamValueL = matchingSet.paramValuesL.find(
+              (pv) => pv.field === param.field
+            );
+            if (!oldParamValueL || !newParamValueL) return;
+
+            if (oldParamValueL.selected !== newParamValueL.selected) {
+              oldParamValueL.selected = newParamValueL.selected;
+              oldParamValueL.value = newParamValueL.value;
+            }
+
+            const oldParamValueR = set.paramValuesR?.find(
+              (pv) => pv.field === param.field
+            );
+            const newParamValueR = matchingSet.paramValuesR?.find(
+              (pv) => pv.field === param.field
+            );
+            if (!oldParamValueR || !newParamValueR) return;
+
+            if (oldParamValueR.selected !== newParamValueR.selected) {
+              oldParamValueR.selected = newParamValueR.selected;
+              oldParamValueR.value = newParamValueR.value;
+            }
+          });
+        });
+      });
+    });
+  }
+
   static updateSelectedExercisesVolWorkSets = (
     component: TrainingComponent,
     selectedSubgroup: Subgroup | null,
@@ -127,7 +176,7 @@ export class CustomWorkloadsSubgroupsService {
     exercises: Exercise[]
   ) => {
     const customSubgroups = component.subgroups.filter(
-      (sg) => sg.parentId === selectedSubgroup?.id || DEFAULT_SUBGROUP_ID
+      (sg) => sg.parentId === (selectedSubgroup?.id || DEFAULT_SUBGROUP_ID)
     );
 
     for (const subgroup of customSubgroups) {
@@ -153,7 +202,7 @@ export class CustomWorkloadsSubgroupsService {
     foundExercise: Exercise
   ) => {
     const customSubgroups = component.subgroups.filter(
-      (sg) => sg.parentId === selectedSubgroup?.id || DEFAULT_SUBGROUP_ID
+      (sg) => sg.parentId === (selectedSubgroup?.id || DEFAULT_SUBGROUP_ID)
     );
 
     for (const subgroup of customSubgroups) {
@@ -200,7 +249,7 @@ export class CustomWorkloadsSubgroupsService {
     } = state;
 
     const customSubgroups = component.subgroups.filter(
-      (sg) => sg.parentId === selectedSubgroup?.id || DEFAULT_SUBGROUP_ID
+      (sg) => sg.parentId === (selectedSubgroup?.id || DEFAULT_SUBGROUP_ID)
     );
 
     for (const subgroup of customSubgroups) {
@@ -270,7 +319,7 @@ export class CustomWorkloadsSubgroupsService {
     } = state;
 
     const customSubgroups = component.subgroups.filter(
-      (sg) => sg.parentId === selectedSubgroup?.id || DEFAULT_SUBGROUP_ID
+      (sg) => sg.parentId === (selectedSubgroup?.id || DEFAULT_SUBGROUP_ID)
     );
 
     for (const subgroup of customSubgroups) {
@@ -318,7 +367,7 @@ export class CustomWorkloadsSubgroupsService {
     const parentId = selectedSubgroup?.id || DEFAULT_SUBGROUP_ID;
 
     component.subgroups = component.subgroups.map((sg) => {
-      if (sg.parentId === parentId) {
+      if (sg.parentId && sg.parentId === parentId) {
         const newSupersets = removeExerciseFromSuperset(
           sg.supersets,
           supersetIndex,
@@ -341,7 +390,7 @@ export class CustomWorkloadsSubgroupsService {
     const parentId = selectedSubgroup?.id || DEFAULT_SUBGROUP_ID;
 
     component.subgroups = component.subgroups.map((sg) => {
-      if (sg.parentId === parentId) {
+      if (sg.parentId && sg.parentId === parentId) {
         const newSupersets = removeSelectedExercisesFromSupersets(
           sg.supersets,
           selectedExercises

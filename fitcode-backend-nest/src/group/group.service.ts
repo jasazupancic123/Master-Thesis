@@ -158,7 +158,12 @@ export class GroupService implements Permission<Group, Institution> {
     };
 
     await this.repository.update(ref.groupId, data);
-    return { ...group, ...data, updatedAt: new Date() };
+
+    const cleanedData = Object.fromEntries(
+      Object.entries(data).filter(([_, v]) => v !== undefined),
+    );
+
+    return { ...group, ...cleanedData, updatedAt: new Date() };
   }
 
   @LogMethod()

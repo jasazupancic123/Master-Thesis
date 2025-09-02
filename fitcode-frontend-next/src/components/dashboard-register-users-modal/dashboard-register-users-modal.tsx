@@ -1,17 +1,11 @@
 'use client';
 
-import {
-  Box,
-  Button,
-  CircularProgress,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Box, Button, Stack, TextField, Typography } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
+import LoadingOverlay from '../loading-overlay/loading-overlay';
 import MyModal from '../modal/modal';
 import { CommonService } from '@/common/service/common.service';
 import { handleApiRequest } from '@/common/type/state.type';
@@ -351,27 +345,7 @@ export default function RegisterUsersDashboard(
         want to add them to the institution?
       </MyModal>
 
-      {isUploadingMembers && (
-        <Box
-          position="fixed"
-          top={0}
-          left={0}
-          width="100vw"
-          height="100vh"
-          display="flex"
-          flexDirection="column"
-          justifyContent="center"
-          alignItems="center"
-          gap={2}
-          sx={{
-            zIndex: 130000,
-            backgroundColor: 'rgba(0, 0, 0, 0.3)',
-          }}
-        >
-          <CircularProgress size={24} />
-          <Typography fontSize={20}>Registering...</Typography>
-        </Box>
-      )}
+      {isUploadingMembers && <LoadingOverlay title="Registering..." />}
     </>
   );
 }

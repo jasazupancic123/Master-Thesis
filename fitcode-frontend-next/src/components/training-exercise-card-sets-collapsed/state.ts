@@ -25,13 +25,23 @@ export function updateAttributeType(
     max: number | undefined;
   },
   state: {
+    component: TrainingComponent;
+    selectedSubgroup: Subgroup | null;
     selectedExercises: TrainingExercise[];
     supersets: Superset[];
     setSupersets: SetState<Superset[]>;
+    setComponent: SetStateNullable<TrainingComponent>;
   }
 ) {
   const { exercise, param, newValue, lOrR, min, max } = input;
-  const { selectedExercises, supersets, setSupersets } = state;
+  const {
+    component,
+    selectedSubgroup,
+    selectedExercises,
+    supersets,
+    setSupersets,
+    setComponent,
+  } = state;
 
   const exercisesToUpdate = selectedExercises.some(
     (ex) => ex.id === exercise.id
@@ -41,22 +51,7 @@ export function updateAttributeType(
 
   const supersetsCopy = [...supersets];
 
-  /* 
-    Variable Name: baseParamField
-
-    Functionality: Get attribute name as everything but numbers
-
-    Example: 'int2' returns 'int'
-    
-    Description: We need this, because some exercise can have 2 intensities 
-    and lets say we update int2, and one exercise only has 1 intensity,
-    so only int1 and it can happen that int1 is the same param type as 
-    int2, so we need to check all int's in this example, because direct 
-    matching by param.field will not work: "int1" !== "int2". 
-    We later check in attributes.options if newValue is even possible, 
-    so if new selected value is in options of an attribute, it works 
-    and means that the int's are of the same type, if not, it skips
-  */
+  // example: `int2` returns `int`
   const baseParamField = param.field.replace(/\d+/, '');
 
   for (const exerciseToUpdate of exercisesToUpdate) {
@@ -167,7 +162,29 @@ export function updateAttributeType(
     }
   }
 
+  // update for custom athlete workloads subgroups
+  if (!selectedSubgroup?.parentId) {
+    CustomWorkloadsSubgroupsService.updateExercisesAttributeTypes(
+      component,
+      selectedSubgroup,
+      supersetsCopy,
+      param
+    );
+  }
+
+  const updatedComponent = selectedSubgroup
+    ? {
+        ...component,
+        subgroups: component.subgroups.map((sg) =>
+          sg.id === selectedSubgroup.id
+            ? { ...sg, supersets: supersetsCopy }
+            : sg
+        ),
+      }
+    : { ...component, supersets: supersetsCopy };
+
   setSupersets(supersetsCopy);
+  setComponent(updatedComponent);
 }
 
 export function updateVolWorkSets(

@@ -201,6 +201,7 @@ export class TrainingService implements Permission<Training, Institution> {
       to: new Date(c.to),
       supersets: [],
       subgroups: [],
+      target: c.target,
       mainSet: MainSet.BLOCK,
       completedMembersIds: [],
     }));
