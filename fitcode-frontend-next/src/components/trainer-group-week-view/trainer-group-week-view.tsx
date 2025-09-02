@@ -2,137 +2,280 @@
 
 import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
-import Grid from '@mui/material/Grid2';
 import Typography from '@mui/material/Typography';
 import dayjs from 'dayjs';
 import React, { Fragment, useEffect, useState } from 'react';
 
+import CustomDivider from '../custom-divider/custom-divider';
+import GroupCycleInfo from '../group-cycle-info/group-cycle-info';
+import HorizontalItemsList from '../horizontal-items-list/horizontal-items-list';
+import { DIVIDER_HEIGHT, MAX_WIDTH } from '../trainer-day-view/constant';
+import VerticalLinesBorders from '../vertical-lines-borders/vertical-lines-borders';
 import { CommonService } from '@/common/service/common.service';
-import Circles from '@/components/circles/circles';
 import TrainingItem from '@/components/training-week-view-item/training-week-view-item';
 import type { Week } from '@/controller/group/type/cycle.type';
-import type { Training } from '@/controller/training/type/training.type';
 import { useGroup } from '@/store/group-provider';
+import { useScreenSize } from '@/store/screen-size-provider';
 
 const commonService = CommonService.instance;
 
 export default function TrainerWeekView() {
   const theme = useTheme();
+  const screenSize = useScreenSize();
 
-  const { cycle, trainings, setDateFrom, setDateTo } = useGroup();
+  const { group, cycle, trainings, setDateFrom, setDateTo } = useGroup();
 
   const [index, setIndex] = useState(0); // week index
-  const weeks = commonService.date.weeks(cycle?.from, cycle?.to) || [];
+  const [amTrainingsHeight, setAmTrainingsHeight] = useState(200);
+  const [pmTrainingsHeight, setPmTrainingsHeight] = useState(200);
 
-  /**
-   * Set date to cycle start and end when opening the page
-   */
+  const weeks = cycle
+    ? commonService.date.weeks(cycle.from, cycle.to)
+    : commonService.date.weeks(new Date(), dayjs().add(6, 'day').toDate());
+
+  const [week, setWeek] = useState(1);
+
+  useEffect(() => {
+    if (!cycle?.from) return;
+
+    const cycleStart = dayjs(cycle.from).startOf('day');
+    const cycleWeek = cycleStart.week();
+    const currentWeek = dayjs(weeks[index][0].date)?.subtract(1, 'day').week();
+    const diff = currentWeek - cycleWeek + 1;
+
+    setWeek(diff);
+  }, [index]);
+
   useEffect(() => {
     if (!cycle) return;
     setIndex(0);
   }, [cycle]);
 
-  /**
-   * Filter trainings based on cycle
-   */
   useEffect(() => {
-    if (!cycle) return;
+    if (weeks.length < 7) return;
+
     setDateFrom(dayjs(weeks[index][0].date));
     setDateTo(dayjs(weeks[index][6].date));
   }, [cycle, index]);
 
-  if (!cycle) return null;
+  useEffect(() => {
+    const amTrainingsElements = document.querySelectorAll('[id^="AM-"]');
+    const pmTrainingsElements = document.querySelectorAll('[id^="PM-"]');
+
+    // find the one with the biggest height
+    const amHeight = Array.from(amTrainingsElements).reduce((acc, curr) => {
+      return Math.max(acc, (curr as HTMLElement).offsetHeight);
+    }, 0);
+
+    const pmHeight = Array.from(pmTrainingsElements).reduce((acc, curr) => {
+      return Math.max(acc, (curr as HTMLElement).offsetHeight);
+    }, 0);
+
+    setAmTrainingsHeight(amHeight);
+    setPmTrainingsHeight(pmHeight);
+  }, [weeks, index, trainings]);
 
   return (
     <Box
-      minHeight={195}
+      width="100%"
+      maxWidth={MAX_WIDTH}
+      display="flex"
+      flexDirection="column"
       sx={{
-        backgroundColor: theme.palette.background.paper,
-        padding: '12px',
-        pb: '20px',
-        borderRadius: '8px',
-        borderTopLeftRadius: '0',
-        borderTopRightRadius: '0',
+        mx: 'auto',
+        position: 'relative',
+        minHeight: 'calc(100vh - 50px)',
       }}
     >
+      <VerticalLinesBorders />
       {/* Week selector */}
       <Box
-        sx={{ padding: '0', backgroundColor: 'inherit', marginBottom: '20px' }}
+        width="100%"
+        height={!screenSize.isSmallerThanLaptop ? DIVIDER_HEIGHT : undefined}
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        justifyContent="space-between"
       >
-        <Circles
-          arrows
-          onArrowClick={(direction) => {
-            if (
-              (direction === 'left' && index === 0) ||
-              (direction === 'right' && index === weeks.length - 1)
-            )
-              return;
+        <Box
+          width="100%"
+          display="flex"
+          flexDirection={screenSize.isSmallerThanLaptop ? 'column' : 'row'}
+          pb={screenSize.isSmallerThanLaptop ? 2 : undefined}
+        >
+          <Box width="25%" display="flex" />
 
-            setIndex((prev) => (direction === 'left' ? prev - 1 : prev + 1));
+          <Box
+            width={screenSize.isSmallerThanLaptop ? '100%' : '50%'}
+            display="flex"
+          >
+            <HorizontalItemsList
+              items={weeks.map((week: Week[], i: number) => {
+                return { label: `WEEK ${i + 1}`, value: i.toString() };
+              })}
+              noItemsText="No weeks available"
+              value={index.toString()}
+              setValue={(value) => {
+                setIndex(parseInt(value, 10));
+              }}
+              onArrowClick={() => {}}
+              cycleView
+              checkIsSameValue={(value: string) => {
+                return value === index.toString();
+              }}
+            />
+          </Box>
+          <Box
+            width={screenSize.isSmallerThanLaptop ? '50%' : '25%'}
+            display="flex"
+            justifyContent={
+              screenSize.isSmallerThanLaptop ? 'center' : 'flex-end'
+            }
+            sx={{
+              mx: screenSize.isSmallerThanLaptop ? 'auto' : undefined,
+            }}
+          >
+            <GroupCycleInfo
+              group={group}
+              cycle={cycle}
+              week={week}
+              smallDisplay={screenSize.isSmallerThanLaptop}
+              disableMoreVert={screenSize.isSmallerThanLaptop}
+            />
+          </Box>
+        </Box>
+
+        {/* Dates */}
+        <Box
+          width={screenSize.isSmallerThanLaptop ? '95%' : '100%'}
+          display="flex"
+          justifyContent="center"
+          sx={{
+            border: screenSize.isSmallerThanLaptop
+              ? `1px solid ${theme.palette.text.primary}`
+              : undefined,
+            borderBottom: 'none',
           }}
-          items={weeks.map((_: Week[], i: number) => ({
-            label: `W${i + 1}`,
-            value: i.toString(),
-          }))}
-          value={index.toString()}
-          setValue={(value) => setIndex(parseInt(value))}
-        />
+        >
+          {weeks[index]?.map(({ date }, i) => {
+            const day = dayjs(date);
+            return (
+              <Box key={i} width={`${100 / 7}%`}>
+                <Typography textAlign="center" fontSize={14}>
+                  {commonService.date.format(
+                    day,
+                    {},
+                    screenSize.isSmallerThanLaptop ? 'D/M' : 'dddd - D/M'
+                  )}
+                </Typography>
+              </Box>
+            );
+          })}
+        </Box>
       </Box>
 
-      {/* Trainings */}
-      <Box pt={0} px={1}>
-        <Grid
-          container
-          spacing={2}
-          display="flex"
-          justifyContent="space-between"
-        >
-          {weeks[index].map(({ date }, i) => {
+      <Box
+        width={screenSize.isSmallerThanLaptop ? '95%' : '100%'}
+        sx={{
+          border: screenSize.isSmallerThanLaptop
+            ? `1px solid ${theme.palette.text.primary}`
+            : undefined,
+          mx: 'auto',
+        }}
+      >
+        {!screenSize.isSmallerThanLaptop && <CustomDivider />}
+
+        {/* Trainings */}
+        <Box width="100%" display="flex" justifyContent="center">
+          {weeks[index]?.map(({ date }, i) => {
             const day = dayjs(date);
             const filtered = trainings.filter((t) =>
               commonService.date.isBetween(day, dayjs(t.from), dayjs(t.to))
             );
 
-            return (
-              <Grid
-                key={i}
-                size={{ xs: 12 / 7 }}
-                sx={{
-                  padding: '8px',
-                  textAlign: 'center',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  position: 'relative',
-                  display: 'flex',
-                  flexDirection: 'column',
-                }}
-              >
-                <Typography>
-                  {commonService.date.format(day, {
-                    withYear: false,
-                    withMonth: true,
-                    withoutDots: false,
-                  })}
-                </Typography>
+            const amTraining = filtered.find((t) => dayjs(t.from).hour() < 12);
+            const pmTraining = filtered.find((t) => dayjs(t.from).hour() >= 12);
 
+            const minHeight = screenSize.isSmallerThanLaptop ? 100 : 200;
+
+            return (
+              <Box
+                key={i}
+                width={`${100 / 7}%`}
+                minHeight={200}
+                alignSelf="stretch"
+                display="flex"
+                flexDirection="column"
+              >
+                {/* AM training */}
                 <Box
+                  id={`AM-${i}`}
+                  height={
+                    amTrainingsHeight > minHeight
+                      ? amTrainingsHeight
+                      : undefined
+                  }
+                  minHeight={minHeight}
                   sx={{
-                    flex: 1,
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
+                    border: `0.5px solid ${theme.palette.background.dark}`,
+                    borderLeft:
+                      i === 0 && !screenSize.isSmallerThanLaptop
+                        ? 'none'
+                        : undefined,
+                    borderRight:
+                      i === 6 && !screenSize.isSmallerThanLaptop
+                        ? 'none'
+                        : undefined,
+                    borderTop: 'none',
                   }}
                 >
-                  {filtered.map((training: Training) => (
-                    <Fragment key={training.id}>
-                      <TrainingItem training={training as Training} />
+                  {amTraining && (
+                    <Fragment key={amTraining.id}>
+                      <TrainingItem training={amTraining} />
                     </Fragment>
-                  ))}
+                  )}
                 </Box>
-              </Grid>
+
+                {/* PM training */}
+                <Box
+                  id={`PM-${i}`}
+                  height={
+                    pmTrainingsHeight > minHeight
+                      ? pmTrainingsHeight
+                      : undefined
+                  }
+                  minHeight={minHeight}
+                  sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    border: `0.5px solid ${theme.palette.background.dark}`,
+                    borderLeft:
+                      i === 0 && !screenSize.isSmallerThanLaptop
+                        ? 'none'
+                        : undefined,
+                    borderRight:
+                      i === 6 && !screenSize.isSmallerThanLaptop
+                        ? 'none'
+                        : undefined,
+                    borderBottom: 'none',
+                  }}
+                >
+                  {pmTraining && (
+                    <Fragment key={pmTraining.id}>
+                      <TrainingItem training={pmTraining} />
+                    </Fragment>
+                  )}
+                </Box>
+              </Box>
             );
           })}
-        </Grid>
+        </Box>
+
+        {!screenSize.isSmallerThanLaptop && <CustomDivider />}
       </Box>
     </Box>
   );

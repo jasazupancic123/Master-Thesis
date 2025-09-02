@@ -5,6 +5,8 @@ import type { User } from '@/controller/user/type/user.type';
 
 export const MAX_WIDTH = '1340px';
 
+export const DIVIDER_HEIGHT = '206px';
+
 export const NUM_MAX_SUPERSETS = 8;
 
 export const NUM_MAX_EXERCISES_PER_SUPERSET = 4;
