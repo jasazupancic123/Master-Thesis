@@ -139,84 +139,82 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                   <KeyboardArrowRight sx={{ fontSize: 18 }} />
                 )}
               </IconButton>
-              {expandedExercisesView && (
-                <>
-                  {supersets.flatMap((s) => s.exercises).length > 0 && (
-                    <Tooltip
-                      title={
-                        supersets.flatMap((s) => s.exercises).length > 0 &&
-                        supersets.every((s) =>
+              <>
+                {supersets.flatMap((s) => s.exercises).length > 0 && (
+                  <Tooltip
+                    title={
+                      supersets.flatMap((s) => s.exercises).length > 0 &&
+                      supersets.every((s) =>
+                        s.exercises.every((e) =>
+                          selectedExercises.some((se) => se.id === e.id)
+                        )
+                      )
+                        ? 'Deselect all exercises'
+                        : 'Select all exercises'
+                    }
+                  >
+                    <IconButton
+                      sx={{ p: 0, m: 0 }}
+                      onClick={() => {
+                        const allExercisesSelected = supersets.every((s) =>
                           s.exercises.every((e) =>
                             selectedExercises.some((se) => se.id === e.id)
                           )
-                        )
-                          ? 'Deselect all exercises'
-                          : 'Select all exercises'
-                      }
-                    >
-                      <IconButton
-                        sx={{ p: 0, m: 0 }}
-                        onClick={() => {
-                          const allExercisesSelected = supersets.every((s) =>
-                            s.exercises.every((e) =>
-                              selectedExercises.some((se) => se.id === e.id)
-                            )
+                        );
+                        if (allExercisesSelected) {
+                          setSelectedExercises([]);
+                        } else {
+                          setSelectedExercises(
+                            supersets.flatMap((s) => s.exercises) || []
                           );
-                          if (allExercisesSelected) {
-                            setSelectedExercises([]);
-                          } else {
-                            setSelectedExercises(
-                              supersets.flatMap((s) => s.exercises) || []
-                            );
-                          }
-                        }}
-                      >
-                        {supersets.every((s) =>
-                          s.exercises.every((e) =>
+                        }
+                      }}
+                    >
+                      {supersets.every((s) =>
+                        s.exercises.every((e) =>
+                          selectedExercises.some((se) => se.id === e.id)
+                        )
+                      ) ? (
+                        <CheckBox sx={{ fontSize: 16 }} />
+                      ) : supersets.some((s) =>
+                          s.exercises.some((e) =>
                             selectedExercises.some((se) => se.id === e.id)
                           )
                         ) ? (
-                          <CheckBox sx={{ fontSize: 16 }} />
-                        ) : supersets.some((s) =>
-                            s.exercises.some((e) =>
-                              selectedExercises.some((se) => se.id === e.id)
-                            )
-                          ) ? (
-                          <IndeterminateCheckBox sx={{ fontSize: 16 }} />
-                        ) : (
-                          <CheckBoxOutlineBlank sx={{ fontSize: 16 }} />
-                        )}
-                      </IconButton>
-                    </Tooltip>
-                  )}
-                  {!selectedAthlete && selectedExercises.length > 0 && (
-                    <Tooltip title="Delete selected exercises">
-                      <IconButton
-                        sx={{ p: 0, m: 0 }}
-                        onClick={() => {
-                          deleteSelectedExercises(
-                            {
-                              selectedExercises,
-                            },
-                            {
-                              component,
-                              training,
-                              setComponent,
-                              setTraining,
-                              setSelectedExercises,
-                              selectedSubgroup,
-                              setSelectedSubgroup,
-                              setDetectedChanges,
-                            }
-                          );
-                        }}
-                      >
-                        <Delete sx={{ fontSize: 16 }} />
-                      </IconButton>
-                    </Tooltip>
-                  )}
-                </>
-              )}
+                        <IndeterminateCheckBox sx={{ fontSize: 16 }} />
+                      ) : (
+                        <CheckBoxOutlineBlank sx={{ fontSize: 16 }} />
+                      )}
+                    </IconButton>
+                  </Tooltip>
+                )}
+                {!selectedAthlete && selectedExercises.length > 0 && (
+                  <Tooltip title="Delete selected exercises">
+                    <IconButton
+                      sx={{ p: 0, m: 0 }}
+                      onClick={() => {
+                        deleteSelectedExercises(
+                          {
+                            selectedExercises,
+                          },
+                          {
+                            component,
+                            training,
+                            setComponent,
+                            setTraining,
+                            setSelectedExercises,
+                            selectedSubgroup,
+                            setSelectedSubgroup,
+                            setDetectedChanges,
+                          }
+                        );
+                      }}
+                    >
+                      <Delete sx={{ fontSize: 16 }} />
+                    </IconButton>
+                  </Tooltip>
+                )}
+              </>
             </Box>
           )}
         </Box>

@@ -377,6 +377,7 @@ export default function Supersets(props: SupersetsProps) {
               bgcolor: 'background.default',
               borderRadius: 1,
               boxShadow: '0 1px 1px rgba(0,0,0,0.25)',
+              border: `1px solid ${theme.palette.text.primary}`,
             }}
           >
             <StubTrainingExerciseCard
