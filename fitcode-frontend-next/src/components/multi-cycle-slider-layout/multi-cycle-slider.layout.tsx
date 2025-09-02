@@ -199,7 +199,7 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
         {screenSize.isSmallerThanLaptop ? (
           <Box width="100%" display="flex" flexDirection="column">
             <HorizontalItems />
-            <Box display="flex" width="100%">
+            <Box display="flex" width="40%" sx={{ mx: 'auto' }}>
               <Box width="50%" mt={0.75}>
                 <Box display="flex" flexDirection="column">
                   <Typography

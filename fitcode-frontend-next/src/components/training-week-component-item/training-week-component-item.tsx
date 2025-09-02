@@ -1,119 +1,89 @@
-import { Stack, Typography } from '@mui/material';
-import dayjs from 'dayjs';
+import { Box, Typography } from '@mui/material';
+import { useTheme } from '@mui/material';
 
-import { theme } from '@/app/style';
-import type { SetState } from '@/common/type/state.type';
-import type { Training } from '@/controller/training/type/training.type';
+import { CommonService } from '@/common/service/common.service';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { useGroup } from '@/store/group-provider';
+import { useScreenSize } from '@/store/screen-size-provider';
+
+const commonService = CommonService.instance;
 
 interface TrainerWeekComponentItemProps {
   component: TrainingComponent;
-  training: Training;
-  setIsChanged: SetState<boolean>;
-  updatedComponents: TrainingComponent[];
-  setUpdatedComponents: SetState<TrainingComponent[]>;
-  warmupOrCooldown?: 'warmup' | 'cooldown';
 }
 
 export default function TrainerWeekComponentItem(
   props: TrainerWeekComponentItemProps
 ) {
-  const {
-    component: c,
-    training,
-    setIsChanged,
-    updatedComponents,
-    setUpdatedComponents,
-    warmupOrCooldown,
-  } = props;
+  const theme = useTheme();
+  const screenSize = useScreenSize();
 
-  const { setTrainings } = useGroup();
-  return (
-    <Stack key={c.id}>
-      <Typography
+  const { component } = props;
+
+  if (screenSize.isMobile || screenSize.isSmallTablet) {
+    const IconComponent = commonService.navigation.getComponentIcon(
+      component.component?.name || ''
+    );
+    return (
+      <Box
+        display="flex"
+        flexDirection="column"
+        justifyContent="center"
+        alignItems="center"
+        p={0.5}
+        gap={0.25}
         sx={{
-          textAlign: 'left',
-          flexBasis: '66.67%',
+          backgroundColor: theme.palette.background.light,
+          borderRadius: 2,
         }}
       >
-        {c.component?.name}
+        <Typography fontSize={12}>
+          {commonService.date.format(component.from, {}, 'HH:mm')}
+        </Typography>
+        {IconComponent && <IconComponent sx={{ fontSize: 16 }} />}
+      </Box>
+    );
+  }
+  return (
+    <Box
+      width="100%"
+      display="flex"
+      flexDirection="column"
+      alignItems="flex-start"
+    >
+      <Typography fontSize={12}>
+        {commonService.date.format(component.from, {}, 'H:mm')} -{' '}
+        {commonService.date.format(component.to, {}, 'H:mm')}
       </Typography>
-
-      <Stack spacing={1} sx={{ mb: 1 }}>
-        <input
-          type="time"
-          value={dayjs(c.from).format('HH:mm')}
-          onChange={(e) => {
-            setIsChanged(true);
-
-            const [hours, minutes] = e.target.value.split(':');
-            const from = dayjs(training.from)
-              .set('hour', parseInt(hours))
-              .set('minute', parseInt(minutes))
-              .toDate();
-
-            if (warmupOrCooldown) {
-              const wOrC =
-                warmupOrCooldown === 'warmup'
-                  ? { ...training.warmup }
-                  : { ...training.cooldown };
-              wOrC.from = from;
-              wOrC.to = dayjs(from).add(5, 'minute').toDate();
-
-              const newTraining: Training = {
-                ...training,
-              };
-
-              if (warmupOrCooldown === 'warmup') newTraining.warmup = wOrC;
-              else newTraining.cooldown = wOrC;
-
-              setTrainings((prev) =>
-                prev.map((t) => (t.id === newTraining.id ? newTraining : t))
-              );
-              return;
-            }
-
-            const components = [...updatedComponents];
-            const i = updatedComponents.findIndex((tc) => tc.id === c.id);
-
-            if (i === -1) return;
-
-            components[i] = { ...components[i], from };
-            setUpdatedComponents(components);
-          }}
-          style={{
-            color: '#fff',
-            backgroundColor: theme.palette.background.default,
-            border: 'none',
-            padding: '4px',
-            borderRadius: '4px',
-            textAlign: 'center',
-            WebkitAppearance: 'none',
-            MozAppearance: 'textfield',
+      <Box
+        width="100%"
+        display="flex"
+        justifyContent="flex-start"
+        alignItems="center"
+        gap={1}
+      >
+        <Box
+          sx={{
+            backgroundColor: theme.palette.primary.main,
+            width: 4,
+            height: 16,
+            borderRadius: 5,
           }}
         />
-        <style jsx>{`
-          input[type='time']::-webkit-calendar-picker-indicator {
-            filter: invert(1);
-            cursor: pointer;
-          }
-        `}</style>
-
-        {/* <input
-                type="time"
-                value={date.to}
-                onChange={(e) => onChange('to', e.target.value)}
-                style={{
-                  color: '#fff',
-                  backgroundColor: 'background.default',
-                  border: 'none',
-                  padding: '4px',
-                  borderRadius: '4px',
-                  textAlign: 'center',
-                }}
-              /> */}
-      </Stack>
-    </Stack>
+        <Typography
+          fontSize={16}
+          sx={{
+            textTransform: 'uppercase',
+            color: theme.palette.primary.main,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {component.target
+            ? `${component.component?.name} - ${component.target.name}`
+            : component.component?.name}
+        </Typography>
+      </Box>
+    </Box>
   );
 }

@@ -7,8 +7,9 @@ import { useTheme } from '@mui/material/styles';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 
-import { MAX_WIDTH } from '../trainer-day-view/constant';
-import VerticalLinesBorder from '../vertical-lines-border/vertical-lines-border';
+import CustomDivider from '../custom-divider/custom-divider';
+import { DIVIDER_HEIGHT, MAX_WIDTH } from '../trainer-day-view/constant';
+import VerticalLinesBorders from '../vertical-lines-borders/vertical-lines-borders';
 import { handleSaveGroup } from '@/app/(trainer)/groups/[group_id]/state';
 import MultiCycleSliderLayout from '@/components/multi-cycle-slider-layout/multi-cycle-slider.layout';
 import CycleComponents from '@/components/training-year-cycle-components/training-year-cycle-components';
@@ -73,7 +74,7 @@ export default function TrainerYearView() {
           mx: 'auto',
         }}
       >
-        <VerticalLinesBorder />
+        <VerticalLinesBorders />
 
         {screenSize.isSmallerThanLaptop && (
           <IconButton
@@ -115,6 +116,7 @@ export default function TrainerYearView() {
         >
           <Box
             width="100%"
+            height={DIVIDER_HEIGHT}
             maxWidth="100%"
             display="flex"
             flexDirection="column"
@@ -129,6 +131,8 @@ export default function TrainerYearView() {
               setSliderProperties={setSliderProperties}
             />
           </Box>
+
+          <CustomDivider />
 
           <Box width="100%" maxWidth="100%">
             <CycleComponents

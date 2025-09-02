@@ -20,6 +20,7 @@ import { MainSet } from '@/controller/training/enum/main-set.enum';
 import { PeriodizationType } from '@/controller/training/enum/periodization-type.enum';
 import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
+import type { Superset } from '@/controller/training/type/superset.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { useGroup } from '@/store/group-provider';
 import { useMain } from '@/store/main-provider';

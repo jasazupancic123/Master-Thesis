@@ -4,7 +4,6 @@ import AcUnit from '@mui/icons-material/AcUnit';
 import DirectionsRunIcon from '@mui/icons-material/DirectionsRun';
 import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
 import LocalFireDepartment from '@mui/icons-material/LocalFireDepartment';
-import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 import SportsGymnasticsIcon from '@mui/icons-material/SportsGymnastics';
 import SportsMartialArtsIcon from '@mui/icons-material/SportsMartialArts';
 import TimerIcon from '@mui/icons-material/Timer';
@@ -27,7 +26,7 @@ export class NavigationUtil {
     return path.split('/').pop()!;
   }
 
-  getComponentIcon(componentName: string): SvgIconComponent {
+  getComponentIcon(componentName: string): SvgIconComponent | null {
     switch (componentName.toLowerCase()) {
       case 'warmup':
         return LocalFireDepartment;
@@ -46,7 +45,7 @@ export class NavigationUtil {
       case 'strength':
         return FitnessCenterIcon;
       default:
-        return QuestionMarkIcon;
+        return null;
     }
   }
 
