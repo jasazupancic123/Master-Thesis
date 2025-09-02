@@ -173,6 +173,7 @@ export default function AthleteTrainingComponents(
                   superset={superset}
                   supersetIndex={i}
                   supersets={supersets}
+                  training={training}
                 />
               ));
             })()

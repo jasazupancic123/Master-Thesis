@@ -1,13 +1,7 @@
 'use client';
 
 import { Add, FileUploadOutlined, MoreVert, Remove } from '@mui/icons-material';
-import {
-  Avatar,
-  Box,
-  CircularProgress,
-  IconButton,
-  Typography,
-} from '@mui/material';
+import { Avatar, Box, IconButton, Typography } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
@@ -21,6 +15,7 @@ import DashboardEditAthleteModal from '@/components/dashboard-edit-athlete-modal
 import RegisterUsersDashboard from '@/components/dashboard-register-users-modal/dashboard-register-users-modal';
 import FileUpload from '@/components/file-upload/file-upload';
 import HorizontalItemsList from '@/components/horizontal-items-list/horizontal-items-list';
+import LoadingOverlay from '@/components/loading-overlay/loading-overlay';
 import MyModal from '@/components/modal/modal';
 import { SearchBar } from '@/components/search-bar/search-bar';
 import { MAX_WIDTH } from '@/components/trainer-day-view/constant';
@@ -624,27 +619,7 @@ export default function DashboardInstitutionPage() {
         setEditUser={setEditUser}
       />
 
-      {isUploadingMembers && (
-        <Box
-          position="fixed"
-          top={0}
-          left={0}
-          width="100vw"
-          height="100vh"
-          display="flex"
-          flexDirection="column"
-          justifyContent="center"
-          alignItems="center"
-          gap={2}
-          sx={{
-            zIndex: 130000,
-            backgroundColor: 'rgba(0, 0, 0, 0.3)',
-          }}
-        >
-          <CircularProgress size={24} />
-          <Typography fontSize={20}>Registering...</Typography>
-        </Box>
-      )}
+      {isUploadingMembers && <LoadingOverlay title="Registering..." />}
     </Box>
   );
 }

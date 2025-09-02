@@ -1,6 +1,8 @@
-import { Box, Stack, Typography } from '@mui/material';
+import { KeyboardArrowRight } from '@mui/icons-material';
+import { Box, IconButton, Stack, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 
+import type { SetState } from '@/common/type/state.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useScreenSize } from '@/store/screen-size-provider';
 
@@ -8,6 +10,9 @@ interface AthleteTrainingExerciseCollapsedProps {
   exercise: TrainingExercise;
   borderTopRadius: boolean;
   borderBottomRadius: boolean;
+  expandedSetsView: boolean;
+  displaySetsArrow: boolean;
+  setExpandedSetsView: SetState<boolean>;
 }
 
 export default function AthleteTrainingExerciseCollapsed(
@@ -16,7 +21,14 @@ export default function AthleteTrainingExerciseCollapsed(
   const theme = useTheme();
   const screenSize = useScreenSize();
 
-  const { exercise, borderTopRadius, borderBottomRadius } = props;
+  const {
+    exercise,
+    borderTopRadius,
+    borderBottomRadius,
+    expandedSetsView,
+    displaySetsArrow,
+    setExpandedSetsView,
+  } = props;
 
   return (
     <Stack
@@ -38,6 +50,30 @@ export default function AthleteTrainingExerciseCollapsed(
         borderBottomLeftRadius: borderBottomRadius ? '5px' : 0,
       }}
     >
+      {displaySetsArrow && (
+        <IconButton
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            right: 0,
+            zIndex: 1,
+          }}
+          disableRipple
+          onClick={() => setExpandedSetsView(!expandedSetsView)}
+        >
+          <KeyboardArrowRight
+            sx={{
+              transform: expandedSetsView ? 'rotate(90deg)' : 'rotate(180deg)',
+              color: 'white',
+              fontSize: screenSize.isTablet ? 14 : 16,
+              ml: screenSize.isUltraSmall ? 0 : screenSize.isMobile ? 1 : 0,
+              transition: 'transform 0.3s ease-in-out',
+            }}
+          />
+        </IconButton>
+      )}
+
       {/* Background Overlay */}
       <Box
         sx={{

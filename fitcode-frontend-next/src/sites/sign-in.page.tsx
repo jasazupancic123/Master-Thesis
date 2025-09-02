@@ -1,13 +1,12 @@
 'use client';
 
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import { Grid2, TextField } from '@mui/material';
+import { TextField } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { FormEvent } from 'react';
 import React from 'react';
@@ -136,20 +135,6 @@ export default function SignInPage() {
             >
               {LINKS_AUTH.login.label}
             </Button>
-
-            <Grid2 container sx={{ justifyContent: 'center' }}>
-              <Grid2>
-                <Link
-                  href={LINKS_AUTH.register.href}
-                  style={{
-                    textDecoration: 'none',
-                    color: theme.palette.primary.main,
-                  }}
-                >
-                  Sign Up
-                </Link>
-              </Grid2>
-            </Grid2>
           </Box>
         </Box>
       </Box>
