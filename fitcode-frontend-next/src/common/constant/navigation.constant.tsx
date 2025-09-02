@@ -1,6 +1,5 @@
 import {
   Add,
-  BarChartOutlined,
   CalendarTodayOutlined,
   FitnessCenterOutlined,
   Groups,
@@ -49,7 +48,6 @@ export const LINK_TRADEMARK = link('Trademark', '#trademark');
 export const LINK_HIGHLIGHTS = link('Highlights', '#highlights');
 export const LINK_ABOUT = link('Our Vision', '#about');
 export const LINK_SIGN_IN = link('Sign In', '/sign-in');
-export const LINK_SIGN_UP = link('Sign Up', '/sign-up');
 export const LINK_PROFILE = link('Profile', '/profile', <PersonIcon />);
 export const LINK_USERS = link('Users', '/users');
 export const LINK_EXERCISES_DASHBOARD = link(
@@ -64,7 +62,6 @@ export const LINK_TRAININGS = link(
   '/trainings',
   <FitnessCenterOutlined />
 );
-export const LINK_CHART = link('Chart', '/chart', <BarChartOutlined />);
 export const LINK_TRAINING = link(
   'Training',
   '/training',
@@ -133,7 +130,6 @@ export const LINKS_DASHBOARD_SIDEBAR_SUB_ITEMS = {
 // grouped links (for utility)
 export const LINKS_AUTH = {
   login: LINK_SIGN_IN,
-  register: LINK_SIGN_UP,
 };
 
 export const LINKS_NAVBAR = {
@@ -150,7 +146,6 @@ export const LINKS_SIDEBAR = {
   [UserRole.ATHLETE]: {
     trainings: LINK_TRAININGS,
     calendar: LINK_CALENDAR,
-    chart: LINK_CHART,
     wellness: LINK_WELLNESS,
   },
   [UserRole.TRAINER]: {

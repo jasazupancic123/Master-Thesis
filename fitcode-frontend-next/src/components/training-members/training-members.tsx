@@ -109,6 +109,13 @@ export default function TrainingMembers(props: TrainingMembersProps) {
       availableMembers.push(...defaultSubgroupMembers);
     }
 
+    // sort available members by group.membersIds
+    availableMembers.sort((a, b) => {
+      const indexA = group.membersIds.indexOf(a.uid);
+      const indexB = group.membersIds.indexOf(b.uid);
+      return indexA - indexB;
+    });
+
     subgroups = subgroups.map((sg) => {
       const leafSubgroup = component.subgroups.find(
         (s) => s.parentId === sg.id

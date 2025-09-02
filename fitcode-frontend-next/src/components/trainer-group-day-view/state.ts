@@ -38,6 +38,7 @@ export async function handleUpdateMultipleTrainings(state: {
   selectedAthlete: User | undefined;
   setSelectedAthleteWorkloads: SetState<CompletedFutureWorkloads>;
   isSettingAthleteWorkloads: React.RefObject<boolean>;
+  setIsUpdatingTraining: SetState<boolean>;
 }) {
   const {
     setTrainings,
@@ -48,12 +49,15 @@ export async function handleUpdateMultipleTrainings(state: {
     exercises,
     methods,
     setDetectedChanges,
+    setIsUpdatingTraining,
   } = state;
 
   if (!training) {
     toast.error('No training to update');
     return;
   }
+
+  setIsUpdatingTraining(true);
 
   await handleApiRequest(
     router,
@@ -83,6 +87,8 @@ export async function handleUpdateMultipleTrainings(state: {
     undefined,
     'Error when updating training'
   );
+
+  setIsUpdatingTraining(false);
 }
 
 export const removeSelectedExercisesFromSupersets = (

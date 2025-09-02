@@ -247,9 +247,12 @@ export default function TrainingExerciseCardCollapsedSets(
                                 max: curMax,
                               },
                               {
+                                selectedSubgroup,
+                                component,
                                 selectedExercises,
                                 supersets,
                                 setSupersets,
+                                setComponent,
                               }
                             );
                           }}

@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 
 import CustomDivider from '../custom-divider/custom-divider';
+import LoadingOverlay from '../loading-overlay/loading-overlay';
 import { DIVIDER_HEIGHT, MAX_WIDTH } from '../trainer-day-view/constant';
 import GroupTrainerDayViewHeader from '../trainer-group-day-view-header/trainer-group-day-view-header';
 import GroupTrainerDayViewTrainings from '../trainer-group-day-view-trainings/group-trainer-day-view-trainings';
@@ -57,6 +58,7 @@ export default function TrainerDayView() {
     isSettingAthleteWorkloads,
   } = useTrainerDayViewContext();
 
+  const [isUpdatingTraining, setIsUpdatingTraining] = useState(false);
   const [week, setWeek] = useState<number>(1);
   const [days, setDays] = useState(
     commonService.date.getWeekDays().map(({ label, date }) => ({
@@ -195,6 +197,7 @@ export default function TrainerDayView() {
                   selectedAthlete,
                   setSelectedAthleteWorkloads,
                   isSettingAthleteWorkloads,
+                  setIsUpdatingTraining,
                 })
               }
             >
@@ -268,6 +271,7 @@ export default function TrainerDayView() {
                     selectedAthlete,
                     setSelectedAthleteWorkloads,
                     isSettingAthleteWorkloads,
+                    setIsUpdatingTraining,
                   });
                 }}
               >
@@ -352,6 +356,9 @@ export default function TrainerDayView() {
           <GroupTrainerDayViewTrainings loading={loading} />
         </Box>
       </Box>
+      {isUpdatingTraining && (
+        <LoadingOverlay title="Updating training plan..." />
+      )}
     </Box>
   );
 }
