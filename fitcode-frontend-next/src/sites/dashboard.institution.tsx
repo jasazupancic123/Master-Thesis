@@ -1,33 +1,36 @@
 'use client';
 
 import { Add, FileUploadOutlined, MoreVert, Remove } from '@mui/icons-material';
-import { Avatar, Box, IconButton, Typography } from '@mui/material';
+import {
+  Avatar,
+  Box,
+  CircularProgress,
+  IconButton,
+  Typography,
+} from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { theme } from '@/app/style';
 import { AthletesTrainers } from '@/common/enum/athletes-trainer.enum';
-import { CommonService } from '@/common/service/common.service';
-import { isManager } from '@/common/service/util/firebase-auth.util';
+import { isManager } from '@/common/firebase/firebase-auth.util';
+import { FirebaseFunctionsUtil } from '@/common/firebase/firebase-functions.util';
 import { handleApiRequest } from '@/common/type/state.type';
 import DashboardEditAthleteModal from '@/components/dashboard-edit-athlete-modal/dashboard-edit-athlete-modal';
 import RegisterUsersDashboard from '@/components/dashboard-register-users-modal/dashboard-register-users-modal';
 import FileUpload from '@/components/file-upload/file-upload';
 import HorizontalItemsList from '@/components/horizontal-items-list/horizontal-items-list';
-import LoadingOverlay from '@/components/loading-overlay/loading-overlay';
 import MyModal from '@/components/modal/modal';
 import { SearchBar } from '@/components/search-bar/search-bar';
 import { MAX_WIDTH } from '@/components/trainer-day-view/constant';
 import { InstitutionController } from '@/controller/institution/institution.controller';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import type { User } from '@/controller/user/type/user.type';
+import { useAuth } from '@/store/auth-provider';
 import { useDashboard } from '@/store/dashboard-provider';
 import { useMain } from '@/store/main-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
-
-const commonService = CommonService.instance;
-const firebaseService = commonService.firebase;
 
 export default function DashboardInstitutionPage() {
   const {
@@ -39,6 +42,7 @@ export default function DashboardInstitutionPage() {
   } = useDashboard();
   const screenSize = useScreenSize();
   const router = useRouter();
+  const { token } = useAuth();
 
   const { profile, users } = useMain();
 
@@ -63,6 +67,10 @@ export default function DashboardInstitutionPage() {
   const [isUploadingMembers, setIsUploadingMembers] = useState(false);
 
   const roles = profile.customClaims.role || [];
+
+  const firebaseFunctions = new FirebaseFunctionsUtil({
+    authIdToken: token,
+  });
 
   useEffect(() => {
     const current =
@@ -258,7 +266,7 @@ export default function DashboardInstitutionPage() {
 
       handleApiRequest(
         router,
-        () => firebaseService.functions.createUserWithRole(input),
+        () => firebaseFunctions.createUserWithRole(input),
         () => {
           setCsvUserEmails((prev) => [...prev, email]);
 
@@ -619,7 +627,27 @@ export default function DashboardInstitutionPage() {
         setEditUser={setEditUser}
       />
 
-      {isUploadingMembers && <LoadingOverlay title="Registering..." />}
+      {isUploadingMembers && (
+        <Box
+          position="fixed"
+          top={0}
+          left={0}
+          width="100vw"
+          height="100vh"
+          display="flex"
+          flexDirection="column"
+          justifyContent="center"
+          alignItems="center"
+          gap={2}
+          sx={{
+            zIndex: 130000,
+            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+          }}
+        >
+          <CircularProgress size={24} />
+          <Typography fontSize={20}>Registering...</Typography>
+        </Box>
+      )}
     </Box>
   );
 }

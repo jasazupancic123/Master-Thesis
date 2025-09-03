@@ -23,7 +23,7 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { SPORTS } from '@/common/constant/sport.constant';
-import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
+import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
 import { handleApiRequest } from '@/common/type/state.type';
 import FaceCapture from '@/components/face-capture/face-capture';
 import FileUpload from '@/components/file-upload/file-upload';
@@ -35,6 +35,8 @@ import { useAuth } from '@/store/auth-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 
 const DEFAULT_MARGIN = 1;
+
+const firebaseStorage = new FirebaseStorageUtil();
 
 export default function ProfilePage() {
   const {
@@ -181,7 +183,7 @@ export default function ProfilePage() {
           makeRound
           onFileUpload={async (file) => {
             const path = `user/${user.uid}/${file.name}`;
-            const url = await FirebaseStorageUtil.uploadFile(file, path);
+            const url = await firebaseStorage.uploadFile(file, path);
             const newProfile = { ...profile, profileImageUrl: url };
             setProfile(newProfile as UserEntity);
           }}

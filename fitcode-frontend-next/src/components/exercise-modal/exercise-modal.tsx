@@ -9,7 +9,7 @@ import React, { useEffect, useState } from 'react';
 import SelectAttribute from '../select-attribute/select-attribute';
 import SelectComponent from '../select-component/select-component';
 import { CommonService } from '@/common/service/common.service';
-import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
+import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
 import type { SetState } from '@/common/type/state.type';
 import FileUpload from '@/components/file-upload/file-upload';
 import MyModal from '@/components/modal/modal';
@@ -21,6 +21,8 @@ import type {
 } from '@/controller/component/type/component.type';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
 import { useScreenSize } from '@/store/screen-size-provider';
+
+const firebaseStorage = new FirebaseStorageUtil();
 
 interface Props {
   data: Partial<Exercise>;
@@ -194,7 +196,7 @@ export default function ExerciseModal(props: Props) {
                 initialFileUrl={data.videoUrl}
                 onFileUpload={async (file: File) => {
                   const path = `media/exercise/${Date.now()}-${file.name}`;
-                  const url = await FirebaseStorageUtil.uploadFile(file, path);
+                  const url = await firebaseStorage.uploadFile(file, path);
                   setData((prev) => ({ ...prev, videoUrl: url }));
                 }}
               />
@@ -209,7 +211,7 @@ export default function ExerciseModal(props: Props) {
                 initialFileUrl={data.imageUrl}
                 onFileUpload={async (file: File) => {
                   const path = `media/exercise/${Date.now()}-${file.name}`;
-                  const url = await FirebaseStorageUtil.uploadFile(file, path);
+                  const url = await firebaseStorage.uploadFile(file, path);
                   setData((prev) => ({ ...prev, imageUrl: url }));
                 }}
               />

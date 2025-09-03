@@ -1,22 +1,26 @@
 'use client';
 
-import { Box, Button, Stack, TextField, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
-import LoadingOverlay from '../loading-overlay/loading-overlay';
 import MyModal from '../modal/modal';
-import { CommonService } from '@/common/service/common.service';
+import { FirebaseFunctionsUtil } from '@/common/firebase/firebase-functions.util';
 import { handleApiRequest } from '@/common/type/state.type';
 import { InstitutionController } from '@/controller/institution/institution.controller';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import type { User } from '@/controller/user/type/user.type';
+import { useAuth } from '@/store/auth-provider';
 import { useDashboard } from '@/store/dashboard-provider';
 import { useMain } from '@/store/main-provider';
-
-const commonService = CommonService.instance;
-const firebaseService = commonService.firebase;
 
 interface RegisterUsersDashboardProps {
   registerRole: UserRole;
@@ -29,6 +33,7 @@ export default function RegisterUsersDashboard(
 
   const router = useRouter();
 
+  const { token } = useAuth();
   const { users } = useMain();
   const {
     selectedInstitution,
@@ -36,6 +41,10 @@ export default function RegisterUsersDashboard(
     refetchUsers,
     refetchMembers,
   } = useDashboard();
+
+  const firebaseFunctions = new FirebaseFunctionsUtil({
+    authIdToken: token || undefined,
+  });
 
   const [formData, setFormData] = useState({
     displayName: '',
@@ -265,7 +274,7 @@ export default function RegisterUsersDashboard(
 
     handleApiRequest(
       router,
-      () => firebaseService.functions.createUserWithRole(input),
+      () => firebaseFunctions.createUserWithRole(input),
       () => {
         refetchUsers();
         refetchMembers();
@@ -345,7 +354,27 @@ export default function RegisterUsersDashboard(
         want to add them to the institution?
       </MyModal>
 
-      {isUploadingMembers && <LoadingOverlay title="Registering..." />}
+      {isUploadingMembers && (
+        <Box
+          position="fixed"
+          top={0}
+          left={0}
+          width="100vw"
+          height="100vh"
+          display="flex"
+          flexDirection="column"
+          justifyContent="center"
+          alignItems="center"
+          gap={2}
+          sx={{
+            zIndex: 130000,
+            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+          }}
+        >
+          <CircularProgress size={24} />
+          <Typography fontSize={20}>Registering...</Typography>
+        </Box>
+      )}
     </>
   );
 }

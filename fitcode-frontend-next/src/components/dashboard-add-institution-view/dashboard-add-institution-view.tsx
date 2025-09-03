@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import FileUpload from '../file-upload/file-upload';
-import { CommonService } from '@/common/service/common.service';
-import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
+import { FirebaseFunctionsUtil } from '@/common/firebase/firebase-functions.util';
+import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
 import { handleApiRequest } from '@/common/type/state.type';
 import { InstitutionController } from '@/controller/institution/institution.controller';
 import { InstitutionService } from '@/controller/institution/institution.service';
@@ -14,8 +14,8 @@ import { useDashboard } from '@/store/dashboard-provider';
 import { useMain } from '@/store/main-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 
-const commonService = CommonService.instance;
-const firebaseService = commonService.firebase;
+const firebaseStorage = new FirebaseStorageUtil();
+const firebaseFunctions = new FirebaseFunctionsUtil();
 
 export default function AddInstitutionDashboard() {
   const { users } = useMain();
@@ -104,7 +104,7 @@ export default function AddInstitutionDashboard() {
 
     handleApiRequest(
       router,
-      () => firebaseService.functions.createUserWithRole(userInput),
+      () => firebaseFunctions.createUserWithRole(userInput),
       () => {
         refetchUsers();
       },
@@ -183,7 +183,7 @@ export default function AddInstitutionDashboard() {
             initialFileUrl={imageUrl}
             onFileUpload={async (file: File) => {
               const path = `media/exercise/${Date.now()}-${file.name}`;
-              const url = await FirebaseStorageUtil.uploadFile(file, path);
+              const url = await firebaseStorage.uploadFile(file, path);
               setImageUrl(url);
             }}
           />

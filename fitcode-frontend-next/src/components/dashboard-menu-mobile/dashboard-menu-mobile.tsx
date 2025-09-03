@@ -25,7 +25,7 @@ import {
   LINKS_DASHBOARD_SIDEBAR_SUB_ITEMS,
   LINKS_SIDEBAR,
 } from '@/common/constant/navigation.constant';
-import { isAdmin } from '@/common/service/util/firebase-auth.util';
+import { isAdmin } from '@/common/firebase/firebase-auth.util';
 import type { Institution } from '@/controller/institution/type/institution.type';
 import { useAuth } from '@/store/auth-provider';
 import { useDashboard } from '@/store/dashboard-provider';
@@ -63,7 +63,7 @@ export default function DashboardMenuMobile() {
       {/* Side drawer from the right */}
       <Drawer anchor="left" open={open} onClose={() => setOpen(false)}>
         <List sx={{ mt: 5 }}>
-          {isAdmin(role) && (
+          {isAdmin(role!) && (
             <Box ml={screenSize.isMobile ? 2 : 0}>
               <SelectInputHorizontal<Institution>
                 label={selectedInstitution?.name || 'Select institution'}
@@ -82,9 +82,9 @@ export default function DashboardMenuMobile() {
             </Box>
           )}
 
-          {role.length &&
+          {role &&
             [
-              ...Object.values(LINKS_SIDEBAR[role[0]]),
+              ...Object.values(LINKS_SIDEBAR[role]),
               ...Object.values(LINKS_DASHBOARD_SIDEBAR_SUB_ITEMS),
             ].map((link, i) => {
               if (!link) return null;

@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS } from '@/common/constant/navigation.constant';
-import { isTrainer } from '@/common/service/util/firebase-auth.util';
+import { isTrainer } from '@/common/firebase/firebase-auth.util';
 import { handleApiRequest } from '@/common/type/state.type';
 import AddGroupModal from '@/components/dashboard-add-group-modal/dashboard-add-group-modal';
 import DashboardGroups from '@/components/dashboard-groups/dashboard-groups';
@@ -20,6 +20,7 @@ import { GroupService } from '@/controller/group/group.service';
 import type { Institution } from '@/controller/institution/type/institution.type';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import type { User } from '@/controller/user/type/user.type';
+import { useAuth } from '@/store/auth-provider';
 import { useDashboard } from '@/store/dashboard-provider';
 import { useMain } from '@/store/main-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
@@ -28,7 +29,8 @@ export default function DashboardPage() {
   const screenSize = useScreenSize();
   const router = useRouter();
 
-  const { profile, users } = useMain();
+  const { users } = useMain();
+  const { role, token, profile } = useAuth();
 
   const {
     institutions,
@@ -50,21 +52,23 @@ export default function DashboardPage() {
   const [groupName, setGroupName] = useState('');
   const [owner, setOwner] = useState<User | null>(null);
 
-  const role = profile?.customClaims?.role || [];
-
   useEffect(() => {
     // fetch groups when selected institution changes
-    if (!selectedInstitution || selectedInstitution.groups) return;
+    if (!token || !role || !selectedInstitution || selectedInstitution.groups)
+      return;
+
     const fetchGroups = async () => {
       const groups = await GroupController.findAllByInstitution(
-        selectedInstitution.id
+        selectedInstitution.id,
+        token!
       );
 
-      for (let group of groups) group = GroupService.mapMembers(group, users);
+      for (const group of groups) GroupService.mapMembers(group, users);
 
       setSelectedInstitution((prev) => ({ ...prev, groups }) as Institution);
       if (groups.length) setSelectedGroup(groups[0]);
     };
+
     fetchGroups();
   }, [selectedInstitution]);
 
@@ -126,7 +130,7 @@ export default function DashboardPage() {
           }}
           gap={1}
         >
-          {isTrainer(role) && (
+          {role && isTrainer(role) && (
             <Tooltip title="Go to group" placement="top">
               <Fab
                 color="primary"

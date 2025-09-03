@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google';
 import React from 'react';
 import { Toaster } from 'react-hot-toast';
 
+import { getFirebaseServerAuth, getIdTokenResult } from '@/common/helper/ssr';
 import type { ChildrenProps } from '@/common/type/props.type';
 import { AuthProvider } from '@/store/auth-provider';
 import { ScreenSizeProvider } from '@/store/screen-size-provider';
@@ -16,13 +17,19 @@ export const metadata: Metadata = {
   description: 'Track workouts more efficiently.',
 };
 
-export default function RootLayout({ children }: ChildrenProps) {
+export default async function RootLayout({ children }: ChildrenProps) {
+  const auth = await getFirebaseServerAuth();
+
+  let token: string | undefined;
+  if (auth?.currentUser)
+    token = (await getIdTokenResult(auth.currentUser)).token;
+
   return (
     <html lang="en" style={{ scrollBehavior: 'smooth' }}>
       <body className={inter.className}>
         <AppRouterCacheProvider>
           <ThemeRegistry>
-            <AuthProvider>
+            <AuthProvider initialToken={token}>
               <ScreenSizeProvider>{children}</ScreenSizeProvider>
             </AuthProvider>
             <Toaster position="bottom-center" />

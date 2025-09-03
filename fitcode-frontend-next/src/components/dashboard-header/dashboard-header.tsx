@@ -33,13 +33,12 @@ import {
   LINK_DASHBOARD_HOME,
   LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS,
 } from '@/common/constant/navigation.constant';
-import { isAdmin } from '@/common/service/util/firebase-auth.util';
+import { isAdmin } from '@/common/firebase/firebase-auth.util';
 import type { ILink } from '@/common/type/link.type';
 import { handleApiRequest } from '@/common/type/state.type';
 import { GroupController } from '@/controller/group/group.controller';
 import { useAuth } from '@/store/auth-provider';
 import { useDashboard } from '@/store/dashboard-provider';
-import { useMain } from '@/store/main-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 
 export default function DashboardHeader() {
@@ -54,10 +53,6 @@ export default function DashboardHeader() {
     detectedChanges,
     setDetectedChanges,
   } = useDashboard();
-  const { profile: user } = useMain();
-
-  const roles = user.customClaims.role || [];
-
   const { role, profile } = useAuth();
   const screenSize = useScreenSize();
   const theme = useTheme();
@@ -177,7 +172,7 @@ export default function DashboardHeader() {
               )}
             </IconButton>
           </Box>
-          {isAdmin(roles) ? (
+          {isAdmin(role!) ? (
             <Box
               position="relative"
               onClick={(event) => {
@@ -275,7 +270,7 @@ export default function DashboardHeader() {
             mt: '12px',
           }}
         >
-          {Object.values(LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS(role)).map(
+          {Object.values(LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS(role!)).map(
             (val) => {
               if (!val) return null;
               return (
@@ -285,7 +280,7 @@ export default function DashboardHeader() {
                   dashboardView
                   numValues={
                     Object.values(
-                      LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS(role)
+                      LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS(role!)
                     ).filter((item) => item !== undefined).length
                   }
                 />
@@ -360,13 +355,13 @@ export default function DashboardHeader() {
       >
         <MenuItem
           onClick={() => {
-            setFilter(LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS(role).home);
+            setFilter(LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS(role!).home);
             setOpenInstitutionsMenu(false);
             setAnchorInstitutionsEl(null);
           }}
         >
           <Link
-            href={LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS(role).home.href}
+            href={LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS(role!).home.href}
             passHref
           >
             <Typography>Dashboard</Typography>

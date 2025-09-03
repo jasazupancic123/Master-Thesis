@@ -24,8 +24,8 @@ export class UserController {
     return api.get<User>('/user/me', { token });
   }
 
-  static async findProfile() {
-    return api.get<UserEntity>('/user/me/profile');
+  static async findProfile(token: string) {
+    return api.get<UserEntity>('/user/me/profile', { token });
   }
 
   static async findById(id: string) {

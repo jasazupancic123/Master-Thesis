@@ -13,7 +13,6 @@ import type { Method } from '@/controller/method/type/method.type';
 import type { User } from '@/controller/user/type/user.type';
 
 export interface MainProviderProps {
-  profile: User;
   users: User[];
   components: Component[];
   exercises: Exercise[];
@@ -23,7 +22,6 @@ export interface MainProviderProps {
 }
 
 interface MainContextProps extends MainProviderProps {
-  setProfile: SetState<User>;
   setUsers: SetState<User[]>;
   setComponents: SetState<Component[]>;
   setExercises: SetState<Exercise[]>;
@@ -38,7 +36,6 @@ export const useMain = () => useContext(MainContext)!;
 export function MainProvider(props: MainProviderProps & ChildrenProps) {
   const {
     children,
-    profile: initialProfile,
     users: initialUsers,
     components: initialComponents,
     exercises: initialExercises,
@@ -47,24 +44,22 @@ export function MainProvider(props: MainProviderProps & ChildrenProps) {
     institutions,
   } = props;
 
-  const [profile, setProfile] = useState<User>(initialProfile);
-  const [users, setUsers] = useState<User[]>(initialUsers || []);
   const [components, setComponents] = useState<Component[]>(
     initialComponents || []
   );
+
   const [exercises, setExercises] = useState<Exercise[]>(
     initialExercises.map((e) => ExerciseService.mapComponents(e, components)) ||
       []
   );
 
+  const [users, setUsers] = useState<User[]>(initialUsers || []);
+  const [methods, setMethods] = useState<Method[]>(initialMethods || []);
   const [attributes, setAttributes] = useState<Attribute[]>(
     initialAttributes || []
   );
-  const [methods, setMethods] = useState<Method[]>(initialMethods || []);
 
   const value: MainContextProps = {
-    profile,
-    setProfile,
     users,
     setUsers,
     components,

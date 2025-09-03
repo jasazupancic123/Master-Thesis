@@ -24,7 +24,7 @@ import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
-import { isAdmin } from '@/common/service/util/firebase-auth.util';
+import { isAdmin } from '@/common/firebase/firebase-auth.util';
 import type { Pagination as PaginationType } from '@/common/type/paginate.type';
 import { ExerciseCard } from '@/components/exercise-card/exercise-card';
 import ExerciseChips from '@/components/exercise-chips/exercise-chips';
