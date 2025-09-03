@@ -4,12 +4,14 @@ import { Box, Button, Typography } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
-import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
+import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
 import type { SetState } from '@/common/type/state.type';
 import { handleApiRequest } from '@/common/type/state.type';
 import type { CustomClaims } from '@/controller/user/type/custom-claims.type';
 import { UserController } from '@/controller/user/user.controller';
 import { useAuth } from '@/store/auth-provider';
+
+const firebaseStorage = new FirebaseStorageUtil();
 
 interface FaceCapturePreviewsModalProps {
   previews: {
@@ -120,7 +122,7 @@ export default function FaceCapturePreviewsModal(
                   type: blob.type || 'image/jpeg',
                 });
                 const path = `user/${user.uid}/${file.name}`;
-                const url = await FirebaseStorageUtil.uploadFile(file, path);
+                const url = await firebaseStorage.uploadFile(file, path);
 
                 switch (view) {
                   case 'front':

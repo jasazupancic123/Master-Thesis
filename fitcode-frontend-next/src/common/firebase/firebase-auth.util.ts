@@ -1,23 +1,30 @@
 import { FirebaseError } from 'firebase/app';
-import type { UserCredential } from 'firebase/auth';
+import type { Auth, UserCredential } from 'firebase/auth';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   updateProfile,
 } from 'firebase/auth';
 
-import { auth } from '@/common/config/firebase.config';
+import type { FirebaseInitAppOptions } from '@/common/config/firebase.config';
+import { getFirebaseAuth } from '@/common/config/firebase.config';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 
-export const isAdmin = (role: UserRole[]) => role.includes(UserRole.ADMIN);
-export const isManager = (role: UserRole[]) => role.includes(UserRole.MANAGER);
-export const isTrainer = (role: UserRole[]) => role.includes(UserRole.TRAINER);
-export const isAthlete = (role: UserRole[]) => role.includes(UserRole.ATHLETE);
+export const isAdmin = (role: UserRole) => role === UserRole.ADMIN;
+export const isManager = (role: UserRole) => role === UserRole.MANAGER;
+export const isTrainer = (role: UserRole) => role === UserRole.TRAINER;
+export const isAthlete = (role: UserRole) => role === UserRole.ATHLETE;
 
 export class FirebaseAuthUtil {
-  static async login(email: string, password: string): Promise<UserCredential> {
+  private auth: Auth;
+
+  constructor(options?: FirebaseInitAppOptions) {
+    this.auth = getFirebaseAuth(options);
+  }
+
+  async login(email: string, password: string): Promise<UserCredential> {
     try {
-      return await signInWithEmailAndPassword(auth, email, password);
+      return await signInWithEmailAndPassword(this.auth, email, password);
     } catch (e: unknown) {
       if (e instanceof FirebaseError) {
         switch (e.code) {
@@ -42,19 +49,19 @@ export class FirebaseAuthUtil {
     }
   }
 
-  static async register(
+  async register(
     email: string,
     password: string,
     displayName?: string
   ): Promise<UserCredential> {
     try {
       const result = await createUserWithEmailAndPassword(
-        auth,
+        this.auth,
         email,
         password
       );
-      if (displayName) await updateProfile(result.user, { displayName });
 
+      if (displayName) await updateProfile(result.user, { displayName });
       return result;
     } catch (e: unknown) {
       if (e instanceof FirebaseError) {

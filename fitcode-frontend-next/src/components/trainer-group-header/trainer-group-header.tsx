@@ -88,8 +88,8 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
           {/* Side drawer from the right */}
           <Drawer anchor="left" open={open} onClose={() => setOpen(false)}>
             <List sx={{ mt: 5 }}>
-              {role.length &&
-                Object.values(LINKS_SIDEBAR[role[0]]).map((link, i) => {
+              {role &&
+                Object.values(LINKS_SIDEBAR[role]).map((link, i) => {
                   if (!link) return null;
 
                   let Icon: React.ReactNode = null;

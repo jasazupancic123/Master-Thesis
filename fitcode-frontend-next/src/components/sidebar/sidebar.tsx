@@ -25,7 +25,7 @@ export default function Sidebar() {
   const { role, logout } = useAuth() as AuthContextType;
   const toggle = (newOpen: boolean) => () => setOpen(newOpen);
 
-  const DrawerList = role.length && (
+  const DrawerList = role && (
     <Box sx={{ width: 250 }} role="presentation" onClick={toggle(false)}>
       <List sx={{ pt: 0 }}>
         <ListItem>
@@ -35,7 +35,7 @@ export default function Sidebar() {
           </ListItemButton>
         </ListItem>
         {commonService.navigation
-          .getSidebarLinksByUserRole(role[0])
+          .getSidebarLinksByUserRole(role)
           .map(({ href, label }, i) => (
             <ListItem key={i} disablePadding>
               <Link href={href} passHref style={{ width: '100%' }}>

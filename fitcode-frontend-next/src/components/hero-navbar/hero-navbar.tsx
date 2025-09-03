@@ -140,9 +140,10 @@ export default function HeroNavbar({ showLogin = true }) {
                   alignItems: 'center',
                 }}
               >
-                <NextLink href={mainPageMapper[role[0]].href} passHref>
+                <NextLink href={mainPageMapper[role].href} passHref>
                   Dashboard
                 </NextLink>
+
                 <NextLink href="#" onClick={() => logout()}>
                   Sign Out
                 </NextLink>

@@ -15,43 +15,47 @@ export class GroupController {
     return api.get<Group[]>('/group');
   }
 
-  static async findById(groupId: string) {
-    return api.get<Group>(`/group/${groupId}`);
+  static async findById(groupId: string, token: string) {
+    return api.get<Group>(`/group/${groupId}`, { token });
   }
 
-  static async findAllByInstitution(institutionId: string) {
-    return api.get<Group[]>(`/group/institution/${institutionId}`);
+  static async findAllByInstitution(institutionId: string, token: string) {
+    return api.get<Group[]>(`/group/institution/${institutionId}`, { token });
   }
 
-  static async create(body: CreateGroup) {
-    return api.post<Group>('/group', body);
+  static async create(body: CreateGroup, token: string) {
+    return api.post<Group>('/group', body, { token });
   }
 
-  static async update(groupId: string, body: UpdateGroup): Promise<Group> {
-    return api.patch<Group>(`/group/${groupId}`, body);
+  static async update(
+    groupId: string,
+    body: UpdateGroup,
+    token: string
+  ): Promise<Group> {
+    return api.patch<Group>(`/group/${groupId}`, body, { token });
   }
 
-  static async batchUpdate(body: BatchUpdateGroups) {
-    return api.patch<void>(`/group/update/batch`, body);
+  static async batchUpdate(body: BatchUpdateGroups, token: string) {
+    return api.patch<void>(`/group/update/batch`, body, { token });
   }
 
-  static async delete(groupId: string) {
-    return api.delete<void>(`/group/${groupId}`);
+  static async delete(groupId: string, token: string) {
+    return api.delete<void>(`/group/${groupId}`, { token });
   }
 
-  static async addMember(groupId: string, body: UserId) {
-    return api.patch<void>(`/group/${groupId}/member`, body);
+  static async addMember(groupId: string, body: UserId, token: string) {
+    return api.patch<void>(`/group/${groupId}/member`, body, { token });
   }
 
-  static async removeMember(groupId: string, body: UserId) {
-    return api.delete<void>(`/group/${groupId}/member`, { body });
+  static async removeMember(groupId: string, body: UserId, token: string) {
+    return api.delete<void>(`/group/${groupId}/member`, { body, token });
   }
 
-  static async addCycle(groupId: string, cycle: Cycle) {
-    return api.post<void>(`/group/${groupId}/cycle`, cycle);
+  static async addCycle(groupId: string, cycle: Cycle, token: string) {
+    return api.post<void>(`/group/${groupId}/cycle`, cycle, { token });
   }
 
-  static async removeCycle(groupId: string, cycleId: string) {
-    return api.delete<void>(`/group/${groupId}/cycle/${cycleId}`);
+  static async removeCycle(groupId: string, cycleId: string, token: string) {
+    return api.delete<void>(`/group/${groupId}/cycle/${cycleId}`, { token });
   }
 }

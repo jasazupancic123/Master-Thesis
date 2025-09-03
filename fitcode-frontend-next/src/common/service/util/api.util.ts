@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation';
 import qs from 'qs';
 
-import { auth } from '@/common/config/firebase.config';
 import { BACKEND_API_BASE_URL } from '@/common/constant/api.constant';
 import { LINK_SIGN_IN } from '@/common/constant/navigation.constant';
 import type { FetchOptions, Query } from '@/common/type/api.type';
@@ -29,13 +28,6 @@ export class ApiUtil {
     return ApiUtil.query(query);
   }
 
-  static async getFreshIdToken(): Promise<string | null> {
-    const user = auth.currentUser;
-    if (!user) return null;
-
-    return await user.getIdToken(true); // true = force refresh if expired
-  }
-
   async fetch<T>(url: string, options?: FetchOptions): Promise<T> {
     const {
       method = 'GET',
@@ -46,15 +38,13 @@ export class ApiUtil {
       cacheTimeInMs,
     } = options || {};
 
-    const freshToken = token ?? (await ApiUtil.getFreshIdToken());
-
     const res = await fetch(
       `${BACKEND_API_BASE_URL}${url}${this.query(query)}`,
       {
         method,
         headers: {
           ...(!formData ? { 'Content-Type': 'application/json' } : {}),
-          ...(freshToken ? { Authorization: `Bearer ${freshToken}` } : {}),
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         ...(body ? { body: JSON.stringify(body) } : {}),
         ...(formData ? { body: formData } : {}),
