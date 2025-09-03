@@ -20,6 +20,7 @@ export type TrainingComponent = IdEntity &
     target?: Target; // selected target
     periodizationType?: PeriodizationType;
     copiedFrom?: CopiedFrom; // used for copying components from other trainings
+    location?: string;
 
     // mapped properties
     method?: Method;

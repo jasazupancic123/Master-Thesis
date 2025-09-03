@@ -162,7 +162,9 @@ export default function FileUpload(props: Props) {
                   overflow: 'hidden', // ensures overflow is hidden
                   display: 'block',
                 }}
-                onError={() => {
+                onError={(e) => {
+                  console.log('image uploading error:', e);
+                  console.log('preview:', preview);
                   setPreview((prev) => ({ ...prev, error: 'Invalid image' }));
                 }}
               />
