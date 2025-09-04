@@ -20,6 +20,7 @@ export interface Props {
   onCancel?: () => void;
   onConfirm?: () => void;
   onDelete?: () => void;
+  confirmText?: string;
   cancelText?: string;
   width?: number | string;
   sx?: SxProps;
@@ -39,6 +40,7 @@ export default function MyModal(props: Props) {
     onDelete,
     width,
     sx,
+    confirmText = 'Confirm',
     cancelText = 'Cancel',
     dialogueContentSx,
     componentCalendarView,
@@ -84,17 +86,17 @@ export default function MyModal(props: Props) {
               <DialogActions>
                 {onConfirm && (
                   <Button onClick={onConfirm} color="primary">
-                    Confirm
-                  </Button>
-                )}
-                {onCancel && (
-                  <Button onClick={handleClose} color="secondary">
-                    {cancelText}
+                    {confirmText}
                   </Button>
                 )}
                 {onDelete && (
                   <Button onClick={handleDelete} color="secondary">
                     Delete
+                  </Button>
+                )}
+                {onCancel && (
+                  <Button onClick={handleClose} color="secondary">
+                    {cancelText}
                   </Button>
                 )}
               </DialogActions>
