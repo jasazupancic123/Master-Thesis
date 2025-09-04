@@ -1,4 +1,5 @@
 import type { Cycle } from './cycle.type';
+import type { GroupEvent } from './group-event.type';
 import type { BaseEntity, IdEntity } from '@/common/type/entity.type';
 import type { User } from '@/controller/user/type/user.type';
 
@@ -8,6 +9,7 @@ export type Group = BaseEntity & {
   name: string;
   membersIds: string[];
   cycles: Cycle[];
+  events?: GroupEvent[];
 
   // mapped properties
   members?: User[];
