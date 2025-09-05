@@ -100,8 +100,8 @@ export default function AthleteHeader() {
             >
               <Settings
                 sx={{
-                  width: screenSize.isGigaSmall ? 25 : 30,
-                  height: screenSize.isGigaSmall ? 25 : 30,
+                  width: 25,
+                  height: 25,
                 }}
               />
             </IconButton>

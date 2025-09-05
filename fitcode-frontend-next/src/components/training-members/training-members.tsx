@@ -350,8 +350,6 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                       <Box
                         sx={{ p: 0, m: 0 }}
                         onClick={() => {
-                          if (!component) return;
-
                           updateSelectedAthlete({
                             member,
                             selectedAthlete,

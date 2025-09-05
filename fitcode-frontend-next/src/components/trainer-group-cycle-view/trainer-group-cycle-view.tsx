@@ -23,6 +23,7 @@ import { TrainingService } from '@/controller/training/training.service';
 import { useGroup } from '@/store/group-provider';
 import { useMain } from '@/store/main-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
+import MobileDoubleTextItems from '../mobile-double-text-items/mobile-double-text-items';
 
 const commonService = CommonService.instance;
 
@@ -150,77 +151,20 @@ export default function TrainerCycleView() {
           {screenSize.isSmallerThanLaptop ? (
             <Box width="100%" display="flex" flexDirection="column">
               <HorizontalItems />
-              <Box
-                display="flex"
-                width="40%"
-                justifyContent="center"
-                gap={4}
-                mt={0.75}
-                sx={{
-                  mx: 'auto',
-                }}
-              >
-                <Box
-                  display="flex"
-                  flexDirection="column"
-                  width="50%"
-                  alignItems="center"
-                >
-                  <Typography
-                    textAlign="center"
-                    sx={{
-                      fontSize: '12px',
-                      fontWeight: 400,
-                    }}
-                  >
-                    Group
-                  </Typography>
-                  <Typography
-                    textTransform="uppercase"
-                    textAlign="center"
-                    sx={{
-                      fontSize: screenSize.isSmallerThanLaptop
-                        ? '14px'
-                        : '16px',
-                      fontWeight: 600,
-                    }}
-                  >
-                    {group.name}
-                  </Typography>
-                </Box>
-                {cycle && (
-                  <Box
-                    display="flex"
-                    flexDirection="column"
-                    width="50%"
-                    alignItems="center"
-                  >
-                    <Typography
-                      textAlign="center"
-                      sx={{
-                        fontSize: '12px',
-                        fontWeight: 400,
-                      }}
-                    >
-                      Duration
-                    </Typography>
-                    <Typography
-                      textAlign="center"
-                      textTransform="uppercase"
-                      sx={{
-                        fontSize: screenSize.isSmallerThanLaptop
-                          ? '14px'
-                          : '16px',
-                        fontWeight: 600,
-                      }}
-                    >
-                      {cycle.from && cycle.to
-                        ? `${commonService.date.weeks(cycle.from, cycle.to).length} weeks`
-                        : 'N/A'}
-                    </Typography>
-                  </Box>
-                )}
-              </Box>
+              <MobileDoubleTextItems
+                item1={{ label: 'Group', value: group.name }}
+                item2={
+                  cycle
+                    ? {
+                        label: 'Duration',
+                        value:
+                          cycle.from && cycle.to
+                            ? `${commonService.date.weeks(cycle.from, cycle.to).length} weeks`
+                            : 'N/A',
+                      }
+                    : undefined
+                }
+              />
             </Box>
           ) : (
             <>

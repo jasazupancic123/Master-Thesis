@@ -53,8 +53,8 @@ export type TrainerDayViewContextProps = {
   setDay: SetState<Day>;
   training: Training | undefined;
   setTraining: SetStateNullable<Training>;
-  selectedPeriod: 'AM' | 'PM'; // selected period for the training
-  setSelectedPeriod: SetState<'AM' | 'PM'>;
+  selectedPeriod: 'AM' | 'PM' | undefined; // selected period for the training
+  setSelectedPeriod: SetState<'AM' | 'PM' | undefined>;
   component: TrainingComponent | undefined; // selected training component
   setComponent: SetStateNullable<TrainingComponent>;
   wellness: WellnessZScore[];

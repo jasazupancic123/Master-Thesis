@@ -55,7 +55,6 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
           display="flex"
           alignItems="center"
           sx={{
-            cursor: selectedAthlete ? undefined : 'pointer',
             p: 0,
             m: 0,
           }}
@@ -108,6 +107,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
               mb: 0,
               textTransform: 'uppercase',
               fontWeight: 350,
+              cursor: 'pointer',
             }}
             onClick={() => {
               if (

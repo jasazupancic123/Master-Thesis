@@ -5,20 +5,19 @@ import { useTheme } from '@mui/material';
 import { LocalizationProvider, TimePicker } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import toast from 'react-hot-toast';
 
 import MyModal from '../modal/modal';
 import TrainerWeekViewItem from '../training-week-component-item/training-week-component-item';
 import { isOverlaping } from './state';
 import type { GroupEvent } from '@/controller/group/type/group-event.type';
-import type { Training } from '@/controller/training/type/training.type';
-import type { TrainingComponent } from '@/controller/training/type/training-component.type';
+import type { TrainingComponentWithTrainingId } from '@/controller/training/type/training-component.type';
 import { useGroup } from '@/store/group-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 
 export type WeekViewItemProps = {
-  item: Training | GroupEvent;
+  item: TrainingComponentWithTrainingId | GroupEvent;
 };
 
 export default function WeekViewItem(props: WeekViewItemProps) {
@@ -28,36 +27,18 @@ export default function WeekViewItem(props: WeekViewItemProps) {
   const { item } = props;
   const { group, setGroup, trainings, setTrainings } = useGroup();
 
-  const checkIsTraining = (item: Training | GroupEvent): item is Training => {
-    return (item as Training).components !== undefined;
-  };
   const checkIsTrainingComponent = (
-    item: TrainingComponent | GroupEvent
-  ): item is TrainingComponent => {
-    return (item as TrainingComponent).supersets !== undefined;
+    item: TrainingComponentWithTrainingId | GroupEvent
+  ): item is TrainingComponentWithTrainingId => {
+    return (item as TrainingComponentWithTrainingId).supersets !== undefined;
   };
 
-  const isTraining = checkIsTraining(item);
+  const isTrainingComponent = checkIsTrainingComponent(item);
 
-  const [updatedComponents] = useState<TrainingComponent[] | undefined>(
-    isTraining ? item.components : undefined
-  );
   const [selectedItem, setSelectedItem] = useState<
-    (TrainingComponent | GroupEvent) | null
+    (TrainingComponentWithTrainingId | GroupEvent) | null
   >(null);
   const [openModal, setOpenModal] = useState(false);
-
-  useEffect(() => {
-    if (!isTraining || !updatedComponents) return;
-
-    // only update current filtered trainings (in week view, max 7 of them are in array)
-    // and update all trainings and current training after training is saved
-    setTrainings((prev) =>
-      prev.map((t) =>
-        t.id === item.id ? { ...item, components: updatedComponents } : t
-      )
-    );
-  }, [updatedComponents]);
 
   return (
     <Box>
@@ -74,15 +55,13 @@ export default function WeekViewItem(props: WeekViewItemProps) {
               : undefined,
         }}
       >
-        {isTraining && item.components ? (
-          item.components.map((c) => (
-            <TrainerWeekViewItem
-              key={c.id}
-              item={c}
-              setSelectedItem={setSelectedItem}
-              setOpenModal={setOpenModal}
-            />
-          ))
+        {isTrainingComponent ? (
+          <TrainerWeekViewItem
+            key={item.id}
+            item={item}
+            setSelectedItem={setSelectedItem}
+            setOpenModal={setOpenModal}
+          />
         ) : (
           <TrainerWeekViewItem
             key={item.id}
@@ -214,7 +193,7 @@ export default function WeekViewItem(props: WeekViewItemProps) {
                     if (checkIsTrainingComponent(newItem)) {
                       setTrainings((prev) =>
                         prev.map((t) =>
-                          t.id === item.id
+                          t.id === newItem.trainingId
                             ? {
                                 ...t,
                                 components: t.components.map((c) =>
@@ -268,7 +247,7 @@ export default function WeekViewItem(props: WeekViewItemProps) {
                     if (checkIsTrainingComponent(newItem)) {
                       setTrainings((prev) =>
                         prev.map((t) =>
-                          t.id === item.id
+                          t.id === newItem.trainingId
                             ? {
                                 ...t,
                                 components: t.components.map((c) =>
@@ -311,7 +290,7 @@ export default function WeekViewItem(props: WeekViewItemProps) {
                 if (checkIsTrainingComponent(newItem)) {
                   setTrainings((prev) =>
                     prev.map((t) =>
-                      t.id === item.id
+                      t.id === newItem.trainingId
                         ? {
                             ...t,
                             components: t.components.map((c) =>

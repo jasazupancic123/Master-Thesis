@@ -26,6 +26,7 @@ import type { MuscleTip } from '@/controller/exercise/type/muscle-tip.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
+import { paintHeatmaps } from './state';
 
 const data = [
   { time: '', value: 0 },
@@ -48,7 +49,7 @@ type TooltipProps = {
   payload?: { payload: DataPoint; value: number }[];
 };
 
-const CustomTooltip: React.FC<TooltipProps> = ({ active, payload }) => {
+const CustomChartTooltip: React.FC<TooltipProps> = ({ active, payload }) => {
   if (active && payload && payload.length) {
     return (
       <div
@@ -117,53 +118,8 @@ export default function MuscleHeatmapView() {
   }, [exercises, heatmapLevel]);
 
   useEffect(() => {
-    // Limit to actual shapes
-    const resetContainers = [HEATMAP_FRONT_ID, HEATMAP_BACK_ID];
-
-    // Reset
-    resetContainers.forEach((id) => {
-      const container = document.getElementById(id);
-      if (container) {
-        container.querySelectorAll<HTMLElement>('*').forEach((el) => {
-          el.style.setProperty('fill', 'transparent', 'important');
-        });
-      }
-    });
-
-    // Paint
-    muscleLoads.forEach(([muscleType, muscleLoad]) => {
-      const color = getMuscleColor(muscleLoad);
-      if (!color) return;
-
-      // Find the actual shapes by id
-      const elements = document.querySelectorAll<HTMLElement>(
-        `[id="${muscleType}"]`
-      );
-      if (!elements.length) return;
-
-      elements.forEach((el) => {
-        // If your id is on a <g>, paint its children shapes
-        const isGroup = el.tagName.toLowerCase() === 'g';
-        const targets = isGroup ? el.querySelectorAll<HTMLElement>('*') : [el];
-
-        targets.forEach((t) => {
-          t.style.setProperty('fill', color, 'important');
-        });
-      });
-    });
+    paintHeatmaps(muscleLoads);
   }, [muscleLoads]);
-
-  const getMuscleColor = (load: number) => {
-    let color = undefined;
-    if (load >= 5 && load <= 10) color = HEATMAP_COLORS[0];
-    else if (load >= 11 && load <= 25) color = HEATMAP_COLORS[1];
-    else if (load >= 26 && load <= 35) color = HEATMAP_COLORS[2];
-    else if (load >= 36 && load <= 50) color = HEATMAP_COLORS[3];
-    else if (load >= 51 && load <= 55) color = HEATMAP_COLORS[4];
-    else if (load >= 56) color = HEATMAP_COLORS[5];
-
-    return color;
-  };
 
   return (
     <Box
@@ -280,7 +236,7 @@ export default function MuscleHeatmapView() {
             <CartesianGrid strokeDasharray="3 3" stroke="#333" />
             <XAxis dataKey="time" stroke="#aaa" />
             <YAxis stroke="#aaa" />
-            <Tooltip content={<CustomTooltip />} />
+            <Tooltip content={<CustomChartTooltip />} />
 
             <Area
               type="monotone"

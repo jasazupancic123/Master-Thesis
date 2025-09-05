@@ -116,7 +116,7 @@ export default function TrainerYearView() {
         >
           <Box
             width="100%"
-            height={DIVIDER_HEIGHT}
+            minHeight={DIVIDER_HEIGHT}
             maxWidth="100%"
             display="flex"
             flexDirection="column"

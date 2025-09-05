@@ -26,7 +26,24 @@ export default function DraggableSelect({
     : { cursor: selectedEventType ? 'grab' : undefined };
 
   return (
-    <Box ref={setNodeRef} {...attributes} {...listeners} sx={style}>
+    <Box
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      sx={{
+        ...style,
+        touchAction: selectedEventType ? 'none' : 'auto', // 👈 key line
+        WebkitUserSelect: 'none',
+        userSelect: 'none',
+        WebkitTapHighlightColor: 'transparent',
+        cursor: selectedEventType
+          ? isDragging
+            ? 'grabbing'
+            : 'grab'
+          : undefined,
+        transform: transform ? CSS.Translate.toString(transform) : undefined,
+      }}
+    >
       {children}
     </Box>
   );
