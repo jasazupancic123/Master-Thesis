@@ -5,14 +5,17 @@ import { useTheme } from '@mui/material';
 import { CommonService } from '@/common/service/common.service';
 import type { SetState } from '@/common/type/state.type';
 import type { GroupEvent } from '@/controller/group/type/group-event.type';
-import type { TrainingComponent } from '@/controller/training/type/training-component.type';
+import type { TrainingComponentWithTrainingId } from '@/controller/training/type/training-component.type';
 import { useScreenSize } from '@/store/screen-size-provider';
+import { getComponentIcon } from '@/common/service/util/icons.util';
 
 const commonService = CommonService.instance;
 
 interface TrainerWeekViewItemProps {
-  item: TrainingComponent | GroupEvent;
-  setSelectedItem: SetState<(TrainingComponent | GroupEvent) | null>;
+  item: TrainingComponentWithTrainingId | GroupEvent;
+  setSelectedItem: SetState<
+    (TrainingComponentWithTrainingId | GroupEvent) | null
+  >;
   setOpenModal: SetState<boolean>;
 }
 
@@ -23,9 +26,9 @@ export default function TrainerWeekViewItem(props: TrainerWeekViewItemProps) {
   const { item, setSelectedItem, setOpenModal } = props;
 
   const checkIsComponent = (
-    item: TrainingComponent | GroupEvent
-  ): item is TrainingComponent => {
-    return (item as TrainingComponent).supersets !== undefined;
+    item: TrainingComponentWithTrainingId | GroupEvent
+  ): item is TrainingComponentWithTrainingId => {
+    return (item as TrainingComponentWithTrainingId).supersets !== undefined;
   };
 
   const isComponent = checkIsComponent(item);
@@ -33,7 +36,7 @@ export default function TrainerWeekViewItem(props: TrainerWeekViewItemProps) {
   // MOBILE DESIGN
   if (screenSize.isMobile || screenSize.isSmallTablet) {
     const IconComponent = isComponent
-      ? commonService.navigation.getComponentIcon(item.component?.name || '')
+      ? getComponentIcon(item.component?.name || '')
       : undefined;
     return (
       <Box
@@ -56,7 +59,7 @@ export default function TrainerWeekViewItem(props: TrainerWeekViewItemProps) {
           {commonService.date.format(item.from, {}, 'HH:mm')}
         </Typography>
         {isComponent ? (
-          IconComponent && <IconComponent sx={{ fontSize: 16 }} />
+          IconComponent && <IconComponent style={{ height: 16, width: 16 }} />
         ) : (
           <Event sx={{ fontSize: 16 }} />
         )}

@@ -16,6 +16,7 @@ import type { Cycle } from '@/controller/group/type/cycle.type';
 import type { Group } from '@/controller/group/type/group.type';
 import { useGroup } from '@/store/group-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
+import MobileDoubleTextItems from '../mobile-double-text-items/mobile-double-text-items';
 
 dayjs.extend(dayOfYear);
 
@@ -199,56 +200,17 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
         {screenSize.isSmallerThanLaptop ? (
           <Box width="100%" display="flex" flexDirection="column">
             <HorizontalItems />
-            <Box display="flex" width="40%" sx={{ mx: 'auto' }}>
-              <Box width="50%" mt={0.75}>
-                <Box display="flex" flexDirection="column">
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      fontSize: '12px',
-                      fontWeight: 400,
-                      textAlign: 'center',
-                    }}
-                  >
-                    Active cycle
-                  </Typography>
-                  <Typography
-                    textTransform="uppercase"
-                    sx={{
-                      fontSize: '16px',
-                      fontWeight: 600,
-                      textAlign: 'center',
-                    }}
-                  >
-                    {activeCycle ? activeCycle.name : 'No active cycle'}
-                  </Typography>
-                </Box>
-              </Box>
-              <Box width="50%" mt={0.75}>
-                <Box display="flex" flexDirection="column">
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      fontSize: '12px',
-                      fontWeight: 400,
-                      textAlign: 'center',
-                    }}
-                  >
-                    Group
-                  </Typography>
-                  <Typography
-                    textTransform="uppercase"
-                    sx={{
-                      fontSize: '16px',
-                      fontWeight: 600,
-                      textAlign: 'center',
-                    }}
-                  >
-                    {group.name}
-                  </Typography>
-                </Box>
-              </Box>
-            </Box>
+
+            <MobileDoubleTextItems
+              item1={{
+                label: 'Active cycle',
+                value: activeCycle ? activeCycle.name : 'No active cycle',
+              }}
+              item2={{
+                label: 'Group',
+                value: group.name,
+              }}
+            />
           </Box>
         ) : (
           <>
@@ -338,7 +300,11 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
             borderRadius: '50%',
             p: 0.3,
             mr: 1,
-            mt: screenSize.isMobile ? 2.3 : 2.5,
+            mt: screenSize.isMobile
+              ? 0
+              : screenSize.isSmallerThanLaptop
+                ? -0.1
+                : 2.7,
             '&:hover': { backgroundColor: 'primary.main' },
           }}
           onClick={() => {
@@ -388,7 +354,11 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
           flexDirection="column"
           width="100%"
           sx={{
-            mt: screenSize.isMobile ? 4.45 : 5.2,
+            mt: screenSize.isMobile
+              ? 2
+              : screenSize.isSmallerThanLaptop
+                ? 2.5
+                : 5.2,
           }}
         >
           {/* Slider */}

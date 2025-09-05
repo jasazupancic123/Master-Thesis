@@ -18,6 +18,11 @@ import type { TrainingComponent } from '@/controller/training/type/training-comp
 import { useAuth } from '@/store/auth-provider';
 import { useMain } from '@/store/main-provider';
 import { useTraining } from '@/store/training-provider';
+import ComponentsAvatar from '../components-avatar/components-avatar';
+import { CommonService } from '@/common/service/common.service';
+import { getComponentIcon } from '@/common/service/util/icons.util';
+
+const commonService = CommonService.instance;
 
 type AthleteTrainingCardProps = {
   training: Training;
@@ -153,13 +158,7 @@ export default function AthleteTrainingCard(props: AthleteTrainingCardProps) {
         >
           {/* Group name, cycle name, date */}
           <Box display="flex" alignItems="center" gap={1}>
-            <Avatar
-              src={training.institution?.imageUrl || ''}
-              sx={{
-                width: 50,
-                height: 50,
-              }}
-            />
+            <ComponentsAvatar size={50} components={training.components} />
             <Box display="flex" flexDirection="column">
               <Typography
                 sx={{

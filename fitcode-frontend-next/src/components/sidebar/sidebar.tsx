@@ -17,10 +17,17 @@ import * as React from 'react';
 import { CommonService } from '@/common/service/common.service';
 import type { AuthContextType } from '@/common/type/context.type';
 import { useAuth } from '@/store/auth-provider';
+import { useAthlete } from '@/store/athlete-provider';
+import { LINKS_SIDEBAR } from '@/common/constant/navigation.constant';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
 
 const commonService = CommonService.instance;
 
 export default function Sidebar() {
+  const athleteContext = useAthlete();
+
+  const { filter, setFilter } = athleteContext || {};
+
   const [open, setOpen] = React.useState(false);
   const { role, logout } = useAuth() as AuthContextType;
   const toggle = (newOpen: boolean) => () => setOpen(newOpen);
@@ -38,7 +45,21 @@ export default function Sidebar() {
           .getSidebarLinksByUserRole(role[0])
           .map(({ href, label }, i) => (
             <ListItem key={i} disablePadding>
-              <Link href={href} passHref style={{ width: '100%' }}>
+              <Link
+                href={href}
+                passHref
+                style={{ width: '100%' }}
+                onClick={() => {
+                  if (!filter || !setFilter) return;
+
+                  const newValue = Object.values(
+                    LINKS_SIDEBAR[UserRole.ATHLETE]
+                  )[i];
+                  if (!newValue) return;
+
+                  setFilter(newValue);
+                }}
+              >
                 <ListItemButton sx={{ width: '100%' }}>
                   <ListItemText primary={label} />
                 </ListItemButton>

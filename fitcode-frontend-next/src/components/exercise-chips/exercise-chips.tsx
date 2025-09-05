@@ -13,6 +13,7 @@ import type {
 import type { Target } from '@/controller/target/type/target.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { useScreenSize } from '@/store/screen-size-provider';
+import { getComponentIcon } from '@/common/service/util/icons.util';
 
 const commonService = CommonService.instance;
 
@@ -66,7 +67,7 @@ export default function ExerciseChips(props: ExerciseChipsProps) {
       }}
     >
       {components.map((c, i) => {
-        const IconComponent = commonService.navigation.getComponentIcon(c.name);
+        const IconComponent = getComponentIcon(c.name);
 
         const targets = c.targets || [];
 
@@ -147,8 +148,9 @@ export default function ExerciseChips(props: ExerciseChipsProps) {
               >
                 {IconComponent && (
                   <IconComponent
-                    sx={{
-                      fontSize: screenSize.isMobile ? 20 : 30,
+                    style={{
+                      height: screenSize.isMobile ? 20 : 30,
+                      width: screenSize.isMobile ? 20 : 30,
                     }}
                   />
                 )}

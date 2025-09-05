@@ -296,7 +296,7 @@ export default function TrainingCard(props: TrainingCardProps) {
                 open={datePickerOpen}
                 value={null}
                 onChange={(newDate) => {
-                  if (!newDate) return;
+                  if (!newDate || !selectedPeriod) return;
                   setJustClickedOnCopyDate(true);
                   handleCopyTraining(
                     { newDate, period: selectedPeriod },
@@ -344,7 +344,7 @@ export default function TrainingCard(props: TrainingCardProps) {
               <DatePicker
                 value={null}
                 onChange={(newDate) => {
-                  if (!newDate) return;
+                  if (!newDate || !selectedPeriod) return;
 
                   handleCopyTraining(
                     { newDate, period: selectedPeriod },

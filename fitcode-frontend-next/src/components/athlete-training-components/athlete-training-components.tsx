@@ -18,6 +18,7 @@ import type { TrainingComponent } from '@/controller/training/type/training-comp
 import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
 import { useAuth } from '@/store/auth-provider';
 import { useTraining } from '@/store/training-provider';
+import { getComponentIcon } from '@/common/service/util/icons.util';
 
 const commonService = CommonService.instance;
 
@@ -86,9 +87,7 @@ export default function AthleteTrainingComponents(
           }}
         >
           {components.map((component) => {
-            const IconComponent = commonService.navigation.getComponentIcon(
-              component.id
-            );
+            const IconComponent = getComponentIcon(component.id);
 
             return (
               <Box key={component.id} minWidth="48px">

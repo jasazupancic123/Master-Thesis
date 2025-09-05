@@ -1,6 +1,6 @@
 'use client';
 import { Close } from '@mui/icons-material';
-import { Box, IconButton, Typography, useTheme } from '@mui/material';
+import { Box, IconButton, Slider, Typography, useTheme } from '@mui/material';
 import { useCallback, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 
@@ -24,7 +24,7 @@ import { useMain } from '@/store/main-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
-type SvgC = React.ForwardRefExoticComponent<
+export type SvgC = React.ForwardRefExoticComponent<
   React.SVGProps<SVGSVGElement> & React.RefAttributes<SVGSVGElement>
 >;
 
@@ -35,14 +35,22 @@ interface MuscleMapWithTooltipProps {
   heatmapLevel: number;
   tip: MuscleTip;
   setTip: SetState<MuscleTip>;
+  athleteAnthropometry?: boolean;
+  muscleLoads?: [string, number][];
+  setMuscleLoads?: SetState<[string, number][]>;
 }
 
 export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
   const theme = useTheme();
   const screenSize = useScreenSize();
 
-  const { setTrainings } = useGroup();
   const { exercises: allExercises } = useMain();
+
+  const groupContext = useGroup();
+  const trainerDayViewContext = useTrainerDayViewContext();
+
+  const { setTrainings } = groupContext || {};
+
   const {
     training,
     setTraining,
@@ -52,9 +60,19 @@ export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
     setSupersets,
     selectedSubgroup,
     setSelectedSubgroup,
-  } = useTrainerDayViewContext();
+  } = trainerDayViewContext || {};
 
-  const { front, Svg, exercisesInComponent, heatmapLevel, tip, setTip } = props;
+  const {
+    front,
+    Svg,
+    exercisesInComponent,
+    heatmapLevel,
+    tip,
+    athleteAnthropometry,
+    setTip,
+    muscleLoads,
+    setMuscleLoads,
+  } = props;
 
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -79,7 +97,13 @@ export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
     // 1) nearest filled <g>, or
     // 2) the hovered element itself if it has explicit fill,
     // 3) otherwise nothing (we'll maybe hide below).
-    const group = findFilledGroup(raw, heatmapLevel);
+    const group = findFilledGroup(
+      raw,
+      heatmapLevel,
+      athleteAnthropometry && muscleLoads
+        ? muscleLoads.map(([id]) => id)
+        : undefined
+    );
     const target =
       group ??
       (raw instanceof SVGGraphicsElement && hasExplicitFill(raw) ? raw : null);
@@ -210,18 +234,25 @@ export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
       setTip((prev) => {
         // If we are still on the same muscle, only update position to avoid re-mount
         if (prev.show && prev.id === key) {
-          if (prev.x === x && prev.y === y) return prev; // no-op
-          return { ...prev, x, y };
+          if (prev.x === x && prev.y === y) {
+            return prev;
+          } // no-op
+          return {
+            ...prev,
+            x: athleteAnthropometry ? prev.x : x,
+            y: athleteAnthropometry ? prev.y : y,
+          };
         }
 
-        const { componentExercises, possibleExercises } =
-          computeExercises(muscleIds);
+        const { componentExercises, possibleExercises } = athleteAnthropometry
+          ? { componentExercises: undefined, possibleExercises: undefined }
+          : computeExercises(muscleIds);
 
         // New muscle → compute exercises once
         return {
           show: true,
-          x,
-          y,
+          x: x === 0 && athleteAnthropometry ? prev.x : x,
+          y: y === 0 && athleteAnthropometry ? prev.y : y,
           id: key,
           name: muscleName,
           componentExercises,
@@ -257,9 +288,40 @@ export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
         onMouseLeave={handleMouseLeave}
         onFocus={handleFocus}
         onBlur={handleBlur}
-        onClick={() => {
+        onClick={(e: React.MouseEvent<SVGSVGElement>) => {
+          if (athleteAnthropometry && muscleLoads) {
+            const raw = e.target as Element;
+            const group = findFilledGroup(
+              raw,
+              heatmapLevel,
+              muscleLoads.map(([id]) => id)
+            );
+            const target =
+              group ??
+              (raw instanceof SVGGraphicsElement && hasExplicitFill(raw)
+                ? raw
+                : null);
+
+            if (!target) return;
+
+            showForEl(target!);
+            setTip((t) => ({
+              ...t,
+              show: true,
+              focus: true,
+            }));
+
+            return;
+          }
+
           if (!tip.show) return;
-          setTip((t) => ({ ...t, focus: true, x: 0, y: 0 }));
+
+          setTip((t) => ({
+            ...t,
+            focus: true,
+            x: 0,
+            y: 0,
+          }));
         }}
         role="img"
         style={{
@@ -268,8 +330,7 @@ export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
           cursor: 'pointer',
         }}
       />
-
-      {tip.show && (
+      {tip && tip.show && (
         <Box
           id="muscle-tip"
           display="flex"
@@ -278,6 +339,7 @@ export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
           justifyContent="flex-start"
           sx={{
             width: 'fit-content',
+            minWidth: athleteAnthropometry ? 200 : undefined,
             position: 'absolute',
             left: screenSize.isMobile ? (front ? undefined : '0%') : tip.x,
             right: screenSize.isMobile && front ? '0%' : undefined,
@@ -320,153 +382,212 @@ export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
             gap={1}
             sx={{
               maxHeight: 300,
-              overflowY: 'auto',
+              overflowY: !athleteAnthropometry ? 'auto' : undefined,
             }}
           >
-            <Box
-              maxWidth="50%"
-              display="flex"
-              flexDirection="column"
-              alignItems="center"
-              sx={{
-                minWidth: screenSize.isUltraSmall
-                  ? 80
-                  : screenSize.isMobile
-                    ? 100
-                    : 150,
-                maxWidth: screenSize.isUltraSmall ? 80 : undefined,
-              }}
-            >
-              <Typography fontSize={14} noWrap>
-                In training
-              </Typography>
-              <Box
-                width="100%"
-                display="flex"
-                flexDirection="column"
-                alignItems="flex-start"
-              >
-                {tip.componentExercises.map((ex) => (
-                  <Typography key={ex.id} fontSize={14} textAlign="start">
-                    • {ex.exercise?.name}
+            {!athleteAnthropometry &&
+            tip.possibleExercises &&
+            tip.componentExercises ? (
+              <>
+                <Box
+                  maxWidth="50%"
+                  display="flex"
+                  flexDirection="column"
+                  alignItems="center"
+                  sx={{
+                    minWidth: screenSize.isUltraSmall
+                      ? 80
+                      : screenSize.isMobile
+                        ? 100
+                        : 150,
+                    maxWidth: screenSize.isUltraSmall ? 80 : undefined,
+                  }}
+                >
+                  <Typography fontSize={14} noWrap>
+                    In training
                   </Typography>
-                ))}
-              </Box>
-            </Box>
-
-            <Box
-              maxWidth="50%"
-              display="flex"
-              flexDirection="column"
-              alignItems="center"
-              sx={{
-                minWidth: screenSize.isUltraSmall
-                  ? 80
-                  : screenSize.isMobile
-                    ? 100
-                    : 150,
-                maxWidth: screenSize.isUltraSmall ? 80 : undefined,
-              }}
-            >
-              <Typography fontSize={14} noWrap>
-                Suggested
-              </Typography>
-              <Box
-                width="100%"
-                display="flex"
-                flexDirection="column"
-                alignItems="flex-start"
-              >
-                {tip.possibleExercises.map((ex) => (
                   <Box
                     width="100%"
-                    key={ex.id}
-                    sx={{
-                      '&:hover': {
-                        border: `1px solid ${theme.palette.text.primary}`,
-                        borderRadius: 1,
-                        p: 0.1,
-                      },
-                      cursor: 'pointer',
-                    }}
-                    onClick={() => {
-                      if (!training || !component) return;
-
-                      const setsRange = component.method?.attributes
-                        ?.map((a) =>
-                          a.options?.find((o) => o.field === VolWorkSetType.Set)
-                        )
-                        .find(Boolean);
-
-                      const trainingExercises =
-                        getTrainingExercisesFromExercises(
-                          [ex.id],
-                          allExercises,
-                          component,
-                          component.method,
-                          setsRange?.min,
-                          setsRange?.max
-                        );
-
-                      if (trainingExercises.length !== 1) {
-                        toast.error('Error adding exercise');
-                        return;
-                      }
-
-                      const trainingExercise = trainingExercises[0];
-
-                      try {
-                        handleAddExerciseToSupersetComponent(
-                          {
-                            selectedExercisesIds: [ex.id],
-                            allExercises,
-                            minSets: setsRange?.min,
-                            maxSets: setsRange?.max,
-                          },
-                          {
-                            training,
-                            setTraining,
-                            setTrainings,
-                            component,
-                            setComponent,
-                            supersets,
-                            setSupersets,
-                            setOpenAddExerciseModal: () => {},
-                            setDetectedChanges: () => {},
-                            setSearch: () => {},
-                            selectedSubgroup,
-                            setSelectedSubgroup,
-                            setPagination: () => {},
-                          }
-                        );
-
-                        tip.possibleExercises = tip.possibleExercises.filter(
-                          (e) => e.id !== ex.id
-                        );
-
-                        tip.componentExercises.push(trainingExercise);
-                      } catch (e) {
-                        toast.error('Error adding exercise');
-                      }
-                    }}
+                    display="flex"
+                    flexDirection="column"
+                    alignItems="flex-start"
                   >
-                    <Typography fontSize={14} textAlign="start">
-                      • {ex.name}
-                    </Typography>
+                    {tip.componentExercises.map((ex) => (
+                      <Typography key={ex.id} fontSize={14} textAlign="start">
+                        • {ex.exercise?.name}
+                      </Typography>
+                    ))}
                   </Box>
-                ))}
+                </Box>
+
+                <Box
+                  maxWidth="50%"
+                  display="flex"
+                  flexDirection="column"
+                  alignItems="center"
+                  sx={{
+                    minWidth: screenSize.isUltraSmall
+                      ? 80
+                      : screenSize.isMobile
+                        ? 100
+                        : 150,
+                    maxWidth: screenSize.isUltraSmall ? 80 : undefined,
+                  }}
+                >
+                  <Typography fontSize={14} noWrap>
+                    Suggested
+                  </Typography>
+                  <Box
+                    width="100%"
+                    display="flex"
+                    flexDirection="column"
+                    alignItems="flex-start"
+                  >
+                    {tip.possibleExercises.map((ex) => (
+                      <Box
+                        width="100%"
+                        key={ex.id}
+                        sx={{
+                          '&:hover': {
+                            border: `1px solid ${theme.palette.text.primary}`,
+                            borderRadius: 1,
+                            p: 0.1,
+                          },
+                          cursor: 'pointer',
+                        }}
+                        onClick={() => {
+                          if (
+                            !training ||
+                            !component ||
+                            !tip.possibleExercises ||
+                            !tip.componentExercises
+                          )
+                            return;
+
+                          const setsRange = component.method?.attributes
+                            ?.map((a) =>
+                              a.options?.find(
+                                (o) => o.field === VolWorkSetType.Set
+                              )
+                            )
+                            .find(Boolean);
+
+                          const trainingExercises =
+                            getTrainingExercisesFromExercises(
+                              [ex.id],
+                              allExercises,
+                              component,
+                              component.method,
+                              setsRange?.min,
+                              setsRange?.max
+                            );
+
+                          if (trainingExercises.length !== 1) {
+                            toast.error('Error adding exercise');
+                            return;
+                          }
+
+                          const trainingExercise = trainingExercises[0];
+
+                          try {
+                            handleAddExerciseToSupersetComponent(
+                              {
+                                selectedExercisesIds: [ex.id],
+                                allExercises,
+                                minSets: setsRange?.min,
+                                maxSets: setsRange?.max,
+                              },
+                              {
+                                training,
+                                setTraining,
+                                setTrainings,
+                                component,
+                                setComponent,
+                                supersets,
+                                setSupersets,
+                                setOpenAddExerciseModal: () => {},
+                                setDetectedChanges: () => {},
+                                setSearch: () => {},
+                                selectedSubgroup,
+                                setSelectedSubgroup,
+                                setPagination: () => {},
+                              }
+                            );
+
+                            tip.possibleExercises =
+                              tip.possibleExercises.filter(
+                                (e) => e.id !== ex.id
+                              );
+
+                            tip.componentExercises.push(trainingExercise);
+                          } catch (e) {
+                            toast.error('Error adding exercise');
+                          }
+                        }}
+                      >
+                        <Typography fontSize={14} textAlign="start">
+                          • {ex.name}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                </Box>
+              </>
+            ) : (
+              <Box
+                width="100%"
+                display="flex"
+                flexDirection="column"
+                alignItems="center"
+                sx={{
+                  px: 1,
+                }}
+              >
+                <Typography fontSize={14}>Pain level</Typography>
+                {muscleLoads &&
+                  setMuscleLoads &&
+                  muscleLoads.find(([id]) => id === tip.id) && (
+                    <Slider
+                      valueLabelDisplay="auto"
+                      value={
+                        muscleLoads.find(([id]) => id === tip.id)?.[1] ?? 5
+                      }
+                      onChange={(_, value) => {
+                        if (!setMuscleLoads || !tip.id) return;
+                        const v = value as number;
+                        setMuscleLoads((ml) => {
+                          const existing = ml.find(([id]) => id === tip.id);
+                          if (existing) {
+                            existing[1] = v;
+                            return [...ml];
+                          }
+                          if (!tip.id) return ml;
+                          return [...ml, [tip.id, v]];
+                        });
+                      }}
+                      step={1}
+                      min={0}
+                      max={10}
+                      sx={{
+                        width: 200,
+                        color: theme.palette.primary.main,
+                      }}
+                    />
+                  )}
               </Box>
-            </Box>
+            )}
           </Box>
 
-          <Typography
-            noWrap
-            textAlign="center"
-            fontSize={10}
-            color={theme.palette.text.secondary}
-          >
-            {!tip.focus ? 'Click to focus' : 'Click exercise to add'}
-          </Typography>
+          {!athleteAnthropometry && (
+            <Typography
+              noWrap
+              textAlign="center"
+              fontSize={10}
+              color={theme.palette.text.secondary}
+            >
+              {!tip.focus ? 'Click to focus' : 'Click exercise to add'}
+            </Typography>
+          )}
         </Box>
       )}
     </Box>

@@ -1,12 +1,3 @@
-import type { SvgIconComponent } from '@mui/icons-material';
-import AccessibilityIcon from '@mui/icons-material/Accessibility';
-import AcUnit from '@mui/icons-material/AcUnit';
-import DirectionsRunIcon from '@mui/icons-material/DirectionsRun';
-import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
-import LocalFireDepartment from '@mui/icons-material/LocalFireDepartment';
-import SportsGymnasticsIcon from '@mui/icons-material/SportsGymnastics';
-import SportsMartialArtsIcon from '@mui/icons-material/SportsMartialArts';
-import TimerIcon from '@mui/icons-material/Timer';
 import { redirect } from 'next/navigation';
 
 import {
@@ -24,29 +15,6 @@ export class NavigationUtil {
 
   getFilenameFromPath(path: string): string {
     return path.split('/').pop()!;
-  }
-
-  getComponentIcon(componentName: string): SvgIconComponent | null {
-    switch (componentName.toLowerCase()) {
-      case 'warmup':
-        return LocalFireDepartment;
-      case 'cooldown':
-        return AcUnit;
-      case 'coordination':
-        return SportsGymnasticsIcon;
-      case 'endurance':
-        return DirectionsRunIcon;
-      case 'other':
-        return AccessibilityIcon;
-      case 'rom':
-        return SportsMartialArtsIcon;
-      case 'speed':
-        return TimerIcon;
-      case 'strength':
-        return FitnessCenterIcon;
-      default:
-        return null;
-    }
   }
 
   handleErrorRedirectToSignInPage(e: Error) {

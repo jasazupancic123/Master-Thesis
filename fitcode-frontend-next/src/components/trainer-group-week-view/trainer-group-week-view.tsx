@@ -4,6 +4,7 @@ import {
   closestCenter,
   DndContext,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
@@ -82,11 +83,17 @@ export default function TrainerWeekView() {
   }, [cycle, index]);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 0, tolerance: 5 },
+    })
   );
 
   const disabledSensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 999999 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 999999 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 999999, tolerance: 999999 },
+    })
   );
 
   return (

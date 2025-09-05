@@ -12,6 +12,7 @@ import type { Week } from '@/controller/group/type/cycle.type';
 import type { Group } from '@/controller/group/type/group.type';
 import type { GroupEvent } from '@/controller/group/type/group-event.type';
 import type { Training } from '@/controller/training/type/training.type';
+import { TrainingComponentWithTrainingId } from '@/controller/training/type/training-component.type';
 
 const blurSelect = (selectRef: RefObject<HTMLDivElement | null>) => {
   if (selectRef.current) {
@@ -30,14 +31,16 @@ export const getAmPmItems = (
     group: Group;
   }
 ): {
-  amItems: (Training | GroupEvent)[];
-  pmItems: (Training | GroupEvent)[];
+  amItems: (TrainingComponentWithTrainingId | GroupEvent)[];
+  pmItems: (TrainingComponentWithTrainingId | GroupEvent)[];
 } => {
   const { group, trainings, commonService } = state;
 
   const day = dayjs(date);
-  const filteredItems: (Training | GroupEvent)[] = [
-    ...trainings,
+  const filteredItems: (TrainingComponentWithTrainingId | GroupEvent)[] = [
+    ...trainings
+      .map((t) => t.components.map((c) => ({ ...c, trainingId: t.id })))
+      .flat(),
     ...(group.events || []),
   ].filter((t) =>
     commonService.date.isBetween(day, dayjs(t.from), dayjs(t.to))
@@ -47,16 +50,10 @@ export const getAmPmItems = (
 
   const amItems = filteredItems
     .filter((t) => dayjs(t.from).hour() < 12)
-    .sort(
-      (a, b) =>
-        dayjs(a.from).get('millisecond') - dayjs(b.from).get('millisecond')
-    );
+    .sort((a, b) => dayjs(a.from).valueOf() - dayjs(b.from).valueOf());
   const pmItems = filteredItems
     .filter((t) => dayjs(t.from).hour() >= 12)
-    .sort(
-      (a, b) =>
-        dayjs(a.from).get('millisecond') - dayjs(b.from).get('millisecond')
-    );
+    .sort((a, b) => dayjs(a.from).valueOf() - dayjs(b.from).valueOf());
 
   return { amItems, pmItems };
 };

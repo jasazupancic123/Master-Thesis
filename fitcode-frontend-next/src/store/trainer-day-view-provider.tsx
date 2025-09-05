@@ -53,8 +53,8 @@ export function TrainerDayViewProvider(
   const [day, setDay] = useState<Day>(commonService.date.getToday());
 
   // check if it's after 12:00, then set to PM, else AM
-  const [selectedPeriod, setSelectedPeriod] = useState<'AM' | 'PM'>(
-    new Date().getHours() >= 12 ? 'PM' : 'AM'
+  const [selectedPeriod, setSelectedPeriod] = useState<'AM' | 'PM' | undefined>(
+    undefined
   );
 
   const [training, setTraining] = useState<Training | undefined>();

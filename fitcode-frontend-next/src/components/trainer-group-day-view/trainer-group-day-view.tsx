@@ -38,11 +38,12 @@ export default function TrainerDayView() {
   const {
     group,
     cycle,
+    setCycle,
+    trainings,
     setTrainings,
     setDateFrom,
     setDateTo,
     setDetectedChanges,
-    setCycle,
   } = useGroup();
 
   const {
@@ -119,12 +120,14 @@ export default function TrainerDayView() {
   }, [component]);
 
   useEffect(() => {
+    if (!selectedPeriod) return;
+
     let from: Date, to: Date;
     if (selectedPeriod === 'AM') {
       from = day.date.startOf('day').toDate();
       to = day.date.startOf('day').add(12, 'hours').toDate();
     } else {
-      from = day.date.startOf('day').add(12, 'hours').toDate();
+      from = day.date.startOf('day').add(11, 'hours').toDate();
       to = day.date.endOf('day').toDate();
     }
 
@@ -159,7 +162,7 @@ export default function TrainerDayView() {
       undefined,
       undefined
     );
-  }, [day, selectedPeriod]);
+  }, [selectedPeriod]);
 
   useEffect(() => {
     // fetch only for selectedAthlete, group avg is already on training itself
