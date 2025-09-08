@@ -20,6 +20,7 @@ import TrainingMembers from '@/components/training-members/training-members';
 import { COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE } from '@/controller/training/constant/completed-future-workloads-default-value.constant';
 import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
+import { useAuthenticatedAuth } from '@/store/auth-provider';
 import { useGroup } from '@/store/group-provider';
 import { useMain } from '@/store/main-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
@@ -34,6 +35,8 @@ export default function TrainerDayView() {
   const screenSize = useScreenSize();
   const router = useRouter();
 
+  const auth = useAuthenticatedAuth();
+  const controller = TrainingController.getInstance(auth.token);
   const { components, exercises, methods } = useMain();
   const {
     group,
@@ -131,7 +134,7 @@ export default function TrainerDayView() {
     handleApiRequest(
       router,
       () =>
-        TrainingController.findAll({
+        controller.findAll({
           groupId: group.id,
           cycleId: cycle?.id,
           from,
@@ -166,6 +169,8 @@ export default function TrainerDayView() {
     setSelectedAthleteWorkloads(COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE);
   }, [selectedAthlete]);
 
+  if (!group || !cycle) return null;
+
   return (
     <Box width="100%" position="relative">
       {!screenSize.isSmallerThanLaptop && (
@@ -183,7 +188,7 @@ export default function TrainerDayView() {
             <IconButton
               sx={{ mx: 0, cursor: 'pointer' }}
               onClick={() =>
-                handleUpdateMultipleTrainings({
+                handleUpdateMultipleTrainings(controller, {
                   setTrainings,
                   training,
                   setTraining,
@@ -257,7 +262,7 @@ export default function TrainerDayView() {
                   m: 0,
                 }}
                 onClick={() => {
-                  handleUpdateMultipleTrainings({
+                  handleUpdateMultipleTrainings(controller, {
                     setTrainings,
                     training,
                     setTraining,

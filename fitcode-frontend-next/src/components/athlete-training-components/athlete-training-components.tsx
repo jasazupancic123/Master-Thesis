@@ -16,7 +16,8 @@ import { TrainingService } from '@/controller/training/training.service';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
-import { useAuth } from '@/store/auth-provider';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
+import { useAuthenticatedAuth, withAuth } from '@/store/auth-provider';
 import { useTraining } from '@/store/training-provider';
 
 const commonService = CommonService.instance;
@@ -33,9 +34,9 @@ interface AthleteTrainingComponentsProps {
   timeout: number;
 }
 
-export default function AthleteTrainingComponents(
-  props: AthleteTrainingComponentsProps
-) {
+export default withAuth(AthleteTrainingComponents, [UserRole.ATHLETE]);
+
+function AthleteTrainingComponents(props: AthleteTrainingComponentsProps) {
   const {
     training,
     components,
@@ -49,18 +50,11 @@ export default function AthleteTrainingComponents(
   } = props;
 
   const { setTrainingInProgress, setView } = useTraining();
-  const { user } = useAuth();
+  const { token, user } = useAuthenticatedAuth();
+  const controller = TrainingController.getInstance(token);
 
   const theme = useTheme();
   const router = useRouter();
-
-  if (!user) {
-    return (
-      <Typography textAlign="center" sx={{ fontSize: 12 }}>
-        Please log in to view training components.
-      </Typography>
-    );
-  }
 
   return (
     <Box
@@ -203,8 +197,7 @@ export default function AthleteTrainingComponents(
 
           handleApiRequest(
             router,
-            () =>
-              TrainingController.getPrescribedTraining(training.id, user.uid),
+            () => controller.getPrescribedTraining(training.id, user.uid),
             (training) => {
               setTrainingInProgress({
                 training: training,

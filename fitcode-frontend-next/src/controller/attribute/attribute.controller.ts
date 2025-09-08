@@ -1,10 +1,20 @@
+import { BaseController } from '../base.controller';
 import type { Attribute } from './type/attribute.type';
-import { CommonService } from '@/common/service/common.service';
 
-const api = CommonService.instance.api;
+export class AttributeController extends BaseController {
+  private static instance: AttributeController;
 
-export class AttributeController {
-  static async findAll() {
-    return api.get<Attribute[]>('/attribute', {});
+  private constructor() {
+    super('/attribute');
+  }
+
+  static getInstance(token: string) {
+    if (!this.instance) this.instance = new AttributeController();
+    this.instance.setToken(token);
+    return this.instance;
+  }
+
+  async findAll() {
+    return this.api.get<Attribute[]>('/', { token: this.getToken() });
   }
 }

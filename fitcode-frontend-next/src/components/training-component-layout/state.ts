@@ -6,12 +6,13 @@ import { handleApiRequest } from '@/common/type/state.type';
 import type { Component } from '@/controller/component/type/component.type';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
 import type { Method } from '@/controller/method/type/method.type';
-import { TrainingController } from '@/controller/training/training.controller';
+import type { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 
 export async function handleCopyComponentApiRequest(
+  controller: TrainingController,
   input: {
     training: Training;
     trainingInPeriod: Training;
@@ -33,7 +34,7 @@ export async function handleCopyComponentApiRequest(
   handleApiRequest(
     router,
     () =>
-      TrainingController.copyComponent({
+      controller.copyComponent({
         copyFromTrainingId: training.id,
         copyToTrainingId: trainingInPeriod.id,
         componentId: component.id,

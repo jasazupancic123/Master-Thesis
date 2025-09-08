@@ -3,7 +3,6 @@ import dayjs from 'dayjs';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
 
-import type { AddTrainingComponents } from './type';
 import { CommonService } from '@/common/service/common.service';
 import type { SetState, SetStateNullable } from '@/common/type/state.type';
 import { handleApiRequest } from '@/common/type/state.type';
@@ -13,12 +12,13 @@ import type { Cycle } from '@/controller/group/type/cycle.type';
 import type { Group } from '@/controller/group/type/group.type';
 import type { Method } from '@/controller/method/type/method.type';
 import type { Target } from '@/controller/target/type/target.type';
-import { TrainingController } from '@/controller/training/training.controller';
+import type { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 
 export async function handleCreateTraining(
+  controller: TrainingController,
   input: {
     group: Group;
     cycle: Cycle;
@@ -74,7 +74,7 @@ export async function handleCreateTraining(
   handleApiRequest(
     router,
     () =>
-      TrainingController.create({
+      controller.create({
         groupId: group.id,
         cycleId: cycle.id,
         components: selectedComponents,
@@ -96,7 +96,8 @@ export async function handleCreateTraining(
 }
 
 export async function handleAddTrainingComponents(
-  input: AddTrainingComponents & { trainingId: string },
+  controller: TrainingController,
+  input: { trainingId: string; components: TrainingComponent[] },
   state: {
     router: AppRouterInstance;
     setTrainings: SetState<Training[]>;
@@ -128,9 +129,9 @@ export async function handleAddTrainingComponents(
     () =>
       !restInput.components.length
         ? // if outside box was clicked, delete the whole training
-          TrainingController.delete(trainingId)
+          controller.delete(trainingId)
         : // else, add components
-          TrainingController.addComponents(trainingId, restInput),
+          controller.addComponents(trainingId, restInput),
     (training) => {
       if (!training) {
         // training was deleted
@@ -162,6 +163,7 @@ export async function handleAddTrainingComponents(
 }
 
 export async function handleDeleteTrainingComponent(
+  controller: TrainingController,
   input: {
     trainingId: string;
     componentId: string;
@@ -179,7 +181,7 @@ export async function handleDeleteTrainingComponent(
 
   handleApiRequest(
     router,
-    () => TrainingController.deleteComponent(trainingId, componentId),
+    () => controller.deleteComponent(trainingId, componentId),
     (training) => {
       TrainingService.mapData(training, {
         components,

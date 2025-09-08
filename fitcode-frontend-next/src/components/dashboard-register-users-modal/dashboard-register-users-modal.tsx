@@ -18,7 +18,7 @@ import { handleApiRequest } from '@/common/type/state.type';
 import { InstitutionController } from '@/controller/institution/institution.controller';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import type { User } from '@/controller/user/type/user.type';
-import { useAuth } from '@/store/auth-provider';
+import { useAuthenticatedAuth, withAuth } from '@/store/auth-provider';
 import { useDashboard } from '@/store/dashboard-provider';
 import { useMain } from '@/store/main-provider';
 
@@ -26,14 +26,15 @@ interface RegisterUsersDashboardProps {
   registerRole: UserRole;
 }
 
-export default function RegisterUsersDashboard(
-  props: RegisterUsersDashboardProps
-) {
-  const { registerRole } = props;
+const firebaseFunctions = FirebaseFunctionsUtil.Instance;
 
+function RegisterUsersDashboard(props: RegisterUsersDashboardProps) {
+  const { registerRole } = props;
   const router = useRouter();
 
-  const { token } = useAuth();
+  const { token } = useAuthenticatedAuth();
+  const controller = InstitutionController.getInstance(token);
+
   const { users } = useMain();
   const {
     selectedInstitution,
@@ -41,10 +42,6 @@ export default function RegisterUsersDashboard(
     refetchUsers,
     refetchMembers,
   } = useDashboard();
-
-  const firebaseFunctions = new FirebaseFunctionsUtil({
-    authIdToken: token || undefined,
-  });
 
   const [formData, setFormData] = useState({
     displayName: '',
@@ -86,7 +83,7 @@ export default function RegisterUsersDashboard(
       handleApiRequest(
         router,
         () =>
-          InstitutionController.addTrainer(selectedInstitution.id, {
+          controller.addTrainer(selectedInstitution.id, {
             userId: user.uid,
           }),
         () => {
@@ -117,7 +114,7 @@ export default function RegisterUsersDashboard(
       handleApiRequest(
         router,
         () =>
-          InstitutionController.addAthlete(selectedInstitution.id, {
+          controller.addAthlete(selectedInstitution.id, {
             userId: user.uid,
           }),
         () => {
@@ -156,7 +153,7 @@ export default function RegisterUsersDashboard(
       handleApiRequest(
         router,
         () =>
-          InstitutionController.addTrainer(selectedInstitution.id, {
+          controller.addTrainer(selectedInstitution.id, {
             userId: existingUser.uid,
           }),
         () => {
@@ -187,7 +184,7 @@ export default function RegisterUsersDashboard(
       handleApiRequest(
         router,
         () =>
-          InstitutionController.addAthlete(selectedInstitution.id, {
+          controller.addAthlete(selectedInstitution.id, {
             userId: existingUser.uid,
           }),
         () => {
@@ -378,3 +375,8 @@ export default function RegisterUsersDashboard(
     </>
   );
 }
+
+export default withAuth(RegisterUsersDashboard, [
+  UserRole.TRAINER,
+  UserRole.MANAGER,
+]);

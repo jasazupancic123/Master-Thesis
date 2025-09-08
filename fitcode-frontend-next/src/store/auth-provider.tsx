@@ -1,51 +1,56 @@
 'use client';
 
 import type { User } from '@firebase/auth';
-import { Skeleton } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useState } from 'react';
 
 import { getFirebaseAuth } from '@/common/config/firebase.config';
-import { FIREBASE_AUTH_ID_TOKEN } from '@/common/constant/browser.constant';
 import { LINK_SIGN_IN } from '@/common/constant/navigation.constant';
-import { CommonService } from '@/common/service/common.service';
-import type { AuthContextType } from '@/common/type/context.type';
+import type { AuthContextType, AuthStatus } from '@/common/type/context.type';
 import type { ChildrenProps } from '@/common/type/props.type';
 import type { UserRole } from '@/controller/user/enum/user-role.enum';
 import type { CustomClaims } from '@/controller/user/type/custom-claims.type';
-import type { UserEntity } from '@/controller/user/type/user.type';
-import { UserController } from '@/controller/user/user.controller';
-
-const commonService = CommonService.instance;
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const useAuth = () => useContext(AuthContext)!;
 
 export type AuthState = {
-  authIdToken?: string;
-  user?: User | null;
+  status: AuthStatus;
+  token?: string;
+  user?: User;
   role?: UserRole;
   customClaims?: CustomClaims;
 };
 
-type AuthProviderProps = ChildrenProps & {
-  initialToken?: string;
-};
-
-export const AuthProvider = (props: AuthProviderProps) => {
+export const AuthProvider = (props: ChildrenProps) => {
+  const { children } = props;
   const auth = getFirebaseAuth();
   const router = useRouter();
-  const { children, initialToken } = props;
 
-  const [user, setUser] = useState<User | null>(null);
-  const [authIdToken, setAuthIdToken] = useState(initialToken);
+  const [state, setState] = useState<AuthState>({
+    status: 'loading',
+    token: undefined,
+    user: undefined,
+    role: undefined,
+    customClaims: undefined,
+  });
 
-  const [profile, setProfile] = useState<UserEntity | undefined>(undefined);
-  const [role, setRole] = useState<UserRole | undefined>(undefined);
-  const [customClaims, setCustomClaims] = useState<CustomClaims | undefined>(
-    undefined
-  );
+  function setCustomClaims(claims: CustomClaims) {
+    if (state.status === 'authenticated')
+      setState((prevState) => ({
+        ...prevState,
+        customClaims: claims,
+      }));
+  }
+
+  function setDisplayName(name: string) {
+    if (state.status === 'authenticated')
+      setState((prevState) => ({
+        ...prevState,
+        user: { ...prevState.user!, displayName: name },
+      }));
+  }
 
   // first time init get token from cookies and refresh if needed
   useEffect(() => {
@@ -62,41 +67,35 @@ export const AuthProvider = (props: AuthProviderProps) => {
     return () => unsubscribe();
   }, [auth]);
 
-  async function handleUserChange(authUser: User | null): Promise<AuthState> {
-    if (!authUser) {
-      setAuthIdToken(undefined);
-      setUser(null);
-      setRole(undefined);
-      setCustomClaims(undefined);
-      commonService.browser.removeClientCookie(FIREBASE_AUTH_ID_TOKEN);
+  async function handleUserChange(user: User | null): Promise<AuthState> {
+    let newState: AuthState = { ...state, status: 'loading' };
 
-      return {
-        authIdToken: undefined,
-        user: null,
+    if (!user) {
+      // user is logged out
+      newState = {
+        status: 'unauthenticated',
+        token: undefined,
+        user: undefined,
         role: undefined,
         customClaims: undefined,
       };
+    } else {
+      // user is logged in
+      const { token, claims } = await user.getIdTokenResult();
+      const customClaims = claims as unknown as CustomClaims;
+      const role = customClaims.role?.[0];
+
+      newState = {
+        status: 'authenticated',
+        token,
+        user,
+        role,
+        customClaims,
+      };
     }
 
-    // user is logged in
-    const { token, claims } = await authUser.getIdTokenResult();
-    const customClaims = claims as unknown as CustomClaims;
-    const role = customClaims.role?.[0];
-
-    setAuthIdToken(token);
-    setUser(authUser);
-    setRole(role);
-    setCustomClaims(customClaims);
-    commonService.browser.setClientCookie(FIREBASE_AUTH_ID_TOKEN, token);
-
-    await handleProfileChange(token);
-    return { authIdToken: token, user: authUser, role, customClaims };
-  }
-
-  async function handleProfileChange(token?: string) {
-    if (!token) return setProfile(undefined);
-    const profile = await UserController.findProfile(token);
-    setProfile(profile);
+    setState(newState);
+    return newState;
   }
 
   async function logout(redirect = true): Promise<void> {
@@ -105,32 +104,78 @@ export const AuthProvider = (props: AuthProviderProps) => {
     if (redirect) router.push(LINK_SIGN_IN.href);
   }
 
+  if (
+    auth?.currentUser &&
+    state.status === 'authenticated' &&
+    state.token &&
+    state.user &&
+    state.role &&
+    state.customClaims
+  )
+    return (
+      <AuthContext.Provider
+        value={{
+          status: 'authenticated',
+          token: state.token!,
+          user: state.user!,
+          role: state.role!,
+          customClaims: state.customClaims!,
+          setCustomClaims,
+          handleUserChange,
+          setDisplayName,
+          logout,
+        }}
+      >
+        {children}
+      </AuthContext.Provider>
+    );
+
+  if (state.status === 'loading')
+    return (
+      <AuthContext.Provider
+        value={{ status: 'loading', token: undefined, handleUserChange }}
+      >
+        {children}
+      </AuthContext.Provider>
+    );
+
   return (
     <AuthContext.Provider
-      value={{
-        user,
-        setUser,
-        role,
-        logout,
-        token: authIdToken,
-        profile,
-        setProfile,
-        customClaims,
-        setCustomClaims,
-        handleUserChange,
-      }}
+      value={{ status: 'unauthenticated', token: undefined, handleUserChange }}
     >
       {children}
     </AuthContext.Provider>
   );
 };
 
-export function AuthGuard(props: ChildrenProps) {
-  const { children } = props;
-  const { user, token, customClaims, role, profile } = useAuth();
+export type AuthenticatedAuth<T = unknown> = T & {
+  auth: Extract<AuthContextType, { status: 'authenticated' }>;
+};
 
-  if (!user || !token || !customClaims || !role || !profile)
-    return <Skeleton variant="rectangular" width={'100%'} height={50} />;
+const AuthenticatedAuthContext = createContext<
+  AuthenticatedAuth['auth'] | null
+>(null);
 
-  return <>{children}</>;
+export const useAuthenticatedAuth = () => useContext(AuthenticatedAuthContext)!;
+
+export function withAuth<P extends object>(
+  Component: React.ComponentType<P>,
+  allowedRoles?: UserRole[]
+) {
+  return function Wrapped(props: P) {
+    const auth = useAuth();
+    const router = useRouter();
+
+    if (auth.status !== 'authenticated') return <div>Loading...</div>;
+    if (allowedRoles && !allowedRoles.includes(auth.role)) {
+      router.replace(LINK_SIGN_IN.href);
+      return null;
+    }
+
+    return (
+      <AuthenticatedAuthContext.Provider value={auth}>
+        <Component {...props} />
+      </AuthenticatedAuthContext.Provider>
+    );
+  };
 }

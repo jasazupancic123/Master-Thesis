@@ -20,14 +20,7 @@ export const useWellness = () => useContext(WellnessContext)!;
 export function WellnessProvider(props: WellnessProviderProps & ChildrenProps) {
   const { children, wellness: providedWellness } = props;
   const [wellness, setWellness] = useState<Wellness>(providedWellness);
-
-  const value = useMemo(
-    () => ({
-      wellness,
-      setWellness,
-    }),
-    [wellness]
-  );
+  const value = useMemo(() => ({ wellness, setWellness }), [wellness]);
 
   return (
     <WellnessContext.Provider value={value}>

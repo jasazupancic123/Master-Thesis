@@ -6,11 +6,10 @@ import { useEffect, useState } from 'react';
 import Alert from '../components/alert/alert';
 import type { GroupIdPageProps } from '@/app/(trainer)/groups/[group_id]/props';
 import type { ChildrenProps } from '@/common/type/props.type';
-import { GroupController } from '@/controller/group/group.controller';
-import { InstitutionController } from '@/controller/institution/institution.controller';
-import { TrainingController } from '@/controller/training/training.controller';
+import { Controller } from '@/controller/controller';
 import { TrainingService } from '@/controller/training/training.service';
-import { useAuth } from '@/store/auth-provider';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
+import { useAuthenticatedAuth, withAuth } from '@/store/auth-provider';
 import { GroupProvider } from '@/store/group-provider';
 import { useMain } from '@/store/main-provider';
 
@@ -20,25 +19,25 @@ interface GroupsInitializerProps extends ChildrenProps {
   }>;
 }
 
-export default function GroupInitializer({
-  children,
-  params,
-}: GroupsInitializerProps) {
+export default withAuth(GroupInitializer, [UserRole.TRAINER, UserRole.MANAGER]);
+
+function GroupInitializer({ children, params }: GroupsInitializerProps) {
   const [state, setState] = useState<GroupIdPageProps | null>(null);
 
   const { components, exercises, methods } = useMain();
-  const { token } = useAuth();
+  const auth = useAuthenticatedAuth();
+  const controller = Controller.getInstance(auth.token);
 
   useEffect(() => {
     async function init() {
       const groupId = (await params).group_id;
-      const group = await GroupController.findById(groupId, token!);
+      const group = await controller.group.findById(groupId);
       if (!group) return notFound();
 
       const [groups, institution, trainings] = await Promise.all([
-        GroupController.findAll(),
-        InstitutionController.findById(group.institutionId),
-        TrainingController.findAll({ groupId }),
+        controller.group.findAll(),
+        controller.institution.findById(group.institutionId),
+        controller.training.findAll({ groupId }),
       ]);
 
       const mappedTrainings = trainings.map((t) => {

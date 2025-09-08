@@ -13,7 +13,9 @@ import VerticalLinesBorders from '../vertical-lines-borders/vertical-lines-borde
 import { handleSaveGroup } from '@/app/(trainer)/groups/[group_id]/state';
 import MultiCycleSliderLayout from '@/components/multi-cycle-slider-layout/multi-cycle-slider.layout';
 import CycleComponents from '@/components/training-year-cycle-components/training-year-cycle-components';
+import { GroupController } from '@/controller/group/group.controller';
 import type { Cycle } from '@/controller/group/type/cycle.type';
+import { useAuthenticatedAuth } from '@/store/auth-provider';
 import { useGroup } from '@/store/group-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 
@@ -22,6 +24,8 @@ export default function TrainerYearView() {
   const router = useRouter();
   const { group, setGroup, cycle, setCycle, setDetectedChanges } = useGroup();
 
+  const auth = useAuthenticatedAuth();
+  const controller = GroupController.getInstance(auth.token);
   const theme = useTheme();
   const [selectedGroup, setSelectedGroup] = useState({ ...group });
 
@@ -48,6 +52,7 @@ export default function TrainerYearView() {
               sx={{ p: 0, m: 0, mx: 1, cursor: 'pointer' }}
               onClick={() =>
                 handleSaveGroup(
+                  controller,
                   selectedGroup,
                   setSelectedGroup,
                   cycle,
@@ -80,6 +85,7 @@ export default function TrainerYearView() {
           <IconButton
             onClick={() =>
               handleSaveGroup(
+                controller,
                 selectedGroup,
                 setSelectedGroup,
                 cycle,

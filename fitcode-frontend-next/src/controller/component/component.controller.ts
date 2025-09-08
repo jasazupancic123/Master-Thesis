@@ -1,13 +1,24 @@
+import { BaseController } from '../base.controller';
 import type { Component } from './type/component.type';
 import { ONE_HOUR_IN_MS } from '@/common/constant/time.constant';
-import { CommonService } from '@/common/service/common.service';
 
-const api = CommonService.instance.api;
+export class ComponentController extends BaseController {
+  private static instance: ComponentController;
 
-export class ComponentController {
-  static async findAll() {
-    return await api.get<Component[]>('/component', {
+  private constructor() {
+    super('/component');
+  }
+
+  static getInstance(token: string) {
+    if (!this.instance) this.instance = new ComponentController();
+    this.instance.setToken(token);
+    return this.instance;
+  }
+
+  async findAll() {
+    return await this.api.get<Component[]>('/', {
       cacheTimeInMs: ONE_HOUR_IN_MS,
+      token: this.getToken(),
     });
   }
 }

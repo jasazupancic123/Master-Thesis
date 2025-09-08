@@ -1,14 +1,19 @@
 import type { FirebaseStorage } from '@firebase/storage';
 import { getDownloadURL, ref, uploadBytes } from '@firebase/storage';
 
-import type { FirebaseInitAppOptions } from '@/common/config/firebase.config';
 import { getFirebaseStorage } from '@/common/config/firebase.config';
 
 export class FirebaseStorageUtil {
+  private static instance: FirebaseStorageUtil;
   private storage: FirebaseStorage;
 
-  constructor(options?: FirebaseInitAppOptions) {
-    this.storage = getFirebaseStorage(options);
+  private constructor() {
+    this.storage = getFirebaseStorage();
+  }
+
+  static get Instance() {
+    if (!this.instance) this.instance = new FirebaseStorageUtil();
+    return this.instance;
   }
 
   async uploadFile(file: File, path: string) {
@@ -20,6 +25,5 @@ export class FirebaseStorageUtil {
   async exerciseUrl(path: string) {
     const reference = ref(this.storage, path);
     const url = await getDownloadURL(reference);
-    return url;
   }
 }

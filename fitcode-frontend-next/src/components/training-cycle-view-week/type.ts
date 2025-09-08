@@ -1,6 +1,5 @@
 import type { Dayjs } from 'dayjs';
 
-import type { AddTrainingComponents } from '../trainer-cycle-view/type';
 import type { Day } from '@/common/service/util/date.util';
 import type { SetState } from '@/common/type/state.type';
 import type { Component } from '@/controller/component/type/component.type';
@@ -50,7 +49,7 @@ export type TrainingCycleViewGridItemProps = TrainingCycleViewCommonProps & {
 type TrainingCycleViewCommonProps = {
   addTrainingComponent: (
     trainingId: string,
-    data: AddTrainingComponents
+    data: { components: TrainingComponent[] }
   ) => void;
   deleteTrainingComponent: (
     trainingId: string,

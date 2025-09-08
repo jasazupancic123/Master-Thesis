@@ -3,8 +3,9 @@ import { Avatar, Box, Menu, MenuItem, Typography } from '@mui/material';
 import Link from 'next/link';
 
 import { LINK_PROFILE } from '@/common/constant/navigation.constant';
+import { useAuthenticatedAuth } from '@/store/auth-provider';
 import type { SetState } from '@/common/type/state.type';
-import { useAuth } from '@/store/auth-provider';
+import { useMain } from '@/store/main-provider';
 
 interface ProfileHeaderMenuProps {
   anchorEl: HTMLElement | null;
@@ -14,8 +15,10 @@ interface ProfileHeaderMenuProps {
 }
 
 export default function ProfileHeaderMenu(props: ProfileHeaderMenuProps) {
-  const { profile, logout } = useAuth();
+  const { logout } = useAuthenticatedAuth();
+  const { profile } = useMain();
   const { anchorEl, open, setOpen, setAnchorEl } = props;
+
   return (
     <Menu
       anchorEl={anchorEl}

@@ -16,10 +16,16 @@ export const isTrainer = (role: UserRole) => role === UserRole.TRAINER;
 export const isAthlete = (role: UserRole) => role === UserRole.ATHLETE;
 
 export class FirebaseAuthUtil {
+  private static instance: FirebaseAuthUtil;
   private auth: Auth;
 
-  constructor(options?: FirebaseInitAppOptions) {
+  private constructor(options?: FirebaseInitAppOptions) {
     this.auth = getFirebaseAuth(options);
+  }
+
+  static getInstance(options?: FirebaseInitAppOptions) {
+    if (!this.instance) this.instance = new FirebaseAuthUtil(options);
+    return this.instance;
   }
 
   async login(email: string, password: string): Promise<UserCredential> {

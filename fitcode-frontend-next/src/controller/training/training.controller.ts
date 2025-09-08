@@ -1,3 +1,4 @@
+import { BaseController } from '../base.controller';
 import type { UserId } from '../institution/type/institution.type';
 import type { CompletedFutureWorkloads } from './type/completed-future-workloads.type';
 import type { CompletedTrainingComponent } from './type/completed-training.entity';
@@ -13,91 +14,126 @@ import type {
   CopyComponent,
   TrainingComponent,
 } from './type/training-component.type';
-import { CommonService } from '@/common/service/common.service';
 
-const api = CommonService.instance.api;
+export class TrainingController extends BaseController {
+  private static instance: TrainingController;
 
-export class TrainingController {
-  static async findAll(query?: FilterTrainings) {
-    return api.get<Training[]>('/training', { query });
+  private constructor() {
+    super('/training');
   }
 
-  static async getPrescribedTraining(
+  static getInstance(token: string) {
+    if (!this.instance) this.instance = new TrainingController();
+    this.instance.setToken(token);
+    return this.instance;
+  }
+
+  async findAll(query?: FilterTrainings) {
+    return this.api.get<Training[]>('/', {
+      query,
+      token: this.getToken(),
+    });
+  }
+
+  async getPrescribedTraining(
     trainingId: string,
     userId: string
   ): Promise<Training | null> {
-    return api.get<Training | null>(
-      `/training/${trainingId}/athlete/${userId}/prescribed`
+    return this.api.get<Training | null>(
+      `/${trainingId}/athlete/${userId}/prescribed`,
+      { token: this.getToken() }
     );
   }
 
-  static async findAthleteWorkloads(trainingId: string, userId: string) {
-    return api.get<CompletedFutureWorkloads>(
-      `/training/${trainingId}/athlete/${userId}/workloads`
+  async findAthleteWorkloads(trainingId: string, userId: string) {
+    return this.api.get<CompletedFutureWorkloads>(
+      `/${trainingId}/athlete/${userId}/workloads`,
+      { token: this.getToken() }
     );
   }
 
-  static async create(body: CreateTraining): Promise<Training> {
-    return api.post<Training>('/training', body);
+  async create(body: CreateTraining): Promise<Training> {
+    return this.api.post<Training>('/', body, {
+      token: this.getToken(),
+    });
   }
 
-  static async copyComponent(body: CopyComponent) {
-    return api.post<Training>('/training/copy/component', body);
+  async copyComponent(body: CopyComponent) {
+    return this.api.post<Training>('/copy/component', body, {
+      token: this.getToken(),
+    });
   }
 
-  static async update(trainingId: string, body: UpdateTraining) {
-    return api.patch<Training>(`/training/${trainingId}`, body);
+  async update(trainingId: string, body: UpdateTraining) {
+    return this.api.patch<Training>(`/${trainingId}`, body, {
+      token: this.getToken(),
+    });
   }
 
-  static async copy(trainingId: string, body: CopyTraining) {
-    return api.post<Training>(`/training/${trainingId}/copy`, body);
+  async copy(trainingId: string, body: CopyTraining) {
+    return this.api.post<Training>(`/${trainingId}/copy`, body, {
+      token: this.getToken(),
+    });
   }
 
-  static async delete(trainingId: string) {
-    await api.delete<null>(`/training/${trainingId}`);
+  async delete(trainingId: string) {
+    await this.api.delete<null>(`/${trainingId}`, {
+      token: this.getToken(),
+    });
+
     return null;
   }
 
-  static async periodize(
+  async periodize(
     baseTrainingId: string,
     componentId: string,
     body: PeriodizeTrainings
   ) {
-    return api.patch<Training[]>(
-      `/training/${baseTrainingId}/periodize/component/${componentId}`,
-      body
+    return this.api.patch<Training[]>(
+      `/${baseTrainingId}/periodize/component/${componentId}`,
+      body,
+      { token: this.getToken() }
     );
   }
 
-  static async completeTrainingComponent(
+  async completeTrainingComponent(
     trainingId: string,
     componentId: string,
     body: CompletedTrainingComponent
   ): Promise<Training> {
-    return api.patch<Training>(
-      `/training/${trainingId}/component/${componentId}/complete`,
-      body
+    return this.api.patch<Training>(
+      `/${trainingId}/component/${componentId}/complete`,
+      body,
+      { token: this.getToken() }
     );
   }
 
-  static async addComponents(
+  async addComponents(
     trainingId: string,
     body: { components: TrainingComponent[] }
   ) {
-    return api.post<Training>(`/training/${trainingId}/component`, body);
+    return this.api.post<Training>(`/${trainingId}/component`, body, {
+      token: this.getToken(),
+    });
   }
 
-  static async deleteComponent(trainingId: string, componentId: string) {
-    return api.delete<Training>(
-      `/training/${trainingId}/component/${componentId}`
+  async deleteComponent(trainingId: string, componentId: string) {
+    return this.api.delete<Training>(
+      `/${trainingId}/component/${componentId}`,
+      { token: this.getToken() }
     );
   }
 
-  static async addMember(trainingId: string, body: UserId) {
-    return api.patch<void>(`/training/${trainingId}/member`, body);
+  async addMember(trainingId: string, body: UserId) {
+    return this.api.patch<void>(`/${trainingId}/member`, body, {
+      token: this.getToken(),
+    });
   }
 
-  static async removeMember(trainingId: string, body: UserId) {
-    return api.delete<void>(`/training/${trainingId}/member`, { body });
+  async removeMember(trainingId: string, body: UserId) {
+    return this.api.delete<void>(`/${trainingId}/member`, {
+      body,
+      token: this.getToken(),
+    });
   }
 }

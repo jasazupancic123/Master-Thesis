@@ -8,8 +8,8 @@ import React, { useEffect, useState } from 'react';
 
 import SelectAttribute from '../select-attribute/select-attribute';
 import SelectComponent from '../select-component/select-component';
-import { CommonService } from '@/common/service/common.service';
 import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
+import { CommonService } from '@/common/service/common.service';
 import type { SetState } from '@/common/type/state.type';
 import FileUpload from '@/components/file-upload/file-upload';
 import MyModal from '@/components/modal/modal';
@@ -22,7 +22,7 @@ import type {
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
 import { useScreenSize } from '@/store/screen-size-provider';
 
-const firebaseStorage = new FirebaseStorageUtil();
+const firebaseStorage = FirebaseStorageUtil.Instance;
 
 interface Props {
   data: Partial<Exercise>;

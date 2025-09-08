@@ -19,12 +19,14 @@ export default function Layout({ children }: ChildrenProps) {
   );
 }
 
-function TrainingContent({ children }: ChildrenProps) {
+function TrainingContent(props: ChildrenProps) {
+  const { children } = props;
   const { view } = useTraining();
 
   return (
     <>
       {view === ExerciseTrainingView.ExerciseView && <AthleteHeader />}
+
       <Container component="main" sx={{ px: '0px !important' }}>
         <Box>{children}</Box>
       </Container>

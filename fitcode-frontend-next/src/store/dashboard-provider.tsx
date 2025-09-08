@@ -3,9 +3,8 @@
 import { usePathname } from 'next/navigation';
 import { createContext, useContext, useEffect, useState } from 'react';
 
-import { useAuth } from './auth-provider';
+import { useAuthenticatedAuth } from './auth-provider';
 import { useMain } from './main-provider';
-import { BACKEND_API_BASE_URL } from '@/common/constant/api.constant';
 import {
   LINK_DASHBOARD_HOME,
   LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS,
@@ -54,7 +53,7 @@ export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
     refetchMembers,
   } = props;
 
-  const { token, role } = useAuth();
+  const { role } = useAuthenticatedAuth();
   const pathname = usePathname();
   const [currentFilter, setCurrentFilter] = useState(LINK_DASHBOARD_HOME);
 
@@ -85,11 +84,7 @@ export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
 
   const { setUsers } = useMain();
 
-  const { data: fetchedUsers, refetch } = useNestBackendFetch<User[]>(
-    `${BACKEND_API_BASE_URL}/user`,
-    token!,
-    { method: 'GET' }
-  );
+  const { data: fetchedUsers, refetch } = useNestBackendFetch<User[]>(`/user`);
 
   useEffect(() => {
     if (fetchedUsers) setUsers(fetchedUsers);

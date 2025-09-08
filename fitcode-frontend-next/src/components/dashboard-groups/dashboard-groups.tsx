@@ -14,7 +14,8 @@ import type { SetState } from '@/common/type/state.type';
 import { GroupController } from '@/controller/group/group.controller';
 import { GroupService } from '@/controller/group/group.service';
 import type { Cycle } from '@/controller/group/type/cycle.type';
-import { useAuth } from '@/store/auth-provider';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
+import { useAuthenticatedAuth, withAuth } from '@/store/auth-provider';
 import { useDashboard } from '@/store/dashboard-provider';
 import { useMain } from '@/store/main-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
@@ -36,16 +37,16 @@ interface DashboardGroupsProps {
   }>;
 }
 
-export default function DashboardGroups(props: DashboardGroupsProps) {
+function DashboardGroups(props: DashboardGroupsProps) {
+  const { modal, setModal } = props;
+
   const screenSize = useScreenSize();
   const theme = useTheme();
   const { users } = useMain();
-  const { token, role } = useAuth();
-
+  const { role, token } = useAuthenticatedAuth();
+  const controller = GroupController.getInstance(token);
   const { selectedInstitution, selectedGroup, setSelectedGroup } =
     useDashboard();
-
-  const { modal, setModal } = props;
 
   const [_selectedCycle, setSelectedCycle] = useState<Cycle | null>(
     selectedGroup?.cycles[0] || null
@@ -55,12 +56,9 @@ export default function DashboardGroups(props: DashboardGroupsProps) {
 
   useEffect(() => {
     async function fetchGroups() {
-      if (!token || !role || !selectedInstitution || selectedInstitution.groups)
-        return;
-
-      selectedInstitution.groups = await GroupController.findAllByInstitution(
-        selectedInstitution.id,
-        token
+      if (!selectedInstitution || selectedInstitution.groups) return;
+      selectedInstitution.groups = await controller.findAllByInstitution(
+        selectedInstitution.id
       );
 
       if (
@@ -80,7 +78,6 @@ export default function DashboardGroups(props: DashboardGroupsProps) {
   }, [selectedInstitution]);
 
   if (!selectedInstitution) return null;
-  if (!role) return null;
 
   const HorizontalInput = () => {
     return (
@@ -103,9 +100,11 @@ export default function DashboardGroups(props: DashboardGroupsProps) {
             setModal((prev) => ({ ...prev, add_group: true }));
             return;
           }
+
           const group = selectedInstitution?.groups?.find(
             (g) => g.id === value
           );
+
           if (group) {
             const mapped = GroupService.mapMembers(group, users);
             setSelectedGroup(mapped);
@@ -223,3 +222,9 @@ export default function DashboardGroups(props: DashboardGroupsProps) {
     </Box>
   );
 }
+
+export default withAuth(DashboardGroups, [
+  UserRole.TRAINER,
+  UserRole.MANAGER,
+  UserRole.ADMIN,
+]);

@@ -7,24 +7,27 @@ import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
 import type { SetState } from '@/common/type/state.type';
 import { handleApiRequest } from '@/common/type/state.type';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
-import { TrainingController } from '@/controller/training/training.controller';
+import type { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
 import type { CompletedTrainingExercise } from '@/controller/training/type/completed-training.entity';
 import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
 
-export const handleFinishTraining = async (state: {
-  trainingInProgress: TrainingInProgress | null;
-  setTrainingInProgress: SetState<TrainingInProgress | null>;
-  user: User | null;
-  router: AppRouterInstance;
-  setTrainings: SetState<Training[]>;
-  clearTrainingState: () => void;
-  setSelectedSuperset: SetState<Superset | undefined>;
-  setView: SetState<ExerciseOrTraining>;
-  exercises: Exercise[];
-}) => {
+export const handleFinishTraining = async (
+  controller: TrainingController,
+  state: {
+    trainingInProgress: TrainingInProgress | null;
+    setTrainingInProgress: SetState<TrainingInProgress | null>;
+    user: User | null;
+    router: AppRouterInstance;
+    setTrainings: SetState<Training[]>;
+    clearTrainingState: () => void;
+    setSelectedSuperset: SetState<Superset | undefined>;
+    setView: SetState<ExerciseOrTraining>;
+    exercises: Exercise[];
+  }
+) => {
   const {
     trainingInProgress,
     setTrainingInProgress,
@@ -52,7 +55,7 @@ export const handleFinishTraining = async (state: {
           }))
         );
 
-      return TrainingController.completeTrainingComponent(
+      return controller.completeTrainingComponent(
         trainingInProgress.training.id,
         trainingInProgress.selectedComponent.component?.id ||
           trainingInProgress.selectedComponent.id,

@@ -17,6 +17,7 @@ import { GroupController } from '@/controller/group/group.controller';
 import type { Group } from '@/controller/group/type/group.type';
 import type { Institution } from '@/controller/institution/type/institution.type';
 import type { User } from '@/controller/user/type/user.type';
+import { useAuthenticatedAuth } from '@/store/auth-provider';
 import { useDashboard } from '@/store/dashboard-provider';
 
 export type AddMembersModalProps = {
@@ -56,6 +57,8 @@ export function AddMembersModal(props: AddMembersModalProps) {
     enableScroll,
   } = props;
   const { setDetectedChanges } = useDashboard();
+  const { token } = useAuthenticatedAuth();
+  const controller = GroupController.getInstance(token);
 
   const [searchQueryAddPlayer, setSearchQueryAddPlayer] = useState('');
   const [filteredUsers, setFilteredUsers] = useState<User[] | null>(null);
@@ -69,7 +72,7 @@ export function AddMembersModal(props: AddMembersModalProps) {
 
     await handleApiRequest(
       router,
-      () => GroupController.addMember(group!.id, { userId: user.uid }),
+      () => controller.addMember(group!.id, { userId: user.uid }),
       () => {
         toast.success('Member added successfully');
       },
@@ -109,7 +112,7 @@ export function AddMembersModal(props: AddMembersModalProps) {
 
     await handleApiRequest(
       router,
-      () => GroupController.removeMember(group!.id, { userId: user.uid }),
+      () => controller.removeMember(group!.id, { userId: user.uid }),
       () => {
         toast.success('Member removed successfully');
       },

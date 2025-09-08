@@ -7,7 +7,6 @@ import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 import React from 'react';
 
-import type { AddTrainingComponents } from '../trainer-cycle-view/type';
 import { getFilteredTrainings, handleClickDateCell } from './state';
 import { CommonService } from '@/common/service/common.service';
 import type { Day } from '@/common/service/util/date.util';
@@ -16,8 +15,11 @@ import { TrainingGridItem } from '@/components/training-cycle-view-grid-item/tra
 import type { Component } from '@/controller/component/type/component.type';
 import type { Target } from '@/controller/target/type/target.type';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
+import { TrainingController } from '@/controller/training/training.controller';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
+import { useAuthenticatedAuth, withAuth } from '@/store/auth-provider';
 import { useGroup } from '@/store/group-provider';
 import { useMain } from '@/store/main-provider';
 
@@ -44,7 +46,7 @@ interface TrainingWeekDatesProps {
   setTrainingInPeriodForModal?: SetState<Training | null>;
   addTrainingComponent: (
     trainingId: string,
-    data: AddTrainingComponents
+    data: { components: TrainingComponent[] }
   ) => void;
   deleteTrainingComponent: (
     trainingId: string,
@@ -52,9 +54,13 @@ interface TrainingWeekDatesProps {
   ) => Promise<void>;
 }
 
-export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
+export default withAuth(TrainingWeekDates, [UserRole.TRAINER]);
+
+function TrainingWeekDates(props: TrainingWeekDatesProps) {
   const router = useRouter();
   const theme = useTheme();
+  const auth = useAuthenticatedAuth();
+  const controller = TrainingController.getInstance(auth.token);
 
   const { components, exercises: allExercises, methods } = useMain();
   const { group, cycle, trainings, setCycle, setTrainings } = useGroup();
@@ -126,6 +132,7 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
               }}
               onClick={() => {
                 handleClickDateCell(
+                  controller,
                   { date, period },
                   {
                     router,
