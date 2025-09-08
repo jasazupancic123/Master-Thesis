@@ -1,3 +1,4 @@
+import { BaseController } from '../base.controller';
 import type { CustomClaims } from './type/custom-claims.type';
 import type {
   AddAthlete,
@@ -11,50 +12,70 @@ import type {
   Wellness,
   WellnessZScore,
 } from './type/wellness.type';
-import { CommonService } from '@/common/service/common.service';
 
-const api = CommonService.instance.api;
+export class UserController extends BaseController {
+  private static instance: UserController;
 
-export class UserController {
-  static async findAll(token?: string, query?: FilterUsers) {
-    return api.get<User[]>('/user', { token, query });
+  private constructor() {
+    super('/user');
   }
 
-  static async findMe(token?: string) {
-    return api.get<User>('/user/me', { token });
+  static getInstance(token: string) {
+    if (!this.instance) this.instance = new UserController();
+    this.instance.setToken(token);
+    return this.instance;
   }
 
-  static async findProfile(token: string) {
-    return api.get<UserEntity>('/user/me/profile', { token });
+  async findAll(query?: FilterUsers) {
+    return this.api.get<User[]>('/', { token: this.getToken(), query });
   }
 
-  static async findById(id: string) {
-    return api.get<User>(`/user/${id}`);
+  async findMe() {
+    return this.api.get<User>('/me', { token: this.getToken() });
   }
 
-  static async updateClaims(id: string, input: CustomClaims) {
-    return api.patch<object>(`/user/${id}`, input);
+  async findProfile() {
+    return this.api.get<UserEntity>('/me/profile', {
+      token: this.getToken(),
+    });
   }
 
-  static async updateProfile(input: UpdateProfile) {
-    return api.patch<object>('/user/me/profile', input);
+  async findById(id: string) {
+    return this.api.get<User>(`/${id}`, { token: this.getToken() });
   }
 
-  static async getMyMeta() {
-    return api.get<Wellness>('/user/me/meta');
+  async updateClaims(id: string, input: CustomClaims) {
+    return this.api.patch<object>(`/${id}`, input, {
+      token: this.getToken(),
+    });
   }
 
-  static async getWellnessByInstitutionId(institutionId: string) {
-    return api.get<WellnessZScore[]>(
-      `/user/wellness/institution/${institutionId}`
+  async updateProfile(input: UpdateProfile) {
+    return this.api.patch<object>('/me/profile', input, {
+      token: this.getToken(),
+    });
+  }
+
+  async getMyMeta() {
+    return this.api.get<Wellness>('/me/meta', { token: this.getToken() });
+  }
+
+  async getWellnessByInstitutionId(institutionId: string) {
+    return this.api.get<WellnessZScore[]>(
+      `/wellness/institution/${institutionId}`,
+      { token: this.getToken() }
     );
   }
 
-  static async saveMeta(body: CreateWellness) {
-    return api.post<Wellness>('/user/me/meta', body);
+  async saveMeta(body: CreateWellness) {
+    return this.api.post<Wellness>('/me/meta', body, {
+      token: this.getToken(),
+    });
   }
 
-  static async addAthlete(input: AddAthlete) {
-    return api.post<User>('/user/athlete/add', input);
+  async addAthlete(input: AddAthlete) {
+    return this.api.post<User>('/athlete/add', input, {
+      token: this.getToken(),
+    });
   }
 }

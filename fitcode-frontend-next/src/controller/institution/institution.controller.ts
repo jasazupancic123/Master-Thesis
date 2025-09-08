@@ -1,47 +1,77 @@
+import { BaseController } from '../base.controller';
 import type { UserEntity } from '../user/type/user.type';
 import type {
   CreateInstitution,
   Institution,
   UserId,
 } from './type/institution.type';
-import { CommonService } from '@/common/service/common.service';
 
-const api = CommonService.instance.api;
+export class InstitutionController extends BaseController {
+  private static instance: InstitutionController;
 
-export class InstitutionController {
-  static async findAll(token: string) {
-    return api.get<Institution[]>('/institution', { token });
+  private constructor() {
+    super('/institution');
   }
 
-  static async findById(id: string, token?: string) {
-    return api.get<Institution>(`/institution/${id}`, { token });
+  static getInstance(token: string) {
+    if (!this.instance) this.instance = new InstitutionController();
+    this.instance.setToken(token);
+    return this.instance;
   }
 
-  static async findAthletes(id: string) {
-    return api.get<UserEntity[]>(`/institution/${id}/find/athletes`);
+  async findAll() {
+    return this.api.get<Institution[]>('/', {
+      token: this.getToken(),
+    });
   }
 
-  static async findTrainers(id: string) {
-    return api.get<UserEntity[]>(`/institution/${id}/find/trainers`);
+  async findById(id: string) {
+    return this.api.get<Institution>(`/${id}`, {
+      token: this.getToken(),
+    });
   }
 
-  static async create(body: CreateInstitution) {
-    return api.post<Institution>('/institution', body);
+  async findAthletes(id: string) {
+    return this.api.get<UserEntity[]>(`/${id}/find/athletes`, {
+      token: this.getToken(),
+    });
   }
 
-  static async addAthlete(institutionId: string, body: UserId) {
-    return api.patch<void>(`/institution/${institutionId}/athlete`, body);
+  async findTrainers(id: string) {
+    return this.api.get<UserEntity[]>(`/${id}/find/trainers`, {
+      token: this.getToken(),
+    });
   }
 
-  static async removeAthlete(institutionId: string, body: UserId) {
-    return api.delete<void>(`/institution/${institutionId}/athlete`, { body });
+  async create(body: CreateInstitution) {
+    return this.api.post<Institution>('/institution', body, {
+      token: this.getToken(),
+    });
   }
 
-  static async addTrainer(institutionId: string, body: UserId) {
-    return api.patch<void>(`/institution/${institutionId}/trainer`, body);
+  async addAthlete(institutionId: string, body: UserId) {
+    return this.api.patch<void>(`/${institutionId}/athlete`, body, {
+      token: this.getToken(),
+    });
   }
 
-  static async removeTrainer(institutionId: string, body: UserId) {
-    return api.delete<void>(`/institution/${institutionId}/trainer`, { body });
+  async removeAthlete(institutionId: string, body: UserId) {
+    return this.api.delete<void>(`/${institutionId}/athlete`, {
+      body,
+      token: this.getToken(),
+    });
+  }
+
+  async addTrainer(institutionId: string, body: UserId) {
+    return this.api.patch<void>(`/${institutionId}/trainer`, body, {
+      token: this.getToken(),
+    });
+  }
+
+  async removeTrainer(institutionId: string, body: UserId) {
+    return this.api.delete<void>(`/${institutionId}/trainer`, {
+      body,
+      token: this.getToken(),
+    });
   }
 }

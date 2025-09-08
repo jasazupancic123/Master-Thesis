@@ -1,3 +1,5 @@
+'use client';
+
 import { Box, Button, FormControl, TextField } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -10,19 +12,24 @@ import { handleApiRequest } from '@/common/type/state.type';
 import { InstitutionController } from '@/controller/institution/institution.controller';
 import { InstitutionService } from '@/controller/institution/institution.service';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
+import { useAuthenticatedAuth, withAuth } from '@/store/auth-provider';
 import { useDashboard } from '@/store/dashboard-provider';
 import { useMain } from '@/store/main-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 
-const firebaseStorage = new FirebaseStorageUtil();
-const firebaseFunctions = new FirebaseFunctionsUtil();
+const firebaseStorage = FirebaseStorageUtil.Instance;
+const firebaseFunctions = FirebaseFunctionsUtil.Instance;
 
-export default function AddInstitutionDashboard() {
+export default withAuth(AddInstitutionDashboard, [UserRole.ADMIN]);
+
+function AddInstitutionDashboard() {
   const { users } = useMain();
   const router = useRouter();
   const screenSize = useScreenSize();
-
   const { setInstitutions, refetchUsers } = useDashboard();
+
+  const auth = useAuthenticatedAuth();
+  const controller = InstitutionController.getInstance(auth.token);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -34,7 +41,6 @@ export default function AddInstitutionDashboard() {
     if (!name || !imageUrl || !email) return;
 
     const owner = users.find((user) => user.email === email.toLowerCase());
-
     if (!owner) {
       toast.error('Institution not registered correctly');
       return;
@@ -43,7 +49,7 @@ export default function AddInstitutionDashboard() {
     handleApiRequest(
       router,
       () =>
-        InstitutionController.create({
+        controller.create({
           name,
           imageUrl,
           ownerId: owner.uid,

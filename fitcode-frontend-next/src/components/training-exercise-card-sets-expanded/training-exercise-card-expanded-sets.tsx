@@ -52,8 +52,7 @@ export default function TrainingExerciseCardExpandedSets(
 
   const { setDetectedChanges } = useGroup();
 
-  const { exercise, expandedSetsView, setExpandedSetsView, supersetIndex } =
-    props;
+  const { exercise, expandedSetsView, setExpandedSetsView } = props;
 
   if (!training || !component) return null;
 

@@ -7,11 +7,12 @@ import toast from 'react-hot-toast';
 import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
 import type { SetState } from '@/common/type/state.type';
 import { handleApiRequest } from '@/common/type/state.type';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
 import type { CustomClaims } from '@/controller/user/type/custom-claims.type';
 import { UserController } from '@/controller/user/user.controller';
-import { useAuth } from '@/store/auth-provider';
+import { useAuthenticatedAuth, withAuth } from '@/store/auth-provider';
 
-const firebaseStorage = new FirebaseStorageUtil();
+const firebaseStorage = FirebaseStorageUtil.Instance;
 
 interface FaceCapturePreviewsModalProps {
   previews: {
@@ -28,10 +29,10 @@ interface FaceCapturePreviewsModalProps {
   heightWidthRatio: number;
 }
 
-export default function FaceCapturePreviewsModal(
-  props: FaceCapturePreviewsModalProps
-) {
-  const { user, customClaims, setCustomClaims } = useAuth();
+function FaceCapturePreviewsModal(props: FaceCapturePreviewsModalProps) {
+  const { user, customClaims, setCustomClaims } = useAuthenticatedAuth();
+  const auth = useAuthenticatedAuth();
+  const controller = UserController.getInstance(auth.token);
   const router = useRouter();
 
   const { previews, captures, setIsCapturingFace, heightWidthRatio } = props;
@@ -121,6 +122,7 @@ export default function FaceCapturePreviewsModal(
                 const file = new File([blob], `${view}.jpg`, {
                   type: blob.type || 'image/jpeg',
                 });
+
                 const path = `user/${user.uid}/${file.name}`;
                 const url = await firebaseStorage.uploadFile(file, path);
 
@@ -140,7 +142,7 @@ export default function FaceCapturePreviewsModal(
 
             await handleApiRequest(
               router,
-              () => UserController.updateClaims(user.uid, updatedCustomClaims),
+              () => controller.updateClaims(user.uid, updatedCustomClaims),
               () => {
                 setCustomClaims(updatedCustomClaims);
                 toast.success('Face recognition images uploaded successfully!');
@@ -159,3 +161,8 @@ export default function FaceCapturePreviewsModal(
     </Box>
   );
 }
+
+export default withAuth(FaceCapturePreviewsModal, [
+  UserRole.ATHLETE,
+  UserRole.TRAINER,
+]);

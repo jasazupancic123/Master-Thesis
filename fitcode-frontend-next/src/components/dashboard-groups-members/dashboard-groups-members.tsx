@@ -13,7 +13,7 @@ import { isManager, isTrainer } from '@/common/firebase/firebase-auth.util';
 import { handleApiRequest, type SetState } from '@/common/type/state.type';
 import { GroupController } from '@/controller/group/group.controller';
 import type { User } from '@/controller/user/type/user.type';
-import { useAuth } from '@/store/auth-provider';
+import { useAuthenticatedAuth } from '@/store/auth-provider';
 import { useDashboard } from '@/store/dashboard-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 
@@ -39,7 +39,10 @@ export default function DashboardGroupsMembers(
 ) {
   const router = useRouter();
 
-  const { role } = useAuth();
+  const { role } = useAuthenticatedAuth();
+  const auth = useAuthenticatedAuth();
+  const controller = GroupController.getInstance(auth.token);
+
   const {
     selectedInstitution,
     setSelectedInstitution,
@@ -74,7 +77,10 @@ export default function DashboardGroupsMembers(
 
     await handleApiRequest(
       router,
-      () => GroupController.removeMember(selectedGroup!.id, { userId: userId }),
+      () =>
+        controller.removeMember(selectedGroup!.id, {
+          userId: userId,
+        }),
       () => {
         toast.success('Member removed successfully');
       },

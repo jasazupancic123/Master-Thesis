@@ -78,10 +78,11 @@ function Section(props: AppPageProps) {
 }
 
 export default function Home() {
-  const { role } = useAuth();
+  const auth = useAuth();
   const [selectedItemIndex, setSelectedItemIndex] = React.useState(0);
 
-  if (role) redirect(SIGN_IN_REDIRECT_MAPPER[role].href, RedirectType.replace);
+  if (auth.status === 'authenticated')
+    redirect(SIGN_IN_REDIRECT_MAPPER[auth.role].href, RedirectType.replace);
   else
     return (
       <>

@@ -20,6 +20,8 @@ import { FirebaseAuthUtil } from '@/common/firebase/firebase-auth.util';
 import HeroNavbar from '@/components/hero-navbar/hero-navbar';
 import { useAuth } from '@/store/auth-provider';
 
+const firebaseAuthUtil = FirebaseAuthUtil.getInstance();
+
 export default function SignInPage() {
   const theme = useTheme();
   const router = useRouter();
@@ -32,7 +34,7 @@ export default function SignInPage() {
     e.preventDefault();
 
     try {
-      const result = await new FirebaseAuthUtil().login(email, password);
+      const result = await firebaseAuthUtil.login(email, password);
       const { role } = await handleUserChange(result.user);
       if (role) router.push(SIGN_IN_REDIRECT_MAPPER[role]?.href);
     } catch (e) {

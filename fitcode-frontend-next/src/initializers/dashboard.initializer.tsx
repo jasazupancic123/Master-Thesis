@@ -9,14 +9,15 @@ import { GroupService } from '@/controller/group/group.service';
 import { InstitutionService } from '@/controller/institution/institution.service';
 import type { UserEntity } from '@/controller/user/type/user.type';
 import DashboardLayout from '@/sites/dashboard.layout';
-import { useAuth } from '@/store/auth-provider';
+import { useAuthenticatedAuth } from '@/store/auth-provider';
 import type { DashboardPageProps } from '@/store/dashboard-provider';
 import { DashboardProvider } from '@/store/dashboard-provider';
 import { useMain } from '@/store/main-provider';
 
 export default function DashboardInitializer({ children }: ChildrenProps) {
   const [state, setState] = useState<DashboardPageProps | null>(null);
-  const { token } = useAuth();
+  const auth = useAuthenticatedAuth();
+  const controller = GroupController.getInstance(auth.token);
 
   const { users, institutions: allInstitutions } = useMain();
 
@@ -25,7 +26,7 @@ export default function DashboardInitializer({ children }: ChildrenProps) {
 
   const { data: fetchedMembers, refetch: refetchMembers } = useNestBackendFetch<
     UserEntity[]
-  >(`/institution/${institutionId}/find/all`);
+  >(`/institution/${institutionId}/find/all`, { enabled: !!institutionId }); // only fetch when id is defined
 
   useEffect(() => {
     if (fetchedMembers) {
@@ -48,9 +49,8 @@ export default function DashboardInitializer({ children }: ChildrenProps) {
 
         const selectedInstitution = institutions?.[0] ?? null;
         if (selectedInstitution) {
-          const groups = await GroupController.findAllByInstitution(
-            selectedInstitution.id,
-            token!
+          const groups = await controller.findAllByInstitution(
+            selectedInstitution.id
           );
 
           for (const group of groups) GroupService.mapMembers(group, users);
@@ -71,7 +71,7 @@ export default function DashboardInitializer({ children }: ChildrenProps) {
       }
     }
 
-    init();
+    init().then();
   }, []);
 
   if (!state) return <div>Loading dashboard...</div>;

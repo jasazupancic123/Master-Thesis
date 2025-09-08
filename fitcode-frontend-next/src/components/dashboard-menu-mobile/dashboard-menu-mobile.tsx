@@ -27,14 +27,19 @@ import {
 } from '@/common/constant/navigation.constant';
 import { isAdmin } from '@/common/firebase/firebase-auth.util';
 import type { Institution } from '@/controller/institution/type/institution.type';
-import { useAuth } from '@/store/auth-provider';
+import { useAuthenticatedAuth } from '@/store/auth-provider';
 import { useDashboard } from '@/store/dashboard-provider';
+import { useMain } from '@/store/main-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
+
+//  import { useAuthenticatedAuth } from '@/store/auth-provider';
 
 export default function DashboardMenuMobile() {
   const { institutions, selectedInstitution, setSelectedInstitution } =
     useDashboard();
-  const { role, profile, logout } = useAuth();
+
+  const { role, logout } = useAuthenticatedAuth();
+  const { profile } = useMain();
 
   const screenSize = useScreenSize();
 

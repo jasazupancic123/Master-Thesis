@@ -20,11 +20,14 @@ import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
 import type { SetState } from '@/common/type/state.type';
 import { Gender } from '@/controller/user/enum/gender.enum';
 import { SportLevel } from '@/controller/user/enum/sport-level.enum';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
 import type { User, UserEntity } from '@/controller/user/type/user.type';
+import { UserController } from '@/controller/user/user.controller';
+import { useAuthenticatedAuth, withAuth } from '@/store/auth-provider';
 import { useDashboard } from '@/store/dashboard-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 
-const firebaseStorage = new FirebaseStorageUtil();
+const firebaseStorage = FirebaseStorageUtil.Instance;
 
 interface DashboardEditAthleteModalProps {
   isOpen: boolean;
@@ -41,10 +44,12 @@ interface DashboardEditAthleteModalProps {
 
 const DEFAULT_MARGIN = 1;
 
-export default function DashboardEditAthleteModal(
-  props: DashboardEditAthleteModalProps
-) {
+export default withAuth(DashboardEditAthleteModal, [UserRole.TRAINER]);
+
+function DashboardEditAthleteModal(props: DashboardEditAthleteModalProps) {
   const { selectedInstitution, members, refetchMembers } = useDashboard();
+  const auth = useAuthenticatedAuth();
+  const controller = UserController.getInstance(auth.token);
 
   const screenSize = useScreenSize();
   const router = useRouter();
@@ -52,12 +57,10 @@ export default function DashboardEditAthleteModal(
   const { isOpen, setModal, editUser, setEditUser } = props;
   const [editedUser, setEditedUser] = useState(false);
   const [editedProfile, setEditedProfile] = useState(false);
-
   const [profile, setProfile] = useState<UserEntity | undefined>(undefined);
 
   useEffect(() => {
     if (!editUser) return;
-
     const member = members.find((m) => m.id === editUser.uid);
     setProfile(member);
   }, [editUser]);
@@ -93,7 +96,7 @@ export default function DashboardEditAthleteModal(
       }}
       onConfirm={() => {
         if (editedProfile) {
-          updateUserProfile({
+          updateUserProfile(controller, {
             editUser,
             router,
             selectedInstitution,
@@ -104,6 +107,7 @@ export default function DashboardEditAthleteModal(
             refetchMembers,
           });
         }
+
         if (editUser && editedUser) {
           // here logic to update user, need BE route for it
         }
@@ -138,6 +142,7 @@ export default function DashboardEditAthleteModal(
                     profileImageUrl: url,
                   }
             );
+
             if (profile) setEditedProfile(true);
           }}
         />

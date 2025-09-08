@@ -6,24 +6,27 @@ import type { SetState } from '@/common/type/state.type';
 import { handleApiRequest } from '@/common/type/state.type';
 import type { Institution } from '@/controller/institution/type/institution.type';
 import type { User, UserEntity } from '@/controller/user/type/user.type';
-import { UserController } from '@/controller/user/user.controller';
+import type { UserController } from '@/controller/user/user.controller';
 
-export const updateUserProfile = async (input: {
-  editUser: User | null;
-  router: AppRouterInstance;
-  selectedInstitution: Institution | null;
-  profile: UserEntity | undefined;
-  setModal: SetState<{
-    add_member: boolean;
-    add_trainer: boolean;
-    add_group: boolean;
-    add_member_via_csv: boolean;
-    edit_athlete: boolean;
-  }>;
-  setEditedProfile: SetState<boolean>;
-  setEditUser: SetState<User | null>;
-  refetchMembers: (url?: string) => void;
-}) => {
+export const updateUserProfile = async (
+  controller: UserController,
+  input: {
+    editUser: User | null;
+    router: AppRouterInstance;
+    selectedInstitution: Institution | null;
+    profile: UserEntity | undefined;
+    setModal: SetState<{
+      add_member: boolean;
+      add_trainer: boolean;
+      add_group: boolean;
+      add_member_via_csv: boolean;
+      edit_athlete: boolean;
+    }>;
+    setEditedProfile: SetState<boolean>;
+    setEditUser: SetState<User | null>;
+    refetchMembers: (url?: string) => void;
+  }
+) => {
   const {
     editUser,
     router,
@@ -39,7 +42,7 @@ export const updateUserProfile = async (input: {
   handleApiRequest(
     router,
     () =>
-      UserController.updateProfile({
+      controller.updateProfile({
         ...profile,
         userId: editUser.uid,
       }),

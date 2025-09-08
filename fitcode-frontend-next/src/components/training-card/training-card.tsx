@@ -23,12 +23,15 @@ import MyModal from '../modal/modal';
 import type { TrainingCardProps } from '../trainer-day-view/props';
 import { handleCopyTraining } from '../trainer-day-view/state';
 import TrainingComponentLayout from '../training-component-layout/training-component-layout';
+import { TrainingController } from '@/controller/training/training.controller';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
+import { useAuthenticatedAuth, withAuth } from '@/store/auth-provider';
 import { useGroup } from '@/store/group-provider';
 import { useMain } from '@/store/main-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
-export default function TrainingCard(props: TrainingCardProps) {
+function TrainingCard(props: TrainingCardProps) {
   const { components, exercises, methods } = useMain();
   const { trainings, cycle, setTrainings } = useGroup();
 
@@ -45,6 +48,8 @@ export default function TrainingCard(props: TrainingCardProps) {
   } = useTrainerDayViewContext();
 
   const theme = useTheme();
+  const auth = useAuthenticatedAuth();
+  const controller = TrainingController.getInstance(auth.token);
 
   const { day } = props;
 
@@ -299,6 +304,7 @@ export default function TrainingCard(props: TrainingCardProps) {
                   if (!newDate) return;
                   setJustClickedOnCopyDate(true);
                   handleCopyTraining(
+                    controller,
                     { newDate, period: selectedPeriod },
                     {
                       router,
@@ -347,6 +353,7 @@ export default function TrainingCard(props: TrainingCardProps) {
                   if (!newDate) return;
 
                   handleCopyTraining(
+                    controller,
                     { newDate, period: selectedPeriod },
                     {
                       router,
@@ -369,3 +376,5 @@ export default function TrainingCard(props: TrainingCardProps) {
     </Box>
   );
 }
+
+export default withAuth(TrainingCard, [UserRole.TRAINER, UserRole.MANAGER]);

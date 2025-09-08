@@ -20,7 +20,7 @@ import { GroupService } from '@/controller/group/group.service';
 import type { Institution } from '@/controller/institution/type/institution.type';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import type { User } from '@/controller/user/type/user.type';
-import { useAuth } from '@/store/auth-provider';
+import { useAuthenticatedAuth } from '@/store/auth-provider';
 import { useDashboard } from '@/store/dashboard-provider';
 import { useMain } from '@/store/main-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
@@ -29,8 +29,9 @@ export default function DashboardPage() {
   const screenSize = useScreenSize();
   const router = useRouter();
 
-  const { users } = useMain();
-  const { role, token, profile } = useAuth();
+  const { users, profile } = useMain();
+  const { role, token } = useAuthenticatedAuth();
+  const controller = GroupController.getInstance(token);
 
   const {
     institutions,
@@ -54,13 +55,11 @@ export default function DashboardPage() {
 
   useEffect(() => {
     // fetch groups when selected institution changes
-    if (!token || !role || !selectedInstitution || selectedInstitution.groups)
-      return;
+    if (!selectedInstitution || selectedInstitution.groups) return;
 
     const fetchGroups = async () => {
-      const groups = await GroupController.findAllByInstitution(
-        selectedInstitution.id,
-        token!
+      const groups = await controller.findAllByInstitution(
+        selectedInstitution.id
       );
 
       for (const group of groups) GroupService.mapMembers(group, users);
@@ -293,7 +292,7 @@ export default function DashboardPage() {
 
           handleApiRequest(
             router,
-            () => GroupController.create(input),
+            () => controller.create(input),
             (group) => {
               setSelectedInstitution({
                 ...selectedInstitution,
