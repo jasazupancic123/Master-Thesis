@@ -1,5 +1,4 @@
 import type { UserId } from '../institution/type/institution.type';
-import type { CompletedFutureWorkloads } from './type/completed-future-workloads.type';
 import type { CompletedTrainingComponent } from './type/completed-training.entity';
 import type {
   CopyTraining,
@@ -13,6 +12,7 @@ import type {
   CopyComponent,
   TrainingComponent,
 } from './type/training-component.type';
+import type { Workload } from './type/workload.type';
 import { CommonService } from '@/common/service/common.service';
 
 const api = CommonService.instance.api;
@@ -31,8 +31,11 @@ export class TrainingController {
     );
   }
 
-  static async findAthleteWorkloads(trainingId: string, userId: string) {
-    return api.get<CompletedFutureWorkloads>(
+  static async findCompletedAthleteWorkloads(
+    trainingId: string,
+    userId: string
+  ) {
+    return api.get<Workload[]>(
       `/training/${trainingId}/athlete/${userId}/workloads`
     );
   }

@@ -40,8 +40,8 @@ import type {
   Exercise,
 } from '@/controller/exercise/type/exercise.type';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
-import { useMain } from '@/store/main-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
+import { useMain } from '@/store/main.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 export const DEFAULT_EXERCISE: Partial<Exercise> = {
   name: '',

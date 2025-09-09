@@ -11,9 +11,9 @@ import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
 import type { Training } from '@/controller/training/type/training.type';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
-import { useMain } from '@/store/main-provider';
-import type { TrainingProviderProps } from '@/store/training-provider';
-import { TrainingProvider } from '@/store/training-provider';
+import { useMain } from '@/store/main.provider';
+import type { TrainingProviderProps } from '@/store/training.provider';
+import { TrainingProvider } from '@/store/training.provider';
 
 export default function TrainingsInitializer({ children }: ChildrenProps) {
   const [state, setState] = useState<TrainingProviderProps | null>(null);

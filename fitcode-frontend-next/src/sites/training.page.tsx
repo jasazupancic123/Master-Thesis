@@ -1,17 +1,18 @@
 'use client';
 
-import { Box, CircularProgress, Typography } from '@mui/material';
+import { Box, CircularProgress } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 
 import { CompletedPlanned } from '@/common/enum/completed-planned.enum';
 import { CommonService } from '@/common/service/common.service';
 import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
 import type { Pagination } from '@/common/type/paginate.type';
+import AthleteOptionsContainer from '@/components/athlete-options-container/athlete-options-container';
 import AthleteTrainingCard from '@/components/athlete-training-card/athlete-training-card';
 import TrainingInProgress from '@/components/training-in-progress/training-in-progress';
 import type { Training } from '@/controller/training/type/training.type';
-import { useTraining } from '@/store/training-provider';
-import AthleteOptionsContainer from '@/components/athlete-options-container/athlete-options-container';
+import { useTraining } from '@/store/training.provider';
+import { TrainingInProgressProvider } from '@/store/training-in-progress.provider';
 
 const PAGE_SIZE = 3;
 const commonService = CommonService.instance;
@@ -169,6 +170,7 @@ export default function TrainingPage() {
         onClick={(type) => {
           setFilter(type as CompletedPlanned);
         }}
+        title="Trainings"
       />
       <Box
         ref={containerRef}
@@ -195,12 +197,14 @@ export default function TrainingPage() {
       </Box>
     </Box>
   ) : (
-    <TrainingInProgress
-      setTrainings={
-        filter === CompletedPlanned.PLANNED
-          ? setFilteredPlannedTrainings
-          : setFilteredCompletedTrainings
-      }
-    />
+    <TrainingInProgressProvider>
+      <TrainingInProgress
+        setTrainings={
+          filter === CompletedPlanned.PLANNED
+            ? setFilteredPlannedTrainings
+            : setFilteredCompletedTrainings
+        }
+      />
+    </TrainingInProgressProvider>
   );
 }

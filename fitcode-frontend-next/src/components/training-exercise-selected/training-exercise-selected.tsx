@@ -1,5 +1,6 @@
 'use client';
 
+import { Check } from '@mui/icons-material';
 import RemoveIcon from '@mui/icons-material/Remove';
 import {
   Box,
@@ -28,10 +29,10 @@ import type { SetState } from '@/common/type/state.type';
 import { ParamType } from '@/controller/component/enum/param.enum';
 import type { ChartWorkloadData } from '@/controller/training/type/chart-workload-data.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { useGroup } from '@/store/group-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { useSupersets } from '@/store/supersets-provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
+import { useGroup } from '@/store/group.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
+import { useSupersets } from '@/store/supersets.provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 
 interface TrainingExerciseSelectedProps {
   supersetIndex: number;
@@ -70,7 +71,11 @@ export default function TrainingExerciseSelected(
   const theme = useTheme();
 
   const { setSelectedExercise } = useSupersets();
-  const { training, selectedAthlete } = useTrainerDayViewContext();
+  const {
+    training,
+    selectedAthlete,
+    selectedAthleteCompletedWorkloads: selectedAthleteWorkloads,
+  } = useTrainerDayViewContext();
   const { group } = useGroup();
 
   const {
@@ -135,6 +140,13 @@ export default function TrainingExerciseSelected(
     const p = payload[0];
     if (!p || !p.payload) return null;
 
+    const completed = selectedAthleteWorkloads.some(
+      (wl) =>
+        wl.trainingId === p.payload.trainingId &&
+        wl.componentId === p.payload.componentId &&
+        wl.exerciseId === p.payload.exerciseId
+    );
+
     return (
       <Box
         key={label}
@@ -192,6 +204,20 @@ export default function TrainingExerciseSelected(
             );
           }
         })}
+        {completed && (
+          <Typography
+            textAlign="center"
+            fontSize={12}
+            sx={{
+              color: theme.palette.success.main,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.5,
+            }}
+          >
+            <Check sx={{ fontSize: 12 }} /> Completed
+          </Typography>
+        )}
       </Box>
     );
   };

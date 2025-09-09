@@ -22,8 +22,8 @@ import {
   LINKS_TRAINER_GROUP_SIDEBAR_SUB_ITEMS,
 } from '@/common/constant/navigation.constant';
 import type { Group } from '@/controller/group/type/group.type';
-import { useAuth } from '@/store/auth-provider';
-import { useGroup } from '@/store/group-provider';
+import { useAuth } from '@/store/auth.provider';
+import { useGroup } from '@/store/group.provider';
 
 export interface TrainerGroupSidebarProps {
   group: Group | null; // selected group

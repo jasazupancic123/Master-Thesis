@@ -11,7 +11,7 @@ import type { ChildrenProps } from '@/common/type/props.type';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import type { Wellness } from '@/controller/user/type/wellness.type';
 import { UserController } from '@/controller/user/user.controller';
-import { useMain } from '@/store/main-provider';
+import { useMain } from '@/store/main.provider';
 import { WellnessProvider } from '@/store/wellness-provider';
 
 export default function WellnessInitializer({ children }: ChildrenProps) {

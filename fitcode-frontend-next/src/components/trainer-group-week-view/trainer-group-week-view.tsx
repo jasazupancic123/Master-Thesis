@@ -32,8 +32,8 @@ import { CommonService } from '@/common/service/common.service';
 import WeekViewItem from '@/components/training-week-view-item/training-week-view-item';
 import { EventType } from '@/controller/group/enum/event-type.enum';
 import type { Week } from '@/controller/group/type/cycle.type';
-import { useGroup } from '@/store/group-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
+import { useGroup } from '@/store/group.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 const commonService = CommonService.instance;
 

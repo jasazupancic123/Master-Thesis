@@ -1,16 +1,16 @@
-import { SvgC } from '@/components/muscle-map-with-tooltip/muscle-map-with-tooltip';
+import type { SvgIconComponent } from '@mui/icons-material';
 import {
   Accessibility,
   AcUnit,
   LocalFireDepartment,
-  SvgIconComponent,
 } from '@mui/icons-material';
 
-import StrengthIcon from '@/assets/icons/Strength.svg';
-import SpeedIcon from '@/assets/icons/Speed.svg';
-import RomIcon from '@/assets/icons/Rom.svg';
-import EnduranceIcon from '@/assets/icons/Endurance.svg';
 import CoordinationIcon from '@/assets/icons/Coordination.svg';
+import EnduranceIcon from '@/assets/icons/Endurance.svg';
+import RomIcon from '@/assets/icons/Rom.svg';
+import SpeedIcon from '@/assets/icons/Speed.svg';
+import StrengthIcon from '@/assets/icons/Strength.svg';
+import type { SvgC } from '@/components/muscle-map-with-tooltip/muscle-map-with-tooltip';
 
 export function getComponentIcon(
   componentName: string

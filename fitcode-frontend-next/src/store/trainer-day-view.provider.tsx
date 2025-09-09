@@ -1,7 +1,7 @@
 import { useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 
-import { useMain } from './main-provider';
+import { useMain } from './main.provider';
 import type {
   GroupContextProps,
   TrainerDayViewContextProps,
@@ -14,12 +14,12 @@ import { handleApiRequest } from '@/common/type/state.type';
 import { ExerciseService } from '@/controller/exercise/exercise.service';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
 import { InstitutionController } from '@/controller/institution/institution.controller';
-import type { CompletedFutureWorkloads } from '@/controller/training/type/completed-future-workloads.type';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
 import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import type { Workload } from '@/controller/training/type/workload.type';
 import type { User, UserEntity } from '@/controller/user/type/user.type';
 import type { WellnessZScore } from '@/controller/user/type/wellness.type';
 import { UserController } from '@/controller/user/user.controller';
@@ -53,9 +53,13 @@ export function TrainerDayViewProvider(
   const [day, setDay] = useState<Day>(commonService.date.getToday());
 
   // check if it's after 12:00, then set to PM, else AM
-  const [selectedPeriod, setSelectedPeriod] = useState<'AM' | 'PM' | undefined>(
-    undefined
-  );
+  const [selectedPeriod, setSelectedPeriod] = useState<
+    | {
+        key: Date;
+        value: 'AM' | 'PM';
+      }
+    | undefined
+  >(undefined);
 
   const [training, setTraining] = useState<Training | undefined>();
   const [component, setComponent] = useState<TrainingComponent | undefined>();
@@ -72,11 +76,10 @@ export function TrainerDayViewProvider(
     null
   );
 
-  const [selectedAthleteWorkloads, setSelectedAthleteWorkloads] =
-    useState<CompletedFutureWorkloads>({
-      futureWorkloads: [],
-      completedWorkloads: [],
-    });
+  const [
+    selectedAthleteCompletedWorkloads,
+    setSelectedAthleteCompletedWorkloads,
+  ] = useState<Workload[]>([]);
 
   const isSettingAthleteWorkloads = useRef(false);
   const previousSelectedAthlete = useRef<User | undefined>(undefined);
@@ -178,8 +181,8 @@ export function TrainerDayViewProvider(
     setPagination,
     search,
     setSearch,
-    selectedAthleteWorkloads,
-    setSelectedAthleteWorkloads,
+    selectedAthleteCompletedWorkloads,
+    setSelectedAthleteCompletedWorkloads,
     isSettingAthleteWorkloads,
     previousSelectedAthlete,
   };

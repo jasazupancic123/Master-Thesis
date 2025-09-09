@@ -1,9 +1,8 @@
-import React from 'react';
 import { Avatar, Box } from '@mui/material';
-import type { SvgIconComponent } from '@mui/icons-material';
-import { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { SvgC } from '../muscle-map-with-tooltip/muscle-map-with-tooltip';
+import React from 'react';
+
 import { getComponentIcon } from '@/common/service/util/icons.util';
+import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 
 type Props = {
   size?: number; // Avatar px size
@@ -33,7 +32,7 @@ export default function ComponentsAvatarCircle({
     n === 0
       ? []
       : components.map((c, i) => {
-          const Icon = getComponentIcon(c.component?.name || '');
+          const Icon = getComponentIcon(c.component?.name || c.id || '');
           if (!Icon) return null;
 
           // Start from top (-90deg) and go clockwise
@@ -71,7 +70,9 @@ export default function ComponentsAvatarCircle({
   const single =
     n === 1
       ? (() => {
-          const Icon = getComponentIcon(components[0]?.component?.name || '');
+          const Icon = getComponentIcon(
+            components[0]?.component?.name || components[0].id || ''
+          );
           if (!Icon) return null;
           const singleSize = size * 0.7;
           return (

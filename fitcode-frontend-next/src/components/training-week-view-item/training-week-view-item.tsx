@@ -13,8 +13,8 @@ import TrainerWeekViewItem from '../training-week-component-item/training-week-c
 import { isOverlaping } from './state';
 import type { GroupEvent } from '@/controller/group/type/group-event.type';
 import type { TrainingComponentWithTrainingId } from '@/controller/training/type/training-component.type';
-import { useGroup } from '@/store/group-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
+import { useGroup } from '@/store/group.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 export type WeekViewItemProps = {
   item: TrainingComponentWithTrainingId | GroupEvent;

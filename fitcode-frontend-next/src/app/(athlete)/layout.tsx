@@ -15,9 +15,9 @@ import { ExerciseController } from '@/controller/exercise/exercise.controller';
 import { InstitutionController } from '@/controller/institution/institution.controller';
 import { MethodController } from '@/controller/method/method.controller';
 import { UserController } from '@/controller/user/user.controller';
-import { AthleteProvider } from '@/store/athlete-provider';
-import type { MainProviderProps } from '@/store/main-provider';
-import { MainProvider } from '@/store/main-provider';
+import { AthleteProvider } from '@/store/athlete.provider';
+import type { MainProviderProps } from '@/store/main.provider';
+import { MainProvider } from '@/store/main.provider';
 
 export default async function Layout({ children }: ChildrenProps) {
   const cookieStore = await cookies();

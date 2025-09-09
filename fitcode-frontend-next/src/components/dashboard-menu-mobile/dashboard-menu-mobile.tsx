@@ -27,9 +27,9 @@ import {
 } from '@/common/constant/navigation.constant';
 import { isAdmin } from '@/common/service/util/firebase-auth.util';
 import type { Institution } from '@/controller/institution/type/institution.type';
-import { useAuth } from '@/store/auth-provider';
-import { useDashboard } from '@/store/dashboard-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
+import { useAuth } from '@/store/auth.provider';
+import { useDashboard } from '@/store/dashboard.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 export default function DashboardMenuMobile() {
   const { institutions, selectedInstitution, setSelectedInstitution } =

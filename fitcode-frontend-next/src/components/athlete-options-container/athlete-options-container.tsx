@@ -1,10 +1,12 @@
 'use client';
 
 import { Box, Typography, useTheme } from '@mui/material';
-import { useRef } from 'react';
+
+import TrapezoidTitle from './trapezoid-title';
 
 interface AthleteOptionsContainerProps {
   items: string[];
+  title: string;
   selectedItem: string;
   onClick: (type: string) => void;
 }
@@ -13,53 +15,63 @@ export default function AthleteOptionsContainer(
   props: AthleteOptionsContainerProps
 ) {
   const theme = useTheme();
-  const selectedTextRef = useRef<HTMLDivElement | null>(null);
 
-  const { items, selectedItem, onClick } = props;
+  const { items, title, selectedItem, onClick } = props;
   return (
     <Box
       width="100%"
       display="flex"
-      justifyContent="center"
+      justifyContent="space-between"
       sx={{
-        backgroundColor: theme.palette.background.light,
-        py: 1,
+        backgroundColor: theme.palette.background.dark,
+        py: 1.5,
+        px: 1,
+        borderTop: `3px solid ${theme.palette.background.textBackground}`,
+        position: 'relative',
       }}
     >
-      {items.map((type) => (
+      <TrapezoidTitle title={title} />
+
+      {items.map((type, i) => (
         <Box
           key={type}
           display="flex"
-          flexDirection="column"
           alignItems="center" // center the inline-sized text inside the column
-          sx={{ width: `calc(100% / ${items.length})` }}
+          gap={0.75}
         >
+          {type === selectedItem && i === 0 && (
+            <Box
+              sx={{
+                backgroundColor: theme.palette.primary.main,
+                width: 4,
+                height: 16,
+                borderRadius: 5,
+              }}
+            />
+          )}
+
           <Typography
             onClick={() => onClick(type)}
             sx={{
               display: 'inline-block', // shrink to content width
-              fontWeight: 'bold',
               fontSize: 12,
               textTransform: 'uppercase',
               cursor: 'pointer',
-              position: 'relative',
-              '&::after': {
-                content: '""',
-                position: 'absolute',
-                left: 0,
-                right: 0, // underline matches text width
-                bottom: -4,
-                height: 2,
-                borderRadius: 2,
-                backgroundColor:
-                  type === selectedItem
-                    ? theme.palette.primary.main
-                    : 'transparent',
-              },
             }}
           >
             {type}
           </Typography>
+
+          {type === selectedItem && i === 1 && (
+            <Box
+              sx={{
+                backgroundColor: theme.palette.primary.main,
+                width: 4,
+                height: 16,
+                borderRadius: 5,
+              }}
+            />
+          )}
         </Box>
       ))}
     </Box>

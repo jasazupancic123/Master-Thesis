@@ -33,9 +33,9 @@ import {
 import type { GroupDateFilter } from '@/common/type/filter.type';
 import type { SetState } from '@/common/type/state.type';
 import FilterButton from '@/components/filter-button/filter-button';
-import { useAuth } from '@/store/auth-provider';
-import { useGroup } from '@/store/group-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
+import { useAuth } from '@/store/auth.provider';
+import { useGroup } from '@/store/group.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 export interface TrainerGroupHeaderProps {
   filter: GroupDateFilter;

@@ -2,12 +2,13 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 
-import { useAuth } from './auth-provider';
+import { useAuth } from './auth.provider';
 import type { ExerciseOrTraining } from '@/common/type/exercise-or-training.type';
 import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
 import type { ChildrenProps } from '@/common/type/props.type';
 import type { SetState } from '@/common/type/state.type';
 import type { Training } from '@/controller/training/type/training.type';
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
 
 interface TrainingContextType extends TrainingProviderProps {
@@ -17,6 +18,10 @@ interface TrainingContextType extends TrainingProviderProps {
   view: ExerciseOrTraining;
   setView: SetState<ExerciseOrTraining>;
   isLoaded: boolean;
+  updateTrainingInProgress: (
+    exercise: TrainingExercise,
+    supersetIndex: number
+  ) => void;
 }
 
 export interface TrainingProviderProps {
@@ -84,6 +89,38 @@ export const TrainingProvider = (
     localStorage.removeItem(STORED_TRAINING_IN_PROGRESS);
   };
 
+  const updateTrainingInProgress = (
+    exercise: TrainingExercise,
+    supersetIndex: number
+  ) => {
+    if (!trainingInProgress) return;
+
+    setTrainingInProgress({
+      ...trainingInProgress,
+      selectedComponent: {
+        ...trainingInProgress.selectedComponent,
+        supersets: trainingInProgress.selectedComponent.supersets.map(
+          (superset) => ({
+            ...superset,
+            exercises: superset.exercises.map((ex) =>
+              ex.id === exercise.id ? exercise : ex
+            ),
+          })
+        ),
+      },
+      supersets: trainingInProgress.supersets.map((superset, index) =>
+        index === supersetIndex
+          ? {
+              ...superset,
+              exercises: superset.exercises.map((ex) =>
+                ex.id === exercise.id ? exercise : ex
+              ),
+            }
+          : superset
+      ),
+    });
+  };
+
   return (
     <TrainingContext.Provider
       value={{
@@ -95,6 +132,7 @@ export const TrainingProvider = (
         view,
         setView,
         isLoaded,
+        updateTrainingInProgress,
       }}
     >
       {children}

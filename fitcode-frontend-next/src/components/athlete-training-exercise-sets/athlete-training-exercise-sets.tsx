@@ -5,17 +5,24 @@ import toast from 'react-hot-toast';
 import { ExerciseParam } from '../exercise-param/exercise-param';
 import LeftRightExerciseText from '../left-right-exercise-text/left-right-exercise-text';
 import { getLAndRValues } from '../training-exercise-card/state';
+import { updateExerciseAttributeValues } from '../training-exercise-card-sets-expanded/state';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import { ParamType } from '@/controller/component/enum/param.enum';
-import { COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE } from '@/controller/training/constant/completed-future-workloads-default-value.constant';
+import type { ExerciseSet } from '@/controller/training/type/exercise-set.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { useScreenSize } from '@/store/screen-size-provider';
+import { useScreenSize } from '@/store/screen-size.provider';
+import { useTraining } from '@/store/training.provider';
 
 interface AthleteTrainingExerciseSetsProps {
   training: Training;
   exercise: TrainingExercise;
   borderBottomRadius: boolean;
+  expanded?: boolean;
+  trainingInProgressView?: boolean;
+  passedSet?: ExerciseSet;
+  setIndex?: number;
+  supersetIndex?: number;
 }
 
 export default function AthleteTrainingExerciseSets(
@@ -24,7 +31,19 @@ export default function AthleteTrainingExerciseSets(
   const theme = useTheme();
   const screenSize = useScreenSize();
 
-  const { training, exercise, borderBottomRadius } = props;
+  const { trainingInProgress, updateTrainingInProgress } = useTraining();
+
+  const {
+    training,
+    exercise,
+    borderBottomRadius,
+    expanded,
+    trainingInProgressView,
+    passedSet,
+    setIndex,
+    supersetIndex,
+  } = props;
+
   return (
     <Box
       display="flex"
@@ -39,7 +58,9 @@ export default function AthleteTrainingExerciseSets(
       }}
     >
       {/* Expanded sets view */}
-      {exercise.sets.map((set, i) => {
+      {(passedSet ? [passedSet] : exercise.sets).map((set, i) => {
+        if (!expanded && i > 0) return null;
+
         return (
           <Grid2
             container
@@ -89,14 +110,16 @@ export default function AthleteTrainingExerciseSets(
                     {
                       set,
                       param,
-                      setIndex: i,
+                      setIndex:
+                        setIndex !== undefined && setIndex !== null
+                          ? setIndex
+                          : i,
                       paramIndex: j - 1,
                     },
                     {
                       training,
                       exercise,
-                      selectedAthleteWorkloads:
-                        COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE,
+                      selectedAthleteWorkloads: [],
                       selectedAthlete: undefined,
                     }
                   );
@@ -118,27 +141,81 @@ export default function AthleteTrainingExerciseSets(
                         .map((lOrR) => (
                           <ExerciseParam
                             key={`${param.field}-${lOrR}`}
-                            showOptions={set.setNumber === 1 && lOrR === 'L'}
+                            showOptions={lOrR === 'L'}
                             disableOptions
-                            disableSets
+                            disableSets={!trainingInProgressView}
+                            dissableSettingValue={
+                              param.field === ParamType.VolWorkSets ||
+                              (trainingInProgressView && !passedSet)
+                            }
                             param={param}
                             value={
                               lOrR === 'L'
                                 ? param.field === ParamType.VolWorkSets
                                   ? ({
                                       ...valueL,
-                                      value: set.setNumber.toString(),
+                                      value: passedSet
+                                        ? passedSet.setNumber
+                                        : !expanded
+                                          ? exercise.sets.length
+                                          : set.setNumber.toString(),
                                     } as AttributeValue)
                                   : valueL
                                 : param.field === ParamType.VolWorkSets
                                   ? ({
                                       ...valueR,
-                                      value: set.setNumber.toString(),
+                                      value: passedSet
+                                        ? passedSet.setNumber
+                                        : !expanded
+                                          ? exercise.sets.length
+                                          : set.setNumber.toString(),
                                     } as AttributeValue)
                                   : valueR || undefined
                             }
                             onOptionChange={() => {}}
-                            onSubOptionChange={() => {}}
+                            onSubOptionChange={(newValue) => {
+                              if (
+                                !passedSet ||
+                                !trainingInProgressView ||
+                                supersetIndex === undefined ||
+                                supersetIndex === null
+                              )
+                                return;
+
+                              if (
+                                !trainingInProgress ||
+                                !trainingInProgress.selectedComponent
+                              )
+                                return null;
+
+                              if (param.field === ParamType.VolWorkSets) return;
+
+                              if (+newValue < 0) return;
+
+                              updateExerciseAttributeValues(
+                                {
+                                  newValue,
+                                  i,
+                                  set,
+                                  lOrR: lOrR as 'L' | 'R',
+                                },
+                                {
+                                  selectedExercises: [exercise],
+                                  exercise: exercise,
+                                  param,
+                                  training,
+                                  component:
+                                    trainingInProgress.selectedComponent,
+                                  setTraining: () => {},
+                                  supersets: trainingInProgress.supersets,
+                                  setDetectedChanges: () => {},
+                                  selectedSubgroup: null,
+                                  setSelectedSubgroup: () => {},
+                                }
+                              );
+
+                              updateTrainingInProgress(exercise, supersetIndex);
+                            }}
                           />
                         ))}
                     </Box>

@@ -12,8 +12,8 @@ import { useTheme } from '@mui/material';
 import { deleteSelectedExercises } from '../trainer-group-day-view/state';
 import type { SetState } from '@/common/type/state.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { useGroup } from '@/store/group-provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
+import { useGroup } from '@/store/group.provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 
 interface TrainingComponentProps {
   trainingComponent: TrainingComponent;

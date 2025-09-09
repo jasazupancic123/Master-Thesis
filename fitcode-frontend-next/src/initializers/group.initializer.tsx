@@ -11,8 +11,8 @@ import { InstitutionController } from '@/controller/institution/institution.cont
 import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
-import { GroupProvider } from '@/store/group-provider';
-import { useMain } from '@/store/main-provider';
+import { GroupProvider } from '@/store/group.provider';
+import { useMain } from '@/store/main.provider';
 
 interface GroupsInitializerProps extends ChildrenProps {
   params: Promise<{

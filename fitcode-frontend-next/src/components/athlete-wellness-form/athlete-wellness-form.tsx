@@ -3,12 +3,12 @@ import { useTheme } from '@mui/material';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 
-import type { SetState } from '@/common/type/state.type';
-import type { Wellness } from '@/controller/user/type/wellness.type';
-import { useScreenSize } from '@/store/screen-size-provider';
 import FatigueIcon from '@/assets/icons/Fatigue.svg';
 import SleepIcon from '@/assets/icons/Sleep.svg';
 import SorenessIcon from '@/assets/icons/Soreness.svg';
+import type { SetState } from '@/common/type/state.type';
+import type { Wellness } from '@/controller/user/type/wellness.type';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 interface Props {
   onSubmit: (_data: Partial<Wellness>) => void | Promise<void>;

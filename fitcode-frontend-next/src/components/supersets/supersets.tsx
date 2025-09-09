@@ -6,6 +6,7 @@ import {
   DndContext,
   DragOverlay,
   PointerSensor,
+  TouchSensor,
   useDroppable,
   useSensor,
   useSensors,
@@ -26,11 +27,11 @@ import type { SetState } from '@/common/type/state.type';
 import { VolWorkSetType } from '@/controller/component/enum/param.enum';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { useGroup } from '@/store/group-provider';
-import { useMain } from '@/store/main-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { SupersetsProvider } from '@/store/supersets-provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
+import { useGroup } from '@/store/group.provider';
+import { useMain } from '@/store/main.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
+import { SupersetsProvider } from '@/store/supersets.provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 
 interface SupersetsProps {
   openAddExerciseModal: boolean;
@@ -160,11 +161,17 @@ export default function Supersets(props: SupersetsProps) {
   }, [component?.method]);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 0, tolerance: 5 },
+    })
   );
 
   const disabledSensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 999999 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 999999 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 999999, tolerance: 999999 },
+    })
   );
 
   const getContainerIdForSupersetIndex = (i: number) => `${component!.id}-${i}`;

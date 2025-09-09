@@ -4,9 +4,9 @@ import React from 'react';
 
 import type { GroupDateFilter } from '@/common/type/filter.type';
 import type { ILink } from '@/common/type/link.type';
-import { useDashboard } from '@/store/dashboard-provider';
-import { useGroup } from '@/store/group-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
+import { useDashboard } from '@/store/dashboard.provider';
+import { useGroup } from '@/store/group.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 interface Props {
   value: GroupDateFilter | ILink;

@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 import { LINK_PROFILE } from '@/common/constant/navigation.constant';
 import type { SetState } from '@/common/type/state.type';
-import { useAuth } from '@/store/auth-provider';
+import { useAuth } from '@/store/auth.provider';
 
 interface ProfileHeaderMenuProps {
   anchorEl: HTMLElement | null;

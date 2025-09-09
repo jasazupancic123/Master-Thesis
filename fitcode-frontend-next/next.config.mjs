@@ -21,6 +21,7 @@ const nextConfig = {
         hostname: 'img.sofascore.com',
       },
     ],
+    domains: ['firebasestorage.googleapis.com'],
   },
   eslint: {
     ignoreDuringBuilds: true,
