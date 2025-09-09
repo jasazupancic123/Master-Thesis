@@ -1,13 +1,10 @@
 import ReactDOM from 'react-dom';
-import toast from 'react-hot-toast';
 
 import type { SetState, SetStateNullable } from '@/common/type/state.type';
 import type { Attribute } from '@/controller/attribute/type/attribute.type';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
-import { ParamType } from '@/controller/component/enum/param.enum';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
 import { CustomWorkloadsSubgroupsService } from '@/controller/training/custom-workloads-subgroups.service';
-import type { CompletedFutureWorkloads } from '@/controller/training/type/completed-future-workloads.type';
 import type { ExerciseSet } from '@/controller/training/type/exercise-set.type';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
 import type { Superset } from '@/controller/training/type/superset.type';
@@ -385,82 +382,30 @@ export const getLAndRValues = (
   state: {
     training: Training;
     exercise: TrainingExercise;
-    selectedAthleteWorkloads: CompletedFutureWorkloads;
+    selectedAthleteWorkloads: Workload[];
     selectedAthlete?: User;
   }
 ): {
   valueL: AttributeValue | null;
   valueR: AttributeValue | null;
 } => {
-  const { set, param, setIndex, paramIndex } = input;
-  const { training, exercise, selectedAthleteWorkloads, selectedAthlete } =
-    state;
+  const { param, setIndex } = input;
+  const { exercise } = state;
 
-  let valueL: AttributeValue | null = null;
-  let valueR: AttributeValue | null = null;
-
-  // find the fetched future custom workload for the selected athlete
-  const foundFutureWorkload = selectedAthleteWorkloads.futureWorkloads.find(
-    (fw) =>
-      fw.trainingId === training.id &&
-      fw.exerciseId === exercise.id &&
-      fw.setNumber === set.setNumber &&
-      fw.userId === selectedAthlete?.uid
-  );
-
-  if (foundFutureWorkload && param.field !== ParamType.VolWorkSets) {
-    const perscribedFieldNameL = getPerscribedFieldName(param, 'L');
-    const perscribedFieldNameR = getPerscribedFieldName(param, 'R');
-
-    if (!perscribedFieldNameL || !perscribedFieldNameR) {
-      toast.error(`Invalid parameter field: ${param.field}`);
-      return { valueL: null, valueR: null };
-    }
-
-    const selectedL = exercise.sets[setIndex].paramValuesL[paramIndex].selected;
-    const selectedR =
-      exercise.sets[setIndex].paramValuesR?.[paramIndex].selected;
-
-    valueL = {
-      field: param.field,
-      selected: selectedL,
-      value:
-        foundFutureWorkload?.[perscribedFieldNameL]?.toString() ||
-        exercise.sets[setIndex].paramValuesL.find(
-          (pv) => pv.field === param.field
-        )?.value ||
-        '',
-    };
-
-    valueR = selectedR
-      ? {
-          field: param.field,
-          selected: selectedR,
-          value:
-            foundFutureWorkload?.[perscribedFieldNameR]?.toString() ||
-            exercise.sets[setIndex].paramValuesR?.find(
-              (pv) => pv.field === param.field
-            )?.value ||
-            '',
-        }
-      : null;
-  } else {
-    valueL = exercise.sets[setIndex].paramValuesL.find(
-      (pv) => pv.field === param.field
-    ) || {
-      field: param.field,
-      selected: 'set',
-      value: exercise.sets.length.toString(),
-    };
-
-    valueR = exercise.sets[setIndex].paramValuesR?.find(
-      (pv) => pv.field === param.field
-    ) || {
-      field: param.field,
-      selected: 'set',
-      value: exercise.sets.length.toString(),
-    };
-  }
+  const valueL: AttributeValue | null = exercise.sets[
+    setIndex
+  ].paramValuesL.find((pv) => pv.field === param.field) || {
+    field: param.field,
+    selected: 'set',
+    value: exercise.sets.length.toString(),
+  };
+  const valueR: AttributeValue | null = exercise.sets[
+    setIndex
+  ].paramValuesR?.find((pv) => pv.field === param.field) || {
+    field: param.field,
+    selected: 'set',
+    value: exercise.sets.length.toString(),
+  };
 
   return { valueL, valueR };
 };

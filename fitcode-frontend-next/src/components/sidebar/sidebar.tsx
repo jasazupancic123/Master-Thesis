@@ -14,12 +14,12 @@ import ListItemText from '@mui/material/ListItemText';
 import Link from 'next/link';
 import * as React from 'react';
 
+import { LINKS_SIDEBAR } from '@/common/constant/navigation.constant';
 import { CommonService } from '@/common/service/common.service';
 import type { AuthContextType } from '@/common/type/context.type';
-import { useAuth } from '@/store/auth-provider';
-import { useAthlete } from '@/store/athlete-provider';
-import { LINKS_SIDEBAR } from '@/common/constant/navigation.constant';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
+import { useAthlete } from '@/store/athlete.provider';
+import { useAuth } from '@/store/auth.provider';
 
 const commonService = CommonService.instance;
 

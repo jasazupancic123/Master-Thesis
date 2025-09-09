@@ -1,24 +1,23 @@
 'use client';
 
+import { Button, useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
+import { WellnessAnthropometry } from '@/common/enum/wellnes-anthropometry.enum';
 import { handleApiRequest } from '@/common/type/state.type';
+import AthleteAnthropometryForm from '@/components/athlete-anthropometry-form/athlete-anthropometry-form';
+import AthleteOptionsContainer from '@/components/athlete-options-container/athlete-options-container';
 import AthleteWellnessForm from '@/components/athlete-wellness-form/athlete-wellness-form';
+import { paintHeatmaps } from '@/components/muscle-heatmap-view/state';
 import type { Wellness } from '@/controller/user/type/wellness.type';
 import { UserController } from '@/controller/user/user.controller';
 import { setCachedWellness } from '@/session-cache/wellness.session-cache';
-import { WellnessAnthropometry } from '@/common/enum/wellnes-anthropometry.enum';
-import AthleteOptionsContainer from '@/components/athlete-options-container/athlete-options-container';
-import { useEffect, useState } from 'react';
-import { Button, useTheme } from '@mui/material';
-import { useScreenSize } from '@/store/screen-size-provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 import { useWellness } from '@/store/wellness-provider';
-import AthleteAnthropometryForm from '@/components/athlete-anthropometry-form/athlete-anthropometry-form';
-import { MuscleService } from '@/controller/exercise/muscle.service';
-import { paintHeatmaps } from '@/components/muscle-heatmap-view/state';
 
 export type SubmitWellnessInput = Parameters<typeof UserController.saveMeta>[0];
 
@@ -68,7 +67,7 @@ export default function FeedbackPage() {
   });
 
   useEffect(() => {
-    if(filter !== WellnessAnthropometry.ANTHROPOMETRY) return;
+    if (filter !== WellnessAnthropometry.ANTHROPOMETRY) return;
     paintHeatmaps(muscleLoads, true);
   }, [muscleLoads, filter]);
 
@@ -104,6 +103,7 @@ export default function FeedbackPage() {
           onClick={(type) => {
             setFilter(type as WellnessAnthropometry);
           }}
+          title="Feedback"
         />
 
         {filter === WellnessAnthropometry.WELLNESS ? (

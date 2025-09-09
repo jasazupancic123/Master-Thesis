@@ -4,7 +4,7 @@ import Stack from '@mui/material/Stack';
 import React from 'react';
 
 import { theme } from '@/app/style';
-import { CommonService } from '@/common/service/common.service';
+import { getComponentIcon } from '@/common/service/util/icons.util';
 import type { SetState } from '@/common/type/state.type';
 import type {
   Component,
@@ -12,10 +12,7 @@ import type {
 } from '@/controller/component/type/component.type';
 import type { Target } from '@/controller/target/type/target.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { getComponentIcon } from '@/common/service/util/icons.util';
-
-const commonService = CommonService.instance;
+import { useScreenSize } from '@/store/screen-size.provider';
 
 export interface ExerciseChipsProps {
   components: (Component | TreeComponent)[];

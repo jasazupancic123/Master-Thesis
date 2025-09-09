@@ -3,11 +3,11 @@ import { Box, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 
 import { CommonService } from '@/common/service/common.service';
+import { getComponentIcon } from '@/common/service/util/icons.util';
 import type { SetState } from '@/common/type/state.type';
 import type { GroupEvent } from '@/controller/group/type/group-event.type';
 import type { TrainingComponentWithTrainingId } from '@/controller/training/type/training-component.type';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { getComponentIcon } from '@/common/service/util/icons.util';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 const commonService = CommonService.instance;
 

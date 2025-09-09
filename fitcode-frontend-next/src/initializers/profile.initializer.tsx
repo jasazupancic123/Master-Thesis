@@ -10,7 +10,7 @@ import {
   getCachedProfile,
   setCachedProfile,
 } from '@/session-cache/profile.session-cache';
-import { ProfileProvider } from '@/store/profile-provider';
+import { ProfileProvider } from '@/store/profile.provider';
 
 export default function ProfileInitializer({ children }: ChildrenProps) {
   const [user, setUser] = useState<User | null>(getCachedProfile());

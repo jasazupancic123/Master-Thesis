@@ -12,7 +12,7 @@ import type { Week } from '@/controller/group/type/cycle.type';
 import type { Group } from '@/controller/group/type/group.type';
 import type { GroupEvent } from '@/controller/group/type/group-event.type';
 import type { Training } from '@/controller/training/type/training.type';
-import { TrainingComponentWithTrainingId } from '@/controller/training/type/training-component.type';
+import type { TrainingComponentWithTrainingId } from '@/controller/training/type/training-component.type';
 
 const blurSelect = (selectRef: RefObject<HTMLDivElement | null>) => {
   if (selectRef.current) {

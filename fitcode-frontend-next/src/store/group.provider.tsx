@@ -3,7 +3,7 @@
 import dayjs from 'dayjs';
 import { createContext, useContext, useState } from 'react';
 
-import { useMain } from './main-provider';
+import { useMain } from './main.provider';
 import type {
   GroupContextProps,
   GroupIdPageProps,

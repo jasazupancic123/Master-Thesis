@@ -7,13 +7,14 @@ import toast from 'react-hot-toast';
 
 import LoadingOverlay from '../loading-overlay/loading-overlay';
 import MyModal from '../modal/modal';
+import { BACKEND_API_BASE_URL } from '@/common/constant/api.constant';
 import { CommonService } from '@/common/service/common.service';
 import { handleApiRequest } from '@/common/type/state.type';
 import { InstitutionController } from '@/controller/institution/institution.controller';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import type { User } from '@/controller/user/type/user.type';
-import { useDashboard } from '@/store/dashboard-provider';
-import { useMain } from '@/store/main-provider';
+import { useDashboard } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
 
 const commonService = CommonService.instance;
 const firebaseService = commonService.firebase;
@@ -223,6 +224,8 @@ export default function RegisterUsersDashboard(
   };
 
   const handleSubmit = (e: React.FormEvent) => {
+    if (!selectedInstitution) return;
+
     e.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
@@ -267,8 +270,10 @@ export default function RegisterUsersDashboard(
       router,
       () => firebaseService.functions.createUserWithRole(input),
       () => {
+        refetchMembers(
+          `${BACKEND_API_BASE_URL}/institution/${selectedInstitution.id}/find/all`
+        );
         refetchUsers();
-        refetchMembers();
       },
       () => {
         setIsUploadingMembers(false);

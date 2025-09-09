@@ -64,12 +64,12 @@ export class TrainingController {
 
   @Get(':trainingId/athlete/:athleteId/workloads')
   @Auth()
-  async findAthleteWorkloads(
+  async findCompletedAthleteWorkloads(
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
     @Param('athleteId') athleteId: string,
   ) {
-    return await this.trainingService.findAthleteWorkloads(user, {
+    return await this.trainingService.findCompletedAthleteWorkloads(user, {
       trainingId,
       uid: athleteId,
     });

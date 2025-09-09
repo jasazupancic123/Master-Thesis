@@ -7,6 +7,7 @@ import React, { Fragment, useEffect, useState } from 'react';
 
 import ExerciseChips from '../exercise-chips/exercise-chips';
 import HorizontalItemsList from '../horizontal-items-list/horizontal-items-list';
+import MobileDoubleTextItems from '../mobile-double-text-items/mobile-double-text-items';
 import { DIVIDER_HEIGHT, MAX_WIDTH } from '../trainer-day-view/constant';
 import VerticalLinesBorders from '../vertical-lines-borders/vertical-lines-borders';
 import { CommonService } from '@/common/service/common.service';
@@ -20,10 +21,9 @@ import type { Component } from '@/controller/component/type/component.type';
 import { GroupService } from '@/controller/group/group.service';
 import type { Target } from '@/controller/target/type/target.type';
 import { TrainingService } from '@/controller/training/training.service';
-import { useGroup } from '@/store/group-provider';
-import { useMain } from '@/store/main-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
-import MobileDoubleTextItems from '../mobile-double-text-items/mobile-double-text-items';
+import { useGroup } from '@/store/group.provider';
+import { useMain } from '@/store/main.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 const commonService = CommonService.instance;
 

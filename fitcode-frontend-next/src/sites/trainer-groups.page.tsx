@@ -6,7 +6,7 @@ import Typography from '@mui/material/Typography';
 
 import TrainerGroupHeader from '../components/trainer-group-header/trainer-group-header';
 import GroupSidebar from '@/components/group-sidebar/group-sidebar';
-import { useScreenSize } from '@/store/screen-size-provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 export default function TrainerGroupsPage() {
   const theme = useTheme();

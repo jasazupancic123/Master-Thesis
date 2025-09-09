@@ -1,13 +1,14 @@
-import { HEATMAP_COLORS } from '@/common/constant/color.constant';
-import { useScreenSize } from '@/store/screen-size-provider';
 import { Box, Typography } from '@mui/material';
+import { useEffect, useState } from 'react';
+
 import MuscleMapWithTooltip from '../muscle-map-with-tooltip/muscle-map-with-tooltip';
 import HeatmapBack from '@/assets/svg/heatmap-back.svg';
 import HeatmapFront from '@/assets/svg/heatmap-front.svg';
-import { useEffect, useState } from 'react';
-import { MuscleTip } from '@/controller/exercise/type/muscle-tip.type';
-import { SetState } from '@/common/type/state.type';
+import { HEATMAP_COLORS } from '@/common/constant/color.constant';
+import type { SetState } from '@/common/type/state.type';
 import { MuscleService } from '@/controller/exercise/muscle.service';
+import type { MuscleTip } from '@/controller/exercise/type/muscle-tip.type';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 interface AthleteAnthropometryFormProps {
   muscleLoads: [string, number][];

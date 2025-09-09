@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 
 import AthleteSuperset from '../athlete-superset/athlete-superset';
 import MyModal from '../modal/modal';
-import { CommonService } from '@/common/service/common.service';
+import { getComponentIcon } from '@/common/service/util/icons.util';
 import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
 import type { SetState } from '@/common/type/state.type';
 import { handleApiRequest } from '@/common/type/state.type';
@@ -16,11 +16,9 @@ import { TrainingService } from '@/controller/training/training.service';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
-import { useAuth } from '@/store/auth-provider';
-import { useTraining } from '@/store/training-provider';
-import { getComponentIcon } from '@/common/service/util/icons.util';
-
-const commonService = CommonService.instance;
+import { useAuth } from '@/store/auth.provider';
+import { useMain } from '@/store/main.provider';
+import { useTraining } from '@/store/training.provider';
 
 interface AthleteTrainingComponentsProps {
   training: Training;
@@ -51,6 +49,7 @@ export default function AthleteTrainingComponents(
 
   const { setTrainingInProgress, setView } = useTraining();
   const { user } = useAuth();
+  const { exercises } = useMain();
 
   const theme = useTheme();
   const router = useRouter();
@@ -205,8 +204,14 @@ export default function AthleteTrainingComponents(
             () =>
               TrainingController.getPrescribedTraining(training.id, user.uid),
             (training) => {
+              if (!training) {
+                toast.error('Failed to start training. Please try again.');
+                return;
+              }
+              TrainingService.mapData(training, { exercises });
+
               setTrainingInProgress({
-                training: training,
+                training,
                 selectedComponent: selectedComponent,
                 userId: user.uid,
               } as TrainingInProgress);

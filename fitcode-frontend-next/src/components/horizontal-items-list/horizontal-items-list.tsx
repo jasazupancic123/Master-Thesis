@@ -9,9 +9,9 @@ import toast from 'react-hot-toast';
 import type { Day } from '@/common/service/util/date.util';
 import type { Training } from '@/controller/training/type/training.type';
 import type { User } from '@/controller/user/type/user.type';
-import { useDashboard } from '@/store/dashboard-provider';
-import { useGroup } from '@/store/group-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
+import { useDashboard } from '@/store/dashboard.provider';
+import { useGroup } from '@/store/group.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 interface HorizontalItemsListProps {
   items: { label: string; value: string; sublabel?: string }[];

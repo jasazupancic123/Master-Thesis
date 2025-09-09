@@ -9,7 +9,7 @@ import type { SetState } from '@/common/type/state.type';
 import { handleApiRequest } from '@/common/type/state.type';
 import type { CustomClaims } from '@/controller/user/type/custom-claims.type';
 import { UserController } from '@/controller/user/user.controller';
-import { useAuth } from '@/store/auth-provider';
+import { useAuth } from '@/store/auth.provider';
 
 interface FaceCapturePreviewsModalProps {
   previews: {

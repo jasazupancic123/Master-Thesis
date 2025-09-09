@@ -1,24 +1,22 @@
 'use client';
 
-import { Settings } from '@mui/icons-material';
+import Menu from '@mui/icons-material/Menu';
 import { Avatar, IconButton, Tooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
+import dayjs from 'dayjs';
 import Link from 'next/link';
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 
 import BottomNavigation from '../bottom-navigation/bottom-navigation';
 import Sidebar from '../sidebar/sidebar';
+import SettingsIcon from '@/assets/icons/Settings.svg';
 import { LINK_PROFILE } from '@/common/constant/navigation.constant';
-import Logo from '@/components/logo/logo';
-import { useAthlete } from '@/store/athlete-provider';
-import { useAuth } from '@/store/auth-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
+import { useAuth } from '@/store/auth.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 export default function AthleteHeader() {
-  const { filter } = useAthlete();
-
   const theme = useTheme();
   const screenSize = useScreenSize();
   const { profile, user } = useAuth();
@@ -33,7 +31,7 @@ export default function AthleteHeader() {
       <Box
         display="flex"
         width="100%"
-        height={70}
+        height={60}
         sx={{
           backgroundColor: theme.palette.background.light,
           justifyContent: 'space-between',
@@ -48,12 +46,11 @@ export default function AthleteHeader() {
       >
         <Typography
           sx={{
-            fontWeight: 'bold',
             color: 'text.primary',
-            fontSize: screenSize.isGigaSmall ? 16 : 18,
+            fontSize: 12,
           }}
         >
-          {filter.label}
+          {dayjs().format('DD-MMM-YY').toUpperCase()}
         </Typography>
         <Box
           sx={{
@@ -62,11 +59,21 @@ export default function AthleteHeader() {
             transform: 'translateX(-50%)',
           }}
         >
-          <Logo
-            width={screenSize.isGigaSmall ? 40 : 52}
-            height={screenSize.isGigaSmall ? 27 : 35}
-            version="narrow"
-          />
+          <Tooltip title={user?.email}>
+            <Link href={LINK_PROFILE.href} passHref>
+              <Avatar
+                className="avatar-border"
+                src={avatarSrc || '/user_avatar.png'} // Path to the image in the public folder
+                sx={{
+                  width: 40,
+                  height: 40,
+                  mx: 0,
+                  my: 1,
+                  cursor: 'pointer',
+                }}
+              />
+            </Link>
+          </Tooltip>
         </Box>
 
         <Box
@@ -75,37 +82,29 @@ export default function AthleteHeader() {
           alignItems="center"
           gap={1}
         >
-          <Tooltip title={user?.email}>
-            <Link href={LINK_PROFILE.href} passHref>
-              <Avatar
-                className="avatar-border"
-                src={avatarSrc || '/user_avatar.png'} // Path to the image in the public folder
-                sx={{
-                  width: screenSize.isGigaSmall ? 30 : 35,
-                  height: screenSize.isGigaSmall ? 30 : 35,
-                  mx: 0,
-                  my: 1,
-                  cursor: 'pointer',
-                }}
-              />
-            </Link>
-          </Tooltip>
-          <Tooltip title={user?.email}>
-            <IconButton
-              sx={{
-                p: 0,
-                m: 0,
-                cursor: 'pointer',
+          <IconButton
+            sx={{
+              p: 0,
+              m: 0,
+              cursor: 'pointer',
+            }}
+          >
+            <SettingsIcon
+              style={{
+                width: 20,
+                height: 20,
               }}
-            >
-              <Settings
-                sx={{
-                  width: 25,
-                  height: 25,
-                }}
-              />
-            </IconButton>
-          </Tooltip>
+            />
+          </IconButton>
+          <IconButton
+            sx={{
+              p: 0,
+              m: 0,
+              cursor: 'pointer',
+            }}
+          >
+            <Menu sx={{ fontSize: 24 }} />
+          </IconButton>
         </Box>
       </Box>
 

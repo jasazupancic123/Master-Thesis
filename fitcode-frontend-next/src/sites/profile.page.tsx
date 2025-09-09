@@ -31,8 +31,8 @@ import { Gender } from '@/controller/user/enum/gender.enum';
 import { SportLevel } from '@/controller/user/enum/sport-level.enum';
 import type { UserEntity } from '@/controller/user/type/user.type';
 import { UserController } from '@/controller/user/user.controller';
-import { useAuth } from '@/store/auth-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
+import { useAuth } from '@/store/auth.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 const DEFAULT_MARGIN = 1;
 

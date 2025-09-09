@@ -6,17 +6,14 @@ import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
-import { CommonService } from '@/common/service/common.service';
+import { getComponentIcon } from '@/common/service/util/icons.util';
 import type { SetState } from '@/common/type/state.type';
 import { ComponentLevel } from '@/controller/group/enum/component-level.enum';
 import type { Cycle } from '@/controller/group/type/cycle.type';
 import type { Target } from '@/controller/target/type/target.type';
-import { useGroup } from '@/store/group-provider';
-import { useMain } from '@/store/main-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { getComponentIcon } from '@/common/service/util/icons.util';
-
-const commonService = CommonService.instance;
+import { useGroup } from '@/store/group.provider';
+import { useMain } from '@/store/main.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 interface CycleComponentsProps {
   sortedCycles: Cycle[];

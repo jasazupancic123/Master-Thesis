@@ -9,14 +9,14 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
 import HorizontalItemsList from '../horizontal-items-list/horizontal-items-list';
+import MobileDoubleTextItems from '../mobile-double-text-items/mobile-double-text-items';
 import MultiCycleSlider from '../multi-cycle-slider/multi-cycle-slider';
 import { handleAddCycle } from './state';
 import type { SetState } from '@/common/type/state.type';
 import type { Cycle } from '@/controller/group/type/cycle.type';
 import type { Group } from '@/controller/group/type/group.type';
-import { useGroup } from '@/store/group-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
-import MobileDoubleTextItems from '../mobile-double-text-items/mobile-double-text-items';
+import { useGroup } from '@/store/group.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 dayjs.extend(dayOfYear);
 

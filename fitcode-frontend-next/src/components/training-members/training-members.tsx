@@ -25,9 +25,9 @@ import { onDragEndSubgroup } from '../trainer-day-view/state';
 import TrainingMembersSubgroup from '../training-members-subgroups/training-members-subgroups';
 import { handleAddMembersSubgroup, updateSelectedAthlete } from './state';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
-import { useGroup } from '@/store/group-provider';
-import { useMain } from '@/store/main-provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
+import { useGroup } from '@/store/group.provider';
+import { useMain } from '@/store/main.provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 
 interface TrainingMembersProps {
   isSticky: boolean;

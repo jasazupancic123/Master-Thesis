@@ -13,9 +13,9 @@ import type { Dimensions } from '@/common/type/dimensions.type';
 import type { ParamType } from '@/controller/component/enum/param.enum';
 import type { ChartWorkloadData } from '@/controller/training/type/chart-workload-data.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { useGroup } from '@/store/group-provider';
-import { useSupersets } from '@/store/supersets-provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
+import { useGroup } from '@/store/group.provider';
+import { useSupersets } from '@/store/supersets.provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 
 export interface TrainingExerciseCardContainerProps {
   supersetIndex: number;
@@ -32,7 +32,7 @@ export default function TrainingExerciseCardContainer(
   const {
     training,
     selectedAthlete,
-    selectedAthleteWorkloads,
+    selectedAthleteCompletedWorkloads: selectedAthleteWorkloads,
     component,
     selectedSubgroup,
   } = useTrainerDayViewContext();

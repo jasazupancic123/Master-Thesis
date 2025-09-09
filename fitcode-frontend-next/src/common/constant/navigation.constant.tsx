@@ -147,6 +147,7 @@ export const LINKS_SIDEBAR = {
     trainings: LINK_TRAININGS,
     calendar: LINK_CALENDAR,
     feedback: LINK_FEEDBACK,
+    profile: LINK_PROFILE,
   },
   [UserRole.TRAINER]: {
     dashboard: LINK_DASHBOARD,

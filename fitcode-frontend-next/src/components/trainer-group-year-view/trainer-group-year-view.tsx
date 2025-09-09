@@ -14,8 +14,8 @@ import { handleSaveGroup } from '@/app/(trainer)/groups/[group_id]/state';
 import MultiCycleSliderLayout from '@/components/multi-cycle-slider-layout/multi-cycle-slider.layout';
 import CycleComponents from '@/components/training-year-cycle-components/training-year-cycle-components';
 import type { Cycle } from '@/controller/group/type/cycle.type';
-import { useGroup } from '@/store/group-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
+import { useGroup } from '@/store/group.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 export default function TrainerYearView() {
   const screenSize = useScreenSize();

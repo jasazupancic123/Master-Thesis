@@ -12,9 +12,9 @@ import { InstitutionService } from '@/controller/institution/institution.service
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import type { UserEntity } from '@/controller/user/type/user.type';
 import DashboardLayout from '@/sites/dashboard.layout';
-import type { DashboardPageProps } from '@/store/dashboard-provider';
-import { DashboardProvider } from '@/store/dashboard-provider';
-import { useMain } from '@/store/main-provider';
+import type { DashboardPageProps } from '@/store/dashboard.provider';
+import { DashboardProvider } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
 
 export default function DashboardInitializer({ children }: ChildrenProps) {
   const [state, setState] = useState<DashboardPageProps | null>(null);
@@ -30,6 +30,14 @@ export default function DashboardInitializer({ children }: ChildrenProps) {
   >(`${BACKEND_API_BASE_URL}/institution/${institutionId}/find/all`, {
     skip: !institutionId, // wait until we have ID
   });
+
+  useEffect(() => {
+    if (!state || !state.selectedInstitution) {
+      setInstitutionId(null);
+      return;
+    }
+    setInstitutionId(state.selectedInstitution.id);
+  }, [state, state?.selectedInstitution]);
 
   useEffect(() => {
     if (fetchedMembers) {

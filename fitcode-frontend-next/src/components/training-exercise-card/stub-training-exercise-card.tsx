@@ -6,8 +6,8 @@ import { useState } from 'react';
 
 import type { TrainingExerciseCardProps } from '../trainer-day-view/props';
 import StubTrainingExerciseCardCollapsedSets from '../training-exercise-card-sets-collapsed/stub-training-exercise-card-collapsed-sets';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
+import { useScreenSize } from '@/store/screen-size.provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 
 export default function StubTrainingExerciseCard(
   props: Pick<TrainingExerciseCardProps, 'exercise'> & {

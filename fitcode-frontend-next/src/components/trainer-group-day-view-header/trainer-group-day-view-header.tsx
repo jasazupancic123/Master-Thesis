@@ -11,9 +11,9 @@ import HorizontalItemsList from '../horizontal-items-list/horizontal-items-list'
 import { MAX_WIDTH } from '../trainer-day-view/constant';
 import { COLOR } from '@/common/constant/color.constant';
 import { CommonService } from '@/common/service/common.service';
-import { useGroup } from '@/store/group-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
+import { useGroup } from '@/store/group.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 
 dayjs.extend(weekOfYear);
 
@@ -63,7 +63,7 @@ export default function GroupTrainerDayViewHeader(
       period = new Date(todaysTrainings[0].from).getHours() >= 12 ? 'PM' : 'AM';
     }
 
-    setSelectedPeriod(period);
+    setSelectedPeriod({ key: new Date(), value: period });
   }, [day]);
 
   interface PeriodSelectProps {
@@ -82,7 +82,7 @@ export default function GroupTrainerDayViewHeader(
         gap={smallDisplay ? 4 : 1}
       >
         {['AM', 'PM'].map((period) => {
-          const isPeriodSelected = selectedPeriod === period;
+          const isPeriodSelected = selectedPeriod?.value === period;
           return (
             <Box
               key={period}
@@ -100,7 +100,10 @@ export default function GroupTrainerDayViewHeader(
                   setDetectedChanges(false);
                   return;
                 }
-                setSelectedPeriod(period as 'AM' | 'PM');
+                setSelectedPeriod({
+                  key: new Date(),
+                  value: period as 'AM' | 'PM',
+                });
               }}
             >
               <Box

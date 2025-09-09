@@ -5,9 +5,9 @@ import React from 'react';
 import { Toaster } from 'react-hot-toast';
 
 import type { ChildrenProps } from '@/common/type/props.type';
-import { AuthProvider } from '@/store/auth-provider';
-import { ScreenSizeProvider } from '@/store/screen-size-provider';
-import ThemeRegistry from '@/store/theme-registry';
+import { AuthProvider } from '@/store/auth.provider';
+import { ScreenSizeProvider } from '@/store/screen-size.provider';
+import ThemeRegistry from '@/store/theme.registry';
 
 const inter = Inter({ subsets: ['latin'] });
 

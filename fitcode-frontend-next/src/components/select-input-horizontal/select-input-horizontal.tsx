@@ -5,7 +5,7 @@ import Select from '@mui/material/Select';
 import type { ReactNode } from 'react';
 import React from 'react';
 
-import { useScreenSize } from '@/store/screen-size-provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 interface Props<T> {
   icon: ReactNode;

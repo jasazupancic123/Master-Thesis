@@ -1,9 +1,8 @@
+import type { TrainingExercise } from '../training/type/training-exercise.type';
 import {
   HEATMAP_BACK_ID,
   HEATMAP_FRONT_ID,
 } from '@/common/constant/heatmap.constant';
-import type { TrainingExercise } from '../training/type/training-exercise.type';
-import { Exercise } from './type/exercise.type';
 
 export class MuscleService {
   static generateMuscleLoads(

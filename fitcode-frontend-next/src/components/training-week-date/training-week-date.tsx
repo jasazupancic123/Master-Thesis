@@ -18,8 +18,8 @@ import type { Target } from '@/controller/target/type/target.type';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { useGroup } from '@/store/group-provider';
-import { useMain } from '@/store/main-provider';
+import { useGroup } from '@/store/group.provider';
+import { useMain } from '@/store/main.provider';
 
 interface TrainingWeekDatesProps {
   week: dayjs.Dayjs[];

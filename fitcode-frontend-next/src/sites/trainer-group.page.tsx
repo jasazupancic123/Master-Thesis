@@ -9,8 +9,8 @@ import TrainerCycleView from '@/components/trainer-group-cycle-view/trainer-grou
 import TrainerDayView from '@/components/trainer-group-day-view/trainer-group-day-view';
 import TrainerWeekView from '@/components/trainer-group-week-view/trainer-group-week-view';
 import TrainerYearView from '@/components/trainer-group-year-view/trainer-group-year-view';
-import { useGroup } from '@/store/group-provider';
-import { TrainerDayViewProvider } from '@/store/trainer-day-view-provider';
+import { useGroup } from '@/store/group.provider';
+import { TrainerDayViewProvider } from '@/store/trainer-day-view.provider';
 
 export default function TrainerGroupPage() {
   const context = useGroup();

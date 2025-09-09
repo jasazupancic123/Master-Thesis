@@ -23,10 +23,10 @@ import MyModal from '../modal/modal';
 import type { TrainingCardProps } from '../trainer-day-view/props';
 import { handleCopyTraining } from '../trainer-day-view/state';
 import TrainingComponentLayout from '../training-component-layout/training-component-layout';
-import { useGroup } from '@/store/group-provider';
-import { useMain } from '@/store/main-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
+import { useGroup } from '@/store/group.provider';
+import { useMain } from '@/store/main.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 
 export default function TrainingCard(props: TrainingCardProps) {
   const { components, exercises, methods } = useMain();
@@ -79,8 +79,8 @@ export default function TrainingCard(props: TrainingCardProps) {
     return thisCycleTrainings.some(
       (t) =>
         dayjs(t.from).isSame(date, 'day') &&
-        ((dayjs(t.from).hour() < 12 && selectedPeriod === 'AM') ||
-          (dayjs(t.from).hour() >= 12 && selectedPeriod === 'PM'))
+        ((dayjs(t.from).hour() < 12 && selectedPeriod?.value === 'AM') ||
+          (dayjs(t.from).hour() >= 12 && selectedPeriod?.value === 'PM'))
     );
   };
 
@@ -101,7 +101,7 @@ export default function TrainingCard(props: TrainingCardProps) {
               left: 0,
             }}
           >
-            {selectedPeriod === 'AM' ? 'Morning' : 'Afternoon'}
+            {selectedPeriod?.value === 'AM' ? 'Morning' : 'Afternoon'}
           </Typography>
 
           {cycle && component ? (
@@ -270,7 +270,7 @@ export default function TrainingCard(props: TrainingCardProps) {
         cancelText="Close"
         onCancel={() => {
           setShowCopyTrainingModal(false);
-          setSelectedPeriod('AM');
+          setSelectedPeriod({ key: new Date(), value: 'AM' });
           setDatePickerOpen(false);
         }}
       >
@@ -280,7 +280,10 @@ export default function TrainingCard(props: TrainingCardProps) {
           <Select
             value={selectedPeriod}
             onChange={(event) =>
-              setSelectedPeriod(event.target.value as 'AM' | 'PM')
+              setSelectedPeriod({
+                key: new Date(),
+                value: event.target.value as 'AM' | 'PM',
+              })
             }
             fullWidth
           >
@@ -299,7 +302,7 @@ export default function TrainingCard(props: TrainingCardProps) {
                   if (!newDate || !selectedPeriod) return;
                   setJustClickedOnCopyDate(true);
                   handleCopyTraining(
-                    { newDate, period: selectedPeriod },
+                    { newDate, period: selectedPeriod.value },
                     {
                       router,
                       training,
@@ -347,7 +350,7 @@ export default function TrainingCard(props: TrainingCardProps) {
                   if (!newDate || !selectedPeriod) return;
 
                   handleCopyTraining(
-                    { newDate, period: selectedPeriod },
+                    { newDate, period: selectedPeriod.value },
                     {
                       router,
                       training,

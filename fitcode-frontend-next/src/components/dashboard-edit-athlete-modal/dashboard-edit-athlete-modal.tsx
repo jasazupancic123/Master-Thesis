@@ -21,8 +21,8 @@ import type { SetState } from '@/common/type/state.type';
 import { Gender } from '@/controller/user/enum/gender.enum';
 import { SportLevel } from '@/controller/user/enum/sport-level.enum';
 import type { User, UserEntity } from '@/controller/user/type/user.type';
-import { useDashboard } from '@/store/dashboard-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
+import { useDashboard } from '@/store/dashboard.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 interface DashboardEditAthleteModalProps {
   isOpen: boolean;

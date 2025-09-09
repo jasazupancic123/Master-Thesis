@@ -4,25 +4,21 @@ import {
   ArrowForwardRounded,
   MoreVert,
 } from '@mui/icons-material';
-import { Avatar, Box, Divider, IconButton } from '@mui/material';
+import { Box, Divider, IconButton } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
 
 import AthleteTrainingComponents from '../athlete-training-components/athlete-training-components';
+import ComponentsAvatar from '../components-avatar/components-avatar';
 import { TrainingService } from '@/controller/training/training.service';
 import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { useAuth } from '@/store/auth-provider';
-import { useMain } from '@/store/main-provider';
-import { useTraining } from '@/store/training-provider';
-import ComponentsAvatar from '../components-avatar/components-avatar';
-import { CommonService } from '@/common/service/common.service';
-import { getComponentIcon } from '@/common/service/util/icons.util';
-
-const commonService = CommonService.instance;
+import { useAuth } from '@/store/auth.provider';
+import { useMain } from '@/store/main.provider';
+import { useTraining } from '@/store/training.provider';
 
 type AthleteTrainingCardProps = {
   training: Training;

@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 
-import { useMain } from './main-provider';
+import { useMain } from './main.provider';
 import { BACKEND_API_BASE_URL } from '@/common/constant/api.constant';
 import {
   LINK_DASHBOARD_HOME,
@@ -79,7 +79,7 @@ export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
 
   const { setUsers } = useMain();
 
-  const { data: fetchedUsers, refetch } = useFetch<User[]>(
+  const { data: fetchedUsers, refetch: refetchUsers } = useFetch<User[]>(
     `${BACKEND_API_BASE_URL}/user`,
     { method: 'GET' }
   );
@@ -93,7 +93,7 @@ export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
   const value: DashboardContextProps = {
     filter,
     setFilter,
-    refetchUsers: refetch,
+    refetchUsers,
     institutions,
     setInstitutions,
     selectedInstitution,

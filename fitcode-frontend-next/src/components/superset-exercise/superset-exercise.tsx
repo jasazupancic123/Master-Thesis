@@ -19,10 +19,10 @@ import { deleteSupersetExercise } from './state';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
 import type { Superset } from '@/controller/training/type/superset.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { useGroup } from '@/store/group-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { useSupersets } from '@/store/supersets-provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
+import { useGroup } from '@/store/group.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
+import { useSupersets } from '@/store/supersets.provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 
 interface SupersetExerciseProps {
   exercise: TrainingExercise;

@@ -1,6 +1,6 @@
-import { useScreenSize } from '@/store/screen-size-provider';
 import { Box, Typography } from '@mui/material';
-import { group } from 'console';
+
+import { useScreenSize } from '@/store/screen-size.provider';
 
 interface MobileDoubleTextItemsProps {
   item1: {
