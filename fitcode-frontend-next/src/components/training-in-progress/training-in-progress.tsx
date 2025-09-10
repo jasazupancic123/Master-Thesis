@@ -15,9 +15,10 @@ import { handleFinishTraining } from './state';
 import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
 import type { SetState } from '@/common/type/state.type';
 import { useHorizontalOverflow } from '@/common/util/horizontal-overflow.util';
+import { TrainingController } from '@/controller/training/training.controller';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
-import { useAuth } from '@/store/auth.provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
@@ -29,6 +30,9 @@ interface TrainingInProgressProps {
 export default function TrainingInProgress(props: TrainingInProgressProps) {
   const theme = useTheme();
   const router = useRouter();
+  const { exercises } = useMain();
+  const { user, token } = useAuthenticatedAuth();
+  const controller = TrainingController.getInstance(token);
 
   const {
     clearTrainingState,
@@ -45,11 +49,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
     setSetIndex,
   } = useTrainingInProgress();
 
-  const { user } = useAuth();
-  const { exercises } = useMain();
-
   const { outerRef, innerRef, isOverflowing } = useHorizontalOverflow();
-
   const { setTrainings } = props;
 
   const [elapsedTime, setElapsedTime] = useState(0);
@@ -281,7 +281,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
           >
             <MenuItem
               onClick={() =>
-                handleFinishTraining({
+                handleFinishTraining(controller, {
                   trainingInProgress,
                   setTrainingInProgress,
                   user,
@@ -310,7 +310,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
         cancelText="Cancel"
         onCancel={() => setOpenFinishTrainingModal(false)}
         onConfirm={() => {
-          handleFinishTraining({
+          handleFinishTraining(controller, {
             trainingInProgress,
             setTrainingInProgress,
             user,

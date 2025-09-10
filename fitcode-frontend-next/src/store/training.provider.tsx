@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 
-import { useAuth } from './auth.provider';
+import { useAuthenticatedAuth } from './auth.provider';
 import type { ExerciseOrTraining } from '@/common/type/exercise-or-training.type';
 import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
 import type { ChildrenProps } from '@/common/type/props.type';
@@ -46,11 +46,9 @@ export const TrainingProvider = (
     ExerciseTrainingView.ExerciseView
   );
 
-  const { user } = useAuth();
+  const { user } = useAuthenticatedAuth();
 
   useEffect(() => {
-    if (!user) return;
-
     const storedTrainingInProgress = localStorage.getItem(
       STORED_TRAINING_IN_PROGRESS
     );

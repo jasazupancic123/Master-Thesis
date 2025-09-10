@@ -28,7 +28,7 @@ import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { useAuth } from '@/store/auth.provider';
 
 export default function HeroNavbar({ showLogin = true }) {
-  const { user, logout, role } = useAuth();
+  const auth = useAuth();
   const [open, setOpen] = React.useState(false);
   const toggleDrawer = (newOpen: boolean) => () => setOpen(newOpen);
   const pathname = usePathname();
@@ -42,23 +42,19 @@ export default function HeroNavbar({ showLogin = true }) {
   };
 
   const handleScrollOrRedirect = (id: string) => async () => {
-    if (pathname !== '/') {
-      router.push(`/#${id}`);
-    } else {
+    if (pathname !== '/') router.push(`/#${id}`);
+    else {
       const section = document.getElementById(id);
-      if (section) {
+      if (section)
         section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
     }
+
     setOpen(false); // Close mobile drawer after selection
   };
 
   const handleLogoClick = () => {
-    if (pathname !== '/') {
-      router.push('/');
-    } else {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    if (pathname !== '/') router.push('/');
+    else window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -132,7 +128,7 @@ export default function HeroNavbar({ showLogin = true }) {
               </Box>
             </Box>
 
-            {user && role?.[0] ? (
+            {auth.status === 'authenticated' ? (
               <Box
                 sx={{
                   display: { xs: 'none', md: 'flex' },
@@ -140,10 +136,11 @@ export default function HeroNavbar({ showLogin = true }) {
                   alignItems: 'center',
                 }}
               >
-                <NextLink href={mainPageMapper[role[0]].href} passHref>
+                <NextLink href={mainPageMapper[auth.role].href} passHref>
                   Dashboard
                 </NextLink>
-                <NextLink href="#" onClick={() => logout()}>
+
+                <NextLink href="#" onClick={() => auth.logout()}>
                   Sign Out
                 </NextLink>
               </Box>

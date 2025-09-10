@@ -1,16 +1,11 @@
 import Container from '@mui/material/Container';
 
 import type { ChildrenProps } from '@/common/type/props.type';
-import HeroNavbar from '@/components/hero-navbar/hero-navbar';
 
 export default function Layout({ children }: ChildrenProps) {
   return (
-    <>
-      <HeroNavbar showLogin={false} />
-
-      <Container component="main" maxWidth="xs">
-        {children}
-      </Container>
-    </>
+    <Container component="main" maxWidth="xs">
+      {children}
+    </Container>
   );
 }

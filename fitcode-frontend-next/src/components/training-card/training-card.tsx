@@ -23,6 +23,8 @@ import MyModal from '../modal/modal';
 import type { TrainingCardProps } from '../trainer-day-view/props';
 import { handleCopyTraining } from '../trainer-day-view/state';
 import TrainingComponentLayout from '../training-component-layout/training-component-layout';
+import { TrainingController } from '@/controller/training/training.controller';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
@@ -45,6 +47,8 @@ export default function TrainingCard(props: TrainingCardProps) {
   } = useTrainerDayViewContext();
 
   const theme = useTheme();
+  const auth = useAuthenticatedAuth();
+  const controller = TrainingController.getInstance(auth.token);
 
   const { day } = props;
 
@@ -302,6 +306,7 @@ export default function TrainingCard(props: TrainingCardProps) {
                   if (!newDate || !selectedPeriod) return;
                   setJustClickedOnCopyDate(true);
                   handleCopyTraining(
+                    controller,
                     { newDate, period: selectedPeriod.value },
                     {
                       router,
@@ -350,6 +355,7 @@ export default function TrainingCard(props: TrainingCardProps) {
                   if (!newDate || !selectedPeriod) return;
 
                   handleCopyTraining(
+                    controller,
                     { newDate, period: selectedPeriod.value },
                     {
                       router,

@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
   reactStrictMode: false,
   images: {
     remotePatterns: [
@@ -20,8 +19,11 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'img.sofascore.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'firebasestorage.googleapis.com',
+      },
     ],
-    domains: ['firebasestorage.googleapis.com'],
   },
   eslint: {
     ignoreDuringBuilds: true,

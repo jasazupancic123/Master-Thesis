@@ -1,4 +1,3 @@
-// dashboard/layout.tsx
 import type { ChildrenProps } from '@/common/type/props.type';
 import DashboardInitializer from '@/initializers/dashboard.initializer';
 

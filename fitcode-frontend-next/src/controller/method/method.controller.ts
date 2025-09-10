@@ -1,18 +1,28 @@
+import { BaseController } from '../base.controller';
 import type { Method } from './type/method.type';
-import { CommonService } from '@/common/service/common.service';
 
-const api = CommonService.instance.api;
+export class MethodController extends BaseController {
+  private static instance: MethodController;
 
-export class MethodController {
-  static async findAll(token?: string): Promise<Method[]> {
-    return api.get('/method', { token });
+  private constructor() {
+    super('/method');
   }
 
-  static async findById(id: string): Promise<Method> {
-    return api.get(`/method/${id}`);
+  static getInstance(token: string) {
+    if (!this.instance) this.instance = new MethodController();
+    this.instance.setToken(token);
+    return this.instance;
   }
 
-  static async create(body: Method): Promise<Method> {
-    return api.post<Method>('/method', body);
+  async findAll(): Promise<Method[]> {
+    return this.api.get('/', { token: this.getToken() });
+  }
+
+  async findById(id: string): Promise<Method> {
+    return this.api.get(`/${id}`, { token: this.getToken() });
+  }
+
+  async create(body: Method): Promise<Method> {
+    return this.api.post<Method>('/', body, { token: this.getToken() });
   }
 }

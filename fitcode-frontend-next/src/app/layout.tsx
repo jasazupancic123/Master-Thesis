@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   description: 'Track workouts more efficiently.',
 };
 
-export default function RootLayout({ children }: ChildrenProps) {
+export default async function RootLayout({ children }: ChildrenProps) {
   return (
     <html lang="en" style={{ scrollBehavior: 'smooth' }}>
       <body className={inter.className}>

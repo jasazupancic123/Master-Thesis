@@ -26,7 +26,7 @@ import type { Method } from '@/controller/method/type/method.type';
 import { CustomWorkloadsSubgroupsService } from '@/controller/training/custom-workloads-subgroups.service';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
 import { SetStatus } from '@/controller/training/enum/set-status.enum';
-import { TrainingController } from '@/controller/training/training.controller';
+import type { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
 import type { ChartWorkloadData } from '@/controller/training/type/chart-workload-data.type';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
@@ -39,6 +39,7 @@ import type { WorkloadValue } from '@/controller/training/type/workload-value.ty
 import type { User } from '@/controller/user/type/user.type';
 
 export async function handleCopyTraining(
+  controller: TrainingController,
   input: {
     newDate: Dayjs;
     period: string;
@@ -90,7 +91,7 @@ export async function handleCopyTraining(
 
   handleApiRequest(
     router,
-    () => TrainingController.copy(training.id, { from: new Date(from) }),
+    () => controller.copy(training.id, { from: new Date(from) }),
     (copiedTraining) => {
       TrainingService.mapData(copiedTraining, {
         components,

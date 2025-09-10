@@ -1,6 +1,7 @@
 import { useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 
+import { useAuthenticatedAuth } from './auth.provider';
 import { useMain } from './main.provider';
 import type {
   GroupContextProps,
@@ -11,9 +12,9 @@ import type { Day } from '@/common/service/util/date.util';
 import type { Pagination } from '@/common/type/paginate.type';
 import type { ChildrenProps } from '@/common/type/props.type';
 import { handleApiRequest } from '@/common/type/state.type';
+import { Controller } from '@/controller/controller';
 import { ExerciseService } from '@/controller/exercise/exercise.service';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
-import { InstitutionController } from '@/controller/institution/institution.controller';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
 import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
@@ -22,7 +23,6 @@ import type { TrainingExercise } from '@/controller/training/type/training-exerc
 import type { Workload } from '@/controller/training/type/workload.type';
 import type { User, UserEntity } from '@/controller/user/type/user.type';
 import type { WellnessZScore } from '@/controller/user/type/wellness.type';
-import { UserController } from '@/controller/user/user.controller';
 
 const commonService = CommonService.instance;
 
@@ -39,6 +39,8 @@ export function TrainerDayViewProvider(
 
   const router = useRouter();
   const { components, exercises } = useMain();
+  const { token } = useAuthenticatedAuth();
+  const controller = Controller.getInstance(token);
 
   // filtering selected component exercises
   const [filteredExercises, setFilteredExercises] = useState<Exercise[]>([]);
@@ -54,11 +56,7 @@ export function TrainerDayViewProvider(
 
   // check if it's after 12:00, then set to PM, else AM
   const [selectedPeriod, setSelectedPeriod] = useState<
-    | {
-        key: Date;
-        value: 'AM' | 'PM';
-      }
-    | undefined
+    { key: Date; value: 'AM' | 'PM' } | undefined
   >(undefined);
 
   const [training, setTraining] = useState<Training | undefined>();
@@ -104,7 +102,7 @@ export function TrainerDayViewProvider(
     async function fetchMembers() {
       handleApiRequest(
         router,
-        () => InstitutionController.findAthletes(group.institutionId),
+        () => controller.institution.findAthletes(group.institutionId),
         (members) => setMembers(members),
         undefined
       );
@@ -113,7 +111,7 @@ export function TrainerDayViewProvider(
     async function fetchWellness() {
       handleApiRequest(
         router,
-        () => UserController.getWellnessByInstitutionId(group.institutionId),
+        () => controller.user.getWellnessByInstitutionId(group.institutionId),
         (wellness) => setWellness(wellness),
         undefined
       );

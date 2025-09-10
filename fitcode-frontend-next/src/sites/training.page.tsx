@@ -113,8 +113,6 @@ export default function TrainingPage() {
   }, [isLoaded]);
 
   const handlePaginateTrainings = async () => {
-    await commonService.generic.sleep(1);
-
     const allTrainings =
       filter === CompletedPlanned.PLANNED
         ? plannedTrainings

@@ -19,6 +19,7 @@ import { handleApiRequest } from '@/common/type/state.type';
 import TrainingMembers from '@/components/training-members/training-members';
 import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
@@ -33,6 +34,8 @@ export default function TrainerDayView() {
   const screenSize = useScreenSize();
   const router = useRouter();
 
+  const auth = useAuthenticatedAuth();
+  const controller = TrainingController.getInstance(auth.token);
   const { components, exercises, methods } = useMain();
   const {
     group,
@@ -132,7 +135,7 @@ export default function TrainerDayView() {
     handleApiRequest(
       router,
       () =>
-        TrainingController.findAll({
+        controller.findAll({
           groupId: group.id,
           cycleId: cycle?.id,
           from,
@@ -192,7 +195,7 @@ export default function TrainerDayView() {
       handleApiRequest(
         router,
         () =>
-          TrainingController.findCompletedAthleteWorkloads(
+          controller.findCompletedAthleteWorkloads(
             training.id,
             selectedAthlete.uid
           ),
@@ -211,6 +214,8 @@ export default function TrainerDayView() {
     else setSelectedAthleteWorkloads([]);
   }, [selectedAthlete]);
 
+  if (!group || !cycle) return null;
+
   return (
     <Box width="100%" position="relative">
       {!screenSize.isSmallerThanLaptop && (
@@ -228,7 +233,7 @@ export default function TrainerDayView() {
             <IconButton
               sx={{ mx: 0, cursor: 'pointer' }}
               onClick={() =>
-                handleUpdateMultipleTrainings({
+                handleUpdateMultipleTrainings(controller, {
                   setTrainings,
                   training,
                   setTraining,
@@ -301,7 +306,7 @@ export default function TrainerDayView() {
                   m: 0,
                 }}
                 onClick={() => {
-                  handleUpdateMultipleTrainings({
+                  handleUpdateMultipleTrainings(controller, {
                     setTrainings,
                     training,
                     setTraining,

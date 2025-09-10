@@ -10,7 +10,7 @@ import * as React from 'react';
 import { LINKS_SIDEBAR } from '@/common/constant/navigation.constant';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { useAthlete } from '@/store/athlete.provider';
-import { useAuth } from '@/store/auth.provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 export default function BottomNavigation() {
@@ -19,7 +19,7 @@ export default function BottomNavigation() {
   const theme = useTheme();
   const screenSize = useScreenSize();
   const router = useRouter();
-  const { logout } = useAuth();
+  const { logout } = useAuthenticatedAuth();
 
   return (
     <BN

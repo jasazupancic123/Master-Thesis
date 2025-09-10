@@ -1,3 +1,4 @@
+import { BaseController } from '../base.controller';
 import type {
   CreateExercise,
   Exercise,
@@ -6,43 +7,61 @@ import type {
   UpsertManyExercises,
   UpsertManyMuscleValues,
 } from './type/exercise.type';
-import { CommonService } from '@/common/service/common.service';
 
-const api = CommonService.instance.api;
+export class ExerciseController extends BaseController {
+  private static instance: ExerciseController;
 
-export class ExerciseController {
-  static async findAllGlobal(token?: string, query?: FilterExercises) {
-    return api.get<Exercise[]>('/exercise/global', { token, query });
+  private constructor() {
+    super('/exercise');
   }
 
-  static async findAllByInstitution(
-    token: string,
-    institutionId: string,
-    query?: FilterExercises
-  ) {
-    return api.get<Exercise[]>(`/exercise/institution/${institutionId}`, {
+  static getInstance(token: string) {
+    if (!this.instance) this.instance = new ExerciseController();
+    this.instance.setToken(token);
+    return this.instance;
+  }
+
+  async findAllGlobal(query?: FilterExercises) {
+    return this.api.get<Exercise[]>('/global', {
+      token: this.getToken(),
       query,
-      token,
     });
   }
 
-  static async create(body: CreateExercise) {
-    return api.post<Exercise>(`/exercise`, body);
+  async findAllByInstitution(institutionId: string, query?: FilterExercises) {
+    return this.api.get<Exercise[]>(`/institution/${institutionId}`, {
+      query,
+      token: this.getToken(),
+    });
   }
 
-  static async upsertMany(body: UpsertManyExercises) {
-    return api.post<Exercise[]>(`/exercise/many`, body);
+  async create(body: CreateExercise) {
+    return this.api.post<Exercise>(``, body, {
+      token: this.getToken(),
+    });
   }
 
-  static async upsertManyMuscleValues(body: UpsertManyMuscleValues) {
-    return api.patch<null>(`/exercise/muscle-values/many`, body);
+  async upsertMany(body: UpsertManyExercises) {
+    return this.api.post<Exercise[]>(`/many`, body, {
+      token: this.getToken(),
+    });
   }
 
-  static async update(exerciseId: string, body: UpdateExercise) {
-    return api.patch<Exercise>(`/exercise/${exerciseId}`, body);
+  async upsertManyMuscleValues(body: UpsertManyMuscleValues) {
+    return this.api.patch<null>(`/muscle-values/many`, body, {
+      token: this.getToken(),
+    });
   }
 
-  static async delete(exerciseId: string) {
-    return api.delete<null>(`/exercise/${exerciseId}`);
+  async update(exerciseId: string, body: UpdateExercise) {
+    return this.api.patch<Exercise>(`/${exerciseId}`, body, {
+      token: this.getToken(),
+    });
+  }
+
+  async delete(exerciseId: string) {
+    return this.api.delete<null>(`/${exerciseId}`, {
+      token: this.getToken(),
+    });
   }
 }

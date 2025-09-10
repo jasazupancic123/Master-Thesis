@@ -1,14 +1,15 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
 import { createContext, useContext, useEffect, useState } from 'react';
 
+import { useAuthenticatedAuth } from './auth.provider';
 import { useMain } from './main.provider';
-import { BACKEND_API_BASE_URL } from '@/common/constant/api.constant';
 import {
   LINK_DASHBOARD_HOME,
   LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS,
 } from '@/common/constant/navigation.constant';
-import { useFetch } from '@/common/hooks/use-fetch.hook';
+import { useNestBackendFetch } from '@/common/hooks/use-fetch.hook';
 import type { ILink } from '@/common/type/link.type';
 import type { ChildrenProps } from '@/common/type/props.type';
 import type { SetState } from '@/common/type/state.type';
@@ -52,18 +53,22 @@ export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
     refetchMembers,
   } = props;
 
-  const { profile } = useMain();
+  const { role } = useAuthenticatedAuth();
+  const pathname = usePathname();
+  const [currentFilter, setCurrentFilter] = useState(LINK_DASHBOARD_HOME);
 
-  const roles = profile.customClaims.role || [];
+  useEffect(() => {
+    if (!pathname || !role) return;
 
-  let currentFilter = LINK_DASHBOARD_HOME;
-  const url = new URL(window.location.href);
-  const lastItemInUrl = url.pathname.split('/').pop();
-  Object.values(LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS(roles)).map((link) => {
-    if (lastItemInUrl && link?.href.endsWith(lastItemInUrl)) {
-      currentFilter = link;
-    }
-  });
+    const lastItemInUrl = pathname.split('/').pop();
+    const links = Object.values(LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS(role));
+
+    const matched = links.find(
+      (link) => lastItemInUrl && link?.href.endsWith(lastItemInUrl)
+    );
+
+    setCurrentFilter(matched || LINK_DASHBOARD_HOME);
+  }, [pathname, role]);
 
   const [filter, setFilter] = useState<ILink>(currentFilter);
   const [institutions, setInstitutions] =
@@ -79,21 +84,16 @@ export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
 
   const { setUsers } = useMain();
 
-  const { data: fetchedUsers, refetch: refetchUsers } = useFetch<User[]>(
-    `${BACKEND_API_BASE_URL}/user`,
-    { method: 'GET' }
-  );
+  const { data: fetchedUsers, refetch } = useNestBackendFetch<User[]>(`/user`);
 
   useEffect(() => {
-    if (fetchedUsers) {
-      setUsers(fetchedUsers);
-    }
+    if (fetchedUsers) setUsers(fetchedUsers);
   }, [fetchedUsers, setUsers]);
 
   const value: DashboardContextProps = {
     filter,
     setFilter,
-    refetchUsers,
+    refetchUsers: refetch,
     institutions,
     setInstitutions,
     selectedInstitution,

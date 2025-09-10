@@ -9,12 +9,12 @@ import { AddMembersModal } from '../add-members-modal/add-members-modal';
 import DashboardEditAthleteModal from '../dashboard-edit-athlete-modal/dashboard-edit-athlete-modal';
 import MyModal from '../modal/modal';
 import { SearchBar } from '../search-bar/search-bar';
-import { isManager, isTrainer } from '@/common/service/util/firebase-auth.util';
+import { isManager, isTrainer } from '@/common/firebase/firebase-auth.util';
 import { handleApiRequest, type SetState } from '@/common/type/state.type';
 import { GroupController } from '@/controller/group/group.controller';
 import type { User } from '@/controller/user/type/user.type';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
-import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 interface DashboardGroupsMembersProps {
@@ -38,6 +38,11 @@ export default function DashboardGroupsMembers(
   props: DashboardGroupsMembersProps
 ) {
   const router = useRouter();
+
+  const { role } = useAuthenticatedAuth();
+  const auth = useAuthenticatedAuth();
+  const controller = GroupController.getInstance(auth.token);
+
   const {
     selectedInstitution,
     setSelectedInstitution,
@@ -45,9 +50,6 @@ export default function DashboardGroupsMembers(
     members,
     setDetectedChanges,
   } = useDashboard();
-  const { profile } = useMain();
-
-  const roles = profile.customClaims.role || [];
 
   const theme = useTheme();
   const screenSize = useScreenSize();
@@ -75,7 +77,10 @@ export default function DashboardGroupsMembers(
 
     await handleApiRequest(
       router,
-      () => GroupController.removeMember(selectedGroup!.id, { userId: userId }),
+      () =>
+        controller.removeMember(selectedGroup!.id, {
+          userId: userId,
+        }),
       () => {
         toast.success('Member removed successfully');
       },
@@ -182,7 +187,8 @@ export default function DashboardGroupsMembers(
                     onMouseEnter={() => setHoveredUser(user)}
                     onMouseLeave={() => setHoveredUser(null)}
                   >
-                    {(isManager(roles) || isTrainer(roles)) &&
+                    {role &&
+                      (isManager(role) || isTrainer(role)) &&
                       user.uid === hoveredUser?.uid && (
                         <IconButton
                           className="remove-icon"
@@ -239,7 +245,7 @@ export default function DashboardGroupsMembers(
                   </Box>
                 );
               })}
-              {(isTrainer(roles) || isManager(roles)) && (
+              {role && (isTrainer(role) || isManager(role)) && (
                 <Tooltip title="Add member" placement="bottom">
                   <IconButton
                     sx={{

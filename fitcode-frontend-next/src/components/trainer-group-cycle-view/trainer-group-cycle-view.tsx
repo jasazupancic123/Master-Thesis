@@ -20,7 +20,9 @@ import { ComponentService } from '@/controller/component/component.service';
 import type { Component } from '@/controller/component/type/component.type';
 import { GroupService } from '@/controller/group/group.service';
 import type { Target } from '@/controller/target/type/target.type';
+import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
@@ -35,6 +37,9 @@ export default function TrainerCycleView() {
   const theme = useTheme();
   const screenSize = useScreenSize();
   const router = useRouter();
+  const auth = useAuthenticatedAuth();
+  const controller = TrainingController.getInstance(auth.token);
+
   const [selectedComponents, setSelectedComponents] = useState<Component[]>([]);
   const [selectedTargets, setSelectedTargets] = useState<
     { componentId: string; target: Target }[]
@@ -325,6 +330,7 @@ export default function TrainerCycleView() {
                   }
                   addTrainingComponent={(trainingId, input) => {
                     handleAddTrainingComponents(
+                      controller,
                       { trainingId, ...input },
                       {
                         router,
@@ -338,6 +344,7 @@ export default function TrainerCycleView() {
                   }}
                   deleteTrainingComponent={(trainingId, componentId) =>
                     handleDeleteTrainingComponent(
+                      controller,
                       { trainingId, componentId },
                       {
                         router,
