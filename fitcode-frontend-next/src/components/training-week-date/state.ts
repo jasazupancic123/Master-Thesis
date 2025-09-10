@@ -18,12 +18,13 @@ import type { Group } from '@/controller/group/type/group.type';
 import type { Method } from '@/controller/method/type/method.type';
 import type { Target } from '@/controller/target/type/target.type';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
-import { TrainingController } from '@/controller/training/training.controller';
+import type { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 
 export async function handleClickDateCell(
+  controller: TrainingController,
   input: {
     date: Dayjs;
     period: string;
@@ -91,6 +92,7 @@ export async function handleClickDateCell(
       // ADD THE SELECTED TRAINING COMPONENT TO THE TRAINING
       if (copyComponent && training && day) {
         handleCopyComponentApiRequest(
+          controller,
           {
             training,
             trainingInPeriod,
@@ -141,7 +143,7 @@ export async function handleClickDateCell(
       handleApiRequest(
         router,
         () =>
-          TrainingController.copyComponent({
+          controller.copyComponent({
             copyFromTrainingId: training.id,
             componentId: newTrainingComponent.id,
             from,
@@ -177,6 +179,7 @@ export async function handleClickDateCell(
       return;
 
     handleAddTraining(
+      controller,
       { date, period: period as 'AM' | 'PM' },
       {
         group,
@@ -290,6 +293,7 @@ export function getFilteredTrainings(
 }
 
 function handleAddTraining(
+  controller: TrainingController,
   input: {
     date: Dayjs;
     period: 'AM' | 'PM';
@@ -334,6 +338,7 @@ function handleAddTraining(
   const from = setMinutes(setHours(date.toDate(), period === 'AM' ? 8 : 14), 0);
 
   handleCreateTraining(
+    controller,
     {
       group,
       cycle: cycle!,

@@ -72,6 +72,7 @@ export function handlePaginateExercises(
 }
 
 export async function handleAddExercise(
+  token: string,
   input: Partial<Exercise>,
   state: {
     router: AppRouterInstance;
@@ -102,6 +103,8 @@ export async function handleAddExercise(
     setExercise,
     setModal,
   } = state;
+
+  const controller = ExerciseController.getInstance(token);
 
   if (!input.name) return toast.error('Name is required');
   if (!input.componentIds?.length)
@@ -155,7 +158,7 @@ export async function handleAddExercise(
   handleApiRequest(
     router,
     () =>
-      ExerciseController.create({
+      controller.create({
         name: input.name!,
         componentIds: input.componentIds!,
         isBilateral: input.isBilateral || false,
@@ -192,6 +195,7 @@ export async function handleAddExercise(
 }
 
 export async function handleUpdateExercise(
+  token: string,
   exerciseId: string,
   input: Partial<Exercise>,
   state: {
@@ -219,6 +223,8 @@ export async function handleUpdateExercise(
     setExercise,
     setModal,
   } = state;
+
+  const controller = ExerciseController.getInstance(token);
 
   if (!input.name) return toast.error('Name is required');
   if (!input.componentIds?.length)
@@ -272,7 +278,7 @@ export async function handleUpdateExercise(
   handleApiRequest(
     router,
     () =>
-      ExerciseController.update(exerciseId, {
+      controller.update(exerciseId, {
         name: input.name!,
         componentIds: input.componentIds!,
         imageUrl: input.imageUrl,
@@ -301,6 +307,7 @@ export async function handleUpdateExercise(
 }
 
 export async function handleDeleteExercise(
+  token: string,
   exerciseId: string,
   state: {
     router: AppRouterInstance;
@@ -309,10 +316,11 @@ export async function handleDeleteExercise(
   }
 ) {
   const { router, setFilteredExercises, setExercises } = state;
+  const controller = ExerciseController.getInstance(token);
 
   handleApiRequest(
     router,
-    () => ExerciseController.delete(exerciseId),
+    () => controller.delete(exerciseId),
     () => {
       setFilteredExercises((prev) => prev.filter((e) => e.id !== exerciseId));
       setExercises((prev) => prev.filter((e) => e.id !== exerciseId));
@@ -379,6 +387,7 @@ export async function handleMuscleValuesCsvFileUpload(
 }
 
 export async function handleUpsertManyExercises(
+  token: string,
   input: UpsertManyExercises,
   state: {
     router: AppRouterInstance;
@@ -386,10 +395,11 @@ export async function handleUpsertManyExercises(
   }
 ) {
   const { router, setExercises } = state;
+  const controller = ExerciseController.getInstance(token);
 
   handleApiRequest(
     router,
-    () => ExerciseController.upsertMany(input),
+    () => controller.upsertMany(input),
     (exercises) => {
       setExercises((prev) =>
         // if exercise already exists, update it, otherwise add it
@@ -406,6 +416,7 @@ export async function handleUpsertManyExercises(
 }
 
 export async function handleUpsertMuscleValues(
+  token: string,
   input: UpsertManyMuscleValues,
   state: {
     router: AppRouterInstance;
@@ -413,10 +424,11 @@ export async function handleUpsertMuscleValues(
   }
 ) {
   const { router, setExercises } = state;
+  const controller = ExerciseController.getInstance(token);
 
   handleApiRequest(
     router,
-    () => ExerciseController.upsertManyMuscleValues(input),
+    () => controller.upsertManyMuscleValues(input),
     () => {
       setExercises((prev) =>
         prev.map((exercise) => {

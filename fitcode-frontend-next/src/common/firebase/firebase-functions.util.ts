@@ -1,9 +1,22 @@
+import type { Functions } from 'firebase/functions';
 import { httpsCallable } from 'firebase/functions';
 
-import { functions } from '@/common/config/firebase.config';
+import { getFirebaseFunctions } from '@/common/config/firebase.config';
 import type { UserRole } from '@/controller/user/enum/user-role.enum';
 
 export class FirebaseFunctionsUtil {
+  private static instance: FirebaseFunctionsUtil;
+  private readonly functions: Functions;
+
+  private constructor() {
+    this.functions = getFirebaseFunctions();
+  }
+
+  static get Instance() {
+    if (!this.instance) this.instance = new FirebaseFunctionsUtil();
+    return this.instance;
+  }
+
   async createUserWithRole(input: {
     email: string;
     password: string;
@@ -11,7 +24,7 @@ export class FirebaseFunctionsUtil {
     displayName: string;
   }) {
     try {
-      await httpsCallable(functions, 'createUserWithRole')(input);
+      await httpsCallable(this.functions, 'createUserWithRole')(input);
     } catch (e: unknown) {
       if (e instanceof Error && 'details' in e) {
         const authCode = (e.details as { originalCode: string })?.originalCode;

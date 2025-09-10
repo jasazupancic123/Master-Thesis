@@ -20,16 +20,18 @@ export function handleNavigate(
 }
 
 export async function fetchAthleteTrainings(
+  token: string,
   dateRange: DateRange,
   state: {
     router: AppRouterInstance;
   }
 ) {
   const { router } = state;
+  const controller = TrainingController.getInstance(token);
 
   return handleApiRequest(
     router,
-    () => TrainingController.findAll({ ...dateRange }),
+    () => controller.findAll({ ...dateRange }),
     (_trainings) => {},
     undefined,
     'Failed to fetch trainings'

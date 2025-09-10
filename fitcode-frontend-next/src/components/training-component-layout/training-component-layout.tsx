@@ -17,13 +17,21 @@ import {
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
 import type { Method } from '@/controller/method/type/method.type';
+import { TrainingController } from '@/controller/training/training.controller';
 import type { Training } from '@/controller/training/type/training.type';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
+import { useAuthenticatedAuth, withAuth } from '@/store/auth-provider';
 import { useGroup } from '@/store/group-provider';
 import { useMain } from '@/store/main-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
-export default function TrainingComponentLayout(props: TrainingComponentProps) {
+export default withAuth(TrainingComponentLayout, [
+  UserRole.TRAINER,
+  UserRole.MANAGER,
+]);
+
+function TrainingComponentLayout(props: TrainingComponentProps) {
   const screenSize = useScreenSize();
   const router = useRouter();
 
@@ -36,6 +44,8 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
   } = useMain();
   const { filter, setTrainings } = useGroup();
 
+  const auth = useAuthenticatedAuth();
+  const controller = TrainingController.getInstance(auth.token);
   const { training, component } = useTrainerDayViewContext();
 
   const [openAddExerciseModal, setOpenAddExerciseModal] = useState(false);
@@ -240,6 +250,7 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
             return;
           }
           handleCopyComponentApiRequest(
+            controller,
             {
               training,
               trainingInPeriod: trainingInPeriodForModal,

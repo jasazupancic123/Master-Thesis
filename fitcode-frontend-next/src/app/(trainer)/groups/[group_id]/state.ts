@@ -3,11 +3,12 @@ import toast from 'react-hot-toast';
 
 import type { SetState } from '@/common/type/state.type';
 import { handleApiRequest } from '@/common/type/state.type';
-import { GroupController } from '@/controller/group/group.controller';
+import type { GroupController } from '@/controller/group/group.controller';
 import type { Cycle } from '@/controller/group/type/cycle.type';
 import type { Group } from '@/controller/group/type/group.type';
 
 export async function handleSaveGroup(
+  controller: GroupController,
   selectedGroup: Group,
   setSelectedGroup: SetState<Group>,
   cycle: Cycle | undefined,
@@ -26,7 +27,7 @@ export async function handleSaveGroup(
   handleApiRequest(
     router,
     () =>
-      GroupController.update(selectedGroup.id, {
+      controller.update(selectedGroup.id, {
         cycles: selectedGroup.cycles,
       }),
     (group) => {

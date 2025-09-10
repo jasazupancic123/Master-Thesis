@@ -14,7 +14,6 @@ import { TrainerDayViewProvider } from '@/store/trainer-day-view-provider';
 
 export default function TrainerGroupPage() {
   const context = useGroup();
-
   const { group, filter } = context;
 
   const mapper: Record<GroupDateFilter, ReactNode> = {
@@ -29,14 +28,8 @@ export default function TrainerGroupPage() {
   };
 
   return (
-    <Box
-      sx={{
-        overflowX: 'hidden',
-      }}
-      width="100%"
-    >
+    <Box sx={{ overflowX: 'hidden' }} width="100%">
       <GroupSidebar group={group} />
-
       <Box mt="50px">{mapper[filter]}</Box>
     </Box>
   );

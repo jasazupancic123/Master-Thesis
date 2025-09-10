@@ -12,29 +12,21 @@ import type { FormEvent } from 'react';
 import React from 'react';
 import toast from 'react-hot-toast';
 
-import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
 import {
-  LINK_DASHBOARD,
-  LINK_TRAININGS,
   LINKS_AUTH,
+  SIGN_IN_REDIRECT_MAPPER,
 } from '@/common/constant/navigation.constant';
-import { CommonService } from '@/common/service/common.service';
-import { FirebaseAuthUtil } from '@/common/service/util/firebase-auth.util';
+import { FirebaseAuthUtil } from '@/common/firebase/firebase-auth.util';
 import HeroNavbar from '@/components/hero-navbar/hero-navbar';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
+import { useAuth } from '@/store/auth-provider';
 
-const mapper = {
-  [UserRole.ATHLETE]: LINK_TRAININGS,
-  [UserRole.TRAINER]: LINK_DASHBOARD,
-  [UserRole.MANAGER]: LINK_DASHBOARD,
-  [UserRole.ADMIN]: LINK_DASHBOARD,
-};
-
-const commonService = CommonService.instance;
+const firebaseAuthUtil = FirebaseAuthUtil.getInstance();
 
 export default function SignInPage() {
   const theme = useTheme();
   const router = useRouter();
+  const { handleUserChange } = useAuth();
+
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
 
@@ -42,31 +34,18 @@ export default function SignInPage() {
     e.preventDefault();
 
     try {
-      const result = await FirebaseAuthUtil.login(email, password);
-      const tokenResult = await result.user.getIdTokenResult();
-
-      const role = tokenResult.claims.role as UserRole;
-      commonService.browser.setClientCookie(
-        FIREBASE_COOKIE_NAME,
-        tokenResult.token,
-        7
-      );
-
-      toast.success('Logged in successfully');
-      router.replace(mapper[role].href);
-      router.refresh();
+      const result = await firebaseAuthUtil.login(email, password);
+      const { role } = await handleUserChange(result.user);
+      if (role) router.push(SIGN_IN_REDIRECT_MAPPER[role]?.href);
     } catch (e) {
-      if (e instanceof Error) {
-        toast.error(e.message);
-      } else {
-        toast.error('An unknown error occurred.');
-      }
+      toast.error((e as Error).message);
     }
   }
 
   return (
     <>
       <HeroNavbar />
+
       <Box
         sx={{
           display: 'flex',

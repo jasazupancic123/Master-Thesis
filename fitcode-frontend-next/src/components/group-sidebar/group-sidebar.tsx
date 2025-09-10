@@ -22,7 +22,7 @@ import {
   LINKS_TRAINER_GROUP_SIDEBAR_SUB_ITEMS,
 } from '@/common/constant/navigation.constant';
 import type { Group } from '@/controller/group/type/group.type';
-import { useAuth } from '@/store/auth-provider';
+import { useAuthenticatedAuth } from '@/store/auth-provider';
 import { useGroup } from '@/store/group-provider';
 
 export interface TrainerGroupSidebarProps {
@@ -31,12 +31,10 @@ export interface TrainerGroupSidebarProps {
 
 export default function GroupSidebar(props: TrainerGroupSidebarProps) {
   const { filter, setFilter } = useGroup();
-
   const { group } = props;
-
   const theme = useTheme();
 
-  const { logout } = useAuth();
+  const { logout } = useAuthenticatedAuth();
   const [open, setOpen] = useState(false);
 
   function handleLinkClick(

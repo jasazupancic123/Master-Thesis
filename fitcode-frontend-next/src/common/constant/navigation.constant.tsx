@@ -114,13 +114,11 @@ export const LINK_ADD_INSTITUTION = link(
   <Add />
 );
 
-export const LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS = (role: UserRole[]) => ({
+export const LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS = (role: UserRole) => ({
   home: LINK_DASHBOARD_HOME,
   institution: LINK_DASHBOARD_INSTITUTION,
   exercises: LINK_EXERCISES_DASHBOARD_NAVIGATION,
-  addInstitution: role.includes(UserRole.ADMIN)
-    ? LINK_ADD_INSTITUTION
-    : undefined,
+  addInstitution: role === UserRole.ADMIN ? LINK_ADD_INSTITUTION : undefined,
 });
 
 export const LINKS_DASHBOARD_SIDEBAR_SUB_ITEMS = {
@@ -164,4 +162,11 @@ export const LINKS_SIDEBAR = {
     exercises: LINK_EXERCISES_DASHBOARD,
     dashboard: LINK_DASHBOARD,
   },
+};
+
+export const SIGN_IN_REDIRECT_MAPPER = {
+  [UserRole.ATHLETE]: LINK_TRAININGS,
+  [UserRole.TRAINER]: LINK_DASHBOARD,
+  [UserRole.MANAGER]: LINK_DASHBOARD,
+  [UserRole.ADMIN]: LINK_DASHBOARD,
 };

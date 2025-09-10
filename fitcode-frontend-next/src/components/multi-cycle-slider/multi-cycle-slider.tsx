@@ -20,6 +20,7 @@ import { handleApiRequest, type SetState } from '@/common/type/state.type';
 import { GroupController } from '@/controller/group/group.controller';
 import type { Cycle } from '@/controller/group/type/cycle.type';
 import type { Group } from '@/controller/group/type/group.type';
+import { useAuthenticatedAuth } from '@/store/auth-provider';
 import { useGroup } from '@/store/group-provider';
 
 dayjs.extend(dayOfYear);
@@ -62,12 +63,12 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
     setCycles,
   } = props;
 
-  const { setGroup } = useGroup();
-
+  const auth = useAuthenticatedAuth();
+  const controller = GroupController.getInstance(auth.token);
   const router = useRouter();
   const theme = useTheme();
 
-  const { cycle, setCycle, setDetectedChanges } = useGroup();
+  const { cycle, setCycle, setDetectedChanges, setGroup } = useGroup();
 
   const [draggedDay, setDraggedDay] = useState<number | null>(null);
   const [mouseX, setMouseX] = useState<number | null>(null);
@@ -86,7 +87,7 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
 
     handleApiRequest(
       router,
-      () => GroupController.removeCycle(selectedGroup.id, editCycle.id),
+      () => controller.removeCycle(selectedGroup.id, editCycle.id),
       () => {
         if (cycle && editCycle.id === cycle?.id) setCycle(undefined);
 
@@ -331,6 +332,7 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
           );
         }}
       />
+
       {editCycle && (
         <MyModal
           isOpen={openEditCycleModal}

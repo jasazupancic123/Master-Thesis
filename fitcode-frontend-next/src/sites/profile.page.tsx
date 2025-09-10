@@ -17,13 +17,12 @@ import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
-import type { User } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { SPORTS } from '@/common/constant/sport.constant';
-import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
+import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
 import { handleApiRequest } from '@/common/type/state.type';
 import FaceCapture from '@/components/face-capture/face-capture';
 import FileUpload from '@/components/file-upload/file-upload';
@@ -31,19 +30,15 @@ import { Gender } from '@/controller/user/enum/gender.enum';
 import { SportLevel } from '@/controller/user/enum/sport-level.enum';
 import type { UserEntity } from '@/controller/user/type/user.type';
 import { UserController } from '@/controller/user/user.controller';
-import { useAuth } from '@/store/auth-provider';
+import { useAuthenticatedAuth } from '@/store/auth-provider';
+import { useMain } from '@/store/main-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 
 const DEFAULT_MARGIN = 1;
 
 export default function ProfilePage() {
-  const {
-    user,
-    setUser,
-    profile: profileGlobal,
-    setProfile: setProfileGlobal,
-    customClaims,
-  } = useAuth();
+  const { user, setDisplayName, customClaims, token } = useAuthenticatedAuth();
+  const { profile: profileGlobal, setProfile: setProfileGlobal } = useMain();
 
   const theme = useTheme();
   const router = useRouter();
@@ -77,11 +72,8 @@ export default function ProfilePage() {
     setUpdatedProfile(true);
   }
 
-  function handleChangeUser<K extends keyof User>(key: K, value: User[K]) {
-    if (!user) return;
-
-    const newUser = { ...user, [key]: value };
-    setUser(newUser);
+  function handleUpdateDisplayName(value: string) {
+    setDisplayName(value);
     setUpdatedUser(true);
   }
 
@@ -102,7 +94,7 @@ export default function ProfilePage() {
       handleApiRequest(
         router,
         () =>
-          UserController.updateProfile({
+          UserController.getInstance(token).updateProfile({
             sport,
             level,
             gender,
@@ -126,8 +118,6 @@ export default function ProfilePage() {
       // logic here
     }
   }
-
-  if (!user) return null;
 
   return isCapturingFace ? (
     <FaceCapture
@@ -181,7 +171,11 @@ export default function ProfilePage() {
           makeRound
           onFileUpload={async (file) => {
             const path = `user/${user.uid}/${file.name}`;
-            const url = await FirebaseStorageUtil.uploadFile(file, path);
+            const url = await FirebaseStorageUtil.Instance.uploadFile(
+              file,
+              path
+            );
+
             const newProfile = { ...profile, profileImageUrl: url };
             setProfile(newProfile as UserEntity);
           }}
@@ -199,7 +193,7 @@ export default function ProfilePage() {
             variant="outlined"
             sx={{ flex: 1 }}
             value={user?.displayName}
-            onChange={(e) => handleChangeUser('displayName', e.target.value)}
+            onChange={(e) => handleUpdateDisplayName(e.target.value)}
           />
         </Box>
 

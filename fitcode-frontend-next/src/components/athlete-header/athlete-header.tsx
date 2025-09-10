@@ -13,7 +13,8 @@ import Sidebar from '../sidebar/sidebar';
 import { LINK_PROFILE } from '@/common/constant/navigation.constant';
 import Logo from '@/components/logo/logo';
 import { useAthlete } from '@/store/athlete-provider';
-import { useAuth } from '@/store/auth-provider';
+import { useAuthenticatedAuth } from '@/store/auth-provider';
+import { useMain } from '@/store/main-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 
 export default function AthleteHeader() {
@@ -21,7 +22,8 @@ export default function AthleteHeader() {
 
   const theme = useTheme();
   const screenSize = useScreenSize();
-  const { profile, user } = useAuth();
+  const { user } = useAuthenticatedAuth();
+  const { profile } = useMain();
   const [avatarSrc, setAvatarSrc] = useState(profile?.profileImageUrl);
 
   useEffect(() => {
