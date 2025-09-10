@@ -7,10 +7,9 @@ import toast from 'react-hot-toast';
 import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
 import type { SetState } from '@/common/type/state.type';
 import { handleApiRequest } from '@/common/type/state.type';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
 import type { CustomClaims } from '@/controller/user/type/custom-claims.type';
 import { UserController } from '@/controller/user/user.controller';
-import { useAuthenticatedAuth, withAuth } from '@/store/auth-provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 
 const firebaseStorage = FirebaseStorageUtil.Instance;
 
@@ -29,10 +28,11 @@ interface FaceCapturePreviewsModalProps {
   heightWidthRatio: number;
 }
 
-function FaceCapturePreviewsModal(props: FaceCapturePreviewsModalProps) {
-  const { user, customClaims, setCustomClaims } = useAuthenticatedAuth();
-  const auth = useAuthenticatedAuth();
-  const controller = UserController.getInstance(auth.token);
+export default function FaceCapturePreviewsModal(
+  props: FaceCapturePreviewsModalProps
+) {
+  const { user, customClaims, setCustomClaims, token } = useAuthenticatedAuth();
+  const controller = UserController.getInstance(token);
   const router = useRouter();
 
   const { previews, captures, setIsCapturingFace, heightWidthRatio } = props;
@@ -161,8 +161,3 @@ function FaceCapturePreviewsModal(props: FaceCapturePreviewsModalProps) {
     </Box>
   );
 }
-
-export default withAuth(FaceCapturePreviewsModal, [
-  UserRole.ATHLETE,
-  UserRole.TRAINER,
-]);

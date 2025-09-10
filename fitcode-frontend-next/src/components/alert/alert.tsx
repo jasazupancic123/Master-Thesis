@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 
 import Logo from '../logo/logo';
 import { LINK_SIGN_IN } from '@/common/constant/navigation.constant';
-import { useScreenSize } from '@/store/screen-size-provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 interface AlertProps {
   type: 'loading' | 'unauthorized';

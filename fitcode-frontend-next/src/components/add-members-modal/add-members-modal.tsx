@@ -17,8 +17,8 @@ import { GroupController } from '@/controller/group/group.controller';
 import type { Group } from '@/controller/group/type/group.type';
 import type { Institution } from '@/controller/institution/type/institution.type';
 import type { User } from '@/controller/user/type/user.type';
-import { useAuthenticatedAuth } from '@/store/auth-provider';
-import { useDashboard } from '@/store/dashboard-provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useDashboard } from '@/store/dashboard.provider';
 
 export type AddMembersModalProps = {
   title?: string;

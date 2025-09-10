@@ -14,11 +14,10 @@ import type { SetState } from '@/common/type/state.type';
 import { GroupController } from '@/controller/group/group.controller';
 import { GroupService } from '@/controller/group/group.service';
 import type { Cycle } from '@/controller/group/type/cycle.type';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
-import { useAuthenticatedAuth, withAuth } from '@/store/auth-provider';
-import { useDashboard } from '@/store/dashboard-provider';
-import { useMain } from '@/store/main-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useDashboard } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 interface DashboardGroupsProps {
   modal: {
@@ -37,7 +36,7 @@ interface DashboardGroupsProps {
   }>;
 }
 
-function DashboardGroups(props: DashboardGroupsProps) {
+export default function DashboardGroups(props: DashboardGroupsProps) {
   const { modal, setModal } = props;
 
   const screenSize = useScreenSize();
@@ -222,9 +221,3 @@ function DashboardGroups(props: DashboardGroupsProps) {
     </Box>
   );
 }
-
-export default withAuth(DashboardGroups, [
-  UserRole.TRAINER,
-  UserRole.MANAGER,
-  UserRole.ADMIN,
-]);

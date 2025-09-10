@@ -36,7 +36,7 @@ export class GroupController extends BaseController {
   }
 
   async create(body: CreateGroup) {
-    return this.api.post<Group>('/group', body, { token: this.getToken() });
+    return this.api.post<Group>('/', body, { token: this.getToken() });
   }
 
   async update(groupId: string, body: UpdateGroup): Promise<Group> {

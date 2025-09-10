@@ -12,11 +12,11 @@ import type { AttributeValue } from '@/controller/attribute/type/attribute-value
 import { ParamType } from '@/controller/component/enum/param.enum';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { useGroup } from '@/store/group-provider';
-import { useMain } from '@/store/main-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { useSupersets } from '@/store/supersets-provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
+import { useGroup } from '@/store/group.provider';
+import { useMain } from '@/store/main.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
+import { useSupersets } from '@/store/supersets.provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 
 interface TrainingExerciseCarExpandedSetsProps {
   component: TrainingComponent;
@@ -47,7 +47,7 @@ export default function TrainingExerciseCardExpandedSets(
     selectedExercises,
     setSelectedExercises,
     selectedAthlete,
-    selectedAthleteWorkloads,
+    selectedAthleteCompletedWorkloads: selectedAthleteWorkloads,
   } = useTrainerDayViewContext();
 
   const { setDetectedChanges } = useGroup();

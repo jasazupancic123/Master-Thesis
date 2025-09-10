@@ -4,11 +4,13 @@ import Box from '@mui/material/Box';
 import React, { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 
+import type { SvgC } from '../muscle-map-with-tooltip/muscle-map-with-tooltip';
 import type { TrainingCycleViewGridItemProps } from '../training-cycle-view-week/type';
 import { CommonService } from '@/common/service/common.service';
+import { getComponentIcon } from '@/common/service/util/icons.util';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { useGroup } from '@/store/group-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
+import { useGroup } from '@/store/group.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 const commonService = CommonService.instance;
 
@@ -110,19 +112,8 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
     return () => window.removeEventListener('resize', checkWrapping);
   }, [training.components, components.length]);
 
-  let fontSize = undefined;
-  if (screenSize.isMobile) fontSize = '125%';
-  else if (screenSize.isLandscapeMobile) fontSize = 15;
-  else if (training?.components.length > 5) {
-    fontSize = 20;
-  } else fontSize = 20;
-
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center">
-        <Box sx={{ flex: 1 }}></Box>
-      </Box>
-
       <Box
         ref={containerRef}
         display="flex"
@@ -131,6 +122,8 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
         flexDirection={screenSize.isMobile ? 'column' : 'row'}
         flexWrap="wrap"
         height="70px"
+        gap={1}
+        py={1}
         sx={{
           overflowY:
             isWrapped || screenSize.isMobile || screenSize.isLandscapeMobile
@@ -151,8 +144,8 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
         {components.map((trainingComponent) => {
           const component = trainingComponent.component;
           if (!component) return null;
-          const IconComponent: SvgIconComponent | null =
-            commonService.navigation.getComponentIcon(component?.name);
+          const IconComponent: SvgIconComponent | SvgC | null =
+            getComponentIcon(component?.name);
 
           return (
             <Tooltip
@@ -198,7 +191,7 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
                           trainingComponent.target.id === selectedTarget?.id &&
                           cycle &&
                           basePeriodizationTraining &&
-                          CommonService.instance.date.isBetween(
+                          commonService.date.isBetween(
                             training.to,
                             basePeriodizationTraining.to,
                             cycle?.to
@@ -208,7 +201,7 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
                         } else if (
                           cycle &&
                           basePeriodizationTraining &&
-                          !CommonService.instance.date.isBetween(
+                          !commonService.date.isBetween(
                             training.to,
                             basePeriodizationTraining.to,
                             cycle?.to
@@ -226,6 +219,10 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
                         component!.id
                       );
                     }}
+                    style={{
+                      height: screenSize.isSmallerThanLaptop ? 20 : 25,
+                      width: screenSize.isSmallerThanLaptop ? 20 : 25,
+                    }}
                     sx={{
                       color: cycleView
                         ? trainingComponent.target?.color
@@ -234,13 +231,6 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
                           : selected && selectedTarget
                             ? selectedTarget.color
                             : undefined,
-                      fontSize:
-                        (componentCalendarView || periodizationView) &&
-                        isSameDayAsSelectedComponent
-                          ? screenSize.isMobile
-                            ? 20
-                            : 25
-                          : fontSize,
                       margin: !componentCalendarView
                         ? !screenSize.isMobile &&
                           !screenSize.isLandscapeMobile &&

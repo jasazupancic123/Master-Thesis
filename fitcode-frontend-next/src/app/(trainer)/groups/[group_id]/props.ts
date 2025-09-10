@@ -8,12 +8,12 @@ import type { Exercise } from '@/controller/exercise/type/exercise.type';
 import type { Cycle } from '@/controller/group/type/cycle.type';
 import type { Group } from '@/controller/group/type/group.type';
 import type { Institution } from '@/controller/institution/type/institution.type';
-import type { CompletedFutureWorkloads } from '@/controller/training/type/completed-future-workloads.type';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
 import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import type { Workload } from '@/controller/training/type/workload.type';
 import type { User, UserEntity } from '@/controller/user/type/user.type';
 import type { WellnessZScore } from '@/controller/user/type/wellness.type';
 
@@ -53,8 +53,19 @@ export type TrainerDayViewContextProps = {
   setDay: SetState<Day>;
   training: Training | undefined;
   setTraining: SetStateNullable<Training>;
-  selectedPeriod: 'AM' | 'PM'; // selected period for the training
-  setSelectedPeriod: SetState<'AM' | 'PM'>;
+  selectedPeriod:
+    | {
+        key: Date;
+        value: 'AM' | 'PM';
+      }
+    | undefined; // selected period for the training
+  setSelectedPeriod: SetState<
+    | {
+        key: Date;
+        value: 'AM' | 'PM';
+      }
+    | undefined
+  >;
   component: TrainingComponent | undefined; // selected training component
   setComponent: SetStateNullable<TrainingComponent>;
   wellness: WellnessZScore[];
@@ -73,8 +84,8 @@ export type TrainerDayViewContextProps = {
   setPagination: SetState<Pagination>;
   search: string;
   setSearch: SetState<string>;
-  selectedAthleteWorkloads: CompletedFutureWorkloads;
-  setSelectedAthleteWorkloads: SetState<CompletedFutureWorkloads>;
+  selectedAthleteCompletedWorkloads: Workload[];
+  setSelectedAthleteCompletedWorkloads: SetState<Workload[]>;
   isSettingAthleteWorkloads: React.RefObject<boolean>;
   previousSelectedAthlete: React.RefObject<User | undefined>;
 };

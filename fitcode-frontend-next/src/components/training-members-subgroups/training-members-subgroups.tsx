@@ -20,8 +20,8 @@ import { updateSelectedAthlete } from '../training-members/state';
 import type { SetState } from '@/common/type/state.type';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
 import type { User } from '@/controller/user/type/user.type';
-import { useGroup } from '@/store/group-provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
+import { useGroup } from '@/store/group.provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 
 interface TrainingMembersSubgroupProps {
   subgroup: Subgroup;

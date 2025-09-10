@@ -1,24 +1,23 @@
 'use client';
 
-import { Box, CircularProgress, Typography } from '@mui/material';
-import { useTheme } from '@mui/material';
+import { Box, CircularProgress } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 
-import { CompletedPlanned } from '@/common/enum/past-future.enum';
+import { CompletedPlanned } from '@/common/enum/completed-planned.enum';
 import { CommonService } from '@/common/service/common.service';
 import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
 import type { Pagination } from '@/common/type/paginate.type';
+import AthleteOptionsContainer from '@/components/athlete-options-container/athlete-options-container';
 import AthleteTrainingCard from '@/components/athlete-training-card/athlete-training-card';
 import TrainingInProgress from '@/components/training-in-progress/training-in-progress';
 import type { Training } from '@/controller/training/type/training.type';
-import { useTraining } from '@/store/training-provider';
+import { useTraining } from '@/store/training.provider';
+import { TrainingInProgressProvider } from '@/store/training-in-progress.provider';
 
 const PAGE_SIZE = 3;
 const commonService = CommonService.instance;
 
 export default function TrainingPage() {
-  const theme = useTheme();
-
   const {
     view,
     setView,
@@ -163,42 +162,14 @@ export default function TrainingPage() {
 
   return view === ExerciseTrainingView.ExerciseView ? (
     <Box display="flex" flexDirection="column" width="100%">
-      <Box
-        display="flex"
-        justifyContent="space-evenly"
-        sx={{
-          backgroundColor: theme.palette.background.light,
-          py: 1,
+      <AthleteOptionsContainer
+        items={[CompletedPlanned.COMPLETED, CompletedPlanned.PLANNED]}
+        selectedItem={filter}
+        onClick={(type) => {
+          setFilter(type as CompletedPlanned);
         }}
-      >
-        {[CompletedPlanned.COMPLETED, CompletedPlanned.PLANNED].map((type) => (
-          <Box key={type} display="flex" flexDirection="column">
-            <Typography
-              sx={{
-                fontWeight: 'bold',
-                fontSize: 12,
-                textTransform: 'uppercase',
-                cursor: 'pointer',
-              }}
-              onClick={() => {
-                setFilter(type);
-              }}
-            >
-              {type}
-            </Typography>
-            {type === filter && (
-              <Box
-                sx={{
-                  width: '100%',
-                  height: 2,
-                  borderRadius: 2,
-                  backgroundColor: theme.palette.primary.main,
-                }}
-              />
-            )}
-          </Box>
-        ))}
-      </Box>
+        title="Trainings"
+      />
       <Box
         ref={containerRef}
         sx={{
@@ -224,12 +195,14 @@ export default function TrainingPage() {
       </Box>
     </Box>
   ) : (
-    <TrainingInProgress
-      setTrainings={
-        filter === CompletedPlanned.PLANNED
-          ? setFilteredPlannedTrainings
-          : setFilteredCompletedTrainings
-      }
-    />
+    <TrainingInProgressProvider>
+      <TrainingInProgress
+        setTrainings={
+          filter === CompletedPlanned.PLANNED
+            ? setFilteredPlannedTrainings
+            : setFilteredCompletedTrainings
+        }
+      />
+    </TrainingInProgressProvider>
   );
 }

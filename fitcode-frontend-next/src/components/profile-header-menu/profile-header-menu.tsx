@@ -3,9 +3,9 @@ import { Avatar, Box, Menu, MenuItem, Typography } from '@mui/material';
 import Link from 'next/link';
 
 import { LINK_PROFILE } from '@/common/constant/navigation.constant';
-import { useAuthenticatedAuth } from '@/store/auth-provider';
 import type { SetState } from '@/common/type/state.type';
-import { useMain } from '@/store/main-provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useMain } from '@/store/main.provider';
 
 interface ProfileHeaderMenuProps {
   anchorEl: HTMLElement | null;

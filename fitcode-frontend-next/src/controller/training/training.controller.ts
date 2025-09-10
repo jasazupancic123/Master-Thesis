@@ -1,6 +1,5 @@
 import { BaseController } from '../base.controller';
 import type { UserId } from '../institution/type/institution.type';
-import type { CompletedFutureWorkloads } from './type/completed-future-workloads.type';
 import type { CompletedTrainingComponent } from './type/completed-training.entity';
 import type {
   CopyTraining,
@@ -14,6 +13,7 @@ import type {
   CopyComponent,
   TrainingComponent,
 } from './type/training-component.type';
+import type { Workload } from './type/workload.type';
 
 export class TrainingController extends BaseController {
   private static instance: TrainingController;
@@ -45,8 +45,8 @@ export class TrainingController extends BaseController {
     );
   }
 
-  async findAthleteWorkloads(trainingId: string, userId: string) {
-    return this.api.get<CompletedFutureWorkloads>(
+  async findCompletedAthleteWorkloads(trainingId: string, userId: string) {
+    return this.api.get<Workload[]>(
       `/${trainingId}/athlete/${userId}/workloads`,
       { token: this.getToken() }
     );

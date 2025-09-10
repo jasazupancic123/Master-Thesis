@@ -16,7 +16,6 @@ import type { Method } from '@/controller/method/type/method.type';
 import { CustomWorkloadsSubgroupsService } from '@/controller/training/custom-workloads-subgroups.service';
 import type { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
-import type { CompletedFutureWorkloads } from '@/controller/training/type/completed-future-workloads.type';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
 import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
@@ -38,7 +37,6 @@ export async function handleUpdateMultipleTrainings(
     methods: Method[];
     setDetectedChanges: SetState<boolean>;
     selectedAthlete: User | undefined;
-    setSelectedAthleteWorkloads: SetState<CompletedFutureWorkloads>;
     isSettingAthleteWorkloads: React.RefObject<boolean>;
     setIsUpdatingTraining: SetState<boolean>;
   }

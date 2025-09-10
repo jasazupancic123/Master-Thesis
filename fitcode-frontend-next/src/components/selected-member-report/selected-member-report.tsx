@@ -21,8 +21,8 @@ import SorenessIcon from '@/assets/icons/Soreness.svg';
 import { WellnessChartDataType } from '@/controller/user/enum/wellness-chart-data-type.enum';
 import type { UserEntity } from '@/controller/user/type/user.type';
 import type { WellnessChartData } from '@/controller/user/type/wellness.type';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
+import { useScreenSize } from '@/store/screen-size.provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 
 interface SelectedMemberReportProps {
   groupMembers: UserEntity[];

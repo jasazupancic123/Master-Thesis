@@ -4,19 +4,20 @@ import {
   ArrowForwardRounded,
   MoreVert,
 } from '@mui/icons-material';
-import { Avatar, Box, Divider, IconButton } from '@mui/material';
+import { Box, Divider, IconButton } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
 
 import AthleteTrainingComponents from '../athlete-training-components/athlete-training-components';
+import ComponentsAvatar from '../components-avatar/components-avatar';
 import { TrainingService } from '@/controller/training/training.service';
 import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { useAuthenticatedAuth } from '@/store/auth-provider';
-import { useTraining } from '@/store/training-provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useTraining } from '@/store/training.provider';
 
 type AthleteTrainingCardProps = {
   training: Training;
@@ -151,13 +152,7 @@ export default function AthleteTrainingCard(props: AthleteTrainingCardProps) {
         >
           {/* Group name, cycle name, date */}
           <Box display="flex" alignItems="center" gap={1}>
-            <Avatar
-              src={training.institution?.imageUrl || ''}
-              sx={{
-                width: 50,
-                height: 50,
-              }}
-            />
+            <ComponentsAvatar size={50} components={training.components} />
             <Box display="flex" flexDirection="column">
               <Typography
                 sx={{

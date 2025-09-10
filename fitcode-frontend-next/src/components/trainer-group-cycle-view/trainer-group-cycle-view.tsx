@@ -7,6 +7,7 @@ import React, { Fragment, useEffect, useState } from 'react';
 
 import ExerciseChips from '../exercise-chips/exercise-chips';
 import HorizontalItemsList from '../horizontal-items-list/horizontal-items-list';
+import MobileDoubleTextItems from '../mobile-double-text-items/mobile-double-text-items';
 import { DIVIDER_HEIGHT, MAX_WIDTH } from '../trainer-day-view/constant';
 import VerticalLinesBorders from '../vertical-lines-borders/vertical-lines-borders';
 import { CommonService } from '@/common/service/common.service';
@@ -21,15 +22,14 @@ import { GroupService } from '@/controller/group/group.service';
 import type { Target } from '@/controller/target/type/target.type';
 import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
-import { useAuthenticatedAuth, withAuth } from '@/store/auth-provider';
-import { useGroup } from '@/store/group-provider';
-import { useMain } from '@/store/main-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useGroup } from '@/store/group.provider';
+import { useMain } from '@/store/main.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 const commonService = CommonService.instance;
 
-function TrainerCycleView() {
+export default function TrainerCycleView() {
   const { components, exercises: allExercises, methods } = useMain();
   const { group, cycle, setCycle, setTrainings, setDateFrom, setDateTo } =
     useGroup();
@@ -156,77 +156,20 @@ function TrainerCycleView() {
           {screenSize.isSmallerThanLaptop ? (
             <Box width="100%" display="flex" flexDirection="column">
               <HorizontalItems />
-              <Box
-                display="flex"
-                width="40%"
-                justifyContent="center"
-                gap={4}
-                mt={0.75}
-                sx={{
-                  mx: 'auto',
-                }}
-              >
-                <Box
-                  display="flex"
-                  flexDirection="column"
-                  width="50%"
-                  alignItems="center"
-                >
-                  <Typography
-                    textAlign="center"
-                    sx={{
-                      fontSize: '12px',
-                      fontWeight: 400,
-                    }}
-                  >
-                    Group
-                  </Typography>
-                  <Typography
-                    textTransform="uppercase"
-                    textAlign="center"
-                    sx={{
-                      fontSize: screenSize.isSmallerThanLaptop
-                        ? '14px'
-                        : '16px',
-                      fontWeight: 600,
-                    }}
-                  >
-                    {group.name}
-                  </Typography>
-                </Box>
-                {cycle && (
-                  <Box
-                    display="flex"
-                    flexDirection="column"
-                    width="50%"
-                    alignItems="center"
-                  >
-                    <Typography
-                      textAlign="center"
-                      sx={{
-                        fontSize: '12px',
-                        fontWeight: 400,
-                      }}
-                    >
-                      Duration
-                    </Typography>
-                    <Typography
-                      textAlign="center"
-                      textTransform="uppercase"
-                      sx={{
-                        fontSize: screenSize.isSmallerThanLaptop
-                          ? '14px'
-                          : '16px',
-                        fontWeight: 600,
-                      }}
-                    >
-                      {cycle.from && cycle.to
-                        ? `${commonService.date.weeks(cycle.from, cycle.to).length} weeks`
-                        : 'N/A'}
-                    </Typography>
-                  </Box>
-                )}
-              </Box>
+              <MobileDoubleTextItems
+                item1={{ label: 'Group', value: group.name }}
+                item2={
+                  cycle
+                    ? {
+                        label: 'Duration',
+                        value:
+                          cycle.from && cycle.to
+                            ? `${commonService.date.weeks(cycle.from, cycle.to).length} weeks`
+                            : 'N/A',
+                      }
+                    : undefined
+                }
+              />
             </Box>
           ) : (
             <>
@@ -422,5 +365,3 @@ function TrainerCycleView() {
     </Box>
   );
 }
-
-export default withAuth(TrainerCycleView, [UserRole.TRAINER, UserRole.MANAGER]);

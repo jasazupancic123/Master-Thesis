@@ -17,14 +17,13 @@ import { handleUpdateMultipleTrainings } from './state';
 import { CommonService } from '@/common/service/common.service';
 import { handleApiRequest } from '@/common/type/state.type';
 import TrainingMembers from '@/components/training-members/training-members';
-import { COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE } from '@/controller/training/constant/completed-future-workloads-default-value.constant';
 import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
-import { useAuthenticatedAuth } from '@/store/auth-provider';
-import { useGroup } from '@/store/group-provider';
-import { useMain } from '@/store/main-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useGroup } from '@/store/group.provider';
+import { useMain } from '@/store/main.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 
 dayjs.extend(weekOfYear);
 
@@ -41,11 +40,11 @@ export default function TrainerDayView() {
   const {
     group,
     cycle,
+    setCycle,
     setTrainings,
     setDateFrom,
     setDateTo,
     setDetectedChanges,
-    setCycle,
   } = useGroup();
 
   const {
@@ -57,7 +56,7 @@ export default function TrainerDayView() {
     selectedPeriod,
     setSelectedSubgroup,
     selectedAthlete,
-    setSelectedAthleteWorkloads,
+    setSelectedAthleteCompletedWorkloads: setSelectedAthleteWorkloads,
     isSettingAthleteWorkloads,
   } = useTrainerDayViewContext();
 
@@ -122,12 +121,14 @@ export default function TrainerDayView() {
   }, [component]);
 
   useEffect(() => {
+    if (!selectedPeriod) return;
+
     let from: Date, to: Date;
-    if (selectedPeriod === 'AM') {
+    if (selectedPeriod.value === 'AM') {
       from = day.date.startOf('day').toDate();
       to = day.date.startOf('day').add(12, 'hours').toDate();
     } else {
-      from = day.date.startOf('day').add(12, 'hours').toDate();
+      from = day.date.startOf('day').add(11, 'hours').toDate();
       to = day.date.endOf('day').toDate();
     }
 
@@ -162,11 +163,55 @@ export default function TrainerDayView() {
       undefined,
       undefined
     );
-  }, [day, selectedPeriod]);
+  }, [selectedPeriod]);
 
   useEffect(() => {
     // fetch only for selectedAthlete, group avg is already on training itself
-    setSelectedAthleteWorkloads(COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE);
+    const fetchWorkloads = async () => {
+      if (!selectedAthlete) return;
+
+      const combinedComponents = training?.components;
+
+      if (!combinedComponents || !combinedComponents.length) {
+        setSelectedAthleteWorkloads([]);
+        return;
+      }
+
+      const uniqueExerciseIds = [] as string[];
+      combinedComponents.forEach((c) => {
+        c.supersets.forEach((s) => {
+          s.exercises.forEach((e) => {
+            if (!uniqueExerciseIds.includes(e.id)) uniqueExerciseIds.push(e.id);
+          });
+        });
+      });
+
+      if (!uniqueExerciseIds.length) {
+        setSelectedAthleteWorkloads([]);
+        return;
+      }
+
+      isSettingAthleteWorkloads.current = true;
+      handleApiRequest(
+        router,
+        () =>
+          controller.findCompletedAthleteWorkloads(
+            training.id,
+            selectedAthlete.uid
+          ),
+        (workloads) => {
+          setSelectedAthleteWorkloads(workloads);
+          isSettingAthleteWorkloads.current = false;
+        },
+        undefined,
+        'Failed to fetch workloads'
+      );
+      isSettingAthleteWorkloads.current = false;
+    };
+
+    // fetch only for selectedAthlete, group avg is already on training itself
+    if (selectedAthlete) fetchWorkloads();
+    else setSelectedAthleteWorkloads([]);
   }, [selectedAthlete]);
 
   if (!group || !cycle) return null;
@@ -200,7 +245,6 @@ export default function TrainerDayView() {
                   methods,
                   setDetectedChanges,
                   selectedAthlete,
-                  setSelectedAthleteWorkloads,
                   isSettingAthleteWorkloads,
                   setIsUpdatingTraining,
                 })
@@ -274,7 +318,6 @@ export default function TrainerDayView() {
                     methods,
                     setDetectedChanges,
                     selectedAthlete,
-                    setSelectedAthleteWorkloads,
                     isSettingAthleteWorkloads,
                     setIsUpdatingTraining,
                   });

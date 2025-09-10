@@ -3,8 +3,8 @@
 import { usePathname } from 'next/navigation';
 import { createContext, useContext, useEffect, useState } from 'react';
 
-import { useAuthenticatedAuth } from './auth-provider';
-import { useMain } from './main-provider';
+import { useAuthenticatedAuth } from './auth.provider';
+import { useMain } from './main.provider';
 import {
   LINK_DASHBOARD_HOME,
   LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS,

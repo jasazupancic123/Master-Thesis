@@ -20,12 +20,11 @@ import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
 import type { SetState } from '@/common/type/state.type';
 import { Gender } from '@/controller/user/enum/gender.enum';
 import { SportLevel } from '@/controller/user/enum/sport-level.enum';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
 import type { User, UserEntity } from '@/controller/user/type/user.type';
 import { UserController } from '@/controller/user/user.controller';
-import { useAuthenticatedAuth, withAuth } from '@/store/auth-provider';
-import { useDashboard } from '@/store/dashboard-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useDashboard } from '@/store/dashboard.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 const firebaseStorage = FirebaseStorageUtil.Instance;
 
@@ -44,9 +43,9 @@ interface DashboardEditAthleteModalProps {
 
 const DEFAULT_MARGIN = 1;
 
-export default withAuth(DashboardEditAthleteModal, [UserRole.TRAINER]);
-
-function DashboardEditAthleteModal(props: DashboardEditAthleteModalProps) {
+export default function DashboardEditAthleteModal(
+  props: DashboardEditAthleteModalProps
+) {
   const { selectedInstitution, members, refetchMembers } = useDashboard();
   const auth = useAuthenticatedAuth();
   const controller = UserController.getInstance(auth.token);

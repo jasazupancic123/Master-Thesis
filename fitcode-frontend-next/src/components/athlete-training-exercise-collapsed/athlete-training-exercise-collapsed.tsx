@@ -4,7 +4,7 @@ import { useTheme } from '@mui/material';
 
 import type { SetState } from '@/common/type/state.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { useScreenSize } from '@/store/screen-size-provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 interface AthleteTrainingExerciseCollapsedProps {
   exercise: TrainingExercise;

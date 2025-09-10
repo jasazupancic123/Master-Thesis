@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { BACKEND_API_BASE_URL } from '../constant/api.constant';
-import { useAuthenticatedAuth } from '@/store/auth-provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 
 export function useNestBackendFetch<T = unknown>(
   url: string,

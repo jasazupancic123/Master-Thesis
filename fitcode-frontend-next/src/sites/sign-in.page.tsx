@@ -18,7 +18,7 @@ import {
 } from '@/common/constant/navigation.constant';
 import { FirebaseAuthUtil } from '@/common/firebase/firebase-auth.util';
 import HeroNavbar from '@/components/hero-navbar/hero-navbar';
-import { useAuth } from '@/store/auth-provider';
+import { useAuth } from '@/store/auth.provider';
 
 const firebaseAuthUtil = FirebaseAuthUtil.getInstance();
 

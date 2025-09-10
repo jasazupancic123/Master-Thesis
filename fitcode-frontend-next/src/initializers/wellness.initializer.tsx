@@ -8,15 +8,12 @@ import {
   setCachedWellness,
 } from '../session-cache/wellness.session-cache';
 import type { ChildrenProps } from '@/common/type/props.type';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
 import type { Wellness } from '@/controller/user/type/wellness.type';
 import { UserController } from '@/controller/user/user.controller';
-import { useAuthenticatedAuth, withAuth } from '@/store/auth-provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { WellnessProvider } from '@/store/wellness-provider';
 
-export default withAuth(WellnessInitializer, [UserRole.ATHLETE]);
-
-function WellnessInitializer(props: ChildrenProps) {
+export default function WellnessInitializer(props: ChildrenProps) {
   const { children } = props;
   const { token } = useAuthenticatedAuth();
   const controller = UserController.getInstance(token);

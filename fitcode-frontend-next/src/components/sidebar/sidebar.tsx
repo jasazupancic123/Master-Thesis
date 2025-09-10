@@ -14,12 +14,19 @@ import ListItemText from '@mui/material/ListItemText';
 import Link from 'next/link';
 import * as React from 'react';
 
-import { useAuthenticatedAuth } from '@/store/auth-provider';
+import { LINKS_SIDEBAR } from '@/common/constant/navigation.constant';
 import { CommonService } from '@/common/service/common.service';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
+import { useAthlete } from '@/store/athlete.provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 
 const commonService = CommonService.instance;
 
 export default function Sidebar() {
+  const athleteContext = useAthlete();
+
+  const { filter, setFilter } = athleteContext || {};
+
   const [open, setOpen] = React.useState(false);
   const { role, logout } = useAuthenticatedAuth();
 
@@ -38,7 +45,21 @@ export default function Sidebar() {
           .getSidebarLinksByUserRole(role)
           .map(({ href, label }, i) => (
             <ListItem key={i} disablePadding>
-              <Link href={href} passHref style={{ width: '100%' }}>
+              <Link
+                href={href}
+                passHref
+                style={{ width: '100%' }}
+                onClick={() => {
+                  if (!filter || !setFilter) return;
+
+                  const newValue = Object.values(
+                    LINKS_SIDEBAR[UserRole.ATHLETE]
+                  )[i];
+                  if (!newValue) return;
+
+                  setFilter(newValue);
+                }}
+              >
                 <ListItemButton sx={{ width: '100%' }}>
                   <ListItemText primary={label} />
                 </ListItemButton>

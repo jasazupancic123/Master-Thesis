@@ -5,8 +5,8 @@ import { AddMembersModal } from '../add-members-modal/add-members-modal';
 import MyModal from '../modal/modal';
 import type { SetState } from '@/common/type/state.type';
 import type { User } from '@/controller/user/type/user.type';
-import { useDashboard } from '@/store/dashboard-provider';
-import { useMain } from '@/store/main-provider';
+import { useDashboard } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
 
 interface AddGroupModalProps {
   groupName: string;

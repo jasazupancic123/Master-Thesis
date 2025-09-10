@@ -155,7 +155,7 @@ export function updateSelectedAthlete(input: {
   member: User;
   selectedAthlete: User | undefined;
   setSelectedAthlete: SetState<User | undefined>;
-  component: TrainingComponent;
+  component: TrainingComponent | undefined;
   selectedSubgroup: Subgroup | null;
   setSelectedSubgroup: SetState<Subgroup | null>;
   subgroupId: string;
@@ -172,14 +172,14 @@ export function updateSelectedAthlete(input: {
 
   if (subgroupId !== (selectedSubgroup?.id || DEFAULT_SUBGROUP_ID)) return;
 
-  const foundCustomUserSubgroup = component.subgroups.find(
+  const foundCustomUserSubgroup = component?.subgroups.find(
     (subgroup) => subgroup.parentId && subgroup.membersIds.includes(member.uid)
   );
 
   if (selectedAthlete?.uid === member.uid) {
     // update selectedSubgroup on member deselect
     if (foundCustomUserSubgroup) {
-      const parentSubgroup = component.subgroups.find(
+      const parentSubgroup = component?.subgroups.find(
         (subgroup) => subgroup.id === foundCustomUserSubgroup.parentId
       );
 

@@ -34,7 +34,7 @@ import {
 import type { ChildrenProps } from '@/common/type/props.type';
 import Footer from '@/components/footer/footer';
 import HeroNavbar from '@/components/hero-navbar/hero-navbar';
-import { useAuth } from '@/store/auth-provider';
+import { useAuth } from '@/store/auth.provider';
 
 export type AppPageProps = ChildrenProps & {
   title: string;

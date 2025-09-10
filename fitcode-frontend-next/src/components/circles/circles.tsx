@@ -9,8 +9,8 @@ import dayjs from 'dayjs';
 import React from 'react';
 import toast from 'react-hot-toast';
 
-import { useGroup } from '@/store/group-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
+import { useGroup } from '@/store/group.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 interface Props {
   items: { label: string; value: string; sublabel?: string }[];

@@ -20,7 +20,7 @@ import type {
   TreeComponent,
 } from '@/controller/component/type/component.type';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
-import { useScreenSize } from '@/store/screen-size-provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 const firebaseStorage = FirebaseStorageUtil.Instance;
 

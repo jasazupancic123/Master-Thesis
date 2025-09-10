@@ -13,9 +13,9 @@ import { isManager, isTrainer } from '@/common/firebase/firebase-auth.util';
 import { handleApiRequest, type SetState } from '@/common/type/state.type';
 import { GroupController } from '@/controller/group/group.controller';
 import type { User } from '@/controller/user/type/user.type';
-import { useAuthenticatedAuth } from '@/store/auth-provider';
-import { useDashboard } from '@/store/dashboard-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useDashboard } from '@/store/dashboard.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 interface DashboardGroupsMembersProps {
   modal: {

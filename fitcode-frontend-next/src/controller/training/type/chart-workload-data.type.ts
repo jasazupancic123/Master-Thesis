@@ -1,5 +1,7 @@
 export type ChartWorkloadData = {
   trainingId: string;
+  componentId: string;
+  exerciseId: string;
   name: string;
   int1?: number;
   vol1?: number;

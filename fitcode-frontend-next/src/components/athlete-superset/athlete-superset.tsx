@@ -1,5 +1,5 @@
 import Box from '@mui/material/Box/Box';
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 
 import AthleteTrainingExerciseCollapsed from '../athlete-training-exercise-collapsed/athlete-training-exercise-collapsed';
 import AthleteTrainingExerciseSets from '../athlete-training-exercise-sets/athlete-training-exercise-sets';
@@ -33,9 +33,8 @@ export default function AthleteSuperset(props: AthleteSupersetProps) {
         }}
       >
         {superset.exercises.map((exercise, i) => (
-          <>
+          <Fragment key={exercise.id}>
             <AthleteTrainingExerciseCollapsed
-              key={exercise.id}
               exercise={exercise}
               borderTopRadius={i === 0}
               borderBottomRadius={
@@ -53,7 +52,7 @@ export default function AthleteSuperset(props: AthleteSupersetProps) {
                 borderBottomRadius={i === superset.exercises.length - 1}
               />
             )}
-          </>
+          </Fragment>
         ))}
       </Box>
     </Box>

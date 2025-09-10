@@ -24,14 +24,13 @@ import type { TrainingCardProps } from '../trainer-day-view/props';
 import { handleCopyTraining } from '../trainer-day-view/state';
 import TrainingComponentLayout from '../training-component-layout/training-component-layout';
 import { TrainingController } from '@/controller/training/training.controller';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
-import { useAuthenticatedAuth, withAuth } from '@/store/auth-provider';
-import { useGroup } from '@/store/group-provider';
-import { useMain } from '@/store/main-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useGroup } from '@/store/group.provider';
+import { useMain } from '@/store/main.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 
-function TrainingCard(props: TrainingCardProps) {
+export default function TrainingCard(props: TrainingCardProps) {
   const { components, exercises, methods } = useMain();
   const { trainings, cycle, setTrainings } = useGroup();
 
@@ -84,8 +83,8 @@ function TrainingCard(props: TrainingCardProps) {
     return thisCycleTrainings.some(
       (t) =>
         dayjs(t.from).isSame(date, 'day') &&
-        ((dayjs(t.from).hour() < 12 && selectedPeriod === 'AM') ||
-          (dayjs(t.from).hour() >= 12 && selectedPeriod === 'PM'))
+        ((dayjs(t.from).hour() < 12 && selectedPeriod?.value === 'AM') ||
+          (dayjs(t.from).hour() >= 12 && selectedPeriod?.value === 'PM'))
     );
   };
 
@@ -106,7 +105,7 @@ function TrainingCard(props: TrainingCardProps) {
               left: 0,
             }}
           >
-            {selectedPeriod === 'AM' ? 'Morning' : 'Afternoon'}
+            {selectedPeriod?.value === 'AM' ? 'Morning' : 'Afternoon'}
           </Typography>
 
           {cycle && component ? (
@@ -275,7 +274,7 @@ function TrainingCard(props: TrainingCardProps) {
         cancelText="Close"
         onCancel={() => {
           setShowCopyTrainingModal(false);
-          setSelectedPeriod('AM');
+          setSelectedPeriod({ key: new Date(), value: 'AM' });
           setDatePickerOpen(false);
         }}
       >
@@ -285,7 +284,10 @@ function TrainingCard(props: TrainingCardProps) {
           <Select
             value={selectedPeriod}
             onChange={(event) =>
-              setSelectedPeriod(event.target.value as 'AM' | 'PM')
+              setSelectedPeriod({
+                key: new Date(),
+                value: event.target.value as 'AM' | 'PM',
+              })
             }
             fullWidth
           >
@@ -301,11 +303,11 @@ function TrainingCard(props: TrainingCardProps) {
                 open={datePickerOpen}
                 value={null}
                 onChange={(newDate) => {
-                  if (!newDate) return;
+                  if (!newDate || !selectedPeriod) return;
                   setJustClickedOnCopyDate(true);
                   handleCopyTraining(
                     controller,
-                    { newDate, period: selectedPeriod },
+                    { newDate, period: selectedPeriod.value },
                     {
                       router,
                       training,
@@ -350,11 +352,11 @@ function TrainingCard(props: TrainingCardProps) {
               <DatePicker
                 value={null}
                 onChange={(newDate) => {
-                  if (!newDate) return;
+                  if (!newDate || !selectedPeriod) return;
 
                   handleCopyTraining(
                     controller,
-                    { newDate, period: selectedPeriod },
+                    { newDate, period: selectedPeriod.value },
                     {
                       router,
                       training,
@@ -376,5 +378,3 @@ function TrainingCard(props: TrainingCardProps) {
     </Box>
   );
 }
-
-export default withAuth(TrainingCard, [UserRole.TRAINER, UserRole.MANAGER]);

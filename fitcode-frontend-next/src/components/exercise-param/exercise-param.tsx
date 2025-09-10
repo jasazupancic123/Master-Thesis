@@ -9,7 +9,7 @@ import type { SetState } from '@/common/type/state.type';
 import type { Attribute } from '@/controller/attribute/type/attribute.type';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { useGroup } from '@/store/group-provider';
+import { useGroup } from '@/store/group.provider';
 
 interface Props {
   param: Attribute;
@@ -27,6 +27,7 @@ interface Props {
   min?: number;
   max?: number;
   athleteView?: boolean;
+  dissableSettingValue?: boolean;
 }
 
 export function ExerciseParam(props: Props) {
@@ -47,6 +48,7 @@ export function ExerciseParam(props: Props) {
     min,
     max,
     athleteView,
+    dissableSettingValue,
   } = props;
 
   const group = useGroup() ?? {};
@@ -146,7 +148,7 @@ export function ExerciseParam(props: Props) {
           }}
         >
           <Select
-            disabled={readOnly}
+            disabled={readOnly || dissableSettingValue}
             variant="filled"
             sx={{
               textAlign: 'center',
@@ -165,11 +167,27 @@ export function ExerciseParam(props: Props) {
                 border: 'none !important',
               },
               '& .MuiInputBase-input.Mui-disabled': {
-                color: readOnly ? 'white !important' : undefined,
-                WebkitTextFillColor: readOnly ? 'white !important' : undefined,
+                color: readOnly
+                  ? 'white !important'
+                  : dissableSettingValue
+                    ? `${theme.palette.text.primary} !important`
+                    : undefined,
+                WebkitTextFillColor: readOnly
+                  ? 'white !important'
+                  : dissableSettingValue
+                    ? `${theme.palette.text.primary} !important`
+                    : undefined,
+                backgroundColor: dissableSettingValue
+                  ? 'transparent !important'
+                  : undefined,
               },
-              '& .Mui-disabled': {
-                color: 'rgba(255, 255, 255, 0) !important',
+              '&.Mui-disabled': {
+                backgroundColor: dissableSettingValue
+                  ? 'transparent !important'
+                  : undefined,
+                color: dissableSettingValue
+                  ? `${theme.palette.text.primary} !important`
+                  : undefined,
               },
             }}
             value={value.value}

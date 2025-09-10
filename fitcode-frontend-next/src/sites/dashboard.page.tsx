@@ -20,10 +20,10 @@ import { GroupService } from '@/controller/group/group.service';
 import type { Institution } from '@/controller/institution/type/institution.type';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import type { User } from '@/controller/user/type/user.type';
-import { useAuthenticatedAuth } from '@/store/auth-provider';
-import { useDashboard } from '@/store/dashboard-provider';
-import { useMain } from '@/store/main-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useDashboard } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 export default function DashboardPage() {
   const screenSize = useScreenSize();

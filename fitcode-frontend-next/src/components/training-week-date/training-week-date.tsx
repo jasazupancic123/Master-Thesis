@@ -18,10 +18,9 @@ import { MainSet } from '@/controller/training/enum/main-set.enum';
 import { TrainingController } from '@/controller/training/training.controller';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
-import { useAuthenticatedAuth, withAuth } from '@/store/auth-provider';
-import { useGroup } from '@/store/group-provider';
-import { useMain } from '@/store/main-provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useGroup } from '@/store/group.provider';
+import { useMain } from '@/store/main.provider';
 
 interface TrainingWeekDatesProps {
   week: dayjs.Dayjs[];
@@ -54,9 +53,7 @@ interface TrainingWeekDatesProps {
   ) => Promise<void>;
 }
 
-export default withAuth(TrainingWeekDates, [UserRole.TRAINER]);
-
-function TrainingWeekDates(props: TrainingWeekDatesProps) {
+export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
   const router = useRouter();
   const theme = useTheme();
   const auth = useAuthenticatedAuth();

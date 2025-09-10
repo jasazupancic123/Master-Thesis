@@ -12,17 +12,15 @@ import { handleApiRequest } from '@/common/type/state.type';
 import { InstitutionController } from '@/controller/institution/institution.controller';
 import { InstitutionService } from '@/controller/institution/institution.service';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
-import { useAuthenticatedAuth, withAuth } from '@/store/auth-provider';
-import { useDashboard } from '@/store/dashboard-provider';
-import { useMain } from '@/store/main-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useDashboard } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 const firebaseStorage = FirebaseStorageUtil.Instance;
 const firebaseFunctions = FirebaseFunctionsUtil.Instance;
 
-export default withAuth(AddInstitutionDashboard, [UserRole.ADMIN]);
-
-function AddInstitutionDashboard() {
+export default function AddInstitutionDashboard() {
   const { users } = useMain();
   const router = useRouter();
   const screenSize = useScreenSize();

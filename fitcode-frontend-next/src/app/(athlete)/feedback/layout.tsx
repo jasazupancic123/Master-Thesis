@@ -9,7 +9,7 @@ import WellnessInitializer from '@/initializers/wellness.initializer';
 
 export default function Layout({ children }: ChildrenProps) {
   return (
-    <Box bgcolor="background.paper" minHeight="100vh">
+    <Box bgcolor="background.default" minHeight="100vh">
       <AthleteHeader />
 
       <Container component="main" maxWidth="lg" sx={{ px: '0px !important' }}>

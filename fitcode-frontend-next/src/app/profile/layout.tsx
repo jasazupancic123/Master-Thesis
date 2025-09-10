@@ -5,8 +5,8 @@ import Container from '@mui/material/Container';
 
 import type { ChildrenProps } from '@/common/type/props.type';
 import ProfileInitializer from '@/initializers/profile.initializer';
-import { withAuth } from '@/store/auth-provider';
-import MainProvider from '@/store/main-provider';
+import { withAuth } from '@/store/auth.provider';
+import MainProvider from '@/store/main.provider';
 
 export default withAuth(Layout);
 
