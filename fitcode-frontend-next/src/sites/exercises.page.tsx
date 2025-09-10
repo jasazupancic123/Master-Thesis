@@ -24,7 +24,7 @@ import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
-import { isAdmin } from '@/common/service/util/firebase-auth.util';
+import { isAdmin } from '@/common/firebase/firebase-auth.util';
 import type { Pagination as PaginationType } from '@/common/type/paginate.type';
 import { ExerciseCard } from '@/components/exercise-card/exercise-card';
 import ExerciseChips from '@/components/exercise-chips/exercise-chips';
@@ -40,6 +40,7 @@ import type {
   Exercise,
 } from '@/controller/exercise/type/exercise.type';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
+import { useAuthenticatedAuth } from '@/store/auth-provider';
 import { useMain } from '@/store/main-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 
@@ -51,19 +52,17 @@ export const DEFAULT_EXERCISE: Partial<Exercise> = {
 };
 
 export default function ExercisesPage() {
+  const { token, role } = useAuthenticatedAuth();
   const {
     components,
     attributes,
     exercises: allExercises,
     setExercises: setAllExercises,
-    profile,
   } = useMain();
 
   const router = useRouter();
   const theme = useTheme();
   const screenSize = useScreenSize();
-
-  const roles = profile?.customClaims?.role || [];
 
   // filter exercises
   const [selectedComponent, setSelectedComponent] = useState<Component | null>(
@@ -130,7 +129,7 @@ export default function ExercisesPage() {
   return (
     <Box p={2} px={screenSize.isMobile ? 0 : undefined}>
       {/* Import Button */}
-      {isAdmin(roles) && (
+      {role && isAdmin(role) && (
         <Box
           width="100%"
           display="flex"
@@ -283,7 +282,7 @@ export default function ExercisesPage() {
           setIsOpen={(isOpen) => setModal({ ...modal, add: isOpen })}
           title={'Add Exercise'}
           onConfirm={async (attributes) => {
-            handleAddExercise(exercise, {
+            handleAddExercise(token, exercise, {
               router,
               components,
               attributes,
@@ -314,14 +313,13 @@ export default function ExercisesPage() {
           isOpen={modal.edit}
           setIsOpen={(isOpen) => setModal({ ...modal, edit: isOpen })}
           title={
-            exercise.ownerId === 'global' && !roles.includes(UserRole.ADMIN)
+            exercise.ownerId === 'global' && role !== UserRole.ADMIN
               ? 'Exercise Details'
               : 'Update Exercise'
           }
-          {...((exercise.ownerId !== 'global' ||
-            roles.includes(UserRole.ADMIN)) && {
+          {...((exercise.ownerId !== 'global' || role === UserRole.ADMIN) && {
             onConfirm: async (attributes) => {
-              handleUpdateExercise(exercise!.id!, exercise, {
+              handleUpdateExercise(token, exercise!.id!, exercise, {
                 router,
                 components,
                 attributes,
@@ -346,7 +344,7 @@ export default function ExercisesPage() {
         cancelText="Cancel"
         onCancel={() => setModal((prev) => ({ ...prev, confirmDelete: false }))}
         onConfirm={async () => {
-          await handleDeleteExercise(exercise!.id!, {
+          await handleDeleteExercise(token, exercise!.id!, {
             router,
             setFilteredExercises,
             setExercises: setAllExercises,
@@ -365,6 +363,7 @@ export default function ExercisesPage() {
         width={screenSize.isMobile ? undefined : 500}
         onConfirm={() => {
           handleUpsertManyExercises(
+            token,
             {
               exercises: importedExercises.map((exercise) => ({
                 name: exercise.name,
@@ -398,6 +397,7 @@ export default function ExercisesPage() {
         width={screenSize.isMobile ? undefined : 500}
         onConfirm={() => {
           handleUpsertMuscleValues(
+            token,
             {
               exercises: importedMuscleValueExercises.map(
                 (muscleValuesExercise) => ({

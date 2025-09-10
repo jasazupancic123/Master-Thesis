@@ -30,11 +30,12 @@ import {
   LINK_SETTINGS,
   LINKS_SIDEBAR,
 } from '@/common/constant/navigation.constant';
+import { useAuthenticatedAuth } from '@/store/auth-provider';
 import type { GroupDateFilter } from '@/common/type/filter.type';
 import type { SetState } from '@/common/type/state.type';
 import FilterButton from '@/components/filter-button/filter-button';
-import { useAuth } from '@/store/auth-provider';
 import { useGroup } from '@/store/group-provider';
+import { useMain } from '@/store/main-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 
 export interface TrainerGroupHeaderProps {
@@ -48,7 +49,8 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
 
   const { filter, setFilter } = props;
 
-  const { role, profile } = useAuth();
+  const { role } = useAuthenticatedAuth();
+  const { profile } = useMain();
   const { institution, detectedChanges, setDetectedChanges } = useGroup();
 
   const [open, setOpen] = useState(false);
@@ -88,8 +90,8 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
           {/* Side drawer from the right */}
           <Drawer anchor="left" open={open} onClose={() => setOpen(false)}>
             <List sx={{ mt: 5 }}>
-              {role.length &&
-                Object.values(LINKS_SIDEBAR[role[0]]).map((link, i) => {
+              {role &&
+                Object.values(LINKS_SIDEBAR[role]).map((link, i) => {
                   if (!link) return null;
 
                   let Icon: React.ReactNode = null;

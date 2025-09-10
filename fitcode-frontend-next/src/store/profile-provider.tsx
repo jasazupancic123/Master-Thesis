@@ -20,13 +20,8 @@ export const useProfile = () => useContext(ProfileContext)!;
 
 export function ProfileProvider(props: ProfileContextProps & ChildrenProps) {
   const { children, user: providedUser } = props;
-
   const [user, setUser] = useState<User>(providedUser);
-
-  const value: ProfileProviderProps = {
-    user,
-    setUser,
-  };
+  const value: ProfileProviderProps = { user, setUser };
 
   return (
     <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>

@@ -13,10 +13,12 @@ import TrainingInProgressSuperset from '../training-in-progress-superset/trainin
 import { handleFinishTraining } from './state';
 import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
 import type { SetState } from '@/common/type/state.type';
+import { TrainingController } from '@/controller/training/training.controller';
 import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
-import { useAuth } from '@/store/auth-provider';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
+import { useAuthenticatedAuth, withAuth } from '@/store/auth-provider';
 import { useMain } from '@/store/main-provider';
 import { useTraining } from '@/store/training-provider';
 
@@ -24,9 +26,14 @@ interface TrainingInProgressProps {
   setTrainings: SetState<Training[]>;
 }
 
-export default function TrainingInProgress(props: TrainingInProgressProps) {
+export default withAuth(TrainingInProgress, [UserRole.ATHLETE]);
+
+function TrainingInProgress(props: TrainingInProgressProps) {
   const theme = useTheme();
   const router = useRouter();
+  const { exercises } = useMain();
+  const { user, token } = useAuthenticatedAuth();
+  const controller = TrainingController.getInstance(token);
 
   const {
     clearTrainingState,
@@ -34,8 +41,6 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
     setTrainingInProgress,
     setView,
   } = useTraining();
-
-  const { exercises } = useMain();
 
   const { setTrainings } = props;
 
@@ -47,8 +52,8 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
   const [openFinishTrainingModal, setOpenFinishTrainingModal] = useState(false);
   const [openCancelTrainingModal, setOpenCancelTrainingModal] = useState(false);
   const [playAnimation, setPlayAnimation] = useState(true);
-
-  const { user } = useAuth();
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
 
   useEffect(() => {
     if (!trainingInProgress) return;
@@ -119,9 +124,6 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
     setElapsedTime(0);
     setSelectedSuperset(undefined);
   };
-
-  const [anchorEl, setAnchorEl] = useState(null);
-  const open = Boolean(anchorEl);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleOpenMenu = (event: any) => {
@@ -200,7 +202,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
           >
             <MenuItem
               onClick={() =>
-                handleFinishTraining({
+                handleFinishTraining(controller, {
                   trainingInProgress,
                   setTrainingInProgress,
                   user,
@@ -229,7 +231,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
         cancelText="Cancel"
         onCancel={() => setOpenFinishTrainingModal(false)}
         onConfirm={() => {
-          handleFinishTraining({
+          handleFinishTraining(controller, {
             trainingInProgress,
             setTrainingInProgress,
             user,

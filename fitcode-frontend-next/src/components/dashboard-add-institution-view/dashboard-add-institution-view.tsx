@@ -1,28 +1,35 @@
+'use client';
+
 import { Box, Button, FormControl, TextField } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import FileUpload from '../file-upload/file-upload';
-import { CommonService } from '@/common/service/common.service';
-import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
+import { FirebaseFunctionsUtil } from '@/common/firebase/firebase-functions.util';
+import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
 import { handleApiRequest } from '@/common/type/state.type';
 import { InstitutionController } from '@/controller/institution/institution.controller';
 import { InstitutionService } from '@/controller/institution/institution.service';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
+import { useAuthenticatedAuth, withAuth } from '@/store/auth-provider';
 import { useDashboard } from '@/store/dashboard-provider';
 import { useMain } from '@/store/main-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 
-const commonService = CommonService.instance;
-const firebaseService = commonService.firebase;
+const firebaseStorage = FirebaseStorageUtil.Instance;
+const firebaseFunctions = FirebaseFunctionsUtil.Instance;
 
-export default function AddInstitutionDashboard() {
+export default withAuth(AddInstitutionDashboard, [UserRole.ADMIN]);
+
+function AddInstitutionDashboard() {
   const { users } = useMain();
   const router = useRouter();
   const screenSize = useScreenSize();
-
   const { setInstitutions, refetchUsers } = useDashboard();
+
+  const auth = useAuthenticatedAuth();
+  const controller = InstitutionController.getInstance(auth.token);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -34,7 +41,6 @@ export default function AddInstitutionDashboard() {
     if (!name || !imageUrl || !email) return;
 
     const owner = users.find((user) => user.email === email.toLowerCase());
-
     if (!owner) {
       toast.error('Institution not registered correctly');
       return;
@@ -43,7 +49,7 @@ export default function AddInstitutionDashboard() {
     handleApiRequest(
       router,
       () =>
-        InstitutionController.create({
+        controller.create({
           name,
           imageUrl,
           ownerId: owner.uid,
@@ -104,7 +110,7 @@ export default function AddInstitutionDashboard() {
 
     handleApiRequest(
       router,
-      () => firebaseService.functions.createUserWithRole(userInput),
+      () => firebaseFunctions.createUserWithRole(userInput),
       () => {
         refetchUsers();
       },
@@ -183,7 +189,7 @@ export default function AddInstitutionDashboard() {
             initialFileUrl={imageUrl}
             onFileUpload={async (file: File) => {
               const path = `media/exercise/${Date.now()}-${file.name}`;
-              const url = await FirebaseStorageUtil.uploadFile(file, path);
+              const url = await firebaseStorage.uploadFile(file, path);
               setImageUrl(url);
             }}
           />

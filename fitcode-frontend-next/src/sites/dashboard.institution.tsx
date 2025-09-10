@@ -1,33 +1,38 @@
 'use client';
 
 import { Add, FileUploadOutlined, MoreVert, Remove } from '@mui/icons-material';
-import { Avatar, Box, IconButton, Typography } from '@mui/material';
+import {
+  Avatar,
+  Box,
+  CircularProgress,
+  IconButton,
+  Typography,
+} from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { theme } from '@/app/style';
 import { AthletesTrainers } from '@/common/enum/athletes-trainer.enum';
-import { CommonService } from '@/common/service/common.service';
-import { isManager } from '@/common/service/util/firebase-auth.util';
+import { isManager } from '@/common/firebase/firebase-auth.util';
+import { FirebaseFunctionsUtil } from '@/common/firebase/firebase-functions.util';
 import { handleApiRequest } from '@/common/type/state.type';
 import DashboardEditAthleteModal from '@/components/dashboard-edit-athlete-modal/dashboard-edit-athlete-modal';
 import RegisterUsersDashboard from '@/components/dashboard-register-users-modal/dashboard-register-users-modal';
 import FileUpload from '@/components/file-upload/file-upload';
 import HorizontalItemsList from '@/components/horizontal-items-list/horizontal-items-list';
-import LoadingOverlay from '@/components/loading-overlay/loading-overlay';
 import MyModal from '@/components/modal/modal';
 import { SearchBar } from '@/components/search-bar/search-bar';
 import { MAX_WIDTH } from '@/components/trainer-day-view/constant';
 import { InstitutionController } from '@/controller/institution/institution.controller';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import type { User } from '@/controller/user/type/user.type';
+import { useAuthenticatedAuth } from '@/store/auth-provider';
 import { useDashboard } from '@/store/dashboard-provider';
 import { useMain } from '@/store/main-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 
-const commonService = CommonService.instance;
-const firebaseService = commonService.firebase;
+const firebaseFunctions = FirebaseFunctionsUtil.Instance;
 
 export default function DashboardInstitutionPage() {
   const {
@@ -40,7 +45,9 @@ export default function DashboardInstitutionPage() {
   const screenSize = useScreenSize();
   const router = useRouter();
 
-  const { profile, users } = useMain();
+  const { token, role } = useAuthenticatedAuth();
+  const controller = InstitutionController.getInstance(token);
+  const { users } = useMain();
 
   const [selectedView, setSelectedView] = useState<AthletesTrainers>(
     AthletesTrainers.ATHLETES
@@ -61,8 +68,6 @@ export default function DashboardInstitutionPage() {
   const [loading, setLoading] = useState(true);
   const [csvUserEmails, setCsvUserEmails] = useState<string[]>([]);
   const [isUploadingMembers, setIsUploadingMembers] = useState(false);
-
-  const roles = profile.customClaims.role || [];
 
   useEffect(() => {
     const current =
@@ -108,70 +113,7 @@ export default function DashboardInstitutionPage() {
       return;
     }
 
-    /* if (trainers.length) {
-      handleApiRequest(
-        router,
-        () =>
-          InstitutionController.addTrainer(selectedInstitution.id, {
-            trainerIds: trainers.map((user) => user.uid),
-          }),
-        () => {
-          setSelectedInstitution((prev) => {
-            if (!prev) return prev;
-
-            const updatedTrainerIds = prev.trainerIds
-              ? [...prev.trainerIds, ...trainers.map((user) => user.uid)]
-              : trainers.map((user) => user.uid);
-
-            const updatedTrainers = prev.trainers
-              ? [...prev.trainers, ...trainers]
-              : [...trainers];
-
-            return {
-              ...prev,
-              trainers: updatedTrainers,
-              trainerIds: updatedTrainerIds,
-            };
-          });
-        },
-        undefined,
-        'Failed to register trainers'
-      );
-    } */
-
-    /* if (athletes.length) {
-      handleApiRequest(
-        router,
-        () =>
-          InstitutionController.addAthlete(selectedInstitution.id, {
-            athleteIds: athletes.map((user) => user.uid),
-          }),
-        () => {
-          setSelectedInstitution((prev) => {
-            if (!prev) return prev;
-
-            const updatedAthleteIds = prev.athleteIds
-              ? [...prev.athleteIds, ...athletes.map((user) => user.uid)]
-              : athletes.map((user) => user.uid);
-
-            const updatedAthletes = prev.athletes
-              ? [...prev.athletes, ...athletes]
-              : [...athletes];
-
-            return {
-              ...prev,
-              athletes: updatedAthletes,
-              athleteIds: updatedAthleteIds,
-            };
-          });
-        },
-        undefined,
-        'Failed to register athletes'
-      );
-    } */
-
     toast.success('Successfully added users');
-
     setCsvUserEmails([]);
     setIsUploadingMembers(false);
   }, [users]);
@@ -183,10 +125,10 @@ export default function DashboardInstitutionPage() {
       router,
       () =>
         view === AthletesTrainers.ATHLETES
-          ? InstitutionController.removeAthlete(selectedInstitution.id, {
+          ? controller.removeAthlete(selectedInstitution.id, {
               userId,
             })
-          : InstitutionController.removeTrainer(selectedInstitution.id, {
+          : controller.removeTrainer(selectedInstitution.id, {
               userId,
             }),
       () => {
@@ -258,7 +200,7 @@ export default function DashboardInstitutionPage() {
 
       handleApiRequest(
         router,
-        () => firebaseService.functions.createUserWithRole(input),
+        () => firebaseFunctions.createUserWithRole(input),
         () => {
           setCsvUserEmails((prev) => [...prev, email]);
 
@@ -433,7 +375,7 @@ export default function DashboardInstitutionPage() {
             position: 'relative',
           }}
         >
-          {isManager(roles) && (
+          {isManager(role) && (
             <Box
               display="flex"
               gap={1.5}
@@ -523,7 +465,7 @@ export default function DashboardInstitutionPage() {
                   onMouseEnter={() => setHoveredUser(user)}
                   onMouseLeave={() => setHoveredUser(null)}
                 >
-                  {isManager(roles) && user.uid === hoveredUser?.uid && (
+                  {isManager(role) && user.uid === hoveredUser?.uid && (
                     <IconButton
                       className="remove-icon"
                       size="small"
@@ -619,7 +561,27 @@ export default function DashboardInstitutionPage() {
         setEditUser={setEditUser}
       />
 
-      {isUploadingMembers && <LoadingOverlay title="Registering..." />}
+      {isUploadingMembers && (
+        <Box
+          position="fixed"
+          top={0}
+          left={0}
+          width="100vw"
+          height="100vh"
+          display="flex"
+          flexDirection="column"
+          justifyContent="center"
+          alignItems="center"
+          gap={2}
+          sx={{
+            zIndex: 130000,
+            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+          }}
+        >
+          <CircularProgress size={24} />
+          <Typography fontSize={20}>Registering...</Typography>
+        </Box>
+      )}
     </Box>
   );
 }

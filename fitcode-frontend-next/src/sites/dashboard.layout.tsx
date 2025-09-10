@@ -27,6 +27,7 @@ export default function DashboardLayout({ children }: ChildrenProps) {
       >
         <Box width="100%" display="flex" flexDirection="column">
           <DashboardHeader />
+
           <Box
             width="100%"
             display="flex"

@@ -1,3 +1,4 @@
+import { BaseController } from '../base.controller';
 import type { UserId } from '../institution/type/institution.type';
 import type { Cycle } from './type/cycle.type';
 import type {
@@ -6,52 +7,78 @@ import type {
   Group,
   UpdateGroup,
 } from './type/group.type';
-import { CommonService } from '@/common/service/common.service';
 
-const api = CommonService.instance.api;
+export class GroupController extends BaseController {
+  private static instance: GroupController;
 
-export class GroupController {
-  static async findAll() {
-    return api.get<Group[]>('/group');
+  private constructor() {
+    super('/group');
   }
 
-  static async findById(groupId: string) {
-    return api.get<Group>(`/group/${groupId}`);
+  static getInstance(token: string) {
+    if (!this.instance) this.instance = new GroupController();
+    this.instance.setToken(token);
+    return this.instance;
   }
 
-  static async findAllByInstitution(institutionId: string) {
-    return api.get<Group[]>(`/group/institution/${institutionId}`);
+  async findAll() {
+    return this.api.get<Group[]>('/', { token: this.getToken() });
   }
 
-  static async create(body: CreateGroup) {
-    return api.post<Group>('/group', body);
+  async findById(groupId: string) {
+    return this.api.get<Group>(`/${groupId}`, { token: this.getToken() });
   }
 
-  static async update(groupId: string, body: UpdateGroup): Promise<Group> {
-    return api.patch<Group>(`/group/${groupId}`, body);
+  async findAllByInstitution(institutionId: string) {
+    return this.api.get<Group[]>(`/institution/${institutionId}`, {
+      token: this.getToken(),
+    });
   }
 
-  static async batchUpdate(body: BatchUpdateGroups) {
-    return api.patch<void>(`/group/update/batch`, body);
+  async create(body: CreateGroup) {
+    return this.api.post<Group>('/group', body, { token: this.getToken() });
   }
 
-  static async delete(groupId: string) {
-    return api.delete<void>(`/group/${groupId}`);
+  async update(groupId: string, body: UpdateGroup): Promise<Group> {
+    return this.api.patch<Group>(`/${groupId}`, body, {
+      token: this.getToken(),
+    });
   }
 
-  static async addMember(groupId: string, body: UserId) {
-    return api.patch<void>(`/group/${groupId}/member`, body);
+  async batchUpdate(body: BatchUpdateGroups) {
+    return this.api.patch<void>(`/update/batch`, body, {
+      token: this.getToken(),
+    });
   }
 
-  static async removeMember(groupId: string, body: UserId) {
-    return api.delete<void>(`/group/${groupId}/member`, { body });
+  async delete(groupId: string) {
+    return this.api.delete<void>(`/${groupId}`, {
+      token: this.getToken(),
+    });
   }
 
-  static async addCycle(groupId: string, cycle: Cycle) {
-    return api.post<void>(`/group/${groupId}/cycle`, cycle);
+  async addMember(groupId: string, body: UserId) {
+    return this.api.patch<void>(`/${groupId}/member`, body, {
+      token: this.getToken(),
+    });
   }
 
-  static async removeCycle(groupId: string, cycleId: string) {
-    return api.delete<void>(`/group/${groupId}/cycle/${cycleId}`);
+  async removeMember(groupId: string, body: UserId) {
+    return this.api.delete<void>(`/${groupId}/member`, {
+      body,
+      token: this.getToken(),
+    });
+  }
+
+  async addCycle(groupId: string, cycle: Cycle) {
+    return this.api.post<void>(`/${groupId}/cycle`, cycle, {
+      token: this.getToken(),
+    });
+  }
+
+  async removeCycle(groupId: string, cycleId: string) {
+    return this.api.delete<void>(`/${groupId}/cycle/${cycleId}`, {
+      token: this.getToken(),
+    });
   }
 }
