@@ -6,16 +6,14 @@ import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
-import { CommonService } from '@/common/service/common.service';
+import { getComponentIcon } from '@/common/service/util/icons.util';
 import type { SetState } from '@/common/type/state.type';
 import { ComponentLevel } from '@/controller/group/enum/component-level.enum';
 import type { Cycle } from '@/controller/group/type/cycle.type';
 import type { Target } from '@/controller/target/type/target.type';
-import { useGroup } from '@/store/group-provider';
-import { useMain } from '@/store/main-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
-
-const commonService = CommonService.instance;
+import { useGroup } from '@/store/group.provider';
+import { useMain } from '@/store/main.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 interface CycleComponentsProps {
   sortedCycles: Cycle[];
@@ -88,9 +86,7 @@ export default function CycleComponents(props: CycleComponentsProps) {
       position="relative"
     >
       {parentComponents.toReversed().map((component) => {
-        const IconComponent = commonService.navigation.getComponentIcon(
-          component.name
-        );
+        const IconComponent = getComponentIcon(component.name);
 
         return (
           <Box key={component.id} width="100%">
@@ -122,8 +118,9 @@ export default function CycleComponents(props: CycleComponentsProps) {
                 >
                   {IconComponent && (
                     <IconComponent
-                      sx={{
-                        fontSize: screenSize.isMobile ? 15 : 25,
+                      style={{
+                        height: screenSize.isMobile ? 15 : 25,
+                        width: screenSize.isMobile ? 15 : 25,
                       }}
                     />
                   )}

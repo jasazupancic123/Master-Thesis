@@ -12,9 +12,9 @@ import { PeriodizationType } from '@/controller/training/enum/periodization-type
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { useGroup } from '@/store/group-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
+import { useGroup } from '@/store/group.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 
 interface ComponentPeriodizationProps {
   selectedComponent: TrainingComponent;

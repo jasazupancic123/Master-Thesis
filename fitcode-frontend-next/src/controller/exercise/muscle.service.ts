@@ -1,4 +1,8 @@
 import type { TrainingExercise } from '../training/type/training-exercise.type';
+import {
+  HEATMAP_BACK_ID,
+  HEATMAP_FRONT_ID,
+} from '@/common/constant/heatmap.constant';
 
 export class MuscleService {
   static generateMuscleLoads(
@@ -26,6 +30,40 @@ export class MuscleService {
           loads.push([muscleId, Number(muscleValue.value)]);
         }
       });
+    });
+
+    return loads;
+  }
+
+  static getIdsAtDepth = (root: Element, depth: number): string[] => {
+    let level: Element[] = Array.from(root.children); // depth = 1
+    for (let d = 1; d < depth; d++) {
+      level = level.flatMap((el) => Array.from(el.children));
+    }
+    return level
+      .map((el) => (el as HTMLElement).id)
+      .filter((id): id is string => Boolean(id));
+  };
+
+  static generateEmptyMuscleLoadsForAllMuscles(
+    childrenDepth: number
+  ): [string, number][] {
+    const loads: [string, number][] = [];
+
+    const resetContainers = [HEATMAP_FRONT_ID, HEATMAP_BACK_ID];
+
+    // Reset
+    const muscleIds = [] as string[];
+    resetContainers.forEach((id) => {
+      const container = document.getElementById(id);
+      if (container) {
+        let ids = this.getIdsAtDepth(container, childrenDepth);
+        ids = ids.filter((id) => !muscleIds.includes(id));
+        muscleIds.push(...ids);
+      }
+    });
+    muscleIds.forEach((id) => {
+      loads.push([id, 0]);
     });
 
     return loads;

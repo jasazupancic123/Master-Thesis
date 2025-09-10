@@ -9,10 +9,10 @@ import { GroupService } from '@/controller/group/group.service';
 import { InstitutionService } from '@/controller/institution/institution.service';
 import type { UserEntity } from '@/controller/user/type/user.type';
 import DashboardLayout from '@/sites/dashboard.layout';
-import { useAuthenticatedAuth } from '@/store/auth-provider';
-import type { DashboardPageProps } from '@/store/dashboard-provider';
-import { DashboardProvider } from '@/store/dashboard-provider';
-import { useMain } from '@/store/main-provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
+import type { DashboardPageProps } from '@/store/dashboard.provider';
+import { DashboardProvider } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
 
 export default function DashboardInitializer({ children }: ChildrenProps) {
   const [state, setState] = useState<DashboardPageProps | null>(null);
@@ -27,6 +27,14 @@ export default function DashboardInitializer({ children }: ChildrenProps) {
   const { data: fetchedMembers, refetch: refetchMembers } = useNestBackendFetch<
     UserEntity[]
   >(`/institution/${institutionId}/find/all`, { enabled: !!institutionId }); // only fetch when id is defined
+
+  useEffect(() => {
+    if (!state || !state.selectedInstitution) {
+      setInstitutionId(null);
+      return;
+    }
+    setInstitutionId(state.selectedInstitution.id);
+  }, [state, state?.selectedInstitution]);
 
   useEffect(() => {
     if (fetchedMembers) {

@@ -3,8 +3,8 @@ import Box from '@mui/material/Box';
 import React from 'react';
 
 import TrainingCard from '@/components/training-card/training-card';
-import { useGroup } from '@/store/group-provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
+import { useGroup } from '@/store/group.provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 
 interface GroupTrainerDayViewTrainingsProps {
   loading: boolean;

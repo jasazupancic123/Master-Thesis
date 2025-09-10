@@ -72,7 +72,7 @@ export const LINK_CALENDAR = link(
   '/calendar',
   <CalendarTodayOutlined />
 );
-export const LINK_WELLNESS = link('Wellness', '/wellness', <SpaOutlined />);
+export const LINK_FEEDBACK = link('Feedback', '/feedback', <SpaOutlined />);
 
 export const LINK_SETTINGS = link('Settings', '/settings');
 export const LINK_GROUP_BY_ID = (id: string) =>
@@ -144,7 +144,8 @@ export const LINKS_SIDEBAR = {
   [UserRole.ATHLETE]: {
     trainings: LINK_TRAININGS,
     calendar: LINK_CALENDAR,
-    wellness: LINK_WELLNESS,
+    feedback: LINK_FEEDBACK,
+    profile: LINK_PROFILE,
   },
   [UserRole.TRAINER]: {
     dashboard: LINK_DASHBOARD,

@@ -18,11 +18,9 @@ import {
 } from '../app/(athlete)/calendar/state';
 import type { CalendarEvent } from '../common/type/calendar-event-type';
 import CustomToolbar from '../components/calendar-custom-toolbar/calendar-custom-toolbar';
-import { CommonService } from '@/common/service/common.service';
-import { useAuthenticatedAuth } from '@/store/auth-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
-
-const commonService = CommonService.instance;
+import { getComponentIcon } from '@/common/service/util/icons.util';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 export default function CalendarPage() {
   const screenSize = useScreenSize();
@@ -55,9 +53,7 @@ export default function CalendarPage() {
         const events = _trainings.map((training) => {
           const componentsIcons = [];
           for (const component of Object.values(training.components)) {
-            const IconComponent = commonService.navigation.getComponentIcon(
-              component.id
-            );
+            const IconComponent = getComponentIcon(component.id);
 
             componentsIcons.push(IconComponent);
           }

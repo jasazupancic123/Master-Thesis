@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 
-import { useAuthenticatedAuth, withAuth } from './auth-provider';
+import { useAuthenticatedAuth } from './auth.provider';
 import type { ChildrenProps } from '@/common/type/props.type';
 import type { SetState, SetStateNullable } from '@/common/type/state.type';
 import type { Attribute } from '@/controller/attribute/type/attribute.type';
@@ -36,9 +36,7 @@ const MainContext = createContext<MainContextProps | null>(null);
 
 export const useMain = () => useContext(MainContext)!;
 
-export default withAuth(MainProvider);
-
-function MainProvider(props: ChildrenProps) {
+export default function MainProvider(props: ChildrenProps) {
   const { children } = props;
   const { token } = useAuthenticatedAuth();
   const [loading, setLoading] = useState(false);

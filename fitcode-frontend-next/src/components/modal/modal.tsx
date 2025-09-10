@@ -9,7 +9,7 @@ import Button from '@mui/material/Button';
 import type { ReactNode } from 'react';
 import React from 'react';
 
-import { useScreenSize } from '@/store/screen-size-provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 export interface Props {
   isOpen: boolean;

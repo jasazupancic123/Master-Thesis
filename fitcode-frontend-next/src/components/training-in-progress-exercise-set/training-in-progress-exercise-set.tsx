@@ -9,7 +9,7 @@ import type { ExerciseSet } from '@/controller/training/type/exercise-set.type';
 import type { Superset } from '@/controller/training/type/superset.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
-import { useTraining } from '@/store/training-provider';
+import { useTraining } from '@/store/training.provider';
 
 interface TrainingInProgressExerciseSetProps {
   set: ExerciseSet;

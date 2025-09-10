@@ -25,7 +25,7 @@ import {
 } from '@/common/constant/navigation.constant';
 import Logo from '@/components/logo/logo';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
-import { useAuth } from '@/store/auth-provider';
+import { useAuth } from '@/store/auth.provider';
 
 export default function HeroNavbar({ showLogin = true }) {
   const auth = useAuth();
@@ -218,11 +218,27 @@ export default function HeroNavbar({ showLogin = true }) {
 
                   <Divider />
 
-                  <MenuItem>
-                    <NextLink href={LINKS_AUTH.login.href}>
-                      {LINKS_AUTH.login.label}
-                    </NextLink>
-                  </MenuItem>
+                  <Box
+                    sx={{
+                      minWidth: '60dvw',
+                      backgroundColor: 'background.paper',
+                      flexGrow: 1,
+                    }}
+                  >
+                    {Object.values(LINKS_AUTH).map((item) => (
+                      <MenuItem
+                        key={item.id}
+                        sx={{ p: 1 }}
+                        onClick={() => {
+                          router.push(item.href);
+                        }}
+                      >
+                        <Typography variant="body2" color="text.primary">
+                          {item.label}
+                        </Typography>
+                      </MenuItem>
+                    ))}
+                  </Box>
                 </Box>
               </Drawer>
             </Box>

@@ -8,27 +8,26 @@ import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 
 import Animation from '../animation/animation';
+import AthleteOptionsContainer from '../athlete-options-container/athlete-options-container';
 import MyModal from '../modal/modal';
 import TrainingInProgressSuperset from '../training-in-progress-superset/training-in-progress-superset';
 import { handleFinishTraining } from './state';
 import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
 import type { SetState } from '@/common/type/state.type';
+import { useHorizontalOverflow } from '@/common/util/horizontal-overflow.util';
 import { TrainingController } from '@/controller/training/training.controller';
-import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
-import { useAuthenticatedAuth, withAuth } from '@/store/auth-provider';
-import { useMain } from '@/store/main-provider';
-import { useTraining } from '@/store/training-provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useMain } from '@/store/main.provider';
+import { useTraining } from '@/store/training.provider';
+import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 
 interface TrainingInProgressProps {
   setTrainings: SetState<Training[]>;
 }
 
-export default withAuth(TrainingInProgress, [UserRole.ATHLETE]);
-
-function TrainingInProgress(props: TrainingInProgressProps) {
+export default function TrainingInProgress(props: TrainingInProgressProps) {
   const theme = useTheme();
   const router = useRouter();
   const { exercises } = useMain();
@@ -42,18 +41,21 @@ function TrainingInProgress(props: TrainingInProgressProps) {
     setView,
   } = useTraining();
 
-  const { setTrainings } = props;
+  const {
+    selectedExercise,
+    setSelectedExercise,
+    selectedSuperset,
+    setSelectedSuperset,
+    setSetIndex,
+  } = useTrainingInProgress();
 
-  const [selectedSuperset, setSelectedSuperset] = useState<
-    Superset | undefined
-  >();
+  const { outerRef, innerRef, isOverflowing } = useHorizontalOverflow();
+  const { setTrainings } = props;
 
   const [elapsedTime, setElapsedTime] = useState(0);
   const [openFinishTrainingModal, setOpenFinishTrainingModal] = useState(false);
   const [openCancelTrainingModal, setOpenCancelTrainingModal] = useState(false);
   const [playAnimation, setPlayAnimation] = useState(true);
-  const [anchorEl, setAnchorEl] = useState(null);
-  const open = Boolean(anchorEl);
 
   useEffect(() => {
     if (!trainingInProgress) return;
@@ -68,22 +70,31 @@ function TrainingInProgress(props: TrainingInProgressProps) {
       newTrainingInProgress.startOfTraining = dayjs();
     }
 
+    let selectedSuperset = undefined;
     if (!newTrainingInProgress.supersetIndex) {
       newTrainingInProgress.supersetIndex = 0;
-      setSelectedSuperset(newTrainingInProgress.supersets[0]);
-    } else
-      setSelectedSuperset(
+      selectedSuperset = newTrainingInProgress.supersets[0];
+    } else {
+      selectedSuperset =
         newTrainingInProgress.supersets[
           newTrainingInProgress.supersetIndex || 0
-        ]
-      );
+        ];
+    }
 
-    const componentIndex = newTrainingInProgress.training.components.findIndex(
-      (c) => c.id === newTrainingInProgress.selectedComponent?.id
-    );
+    setSelectedSuperset(selectedSuperset);
 
-    if (componentIndex === -1) return;
-    const component = newTrainingInProgress.training.components[componentIndex];
+    if (!selectedExercise) {
+      setSelectedExercise(selectedSuperset?.exercises[0] || null);
+      setSetIndex(0);
+    }
+
+    const component = [
+      newTrainingInProgress.training.warmup,
+      ...newTrainingInProgress.training.components,
+      newTrainingInProgress.training.cooldown,
+    ].find((c) => c.id === newTrainingInProgress.selectedComponent?.id);
+
+    if (!component) return;
 
     setTrainingInProgress(
       (prev) =>
@@ -125,6 +136,9 @@ function TrainingInProgress(props: TrainingInProgressProps) {
     setSelectedSuperset(undefined);
   };
 
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleOpenMenu = (event: any) => {
     setAnchorEl(event.currentTarget);
@@ -139,6 +153,14 @@ function TrainingInProgress(props: TrainingInProgressProps) {
     setOpenCancelTrainingModal(true);
   };
 
+  const formatTime = (seconds: number) => {
+    if (isNaN(seconds)) return '00:00:00'; // Default to zero time if invalid
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  };
+
   return playAnimation ? (
     <Animation
       text="LOADING YOUR TRAINING"
@@ -148,15 +170,72 @@ function TrainingInProgress(props: TrainingInProgressProps) {
       }}
       fullScreen={true}
     />
-  ) : (
-    <>
+  ) : trainingInProgress ? (
+    <Box width="100%" display="flex" flexDirection="column" alignItems="center">
+      <AthleteOptionsContainer
+        items={[
+          trainingInProgress.selectedComponent.id,
+          `Time: ${formatTime(elapsedTime)}`,
+        ]}
+        selectedItem={trainingInProgress.selectedComponent.id}
+        title="Session"
+        onClick={() => {}}
+      />
+      <Box
+        ref={outerRef}
+        width="100%"
+        sx={{
+          overflowX: 'auto',
+          border: `1px solid ${theme.palette.background.textBackground}`,
+          borderLeft: 'none',
+          borderRight: 'none',
+        }}
+      >
+        <Box
+          ref={innerRef}
+          display="flex"
+          gap={4}
+          p={1}
+          justifyContent={isOverflowing ? 'flex-start' : 'center'}
+          sx={{
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {trainingInProgress.supersets?.map((superset, i) => (
+            <Typography
+              key={i}
+              fontSize={12}
+              textAlign="center"
+              noWrap
+              sx={{
+                flex: '0 0 auto',
+                color:
+                  selectedSuperset === superset
+                    ? theme.palette.text.primary
+                    : theme.palette.text.secondary,
+              }}
+              onClick={() => {
+                setSelectedSuperset(superset);
+                setSelectedExercise(superset.exercises[0] || null);
+                setSetIndex(0);
+                setTrainingInProgress((prev) => {
+                  if (!prev) return prev;
+                  return {
+                    ...prev,
+                    supersetIndex: i,
+                  };
+                });
+              }}
+            >
+              Superset {i + 1}
+            </Typography>
+          ))}
+        </Box>
+      </Box>
       {trainingInProgress &&
       trainingInProgress.supersets &&
       selectedSuperset ? (
         <TrainingInProgressSuperset
-          selectedSuperset={selectedSuperset}
-          setSelectedSuperset={setSelectedSuperset}
-          elapsedTime={elapsedTime}
           anchorEl={anchorEl}
           open={open}
           setOpenFinishTrainingModal={setOpenFinishTrainingModal}
@@ -263,6 +342,6 @@ function TrainingInProgress(props: TrainingInProgressProps) {
           Cancel Training?
         </Typography>
       </MyModal>
-    </>
-  );
+    </Box>
+  ) : null;
 }

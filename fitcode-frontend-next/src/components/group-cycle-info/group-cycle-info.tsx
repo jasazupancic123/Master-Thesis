@@ -3,7 +3,7 @@ import { Box, IconButton, Typography } from '@mui/material';
 
 import type { Cycle } from '@/controller/group/type/cycle.type';
 import type { Group } from '@/controller/group/type/group.type';
-import { useScreenSize } from '@/store/screen-size-provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 interface GroupInfoProps {
   group: Group;

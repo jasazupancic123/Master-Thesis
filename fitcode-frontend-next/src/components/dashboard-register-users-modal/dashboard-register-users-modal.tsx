@@ -13,14 +13,15 @@ import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import MyModal from '../modal/modal';
+import { BACKEND_API_BASE_URL } from '@/common/constant/api.constant';
 import { FirebaseFunctionsUtil } from '@/common/firebase/firebase-functions.util';
 import { handleApiRequest } from '@/common/type/state.type';
 import { InstitutionController } from '@/controller/institution/institution.controller';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import type { User } from '@/controller/user/type/user.type';
-import { useAuthenticatedAuth, withAuth } from '@/store/auth-provider';
-import { useDashboard } from '@/store/dashboard-provider';
-import { useMain } from '@/store/main-provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useDashboard } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
 
 interface RegisterUsersDashboardProps {
   registerRole: UserRole;
@@ -28,7 +29,9 @@ interface RegisterUsersDashboardProps {
 
 const firebaseFunctions = FirebaseFunctionsUtil.Instance;
 
-function RegisterUsersDashboard(props: RegisterUsersDashboardProps) {
+export default function RegisterUsersDashboard(
+  props: RegisterUsersDashboardProps
+) {
   const { registerRole } = props;
   const router = useRouter();
 
@@ -229,6 +232,8 @@ function RegisterUsersDashboard(props: RegisterUsersDashboardProps) {
   };
 
   const handleSubmit = (e: React.FormEvent) => {
+    if (!selectedInstitution) return;
+
     e.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
@@ -273,8 +278,10 @@ function RegisterUsersDashboard(props: RegisterUsersDashboardProps) {
       router,
       () => firebaseFunctions.createUserWithRole(input),
       () => {
+        refetchMembers(
+          `${BACKEND_API_BASE_URL}/institution/${selectedInstitution.id}/find/all`
+        );
         refetchUsers();
-        refetchMembers();
       },
       () => {
         setIsUploadingMembers(false);
@@ -375,8 +382,3 @@ function RegisterUsersDashboard(props: RegisterUsersDashboardProps) {
     </>
   );
 }
-
-export default withAuth(RegisterUsersDashboard, [
-  UserRole.TRAINER,
-  UserRole.MANAGER,
-]);

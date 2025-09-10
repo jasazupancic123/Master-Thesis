@@ -8,10 +8,10 @@ import type { ChildrenProps } from '@/common/type/props.type';
 import { Controller } from '@/controller/controller';
 import { TrainingService } from '@/controller/training/training.service';
 import type { Training } from '@/controller/training/type/training.type';
-import { useAuthenticatedAuth } from '@/store/auth-provider';
-import { useMain } from '@/store/main-provider';
-import type { TrainingProviderProps } from '@/store/training-provider';
-import { TrainingProvider } from '@/store/training-provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useMain } from '@/store/main.provider';
+import type { TrainingProviderProps } from '@/store/training.provider';
+import { TrainingProvider } from '@/store/training.provider';
 
 export default function TrainingsInitializer(props: ChildrenProps) {
   const { token } = useAuthenticatedAuth();

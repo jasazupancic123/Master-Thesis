@@ -30,13 +30,13 @@ import {
   LINK_SETTINGS,
   LINKS_SIDEBAR,
 } from '@/common/constant/navigation.constant';
-import { useAuthenticatedAuth } from '@/store/auth-provider';
 import type { GroupDateFilter } from '@/common/type/filter.type';
 import type { SetState } from '@/common/type/state.type';
 import FilterButton from '@/components/filter-button/filter-button';
-import { useGroup } from '@/store/group-provider';
-import { useMain } from '@/store/main-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useGroup } from '@/store/group.provider';
+import { useMain } from '@/store/main.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 export interface TrainerGroupHeaderProps {
   filter: GroupDateFilter;

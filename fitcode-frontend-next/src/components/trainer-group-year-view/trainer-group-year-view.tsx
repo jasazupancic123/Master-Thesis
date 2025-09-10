@@ -15,9 +15,9 @@ import MultiCycleSliderLayout from '@/components/multi-cycle-slider-layout/multi
 import CycleComponents from '@/components/training-year-cycle-components/training-year-cycle-components';
 import { GroupController } from '@/controller/group/group.controller';
 import type { Cycle } from '@/controller/group/type/cycle.type';
-import { useAuthenticatedAuth } from '@/store/auth-provider';
-import { useGroup } from '@/store/group-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useGroup } from '@/store/group.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 export default function TrainerYearView() {
   const screenSize = useScreenSize();
@@ -122,7 +122,7 @@ export default function TrainerYearView() {
         >
           <Box
             width="100%"
-            height={DIVIDER_HEIGHT}
+            minHeight={DIVIDER_HEIGHT}
             maxWidth="100%"
             display="flex"
             flexDirection="column"

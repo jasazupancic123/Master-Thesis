@@ -27,6 +27,10 @@ export type TrainingComponent = IdEntity &
     component?: Component;
   };
 
+export type TrainingComponentWithTrainingId = TrainingComponent & {
+  trainingId: string;
+};
+
 export type CreateTrainingComponent = Pick<
   TrainingComponent,
   'id' | 'from' | 'to' | 'target' | 'methodId'

@@ -9,8 +9,8 @@ import {
   getCachedProfile,
   setCachedProfile,
 } from '@/session-cache/profile.session-cache';
-import { useAuthenticatedAuth } from '@/store/auth-provider';
-import { ProfileProvider } from '@/store/profile-provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { ProfileProvider } from '@/store/profile.provider';
 
 export default function ProfileInitializer({ children }: ChildrenProps) {
   const { token } = useAuthenticatedAuth();

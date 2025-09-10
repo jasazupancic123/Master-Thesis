@@ -20,7 +20,8 @@ export const hasExplicitFill = (el: Element) => {
 
 export const findFilledGroup = (
   start: Element,
-  heatmapLevel: number
+  heatmapLevel: number,
+  muscleIds?: string[]
 ): SVGGraphicsElement | null => {
   let i = 4; // because first element is path, which we skip, so it becomes 3 when going to <g>'s
   let el: Element | null = start;
@@ -31,7 +32,10 @@ export const findFilledGroup = (
       (i === heatmapLevel ||
         [HEATMAP_FRONT_ID, HEATMAP_BACK_ID].includes(
           el.parentElement?.id || ''
-        ))
+        )) &&
+      (muscleIds
+        ? muscleIds.includes(normId(el.id).replace('-r', '').replace('-l', ''))
+        : true)
     ) {
       return el;
     }

@@ -168,10 +168,10 @@ export class TrainingService implements Permission<Training, Institution> {
   }
 
   @LogMethod()
-  async findAthleteWorkloads(
+  async findCompletedAthleteWorkloads(
     user: User,
     ref: TrainingRef & UserRef,
-  ): Promise<{ completedWorkloads: Workload[]; futureWorkloads: Workload[] }> {
+  ): Promise<Workload[]> {
     const training = await this.findOneByIdOrFail(user, ref);
     const athlete = await this.getAthlete(user, ref.uid, training.institution);
 
@@ -179,7 +179,7 @@ export class TrainingService implements Permission<Training, Institution> {
       q.where('userId', '==', athlete.uid),
     );
 
-    return { completedWorkloads: [], futureWorkloads: workloads };
+    return workloads;
   }
 
   @LogMethod()

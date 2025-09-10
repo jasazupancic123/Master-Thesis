@@ -28,6 +28,7 @@ import FilterButton from '../filter-button/filter-button';
 import MyModal from '../modal/modal';
 import ProfileHeaderMenu from '../profile-header-menu/profile-header-menu';
 import { MAX_WIDTH } from '../trainer-day-view/constant';
+import { BACKEND_API_BASE_URL } from '@/common/constant/api.constant';
 import {
   LINK_DASHBOARD,
   LINK_DASHBOARD_HOME,
@@ -37,10 +38,11 @@ import { isAdmin } from '@/common/firebase/firebase-auth.util';
 import type { ILink } from '@/common/type/link.type';
 import { handleApiRequest } from '@/common/type/state.type';
 import { GroupController } from '@/controller/group/group.controller';
-import { useAuthenticatedAuth } from '@/store/auth-provider';
-import { useDashboard } from '@/store/dashboard-provider';
-import { useMain } from '@/store/main-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
+import { GroupService } from '@/controller/group/group.service';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useDashboard } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 export default function DashboardHeader() {
   const {
@@ -53,9 +55,10 @@ export default function DashboardHeader() {
     setSelectedGroup,
     detectedChanges,
     setDetectedChanges,
+    refetchMembers,
   } = useDashboard();
 
-  const { profile } = useMain();
+  const { profile, users } = useMain();
   const { token, role } = useAuthenticatedAuth();
   const controller = GroupController.getInstance(token);
 
@@ -378,11 +381,21 @@ export default function DashboardHeader() {
             key={institution.id}
             onClick={() => {
               setSelectedInstitution(institution);
-              if (institution.groups && institution.groups.length)
-                setSelectedGroup(institution.groups[0]);
-              else setSelectedGroup(null);
+              if (institution.groups && institution.groups.length) {
+                const mapped = GroupService.mapMembers(
+                  institution.groups[0],
+                  users
+                );
+                setSelectedGroup(mapped);
+              } else {
+                setSelectedGroup(null);
+              }
               setOpenInstitutionsMenu(false);
               setAnchorInstitutionsEl(null);
+
+              refetchMembers(
+                `${BACKEND_API_BASE_URL}/institution/${institution.id}/find/all`
+              );
             }}
           >
             <Box

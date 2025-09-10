@@ -6,7 +6,7 @@ import React from 'react';
 import type { ToolbarProps } from 'react-big-calendar';
 
 import type { CalendarEvent } from '@/common/type/calendar-event-type';
-import { useScreenSize } from '@/store/screen-size-provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 const CustomToolbar: React.FC<ToolbarProps<CalendarEvent, object>> = ({
   date,

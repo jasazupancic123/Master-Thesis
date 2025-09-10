@@ -8,10 +8,9 @@ import type { GroupIdPageProps } from '@/app/(trainer)/groups/[group_id]/props';
 import type { ChildrenProps } from '@/common/type/props.type';
 import { Controller } from '@/controller/controller';
 import { TrainingService } from '@/controller/training/training.service';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
-import { useAuthenticatedAuth, withAuth } from '@/store/auth-provider';
-import { GroupProvider } from '@/store/group-provider';
-import { useMain } from '@/store/main-provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { GroupProvider } from '@/store/group.provider';
+import { useMain } from '@/store/main.provider';
 
 interface GroupsInitializerProps extends ChildrenProps {
   params: Promise<{
@@ -19,9 +18,10 @@ interface GroupsInitializerProps extends ChildrenProps {
   }>;
 }
 
-export default withAuth(GroupInitializer, [UserRole.TRAINER, UserRole.MANAGER]);
-
-function GroupInitializer({ children, params }: GroupsInitializerProps) {
+export default function GroupInitializer({
+  children,
+  params,
+}: GroupsInitializerProps) {
   const [state, setState] = useState<GroupIdPageProps | null>(null);
 
   const { components, exercises, methods } = useMain();

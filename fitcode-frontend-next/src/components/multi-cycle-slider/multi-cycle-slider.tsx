@@ -20,8 +20,8 @@ import { handleApiRequest, type SetState } from '@/common/type/state.type';
 import { GroupController } from '@/controller/group/group.controller';
 import type { Cycle } from '@/controller/group/type/cycle.type';
 import type { Group } from '@/controller/group/type/group.type';
-import { useAuthenticatedAuth } from '@/store/auth-provider';
-import { useGroup } from '@/store/group-provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useGroup } from '@/store/group.provider';
 
 dayjs.extend(dayOfYear);
 

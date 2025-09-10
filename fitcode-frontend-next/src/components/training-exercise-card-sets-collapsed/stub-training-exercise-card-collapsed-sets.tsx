@@ -8,8 +8,8 @@ import { getLAndRValues } from '../training-exercise-card/state';
 import type { TrainingExerciseCardCollapsedSetsProps } from './training-exercise-card-collapsed-sets';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import { ParamType } from '@/controller/component/enum/param.enum';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
+import { useScreenSize } from '@/store/screen-size.provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 
 export default function StubTrainingExerciseCardCollapsedSets(
   props: TrainingExerciseCardCollapsedSetsProps
@@ -19,8 +19,12 @@ export default function StubTrainingExerciseCardCollapsedSets(
   const { exercise, expandedSetsView, setExpandedSetsView, componentIndex } =
     props;
 
-  const { training, component, selectedAthlete, selectedAthleteWorkloads } =
-    useTrainerDayViewContext();
+  const {
+    training,
+    component,
+    selectedAthlete,
+    selectedAthleteCompletedWorkloads: selectedAthleteWorkloads,
+  } = useTrainerDayViewContext();
 
   if (!training || !component) return null;
 

@@ -19,19 +19,13 @@ import {
 import type { Method } from '@/controller/method/type/method.type';
 import { TrainingController } from '@/controller/training/training.controller';
 import type { Training } from '@/controller/training/type/training.type';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
-import { useAuthenticatedAuth, withAuth } from '@/store/auth-provider';
-import { useGroup } from '@/store/group-provider';
-import { useMain } from '@/store/main-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useGroup } from '@/store/group.provider';
+import { useMain } from '@/store/main.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 
-export default withAuth(TrainingComponentLayout, [
-  UserRole.TRAINER,
-  UserRole.MANAGER,
-]);
-
-function TrainingComponentLayout(props: TrainingComponentProps) {
+export default function TrainingComponentLayout(props: TrainingComponentProps) {
   const screenSize = useScreenSize();
   const router = useRouter();
 

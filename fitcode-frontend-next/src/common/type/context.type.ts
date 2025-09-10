@@ -2,7 +2,7 @@ import type { User } from 'firebase/auth';
 
 import type { UserRole } from '@/controller/user/enum/user-role.enum';
 import type { CustomClaims } from '@/controller/user/type/custom-claims.type';
-import type { AuthState } from '@/store/auth-provider';
+import type { AuthState } from '@/store/auth.provider';
 
 export type AuthStatus = 'loading' | 'unauthenticated' | 'authenticated';
 

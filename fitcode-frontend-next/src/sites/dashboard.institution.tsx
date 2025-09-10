@@ -13,6 +13,7 @@ import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { theme } from '@/app/style';
+import { BACKEND_API_BASE_URL } from '@/common/constant/api.constant';
 import { AthletesTrainers } from '@/common/enum/athletes-trainer.enum';
 import { isManager } from '@/common/firebase/firebase-auth.util';
 import { FirebaseFunctionsUtil } from '@/common/firebase/firebase-functions.util';
@@ -27,10 +28,10 @@ import { MAX_WIDTH } from '@/components/trainer-day-view/constant';
 import { InstitutionController } from '@/controller/institution/institution.controller';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import type { User } from '@/controller/user/type/user.type';
-import { useAuthenticatedAuth } from '@/store/auth-provider';
-import { useDashboard } from '@/store/dashboard-provider';
-import { useMain } from '@/store/main-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useDashboard } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 const firebaseFunctions = FirebaseFunctionsUtil.Instance;
 
@@ -192,7 +193,9 @@ export default function DashboardInstitutionPage() {
 
         if (i === rows.length - 1) {
           refetchUsers();
-          refetchMembers(selectedInstitution?.id);
+          refetchMembers(
+            `${BACKEND_API_BASE_URL}/institution/${selectedInstitution?.id}/find/all`
+          );
         }
 
         return;
@@ -206,7 +209,9 @@ export default function DashboardInstitutionPage() {
 
           if (i === rows.length - 1) {
             refetchUsers();
-            refetchMembers(selectedInstitution?.id);
+            refetchMembers(
+              `${BACKEND_API_BASE_URL}/institution/${selectedInstitution?.id}/find/all`
+            );
           }
         },
         () => {

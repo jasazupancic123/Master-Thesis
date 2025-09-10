@@ -44,9 +44,7 @@ export class InstitutionController extends BaseController {
   }
 
   async create(body: CreateInstitution) {
-    return this.api.post<Institution>('/institution', body, {
-      token: this.getToken(),
-    });
+    return this.api.post<Institution>('/', body, { token: this.getToken() });
   }
 
   async addAthlete(institutionId: string, body: UserId) {
