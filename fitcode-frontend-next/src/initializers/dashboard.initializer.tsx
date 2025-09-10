@@ -2,34 +2,31 @@
 
 import { useEffect, useState } from 'react';
 
-import Alert from '../components/alert/alert';
-import { BACKEND_API_BASE_URL } from '@/common/constant/api.constant';
-import { useFetch } from '@/common/hooks/use-fetch.hook';
+import { useNestBackendFetch } from '@/common/hooks/use-fetch.hook';
 import type { ChildrenProps } from '@/common/type/props.type';
 import { GroupController } from '@/controller/group/group.controller';
 import { GroupService } from '@/controller/group/group.service';
 import { InstitutionService } from '@/controller/institution/institution.service';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
 import type { UserEntity } from '@/controller/user/type/user.type';
 import DashboardLayout from '@/sites/dashboard.layout';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 import type { DashboardPageProps } from '@/store/dashboard.provider';
 import { DashboardProvider } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 
 export default function DashboardInitializer({ children }: ChildrenProps) {
   const [state, setState] = useState<DashboardPageProps | null>(null);
-  const [unauthorized, setUnauthorized] = useState(false);
+  const auth = useAuthenticatedAuth();
+  const controller = GroupController.getInstance(auth.token);
 
-  const { profile, users, institutions: allInstitutions } = useMain();
+  const { users, institutions: allInstitutions } = useMain();
 
   const [institutionId, setInstitutionId] = useState<string | null>(null);
   const [members, setMembers] = useState<UserEntity[]>([]);
 
-  const { data: fetchedMembers, refetch: refetchMembers } = useFetch<
+  const { data: fetchedMembers, refetch: refetchMembers } = useNestBackendFetch<
     UserEntity[]
-  >(`${BACKEND_API_BASE_URL}/institution/${institutionId}/find/all`, {
-    skip: !institutionId, // wait until we have ID
-  });
+  >(`/institution/${institutionId}/find/all`, { enabled: !!institutionId }); // only fetch when id is defined
 
   useEffect(() => {
     if (!state || !state.selectedInstitution) {
@@ -45,10 +42,7 @@ export default function DashboardInitializer({ children }: ChildrenProps) {
       setState((prev) => {
         if (!prev) return null;
 
-        return {
-          ...prev,
-          members: fetchedMembers,
-        };
+        return { ...prev, members: fetchedMembers };
       });
     }
   }, [fetchedMembers]);
@@ -56,28 +50,18 @@ export default function DashboardInitializer({ children }: ChildrenProps) {
   useEffect(() => {
     async function init() {
       try {
-        const roles = profile.customClaims.role;
-
-        if (
-          !roles.includes(UserRole.TRAINER) &&
-          !roles.includes(UserRole.MANAGER) &&
-          !roles.includes(UserRole.ADMIN)
-        )
-          return setUnauthorized(true);
-
         const institutions = InstitutionService.mapUsers(
           allInstitutions,
           users
         );
-        const selectedInstitution = institutions?.[0] ?? null;
 
+        const selectedInstitution = institutions?.[0] ?? null;
         if (selectedInstitution) {
-          const groups = await GroupController.findAllByInstitution(
+          const groups = await controller.findAllByInstitution(
             selectedInstitution.id
           );
 
-          for (let group of groups)
-            group = GroupService.mapMembers(group, users);
+          for (const group of groups) GroupService.mapMembers(group, users);
 
           selectedInstitution.groups = groups;
           setInstitutionId(selectedInstitution.id); //this triggers member fetch
@@ -90,15 +74,15 @@ export default function DashboardInitializer({ children }: ChildrenProps) {
           refetchMembers,
         });
       } catch (e) {
-        setUnauthorized(true);
+        console.error('Error during dashboard initialization:', e);
+        setState(null);
       }
     }
 
-    init();
+    init().then();
   }, []);
 
-  if (unauthorized) return <Alert type="unauthorized" />;
-  if (!state) return <Alert type="loading" />;
+  if (!state) return <div>Loading dashboard...</div>;
 
   return (
     <DashboardProvider {...state}>

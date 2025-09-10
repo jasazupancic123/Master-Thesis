@@ -16,8 +16,7 @@ import { TrainingService } from '@/controller/training/training.service';
 import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { useAuth } from '@/store/auth.provider';
-import { useMain } from '@/store/main.provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useTraining } from '@/store/training.provider';
 
 type AthleteTrainingCardProps = {
@@ -27,9 +26,8 @@ type AthleteTrainingCardProps = {
 const TIMEOUT = 400; // ms
 
 export default function AthleteTrainingCard(props: AthleteTrainingCardProps) {
-  const { profile } = useMain();
   const { trainingInProgress } = useTraining();
-  const { user } = useAuth();
+  const { user } = useAuthenticatedAuth();
 
   const theme = useTheme();
 
@@ -51,14 +49,14 @@ export default function AthleteTrainingCard(props: AthleteTrainingCardProps) {
 
     setSupersets(
       TrainingService.getPrescribedSupersetsByUser(
-        profile.uid,
+        user.uid,
         training.components.find(
           (c) => c.id === trainingInProgress.selectedComponent?.id
         ) || trainingInProgress.selectedComponent!
       )
     );
   }, [
-    profile.uid,
+    user.uid,
     training.components,
     trainingInProgress,
     trainingInProgress?.selectedComponent,
@@ -244,7 +242,7 @@ export default function AthleteTrainingCard(props: AthleteTrainingCardProps) {
                 fontWeight: 'bold',
               }}
             >
-              {getNumExercises(profile.uid)}
+              {getNumExercises(user.uid)}
             </Typography>
           </Box>
         </Box>

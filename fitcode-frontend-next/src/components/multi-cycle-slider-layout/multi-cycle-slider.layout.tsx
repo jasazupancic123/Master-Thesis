@@ -13,8 +13,10 @@ import MobileDoubleTextItems from '../mobile-double-text-items/mobile-double-tex
 import MultiCycleSlider from '../multi-cycle-slider/multi-cycle-slider';
 import { handleAddCycle } from './state';
 import type { SetState } from '@/common/type/state.type';
+import { GroupController } from '@/controller/group/group.controller';
 import type { Cycle } from '@/controller/group/type/cycle.type';
 import type { Group } from '@/controller/group/type/group.type';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 
@@ -43,6 +45,8 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
   const screenSize = useScreenSize();
   const theme = useTheme();
 
+  const auth = useAuthenticatedAuth();
+  const controller = GroupController.getInstance(auth.token);
   const { group, setGroup, setCycle } = useGroup();
 
   const [selectedYear, setSelectedYear] = useState(dayjs().year());
@@ -328,6 +332,7 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
                 : dayjs(lastCycle.to).add(1, 'w').endOf('w').add(1, 'day');
 
             handleAddCycle(
+              controller,
               router,
               {
                 name: `Cycle ${selectedGroup.cycles.length + 1}`,

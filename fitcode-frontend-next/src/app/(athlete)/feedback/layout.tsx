@@ -1,3 +1,5 @@
+'use client';
+
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 
@@ -11,9 +13,7 @@ export default function Layout({ children }: ChildrenProps) {
       <AthleteHeader />
 
       <Container component="main" maxWidth="lg" sx={{ px: '0px !important' }}>
-        <Box>
-          <WellnessInitializer> {children}</WellnessInitializer>
-        </Box>
+        <WellnessInitializer>{children}</WellnessInitializer>
       </Container>
     </Box>
   );

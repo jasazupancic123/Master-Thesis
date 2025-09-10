@@ -13,16 +13,19 @@ import AthleteAnthropometryForm from '@/components/athlete-anthropometry-form/at
 import AthleteOptionsContainer from '@/components/athlete-options-container/athlete-options-container';
 import AthleteWellnessForm from '@/components/athlete-wellness-form/athlete-wellness-form';
 import { paintHeatmaps } from '@/components/muscle-heatmap-view/state';
-import type { Wellness } from '@/controller/user/type/wellness.type';
+import type {
+  CreateWellness,
+  Wellness,
+} from '@/controller/user/type/wellness.type';
 import { UserController } from '@/controller/user/user.controller';
 import { setCachedWellness } from '@/session-cache/wellness.session-cache';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useWellness } from '@/store/wellness-provider';
 
-export type SubmitWellnessInput = Parameters<typeof UserController.saveMeta>[0];
-
 export async function submitWellness(
-  input: SubmitWellnessInput,
+  token: string,
+  input: CreateWellness,
   state: {
     router: AppRouterInstance;
     setCachedWellness: (wellness: Wellness) => void;
@@ -32,7 +35,7 @@ export async function submitWellness(
 
   handleApiRequest(
     router,
-    () => UserController.saveMeta(input),
+    () => UserController.getInstance(token).saveMeta(input),
     (_wellness) => {
       setCachedWellness(_wellness);
       toast.success('Successfully submitted wellness');
@@ -46,6 +49,7 @@ export default function FeedbackPage() {
   const theme = useTheme();
   const router = useRouter();
   const screenSize = useScreenSize();
+  const { token } = useAuthenticatedAuth();
 
   const [filter, setFilter] = useState<WellnessAnthropometry>(
     WellnessAnthropometry.WELLNESS
@@ -110,6 +114,7 @@ export default function FeedbackPage() {
           <AthleteWellnessForm
             onSubmit={(data) =>
               submitWellness(
+                token,
                 { date: new Date(), ...data },
                 { router, setCachedWellness }
               )
@@ -132,6 +137,7 @@ export default function FeedbackPage() {
         variant="contained"
         onClick={() => {
           submitWellness(
+            token,
             { ...state, date: new Date() },
             { router, setCachedWellness }
           );

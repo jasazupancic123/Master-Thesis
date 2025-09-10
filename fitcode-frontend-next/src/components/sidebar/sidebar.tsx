@@ -16,10 +16,9 @@ import * as React from 'react';
 
 import { LINKS_SIDEBAR } from '@/common/constant/navigation.constant';
 import { CommonService } from '@/common/service/common.service';
-import type { AuthContextType } from '@/common/type/context.type';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { useAthlete } from '@/store/athlete.provider';
-import { useAuth } from '@/store/auth.provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 
 const commonService = CommonService.instance;
 
@@ -29,10 +28,11 @@ export default function Sidebar() {
   const { filter, setFilter } = athleteContext || {};
 
   const [open, setOpen] = React.useState(false);
-  const { role, logout } = useAuth() as AuthContextType;
+  const { role, logout } = useAuthenticatedAuth();
+
   const toggle = (newOpen: boolean) => () => setOpen(newOpen);
 
-  const DrawerList = role.length && (
+  const DrawerList = role && (
     <Box sx={{ width: 250 }} role="presentation" onClick={toggle(false)}>
       <List sx={{ pt: 0 }}>
         <ListItem>
@@ -42,7 +42,7 @@ export default function Sidebar() {
           </ListItemButton>
         </ListItem>
         {commonService.navigation
-          .getSidebarLinksByUserRole(role[0])
+          .getSidebarLinksByUserRole(role)
           .map(({ href, label }, i) => (
             <ListItem key={i} disablePadding>
               <Link

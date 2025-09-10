@@ -1,34 +1,42 @@
 'use client';
 
-import { Box, Button, Stack, TextField, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
-import LoadingOverlay from '../loading-overlay/loading-overlay';
 import MyModal from '../modal/modal';
 import { BACKEND_API_BASE_URL } from '@/common/constant/api.constant';
-import { CommonService } from '@/common/service/common.service';
+import { FirebaseFunctionsUtil } from '@/common/firebase/firebase-functions.util';
 import { handleApiRequest } from '@/common/type/state.type';
 import { InstitutionController } from '@/controller/institution/institution.controller';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import type { User } from '@/controller/user/type/user.type';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
-
-const commonService = CommonService.instance;
-const firebaseService = commonService.firebase;
 
 interface RegisterUsersDashboardProps {
   registerRole: UserRole;
 }
 
+const firebaseFunctions = FirebaseFunctionsUtil.Instance;
+
 export default function RegisterUsersDashboard(
   props: RegisterUsersDashboardProps
 ) {
   const { registerRole } = props;
-
   const router = useRouter();
+
+  const { token } = useAuthenticatedAuth();
+  const controller = InstitutionController.getInstance(token);
 
   const { users } = useMain();
   const {
@@ -78,7 +86,7 @@ export default function RegisterUsersDashboard(
       handleApiRequest(
         router,
         () =>
-          InstitutionController.addTrainer(selectedInstitution.id, {
+          controller.addTrainer(selectedInstitution.id, {
             userId: user.uid,
           }),
         () => {
@@ -109,7 +117,7 @@ export default function RegisterUsersDashboard(
       handleApiRequest(
         router,
         () =>
-          InstitutionController.addAthlete(selectedInstitution.id, {
+          controller.addAthlete(selectedInstitution.id, {
             userId: user.uid,
           }),
         () => {
@@ -148,7 +156,7 @@ export default function RegisterUsersDashboard(
       handleApiRequest(
         router,
         () =>
-          InstitutionController.addTrainer(selectedInstitution.id, {
+          controller.addTrainer(selectedInstitution.id, {
             userId: existingUser.uid,
           }),
         () => {
@@ -179,7 +187,7 @@ export default function RegisterUsersDashboard(
       handleApiRequest(
         router,
         () =>
-          InstitutionController.addAthlete(selectedInstitution.id, {
+          controller.addAthlete(selectedInstitution.id, {
             userId: existingUser.uid,
           }),
         () => {
@@ -268,7 +276,7 @@ export default function RegisterUsersDashboard(
 
     handleApiRequest(
       router,
-      () => firebaseService.functions.createUserWithRole(input),
+      () => firebaseFunctions.createUserWithRole(input),
       () => {
         refetchMembers(
           `${BACKEND_API_BASE_URL}/institution/${selectedInstitution.id}/find/all`
@@ -350,7 +358,27 @@ export default function RegisterUsersDashboard(
         want to add them to the institution?
       </MyModal>
 
-      {isUploadingMembers && <LoadingOverlay title="Registering..." />}
+      {isUploadingMembers && (
+        <Box
+          position="fixed"
+          top={0}
+          left={0}
+          width="100vw"
+          height="100vh"
+          display="flex"
+          flexDirection="column"
+          justifyContent="center"
+          alignItems="center"
+          gap={2}
+          sx={{
+            zIndex: 130000,
+            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+          }}
+        >
+          <CircularProgress size={24} />
+          <Typography fontSize={20}>Registering...</Typography>
+        </Box>
+      )}
     </>
   );
 }

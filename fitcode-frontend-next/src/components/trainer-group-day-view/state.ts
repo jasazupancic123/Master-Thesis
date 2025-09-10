@@ -14,7 +14,7 @@ import type { Cycle } from '@/controller/group/type/cycle.type';
 import type { Group } from '@/controller/group/type/group.type';
 import type { Method } from '@/controller/method/type/method.type';
 import { CustomWorkloadsSubgroupsService } from '@/controller/training/custom-workloads-subgroups.service';
-import { TrainingController } from '@/controller/training/training.controller';
+import type { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
 import type { Superset } from '@/controller/training/type/superset.type';
@@ -23,21 +23,24 @@ import type { TrainingComponent } from '@/controller/training/type/training-comp
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import type { User } from '@/controller/user/type/user.type';
 
-export async function handleUpdateMultipleTrainings(state: {
-  setTrainings: SetState<Training[]>;
-  training: Training | undefined;
-  setTraining: SetState<Training | undefined>;
-  group: Group;
-  cycle: Cycle | undefined;
-  router: AppRouterInstance;
-  components: Component[];
-  exercises: Exercise[];
-  methods: Method[];
-  setDetectedChanges: SetState<boolean>;
-  selectedAthlete: User | undefined;
-  isSettingAthleteWorkloads: React.RefObject<boolean>;
-  setIsUpdatingTraining: SetState<boolean>;
-}) {
+export async function handleUpdateMultipleTrainings(
+  controller: TrainingController,
+  state: {
+    setTrainings: SetState<Training[]>;
+    training: Training | undefined;
+    setTraining: SetState<Training | undefined>;
+    group: Group;
+    cycle: Cycle | undefined;
+    router: AppRouterInstance;
+    components: Component[];
+    exercises: Exercise[];
+    methods: Method[];
+    setDetectedChanges: SetState<boolean>;
+    selectedAthlete: User | undefined;
+    isSettingAthleteWorkloads: React.RefObject<boolean>;
+    setIsUpdatingTraining: SetState<boolean>;
+  }
+) {
   const {
     setTrainings,
     training,
@@ -60,7 +63,7 @@ export async function handleUpdateMultipleTrainings(state: {
   await handleApiRequest(
     router,
     () =>
-      TrainingController.update(training.id, {
+      controller.update(training.id, {
         ...training,
       }),
     (newTraining) => {

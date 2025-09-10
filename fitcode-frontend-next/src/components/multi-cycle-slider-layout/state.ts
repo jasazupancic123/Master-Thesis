@@ -6,13 +6,14 @@ import { v4 } from 'uuid';
 
 import type { SetStateNullable } from '@/common/type/state.type';
 import { handleApiRequest, type SetState } from '@/common/type/state.type';
-import { GroupController } from '@/controller/group/group.controller';
+import type { GroupController } from '@/controller/group/group.controller';
 import type { Cycle, Week } from '@/controller/group/type/cycle.type';
 import type { Group } from '@/controller/group/type/group.type';
 
 type AddCycleInput = Pick<Cycle, 'name' | 'from' | 'to' | 'description'>;
 
 export async function handleAddCycle(
+  controller: GroupController,
   router: AppRouterInstance,
   input: AddCycleInput,
   state: {
@@ -57,7 +58,7 @@ export async function handleAddCycle(
 
   handleApiRequest(
     router,
-    () => GroupController.addCycle(selectedGroup.id, newCycle),
+    () => controller.addCycle(selectedGroup.id, newCycle),
     () => {
       const newCycles = [...selectedGroup.cycles, newCycle];
 

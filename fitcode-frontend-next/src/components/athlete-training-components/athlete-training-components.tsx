@@ -16,7 +16,7 @@ import { TrainingService } from '@/controller/training/training.service';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
-import { useAuth } from '@/store/auth.provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import { useTraining } from '@/store/training.provider';
 
@@ -48,19 +48,12 @@ export default function AthleteTrainingComponents(
   } = props;
 
   const { setTrainingInProgress, setView } = useTraining();
-  const { user } = useAuth();
   const { exercises } = useMain();
+  const { token, user } = useAuthenticatedAuth();
+  const controller = TrainingController.getInstance(token);
 
   const theme = useTheme();
   const router = useRouter();
-
-  if (!user) {
-    return (
-      <Typography textAlign="center" sx={{ fontSize: 12 }}>
-        Please log in to view training components.
-      </Typography>
-    );
-  }
 
   return (
     <Box
@@ -201,8 +194,7 @@ export default function AthleteTrainingComponents(
 
           handleApiRequest(
             router,
-            () =>
-              TrainingController.getPrescribedTraining(training.id, user.uid),
+            () => controller.getPrescribedTraining(training.id, user.uid),
             (training) => {
               if (!training) {
                 toast.error('Failed to start training. Please try again.');

@@ -10,7 +10,7 @@
       "esnext"
     ],
     "types": [
-      "jest",
+      "jest", 
       "node"
     ],
     "allowJs": true,

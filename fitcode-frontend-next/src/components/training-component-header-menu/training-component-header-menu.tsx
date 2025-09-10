@@ -21,6 +21,7 @@ import { PeriodizationType } from '@/controller/training/enum/periodization-type
 import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
@@ -36,6 +37,8 @@ export default function TrainingComponentHeaderMenu() {
     exercises: allExercises,
   } = useMain();
 
+  const auth = useAuthenticatedAuth();
+  const controller = TrainingController.getInstance(auth.token);
   const { detectedChanges, setDetectedChanges, trainings, setTrainings } =
     useGroup();
 
@@ -383,7 +386,7 @@ export default function TrainingComponentHeaderMenu() {
           handleApiRequest(
             router,
             () =>
-              TrainingController.periodize(training.id, component.id, {
+              controller.periodize(training.id, component.id, {
                 periodizationType:
                   selectedPeriodizationType as PeriodizationType,
                 exerciseIds: selectedExercises.map((e) => e.id),

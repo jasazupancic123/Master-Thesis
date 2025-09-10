@@ -19,10 +19,12 @@ import {
 import type { CalendarEvent } from '../common/type/calendar-event-type';
 import CustomToolbar from '../components/calendar-custom-toolbar/calendar-custom-toolbar';
 import { getComponentIcon } from '@/common/service/util/icons.util';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 export default function CalendarPage() {
   const screenSize = useScreenSize();
+  const { token } = useAuthenticatedAuth();
 
   const router = useRouter();
   const theme = useTheme();
@@ -39,9 +41,11 @@ export default function CalendarPage() {
         now.getMonth() - 1,
         1
       );
+
       const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 2, 0);
 
       fetchAthleteTrainings(
+        token,
         { from: firstDayOfMonth, to: lastDayOfMonth },
         { router }
       ).then((_trainings) => {

@@ -60,7 +60,7 @@ type DotProps = {
   cx?: number;
   cy?: number;
   stroke?: string;
-  payload?: any;
+  payload?: { trainingId: string; [key: string]: unknown };
   value?: number | string | null;
 };
 

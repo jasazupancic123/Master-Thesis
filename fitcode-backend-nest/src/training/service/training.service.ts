@@ -252,7 +252,6 @@ export class TrainingService implements Permission<Training, Institution> {
       membersIds,
       completedMembersIds: [],
       stats: [],
-      // futureStats: input.futureStats || [],
       warmup,
       cooldown,
       components: trainingComponents

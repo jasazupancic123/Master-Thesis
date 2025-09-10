@@ -17,7 +17,9 @@ import {
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
 import type { Method } from '@/controller/method/type/method.type';
+import { TrainingController } from '@/controller/training/training.controller';
 import type { Training } from '@/controller/training/type/training.type';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
@@ -36,6 +38,8 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
   } = useMain();
   const { filter, setTrainings } = useGroup();
 
+  const auth = useAuthenticatedAuth();
+  const controller = TrainingController.getInstance(auth.token);
   const { training, component } = useTrainerDayViewContext();
 
   const [openAddExerciseModal, setOpenAddExerciseModal] = useState(false);
@@ -240,6 +244,7 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
             return;
           }
           handleCopyComponentApiRequest(
+            controller,
             {
               training,
               trainingInPeriod: trainingInPeriodForModal,

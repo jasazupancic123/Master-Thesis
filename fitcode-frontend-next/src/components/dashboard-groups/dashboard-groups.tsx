@@ -9,11 +9,12 @@ import DashboardGroupsMembers from '../dashboard-groups-members/dashboard-groups
 import HorizontalItemsList from '../horizontal-items-list/horizontal-items-list';
 import { MAX_WIDTH } from '../trainer-day-view/constant';
 import { ADD_GROUP } from '@/common/constant/add-group.constant';
-import { isManager } from '@/common/service/util/firebase-auth.util';
+import { isManager } from '@/common/firebase/firebase-auth.util';
 import type { SetState } from '@/common/type/state.type';
 import { GroupController } from '@/controller/group/group.controller';
 import { GroupService } from '@/controller/group/group.service';
 import type { Cycle } from '@/controller/group/type/cycle.type';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
@@ -36,16 +37,15 @@ interface DashboardGroupsProps {
 }
 
 export default function DashboardGroups(props: DashboardGroupsProps) {
-  const screenSize = useScreenSize();
-  const theme = useTheme();
-  const { profile, users } = useMain();
-
-  const { selectedInstitution, selectedGroup, setSelectedGroup } =
-    useDashboard();
-
   const { modal, setModal } = props;
 
-  const roles = profile.customClaims.role || [];
+  const screenSize = useScreenSize();
+  const theme = useTheme();
+  const { users } = useMain();
+  const { role, token } = useAuthenticatedAuth();
+  const controller = GroupController.getInstance(token);
+  const { selectedInstitution, selectedGroup, setSelectedGroup } =
+    useDashboard();
 
   const [_selectedCycle, setSelectedCycle] = useState<Cycle | null>(
     selectedGroup?.cycles[0] || null
@@ -56,8 +56,7 @@ export default function DashboardGroups(props: DashboardGroupsProps) {
   useEffect(() => {
     async function fetchGroups() {
       if (!selectedInstitution || selectedInstitution.groups) return;
-
-      selectedInstitution.groups = await GroupController.findAllByInstitution(
+      selectedInstitution.groups = await controller.findAllByInstitution(
         selectedInstitution.id
       );
 
@@ -83,7 +82,7 @@ export default function DashboardGroups(props: DashboardGroupsProps) {
     return (
       <HorizontalItemsList
         dashboardView
-        addButtonOnEnd={isManager(roles)}
+        addButtonOnEnd={isManager(role)}
         onButtonClick={() => {
           setModal((prev) => ({ ...prev, add_group: true }));
         }}
@@ -100,9 +99,11 @@ export default function DashboardGroups(props: DashboardGroupsProps) {
             setModal((prev) => ({ ...prev, add_group: true }));
             return;
           }
+
           const group = selectedInstitution?.groups?.find(
             (g) => g.id === value
           );
+
           if (group) {
             const mapped = GroupService.mapMembers(group, users);
             setSelectedGroup(mapped);
