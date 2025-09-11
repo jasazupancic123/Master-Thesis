@@ -138,8 +138,9 @@ export class TrainingService implements Permission<Training, Institution> {
     user: User,
     filter?: Filter<Training>,
     options?: { limit?: number },
+    populate?: boolean,
   ): Promise<Training[]> {
-    return await this.repository.findAll((q) => {
+    const trainings = await this.repository.findAll((q) => {
       // filter by roles
       if (
         this.firebaseService.isTrainer(user) ||
@@ -165,6 +166,23 @@ export class TrainingService implements Permission<Training, Institution> {
       if (options?.limit) q = q.limit(options.limit);
       return q;
     });
+
+    if (populate)
+      trainings.forEach(async (t) => {
+        t.institution = t.institutionId
+          ? await this.institutionService.getDoc({
+              institutionId: t.institutionId,
+            })
+          : undefined;
+
+        t.group = t.groupId
+          ? await this.groupService.findOneById(user, { groupId: t.groupId })
+          : undefined;
+
+        t.cycle = this.groupService.findCycleOrFail(t.cycleId, t.group);
+      });
+
+    return trainings;
   }
 
   @LogMethod()

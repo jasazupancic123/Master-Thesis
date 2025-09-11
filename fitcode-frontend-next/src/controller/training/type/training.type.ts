@@ -45,7 +45,7 @@ export type UpdateTraining = Pick<Training, 'warmup' | 'cooldown'> & {
 };
 
 export type FilterTrainings = DateRange &
-  Partial<Pick<Training, 'groupId' | 'cycleId'>>;
+  Partial<Pick<Training, 'groupId' | 'cycleId'>> & { populate?: boolean };
 
 export type PeriodizeTrainings = {
   periodizationType: PeriodizationType;
