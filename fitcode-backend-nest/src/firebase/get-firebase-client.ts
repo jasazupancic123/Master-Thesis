@@ -25,9 +25,9 @@ export function getFirebaseClient(
 ): FirebaseClient {
   const apps = getApps();
   const config = {
-    credential: commonService.env.isProd()
-      ? admin.credential.applicationDefault()
-      : admin.credential.cert(require('../../serviceAccount.json')),
+    ...(!commonService.env.isProd() && {
+      credential: admin.credential.cert(require('../../serviceAccount.json')),
+    }),
   };
 
   const app = (!apps.length ? initializeApp(config) : apps[0]) as admin.app.App;

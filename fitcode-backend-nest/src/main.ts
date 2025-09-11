@@ -2,9 +2,7 @@ import type { INestApplication } from '@nestjs/common';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpAdapterHost, NestFactory } from '@nestjs/core';
-import { ExpressAdapter } from '@nestjs/platform-express';
 import { config } from 'dotenv';
-import express from 'express';
 import { json, urlencoded } from 'express';
 
 import { AppModule } from './app.module';
@@ -12,20 +10,16 @@ import { AllExceptionsFilter } from './common/filter/all-exception.filter';
 import { CommonService } from './common/service/common.service';
 import { DataSetup } from './common/setup/data.setup';
 import { SwaggerSetup } from './common/setup/swagger.setup';
-import type { Environment } from './config/environment-validation-schema';
+import type {
+  Environment,
+  NodeEnv,
+} from './config/environment-validation-schema';
 
-config({ quiet: true, path: '.env.prod' });
+const nodeEnv = (process.env.NODE_ENV || 'dev') as NodeEnv;
+config({ quiet: true, path: `.env.${nodeEnv}` });
 
-const server = express();
-
-async function createApp(
-  expressInstance: express.Express,
-): Promise<INestApplication> {
-  const app = await NestFactory.create(
-    AppModule,
-    new ExpressAdapter(expressInstance),
-  );
-
+async function createApp(): Promise<INestApplication> {
+  const app = await NestFactory.create(AppModule);
   const httpAdapter = app.get(HttpAdapterHost);
 
   // config
@@ -68,12 +62,12 @@ async function initApp(app: INestApplication): Promise<void> {
   logger.log(`Application started on http://localhost:${port}`);
 }
 
-async function bootstrap(expressInstance: express.Express): Promise<void> {
-  const app = await createApp(expressInstance);
+async function bootstrap(): Promise<void> {
+  const app = await createApp();
   await initApp(app);
 }
 
-bootstrap(server)
+bootstrap()
   .then()
   .catch((error) => {
     const logger = new Logger(initApp.name);

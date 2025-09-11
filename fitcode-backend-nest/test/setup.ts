@@ -5,7 +5,10 @@ import { ConfigService } from '@nestjs/config';
 import { config } from 'dotenv';
 
 import { CommonService } from '@src/common/service/common.service';
-import type { Environment } from '@src/config/environment-validation-schema';
+import type {
+  Environment,
+  NodeEnv,
+} from '@src/config/environment-validation-schema';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { getFirebaseClient } from '@src/firebase/get-firebase-client';
 
@@ -16,7 +19,8 @@ import {
   createTrainerUserAndToken,
 } from '@test/common/utils/auth.util';
 
-config({ quiet: true });
+const nodeEnv = (process.env.NODE_ENV || 'dev') as NodeEnv;
+config({ quiet: true, path: `.env.${nodeEnv}` });
 
 export default async function () {
   const commonService = new CommonService();

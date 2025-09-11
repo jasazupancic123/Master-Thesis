@@ -1,6 +1,9 @@
 import { config } from 'dotenv';
 
-config({ quiet: true });
+import type { NodeEnv } from '@src/config/environment-validation-schema';
+
+const nodeEnv = (process.env.NODE_ENV || 'dev') as NodeEnv;
+config({ quiet: true, path: `.env.${nodeEnv}` });
 
 export class EnvUtil {
   isDev() {
@@ -8,7 +11,7 @@ export class EnvUtil {
   }
 
   isProd() {
-    return process.env.NODE_ENV === 'prod';
+    return process.env.NODE_ENV === 'production';
   }
 
   isTest() {
