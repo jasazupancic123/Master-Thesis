@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 
 import type { ExerciseOrTraining } from '@/common/type/exercise-or-training.type';
 import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
+import type { ExerciseSetTracking } from '@/common/type/exercise-set-tracking-state.type';
 import type { SetState } from '@/common/type/state.type';
 import { handleApiRequest } from '@/common/type/state.type';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
@@ -12,6 +13,7 @@ import { TrainingService } from '@/controller/training/training.service';
 import type { CompletedTrainingExercise } from '@/controller/training/type/completed-training.entity';
 import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
 
 export const handleFinishTraining = async (
@@ -95,4 +97,31 @@ export const handleFinishTraining = async (
     undefined,
     'Failed to update training data'
   );
+};
+
+// returns how many sets are undone in current superset
+export const getUndoneExercises = (
+  superset: Superset | undefined,
+  supersetIndex: number | undefined,
+  exerciseSetTrackingState: ExerciseSetTracking[]
+): TrainingExercise[] => {
+  if (superset === undefined || supersetIndex === undefined) return [];
+
+  const undoneExercises = [] as TrainingExercise[];
+
+  superset.exercises.forEach((exercise) => {
+    const tracking = exerciseSetTrackingState.find(
+      (t) => t.exerciseId === exercise.id && t.supersetIndex === supersetIndex
+    );
+    exercise.sets.forEach((set) => {
+      if (
+        !tracking ||
+        (!tracking.completedSetNumbers.includes(set.setNumber) &&
+          !undoneExercises.find((e) => e.id === exercise.id))
+      )
+        undoneExercises.push(exercise);
+    });
+  });
+
+  return undoneExercises;
 };

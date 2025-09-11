@@ -1,12 +1,18 @@
-import { Box, Divider, Slider } from '@mui/material';
-import { useTheme } from '@mui/material';
-import TextField from '@mui/material/TextField';
+import { Box, Divider } from '@mui/material';
 import Typography from '@mui/material/Typography';
+import { useEffect, useState } from 'react';
 
+import AthleteWellnessSlider from '../athlete-wellness-slider/athlete-wellness-slider';
+import MuscleMapWithTooltip from '../muscle-map-with-tooltip/muscle-map-with-tooltip';
 import FatigueIcon from '@/assets/icons/Fatigue.svg';
 import SleepIcon from '@/assets/icons/Sleep.svg';
 import SorenessIcon from '@/assets/icons/Soreness.svg';
+import HeatmapBack from '@/assets/svg/heatmap-back.svg';
+import HeatmapFront from '@/assets/svg/heatmap-front.svg';
+import { HEATMAP_COLORS } from '@/common/constant/color.constant';
 import type { SetState } from '@/common/type/state.type';
+import { MuscleService } from '@/controller/exercise/muscle.service';
+import type { MuscleTip } from '@/controller/exercise/type/muscle-tip.type';
 import type { Wellness } from '@/controller/user/type/wellness.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 
@@ -16,12 +22,35 @@ interface Props {
   setDisabled: SetState<boolean>;
   state: Wellness;
   setState: SetState<Wellness>;
+  muscleLoads: [string, number][];
+  setMuscleLoads: SetState<[string, number][]>;
 }
 
 export default function AthleteWellnessForm(props: Props) {
   const screenSize = useScreenSize();
 
-  const { state, setState } = props;
+  const { state, setState, muscleLoads, setMuscleLoads } = props;
+
+  const [tipHeatmapFront, setTipHeatmapFront] = useState<MuscleTip>({
+    show: false,
+    x: 0,
+    y: 0,
+    focus: false,
+  });
+
+  const [tipHeatmapBack, setTipHeatmapBack] = useState<MuscleTip>({
+    show: false,
+    x: 0,
+    y: 0,
+    focus: false,
+  });
+
+  useEffect(() => {
+    if (muscleLoads.length) return; // Already set
+
+    const loads = MuscleService.generateEmptyMuscleLoadsForAllMuscles(1);
+    setMuscleLoads(loads);
+  }, []);
 
   return (
     <Box width="100%" display="flex" flexDirection="column" alignItems="center">
@@ -62,79 +91,68 @@ export default function AthleteWellnessForm(props: Props) {
         icon={<SorenessIcon height={16} />}
       />
 
-      {/* Comment */}
-      <TextField
-        label="Comment"
-        variant="outlined"
-        value={state.comment}
-        onChange={(event) =>
-          setState((prev) => ({ ...prev, comment: event.target.value }))
+      <Box
+        sx={
+          screenSize.isSmallerThanLaptop
+            ? {
+                width: '100%',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                textAlign: 'center',
+                flexWrap: 'nowrap',
+              }
+            : {}
         }
-        multiline
-        rows={1.5}
-        sx={{
-          width: screenSize.isMobile
-            ? '90%'
-            : screenSize.isLandscapeMobile
-              ? '66%'
-              : '30%',
-          backgroundColor: 'background.default',
-          borderRadius: '10px',
-          '& .MuiOutlinedInput-root': {
-            height: screenSize.isLandscapeMobile ? '20vh' : 'auto', // Set full field height
-            display: 'flex', // Align text properly
-            alignItems: 'center', // Ensures vertical centering
-            '& textarea': {
-              height: screenSize.isLandscapeMobile ? '12vh' : 'auto', // Resize inner text area
-              paddingTop: screenSize.isLandscapeMobile ? '5px' : undefined, // Adjust text alignment
-              paddingBottom: screenSize.isLandscapeMobile ? '5px' : undefined,
-              overflow: 'hidden', // Prevent extra growth
-            },
-          },
-          '& .MuiInputLabel-root': {
-            top: screenSize.isLandscapeMobile ? '-5px' : undefined, // Adjust label position
-          },
-        }}
-        inputProps={{
-          style: {
-            padding: screenSize.isLandscapeMobile ? '5px 10px' : undefined, // Ensure consistent padding
-            height: screenSize.isLandscapeMobile ? '12vh' : 'auto',
-            display: 'flex',
-            alignItems: 'center', // Ensures text aligns correctly
-          },
-        }}
-        disabled={props.disabled}
-      />
+        position="relative"
+      >
+        <MuscleMapWithTooltip
+          front={true}
+          Svg={HeatmapFront}
+          exercisesInComponent={[]}
+          heatmapLevel={1}
+          tip={tipHeatmapFront}
+          setTip={setTipHeatmapFront}
+          athleteAnthropometry
+          muscleLoads={muscleLoads}
+          setMuscleLoads={setMuscleLoads}
+        />
+        <MuscleMapWithTooltip
+          front={false}
+          Svg={HeatmapBack}
+          exercisesInComponent={[]}
+          heatmapLevel={1}
+          tip={tipHeatmapBack}
+          setTip={setTipHeatmapBack}
+          athleteAnthropometry
+          muscleLoads={muscleLoads}
+          setMuscleLoads={setMuscleLoads}
+        />
 
-      {/* Weight in kg */}
-      <TextField
-        label="Weight (kg)"
-        type="number"
-        value={state.weight}
-        onChange={(event) => {
-          if (isNaN(Number(event.target.value))) return;
-
-          setState((prev) => ({
-            ...prev,
-            weight: Number(event.target.value),
-          }));
-        }}
-        sx={{
-          mt: 2,
-          backgroundColor: 'background.default',
-          borderRadius: '10px',
-        }}
-        inputProps={{
-          min: 0,
-          step: 0.5,
-          style: {
-            padding: '5px 10px',
-            display: 'flex',
-            alignItems: 'center',
-          },
-        }}
-        disabled={props.disabled}
-      />
+        {/* Legend */}
+        <Box
+          display="flex"
+          flexDirection="column-reverse"
+          sx={{
+            position: 'absolute',
+            bottom: 20,
+            right: screenSize.isSmallerThanLaptop ? '50%' : -50,
+            transform: screenSize.isSmallerThanLaptop
+              ? 'translateX(+50%)'
+              : 'none',
+          }}
+          gap={1}
+        >
+          {HEATMAP_COLORS.map((color, index) => (
+            <Box
+              key={index}
+              bgcolor={color}
+              width={screenSize.isMobile ? 40 : 100}
+              height={screenSize.isMobile ? 3 : 5}
+            />
+          ))}
+        </Box>
+      </Box>
     </Box>
   );
 }
@@ -146,7 +164,6 @@ function UserWellnessSlider(props: {
   disabled: boolean;
   icon: React.ReactNode;
 }) {
-  const theme = useTheme();
   return (
     <Box
       width="100%"
@@ -172,37 +189,9 @@ function UserWellnessSlider(props: {
         {props.icon}
         {props.label}
       </Typography>
-      <Slider
-        orientation="horizontal"
+      <AthleteWellnessSlider
         value={props.value}
-        min={1}
-        max={10}
-        onChange={(_, value) => props.setValue(value as number)}
-        valueLabelDisplay="on"
-        sx={{
-          '& .MuiSlider-track': {
-            backgroundColor: theme.palette.primary.main,
-            border: 'none',
-          },
-          '& .MuiSlider-thumb': {
-            width: 14,
-            height: 14,
-            backgroundColor: props.disabled
-              ? 'gray'
-              : theme.palette.primary.main,
-          },
-          '& .MuiSlider-rail': {
-            backgroundColor: '#ffffff',
-          },
-          '& .MuiSlider-valueLabelOpen': {
-            backgroundColor: 'transparent',
-            top: 2,
-            fontSize: 12,
-          },
-          '& .MuiSlider-valueLabelOpen:before': {
-            display: 'none',
-          },
-        }}
+        setValue={props.setValue}
         disabled={props.disabled}
       />
     </Box>

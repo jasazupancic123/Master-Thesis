@@ -20,7 +20,6 @@ import type {
 import { UserController } from '@/controller/user/user.controller';
 import { setCachedWellness } from '@/session-cache/wellness.session-cache';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
-import { useScreenSize } from '@/store/screen-size.provider';
 import { useWellness } from '@/store/wellness-provider';
 
 export async function submitWellness(
@@ -48,7 +47,6 @@ export async function submitWellness(
 export default function FeedbackPage() {
   const theme = useTheme();
   const router = useRouter();
-  const screenSize = useScreenSize();
   const { token } = useAuthenticatedAuth();
 
   const [filter, setFilter] = useState<WellnessAnthropometry>(
@@ -71,21 +69,18 @@ export default function FeedbackPage() {
   });
 
   useEffect(() => {
-    if (filter !== WellnessAnthropometry.ANTHROPOMETRY) return;
     paintHeatmaps(muscleLoads, true);
   }, [muscleLoads, filter]);
 
   return (
     <Box
-      width="100%"
       display="flex"
       flexDirection="column"
       alignItems="center"
       sx={{
-        height: 'calc(100vh - 100px)',
         overflowY: 'auto',
-        pb: 6,
-        backgroundColor: 'background.default',
+        backgroundColor: 'transparent',
+        pb: filter === WellnessAnthropometry.WELLNESS ? 15 : 0,
       }}
     >
       <Box
@@ -123,12 +118,11 @@ export default function FeedbackPage() {
             setDisabled={() => {}}
             state={state}
             setState={setState}
-          />
-        ) : (
-          <AthleteAnthropometryForm
             muscleLoads={muscleLoads}
             setMuscleLoads={setMuscleLoads}
           />
+        ) : (
+          <AthleteAnthropometryForm state={state} setState={setState} />
         )}
       </Box>
 
@@ -143,8 +137,10 @@ export default function FeedbackPage() {
           );
         }}
         sx={{
-          mt: screenSize.isLandscapeMobile ? 2 : 4,
-          backgroundColor: theme.palette.primary.main,
+          position: 'fixed',
+          bottom: 60,
+          left: '50%',
+          transform: 'translateX(-50%)',
           color: '#ffffff',
         }}
       >

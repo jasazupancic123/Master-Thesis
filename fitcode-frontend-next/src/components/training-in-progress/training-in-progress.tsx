@@ -11,12 +11,13 @@ import Animation from '../animation/animation';
 import AthleteOptionsContainer from '../athlete-options-container/athlete-options-container';
 import MyModal from '../modal/modal';
 import TrainingInProgressSuperset from '../training-in-progress-superset/training-in-progress-superset';
-import { handleFinishTraining } from './state';
+import { getUndoneExercises, handleFinishTraining } from './state';
 import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
 import type { SetState } from '@/common/type/state.type';
 import { useHorizontalOverflow } from '@/common/util/horizontal-overflow.util';
 import { TrainingController } from '@/controller/training/training.controller';
 import type { Training } from '@/controller/training/type/training.type';
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
@@ -46,6 +47,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
     setSelectedExercise,
     selectedSuperset,
     setSelectedSuperset,
+    supersetIndex,
     setSetIndex,
   } = useTrainingInProgress();
 
@@ -56,6 +58,11 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
   const [openFinishTrainingModal, setOpenFinishTrainingModal] = useState(false);
   const [openCancelTrainingModal, setOpenCancelTrainingModal] = useState(false);
   const [playAnimation, setPlayAnimation] = useState(true);
+  const [undoneExercises, setUndoneExercises] = useState<TrainingExercise[]>(
+    []
+  );
+  const [showUndoneSetsWarning, setShowUndoneSetsWarning] = useState(false);
+  const [showUndoneSetsError, setShowUndoneSetsError] = useState(false);
 
   useEffect(() => {
     if (!trainingInProgress) return;
@@ -212,9 +219,19 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
                 color:
                   selectedSuperset === superset
                     ? theme.palette.text.primary
-                    : theme.palette.text.secondary,
+                    : theme.palette.grey[700],
               }}
               onClick={() => {
+                const undoneExercises = getUndoneExercises(
+                  selectedSuperset,
+                  supersetIndex,
+                  trainingInProgress.exerciseSetTrackingState
+                );
+                if (undoneExercises.length > 0) {
+                  setUndoneExercises(undoneExercises);
+                  setShowUndoneSetsWarning(true);
+                }
+
                 setSelectedSuperset(superset);
                 setSelectedExercise(superset.exercises[0] || null);
                 setSetIndex(0);
@@ -242,6 +259,8 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
           handleCancel={handleCancel}
           handleOpenMenu={handleOpenMenu}
           handleCloseMenu={handleCloseMenu}
+          setUndoneExercises={setUndoneExercises}
+          setShowUndoneSetsError={setShowUndoneSetsError}
         />
       ) : (
         <Box
@@ -340,6 +359,32 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
       >
         <Typography variant="h6" sx={{ width: '100%', textAlign: 'center' }}>
           Cancel Training?
+        </Typography>
+      </MyModal>
+      <MyModal
+        isOpen={showUndoneSetsWarning}
+        setIsOpen={(open) => setShowUndoneSetsWarning(open)}
+        onConfirm={() => {
+          setShowUndoneSetsWarning(false);
+          setUndoneExercises([]);
+        }}
+      >
+        <Typography variant="h6" sx={{ width: '100%', textAlign: 'center' }}>
+          {undoneExercises.map((e) => e.exercise?.name).join(', ')} undone in
+          current superset
+        </Typography>
+      </MyModal>
+      <MyModal
+        isOpen={showUndoneSetsError}
+        setIsOpen={(open) => setShowUndoneSetsError(open)}
+        onConfirm={() => {
+          setShowUndoneSetsError(false);
+          setUndoneExercises([]);
+        }}
+      >
+        <Typography variant="h6" sx={{ width: '100%', textAlign: 'center' }}>
+          {undoneExercises.map((e) => e.exercise?.name).join(', ')} undone in
+          training, complete them before finishing
         </Typography>
       </MyModal>
     </Box>

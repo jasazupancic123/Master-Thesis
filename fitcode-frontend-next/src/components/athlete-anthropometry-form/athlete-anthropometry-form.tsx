@@ -1,18 +1,12 @@
-import { Box, Typography } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { Box, TextField } from '@mui/material';
 
-import MuscleMapWithTooltip from '../muscle-map-with-tooltip/muscle-map-with-tooltip';
-import HeatmapBack from '@/assets/svg/heatmap-back.svg';
-import HeatmapFront from '@/assets/svg/heatmap-front.svg';
-import { HEATMAP_COLORS } from '@/common/constant/color.constant';
 import type { SetState } from '@/common/type/state.type';
-import { MuscleService } from '@/controller/exercise/muscle.service';
-import type { MuscleTip } from '@/controller/exercise/type/muscle-tip.type';
+import type { Wellness } from '@/controller/user/type/wellness.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 interface AthleteAnthropometryFormProps {
-  muscleLoads: [string, number][];
-  setMuscleLoads: SetState<[string, number][]>;
+  state: Wellness;
+  setState: SetState<Wellness>;
 }
 
 export default function AthleteAnthropometryForm(
@@ -20,28 +14,7 @@ export default function AthleteAnthropometryForm(
 ) {
   const screenSize = useScreenSize();
 
-  const { muscleLoads, setMuscleLoads } = props;
-
-  const [tipHeatmapFront, setTipHeatmapFront] = useState<MuscleTip>({
-    show: false,
-    x: 0,
-    y: 0,
-    focus: false,
-  });
-
-  const [tipHeatmapBack, setTipHeatmapBack] = useState<MuscleTip>({
-    show: false,
-    x: 0,
-    y: 0,
-    focus: false,
-  });
-
-  useEffect(() => {
-    if (muscleLoads.length) return; // Already set
-
-    const loads = MuscleService.generateEmptyMuscleLoadsForAllMuscles(1);
-    setMuscleLoads(loads);
-  }, []);
+  const { state, setState } = props;
 
   return (
     <Box
@@ -54,15 +27,6 @@ export default function AthleteAnthropometryForm(
     >
       <Box
         width="100%"
-        height="15vh"
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-      >
-        <Typography>Tap a muscle to rate pain level</Typography>
-      </Box>
-      <Box
-        width="100%"
         display="flex"
         justifyContent="center"
         alignItems="center"
@@ -71,68 +35,76 @@ export default function AthleteAnthropometryForm(
           flexDirection: screenSize.isSmallerThanLaptop ? 'column' : 'row',
         }}
       >
-        <Box
-          sx={
-            screenSize.isSmallerThanLaptop
-              ? {
-                  width: '100%',
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  textAlign: 'center',
-                  flexWrap: 'nowrap',
-                }
-              : {}
-          }
-          position="relative"
-        >
-          <MuscleMapWithTooltip
-            front={true}
-            Svg={HeatmapFront}
-            exercisesInComponent={[]}
-            heatmapLevel={1}
-            tip={tipHeatmapFront}
-            setTip={setTipHeatmapFront}
-            athleteAnthropometry
-            muscleLoads={muscleLoads}
-            setMuscleLoads={setMuscleLoads}
-          />
-          <MuscleMapWithTooltip
-            front={false}
-            Svg={HeatmapBack}
-            exercisesInComponent={[]}
-            heatmapLevel={1}
-            tip={tipHeatmapBack}
-            setTip={setTipHeatmapBack}
-            athleteAnthropometry
-            muscleLoads={muscleLoads}
-            setMuscleLoads={setMuscleLoads}
-          />
+        {/* Weight in kg */}
+        <TextField
+          label="Weight (kg)"
+          type="number"
+          value={state.weight}
+          onChange={(event) => {
+            if (isNaN(Number(event.target.value))) return;
 
-          {/* Legend */}
-          <Box
-            display="flex"
-            flexDirection="column-reverse"
-            sx={{
-              position: 'absolute',
-              bottom: 20,
-              right: screenSize.isSmallerThanLaptop ? '50%' : -50,
-              transform: screenSize.isSmallerThanLaptop
-                ? 'translateX(+50%)'
-                : 'none',
-            }}
-            gap={1}
-          >
-            {HEATMAP_COLORS.map((color, index) => (
-              <Box
-                key={index}
-                bgcolor={color}
-                width={screenSize.isMobile ? 40 : 100}
-                height={screenSize.isMobile ? 3 : 5}
-              />
-            ))}
-          </Box>
-        </Box>
+            setState((prev) => ({
+              ...prev,
+              weight: Number(event.target.value),
+            }));
+          }}
+          sx={{
+            mt: 2,
+            backgroundColor: 'background.default',
+            borderRadius: '10px',
+          }}
+          inputProps={{
+            min: 0,
+            step: 0.5,
+            style: {
+              padding: '5px 10px',
+              display: 'flex',
+              alignItems: 'center',
+            },
+          }}
+        />
+        {/* Comment */}
+        <TextField
+          label="Comment"
+          variant="outlined"
+          value={state.comment}
+          onChange={(event) =>
+            setState((prev) => ({ ...prev, comment: event.target.value }))
+          }
+          multiline
+          rows={1.5}
+          sx={{
+            width: screenSize.isMobile
+              ? '90%'
+              : screenSize.isLandscapeMobile
+                ? '66%'
+                : '30%',
+            backgroundColor: 'background.default',
+            borderRadius: '10px',
+            '& .MuiOutlinedInput-root': {
+              height: screenSize.isLandscapeMobile ? '20vh' : 'auto', // Set full field height
+              display: 'flex', // Align text properly
+              alignItems: 'center', // Ensures vertical centering
+              '& textarea': {
+                height: screenSize.isLandscapeMobile ? '12vh' : 'auto', // Resize inner text area
+                paddingTop: screenSize.isLandscapeMobile ? '5px' : undefined, // Adjust text alignment
+                paddingBottom: screenSize.isLandscapeMobile ? '5px' : undefined,
+                overflow: 'hidden', // Prevent extra growth
+              },
+            },
+            '& .MuiInputLabel-root': {
+              top: screenSize.isLandscapeMobile ? '-5px' : undefined, // Adjust label position
+            },
+          }}
+          inputProps={{
+            style: {
+              padding: screenSize.isLandscapeMobile ? '5px 10px' : undefined, // Ensure consistent padding
+              height: screenSize.isLandscapeMobile ? '12vh' : 'auto',
+              display: 'flex',
+              alignItems: 'center', // Ensures text aligns correctly
+            },
+          }}
+        />
       </Box>
     </Box>
   );
