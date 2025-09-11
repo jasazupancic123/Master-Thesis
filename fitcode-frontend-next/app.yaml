@@ -1,0 +1,15 @@
+runtime: nodejs20
+service: fitcode-frontend-next
+env: standard
+
+automatic_scaling:
+  min_instances: 1
+  max_instances: 5
+
+env_variables:
+  NEXT_PUBLIC_API_URL: 'https://fitcode-testing.ew.r.appspot.com'
+  NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: 'fitcode-testing.firebaseapp.com'
+  NEXT_PUBLIC_FIREBASE_API_KEY: 'AIzaSyA8_8AiJT0wgm1LAsbZ84Eum9MLT9RjArs'
+  NEXT_PUBLIC_FIREBASE_PROJECT_ID: 'fitcode-testing'
+  NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: 'fitcode-testing.appspot.com'
+  NEXT_PUBLIC_FIREBASE_APP_ID: '1:630576200743:web:15c63eab07b1ca0b322202'

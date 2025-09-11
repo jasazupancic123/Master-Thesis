@@ -1,6 +1,7 @@
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v13-appRouter';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import { connection } from 'next/server';
 import React from 'react';
 import { Toaster } from 'react-hot-toast';
 
@@ -17,6 +18,8 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: ChildrenProps) {
+  await connection(); // this disables pre-rendering of all pages
+
   return (
     <html lang="en" style={{ scrollBehavior: 'smooth' }}>
       <body className={inter.className}>
