@@ -1,6 +1,6 @@
 'use client';
 
-import { notFound } from 'next/navigation';
+import { notFound, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import Alert from '../components/alert/alert';
@@ -12,16 +12,8 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { GroupProvider } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 
-interface GroupsInitializerProps extends ChildrenProps {
-  params: Promise<{
-    group_id: string;
-  }>;
-}
-
-export default function GroupInitializer({
-  children,
-  params,
-}: GroupsInitializerProps) {
+export default function GroupInitializer({ children }: ChildrenProps) {
+  const pathname = usePathname();
   const [state, setState] = useState<GroupIdPageProps | null>(null);
 
   const { components, exercises, methods } = useMain();
@@ -30,7 +22,7 @@ export default function GroupInitializer({
 
   useEffect(() => {
     async function init() {
-      const groupId = (await params).group_id;
+      const groupId = pathname.split('/')[2];
       const group = await controller.group.findById(groupId);
       if (!group) return notFound();
 

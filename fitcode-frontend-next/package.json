@@ -5,8 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
-    "deploy": "gcloud run deploy fitcode-frontend-next --source . --region europe-west4 --platform managed --allow-unauthenticated --project fitcode-testing --build-env-vars-file .env.prod.yaml",
+    "start": "next start -p 8080",
     "lint": "next lint --fix",
     "test": "jest"
   },
