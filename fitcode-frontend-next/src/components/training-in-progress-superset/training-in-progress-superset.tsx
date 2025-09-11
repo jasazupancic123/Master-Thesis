@@ -6,8 +6,10 @@ import { useTheme } from '@mui/material';
 import { useRef, useState } from 'react';
 
 import MyModal from '../modal/modal';
+import { getUndoneExercises } from '../training-in-progress/state';
 import TrainingInProgressExerciseCard from '../training-in-progress-exercise-card/training-in-progress-exercise-card';
 import type { SetState } from '@/common/type/state.type';
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
@@ -19,6 +21,8 @@ interface TrainingInProgressSupersetProps {
   handleCancel: () => void;
   handleOpenMenu: (event: React.MouseEvent<HTMLElement>) => void;
   handleCloseMenu: () => void;
+  setUndoneExercises: SetState<TrainingExercise[]>;
+  setShowUndoneSetsError: SetState<boolean>;
 }
 
 export default function TrainingInProgressSuperset(
@@ -35,6 +39,8 @@ export default function TrainingInProgressSuperset(
     handleCancel,
     handleOpenMenu,
     handleCloseMenu,
+    setUndoneExercises,
+    setShowUndoneSetsError,
   } = props;
 
   const { selectedSuperset, setSelectedSuperset, selectedExercise } =
@@ -46,6 +52,26 @@ export default function TrainingInProgressSuperset(
   const handleFinish = () => {
     if (!trainingInProgress?.supersets || !selectedSuperset) return;
     handleCloseMenu();
+
+    const undoneExercises = [] as TrainingExercise[];
+
+    trainingInProgress.supersets.forEach((superset, sIndex) => {
+      const undoneExercisesForSuperset = getUndoneExercises(
+        superset,
+        sIndex,
+        trainingInProgress.exerciseSetTrackingState
+      );
+      undoneExercisesForSuperset.forEach((exercise) => {
+        if (!undoneExercises.find((e) => e.id === exercise.id))
+          undoneExercises.push(exercise);
+      });
+    });
+
+    if (undoneExercises.length > 0) {
+      setUndoneExercises(undoneExercises);
+      setShowUndoneSetsError(true);
+      return;
+    }
 
     setOpenFinishTrainingModal(true);
   };
@@ -61,11 +87,6 @@ export default function TrainingInProgressSuperset(
         display="flex"
         flexDirection="column"
         gap={3}
-        sx={{
-          overflowY: 'auto',
-          height: 'calc(100vh - 150px)',
-          minHeight: 0,
-        }}
       >
         {/* Training Exercise */}
         {selectedExercise && <TrainingInProgressExerciseCard />}
@@ -75,7 +96,7 @@ export default function TrainingInProgressSuperset(
         size="small"
         sx={{
           backgroundColor: theme.palette.primary.main,
-          position: 'absolute',
+          position: 'fixed',
           bottom: 60,
           right: 16,
         }}

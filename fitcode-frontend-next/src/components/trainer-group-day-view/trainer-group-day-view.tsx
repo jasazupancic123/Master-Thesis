@@ -214,8 +214,6 @@ export default function TrainerDayView() {
     else setSelectedAthleteWorkloads([]);
   }, [selectedAthlete]);
 
-  if (!group || !cycle) return null;
-
   return (
     <Box width="100%" position="relative">
       {!screenSize.isSmallerThanLaptop && (
