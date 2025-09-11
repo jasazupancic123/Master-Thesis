@@ -2,7 +2,7 @@ import * as Joi from 'joi';
 
 export const validationSchema = Joi.object({
   // Environment
-  NODE_ENV: Joi.string().valid('dev', 'prod', 'test').default('dev'),
+  NODE_ENV: Joi.string().valid('dev', 'production', 'test').default('dev'),
   PORT: Joi.number().default(8080),
 
   // Firebase Admin
@@ -16,8 +16,10 @@ export const validationSchema = Joi.object({
   EVENTARC_EMULATOR: Joi.string().optional(),
 });
 
+export type NodeEnv = 'dev' | 'test' | 'stg' | 'production';
+
 export type Environment = {
-  NODE_ENV: 'dev' | 'prod' | 'test';
+  NODE_ENV: NodeEnv;
   PORT: number;
   ADMIN_EMAIL: string;
   ADMIN_PASSWORD: string;

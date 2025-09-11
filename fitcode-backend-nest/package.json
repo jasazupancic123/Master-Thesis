@@ -7,8 +7,8 @@
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "nest start",
-    "start:prod": "node dist/main",
+    "start": "node dist/main",
+    "deploy": "cross-env NODE_ENV=production && gcloud app deploy",
     "firebase:dev": "firebase emulators:start --only firestore,auth,storage,functions",
     "start:dev": "nest start -b swc --watch",
     "start:debug": "nest start --debug --watch",
@@ -18,8 +18,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/jest/bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json --runInBand",
-    "prepare": "if [ \"$CI\" != \"true\" ]; then cd .. && husky fitcode-backend-nest/.husky; fi",
-    "deploy": "gcloud run deploy fitcode-backend-nest --source . --region europe-west4 --platform managed --allow-unauthenticated --env-vars-file .env.prod.yaml"
+    "prepare": "if [ \"$CI\" != \"true\" ]; then cd .. && husky fitcode-backend-nest/.husky; fi"
   },
   "dependencies": {
     "@golevelup/ts-jest": "^0.7.0",
