@@ -9,5 +9,5 @@ export type FetchOptions = {
 
 export type Query = Record<
   string,
-  string | number | string[] | number[] | Date
+  string | boolean | number | string[] | number[] | Date
 >;

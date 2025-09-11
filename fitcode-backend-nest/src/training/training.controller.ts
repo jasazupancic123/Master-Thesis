@@ -43,12 +43,17 @@ export class TrainingController {
   ) {
     filter = this.commonService.object.clean(filter);
 
-    return await this.trainingService.findAll(user, {
-      groupId: filter.groupId,
-      cycleId: filter.cycleId,
-      ...(filter.from && { from: filter.from }),
-      ...(filter.to && { to: filter.to }),
-    });
+    return await this.trainingService.findAll(
+      user,
+      {
+        groupId: filter.groupId,
+        cycleId: filter.cycleId,
+        ...(filter.from && { from: filter.from }),
+        ...(filter.to && { to: filter.to }),
+      },
+      {},
+      filter?.populate,
+    );
   }
 
   @Get(':trainingId/athlete/:athleteId/prescribed')

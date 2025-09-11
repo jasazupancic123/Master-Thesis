@@ -5,9 +5,9 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { useAuthenticatedAuth } from './auth.provider';
 import type { ChildrenProps } from '@/common/type/props.type';
 import type { SetState, SetStateNullable } from '@/common/type/state.type';
+import { AppController } from '@/controller/app.controller';
 import type { Attribute } from '@/controller/attribute/type/attribute.type';
 import type { Component } from '@/controller/component/type/component.type';
-import { Controller } from '@/controller/controller';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
 import type { Institution } from '@/controller/institution/type/institution.type';
 import type { Method } from '@/controller/method/type/method.type';
@@ -40,7 +40,7 @@ export default function MainProvider(props: ChildrenProps) {
   const { children } = props;
   const { token } = useAuthenticatedAuth();
   const [loading, setLoading] = useState(false);
-  const controller = Controller.getInstance(token);
+  const controller = AppController.getInstance(token);
 
   const [profile, setProfile] = useState<UserEntity | undefined>();
   const [users, setUsers] = useState<User[]>([]);
@@ -55,39 +55,14 @@ export default function MainProvider(props: ChildrenProps) {
       setLoading(true);
 
       try {
-        const [
-          users,
-          exercises,
-          attributes,
-          components,
-          methods,
-          institutions,
-          profile,
-        ] = await Promise.all([
-          controller.user.findAll(),
-          controller.exercise.findAllGlobal(),
-          controller.attribute.findAll(),
-          controller.component.findAll(),
-          controller.method.findAll(),
-          controller.institution.findAll(),
-          controller.user.findProfile(),
-        ]);
-
-        const institutionId = institutions?.[0]?.id || null; // currently, we only support 1 institution
-        if (institutionId) {
-          const institutionalExercises =
-            await controller.exercise.findAllByInstitution(institutionId);
-
-          exercises.push(...institutionalExercises);
-        }
-
-        setProfile(profile!);
-        setUsers(users);
-        setExercises(exercises);
-        setAttributes(attributes);
-        setComponents(components);
-        setMethods(methods);
-        setInstitutions(institutions);
+        const data = await controller.init();
+        setProfile(data.profile);
+        setUsers(data.users);
+        setExercises(data.exercises);
+        setAttributes(data.attributes);
+        setComponents(data.components);
+        setMethods(data.methods);
+        setInstitutions(data.institutions);
       } catch (e) {
         console.error('Error during main initialization:', e);
       } finally {

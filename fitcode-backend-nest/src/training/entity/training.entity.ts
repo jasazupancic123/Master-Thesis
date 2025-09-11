@@ -9,6 +9,8 @@ import {
 } from 'class-validator';
 
 import { BaseEntity } from '@src/common/entity/base.entity';
+import { Cycle } from '@src/group/entity/cycle.entity';
+import { Group } from '@src/group/entity/group.entity';
 import { Institution } from '@src/institution/entity/institution.entity';
 
 import { TrainingComponent } from './training-component.entity';
@@ -29,6 +31,7 @@ export class Training extends BaseEntity {
   @IsOptional()
   @Expose()
   groupId?: string;
+  group?: Group | null;
 
   @IsString()
   @IsNotEmpty()
@@ -36,6 +39,7 @@ export class Training extends BaseEntity {
   @IsOptional()
   @Expose()
   cycleId?: string;
+  cycle?: Cycle | null;
 
   @IsString()
   @IsNotEmpty()

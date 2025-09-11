@@ -28,23 +28,11 @@ export default function TrainingsInitializer(props: ChildrenProps) {
 
       let trainings: Training[] = [];
       try {
-        const allTrainings = await controller.training.findAll();
-        trainings = await Promise.all(
-          (allTrainings as Training[]).map(async (t) => {
-            TrainingService.mapData(t, { components, exercises, methods });
-
-            t.institution = t.institutionId
-              ? await controller.institution.findById(t.institutionId)
-              : undefined;
-
-            t.group = t.groupId
-              ? await controller.group.findById(t.groupId)
-              : undefined;
-
-            t.cycle = t.group?.cycles[0] || undefined;
-            return t;
-          })
-        );
+        trainings = await controller.training.findAll({ populate: true });
+        trainings = trainings.map((t) => {
+          TrainingService.mapData(t, { components, exercises, methods });
+          return t;
+        });
       } catch (error) {
         console.error('Error fetching trainings:', error);
       } finally {
