@@ -24,7 +24,6 @@ export const useGroup = () => useContext(GroupContext)!;
 export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
   const {
     children,
-    groups,
     group: providedGroup,
     institution: providedInstitution,
     trainings: allTrainings,
@@ -52,7 +51,6 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
   const [filteredUsers, setFilteredUsers] = useState(allUsers);
 
   const value: GroupContextProps = {
-    groups,
     filter,
     setFilter,
     institution,

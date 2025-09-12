@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import type React from 'react';
 import toast from 'react-hot-toast';
@@ -6,7 +7,8 @@ import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
-import type { SetState } from '@/common/type/state.type';
+import type { Day } from '@/common/service/util/date.util';
+import type { SetState, SetStateNullable } from '@/common/type/state.type';
 import { handleApiRequest } from '@/common/type/state.type';
 import type { Component } from '@/controller/component/type/component.type';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
@@ -181,3 +183,69 @@ export function deleteSelectedExercises(
   setSelectedExercises([]);
   setDetectedChanges(true);
 }
+
+export const setTrainingOnDayView = (
+  selectedPeriod: {
+    key: Date;
+    value: string;
+  },
+  state: {
+    day: Day;
+    trainings: Training[];
+    component?: TrainingComponent;
+    setTraining: SetStateNullable<Training>;
+    setComponent: SetStateNullable<TrainingComponent>;
+    setLoading: SetState<boolean>;
+    components: Component[];
+    exercises: Exercise[];
+    methods: Method[];
+  }
+) => {
+  const {
+    day,
+    trainings,
+    component,
+    setComponent,
+    setTraining,
+    setLoading,
+    components,
+    exercises,
+    methods,
+  } = state;
+
+  let from: Date, to: Date;
+  if (selectedPeriod.value === 'AM') {
+    from = day.date.startOf('day').toDate();
+    to = day.date.startOf('day').add(12, 'hours').toDate();
+  } else {
+    from = day.date.startOf('day').add(11, 'hours').toDate();
+    to = day.date.endOf('day').toDate();
+  }
+
+  const currentComponentId = component?.id;
+
+  const foundTraining = trainings.find(
+    (t) => dayjs(t.from).isAfter(from) && dayjs(t.to).isBefore(to)
+  );
+
+  if (!foundTraining) {
+    setTraining(undefined);
+    setLoading(false);
+    setComponent(undefined);
+    return;
+  }
+
+  TrainingService.mapData(foundTraining, {
+    components,
+    exercises,
+    methods,
+  });
+
+  const foundComponent = currentComponentId
+    ? foundTraining.components.find((c) => c.id === currentComponentId)
+    : undefined;
+
+  setTraining(foundTraining);
+  setComponent(foundComponent);
+  setLoading(false);
+};

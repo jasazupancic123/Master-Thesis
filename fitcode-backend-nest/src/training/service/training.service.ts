@@ -167,20 +167,39 @@ export class TrainingService implements Permission<Training, Institution> {
       return q;
     });
 
-    if (populate)
+    if (populate) {
+      const institutions: Institution[] = [];
+      const groups: Group[] = [];
+
       trainings.forEach(async (t) => {
-        t.institution = t.institutionId
-          ? await this.institutionService.getDoc({
-              institutionId: t.institutionId,
-            })
-          : undefined;
+        const foundInstitution = institutions.find(
+          (i) => i.id === t.institutionId,
+        );
 
-        t.group = t.groupId
-          ? await this.groupService.findOneById(user, { groupId: t.groupId })
-          : undefined;
+        const institution =
+          foundInstitution || t.institutionId
+            ? await this.institutionService.getDoc({
+                institutionId: t.institutionId,
+              })
+            : undefined;
 
+        const foundGroup = groups.find((g) => g.id === t.groupId);
+
+        const group =
+          foundGroup || t.groupId
+            ? await this.groupService.findOneById(user, { groupId: t.groupId })
+            : undefined;
+
+        t.institution = institution;
+        t.group = group;
         t.cycle = this.groupService.findCycleOrFail(t.cycleId, t.group);
+
+        if (!institutions.find((i) => i.id === institution?.id) && institution)
+          institutions.push(institution);
+        if (!groups.find((g) => g.id === group?.id) && group)
+          groups.push(group);
       });
+    }
 
     return trainings;
   }

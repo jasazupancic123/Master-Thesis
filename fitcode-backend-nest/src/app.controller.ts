@@ -8,6 +8,7 @@ import { RequestUser } from './common/decorator/request-user.decorator';
 import { User } from './common/type/firebase-auth.type';
 import { ComponentService } from './component/component.service';
 import { ExerciseService } from './exercise/service/exercise.service';
+import { GroupService } from './group/group.service';
 import { InstitutionService } from './institution/service/institution.service';
 import { MethodService } from './method/service/method.service';
 import { UserService } from './user/service/user.service';
@@ -23,6 +24,7 @@ export class AppController {
     private readonly componentService: ComponentService,
     private readonly methodService: MethodService,
     private readonly institutionService: InstitutionService,
+    private readonly groupService: GroupService,
   ) {}
 
   @Get()
@@ -41,23 +43,23 @@ export class AppController {
       methods,
       institutions,
       profile,
+      groups,
     ] = await Promise.all([
-      this.userService.findAll(),
+      this.userService.findAll(user),
       this.exerciseService.findAllGlobal(),
       this.attributeService.findAll(),
       this.componentService.findAllFlat(),
       this.methodService.findAll(),
       this.institutionService.findAll(user),
       this.userService.findProfile(user),
+      this.groupService.findAll(user),
     ]);
 
-    institutions
-      .map((i) => i.id)
-      .forEach(async (institutionId) => {
-        exercises.push(
-          ...(await this.exerciseService.findAllByInstitution(institutionId)),
-        );
-      });
+    institutions.forEach(async (institution) => {
+      exercises.push(
+        ...(await this.exerciseService.findAllByInstitution(institution.id)),
+      );
+    });
 
     return {
       profile,
@@ -67,6 +69,7 @@ export class AppController {
       components,
       methods,
       institutions,
+      groups,
     };
   }
 }

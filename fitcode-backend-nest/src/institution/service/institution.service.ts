@@ -134,7 +134,11 @@ export class InstitutionService implements Permission<Institution> {
         ? institution.athleteIds
         : type === GetMembersType.TRAINERS
           ? institution.trainerIds
-          : [...institution.athleteIds, ...institution.trainerIds];
+          : [
+              ...institution.athleteIds,
+              ...institution.trainerIds,
+              institution.ownerId,
+            ];
 
     return this.firebaseService.batchIn('id', ids, collection);
   }

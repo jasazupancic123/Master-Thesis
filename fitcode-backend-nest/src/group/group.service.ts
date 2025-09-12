@@ -20,7 +20,7 @@ import { Permission } from '../common/interface/permission.interface';
 import { CommonService } from '../common/service/common.service';
 import { Create, Update } from '../common/type/entity.type';
 import { User } from '../common/type/firebase-auth.type';
-import { GroupRef, InstitutionRef } from '../common/type/firestore.type';
+import { GroupRef } from '../common/type/firestore.type';
 import { FirebaseService } from '../firebase/firebase.service';
 import { Institution } from '../institution/entity/institution.entity';
 import { InstitutionService } from '../institution/service/institution.service';
@@ -49,12 +49,21 @@ export class GroupService implements Permission<Group, Institution> {
   }
 
   async findAll(user: User): Promise<Group[]> {
+    const institutions = await this.institutionService.findAll(user);
+
     return await this.repository.findAll((q) => {
-      return this.firebaseService.isTrainer(user)
-        ? q.where('ownerId', '==', user.uid)
-        : this.firebaseService.isAthlete(user)
-          ? q.where('membersIds', 'array-contains', user.uid)
-          : q;
+      return this.firebaseService.isAdmin(user) // admin sees all institutions
+        ? q
+        : this.firebaseService.isTrainer(user) ||
+            this.firebaseService.isManager(user)
+          ? q.where(
+              'institutionId',
+              'in',
+              institutions.map((i) => i.id),
+            )
+          : this.firebaseService.isAthlete(user)
+            ? q.where('membersIds', 'array-contains', user.uid)
+            : q;
     });
   }
 
@@ -77,28 +86,13 @@ export class GroupService implements Permission<Group, Institution> {
     return group;
   }
 
-  async findAllByInstitution(
-    user: User,
-    ref: InstitutionRef,
-  ): Promise<Group[]> {
-    const institution = await this.institutionService.getDocByIdOrFail(ref);
-    if (!this.institutionService.canView(user, institution))
-      throw new UnauthorizedException(
-        'You are not allowed to view this institution',
-      );
-
-    return await this.repository.findAll((q) =>
-      q.where('institutionId', '==', ref.institutionId),
-    );
-  }
-
   @LogMethod()
   async create(user: User, input: CreateGroupDto): Promise<Group> {
     const { name, membersIds, institutionId, ownerId } = input;
 
     // validate
     const institution = await this.institutionService.getDocByIdOrFail(input);
-    await this.userService.findAllOrFail({ ids: membersIds });
+    await this.userService.findAllOrFail(user, { ids: membersIds });
     if (!this.institutionService.canEdit(user, institution))
       throw new UnauthorizedException(
         'You are not allowed to create group in this institution',

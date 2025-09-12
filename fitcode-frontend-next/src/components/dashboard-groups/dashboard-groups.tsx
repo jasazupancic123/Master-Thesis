@@ -11,7 +11,6 @@ import { MAX_WIDTH } from '../trainer-day-view/constant';
 import { ADD_GROUP } from '@/common/constant/add-group.constant';
 import { isManager } from '@/common/firebase/firebase-auth.util';
 import type { SetState } from '@/common/type/state.type';
-import { GroupController } from '@/controller/group/group.controller';
 import { GroupService } from '@/controller/group/group.service';
 import type { Cycle } from '@/controller/group/type/cycle.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
@@ -41,9 +40,8 @@ export default function DashboardGroups(props: DashboardGroupsProps) {
 
   const screenSize = useScreenSize();
   const theme = useTheme();
-  const { users } = useMain();
-  const { role, token } = useAuthenticatedAuth();
-  const controller = GroupController.getInstance(token);
+  const { users, groups } = useMain();
+  const { role } = useAuthenticatedAuth();
   const { selectedInstitution, selectedGroup, setSelectedGroup } =
     useDashboard();
 
@@ -56,8 +54,8 @@ export default function DashboardGroups(props: DashboardGroupsProps) {
   useEffect(() => {
     async function fetchGroups() {
       if (!selectedInstitution || selectedInstitution.groups) return;
-      selectedInstitution.groups = await controller.findAllByInstitution(
-        selectedInstitution.id
+      selectedInstitution.groups = groups.filter(
+        (g) => g.institutionId === selectedInstitution.id
       );
 
       if (

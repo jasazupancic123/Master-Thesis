@@ -204,9 +204,13 @@ export class DataSetup extends BaseSetup {
       }),
     );
 
-    const users = await this.userService.findAll({
-      emails: data.map((u) => u.email),
-    });
+    const users = await this.userService.findAll(
+      this.admin,
+      {
+        emails: data.map((u) => u.email),
+      },
+      true,
+    );
 
     const athletes = users.filter((u) =>
       u.customClaims?.role?.includes(UserRole.ATHLETE),
@@ -241,7 +245,11 @@ export class DataSetup extends BaseSetup {
     const groups = data.find((u) => u.email === this.trainer.email)?.groups;
 
     for (const { name, membersIds: emails } of groups) {
-      const members = await this.userService.findAll({ emails });
+      const members = await this.userService.findAll(
+        this.admin,
+        { emails },
+        true,
+      );
       const membersIds = members.map((m) => m.uid);
       const group = await groupService.create(this.manager, {
         name,

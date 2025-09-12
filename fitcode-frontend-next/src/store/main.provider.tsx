@@ -9,6 +9,7 @@ import { AppController } from '@/controller/app.controller';
 import type { Attribute } from '@/controller/attribute/type/attribute.type';
 import type { Component } from '@/controller/component/type/component.type';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
+import type { Group } from '@/controller/group/type/group.type';
 import type { Institution } from '@/controller/institution/type/institution.type';
 import type { Method } from '@/controller/method/type/method.type';
 import type { User, UserEntity } from '@/controller/user/type/user.type';
@@ -21,6 +22,7 @@ export interface MainProviderProps {
   attributes: Attribute[];
   methods: Method[];
   institutions: Institution[];
+  groups: Group[];
 }
 
 interface MainContextProps extends MainProviderProps {
@@ -49,6 +51,7 @@ export default function MainProvider(props: ChildrenProps) {
   const [components, setComponents] = useState<Component[]>([]);
   const [methods, setMethods] = useState<Method[]>([]);
   const [institutions, setInstitutions] = useState<Institution[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
 
   useEffect(() => {
     async function init() {
@@ -56,7 +59,6 @@ export default function MainProvider(props: ChildrenProps) {
 
       try {
         const data = await controller.init();
-        console.log('data:', data);
         setProfile(data.profile);
         setUsers(data.users);
         setExercises(data.exercises);
@@ -64,6 +66,7 @@ export default function MainProvider(props: ChildrenProps) {
         setComponents(data.components);
         setMethods(data.methods);
         setInstitutions(data.institutions);
+        setGroups(data.groups);
       } catch (e) {
         console.error('Error during main initialization:', e);
       } finally {
@@ -72,7 +75,7 @@ export default function MainProvider(props: ChildrenProps) {
     }
 
     init();
-  }, [token]);
+  }, []);
 
   if (loading) return <div>Fetching data...</div>;
 
@@ -90,6 +93,7 @@ export default function MainProvider(props: ChildrenProps) {
     methods,
     setMethods,
     institutions,
+    groups,
   };
 
   return <MainContext.Provider value={value}>{children}</MainContext.Provider>;

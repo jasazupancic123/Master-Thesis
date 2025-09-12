@@ -22,7 +22,6 @@ export type GroupIdPageParams = { params: Promise<{ group_id: string }> };
 export interface GroupIdPageProps {
   group: Group;
   institution: Institution;
-  groups: Group[];
   trainings: Training[];
 }
 
@@ -88,4 +87,6 @@ export type TrainerDayViewContextProps = {
   setSelectedAthleteCompletedWorkloads: SetState<Workload[]>;
   isSettingAthleteWorkloads: React.RefObject<boolean>;
   previousSelectedAthlete: React.RefObject<User | undefined>;
+  loading: boolean;
+  setLoading: SetState<boolean>;
 };
