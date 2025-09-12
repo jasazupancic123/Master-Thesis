@@ -15,6 +15,7 @@ import {
   hasExplicitFill,
   normId,
 } from './state';
+import SorenessIcon from '@/assets/icons/Soreness.svg';
 import type { SetState } from '@/common/type/state.type';
 import { VolWorkSetType } from '@/controller/component/enum/param.enum';
 import type { MuscleTip } from '@/controller/exercise/type/muscle-tip.type';
@@ -543,36 +544,82 @@ export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
                   px: 1,
                 }}
               >
-                <Typography fontSize={14}>Pain level</Typography>
                 {muscleLoads &&
                   setMuscleLoads &&
                   muscleLoads.find(([id]) => id === tip.id) && (
-                    <Slider
-                      valueLabelDisplay="auto"
-                      value={
-                        muscleLoads.find(([id]) => id === tip.id)?.[1] ?? 5
-                      }
-                      onChange={(_, value) => {
-                        if (!setMuscleLoads || !tip.id) return;
-                        const v = value as number;
-                        setMuscleLoads((ml) => {
-                          const existing = ml.find(([id]) => id === tip.id);
-                          if (existing) {
-                            existing[1] = v;
-                            return [...ml];
-                          }
-                          if (!tip.id) return ml;
-                          return [...ml, [tip.id, v]];
-                        });
-                      }}
-                      step={1}
-                      min={0}
-                      max={10}
+                    <Box
+                      width="100%"
+                      display="flex"
+                      justifyContent="center"
+                      alignItems="center"
                       sx={{
-                        width: 200,
-                        color: theme.palette.primary.main,
+                        p: 4,
+                        py: 2,
+                        pb: 0,
+                        position: 'relative',
                       }}
-                    />
+                    >
+                      <Typography
+                        fontSize={12}
+                        sx={{
+                          position: 'absolute',
+                          left: 32,
+                          top: 5,
+                          display: 'flex',
+                          alignItems: 'center',
+                        }}
+                        gap={0.5}
+                      >
+                        <SorenessIcon />
+                        Soreness
+                      </Typography>
+                      <Slider
+                        valueLabelDisplay="auto"
+                        value={
+                          muscleLoads.find(([id]) => id === tip.id)?.[1] ?? 5
+                        }
+                        onChange={(_, value) => {
+                          if (!setMuscleLoads || !tip.id) return;
+                          const v = value as number;
+                          setMuscleLoads((ml) => {
+                            const existing = ml.find(([id]) => id === tip.id);
+                            if (existing) {
+                              existing[1] = v;
+                              return [...ml];
+                            }
+                            if (!tip.id) return ml;
+                            return [...ml, [tip.id, v]];
+                          });
+                        }}
+                        step={1}
+                        min={0}
+                        max={10}
+                        sx={{
+                          width: 200,
+                          color: theme.palette.primary.main,
+                          '& .MuiSlider-track': {
+                            backgroundColor: theme.palette.primary.main,
+                            border: 'none',
+                          },
+                          '& .MuiSlider-thumb': {
+                            width: 14,
+                            height: 14,
+                            backgroundColor: theme.palette.primary.main,
+                          },
+                          '& .MuiSlider-rail': {
+                            backgroundColor: '#ffffff',
+                          },
+                          '& .MuiSlider-valueLabelOpen': {
+                            backgroundColor: 'transparent',
+                            top: 2,
+                            fontSize: 12,
+                          },
+                          '& .MuiSlider-valueLabelOpen:before': {
+                            display: 'none',
+                          },
+                        }}
+                      />
+                    </Box>
                   )}
               </Box>
             )}
