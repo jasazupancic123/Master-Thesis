@@ -28,6 +28,7 @@ interface Props {
   max?: number;
   athleteView?: boolean;
   dissableSettingValue?: boolean;
+  colorToPrimary?: boolean;
 }
 
 export function ExerciseParam(props: Props) {
@@ -49,6 +50,7 @@ export function ExerciseParam(props: Props) {
     max,
     athleteView,
     dissableSettingValue,
+    colorToPrimary,
   } = props;
 
   const group = useGroup() ?? {};
@@ -284,7 +286,9 @@ export function ExerciseParam(props: Props) {
               '& .MuiInputBase-input': {
                 p: 0.5,
                 textAlign: 'center',
-                color: theme.palette.text.primary,
+                color: colorToPrimary
+                  ? `${theme.palette.primary.main} !important`
+                  : theme.palette.text.primary,
                 fontSize: 12,
                 fontWeight: 400,
               },

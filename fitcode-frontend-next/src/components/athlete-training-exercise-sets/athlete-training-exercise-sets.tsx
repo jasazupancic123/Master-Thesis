@@ -1,3 +1,4 @@
+import { CheckCircle } from '@mui/icons-material';
 import { Box, Grid2 } from '@mui/material';
 import { useTheme } from '@mui/material';
 import toast from 'react-hot-toast';
@@ -6,6 +7,7 @@ import { ExerciseParam } from '../exercise-param/exercise-param';
 import LeftRightExerciseText from '../left-right-exercise-text/left-right-exercise-text';
 import { getLAndRValues } from '../training-exercise-card/state';
 import { updateExerciseAttributeValues } from '../training-exercise-card-sets-expanded/state';
+import type { ExerciseSetTracking } from '@/common/type/exercise-set-tracking-state.type';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import { ParamType } from '@/controller/component/enum/param.enum';
 import type { ExerciseSet } from '@/controller/training/type/exercise-set.type';
@@ -23,6 +25,9 @@ interface AthleteTrainingExerciseSetsProps {
   passedSet?: ExerciseSet;
   setIndex?: number;
   supersetIndex?: number;
+  exerciseSetTrackingState?: ExerciseSetTracking[];
+  dissableBottomPadding?: boolean;
+  colorSetsToPrimary?: boolean;
 }
 
 export default function AthleteTrainingExerciseSets(
@@ -42,6 +47,9 @@ export default function AthleteTrainingExerciseSets(
     passedSet,
     setIndex,
     supersetIndex,
+    exerciseSetTrackingState,
+    dissableBottomPadding,
+    colorSetsToPrimary,
   } = props;
 
   return (
@@ -52,7 +60,7 @@ export default function AthleteTrainingExerciseSets(
       gap={0.9}
       sx={{
         backgroundColor: theme.palette.background.dark,
-        pb: 1,
+        pb: !dissableBottomPadding ? 1 : undefined,
         borderBottomRightRadius: borderBottomRadius ? '5px' : 0,
         borderBottomLeftRadius: borderBottomRadius ? '5px' : 0,
       }}
@@ -63,19 +71,27 @@ export default function AthleteTrainingExerciseSets(
 
         return (
           <Grid2
-            container
-            spacing={1}
-            columns={11}
             key={i}
+            container
+            spacing={0.5}
+            columns={11}
             px={screenSize.isSmallerThanLaptop ? 1 : 0}
           >
-            <Grid2 size={1}>
+            <Grid2 size={0.5}>
               <Box
                 display="flex"
                 flexDirection="column"
                 alignItems="center"
                 gap={0.9}
-                mt={i === 0 ? 3.75 : 0.5}
+                mt={
+                  i === 0
+                    ? trainingInProgressView
+                      ? 3.6
+                      : 3.75
+                    : trainingInProgressView
+                      ? 3.75
+                      : 0.5
+                }
               >
                 <Box
                   key="exercise-title"
@@ -148,6 +164,7 @@ export default function AthleteTrainingExerciseSets(
                               param.field === ParamType.VolWorkSets ||
                               (trainingInProgressView && !passedSet)
                             }
+                            colorToPrimary={colorSetsToPrimary && param.field === ParamType.VolWorkSets}
                             param={param}
                             value={
                               lOrR === 'L'
@@ -222,6 +239,20 @@ export default function AthleteTrainingExerciseSets(
                   );
                 })}
               </Box>
+            </Grid2>
+            <Grid2 size={0.5} display="flex" alignItems="flex-end">
+              {exerciseSetTrackingState &&
+                exerciseSetTrackingState.find(
+                  (estState) =>
+                    estState.supersetIndex === supersetIndex &&
+                    estState.exerciseId === exercise.id &&
+                    estState.completedSetNumbers.includes(set.setNumber)
+                ) && (
+                  <CheckCircle
+                    fontSize="small"
+                    sx={{ color: theme.palette.primary.main, mb: 0.45 }}
+                  />
+                )}
             </Grid2>
           </Grid2>
         );

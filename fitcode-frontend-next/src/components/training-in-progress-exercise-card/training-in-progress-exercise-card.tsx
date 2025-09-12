@@ -1,12 +1,12 @@
 import {
   ArrowDropDown,
   ArrowDropUp,
-  ArrowLeft,
-  ArrowRight,
   CameraAltOutlined,
+  CheckCircle,
   KeyboardOutlined,
+  PanoramaFishEye,
 } from '@mui/icons-material';
-import { Box, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Checkbox, IconButton, Stack, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Image from 'next/image';
 import { useState } from 'react';
@@ -14,6 +14,11 @@ import { useState } from 'react';
 import TrapezoidTitle from '../athlete-options-container/trapezoid-title';
 import AthleteTrainingExerciseSets from '../athlete-training-exercise-sets/athlete-training-exercise-sets';
 import SwipeableBox from '../swipeable-box/swipeable-box';
+import {
+  isExerciseSetCompleted,
+  markExerciseSetAsCompleted,
+  unmarkExerciseSetAsCompleted,
+} from './state';
 import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
 import { useScreenSize } from '@/store/screen-size.provider';
@@ -24,7 +29,7 @@ export default function TrainingInProgressExerciseCard() {
   const theme = useTheme();
   const screenSize = useScreenSize();
 
-  const { trainingInProgress } = useTraining();
+  const { trainingInProgress, setTrainingInProgress } = useTraining();
 
   const {
     selectedExercise,
@@ -39,6 +44,7 @@ export default function TrainingInProgressExerciseCard() {
   const [expandedSetsView, setExpandedSetsView] = useState(false);
   const [selectedTrackingMethod, setSelectedTrackingMethod] =
     useState<TrackingMethod>(TrackingMethod.MANUAL);
+  const [imageHeight, setImageHeight] = useState(0);
 
   if (!trainingInProgress || !selectedSuperset || !selectedExercise)
     return null;
@@ -76,8 +82,10 @@ export default function TrainingInProgressExerciseCard() {
 
   return (
     <SwipeableBox
-      onSwipeLeft={goToNextExercise}
-      onSwipeRight={goToPreviousExercise}
+      onSwipeLeft={expandedSetsView ? undefined : goToNextExercise}
+      onSwipeRight={expandedSetsView ? undefined : goToPreviousExercise}
+      onSwipeUp={expandedSetsView ? undefined : goToNextSet}
+      onSwipeDown={expandedSetsView ? undefined : goToPreviousSet}
     >
       <Box
         width="100%"
@@ -85,11 +93,15 @@ export default function TrainingInProgressExerciseCard() {
         display="flex"
         flexDirection="column"
         alignItems="center"
+        sx={{
+          overflowY: expandedSetsView ? 'auto' : undefined,
+          backgroundColor: theme.palette.background.dark,
+          pb: '100px',
+        }}
       >
         <Stack
           p={1}
           px={screenSize.isMobile ? 0 : undefined}
-          pb={2}
           gap={1}
           sx={{
             width: '100% !important',
@@ -116,14 +128,79 @@ export default function TrainingInProgressExerciseCard() {
           />
 
           {/* Exercise Index */}
-          {exerciseIndex !== undefined &&
-            exerciseIndex !== null &&
-            supersetIndex !== undefined &&
-            supersetIndex !== null && (
+
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            alignItems="center"
+            sx={{
+              mt: 0,
+              position: 'relative',
+              px: 2,
+            }}
+          >
+            {exerciseIndex !== undefined &&
+              exerciseIndex !== null &&
+              supersetIndex !== undefined &&
+              supersetIndex !== null && (
+                <Box
+                  display="flex"
+                  flexDirection="column"
+                  sx={{ cursor: 'pointer' }}
+                >
+                  <Typography
+                    variant="caption"
+                    color={theme.palette.background.lightBorder}
+                    sx={{ zIndex: 1 }}
+                  >
+                    {isCircuit
+                      ? `${exerciseIndex + 1}`
+                      : `${supersetIndex + 1}${String.fromCharCode(65 + exerciseIndex).replace('@', '')}`}
+                  </Typography>
+                </Box>
+              )}
+            <Box
+              width="90%"
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+              sx={{
+                position: 'absolute',
+                left: '50%',
+                transform: 'translateX(-50%)',
+              }}
+            >
+              <Typography
+                variant="body1"
+                fontWeight={700}
+                fontSize={12}
+                textTransform="uppercase"
+                color={theme.palette.text.primary}
+                sx={{
+                  textAlign: 'center',
+                  overflow: 'hidden',
+                  whiteSpace: 'nowrap',
+                  textOverflow: 'ellipsis',
+                  maxWidth: '75%',
+                  zIndex: 1,
+                  textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
+                }}
+              >
+                {selectedExercise.exercise?.name || 'Unnamed Exercise'}
+              </Typography>
+              <IconButton
+                onClick={() => setExpandedSetsView(!expandedSetsView)}
+                sx={{
+                  p: 0,
+                  m: 0,
+                  mb: 0.25,
+                }}
+              >
+                {expandedSetsView ? <ArrowDropUp /> : <ArrowDropDown />}
+              </IconButton>
+            </Box>
+            {setIndex !== undefined && (
               <Box
-                position="absolute"
-                top={7.4}
-                left={10}
                 display="flex"
                 flexDirection="column"
                 sx={{ cursor: 'pointer' }}
@@ -133,108 +210,74 @@ export default function TrainingInProgressExerciseCard() {
                   color={theme.palette.background.lightBorder}
                   sx={{ zIndex: 1 }}
                 >
-                  {isCircuit
-                    ? `${exerciseIndex + 1}`
-                    : `${supersetIndex + 1}${String.fromCharCode(65 + exerciseIndex).replace('@', '')}`}
+                  Set {setIndex + 1}
                 </Typography>
               </Box>
             )}
-
-          <Stack direction="row" justifyContent="center" sx={{ mt: 0 }}>
-            <Typography
-              variant="body1"
-              fontWeight={700}
-              fontSize={12}
-              textTransform="uppercase"
-              color={theme.palette.text.primary}
-              sx={{
-                textAlign: 'center',
-                overflow: 'hidden',
-                whiteSpace: 'nowrap',
-                textOverflow: 'ellipsis',
-                maxWidth: '75%',
-                zIndex: 1,
-                textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
-              }}
-            >
-              {selectedExercise.exercise?.name || 'Unnamed Exercise'}
-            </Typography>
           </Stack>
+        </Stack>
 
+        {expandedSetsView && (
           <Box
             width="100%"
             display="flex"
             justifyContent="center"
             alignItems="center"
+            minHeight={imageHeight ? imageHeight : undefined}
             sx={{
               position: 'relative',
               px: 2,
             }}
           >
-            {selectedSuperset.exercises.indexOf(selectedExercise) > 0 && (
-              <IconButton
-                onClick={goToPreviousExercise}
-                sx={{
-                  p: 0,
-                  m: 0,
-                  position: 'absolute',
-                  left: 0,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                }}
-              >
-                <ArrowLeft />
-              </IconButton>
-            )}
             <AthleteTrainingExerciseSets
               training={trainingInProgress?.training}
               exercise={selectedExercise}
               borderBottomRadius={false}
               expanded={expandedSetsView}
               trainingInProgressView
+              supersetIndex={supersetIndex}
+              exerciseSetTrackingState={
+                trainingInProgress.exerciseSetTrackingState
+              }
+              dissableBottomPadding
             />
-            {selectedSuperset.exercises.indexOf(selectedExercise) <
-              selectedSuperset.exercises.length - 1 && (
-              <IconButton
-                onClick={goToNextExercise}
-                sx={{
-                  p: 0,
-                  m: 0,
-                  position: 'absolute',
-                  right: 0,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                }}
-              >
-                <ArrowRight />
-              </IconButton>
-            )}
           </Box>
-
-          <IconButton
-            onClick={() => setExpandedSetsView(!expandedSetsView)}
-            sx={{
-              position: 'absolute',
-              bottom: -8,
-              left: '50%',
-              transform: 'translateX(-50%)',
-            }}
-          >
-            {expandedSetsView ? <ArrowDropUp /> : <ArrowDropDown />}
-          </IconButton>
-        </Stack>
+        )}
 
         {/* Image */}
-        {selectedExercise.exercise?.imageUrl && (
-          <Image
-            src={selectedExercise.exercise.imageUrl}
-            alt={selectedExercise.exercise?.name || ''}
-            width={0}
-            height={0}
-            sizes="100vw"
-            style={{ width: '100%', height: 'auto' }}
-          />
-        )}
+        {!expandedSetsView &&
+          (selectedExercise.exercise?.videoUrl ? (
+            <video
+              muted
+              playsInline
+              controls
+              poster={selectedExercise.exercise?.imageUrl || undefined}
+              style={{ width: '100%', height: 'auto', display: 'block' }}
+              preload="metadata"
+              onLoadedMetadata={(e) => {
+                const v = e.currentTarget;
+                const renderedHeight =
+                  v.getBoundingClientRect().height || v.videoHeight;
+                setImageHeight(renderedHeight);
+              }}
+              src={selectedExercise.exercise.videoUrl}
+            />
+          ) : (
+            selectedExercise.exercise?.imageUrl && (
+              <Image
+                src={selectedExercise.exercise.imageUrl}
+                alt={selectedExercise.exercise?.name || ''}
+                width={0}
+                height={0}
+                sizes="100vw"
+                style={{ width: '100%', height: 'auto' }}
+                onLoadingComplete={(img) => {
+                  const { height } = img;
+                  setImageHeight(height);
+                }}
+              />
+            )
+          ))}
 
         {/* Current tracking exercise set */}
         <Box
@@ -254,30 +297,77 @@ export default function TrainingInProgressExerciseCard() {
           <Box
             width="100%"
             display="flex"
-            justifyContent="flex-end"
+            justifyContent="space-between"
             pt={0.5}
-            pr={2}
+            px={2}
             gap={2}
           >
-            {[TrackingMethod.MANUAL, TrackingMethod.CAMERA].map((method) => (
-              <IconButton
-                key={method}
-                sx={{
-                  p: 0,
-                  m: 0,
-                }}
-                color={
-                  selectedTrackingMethod === method ? 'primary' : 'default'
+            <Box display="flex" alignItems="center" gap={1}>
+              {[TrackingMethod.MANUAL, TrackingMethod.CAMERA].map((method) => (
+                <IconButton
+                  key={method}
+                  sx={{
+                    p: 0,
+                    m: 0,
+                  }}
+                  color={
+                    selectedTrackingMethod === method ? 'primary' : 'default'
+                  }
+                  onClick={() => setSelectedTrackingMethod(method)}
+                >
+                  {method === TrackingMethod.MANUAL ? (
+                    <KeyboardOutlined />
+                  ) : (
+                    <CameraAltOutlined />
+                  )}
+                </IconButton>
+              ))}
+            </Box>
+            <Box display="flex" alignItems="center" gap={0.25}>
+              <Typography fontSize={12}>Done</Typography>
+              <Checkbox
+                icon={<PanoramaFishEye />}
+                checkedIcon={
+                  <CheckCircle sx={{ color: theme.palette.primary.main }} />
                 }
-                onClick={() => setSelectedTrackingMethod(method)}
-              >
-                {method === TrackingMethod.MANUAL ? (
-                  <KeyboardOutlined />
-                ) : (
-                  <CameraAltOutlined />
-                )}
-              </IconButton>
-            ))}
+                size="small"
+                checked={
+                  supersetIndex !== undefined &&
+                  setIndex !== undefined &&
+                  isExerciseSetCompleted(
+                    { exerciseId: selectedExercise.id, supersetIndex },
+                    setIndex + 1,
+                    trainingInProgress.exerciseSetTrackingState
+                  )
+                }
+                sx={{
+                  '&.MuiCheckbox-root': {
+                    px: 0,
+                  },
+                }}
+                onChange={(e) => {
+                  if (supersetIndex === undefined || setIndex === undefined)
+                    return;
+
+                  const isCompleted = e.target.checked;
+                  if (isCompleted) {
+                    markExerciseSetAsCompleted(
+                      { exerciseId: selectedExercise.id, supersetIndex },
+                      setIndex + 1,
+                      trainingInProgress.exerciseSetTrackingState,
+                      setTrainingInProgress
+                    );
+                  } else {
+                    unmarkExerciseSetAsCompleted(
+                      { exerciseId: selectedExercise.id, supersetIndex },
+                      setIndex + 1,
+                      trainingInProgress.exerciseSetTrackingState,
+                      setTrainingInProgress
+                    );
+                  }
+                }}
+              />
+            </Box>
           </Box>
           {setIndex !== undefined &&
             setIndex !== null &&
@@ -292,37 +382,6 @@ export default function TrainingInProgressExerciseCard() {
                   position: 'relative',
                 }}
               >
-                {setIndex > 0 && (
-                  <IconButton
-                    onClick={goToPreviousSet}
-                    sx={{
-                      position: 'absolute',
-                      left: 0,
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      p: 0,
-                      m: 0,
-                    }}
-                  >
-                    <ArrowLeft />
-                  </IconButton>
-                )}
-
-                {setIndex < selectedExercise.sets.length - 1 && (
-                  <IconButton
-                    onClick={goToNextSet}
-                    sx={{
-                      position: 'absolute',
-                      right: 0,
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      p: 0,
-                      m: 0,
-                    }}
-                  >
-                    <ArrowRight />
-                  </IconButton>
-                )}
                 <AthleteTrainingExerciseSets
                   training={trainingInProgress?.training}
                   exercise={selectedExercise}
@@ -332,6 +391,7 @@ export default function TrainingInProgressExerciseCard() {
                   passedSet={selectedExercise.sets[setIndex]}
                   supersetIndex={supersetIndex}
                   setIndex={setIndex}
+                  colorSetsToPrimary
                 />
               </Box>
             )}
