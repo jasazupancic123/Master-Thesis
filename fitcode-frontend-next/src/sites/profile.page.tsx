@@ -21,6 +21,10 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
+import {
+  LINK_DASHBOARD,
+  LINK_TRAININGS,
+} from '@/common/constant/navigation.constant';
 import { SPORTS } from '@/common/constant/sport.constant';
 import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
 import { handleApiRequest } from '@/common/type/state.type';
@@ -28,6 +32,7 @@ import FaceCapture from '@/components/face-capture/face-capture';
 import FileUpload from '@/components/file-upload/file-upload';
 import { Gender } from '@/controller/user/enum/gender.enum';
 import { SportLevel } from '@/controller/user/enum/sport-level.enum';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
 import type { UserEntity } from '@/controller/user/type/user.type';
 import { UserController } from '@/controller/user/user.controller';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
@@ -157,7 +162,15 @@ export default function ProfilePage() {
         >
           <IconButton
             sx={{ p: 0, m: 0 }}
-            onClick={() => router.back()} // goes back to the previous URL
+            onClick={() => {
+              if (
+                customClaims.role.includes(UserRole.TRAINER) ||
+                customClaims.role.includes(UserRole.ADMIN) ||
+                customClaims.role.includes(UserRole.MANAGER)
+              ) {
+                router.push(LINK_DASHBOARD.href);
+              } else router.push(LINK_TRAININGS.href);
+            }}
           >
             <ArrowBack />
           </IconButton>

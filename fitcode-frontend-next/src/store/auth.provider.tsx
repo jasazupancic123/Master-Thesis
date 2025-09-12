@@ -168,9 +168,6 @@ export function withAuth<P extends object>(
 
     if (auth.status !== 'authenticated') return <div>Loading...</div>;
 
-    console.log('current user:', auth.user?.email, auth.role);
-    console.log('allowed roles:', allowedRoles);
-
     if (allowedRoles && !allowedRoles.includes(auth.role)) {
       router.replace(LINK_SIGN_IN.href);
       return null;
