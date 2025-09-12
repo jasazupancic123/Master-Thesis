@@ -82,6 +82,8 @@ export function TrainerDayViewProvider(
   const isSettingAthleteWorkloads = useRef(false);
   const previousSelectedAthlete = useRef<User | undefined>(undefined);
 
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
     if (selectedSubgroup) setSupersets(selectedSubgroup.supersets);
     else if (component) {
@@ -125,9 +127,7 @@ export function TrainerDayViewProvider(
    * Reset selected training and its children on certain changes
    */
   useEffect(() => {
-    setTraining(undefined);
     setSelectedSubgroup(null);
-    setComponent(undefined);
     setSelectedAthlete(undefined);
     setSelectedExercises([]);
   }, [cycle, dateFrom, dateTo]);
@@ -183,6 +183,8 @@ export function TrainerDayViewProvider(
     setSelectedAthleteCompletedWorkloads,
     isSettingAthleteWorkloads,
     previousSelectedAthlete,
+    loading,
+    setLoading,
   };
 
   return (

@@ -29,7 +29,7 @@ export default function DashboardPage() {
   const screenSize = useScreenSize();
   const router = useRouter();
 
-  const { users, profile } = useMain();
+  const { users, profile, groups: allGroups } = useMain();
   const { role, token } = useAuthenticatedAuth();
   const controller = GroupController.getInstance(token);
 
@@ -58,8 +58,8 @@ export default function DashboardPage() {
     if (!selectedInstitution || selectedInstitution.groups) return;
 
     const fetchGroups = async () => {
-      const groups = await controller.findAllByInstitution(
-        selectedInstitution.id
+      const groups = allGroups.filter(
+        (g) => g.institutionId === selectedInstitution.id
       );
 
       for (const group of groups) GroupService.mapMembers(group, users);

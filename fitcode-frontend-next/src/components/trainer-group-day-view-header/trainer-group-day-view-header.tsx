@@ -63,7 +63,9 @@ export default function GroupTrainerDayViewHeader(
       period = new Date(todaysTrainings[0].from).getHours() >= 12 ? 'PM' : 'AM';
     }
 
-    setSelectedPeriod({ key: new Date(), value: period });
+    const newPeriod = { key: new Date(), value: period };
+
+    setSelectedPeriod(newPeriod);
   }, [day]);
 
   interface PeriodSelectProps {
@@ -100,10 +102,11 @@ export default function GroupTrainerDayViewHeader(
                   setDetectedChanges(false);
                   return;
                 }
-                setSelectedPeriod({
+                const newPeriod = {
                   key: new Date(),
                   value: period as 'AM' | 'PM',
-                });
+                };
+                setSelectedPeriod(newPeriod);
               }}
             >
               <Box

@@ -30,7 +30,7 @@ export class Controller {
   }
 
   public static getInstance(token: string): Controller {
-    if (!Controller.instance) Controller.instance = new Controller(token);
+    Controller.instance = new Controller(token);
     return Controller.instance;
   }
 }

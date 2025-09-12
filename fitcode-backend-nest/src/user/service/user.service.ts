@@ -1,5 +1,7 @@
 import {
   BadRequestException,
+  forwardRef,
+  Inject,
   Injectable,
   Logger,
   NotFoundException,
@@ -17,9 +19,11 @@ import {
   UserRef,
   WellnessRef,
 } from '@src/common/type/firestore.type';
+import { Wrapper } from '@src/common/type/wrapper.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { Institution } from '@src/institution/entity/institution.entity';
 import { InstitutionRepository } from '@src/institution/repository/institution.repository';
+import { InstitutionService } from '@src/institution/service/institution.service';
 
 import { FilterUserQueryDto } from '../dto/filter-user-query.dto';
 import { UpdateUserClaimsDto } from '../dto/update-user-claims.dto';
@@ -45,6 +49,8 @@ export class UserService implements Permission<UserEntity, Institution> {
     private readonly institutionRepository: InstitutionRepository,
     private readonly userRepository: UserRepository,
     private readonly wellnessRepository: WellnessRepository,
+    @Inject(forwardRef(() => InstitutionService))
+    private readonly institutionService: Wrapper<InstitutionService>,
   ) {}
 
   async findOne(id: string): Promise<UserEntity | null> {
@@ -96,13 +102,49 @@ export class UserService implements Permission<UserEntity, Institution> {
     return await this.userRepository.findById(ref.uid);
   }
 
-  async findAll(filter?: FilterUserQueryDto): Promise<User[]> {
+  async findAll(
+    user: User,
+    filter?: FilterUserQueryDto,
+    onDataSetup?: boolean,
+  ): Promise<User[]> {
+    const institutions = await this.institutionService.findAll(user);
+    console.log('institutions', institutions);
+    console.log('filter', filter);
+    const allUsers = await this.firebaseService.authUsers(filter);
+    console.log('allUsers', allUsers);
+    console.log('isAdmin', this.firebaseService.isAdmin(user));
+
+    const users = onDataSetup
+      ? allUsers
+      : allUsers.filter((u) =>
+          institutions.some((institution) =>
+            [
+              ...institution.trainerIds,
+              ...institution.athleteIds,
+              institution.ownerId,
+            ].includes(u.uid),
+          ),
+        );
+
+    console.log('finalUsers', users);
+
+    if (this.firebaseService.isAdmin(user))
+      users.push(...allUsers.filter((u) => this.firebaseService.isManager(u)));
+
+    const uniqueUsers = users.filter(
+      (user, index, self) =>
+        index === self.findIndex((u) => u.uid === user.uid),
+    );
+
     if (filter?.ids?.length === 0 || filter?.emails?.length === 0) return [];
-    return await this.firebaseService.authUsers(filter);
+    return uniqueUsers;
   }
 
-  async findAllOrFail(filter?: FilterUserQueryDto): Promise<User[]> {
-    let users = await this.findAll(filter);
+  async findAllOrFail(
+    user: User,
+    filter?: FilterUserQueryDto,
+  ): Promise<User[]> {
+    let users = await this.findAll(user, filter);
     if (filter) {
       /* const length = filter.ids?.length || 0 + filter.emails?.length || 0;
       if (users.length !== length)
