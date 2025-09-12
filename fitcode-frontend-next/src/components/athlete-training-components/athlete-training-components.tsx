@@ -9,6 +9,7 @@ import AthleteSuperset from '../athlete-superset/athlete-superset';
 import MyModal from '../modal/modal';
 import { getComponentIcon } from '@/common/service/util/icons.util';
 import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
+import type { ExerciseSetTracking } from '@/common/type/exercise-set-tracking-state.type';
 import type { SetState } from '@/common/type/state.type';
 import { handleApiRequest } from '@/common/type/state.type';
 import { TrainingController } from '@/controller/training/training.controller';
@@ -202,10 +203,24 @@ export default function AthleteTrainingComponents(
               }
               TrainingService.mapData(training, { exercises });
 
+              const state: ExerciseSetTracking[] =
+                selectedComponent.supersets
+                  .map((s, sIndex) => {
+                    return s.exercises.map((e) => {
+                      return {
+                        exerciseId: e.id,
+                        supersetIndex: sIndex,
+                        completedSetNumbers: [] as number[],
+                      };
+                    });
+                  })
+                  .flat() || [];
+
               setTrainingInProgress({
                 training,
                 selectedComponent: selectedComponent,
                 userId: user.uid,
+                exerciseSetTrackingState: state,
               } as TrainingInProgress);
 
               setView(ExerciseTrainingView.TrainingView);
