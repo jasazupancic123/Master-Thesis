@@ -108,11 +108,7 @@ export class UserService implements Permission<UserEntity, Institution> {
     onDataSetup?: boolean,
   ): Promise<User[]> {
     const institutions = await this.institutionService.findAll(user);
-    console.log('institutions', institutions);
-    console.log('filter', filter);
     const allUsers = await this.firebaseService.authUsers(filter);
-    console.log('allUsers', allUsers);
-    console.log('isAdmin', this.firebaseService.isAdmin(user));
 
     const users = onDataSetup
       ? allUsers
@@ -125,8 +121,6 @@ export class UserService implements Permission<UserEntity, Institution> {
             ].includes(u.uid),
           ),
         );
-
-    console.log('finalUsers', users);
 
     if (this.firebaseService.isAdmin(user))
       users.push(...allUsers.filter((u) => this.firebaseService.isManager(u)));
