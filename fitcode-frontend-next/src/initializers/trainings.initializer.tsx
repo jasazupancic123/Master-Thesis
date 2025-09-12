@@ -18,14 +18,11 @@ export default function TrainingsInitializer(props: ChildrenProps) {
   const controller = Controller.getInstance(token);
   const { children } = props;
 
-  const [loading, setLoading] = useState(false);
   const [state, setState] = useState<TrainingProviderProps | null>(null);
-  const { exercises, components, methods } = useMain();
+  const { exercises, components, methods, groups } = useMain();
 
   useEffect(() => {
     async function init() {
-      setLoading(true);
-
       let trainings: Training[] = [];
       try {
         trainings = await controller.training.findAll({ populate: true });
@@ -35,8 +32,6 @@ export default function TrainingsInitializer(props: ChildrenProps) {
         });
       } catch (error) {
         console.error('Error fetching trainings:', error);
-      } finally {
-        setLoading(false);
       }
 
       // sort by ascending date
@@ -52,7 +47,11 @@ export default function TrainingsInitializer(props: ChildrenProps) {
         })
         .sort((a, b) => {
           return dayjs(a.from).diff(dayjs(b.from));
-        });
+        })
+        .map((t) => ({
+          ...t,
+          group: groups.find((g) => g.id === t.groupId),
+        }));
 
       // sort by descending date
       const completedTrainings = trainings
@@ -63,7 +62,11 @@ export default function TrainingsInitializer(props: ChildrenProps) {
         })
         .sort((a, b) => {
           return dayjs(b.from).diff(dayjs(a.from));
-        });
+        })
+        .map((t) => ({
+          ...t,
+          group: groups.find((g) => g.id === t.groupId),
+        }));
 
       const context: TrainingProviderProps = {
         plannedTrainings,

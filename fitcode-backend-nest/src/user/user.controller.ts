@@ -27,8 +27,8 @@ export class UserController {
 
   @Get()
   @Auth()
-  async findAll(@Query() query: FilterUserQueryDto) {
-    return await this.userService.findAll(query);
+  async findAll(@RequestUser() user: User, @Query() query: FilterUserQueryDto) {
+    return await this.userService.findAll(user, query);
   }
 
   @Get(':id')

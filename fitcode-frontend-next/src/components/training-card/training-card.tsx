@@ -1,44 +1,20 @@
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import {
-  Box,
-  IconButton,
-  MenuItem,
-  Select,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Box, TextField, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
-import {
-  DatePicker,
-  DesktopDatePicker,
-  LocalizationProvider,
-} from '@mui/x-date-pickers';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import type { Dayjs } from 'dayjs';
-import dayjs from 'dayjs';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
-import MyModal from '../modal/modal';
 import type { TrainingCardProps } from '../trainer-day-view/props';
-import { handleCopyTraining } from '../trainer-day-view/state';
 import TrainingComponentLayout from '../training-component-layout/training-component-layout';
-import { TrainingController } from '@/controller/training/training.controller';
-import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useGroup } from '@/store/group.provider';
-import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 
 export default function TrainingCard(props: TrainingCardProps) {
-  const { components, exercises, methods } = useMain();
-  const { trainings, cycle, setTrainings } = useGroup();
+  const { cycle } = useGroup();
 
   const {
     training,
     setTraining,
     selectedPeriod,
-    setSelectedPeriod,
     selectedSubgroup,
     setSelectedSubgroup,
     component,
@@ -47,16 +23,10 @@ export default function TrainingCard(props: TrainingCardProps) {
   } = useTrainerDayViewContext();
 
   const theme = useTheme();
-  const auth = useAuthenticatedAuth();
-  const controller = TrainingController.getInstance(auth.token);
 
   const { day } = props;
 
   const screenSize = useScreenSize();
-  const router = useRouter();
-  const [showCopyTrainingModal, setShowCopyTrainingModal] = useState(false);
-  const [justClikedOnCopyDate, setJustClickedOnCopyDate] = useState(false);
-  const [datePickerOpen, setDatePickerOpen] = useState(false); // Keep it open
 
   useEffect(() => {
     if (!component || !selectedSubgroup || !selectedSubgroup) return;
@@ -70,23 +40,6 @@ export default function TrainingCard(props: TrainingCardProps) {
       setSelectedSubgroup(null);
     }
   }, [component]);
-
-  const isDateUnavailable = (date: Dayjs): boolean => {
-    const thisCycleTrainings = trainings.filter((t) => t.cycleId === cycle?.id);
-
-    if (
-      cycle &&
-      (dayjs(cycle.from).isAfter(date) || dayjs(cycle.to).isBefore(date))
-    )
-      return true;
-
-    return thisCycleTrainings.some(
-      (t) =>
-        dayjs(t.from).isSame(date, 'day') &&
-        ((dayjs(t.from).hour() < 12 && selectedPeriod?.value === 'AM') ||
-          (dayjs(t.from).hour() >= 12 && selectedPeriod?.value === 'PM'))
-    );
-  };
 
   if (!training) return null;
 
@@ -267,114 +220,6 @@ export default function TrainingCard(props: TrainingCardProps) {
           </>
         )}
       </Box>
-
-      <MyModal
-        isOpen={showCopyTrainingModal}
-        setIsOpen={(open) => setShowCopyTrainingModal(open)}
-        cancelText="Close"
-        onCancel={() => {
-          setShowCopyTrainingModal(false);
-          setSelectedPeriod({ key: new Date(), value: 'AM' });
-          setDatePickerOpen(false);
-        }}
-      >
-        <Box display="flex" flexDirection="column" gap={2}>
-          {/* Dropdown for AM/PM Selection */}
-          <Typography variant="h6">Select Training Period</Typography>
-          <Select
-            value={selectedPeriod}
-            onChange={(event) =>
-              setSelectedPeriod({
-                key: new Date(),
-                value: event.target.value as 'AM' | 'PM',
-              })
-            }
-            fullWidth
-          >
-            <MenuItem value="AM">AM</MenuItem>
-            <MenuItem value="PM">PM</MenuItem>
-          </Select>
-
-          {/* Date Picker */}
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <Typography variant="h6">Select Date</Typography>
-            {!screenSize.isLandscapeMobile ? (
-              <DesktopDatePicker
-                open={datePickerOpen}
-                value={null}
-                onChange={(newDate) => {
-                  if (!newDate || !selectedPeriod) return;
-                  setJustClickedOnCopyDate(true);
-                  handleCopyTraining(
-                    controller,
-                    { newDate, period: selectedPeriod.value },
-                    {
-                      router,
-                      training,
-                      cycle: cycle!,
-                      setTrainings,
-                      day,
-                      components,
-                      exercises,
-                      methods,
-                    }
-                  );
-                }}
-                onClose={() => {
-                  if (!justClikedOnCopyDate) {
-                    setDatePickerOpen(false);
-                    setJustClickedOnCopyDate(false);
-                  }
-                }}
-                shouldDisableDate={isDateUnavailable}
-                slotProps={{
-                  textField: {
-                    disabled: true,
-                    InputProps: {
-                      endAdornment: (
-                        <IconButton
-                          onClick={() => setDatePickerOpen(!datePickerOpen)}
-                        >
-                          <CalendarMonthIcon />
-                        </IconButton>
-                      ),
-                    },
-                  },
-                  openPickerButton: {
-                    sx: { display: 'flex !important' },
-                    onClick: () => {
-                      setDatePickerOpen(false);
-                    },
-                  },
-                }}
-              />
-            ) : (
-              <DatePicker
-                value={null}
-                onChange={(newDate) => {
-                  if (!newDate || !selectedPeriod) return;
-
-                  handleCopyTraining(
-                    controller,
-                    { newDate, period: selectedPeriod.value },
-                    {
-                      router,
-                      training,
-                      cycle: cycle!,
-                      setTrainings,
-                      day,
-                      components,
-                      exercises,
-                      methods,
-                    }
-                  );
-                }}
-                shouldDisableDate={isDateUnavailable}
-              />
-            )}
-          </LocalizationProvider>
-        </Box>
-      </MyModal>
     </Box>
   );
 }

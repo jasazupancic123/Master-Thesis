@@ -2,6 +2,7 @@ import { Global, Module } from '@nestjs/common';
 
 import { ChangeLogModule } from '@src/change-log/change-log.module';
 import { InstitutionRepository } from '@src/institution/repository/institution.repository';
+import { InstitutionService } from '@src/institution/service/institution.service';
 
 import { Wellness } from './entity/wellness.entity';
 import { UserRepository } from './repository/user.repository';
@@ -16,6 +17,7 @@ import { UserController } from './user.controller';
   providers: [
     WellnessRepository,
     InstitutionRepository,
+    InstitutionService,
     UserRepository,
     UserService,
   ],

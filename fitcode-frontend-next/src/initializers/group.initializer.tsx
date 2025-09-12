@@ -16,21 +16,23 @@ export default function GroupInitializer({ children }: ChildrenProps) {
   const pathname = usePathname();
   const [state, setState] = useState<GroupIdPageProps | null>(null);
 
-  const { components, exercises, methods } = useMain();
+  const { components, exercises, methods, groups, institutions } = useMain();
   const auth = useAuthenticatedAuth();
   const controller = Controller.getInstance(auth.token);
 
   useEffect(() => {
     async function init() {
       const groupId = pathname.split('/')[2];
-      const group = await controller.group.findById(groupId);
+      const group = groups.find((g) => g.id === groupId);
       if (!group) return notFound();
 
-      const [groups, institution, trainings] = await Promise.all([
-        controller.group.findAll(),
-        controller.institution.findById(group.institutionId),
-        controller.training.findAll({ groupId }),
-      ]);
+      const institution = institutions.find(
+        (i) => i.id === group.institutionId
+      );
+
+      if (!institution) return notFound();
+
+      const trainings = await controller.training.findAll({ groupId });
 
       const mappedTrainings = trainings.map((t) => {
         TrainingService.mapData(t, {
@@ -45,7 +47,6 @@ export default function GroupInitializer({ children }: ChildrenProps) {
       const context: GroupIdPageProps = {
         group,
         institution,
-        groups,
         trainings: mappedTrainings,
       };
 

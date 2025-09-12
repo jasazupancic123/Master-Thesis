@@ -84,7 +84,8 @@ export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
 
   const { setUsers } = useMain();
 
-  const { data: fetchedUsers, refetch } = useNestBackendFetch<User[]>(`/user`);
+  const { data: fetchedUsers, refetch: refetchUsers } =
+    useNestBackendFetch<User[]>(`/user`);
 
   useEffect(() => {
     if (fetchedUsers) setUsers(fetchedUsers);
@@ -93,7 +94,7 @@ export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
   const value: DashboardContextProps = {
     filter,
     setFilter,
-    refetchUsers: refetch,
+    refetchUsers,
     institutions,
     setInstitutions,
     selectedInstitution,
