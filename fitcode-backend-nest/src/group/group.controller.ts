@@ -37,17 +37,6 @@ export class GroupController {
     return await this.groupService.findOneByIdOrFail(user, { groupId });
   }
 
-  @Get('institution/:institutionId')
-  @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ADMIN])
-  async findAllByInstitution(
-    @RequestUser() user: User,
-    @Param('institutionId') institutionId: string,
-  ) {
-    return await this.groupService.findAllByInstitution(user, {
-      institutionId,
-    });
-  }
-
   @Post()
   @Auth([UserRole.MANAGER])
   async create(@RequestUser() user: User, @Body() body: CreateGroupDto) {

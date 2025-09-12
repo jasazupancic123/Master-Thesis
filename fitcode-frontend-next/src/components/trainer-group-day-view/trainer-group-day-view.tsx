@@ -13,12 +13,11 @@ import { DIVIDER_HEIGHT, MAX_WIDTH } from '../trainer-day-view/constant';
 import GroupTrainerDayViewHeader from '../trainer-group-day-view-header/trainer-group-day-view-header';
 import GroupTrainerDayViewTrainings from '../trainer-group-day-view-trainings/group-trainer-day-view-trainings';
 import VerticalLinesBorders from '../vertical-lines-borders/vertical-lines-borders';
-import { handleUpdateMultipleTrainings } from './state';
+import { handleUpdateMultipleTrainings, setTrainingOnDayView } from './state';
 import { CommonService } from '@/common/service/common.service';
 import { handleApiRequest } from '@/common/type/state.type';
 import TrainingMembers from '@/components/training-members/training-members';
 import { TrainingController } from '@/controller/training/training.controller';
-import { TrainingService } from '@/controller/training/training.service';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
@@ -39,6 +38,7 @@ export default function TrainerDayView() {
   const { components, exercises, methods } = useMain();
   const {
     group,
+    trainings,
     cycle,
     setCycle,
     setTrainings,
@@ -58,6 +58,7 @@ export default function TrainerDayView() {
     selectedAthlete,
     setSelectedAthleteCompletedWorkloads: setSelectedAthleteWorkloads,
     isSettingAthleteWorkloads,
+    setLoading,
   } = useTrainerDayViewContext();
 
   const [isUpdatingTraining, setIsUpdatingTraining] = useState(false);
@@ -82,7 +83,21 @@ export default function TrainerDayView() {
   }, [day]);
 
   const [isSticky, setIsSticky] = useState(false);
-  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!selectedPeriod) return;
+    setTrainingOnDayView(selectedPeriod, {
+      day,
+      trainings,
+      component,
+      setTraining,
+      setComponent,
+      setLoading,
+      components,
+      exercises,
+      methods,
+    });
+  }, [selectedPeriod]);
 
   useEffect(() => {
     setDateFrom(day.date.startOf('day'));
@@ -120,50 +135,56 @@ export default function TrainerDayView() {
     if (!component) setSelectedSubgroup(null);
   }, [component]);
 
-  useEffect(() => {
-    if (!selectedPeriod) return;
+  // useEffect(() => {
+  //   if (!selectedPeriod) return;
 
-    let from: Date, to: Date;
-    if (selectedPeriod.value === 'AM') {
-      from = day.date.startOf('day').toDate();
-      to = day.date.startOf('day').add(12, 'hours').toDate();
-    } else {
-      from = day.date.startOf('day').add(11, 'hours').toDate();
-      to = day.date.endOf('day').toDate();
-    }
+  //   let from: Date, to: Date;
+  //   if (selectedPeriod.value === 'AM') {
+  //     from = day.date.startOf('day').toDate();
+  //     to = day.date.startOf('day').add(12, 'hours').toDate();
+  //   } else {
+  //     from = day.date.startOf('day').add(11, 'hours').toDate();
+  //     to = day.date.endOf('day').toDate();
+  //   }
 
-    handleApiRequest(
-      router,
-      () =>
-        controller.findAll({
-          groupId: group.id,
-          cycleId: cycle?.id,
-          from,
-          to,
-        }),
-      (trainings) => {
-        setComponent(undefined);
+  //   handleApiRequest(
+  //     router,
+  //     () =>
+  //       controller.findAll({
+  //         groupId: group.id,
+  //         cycleId: cycle?.id,
+  //         from,
+  //         to,
+  //       }),
+  //     (trainings) => {
+  //       const currentComponentId = component?.id;
 
-        const foundTraining = trainings?.[0];
-        if (!foundTraining) {
-          setTraining(undefined);
-          setLoading(false);
-          return;
-        }
+  //       const foundTraining = trainings?.[0];
+  //       if (!foundTraining) {
+  //         setTraining(undefined);
+  //         setLoading(false);
+  //         setComponent(undefined);
+  //         return;
+  //       }
 
-        TrainingService.mapData(foundTraining, {
-          components,
-          exercises,
-          methods,
-        });
+  //       TrainingService.mapData(foundTraining, {
+  //         components,
+  //         exercises,
+  //         methods,
+  //       });
 
-        setTraining(foundTraining);
-        setLoading(false);
-      },
-      undefined,
-      undefined
-    );
-  }, [selectedPeriod]);
+  //       const foundComponent = currentComponentId
+  //         ? foundTraining.components.find((c) => c.id === currentComponentId)
+  //         : undefined;
+
+  //       setTraining(foundTraining);
+  //       setComponent(foundComponent);
+  //       setLoading(false);
+  //     },
+  //     undefined,
+  //     undefined
+  //   );
+  // }, [selectedPeriod]);
 
   useEffect(() => {
     // fetch only for selectedAthlete, group avg is already on training itself
@@ -399,7 +420,7 @@ export default function TrainerDayView() {
         </Box>
         {/* Trainings for the day */}
         <Box maxWidth={MAX_WIDTH} mx="auto">
-          <GroupTrainerDayViewTrainings loading={loading} />
+          <GroupTrainerDayViewTrainings />
         </Box>
       </Box>
       {isUpdatingTraining && (

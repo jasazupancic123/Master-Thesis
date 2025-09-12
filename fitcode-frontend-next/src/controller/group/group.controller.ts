@@ -29,12 +29,6 @@ export class GroupController extends BaseController {
     return this.api.get<Group>(`/${groupId}`, { token: this.getToken() });
   }
 
-  async findAllByInstitution(institutionId: string) {
-    return this.api.get<Group[]>(`/institution/${institutionId}`, {
-      token: this.getToken(),
-    });
-  }
-
   async create(body: CreateGroup) {
     return this.api.post<Group>('/', body, { token: this.getToken() });
   }

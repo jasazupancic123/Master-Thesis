@@ -6,17 +6,9 @@ import TrainingCard from '@/components/training-card/training-card';
 import { useGroup } from '@/store/group.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 
-interface GroupTrainerDayViewTrainingsProps {
-  loading: boolean;
-}
-
-export default function GroupTrainerDayViewTrainings(
-  props: GroupTrainerDayViewTrainingsProps
-) {
-  const { loading } = props;
-
+export default function GroupTrainerDayViewTrainings() {
   const { cycle } = useGroup();
-  const { day, training } = useTrainerDayViewContext();
+  const { loading, day, training } = useTrainerDayViewContext();
 
   return !cycle ? (
     <Box
