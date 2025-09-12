@@ -56,6 +56,7 @@ export default function MainProvider(props: ChildrenProps) {
 
       try {
         const data = await controller.init();
+        console.log('data:', data);
         setProfile(data.profile);
         setUsers(data.users);
         setExercises(data.exercises);
