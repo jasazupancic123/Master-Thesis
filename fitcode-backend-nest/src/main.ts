@@ -7,6 +7,7 @@ import { json, urlencoded } from 'express';
 
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filter/all-exception.filter';
+import { TimingInterceptor } from './common/interceptor/timing.interceptor';
 import { CommonService } from './common/service/common.service';
 import { DataSetup } from './common/setup/data.setup';
 import { SwaggerSetup } from './common/setup/swagger.setup';
@@ -38,6 +39,7 @@ async function createApp(): Promise<INestApplication> {
     }),
   );
 
+  app.useGlobalInterceptors(new TimingInterceptor());
   app.useGlobalFilters(
     new AllExceptionsFilter(
       httpAdapter.httpAdapter as unknown as HttpAdapterHost,
