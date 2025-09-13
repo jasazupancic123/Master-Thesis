@@ -17,12 +17,11 @@ export default function TrainingsInitializer(props: ChildrenProps) {
   const controller = Controller.getInstance(token);
   const { children } = props;
 
+  const { exercises, components, methods, groups } = useMain();
   const [state, setState] = useState<TrainingProviderProps>({
     plannedTrainings: [],
     completedTrainings: [],
   });
-
-  const { exercises, components, methods, groups } = useMain();
 
   useEffect(() => {
     async function init() {
@@ -79,7 +78,7 @@ export default function TrainingsInitializer(props: ChildrenProps) {
       setState(context);
     }
 
-    init();
+    init().then();
   }, []);
 
   return <TrainingProvider {...state}>{children}</TrainingProvider>;
