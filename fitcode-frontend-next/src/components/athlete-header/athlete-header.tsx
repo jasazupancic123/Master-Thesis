@@ -1,6 +1,5 @@
 'use client';
 
-import Menu from '@mui/icons-material/Menu';
 import { Avatar, IconButton, Tooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
@@ -37,15 +36,13 @@ export default function AthleteHeader() {
         sx={{
           backgroundColor: theme.palette.background.light,
           justifyContent: 'space-between',
-          px: screenSize.isMobile
-            ? 1.5
-            : screenSize.isSmallerThanLaptop
-              ? 5
-              : 10,
+          px: screenSize.isMobile ? 1.5 : 6,
+          pr: screenSize.isMobile ? 1.5 : 1,
           position: 'relative',
           alignItems: 'center',
         }}
       >
+        {!screenSize.isLandscapeMobile && !screenSize.isMobile && <Sidebar />}
         <Typography
           sx={{
             color: 'text.primary',
@@ -98,7 +95,7 @@ export default function AthleteHeader() {
               }}
             />
           </IconButton>
-          <IconButton
+          {/* <IconButton
             sx={{
               p: 0,
               m: 0,
@@ -106,7 +103,7 @@ export default function AthleteHeader() {
             }}
           >
             <Menu sx={{ fontSize: 24 }} />
-          </IconButton>
+          </IconButton> */}
         </Box>
       </Box>
 

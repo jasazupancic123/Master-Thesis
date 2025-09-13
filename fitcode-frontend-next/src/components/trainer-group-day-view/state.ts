@@ -193,6 +193,8 @@ export const setTrainingOnDayView = (
     day: Day;
     trainings: Training[];
     component?: TrainingComponent;
+    selectedSubgroup: Subgroup | null;
+    setSelectedSubgroup: SetState<Subgroup | null>;
     setTraining: SetStateNullable<Training>;
     setComponent: SetStateNullable<TrainingComponent>;
     setLoading: SetState<boolean>;
@@ -205,6 +207,8 @@ export const setTrainingOnDayView = (
     day,
     trainings,
     component,
+    selectedSubgroup,
+    setSelectedSubgroup,
     setComponent,
     setTraining,
     setLoading,
@@ -223,6 +227,7 @@ export const setTrainingOnDayView = (
   }
 
   const currentComponentId = component?.id;
+  const currentSubgroupId = selectedSubgroup?.id;
 
   const foundTraining = trainings.find(
     (t) => dayjs(t.from).isAfter(from) && dayjs(t.to).isBefore(to)
@@ -244,8 +249,11 @@ export const setTrainingOnDayView = (
   const foundComponent = currentComponentId
     ? foundTraining.components.find((c) => c.id === currentComponentId)
     : undefined;
+  const foundSubgroup =
+    foundComponent?.subgroups.find((sg) => sg.id === currentSubgroupId) || null;
 
-  setTraining(foundTraining);
   setComponent(foundComponent);
+  setSelectedSubgroup(foundSubgroup);
+  setTraining(foundTraining);
   setLoading(false);
 };
