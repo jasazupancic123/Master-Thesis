@@ -3,7 +3,6 @@
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 
-import Alert from '../components/alert/alert';
 import type { ChildrenProps } from '@/common/type/props.type';
 import { Controller } from '@/controller/controller';
 import { TrainingService } from '@/controller/training/training.service';
@@ -18,7 +17,11 @@ export default function TrainingsInitializer(props: ChildrenProps) {
   const controller = Controller.getInstance(token);
   const { children } = props;
 
-  const [state, setState] = useState<TrainingProviderProps | null>(null);
+  const [state, setState] = useState<TrainingProviderProps>({
+    plannedTrainings: [],
+    completedTrainings: [],
+  });
+
   const { exercises, components, methods, groups } = useMain();
 
   useEffect(() => {
@@ -79,6 +82,5 @@ export default function TrainingsInitializer(props: ChildrenProps) {
     init();
   }, []);
 
-  if (!state) return <Alert type="loading" />;
   return <TrainingProvider {...state}>{children}</TrainingProvider>;
 }

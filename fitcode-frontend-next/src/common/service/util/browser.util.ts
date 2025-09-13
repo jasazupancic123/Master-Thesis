@@ -1,24 +1,11 @@
 export class BrowserUtil {
-  getClientCookie(key: string): string | null {
-    const name = key + '=';
-    const decodedCookie = decodeURIComponent(document.cookie);
-    const ca = decodedCookie.split(';');
-
-    for (let i = 0; i < ca.length; i++) {
-      let c = ca[i];
-      while (c.charAt(0) === ' ') c = c.substring(1);
-      if (c.indexOf(name) === 0) return c.substring(name.length, c.length);
-    }
-
-    return null;
-  }
-
-  setClientCookie(key: string, value: string, expirationDays = 1): void {
-    const expirationDate = new Date(
-      new Date().setDate(new Date().getDate() + expirationDays)
+  setClientCookie(key: string, value: string, maxAgeSeconds = 3600): void {
+    const expiresAt = Date.now() + maxAgeSeconds * 1000;
+    const cookieValue = encodeURIComponent(
+      JSON.stringify({ value, expiresAt })
     );
 
-    document.cookie = `${key}=${value}; expires=${expirationDate.toUTCString()}; path=/`;
+    document.cookie = `${key}=${cookieValue}; path=/; SameSite=Lax`;
   }
 
   removeClientCookie(key: string): void {

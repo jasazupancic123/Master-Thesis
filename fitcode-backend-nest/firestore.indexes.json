@@ -1,4 +1,68 @@
 {
-  "indexes": [],
+  "indexes": [
+    {
+      "collectionGroup": "exercises",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "ownerId", "order": "ASCENDING" },
+        { "fieldPath": "componentIds", "arrayConfig": "CONTAINS" }
+      ]
+    },
+    {
+      "collectionGroup": "wellness",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "wellness",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "date", "order": "ASCENDING" },
+        { "fieldPath": "weight", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "trainings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "ownerId", "order": "ASCENDING" },
+        { "fieldPath": "groupId", "order": "ASCENDING" },
+        { "fieldPath": "from", "order": "ASCENDING" },
+        { "fieldPath": "to", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "trainings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "membersIds", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "groupId", "order": "ASCENDING" },
+        { "fieldPath": "from", "order": "ASCENDING" },
+        { "fieldPath": "to", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "training-workload",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "exerciseId", "order": "ASCENDING" },
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "intWork1ValueL", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "training-workload",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "trainingId", "order": "ASCENDING" },
+        { "fieldPath": "componentId", "order": "ASCENDING" },
+        { "fieldPath": "userId", "order": "ASCENDING" }
+      ]
+    }
+  ],
   "fieldOverrides": []
 }

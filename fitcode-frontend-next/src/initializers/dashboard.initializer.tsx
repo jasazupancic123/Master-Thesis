@@ -14,7 +14,6 @@ import { useMain } from '@/store/main.provider';
 
 export default function DashboardInitializer({ children }: ChildrenProps) {
   const [state, setState] = useState<DashboardPageProps | null>(null);
-
   const { users, institutions: allInstitutions, groups: allGroups } = useMain();
 
   const [institutionId, setInstitutionId] = useState<string | null>(null);
@@ -44,44 +43,31 @@ export default function DashboardInitializer({ children }: ChildrenProps) {
   }, [fetchedMembers]);
 
   useEffect(() => {
-    async function init() {
-      try {
-        const institutions = InstitutionService.mapUsers(
-          allInstitutions,
-          users
-        );
+    const institutions = InstitutionService.mapUsers(allInstitutions, users);
 
-        const selectedInstitution = institutions?.[0] ?? null;
-        if (selectedInstitution) {
-          const groups = allGroups.filter(
-            (g) => g.institutionId === selectedInstitution.id
-          );
+    const selectedInstitution = institutions?.[0] ?? null;
+    if (selectedInstitution) {
+      const groups = allGroups.filter(
+        (g) => g.institutionId === selectedInstitution.id
+      );
 
-          for (const group of groups) GroupService.mapMembers(group, users);
+      for (const group of groups) GroupService.mapMembers(group, users);
 
-          selectedInstitution.groups = groups;
-          setInstitutionId(selectedInstitution.id); //this triggers member fetch
-        }
-
-        setState({
-          institutions,
-          selectedInstitution,
-          members: members || [],
-          refetchMembers,
-        });
-      } catch (e) {
-        console.error('Error during dashboard initialization:', e);
-        setState(null);
-      }
+      selectedInstitution.groups = groups;
+      setInstitutionId(selectedInstitution.id); //this triggers member fetch
     }
 
-    init().then();
+    setState({
+      institutions,
+      selectedInstitution,
+      members: members || [],
+      refetchMembers,
+    });
   }, []);
 
-  if (!state) return <div>Loading dashboard...</div>;
-
+  if (!state) return null;
   return (
-    <DashboardProvider {...state}>
+    <DashboardProvider {...state!}>
       <DashboardLayout>{children}</DashboardLayout>
     </DashboardProvider>
   );

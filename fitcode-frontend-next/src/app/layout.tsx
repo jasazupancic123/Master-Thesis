@@ -17,8 +17,6 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: ChildrenProps) {
-  // await connection(); // this disables pre-rendering of all pages
-
   return (
     <html lang="en" style={{ scrollBehavior: 'smooth' }}>
       <body className={inter.className}>
