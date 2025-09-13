@@ -36,7 +36,10 @@ export default function SignInPage() {
     try {
       const result = await firebaseAuthUtil.login(email, password);
       const { role } = await handleUserChange(result.user);
-      if (role) router.push(SIGN_IN_REDIRECT_MAPPER[role]?.href);
+      if (role) {
+        toast.success('Signed in successfully');
+        router.push(SIGN_IN_REDIRECT_MAPPER[role]?.href);
+      }
     } catch (e) {
       toast.error((e as Error).message);
     }

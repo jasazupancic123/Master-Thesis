@@ -127,7 +127,7 @@ export function TrainerDayViewProvider(
    * Reset selected training and its children on certain changes
    */
   useEffect(() => {
-    setSelectedSubgroup(null);
+    // setSelectedSubgroup(null);
     setSelectedAthlete(undefined);
     setSelectedExercises([]);
   }, [cycle, dateFrom, dateTo]);

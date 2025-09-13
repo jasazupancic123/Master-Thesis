@@ -100,9 +100,9 @@ export default function Sidebar() {
         <Box
           sx={{
             position: 'fixed',
-            top: 0,
+            top: -1,
             left: 0,
-            height: '50px',
+            height: '60px',
             width: '60px',
             display: 'flex',
             alignItems: 'center',
