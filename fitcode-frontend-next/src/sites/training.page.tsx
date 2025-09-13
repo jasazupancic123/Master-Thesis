@@ -35,6 +35,13 @@ export default function TrainingPage() {
     Training[]
   >([]);
 
+  console.log(
+    'planned length',
+    plannedTrainings.length,
+    'filtered length',
+    filteredPlannedTrainings.length
+  );
+
   const [filter, setFilter] = useState<CompletedPlanned>(
     CompletedPlanned.PLANNED
   );
@@ -62,6 +69,10 @@ export default function TrainingPage() {
   const [hasMoreCompleted, setHasMoreCompleted] = useState(true);
 
   useEffect(() => {
+    handlePaginateTrainings().then();
+  }, [filter, plannedTrainings, completedTrainings]);
+
+  /* useEffect(() => {
     if (loading || view === ExerciseTrainingView.TrainingView) return;
 
     if (
@@ -97,7 +108,7 @@ export default function TrainingPage() {
     filteredCompletedTrainings.length,
     filter,
     view,
-  ]);
+  ]); */
 
   useEffect(() => {
     if (!isLoaded) return;
