@@ -78,6 +78,7 @@
     "@testing-library/user-event": "^14.6.1",
     "@types/date-arithmetic": "^4.1.4",
     "@types/jest": "^30.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24",
     "@types/qs": "^6.14.0",
     "@types/react": "^19",
