@@ -9,8 +9,8 @@ type SwipeableBoxProps = {
   onSwipeUp?: () => void;
   onSwipeDown?: () => void;
   direction?: 'horizontal' | 'vertical' | 'both';
-  threshold?: number; // px to trigger a swipe
-  lockThreshold?: number; // px to lock axis
+  threshold?: number;
+  lockThreshold?: number;
 };
 
 export default function SwipeableBox({
@@ -23,7 +23,6 @@ export default function SwipeableBox({
   direction = 'both',
   children,
 }: SwipeableBoxProps) {
-  // track both axes
   const startX = useRef<number | null>(null);
   const startY = useRef<number | null>(null);
   const lastX = useRef(0);
@@ -31,64 +30,54 @@ export default function SwipeableBox({
   const [dragging, setDragging] = useState(false);
   const axisRef = useRef<'x' | 'y' | null>(null);
 
-  const handlePointerDown: React.PointerEventHandler<HTMLDivElement> = (e) => {
-    (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
-    startX.current = e.clientX;
-    startY.current = e.clientY;
-    lastX.current = e.clientX;
-    lastY.current = e.clientY;
+  const begin = (x: number, y: number) => {
+    startX.current = x;
+    startY.current = y;
+    lastX.current = x;
+    lastY.current = y;
     axisRef.current = null;
     setDragging(true);
   };
 
-  const handlePointerMove: React.PointerEventHandler<HTMLDivElement> = (e) => {
+  const move = (x: number, y: number) => {
     if (!dragging || startX.current === null || startY.current === null) return;
+    lastX.current = x;
+    lastY.current = y;
 
-    lastX.current = e.clientX;
-    lastY.current = e.clientY;
-
-    // lock axis early for better feel
     if (!axisRef.current) {
       const dx = Math.abs(lastX.current - startX.current);
       const dy = Math.abs(lastY.current - startY.current);
-
       if (dx >= lockThreshold || dy >= lockThreshold) {
         axisRef.current = dx > dy ? 'x' : 'y';
       }
     }
   };
 
-  const handlePointerEnd: React.PointerEventHandler<HTMLDivElement> = () => {
+  const end = () => {
     if (startX.current === null || startY.current === null) return;
 
     const dx = lastX.current - startX.current;
     const dy = lastY.current - startY.current;
-
     const absDx = Math.abs(dx);
     const absDy = Math.abs(dy);
-
     const dominantAxis = axisRef.current ?? (absDx >= absDy ? 'x' : 'y');
 
-    // reset
+    // reset first to avoid re-entrancy
     setDragging(false);
     startX.current = null;
     startY.current = null;
     axisRef.current = null;
 
-    // obey the `direction` prop
     if (direction === 'horizontal' && absDx >= threshold) {
       if (dx <= -threshold) onSwipeLeft?.();
       else if (dx >= threshold) onSwipeRight?.();
       return;
     }
-
     if (direction === 'vertical' && absDy >= threshold) {
       if (dy <= -threshold) onSwipeUp?.();
       else if (dy >= threshold) onSwipeDown?.();
       return;
     }
-
-    // direction === 'both' (or unspecified)
     if (dominantAxis === 'x' && absDx >= threshold) {
       if (dx <= -threshold) onSwipeLeft?.();
       else if (dx >= threshold) onSwipeRight?.();
@@ -101,8 +90,41 @@ export default function SwipeableBox({
     }
   };
 
-  // touch-action: for 'both' we generally need 'none' to receive both axes.
-  // if you want the page to still scroll in the non-dominant axis, set 'pan-x' or 'pan-y'.
+  // ---- Pointer Events (Android / desktop, works on modern iOS too but we also add touch fallback)
+  const onPointerDown: React.PointerEventHandler<HTMLDivElement> = (e) => {
+    // Avoid setPointerCapture on iOS – it’s buggy in scrollables.
+    begin(e.clientX, e.clientY);
+  };
+  const onPointerMove: React.PointerEventHandler<HTMLDivElement> = (e) => {
+    move(e.clientX, e.clientY);
+  };
+  const onPointerEnd: React.PointerEventHandler<HTMLDivElement> = () => end();
+
+  // ---- Touch fallback for iOS Safari weirdness
+  const onTouchStart: React.TouchEventHandler<HTMLDivElement> = (e) => {
+    const t = e.touches[0];
+    begin(t.clientX, t.clientY);
+  };
+  const onTouchMove: React.TouchEventHandler<HTMLDivElement> = (e) => {
+    if (!dragging) return;
+    const t = e.touches[0];
+    move(t.clientX, t.clientY);
+
+    // Once we've locked an axis that conflicts with page scroll, stop the browser from stealing the gesture.
+    const axis = axisRef.current;
+    if (
+      direction === 'horizontal' ||
+      (direction === 'both' && axis === 'x') ||
+      direction === 'vertical' ||
+      (direction === 'both' && axis === 'y')
+    ) {
+      e.preventDefault(); // React sets touchmove as non-passive, so this works.
+    }
+  };
+  const onTouchEnd: React.TouchEventHandler<HTMLDivElement> = () => end();
+  const onTouchCancel: React.TouchEventHandler<HTMLDivElement> = () => end();
+
+  // Prefer keeping some native scrolling when possible
   const touchAction =
     direction === 'horizontal'
       ? 'pan-y'
@@ -115,12 +137,19 @@ export default function SwipeableBox({
       sx={{
         touchAction,
         userSelect: 'none',
+        WebkitUserSelect: 'none',
+        WebkitTapHighlightColor: 'transparent',
+        overscrollBehavior: 'contain',
       }}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerEnd}
-      onPointerCancel={handlePointerEnd}
-      onPointerLeave={dragging ? handlePointerEnd : undefined}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerEnd}
+      onPointerCancel={onPointerEnd}
+      onPointerLeave={dragging ? onPointerEnd : undefined}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+      onTouchCancel={onTouchCancel}
     >
       {children}
     </Box>

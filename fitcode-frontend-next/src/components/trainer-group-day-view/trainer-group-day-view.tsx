@@ -54,6 +54,7 @@ export default function TrainerDayView() {
     component,
     setComponent,
     selectedPeriod,
+    selectedSubgroup,
     setSelectedSubgroup,
     selectedAthlete,
     setSelectedAthleteCompletedWorkloads: setSelectedAthleteWorkloads,
@@ -84,6 +85,9 @@ export default function TrainerDayView() {
 
   const [isSticky, setIsSticky] = useState(false);
 
+  {
+    /* Sets new training when new period or day is clicked */
+  }
   useEffect(() => {
     if (!selectedPeriod) return;
     setTrainingOnDayView(selectedPeriod, {
@@ -96,6 +100,8 @@ export default function TrainerDayView() {
       components,
       exercises,
       methods,
+      selectedSubgroup,
+      setSelectedSubgroup,
     });
   }, [selectedPeriod]);
 
@@ -134,57 +140,6 @@ export default function TrainerDayView() {
   useEffect(() => {
     if (!component) setSelectedSubgroup(null);
   }, [component]);
-
-  // useEffect(() => {
-  //   if (!selectedPeriod) return;
-
-  //   let from: Date, to: Date;
-  //   if (selectedPeriod.value === 'AM') {
-  //     from = day.date.startOf('day').toDate();
-  //     to = day.date.startOf('day').add(12, 'hours').toDate();
-  //   } else {
-  //     from = day.date.startOf('day').add(11, 'hours').toDate();
-  //     to = day.date.endOf('day').toDate();
-  //   }
-
-  //   handleApiRequest(
-  //     router,
-  //     () =>
-  //       controller.findAll({
-  //         groupId: group.id,
-  //         cycleId: cycle?.id,
-  //         from,
-  //         to,
-  //       }),
-  //     (trainings) => {
-  //       const currentComponentId = component?.id;
-
-  //       const foundTraining = trainings?.[0];
-  //       if (!foundTraining) {
-  //         setTraining(undefined);
-  //         setLoading(false);
-  //         setComponent(undefined);
-  //         return;
-  //       }
-
-  //       TrainingService.mapData(foundTraining, {
-  //         components,
-  //         exercises,
-  //         methods,
-  //       });
-
-  //       const foundComponent = currentComponentId
-  //         ? foundTraining.components.find((c) => c.id === currentComponentId)
-  //         : undefined;
-
-  //       setTraining(foundTraining);
-  //       setComponent(foundComponent);
-  //       setLoading(false);
-  //     },
-  //     undefined,
-  //     undefined
-  //   );
-  // }, [selectedPeriod]);
 
   useEffect(() => {
     // fetch only for selectedAthlete, group avg is already on training itself
