@@ -1,6 +1,6 @@
 'use client';
 
-import { Box, CircularProgress } from '@mui/material';
+import { Box } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 
 import { CompletedPlanned } from '@/common/enum/completed-planned.enum';
@@ -35,18 +35,9 @@ export default function TrainingPage() {
     Training[]
   >([]);
 
-  console.log(
-    'planned length',
-    plannedTrainings.length,
-    'filtered length',
-    filteredPlannedTrainings.length
-  );
-
   const [filter, setFilter] = useState<CompletedPlanned>(
     CompletedPlanned.PLANNED
   );
-
-  const [loading, setLoading] = useState(false);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
@@ -65,8 +56,9 @@ export default function TrainingPage() {
       pages: Math.ceil(completedTrainings.length / PAGE_SIZE),
       total: completedTrainings.length,
     });
-  const [hasMorePlanned, setHasMorePlanned] = useState(true);
-  const [hasMoreCompleted, setHasMoreCompleted] = useState(true);
+
+  const [_hasMorePlanned, setHasMorePlanned] = useState(true);
+  const [_hasMoreCompleted, setHasMoreCompleted] = useState(true);
 
   useEffect(() => {
     handlePaginateTrainings().then();
@@ -197,12 +189,6 @@ export default function TrainingPage() {
         ))}
 
         <Box ref={sentinelRef} height={'1px'} />
-
-        {loading && (
-          <Box display="flex" justifyContent="center" py={2}>
-            <CircularProgress size={24} />
-          </Box>
-        )}
       </Box>
     </Box>
   ) : (
