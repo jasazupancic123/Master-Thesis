@@ -4,8 +4,12 @@ import type { User } from '@firebase/auth';
 import { useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useState } from 'react';
 
-import { getFirebaseAuth } from '@/common/config/firebase.config';
+import {
+  FIREBASE_AUTH_ID_TOKEN,
+  getFirebaseAuth,
+} from '@/common/config/firebase.config';
 import { LINK_SIGN_IN } from '@/common/constant/navigation.constant';
+import { CommonService } from '@/common/service/common.service';
 import type { AuthContextType, AuthStatus } from '@/common/type/context.type';
 import type { ChildrenProps } from '@/common/type/props.type';
 import type { UserRole } from '@/controller/user/enum/user-role.enum';
@@ -22,6 +26,8 @@ export type AuthState = {
   role?: UserRole;
   customClaims?: CustomClaims;
 };
+
+const browser = CommonService.instance.browser;
 
 export const AuthProvider = (props: ChildrenProps) => {
   const { children } = props;
@@ -79,6 +85,8 @@ export const AuthProvider = (props: ChildrenProps) => {
         role: undefined,
         customClaims: undefined,
       };
+
+      browser.removeClientCookie(FIREBASE_AUTH_ID_TOKEN);
     } else {
       // user is logged in
       const { token, claims } = await user.getIdTokenResult();
@@ -92,6 +100,8 @@ export const AuthProvider = (props: ChildrenProps) => {
         role,
         customClaims,
       };
+
+      browser.setClientCookie(FIREBASE_AUTH_ID_TOKEN, token);
     }
 
     setState(newState);

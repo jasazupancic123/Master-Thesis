@@ -36,18 +36,19 @@ import { UserRole } from '@/controller/user/enum/user-role.enum';
 import type { UserEntity } from '@/controller/user/type/user.type';
 import { UserController } from '@/controller/user/user.controller';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
-import { useMain } from '@/store/main.provider';
+import { useProfile } from '@/store/profile.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 const DEFAULT_MARGIN = 1;
 
 export default function ProfilePage() {
   const { user, setDisplayName, customClaims, token } = useAuthenticatedAuth();
-  const { profile: profileGlobal, setProfile: setProfileGlobal } = useMain();
 
   const theme = useTheme();
   const router = useRouter();
   const screenSize = useScreenSize();
+
+  const { profile: profileGlobal, setProfile: setProfileGlobal } = useProfile();
 
   const [profile, setProfile] = useState<UserEntity>({
     ...profileGlobal,

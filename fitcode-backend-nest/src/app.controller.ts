@@ -55,11 +55,13 @@ export class AppController {
       this.groupService.findAll(user),
     ]);
 
-    institutions.forEach(async (institution) => {
-      exercises.push(
-        ...(await this.exerciseService.findAllByInstitution(institution.id)),
-      );
-    });
+    const institutionExercises = await Promise.all(
+      institutions.map((inst) =>
+        this.exerciseService.findAllByInstitution(inst.id),
+      ),
+    );
+
+    institutionExercises.forEach((list) => exercises.push(...list));
 
     return {
       profile,

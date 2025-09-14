@@ -151,12 +151,7 @@ export class TrainingService implements Permission<Training, Institution> {
         q = q.where('membersIds', 'array-contains', user.uid);
 
       // filter by other params
-      if (filter?.institutionId)
-        q = q.where('institutionId', '==', filter.institutionId);
       if (filter?.groupId) q = q.where('groupId', '==', filter.groupId);
-      if (filter?.cycleId) q = q.where('cycleId', '==', filter.cycleId);
-
-      // filter by date
       if (filter?.from)
         q = q.where('from', '>=', Timestamp.fromDate(new Date(filter.from)));
       if (filter?.to)
@@ -164,6 +159,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
       q = q.orderBy('from', 'asc');
       if (options?.limit) q = q.limit(options.limit);
+
       return q;
     });
 
@@ -171,7 +167,7 @@ export class TrainingService implements Permission<Training, Institution> {
       const institutions: Institution[] = [];
       const groups: Group[] = [];
 
-      trainings.forEach(async (t) => {
+      for (const t of trainings) {
         const foundInstitution = institutions.find(
           (i) => i.id === t.institutionId,
         );
@@ -184,21 +180,18 @@ export class TrainingService implements Permission<Training, Institution> {
             : undefined;
 
         const foundGroup = groups.find((g) => g.id === t.groupId);
-
         const group =
           foundGroup || t.groupId
             ? await this.groupService.findOneById(user, { groupId: t.groupId })
             : undefined;
 
+        if (!foundInstitution && institution) institutions.push(institution);
+        if (!foundGroup && group) groups.push(group);
+
         t.institution = institution;
         t.group = group;
         t.cycle = this.groupService.findCycleOrFail(t.cycleId, t.group);
-
-        if (!institutions.find((i) => i.id === institution?.id) && institution)
-          institutions.push(institution);
-        if (!groups.find((g) => g.id === group?.id) && group)
-          groups.push(group);
-      });
+      }
     }
 
     return trainings;

@@ -4,7 +4,6 @@ import {
   forwardRef,
   Inject,
   Injectable,
-  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { addMinutes, subMinutes } from 'date-fns';
@@ -60,8 +59,6 @@ import {
 
 @Injectable()
 export class TrainingPlanService {
-  private readonly logger = new Logger(TrainingPlanService.name);
-
   constructor(
     private readonly commonService: CommonService,
     private readonly attributeService: AttributeService,

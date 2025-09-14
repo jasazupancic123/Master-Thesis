@@ -9,6 +9,8 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
+import { FirebaseService } from '@src/firebase/firebase.service';
+
 import { Auth } from '../common/decorator/auth.decorator';
 import { RequestUser } from '../common/decorator/request-user.decorator';
 import type { User } from '../common/type/firebase-auth.type';
@@ -23,7 +25,10 @@ import { UserService } from './service/user.service';
 @ApiTags('User')
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly firebaseService: FirebaseService,
+    private readonly userService: UserService,
+  ) {}
 
   @Get()
   @Auth()
