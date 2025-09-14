@@ -12,25 +12,33 @@ import type { DashboardPageProps } from '@/store/dashboard.provider';
 import { DashboardProvider } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 
-export default function DashboardInitializer({ children }: ChildrenProps) {
+type WithInstitutionProps = {
+  institutionId: string;
+};
+
+function withInstitution<T>(
+  Component: React.ComponentType<T & WithInstitutionProps>
+) {
+  return function WrappedComponent(props: T) {
+    const { institutions } = useMain();
+    if (institutions.length === 0) return null;
+    return <Component {...props} institutionId={institutions[0]?.id} />;
+  };
+}
+
+export default withInstitution(DashboardInitializer);
+
+function DashboardInitializer({
+  children,
+  institutionId,
+}: ChildrenProps & WithInstitutionProps) {
   const [state, setState] = useState<DashboardPageProps | null>(null);
-
   const { users, institutions: allInstitutions, groups: allGroups } = useMain();
-
-  const [institutionId, setInstitutionId] = useState<string | null>(null);
   const [members, setMembers] = useState<UserEntity[]>([]);
 
   const { data: fetchedMembers, refetch: refetchMembers } = useNestBackendFetch<
     UserEntity[]
   >(`/institution/${institutionId}/find/all`, { enabled: !!institutionId }); // only fetch when id is defined
-
-  useEffect(() => {
-    if (!state || !state.selectedInstitution) {
-      setInstitutionId(null);
-      return;
-    }
-    setInstitutionId(state.selectedInstitution.id);
-  }, [state, state?.selectedInstitution]);
 
   useEffect(() => {
     if (fetchedMembers) {
@@ -44,44 +52,31 @@ export default function DashboardInitializer({ children }: ChildrenProps) {
   }, [fetchedMembers]);
 
   useEffect(() => {
-    async function init() {
-      try {
-        const institutions = InstitutionService.mapUsers(
-          allInstitutions,
-          users
-        );
+    const institutions = InstitutionService.mapUsers(allInstitutions, users);
+    const selectedInstitution = institutions.find(
+      (inst) => inst.id === institutionId
+    );
 
-        const selectedInstitution = institutions?.[0] ?? null;
-        if (selectedInstitution) {
-          const groups = allGroups.filter(
-            (g) => g.institutionId === selectedInstitution.id
-          );
+    if (!selectedInstitution) return;
 
-          for (const group of groups) GroupService.mapMembers(group, users);
+    const groups = allGroups.filter(
+      (g) => g.institutionId === selectedInstitution.id
+    );
 
-          selectedInstitution.groups = groups;
-          setInstitutionId(selectedInstitution.id); //this triggers member fetch
-        }
+    for (const group of groups) GroupService.mapMembers(group, users);
+    selectedInstitution.groups = groups;
 
-        setState({
-          institutions,
-          selectedInstitution,
-          members: members || [],
-          refetchMembers,
-        });
-      } catch (e) {
-        console.error('Error during dashboard initialization:', e);
-        setState(null);
-      }
-    }
-
-    init().then();
+    setState({
+      institutions,
+      selectedInstitution,
+      members: members || [],
+      refetchMembers,
+    });
   }, []);
 
-  if (!state) return <div>Loading dashboard...</div>;
-
+  if (!state) return null;
   return (
-    <DashboardProvider {...state}>
+    <DashboardProvider {...state!}>
       <DashboardLayout>{children}</DashboardLayout>
     </DashboardProvider>
   );

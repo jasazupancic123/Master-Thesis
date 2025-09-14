@@ -1,3 +1,4 @@
+import { AppController } from './app.controller';
 import { AttributeController } from './attribute/attribute.controller';
 import { ComponentController } from './component/component.controller';
 import { ExerciseController } from './exercise/exercise.controller';
@@ -17,6 +18,7 @@ export class Controller {
   public method: MethodController;
   public training: TrainingController;
   public user: UserController;
+  public app: AppController;
 
   private constructor(token: string) {
     this.attribute = AttributeController.getInstance(token);
@@ -27,6 +29,7 @@ export class Controller {
     this.method = MethodController.getInstance(token);
     this.training = TrainingController.getInstance(token);
     this.user = UserController.getInstance(token);
+    this.app = AppController.getInstance(token);
   }
 
   public static getInstance(token: string): Controller {

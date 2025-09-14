@@ -7,6 +7,9 @@ export const validationSchema = Joi.object({
     .default('dev'),
   PORT: Joi.number().default(8080),
 
+  // Deploy
+  FRONTEND_WHITELIST: Joi.string().optional(), // comma separated
+
   // Firebase Admin
   ADMIN_EMAIL: Joi.string().required(),
   ADMIN_PASSWORD: Joi.string().required(),
@@ -27,6 +30,7 @@ export type NodeEnv = 'dev' | 'test' | 'stg' | 'production';
 export type Environment = {
   NODE_ENV: NodeEnv;
   PORT: number;
+  FRONTEND_WHITELIST: string | undefined;
   ADMIN_EMAIL: string;
   ADMIN_PASSWORD: string;
   FIREBASE_CREDENTIALS: string;

@@ -1,11 +1,20 @@
-import type { User } from '@/controller/user/type/user.type';
+import type { User, UserEntity } from '@/controller/user/type/user.type';
 
-let cachedProfile: User | null = null;
+let cachedUser: User | null = null;
+let cachedProfile: UserEntity | null = null;
 
-export function getCachedProfile() {
+export function getCachedUser(): User | null {
+  return cachedUser;
+}
+
+export function setCachedUser(profile: User) {
+  cachedUser = profile;
+}
+
+export function getCachedProfile(): UserEntity | null {
   return cachedProfile;
 }
 
-export function setCachedProfile(profile: User) {
+export function setCachedProfile(profile: UserEntity) {
   cachedProfile = profile;
 }

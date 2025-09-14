@@ -1,3 +1,5 @@
+'use client';
+
 import { Box, Container } from '@mui/material';
 
 import type { ChildrenProps } from '@/common/type/props.type';
