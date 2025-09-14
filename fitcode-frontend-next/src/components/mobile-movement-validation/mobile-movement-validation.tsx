@@ -18,11 +18,14 @@ import {
 } from '@/controller/pose-detection/type/exercise-start-condition';
 import { KeypointId } from '@/controller/pose-detection/enum/keypoint-id';
 import { KeypointValueType } from '@/controller/pose-detection/enum/keypoint-value-type';
+import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
 
 const DEBUG = false;
 
 export default function MobileMovementValidation() {
-  const keypointHistory = new KeypointHistory([], undefined, true); // infinite frames
+  const keypointHistoryRef = useRef<KeypointHistory>(
+    new KeypointHistory([], 100, true)
+  ); // first make buffer of 100 frames, later set buffer size to undefined to get all recording of exercise
   const keypointBuffer = new KeypointHistory([], 100); // 100 frames buffer
 
   const exerciseStartConditions: ExerciseStartCondition[] = [
@@ -30,28 +33,28 @@ export default function MobileMovementValidation() {
       keypointId: KeypointId.LEFT_EYE,
       type: KeypointValueType.POSITION_Y,
       direction: ConditionDirection.ANY,
-      duration: 1500, // ms
-      distance: 0.05, // meters
+      duration: 750, // ms
+      distance: 0.025, // meters
     },
     {
       keypointId: KeypointId.RIGHT_EYE,
       type: KeypointValueType.POSITION_Y,
       direction: ConditionDirection.ANY,
-      duration: 1500, // ms
-      distance: 0.05, // meters
+      duration: 750, // ms
+      distance: 0.025, // meters
     },
     {
       keypointId: KeypointId.LEFT_SHOULDER,
       type: KeypointValueType.POSITION_Y,
       direction: ConditionDirection.ANY,
-      duration: 1500, // ms
+      duration: 750, // ms
       distance: 0.025, // meters
     },
     {
       keypointId: KeypointId.RIGHT_SHOULDER,
       type: KeypointValueType.POSITION_Y,
       direction: ConditionDirection.ANY,
-      duration: 1500, // ms
+      duration: 750, // ms
       distance: 0.025, // meters
     },
   ];
@@ -76,8 +79,53 @@ export default function MobileMovementValidation() {
   const prevFrameTimeRef = useRef<number | null>(null);
   const lastVideoTimeRef = useRef(-1);
   const frameCountRef = useRef(0);
+  const firstFrameInRecordingMode = useRef(false);
 
   const screenSize = useScreenSize();
+
+  {
+    /* <HELPER TO DRAW GRAPH>*/
+  }
+  const [spaceDown, setSpaceDown] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space' || e.key === ' ') {
+        e.preventDefault(); // stop page scroll
+        if (!spaceDown) setSpaceDown(true);
+
+        const keypointIds = [
+          KeypointId.LEFT_EYE,
+          KeypointId.RIGHT_EYE,
+          KeypointId.LEFT_SHOULDER,
+          KeypointId.RIGHT_SHOULDER,
+        ];
+
+        keypointIds.forEach((id) => {
+          KeypointUtil.drawKeypointValuesGraph(
+            keypointHistoryRef.current.history,
+            id,
+            KeypointValueType.POSITION_Y,
+            ConditionDirection.ANY,
+            0.02, // meters to move
+            avgFps.current ? avgFps.current.value : 30
+          );
+        });
+      }
+    };
+
+    // TS types allow options as EventListenerOptions
+    window.addEventListener('keydown', onKeyDown, { passive: false });
+
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [spaceDown]);
+  {
+    /* </HELPER TO DRAW GRAPH>*/
+  }
 
   // ✅ (1) Mobile console: load Eruda when requested
   useEffect(() => {
@@ -157,6 +205,7 @@ export default function MobileMovementValidation() {
           statusRef,
           model,
           poseLandmarker,
+          keypointHistory: keypointHistoryRef.current,
           keypointBuffer,
           videoRef,
           canvasRef,
@@ -170,6 +219,7 @@ export default function MobileMovementValidation() {
             ? avgFps.current.value <= 15
             : screenSize.isMobile,
           exerciseStartConditions,
+          firstFrameInRecordingMode,
           setFps,
           setStatusMessage,
         }),

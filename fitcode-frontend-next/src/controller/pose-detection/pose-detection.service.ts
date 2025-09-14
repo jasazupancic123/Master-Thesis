@@ -56,7 +56,7 @@ export class PoseDetectionService {
 
       if (!keypoint1 || !keypoint2) return condition.errorMessage;
 
-      const { value1, value2 } = KeypointUtil.getKeypointValueByType(
+      const { value1, value2 } = KeypointUtil.getKeypointsValuesByType(
         keypoint1,
         keypoint2,
         condition.relation

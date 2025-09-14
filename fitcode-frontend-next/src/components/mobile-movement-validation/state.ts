@@ -1,5 +1,6 @@
 import { SetState } from '@/common/type/state.type';
 import { KeypointHistory } from '@/controller/pose-detection/class/keypoint-history';
+import { POSE_DETECTION_CONSTRAINTS } from '@/controller/pose-detection/const/pose-detection-constrains.const';
 import { STATUS_MESSAGES } from '@/controller/pose-detection/const/status-messages';
 import { DetectionStatus } from '@/controller/pose-detection/enum/detection-status';
 import { PoseModel } from '@/controller/pose-detection/enum/pose-model.enum';
@@ -100,6 +101,7 @@ export const predictWebcam = async (state: {
   prevFrameTimeRef: RefObject<number | null>;
   lastVideoTimeRef: RefObject<number>;
   frameCountRef: RefObject<number>;
+  firstFrameInRecordingMode: RefObject<boolean>;
   hasWeakFps: boolean;
   avgFps: RefObject<{ value: number; count: number } | null>;
   setFps: SetState<number | null>;
@@ -119,6 +121,7 @@ export const predictWebcam = async (state: {
     prevFrameTimeRef,
     lastVideoTimeRef,
     frameCountRef,
+    firstFrameInRecordingMode,
     hasWeakFps,
     avgFps,
     setFps,
@@ -186,9 +189,27 @@ export const predictWebcam = async (state: {
         frameCountRef.current
       );
 
-      if (statusRef.current === DetectionStatus.RECORDING) {
-        keypointHistory.insertFrame(keypoints);
+      if (
+        firstFrameInRecordingMode.current === false &&
+        statusRef.current === DetectionStatus.RECORDING
+      ) {
+        // save all frames when in recording mode
+        firstFrameInRecordingMode.current = true;
+        keypointHistory.bufferLength = undefined;
       }
+
+      // if we are in recording state, don't update the buffer's size
+      if (statusRef.current === DetectionStatus.RECORDING)
+        keypointHistory.insertFrame(keypoints);
+      else {
+        // only keep KEYPOINT_BUFFER_DURATION_MS of frames in history
+        keypointHistory.insertFrame(
+          keypoints,
+          avgFps.current,
+          POSE_DETECTION_CONSTRAINTS.KEYPOINT_BUFFER_DURATION_MS * 1000
+        );
+      }
+
       keypointBuffer.insertFrame(keypoints, avgFps.current, hasWeakFps ? 2 : 3); // keep 3 seconds of history
 
       PoseDetectionService.checkStatus(
