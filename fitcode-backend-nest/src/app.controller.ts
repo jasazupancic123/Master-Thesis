@@ -3,6 +3,7 @@ import { ApiTags } from '@nestjs/swagger';
 
 import { AppService } from './app.service';
 import { AttributeService } from './attribute/service/attribute.service';
+import { AuthService } from './auth/auth.service';
 import { Auth } from './common/decorator/auth.decorator';
 import { RequestUser } from './common/decorator/request-user.decorator';
 import { User } from './common/type/firebase-auth.type';
@@ -11,14 +12,15 @@ import { ExerciseService } from './exercise/service/exercise.service';
 import { GroupService } from './group/group.service';
 import { InstitutionService } from './institution/service/institution.service';
 import { MethodService } from './method/service/method.service';
-import { UserService } from './user/service/user.service';
+import { ProfileService } from './profile/service/profile.service';
 
 @ApiTags('General')
 @Controller()
 export class AppController {
   constructor(
     private readonly appService: AppService,
-    private readonly userService: UserService,
+    private readonly authService: AuthService,
+    private readonly profileService: ProfileService,
     private readonly exerciseService: ExerciseService,
     private readonly attributeService: AttributeService,
     private readonly componentService: ComponentService,
@@ -45,13 +47,13 @@ export class AppController {
       profile,
       groups,
     ] = await Promise.all([
-      this.userService.findAll(user),
+      this.authService.findAll(user),
       this.exerciseService.findAllGlobal(),
       this.attributeService.findAll(),
       this.componentService.findAllFlat(),
       this.methodService.findAll(),
       this.institutionService.findAll(user),
-      this.userService.findProfile(user),
+      this.profileService.findProfile(user),
       this.groupService.findAll(user),
     ]);
 

@@ -2,7 +2,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
-import { UserRole } from '../enum/user-role.enum';
+import { UserRole } from '@src/auth/enum/user-role.enum';
 
 export class FilterUserQueryDto {
   @IsOptional()

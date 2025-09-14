@@ -1,0 +1,65 @@
+import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+
+import { UserRole } from '../auth/enum/user-role.enum';
+import { Auth } from '../common/decorator/auth.decorator';
+import { RequestUser } from '../common/decorator/request-user.decorator';
+import type { User } from '../common/type/firebase-auth.type';
+import { SaveWellnessDto } from './dto/save-wellness.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
+import { ProfileService } from './service/profile.service';
+import { WellnessService } from './service/wellness.service';
+
+@ApiTags('Profile')
+@Controller('profile')
+export class ProfileController {
+  constructor(
+    private readonly profileService: ProfileService,
+    private readonly wellnessService: WellnessService,
+  ) {}
+
+  @Get()
+  @Auth()
+  async findProfile(@RequestUser() user: User) {
+    const ref = { uid: user.uid };
+    return await this.profileService.findProfile(ref);
+  }
+
+  @Patch()
+  @Auth()
+  async update(@RequestUser() user: User, @Body() body: UpdateProfileDto) {
+    await this.profileService.updateProfile(user, body);
+    return {};
+  }
+
+  @Post()
+  @Auth([UserRole.ATHLETE])
+  async upsert(@RequestUser() user: User, @Body() body: SaveWellnessDto) {
+    const ref = { uid: user.uid, date: new Date() };
+    return await this.wellnessService.upsert(ref, {
+      ...body,
+      userId: user.uid,
+      date: ref.date,
+    });
+  }
+
+  @Get('/wellness')
+  @Auth([UserRole.ATHLETE])
+  async getLatestWellnessByUser(@RequestUser() user: User) {
+    const ref = { uid: user.uid };
+    return (
+      (await this.wellnessService.getLatestByUser(ref)) || {
+        date: new Date(),
+        userId: user.uid,
+      }
+    );
+  }
+
+  @Get('/wellness/institution/:institutionId')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER])
+  async getWellnessByInstitutionId(
+    @Param('institutionId') institutionId: string,
+  ) {
+    return await this.wellnessService.getDocsByInstitution({ institutionId });
+  }
+}

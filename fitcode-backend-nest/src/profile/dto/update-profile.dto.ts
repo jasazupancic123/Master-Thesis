@@ -3,18 +3,10 @@ import { ApiProperty, PickType } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 import { IsNotEmpty, IsString } from 'class-validator';
 
-import { UserEntity } from '../entity/user.entity';
+import { Profile } from '../entity/profile.entity';
 
-export class UpdateUserProfileDto extends PartialType(
-  PickType(UserEntity, [
-    'sport',
-    'level',
-    'gender',
-    'profileImageUrl',
-    'firstName',
-    'lastName',
-    'birthDate',
-  ] as const),
+export class UpdateProfileDto extends PartialType(
+  PickType(Profile, ['sport', 'level', 'gender', 'birthDate'] as const),
 ) {
   @IsString()
   @IsNotEmpty()

@@ -12,11 +12,11 @@ import { ApiTags } from '@nestjs/swagger';
 
 import { UserIdDto } from '@src/common/dto/user-id.dto';
 
+import { UserRole } from '../auth/enum/user-role.enum';
 import { Auth } from '../common/decorator/auth.decorator';
 import { RequestUser } from '../common/decorator/request-user.decorator';
 import { CommonService } from '../common/service/common.service';
 import { User } from '../common/type/firebase-auth.type';
-import { UserRole } from '../user/enum/user-role.enum';
 import { AddTrainingComponentsDto } from './dto/add-training-components.dto';
 import { CopyComponentDto } from './dto/copy-component.dto';
 import { CopyTrainingDto } from './dto/copy-training.dto';

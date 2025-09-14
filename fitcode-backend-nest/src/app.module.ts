@@ -5,6 +5,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AttributeModule } from './attribute/attribute.module';
+import { AuthModule } from './auth/auth.module';
 import { CacheManagerModule } from './cache-manager/cache-manager.module';
 import { CommonModule } from './common/common.module';
 import { ComponentModule } from './component/component.module';
@@ -14,9 +15,9 @@ import { FirebaseModule } from './firebase/firebase.module';
 import { GroupModule } from './group/group.module';
 import { InstitutionModule } from './institution/institution.module';
 import { MethodModule } from './method/method.module';
+import { ProfileModule } from './profile/profile.module';
 import { TestDbModule } from './test-db/test-db.module';
 import { TrainingModule } from './training/training.module';
-import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -25,8 +26,9 @@ import { UserModule } from './user/user.module';
     EventEmitterModule.forRoot(),
     CommonModule,
     CacheManagerModule,
+    AuthModule,
     AttributeModule,
-    UserModule,
+    ProfileModule,
     ComponentModule,
     MethodModule,
     InstitutionModule,

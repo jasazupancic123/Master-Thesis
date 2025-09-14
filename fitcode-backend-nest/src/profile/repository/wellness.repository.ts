@@ -12,7 +12,7 @@ import {
 import { FirebaseService } from '@src/firebase/firebase.service';
 
 import { Wellness } from '../entity/wellness.entity';
-import { UserRepository } from './user.repository';
+import { ProfileRepository } from './profile.repository';
 
 @Injectable()
 export class WellnessRepository extends FirestoreRepository<
@@ -23,7 +23,7 @@ export class WellnessRepository extends FirestoreRepository<
 
   constructor(
     readonly firebaseService: FirebaseService,
-    private readonly parentRepository: UserRepository,
+    private readonly parentRepository: ProfileRepository,
     @Inject(Wellness)
     readonly changeLog: ChangeLogManager<Wellness>,
   ) {
