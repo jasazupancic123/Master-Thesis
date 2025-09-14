@@ -5,26 +5,68 @@ import { DrawingUtils, PoseLandmarker } from '@mediapipe/tasks-vision';
 import { Box } from '@mui/material';
 import { enableCam, getStatusMessage, loadModel, predictWebcam } from './state';
 import FpsText from './components/fps-text';
-import StillnessText from './components/stillness-text';
 import { DetectionStatus } from '@/controller/pose-detection/enum/detection-status';
 import { STATUS_MESSAGES } from '@/controller/pose-detection/const/status-messages';
 import MovementValidationHeader from './components/movement-validation-header';
 import LoadingOverlay from '../loading-overlay/loading-overlay';
 import { PoseModel } from '@/controller/pose-detection/enum/pose-model.enum';
+import { KeypointHistory } from '@/controller/pose-detection/class/keypoint-history';
+import { useScreenSize } from '@/store/screen-size.provider';
+import {
+  ConditionDirection,
+  ExerciseStartCondition,
+} from '@/controller/pose-detection/type/exercise-start-condition';
+import { KeypointId } from '@/controller/pose-detection/enum/keypoint-id';
+import { KeypointValueType } from '@/controller/pose-detection/enum/keypoint-value-type';
+
+const DEBUG = false;
 
 export default function MobileMovementValidation() {
+  const keypointHistory = new KeypointHistory([], undefined, true); // infinite frames
+  const keypointBuffer = new KeypointHistory([], 100); // 100 frames buffer
+
+  const exerciseStartConditions: ExerciseStartCondition[] = [
+    {
+      keypointId: KeypointId.LEFT_EYE,
+      type: KeypointValueType.POSITION_Y,
+      direction: ConditionDirection.ANY,
+      duration: 1500, // ms
+      distance: 0.05, // meters
+    },
+    {
+      keypointId: KeypointId.RIGHT_EYE,
+      type: KeypointValueType.POSITION_Y,
+      direction: ConditionDirection.ANY,
+      duration: 1500, // ms
+      distance: 0.05, // meters
+    },
+    {
+      keypointId: KeypointId.LEFT_SHOULDER,
+      type: KeypointValueType.POSITION_Y,
+      direction: ConditionDirection.ANY,
+      duration: 1500, // ms
+      distance: 0.025, // meters
+    },
+    {
+      keypointId: KeypointId.RIGHT_SHOULDER,
+      type: KeypointValueType.POSITION_Y,
+      direction: ConditionDirection.ANY,
+      duration: 1500, // ms
+      distance: 0.025, // meters
+    },
+  ];
+
   const statusRef = useRef<DetectionStatus>(DetectionStatus.NOT_FULLY_IN_FRAME);
+  const [statusMessage, setStatusMessage] = useState(
+    STATUS_MESSAGES[statusRef.current]
+  );
   const [model, setModel] = useState<PoseModel>(PoseModel.MEDIAPIPE);
   const [poseLandmarker, setPoseLandmarker] = useState<PoseLandmarker | null>(
     null
   );
 
-  const [isStill, setIsStill] = useState(false);
-
   const [fps, setFps] = useState<number | null>(null);
-  const [avgFps, setAvgFps] = useState<{ value: number; count: number } | null>(
-    null
-  );
+  const avgFps = useRef<{ value: number; count: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -34,6 +76,64 @@ export default function MobileMovementValidation() {
   const prevFrameTimeRef = useRef<number | null>(null);
   const lastVideoTimeRef = useRef(-1);
   const frameCountRef = useRef(0);
+
+  const screenSize = useScreenSize();
+
+  // ✅ (1) Mobile console: load Eruda when requested
+  useEffect(() => {
+    if (!DEBUG) return;
+
+    if (typeof window === 'undefined') return;
+
+    const wantDebug =
+      /(\?|&)debug(=1)?(&|$)/.test(window.location.search) ||
+      /(\?|&)eruda(=1)?(&|$)/.test(window.location.search) ||
+      process.env.NEXT_PUBLIC_ENABLE_ERUDA === '1';
+
+    if (!wantDebug) return;
+
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/eruda';
+    script.async = true;
+    script.onload = () => {
+      // @ts-ignore
+      window.eruda?.init();
+    };
+    document.body.appendChild(script);
+
+    return () => {
+      // @ts-ignore
+      window.eruda?.destroy?.();
+      script.remove();
+    };
+  }, []);
+
+  // (optional) programmatic toggle you can call e.g. from a button
+  const openConsole = async () => {
+    if (!DEBUG) return;
+
+    if (typeof window === 'undefined') return;
+    // @ts-ignore
+    if (window.eruda) {
+      // @ts-ignore
+      window.eruda.show();
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/eruda';
+    script.async = true;
+    script.onload = () => {
+      // @ts-ignore
+      window.eruda?.init();
+      // @ts-ignore
+      window.eruda?.show();
+    };
+    document.body.appendChild(script);
+  };
+
+  useEffect(() => {
+    setStatusMessage(getStatusMessage(statusRef.current));
+  }, [statusRef.current]);
 
   useEffect(() => {
     if (canvasRef.current) {
@@ -57,6 +157,7 @@ export default function MobileMovementValidation() {
           statusRef,
           model,
           poseLandmarker,
+          keypointBuffer,
           videoRef,
           canvasRef,
           drawingUtilsRef,
@@ -64,8 +165,13 @@ export default function MobileMovementValidation() {
           prevFrameTimeRef,
           lastVideoTimeRef,
           frameCountRef,
+          avgFps,
+          hasWeakFps: avgFps.current
+            ? avgFps.current.value <= 15
+            : screenSize.isMobile,
+          exerciseStartConditions,
           setFps,
-          setAvgFps,
+          setStatusMessage,
         }),
       setError,
     });
@@ -76,7 +182,7 @@ export default function MobileMovementValidation() {
       {!poseLandmarker && <LoadingOverlay title="Loading model..." />}
 
       <MovementValidationHeader
-        statusMessage={error ? `${error}` : getStatusMessage(statusRef.current)}
+        statusMessage={error ? `${error}` : statusMessage}
       />
 
       <Box sx={{ position: 'relative' }}>
@@ -93,9 +199,34 @@ export default function MobileMovementValidation() {
           style={{ position: 'absolute', left: 0, top: 0 }}
         />
 
-        <FpsText fps={fps} avgFps={avgFps} />
+        <FpsText fps={fps} avgFps={avgFps.current} />
 
-        <StillnessText isStill={isStill} />
+        {/* 🔧 Optional floating debug button (only shows if you want) */}
+        {DEBUG && (
+          <button
+            onClick={openConsole}
+            style={{
+              position: 'absolute',
+              right: 12,
+              bottom: 12,
+              padding: '10px 14px',
+              borderRadius: 10,
+              border: 'none',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+              background: '#fff',
+              fontWeight: 600,
+              cursor: 'pointer',
+              opacity:
+                typeof window !== 'undefined' &&
+                (/\bdebug\b|\beruda\b/.test(window.location.search) ||
+                  process.env.NEXT_PUBLIC_ENABLE_ERUDA === '1')
+                  ? 0.7
+                  : 0.9,
+            }}
+          >
+            Debug
+          </button>
+        )}
       </Box>
     </Box>
   );

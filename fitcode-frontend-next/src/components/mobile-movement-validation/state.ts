@@ -1,8 +1,10 @@
 import { SetState } from '@/common/type/state.type';
+import { KeypointHistory } from '@/controller/pose-detection/class/keypoint-history';
 import { STATUS_MESSAGES } from '@/controller/pose-detection/const/status-messages';
 import { DetectionStatus } from '@/controller/pose-detection/enum/detection-status';
 import { PoseModel } from '@/controller/pose-detection/enum/pose-model.enum';
 import { PoseDetectionService } from '@/controller/pose-detection/pose-detection.service';
+import { ExerciseStartCondition } from '@/controller/pose-detection/type/exercise-start-condition';
 import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
 import {
   DrawingUtils,
@@ -67,7 +69,7 @@ export function enableCam(state: {
   setError: SetState<string | null>;
 }) {
   const { poseLandmarker, videoRef, predictWebcam, setError } = state;
-  
+
   if (!poseLandmarker) return;
 
   // Activate the webcam stream.
@@ -88,6 +90,9 @@ export const predictWebcam = async (state: {
   statusRef: RefObject<DetectionStatus>;
   model: PoseModel;
   poseLandmarker: PoseLandmarker | null;
+  keypointHistory: KeypointHistory;
+  keypointBuffer: KeypointHistory;
+  exerciseStartConditions: ExerciseStartCondition[];
   videoRef: RefObject<HTMLVideoElement | null>;
   canvasRef: RefObject<HTMLCanvasElement | null>;
   drawingUtilsRef: RefObject<DrawingUtils | null>;
@@ -95,13 +100,18 @@ export const predictWebcam = async (state: {
   prevFrameTimeRef: RefObject<number | null>;
   lastVideoTimeRef: RefObject<number>;
   frameCountRef: RefObject<number>;
+  hasWeakFps: boolean;
+  avgFps: RefObject<{ value: number; count: number } | null>;
   setFps: SetState<number | null>;
-  setAvgFps: SetState<{ value: number; count: number } | null>;
+  setStatusMessage: SetState<string>;
 }) => {
   const {
     statusRef,
     model,
     poseLandmarker,
+    keypointHistory,
+    keypointBuffer,
+    exerciseStartConditions,
     videoRef,
     canvasRef,
     drawingUtilsRef,
@@ -109,8 +119,10 @@ export const predictWebcam = async (state: {
     prevFrameTimeRef,
     lastVideoTimeRef,
     frameCountRef,
+    hasWeakFps,
+    avgFps,
     setFps,
-    setAvgFps,
+    setStatusMessage,
   } = state;
 
   const video = videoRef.current;
@@ -149,13 +161,15 @@ export const predictWebcam = async (state: {
     const delta = startTimeMs - prevFrameTimeRef.current;
     const instFps = Math.round(1000 / delta);
     setFps(instFps);
-    setAvgFps((prev) => {
-      if (!prev) return { value: instFps, count: 1 };
-      return {
-        value: (prev.value * prev.count + instFps) / (prev.count + 1),
-        count: prev.count + 1,
+    if (!avgFps.current) avgFps.current = { value: instFps, count: 1 };
+    else {
+      avgFps.current = {
+        value:
+          (avgFps.current.value * avgFps.current.count + instFps) /
+          (avgFps.current.count + 1),
+        count: avgFps.current.count + 1,
       };
-    });
+    }
   }
 
   if (lastVideoTimeRef.current !== video.currentTime) {
@@ -163,8 +177,8 @@ export const predictWebcam = async (state: {
     prevFrameTimeRef.current = startTimeMs;
 
     poseLandmarker.detectForVideo(video, startTimeMs, (result) => {
-      console.log('DETECT FOR VIDEO');
       frameCountRef.current += 1;
+
       const keypoints = KeypointUtil.getDesiredKeypointsByModel(
         result.worldLandmarks[0], // unit: m, origin: center of hips
         model,
@@ -172,7 +186,19 @@ export const predictWebcam = async (state: {
         frameCountRef.current
       );
 
-      PoseDetectionService.checkStatus(statusRef, keypoints);
+      if (statusRef.current === DetectionStatus.RECORDING) {
+        keypointHistory.insertFrame(keypoints);
+      }
+      keypointBuffer.insertFrame(keypoints, avgFps.current, hasWeakFps ? 2 : 3); // keep 3 seconds of history
+
+      PoseDetectionService.checkStatus(
+        statusRef,
+        keypoints,
+        setStatusMessage,
+        keypointBuffer,
+        exerciseStartConditions,
+        avgFps.current
+      );
 
       ctx.save();
       ctx.clearRect(0, 0, canvas.width, canvas.height);
