@@ -34,7 +34,10 @@ export class ProfileController {
 
   @Post()
   @Auth([UserRole.ATHLETE])
-  async upsert(@RequestUser() user: User, @Body() body: SaveWellnessDto) {
+  async upsertWellness(
+    @RequestUser() user: User,
+    @Body() body: SaveWellnessDto,
+  ) {
     const ref = { uid: user.uid, date: new Date() };
     return await this.wellnessService.upsert(ref, {
       ...body,
@@ -57,7 +60,7 @@ export class ProfileController {
 
   @Get('/wellness/institution/:institutionId')
   @Auth([UserRole.MANAGER, UserRole.TRAINER])
-  async getWellnessByInstitutionId(
+  async getWellnessByInstitution(
     @Param('institutionId') institutionId: string,
   ) {
     return await this.wellnessService.getDocsByInstitution({ institutionId });

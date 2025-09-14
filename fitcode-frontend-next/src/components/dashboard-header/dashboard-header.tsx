@@ -58,8 +58,8 @@ export default function DashboardHeader() {
     refetchMembers,
   } = useDashboard();
 
-  const { profile, users } = useMain();
-  const { token, role } = useAuthenticatedAuth();
+  const { users } = useMain();
+  const { token, role, user } = useAuthenticatedAuth();
   const controller = GroupController.getInstance(token);
 
   const screenSize = useScreenSize();
@@ -147,7 +147,7 @@ export default function DashboardHeader() {
             }}
           >
             <Avatar
-              src={profile?.profileImageUrl}
+              src={user?.photoURL || '/user_avatar.png'}
               sx={{
                 width: 34,
                 height: 34,

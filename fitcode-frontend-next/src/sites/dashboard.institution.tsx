@@ -25,9 +25,9 @@ import HorizontalItemsList from '@/components/horizontal-items-list/horizontal-i
 import MyModal from '@/components/modal/modal';
 import { SearchBar } from '@/components/search-bar/search-bar';
 import { MAX_WIDTH } from '@/components/trainer-day-view/constant';
+import type { AuthUser } from '@/controller/auth/type/user.type';
 import { InstitutionController } from '@/controller/institution/institution.controller';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
-import type { User } from '@/controller/user/type/user.type';
+import { UserRole } from '@/controller/profile/enum/user-role.enum';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
@@ -36,26 +36,26 @@ import { useScreenSize } from '@/store/screen-size.provider';
 const firebaseFunctions = FirebaseFunctionsUtil.Instance;
 
 export default function DashboardInstitutionPage() {
+  const screenSize = useScreenSize();
+  const router = useRouter();
+  const { token, role } = useAuthenticatedAuth();
+  const { users } = useMain();
+
   const {
     selectedInstitution,
     setSelectedInstitution,
-    members,
     refetchMembers,
     refetchUsers,
   } = useDashboard();
-  const screenSize = useScreenSize();
-  const router = useRouter();
 
-  const { token, role } = useAuthenticatedAuth();
   const controller = InstitutionController.getInstance(token);
-  const { users } = useMain();
 
   const [selectedView, setSelectedView] = useState<AthletesTrainers>(
     AthletesTrainers.ATHLETES
   );
 
-  const [currentUsers, setCurrentUsers] = useState<User[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
+  const [currentUsers, setCurrentUsers] = useState<AuthUser[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<AuthUser[]>([]);
   const [search, setSearch] = useState('');
   const [modal, setModal] = useState({
     add_member: false,
@@ -64,8 +64,8 @@ export default function DashboardInstitutionPage() {
     add_member_via_csv: false,
     edit_athlete: false,
   });
-  const [hoveredUser, setHoveredUser] = useState<User | null>(null);
-  const [editUser, setEditUser] = useState<User | null>(null);
+  const [hoveredUser, setHoveredUser] = useState<AuthUser | null>(null);
+  const [editUser, setEditUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [csvUserEmails, setCsvUserEmails] = useState<string[]>([]);
   const [isUploadingMembers, setIsUploadingMembers] = useState(false);
@@ -87,7 +87,7 @@ export default function DashboardInstitutionPage() {
   useEffect(() => {
     if (!selectedInstitution || !csvUserEmails.length) return;
 
-    const newUsers = [] as User[];
+    const newUsers = [] as AuthUser[];
 
     for (const email of csvUserEmails) {
       if (!email) continue;
@@ -455,7 +455,6 @@ export default function DashboardInstitutionPage() {
           ) : (
             filteredUsers.map((user) => {
               if (!user || !user.displayName) return;
-
               const names = user.displayName.split(' ');
 
               return (
@@ -492,7 +491,7 @@ export default function DashboardInstitutionPage() {
                   <Avatar
                     className="avatar-border"
                     src={
-                      members.find((m) => m.id === user.uid)?.profileImageUrl ||
+                      users.find((m) => m.uid === user.uid)?.photoURL ||
                       '/user_avatar.png'
                     }
                     sx={{
@@ -529,6 +528,7 @@ export default function DashboardInstitutionPage() {
           )}
         </Box>
       </Box>
+
       <MyModal
         isOpen={modal.add_member}
         setIsOpen={(open) => setModal({ ...modal, add_member: open })}
@@ -544,6 +544,7 @@ export default function DashboardInstitutionPage() {
           }
         />
       </MyModal>
+
       <MyModal
         isOpen={modal.add_member_via_csv}
         setIsOpen={(open) => setModal({ ...modal, add_member_via_csv: open })}
@@ -559,11 +560,13 @@ export default function DashboardInstitutionPage() {
           }}
         />
       </MyModal>
+
       <DashboardEditAthleteModal
         isOpen={modal.edit_athlete}
         setModal={setModal}
         editUser={editUser}
         setEditUser={setEditUser}
+        setFilteredUsers={setFilteredUsers}
       />
 
       {isUploadingMembers && (

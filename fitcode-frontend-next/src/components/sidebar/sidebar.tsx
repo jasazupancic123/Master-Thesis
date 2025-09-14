@@ -16,7 +16,7 @@ import * as React from 'react';
 
 import { LINKS_SIDEBAR } from '@/common/constant/navigation.constant';
 import { CommonService } from '@/common/service/common.service';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
+import { UserRole } from '@/controller/profile/enum/user-role.enum';
 import { useAthlete } from '@/store/athlete.provider';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 

@@ -13,9 +13,10 @@ import { RequestUser } from '@src/common/decorator/request-user.decorator';
 import { User } from '@src/common/type/firebase-auth.type';
 
 import { AuthService } from './auth.service';
-import { RegisterAthleteDto } from './dto/add-athlete.dto';
 import { UpdateCustomClaimsDto } from './dto/custom-claims.dto';
 import { FilterUserQueryDto } from './dto/filter-user-query.dto';
+import { RegisterAthleteDto } from './dto/register-athlete.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { UserRole } from './enum/user-role.enum';
 
 @Controller('auth')
@@ -37,20 +38,30 @@ export class AuthController {
 
   @Patch(':id')
   @Auth()
-  async updateClaims(
+  async updateUser(
+    @RequestUser() user: User,
+    @Param('id') id: string,
+    @Body() body: UpdateUserDto,
+  ) {
+    await this.authService.updateUser(user, id, body);
+  }
+
+  @Patch(':id/claims')
+  @Auth()
+  async updateCustomClaims(
+    @RequestUser() user: User,
     @Param('id') id: string,
     @Body() body: UpdateCustomClaimsDto,
   ) {
-    await this.authService.updateCustomClaims(id, body);
-    return {};
+    await this.authService.updateCustomClaims(user, id, body);
   }
 
-  @Post('athlete/add')
-  @Auth([UserRole.TRAINER])
+  @Post('athlete/register')
+  @Auth([UserRole.TRAINER, UserRole.MANAGER])
   async registerAthlete(
     @RequestUser() user: User,
     @Body() body: RegisterAthleteDto,
   ) {
-    return await this.authService.registerAthlete(user, body);
+    return await this.authService.registerAthlete(body);
   }
 }

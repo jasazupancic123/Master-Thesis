@@ -8,15 +8,15 @@ import {
   setCachedWellness,
 } from '../session-cache/wellness.session-cache';
 import type { ChildrenProps } from '@/common/type/props.type';
-import type { Wellness } from '@/controller/user/type/wellness.type';
-import { UserController } from '@/controller/user/user.controller';
+import { ProfileController } from '@/controller/profile/profile.controller';
+import type { Wellness } from '@/controller/profile/type/wellness.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { WellnessProvider } from '@/store/wellness-provider';
 
 export default function WellnessInitializer(props: ChildrenProps) {
   const { children } = props;
   const { token } = useAuthenticatedAuth();
-  const controller = UserController.getInstance(token);
+  const controller = ProfileController.getInstance(token);
 
   const [wellness, setWellness] = useState<Wellness | null>(
     getCachedWellness()
@@ -25,7 +25,7 @@ export default function WellnessInitializer(props: ChildrenProps) {
   useEffect(() => {
     async function init() {
       if (wellness) return; // already cached
-      const fetchedWellness = await controller.getMyMeta();
+      const fetchedWellness = await controller.getLatestWellnessByUser();
       setCachedWellness(fetchedWellness);
       setWellness(fetchedWellness);
     }

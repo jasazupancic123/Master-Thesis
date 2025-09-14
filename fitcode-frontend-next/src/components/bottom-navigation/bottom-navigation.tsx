@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import * as React from 'react';
 
 import { LINKS_SIDEBAR } from '@/common/constant/navigation.constant';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
+import { UserRole } from '@/controller/profile/enum/user-role.enum';
 import { useAthlete } from '@/store/athlete.provider';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';

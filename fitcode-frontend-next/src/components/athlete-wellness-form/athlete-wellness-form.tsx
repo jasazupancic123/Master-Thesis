@@ -13,7 +13,7 @@ import { HEATMAP_COLORS } from '@/common/constant/color.constant';
 import type { SetState } from '@/common/type/state.type';
 import { MuscleService } from '@/controller/exercise/muscle.service';
 import type { MuscleTip } from '@/controller/exercise/type/muscle-tip.type';
-import type { Wellness } from '@/controller/user/type/wellness.type';
+import type { Wellness } from '@/controller/profile/type/wellness.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 interface Props {

@@ -2,16 +2,16 @@ import dayjs from 'dayjs';
 
 import { COLOR } from '@/common/constant/color.constant';
 import type { SetState } from '@/common/type/state.type';
-import { WellnessChartDataType } from '@/controller/user/enum/wellness-chart-data-type.enum';
-import type { User } from '@/controller/user/type/user.type';
+import type { AuthUser } from '@/controller/auth/type/user.type';
+import { WellnessChartDataType } from '@/controller/profile/enum/wellness-chart-data-type.enum';
 import type {
   WellnessChartData,
   WellnessZScore,
-} from '@/controller/user/type/wellness.type';
+} from '@/controller/profile/type/wellness.type';
 
 export default function setupChartData(
   wellness: WellnessZScore[],
-  selectedAthlete: User,
+  selectedAthlete: AuthUser,
   setWellnessChartData: SetState<WellnessChartData[]>
 ) {
   const currentWellness =

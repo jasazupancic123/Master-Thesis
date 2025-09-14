@@ -1,4 +1,11 @@
-import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
+import {
+  ForbiddenException,
+  forwardRef,
+  Inject,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { UserRecord } from 'firebase-admin/auth';
 
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
@@ -10,6 +17,7 @@ import { InstitutionService } from '@src/institution/service/institution.service
 import { CreateUser } from './dto/create-user.dto';
 import { UpdateCustomClaimsDto } from './dto/custom-claims.dto';
 import { FilterUserQueryDto } from './dto/filter-user-query.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class AuthService {
@@ -83,15 +91,19 @@ export class AuthService {
     return users;
   }
 
+  async updateUser(user: User, uid: string, data: UpdateUserDto) {
+    const userToUpdate = await this.getUserToUpdate(user, uid);
+    await this.firebaseService.auth.updateUser(userToUpdate.uid, data);
+  }
+
   async updateCustomClaims(
+    user: User,
     uid: string,
     claims: UpdateCustomClaimsDto,
   ): Promise<void> {
-    const customClaims = (await this.firebaseService.auth.getUser(uid))
-      .customClaims;
-
-    await this.firebaseService.auth.setCustomUserClaims(uid, {
-      ...customClaims,
+    const userToUpdate = await this.getUserToUpdate(user, uid);
+    await this.firebaseService.auth.setCustomUserClaims(userToUpdate.uid, {
+      ...userToUpdate.customClaims,
       ...claims,
     });
   }
@@ -115,12 +127,73 @@ export class AuthService {
   }
 
   @LogMethod()
-  async registerAthlete(user: User, input: Omit<CreateUser, 'customClaims'>) {
+  async registerAthlete(input: Omit<CreateUser, 'customClaims'>) {
     const { email, displayName, password } = input;
     return await this.firebaseService.auth.createUser({
       email,
       displayName,
       password,
     });
+  }
+
+  async getUserToUpdate(mainUser: User, userToUpdateId: string): Promise<User> {
+    const userToUpdate = await this.findOneBy('id', userToUpdateId);
+    if (!userToUpdate) throw new NotFoundException('User not found');
+
+    const canUpdate = await this.canUpdate(mainUser, userToUpdate);
+    if (!canUpdate) throw new ForbiddenException('Cannot update user');
+
+    return userToUpdate;
+  }
+
+  async canUpdate(mainUser: User, userToUpdate: User): Promise<boolean> {
+    // admin can update anyone
+    if (this.firebaseService.isAdmin(mainUser)) return true;
+
+    // athlete can update only himself
+    if (
+      this.firebaseService.isAthlete(userToUpdate) &&
+      mainUser.uid === userToUpdate.uid
+    )
+      return true;
+
+    // manager can update himself, trainers and athletes in his institutions
+    // trainer can update himself and athletes in his institutions
+    const institutions = await this.institutionService.findAll(mainUser);
+
+    if (this.firebaseService.isManager(mainUser)) {
+      const institution = institutions.find((i) => i.ownerId === mainUser.uid);
+      if (!institution) return false;
+
+      if (
+        this.firebaseService.isTrainer(userToUpdate) &&
+        institution.trainerIds.includes(userToUpdate.uid)
+      )
+        return true;
+
+      if (
+        this.firebaseService.isAthlete(userToUpdate) &&
+        institution.athleteIds.includes(userToUpdate.uid)
+      )
+        return true;
+
+      return mainUser.uid === userToUpdate.uid;
+    }
+
+    if (this.firebaseService.isTrainer(mainUser)) {
+      const trainerInstitutions = institutions.filter((i) =>
+        i.trainerIds.includes(mainUser.uid),
+      );
+
+      if (
+        this.firebaseService.isAthlete(userToUpdate) &&
+        trainerInstitutions.some((i) => i.athleteIds.includes(userToUpdate.uid))
+      )
+        return true;
+
+      return mainUser.uid === userToUpdate.uid;
+    }
+
+    return false;
   }
 }

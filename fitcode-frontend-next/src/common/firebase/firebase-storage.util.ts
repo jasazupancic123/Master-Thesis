@@ -21,9 +21,4 @@ export class FirebaseStorageUtil {
     await uploadBytes(reference, file);
     return await getDownloadURL(reference);
   }
-
-  async exerciseUrl(path: string) {
-    const reference = ref(this.storage, path);
-    const url = await getDownloadURL(reference);
-  }
 }

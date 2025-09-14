@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import type { SetState, SetStateNullable } from '@/common/type/state.type';
 import type { Attribute } from '@/controller/attribute/type/attribute.type';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
+import type { AuthUser } from '@/controller/auth/type/user.type';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
 import { CustomWorkloadsSubgroupsService } from '@/controller/training/custom-workloads-subgroups.service';
 import type { ExerciseSet } from '@/controller/training/type/exercise-set.type';
@@ -12,7 +13,6 @@ import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import type { Workload } from '@/controller/training/type/workload.type';
-import type { User } from '@/controller/user/type/user.type';
 
 export function updateVolWorkSets(input: {
   exercise: TrainingExercise;
@@ -383,7 +383,7 @@ export const getLAndRValues = (
     training: Training;
     exercise: TrainingExercise;
     selectedAthleteWorkloads: Workload[];
-    selectedAthlete?: User;
+    selectedAthlete?: AuthUser;
   }
 ): {
   valueL: AttributeValue | null;

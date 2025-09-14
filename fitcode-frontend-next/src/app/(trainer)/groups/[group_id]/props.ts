@@ -4,18 +4,19 @@ import type { Day } from '@/common/service/util/date.util';
 import type { GroupDateFilter } from '@/common/type/filter.type';
 import type { Pagination } from '@/common/type/paginate.type';
 import type { SetState, SetStateNullable } from '@/common/type/state.type';
+import type { AuthUser } from '@/controller/auth/type/user.type';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
 import type { Cycle } from '@/controller/group/type/cycle.type';
 import type { Group } from '@/controller/group/type/group.type';
 import type { Institution } from '@/controller/institution/type/institution.type';
+import type { Profile } from '@/controller/profile/type/user.type';
+import type { WellnessZScore } from '@/controller/profile/type/wellness.type';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
 import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import type { Workload } from '@/controller/training/type/workload.type';
-import type { User, UserEntity } from '@/controller/user/type/user.type';
-import type { WellnessZScore } from '@/controller/user/type/wellness.type';
 
 export type GroupIdPageParams = { params: Promise<{ group_id: string }> };
 
@@ -40,14 +41,14 @@ export type GroupContextProps = GroupIdPageProps & {
   setDateTo: SetState<Dayjs>;
   trainings: Training[];
   setTrainings: SetState<Training[]>;
-  filteredUsers: User[];
-  setFilteredUsers: SetState<User[]>;
+  filteredUsers: AuthUser[];
+  setFilteredUsers: SetState<AuthUser[]>;
   detectedChanges: boolean;
   setDetectedChanges: SetState<boolean>;
 };
 
 export type TrainerDayViewContextProps = {
-  members: UserEntity[]; // group members
+  members: Profile[]; // group members
   day: Day;
   setDay: SetState<Day>;
   training: Training | undefined;
@@ -73,8 +74,8 @@ export type TrainerDayViewContextProps = {
   setSelectedExercises: SetState<TrainingExercise[]>;
   supersets: Superset[]; // supersets of the selected component
   setSupersets: SetState<Superset[]>;
-  selectedAthlete: User | undefined;
-  setSelectedAthlete: SetStateNullable<User>;
+  selectedAthlete: AuthUser | undefined;
+  setSelectedAthlete: SetStateNullable<AuthUser>;
   selectedSubgroup: Subgroup | null;
   setSelectedSubgroup: SetState<Subgroup | null>;
   filteredExercises: Exercise[];
@@ -86,7 +87,7 @@ export type TrainerDayViewContextProps = {
   selectedAthleteCompletedWorkloads: Workload[];
   setSelectedAthleteCompletedWorkloads: SetState<Workload[]>;
   isSettingAthleteWorkloads: React.RefObject<boolean>;
-  previousSelectedAthlete: React.RefObject<User | undefined>;
+  previousSelectedAthlete: React.RefObject<AuthUser | undefined>;
   loading: boolean;
   setLoading: SetState<boolean>;
 };

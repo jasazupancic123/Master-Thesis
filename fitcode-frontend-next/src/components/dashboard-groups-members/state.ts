@@ -4,17 +4,26 @@ import toast from 'react-hot-toast';
 import { BACKEND_API_BASE_URL } from '@/common/constant/api.constant';
 import type { SetState } from '@/common/type/state.type';
 import { handleApiRequest } from '@/common/type/state.type';
+import { AuthController } from '@/controller/auth/auth.controller';
+import type { AuthUser } from '@/controller/auth/type/user.type';
 import type { Institution } from '@/controller/institution/type/institution.type';
-import type { User, UserEntity } from '@/controller/user/type/user.type';
-import type { UserController } from '@/controller/user/user.controller';
+import { ProfileController } from '@/controller/profile/profile.controller';
+import type { Profile } from '@/controller/profile/type/user.type';
 
 export const updateUserProfile = async (
-  controller: UserController,
+  token: string,
   input: {
-    editUser: User | null;
     router: AppRouterInstance;
+    userToEdit: AuthUser | null;
+    isEditedUser?: boolean;
+    isEditedProfile?: boolean;
     selectedInstitution: Institution | null;
-    profile: UserEntity | undefined;
+    profileToEdit: Profile | undefined;
+    setIsEditedProfile: SetState<boolean>;
+    setUserToEdit: SetState<AuthUser | null>;
+    setIsEditedUser: SetState<boolean>;
+    refetchMembers: (url?: string) => void;
+    refetchUsers: () => void;
     setModal: SetState<{
       add_member: boolean;
       add_trainer: boolean;
@@ -22,41 +31,53 @@ export const updateUserProfile = async (
       add_member_via_csv: boolean;
       edit_athlete: boolean;
     }>;
-    setEditedProfile: SetState<boolean>;
-    setEditUser: SetState<User | null>;
-    refetchMembers: (url?: string) => void;
   }
 ) => {
   const {
-    editUser,
+    userToEdit,
     router,
     selectedInstitution,
-    profile,
+    profileToEdit,
     setModal,
-    setEditedProfile,
-    setEditUser,
+    isEditedUser,
+    setIsEditedProfile,
+    setUserToEdit,
     refetchMembers,
+    refetchUsers,
   } = input;
 
-  if (!editUser || !profile) return;
+  const authController = AuthController.getInstance(token);
+  const profileController = ProfileController.getInstance(token);
+
   handleApiRequest(
     router,
-    () =>
-      controller.updateProfile({
-        ...profile,
-        userId: editUser.uid,
-      }),
-    () => {
+    async () => {
+      if (profileToEdit)
+        await profileController.update({
+          level: profileToEdit.level,
+          sport: profileToEdit.sport,
+          birthDate: profileToEdit.birthDate,
+          gender: profileToEdit.gender,
+          userId: profileToEdit.id,
+        });
+
+      if (userToEdit && isEditedUser)
+        await authController.updateUser(userToEdit.uid, {
+          displayName: userToEdit.displayName,
+          photoURL: userToEdit.photoURL,
+        });
+
+      refetchUsers();
       refetchMembers(
         selectedInstitution
           ? `${BACKEND_API_BASE_URL}/institution/${selectedInstitution.id}/find/all`
           : undefined
       );
-
+    },
+    () => {
       setModal((prev) => ({ ...prev, edit_athlete: false }));
-      setEditedProfile(false);
-      setEditUser(null);
-
+      setIsEditedProfile(false);
+      setUserToEdit(null);
       toast.success('Successfully updated user profile');
     },
     undefined,
