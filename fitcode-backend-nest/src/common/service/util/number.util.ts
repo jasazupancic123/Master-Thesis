@@ -50,7 +50,7 @@ export class NumberUtil {
     return Math.round(int * 2) / 2; // round to the nearest 0.5 kg
   }
 
-  getStandardDeviation(xs: number[]) {
+  std(xs: number[]) {
     const n = xs.length;
     if (n < 2) return NaN; // not enough history
     const mean = xs.reduce((a, b) => a + b, 0) / n;
@@ -58,13 +58,13 @@ export class NumberUtil {
     return Math.sqrt(sse / (n - 1));
   }
 
-  getMean(xs: number[]) {
+  mean(xs: number[]) {
     const n = xs.length;
     if (n === 0) return 0;
     return xs.reduce((a, b) => a + b, 0) / n;
   }
 
-  getZScore(
+  z(
     current: number | null | undefined,
     mean: number | null,
     sd: number | null,

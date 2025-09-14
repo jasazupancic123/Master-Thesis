@@ -1,7 +1,7 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { IsEnum, IsOptional, IsString } from 'class-validator';
 
-import { UserRole } from '../enum/user-role.enum';
+import { UserRole } from '@src/auth/enum/user-role.enum';
 
 export class CustomClaimsDto {
   @IsEnum(UserRole, { each: true })
@@ -23,3 +23,5 @@ export class CustomClaimsDto {
   @ApiPropertyOptional()
   faceRightUrl?: string;
 }
+
+export class UpdateCustomClaimsDto extends PartialType(CustomClaimsDto) {}

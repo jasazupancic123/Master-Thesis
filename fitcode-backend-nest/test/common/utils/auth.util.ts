@@ -1,8 +1,8 @@
+import { UserRole } from '@src/auth/enum/user-role.enum';
 import type { CustomClaims, User } from '@src/common/type/firebase-auth.type';
 import { generateRandomEmail } from '@src/common/utils/random.util';
 import type { FirebaseService } from '@src/firebase/firebase.service';
-import type { UserEntity } from '@src/user/entity/user.entity';
-import { UserRole } from '@src/user/enum/user-role.enum';
+import type { Profile } from '@src/profile/entity/profile.entity';
 
 import type { TestUser } from '../type/auth.type';
 
@@ -19,7 +19,7 @@ export async function createTestUserAndToken(
   const customClaims: CustomClaims = { role: [role] };
   await firebaseService.auth.setCustomUserClaims(user.uid, customClaims);
 
-  const createUserQuery = firebaseService.buildCreateQuery<UserEntity>(
+  const createUserQuery = firebaseService.buildCreateQuery<Profile>(
     { id: user.uid },
     { timestamps: true },
   );

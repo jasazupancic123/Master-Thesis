@@ -10,10 +10,10 @@ import { Update } from '@src/common/type/entity.type';
 import { FirestoreRepository } from '@src/common/type/firestore.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 
-import { UserEntity } from '../entity/user.entity';
+import { Profile } from '../entity/profile.entity';
 
 @Injectable()
-export class UserRepository extends FirestoreRepository<UserEntity> {
+export class ProfileRepository extends FirestoreRepository<Profile> {
   collectionName = FirestoreCollection.USER;
 
   constructor(readonly firebaseService: FirebaseService) {
@@ -28,10 +28,10 @@ export class UserRepository extends FirestoreRepository<UserEntity> {
     return this.collection().doc(id);
   }
 
-  async save(input: Partial<UserEntity>) {
+  async save(input: Partial<Profile>) {
     if (!input.id) throw new Error('User ID is required');
 
-    const query = this.firebaseService.buildCreateQuery<UserEntity>(
+    const query = this.firebaseService.buildCreateQuery<Profile>(
       { id: input.id },
       { timestamps: true },
     );
@@ -40,7 +40,7 @@ export class UserRepository extends FirestoreRepository<UserEntity> {
     return input.id;
   }
 
-  async update(id: string, input: Update<UserEntity>) {
+  async update(id: string, input: Update<Profile>) {
     const query = this.firebaseService.buildUpdateQuery(input);
     await this.doc(id).update(query);
   }

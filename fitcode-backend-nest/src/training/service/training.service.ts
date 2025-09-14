@@ -1,6 +1,8 @@
 import {
   BadRequestException,
   ConflictException,
+  forwardRef,
+  Inject,
   Injectable,
   Logger,
   NotFoundException,
@@ -19,6 +21,7 @@ import {
 import { Query, Timestamp } from 'firebase-admin/firestore';
 
 import { AttributeService } from '@src/attribute/service/attribute.service';
+import { AuthService } from '@src/auth/auth.service';
 import {
   DEFAULT_WEIGHT_KG,
   MIN_BODYWEIGHT_KG,
@@ -43,6 +46,7 @@ import {
   BatchWriteOperation,
 } from '@src/common/type/orm.type';
 import { Filter } from '@src/common/type/orm.type';
+import { Wrapper } from '@src/common/type/wrapper.type';
 import { ComponentService } from '@src/component/component.service';
 import {
   COOLDOWN_COMPONENT_ID,
@@ -61,7 +65,7 @@ import { UpdateInstitutionAthleteEvent } from '@src/institution/event/update-ins
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { MethodService } from '@src/method/service/method.service';
 import { PeriodizationService } from '@src/periodization/periodization.service';
-import { UserService } from '@src/user/service/user.service';
+import { WellnessService } from '@src/profile/service/wellness.service';
 
 import { CopyComponentDto } from '../dto/copy-component.dto';
 import { CopyTrainingDto } from '../dto/copy-training.dto';
@@ -87,12 +91,14 @@ export class TrainingService implements Permission<Training, Institution> {
 
   constructor(
     private readonly firebaseService: FirebaseService,
+    @Inject(forwardRef(() => AuthService))
+    private readonly authService: Wrapper<AuthService>,
     private readonly commonService: CommonService,
     private readonly attributeService: AttributeService,
     private readonly componentService: ComponentService,
     private readonly methodService: MethodService,
-    private readonly userService: UserService,
     private readonly periodizationService: PeriodizationService,
+    private readonly wellnessService: WellnessService,
     private readonly repository: TrainingRepository,
     private readonly trainingPlanService: TrainingPlanService,
     private readonly workloadRepository: WorkloadRepository,
@@ -420,7 +426,7 @@ export class TrainingService implements Permission<Training, Institution> {
       throw new UnauthorizedException('You are not allowed to update members');
 
     // check if member exists
-    const member = await this.userService.findOneBy('id', memberId);
+    const member = await this.authService.findOneBy('id', memberId);
     if (!member) throw new BadRequestException('Member does not exist');
     if (!this.firebaseService.isAthlete(member))
       throw new BadRequestException('Member must be an athlete');
@@ -1046,7 +1052,7 @@ export class TrainingService implements Permission<Training, Institution> {
     if (!hasBwParamType) return;
 
     const ref = { uid: athleteId };
-    const bw = await this.userService.getLastBodyweight(ref);
+    const bw = await this.wellnessService.getLastBodyweight(ref);
     if (!bw || bw < MIN_BODYWEIGHT_KG) return; // no valid bodyweight found
 
     this.trainingPlanService.modifyPrescribedParamValuesByType(
@@ -1143,7 +1149,7 @@ export class TrainingService implements Permission<Training, Institution> {
     if (this.firebaseService.isAthlete(user)) return user;
     if (!athleteId) throw new BadRequestException('You must provide athlete');
 
-    const found = await this.userService.findOneBy('id', athleteId);
+    const found = await this.authService.findOneBy('id', athleteId);
     if (!found) throw new NotFoundException('Athlete does not exist');
 
     if (institution)

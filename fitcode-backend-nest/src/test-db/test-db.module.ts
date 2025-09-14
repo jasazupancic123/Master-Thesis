@@ -3,7 +3,7 @@ import { Module } from '@nestjs/common';
 import { FirebaseModule } from '@src/firebase/firebase.module';
 import { GroupRepository } from '@src/group/repository/group.repository';
 import { InstitutionRepository } from '@src/institution/repository/institution.repository';
-import { UserRepository } from '@src/user/repository/user.repository';
+import { ProfileRepository } from '@src/profile/repository/profile.repository';
 
 import { TestAttributeService } from './service/test-attribute.service';
 import { TestComponentService } from './service/test-component.service';
@@ -24,7 +24,7 @@ import { TestDbService } from './test-db.service';
     TrainingTestRepository,
     InstitutionRepository,
     GroupRepository,
-    UserRepository,
+    ProfileRepository,
     WellnessTestRepository,
   ],
   exports: [TestDbService],
