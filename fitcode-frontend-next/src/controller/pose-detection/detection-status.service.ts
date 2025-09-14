@@ -220,8 +220,8 @@ export class DetectionStatusService {
 
       const stdDev = DetectionStatusService.calculateStandardDeviation(history);
       return currentStatus === DetectionStatus.READY
-        ? stdDev < POSE_DETECTION_CONSTRAINTS.STILLNESS_THRESHOLD_WHILE_READY
-        : stdDev < POSE_DETECTION_CONSTRAINTS.STILLNESS_THRESHOLD;
+        ? stdDev < POSE_DETECTION_CONSTRAINTS.STILLNESS_THRESHOLD_WHILE_READY_M
+        : stdDev < POSE_DETECTION_CONSTRAINTS.STILLNESS_THRESHOLD_M;
     });
   }
 
@@ -280,7 +280,7 @@ export class DetectionStatusService {
     condition: ExerciseStartCondition
   ): boolean {
     const { value1: currentValue, value2: nextValue } =
-      KeypointUtil.getKeypointValueByType(
+      KeypointUtil.getKeypointsValuesByType(
         currentKeypoint,
         nextKeypoint,
         condition.type
@@ -288,18 +288,8 @@ export class DetectionStatusService {
 
     if (currentValue === undefined || nextValue === undefined) return false;
 
-    // console.log('currentValue, nextValue', currentValue, nextValue);
-
     const distance = Math.abs(nextValue - currentValue);
     const isDistanceOk = distance >= condition.distance;
-
-    console.log({
-      currentValue,
-      nextValue,
-      distance,
-      conditionDistance: condition.distance,
-      isDistanceOk,
-    });
 
     switch (condition.direction) {
       case ConditionDirection.ANY: {
