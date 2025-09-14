@@ -1,0 +1,53 @@
+import { Keypoint } from '../type/keypoint';
+
+export class KeypointHistory {
+  history: Keypoint[][];
+  bufferLength?: number;
+  isMainHistory?: boolean;
+
+  constructor(
+    history: Keypoint[][],
+    bufferLength?: number,
+    isMainHistory?: boolean
+  ) {
+    this.history = history;
+    this.bufferLength = bufferLength;
+    this.isMainHistory = isMainHistory;
+  }
+
+  insertFrame(
+    keypoints: Keypoint[],
+    avgFps?: { value: number; count: number } | null,
+    numSeconds?: number
+  ) {
+    if (this.isMainHistory) {
+      // TODO()
+      // checks if a keypoint is a outlier via the checkForOutliers function
+      // if there's an outlier, then keypoint.isValid becomes false
+      // checkForOutliers(keypoints, outliersBuffer);
+      // TODO()
+      // calculates keypoints velocities based on previous frames
+      // updates keypoint.velocity
+      // const previousFrameKeypoints = keypoints[keypoints.length - 1]
+      // calculateVelocities(keypoints, previousFrameKeypoints);
+    }
+
+    // inserts keypoints
+    this.history.push(keypoints);
+
+    if (avgFps && numSeconds && avgFps.count > 10) {
+      // calculate new buffer length based on fps and numSeconds
+      const maxBufferLength = Math.ceil(avgFps.value * numSeconds);
+      this.bufferLength = maxBufferLength;
+    }
+
+    if (this.bufferLength && this.history.length > this.bufferLength)
+      this.history.shift();
+  }
+
+  getHistoryById(keypointId: string): Keypoint[] {
+    return this.history.map((frame) =>
+      frame.find((kp) => kp.id === keypointId)
+    ) as Keypoint[];
+  }
+}
