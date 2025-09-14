@@ -13,11 +13,11 @@ import AthleteAnthropometryForm from '@/components/athlete-anthropometry-form/at
 import AthleteOptionsContainer from '@/components/athlete-options-container/athlete-options-container';
 import AthleteWellnessForm from '@/components/athlete-wellness-form/athlete-wellness-form';
 import { paintHeatmaps } from '@/components/muscle-heatmap-view/state';
+import { ProfileController } from '@/controller/profile/profile.controller';
 import type {
   CreateWellness,
   Wellness,
-} from '@/controller/user/type/wellness.type';
-import { UserController } from '@/controller/user/user.controller';
+} from '@/controller/profile/type/wellness.type';
 import { setCachedWellness } from '@/session-cache/wellness.session-cache';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useWellness } from '@/store/wellness-provider';
@@ -34,7 +34,7 @@ export async function submitWellness(
 
   handleApiRequest(
     router,
-    () => UserController.getInstance(token).saveMeta(input),
+    () => ProfileController.getInstance(token).upsertWellness(input),
     (_wellness) => {
       setCachedWellness(_wellness);
       toast.success('Successfully submitted wellness');

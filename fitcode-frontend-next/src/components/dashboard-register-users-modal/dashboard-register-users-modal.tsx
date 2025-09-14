@@ -16,9 +16,9 @@ import MyModal from '../modal/modal';
 import { BACKEND_API_BASE_URL } from '@/common/constant/api.constant';
 import { FirebaseFunctionsUtil } from '@/common/firebase/firebase-functions.util';
 import { handleApiRequest } from '@/common/type/state.type';
+import type { AuthUser } from '@/controller/auth/type/user.type';
 import { InstitutionController } from '@/controller/institution/institution.controller';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
-import type { User } from '@/controller/user/type/user.type';
+import { UserRole } from '@/controller/profile/enum/user-role.enum';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
@@ -53,7 +53,7 @@ export default function RegisterUsersDashboard(
     confirmPassword: '',
   });
   const [openModal, setOpenModal] = useState(false);
-  const [existingUser, setExistingUser] = useState<User | null>(null);
+  const [existingUser, setExistingUser] = useState<AuthUser | null>(null);
   const [isUploadingMembers, setIsUploadingMembers] = useState(false);
 
   // refetch users and update institution's athletes or trainers

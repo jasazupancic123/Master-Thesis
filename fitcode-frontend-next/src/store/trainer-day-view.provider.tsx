@@ -21,8 +21,9 @@ import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import type { Workload } from '@/controller/training/type/workload.type';
-import type { User, UserEntity } from '@/controller/user/type/user.type';
-import type { WellnessZScore } from '@/controller/user/type/wellness.type';
+import type { Profile } from '@/controller/profile/type/user.type';
+import type { AuthUser } from '@/controller/auth/type/user.type';
+import type { WellnessZScore } from '@/controller/profile/type/wellness.type';
 
 const commonService = CommonService.instance;
 
@@ -62,14 +63,16 @@ export function TrainerDayViewProvider(
   const [training, setTraining] = useState<Training | undefined>();
   const [component, setComponent] = useState<TrainingComponent | undefined>();
   const [supersets, setSupersets] = useState<Superset[]>([]);
-  const [members, setMembers] = useState<UserEntity[]>([]);
+  const [members, setMembers] = useState<Profile[]>([]);
 
   const [wellness, setWellness] = useState<WellnessZScore[]>([]);
 
   const [selectedExercises, setSelectedExercises] = useState<
     TrainingExercise[]
   >([]);
-  const [selectedAthlete, setSelectedAthlete] = useState<User | undefined>();
+  const [selectedAthlete, setSelectedAthlete] = useState<
+    AuthUser | undefined
+  >();
   const [selectedSubgroup, setSelectedSubgroup] = useState<Subgroup | null>(
     null
   );
@@ -80,7 +83,7 @@ export function TrainerDayViewProvider(
   ] = useState<Workload[]>([]);
 
   const isSettingAthleteWorkloads = useRef(false);
-  const previousSelectedAthlete = useRef<User | undefined>(undefined);
+  const previousSelectedAthlete = useRef<AuthUser | undefined>(undefined);
 
   const [loading, setLoading] = useState(false);
 
@@ -113,7 +116,7 @@ export function TrainerDayViewProvider(
     async function fetchWellness() {
       handleApiRequest(
         router,
-        () => controller.user.getWellnessByInstitutionId(group.institutionId),
+        () => controller.profile.getWellnessByInstitution(group.institutionId),
         (wellness) => setWellness(wellness),
         undefined
       );

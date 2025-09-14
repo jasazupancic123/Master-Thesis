@@ -11,10 +11,11 @@ import MyModal from '../modal/modal';
 import { SearchBar } from '../search-bar/search-bar';
 import { isManager, isTrainer } from '@/common/firebase/firebase-auth.util';
 import { handleApiRequest, type SetState } from '@/common/type/state.type';
+import type { AuthUser } from '@/controller/auth/type/user.type';
 import { GroupController } from '@/controller/group/group.controller';
-import type { User } from '@/controller/user/type/user.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 interface DashboardGroupsMembersProps {
@@ -38,6 +39,7 @@ export default function DashboardGroupsMembers(
   props: DashboardGroupsMembersProps
 ) {
   const router = useRouter();
+  const { users } = useMain();
 
   const { role } = useAuthenticatedAuth();
   const auth = useAuthenticatedAuth();
@@ -47,7 +49,6 @@ export default function DashboardGroupsMembers(
     selectedInstitution,
     setSelectedInstitution,
     selectedGroup,
-    members,
     setDetectedChanges,
   } = useDashboard();
 
@@ -56,9 +57,9 @@ export default function DashboardGroupsMembers(
 
   const { modal, setModal } = props;
 
-  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
-  const [hoveredUser, setHoveredUser] = useState<User | null>(null);
-  const [editUser, setEditUser] = useState<User | null>(null);
+  const [filteredUsers, setFilteredUsers] = useState<AuthUser[]>([]);
+  const [hoveredUser, setHoveredUser] = useState<AuthUser | null>(null);
+  const [editUser, setEditUser] = useState<AuthUser | null>(null);
   const [search, setSearch] = useState('');
 
   useEffect(() => {
@@ -211,8 +212,8 @@ export default function DashboardGroupsMembers(
                     <Avatar
                       className="avatar-border"
                       src={
-                        members.find((m) => m.id === user.uid)
-                          ?.profileImageUrl || '/user_avatar.png'
+                        users.find((m) => m.uid === user.uid)?.photoURL ||
+                        '/user_avatar.png'
                       }
                       sx={{
                         width: screenSize.isMobile ? 70 : 80,
@@ -295,6 +296,7 @@ export default function DashboardGroupsMembers(
         setModal={setModal}
         editUser={editUser}
         setEditUser={setEditUser}
+        setFilteredUsers={setFilteredUsers}
       />
     </>
   );

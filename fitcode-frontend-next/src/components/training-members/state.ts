@@ -10,23 +10,23 @@ import {
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
 import type { SetState, SetStateNullable } from '@/common/type/state.type';
+import type { AuthUser } from '@/controller/auth/type/user.type';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
 import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import type { User } from '@/controller/user/type/user.type';
 
 export async function handleAddMembersSubgroup(
-  input: { member: User },
+  input: { member: AuthUser },
   state: {
     training: Training | undefined;
     setTraining: SetStateNullable<Training>;
     component: TrainingComponent | undefined;
     setComponent: SetState<TrainingComponent | undefined>;
     setSelectedSubgroup: SetState<Subgroup | null>;
-    setSelectedAthlete: SetStateNullable<User>;
+    setSelectedAthlete: SetStateNullable<AuthUser>;
     setDetectedChanges: SetState<boolean>;
   }
 ) {
@@ -152,9 +152,9 @@ export async function handleAddMembersSubgroup(
 }
 
 export function updateSelectedAthlete(input: {
-  member: User;
-  selectedAthlete: User | undefined;
-  setSelectedAthlete: SetState<User | undefined>;
+  member: AuthUser;
+  selectedAthlete: AuthUser | undefined;
+  setSelectedAthlete: SetState<AuthUser | undefined>;
   component: TrainingComponent | undefined;
   selectedSubgroup: Subgroup | null;
   setSelectedSubgroup: SetState<Subgroup | null>;
@@ -197,7 +197,7 @@ export function updateSelectedAthlete(input: {
 }
 
 export function getOrCreateCustomWorkloadsSubgroup(input: {
-  selectedAthlete: User;
+  selectedAthlete: AuthUser;
   component: TrainingComponent;
   setComponent: SetStateNullable<TrainingComponent>;
   selectedSubgroup: Subgroup | null;

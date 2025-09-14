@@ -18,9 +18,10 @@ import { DEFAULT_SUBGROUP_ID } from '../trainer-day-view/constant';
 import { handleDeleteSubgroup } from '../trainer-day-view/state';
 import { updateSelectedAthlete } from '../training-members/state';
 import type { SetState } from '@/common/type/state.type';
+import type { AuthUser } from '@/controller/auth/type/user.type';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
-import type { User } from '@/controller/user/type/user.type';
 import { useGroup } from '@/store/group.provider';
+import { useMain } from '@/store/main.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 
 interface TrainingMembersSubgroupProps {
@@ -28,7 +29,7 @@ interface TrainingMembersSubgroupProps {
   subgroupIndex: number;
   anchorEl: HTMLElement | null;
   setAnchorEl: SetState<HTMLElement | null>;
-  members: User[];
+  members: AuthUser[];
   setEditSubgroupName: SetState<string>;
   setEditedSubgroup: SetState<Subgroup | null>;
   setModal: SetState<{ editSubgroup: boolean }>;
@@ -43,8 +44,9 @@ export default function TrainingMembersSubgroup(
   const { selectedExercises, setSelectedExercises } =
     useTrainerDayViewContext();
 
+  const { users } = useMain();
+
   const {
-    members: groupMembers,
     component,
     setComponent,
     training,
@@ -336,8 +338,8 @@ export default function TrainingMembersSubgroup(
                           <Avatar
                             className="avatar-border"
                             src={
-                              groupMembers.find((m) => m.id === member.uid)
-                                ?.profileImageUrl || '/user_avatar.png'
+                              users.find((m) => m.uid === member.uid)
+                                ?.photoURL || '/user_avatar.png'
                             }
                             sx={{
                               width: 50,

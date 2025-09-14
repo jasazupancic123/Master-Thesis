@@ -4,16 +4,16 @@ import {
 } from '../training-members/state';
 import type { SetState } from '@/common/type/state.type';
 import type { Attribute } from '@/controller/attribute/type/attribute.type';
+import type { AuthUser } from '@/controller/auth/type/user.type';
 import type { ExerciseSet } from '@/controller/training/type/exercise-set.type';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
 import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import type { User } from '@/controller/user/type/user.type';
 
 export function getCorrectValuesForExerciseParam(
-  selectedAthlete: User | undefined,
+  selectedAthlete: AuthUser | undefined,
   input: {
     exercise: TrainingExercise;
   },

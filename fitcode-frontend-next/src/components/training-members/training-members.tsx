@@ -371,8 +371,8 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                         <Avatar
                           className="avatar-border"
                           src={
-                            groupMembers.find((m) => m.id === member.uid)
-                              ?.profileImageUrl || '/user_avatar.png'
+                            users.find((m) => m.uid === member.uid)?.photoURL ||
+                            '/user_avatar.png'
                           }
                           sx={{
                             width: 50,

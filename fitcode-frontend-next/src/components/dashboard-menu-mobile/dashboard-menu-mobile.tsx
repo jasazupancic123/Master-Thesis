@@ -29,15 +29,13 @@ import { isAdmin } from '@/common/firebase/firebase-auth.util';
 import type { Institution } from '@/controller/institution/type/institution.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
-import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 export default function DashboardMenuMobile() {
   const { institutions, selectedInstitution, setSelectedInstitution } =
     useDashboard();
 
-  const { role, logout } = useAuthenticatedAuth();
-  const { profile } = useMain();
+  const { user, role, logout } = useAuthenticatedAuth();
 
   const screenSize = useScreenSize();
 
@@ -109,7 +107,7 @@ export default function DashboardMenuMobile() {
                 case LINK_PROFILE.href:
                   Icon = (
                     <Avatar
-                      src={profile?.profileImageUrl}
+                      src={user?.photoURL || '/user_avatar.png'}
                       sx={{
                         width: 25,
                         height: 25,

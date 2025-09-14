@@ -11,7 +11,7 @@ import {
 import type { ILink } from '@/common/type/link.type';
 import type { ChildrenProps } from '@/common/type/props.type';
 import type { SetState } from '@/common/type/state.type';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
+import { UserRole } from '@/controller/profile/enum/user-role.enum';
 
 interface AthleteContextProps {
   selectedDate: Dayjs;

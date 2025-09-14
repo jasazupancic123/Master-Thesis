@@ -2,7 +2,7 @@ import type { Functions } from 'firebase/functions';
 import { httpsCallable } from 'firebase/functions';
 
 import { getFirebaseFunctions } from '@/common/config/firebase.config';
-import type { UserRole } from '@/controller/user/enum/user-role.enum';
+import type { UserRole } from '@/controller/profile/enum/user-role.enum';
 
 export class FirebaseFunctionsUtil {
   private static instance: FirebaseFunctionsUtil;

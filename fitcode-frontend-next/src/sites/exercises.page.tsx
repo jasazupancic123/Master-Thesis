@@ -39,7 +39,7 @@ import type {
   CreateExerciseMuscleValues,
   Exercise,
 } from '@/controller/exercise/type/exercise.type';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
+import { UserRole } from '@/controller/profile/enum/user-role.enum';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';

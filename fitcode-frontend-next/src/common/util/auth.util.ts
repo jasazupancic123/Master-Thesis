@@ -7,7 +7,6 @@ import { LINK_SIGN_IN } from '../constant/navigation.constant';
 export async function getAuthIdTokenFromCookies(): Promise<string | undefined> {
   const cookieStore = await cookies();
   const payload = cookieStore.get(FIREBASE_AUTH_ID_TOKEN)?.value;
-
   if (!payload) return undefined;
 
   let value = '';

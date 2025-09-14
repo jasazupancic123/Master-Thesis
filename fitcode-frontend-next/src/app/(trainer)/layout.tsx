@@ -10,7 +10,7 @@ export default async function Layout({ children }: ChildrenProps) {
   if (!token) return <Alert type="unauthorized" />;
 
   const controller = Controller.getInstance(token);
-  const profile = await controller.user.findMe();
+  const profile = await controller.auth.findMe();
   if (!profile) return <Alert type="unauthorized" />;
 
   if (isAthlete(profile.customClaims.role[0]))

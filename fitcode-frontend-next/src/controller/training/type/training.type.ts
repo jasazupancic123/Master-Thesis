@@ -9,8 +9,8 @@ import type { BaseEntity } from '@/common/type/entity.type';
 import type { Cycle } from '@/controller/group/type/cycle.type';
 import type { Group } from '@/controller/group/type/group.type';
 import type { Institution } from '@/controller/institution/type/institution.type';
-import type { User } from '@/controller/user/type/user.type';
-import type { Wellness } from '@/controller/user/type/wellness.type';
+import type { AuthUser } from '@/controller/auth/type/user.type';
+import type { Wellness } from '@/controller/profile/type/wellness.type';
 
 export type Training = BaseEntity &
   Required<DateRange> & {
@@ -30,7 +30,7 @@ export type Training = BaseEntity &
     institution?: Institution;
     group?: Group;
     cycle?: Cycle;
-    members?: User[];
+    members?: AuthUser[];
   };
 
 export type CreateTraining = Pick<

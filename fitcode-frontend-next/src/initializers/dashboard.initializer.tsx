@@ -6,7 +6,7 @@ import { useNestBackendFetch } from '@/common/hooks/use-fetch.hook';
 import type { ChildrenProps } from '@/common/type/props.type';
 import { GroupService } from '@/controller/group/group.service';
 import { InstitutionService } from '@/controller/institution/institution.service';
-import type { UserEntity } from '@/controller/user/type/user.type';
+import type { Profile } from '@/controller/profile/type/user.type';
 import DashboardLayout from '@/sites/dashboard.layout';
 import type { DashboardPageProps } from '@/store/dashboard.provider';
 import { DashboardProvider } from '@/store/dashboard.provider';
@@ -34,10 +34,10 @@ function DashboardInitializer({
 }: ChildrenProps & WithInstitutionProps) {
   const [state, setState] = useState<DashboardPageProps | null>(null);
   const { users, institutions: allInstitutions, groups: allGroups } = useMain();
-  const [members, setMembers] = useState<UserEntity[]>([]);
+  const [members, setMembers] = useState<Profile[]>([]);
 
   const { data: fetchedMembers, refetch: refetchMembers } = useNestBackendFetch<
-    UserEntity[]
+    Profile[]
   >(`/institution/${institutionId}/find/all`, { enabled: !!institutionId }); // only fetch when id is defined
 
   useEffect(() => {

@@ -11,12 +11,13 @@ import type { Exercise } from '@/controller/exercise/type/exercise.type';
 import type { Group } from '@/controller/group/type/group.type';
 import type { Institution } from '@/controller/institution/type/institution.type';
 import type { Method } from '@/controller/method/type/method.type';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
-import type { User, UserEntity } from '@/controller/user/type/user.type';
+import { UserRole } from '@/controller/profile/enum/user-role.enum';
+import type { Profile } from '@/controller/profile/type/user.type';
+import type { AuthUser } from '@/controller/auth/type/user.type';
 
 export interface MainProviderProps {
-  profile: UserEntity;
-  users: User[];
+  profile: Profile;
+  users: AuthUser[];
   components: Component[];
   exercises: Exercise[];
   attributes: Attribute[];
@@ -26,8 +27,8 @@ export interface MainProviderProps {
 }
 
 interface MainContextProps extends MainProviderProps {
-  setProfile: SetStateNullable<UserEntity>;
-  setUsers: SetState<User[]>;
+  setProfile: SetStateNullable<Profile>;
+  setUsers: SetState<AuthUser[]>;
   setComponents: SetState<Component[]>;
   setExercises: SetState<Exercise[]>;
   setAttributes: SetState<Attribute[]>;
@@ -48,8 +49,8 @@ export const CoachMainProvider = withAuth(MainProvider, [
 export default function MainProvider(props: ChildrenProps & MainProviderProps) {
   const { children } = props;
 
-  const [profile, setProfile] = useState<UserEntity | undefined>(props.profile);
-  const [users, setUsers] = useState<User[]>(props.users);
+  const [profile, setProfile] = useState<Profile | undefined>(props.profile);
+  const [users, setUsers] = useState<AuthUser[]>(props.users);
   const [exercises, setExercises] = useState<Exercise[]>(props.exercises);
   const [attributes, setAttributes] = useState<Attribute[]>(props.attributes);
   const [components, setComponents] = useState<Component[]>(props.components);
@@ -57,7 +58,7 @@ export default function MainProvider(props: ChildrenProps & MainProviderProps) {
 
   const value: MainContextProps = {
     profile: profile!,
-    setProfile: setProfile as SetStateNullable<UserEntity>,
+    setProfile: setProfile as SetStateNullable<Profile>,
     users,
     setUsers,
     components,

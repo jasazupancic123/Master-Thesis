@@ -1,9 +1,9 @@
-import type { User } from '../user/type/user.type';
+import type { AuthUser } from '../auth/type/user.type';
 import type { Cycle } from './type/cycle.type';
 import type { Group } from './type/group.type';
 
 export class GroupService {
-  static mapMembers(item: Group, users: User[]) {
+  static mapMembers(item: Group, users: AuthUser[]) {
     item.members = item.membersIds.map(
       (userId) => users.find(({ uid }) => uid === userId)!
     );

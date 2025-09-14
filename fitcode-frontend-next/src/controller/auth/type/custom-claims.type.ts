@@ -1,4 +1,4 @@
-import type { UserRole } from '../enum/user-role.enum';
+import type { UserRole } from '@/controller/profile/enum/user-role.enum';
 
 export interface CustomClaims {
   role: UserRole[];

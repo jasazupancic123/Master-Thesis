@@ -17,6 +17,7 @@ import { handleApiRequest } from '@/common/type/state.type';
 import { AttributeType } from '@/controller/attribute/enum/attribute-value.enum';
 import type { Attribute } from '@/controller/attribute/type/attribute.type';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
+import type { AuthUser } from '@/controller/auth/type/user.type';
 import type { IntType, VolType } from '@/controller/component/enum/param.enum';
 import { ParamType } from '@/controller/component/enum/param.enum';
 import type { Component } from '@/controller/component/type/component.type';
@@ -36,7 +37,6 @@ import type { TrainingComponent } from '@/controller/training/type/training-comp
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import type { Workload } from '@/controller/training/type/workload.type';
 import type { WorkloadValue } from '@/controller/training/type/workload-value.type';
-import type { User } from '@/controller/user/type/user.type';
 
 export async function handleCopyTraining(
   controller: TrainingController,
@@ -119,7 +119,7 @@ export function onDragEndSubgroup(
     setSubgroups: SetState<Subgroup[]>;
     changedSubgroupIds: string[];
     setChangedSubgroupIds: SetState<string[]>;
-    users: User[];
+    users: AuthUser[];
     component: TrainingComponent | undefined;
     setComponent: SetStateNullable<TrainingComponent>;
     training: Training | undefined;
@@ -244,7 +244,7 @@ export async function handleAddSubgroup(state: {
     | undefined;
   setDetectedChanges: SetState<boolean>;
   setSelectedSubgroup: SetState<Subgroup | null>;
-  setSelectedAthlete: SetStateNullable<User>;
+  setSelectedAthlete: SetStateNullable<AuthUser>;
 }) {
   const {
     training,
@@ -1219,7 +1219,7 @@ export function prepareSelectedAthleteAvgWorkloadsForChart(input: {
   component: TrainingComponent;
   trainings: Training[];
   exercise: TrainingExercise;
-  selectedAthlete: User;
+  selectedAthlete: AuthUser;
   selectedSubgroup: Subgroup | null;
   selectedParams: ParamType[];
   setData: SetState<ChartWorkloadData[]>;
