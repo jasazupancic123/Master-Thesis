@@ -11,7 +11,7 @@ export function getCorsConfig(app: INestApplication): CorsOptions {
   const commonService = app.get(CommonService);
 
   let origin: CorsOptions['origin'] = '*';
-  if (commonService.env.isProd()) {
+  if (commonService.env.isProduction()) {
     const whitelist = configService.get('FRONTEND_WHITELIST')?.split(',') || [];
     if (whitelist.length > 0)
       origin = (requestOrigin, callback) => {
