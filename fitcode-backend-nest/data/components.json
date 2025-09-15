@@ -921,5 +921,12 @@
         ]
       }
     ]
+  },
+  {
+    "name": "Competition",
+    "slug": "competition",
+    "targets": [],
+    "params": { "default": [] },
+    "children": []
   }
 ]
