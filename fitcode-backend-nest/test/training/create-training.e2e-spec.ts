@@ -1,19 +1,20 @@
 import type { INestApplication } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import {
-  createGroupWithCycles,
-  createInstitution,
-  deleteDoc,
-  deleteDocs,
-  deleteInstitution,
-} from '@test/common/utils/data.util';
 import { expectDatesToMatchUpToMinute } from '@test/common/utils/date.util';
 import { addDays, addHours, subDays, subHours } from 'date-fns';
 import * as request from 'supertest';
 
 import { AppModule } from '@src/app.module';
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
+import type { TestInstitution } from '@src/common/type/entity.type';
+import {
+  createGroupWithCycles,
+  createInstitution,
+  deleteDoc,
+  deleteDocs,
+  deleteInstitution,
+} from '@src/common/utils/data.util';
 import { getTime } from '@src/common/utils/date.util';
 import { ComponentService } from '@src/component/component.service';
 import { DEFAULT_PARAMS_KEY } from '@src/component/constant/param.constant';
@@ -35,8 +36,6 @@ import {
   generateTrainingStub,
 } from '@src/training/mock/training.stub';
 import { TrainingService } from '@src/training/service/training.service';
-
-import type { TestInstitution } from '../common/type/entity.type';
 
 describe('Create Training (e2e)', () => {
   let app: INestApplication;

@@ -1,12 +1,11 @@
 import type { INestApplication } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import type { TestUser } from '@test/common/type/auth.type';
-import type { TestInstitution } from '@test/common/type/entity.type';
-import { createAthleteUserAndToken } from '@test/common/utils/auth.util';
 import * as request from 'supertest';
 
 import { AppModule } from '@src/app.module';
+import type { TestInstitution, TestUser } from '@src/common/type/entity.type';
+import { createAthleteUserAndToken } from '@src/common/utils/auth.util';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { TestDbService } from '@src/test-db/test-db.service';
 

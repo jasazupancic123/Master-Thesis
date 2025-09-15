@@ -1,13 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { TestUser } from '@test/common/type/auth.type';
-import { TestInstitution } from '@test/common/type/entity.type';
+
+import { TestInstitution, TestUser } from '@src/common/type/entity.type';
 import {
   createAthleteUserAndToken,
   createManagerUserAndToken,
   createTrainerUserAndToken,
-} from '@test/common/utils/auth.util';
-import { deleteUsersByIds } from '@test/common/utils/data.util';
-
+} from '@src/common/utils/auth.util';
+import { deleteUsersByIds } from '@src/common/utils/data.util';
 import { Institution } from '@src/institution/entity/institution.entity';
 import { generateInstitutionStub } from '@src/institution/mock/institution.mock';
 import { InstitutionRepository } from '@src/institution/repository/institution.repository';
