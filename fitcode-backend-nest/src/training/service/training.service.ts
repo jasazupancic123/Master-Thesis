@@ -47,6 +47,7 @@ import {
 } from '@src/common/type/orm.type';
 import { Filter } from '@src/common/type/orm.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
+import { logFirestoreQuery } from '@src/common/utils/firestore-query.util';
 import { ComponentService } from '@src/component/component.service';
 import {
   COOLDOWN_COMPONENT_ID,
@@ -146,30 +147,33 @@ export class TrainingService implements Permission<Training, Institution> {
     options?: { limit?: number },
     populate?: boolean,
   ): Promise<Training[]> {
-    const trainings = await this.repository.findAll((q) => {
-      // filter by roles
-      if (
-        this.firebaseService.isTrainer(user) ||
-        this.firebaseService.isManager(user)
-      )
-        q = q.where('ownerId', '==', user.uid);
-      else if (this.firebaseService.isAthlete(user))
-        q = q.where('membersIds', 'array-contains', user.uid);
+    const trainings = await this.repository.findAll(
+      logFirestoreQuery(this.logger, (q) => {
+        if (
+          this.firebaseService.isTrainer(user) ||
+          this.firebaseService.isManager(user)
+        )
+          q = q.where('ownerId', '==', user.uid);
+        else if (this.firebaseService.isAthlete(user))
+          q = q.where('membersIds', 'array-contains', user.uid);
 
-      // filter by other params
-      if (filter?.groupId) q = q.where('groupId', '==', filter.groupId);
-      if (filter?.from)
-        q = q.where('from', '>=', Timestamp.fromDate(new Date(filter.from)));
-      if (filter?.to)
-        q = q.where('to', '<=', Timestamp.fromDate(new Date(filter.to)));
+        // filter by other params
+        if (filter?.groupId) q = q.where('groupId', '==', filter.groupId);
+        if (filter?.from)
+          q = q.where('from', '>=', Timestamp.fromDate(new Date(filter.from)));
+        if (filter?.to)
+          q = q.where('to', '<=', Timestamp.fromDate(new Date(filter.to)));
 
-      q = q.orderBy('from', 'asc');
-      if (options?.limit) q = q.limit(options.limit);
+        q = q.orderBy('from', 'asc');
+        if (options?.limit) q = q.limit(options.limit);
 
-      return q;
-    });
+        return q;
+      }),
+    );
 
     if (populate) {
+      const start = performance.now();
+
       const institutions: Institution[] = [];
       const groups: Group[] = [];
 
@@ -188,7 +192,9 @@ export class TrainingService implements Permission<Training, Institution> {
         const foundGroup = groups.find((g) => g.id === t.groupId);
         const group =
           foundGroup || t.groupId
-            ? await this.groupService.findOneById(user, { groupId: t.groupId })
+            ? await this.groupService.findOneById(user, {
+                groupId: t.groupId,
+              })
             : undefined;
 
         if (!foundInstitution && institution) institutions.push(institution);
@@ -198,6 +204,12 @@ export class TrainingService implements Permission<Training, Institution> {
         t.group = group;
         t.cycle = this.groupService.findCycleOrFail(t.cycleId, t.group);
       }
+
+      const duration = this.commonService.number.round(
+        performance.now() - start,
+      );
+
+      this.logger.debug(`findAll(populate=true): Took ${duration}ms`);
     }
 
     return trainings;
