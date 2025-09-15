@@ -4,7 +4,7 @@ import { generateRandomEmail } from '@src/common/utils/random.util';
 import type { FirebaseService } from '@src/firebase/firebase.service';
 import type { Profile } from '@src/profile/entity/profile.entity';
 
-import type { TestUser } from '../type/auth.type';
+import type { TestUser } from '../type/entity.type';
 
 export async function createTestUserAndToken(
   firebaseService: FirebaseService,

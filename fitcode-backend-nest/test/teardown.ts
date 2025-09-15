@@ -1,9 +1,9 @@
 import { ConfigService } from '@nestjs/config';
-import { deleteUsers } from '@test/common/utils/data.util';
 import { config } from 'dotenv';
 
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { CommonService } from '@src/common/service/common.service';
+import { deleteUsers } from '@src/common/utils/data.util';
 import type {
   Environment,
   NodeEnv,

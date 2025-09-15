@@ -9,8 +9,7 @@ import type { Institution } from '@src/institution/entity/institution.entity';
 import { generateInstitutionStub } from '@src/institution/mock/institution.mock';
 import type { InstitutionService } from '@src/institution/service/institution.service';
 
-import type { TestUser } from '../type/auth.type';
-import type { TestInstitution } from '../type/entity.type';
+import type { TestInstitution, TestUser } from '../type/entity.type';
 import {
   createAthleteUserAndToken,
   createManagerUserAndToken,

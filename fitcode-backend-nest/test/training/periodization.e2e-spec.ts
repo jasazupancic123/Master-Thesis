@@ -1,12 +1,12 @@
 import type { INestApplication } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { deleteCollection } from '@test/common/utils/data.util';
 import { TestPeriodizationUtil } from '@test/common/utils/periodization.util';
 import { addDays } from 'date-fns';
 import * as req from 'supertest';
 
 import { AppModule } from '@src/app.module';
+import { deleteCollection } from '@src/common/utils/data.util';
 import type { Component } from '@src/component/entity/component.entity';
 import { generateComponentStub } from '@src/component/mock/component.stub';
 import { FirebaseService } from '@src/firebase/firebase.service';

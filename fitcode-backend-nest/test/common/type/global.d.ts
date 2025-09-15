@@ -1,4 +1,4 @@
-import type { TestUser } from './auth.type';
+import type { TestUser } from '@/src/common/type/entity.type';
 
 declare global {
   namespace NodeJS {

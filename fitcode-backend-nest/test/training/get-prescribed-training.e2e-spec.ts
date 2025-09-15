@@ -1,20 +1,19 @@
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { COMPONENT_PARAMS_OPT1 } from '@test/common/constant/component-params.constant';
-import type { TestUser } from '@test/common/type/auth.type';
-import type { TestInstitution } from '@test/common/type/entity.type';
-import { createAthleteUserAndToken } from '@test/common/utils/auth.util';
+import { subDays } from 'date-fns';
+import * as request from 'supertest';
+
+import { AppModule } from '@src/app.module';
+import type { TestInstitution, TestUser } from '@src/common/type/entity.type';
+import { createAthleteUserAndToken } from '@src/common/utils/auth.util';
 import {
   createGroupWithCycles,
   createInstitution,
   deleteCollection,
   deleteDoc,
   deleteUsers,
-} from '@test/common/utils/data.util';
-import { subDays } from 'date-fns';
-import * as request from 'supertest';
-
-import { AppModule } from '@src/app.module';
+} from '@src/common/utils/data.util';
 import { ComponentService } from '@src/component/component.service';
 import { DEFAULT_PARAMS_KEY } from '@src/component/constant/param.constant';
 import type { Component } from '@src/component/entity/component.entity';
