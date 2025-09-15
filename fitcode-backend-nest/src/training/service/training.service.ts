@@ -159,6 +159,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
         // filter by other params
         if (filter?.groupId) q = q.where('groupId', '==', filter.groupId);
+        if (filter?.cycleId) q = q.where('cycleId', '==', filter.cycleId);
         if (filter?.from)
           q = q.where('from', '>=', Timestamp.fromDate(new Date(filter.from)));
         if (filter?.to)
