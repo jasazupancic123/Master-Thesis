@@ -64,8 +64,7 @@ export class AuthService {
 
     // some users can be in multiple institutions, so we need to filter out duplicates
     const uniqueUsers = users.filter(
-      (user, index, self) =>
-        index === self.findIndex((u) => u.uid === user.uid),
+      (u, index, self) => index === self.findIndex((t) => t.uid === u.uid),
     );
 
     if (filter?.ids?.length === 0 || filter?.emails?.length === 0) return [];

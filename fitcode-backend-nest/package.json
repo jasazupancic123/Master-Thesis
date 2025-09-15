@@ -9,6 +9,7 @@
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "node dist/main",
     "deploy": "cross-env NODE_ENV=production && gcloud app deploy",
+    "deploy:staging": "cross-env NODE_ENV=staging && gcloud app deploy app-staging.yaml",
     "firebase:dev": "firebase emulators:start --only firestore,auth,storage,functions",
     "firebase:deploy:indexes": "firebase deploy --only firestore:indexes",
     "start:dev": "nest start -b swc --watch",
