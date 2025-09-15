@@ -296,19 +296,9 @@ export class DetectionStatusService {
         return isDistanceOk;
       }
       case ConditionDirection.POSITIVE: {
-        if (condition.type === KeypointValueType.POSITION_Y) {
-          // inverted Y axis
-          return nextValue < currentValue && isDistanceOk;
-        }
-
         return nextValue > currentValue && isDistanceOk;
       }
       case ConditionDirection.NEGATIVE:
-        if (condition.type === KeypointValueType.POSITION_Y) {
-          // inverted Y axis
-          return nextValue > currentValue && isDistanceOk;
-        }
-
         return nextValue < currentValue && isDistanceOk;
       default:
         return false;

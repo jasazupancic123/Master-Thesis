@@ -20,6 +20,8 @@ export class KeypointHistory {
     avgFps?: { value: number; count: number } | null,
     numSeconds?: number
   ) {
+    if (!keypoints) return;
+
     if (this.isMainHistory) {
       // TODO()
       // checks if a keypoint is a outlier via the checkForOutliers function
@@ -49,5 +51,12 @@ export class KeypointHistory {
     return this.history.map((frame) =>
       frame.find((kp) => kp.id === keypointId)
     ) as Keypoint[];
+  }
+
+  cutAtIndex(index: number, clearBufferLength?: boolean) {
+    if (index !== -1) {
+      this.history = this.history.slice(index);
+      if (clearBufferLength) this.bufferLength = undefined;
+    }
   }
 }

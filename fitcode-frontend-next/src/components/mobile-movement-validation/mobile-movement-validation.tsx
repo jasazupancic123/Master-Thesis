@@ -26,7 +26,7 @@ export default function MobileMovementValidation() {
   const keypointHistoryRef = useRef<KeypointHistory>(
     new KeypointHistory([], 100, true)
   ); // first make buffer of 100 frames, later set buffer size to undefined to get all recording of exercise
-  const keypointBuffer = new KeypointHistory([], 100); // 100 frames buffer
+  const keypointBuffer = new KeypointHistory([], 100); // 100 frames buffer, updates in the main loop based on fps
 
   const exerciseStartConditions: ExerciseStartCondition[] = [
     {
@@ -98,9 +98,9 @@ export default function MobileMovementValidation() {
 
         const keypointIds = [
           KeypointId.LEFT_EYE,
-          KeypointId.RIGHT_EYE,
-          KeypointId.LEFT_SHOULDER,
-          KeypointId.RIGHT_SHOULDER,
+          // KeypointId.RIGHT_EYE,
+          // KeypointId.LEFT_SHOULDER,
+          // KeypointId.RIGHT_SHOULDER,
         ];
 
         keypointIds.forEach((id) => {
@@ -108,9 +108,7 @@ export default function MobileMovementValidation() {
             keypointHistoryRef.current.history,
             id,
             KeypointValueType.POSITION_Y,
-            ConditionDirection.ANY,
-            0.02, // meters to move
-            avgFps.current ? avgFps.current.value : 30
+            'whole_exercise'
           );
         });
       }
@@ -214,10 +212,8 @@ export default function MobileMovementValidation() {
           prevFrameTimeRef,
           lastVideoTimeRef,
           frameCountRef,
+          isMobile: screenSize.isMobile,
           avgFps,
-          hasWeakFps: avgFps.current
-            ? avgFps.current.value <= 15
-            : screenSize.isMobile,
           exerciseStartConditions,
           firstFrameInRecordingMode,
           setFps,
