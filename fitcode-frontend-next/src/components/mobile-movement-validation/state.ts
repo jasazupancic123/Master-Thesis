@@ -3,16 +3,22 @@ import { KeypointHistory } from '@/controller/pose-detection/class/keypoint-hist
 import { POSE_DETECTION_CONSTRAINTS } from '@/controller/pose-detection/const/pose-detection-constrains.const';
 import { STATUS_MESSAGES } from '@/controller/pose-detection/const/status-messages';
 import { DetectionStatus } from '@/controller/pose-detection/enum/detection-status';
+import { KeypointId } from '@/controller/pose-detection/enum/keypoint-id';
+import { KeypointValueType } from '@/controller/pose-detection/enum/keypoint-value-type';
 import { PoseModel } from '@/controller/pose-detection/enum/pose-model.enum';
 import { PoseDetectionService } from '@/controller/pose-detection/pose-detection.service';
-import { ExerciseStartCondition } from '@/controller/pose-detection/type/exercise-start-condition';
+import { RepDetectionService } from '@/controller/pose-detection/rep-detection.service';
+import {
+  ConditionDirection,
+  ExerciseStartCondition,
+} from '@/controller/pose-detection/type/exercise-start-condition';
 import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
 import {
   DrawingUtils,
   FilesetResolver,
   PoseLandmarker,
 } from '@mediapipe/tasks-vision';
-import { Ref, RefObject } from 'react';
+import { RefObject } from 'react';
 
 export async function loadModel(state: {
   setPoseLandmarker: SetState<PoseLandmarker | null>;
@@ -100,9 +106,9 @@ export const predictWebcam = async (state: {
   canvasCtxRef: RefObject<CanvasRenderingContext2D | null>;
   prevFrameTimeRef: RefObject<number | null>;
   lastVideoTimeRef: RefObject<number>;
+  isMobile: boolean;
   frameCountRef: RefObject<number>;
   firstFrameInRecordingMode: RefObject<boolean>;
-  hasWeakFps: boolean;
   avgFps: RefObject<{ value: number; count: number } | null>;
   setFps: SetState<number | null>;
   setStatusMessage: SetState<string>;
@@ -120,9 +126,9 @@ export const predictWebcam = async (state: {
     canvasCtxRef,
     prevFrameTimeRef,
     lastVideoTimeRef,
+    isMobile,
     frameCountRef,
     firstFrameInRecordingMode,
-    hasWeakFps,
     avgFps,
     setFps,
     setStatusMessage,
@@ -193,7 +199,30 @@ export const predictWebcam = async (state: {
         firstFrameInRecordingMode.current === false &&
         statusRef.current === DetectionStatus.RECORDING
       ) {
-        // save all frames when in recording mode
+        const slopeK = 3; // naklon premice
+        const sustainW = 2; // look for 2 consecutive frames of sustained slope
+
+        const preWindow = Math.min(
+          4,
+          KeypointUtil.getFramesCountFromSeconds(
+            0.15,
+            avgFps.current?.value || 30
+          )
+        ); // look for 0.15s of frames of sustained slope, min 4 frames
+
+        const { index: startOfFirstRepIndex, message } =
+          RepDetectionService.findStartOfFirstRep({
+            buffer: keypointHistory,
+            keypointId: KeypointId.LEFT_EYE,
+            valueType: KeypointValueType.POSITION_Y,
+            direction: ConditionDirection.NEGATIVE,
+            slopeK,
+            sustainW,
+            preWindow,
+          });
+
+        keypointHistory.cutAtIndex(startOfFirstRepIndex, true);
+
         firstFrameInRecordingMode.current = true;
         keypointHistory.bufferLength = undefined;
       }
@@ -210,7 +239,9 @@ export const predictWebcam = async (state: {
         );
       }
 
-      keypointBuffer.insertFrame(keypoints, avgFps.current, hasWeakFps ? 2 : 3); // keep 3 seconds of history
+      const hasWeakFps = avgFps.current ? avgFps.current.value <= 15 : isMobile;
+
+      keypointBuffer.insertFrame(keypoints, avgFps.current, hasWeakFps ? 2 : 3); // keep 2 or 3 seconds of history
 
       PoseDetectionService.checkStatus(
         statusRef,

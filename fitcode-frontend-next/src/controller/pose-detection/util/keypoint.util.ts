@@ -1,11 +1,9 @@
 import { KeypointId } from '../enum/keypoint-id';
 import { PoseModel } from '../enum/pose-model.enum';
-import { Landmark, ObjectDetector } from '@mediapipe/tasks-vision';
+import { Landmark } from '@mediapipe/tasks-vision';
 import { Keypoint } from '../type/keypoint';
 import { KeypointValueType } from '../enum/keypoint-value-type';
 import savitzkyGolay from 'ml-savitzky-golay';
-import { ConditionDirection } from '../type/exercise-start-condition';
-import { POSE_DETECTION_CONSTRAINTS } from '../const/pose-detection-constrains.const';
 
 export class KeypointUtil {
   static getDesiredKeypointsByModel(
@@ -60,7 +58,7 @@ export class KeypointUtil {
       case KeypointValueType.POSITION_X:
         return { value1: keypoint1.x, value2: keypoint2.x };
       case KeypointValueType.POSITION_Y:
-        return { value1: keypoint1.y, value2: keypoint2.y };
+        return { value1: -keypoint1.y, value2: -keypoint2.y };
       case KeypointValueType.POSITION_Z:
         return { value1: keypoint1.z, value2: keypoint2.z };
       case KeypointValueType.VELOCITY:
@@ -78,7 +76,7 @@ export class KeypointUtil {
       case KeypointValueType.POSITION_X:
         return keypoint.x;
       case KeypointValueType.POSITION_Y:
-        return keypoint.y;
+        return -keypoint.y; // invert Y to have +Y as up
       case KeypointValueType.POSITION_Z:
         return keypoint.z;
       case KeypointValueType.VELOCITY:
@@ -88,10 +86,16 @@ export class KeypointUtil {
     }
   }
 
-  static smoothKeypointValues(keypointValues: number[], fps = 30) {
+  static smoothKeypointValues(
+    keypointValues: number[],
+    fps = 30,
+    windowSizeProps?: number,
+    polynomialProps?: number
+  ): number[] {
     // ~0.5–1.5 reps/sec → use a small odd window (11–21 for 30 fps)
-    const windowSize = 11; // must be odd
-    const polynomial = 3; // 2–3 is typical
+    const windowSize = windowSizeProps || 11;
+    const polynomial = polynomialProps || 3;
+
     // sampling interval (seconds per sample)
     const dx = 1 / fps;
 
@@ -104,84 +108,11 @@ export class KeypointUtil {
     });
   }
 
-  static cutStart(
-    keypointValues: number[],
-    avgFps: number,
-    direction: ConditionDirection,
-    distanceToCover: number
-  ): number[] | undefined {
-    // get 300ms of fps
-    const bufferSize = Math.ceil(0.3 * avgFps); // 300ms buffer window
-    if (keypointValues.length < bufferSize) return undefined; // not enough data
-
-    let bestRatio = 0;
-
-    for (let i = bufferSize; i < keypointValues.length; i++) {
-      let okConcurrentKeypoints = 0;
-
-      let dirrection: 'up' | 'down' | undefined = undefined;
-
-      const buffer = keypointValues.slice(i - bufferSize, i);
-
-      for (let j = 1; j < buffer.length; j++) {
-        const currentValue = buffer[j];
-        const prevValue = buffer[j - 1];
-
-        if (direction === ConditionDirection.ANY) {
-          if (dirrection === undefined) {
-            dirrection = currentValue > prevValue ? 'up' : 'down';
-            okConcurrentKeypoints++;
-            continue;
-          }
-
-          const currentDirrection = currentValue > prevValue ? 'up' : 'down';
-
-          if (currentDirrection === dirrection) okConcurrentKeypoints++;
-          else dirrection = currentDirrection;
-        } else if (
-          direction === ConditionDirection.POSITIVE &&
-          currentValue > prevValue
-        )
-          okConcurrentKeypoints++;
-        else if (
-          direction === ConditionDirection.NEGATIVE &&
-          currentValue < prevValue
-        )
-          okConcurrentKeypoints++;
-
-        // if a certain % of the buffer is moving in a single direction, we have a cut point
-        const ratio = okConcurrentKeypoints / buffer.length;
-        if (ratio > bestRatio) bestRatio = ratio;
-
-        const distance = Math.abs(buffer[buffer.length - 1] - buffer[0]);
-
-        if (
-          ratio >= POSE_DETECTION_CONSTRAINTS.START_CUT_OFF_CONFIDENCE &&
-          distance >= distanceToCover
-        ) {
-          // cut off the start up to the current point minus the buffer
-          console.log(`Found cut point at index ${i}, cutting off start`);
-          return keypointValues.slice(i - bufferSize);
-        }
-      }
-    }
-
-    console.log(
-      'No cut point found, best ratio:',
-      bestRatio,
-      'bufferSize:',
-      bufferSize
-    );
-    return keypointValues; // no cut point found, return original
-  }
-
   static drawKeypointValuesGraph(
-    history: Keypoint[][],
+    history: Keypoint[][] | number[],
     keypointId: KeypointId,
     type: KeypointValueType,
-    direction: ConditionDirection,
-    distanceToCover: number, // in meters
-    avgFps: number
+    name?: string
   ) {
     const width = 600;
     const height = 300;
@@ -200,26 +131,22 @@ export class KeypointUtil {
           // make sure you call your util correctly (args order!)
           let v = KeypointUtil.getKeypointValueByType(kp, type);
           if (v == null || !Number.isFinite(Number(v))) return undefined;
-          // invert Y if desired
-          if (type === KeypointValueType.POSITION_Y) v = 1 - Number(v);
+
           return Number(v);
         })
         .filter((v): v is number => Number.isFinite(v));
 
-    const fullVals = seriesFrom(history);
+    const isNumberArray = (arr: any[]): arr is number[] => {
+      return arr.every((item) => typeof item === 'number');
+    };
+
+    const fullVals: number[] = isNumberArray(history)
+      ? history
+      : seriesFrom(history);
 
     const smoothedVals = this.smoothKeypointValues(fullVals);
-    const cutVals = this.cutStart(
-      smoothedVals,
-      avgFps,
-      direction,
-      distanceToCover
-    ) as number[];
 
-    console.log('smoothedVals', smoothedVals);
-    console.log('cutVals', cutVals);
-
-    const draw = (vals: number[], name: 'cut' | 'smoothed', stroke: string) => {
+    const draw = (vals: number[], name: string, stroke: string) => {
       if (vals.length === 0) return;
 
       const globalMin = Math.min(...vals);
@@ -274,9 +201,12 @@ export class KeypointUtil {
       link.click();
     };
 
-    draw(smoothedVals, 'smoothed', '#1f4eff');
-    draw(cutVals, 'cut', '#ff1f4e');
+    draw(smoothedVals, name || 'smoothed', '#1f4eff');
 
     canvas.remove();
+  }
+
+  static getFramesCountFromSeconds(seconds: number, fps: number): number {
+    return Math.ceil(seconds * fps);
   }
 }
