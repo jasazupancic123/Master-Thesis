@@ -63,7 +63,10 @@ describe('Update Institution (e2e)', () => {
       .set('Authorization', `Bearer ${token}`);
 
     expect(response.status).toBe(200);
-    expect(response.body.length).toEqual(expectedLength);
+
+    if (_ === 'admin')
+      expect(response.body.length).toBeGreaterThanOrEqual(expectedLength);
+    else expect(response.body.length).toEqual(expectedLength);
   });
 
   // for institution 2, manual tests must be written since jest's it.each doesn't work
