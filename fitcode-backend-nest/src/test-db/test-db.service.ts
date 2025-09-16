@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 
 import { FirebaseService } from '@src/firebase/firebase.service';
-import { GroupRepository } from '@src/group/repository/group.repository';
 
+import { GroupTestRepository } from './service/group-test.repository';
 import { InstitutionTestRepository } from './service/institution-test.repository';
 import { TestAttributeService } from './service/test-attribute.service';
 import { TestComponentService } from './service/test-component.service';
@@ -21,7 +21,7 @@ export class TestDbService {
     readonly exercises: TestExerciseService,
     readonly trainings: TrainingTestRepository,
     readonly institutions: InstitutionTestRepository,
-    readonly groups: GroupRepository,
+    readonly groups: GroupTestRepository,
     readonly wellness: WellnessTestRepository,
   ) {}
 

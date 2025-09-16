@@ -18,6 +18,10 @@ import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import type { Method } from '@src/method/entity/method.entity';
+import {
+  MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT,
+  MAX_NUM_SUPERSETS_IN_CIRCUIT_COMPONENT,
+} from '@src/training/constant/training-limits.constant';
 import { MainSet } from '@src/training/enum/main-set.enum';
 import {
   generateExerciseSet,
@@ -120,10 +124,14 @@ describe('validateSupersets', () => {
   it.each([
     [
       MainSet.BLOCK,
-      8,
-      'You can only have up to 8 supersets per training component for block sets',
+      MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT,
+      `You can only have up to ${MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT} supersets per training component for block sets`,
     ],
-    [MainSet.CIRCUIT, 1, 'You can only have one circuit set'],
+    [
+      MainSet.CIRCUIT,
+      MAX_NUM_SUPERSETS_IN_CIRCUIT_COMPONENT,
+      `You can only have ${MAX_NUM_SUPERSETS_IN_CIRCUIT_COMPONENT} circuit set`,
+    ],
   ])(
     'should throw error if there are more than %i supersets in a training component for %s main set type',
     (mainSet, maxSupersets, errorMessage) => {
