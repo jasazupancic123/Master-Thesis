@@ -87,24 +87,14 @@ export class RepDetectionService {
 
         if (isRepDone && currentRepRef.current) {
           // Save rep
-          // this.postProcessRep();
 
-          // update avgStartValue and avgExtremeValue
-          repStateRef.current.avgExtremeValue =
-            recordedRepsRef.current.length === 0
-              ? currentRepRef.current.extremeValue!
-              : (repStateRef.current.avgExtremeValue! *
-                  recordedRepsRef.current.length +
-                  currentRepRef.current.extremeValue!) /
-                (recordedRepsRef.current.length + 1);
+          this.updateAvgStartAndExtremeValue(
+            repStateRef,
+            currentRepRef,
+            recordedRepsRef
+          );
 
-          repStateRef.current.avgStartValue =
-            recordedRepsRef.current.length === 0
-              ? currentRepRef.current.startValue
-              : (repStateRef.current.avgStartValue! *
-                  recordedRepsRef.current.length +
-                  currentRepRef.current.startValue) /
-                (recordedRepsRef.current.length + 1);
+          // this.postProcessRep(); -> TODO()
 
           recordedRepsRef.current.push(currentRepRef.current!);
 
@@ -149,31 +139,16 @@ export class RepDetectionService {
     }
   }
 
-  // Detect whether the value went up/down consecutive times and then up/down consecutive times
-  // via the slope of the velocity (K score), example: k=[-2- -1, 1, 2] -> true
-  // Also the value needs to be out of a certain range from the starting value
+  // Detect whether the value went up/down (opposite dirrection of the rep start direction) consecutive times
+  // via the slope of the velocity (K score), example: (rep_direction=NEGATIVE; k=[0.5, 0.75, 1, 2]) -> true
   static detectExtremum(state: {
-    repStateRef: RefObject<RepState>;
     currentRepRef: RefObject<Rep | null>;
-    recordedRepsRef: RefObject<Rep[]>;
     direction: ConditionDirection;
     keypointId: KeypointId;
     valueType: KeypointValueType;
-    slopeK: number;
-    sustainW: number;
     avgFps: { value: number; count: number } | null;
   }) {
-    const {
-      repStateRef,
-      currentRepRef,
-      recordedRepsRef,
-      direction,
-      keypointId,
-      valueType,
-      slopeK,
-      sustainW,
-      avgFps,
-    } = state;
+    const { currentRepRef, direction, keypointId, valueType, avgFps } = state;
 
     if (
       currentRepRef.current?.extremeValue === undefined ||
@@ -192,23 +167,7 @@ export class RepDetectionService {
     )
       return false;
 
-    // if (
-    //   this.checkValueCloseEnoughToStartValue(
-    //     currentValue,
-    //     repStateRef,
-    //     currentRepRef
-    //   )
-    // ) {
-    //   console.log('VALUE TOO CLOSE TO START VALUE');
-    //   return false;
-    // }
-
     const buffer = currentRepRef.current.buffer;
-
-    // Detect max(2, 150ms) consecutive frames with negative/positive K and then
-    // right after max(2, 150ms) consecutive frames with positive/negative K,
-    // so like [-2, -1, 1, 2]. If true, set detectedExtremum to true
-    // also check for buffer length here after calculating the numFrames needed
 
     const totalNumFrames = avgFps
       ? Math.max(
@@ -219,7 +178,6 @@ export class RepDetectionService {
           )
         )
       : POSE_DETECTION_CONSTRAINTS.MIN_REP_FRAMES; // min 4 total consecutive correct frames (2pos k's, 2neg k's)
-    // const minSustainW = Math.max(2, Math.ceil(totalNumFrames / 2));
 
     const startKCheckIndex = buffer.history.length - 1 - totalNumFrames;
 
@@ -228,10 +186,8 @@ export class RepDetectionService {
     let hit = 0;
     const anyDirectionBuffer = [];
 
-    const ks = [];
     for (let i = startKCheckIndex; i < startKCheckIndex + totalNumFrames; i++) {
       const K = velocity[i] / Math.max(scale, 1e-6);
-      ks.push(K);
 
       const lookingForPositiveK = direction === ConditionDirection.NEGATIVE;
 
@@ -297,14 +253,12 @@ export class RepDetectionService {
     )
       return false;
 
-    // CHECK FOR U -> 2 consecutiove values have k negative, and then the next 2 have it positive - in the function also check for minDistanceForRep. Add this attribute to the exerciseConditions
-
     // Update extreme value
     this.updateExtremeRepValue(
       direction,
       currentValue,
       currentRepRef,
-      repStateRef
+      recordedRepsRef
     );
 
     // We need to detect an extremum first to finish the rep
@@ -320,7 +274,7 @@ export class RepDetectionService {
     if (
       !this.checkValueCloseEnoughToStartValue(
         currentValue,
-        repStateRef,
+        recordedRepsRef,
         currentRepRef
       )
     ) {
@@ -556,18 +510,20 @@ export class RepDetectionService {
 
   private static checkValueCloseEnoughToStartValue(
     currentValue: number,
-    repStateRef: RefObject<RepState>,
+    recordedRepsRef: RefObject<Rep[]>,
     currentRepRef: RefObject<Rep | null>
   ) {
     // repStateRef.current.avgStartValue is null only on the very first rep
     const startingValue =
-      repStateRef.current.avgStartValue !== null
-        ? repStateRef.current.avgStartValue
+      recordedRepsRef.current.length &&
+      recordedRepsRef.current[0].startValue !== undefined
+        ? recordedRepsRef.current[0].startValue
         : currentRepRef.current?.startValue;
 
     const extremeValue =
-      repStateRef.current.avgExtremeValue !== null
-        ? repStateRef.current.avgExtremeValue
+      recordedRepsRef.current.length &&
+      recordedRepsRef.current[0].extremeValue !== undefined
+        ? recordedRepsRef.current[0].extremeValue
         : currentRepRef.current?.extremeValue;
 
     if (startingValue === undefined || extremeValue === undefined) return false;
@@ -585,7 +541,7 @@ export class RepDetectionService {
     direction: ConditionDirection,
     currentValue: number,
     currentRepRef: RefObject<Rep | null>,
-    repStateRef: RefObject<RepState>
+    recordedRepsRef: RefObject<Rep[]>
   ) {
     if (!currentRepRef.current) return;
 
@@ -599,7 +555,7 @@ export class RepDetectionService {
             currentValue > startValue &&
             !this.checkValueCloseEnoughToStartValue(
               currentValue,
-              repStateRef,
+              recordedRepsRef,
               currentRepRef
             )) ||
           (extremeValue !== undefined && currentValue > extremeValue)
@@ -616,7 +572,7 @@ export class RepDetectionService {
             currentValue < startValue &&
             !this.checkValueCloseEnoughToStartValue(
               currentValue,
-              repStateRef,
+              recordedRepsRef,
               currentRepRef
             )) ||
           (extremeValue !== undefined && currentValue < extremeValue)
@@ -632,7 +588,7 @@ export class RepDetectionService {
           (extremeValue === undefined &&
             !this.checkValueCloseEnoughToStartValue(
               currentValue,
-              repStateRef,
+              recordedRepsRef,
               currentRepRef
             )) ||
           (extremeValue !== undefined &&
@@ -711,7 +667,7 @@ export class RepDetectionService {
           hit = K >= -slopeK;
         } else if (direction === ConditionDirection.POSITIVE) {
           hit = K <= +slopeK;
-        } else  {
+        } else {
           // ANY
           hit = Math.abs(K) >= slopeK;
         }
@@ -808,5 +764,29 @@ export class RepDetectionService {
       buffer: new KeypointHistory([]),
       detectedExtremum: false,
     };
+  }
+
+  // update avgStartValue and avgExtremeValue of repState
+  private static updateAvgStartAndExtremeValue(
+    repStateRef: RefObject<RepState>,
+    currentRepRef: RefObject<Rep | null>,
+    recordedRepsRef: RefObject<Rep[]>
+  ) {
+    if (!currentRepRef.current) return;
+
+    repStateRef.current.avgExtremeValue =
+      recordedRepsRef.current.length === 0
+        ? currentRepRef.current.extremeValue!
+        : (repStateRef.current.avgExtremeValue! *
+            recordedRepsRef.current.length +
+            currentRepRef.current.extremeValue!) /
+          (recordedRepsRef.current.length + 1);
+
+    repStateRef.current.avgStartValue =
+      recordedRepsRef.current.length === 0
+        ? currentRepRef.current.startValue
+        : (repStateRef.current.avgStartValue! * recordedRepsRef.current.length +
+            currentRepRef.current.startValue) /
+          (recordedRepsRef.current.length + 1);
   }
 }

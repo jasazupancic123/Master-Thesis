@@ -4,6 +4,7 @@ import { Landmark } from '@mediapipe/tasks-vision';
 import { Keypoint } from '../type/keypoint.type';
 import { KeypointValueType } from '../enum/keypoint-value-type';
 import savitzkyGolay from 'ml-savitzky-golay';
+import { Point3D } from '../type/point-3d.type';
 
 export class KeypointUtil {
   static getDesiredKeypointsByModel(
@@ -11,7 +12,8 @@ export class KeypointUtil {
     currentFrameKeypoints: Landmark[] | undefined,
     model: PoseModel,
     capturedAt: Date,
-    frameNum: number
+    frameNum: number,
+    centerHipsYToMiddleAnkleOrigin = true
   ): Keypoint[] {
     if (!currentFrameKeypoints) return [];
 
@@ -22,9 +24,11 @@ export class KeypointUtil {
         currentFrameKeypoints.forEach((kp, i) => {
           keypoints.push({
             id: keypointIds[i] as unknown as KeypointId,
-            x: kp.x,
-            y: kp.y,
-            z: kp.z,
+            position: {
+              x: kp.x,
+              y: kp.y,
+              z: kp.z,
+            },
             velocity: 0,
             isValid: true,
             frameNum,
@@ -32,6 +36,26 @@ export class KeypointUtil {
             visibility: kp.visibility,
           });
         });
+
+        if (centerHipsYToMiddleAnkleOrigin) {
+          // Center LEFT_HIP and RIGHT_HIP to the origin of (LEFT_ANKLE + RIGHT_ANKLE)/2
+          const leftHip = keypoints.find((k) => k.id === KeypointId.LEFT_HIP);
+          const rightHip = keypoints.find((k) => k.id === KeypointId.RIGHT_HIP);
+
+          const leftAnkle = keypoints.find(
+            (k) => k.id === KeypointId.LEFT_ANKLE
+          );
+          const rightAnkle = keypoints.find(
+            (k) => k.id === KeypointId.RIGHT_ANKLE
+          );
+
+          if (!leftHip || !rightHip || !leftAnkle || !rightAnkle) break;
+
+          const y = (leftAnkle.position.y + rightAnkle.position.y) / 2;
+
+          leftHip.position.y -= y;
+        }
+
         break;
       }
       default: {
@@ -56,11 +80,11 @@ export class KeypointUtil {
   ): { value1: number | undefined; value2: number | undefined } {
     switch (type) {
       case KeypointValueType.POSITION_X:
-        return { value1: keypoint1.x, value2: keypoint2.x };
+        return { value1: keypoint1.position.x, value2: keypoint2.position.x };
       case KeypointValueType.POSITION_Y:
-        return { value1: -keypoint1.y, value2: -keypoint2.y };
+        return { value1: -keypoint1.position.y, value2: -keypoint2.position.y };
       case KeypointValueType.POSITION_Z:
-        return { value1: keypoint1.z, value2: keypoint2.z };
+        return { value1: keypoint1.position.z, value2: keypoint2.position.z };
       case KeypointValueType.VELOCITY:
         return { value1: keypoint1.velocity, value2: keypoint2.velocity };
       default:
@@ -74,11 +98,11 @@ export class KeypointUtil {
   ): number | undefined {
     switch (type) {
       case KeypointValueType.POSITION_X:
-        return keypoint.x;
+        return keypoint.position.x;
       case KeypointValueType.POSITION_Y:
-        return -keypoint.y; // invert Y to have +Y as up
+        return -keypoint.position.y; // invert Y to have +Y as up
       case KeypointValueType.POSITION_Z:
-        return keypoint.z;
+        return keypoint.position.z;
       case KeypointValueType.VELOCITY:
         return keypoint.velocity;
       default:

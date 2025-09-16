@@ -75,8 +75,7 @@ export class StatusDetectionService {
 
         return this.updateStatus(
           statusRef,
-          true,
-          // isStill,
+          isStill,
           DetectionStatus.NOT_STILL,
           DetectionStatus.READY
         );
@@ -151,8 +150,8 @@ export class StatusDetectionService {
       KeypointId.RIGHT_SHOULDER,
       KeypointId.LEFT_WRIST,
       KeypointId.RIGHT_WRIST,
-      KeypointId.LEFT_HIP,
-      KeypointId.RIGHT_HIP,
+      // KeypointId.LEFT_HIP,
+      // KeypointId.RIGHT_HIP,
       KeypointId.LEFT_KNEE,
       KeypointId.RIGHT_KNEE,
       KeypointId.LEFT_ANKLE,
@@ -240,11 +239,14 @@ export class StatusDetectionService {
   private static calculateStandardDeviation = (keypoints: Keypoint[]) => {
     if (keypoints.length === 0) return 0;
     const meanX =
-      keypoints.reduce((acc, pos) => acc + pos.x, 0) / keypoints.length;
+      keypoints.reduce((acc, pos) => acc + pos.position.x, 0) /
+      keypoints.length;
     const meanY =
-      keypoints.reduce((acc, pos) => acc + pos.y, 0) / keypoints.length;
+      keypoints.reduce((acc, pos) => acc + pos.position.y, 0) /
+      keypoints.length;
     const variances = keypoints.map(
-      (pos) => ((pos.x - meanX) ** 2 + (pos.y - meanY) ** 2) / 2
+      (pos) =>
+        ((pos.position.x - meanX) ** 2 + (pos.position.y - meanY) ** 2) / 2
     );
     const variance =
       variances.reduce((acc, varian) => acc + varian, 0) / keypoints.length;
@@ -279,6 +281,8 @@ export class StatusDetectionService {
         currentFrameKeypoint,
         condition.type
       );
+
+      // console.log(condition.keypointId, 'currentValue', currentValue);
 
       const isValid = this.validateKeypointCondition(
         historyKeypoint,

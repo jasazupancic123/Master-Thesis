@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { DrawingUtils, PoseLandmarker } from '@mediapipe/tasks-vision';
-import { Box } from '@mui/material';
+import { Box, Button } from '@mui/material';
 import { enableCam, getStatusMessage, loadModel, predictWebcam } from './state';
 import FpsText from './components/fps-text';
 import { DetectionStatus } from '@/controller/pose-detection/enum/detection-status';
@@ -22,11 +22,29 @@ import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
 import { RepStatus } from '@/controller/pose-detection/enum/rep-state';
 import { Rep } from '@/controller/pose-detection/type/rep.type';
 import { RepState } from '@/controller/pose-detection/type/rep-state.type';
+import RepsCounter from './components/reps-counter';
+import { useRouter } from 'next/navigation';
+import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
+import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import { SetState } from '@/common/type/state.type';
+import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 
 const DEBUG = false;
 
-export default function MobileMovementValidation() {
+interface MobileMovementValidationProps {
+  selectedExercise: TrainingExercise | undefined;
+  updateExerciseReps: (repsCount: number) => void | undefined;
+  setSelectedTrackingMethod: SetState<TrackingMethod> | undefined;
+}
+
+export default function MobileMovementValidation(
+  props: MobileMovementValidationProps
+) {
+  const router = useRouter();
   const screenSize = useScreenSize();
+
+  const { selectedExercise, updateExerciseReps, setSelectedTrackingMethod } =
+    props;
 
   // Buffers
   const keypointHistoryRef = useRef<KeypointHistory>(
@@ -34,22 +52,30 @@ export default function MobileMovementValidation() {
   ); // first make buffer of 100 frames, later set buffer size to undefined to get all recording of exercise
   const keypointBuffer = new KeypointHistory([], 100); // 100 frames buffer, updates in the main loop based on fps
 
-  const exerciseRepStartConditions: ExerciseRepStartCondition[] = [
-    {
-      keypointId: KeypointId.LEFT_HIP,
-      type: KeypointValueType.POSITION_Y,
-      direction: ConditionDirection.NEGATIVE,
-      duration: 1000, // ms
-      distance: 0.01, // meters
-    },
-    // {
-    //   keypointId: KeypointId.LEFT_EYE,
-    //   type: KeypointValueType.POSITION_Y,
-    //   direction: ConditionDirection.NEGATIVE,
-    //   duration: 750, // ms
-    //   distance: 0.025, // meters
-    // },
-  ];
+  const exerciseRepStartConditions: ExerciseRepStartCondition[] | undefined =
+    selectedExercise
+      ? EXERCISE_POSES.find((e) => e.exerciseIds.includes(selectedExercise.id))
+          ?.conditions
+      : [
+          {
+            keypointId: KeypointId.LEFT_WRIST,
+            type: KeypointValueType.POSITION_Y,
+            direction: ConditionDirection.POSITIVE,
+            duration: 750, // ms
+            distance: 0.15, // meters
+          },
+          // {
+          //   keypointId: KeypointId.LEFT_EYE,
+          //   type: KeypointValueType.POSITION_Y,
+          //   direction: ConditionDirection.NEGATIVE,
+          //   duration: 750, // ms
+          //   distance: 0.025, // meters
+          // },
+        ];
+
+  if (!exerciseRepStartConditions) {
+    return <div>No pose detection logic for this exercise yet</div>;
+  }
 
   // Main Status
   const statusRef = useRef<DetectionStatus>(DetectionStatus.NOT_FULLY_IN_FRAME);
@@ -100,18 +126,7 @@ export default function MobileMovementValidation() {
         e.preventDefault(); // stop page scroll
         if (!spaceDown) setSpaceDown(true);
 
-        const keypointIds = exerciseRepStartConditions.map(
-          (condition) => condition.keypointId
-        );
-
-        keypointIds.forEach((id) => {
-          KeypointUtil.drawKeypointValuesGraph(
-            keypointHistoryRef.current.history,
-            id,
-            KeypointValueType.POSITION_Y,
-            'whole_exercise'
-          );
-        });
+        drawGraph();
       }
     };
 
@@ -227,6 +242,21 @@ export default function MobileMovementValidation() {
     });
   }, [poseLandmarker]);
 
+  const drawGraph = () => {
+    const keypointIds = exerciseRepStartConditions.map(
+      (condition) => condition.keypointId
+    );
+
+    keypointIds.forEach((id) => {
+      KeypointUtil.drawKeypointValuesGraph(
+        keypointHistoryRef.current.history,
+        id,
+        KeypointValueType.POSITION_Y,
+        'whole_exercise'
+      );
+    });
+  };
+
   return (
     <Box width="100%" display="flex" flexDirection="column">
       {!poseLandmarker && <LoadingOverlay title="Loading model..." />}
@@ -235,11 +265,17 @@ export default function MobileMovementValidation() {
         statusMessage={error ? `${error}` : statusMessage}
       />
 
-      <Box sx={{ position: 'relative' }}>
+      <Box
+        width="100%"
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        sx={{ position: 'relative' }}
+      >
         <video
+          ref={videoRef}
           width="100%"
           height="100%"
-          ref={videoRef}
           autoPlay
           playsInline
           style={{ transform: 'scaleX(-1)' }}
@@ -250,6 +286,36 @@ export default function MobileMovementValidation() {
         />
 
         <FpsText fps={fps} avgFps={avgFps.current} />
+        <RepsCounter reps={recordedRepsRef.current.length} />
+
+        <Box
+          width="100%"
+          display="flex"
+          justifyContent="center"
+          gap={2}
+          sx={{
+            position: 'absolute',
+            bottom: 10,
+            left: 0,
+          }}
+        >
+          <Button variant="contained" onClick={drawGraph} sx={{ mt: 2 }}>
+            Save Graph
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => {
+              console.log({ updateExerciseReps, setSelectedTrackingMethod });
+              if (updateExerciseReps && setSelectedTrackingMethod) {
+                setSelectedTrackingMethod(TrackingMethod.MANUAL);
+                updateExerciseReps(recordedRepsRef.current.length);
+              }
+            }}
+            sx={{ mt: 2 }}
+          >
+            Finish
+          </Button>
+        </Box>
 
         {/* 🔧 Optional floating debug button (only shows if you want) */}
         {DEBUG && (
