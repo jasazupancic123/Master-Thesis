@@ -62,15 +62,40 @@ describe('Update Training (e2e)', () => {
   });
 
   async function req(
-    trainingId: string,
     body: DateRangeDto,
+    _trainingId = trainingId,
+    _componentId = component.id,
     token: string = global.trainer.token,
   ) {
     return await request(app.getHttpServer())
-      .patch(`/training/${trainingId}/component/${component.id}/time`)
+      .patch(`/training/${_trainingId}/component/${_componentId}/time`)
       .set('Authorization', `Bearer ${token}`)
       .send(body);
   }
+
+  it('should fail if component is invalid', async () => {
+    const response = await req(
+      { from: new Date(), to: new Date() },
+      trainingId,
+      'invalid-id',
+    );
+
+    expect(response.status).toBe(404);
+    expect(response.body.message).toBe('Training component not found');
+  });
+
+  it('should throw error if user tries to update warmup or cooldown component', async () => {
+    const response = await req(
+      { from: trainingDate, to: trainingDate },
+      trainingId,
+      'warmup',
+    );
+
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe(
+      'You cannot update warmup and cooldown times',
+    );
+  });
 
   it('should fail to update training if training is in the past', async () => {
     const pastTrainingId = await db.trainings.save(
@@ -83,10 +108,10 @@ describe('Update Training (e2e)', () => {
       }),
     );
 
-    const response = await req(pastTrainingId, {
-      from: new Date(),
-      to: new Date(),
-    });
+    const response = await req(
+      { from: new Date(), to: new Date() },
+      pastTrainingId,
+    );
 
     expect(response.status).toBe(400);
     expect(response.body.message).toBe(
@@ -96,9 +121,29 @@ describe('Update Training (e2e)', () => {
     await db.trainings.delete(pastTrainingId);
   });
 
-  it('should fail if input dates are not on the same day as training', async () => {});
+  it('should fail if input dates are not on the same day as training', async () => {
+    const response = await req({
+      from: getTime(addDays(trainingDate, 1), 9, 0),
+      to: getTime(addDays(trainingDate, 1), 10, 0),
+    });
 
-  it('should fail if input period is different than training period', async () => {});
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe(
+      'Input dates must be on the same day as training',
+    );
+  });
+
+  it('should fail if input period is different than training period', async () => {
+    const response = await req({
+      from: getTime(trainingDate, 13, 0),
+      to: getTime(trainingDate, 14, 0),
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe(
+      'Training is on AM period, but you provided PM',
+    );
+  });
 
   it('should fail to update training if there is overlap between trainings', async () => {
     const in3Days = addDays(new Date(), 3);
@@ -127,10 +172,10 @@ describe('Update Training (e2e)', () => {
       }),
     );
 
-    const response = await req(newTrainingId, {
-      from: getTime(in3Days, 10, 0),
-      to: getTime(in3Days, 11, 0),
-    });
+    const response = await req(
+      { from: getTime(in3Days, 10, 0), to: getTime(in3Days, 11, 0) },
+      newTrainingId,
+    );
 
     expect(response.status).toBe(400);
     expect(response.body.message).toBe('Training overlaps with other training');

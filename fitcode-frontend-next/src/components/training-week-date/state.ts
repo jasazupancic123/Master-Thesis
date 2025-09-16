@@ -5,12 +5,10 @@ import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.
 import toast from 'react-hot-toast';
 
 import { handleCreateTraining } from '../trainer-cycle-view/state';
-import { handleCopyComponentApiRequest } from '../training-component-layout/state';
 import { COLOR } from '@/common/constant/color.constant';
 import { CommonService } from '@/common/service/common.service';
 import type { Day } from '@/common/service/util/date.util';
 import type { SetState, SetStateNullable } from '@/common/type/state.type';
-import { handleApiRequest } from '@/common/type/state.type';
 import type { Component } from '@/controller/component/type/component.type';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
 import type { Cycle } from '@/controller/group/type/cycle.type';
@@ -19,7 +17,6 @@ import type { Method } from '@/controller/method/type/method.type';
 import type { Target } from '@/controller/target/type/target.type';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
 import type { TrainingController } from '@/controller/training/training.controller';
-import { TrainingService } from '@/controller/training/training.service';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 
@@ -61,7 +58,6 @@ export async function handleClickDateCell(
     cycle,
     componentCalendarView,
     periodizationView,
-    copyComponent,
     trainingComponent,
     training,
     trainings,
@@ -70,7 +66,6 @@ export async function handleClickDateCell(
     methods,
     selected,
     selectedTargets,
-    day,
     setTrainings,
     setCycle,
     setOpenOverwriteModal,
@@ -90,23 +85,6 @@ export async function handleClickDateCell(
 
     if (trainingInPeriod && !trainingInPeriodIncludesComponent) {
       // ADD THE SELECTED TRAINING COMPONENT TO THE TRAINING
-      if (copyComponent && training && day) {
-        handleCopyComponentApiRequest(
-          controller,
-          {
-            training,
-            trainingInPeriod,
-            component: trainingComponent!,
-          },
-          {
-            router,
-            allComponents: components,
-            allExercises,
-            allMethods: methods,
-            setTrainings,
-          }
-        );
-      }
     } else if (trainingInPeriod && trainingInPeriodIncludesComponent) {
       // ASK USER IF OVERWRITE THE TRAINING COMPONENT
       if (setOpenOverwriteModal && setTrainingInPeriodForModal) {
@@ -139,34 +117,6 @@ export async function handleClickDateCell(
         from,
         to,
       };
-
-      handleApiRequest(
-        router,
-        () =>
-          controller.copyComponent({
-            copyFromTrainingId: training.id,
-            componentId: newTrainingComponent.id,
-            from,
-          }),
-        (training_) => {
-          TrainingService.mapData(training_, {
-            components,
-            exercises: allExercises,
-            methods,
-          });
-
-          const sortedTrainings = [...trainings, training_].sort((a, b) => {
-            const aDate = new Date(a.from);
-            const bDate = new Date(b.from);
-            return aDate.getTime() - bDate.getTime();
-          });
-
-          setTrainings(sortedTrainings);
-          toast.success('Training with current component created successfully');
-        },
-        undefined,
-        'Failed to create training with current component'
-      );
     }
   } else if (periodizationView) {
     // do nothing
@@ -344,6 +294,7 @@ function handleAddTraining(
       cycle: cycle!,
       date,
       period,
+      from,
       selectedComponents: selected.map((c, i) => ({
         id: c.id,
         subgroups: [],

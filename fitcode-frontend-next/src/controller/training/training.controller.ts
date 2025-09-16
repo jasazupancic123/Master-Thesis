@@ -2,18 +2,15 @@ import { BaseController } from '../base.controller';
 import type { UserId } from '../institution/type/institution.type';
 import type { CompletedTrainingComponent } from './type/completed-training.entity';
 import type {
-  CopyTraining,
   CreateTraining,
   FilterTrainings,
   PeriodizeTrainings,
   Training,
   UpdateTraining,
 } from './type/training.type';
-import type {
-  CopyComponent,
-  TrainingComponent,
-} from './type/training-component.type';
+import type { TrainingComponent } from './type/training-component.type';
 import type { Workload } from './type/workload.type';
+import type { DateRange } from '@/common/type/date-range.type';
 
 export class TrainingController extends BaseController {
   private static instance: TrainingController;
@@ -58,20 +55,20 @@ export class TrainingController extends BaseController {
     });
   }
 
-  async copyComponent(body: CopyComponent) {
-    return this.api.post<Training>('/copy/component', body, {
-      token: this.getToken(),
-    });
-  }
-
   async update(trainingId: string, body: UpdateTraining) {
     return this.api.patch<Training>(`/${trainingId}`, body, {
       token: this.getToken(),
     });
   }
 
-  async copy(trainingId: string, body: CopyTraining) {
-    return this.api.post<Training>(`/${trainingId}/copy`, body, {
+  async updateComponentTime(
+    trainingId: string,
+    componentId: string,
+    body: Required<DateRange>
+  ) {
+    return this.api.patch<
+      Pick<Training, 'components' | 'warmup' | 'cooldown' | 'from' | 'to'>
+    >(`/${trainingId}/component/${componentId}/time`, body, {
       token: this.getToken(),
     });
   }

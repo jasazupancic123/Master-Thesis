@@ -452,7 +452,15 @@ export class TrainingService implements Permission<Training, Institution> {
   ) {
     const training = await this.findOneByIdOrFail(user, ref);
     this.validateCanEdit(user, training, training.institution);
+
     this.trainingPlanService.findComponentOrFail(training, ref.componentId);
+    if ([WARMUP_COMPONENT_ID, COOLDOWN_COMPONENT_ID].includes(ref.componentId))
+      throw new BadRequestException(
+        'You cannot update warmup and cooldown times',
+      );
+
+    if (isBefore(input.to, input.from))
+      throw new BadRequestException('Invalid date range');
 
     // validate overlap
     this.validateIsDateInFuture(training.from);
@@ -463,29 +471,14 @@ export class TrainingService implements Permission<Training, Institution> {
       !isSameDay(input.to, training.to)
     )
       throw new BadRequestException(
-        'Input dates must be on the same day as training dates',
+        'Input dates must be on the same day as training',
       );
 
-    // validate period time
-    const trainingPeriod = this.trainingPlanService.getPeriod(training.from);
-    const inputPeriod = this.trainingPlanService.getPeriod(input.from);
-    if (trainingPeriod !== inputPeriod)
-      throw new BadRequestException(
-        `Training is on ${trainingPeriod} period, but you provided ${inputPeriod}`,
-      );
-
-    await this.validateOverlap(
-      user,
-      {
-        trainingId: training.id,
-        groupId: training.groupId,
-        cycleId: training.cycleId,
-      },
-      input.from,
-      input.to,
+    return await this.repository.updateComponentTime(
+      training,
+      ref.componentId,
+      input,
     );
-
-    await this.repository.updateComponentTime(training, ref.componentId, input);
   }
 
   @LogMethod()
