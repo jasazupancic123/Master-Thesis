@@ -1,31 +1,34 @@
 import { RefObject } from 'react';
 import { DetectionStatus } from './enum/detection-status';
-import { Keypoint } from './type/keypoint';
+import { Keypoint } from './type/keypoint.type';
 import { POSE_DETECTION_CONSTRAINTS } from './const/pose-detection-constrains.const';
 import { KeypointId } from './enum/keypoint-id';
 import { KeypointUtil } from './util/keypoint.util';
 import { PoseDetectionService } from './pose-detection.service';
-import { PoseValidationCondition } from './type/pose-validation-condition';
+import { PoseValidationCondition } from './type/pose-validation-condition.type';
 import { KeypointValueType } from './enum/keypoint-value-type';
 import { SetState } from '@/common/type/state.type';
 import { FACE_CAMERA_MESSAGE } from './const/status-messages';
 import { KeypointHistory } from './class/keypoint-history';
 import {
   ConditionDirection,
-  ExerciseStartCondition,
-} from './type/exercise-start-condition';
+  ExerciseRepStartCondition,
+} from './type/exercise-start-condition.type';
 import { isUtf8 } from 'buffer';
+import { RepState } from './type/rep-state.type';
+import { RepStatus } from './enum/rep-state';
 
-export class DetectionStatusService {
+export class StatusDetectionService {
   // if it returns false, it means we need to return in main loop
-  static checkStatusAndValidateStatus(
+  static checkAndValidateStatus(
     detectionStatus: DetectionStatus,
+    repStateRef: RefObject<RepState>,
     state: {
       keypoints: Keypoint[];
       statusRef: RefObject<DetectionStatus>;
       setStatusMessage: SetState<string>;
       buffer: KeypointHistory;
-      exerciseStartConditions: ExerciseStartCondition[];
+      exerciseStartConditions: ExerciseRepStartCondition[];
       avgFps: { value: number; count: number } | null;
     }
   ): boolean {
@@ -37,6 +40,7 @@ export class DetectionStatusService {
       exerciseStartConditions,
       avgFps,
     } = state;
+
     switch (detectionStatus) {
       case DetectionStatus.NOT_FULLY_IN_FRAME: {
         const isFullyInFrame = this.checkIsFullyInFrame(keypoints);
@@ -71,7 +75,8 @@ export class DetectionStatusService {
 
         return this.updateStatus(
           statusRef,
-          isStill,
+          true,
+          // isStill,
           DetectionStatus.NOT_STILL,
           DetectionStatus.READY
         );
@@ -79,12 +84,19 @@ export class DetectionStatusService {
       case DetectionStatus.READY: {
         if (!avgFps || !avgFps.value || avgFps.count < 10) return false;
 
-        const startedRecording = this.checkStartedRecording(
+        const startedRecording = this.checkExerciseRepStartConditions(
           keypoints,
           buffer,
           exerciseStartConditions,
           avgFps
         );
+
+        if (repStateRef.current.status === RepStatus.NONE && startedRecording)
+          repStateRef.current = {
+            status: RepStatus.IDLE,
+            avgStartValue: null,
+            avgExtremeValue: null,
+          };
 
         return this.updateStatus(
           statusRef,
@@ -218,7 +230,7 @@ export class DetectionStatusService {
       const history = buffer.getHistoryById(kp.id);
       if (history.some((h) => !h)) return false;
 
-      const stdDev = DetectionStatusService.calculateStandardDeviation(history);
+      const stdDev = StatusDetectionService.calculateStandardDeviation(history);
       return currentStatus === DetectionStatus.READY
         ? stdDev < POSE_DETECTION_CONSTRAINTS.STILLNESS_THRESHOLD_WHILE_READY_M
         : stdDev < POSE_DETECTION_CONSTRAINTS.STILLNESS_THRESHOLD_M;
@@ -239,15 +251,16 @@ export class DetectionStatusService {
     return Math.sqrt(variance);
   };
 
-  private static checkStartedRecording(
+  static checkExerciseRepStartConditions(
     keypoints: Keypoint[],
     buffer: KeypointHistory,
-    exerciseStartConditions: ExerciseStartCondition[],
-    avgFps: { value: number; count: number }
+    exerciseStartConditions: ExerciseRepStartCondition[],
+    avgFps: { value: number; count: number } | null
   ): boolean {
     // 5 fps/s, 0.5s -> 3 frames
     for (const condition of exerciseStartConditions) {
-      const numFrames = Math.ceil((avgFps.value * condition.duration) / 1000); // convert ms to seconds
+      const fps = avgFps?.value || 30; // default to 30 fps
+      const numFrames = Math.ceil((fps * condition.duration) / 1000); // convert ms to seconds
 
       const historyFrame = buffer.history.slice(-numFrames)[0];
       if (!historyFrame) return false;
@@ -261,6 +274,11 @@ export class DetectionStatusService {
         (k) => k.id === condition.keypointId
       );
       if (!currentFrameKeypoint) return false;
+
+      const currentValue = KeypointUtil.getKeypointValueByType(
+        currentFrameKeypoint,
+        condition.type
+      );
 
       const isValid = this.validateKeypointCondition(
         historyKeypoint,
@@ -277,7 +295,7 @@ export class DetectionStatusService {
   private static validateKeypointCondition(
     currentKeypoint: Keypoint,
     nextKeypoint: Keypoint,
-    condition: ExerciseStartCondition
+    condition: ExerciseRepStartCondition
   ): boolean {
     const { value1: currentValue, value2: nextValue } =
       KeypointUtil.getKeypointsValuesByType(

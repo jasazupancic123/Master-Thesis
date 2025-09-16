@@ -1,20 +1,22 @@
 import { DetectionStatus } from './enum/detection-status';
-import { Keypoint } from './type/keypoint';
+import { Keypoint } from './type/keypoint.type';
 import { RefObject } from 'react';
-import { DetectionStatusService } from './detection-status.service';
-import { PoseValidationCondition } from './type/pose-validation-condition';
+import { StatusDetectionService } from './status-detection.service';
+import { PoseValidationCondition } from './type/pose-validation-condition.type';
 import { KeypointUtil } from './util/keypoint.util';
 import { SetState } from '@/common/type/state.type';
 import { KeypointHistory } from './class/keypoint-history';
-import { ExerciseStartCondition } from './type/exercise-start-condition';
+import { ExerciseRepStartCondition } from './type/exercise-start-condition.type';
+import { RepState } from './type/rep-state.type';
 
 export class PoseDetectionService {
   static checkStatus(
     statusRef: RefObject<DetectionStatus>,
+    repStateRef: RefObject<RepState>,
     keypoints: Keypoint[],
     setStatusMessage: SetState<string>,
     buffer: KeypointHistory,
-    exerciseStartConditions: ExerciseStartCondition[],
+    exerciseStartConditions: ExerciseRepStartCondition[],
     avgFps: { value: number; count: number } | null
   ) {
     if (statusRef.current !== DetectionStatus.RECORDING) {
@@ -28,8 +30,9 @@ export class PoseDetectionService {
       ];
 
       for (const status of initStatuses) {
-        const validStatus = DetectionStatusService.checkStatusAndValidateStatus(
+        const validStatus = StatusDetectionService.checkAndValidateStatus(
           status,
+          repStateRef,
           {
             keypoints,
             statusRef,

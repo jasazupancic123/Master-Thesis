@@ -14,64 +14,70 @@ import { KeypointHistory } from '@/controller/pose-detection/class/keypoint-hist
 import { useScreenSize } from '@/store/screen-size.provider';
 import {
   ConditionDirection,
-  ExerciseStartCondition,
-} from '@/controller/pose-detection/type/exercise-start-condition';
+  ExerciseRepStartCondition,
+} from '@/controller/pose-detection/type/exercise-start-condition.type';
 import { KeypointId } from '@/controller/pose-detection/enum/keypoint-id';
 import { KeypointValueType } from '@/controller/pose-detection/enum/keypoint-value-type';
 import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
+import { RepStatus } from '@/controller/pose-detection/enum/rep-state';
+import { Rep } from '@/controller/pose-detection/type/rep.type';
+import { RepState } from '@/controller/pose-detection/type/rep-state.type';
 
 const DEBUG = false;
 
 export default function MobileMovementValidation() {
+  const screenSize = useScreenSize();
+
+  // Buffers
   const keypointHistoryRef = useRef<KeypointHistory>(
     new KeypointHistory([], 100, true)
   ); // first make buffer of 100 frames, later set buffer size to undefined to get all recording of exercise
   const keypointBuffer = new KeypointHistory([], 100); // 100 frames buffer, updates in the main loop based on fps
 
-  const exerciseStartConditions: ExerciseStartCondition[] = [
+  const exerciseRepStartConditions: ExerciseRepStartCondition[] = [
     {
-      keypointId: KeypointId.LEFT_EYE,
+      keypointId: KeypointId.LEFT_HIP,
       type: KeypointValueType.POSITION_Y,
-      direction: ConditionDirection.ANY,
-      duration: 750, // ms
-      distance: 0.025, // meters
+      direction: ConditionDirection.NEGATIVE,
+      duration: 1000, // ms
+      distance: 0.01, // meters
     },
-    {
-      keypointId: KeypointId.RIGHT_EYE,
-      type: KeypointValueType.POSITION_Y,
-      direction: ConditionDirection.ANY,
-      duration: 750, // ms
-      distance: 0.025, // meters
-    },
-    {
-      keypointId: KeypointId.LEFT_SHOULDER,
-      type: KeypointValueType.POSITION_Y,
-      direction: ConditionDirection.ANY,
-      duration: 750, // ms
-      distance: 0.025, // meters
-    },
-    {
-      keypointId: KeypointId.RIGHT_SHOULDER,
-      type: KeypointValueType.POSITION_Y,
-      direction: ConditionDirection.ANY,
-      duration: 750, // ms
-      distance: 0.025, // meters
-    },
+    // {
+    //   keypointId: KeypointId.LEFT_EYE,
+    //   type: KeypointValueType.POSITION_Y,
+    //   direction: ConditionDirection.NEGATIVE,
+    //   duration: 750, // ms
+    //   distance: 0.025, // meters
+    // },
   ];
 
+  // Main Status
   const statusRef = useRef<DetectionStatus>(DetectionStatus.NOT_FULLY_IN_FRAME);
   const [statusMessage, setStatusMessage] = useState(
     STATUS_MESSAGES[statusRef.current]
   );
+
+  // Rep State
+  const repStateRef = useRef<RepState>({
+    status: RepStatus.NONE,
+    avgStartValue: null,
+    avgExtremeValue: null,
+  });
+  const currentRepRef = useRef<Rep | null>(null);
+  const recordedRepsRef = useRef<Rep[]>([]);
+
+  // Model and PoseLandmarker
   const [model, setModel] = useState<PoseModel>(PoseModel.MEDIAPIPE);
   const [poseLandmarker, setPoseLandmarker] = useState<PoseLandmarker | null>(
     null
   );
 
+  // FPS and Error
   const [fps, setFps] = useState<number | null>(null);
   const avgFps = useRef<{ value: number; count: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Helper Refs
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawingUtilsRef = useRef<DrawingUtils>(null);
@@ -79,9 +85,7 @@ export default function MobileMovementValidation() {
   const prevFrameTimeRef = useRef<number | null>(null);
   const lastVideoTimeRef = useRef(-1);
   const frameCountRef = useRef(0);
-  const firstFrameInRecordingMode = useRef(false);
-
-  const screenSize = useScreenSize();
+  const initedFirstFrameInRecordingMode = useRef(false);
 
   {
     /* <HELPER TO DRAW GRAPH>*/
@@ -96,12 +100,9 @@ export default function MobileMovementValidation() {
         e.preventDefault(); // stop page scroll
         if (!spaceDown) setSpaceDown(true);
 
-        const keypointIds = [
-          KeypointId.LEFT_EYE,
-          // KeypointId.RIGHT_EYE,
-          // KeypointId.LEFT_SHOULDER,
-          // KeypointId.RIGHT_SHOULDER,
-        ];
+        const keypointIds = exerciseRepStartConditions.map(
+          (condition) => condition.keypointId
+        );
 
         keypointIds.forEach((id) => {
           KeypointUtil.drawKeypointValuesGraph(
@@ -201,10 +202,13 @@ export default function MobileMovementValidation() {
       predictWebcam: async () =>
         await predictWebcam({
           statusRef,
+          repStateRef,
           model,
           poseLandmarker,
           keypointHistory: keypointHistoryRef.current,
           keypointBuffer,
+          currentRepRef,
+          recordedRepsRef,
           videoRef,
           canvasRef,
           drawingUtilsRef,
@@ -214,8 +218,8 @@ export default function MobileMovementValidation() {
           frameCountRef,
           isMobile: screenSize.isMobile,
           avgFps,
-          exerciseStartConditions,
-          firstFrameInRecordingMode,
+          exerciseStartConditions: exerciseRepStartConditions,
+          initedFirstFrameInRecordingMode,
           setFps,
           setStatusMessage,
         }),

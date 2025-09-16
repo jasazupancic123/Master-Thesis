@@ -1,4 +1,4 @@
-import { Keypoint } from '../type/keypoint';
+import { Keypoint } from '../type/keypoint.type';
 
 export class KeypointHistory {
   history: Keypoint[][];
@@ -58,5 +58,9 @@ export class KeypointHistory {
       this.history = this.history.slice(index);
       if (clearBufferLength) this.bufferLength = undefined;
     }
+  }
+
+  clear() {
+    this.history = [];
   }
 }

@@ -6,12 +6,16 @@ import { DetectionStatus } from '@/controller/pose-detection/enum/detection-stat
 import { KeypointId } from '@/controller/pose-detection/enum/keypoint-id';
 import { KeypointValueType } from '@/controller/pose-detection/enum/keypoint-value-type';
 import { PoseModel } from '@/controller/pose-detection/enum/pose-model.enum';
+import { RepStatus } from '@/controller/pose-detection/enum/rep-state';
 import { PoseDetectionService } from '@/controller/pose-detection/pose-detection.service';
 import { RepDetectionService } from '@/controller/pose-detection/rep-detection.service';
 import {
   ConditionDirection,
-  ExerciseStartCondition,
-} from '@/controller/pose-detection/type/exercise-start-condition';
+  ExerciseRepStartCondition,
+} from '@/controller/pose-detection/type/exercise-start-condition.type';
+import { Keypoint } from '@/controller/pose-detection/type/keypoint.type';
+import { RepState } from '@/controller/pose-detection/type/rep-state.type';
+import { Rep } from '@/controller/pose-detection/type/rep.type';
 import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
 import {
   DrawingUtils,
@@ -95,11 +99,14 @@ export function enableCam(state: {
 
 export const predictWebcam = async (state: {
   statusRef: RefObject<DetectionStatus>;
+  repStateRef: RefObject<RepState>;
   model: PoseModel;
   poseLandmarker: PoseLandmarker | null;
   keypointHistory: KeypointHistory;
   keypointBuffer: KeypointHistory;
-  exerciseStartConditions: ExerciseStartCondition[];
+  currentRepRef: RefObject<Rep | null>;
+  recordedRepsRef: RefObject<Rep[]>;
+  exerciseStartConditions: ExerciseRepStartCondition[];
   videoRef: RefObject<HTMLVideoElement | null>;
   canvasRef: RefObject<HTMLCanvasElement | null>;
   drawingUtilsRef: RefObject<DrawingUtils | null>;
@@ -108,17 +115,20 @@ export const predictWebcam = async (state: {
   lastVideoTimeRef: RefObject<number>;
   isMobile: boolean;
   frameCountRef: RefObject<number>;
-  firstFrameInRecordingMode: RefObject<boolean>;
+  initedFirstFrameInRecordingMode: RefObject<boolean>;
   avgFps: RefObject<{ value: number; count: number } | null>;
   setFps: SetState<number | null>;
   setStatusMessage: SetState<string>;
 }) => {
   const {
     statusRef,
+    repStateRef,
     model,
     poseLandmarker,
     keypointHistory,
     keypointBuffer,
+    currentRepRef,
+    recordedRepsRef,
     exerciseStartConditions,
     videoRef,
     canvasRef,
@@ -128,7 +138,7 @@ export const predictWebcam = async (state: {
     lastVideoTimeRef,
     isMobile,
     frameCountRef,
-    firstFrameInRecordingMode,
+    initedFirstFrameInRecordingMode,
     avgFps,
     setFps,
     setStatusMessage,
@@ -195,62 +205,63 @@ export const predictWebcam = async (state: {
         frameCountRef.current
       );
 
-      if (
-        firstFrameInRecordingMode.current === false &&
-        statusRef.current === DetectionStatus.RECORDING
-      ) {
-        const slopeK = 3; // naklon premice
-        const sustainW = 2; // look for 2 consecutive frames of sustained slope
+      insertKeypointsIntoBuffers({
+        statusRef,
+        keypointHistory,
+        keypointBuffer,
+        repStateRef,
+        currentRepBuffer: currentRepRef.current?.buffer,
+        keypoints,
+        isMobile,
+        avgFps,
+      });
 
-        const preWindow = Math.min(
-          4,
-          KeypointUtil.getFramesCountFromSeconds(
-            0.15,
-            avgFps.current?.value || 30
-          )
-        ); // look for 0.15s of frames of sustained slope, min 4 frames
-
-        const { index: startOfFirstRepIndex, message } =
-          RepDetectionService.findStartOfFirstRep({
-            buffer: keypointHistory,
-            keypointId: KeypointId.LEFT_EYE,
-            valueType: KeypointValueType.POSITION_Y,
-            direction: ConditionDirection.NEGATIVE,
-            slopeK,
-            sustainW,
-            preWindow,
-          });
-
-        keypointHistory.cutAtIndex(startOfFirstRepIndex, true);
-
-        firstFrameInRecordingMode.current = true;
-        keypointHistory.bufferLength = undefined;
-      }
-
-      // if we are in recording state, don't update the buffer's size
-      if (statusRef.current === DetectionStatus.RECORDING)
-        keypointHistory.insertFrame(keypoints);
-      else {
-        // only keep KEYPOINT_BUFFER_DURATION_MS of frames in history
-        keypointHistory.insertFrame(
-          keypoints,
-          avgFps.current,
-          POSE_DETECTION_CONSTRAINTS.KEYPOINT_BUFFER_DURATION_MS * 1000
-        );
-      }
-
-      const hasWeakFps = avgFps.current ? avgFps.current.value <= 15 : isMobile;
-
-      keypointBuffer.insertFrame(keypoints, avgFps.current, hasWeakFps ? 2 : 3); // keep 2 or 3 seconds of history
+      const slopeK = 3; // naklon premice
+      const sustainW = 2; // look for 2 consecutive frames of sustained slope
+      const preWindow = Math.min(
+        4,
+        KeypointUtil.getFramesCountFromSeconds(
+          0.15,
+          avgFps.current?.value || 30
+        )
+      ); // look for 0.15s of frames of sustained slope, min 4 frames
 
       PoseDetectionService.checkStatus(
         statusRef,
+        repStateRef,
         keypoints,
         setStatusMessage,
         keypointBuffer,
         exerciseStartConditions,
         avgFps.current
       );
+
+      if (
+        statusRef.current === DetectionStatus.RECORDING &&
+        repStateRef.current.status !== RepStatus.NONE
+      ) {
+        exerciseStartConditions.forEach((condition) => {
+          // Če hočemo meti več conditionov, pol more checkRepStatus za vsak condition
+          // vrniti status za kerega misi in če so vsi enaki, pol lahko menjamo status
+          // na način ki je trenutno v checkRepStatus
+          RepDetectionService.checkRepStatus({
+            repStateRef,
+            currentRepRef,
+            recordedRepsRef,
+            currentFrameKeypoints: keypoints,
+            keypointHistory: keypointHistory,
+            keypointId: condition.keypointId,
+            valueType: condition.type,
+            direction: condition.direction,
+            slopeK,
+            sustainW,
+            preWindow,
+            exerciseStartConditions,
+            avgFps: avgFps.current,
+            initedFirstFrameInRecordingMode, // this is used to track if no rep was detected yet
+          });
+        });
+      }
 
       ctx.save();
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -270,6 +281,48 @@ export const predictWebcam = async (state: {
 
   window.requestAnimationFrame(predictWebcam.bind(null, state));
 };
+
+function insertKeypointsIntoBuffers(state: {
+  statusRef: RefObject<DetectionStatus>;
+  keypointHistory: KeypointHistory;
+  keypointBuffer: KeypointHistory;
+  repStateRef: RefObject<RepState>;
+  currentRepBuffer?: KeypointHistory;
+  keypoints: Keypoint[];
+  isMobile: boolean;
+  avgFps: RefObject<{ value: number; count: number } | null>;
+}) {
+  const {
+    statusRef,
+    keypointHistory,
+    keypointBuffer,
+    repStateRef,
+    currentRepBuffer,
+    keypoints,
+    isMobile,
+    avgFps,
+  } = state;
+
+  // if we are in recording state, don't update the keypointHistory's size
+  if (statusRef.current === DetectionStatus.RECORDING)
+    keypointHistory.insertFrame(keypoints);
+  else {
+    // only keep KEYPOINT_BUFFER_DURATION_MS of frames in history
+    keypointHistory.insertFrame(
+      keypoints,
+      avgFps.current,
+      POSE_DETECTION_CONSTRAINTS.KEYPOINT_BUFFER_DURATION_MS * 1000
+    );
+  }
+
+  // If rep has started, then add frames to current rep buffer
+  if (repStateRef.current.status === RepStatus.IN_REP && currentRepBuffer)
+    currentRepBuffer.insertFrame(keypoints);
+
+  const hasWeakFps = avgFps.current ? avgFps.current.value <= 15 : isMobile;
+
+  keypointBuffer.insertFrame(keypoints, avgFps.current, hasWeakFps ? 2 : 3); // keep 2 or 3 seconds of history
+}
 
 export function getStatusMessage(status: DetectionStatus) {
   return STATUS_MESSAGES[status - 1];

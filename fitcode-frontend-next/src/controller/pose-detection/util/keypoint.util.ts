@@ -1,7 +1,7 @@
 import { KeypointId } from '../enum/keypoint-id';
 import { PoseModel } from '../enum/pose-model.enum';
 import { Landmark } from '@mediapipe/tasks-vision';
-import { Keypoint } from '../type/keypoint';
+import { Keypoint } from '../type/keypoint.type';
 import { KeypointValueType } from '../enum/keypoint-value-type';
 import savitzkyGolay from 'ml-savitzky-golay';
 
@@ -208,5 +208,13 @@ export class KeypointUtil {
 
   static getFramesCountFromSeconds(seconds: number, fps: number): number {
     return Math.ceil(seconds * fps);
+  }
+
+  static getVelocityFromValues(values: number[]) {
+    const n = values.length;
+    const velocity: number[] = Array(n).fill(0);
+    for (let i = 1; i < n; i++) velocity[i] = values[i] - values[i - 1];
+
+    return velocity;
   }
 }

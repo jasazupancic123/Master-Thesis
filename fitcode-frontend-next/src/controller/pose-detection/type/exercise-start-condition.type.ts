@@ -7,7 +7,7 @@ export enum ConditionDirection {
   POSITIVE = 'POSITIVE',
 }
 
-export type ExerciseStartCondition = {
+export type ExerciseRepStartCondition = {
   keypointId: KeypointId;
   type: KeypointValueType;
   direction: ConditionDirection;
@@ -18,3 +18,8 @@ export type ExerciseStartCondition = {
   // how many meters the keypoint needs to move in the specified direction
   distance: number;
 };
+
+export type ExerciseRepStartConditionWithExerciseId =
+  ExerciseRepStartCondition & {
+    exerciseId: string;
+  };
