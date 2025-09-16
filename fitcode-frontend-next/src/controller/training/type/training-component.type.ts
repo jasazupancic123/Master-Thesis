@@ -33,19 +33,13 @@ export type TrainingComponentWithTrainingId = TrainingComponent & {
 
 export type CreateTrainingComponent = Pick<
   TrainingComponent,
-  'id' | 'from' | 'to' | 'target' | 'methodId'
+  'id' | 'target' | 'methodId'
 >;
 
 export type UpdateTrainingComponent = Pick<
   TrainingComponent,
-  'id' | 'color' | 'from' | 'to' | 'target' | 'periodizationType' | 'methodId'
+  'id' | 'target' | 'methodId' | 'mainSet' | 'periodizationType'
 > & {
   supersets: UpdateSuperset[];
   subgroups: UpdateSubgroup[];
-};
-
-export type CopyComponent = Pick<DateRange, 'from'> & {
-  componentId: string;
-  copyFromTrainingId: string;
-  copyToTrainingId?: string;
 };

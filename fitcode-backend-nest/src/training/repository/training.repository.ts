@@ -1,4 +1,5 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { addMinutes, differenceInMinutes, subMinutes } from 'date-fns';
 import {
   CollectionReference,
   DocumentReference,
@@ -13,6 +14,7 @@ import { FirestoreRepository } from '@src/common/type/firestore.type';
 import { BatchWriteOperation } from '@src/common/type/orm.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 
+import { DURATION_TRAINING_COMPONENT_WARMUP_COOLDOWN_IN_MIN } from '../constant/training-limits.constant';
 import { Training } from '../entity/training.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
 
@@ -129,57 +131,61 @@ export class TrainingRepository extends FirestoreRepository<Training> {
     componentId: string,
     input: DateRangeDto,
   ) {
-    const all = [training.warmup, ...training.components, training.cooldown];
-    const component = all.find((c) => c.id === componentId);
-    if (!component) throw new NotFoundException('Component not found');
+    const duration = DURATION_TRAINING_COMPONENT_WARMUP_COOLDOWN_IN_MIN;
 
-    const i = training.components.indexOf(component);
-    const prev = i !== 0 ? all[i - 1] : null;
-    const next = i !== all.length - 1 ? all[i + 1] : null;
-
-    let query: Update<Training> = {};
-    if (!prev)
-      // first component, update its `from` and `to` from input and update next component's `from`
-      query = {
-        from: input.from, // also update training `from`
-        components: all.map((c) => {
-          if (c.id === componentId)
-            return { ...c, from: input.from, to: input.to };
-
-          if (next && c.id === next.id) return { ...c, from: input.to };
-          return c;
-        }),
-      };
-    else if (!next)
-      // last component, update its `from` and `to` from input and update previous component's `to`
-      query = {
-        to: input.to, // also update training `to`
-        components: all.map((c) => {
-          if (c.id === componentId)
-            return { ...c, from: input.from, to: input.to };
-
-          if (prev && c.id === prev.id) return { ...c, to: input.from };
-          return c;
-        }),
-      };
-    else
-      // middle component, update its `from` and `to` from input and update previous component's `to` and next component's `from`
-      query = {
-        components: all.map((c) => {
-          if (c.id === componentId)
-            return { ...c, from: input.from, to: input.to };
-
-          if (prev && c.id === prev.id) return { ...c, to: input.from };
-          if (next && c.id === next.id) return { ...c, from: input.to };
-          return c;
-        }),
-      };
-
-    // sort by time
-    query.components = query.components.sort(
+    const all = [...training.components].sort(
       (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime(),
     );
 
+    const i = all.findIndex((c) => c.id === componentId);
+    if (i === -1) throw new NotFoundException('Component not found');
+
+    // helpers
+    const rebuildForward = (start: number) => {
+      for (let j = start; j < all.length; j++) {
+        const prev = all[j - 1];
+        const c = all[j];
+        const durationInMin = differenceInMinutes(c.to, c.from);
+        c.from = prev.to;
+        c.to = addMinutes(c.from, durationInMin);
+      }
+    };
+
+    const rebuildBackward = (start: number) => {
+      for (let j = start; j >= 0; j--) {
+        const next = all[j + 1];
+        const c = all[j];
+        const durationInMin = differenceInMinutes(c.to, c.from);
+        c.to = next.from;
+        c.from = subMinutes(c.to, durationInMin);
+      }
+    };
+
+    // update the component itself
+    all[i].from = input.from;
+    all[i].to = input.to;
+
+    const query: Update<Training> = {};
+
+    // handle boundaries
+    if (i === 0) {
+      const trainingFrom = subMinutes(input.from, duration);
+      query.from = trainingFrom;
+      query.warmup = { ...training.warmup, from: trainingFrom, to: input.from };
+      rebuildForward(i + 1);
+    } else if (i === all.length - 1) {
+      const trainingTo = addMinutes(input.to, duration);
+      query.to = trainingTo;
+      query.cooldown = { ...training.cooldown, from: input.to, to: trainingTo };
+      rebuildBackward(i - 1);
+    } else {
+      // middle
+      rebuildBackward(i - 1);
+      rebuildForward(i + 1);
+    }
+
+    query.components = all;
     await this.update(training.id, query);
+    return query;
   }
 }

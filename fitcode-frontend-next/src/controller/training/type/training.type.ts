@@ -6,10 +6,10 @@ import type {
 } from './training-component.type';
 import type { DateRange } from '@/common/type/date-range.type';
 import type { BaseEntity } from '@/common/type/entity.type';
+import type { AuthUser } from '@/controller/auth/type/user.type';
 import type { Cycle } from '@/controller/group/type/cycle.type';
 import type { Group } from '@/controller/group/type/group.type';
 import type { Institution } from '@/controller/institution/type/institution.type';
-import type { AuthUser } from '@/controller/auth/type/user.type';
 import type { Wellness } from '@/controller/profile/type/wellness.type';
 
 export type Training = BaseEntity &
@@ -35,7 +35,7 @@ export type Training = BaseEntity &
 
 export type CreateTraining = Pick<
   Training,
-  'groupId' | 'cycleId' | 'membersIds'
+  'groupId' | 'cycleId' | 'membersIds' | 'from'
 > & {
   components: CreateTrainingComponent[];
 };

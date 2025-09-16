@@ -1,8 +1,10 @@
 'use client';
 
+import { redirect } from 'next/navigation';
 import { useEffect } from 'react';
 
 import { FIREBASE_AUTH_ID_TOKEN } from '@/common/config/firebase.config';
+import { LINK_SIGN_IN } from '@/common/constant/navigation.constant';
 import { CommonService } from '@/common/service/common.service';
 
 interface GlobalErrorProps {
@@ -19,7 +21,6 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
     <html>
       <body>
         <h2>Something went wrong!</h2>
-
         <p>{error.message}</p>
 
         <button
@@ -28,7 +29,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
               FIREBASE_AUTH_ID_TOKEN
             );
 
-            reset();
+            redirect(LINK_SIGN_IN.href);
           }}
         >
           Try again
