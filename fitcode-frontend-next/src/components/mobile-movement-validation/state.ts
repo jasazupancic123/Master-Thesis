@@ -32,7 +32,8 @@ export async function loadModel(state: {
 }) {
   const { setPoseLandmarker, videoRef, canvasRef, drawingUtilsRef } = state;
 
-  const modelAssetPath = '/models/pose_landmarker/pose_landmarker_full.task';
+  const modelAssetPath = '/models/pose_landmarker/pose_landmarker_full.task'; // full
+  // const modelAssetPath = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task'; // lite
 
   const vision = await FilesetResolver.forVisionTasks('/wasm');
 
