@@ -48,13 +48,11 @@ export class UpdateSubgroupDto
 export class UpdateTrainingComponentDto
   extends PickType(TrainingComponent, [
     'id',
-    'from',
-    'to',
     'target',
     'methodId',
     'mainSet',
   ] as const)
-  implements UpdateTrainingComponent
+  implements Omit<UpdateTrainingComponent, 'from' | 'to'>
 {
   @ValidateNested({ each: true })
   @Type(() => UpdateSupersetDto)

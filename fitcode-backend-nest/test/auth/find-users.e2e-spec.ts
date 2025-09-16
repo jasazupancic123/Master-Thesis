@@ -57,14 +57,15 @@ describe('Update Institution (e2e)', () => {
     ['manager', 4, global.manager.token], // only institution1
     ['trainer', 4, global.trainer.token],
     ['athlete', 4, global.athlete.token],
-  ])('should get all users for %s', async (_, expectedLength, token) => {
+  ])('should get all users for %s', async (role, expectedLength, token) => {
     const response = await request(app.getHttpServer())
       .get(`/auth`)
       .set('Authorization', `Bearer ${token}`);
 
     expect(response.status).toBe(200);
 
-    if (_ === 'admin')
+    if (role === 'admin')
+      // sometimes, there can be more users (from other tests), so just check minimum
       expect(response.body.length).toBeGreaterThanOrEqual(expectedLength);
     else expect(response.body.length).toEqual(expectedLength);
   });

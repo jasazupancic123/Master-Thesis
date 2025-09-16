@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
+import { DateRangeDto } from '@src/common/dto/date-range.dto';
 import { UserIdDto } from '@src/common/dto/user-id.dto';
 
 import { UserRole } from '../auth/enum/user-role.enum';
@@ -18,8 +19,6 @@ import { RequestUser } from '../common/decorator/request-user.decorator';
 import { CommonService } from '../common/service/common.service';
 import { User } from '../common/type/firebase-auth.type';
 import { AddTrainingComponentsDto } from './dto/add-training-components.dto';
-import { CopyComponentDto } from './dto/copy-component.dto';
-import { CopyTrainingDto } from './dto/copy-training.dto';
 import { CreateTrainingDto } from './dto/create-training.dto';
 import { FilterTrainingQueryDto } from './dto/filter-training-query.dto';
 import { PeriodizeTrainingsDto } from './dto/periodize-training.dto';
@@ -90,16 +89,6 @@ export class TrainingController {
     return await this.trainingService.create(user, body);
   }
 
-  @Post('/copy/component')
-  @Auth()
-  async copyComponent(
-    @RequestUser() user: User,
-    @Body()
-    body: CopyComponentDto,
-  ) {
-    return await this.trainingService.copyComponent(user, body);
-  }
-
   @Patch('/:baseTrainingId/periodize/component/:componentId')
   @Auth()
   async periodize(
@@ -133,15 +122,16 @@ export class TrainingController {
     return await this.trainingService.update(user, ref, body);
   }
 
-  @Post(':trainingId/copy')
+  @Patch(':trainingId/component/:componentId/time')
   @Auth()
-  async copy(
+  async updateComponentTime(
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
-    @Body() body: CopyTrainingDto,
+    @Param('componentId') componentId: string,
+    @Body() body: DateRangeDto,
   ) {
-    const ref = { trainingId };
-    return await this.trainingService.copy(user, ref, body);
+    const ref = { trainingId, componentId };
+    return await this.trainingService.updateComponentTime(user, ref, body);
   }
 
   @Delete(':trainingId')

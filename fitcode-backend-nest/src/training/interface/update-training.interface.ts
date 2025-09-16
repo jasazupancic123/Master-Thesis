@@ -24,11 +24,16 @@ export type UpdateSubgroup = Pick<
 
 export type UpdateTrainingComponent = Pick<
   TrainingComponent,
-  'id' | 'color' | 'from' | 'to' | 'target' | 'methodId' | 'mainSet'
+  'id' | 'color' | 'target' | 'methodId' | 'mainSet' | 'from' | 'to'
 > & {
   supersets: UpdateSuperset[];
   subgroups: UpdateSubgroup[];
 };
+
+export type UpdateTrainingComponentWithoutTime = Omit<
+  UpdateTrainingComponent,
+  'from' | 'to'
+>;
 
 export type UpdateTraining = Pick<Training, 'warmup' | 'cooldown'> & {
   components: UpdateTrainingComponentDto[];

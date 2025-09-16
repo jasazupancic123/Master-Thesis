@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import {
   CollectionReference,
   DocumentReference,
@@ -6,6 +6,7 @@ import {
 } from 'firebase-admin/firestore';
 
 import { ChangeLogManager } from '@src/change-log/change-log.manager';
+import { DateRangeDto } from '@src/common/dto/date-range.dto';
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { Create, Update } from '@src/common/type/entity.type';
 import { FirestoreRepository } from '@src/common/type/firestore.type';
@@ -121,5 +122,64 @@ export class TrainingRepository extends FirestoreRepository<Training> {
         ),
       },
     };
+  }
+
+  async updateComponentTime(
+    training: Training,
+    componentId: string,
+    input: DateRangeDto,
+  ) {
+    const all = [training.warmup, ...training.components, training.cooldown];
+    const component = all.find((c) => c.id === componentId);
+    if (!component) throw new NotFoundException('Component not found');
+
+    const i = training.components.indexOf(component);
+    const prev = i !== 0 ? all[i - 1] : null;
+    const next = i !== all.length - 1 ? all[i + 1] : null;
+
+    let query: Update<Training> = {};
+    if (!prev)
+      // first component, update its `from` and `to` from input and update next component's `from`
+      query = {
+        from: input.from, // also update training `from`
+        components: all.map((c) => {
+          if (c.id === componentId)
+            return { ...c, from: input.from, to: input.to };
+
+          if (next && c.id === next.id) return { ...c, from: input.to };
+          return c;
+        }),
+      };
+    else if (!next)
+      // last component, update its `from` and `to` from input and update previous component's `to`
+      query = {
+        to: input.to, // also update training `to`
+        components: all.map((c) => {
+          if (c.id === componentId)
+            return { ...c, from: input.from, to: input.to };
+
+          if (prev && c.id === prev.id) return { ...c, to: input.from };
+          return c;
+        }),
+      };
+    else
+      // middle component, update its `from` and `to` from input and update previous component's `to` and next component's `from`
+      query = {
+        components: all.map((c) => {
+          if (c.id === componentId)
+            return { ...c, from: input.from, to: input.to };
+
+          if (prev && c.id === prev.id) return { ...c, to: input.from };
+          if (next && c.id === next.id) return { ...c, from: input.to };
+          return c;
+        }),
+      };
+
+    // sort by time
+    query.components = query.components.sort(
+      (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime(),
+    );
+
+    await this.update(training.id, query);
   }
 }

@@ -8,8 +8,6 @@ import { TrainingComponent } from '../entity/training-component.entity';
 
 export class CreateTrainingComponentDto extends PickType(TrainingComponent, [
   'id',
-  'from',
-  'to',
   'target',
   'methodId',
   'copiedFrom',
@@ -20,6 +18,7 @@ export class CreateTrainingDto extends PickType(Training, [
   'cycleId',
   'membersIds',
   'copiedFromId',
+  'from',
 ]) {
   @ValidateNested({ each: true })
   @Type(() => CreateTrainingComponentDto)
