@@ -19,7 +19,7 @@ export type ExerciseRepStartCondition = {
   distance: number;
 };
 
-export type ExerciseRepStartConditionWithExerciseId =
-  ExerciseRepStartCondition & {
-    exerciseId: string;
-  };
+export type ExerciseRepStartConditionWithExerciseIds = {
+  exerciseIds: string[];
+  conditions: ExerciseRepStartCondition[];
+};
