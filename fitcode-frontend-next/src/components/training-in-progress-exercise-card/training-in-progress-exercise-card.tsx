@@ -25,13 +25,11 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import { useRouter } from 'next/navigation';
-import { LINK_POSE_DETECTION } from '@/common/constant/navigation.constant';
-import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
-import toast from 'react-hot-toast';
-import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { ParamType, VolType } from '@/controller/component/enum/param.enum';
+import { ParamType } from '@/controller/component/enum/param.enum';
 import MobileMovementValidation from '../mobile-movement-validation/mobile-movement-validation';
 import { updateExerciseAttributeValues } from '../training-exercise-card-sets-expanded/state';
+import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
+import toast from 'react-hot-toast';
 
 export default function TrainingInProgressExerciseCard() {
   const theme = useTheme();
@@ -68,44 +66,6 @@ export default function TrainingInProgressExerciseCard() {
   const updateExerciseReps = (repsCount: number) => {
     if (supersetIndex === undefined) return;
 
-    // // Update reps
-    // const updatedExercise: TrainingExercise = {
-    //   ...selectedExercise,
-    //   sets: selectedExercise.sets.map((set, index) => {
-    //     if (index === setIndex) {
-    //       return {
-    //         ...set,
-    //         paramValuesL: set.paramValuesL.map((paramValue) => {
-    //           if (paramValue.selected === VolType.Rep) {
-    //             return {
-    //               ...paramValue,
-    //               value: repsCount.toString(),
-    //             };
-    //           }
-
-    //           return paramValue;
-    //         }),
-    //         paramValuesR: set.paramValuesR
-    //           ? set.paramValuesR.map((paramValue) => {
-    //               if (paramValue.selected === VolType.Rep) {
-    //                 return {
-    //                   ...paramValue,
-    //                   value: repsCount.toString(),
-    //                 };
-    //               }
-
-    //               return paramValue;
-    //             })
-    //           : undefined,
-    //       };
-    //     }
-
-    //     return set;
-    //   }),
-    // };
-
-    // console.log('updatedExercise', updatedExercise);
-
     if (setIndex === undefined) return;
 
     const selectedSet = selectedExercise.sets[setIndex];
@@ -114,8 +74,6 @@ export default function TrainingInProgressExerciseCard() {
     const param = selectedExercise.params.find(
       (p) => p.field === ParamType.VolWork1
     );
-
-    console.log({ selectedExercise });
 
     if (!param) return;
 
@@ -141,6 +99,13 @@ export default function TrainingInProgressExerciseCard() {
         }
       );
     });
+
+    markExerciseSetAsCompleted(
+      { exerciseId: selectedExercise.id, supersetIndex },
+      setIndex + 1,
+      trainingInProgress.exerciseSetTrackingState,
+      setTrainingInProgress
+    );
 
     updateTrainingInProgress(selectedExercise, supersetIndex);
   };
@@ -413,6 +378,22 @@ export default function TrainingInProgressExerciseCard() {
                     selectedTrackingMethod === method ? 'primary' : 'default'
                   }
                   onClick={() => {
+                    if (method === TrackingMethod.CAMERA) {
+                      if (!selectedExercise.exercise) return;
+
+                      const hasPoseLogic =
+                        selectedExercise.exercise !== undefined &&
+                        EXERCISE_POSES.some((ep) =>
+                          ep.exerciseIds.includes(selectedExercise.exercise!.id)
+                        );
+
+                      if (!hasPoseLogic) {
+                        toast.error(
+                          'Pose detection is not supported for this exercise yet'
+                        );
+                        return;
+                      }
+                    }
                     setSelectedTrackingMethod(method);
                   }}
                 >

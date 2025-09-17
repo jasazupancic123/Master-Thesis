@@ -8,16 +8,7 @@ export default function RepsCounter(props: RepsCounterProps) {
   const { reps } = props;
 
   return (
-    <Box
-      display="flex"
-      flexDirection="column"
-      alignItems="flex-start"
-      sx={{
-        position: 'absolute',
-        right: 16,
-        top: 10,
-      }}
-    >
+    <Box display="flex" flexDirection="column" alignItems="flex-start">
       <Typography
         variant="caption"
         fontSize={30}

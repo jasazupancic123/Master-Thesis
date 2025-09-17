@@ -14,7 +14,7 @@ export default function MovementValidationHeader(
   return (
     <Box
       width="100%"
-      height={150}
+      height={50}
       display="flex"
       justifyContent="center"
       alignItems="center"
@@ -25,7 +25,7 @@ export default function MovementValidationHeader(
     >
       <Typography
         textAlign="center"
-        fontSize={40}
+        fontSize={20}
         sx={{ textTransform: 'uppercase' }}
       >
         {statusMessage}

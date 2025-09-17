@@ -278,7 +278,6 @@ export class RepDetectionService {
         currentRepRef
       )
     ) {
-      // console.log('VALUE NOT CLOSE TO START VALUE');
       return false;
     }
 
@@ -292,15 +291,13 @@ export class RepDetectionService {
       detectingRepStart: false,
     });
 
-    if (slope === undefined) {
-      // slope not flat enough yet
-      // console.log('SLOPE NOT FLAT ENOUGH YET');
-      return false;
-    }
+    if (slope === undefined) return false;
 
-    // HERE ALSO LOOK FOR LOCAL
+    // HERE ALSO LOOK FOR LOCAL EXTREMUM, NOT JUST SLOPE
+    // If we look for local extremum, we also need to capture the next n frames and get the extremum
+    // out of those, or maybe just track the next n frames, if the value is more extreme than the
+    // current extreme_value, then update it
 
-    // console.log('REP DONE');
     return true;
   }
 
