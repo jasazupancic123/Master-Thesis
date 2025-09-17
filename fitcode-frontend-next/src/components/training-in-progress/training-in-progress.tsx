@@ -23,6 +23,7 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
+import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 
 interface TrainingInProgressProps {
   setTrainings: SetState<Training[]>;
@@ -36,10 +37,11 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
   const controller = TrainingController.getInstance(token);
 
   const {
-    clearTrainingState,
     trainingInProgress,
     setTrainingInProgress,
+    selectedTrackingMethod,
     setView,
+    clearTrainingState,
   } = useTraining();
 
   const {
@@ -179,76 +181,81 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
     />
   ) : trainingInProgress ? (
     <Box width="100%" display="flex" flexDirection="column" alignItems="center">
-      <AthleteOptionsContainer
-        items={[
-          trainingInProgress.selectedComponent.id,
-          `Time: ${formatTime(elapsedTime)}`,
-        ]}
-        selectedItem={trainingInProgress.selectedComponent.id}
-        title="Session"
-        onClick={() => {}}
-      />
-      <Box
-        ref={outerRef}
-        width="100%"
-        sx={{
-          overflowX: 'auto',
-          border: `1px solid ${theme.palette.background.textBackground}`,
-          borderLeft: 'none',
-          borderRight: 'none',
-        }}
-      >
-        <Box
-          ref={innerRef}
-          display="flex"
-          gap={4}
-          p={1}
-          justifyContent={isOverflowing ? 'flex-start' : 'center'}
-          sx={{
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {trainingInProgress.supersets?.map((superset, i) => (
-            <Typography
-              key={i}
-              fontSize={12}
-              textAlign="center"
-              noWrap
+      {selectedTrackingMethod !== TrackingMethod.CAMERA && (
+        <>
+          <AthleteOptionsContainer
+            items={[
+              trainingInProgress.selectedComponent.id,
+              `Time: ${formatTime(elapsedTime)}`,
+            ]}
+            selectedItem={trainingInProgress.selectedComponent.id}
+            title="Session"
+            onClick={() => {}}
+          />
+          <Box
+            ref={outerRef}
+            width="100%"
+            sx={{
+              overflowX: 'auto',
+              border: `1px solid ${theme.palette.background.textBackground}`,
+              borderLeft: 'none',
+              borderRight: 'none',
+            }}
+          >
+            <Box
+              ref={innerRef}
+              display="flex"
+              gap={4}
+              p={1}
+              justifyContent={isOverflowing ? 'flex-start' : 'center'}
               sx={{
-                flex: '0 0 auto',
-                color:
-                  selectedSuperset === superset
-                    ? theme.palette.text.primary
-                    : theme.palette.grey[700],
-              }}
-              onClick={() => {
-                const undoneExercises = getUndoneExercises(
-                  selectedSuperset,
-                  supersetIndex,
-                  trainingInProgress.exerciseSetTrackingState
-                );
-                if (undoneExercises.length > 0) {
-                  setUndoneExercises(undoneExercises);
-                  setShowUndoneSetsWarning(true);
-                }
-
-                setSelectedSuperset(superset);
-                setSelectedExercise(superset.exercises[0] || null);
-                setSetIndex(0);
-                setTrainingInProgress((prev) => {
-                  if (!prev) return prev;
-                  return {
-                    ...prev,
-                    supersetIndex: i,
-                  };
-                });
+                whiteSpace: 'nowrap',
               }}
             >
-              Superset {i + 1}
-            </Typography>
-          ))}
-        </Box>
-      </Box>
+              {trainingInProgress.supersets?.map((superset, i) => (
+                <Typography
+                  key={i}
+                  fontSize={12}
+                  textAlign="center"
+                  noWrap
+                  sx={{
+                    flex: '0 0 auto',
+                    color:
+                      selectedSuperset === superset
+                        ? theme.palette.text.primary
+                        : theme.palette.grey[700],
+                  }}
+                  onClick={() => {
+                    const undoneExercises = getUndoneExercises(
+                      selectedSuperset,
+                      supersetIndex,
+                      trainingInProgress.exerciseSetTrackingState
+                    );
+                    if (undoneExercises.length > 0) {
+                      setUndoneExercises(undoneExercises);
+                      setShowUndoneSetsWarning(true);
+                    }
+
+                    setSelectedSuperset(superset);
+                    setSelectedExercise(superset.exercises[0] || null);
+                    setSetIndex(0);
+                    setTrainingInProgress((prev) => {
+                      if (!prev) return prev;
+                      return {
+                        ...prev,
+                        supersetIndex: i,
+                      };
+                    });
+                  }}
+                >
+                  Superset {i + 1}
+                </Typography>
+              ))}
+            </Box>
+          </Box>
+        </>
+      )}
+
       {trainingInProgress &&
       trainingInProgress.supersets &&
       selectedSuperset ? (
