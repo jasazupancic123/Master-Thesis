@@ -1,12 +1,12 @@
 import type { INestApplication } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { createTrainerUserAndToken } from '@test/common/utils/auth.util';
-import { deleteUsers } from '@test/common/utils/data.util';
 import { addMonths } from 'date-fns';
 import * as request from 'supertest';
 
 import { AppModule } from '@src/app.module';
+import { createTrainerUserAndToken } from '@src/common/utils/auth.util';
+import { deleteUsers } from '@src/common/utils/data.util';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { generateCycleStub } from '@src/group/mock/cycle.stub';
 import { generateGroupStub } from '@src/group/mock/group.stub';

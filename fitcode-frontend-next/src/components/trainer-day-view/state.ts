@@ -1,6 +1,3 @@
-import type { Dayjs } from 'dayjs';
-import dayjs from 'dayjs';
-import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import type { DraggableLocation, DropResult } from 'react-beautiful-dnd';
 import toast from 'react-hot-toast';
 
@@ -10,24 +7,16 @@ import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
-import { CommonService } from '@/common/service/common.service';
-import type { Day } from '@/common/service/util/date.util';
 import type { SetState, SetStateNullable } from '@/common/type/state.type';
-import { handleApiRequest } from '@/common/type/state.type';
 import { AttributeType } from '@/controller/attribute/enum/attribute-value.enum';
 import type { Attribute } from '@/controller/attribute/type/attribute.type';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
+import type { AuthUser } from '@/controller/auth/type/user.type';
 import type { IntType, VolType } from '@/controller/component/enum/param.enum';
 import { ParamType } from '@/controller/component/enum/param.enum';
-import type { Component } from '@/controller/component/type/component.type';
-import type { Exercise } from '@/controller/exercise/type/exercise.type';
-import type { Cycle } from '@/controller/group/type/cycle.type';
-import type { Method } from '@/controller/method/type/method.type';
 import { CustomWorkloadsSubgroupsService } from '@/controller/training/custom-workloads-subgroups.service';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
 import { SetStatus } from '@/controller/training/enum/set-status.enum';
-import type { TrainingController } from '@/controller/training/training.controller';
-import { TrainingService } from '@/controller/training/training.service';
 import type { ChartWorkloadData } from '@/controller/training/type/chart-workload-data.type';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
 import type { Superset } from '@/controller/training/type/superset.type';
@@ -36,81 +25,6 @@ import type { TrainingComponent } from '@/controller/training/type/training-comp
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import type { Workload } from '@/controller/training/type/workload.type';
 import type { WorkloadValue } from '@/controller/training/type/workload-value.type';
-import type { User } from '@/controller/user/type/user.type';
-
-export async function handleCopyTraining(
-  controller: TrainingController,
-  input: {
-    newDate: Dayjs;
-    period: string;
-  },
-  state: {
-    router: AppRouterInstance;
-    training: Training;
-    cycle: Cycle;
-    day: Day;
-    setTrainings: SetState<Training[]>;
-    components: Component[];
-    exercises: Exercise[];
-    methods: Method[];
-  }
-) {
-  const { newDate, period } = input;
-  const {
-    router,
-    training,
-    cycle,
-    setTrainings,
-    components,
-    exercises,
-    methods,
-  } = state;
-
-  if (
-    !CommonService.instance.date.isBetween(
-      newDate,
-      dayjs(cycle.from),
-      dayjs(cycle.to)
-    )
-  )
-    return toast.error('Selected date is not within the cycle');
-
-  const amPair = { start: 8, end: 10 };
-  const pmPair = { start: 14, end: 16 };
-  const pair = period === 'AM' ? amPair : pmPair;
-
-  // set start time and end time to date
-  const from = newDate
-    .set('year', newDate.year())
-    .set('month', newDate.month())
-    .set('date', newDate.date())
-    .set('hour', pair.start)
-    .set('minute', 0)
-    .set('second', 0)
-    .toString();
-
-  handleApiRequest(
-    router,
-    () => controller.copy(training.id, { from: new Date(from) }),
-    (copiedTraining) => {
-      TrainingService.mapData(copiedTraining, {
-        components,
-        exercises,
-        methods,
-      });
-
-      setTrainings((prev) =>
-        [...prev, copiedTraining].sort(
-          (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime()
-        )
-      );
-
-      toast.success('Successfully copied training');
-    },
-    undefined,
-    'Failed to copy'
-  );
-}
 
 export function onDragEndSubgroup(
   { destination, draggableId }: DropResult,
@@ -119,7 +33,7 @@ export function onDragEndSubgroup(
     setSubgroups: SetState<Subgroup[]>;
     changedSubgroupIds: string[];
     setChangedSubgroupIds: SetState<string[]>;
-    users: User[];
+    users: AuthUser[];
     component: TrainingComponent | undefined;
     setComponent: SetStateNullable<TrainingComponent>;
     training: Training | undefined;
@@ -244,7 +158,7 @@ export async function handleAddSubgroup(state: {
     | undefined;
   setDetectedChanges: SetState<boolean>;
   setSelectedSubgroup: SetState<Subgroup | null>;
-  setSelectedAthlete: SetStateNullable<User>;
+  setSelectedAthlete: SetStateNullable<AuthUser>;
 }) {
   const {
     training,
@@ -1219,7 +1133,7 @@ export function prepareSelectedAthleteAvgWorkloadsForChart(input: {
   component: TrainingComponent;
   trainings: Training[];
   exercise: TrainingExercise;
-  selectedAthlete: User;
+  selectedAthlete: AuthUser;
   selectedSubgroup: Subgroup | null;
   selectedParams: ParamType[];
   setData: SetState<ChartWorkloadData[]>;

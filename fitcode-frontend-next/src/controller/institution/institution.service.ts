@@ -1,8 +1,8 @@
-import type { User } from '../user/type/user.type';
+import type { AuthUser } from '../auth/type/user.type';
 import type { Institution } from './type/institution.type';
 
 export class InstitutionService {
-  static mapUsers(items: Institution[], users: User[]): Institution[] {
+  static mapUsers(items: Institution[], users: AuthUser[]): Institution[] {
     return items.map((item: Institution) => {
       const owner = users.find((user) => user.uid === item.ownerId)!;
       const trainers = users.filter((u) => item.trainerIds.includes(u.uid));

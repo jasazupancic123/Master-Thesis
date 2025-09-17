@@ -1,7 +1,7 @@
 {
   "indexes": [
     {
-      "collectionGroup": "exercises",
+      "collection": "exercises",
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "ownerId", "order": "ASCENDING" },
@@ -25,7 +25,7 @@
       ]
     },
     {
-      "collectionGroup": "trainings",
+      "collection": "trainings",
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "ownerId", "order": "ASCENDING" },
@@ -35,13 +35,30 @@
       ]
     },
     {
-      "collectionGroup": "trainings",
+      "collection": "trainings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "groupId", "order": "ASCENDING" },
+        { "fieldPath": "cycleId", "order": "ASCENDING" },
+        { "fieldPath": "from", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collection": "trainings",
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "membersIds", "arrayConfig": "CONTAINS" },
         { "fieldPath": "groupId", "order": "ASCENDING" },
         { "fieldPath": "from", "order": "ASCENDING" },
         { "fieldPath": "to", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "training-workload",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
       ]
     },
     {

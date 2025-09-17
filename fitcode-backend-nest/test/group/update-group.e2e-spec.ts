@@ -1,17 +1,18 @@
 import type { INestApplication } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
+import { addDays } from 'date-fns';
+import * as request from 'supertest';
+
+import { AppModule } from '@src/app.module';
+import type { TestInstitution, TestUser } from '@src/common/type/entity.type';
 import {
   createGroupWithCycles,
   createInstitution,
   createInstitutionWithUsers,
   deleteDoc,
   deleteInstitution,
-} from '@test/common/utils/data.util';
-import { addDays } from 'date-fns';
-import * as request from 'supertest';
-
-import { AppModule } from '@src/app.module';
+} from '@src/common/utils/data.util';
 import { ComponentService } from '@src/component/component.service';
 import type { Component } from '@src/component/entity/component.entity';
 import { generateComponentStub } from '@src/component/mock/component.stub';
@@ -22,9 +23,6 @@ import { GroupService } from '@src/group/group.service';
 import { generateCycleStub } from '@src/group/mock/cycle.stub';
 import { generateGroupStub } from '@src/group/mock/group.stub';
 import { InstitutionService } from '@src/institution/service/institution.service';
-
-import type { TestUser } from '../common/type/auth.type';
-import type { TestInstitution } from '../common/type/entity.type';
 
 describe('Update Group (e2e)', () => {
   let app: INestApplication;

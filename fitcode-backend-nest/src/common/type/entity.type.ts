@@ -1,6 +1,11 @@
 import type { Timestamp } from 'firebase-admin/firestore';
 
+import type { Group } from '@src/group/entity/group.entity';
+import type { Institution } from '@src/institution/entity/institution.entity';
+import type { Training } from '@src/training/entity/training.entity';
+
 import type { TimestampEntity } from '../entity/timestamp.entity';
+import type { User } from './firebase-auth.type';
 
 // Base Firestore type mapping
 type FirestoreType<T> = T extends Date
@@ -54,3 +59,13 @@ export type Update<
 > = {
   [P in Extract<K, keyof T>]?: T[P];
 };
+
+export type TestUser = User & { token: string };
+
+export type TestInstitution = Institution & {
+  manager: TestUser;
+  trainers: TestUser[];
+  athletes: TestUser[];
+};
+
+export type TestTraining = Training & { group?: Group };

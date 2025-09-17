@@ -163,45 +163,18 @@ describe('validateTrainingComponents', () => {
   });
 
   it('should throw error if there are duplicate components', () => {
-    const now = new Date();
     const trainingComponents = [
-      generateTrainingComponent({
-        id: WARMUP_COMPONENT_ID,
-        from: subMinutes(now, 5),
-      }),
-      generateTrainingComponent({ id: 'c1', from: now }),
-      generateTrainingComponent({ id: 'c2', from: addMinutes(now, 5) }),
-      generateTrainingComponent({ id: 'c3', from: addMinutes(now, 10) }),
-      generateTrainingComponent({ id: 'c1', from: addMinutes(now, 15) }),
-      generateTrainingComponent({
-        id: COOLDOWN_COMPONENT_ID,
-        from: addMinutes(now, 20),
-      }),
+      generateTrainingComponent({ id: WARMUP_COMPONENT_ID }),
+      generateTrainingComponent({ id: 'c1' }),
+      generateTrainingComponent({ id: 'c2' }),
+      generateTrainingComponent({ id: 'c3' }),
+      generateTrainingComponent({ id: 'c1' }),
+      generateTrainingComponent({ id: COOLDOWN_COMPONENT_ID }),
     ];
 
     expect(() =>
       service.validateTrainingComponents(null, trainingComponents, [], data),
     ).toThrow(`Duplicate component Component 1`);
-  });
-
-  it('should throw error if component times are invalid', () => {
-    const now = new Date();
-    const trainingComponents = [
-      generateTrainingComponent({
-        id: WARMUP_COMPONENT_ID,
-        from: subMinutes(now, 5),
-      }),
-      generateTrainingComponent({ id: 'c1', from: now }),
-      generateTrainingComponent({ id: 'c2', from: now }),
-      generateTrainingComponent({
-        id: COOLDOWN_COMPONENT_ID,
-        from: addMinutes(now, 20),
-      }),
-    ];
-
-    expect(() =>
-      service.validateTrainingComponents(null, trainingComponents, [], data),
-    ).toThrow(`Component Component 1 has to start before Component 2`);
   });
 
   // NOTE - disabled functionality (for now)

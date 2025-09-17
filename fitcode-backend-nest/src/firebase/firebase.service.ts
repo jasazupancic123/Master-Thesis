@@ -14,12 +14,12 @@ import { Storage } from 'firebase-admin/storage';
 
 import { BatchOperation } from '@src/common/type/orm.type';
 
+import { UserRole } from '../auth/enum/user-role.enum';
 import { TimestampEntity } from '../common/entity/timestamp.entity';
 import { CommonService } from '../common/service/common.service';
 import { Create, FirestoreEntity, Update } from '../common/type/entity.type';
 import { DecodedUser, User } from '../common/type/firebase-auth.type';
 import { Environment } from '../config/environment-validation-schema';
-import { UserRole } from '../user/enum/user-role.enum';
 import { FirebaseClient, InjectFirebaseAdmin } from './get-firebase-client';
 
 @Injectable()

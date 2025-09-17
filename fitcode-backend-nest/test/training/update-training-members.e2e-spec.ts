@@ -1,13 +1,13 @@
 import type { INestApplication } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import type { TestUser } from '@test/common/type/auth.type';
-import { createAthleteUserAndToken } from '@test/common/utils/auth.util';
-import { deleteUsers } from '@test/common/utils/data.util';
 import * as request from 'supertest';
 
 import { AppModule } from '@src/app.module';
 import { getTime } from '@src/common/service/util';
+import type { TestUser } from '@src/common/type/entity.type';
+import { createAthleteUserAndToken } from '@src/common/utils/auth.util';
+import { deleteUsers } from '@src/common/utils/data.util';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { generateGroupStub } from '@src/group/mock/group.stub';
 import { generateInstitutionStub } from '@src/institution/mock/institution.mock';

@@ -6,26 +6,18 @@ import Box from '@mui/material/Box';
 import dayjs from 'dayjs';
 import Link from 'next/link';
 import * as React from 'react';
-import { useEffect, useState } from 'react';
 
 import BottomNavigation from '../bottom-navigation/bottom-navigation';
 import Sidebar from '../sidebar/sidebar';
 import SettingsIcon from '@/assets/icons/Settings.svg';
 import { LINK_PROFILE } from '@/common/constant/navigation.constant';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
-import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 export default function AthleteHeader() {
   const theme = useTheme();
   const screenSize = useScreenSize();
   const { user } = useAuthenticatedAuth();
-  const { profile } = useMain();
-  const [avatarSrc, setAvatarSrc] = useState(profile?.profileImageUrl);
-
-  useEffect(() => {
-    setAvatarSrc(profile?.profileImageUrl);
-  }, [profile]);
 
   return (
     <>
@@ -62,7 +54,7 @@ export default function AthleteHeader() {
             <Link href={LINK_PROFILE.href} passHref>
               <Avatar
                 className="avatar-border"
-                src={avatarSrc || '/user_avatar.png'} // Path to the image in the public folder
+                src={user?.photoURL || '/user_avatar.png'} // Path to the image in the public folder
                 sx={{
                   width: 40,
                   height: 40,

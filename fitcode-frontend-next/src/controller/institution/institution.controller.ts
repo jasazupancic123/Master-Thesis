@@ -1,5 +1,5 @@
 import { BaseController } from '../base.controller';
-import type { UserEntity } from '../user/type/user.type';
+import type { Profile } from '../profile/type/user.type';
 import type {
   CreateInstitution,
   Institution,
@@ -32,13 +32,13 @@ export class InstitutionController extends BaseController {
   }
 
   async findAthletes(id: string) {
-    return this.api.get<UserEntity[]>(`/${id}/find/athletes`, {
+    return this.api.get<Profile[]>(`/${id}/find/athletes`, {
       token: this.getToken(),
     });
   }
 
   async findTrainers(id: string) {
-    return this.api.get<UserEntity[]>(`/${id}/find/trainers`, {
+    return this.api.get<Profile[]>(`/${id}/find/trainers`, {
       token: this.getToken(),
     });
   }

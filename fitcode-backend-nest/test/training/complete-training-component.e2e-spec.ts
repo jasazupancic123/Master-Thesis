@@ -5,18 +5,19 @@ import {
   COMPONENT_PARAMS_OPT1,
   COMPONENT_PARAMS_OPT2,
 } from '@test/common/constant/component-params.constant';
-import { createAthleteUserAndToken } from '@test/common/utils/auth.util';
+import { addDays, addHours, subDays } from 'date-fns';
+import * as request from 'supertest';
+
+import { AppModule } from '@src/app.module';
+import type { TestInstitution, TestUser } from '@src/common/type/entity.type';
+import { createAthleteUserAndToken } from '@src/common/utils/auth.util';
 import {
   createGroupWithCycles,
   createInstitution,
   deleteCollection,
   deleteDoc,
   deleteUsers,
-} from '@test/common/utils/data.util';
-import { addDays, addHours, subDays } from 'date-fns';
-import * as request from 'supertest';
-
-import { AppModule } from '@src/app.module';
+} from '@src/common/utils/data.util';
 import { ComponentService } from '@src/component/component.service';
 import { DEFAULT_PARAMS_KEY } from '@src/component/constant/param.constant';
 import {
@@ -46,9 +47,6 @@ import {
 } from '@src/training/mock/training.stub';
 import { TrainingService } from '@src/training/service/training.service';
 import { WorkloadService } from '@src/training/service/workload.service';
-
-import type { TestUser } from '../common/type/auth.type';
-import type { TestInstitution } from '../common/type/entity.type';
 
 describe('Complete training component (e2e)', () => {
   let app: INestApplication;

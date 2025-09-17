@@ -1,7 +1,7 @@
 import type { Cycle } from './cycle.type';
 import type { GroupEvent } from './group-event.type';
 import type { BaseEntity, IdEntity } from '@/common/type/entity.type';
-import type { User } from '@/controller/user/type/user.type';
+import type { AuthUser } from '@/controller/auth/type/user.type';
 
 export type Group = BaseEntity & {
   institutionId: string;
@@ -12,7 +12,7 @@ export type Group = BaseEntity & {
   events?: GroupEvent[];
 
   // mapped properties
-  members?: User[];
+  members?: AuthUser[];
 };
 
 export type CreateGroup = Pick<

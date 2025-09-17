@@ -24,11 +24,15 @@ export class EnvUtil {
     return process.env.NODE_ENV === 'dev';
   }
 
-  isProd() {
-    return process.env.NODE_ENV === 'production';
-  }
-
   isTest() {
     return process.env.NODE_ENV === 'test';
+  }
+
+  isStaging() {
+    return process.env.NODE_ENV === 'staging';
+  }
+
+  isProduction() {
+    return process.env.NODE_ENV === 'production';
   }
 }

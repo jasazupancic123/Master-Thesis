@@ -1,17 +1,6 @@
 import type { INestApplication } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import type { TestUser } from '@test/common/type/auth.type';
-import {
-  createAthleteUserAndToken,
-  createTrainerUserAndToken,
-} from '@test/common/utils/auth.util';
-import {
-  createGroupWithCycles,
-  createInstitution,
-  deleteDoc,
-  deleteUsers,
-} from '@test/common/utils/data.util';
 import { addDays, subDays } from 'date-fns';
 import { stringify } from 'qs';
 import * as request from 'supertest';
@@ -19,6 +8,17 @@ import * as request from 'supertest';
 import { AppModule } from '@src/app.module';
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { getTime } from '@src/common/service/util';
+import type { TestInstitution, TestUser } from '@src/common/type/entity.type';
+import {
+  createAthleteUserAndToken,
+  createTrainerUserAndToken,
+} from '@src/common/utils/auth.util';
+import {
+  createGroupWithCycles,
+  createInstitution,
+  deleteDoc,
+  deleteUsers,
+} from '@src/common/utils/data.util';
 import { ComponentService } from '@src/component/component.service';
 import type { Component } from '@src/component/entity/component.entity';
 import { generateComponentStub } from '@src/component/mock/component.stub';
@@ -29,8 +29,6 @@ import { InstitutionService } from '@src/institution/service/institution.service
 import { TestDbService } from '@src/test-db/test-db.service';
 import type { FilterTrainingQueryDto } from '@src/training/dto/filter-training-query.dto';
 import { generateTrainingStub } from '@src/training/mock/training.stub';
-
-import type { TestInstitution } from '../common/type/entity.type';
 
 describe('Get Trainings (e2e)', () => {
   let app: INestApplication;

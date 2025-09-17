@@ -3,7 +3,7 @@
 import { createContext, useContext, useMemo, useState } from 'react';
 
 import type { ChildrenProps } from '@/common/type/props.type';
-import type { Wellness } from '@/controller/user/type/wellness.type';
+import type { Wellness } from '@/controller/profile/type/wellness.type';
 
 export interface WellnessProviderProps {
   wellness: Wellness;

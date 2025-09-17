@@ -17,7 +17,7 @@ import {
   createAthleteUserAndToken,
   createManagerUserAndToken,
   createTrainerUserAndToken,
-} from '@test/common/utils/auth.util';
+} from '@src/common/utils/auth.util';
 
 const nodeEnv = (process.env.NODE_ENV || 'dev') as NodeEnv;
 config({ quiet: true, path: `.env.${nodeEnv}` });

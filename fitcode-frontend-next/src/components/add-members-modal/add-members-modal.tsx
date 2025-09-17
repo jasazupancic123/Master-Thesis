@@ -13,27 +13,27 @@ import toast from 'react-hot-toast';
 import { SearchBar } from '../search-bar/search-bar';
 import { theme } from '@/app/style';
 import { handleApiRequest, type SetState } from '@/common/type/state.type';
+import type { AuthUser } from '@/controller/auth/type/user.type';
 import { GroupController } from '@/controller/group/group.controller';
 import type { Group } from '@/controller/group/type/group.type';
 import type { Institution } from '@/controller/institution/type/institution.type';
-import type { User } from '@/controller/user/type/user.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 
 export type AddMembersModalProps = {
   title?: string;
   placeholder?: string;
-  users: User[];
-  members: User[];
-  setMembers: SetState<User[]> | ((members: User[]) => void);
+  users: AuthUser[];
+  members: AuthUser[];
+  setMembers: SetState<AuthUser[]> | ((members: AuthUser[]) => void);
   addUserToEnd: boolean;
   dissableMaxWidth?: boolean;
   dashboardView?: boolean;
   group?: Group | null;
   selectedInstitution?: Institution | null;
   setSelectedInstitution?: SetState<Institution | null>;
-  singleMember?: User | null; // for single member selection
-  setSingleMember?: SetState<User | null>; // for single member selection
+  singleMember?: AuthUser | null; // for single member selection
+  setSingleMember?: SetState<AuthUser | null>; // for single member selection
   enableFirstShowUsers?: boolean; // to show first 5 users when search is empty
   enableScroll?: boolean; // to enable scroll in the modal
 };
@@ -61,9 +61,9 @@ export function AddMembersModal(props: AddMembersModalProps) {
   const controller = GroupController.getInstance(token);
 
   const [searchQueryAddPlayer, setSearchQueryAddPlayer] = useState('');
-  const [filteredUsers, setFilteredUsers] = useState<User[] | null>(null);
+  const [filteredUsers, setFilteredUsers] = useState<AuthUser[] | null>(null);
 
-  const handleAddMember = async (user: User) => {
+  const handleAddMember = async (user: AuthUser) => {
     if (members.some((m) => m.uid === user.uid)) return;
 
     const updatedMembers = props.addUserToEnd
@@ -104,7 +104,7 @@ export function AddMembersModal(props: AddMembersModalProps) {
     setMembers(updatedMembers);
   };
 
-  const handleRemoveMember = async (user: User) => {
+  const handleRemoveMember = async (user: AuthUser) => {
     if (setSingleMember) {
       setSingleMember(null);
       return;
@@ -148,12 +148,12 @@ export function AddMembersModal(props: AddMembersModalProps) {
     }
   };
 
-  const handleChangeMember = (user: User) => {
+  const handleChangeMember = (user: AuthUser) => {
     if (!setSingleMember) return;
     setSingleMember(user);
   };
 
-  const isUserIncluded = (user: User) => {
+  const isUserIncluded = (user: AuthUser) => {
     if (setSingleMember) {
       return user.uid === singleMember?.uid;
     }
@@ -163,7 +163,9 @@ export function AddMembersModal(props: AddMembersModalProps) {
   useEffect(() => {
     let filteredUsers = users.filter(
       (user) =>
-        user.email.toLowerCase().includes(searchQueryAddPlayer.toLowerCase()) ||
+        user.email
+          ?.toLowerCase()
+          .includes(searchQueryAddPlayer.toLowerCase()) ||
         user.displayName
           ?.toLowerCase()
           .includes(searchQueryAddPlayer.toLowerCase())
