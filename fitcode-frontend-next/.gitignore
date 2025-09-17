@@ -35,4 +35,4 @@ yarn-error.log*
 next-env.d.ts
 
 # pose models
-/public/models
+/public/models/
