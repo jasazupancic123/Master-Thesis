@@ -1,18 +1,14 @@
+import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
 import { SetState } from '@/common/type/state.type';
 import { KeypointHistory } from '@/controller/pose-detection/class/keypoint-history';
 import { POSE_DETECTION_CONSTRAINTS } from '@/controller/pose-detection/const/pose-detection-constrains.const';
 import { STATUS_MESSAGES } from '@/controller/pose-detection/const/status-messages';
 import { DetectionStatus } from '@/controller/pose-detection/enum/detection-status';
-import { KeypointId } from '@/controller/pose-detection/enum/keypoint-id';
-import { KeypointValueType } from '@/controller/pose-detection/enum/keypoint-value-type';
 import { PoseModel } from '@/controller/pose-detection/enum/pose-model.enum';
 import { RepStatus } from '@/controller/pose-detection/enum/rep-state';
 import { PoseDetectionService } from '@/controller/pose-detection/pose-detection.service';
 import { RepDetectionService } from '@/controller/pose-detection/rep-detection.service';
-import {
-  ConditionDirection,
-  ExerciseRepStartCondition,
-} from '@/controller/pose-detection/type/exercise-start-condition.type';
+import { ExerciseRepStartCondition } from '@/controller/pose-detection/type/exercise-start-condition.type';
 import { Keypoint } from '@/controller/pose-detection/type/keypoint.type';
 import { RepState } from '@/controller/pose-detection/type/rep-state.type';
 import { Rep } from '@/controller/pose-detection/type/rep.type';
@@ -24,15 +20,30 @@ import {
 } from '@mediapipe/tasks-vision';
 import { RefObject } from 'react';
 
+const firebaseStorage = FirebaseStorageUtil.Instance;
+
 export async function loadModel(state: {
   setPoseLandmarker: SetState<PoseLandmarker | null>;
   videoRef: RefObject<HTMLVideoElement | null>;
   canvasRef: RefObject<HTMLCanvasElement | null>;
   drawingUtilsRef: RefObject<DrawingUtils | null>;
+  runLocally: boolean;
 }) {
-  const { setPoseLandmarker, videoRef, canvasRef, drawingUtilsRef } = state;
+  const {
+    setPoseLandmarker,
+    videoRef,
+    canvasRef,
+    drawingUtilsRef,
+    runLocally,
+  } = state;
 
-  const modelAssetPath = '/models/pose_landmarker/pose_landmarker_full.task'; // full
+  const modelAssetPath = runLocally
+    ? '/models/pose_landmarker/pose_landmarker_full.task'
+    : await firebaseStorage.getUrl(
+        'gs://fitcode-testing.appspot.com/pose-models/pose_landmarker_full.task'
+      );
+
+  // const modelAssetPath = '/models/pose_landmarker/pose_landmarker_full.task'; // full
   // const modelAssetPath = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task'; // lite
 
   const vision = await FilesetResolver.forVisionTasks('/wasm');
@@ -87,7 +98,12 @@ export function enableCam(state: {
   // Activate the webcam stream.
   if (videoRef !== null && videoRef.current !== null) {
     navigator.mediaDevices
-      .getUserMedia({ video: true })
+      .getUserMedia({
+        video: {
+          frameRate: { ideal: 30, max: 60 },
+        },
+        audio: false,
+      })
       .then((stream) => {
         videoRef.current!.srcObject = stream;
         videoRef.current!.addEventListener('loadeddata', predictWebcam);

@@ -26,4 +26,9 @@ export class FirebaseStorageUtil {
     const reference = ref(this.storage, path);
     const url = await getDownloadURL(reference);
   }
+
+  async getUrl(path: string) {
+    const reference = ref(this.storage, path);
+    return await getDownloadURL(reference);
+  }
 }

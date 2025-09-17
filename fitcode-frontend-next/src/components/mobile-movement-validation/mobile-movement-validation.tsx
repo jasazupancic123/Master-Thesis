@@ -23,13 +23,13 @@ import { RepStatus } from '@/controller/pose-detection/enum/rep-state';
 import { Rep } from '@/controller/pose-detection/type/rep.type';
 import { RepState } from '@/controller/pose-detection/type/rep-state.type';
 import RepsCounter from './components/reps-counter';
-import { useRouter } from 'next/navigation';
 import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
 import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { SetState } from '@/common/type/state.type';
 import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 
 const DEBUG = false;
+const RUN_LOCALLY = true; // for testing with local model file
 
 interface MobileMovementValidationProps {
   selectedExercise: TrainingExercise | undefined;
@@ -40,7 +40,6 @@ interface MobileMovementValidationProps {
 export default function MobileMovementValidation(
   props: MobileMovementValidationProps
 ) {
-  const router = useRouter();
   const screenSize = useScreenSize();
 
   const { selectedExercise, updateExerciseReps, setSelectedTrackingMethod } =
@@ -62,7 +61,7 @@ export default function MobileMovementValidation(
             type: KeypointValueType.POSITION_Y,
             direction: ConditionDirection.POSITIVE,
             duration: 750, // ms
-            distance: 0.15, // meters
+            distance: 0.1, // meters
           },
           // {
           //   keypointId: KeypointId.LEFT_EYE,
@@ -207,6 +206,7 @@ export default function MobileMovementValidation(
       canvasRef,
       drawingUtilsRef,
       setPoseLandmarker,
+      runLocally: RUN_LOCALLY,
     });
   }, []);
 
@@ -258,19 +258,49 @@ export default function MobileMovementValidation(
   };
 
   return (
-    <Box width="100%" display="flex" flexDirection="column">
+    <Box
+      width="100%"
+      display="flex"
+      flexDirection="column"
+      sx={{
+        position: 'relative',
+      }}
+    >
       {!poseLandmarker && <LoadingOverlay title="Loading model..." />}
 
-      <MovementValidationHeader
-        statusMessage={error ? `${error}` : statusMessage}
-      />
+      <Box
+        width="100%"
+        display="flex"
+        flexDirection="column"
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 1000,
+        }}
+        gap={1}
+      >
+        {poseLandmarker && (
+          <MovementValidationHeader
+            statusMessage={error ? `${error}` : statusMessage}
+          />
+        )}
+        <Box width="100%" display="flex" justifyContent="space-between" px={1}>
+          <FpsText fps={fps} avgFps={avgFps.current} />
+          <RepsCounter reps={recordedRepsRef.current.length} />
+        </Box>
+      </Box>
 
       <Box
         width="100%"
         display="flex"
         flexDirection="column"
         alignItems="center"
-        sx={{ position: 'relative' }}
+        sx={{
+          position: 'relative',
+          aspectRatio: screenSize.isSmallerThanLaptop ? '9 / 16' : undefined,
+        }}
       >
         <video
           ref={videoRef}
@@ -278,15 +308,12 @@ export default function MobileMovementValidation(
           height="100%"
           autoPlay
           playsInline
-          style={{ transform: 'scaleX(-1)' }}
+          style={{ transform: 'scaleX(-1)', objectFit: 'cover' }}
         />
         <canvas
           ref={canvasRef}
           style={{ position: 'absolute', left: 0, top: 0 }}
         />
-
-        <FpsText fps={fps} avgFps={avgFps.current} />
-        <RepsCounter reps={recordedRepsRef.current.length} />
 
         <Box
           width="100%"
@@ -305,7 +332,6 @@ export default function MobileMovementValidation(
           <Button
             variant="contained"
             onClick={() => {
-              console.log({ updateExerciseReps, setSelectedTrackingMethod });
               if (updateExerciseReps && setSelectedTrackingMethod) {
                 setSelectedTrackingMethod(TrackingMethod.MANUAL);
                 updateExerciseReps(recordedRepsRef.current.length);

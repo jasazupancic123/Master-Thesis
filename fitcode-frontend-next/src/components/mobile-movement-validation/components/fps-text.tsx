@@ -8,16 +8,7 @@ interface FpsTextProps {
 export default function FpsText(props: FpsTextProps) {
   const { fps, avgFps } = props;
   return (
-    <Box
-      display="flex"
-      flexDirection="column"
-      alignItems="flex-start"
-      sx={{
-        position: 'absolute',
-        left: 16,
-        top: 16,
-      }}
-    >
+    <Box display="flex" flexDirection="column" alignItems="flex-start">
       <Typography
         variant="caption"
         sx={{
