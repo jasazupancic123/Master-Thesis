@@ -15,11 +15,11 @@ import AddGroupModal from '@/components/dashboard-add-group-modal/dashboard-add-
 import DashboardGroups from '@/components/dashboard-groups/dashboard-groups';
 import RegisterUsersDashboard from '@/components/dashboard-register-users-modal/dashboard-register-users-modal';
 import MyModal from '@/components/modal/modal';
+import type { AuthUser } from '@/controller/auth/type/user.type';
 import { GroupController } from '@/controller/group/group.controller';
 import { GroupService } from '@/controller/group/group.service';
 import type { Institution } from '@/controller/institution/type/institution.type';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
-import type { User } from '@/controller/user/type/user.type';
+import { UserRole } from '@/controller/profile/enum/user-role.enum';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
@@ -51,7 +51,7 @@ export default function DashboardPage() {
     edit_athlete: false,
   });
   const [groupName, setGroupName] = useState('');
-  const [owner, setOwner] = useState<User | null>(null);
+  const [owner, setOwner] = useState<AuthUser | null>(null);
 
   useEffect(() => {
     // fetch groups when selected institution changes

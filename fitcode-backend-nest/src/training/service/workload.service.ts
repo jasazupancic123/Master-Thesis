@@ -314,7 +314,10 @@ export class WorkloadService {
   async validateWorkloads(
     trainingId: string,
     customWorkloads: CreatePrescribedWorkloadDto[],
-    trainingComponents: TrainingComponent[],
+    trainingComponents: Pick<
+      TrainingComponent,
+      'id' | 'supersets' | 'subgroups' | 'from'
+    >[],
   ): Promise<Create<Workload>[]> {
     if (!customWorkloads || !customWorkloads.length) return [];
 

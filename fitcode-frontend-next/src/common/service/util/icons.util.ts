@@ -4,6 +4,7 @@ import {
   AcUnit,
   LocalFireDepartment,
 } from '@mui/icons-material';
+import CompetitionIcon from '@mui/icons-material/EmojiEvents';
 
 import CoordinationIcon from '@/assets/icons/Coordination.svg';
 import EnduranceIcon from '@/assets/icons/Endurance.svg';
@@ -32,6 +33,8 @@ export function getComponentIcon(
       return SpeedIcon as SvgC;
     case 'strength':
       return StrengthIcon as SvgC;
+    case 'competition':
+      return CompetitionIcon;
     default:
       return null;
   }

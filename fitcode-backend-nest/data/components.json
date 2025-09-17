@@ -921,5 +921,31 @@
         ]
       }
     ]
+  },
+  {
+    "name": "Competition",
+    "slug": "competition",
+    "targets": [
+      {
+        "id": "not-important",
+        "name": "NI",
+        "componentId": "competition",
+        "color": "#d2ee2d"
+      },
+      {
+        "id": "important",
+        "name": "I",
+        "componentId": "competition",
+        "color": "#d87d40"
+      },
+      {
+        "id": "very-important",
+        "name": "VI",
+        "componentId": "competition",
+        "color": "#f02846"
+      }
+    ],
+    "params": { "default": [] },
+    "children": []
   }
 ]

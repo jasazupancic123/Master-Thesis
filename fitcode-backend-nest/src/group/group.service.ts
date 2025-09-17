@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 
+import { AuthService } from '@src/auth/auth.service';
 import { UpdateMembersDto } from '@src/common/dto/user-id.dto';
 import {
   BatchDeleteOperation,
@@ -24,7 +25,6 @@ import { GroupRef } from '../common/type/firestore.type';
 import { FirebaseService } from '../firebase/firebase.service';
 import { Institution } from '../institution/entity/institution.entity';
 import { InstitutionService } from '../institution/service/institution.service';
-import { UserService } from '../user/service/user.service';
 import { DELETE_GROUP_EVENT } from './constant/delete-group-event.constant';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { BatchUpdateOneGroupDto, UpdateGroupDto } from './dto/update-group.dto';
@@ -40,7 +40,7 @@ export class GroupService implements Permission<Group, Institution> {
     private readonly commonService: CommonService,
     private readonly firebaseService: FirebaseService,
     private readonly eventEmitter: EventEmitter2,
-    private readonly userService: UserService,
+    private readonly authService: AuthService,
     private readonly institutionService: InstitutionService,
   ) {}
 
@@ -92,7 +92,7 @@ export class GroupService implements Permission<Group, Institution> {
 
     // validate
     const institution = await this.institutionService.getDocByIdOrFail(input);
-    await this.userService.findAllOrFail(user, { ids: membersIds });
+    await this.authService.findAllOrFail(user, { ids: membersIds });
     if (!this.institutionService.canEdit(user, institution))
       throw new UnauthorizedException(
         'You are not allowed to create group in this institution',
@@ -268,7 +268,7 @@ export class GroupService implements Permission<Group, Institution> {
       throw new UnauthorizedException('You are not allowed to update members');
 
     // check if member exists
-    const member = await this.userService.findOneBy('id', memberId);
+    const member = await this.authService.findOneBy('id', memberId);
     if (!member) throw new BadRequestException('Member does not exist');
     if (!this.firebaseService.isAthlete(member))
       throw new BadRequestException('Member must be an athlete');

@@ -5,6 +5,8 @@ import { readFile } from 'node:fs/promises';
 import { GLOBAL_EXERCISE_OWNER } from '@src//exercise/constant/global-exercise-owner.constant';
 import type { Attribute } from '@src/attribute/entity/attribute.entity';
 import { AttributeService } from '@src/attribute/service/attribute.service';
+import { AuthService } from '@src/auth/auth.service';
+import { UserRole } from '@src/auth/enum/user-role.enum';
 import { ComponentService } from '@src/component/component.service';
 import type { Component } from '@src/component/entity/component.entity';
 import type { Exercise } from '@src/exercise/entity/exercise.entity';
@@ -14,10 +16,9 @@ import { GroupService } from '@src/group/group.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import type { Method } from '@src/method/entity/method.entity';
 import { MethodService } from '@src/method/service/method.service';
-import { SportLevel } from '@src/user/enum/sport-level.enum';
-import { UserRole } from '@src/user/enum/user-role.enum';
-import { UserRepository } from '@src/user/repository/user.repository';
-import { UserService } from '@src/user/service/user.service';
+import { SportLevel } from '@src/profile/enum/sport-level.enum';
+import { ProfileRepository } from '@src/profile/repository/profile.repository';
+import { WellnessService } from '@src/profile/service/wellness.service';
 
 import { FirestoreCollection } from '../enum/firestore-collection.enum';
 import type { User } from '../type/firebase-auth.type';
@@ -25,7 +26,8 @@ import { BaseSetup } from './base.setup';
 
 export class DataSetup extends BaseSetup {
   private readonly firebaseService: FirebaseService;
-  private readonly userService: UserService;
+  private readonly authService: AuthService;
+  private readonly wellnessService: WellnessService;
 
   private admin: User;
   private manager: User;
@@ -34,7 +36,8 @@ export class DataSetup extends BaseSetup {
   constructor(app: INestApplication) {
     super(app);
     this.firebaseService = app.get(FirebaseService);
-    this.userService = app.get(UserService);
+    this.authService = app.get(AuthService);
+    this.wellnessService = app.get(WellnessService);
   }
 
   /**
@@ -47,21 +50,21 @@ export class DataSetup extends BaseSetup {
     if (await this.isInit()) return;
 
     // create / update admin user
-    this.admin = await this.userService.upsert({
+    this.admin = await this.authService.upsert({
       email: this.configService.getOrThrow('ADMIN_EMAIL'),
       password: this.configService.getOrThrow('ADMIN_PASSWORD'),
       displayName: 'Admin',
       customClaims: { role: [UserRole.ADMIN] },
     });
 
-    this.manager = await this.userService.upsert({
+    this.manager = await this.authService.upsert({
       email: 'manager@mail.com',
       password: 'password',
       displayName: 'Manager',
       customClaims: { role: [UserRole.MANAGER] },
     });
 
-    this.trainer = await this.userService.upsert({
+    this.trainer = await this.authService.upsert({
       email: 'trainer@mail.com',
       password: 'password',
       displayName: 'Trainer',
@@ -144,7 +147,7 @@ export class DataSetup extends BaseSetup {
   }
 
   private async importUsers(filename: string) {
-    const userRepository = this.app.get(UserRepository);
+    const userRepository = this.app.get(ProfileRepository);
     const groupService = this.app.get(GroupService);
     const institutionService = this.app.get(InstitutionService);
 
@@ -164,7 +167,7 @@ export class DataSetup extends BaseSetup {
     const createdUsers: User[] = [];
     for (const userData of data) {
       createdUsers.push(
-        await this.userService.upsert({
+        await this.authService.upsert({
           email: userData.email,
           displayName: userData.displayName,
           password: 'password',
@@ -185,7 +188,7 @@ export class DataSetup extends BaseSetup {
         Array.from({
           length: user.email === 'mike.tyson@mail.com' ? 1 : 10,
         }).forEach(async (_, j) => {
-          await this.userService.addOrUpdateWellness(
+          await this.wellnessService.upsert(
             {
               uid: user.uid,
               date: DateTime.now().minus({ days: j }).toJSDate(),
@@ -204,13 +207,9 @@ export class DataSetup extends BaseSetup {
       }),
     );
 
-    const users = await this.userService.findAll(
-      this.admin,
-      {
-        emails: data.map((u) => u.email),
-      },
-      true,
-    );
+    const users = await this.authService.findAll(this.admin, {
+      emails: data.map((u) => u.email),
+    });
 
     const athletes = users.filter((u) =>
       u.customClaims?.role?.includes(UserRole.ATHLETE),
@@ -245,11 +244,7 @@ export class DataSetup extends BaseSetup {
     const groups = data.find((u) => u.email === this.trainer.email)?.groups;
 
     for (const { name, membersIds: emails } of groups) {
-      const members = await this.userService.findAll(
-        this.admin,
-        { emails },
-        true,
-      );
+      const members = await this.authService.findAll(this.admin, { emails });
       const membersIds = members.map((m) => m.uid);
       const group = await groupService.create(this.manager, {
         name,

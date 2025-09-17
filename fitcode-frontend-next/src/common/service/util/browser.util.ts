@@ -11,4 +11,23 @@ export class BrowserUtil {
   removeClientCookie(key: string): void {
     document.cookie = `${key}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/`;
   }
+
+  getClientCookie(key: string): { value: string; expiresAt: number } | null {
+    const cookies = document.cookie ? document.cookie.split('; ') : [];
+    for (let i = 0; i < cookies.length; i++) {
+      const parts = cookies[i].split('=');
+      const cookieName = parts.shift();
+      const cookieValue = parts.join('=');
+
+      if (cookieName === key)
+        try {
+          const parsed = JSON.parse(decodeURIComponent(cookieValue));
+          return parsed;
+        } catch (_) {
+          return null;
+        }
+    }
+
+    return null;
+  }
 }

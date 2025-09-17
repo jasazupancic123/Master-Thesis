@@ -3,8 +3,10 @@
 import { useEffect, useState } from 'react';
 
 import type { ChildrenProps } from '@/common/type/props.type';
-import type { User, UserEntity } from '@/controller/user/type/user.type';
-import { UserController } from '@/controller/user/user.controller';
+import { AuthController } from '@/controller/auth/auth.controller';
+import type { AuthUser } from '@/controller/auth/type/user.type';
+import { ProfileController } from '@/controller/profile/profile.controller';
+import type { Profile } from '@/controller/profile/type/user.type';
 import {
   getCachedProfile,
   getCachedUser,
@@ -17,11 +19,11 @@ import { ProfileProvider } from '@/store/profile.provider';
 export default function ProfileInitializer({ children }: ChildrenProps) {
   const { token } = useAuthenticatedAuth();
 
-  const [user, setUser] = useState<User | undefined>(
+  const [user, setUser] = useState<AuthUser | undefined>(
     getCachedUser() || undefined
   );
 
-  const [profile, setProfile] = useState<UserEntity | undefined>(
+  const [profile, setProfile] = useState<Profile | undefined>(
     getCachedProfile() || undefined
   );
 
@@ -29,12 +31,12 @@ export default function ProfileInitializer({ children }: ChildrenProps) {
     async function init() {
       if (user || profile) return; // already cached
 
-      const fetchedUser = await UserController.getInstance(token).findMe();
+      const fetchedUser = await AuthController.getInstance(token).findMe();
       setCachedUser(fetchedUser);
       setUser(fetchedUser);
 
       const fetchedProfile =
-        await UserController.getInstance(token).findProfile();
+        await ProfileController.getInstance(token).findProfile();
       setCachedProfile(fetchedProfile);
       setProfile(fetchedProfile);
     }

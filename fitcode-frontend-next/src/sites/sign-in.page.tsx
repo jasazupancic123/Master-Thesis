@@ -12,11 +12,13 @@ import type { FormEvent } from 'react';
 import React from 'react';
 import toast from 'react-hot-toast';
 
+import { FIREBASE_AUTH_ID_TOKEN } from '@/common/config/firebase.config';
 import {
   LINKS_AUTH,
   SIGN_IN_REDIRECT_MAPPER,
 } from '@/common/constant/navigation.constant';
 import { FirebaseAuthUtil } from '@/common/firebase/firebase-auth.util';
+import { CommonService } from '@/common/service/common.service';
 import HeroNavbar from '@/components/hero-navbar/hero-navbar';
 import { useAuth } from '@/store/auth.provider';
 
@@ -34,6 +36,7 @@ export default function SignInPage() {
     e.preventDefault();
 
     try {
+      CommonService.instance.browser.removeClientCookie(FIREBASE_AUTH_ID_TOKEN);
       const result = await firebaseAuthUtil.login(email, password);
       const { role } = await handleUserChange(result.user);
       if (role) {

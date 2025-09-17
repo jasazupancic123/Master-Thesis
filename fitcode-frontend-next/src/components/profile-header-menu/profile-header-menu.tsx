@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { LINK_PROFILE } from '@/common/constant/navigation.constant';
 import type { SetState } from '@/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
-import { useMain } from '@/store/main.provider';
 
 interface ProfileHeaderMenuProps {
   anchorEl: HTMLElement | null;
@@ -15,8 +14,7 @@ interface ProfileHeaderMenuProps {
 }
 
 export default function ProfileHeaderMenu(props: ProfileHeaderMenuProps) {
-  const { logout } = useAuthenticatedAuth();
-  const { profile } = useMain();
+  const { user, logout } = useAuthenticatedAuth();
   const { anchorEl, open, setOpen, setAnchorEl } = props;
 
   return (
@@ -41,7 +39,7 @@ export default function ProfileHeaderMenu(props: ProfileHeaderMenuProps) {
             gap={1}
           >
             <Avatar
-              src={profile?.profileImageUrl}
+              src={user?.photoURL || '/user_avatar.png'}
               sx={{
                 width: 25,
                 height: 25,

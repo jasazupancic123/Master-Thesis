@@ -1,19 +1,20 @@
 import type { INestApplication } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import {
-  createGroupWithCycles,
-  createInstitution,
-  deleteDoc,
-  deleteDocs,
-  deleteInstitution,
-} from '@test/common/utils/data.util';
 import { expectDatesToMatchUpToMinute } from '@test/common/utils/date.util';
 import { addDays, addHours, subDays, subHours } from 'date-fns';
 import * as request from 'supertest';
 
 import { AppModule } from '@src/app.module';
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
+import type { TestInstitution } from '@src/common/type/entity.type';
+import {
+  createGroupWithCycles,
+  createInstitution,
+  deleteDoc,
+  deleteDocs,
+  deleteInstitution,
+} from '@src/common/utils/data.util';
 import { getTime } from '@src/common/utils/date.util';
 import { ComponentService } from '@src/component/component.service';
 import { DEFAULT_PARAMS_KEY } from '@src/component/constant/param.constant';
@@ -35,8 +36,6 @@ import {
   generateTrainingStub,
 } from '@src/training/mock/training.stub';
 import { TrainingService } from '@src/training/service/training.service';
-
-import type { TestInstitution } from '../common/type/entity.type';
 
 describe('Create Training (e2e)', () => {
   let app: INestApplication;
@@ -149,7 +148,7 @@ describe('Create Training (e2e)', () => {
 
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
-        'Training must have atleast one component',
+        'Training must have at least one component',
       );
     });
 
@@ -236,7 +235,12 @@ describe('Create Training (e2e)', () => {
 
       const trainingIds = (
         await Promise.all(
-          trainings.map((t) => trainingService.create(global.trainer, t)),
+          trainings.map((t) =>
+            trainingService.create(global.trainer, {
+              ...t,
+              from,
+            }),
+          ),
         )
       ).map((t) => t.id);
 
@@ -277,7 +281,7 @@ describe('Create Training (e2e)', () => {
               membersIds: [global.athlete.uid],
               groupId: group.id,
               cycleId: group.cycles[1].id,
-              date: from,
+              from,
               components: [generateTrainingComponent({ id: component.id })],
             }),
           )
@@ -288,7 +292,7 @@ describe('Create Training (e2e)', () => {
           membersIds: [global.athlete.uid],
           groupId: group.id,
           cycleId: group.cycles[1].id,
-          date: subHours(from, 1),
+          from: subHours(from, 0.5),
           components: [generateTrainingComponent({ id: component.id })],
         });
 
@@ -456,50 +460,6 @@ describe('Create Training (e2e)', () => {
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
         `Duplicate component ${component.name}`,
-      );
-    });
-
-    it('should fail to create new training if training components times are not valid', async () => {
-      const components = await Promise.all([
-        componentService.create(generateComponentStub()),
-        componentService.create(generateComponentStub()),
-        componentService.create(generateComponentStub()),
-        componentService.create(generateComponentStub()),
-        componentService.create(generateComponentStub()),
-      ]);
-
-      const training = generateTrainingStub(
-        {
-          ownerId: global.trainer.uid,
-          membersIds: [global.athlete.uid],
-          groupId: group.id,
-          cycleId: group.cycles[1].id,
-          date: getTime(addDays(new Date(), 2), 8, 0),
-          components: [
-            generateTrainingComponent({ id: components[0].id }),
-            generateTrainingComponent({ id: components[1].id }),
-          ],
-        },
-        { disableAutomaticallySetComponentsDates: true },
-      );
-
-      training.components[0].from = getTime(addDays(new Date(), 2), 8, 0);
-      training.components[0].to = getTime(addDays(new Date(), 2), 8, 30);
-
-      const response = await request(app.getHttpServer())
-        .post('/training')
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send(training);
-
-      expect(response.status).toBe(400);
-      expect(response.body.message).toBe(
-        `Component ${components[0].name} has to start before ${components[1].name}`,
-      );
-
-      await deleteDocs(
-        firebase,
-        'COMPONENT',
-        components.map((c) => c.id),
       );
     });
 
@@ -701,35 +661,21 @@ describe('Create Training (e2e)', () => {
 
       const training = await trainingService.create(
         global.trainer,
-        generateTrainingStub(
-          {
-            ownerId: global.trainer.uid,
-            membersIds: [global.athlete.uid],
-            groupId: group.id,
-            cycleId: group.cycles[1].id,
-            components: [
-              generateTrainingComponent({
-                id: component.id,
-                from: getTime(d, 8, 0),
-                to: getTime(d, 9, 0),
-              }),
-            ],
-          },
-          { disableAutomaticallySetComponentsDates: true },
-        ),
+        generateTrainingStub({
+          ownerId: global.trainer.uid,
+          membersIds: [global.athlete.uid],
+          groupId: group.id,
+          cycleId: group.cycles[1].id,
+          from: getTime(d, 8, 0),
+          components: [generateTrainingComponent({ id: component.id })],
+        }),
       );
 
       const response = await request(app.getHttpServer())
         .post(`/training/${training.id}/component`)
         .set('Authorization', `Bearer ${global.trainer.token}`)
         .send({
-          components: [
-            generateTrainingComponent({
-              id: newComponent.id,
-              from: getTime(d, 9, 0),
-              to: getTime(d, 10, 0),
-            }),
-          ],
+          components: [generateTrainingComponent({ id: newComponent.id })],
         });
 
       expect(response.status).toBe(201);
@@ -752,19 +698,19 @@ describe('Create Training (e2e)', () => {
 
       // should update training times correctly
       expectDatesToMatchUpToMinute(trainingFrom, getTime(d, 7, 45)); // 15 minutes before first component (warmup)
-      expectDatesToMatchUpToMinute(trainingTo, getTime(d, 10, 15)); // 15 minutes after last component (cooldown)
+      expectDatesToMatchUpToMinute(trainingTo, getTime(d, 9, 15)); // 15 minutes after last component (cooldown)
 
       // should update warmup and cooldown times correctly
       expectDatesToMatchUpToMinute(warmupFrom, getTime(d, 7, 45));
       expectDatesToMatchUpToMinute(warmupTo, getTime(d, 8));
-      expectDatesToMatchUpToMinute(cooldownFrom, getTime(d, 10, 0));
-      expectDatesToMatchUpToMinute(cooldownTo, getTime(d, 10, 15));
+      expectDatesToMatchUpToMinute(cooldownFrom, getTime(d, 9, 0));
+      expectDatesToMatchUpToMinute(cooldownTo, getTime(d, 9, 15));
 
       // should update components times correctly
       expectDatesToMatchUpToMinute(c1From, getTime(d, 8, 0));
-      expectDatesToMatchUpToMinute(c1To, getTime(d, 9, 0));
-      expectDatesToMatchUpToMinute(c2From, getTime(d, 9, 0));
-      expectDatesToMatchUpToMinute(c2To, getTime(d, 10, 0));
+      expectDatesToMatchUpToMinute(c1To, getTime(d, 8, 30));
+      expectDatesToMatchUpToMinute(c2From, getTime(d, 8, 30));
+      expectDatesToMatchUpToMinute(c2To, getTime(d, 9, 0));
 
       await Promise.all([
         deleteDoc(firebase, 'COMPONENT', newComponent.id),

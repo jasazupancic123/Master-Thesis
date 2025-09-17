@@ -12,10 +12,10 @@ import { ApiTags } from '@nestjs/swagger';
 
 import { UserIdDto } from '@src/common/dto/user-id.dto';
 
+import { UserRole } from '../auth/enum/user-role.enum';
 import { Auth } from '../common/decorator/auth.decorator';
 import { RequestUser } from '../common/decorator/request-user.decorator';
 import { User } from '../common/type/firebase-auth.type';
-import { UserRole } from '../user/enum/user-role.enum';
 import { CreateInstitutionDto } from './dto/create-institution.dto';
 import { GetMembersType } from './enum/institution-get-members.enum';
 import { InstitutionService } from './service/institution.service';

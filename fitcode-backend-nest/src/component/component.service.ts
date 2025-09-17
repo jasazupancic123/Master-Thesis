@@ -110,11 +110,11 @@ export class ComponentService {
    * @param components - components populated with `parents` array
    */
   getRoot(component: Component, components: Component[]): Component | null {
-    if (component.parents.length === 0) return component;
+    if (component.parents?.length === 0) return component;
 
     for (const parentId of component.parents) {
       const parent = components.find((c) => c.id === parentId);
-      if (parent?.parents.length === 0) return parent;
+      if (parent?.parents?.length === 0) return parent;
     }
 
     return null;

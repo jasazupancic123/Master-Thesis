@@ -4,15 +4,15 @@ import { useState } from 'react';
 import { AddMembersModal } from '../add-members-modal/add-members-modal';
 import MyModal from '../modal/modal';
 import type { SetState } from '@/common/type/state.type';
-import type { User } from '@/controller/user/type/user.type';
+import type { AuthUser } from '@/controller/auth/type/user.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 
 interface AddGroupModalProps {
   groupName: string;
   setGroupName: (groupName: string) => void;
-  owner: User | null;
-  setOwner: SetState<User | null>;
+  owner: AuthUser | null;
+  setOwner: SetState<AuthUser | null>;
 }
 
 export default function AddGroupModal(props: AddGroupModalProps) {

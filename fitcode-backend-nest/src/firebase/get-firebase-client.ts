@@ -26,7 +26,7 @@ export function getFirebaseClient(
   const envCredentials = commonService.env.getKey('FIREBASE_CREDENTIALS');
   let credential: admin.credential.Credential;
 
-  if (commonService.env.isProd())
+  if (commonService.env.isProduction() || commonService.env.isStaging())
     credential = admin.credential.applicationDefault();
   else if (envCredentials)
     credential = admin.credential.cert(JSON.parse(envCredentials));
