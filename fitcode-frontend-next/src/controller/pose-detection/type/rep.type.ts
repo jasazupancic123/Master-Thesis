@@ -1,4 +1,4 @@
-import { KeypointHistory } from '../class/keypoint-history';
+import type { KeypointHistory } from '../class/keypoint-history';
 
 export type Rep = {
   // set on init

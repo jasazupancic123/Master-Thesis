@@ -6,6 +6,7 @@ import { withAuth } from './auth.provider';
 import type { ChildrenProps } from '@/common/type/props.type';
 import type { SetState, SetStateNullable } from '@/common/type/state.type';
 import type { Attribute } from '@/controller/attribute/type/attribute.type';
+import type { AuthUser } from '@/controller/auth/type/user.type';
 import type { Component } from '@/controller/component/type/component.type';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
 import type { Group } from '@/controller/group/type/group.type';
@@ -13,7 +14,6 @@ import type { Institution } from '@/controller/institution/type/institution.type
 import type { Method } from '@/controller/method/type/method.type';
 import { UserRole } from '@/controller/profile/enum/user-role.enum';
 import type { Profile } from '@/controller/profile/type/user.type';
-import type { AuthUser } from '@/controller/auth/type/user.type';
 
 export interface MainProviderProps {
   profile: Profile;

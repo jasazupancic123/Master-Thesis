@@ -9,7 +9,6 @@ import type { SetState } from '@/common/type/state.type';
 import { handleApiRequest } from '@/common/type/state.type';
 import { AuthController } from '@/controller/auth/auth.controller';
 import type { CustomClaims } from '@/controller/auth/type/custom-claims.type';
-import { ProfileController } from '@/controller/profile/profile.controller';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 
 const firebaseStorage = FirebaseStorageUtil.Instance;
@@ -34,7 +33,6 @@ export default function FaceCapturePreviewsModal(
 ) {
   const { user, customClaims, setCustomClaims, token } = useAuthenticatedAuth();
   const authController = AuthController.getInstance(token);
-  const profileController = ProfileController.getInstance(token);
   const router = useRouter();
 
   const { previews, captures, setIsCapturingFace, heightWidthRatio } = props;

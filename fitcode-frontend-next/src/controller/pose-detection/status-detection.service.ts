@@ -1,22 +1,20 @@
-import { RefObject } from 'react';
-import { DetectionStatus } from './enum/detection-status';
-import { Keypoint } from './type/keypoint.type';
+import type { RefObject } from 'react';
+
+import type { KeypointHistory } from './class/keypoint-history';
 import { POSE_DETECTION_CONSTRAINTS } from './const/pose-detection-constrains.const';
-import { KeypointId } from './enum/keypoint-id';
-import { KeypointUtil } from './util/keypoint.util';
-import { PoseDetectionService } from './pose-detection.service';
-import { PoseValidationCondition } from './type/pose-validation-condition.type';
-import { KeypointValueType } from './enum/keypoint-value-type';
-import { SetState } from '@/common/type/state.type';
 import { FACE_CAMERA_MESSAGE } from './const/status-messages';
-import { KeypointHistory } from './class/keypoint-history';
-import {
-  ConditionDirection,
-  ExerciseRepStartCondition,
-} from './type/exercise-start-condition.type';
-import { isUtf8 } from 'buffer';
-import { RepState } from './type/rep-state.type';
+import { ConditionDirection } from './enum/condition-detection.enum';
+import { DetectionStatus } from './enum/detection-status';
+import { KeypointId } from './enum/keypoint-id';
+import { KeypointValueType } from './enum/keypoint-value-type';
 import { RepStatus } from './enum/rep-state';
+import { PoseDetectionService } from './pose-detection.service';
+import type { ExerciseRepStartCondition } from './type/exercise-start-condition.type';
+import type { Keypoint } from './type/keypoint.type';
+import type { PoseValidationCondition } from './type/pose-validation-condition.type';
+import type { RepState } from './type/rep-state.type';
+import { KeypointUtil } from './util/keypoint.util';
+import type { SetState } from '@/common/type/state.type';
 
 export class StatusDetectionService {
   // if it returns false, it means we need to return in main loop
@@ -314,9 +312,6 @@ export class StatusDetectionService {
     const isDistanceOk = distance >= condition.distance;
 
     switch (condition.direction) {
-      case ConditionDirection.ANY: {
-        return isDistanceOk;
-      }
       case ConditionDirection.POSITIVE: {
         return nextValue > currentValue && isDistanceOk;
       }

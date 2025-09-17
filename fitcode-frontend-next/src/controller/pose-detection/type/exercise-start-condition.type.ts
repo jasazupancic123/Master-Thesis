@@ -1,11 +1,6 @@
-import { KeypointId } from '../enum/keypoint-id';
-import { KeypointValueType } from '../enum/keypoint-value-type';
-
-export enum ConditionDirection {
-  ANY = 'ANY',
-  NEGATIVE = 'NEGATIVE',
-  POSITIVE = 'POSITIVE',
-}
+import type { ConditionDirection } from '../enum/condition-detection.enum';
+import type { KeypointId } from '../enum/keypoint-id';
+import type { KeypointValueType } from '../enum/keypoint-value-type';
 
 export type ExerciseRepStartCondition = {
   keypointId: KeypointId;
