@@ -149,7 +149,7 @@ export const updateSelectedExercisesExpandedSets = (
 
 export function updateExerciseAttributeValues(
   input: {
-    newValue: SetStateAction<string>;
+    newValue: SetStateAction<string> | string;
     i: number;
     set: ExerciseSet;
     lOrR: 'L' | 'R';

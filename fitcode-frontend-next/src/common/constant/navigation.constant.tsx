@@ -62,6 +62,11 @@ export const LINK_TRAININGS = link(
   '/trainings',
   <FitnessCenterOutlined />
 );
+export const LINK_POSE_DETECTION = link(
+  'PoseDetection',
+  '/trainings/pose-detection',
+  <Groups />
+);
 export const LINK_TRAINING = link(
   'Training',
   '/training',
