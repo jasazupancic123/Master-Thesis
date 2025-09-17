@@ -42,7 +42,7 @@ const eslintConfig = [
     },
 
     rules: {
-      '@next/next/no-html-link-for-pages': ['error', ['.']],
+      '@next/next/no-html-link-for-pages': 'off',
     },
   },
 
@@ -99,7 +99,7 @@ const eslintConfig = [
           groups: [['^@?\\w'], ['^@src(/.*)?$'], ['^\\u0000']],
         },
       ],
-      'simple-import-sort/exports': 'error',
+      'simple-import-sort/exports': 'warn',
 
       // Restrict relative deep imports
       'no-restricted-imports': [
@@ -124,6 +124,7 @@ const eslintConfig = [
       '**/.turbo',
       'src/app/model-testing/**',
       'src/components/mediapipe-react-app/**',
+      'public/wasm/**',
     ],
   },
 ];

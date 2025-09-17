@@ -9,31 +9,29 @@ import {
 import { Box, Checkbox, IconButton, Stack, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import toast from 'react-hot-toast';
 
 import TrapezoidTitle from '../athlete-options-container/trapezoid-title';
 import AthleteTrainingExerciseSets from '../athlete-training-exercise-sets/athlete-training-exercise-sets';
+import MobileMovementValidation from '../mobile-movement-validation/mobile-movement-validation';
 import SwipeableBox from '../swipeable-box/swipeable-box';
+import { updateExerciseAttributeValues } from '../training-exercise-card-sets-expanded/state';
 import {
   isExerciseSetCompleted,
   markExerciseSetAsCompleted,
   unmarkExerciseSetAsCompleted,
 } from './state';
 import { TrackingMethod } from '@/common/enum/tracking-method.enum';
+import { ParamType } from '@/controller/component/enum/param.enum';
+import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
-import { useRouter } from 'next/navigation';
-import { ParamType } from '@/controller/component/enum/param.enum';
-import MobileMovementValidation from '../mobile-movement-validation/mobile-movement-validation';
-import { updateExerciseAttributeValues } from '../training-exercise-card-sets-expanded/state';
-import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
-import toast from 'react-hot-toast';
 
 export default function TrainingInProgressExerciseCard() {
   const theme = useTheme();
-  const router = useRouter();
   const screenSize = useScreenSize();
 
   const {

@@ -19,19 +19,12 @@ import FatigueIcon from '@/assets/icons/Fatigue.svg';
 import SleepIcon from '@/assets/icons/Sleep.svg';
 import SorenessIcon from '@/assets/icons/Soreness.svg';
 import { WellnessChartDataType } from '@/controller/profile/enum/wellness-chart-data-type.enum';
-import type { Profile } from '@/controller/profile/type/user.type';
 import type { WellnessChartData } from '@/controller/profile/type/wellness.type';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 
-interface SelectedMemberReportProps {
-  groupMembers: Profile[];
-}
-
-export default function SelectedMemberReport(props: SelectedMemberReportProps) {
-  const { groupMembers } = props;
-
+export default function SelectedMemberReport() {
   const theme = useTheme();
   const screenSize = useScreenSize();
 

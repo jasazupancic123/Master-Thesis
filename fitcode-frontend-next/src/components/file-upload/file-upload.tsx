@@ -163,8 +163,6 @@ export default function FileUpload(props: Props) {
                   display: 'block',
                 }}
                 onError={(e) => {
-                  console.log('image uploading error:', e);
-                  console.log('preview:', preview);
                   setPreview((prev) => ({ ...prev, error: 'Invalid image' }));
                 }}
               />

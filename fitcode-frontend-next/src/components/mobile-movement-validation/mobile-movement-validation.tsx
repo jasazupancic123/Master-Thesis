@@ -1,39 +1,38 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { DrawingUtils, PoseLandmarker } from '@mediapipe/tasks-vision';
+import type { DrawingUtils, PoseLandmarker } from '@mediapipe/tasks-vision';
 import { Box, Button } from '@mui/material';
-import { enableCam, getStatusMessage, loadModel, predictWebcam } from './state';
-import FpsText from './components/fps-text';
-import { DetectionStatus } from '@/controller/pose-detection/enum/detection-status';
-import { STATUS_MESSAGES } from '@/controller/pose-detection/const/status-messages';
-import MovementValidationHeader from './components/movement-validation-header';
+import { useEffect, useRef, useState } from 'react';
+
 import LoadingOverlay from '../loading-overlay/loading-overlay';
-import { PoseModel } from '@/controller/pose-detection/enum/pose-model.enum';
+import FpsText from './components/fps-text';
+import MovementValidationHeader from './components/movement-validation-header';
+import RepsCounter from './components/reps-counter';
+import { enableCam, getStatusMessage, loadModel, predictWebcam } from './state';
+import { TrackingMethod } from '@/common/enum/tracking-method.enum';
+import type { SetState } from '@/common/type/state.type';
 import { KeypointHistory } from '@/controller/pose-detection/class/keypoint-history';
-import { useScreenSize } from '@/store/screen-size.provider';
-import {
-  ConditionDirection,
-  ExerciseRepStartCondition,
-} from '@/controller/pose-detection/type/exercise-start-condition.type';
+import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
+import { STATUS_MESSAGES } from '@/controller/pose-detection/const/status-messages';
+import { ConditionDirection } from '@/controller/pose-detection/enum/condition-detection.enum';
+import { DetectionStatus } from '@/controller/pose-detection/enum/detection-status';
 import { KeypointId } from '@/controller/pose-detection/enum/keypoint-id';
 import { KeypointValueType } from '@/controller/pose-detection/enum/keypoint-value-type';
-import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
+import { PoseModel } from '@/controller/pose-detection/enum/pose-model.enum';
 import { RepStatus } from '@/controller/pose-detection/enum/rep-state';
-import { Rep } from '@/controller/pose-detection/type/rep.type';
-import { RepState } from '@/controller/pose-detection/type/rep-state.type';
-import RepsCounter from './components/reps-counter';
-import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
-import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { SetState } from '@/common/type/state.type';
-import { TrackingMethod } from '@/common/enum/tracking-method.enum';
+import type { ExerciseRepStartCondition } from '@/controller/pose-detection/type/exercise-start-condition.type';
+import type { Rep } from '@/controller/pose-detection/type/rep.type';
+import type { RepState } from '@/controller/pose-detection/type/rep-state.type';
+import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import { useScreenSize } from '@/store/screen-size.provider';
+import { EnvUtil } from '@/common/service/util/env.util';
 
 const DEBUG = false;
-const RUN_LOCALLY = true; // for testing with local model file
 
 interface MobileMovementValidationProps {
   selectedExercise: TrainingExercise | undefined;
-  updateExerciseReps: (repsCount: number) => void | undefined;
+  updateExerciseReps: ((repsCount: number) => void) | undefined;
   setSelectedTrackingMethod: SetState<TrackingMethod> | undefined;
 }
 
@@ -71,10 +70,6 @@ export default function MobileMovementValidation(
           //   distance: 0.025, // meters
           // },
         ];
-
-  if (!exerciseRepStartConditions) {
-    return <div>No pose detection logic for this exercise yet</div>;
-  }
 
   // Main Status
   const statusRef = useRef<DetectionStatus>(DetectionStatus.NOT_FULLY_IN_FRAME);
@@ -157,13 +152,13 @@ export default function MobileMovementValidation(
     script.src = 'https://cdn.jsdelivr.net/npm/eruda';
     script.async = true;
     script.onload = () => {
-      // @ts-ignore
+      // @ts-expect-error eruda is dynamically loaded and not typed
       window.eruda?.init();
     };
     document.body.appendChild(script);
 
     return () => {
-      // @ts-ignore
+      // @ts-expect-error eruda is dynamically loaded and not typed
       window.eruda?.destroy?.();
       script.remove();
     };
@@ -174,9 +169,9 @@ export default function MobileMovementValidation(
     if (!DEBUG) return;
 
     if (typeof window === 'undefined') return;
-    // @ts-ignore
+    // @ts-expect-error eruda is dynamically loaded and not typed
     if (window.eruda) {
-      // @ts-ignore
+      // @ts-expect-error eruda is dynamically loaded and not typed
       window.eruda.show();
       return;
     }
@@ -184,9 +179,9 @@ export default function MobileMovementValidation(
     script.src = 'https://cdn.jsdelivr.net/npm/eruda';
     script.async = true;
     script.onload = () => {
-      // @ts-ignore
+      // @ts-expect-error eruda is dynamically loaded and not typed
       window.eruda?.init();
-      // @ts-ignore
+      // @ts-expect-error eruda is dynamically loaded and not typed
       window.eruda?.show();
     };
     document.body.appendChild(script);
@@ -206,11 +201,13 @@ export default function MobileMovementValidation(
       canvasRef,
       drawingUtilsRef,
       setPoseLandmarker,
-      runLocally: RUN_LOCALLY,
+      runLocally: EnvUtil.isDev(),
     });
   }, []);
 
   useEffect(() => {
+    if (!exerciseRepStartConditions) return;
+
     enableCam({
       poseLandmarker,
       videoRef,
@@ -243,6 +240,8 @@ export default function MobileMovementValidation(
   }, [poseLandmarker]);
 
   const drawGraph = () => {
+    if (!exerciseRepStartConditions) return;
+
     const keypointIds = exerciseRepStartConditions.map(
       (condition) => condition.keypointId
     );
@@ -256,6 +255,10 @@ export default function MobileMovementValidation(
       );
     });
   };
+
+  if (!exerciseRepStartConditions) {
+    return <div>No pose detection logic for this exercise yet</div>;
+  }
 
   return (
     <Box
