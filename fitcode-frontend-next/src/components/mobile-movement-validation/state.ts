@@ -1,24 +1,25 @@
-import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
-import { SetState } from '@/common/type/state.type';
-import { KeypointHistory } from '@/controller/pose-detection/class/keypoint-history';
-import { POSE_DETECTION_CONSTRAINTS } from '@/controller/pose-detection/const/pose-detection-constrains.const';
-import { STATUS_MESSAGES } from '@/controller/pose-detection/const/status-messages';
-import { DetectionStatus } from '@/controller/pose-detection/enum/detection-status';
-import { PoseModel } from '@/controller/pose-detection/enum/pose-model.enum';
-import { RepStatus } from '@/controller/pose-detection/enum/rep-state';
-import { PoseDetectionService } from '@/controller/pose-detection/pose-detection.service';
-import { RepDetectionService } from '@/controller/pose-detection/rep-detection.service';
-import { ExerciseRepStartCondition } from '@/controller/pose-detection/type/exercise-start-condition.type';
-import { Keypoint } from '@/controller/pose-detection/type/keypoint.type';
-import { RepState } from '@/controller/pose-detection/type/rep-state.type';
-import { Rep } from '@/controller/pose-detection/type/rep.type';
-import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
 import {
   DrawingUtils,
   FilesetResolver,
   PoseLandmarker,
 } from '@mediapipe/tasks-vision';
-import { RefObject } from 'react';
+import type { RefObject } from 'react';
+
+import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
+import type { SetState } from '@/common/type/state.type';
+import type { KeypointHistory } from '@/controller/pose-detection/class/keypoint-history';
+import { POSE_DETECTION_CONSTRAINTS } from '@/controller/pose-detection/const/pose-detection-constrains.const';
+import { STATUS_MESSAGES } from '@/controller/pose-detection/const/status-messages';
+import { DetectionStatus } from '@/controller/pose-detection/enum/detection-status';
+import type { PoseModel } from '@/controller/pose-detection/enum/pose-model.enum';
+import { RepStatus } from '@/controller/pose-detection/enum/rep-state';
+import { PoseDetectionService } from '@/controller/pose-detection/pose-detection.service';
+import { RepDetectionService } from '@/controller/pose-detection/rep-detection.service';
+import type { ExerciseRepStartCondition } from '@/controller/pose-detection/type/exercise-start-condition.type';
+import type { Keypoint } from '@/controller/pose-detection/type/keypoint.type';
+import type { Rep } from '@/controller/pose-detection/type/rep.type';
+import type { RepState } from '@/controller/pose-detection/type/rep-state.type';
+import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
 
 const firebaseStorage = FirebaseStorageUtil.Instance;
 

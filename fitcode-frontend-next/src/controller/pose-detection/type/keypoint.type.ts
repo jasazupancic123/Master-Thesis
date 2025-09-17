@@ -1,5 +1,5 @@
-import { KeypointId } from '../enum/keypoint-id';
-import { Point3D } from './point-3d.type';
+import type { KeypointId } from '../enum/keypoint-id';
+import type { Point3D } from './point-3d.type';
 
 export type Keypoint = {
   id: KeypointId;
