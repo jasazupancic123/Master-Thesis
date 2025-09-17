@@ -1,9 +1,7 @@
+import { ConditionDirection } from '../enum/condition-detection.enum';
 import { KeypointId } from '../enum/keypoint-id';
 import { KeypointValueType } from '../enum/keypoint-value-type';
-import {
-  ConditionDirection,
-  ExerciseRepStartConditionWithExerciseIds,
-} from '../type/exercise-start-condition.type';
+import type { ExerciseRepStartConditionWithExerciseIds } from '../type/exercise-start-condition.type';
 
 // Smaller the duration, more accurate will the rep cuting be
 export const EXERCISE_POSES: ExerciseRepStartConditionWithExerciseIds[] = [

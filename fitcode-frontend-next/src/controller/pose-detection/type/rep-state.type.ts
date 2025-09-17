@@ -1,4 +1,4 @@
-import { RepStatus } from '../enum/rep-state';
+import type { RepStatus } from '../enum/rep-state';
 
 export type RepState = {
   status: RepStatus;
