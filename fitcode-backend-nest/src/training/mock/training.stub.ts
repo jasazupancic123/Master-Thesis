@@ -88,7 +88,7 @@ export function generateTrainingComponent(
   return {
     id: data?.id ?? v4(),
     color: data?.color || generateRandomColor(),
-    from: data?.from || getTime(addDays(new Date(), 2), 8, 0),
+    from,
     to: data?.to || addHours(from, 1),
     target: data?.target || null,
     methodId: data?.methodId || null,

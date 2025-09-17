@@ -167,12 +167,40 @@ export class TrainingRepository extends FirestoreRepository<Training> {
       throw new BadRequestException(
         'Cannot move start time before the previous component',
       );
+
+    if (i === 0) {
+      // first component → adjust warmup + next
+      const trainingFrom = subMinutes(input.from, duration);
+      query.from = trainingFrom;
+      query.warmup.from = trainingFrom;
+      query.warmup.to = input.from;
+
+      if (next) next.from = input.to;
+    } else if (i === all.length - 1) {
+      // last component → adjust cooldown + prev
+      const trainingTo = addMinutes(input.to, duration);
+      query.to = trainingTo;
+      query.cooldown.to = trainingTo;
+      query.cooldown.from = input.to;
+
+      if (prev) prev.to = input.from;
+    } else {
+      // middle → adjust only immediate neighbors
+      if (prev) prev.to = input.from;
+      if (next) next.from = input.to;
+    }
+
+    query.components = all;
+    await this.update(training.id, query);
+    return query;
   }
 
   async deleteComponent(training: Training, componentId: string) {
     // delete component and adjust times
     const duration = DURATION_TRAINING_COMPONENT_WARMUP_COOLDOWN_IN_MIN;
     const query: Update<Training> = {
+      from: training.from,
+      to: training.to,
       warmup: { ...training.warmup },
       cooldown: { ...training.cooldown },
     };
