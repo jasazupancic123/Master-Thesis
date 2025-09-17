@@ -1,10 +1,10 @@
-import { KeypointId } from '../enum/keypoint-id';
-import { PoseModel } from '../enum/pose-model.enum';
-import { Landmark } from '@mediapipe/tasks-vision';
-import { Keypoint } from '../type/keypoint.type';
-import { KeypointValueType } from '../enum/keypoint-value-type';
+import type { Landmark } from '@mediapipe/tasks-vision';
 import savitzkyGolay from 'ml-savitzky-golay';
-import { Point3D } from '../type/point-3d.type';
+
+import { KeypointId } from '../enum/keypoint-id';
+import { KeypointValueType } from '../enum/keypoint-value-type';
+import { PoseModel } from '../enum/pose-model.enum';
+import type { Keypoint } from '../type/keypoint.type';
 
 export class KeypointUtil {
   static getDesiredKeypointsByModel(
@@ -17,7 +17,7 @@ export class KeypointUtil {
   ): Keypoint[] {
     if (!currentFrameKeypoints) return [];
 
-    let keypoints: Keypoint[] = [];
+    const keypoints: Keypoint[] = [];
     switch (model) {
       case PoseModel.MEDIAPIPE: {
         const keypointIds = Object.values(KeypointId);
@@ -153,14 +153,14 @@ export class KeypointUtil {
           const kp = frame.find((k) => k.id === keypointId);
           if (!kp) return undefined;
           // make sure you call your util correctly (args order!)
-          let v = KeypointUtil.getKeypointValueByType(kp, type);
-          if (v == null || !Number.isFinite(Number(v))) return undefined;
+          const v = KeypointUtil.getKeypointValueByType(kp, type);
+          if (v === null || !Number.isFinite(Number(v))) return undefined;
 
           return Number(v);
         })
         .filter((v): v is number => Number.isFinite(v));
 
-    const isNumberArray = (arr: any[]): arr is number[] => {
+    const isNumberArray = (arr: number[] | Keypoint[][]): arr is number[] => {
       return arr.every((item) => typeof item === 'number');
     };
 

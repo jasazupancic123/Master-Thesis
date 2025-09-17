@@ -1,11 +1,11 @@
 import type { Attribute } from '../attribute/type/attribute.type';
 import type { AttributeValue } from '../attribute/type/attribute-value.type';
+import type { AuthUser } from '../auth/type/user.type';
 import type { IntType, VolType } from '../component/enum/param.enum';
 import { ParamType } from '../component/enum/param.enum';
 import type { Component } from '../component/type/component.type';
 import type { Exercise } from '../exercise/type/exercise.type';
 import type { Method } from '../method/type/method.type';
-import type { AuthUser } from '../auth/type/user.type';
 import type { ExerciseSet } from './type/exercise-set.type';
 import type { Superset } from './type/superset.type';
 import type { Training } from './type/training.type';

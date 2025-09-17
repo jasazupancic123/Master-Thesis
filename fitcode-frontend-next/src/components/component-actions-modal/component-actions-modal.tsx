@@ -5,15 +5,11 @@ import { useState } from 'react';
 import ComponentPeriodization from '../component-periodization/component-periodization';
 import { ComponentModalAction } from '@/common/enum/component-modal-action.constant';
 import type { Day } from '@/common/service/util/date.util';
-import type { SetState } from '@/common/type/state.type';
-import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 
 interface ComponentActionsModalProps {
   trainingComponent: TrainingComponent; // Replace with actual type
   day: Day; // Replace with actual type
-  setOpenOverwriteModal: SetState<boolean>;
-  setTrainingInPeriodForModal: SetState<Training | null>;
 }
 
 export default function ComponentActionsModal(

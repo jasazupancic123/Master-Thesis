@@ -1,13 +1,14 @@
+import type { RefObject } from 'react';
+
+import type { KeypointHistory } from './class/keypoint-history';
 import { DetectionStatus } from './enum/detection-status';
-import { Keypoint } from './type/keypoint.type';
-import { RefObject } from 'react';
 import { StatusDetectionService } from './status-detection.service';
-import { PoseValidationCondition } from './type/pose-validation-condition.type';
+import type { ExerciseRepStartCondition } from './type/exercise-start-condition.type';
+import type { Keypoint } from './type/keypoint.type';
+import type { PoseValidationCondition } from './type/pose-validation-condition.type';
+import type { RepState } from './type/rep-state.type';
 import { KeypointUtil } from './util/keypoint.util';
-import { SetState } from '@/common/type/state.type';
-import { KeypointHistory } from './class/keypoint-history';
-import { ExerciseRepStartCondition } from './type/exercise-start-condition.type';
-import { RepState } from './type/rep-state.type';
+import type { SetState } from '@/common/type/state.type';
 
 export class PoseDetectionService {
   static checkStatus(

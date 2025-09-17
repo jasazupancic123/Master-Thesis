@@ -30,7 +30,7 @@ export default function WeekViewItem(props: WeekViewItemProps) {
   const { token } = useAuthenticatedAuth();
 
   const { item } = props;
-  const { group, setGroup, trainings, setTrainings } = useGroup();
+  const { setGroup, setTrainings } = useGroup();
 
   const checkIsTrainingComponent = (
     item: TrainingComponentWithTrainingId | GroupEvent

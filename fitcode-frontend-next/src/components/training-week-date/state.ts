@@ -93,30 +93,6 @@ export async function handleClickDateCell(
       }
     } else if (!trainingInPeriod) {
       // ADD A NEW TRAINING WITH THE SELECTED TRAINING COMPONENT
-      if (!training) {
-        toast.error('Training not found');
-        return;
-      }
-      if (!trainingComponent) {
-        toast.error('Training component not found');
-        return;
-      }
-      if (!group || !cycle) {
-        toast.error('Group or cycle not found');
-        return;
-      }
-
-      const from =
-        period === 'AM'
-          ? dayjs(date).set('hour', 8).toDate()
-          : dayjs(date).set('hour', 14).toDate();
-      const to = dayjs(from).add(30, 'minutes').toDate();
-
-      const newTrainingComponent = {
-        ...trainingComponent,
-        from,
-        to,
-      };
     }
   } else if (periodizationView) {
     // do nothing

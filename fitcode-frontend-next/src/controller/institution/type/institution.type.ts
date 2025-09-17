@@ -1,6 +1,6 @@
 import type { BaseEntity } from '@/common/type/entity.type';
-import type { Group } from '@/controller/group/type/group.type';
 import type { AuthUser } from '@/controller/auth/type/user.type';
+import type { Group } from '@/controller/group/type/group.type';
 
 export interface Institution extends BaseEntity {
   name: string;

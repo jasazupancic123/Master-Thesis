@@ -41,7 +41,6 @@ export default function TrainingMembers(props: TrainingMembersProps) {
   const { group, setDetectedChanges } = useGroup();
 
   const {
-    members: groupMembers,
     component,
     setComponent,
     training,
@@ -200,7 +199,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
   };
 
   return selectedAthlete ? (
-    <SelectedMemberReport groupMembers={groupMembers} />
+    <SelectedMemberReport />
   ) : (
     <Stack
       direction="row"
