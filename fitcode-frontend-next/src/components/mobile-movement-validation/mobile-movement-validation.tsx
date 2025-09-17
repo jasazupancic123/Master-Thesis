@@ -26,7 +26,6 @@ import type { RepState } from '@/controller/pose-detection/type/rep-state.type';
 import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useScreenSize } from '@/store/screen-size.provider';
-import { EnvUtil } from '@/common/service/util/env.util';
 
 const DEBUG = false;
 
@@ -201,7 +200,6 @@ export default function MobileMovementValidation(
       canvasRef,
       drawingUtilsRef,
       setPoseLandmarker,
-      runLocally: EnvUtil.isDev(),
     });
   }, []);
 

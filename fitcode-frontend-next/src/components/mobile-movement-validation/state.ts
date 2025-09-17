@@ -28,21 +28,10 @@ export async function loadModel(state: {
   videoRef: RefObject<HTMLVideoElement | null>;
   canvasRef: RefObject<HTMLCanvasElement | null>;
   drawingUtilsRef: RefObject<DrawingUtils | null>;
-  runLocally: boolean;
 }) {
-  const {
-    setPoseLandmarker,
-    videoRef,
-    canvasRef,
-    drawingUtilsRef,
-    runLocally,
-  } = state;
+  const { setPoseLandmarker, videoRef, canvasRef, drawingUtilsRef } = state;
 
-  const modelAssetPath = runLocally
-    ? '/models/pose_landmarker/pose_landmarker_full.task'
-    : await firebaseStorage.getUrl(
-        'gs://fitcode-testing.appspot.com/pose-models/pose_landmarker_full.task'
-      );
+  const modelAssetPath = '/models/pose_landmarker/pose_landmarker_full.task';
 
   // const modelAssetPath = '/models/pose_landmarker/pose_landmarker_full.task'; // full
   // const modelAssetPath = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task'; // lite
