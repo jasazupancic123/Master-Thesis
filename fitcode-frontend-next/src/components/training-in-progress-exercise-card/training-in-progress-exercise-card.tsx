@@ -37,6 +37,8 @@ export default function TrainingInProgressExerciseCard() {
   const {
     trainingInProgress,
     setTrainingInProgress,
+    selectedTrackingMethod,
+    setSelectedTrackingMethod,
     updateTrainingInProgress,
   } = useTraining();
 
@@ -51,8 +53,6 @@ export default function TrainingInProgressExerciseCard() {
   } = useTrainingInProgress();
 
   const [expandedSetsView, setExpandedSetsView] = useState(false);
-  const [selectedTrackingMethod, setSelectedTrackingMethod] =
-    useState<TrackingMethod>(TrackingMethod.MANUAL);
   const [imageHeight, setImageHeight] = useState(0);
 
   if (!trainingInProgress || !selectedSuperset || !selectedExercise)
