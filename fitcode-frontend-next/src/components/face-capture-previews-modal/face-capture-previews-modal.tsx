@@ -7,8 +7,9 @@ import toast from 'react-hot-toast';
 import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
 import type { SetState } from '@/common/type/state.type';
 import { handleApiRequest } from '@/common/type/state.type';
-import type { CustomClaims } from '@/controller/user/type/custom-claims.type';
-import { UserController } from '@/controller/user/user.controller';
+import { AuthController } from '@/controller/auth/auth.controller';
+import type { CustomClaims } from '@/controller/auth/type/custom-claims.type';
+import { ProfileController } from '@/controller/profile/profile.controller';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 
 const firebaseStorage = FirebaseStorageUtil.Instance;
@@ -32,7 +33,8 @@ export default function FaceCapturePreviewsModal(
   props: FaceCapturePreviewsModalProps
 ) {
   const { user, customClaims, setCustomClaims, token } = useAuthenticatedAuth();
-  const controller = UserController.getInstance(token);
+  const authController = AuthController.getInstance(token);
+  const profileController = ProfileController.getInstance(token);
   const router = useRouter();
 
   const { previews, captures, setIsCapturingFace, heightWidthRatio } = props;
@@ -142,7 +144,11 @@ export default function FaceCapturePreviewsModal(
 
             await handleApiRequest(
               router,
-              () => controller.updateClaims(user.uid, updatedCustomClaims),
+              () =>
+                authController.updateCustomClaims(
+                  user.uid,
+                  updatedCustomClaims
+                ),
               () => {
                 setCustomClaims(updatedCustomClaims);
                 toast.success('Face recognition images uploaded successfully!');
@@ -151,7 +157,7 @@ export default function FaceCapturePreviewsModal(
               undefined,
               'Failed to post face recognition images'
             );
-          } catch (e) {
+          } catch (_) {
             toast.error('Failed to upload face images');
           }
         }}

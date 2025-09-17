@@ -4,12 +4,17 @@ import type { User } from '@firebase/auth';
 import { useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useState } from 'react';
 
-import { getFirebaseAuth } from '@/common/config/firebase.config';
+import {
+  FIREBASE_AUTH_ID_TOKEN,
+  getFirebaseAuth,
+} from '@/common/config/firebase.config';
 import { LINK_SIGN_IN } from '@/common/constant/navigation.constant';
+import { CommonService } from '@/common/service/common.service';
 import type { AuthContextType, AuthStatus } from '@/common/type/context.type';
 import type { ChildrenProps } from '@/common/type/props.type';
-import type { UserRole } from '@/controller/user/enum/user-role.enum';
-import type { CustomClaims } from '@/controller/user/type/custom-claims.type';
+import type { CustomClaims } from '@/controller/auth/type/custom-claims.type';
+import type { AuthUser } from '@/controller/auth/type/user.type';
+import type { UserRole } from '@/controller/profile/enum/user-role.enum';
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -23,8 +28,12 @@ export type AuthState = {
   customClaims?: CustomClaims;
 };
 
-export const AuthProvider = (props: ChildrenProps) => {
-  const { children } = props;
+const browser = CommonService.instance.browser;
+
+export const AuthProvider = (
+  props: ChildrenProps & { initialToken?: string }
+) => {
+  const { children, initialToken } = props;
   const auth = getFirebaseAuth();
   const router = useRouter();
 
@@ -44,12 +53,12 @@ export const AuthProvider = (props: ChildrenProps) => {
       }));
   }
 
-  function setDisplayName(name: string) {
-    if (state.status === 'authenticated')
-      setState((prevState) => ({
-        ...prevState,
-        user: { ...prevState.user!, displayName: name },
-      }));
+  function setUser(data: Partial<Pick<AuthUser, 'displayName' | 'photoURL'>>) {
+    if (state.status !== 'authenticated') return;
+    setState((prevState) => ({
+      ...prevState,
+      user: { ...prevState.user!, ...data },
+    }));
   }
 
   // first time init get token from cookies and refresh if needed
@@ -79,6 +88,8 @@ export const AuthProvider = (props: ChildrenProps) => {
         role: undefined,
         customClaims: undefined,
       };
+
+      browser.removeClientCookie(FIREBASE_AUTH_ID_TOKEN);
     } else {
       // user is logged in
       const { token, claims } = await user.getIdTokenResult();
@@ -92,6 +103,8 @@ export const AuthProvider = (props: ChildrenProps) => {
         role,
         customClaims,
       };
+
+      browser.setClientCookie(FIREBASE_AUTH_ID_TOKEN, token, 1800);
     }
 
     setState(newState);
@@ -122,7 +135,7 @@ export const AuthProvider = (props: ChildrenProps) => {
           customClaims: state.customClaims!,
           setCustomClaims,
           handleUserChange,
-          setDisplayName,
+          setUser,
           logout,
         }}
       >

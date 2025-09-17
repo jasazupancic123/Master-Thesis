@@ -8,7 +8,6 @@ import { Create, FirestoreEntity } from '@src/common/type/entity.type';
 import {
   CycleRef,
   ExerciseRef,
-  GroupRef,
   InstitutionRef,
   TrainingComponentRef,
   TrainingRef,
@@ -87,49 +86,20 @@ export class WorkloadService {
    * userId is provided, then workloads for only one user for the whole group will be fetched and
    * so on.
    */
-  async findAllByRef(
-    ref: Partial<
-      WorkloadRef & GroupRef & { memberIds: string[]; exerciseIds: string[] }
-    >,
-  ) {
+  async findAllByUserTraining(
+    userId: string,
+    ref: Pick<WorkloadRef, 'trainingId' | 'componentId'>,
+  ): Promise<Workload[]> {
+    const { trainingId, componentId } = ref;
     let query = this.firebaseService.firestore.collectionGroup(
       FirestoreCollection.TRAINING_WORKLOAD,
     );
 
-    if (ref.groupId)
-      query = query.where('groupId', '==', ref.groupId) as CollectionGroup;
-
-    if (ref.trainingId)
-      query = query.where(
-        'trainingId',
-        '==',
-        ref.trainingId,
-      ) as CollectionGroup;
-
-    if (ref.memberIds && ref.memberIds.length)
-      query = query.where('userId', 'in', ref.memberIds) as CollectionGroup;
-    else if (ref.userId)
-      query = query.where('userId', '==', ref.userId) as CollectionGroup;
-
-    if (ref.componentId)
-      query = query.where(
-        'componentId',
-        '==',
-        ref.componentId,
-      ) as CollectionGroup;
-
-    if (ref.exerciseIds && ref.exerciseIds.length)
-      query = query.where(
-        'exerciseId',
-        'in',
-        ref.exerciseIds,
-      ) as CollectionGroup;
-    else if (ref.exerciseId)
-      query = query.where(
-        'exerciseId',
-        '==',
-        ref.exerciseId,
-      ) as CollectionGroup;
+    if (userId) query = query.where('userId', '==', userId) as CollectionGroup;
+    if (trainingId)
+      query = query.where('trainingId', '==', trainingId) as CollectionGroup;
+    if (componentId)
+      query = query.where('componentId', '==', componentId) as CollectionGroup;
 
     return query
       .get()
@@ -183,10 +153,9 @@ export class WorkloadService {
     // custom workloads in the future that are already prescribed (and none of them is completed),
     // that's why we can enforce type of (WorkloadMeta & PrescribedWorkload)[]
     const customPrescribedWorkloads: (WorkloadMeta & PrescribedWorkload)[] =
-      await this.findAllByRef({
+      await this.findAllByUserTraining(ref.uid, {
         trainingId: ref.trainingId,
         componentId: ref.componentId,
-        userId: ref.uid,
       });
 
     // find prescribed supersets (either from subgroup or main group)
@@ -345,7 +314,10 @@ export class WorkloadService {
   async validateWorkloads(
     trainingId: string,
     customWorkloads: CreatePrescribedWorkloadDto[],
-    trainingComponents: TrainingComponent[],
+    trainingComponents: Pick<
+      TrainingComponent,
+      'id' | 'supersets' | 'subgroups' | 'from'
+    >[],
   ): Promise<Create<Workload>[]> {
     if (!customWorkloads || !customWorkloads.length) return [];
 

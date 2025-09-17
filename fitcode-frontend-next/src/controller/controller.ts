@@ -1,14 +1,17 @@
+import { AppController } from './app.controller';
 import { AttributeController } from './attribute/attribute.controller';
+import { AuthController } from './auth/auth.controller';
 import { ComponentController } from './component/component.controller';
 import { ExerciseController } from './exercise/exercise.controller';
 import { GroupController } from './group/group.controller';
 import { InstitutionController } from './institution/institution.controller';
 import { MethodController } from './method/method.controller';
+import { ProfileController } from './profile/profile.controller';
 import { TrainingController } from './training/training.controller';
-import { UserController } from './user/user.controller';
 
 export class Controller {
   private static instance: Controller;
+  public auth: AuthController;
   public attribute: AttributeController;
   public component: ComponentController;
   public exercise: ExerciseController;
@@ -16,9 +19,11 @@ export class Controller {
   public institution: InstitutionController;
   public method: MethodController;
   public training: TrainingController;
-  public user: UserController;
+  public profile: ProfileController;
+  public app: AppController;
 
   private constructor(token: string) {
+    this.auth = AuthController.getInstance(token);
     this.attribute = AttributeController.getInstance(token);
     this.component = ComponentController.getInstance(token);
     this.exercise = ExerciseController.getInstance(token);
@@ -26,7 +31,8 @@ export class Controller {
     this.institution = InstitutionController.getInstance(token);
     this.method = MethodController.getInstance(token);
     this.training = TrainingController.getInstance(token);
-    this.user = UserController.getInstance(token);
+    this.profile = ProfileController.getInstance(token);
+    this.app = AppController.getInstance(token);
   }
 
   public static getInstance(token: string): Controller {

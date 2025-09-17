@@ -79,3 +79,8 @@ export class TrainingComponent extends IntersectionType(IdEntity, ColorEntity) {
   @Expose()
   copiedFrom?: CopiedFrom; // used for copying components from other trainings
 }
+
+export type TrainingComponentWithoutTime = Omit<
+  TrainingComponent,
+  'from' | 'to'
+>;

@@ -1,7 +1,7 @@
 import { Box, TextField } from '@mui/material';
 
 import type { SetState } from '@/common/type/state.type';
-import type { Wellness } from '@/controller/user/type/wellness.type';
+import type { Wellness } from '@/controller/profile/type/wellness.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 interface AthleteAnthropometryFormProps {

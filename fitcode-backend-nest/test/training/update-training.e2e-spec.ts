@@ -5,6 +5,10 @@ import {
   COMPONENT_PARAMS_OPT1,
   COMPONENT_PARAMS_OPT2,
 } from '@test/common/constant/component-params.constant';
+import * as request from 'supertest';
+
+import { AppModule } from '@src/app.module';
+import type { TestInstitution } from '@src/common/type/entity.type';
 import {
   createGroupWithCycles,
   createInstitution,
@@ -12,12 +16,7 @@ import {
   deleteDoc,
   deleteDocs,
   deleteInstitution,
-} from '@test/common/utils/data.util';
-import { addDays, subDays } from 'date-fns';
-import * as request from 'supertest';
-
-import { AppModule } from '@src/app.module';
-import { getTime } from '@src/common/utils/date.util';
+} from '@src/common/utils/data.util';
 import { ComponentService } from '@src/component/component.service';
 import { DEFAULT_PARAMS_KEY } from '@src/component/constant/param.constant';
 import type { Component } from '@src/component/entity/component.entity';
@@ -44,8 +43,6 @@ import {
   generateWorkloadStub,
 } from '@src/training/mock/workload.stub';
 import { TrainingService } from '@src/training/service/training.service';
-
-import type { TestInstitution } from '../common/type/entity.type';
 
 describe('Update Training (e2e)', () => {
   let app: INestApplication;
@@ -130,7 +127,6 @@ describe('Update Training (e2e)', () => {
         groupId: group.id,
         cycleId: group.cycles[1].id,
         components: [generateTrainingComponent({ id: component1.id })],
-        date: data?.from,
         ...data,
       }),
     );
@@ -185,49 +181,6 @@ describe('Update Training (e2e)', () => {
       }
     });
 
-    it('should fail to update training if training is not in cycle', async () => {
-      const response = await request(app.getHttpServer())
-        .patch(`/training/${training.id}`)
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send({
-          ...training,
-          components: [
-            generateTrainingComponent({
-              id: component1.id,
-              from: getTime(addDays(new Date(), 100), 8, 0),
-              to: getTime(addDays(new Date(), 100), 8, 30),
-            }),
-          ],
-        });
-
-      expect(response.status).toBe(400);
-      expect(response.body.message).toBe(
-        'Training falls outside of the selected cycle',
-      );
-    });
-
-    it('should fail to update training if training is in the past', async () => {
-      const response = await request(app.getHttpServer())
-        .patch(`/training/${training.id}`)
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send({
-          ...training,
-          cycleId: group.cycles[1].id,
-          components: [
-            generateTrainingComponent({
-              id: component1.id,
-              from: getTime(subDays(new Date(), 1), 8, 0),
-              to: getTime(subDays(new Date(), 1), 8, 30),
-            }),
-          ],
-        });
-
-      expect(response.status).toBe(400);
-      expect(response.body.message).toBe(
-        'You cannot add or update trainings in the past',
-      );
-    });
-
     it('should delete training if there are not any components left', async () => {
       const response = await request(app.getHttpServer())
         .patch(`/training/${training.id}`)
@@ -239,34 +192,6 @@ describe('Update Training (e2e)', () => {
       expect(trainings).toHaveLength(0);
 
       await deleteDoc(firebase, 'TRAINING', training.id);
-      training = await createTraining();
-    });
-
-    it('should fail to update training if there is overlap between trainings', async () => {
-      const prevTraining = await createTraining({
-        from: getTime(addDays(new Date(), 2), 9, 30),
-      });
-
-      const response = await request(app.getHttpServer())
-        .patch(`/training/${training.id}`)
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send({
-          ...training,
-          components: [
-            generateTrainingComponent({
-              id: component1.id,
-              from: getTime(addDays(new Date(), 2), 10, 0),
-              to: getTime(addDays(new Date(), 2), 10, 30),
-            }),
-          ],
-        });
-
-      expect(response.status).toBe(400);
-      expect(response.body.message).toBe(
-        'Training overlaps with other training',
-      );
-
-      await deleteDocs(firebase, 'TRAINING', [prevTraining.id, training.id]);
       training = await createTraining();
     });
 

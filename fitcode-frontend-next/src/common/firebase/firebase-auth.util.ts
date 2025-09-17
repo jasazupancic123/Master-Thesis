@@ -8,7 +8,7 @@ import {
 
 import type { FirebaseInitAppOptions } from '@/common/config/firebase.config';
 import { getFirebaseAuth } from '@/common/config/firebase.config';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
+import { UserRole } from '@/controller/profile/enum/user-role.enum';
 
 export const isAdmin = (role: UserRole) => role === UserRole.ADMIN;
 export const isManager = (role: UserRole) => role === UserRole.MANAGER;

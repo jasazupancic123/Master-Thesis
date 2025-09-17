@@ -13,9 +13,10 @@ import { useNestBackendFetch } from '@/common/hooks/use-fetch.hook';
 import type { ILink } from '@/common/type/link.type';
 import type { ChildrenProps } from '@/common/type/props.type';
 import type { SetState } from '@/common/type/state.type';
+import type { AuthUser } from '@/controller/auth/type/user.type';
 import type { Group } from '@/controller/group/type/group.type';
 import type { Institution } from '@/controller/institution/type/institution.type';
-import type { User, UserEntity } from '@/controller/user/type/user.type';
+import type { Profile } from '@/controller/profile/type/user.type';
 
 interface DashboardContextProps {
   filter: ILink;
@@ -29,14 +30,14 @@ interface DashboardContextProps {
   selectedGroup: Group | null;
   setSelectedGroup: SetState<Group | null>;
   refetchUsers: () => void;
-  members: UserEntity[];
+  members: Profile[];
   refetchMembers: (providedUrl?: string) => void;
 }
 
 export interface DashboardPageProps {
   institutions: Institution[];
   selectedInstitution: Institution | null;
-  members: UserEntity[];
+  members: Profile[];
   refetchMembers: (providedUrl?: string) => void;
 }
 
@@ -62,7 +63,6 @@ export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
 
     const lastItemInUrl = pathname.split('/').pop();
     const links = Object.values(LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS(role));
-
     const matched = links.find(
       (link) => lastItemInUrl && link?.href.endsWith(lastItemInUrl)
     );
@@ -85,7 +85,7 @@ export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
   const { setUsers } = useMain();
 
   const { data: fetchedUsers, refetch: refetchUsers } =
-    useNestBackendFetch<User[]>(`/user`);
+    useNestBackendFetch<AuthUser[]>(`/auth`);
 
   useEffect(() => {
     if (fetchedUsers) setUsers(fetchedUsers);

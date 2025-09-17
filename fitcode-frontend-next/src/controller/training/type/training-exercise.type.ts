@@ -13,7 +13,4 @@ export type TrainingExercise = IdEntity &
     exercise?: Exercise;
   };
 
-export type UpdateTrainingExercise = Pick<
-  TrainingExercise,
-  'id' | 'color' | 'sets'
->;
+export type UpdateTrainingExercise = Pick<TrainingExercise, 'id' | 'sets'>;

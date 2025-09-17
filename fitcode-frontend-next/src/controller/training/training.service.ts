@@ -5,7 +5,7 @@ import { ParamType } from '../component/enum/param.enum';
 import type { Component } from '../component/type/component.type';
 import type { Exercise } from '../exercise/type/exercise.type';
 import type { Method } from '../method/type/method.type';
-import type { User } from '../user/type/user.type';
+import type { AuthUser } from '../auth/type/user.type';
 import type { ExerciseSet } from './type/exercise-set.type';
 import type { Superset } from './type/superset.type';
 import type { Training } from './type/training.type';
@@ -76,7 +76,7 @@ export class TrainingService {
     }
   }
 
-  static mapMembers(item: Training, users: User[]): Training {
+  static mapMembers(item: Training, users: AuthUser[]): Training {
     item.members = item.membersIds.map(
       (id) => users.find((u) => u.uid === id)!
     );

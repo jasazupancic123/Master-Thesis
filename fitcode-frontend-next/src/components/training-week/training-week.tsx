@@ -85,6 +85,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
           </Box>
         </Stack>
       </Box>
+
       <MyModal
         isOpen={openAreYouSureModal && !componentCalendarView}
         setIsOpen={(open) => setOpenAreYouSureModal(open)}

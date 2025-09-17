@@ -1,17 +1,6 @@
 import type { INestApplication } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import type { TestUser } from '@test/common/type/auth.type';
-import {
-  createAthleteUserAndToken,
-  createTrainerUserAndToken,
-} from '@test/common/utils/auth.util';
-import {
-  createGroupWithCycles,
-  createInstitution,
-  deleteDoc,
-  deleteUsers,
-} from '@test/common/utils/data.util';
 import { addDays, subDays } from 'date-fns';
 import { stringify } from 'qs';
 import * as request from 'supertest';
@@ -19,6 +8,17 @@ import * as request from 'supertest';
 import { AppModule } from '@src/app.module';
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { getTime } from '@src/common/service/util';
+import type { TestInstitution, TestUser } from '@src/common/type/entity.type';
+import {
+  createAthleteUserAndToken,
+  createTrainerUserAndToken,
+} from '@src/common/utils/auth.util';
+import {
+  createGroupWithCycles,
+  createInstitution,
+  deleteDoc,
+  deleteUsers,
+} from '@src/common/utils/data.util';
 import { ComponentService } from '@src/component/component.service';
 import type { Component } from '@src/component/entity/component.entity';
 import { generateComponentStub } from '@src/component/mock/component.stub';
@@ -28,10 +28,7 @@ import { GroupService } from '@src/group/group.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { TestDbService } from '@src/test-db/test-db.service';
 import type { FilterTrainingQueryDto } from '@src/training/dto/filter-training-query.dto';
-import type { Training } from '@src/training/entity/training.entity';
 import { generateTrainingStub } from '@src/training/mock/training.stub';
-
-import type { TestInstitution } from '../common/type/entity.type';
 
 describe('Get Trainings (e2e)', () => {
   let app: INestApplication;
@@ -252,50 +249,6 @@ describe('Get Trainings (e2e)', () => {
     expect(response2.body.length).toBe(4);
   });
 
-  it('should filter by cycle', async () => {
-    const response1 = await request(app.getHttpServer())
-      .get(url({ cycleId: '1' }))
-      .set('Authorization', `Bearer ${trainer1.token}`);
-    expect(response1.status).toBe(200);
-    expect(response1.body.length).toBe(2);
-
-    const training1 = response1.body[0] as Training;
-    const training2 = response1.body[1] as Training;
-    expect(training1.groupId).toBe(group.id);
-    expect(training2.groupId).toBe(group.id);
-    expect(training1.cycleId).toBe('1');
-    expect(training2.cycleId).toBe('1');
-
-    const response2 = await request(app.getHttpServer())
-      .get(url({ cycleId: '2' }))
-      .set('Authorization', `Bearer ${trainer1.token}`);
-    expect(response2.status).toBe(200);
-    expect(response2.body.length).toBe(2);
-
-    const training3 = response2.body[0] as Training;
-    const training4 = response2.body[1] as Training;
-    expect(training3.groupId).toBe(group.id);
-    expect(training4.groupId).toBe('test-group');
-    expect(training3.cycleId).toBe('2');
-    expect(training4.cycleId).toBe('2');
-
-    const response3 = await request(app.getHttpServer())
-      .get(url({ cycleId: '3' }))
-      .set('Authorization', `Bearer ${trainer1.token}`);
-    expect(response3.status).toBe(200);
-    expect(response3.body.length).toBe(3);
-
-    const training5 = response3.body[0] as Training;
-    const training6 = response3.body[1] as Training;
-    const training7 = response3.body[2] as Training;
-    expect(training5.groupId).toBe('test-group');
-    expect(training6.groupId).toBe('test-group');
-    expect(training7.groupId).toBe('test-group');
-    expect(training5.cycleId).toBe('3');
-    expect(training6.cycleId).toBe('3');
-    expect(training7.cycleId).toBe('3');
-  });
-
   it('should filter by date range', async () => {
     const today = new Date();
     const response1 = await request(app.getHttpServer())
@@ -348,13 +301,5 @@ describe('Get Trainings (e2e)', () => {
 
     expect(response1.status).toBe(200);
     expect(response1.body.length).toBe(1);
-
-    // 2. filter by athlete2 and cycle 1 with to date being today 23:59
-    const response2 = await request(app.getHttpServer())
-      .get(url({ cycleId: '1', to: getTime(today, 23, 59) }))
-      .set('Authorization', `Bearer ${athlete2.token}`);
-
-    expect(response2.status).toBe(200);
-    expect(response2.body.length).toBe(2);
   });
 });

@@ -1,16 +1,21 @@
-'use client';
-
+import { isAthlete } from '@/common/firebase/firebase-auth.util';
 import type { ChildrenProps } from '@/common/type/props.type';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
-import { withAuth } from '@/store/auth.provider';
-import MainProvider from '@/store/main.provider';
+import { getAuthIdTokenFromCookies } from '@/common/util/auth.util';
+import Alert from '@/components/alert/alert';
+import { Controller } from '@/controller/controller';
+import { CoachMainProvider } from '@/store/main.provider';
 
-export default withAuth(Layout, [
-  UserRole.TRAINER,
-  UserRole.MANAGER,
-  UserRole.ADMIN,
-]);
+export default async function Layout({ children }: ChildrenProps) {
+  const token = await getAuthIdTokenFromCookies();
+  if (!token) return <Alert type="unauthorized" />;
 
-function Layout({ children }: ChildrenProps) {
-  return <MainProvider>{children}</MainProvider>;
+  const controller = Controller.getInstance(token);
+  const profile = await controller.auth.findMe();
+  if (!profile) return <Alert type="unauthorized" />;
+
+  if (isAthlete(profile.customClaims.role[0]))
+    return <Alert type="unauthorized" />;
+
+  const data = await controller.app.init();
+  return <CoachMainProvider {...data}>{children}</CoachMainProvider>;
 }

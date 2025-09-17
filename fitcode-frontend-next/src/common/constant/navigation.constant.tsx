@@ -23,7 +23,7 @@ import {
   DASHBOARD_PROGRESS,
 } from '@/common/constant/dashboard-views-constant';
 import type { ILink } from '@/common/type/link.type';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
+import { UserRole } from '@/controller/profile/enum/user-role.enum';
 
 export function link(
   label: string,

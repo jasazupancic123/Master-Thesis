@@ -1,11 +1,21 @@
-import type { User } from '@/controller/user/type/user.type';
+import type { AuthUser } from '@/controller/auth/type/user.type';
+import type { Profile } from '@/controller/profile/type/user.type';
 
-let cachedProfile: User | null = null;
+let cachedUser: AuthUser | null = null;
+let cachedProfile: Profile | null = null;
 
-export function getCachedProfile() {
+export function getCachedUser(): AuthUser | null {
+  return cachedUser;
+}
+
+export function setCachedUser(profile: AuthUser) {
+  cachedUser = profile;
+}
+
+export function getCachedProfile(): Profile | null {
   return cachedProfile;
 }
 
-export function setCachedProfile(profile: User) {
+export function setCachedProfile(profile: Profile) {
   cachedProfile = profile;
 }

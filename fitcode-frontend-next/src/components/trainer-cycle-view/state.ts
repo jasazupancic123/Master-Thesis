@@ -23,6 +23,7 @@ export async function handleCreateTraining(
     group: Group;
     cycle: Cycle;
     date: Dayjs;
+    from: Date;
     period: 'AM' | 'PM';
     selectedComponents: TrainingComponent[];
   },
@@ -36,7 +37,7 @@ export async function handleCreateTraining(
     methods: Method[];
   }
 ) {
-  const { group, cycle, date, period, selectedComponents } = input;
+  const { group, cycle, from, date, period, selectedComponents } = input;
   const { router, trainings, setTrainings, components, exercises, methods } =
     state;
 
@@ -79,6 +80,7 @@ export async function handleCreateTraining(
         cycleId: cycle.id,
         components: selectedComponents,
         membersIds: [],
+        from,
       }),
     (training) => {
       TrainingService.mapData(training, {

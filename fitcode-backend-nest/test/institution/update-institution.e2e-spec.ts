@@ -1,17 +1,17 @@
 import type { INestApplication } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import type { TestUser } from '@test/common/type/auth.type';
-import {
-  createAthleteUserAndToken,
-  createManagerUserAndToken,
-  createTrainerUserAndToken,
-} from '@test/common/utils/auth.util';
-import { deleteUsers } from '@test/common/utils/data.util';
 import { addDays, isAfter, isBefore, startOfDay, subDays } from 'date-fns';
 import * as request from 'supertest';
 
 import { AppModule } from '@src/app.module';
+import type { TestUser } from '@src/common/type/entity.type';
+import {
+  createAthleteUserAndToken,
+  createManagerUserAndToken,
+  createTrainerUserAndToken,
+} from '@src/common/utils/auth.util';
+import { deleteUsers } from '@src/common/utils/data.util';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { GroupService } from '@src/group/group.service';
 import { generateGroupStub } from '@src/group/mock/group.stub';
@@ -112,7 +112,7 @@ describe('Update Institution (e2e)', () => {
       expect(institution.athleteIds).toContain(userId);
     });
 
-    it('should successfully add an athlete to the institution and its groups and trainings', async () => {
+    it('should successfully add an athlete to the institution but not its groups and trainings', async () => {
       const membersIds = [athletes[0], athletes[1]].map((a) => a.uid); // only the first two athletes
       const newAthlete = athletes[2];
 
@@ -191,7 +191,7 @@ describe('Update Institution (e2e)', () => {
       expect(institution.athleteIds).toContain(newAthlete.uid);
 
       for (const serviceSpy of [groupServiceSpy, trainingServiceSpy]) {
-        expect(serviceSpy).toHaveBeenCalledWith(
+        expect(serviceSpy).not.toHaveBeenCalledWith(
           expect.objectContaining({
             institutionId,
             userId: newAthlete.uid,
@@ -205,26 +205,14 @@ describe('Update Institution (e2e)', () => {
       const groups = await db.groups.findAll();
       expect(groups).toHaveLength(3);
       for (const group of groups) {
-        expect(group.membersIds).toHaveLength(3);
-        expect(group.membersIds).toContain(newAthlete.uid);
+        expect(group.membersIds).toHaveLength(2);
+        expect(group.membersIds).not.toContain(newAthlete.uid);
       }
 
       const trainings = await db.trainings.findAll();
       expect(trainings).toHaveLength(5);
 
-      const date = startOfDay(new Date());
-      const pastTrainings = trainings.filter((t) => isBefore(t.from, date));
-      const futureTrainings = trainings.filter((t) => isAfter(t.from, date));
-
-      expect(pastTrainings).toHaveLength(2);
-      expect(futureTrainings).toHaveLength(3);
-
-      for (const training of futureTrainings) {
-        expect(training.membersIds).toHaveLength(3);
-        expect(training.membersIds).toContain(newAthlete.uid);
-      }
-
-      for (const training of pastTrainings) {
+      for (const training of trainings) {
         expect(training.membersIds).toHaveLength(2);
         expect(training.membersIds).not.toContain(newAthlete.uid);
       }
@@ -232,7 +220,7 @@ describe('Update Institution (e2e)', () => {
       await db.checkpointRestore();
     });
 
-    it('should successfully remove an athlete from the institution', async () => {
+    it('should successfully remove an athlete from the institution and all groups and trainings', async () => {
       const membersIds = [athletes[0], athletes[1]].map((a) => a.uid); // only the first two athletes
       const userId = athletes[0].uid; // user to remove
 

@@ -18,14 +18,15 @@ import setupChartData, { colorForZ } from './state';
 import FatigueIcon from '@/assets/icons/Fatigue.svg';
 import SleepIcon from '@/assets/icons/Sleep.svg';
 import SorenessIcon from '@/assets/icons/Soreness.svg';
-import { WellnessChartDataType } from '@/controller/user/enum/wellness-chart-data-type.enum';
-import type { UserEntity } from '@/controller/user/type/user.type';
-import type { WellnessChartData } from '@/controller/user/type/wellness.type';
+import { WellnessChartDataType } from '@/controller/profile/enum/wellness-chart-data-type.enum';
+import type { Profile } from '@/controller/profile/type/user.type';
+import type { WellnessChartData } from '@/controller/profile/type/wellness.type';
+import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 
 interface SelectedMemberReportProps {
-  groupMembers: UserEntity[];
+  groupMembers: Profile[];
 }
 
 export default function SelectedMemberReport(props: SelectedMemberReportProps) {
@@ -42,6 +43,8 @@ export default function SelectedMemberReport(props: SelectedMemberReportProps) {
     selectedSubgroup,
     setSelectedSubgroup,
   } = useTrainerDayViewContext();
+
+  const { users } = useMain();
 
   const [wellnessChartData, setWellnessChartData] = useState<
     WellnessChartData[]
@@ -101,8 +104,8 @@ export default function SelectedMemberReport(props: SelectedMemberReportProps) {
           <Avatar
             className="avatar-border"
             src={
-              groupMembers.find((m) => m.id === selectedAthlete?.uid)
-                ?.profileImageUrl || '/user_avatar.png'
+              users.find((m) => m.uid === selectedAthlete?.uid)?.photoURL ||
+              '/user_avatar.png'
             }
             sx={{
               width: 80,

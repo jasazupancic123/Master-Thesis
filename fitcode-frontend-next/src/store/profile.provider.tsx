@@ -1,29 +1,26 @@
 'use client';
 
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext } from 'react';
 
 import type { ChildrenProps } from '@/common/type/props.type';
-import type { SetState } from '@/common/type/state.type';
-import type { User } from '@/controller/user/type/user.type';
+import type { SetStateNullable } from '@/common/type/state.type';
+import type { AuthUser } from '@/controller/auth/type/user.type';
+import type { Profile } from '@/controller/profile/type/user.type';
 
 export interface ProfileContextProps {
-  user: User;
+  user: AuthUser;
+  profile: Profile;
+  setProfile: SetStateNullable<Profile>;
+  setUser: SetStateNullable<AuthUser>;
 }
 
-interface ProfileProviderProps extends ProfileContextProps {
-  setUser: SetState<User>;
-}
-
-const ProfileContext = createContext<ProfileProviderProps | null>(null);
+const ProfileContext = createContext<ProfileContextProps | null>(null);
 
 export const useProfile = () => useContext(ProfileContext)!;
 
 export function ProfileProvider(props: ProfileContextProps & ChildrenProps) {
-  const { children, user: providedUser } = props;
-  const [user, setUser] = useState<User>(providedUser);
-  const value: ProfileProviderProps = { user, setUser };
-
+  const { children } = props;
   return (
-    <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>
+    <ProfileContext.Provider value={props}>{children}</ProfileContext.Provider>
   );
 }

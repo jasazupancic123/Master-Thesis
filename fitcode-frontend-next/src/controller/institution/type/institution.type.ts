@@ -1,6 +1,6 @@
 import type { BaseEntity } from '@/common/type/entity.type';
 import type { Group } from '@/controller/group/type/group.type';
-import type { User } from '@/controller/user/type/user.type';
+import type { AuthUser } from '@/controller/auth/type/user.type';
 
 export interface Institution extends BaseEntity {
   name: string;
@@ -10,9 +10,9 @@ export interface Institution extends BaseEntity {
   imageUrl: string;
 
   // mapped properties
-  owner: User;
-  trainers: User[];
-  athletes: User[];
+  owner: AuthUser;
+  trainers: AuthUser[];
+  athletes: AuthUser[];
   groups: Group[];
 }
 
