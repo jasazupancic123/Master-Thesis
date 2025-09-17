@@ -1,5 +1,10 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { addMinutes, differenceInMinutes, subMinutes } from 'date-fns';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { addMinutes, isAfter, isBefore, subMinutes } from 'date-fns';
 import {
   CollectionReference,
   DocumentReference,
@@ -132,6 +137,10 @@ export class TrainingRepository extends FirestoreRepository<Training> {
     input: DateRangeDto,
   ) {
     const duration = DURATION_TRAINING_COMPONENT_WARMUP_COOLDOWN_IN_MIN;
+    const query: Update<Training> = {
+      warmup: { ...training.warmup },
+      cooldown: { ...training.cooldown },
+    };
 
     const all = [...training.components].sort(
       (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime(),
@@ -140,51 +149,65 @@ export class TrainingRepository extends FirestoreRepository<Training> {
     const i = all.findIndex((c) => c.id === componentId);
     if (i === -1) throw new NotFoundException('Component not found');
 
-    // helpers
-    const rebuildForward = (start: number) => {
-      for (let j = start; j < all.length; j++) {
-        const prev = all[j - 1];
-        const c = all[j];
-        const durationInMin = differenceInMinutes(c.to, c.from);
-        c.from = prev.to;
-        c.to = addMinutes(c.from, durationInMin);
-      }
-    };
-
-    const rebuildBackward = (start: number) => {
-      for (let j = start; j >= 0; j--) {
-        const next = all[j + 1];
-        const c = all[j];
-        const durationInMin = differenceInMinutes(c.to, c.from);
-        c.to = next.from;
-        c.from = subMinutes(c.to, durationInMin);
-      }
-    };
+    const prev = all[i - 1];
+    const next = all[i + 1];
 
     // update the component itself
     all[i].from = input.from;
     all[i].to = input.to;
 
-    const query: Update<Training> = {};
+    // check that input's to is not more than the next component's to
+    if (next && isAfter(input.to, next.to))
+      throw new BadRequestException(
+        'Cannot extend time beyond the next component',
+      );
 
-    // handle boundaries
+    // same for from
+    if (prev && isBefore(input.from, prev.from))
+      throw new BadRequestException(
+        'Cannot move start time before the previous component',
+      );
+  }
+
+  async deleteComponent(training: Training, componentId: string) {
+    // delete component and adjust times
+    const duration = DURATION_TRAINING_COMPONENT_WARMUP_COOLDOWN_IN_MIN;
+    const query: Update<Training> = {
+      warmup: { ...training.warmup },
+      cooldown: { ...training.cooldown },
+    };
+
+    const all = [...training.components].sort(
+      (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime(),
+    );
+
+    const i = all.findIndex((c) => c.id === componentId);
+    if (i === -1) throw new NotFoundException('Component not found');
+
+    const prev = all[i - 1];
+    const next = all[i + 1];
+
     if (i === 0) {
-      const trainingFrom = subMinutes(input.from, duration);
-      query.from = trainingFrom;
-      query.warmup = { ...training.warmup, from: trainingFrom, to: input.from };
-      rebuildForward(i + 1);
+      // first component → adjust warmup + next
+      if (next) {
+        const trainingFrom = subMinutes(next.from, duration);
+        query.from = trainingFrom;
+        query.warmup.from = trainingFrom;
+        query.warmup.to = next.from;
+      }
     } else if (i === all.length - 1) {
-      const trainingTo = addMinutes(input.to, duration);
-      query.to = trainingTo;
-      query.cooldown = { ...training.cooldown, from: input.to, to: trainingTo };
-      rebuildBackward(i - 1);
-    } else {
-      // middle
-      rebuildBackward(i - 1);
-      rebuildForward(i + 1);
-    }
+      // last component → adjust cooldown + prev
+      if (prev) {
+        const trainingTo = addMinutes(prev.to, duration);
+        query.to = trainingTo;
+        query.cooldown.to = trainingTo;
+        query.cooldown.from = prev.to;
+      }
+    } else if (prev && next)
+      // middle → adjust only immediate neighbors
+      prev.to = next.from;
 
-    query.components = all;
+    query.components = all.filter((c) => c.id !== componentId);
     await this.update(training.id, query);
     return query;
   }

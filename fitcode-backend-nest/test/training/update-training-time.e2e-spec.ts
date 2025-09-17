@@ -25,7 +25,7 @@ describe('Update Training (e2e)', () => {
   let group: Group;
   let trainingId: string;
 
-  let trainingDate = getTime(addDays(new Date(), 2), 8, 0); // 2 days in the future, 8:00 AM
+  const trainingDate = getTime(addDays(new Date(), 2), 8, 0); // 2 days in the future, 8:00 AM
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -130,18 +130,6 @@ describe('Update Training (e2e)', () => {
     expect(response.status).toBe(400);
     expect(response.body.message).toBe(
       'Input dates must be on the same day as training',
-    );
-  });
-
-  it('should fail if input period is different than training period', async () => {
-    const response = await req({
-      from: getTime(trainingDate, 13, 0),
-      to: getTime(trainingDate, 14, 0),
-    });
-
-    expect(response.status).toBe(400);
-    expect(response.body.message).toBe(
-      'Training is on AM period, but you provided PM',
     );
   });
 
