@@ -1,5 +1,4 @@
 import { Box, Collapse, Divider, Stack, Typography } from '@mui/material';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import ComponentActionsModal from '../component-actions-modal/component-actions-modal';
@@ -15,37 +14,22 @@ import {
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
 import type { Method } from '@/controller/method/type/method.type';
-import { TrainingController } from '@/controller/training/training.controller';
-import type { Training } from '@/controller/training/type/training.type';
-import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useGroup } from '@/store/group.provider';
-import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 
 export default function TrainingComponentLayout(props: TrainingComponentProps) {
   const screenSize = useScreenSize();
-  const router = useRouter();
 
   const { trainingComponent, day } = props;
 
-  const {
-    components: allComponents,
-    exercises: allExercises,
-    methods: allMethods,
-  } = useMain();
-  const { filter, setTrainings } = useGroup();
+  const { filter } = useGroup();
 
-  const auth = useAuthenticatedAuth();
-  const controller = TrainingController.getInstance(auth.token);
   const { training, component } = useTrainerDayViewContext();
 
   const [openAddExerciseModal, setOpenAddExerciseModal] = useState(false);
   const [openCalendarModal, setOpenCalendarModal] = useState(false);
   const [heatmapView, setHeatmapView] = useState(false);
-  const [openOverwriteModal, setOpenOverwriteModal] = useState(false);
-  const [trainingInPeriodForModal, setTrainingInPeriodForModal] =
-    useState<Training | null>(null);
   const [expandedExercisesView, setExpandedExercisesView] = useState(false);
 
   const getMethodsLimitsString = (method: Method): string => {
@@ -221,8 +205,6 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
       >
         <ComponentActionsModal
           trainingComponent={trainingComponent}
-          setOpenOverwriteModal={setOpenOverwriteModal}
-          setTrainingInPeriodForModal={setTrainingInPeriodForModal}
           day={day}
         />
       </MyModal>

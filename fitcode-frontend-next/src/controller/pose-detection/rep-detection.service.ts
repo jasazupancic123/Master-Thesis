@@ -1,19 +1,17 @@
-import { RefObject } from 'react';
+import type { RefObject } from 'react';
+
 import { KeypointHistory } from './class/keypoint-history';
-import { StatusDetectionService } from './status-detection.service';
-import { DetectionStatus } from './enum/detection-status';
-import { KeypointId } from './enum/keypoint-id';
-import { KeypointValueType } from './enum/keypoint-value-type';
-import { RepStatus } from './enum/rep-state';
-import {
-  ConditionDirection,
-  ExerciseRepStartCondition,
-} from './type/exercise-start-condition.type';
-import { Keypoint } from './type/keypoint.type';
-import { KeypointUtil } from './util/keypoint.util';
-import { Rep } from './type/rep.type';
-import { RepState } from './type/rep-state.type';
 import { POSE_DETECTION_CONSTRAINTS } from './const/pose-detection-constrains.const';
+import { ConditionDirection } from './enum/condition-detection.enum';
+import type { KeypointId } from './enum/keypoint-id';
+import type { KeypointValueType } from './enum/keypoint-value-type';
+import { RepStatus } from './enum/rep-state';
+import { StatusDetectionService } from './status-detection.service';
+import type { ExerciseRepStartCondition } from './type/exercise-start-condition.type';
+import type { Keypoint } from './type/keypoint.type';
+import type { Rep } from './type/rep.type';
+import type { RepState } from './type/rep-state.type';
+import { KeypointUtil } from './util/keypoint.util';
 
 export class RepDetectionService {
   /*
@@ -184,27 +182,14 @@ export class RepDetectionService {
     if (startKCheckIndex < 0) return; // not enough frames yet
 
     let hit = 0;
-    const anyDirectionBuffer = [];
 
     for (let i = startKCheckIndex; i < startKCheckIndex + totalNumFrames; i++) {
       const K = velocity[i] / Math.max(scale, 1e-6);
 
       const lookingForPositiveK = direction === ConditionDirection.NEGATIVE;
 
-      if (direction === ConditionDirection.ANY) anyDirectionBuffer.push(K);
-      else if (lookingForPositiveK && K >= 0) hit++;
+      if (lookingForPositiveK && K >= 0) hit++;
       else if (!lookingForPositiveK && K <= 0) hit++;
-    }
-
-    // Validate any buffer
-    if (direction === ConditionDirection.ANY && anyDirectionBuffer.length) {
-      let firstValuePositive = anyDirectionBuffer[0] > 0;
-      for (const v of anyDirectionBuffer) {
-        if ((firstValuePositive && v >= 0) || (!firstValuePositive && v <= 0)) {
-          hit++;
-          break;
-        }
-      }
     }
 
     if (hit === totalNumFrames) {
@@ -421,20 +406,6 @@ export class RepDetectionService {
       detectingRepStart: true,
     });
 
-    // If ANY and found, infer actual direction from sustained window
-    let effDir = direction;
-    if (direction === ConditionDirection.ANY && slope !== undefined) {
-      const meanLast = (() => {
-        let sum = 0;
-        for (let k = 0; k < sustainW; k++) sum += velocity[slope - k];
-        return sum / sustainW;
-      })();
-      effDir =
-        meanLast <= 0
-          ? ConditionDirection.NEGATIVE
-          : ConditionDirection.POSITIVE;
-    }
-
     // 4) If nothing found, fallback to global extremum consistent with effDir
     if (slope === undefined) {
       if (direction === ConditionDirection.POSITIVE) {
@@ -481,26 +452,8 @@ export class RepDetectionService {
 
     // 5) Slope found, find last local extremum before s within preWindow
     const left = Math.max(0, slope - preWindow);
-    let extremumIdx = left,
+    const extremumIdx = left,
       extremumVal = values[left];
-
-    if (effDir === ConditionDirection.NEGATIVE) {
-      // look for local MAX
-      for (let i = left + 1; i <= slope; i++) {
-        if (values[i] >= extremumVal) {
-          extremumVal = values[i];
-          extremumIdx = i;
-        }
-      }
-    } else {
-      // look for local MIN
-      for (let i = left + 1; i <= slope; i++) {
-        if (values[i] <= extremumVal) {
-          extremumVal = values[i];
-          extremumIdx = i;
-        }
-      }
-    }
 
     return { startIndex: extremumIdx, startValue: extremumVal };
   }
@@ -579,23 +532,6 @@ export class RepDetectionService {
             currentRepRef.current.buffer.history.length - 1;
         }
         break;
-      }
-      case ConditionDirection.ANY: {
-        if (
-          (extremeValue === undefined &&
-            !this.checkValueCloseEnoughToStartValue(
-              currentValue,
-              recordedRepsRef,
-              currentRepRef
-            )) ||
-          (extremeValue !== undefined &&
-            Math.abs(currentValue - extremeValue) >
-              Math.abs(extremeValue - currentRepRef.current.startValue))
-        ) {
-          currentRepRef.current.extremeValue = currentValue;
-          currentRepRef.current.extremeValueIndex =
-            currentRepRef.current.buffer.history.length - 1;
-        }
       }
     }
   }

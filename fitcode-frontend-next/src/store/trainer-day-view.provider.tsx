@@ -12,18 +12,18 @@ import type { Day } from '@/common/service/util/date.util';
 import type { Pagination } from '@/common/type/paginate.type';
 import type { ChildrenProps } from '@/common/type/props.type';
 import { handleApiRequest } from '@/common/type/state.type';
+import type { AuthUser } from '@/controller/auth/type/user.type';
 import { Controller } from '@/controller/controller';
 import { ExerciseService } from '@/controller/exercise/exercise.service';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
+import type { Profile } from '@/controller/profile/type/user.type';
+import type { WellnessZScore } from '@/controller/profile/type/wellness.type';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
 import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import type { Workload } from '@/controller/training/type/workload.type';
-import type { Profile } from '@/controller/profile/type/user.type';
-import type { AuthUser } from '@/controller/auth/type/user.type';
-import type { WellnessZScore } from '@/controller/profile/type/wellness.type';
 
 const commonService = CommonService.instance;
 
