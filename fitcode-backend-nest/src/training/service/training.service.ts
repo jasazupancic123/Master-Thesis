@@ -11,7 +11,6 @@ import {
 import { OnEvent } from '@nestjs/event-emitter';
 import {
   addMinutes,
-  differenceInMinutes,
   endOfDay,
   isBefore,
   isSameDay,
@@ -72,7 +71,6 @@ import { WellnessService } from '@src/profile/service/wellness.service';
 import {
   DURATION_TRAINING_COMPONENT_IN_MIN,
   DURATION_TRAINING_COMPONENT_WARMUP_COOLDOWN_IN_MIN,
-  MAX_DURATION_TRAINING_IN_MIN,
   MAX_NUM_TRAININGS_PER_DAY,
 } from '../constant/training-limits.constant';
 import {
@@ -302,7 +300,7 @@ export class TrainingService implements Permission<Training, Institution> {
     inputComponents.push(cooldown);
     this.validateIsDateInCycle(warmup.from, cycle);
     this.validateIsDateInFuture(warmup.from);
-    await this.validateOverlap(
+    await this.validateOverlapAndMaxLimit(
       user,
       { groupId, cycleId, trainingId: null }, // no trainingId for new training
       warmup.from,
@@ -459,11 +457,9 @@ export class TrainingService implements Permission<Training, Institution> {
         'You cannot update warmup and cooldown times',
       );
 
+    this.validateIsDateInFuture(training.from);
     if (isBefore(input.to, input.from))
       throw new BadRequestException('Invalid date range');
-
-    // validate overlap
-    this.validateIsDateInFuture(training.from);
 
     // input from and to must be on the same day as training from
     if (
@@ -473,6 +469,18 @@ export class TrainingService implements Permission<Training, Institution> {
       throw new BadRequestException(
         'Input dates must be on the same day as training',
       );
+
+    // validate overlap
+    await this.validateOverlap(
+      user,
+      {
+        groupId: training.groupId,
+        cycleId: training.cycleId,
+        trainingId: training.id,
+      },
+      input.from,
+      input.to,
+    );
 
     return await this.repository.updateComponentTime(
       training,
@@ -593,14 +601,11 @@ export class TrainingService implements Permission<Training, Institution> {
     return { ...training, ...query };
   }
 
+  @LogMethod()
   async deleteComponent(
     ref: TrainingComponentRef,
     user: User,
   ): Promise<Training> {
-    this.logger.log(
-      `User ${user.uid} is deleting component ${ref.componentId} from training ${ref.trainingId}`,
-    );
-
     // validate ownership
     const training = await this.findOneByIdOrFail(user, ref);
     this.validateCanEdit(user, training, training.institution);
@@ -615,21 +620,12 @@ export class TrainingService implements Permission<Training, Institution> {
       return { ...training, components: [] };
     }
 
-    filtered.unshift(training.warmup);
-    filtered.push(training.cooldown);
-    this.updateTrainingTimes(filtered);
-
-    training.components = filtered.filter(
-      (c) => c.id !== WARMUP_COMPONENT_ID && c.id !== COOLDOWN_COMPONENT_ID,
+    const query = await this.repository.deleteComponent(
+      training,
+      ref.componentId,
     );
 
-    // get query for training
-    const [query, updatedTraining] =
-      this.trainingPlanService.getDeleteComponentQuery(training, ref);
-
-    // delete component
-    await this.repository.update(ref.trainingId, query);
-    return updatedTraining;
+    return { ...training, ...query };
   }
 
   @LogMethod()
@@ -1011,64 +1007,7 @@ export class TrainingService implements Permission<Training, Institution> {
     return found;
   }
 
-  private updateTrainingTimes(
-    newComponents: Pick<TrainingComponent, 'id' | 'from' | 'to'>[], // with warmup and cooldown
-  ) {
-    // sort new components by from date
-    const sorted = newComponents
-      .filter(
-        (c) => c.id !== WARMUP_COMPONENT_ID && c.id !== COOLDOWN_COMPONENT_ID,
-      ) // remove warmup and cooldown components for sorting
-      .sort((a, b) => new Date(a.from).getTime() - new Date(b.from).getTime());
-
-    if (sorted.length < 1)
-      // 2 are reserved for warmup and cooldown
-      throw new BadRequestException(
-        'Training must have at least one component',
-      );
-
-    const warmup = newComponents.find((c) => c.id === WARMUP_COMPONENT_ID);
-    const cooldown = newComponents.find((c) => c.id === COOLDOWN_COMPONENT_ID);
-
-    const warmupDurationMin = differenceInMinutes(warmup!.to, warmup!.from);
-    const cooldownDurationMin = differenceInMinutes(
-      cooldown!.to,
-      cooldown!.from,
-    );
-
-    // update warmup and cooldown times
-    warmup!.from = subMinutes(sorted[0].from, warmupDurationMin);
-    warmup!.to = sorted[0].from;
-
-    cooldown!.from = sorted[sorted.length - 1].to;
-    cooldown!.to = addMinutes(
-      sorted[sorted.length - 1].to,
-      cooldownDurationMin,
-    );
-
-    sorted.unshift(warmup!);
-    sorted.push(cooldown!);
-
-    const duration = differenceInMinutes(
-      sorted[0].to,
-      sorted[sorted.length - 1].from,
-    );
-
-    const maxDuration = MAX_DURATION_TRAINING_IN_MIN;
-    if (duration > maxDuration)
-      throw new BadRequestException(
-        `Training cannot last more than ${maxDuration} minutes`,
-      );
-
-    // make sure that new components' times are continuous
-    for (let i = 0; i < sorted.length - 1; i++) {
-      const curr = sorted[i];
-      const next = sorted[i + 1];
-      curr.to = next.from;
-    }
-  }
-
-  private async validateOverlap(
+  private async validateOverlapAndMaxLimit(
     user: User,
     ref: CycleRef & Partial<TrainingRef>,
     from: Date,
@@ -1091,6 +1030,38 @@ export class TrainingService implements Permission<Training, Institution> {
       throw new BadRequestException(
         'Maximum number of trainings per day reached',
       );
+
+    const isOverlap = trainings.some((training) =>
+      this.commonService.date.doRangesOverlap(
+        from,
+        to,
+        training.from,
+        training.to,
+      ),
+    );
+
+    if (isOverlap)
+      throw new BadRequestException('Training overlaps with other training');
+  }
+
+  private async validateOverlap(
+    user: User,
+    ref: CycleRef & Partial<TrainingRef>,
+    from: Date,
+    to: Date,
+  ) {
+    const trainings = (
+      await this.findAll(
+        user,
+        {
+          groupId: ref.groupId,
+          cycleId: ref.cycleId,
+          from: startOfDay(from),
+          to: endOfDay(from),
+        },
+        { limit: MAX_NUM_TRAININGS_PER_DAY },
+      )
+    ).filter((t) => t.id !== ref.trainingId); // filter out the training being added/updated
 
     const isOverlap = trainings.some((training) =>
       this.commonService.date.doRangesOverlap(

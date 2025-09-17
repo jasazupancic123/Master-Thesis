@@ -23,10 +23,7 @@ import { DeepPick } from '@src/common/interface/deep-pick.interface';
 import { CommonService } from '@src/common/service/common.service';
 import { Update } from '@src/common/type/entity.type';
 import { User } from '@src/common/type/firebase-auth.type';
-import {
-  ComponentRef,
-  TrainingComponentRef,
-} from '@src/common/type/firestore.type';
+import { ComponentRef } from '@src/common/type/firestore.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
 import { ComponentService } from '@src/component/component.service';
 import { DEFAULT_PARAMS_KEY } from '@src/component/constant/param.constant';
@@ -241,20 +238,6 @@ export class TrainingPlanService {
         }
 
     return exercises;
-  }
-
-  getDeleteComponentQuery(
-    training: Training,
-    ref: TrainingComponentRef,
-  ): [Update<Training>, Training] {
-    const updatedComponents = training.components.filter(
-      (c) => c.id !== ref.componentId,
-    );
-
-    const query: Update<Training> = { components: updatedComponents };
-    training.components = updatedComponents;
-
-    return [query, training];
   }
 
   getAddCompletedMemberQuery(
