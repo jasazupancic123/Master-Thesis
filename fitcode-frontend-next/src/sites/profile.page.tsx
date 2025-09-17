@@ -30,28 +30,37 @@ import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
 import { handleApiRequest } from '@/common/type/state.type';
 import FaceCapture from '@/components/face-capture/face-capture';
 import FileUpload from '@/components/file-upload/file-upload';
-import { Gender } from '@/controller/user/enum/gender.enum';
-import { SportLevel } from '@/controller/user/enum/sport-level.enum';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
-import type { UserEntity } from '@/controller/user/type/user.type';
-import { UserController } from '@/controller/user/user.controller';
+import { AuthController } from '@/controller/auth/auth.controller';
+import type { AuthUser } from '@/controller/auth/type/user.type';
+import { Gender } from '@/controller/profile/enum/gender.enum';
+import { SportLevel } from '@/controller/profile/enum/sport-level.enum';
+import { UserRole } from '@/controller/profile/enum/user-role.enum';
+import { ProfileController } from '@/controller/profile/profile.controller';
+import type { Profile } from '@/controller/profile/type/user.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
-import { useMain } from '@/store/main.provider';
+import { useProfile } from '@/store/profile.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 const DEFAULT_MARGIN = 1;
 
 export default function ProfilePage() {
-  const { user, setDisplayName, customClaims, token } = useAuthenticatedAuth();
-  const { profile: profileGlobal, setProfile: setProfileGlobal } = useMain();
+  const { user, setUser, customClaims, token } = useAuthenticatedAuth();
 
   const theme = useTheme();
   const router = useRouter();
   const screenSize = useScreenSize();
 
-  const [profile, setProfile] = useState<UserEntity>({
-    ...profileGlobal,
-  } as UserEntity);
+  const { profile: profileGlobal, setProfile: setProfileGlobal } = useProfile();
+
+  const [profile, setProfile] = useState<
+    Omit<Profile, 'createdAt' | 'updatedAt'>
+  >({
+    id: user.uid,
+    sport: profileGlobal?.sport,
+    level: profileGlobal?.level,
+    gender: profileGlobal?.gender,
+    birthDate: profileGlobal?.birthDate,
+  });
 
   const [isCapturingFace, setIsCapturingFace] = useState<boolean>(false);
   const [captures, setCaptures] = useState<{
@@ -68,50 +77,48 @@ export default function ProfilePage() {
   const [updatedProfile, setUpdatedProfile] = useState(false);
   const [updatedUser, setUpdatedUser] = useState(false);
 
-  function handleChangeProfile<K extends keyof UserEntity>(
+  function handleChangeProfile<K extends keyof Profile>(
     key: K,
-    value: UserEntity[K]
+    value: Profile[K]
   ) {
     const newProfile = { ...profile, [key]: value };
-    setProfile(newProfile as UserEntity);
+    setProfile(newProfile);
     setUpdatedProfile(true);
   }
 
-  function handleUpdateDisplayName(value: string) {
-    setDisplayName(value);
+  function handleChangeUser<K extends keyof AuthUser>(
+    key: K,
+    value: AuthUser[K]
+  ) {
+    const newUser = { ...user, [key]: value };
+    setUser(newUser);
     setUpdatedUser(true);
   }
 
   async function handleSaveProfile() {
     if (updatedProfile) {
       if (!profile) return;
-      const {
-        sport,
-        level,
-        gender,
-        profileImageUrl,
-        firstName,
-        lastName,
-        phone,
-        birthDate,
-      } = profile;
+      const { sport, level, gender, birthDate } = profile;
 
       handleApiRequest(
         router,
         () =>
-          UserController.getInstance(token).updateProfile({
+          ProfileController.getInstance(token).update({
             sport,
             level,
             gender,
-            profileImageUrl,
-            firstName,
-            phone,
-            lastName,
             birthDate,
             userId: profile.id,
           }),
         (_) => {
-          setProfileGlobal(profile);
+          setProfileGlobal((prev) => ({
+            ...prev!,
+            sport,
+            level,
+            gender,
+            birthDate,
+          }));
+
           toast.success('Profile updated successfully');
         },
         undefined,
@@ -121,6 +128,21 @@ export default function ProfilePage() {
 
     if (updatedUser) {
       // logic here
+      const { displayName, photoURL } = user;
+
+      handleApiRequest(
+        router,
+        () =>
+          AuthController.getInstance(token).updateUser(user.uid, {
+            displayName,
+            photoURL,
+          }),
+        (_) => {
+          toast.success('User updated successfully');
+        },
+        undefined,
+        'Failed to update user'
+      );
     }
   }
 
@@ -175,12 +197,13 @@ export default function ProfilePage() {
             <ArrowBack />
           </IconButton>
         </Box>
+
         <FileUpload
           input="image"
           label="Upload Profile Image"
-          initialFileUrl={profile?.profileImageUrl || undefined}
+          initialFileUrl={user.photoURL || undefined}
           sx={{ width: 200, margin: 'auto', height: 150 }}
-          dissableBorder={profile?.profileImageUrl ? true : false}
+          dissableBorder={user?.photoURL ? true : false}
           makeRound
           onFileUpload={async (file) => {
             const path = `user/${user.uid}/${file.name}`;
@@ -189,8 +212,7 @@ export default function ProfilePage() {
               path
             );
 
-            const newProfile = { ...profile, profileImageUrl: url };
-            setProfile(newProfile as UserEntity);
+            handleChangeUser('photoURL', url);
           }}
         />
 
@@ -206,7 +228,7 @@ export default function ProfilePage() {
             variant="outlined"
             sx={{ flex: 1 }}
             value={user?.displayName}
-            onChange={(e) => handleUpdateDisplayName(e.target.value)}
+            onChange={(e) => handleChangeUser('displayName', e.target.value)}
           />
         </Box>
 
@@ -247,17 +269,6 @@ export default function ProfilePage() {
             />
           </LocalizationProvider>
         </Box>
-
-        {/* Phone Number Input */}
-        <TextField
-          label={!profile?.phone ? 'Phone Number' : undefined}
-          value={profile?.phone}
-          variant="outlined"
-          type="tel" // Triggers numeric keyboard on mobile
-          inputProps={{ pattern: '[0-9]*' }}
-          sx={{ width: '100%', my: DEFAULT_MARGIN }}
-          onChange={(e) => handleChangeProfile('phone', e.target.value)}
-        />
 
         <Box
           display="flex"

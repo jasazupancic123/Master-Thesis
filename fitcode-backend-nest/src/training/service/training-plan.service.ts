@@ -4,10 +4,15 @@ import {
   forwardRef,
   Inject,
   Injectable,
-  Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { addMinutes, subMinutes } from 'date-fns';
+import {
+  addMinutes,
+  getHours,
+  setHours,
+  setMinutes,
+  subMinutes,
+} from 'date-fns';
 
 import { GLOBAL_EXERCISE_OWNER } from '@src//exercise/constant/global-exercise-owner.constant';
 import { Institution } from '@src//institution/entity/institution.entity';
@@ -18,10 +23,7 @@ import { DeepPick } from '@src/common/interface/deep-pick.interface';
 import { CommonService } from '@src/common/service/common.service';
 import { Update } from '@src/common/type/entity.type';
 import { User } from '@src/common/type/firebase-auth.type';
-import {
-  ComponentRef,
-  TrainingComponentRef,
-} from '@src/common/type/firestore.type';
+import { ComponentRef } from '@src/common/type/firestore.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
 import { ComponentService } from '@src/component/component.service';
 import { DEFAULT_PARAMS_KEY } from '@src/component/constant/param.constant';
@@ -43,25 +45,35 @@ import { InstitutionService } from '@src/institution/service/institution.service
 import { Method } from '@src/method/entity/method.entity';
 
 import { MAIN_GROUP_PARENT_ID } from '../constant/main-group-parent-id.constant';
-import { DEFAULT_WARMUP_AND_COOLDOWN_DURATION } from '../constant/training-component-duration.constant';
+import {
+  AM_PM_HOUR_DIVIDER,
+  DURATION_TRAINING_COMPONENT_WARMUP_COOLDOWN_IN_MIN,
+  MAX_NUM_COMPONENTS_IN_TRAINING,
+  MAX_NUM_EXERCISES_IN_BLOCK_SUPERSET,
+  MAX_NUM_EXERCISES_IN_CIRCUIT_SUPERSET,
+  MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT,
+  MAX_NUM_SUPERSETS_IN_CIRCUIT_COMPONENT,
+} from '../constant/training-limits.constant';
 import { CompletedTrainingExercise } from '../entity/completed-training.entity';
 import { ExerciseSet } from '../entity/exercise-set.entity';
 import { Subgroup } from '../entity/subgroup.entity';
 import { Superset } from '../entity/superset.entity';
 import { Training } from '../entity/training.entity';
-import { TrainingComponent } from '../entity/training-component.entity';
+import {
+  TrainingComponent,
+  TrainingComponentWithoutTime,
+} from '../entity/training-component.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
 import { TrainingExerciseAverageStats } from '../entity/training-exercise-average-stats.entity';
 import { MainSet } from '../enum/main-set.enum';
+import { TrainingPeriod } from '../enum/training-period.enum';
 import {
   UpdateSuperset,
-  UpdateTrainingComponent,
+  UpdateTrainingComponentWithoutTime,
 } from '../interface/update-training.interface';
 
 @Injectable()
 export class TrainingPlanService {
-  private readonly logger = new Logger(TrainingPlanService.name);
-
   constructor(
     private readonly commonService: CommonService,
     private readonly attributeService: AttributeService,
@@ -80,6 +92,21 @@ export class TrainingPlanService {
       });
 
     return null;
+  }
+
+  getStartTime(period: TrainingPeriod, date = new Date()): Date {
+    switch (period) {
+      case TrainingPeriod.AM:
+        return setHours(setMinutes(date, 0), 8); // 8:00 AM
+      case TrainingPeriod.PM:
+        return setHours(setMinutes(date, 0), 14); // 2:00 PM
+    }
+  }
+
+  getPeriod(date: Date): TrainingPeriod {
+    const hours = getHours(date);
+    if (hours < AM_PM_HOUR_DIVIDER) return TrainingPeriod.AM;
+    return TrainingPeriod.PM;
   }
 
   async validateCanViewExercise(user: User, exercise: Exercise) {
@@ -213,52 +240,6 @@ export class TrainingPlanService {
     return exercises;
   }
 
-  getAddComponentsQuery(
-    training: Training,
-    input: Update<TrainingComponent>[],
-  ): [Update<Training>, Training] {
-    const lastComponent = training.components[training.components.length - 1];
-
-    const query: Update<Training> = {
-      to: training.cooldown.to,
-      components: [
-        ...training.components.filter(
-          (c) => c.id !== WARMUP_COMPONENT_ID && c.id !== COOLDOWN_COMPONENT_ID,
-        ),
-        ...input.map((c) => ({
-          id: c.id,
-          color: c.color,
-          from: c.from ? c.from : addMinutes(lastComponent.from, 30),
-          to: c.to ? c.to : addMinutes(lastComponent.from, 60),
-          completedMembersIds: [],
-          mainSet: c.mainSet || MainSet.BLOCK,
-          target: c.target,
-          methodId: c.methodId,
-          subgroups: [],
-          supersets: [],
-        })),
-      ],
-    };
-
-    training.to = query.to;
-    training.components = query.components;
-    return [query, training];
-  }
-
-  getDeleteComponentQuery(
-    training: Training,
-    ref: TrainingComponentRef,
-  ): [Update<Training>, Training] {
-    const updatedComponents = training.components.filter(
-      (c) => c.id !== ref.componentId,
-    );
-
-    const query: Update<Training> = { components: updatedComponents };
-    training.components = updatedComponents;
-
-    return [query, training];
-  }
-
   getAddCompletedMemberQuery(
     training: Training,
     ref: { componentId: string; uid: string },
@@ -378,7 +359,7 @@ export class TrainingPlanService {
 
   validateTrainingComponents(
     existingTraining: Training | null,
-    newTrainingComponents: UpdateTrainingComponent[], // with warmup and cooldown
+    newTrainingComponents: UpdateTrainingComponentWithoutTime[], // with warmup and cooldown
     trainingMemberIds: string[],
     data: {
       exercises: Exercise[];
@@ -386,16 +367,15 @@ export class TrainingPlanService {
       methods: Method[];
       attributes: Attribute[];
     },
-  ): TrainingComponent[] {
+  ): TrainingComponentWithoutTime[] {
     const { components, methods } = data;
-    const validTrainingComponents: TrainingComponent[] = [];
-    const duplicates = new Set<string>();
+    const validTrainingComponents: TrainingComponentWithoutTime[] = [];
 
-    for (let i = 0; i < newTrainingComponents.length; i++) {
-      const curr = newTrainingComponents[i];
-      const component = components.find((c) => c.id === curr.id);
+    const duplicates = new Set<string>();
+    for (const newComponent of newTrainingComponents) {
+      const component = components.find((c) => c.id === newComponent.id);
       const existingTrainingComponent = existingTraining?.components?.find(
-        (c) => c.id === curr.id,
+        (c) => c.id === newComponent.id,
       );
 
       // validate components are valid
@@ -406,8 +386,8 @@ export class TrainingPlanService {
         );
 
       // validate method
-      if (curr.methodId) {
-        const method = methods.find((m) => m.id === curr.methodId);
+      if (newComponent.methodId) {
+        const method = methods.find((m) => m.id === newComponent.methodId);
         if (!method)
           throw new NotFoundException(
             'Method not found for training component',
@@ -415,27 +395,24 @@ export class TrainingPlanService {
       }
 
       // check duplicates
-      if (duplicates.has(curr.id))
+      if (duplicates.has(newComponent.id))
         throw new BadRequestException(`Duplicate component ${component.name}`);
       duplicates.add(component.id);
 
-      // validate training component times
-      const next = newTrainingComponents[i + 1];
-      if (next) {
-        const nextComponent = components.find((c) => c.id === next.id);
-        if (i < newTrainingComponents.length - 1 && nextComponent)
-          if (curr.from >= next.from)
-            throw new BadRequestException(
-              `Component ${component.name} has to start before ${nextComponent.name}`,
-            );
-      }
-
       // validate supersets and subgroups
-      const supersets = this.validateSupersets(curr, curr, data);
-      const subgroups = this.validateSubgroups(curr, trainingMemberIds, data);
+      const supersets = this.validateSupersets(
+        newComponent,
+        newComponent,
+        data,
+      );
+      const subgroups = this.validateSubgroups(
+        newComponent,
+        trainingMemberIds,
+        data,
+      );
 
       validTrainingComponents.push({
-        ...curr,
+        ...newComponent,
         supersets,
         subgroups,
         completedMembersIds:
@@ -443,10 +420,10 @@ export class TrainingPlanService {
       });
     }
 
-    if (validTrainingComponents.length > 7)
+    if (validTrainingComponents.length > MAX_NUM_COMPONENTS_IN_TRAINING + 2)
       // warmup and cooldown are already included in the count
       throw new ConflictException(
-        'You can only have up to 5 components per training',
+        `You can only have up to ${MAX_NUM_COMPONENTS_IN_TRAINING} components per training`,
       );
 
     return validTrainingComponents;
@@ -511,7 +488,7 @@ export class TrainingPlanService {
   }
 
   validateSupersets(
-    trainingComponent: UpdateTrainingComponent,
+    trainingComponent: UpdateTrainingComponentWithoutTime,
     item: { supersets: UpdateSuperset[]; mainSet: MainSet },
     data: {
       components: Component[];
@@ -526,14 +503,16 @@ export class TrainingPlanService {
 
     switch (mainSet) {
       case MainSet.BLOCK:
-        if (newSupersets.length > 8)
+        if (newSupersets.length > MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT)
           throw new ConflictException(
-            'You can only have up to 8 supersets per training component for block sets',
+            `You can only have up to ${MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT} supersets per training component for block sets`,
           );
         break;
       case MainSet.CIRCUIT:
-        if (newSupersets.length > 1)
-          throw new ConflictException('You can only have one circuit set');
+        if (newSupersets.length > MAX_NUM_SUPERSETS_IN_CIRCUIT_COMPONENT)
+          throw new ConflictException(
+            `You can only have ${MAX_NUM_SUPERSETS_IN_CIRCUIT_COMPONENT} circuit set`,
+          );
     }
 
     const component = components.find((c) => c.id === trainingComponent.id)!;
@@ -545,15 +524,15 @@ export class TrainingPlanService {
       // validate max exercises per superset
       switch (mainSet) {
         case MainSet.BLOCK:
-          if (superset.exercises.length > 4)
+          if (superset.exercises.length > MAX_NUM_EXERCISES_IN_BLOCK_SUPERSET)
             throw new ConflictException(
-              'You can only have up to 4 exercises per superset for block sets',
+              `You can only have up to ${MAX_NUM_EXERCISES_IN_BLOCK_SUPERSET} exercises per superset for block sets`,
             );
           break;
         case MainSet.CIRCUIT:
-          if (superset.exercises.length > 16)
+          if (superset.exercises.length > MAX_NUM_EXERCISES_IN_CIRCUIT_SUPERSET)
             throw new ConflictException(
-              'You can only have up to 16 exercises per superset for circuit sets',
+              `You can only have up to ${MAX_NUM_EXERCISES_IN_CIRCUIT_SUPERSET} exercises per superset for circuit sets`,
             );
       }
 
@@ -638,7 +617,7 @@ export class TrainingPlanService {
   }
 
   validateSubgroups(
-    trainingComponent: UpdateTrainingComponent,
+    trainingComponent: UpdateTrainingComponentWithoutTime,
     trainingMemberIds: string[],
     data: {
       components: Component[];
@@ -817,7 +796,10 @@ export class TrainingPlanService {
 
     const warmup: TrainingComponent = {
       id: WARMUP_COMPONENT_ID,
-      from: subMinutes(startTime, DEFAULT_WARMUP_AND_COOLDOWN_DURATION),
+      from: subMinutes(
+        startTime,
+        DURATION_TRAINING_COMPONENT_WARMUP_COOLDOWN_IN_MIN,
+      ),
       to: startTime,
       mainSet: MainSet.BLOCK,
       supersets: [],
@@ -828,7 +810,10 @@ export class TrainingPlanService {
     const cooldown: TrainingComponent = {
       id: COOLDOWN_COMPONENT_ID,
       from: endTime,
-      to: addMinutes(endTime, DEFAULT_WARMUP_AND_COOLDOWN_DURATION),
+      to: addMinutes(
+        endTime,
+        DURATION_TRAINING_COMPONENT_WARMUP_COOLDOWN_IN_MIN,
+      ),
       mainSet: MainSet.BLOCK,
       supersets: [],
       subgroups: [],

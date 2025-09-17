@@ -1,5 +1,7 @@
 import {
   BadRequestException,
+  forwardRef,
+  Inject,
   Injectable,
   Logger,
   NotFoundException,
@@ -7,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
+import { AuthService } from '@src/auth/auth.service';
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
 import { Permission } from '@src/common/interface/permission.interface';
 import { CommonService } from '@src/common/service/common.service';
@@ -14,9 +17,10 @@ import { Create } from '@src/common/type/entity.type';
 import { User } from '@src/common/type/firebase-auth.type';
 import { InstitutionRef } from '@src/common/type/firestore.type';
 import { BatchWriteOperation } from '@src/common/type/orm.type';
+import { Wrapper } from '@src/common/type/wrapper.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
-import { UserEntity } from '@src/user/entity/user.entity';
-import { UserService } from '@src/user/service/user.service';
+import { Profile } from '@src/profile/entity/profile.entity';
+import { ProfileService } from '@src/profile/service/profile.service';
 
 import { INSTITUTION_ATHLETE_EVENT } from '../constant/update-institution-athlete-event.constant';
 import { CreateInstitutionDto } from '../dto/create-institution.dto';
@@ -35,8 +39,10 @@ export class InstitutionService implements Permission<Institution> {
     private readonly firebaseService: FirebaseService,
     private readonly commonService: CommonService,
     private readonly eventEmitter: EventEmitter2,
-    private readonly userService: UserService,
+    @Inject(forwardRef(() => AuthService))
+    private readonly authService: Wrapper<AuthService>,
     private readonly repository: InstitutionRepository,
+    private readonly profileService: ProfileService,
   ) {}
 
   async getDoc(ref: InstitutionRef): Promise<Institution | null> {
@@ -72,7 +78,7 @@ export class InstitutionService implements Permission<Institution> {
       `User ${user.uid} is creating institution: ${JSON.stringify(input)}`,
     );
 
-    const owner = await this.userService.findOneBy('id', input.ownerId);
+    const owner = await this.authService.findOneBy('id', input.ownerId);
     if (!owner)
       throw new BadRequestException(
         'Owner of the new institution does not exist',
@@ -125,9 +131,9 @@ export class InstitutionService implements Permission<Institution> {
   async findMembers(
     ref: InstitutionRef,
     type: GetMembersType,
-  ): Promise<UserEntity[]> {
+  ): Promise<Profile[]> {
     const institution = await this.getDocByIdOrFail(ref);
-    const collection = this.userService.getCollection();
+    const collection = this.profileService.getCollection();
 
     const ids =
       type === GetMembersType.ATHLETES
@@ -155,7 +161,7 @@ export class InstitutionService implements Permission<Institution> {
     if (!this.canEdit(user, institution))
       throw new UnauthorizedException('You cannot edit this institution');
 
-    const member = await this.userService.findOneBy('id', input.userId);
+    const member = await this.authService.findOneBy('id', input.userId);
     if (!member) throw new BadRequestException('Member does not exist');
 
     if (trainer) {
@@ -180,16 +186,17 @@ export class InstitutionService implements Permission<Institution> {
         ),
       ];
 
-      // update athlete in all groups & trainings
-      await this.eventEmitter.emitAsync(
-        INSTITUTION_ATHLETE_EVENT,
-        new UpdateInstitutionAthleteEvent({
-          operations,
-          institutionId: institution.id,
-          userId: member.uid,
-          add,
-        }),
-      );
+      // remove athlete in all groups & trainings
+      if (!add)
+        await this.eventEmitter.emitAsync(
+          INSTITUTION_ATHLETE_EVENT,
+          new UpdateInstitutionAthleteEvent({
+            operations,
+            institutionId: institution.id,
+            userId: member.uid,
+            add,
+          }),
+        );
 
       await this.firebaseService.paginateBatches(operations);
     }

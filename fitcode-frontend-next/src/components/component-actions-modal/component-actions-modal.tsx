@@ -3,7 +3,6 @@ import { useTheme } from '@mui/material';
 import { useState } from 'react';
 
 import ComponentPeriodization from '../component-periodization/component-periodization';
-import TrainingComponentCalendar from '../training-component-calendar/training-component-calendar';
 import { ComponentModalAction } from '@/common/enum/component-modal-action.constant';
 import type { Day } from '@/common/service/util/date.util';
 import type { SetState } from '@/common/type/state.type';
@@ -20,31 +19,15 @@ interface ComponentActionsModalProps {
 export default function ComponentActionsModal(
   props: ComponentActionsModalProps
 ) {
-  const {
-    trainingComponent,
-    day,
-    setOpenOverwriteModal,
-    setTrainingInPeriodForModal,
-  } = props;
-
+  const { trainingComponent } = props;
   const theme = useTheme();
 
   const [action, setAction] = useState<ComponentModalAction>(
-    ComponentModalAction.COPY_COMPONENT
+    ComponentModalAction.PERIODIZE_COMPONENT
   );
 
   const renderActionContent = (action: ComponentModalAction) => {
     switch (action) {
-      case ComponentModalAction.COPY_COMPONENT:
-        return (
-          <TrainingComponentCalendar
-            trainingComponent={trainingComponent}
-            setOpenOverwriteModal={setOpenOverwriteModal}
-            setTrainingInPeriodForModal={setTrainingInPeriodForModal}
-            copyComponent={true}
-            day={day}
-          />
-        );
       case ComponentModalAction.PERIODIZE_COMPONENT:
         return <ComponentPeriodization selectedComponent={trainingComponent} />;
       default:
@@ -62,10 +45,6 @@ export default function ComponentActionsModal(
         mb={2}
       >
         {[
-          {
-            value: ComponentModalAction.COPY_COMPONENT,
-            text: 'Copy Component',
-          },
           {
             value: ComponentModalAction.PERIODIZE_COMPONENT,
             text: 'Periodization',

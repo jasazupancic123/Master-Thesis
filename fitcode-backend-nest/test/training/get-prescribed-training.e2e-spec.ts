@@ -1,20 +1,19 @@
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { COMPONENT_PARAMS_OPT1 } from '@test/common/constant/component-params.constant';
-import type { TestUser } from '@test/common/type/auth.type';
-import type { TestInstitution } from '@test/common/type/entity.type';
-import { createAthleteUserAndToken } from '@test/common/utils/auth.util';
+import { subDays } from 'date-fns';
+import * as request from 'supertest';
+
+import { AppModule } from '@src/app.module';
+import type { TestInstitution, TestUser } from '@src/common/type/entity.type';
+import { createAthleteUserAndToken } from '@src/common/utils/auth.util';
 import {
   createGroupWithCycles,
   createInstitution,
   deleteCollection,
   deleteDoc,
   deleteUsers,
-} from '@test/common/utils/data.util';
-import { subDays } from 'date-fns';
-import * as request from 'supertest';
-
-import { AppModule } from '@src/app.module';
+} from '@src/common/utils/data.util';
 import { ComponentService } from '@src/component/component.service';
 import { DEFAULT_PARAMS_KEY } from '@src/component/constant/param.constant';
 import type { Component } from '@src/component/entity/component.entity';
@@ -27,6 +26,9 @@ import { FirebaseService } from '@src/firebase/firebase.service';
 import type { Group } from '@src/group/entity/group.entity';
 import { GroupService } from '@src/group/group.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
+import type { Wellness } from '@src/profile/entity/wellness.entity';
+import { ProfileService } from '@src/profile/service/profile.service';
+import { WellnessService } from '@src/profile/service/wellness.service';
 import { TestDbService } from '@src/test-db/test-db.service';
 import type { Training } from '@src/training/entity/training.entity';
 import type { TrainingComponent } from '@src/training/entity/training-component.entity';
@@ -43,8 +45,6 @@ import {
 } from '@src/training/mock/training.stub';
 import { WorkloadRepository } from '@src/training/repository/workload.repository';
 import { WorkloadService } from '@src/training/service/workload.service';
-import type { Wellness } from '@src/user/entity/wellness.entity';
-import { UserService } from '@src/user/service/user.service';
 
 describe('Get prescribed training (e2e)', () => {
   let app: INestApplication;
@@ -54,7 +54,8 @@ describe('Get prescribed training (e2e)', () => {
   let componentService: ComponentService;
   let exerciseService: ExerciseService;
   let workloadService: WorkloadService;
-  let userService: UserService;
+  let userService: ProfileService;
+  let wellnessService: WellnessService;
 
   let component: Component;
   let exercises: Exercise[];
@@ -77,7 +78,8 @@ describe('Get prescribed training (e2e)', () => {
     componentService = app.get(ComponentService);
     exerciseService = app.get(ExerciseService);
     workloadService = app.get(WorkloadService);
-    userService = app.get(UserService);
+    userService = app.get(ProfileService);
+    wellnessService = app.get(WellnessService);
 
     const institutionService = app.get(InstitutionService);
     const groupService = app.get(GroupService);
@@ -717,7 +719,7 @@ describe('Get prescribed training (e2e)', () => {
       expect(+bw.value).toBe(65);
     });
 
-    const spy = jest.spyOn(userService, 'getLastBodyweight');
+    const spy = jest.spyOn(wellnessService, 'getLastBodyweight');
 
     // insert wellness weight for athlete
     const response = await req(global.athlete, trainingId);
@@ -775,7 +777,7 @@ describe('Get prescribed training (e2e)', () => {
       }),
     );
 
-    const spy = jest.spyOn(userService, 'getLatestWellnessByUser');
+    const spy = jest.spyOn(wellnessService, 'getLatestByUser');
     const response = await req(global.athlete, trainingId);
     expect(response.status).toBe(200);
     expect(spy).not.toHaveBeenCalled();

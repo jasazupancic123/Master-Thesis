@@ -5,14 +5,17 @@ import { useTheme } from '@mui/material';
 import { LocalizationProvider, TimePicker } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
 import MyModal from '../modal/modal';
 import TrainerWeekViewItem from '../training-week-component-item/training-week-component-item';
-import { isOverlaping } from './state';
+import { handleApiRequest } from '@/common/type/state.type';
 import type { GroupEvent } from '@/controller/group/type/group-event.type';
+import { TrainingController } from '@/controller/training/training.controller';
 import type { TrainingComponentWithTrainingId } from '@/controller/training/type/training-component.type';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 
@@ -23,6 +26,8 @@ export type WeekViewItemProps = {
 export default function WeekViewItem(props: WeekViewItemProps) {
   const theme = useTheme();
   const screenSize = useScreenSize();
+  const router = useRouter();
+  const { token } = useAuthenticatedAuth();
 
   const { item } = props;
   const { group, setGroup, trainings, setTrainings } = useGroup();
@@ -34,11 +39,76 @@ export default function WeekViewItem(props: WeekViewItemProps) {
   };
 
   const isTrainingComponent = checkIsTrainingComponent(item);
-
+  const [openModal, setOpenModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<
     (TrainingComponentWithTrainingId | GroupEvent) | null
   >(null);
-  const [openModal, setOpenModal] = useState(false);
+
+  async function handleUpdateTrainingTimes(
+    newItem: TrainingComponentWithTrainingId | GroupEvent
+  ) {
+    if (!isTrainingComponent || !selectedItem) return;
+
+    await handleApiRequest(
+      router,
+      () =>
+        TrainingController.getInstance(token).updateComponentTime(
+          item.trainingId,
+          selectedItem.id,
+          { from: newItem.from, to: newItem.to }
+        ),
+      (result) => {
+        setSelectedItem((prev) => (prev ? newItem : null));
+
+        if (checkIsTrainingComponent(newItem))
+          setTrainings((prev) =>
+            prev.map((t) =>
+              t.id === item.trainingId
+                ? {
+                    ...t,
+                    components: result.components
+                      ? result.components.map((c) => {
+                          const found = t.components.find(
+                            (tc) => tc.id === c.id
+                          )!;
+
+                          return { ...found, from: c.from, to: c.to };
+                        })
+                      : t.components,
+                    warmup: result.warmup
+                      ? {
+                          ...t.warmup,
+                          from: result.warmup.from,
+                          to: result.warmup.to,
+                        }
+                      : t.warmup,
+                    cooldown: result.cooldown
+                      ? {
+                          ...t.cooldown,
+                          from: result.cooldown.from,
+                          to: result.cooldown.to,
+                        }
+                      : t.cooldown,
+                    from: result.from || t.from,
+                    to: result.to || t.to,
+                  }
+                : t
+            )
+          );
+        else
+          setGroup((prev) => ({
+            ...prev,
+            events: prev.events?.map((ev) =>
+              ev.id === newItem.id ? newItem : ev
+            ),
+          }));
+      },
+      (e) =>
+        toast.error(
+          (e as Error).message || 'Failed to update training component time'
+        )
+    );
+  }
 
   return (
     <Box>
@@ -71,6 +141,7 @@ export default function WeekViewItem(props: WeekViewItemProps) {
           />
         )}
       </Box>
+
       <MyModal
         isOpen={openModal}
         setIsOpen={(open) => setOpenModal(open)}
@@ -163,54 +234,18 @@ export default function WeekViewItem(props: WeekViewItemProps) {
                 }}
               />
             )}
+
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <Box display="flex" justifyContent="space-evenly" gap={1}>
                 <TimePicker
                   label="Start"
                   value={dayjs(selectedItem?.from)}
-                  onChange={(newValue) => {
+                  onChange={async (newValue) => {
                     if (!newValue) return;
-
-                    const newItem = {
+                    await handleUpdateTrainingTimes({
                       ...selectedItem,
                       from: newValue.toDate(),
-                    };
-
-                    if (dayjs(newItem.from).isAfter(dayjs(newItem.to)))
-                      newItem.to = dayjs(newItem.from)
-                        .add(5, 'minutes')
-                        .toDate();
-
-                    if (isOverlaping(newItem, { trainings, group })) {
-                      toast.error(
-                        'Time overlaps with another event or component'
-                      );
-                      return;
-                    }
-
-                    setSelectedItem((prev) => (prev ? newItem : null));
-
-                    if (checkIsTrainingComponent(newItem)) {
-                      setTrainings((prev) =>
-                        prev.map((t) =>
-                          t.id === newItem.trainingId
-                            ? {
-                                ...t,
-                                components: t.components.map((c) =>
-                                  c.id === newItem.id ? newItem : c
-                                ),
-                              }
-                            : t
-                        )
-                      );
-                    } else {
-                      setGroup((prev) => ({
-                        ...prev,
-                        events: prev.events?.map((ev) =>
-                          ev.id === newItem.id ? newItem : ev
-                        ),
-                      }));
-                    }
+                    });
                   }}
                   sx={{
                     width:
@@ -219,52 +254,16 @@ export default function WeekViewItem(props: WeekViewItemProps) {
                         : 150,
                   }}
                 />
+
                 <TimePicker
                   label="End"
                   value={dayjs(selectedItem?.to)}
-                  onChange={(newValue) => {
+                  onChange={async (newValue) => {
                     if (!newValue) return;
-
-                    const newItem = {
+                    await handleUpdateTrainingTimes({
                       ...selectedItem,
                       to: newValue.toDate(),
-                    };
-
-                    if (dayjs(newItem.from).isAfter(dayjs(newItem.to)))
-                      newItem.from = dayjs(newItem.to)
-                        .subtract(5, 'minutes')
-                        .toDate();
-
-                    if (isOverlaping(newItem, { trainings, group })) {
-                      toast.error(
-                        'Time overlaps with another event or component'
-                      );
-                      return;
-                    }
-
-                    setSelectedItem((prev) => (prev ? newItem : null));
-
-                    if (checkIsTrainingComponent(newItem)) {
-                      setTrainings((prev) =>
-                        prev.map((t) =>
-                          t.id === newItem.trainingId
-                            ? {
-                                ...t,
-                                components: t.components.map((c) =>
-                                  c.id === newItem.id ? newItem : c
-                                ),
-                              }
-                            : t
-                        )
-                      );
-                    } else {
-                      setGroup((prev) => ({
-                        ...prev,
-                        events: prev.events?.map((ev) =>
-                          ev.id === newItem.id ? newItem : ev
-                        ),
-                      }));
-                    }
+                    });
                   }}
                   sx={{
                     width:
@@ -275,6 +274,7 @@ export default function WeekViewItem(props: WeekViewItemProps) {
                 />
               </Box>
             </LocalizationProvider>
+
             <TextField
               variant="standard"
               label="Location"

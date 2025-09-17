@@ -11,6 +11,7 @@ import { TimingInterceptor } from './common/interceptor/timing.interceptor';
 import { CommonService } from './common/service/common.service';
 import { DataSetup } from './common/setup/data.setup';
 import { SwaggerSetup } from './common/setup/swagger.setup';
+import { getCorsConfig } from './config/cors.config';
 import type {
   Environment,
   NodeEnv,
@@ -26,10 +27,7 @@ async function createApp(): Promise<INestApplication> {
   // config
   app.use(json({ limit: '10mb' }));
   app.use(urlencoded({ extended: true, limit: '10mb' }));
-  app.enableCors({
-    origin: '*',
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-  });
+  app.enableCors(getCorsConfig(app));
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -60,7 +58,10 @@ async function initApp(app: INestApplication): Promise<void> {
 
   // start server
   const port = configService.get('PORT');
-  await app.listen(port, commonService.env.isProd() ? '0.0.0.0' : undefined);
+  await app.listen(
+    port,
+    commonService.env.isProduction() ? '0.0.0.0' : undefined,
+  );
   logger.log(`Application started on http://localhost:${port}`);
 }
 

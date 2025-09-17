@@ -3,31 +3,56 @@
 import { useEffect, useState } from 'react';
 
 import type { ChildrenProps } from '@/common/type/props.type';
-import type { User } from '@/controller/user/type/user.type';
-import { UserController } from '@/controller/user/user.controller';
+import { AuthController } from '@/controller/auth/auth.controller';
+import type { AuthUser } from '@/controller/auth/type/user.type';
+import { ProfileController } from '@/controller/profile/profile.controller';
+import type { Profile } from '@/controller/profile/type/user.type';
 import {
   getCachedProfile,
+  getCachedUser,
   setCachedProfile,
+  setCachedUser,
 } from '@/session-cache/profile.session-cache';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { ProfileProvider } from '@/store/profile.provider';
 
 export default function ProfileInitializer({ children }: ChildrenProps) {
   const { token } = useAuthenticatedAuth();
-  const [user, setUser] = useState<User | null>(getCachedProfile());
+
+  const [user, setUser] = useState<AuthUser | undefined>(
+    getCachedUser() || undefined
+  );
+
+  const [profile, setProfile] = useState<Profile | undefined>(
+    getCachedProfile() || undefined
+  );
 
   useEffect(() => {
     async function init() {
-      if (user) return; // already cached
+      if (user || profile) return; // already cached
 
-      const fetchedUser = await UserController.getInstance(token).findMe();
-      setCachedProfile(fetchedUser);
+      const fetchedUser = await AuthController.getInstance(token).findMe();
+      setCachedUser(fetchedUser);
       setUser(fetchedUser);
+
+      const fetchedProfile =
+        await ProfileController.getInstance(token).findProfile();
+      setCachedProfile(fetchedProfile);
+      setProfile(fetchedProfile);
     }
 
     init();
   }, []);
 
-  if (!user) return <div>Loading profile...</div>;
-  return <ProfileProvider user={user}>{children}</ProfileProvider>;
+  if (!user || !profile) return <div>Loading profile...</div>;
+  return (
+    <ProfileProvider
+      user={user}
+      setUser={setUser}
+      profile={profile}
+      setProfile={setProfile}
+    >
+      {children}
+    </ProfileProvider>
+  );
 }

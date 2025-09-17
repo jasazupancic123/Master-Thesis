@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
-import { UserRole } from '@src/user/enum/user-role.enum';
+import { UserRole } from '@src/auth/enum/user-role.enum';
 
 import { Auth } from '../common/decorator/auth.decorator';
 import { RequestUser } from '../common/decorator/request-user.decorator';

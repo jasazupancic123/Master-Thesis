@@ -1,7 +1,6 @@
 import { Box, Collapse, Divider, Stack, Typography } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import toast from 'react-hot-toast';
 
 import ComponentActionsModal from '../component-actions-modal/component-actions-modal';
 import MyModal from '../modal/modal';
@@ -11,7 +10,6 @@ import type { TrainingComponentProps } from '../trainer-day-view/props';
 import TrainingComponentCard from '../training-component-card/training-component-card';
 import TrainingComponentHeaderMenu from '../training-component-header-menu/training-component-header-menu';
 import TrainingComponentMenu from '../training-component-menu/training-component-menu';
-import { handleCopyComponentApiRequest } from './state';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
@@ -227,42 +225,6 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
           setTrainingInPeriodForModal={setTrainingInPeriodForModal}
           day={day}
         />
-      </MyModal>
-
-      {/* Overwrite Modal */}
-      <MyModal
-        isOpen={openOverwriteModal}
-        setIsOpen={(open) => setOpenOverwriteModal(open)}
-        cancelText="Close"
-        onCancel={() => {
-          setTrainingInPeriodForModal(null);
-          setOpenOverwriteModal(false);
-        }}
-        onConfirm={async () => {
-          if (!trainingInPeriodForModal) {
-            toast.error('No training found for the selected date');
-            return;
-          }
-          handleCopyComponentApiRequest(
-            controller,
-            {
-              training,
-              trainingInPeriod: trainingInPeriodForModal,
-              component: trainingComponent,
-            },
-            {
-              router,
-              allComponents,
-              allExercises,
-              allMethods,
-              setTrainings,
-            }
-          );
-          setTrainingInPeriodForModal(null);
-          setOpenOverwriteModal(false);
-        }}
-      >
-        Overwrite existing component?
       </MyModal>
     </Box>
   );

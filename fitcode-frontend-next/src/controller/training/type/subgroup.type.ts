@@ -1,8 +1,8 @@
 import type { PeriodizationType } from '../enum/periodization-type.enum';
 import type { Superset, UpdateSuperset } from './superset.type';
 import type { ColorEntity, IdEntity } from '@/common/type/entity.type';
+import type { AuthUser } from '@/controller/auth/type/user.type';
 import type { MainSet } from '@/controller/training/enum/main-set.enum';
-import type { User } from '@/controller/user/type/user.type';
 
 export type Subgroup = IdEntity &
   ColorEntity & {
@@ -14,12 +14,12 @@ export type Subgroup = IdEntity &
     parentId?: string;
 
     // mapped properties
-    members?: User[];
+    members?: AuthUser[];
   };
 
 export type UpdateSubgroup = Pick<
   Subgroup,
-  'id' | 'name' | 'color' | 'membersIds' | 'periodizationType' | 'mainSet'
+  'id' | 'name' | 'membersIds' | 'mainSet' | 'periodizationType'
 > & {
   supersets: UpdateSuperset[];
 };

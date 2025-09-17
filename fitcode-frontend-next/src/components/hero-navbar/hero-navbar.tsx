@@ -24,7 +24,7 @@ import {
   LINKS_NAVBAR,
 } from '@/common/constant/navigation.constant';
 import Logo from '@/components/logo/logo';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
+import { UserRole } from '@/controller/profile/enum/user-role.enum';
 import { useAuth } from '@/store/auth.provider';
 
 export default function HeroNavbar({ showLogin = true }) {

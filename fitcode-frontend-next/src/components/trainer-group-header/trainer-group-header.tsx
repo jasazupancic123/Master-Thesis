@@ -35,7 +35,6 @@ import type { SetState } from '@/common/type/state.type';
 import FilterButton from '@/components/filter-button/filter-button';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useGroup } from '@/store/group.provider';
-import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 export interface TrainerGroupHeaderProps {
@@ -49,8 +48,7 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
 
   const { filter, setFilter } = props;
 
-  const { role } = useAuthenticatedAuth();
-  const { profile } = useMain();
+  const { role, user } = useAuthenticatedAuth();
   const { institution, detectedChanges, setDetectedChanges } = useGroup();
 
   const [open, setOpen] = useState(false);
@@ -111,7 +109,7 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
                     case LINK_PROFILE.href:
                       Icon = (
                         <Avatar
-                          src={profile?.profileImageUrl}
+                          src={user?.photoURL || '/user_avatar.png'}
                           sx={{
                             width: 34,
                             height: 34,
@@ -169,7 +167,7 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
             }}
           >
             <Avatar
-              src={profile?.profileImageUrl}
+              src={user?.photoURL || '/user_avatar.png'}
               sx={{
                 width: 34,
                 height: 34,

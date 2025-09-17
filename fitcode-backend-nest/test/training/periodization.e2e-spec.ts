@@ -1,12 +1,12 @@
 import type { INestApplication } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { deleteCollection } from '@test/common/utils/data.util';
 import { TestPeriodizationUtil } from '@test/common/utils/periodization.util';
 import { addDays } from 'date-fns';
 import * as req from 'supertest';
 
 import { AppModule } from '@src/app.module';
+import { deleteCollection } from '@src/common/utils/data.util';
 import type { Component } from '@src/component/entity/component.entity';
 import { generateComponentStub } from '@src/component/mock/component.stub';
 import { FirebaseService } from '@src/firebase/firebase.service';
@@ -758,5 +758,179 @@ describe('Periodization functions (e2e)', () => {
       expect(directSubgroup.supersets[0].exercises).toHaveLength(1); // e1
       expect(directSubgroup.supersets[0].exercises[0].sets).toHaveLength(3); // e1 sets
     }
+  });
+
+  describe('Periodization with targets', () => {
+    let componentWithoutTarget: Component;
+    let dataWithTarget: Partial<Training> & {
+      date: Date;
+      ownerId: string;
+      membersIds: string[];
+    };
+
+    let dataWithoutTarget: Partial<Training> & {
+      date: Date;
+      ownerId: string;
+      membersIds: string[];
+    };
+
+    beforeAll(async () => {
+      componentWithoutTarget = await db.components.create(
+        generateComponentStub({ id: 'c-no-target', targets: [] }),
+      );
+
+      dataWithTarget = {
+        date: addDays(new Date(), 1),
+        ownerId: global.trainer.id,
+        institutionId,
+        groupId,
+        cycleId: 'cycle-1',
+        membersIds: [],
+        components: [
+          generateTrainingComponent({
+            id: 'c1',
+            supersets: [
+              generateSuperset({
+                exercises: [generateTrainingExercise({ id: 'e1' })],
+              }),
+            ],
+          }),
+        ],
+      };
+
+      dataWithoutTarget = {
+        date: addDays(new Date(), 1),
+        ownerId: global.trainer.id,
+        institutionId,
+        groupId,
+        cycleId: 'cycle-1',
+        membersIds: [],
+        components: [
+          generateTrainingComponent({
+            id: 'c-no-target',
+            supersets: [
+              generateSuperset({
+                exercises: [generateTrainingExercise({ id: 'e1' })],
+              }),
+            ],
+          }),
+        ],
+      };
+    });
+
+    afterAll(async () => {
+      await db.components.delete(componentWithoutTarget.id);
+    });
+
+    it('should periodize only trainings with selected target', async () => {
+      await db.trainings.clear();
+
+      const trainings = [
+        // should only periodize 3 trainings (only 3 have targets)
+        generateTrainingStub({ ...dataWithTarget, date: new Date() }), // from today
+        generateTrainingStub(dataWithoutTarget),
+        generateTrainingStub(dataWithTarget),
+        generateTrainingStub(dataWithoutTarget),
+        generateTrainingStub(dataWithTarget),
+      ];
+
+      const ids = await Promise.all(trainings.map((t) => db.trainings.save(t)));
+      expect(ids).toHaveLength(5);
+
+      const response = await request(ids[0], component.id, {
+        exerciseIds: ['e1'],
+        periodizationType: PeriodizationType.REPLICATE,
+      });
+
+      expect(response.status).toBe(200);
+      const body = response.body as Training[];
+      expect(body).toHaveLength(3); // not 5 since only 3 trainings have component with target
+
+      const resultTrainings = await db.trainings.findAll((q) =>
+        q.where('id', 'in', ids),
+      );
+
+      const trainingsWithTarget = resultTrainings
+        .filter((t) => t.components.some((c) => c.id === 'c1'))
+        .filter((t) => t.id !== ids[0]); // filter out base training
+
+      const trainingsWithoutTarget = resultTrainings.filter((t) =>
+        t.components.some((c) => c.id === 'c-no-target'),
+      );
+
+      expect(trainingsWithTarget).toHaveLength(2); // without base training
+      for (const training of trainingsWithTarget) {
+        const componentC1 = training.components.find((c) => c.id === 'c1');
+        expect(componentC1).toBeDefined();
+        expect(componentC1.copiedFrom).toEqual({
+          lastCopiedFromTrainingId: ids[0],
+          rootCopiedFromTrainingId: ids[0],
+        });
+      }
+
+      expect(trainingsWithoutTarget).toHaveLength(2);
+      for (const training of trainingsWithoutTarget) {
+        const componentCNoTarget = training.components.find(
+          (c) => c.id === 'c-no-target',
+        );
+        expect(componentCNoTarget).toBeDefined();
+        expect(componentCNoTarget.copiedFrom).toBeUndefined();
+      }
+    });
+
+    it('should periodize trainings without target and keep those with target intact', async () => {
+      await db.trainings.clear();
+
+      const trainings = [
+        // should only periodize 2 trainings (only 2 have no targets)
+        generateTrainingStub({ ...dataWithoutTarget, date: new Date() }), // from today
+        generateTrainingStub(dataWithTarget),
+        generateTrainingStub(dataWithoutTarget),
+        generateTrainingStub(dataWithTarget),
+      ];
+
+      const ids = await Promise.all(trainings.map((t) => db.trainings.save(t)));
+      expect(ids).toHaveLength(4);
+
+      const response = await request(ids[0], componentWithoutTarget.id, {
+        exerciseIds: ['e1'],
+        periodizationType: PeriodizationType.REPLICATE,
+      });
+
+      expect(response.status).toBe(200);
+      const body = response.body as Training[];
+      expect(body).toHaveLength(2); // not 4 since only 2 trainings have component without target
+
+      const resultTrainings = await db.trainings.findAll((q) =>
+        q.where('id', 'in', ids),
+      );
+
+      const trainingsWithoutTarget = resultTrainings
+        .filter((t) => t.components.some((c) => c.id === 'c-no-target'))
+        .filter((t) => t.id !== ids[0]); // filter out base training
+
+      const trainingsWithTarget = resultTrainings.filter((t) =>
+        t.components.some((c) => c.id === 'c1'),
+      );
+
+      expect(trainingsWithoutTarget).toHaveLength(1); // without base training
+      for (const training of trainingsWithoutTarget) {
+        const componentCNoTarget = training.components.find(
+          (c) => c.id === 'c-no-target',
+        );
+        expect(componentCNoTarget).toBeDefined();
+        expect(componentCNoTarget.copiedFrom).toEqual({
+          lastCopiedFromTrainingId: ids[0],
+          rootCopiedFromTrainingId: ids[0],
+        });
+      }
+
+      expect(trainingsWithTarget).toHaveLength(2);
+      for (const training of trainingsWithTarget) {
+        const componentC1 = training.components.find((c) => c.id === 'c1');
+        expect(componentC1).toBeDefined();
+        expect(componentC1.copiedFrom).toBeUndefined();
+      }
+    });
   });
 });

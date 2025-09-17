@@ -1,7 +1,8 @@
 import type { User } from 'firebase/auth';
 
-import type { UserRole } from '@/controller/user/enum/user-role.enum';
-import type { CustomClaims } from '@/controller/user/type/custom-claims.type';
+import type { CustomClaims } from '@/controller/auth/type/custom-claims.type';
+import type { AuthUser } from '@/controller/auth/type/user.type';
+import type { UserRole } from '@/controller/profile/enum/user-role.enum';
 import type { AuthState } from '@/store/auth.provider';
 
 export type AuthStatus = 'loading' | 'unauthenticated' | 'authenticated';
@@ -24,7 +25,9 @@ export type AuthContextType =
       role: UserRole;
       customClaims: CustomClaims;
       setCustomClaims: (claims: CustomClaims) => void;
-      setDisplayName: (name: string) => void;
+      setUser: (
+        data: Partial<Pick<AuthUser, 'displayName' | 'photoURL'>>
+      ) => void;
       logout: (redirect?: boolean) => Promise<void>;
       handleUserChange: (user: User | null) => Promise<AuthState>;
     };

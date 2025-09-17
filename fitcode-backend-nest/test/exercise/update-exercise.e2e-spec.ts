@@ -1,23 +1,23 @@
 import type { INestApplication } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import {
-  createAthleteUserAndToken,
-  createManagerUserAndToken,
-  createTrainerUserAndToken,
-} from '@test/common/utils/auth.util';
-import {
-  createInstitution,
-  deleteDoc,
-  deleteInstitution,
-  deleteUsers,
-} from '@test/common/utils/data.util';
 import * as request from 'supertest';
 
 import { AppModule } from '@src/app.module';
 import type { Attribute } from '@src/attribute/entity/attribute.entity';
 import { generateAttributeStub } from '@src/attribute/mock/attribute.stub';
 import { AttributeService } from '@src/attribute/service/attribute.service';
+import {
+  createAthleteUserAndToken,
+  createManagerUserAndToken,
+  createTrainerUserAndToken,
+} from '@src/common/utils/auth.util';
+import {
+  createInstitution,
+  deleteDoc,
+  deleteInstitution,
+  deleteUsers,
+} from '@src/common/utils/data.util';
 import { ComponentService } from '@src/component/component.service';
 import type { Component } from '@src/component/entity/component.entity';
 import { generateComponentStub } from '@src/component/mock/component.stub';

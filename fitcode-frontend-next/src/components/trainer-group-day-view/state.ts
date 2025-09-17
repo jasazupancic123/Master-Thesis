@@ -10,6 +10,7 @@ import {
 import type { Day } from '@/common/service/util/date.util';
 import type { SetState, SetStateNullable } from '@/common/type/state.type';
 import { handleApiRequest } from '@/common/type/state.type';
+import type { AuthUser } from '@/controller/auth/type/user.type';
 import type { Component } from '@/controller/component/type/component.type';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
 import type { Cycle } from '@/controller/group/type/cycle.type';
@@ -23,7 +24,6 @@ import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import type { User } from '@/controller/user/type/user.type';
 
 export async function handleUpdateMultipleTrainings(
   controller: TrainingController,
@@ -38,7 +38,7 @@ export async function handleUpdateMultipleTrainings(
     exercises: Exercise[];
     methods: Method[];
     setDetectedChanges: SetState<boolean>;
-    selectedAthlete: User | undefined;
+    selectedAthlete: AuthUser | undefined;
     isSettingAthleteWorkloads: React.RefObject<boolean>;
     setIsUpdatingTraining: SetState<boolean>;
   }
