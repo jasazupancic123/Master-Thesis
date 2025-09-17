@@ -9,7 +9,7 @@ import {
 import { Box, Checkbox, IconButton, Stack, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import TrapezoidTitle from '../athlete-options-container/trapezoid-title';
 import AthleteTrainingExerciseSets from '../athlete-training-exercise-sets/athlete-training-exercise-sets';
@@ -24,12 +24,23 @@ import { MainSet } from '@/controller/training/enum/main-set.enum';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
+import { useRouter } from 'next/navigation';
+import { ParamType } from '@/controller/component/enum/param.enum';
+import MobileMovementValidation from '../mobile-movement-validation/mobile-movement-validation';
+import { updateExerciseAttributeValues } from '../training-exercise-card-sets-expanded/state';
+import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
+import toast from 'react-hot-toast';
 
 export default function TrainingInProgressExerciseCard() {
   const theme = useTheme();
+  const router = useRouter();
   const screenSize = useScreenSize();
 
-  const { trainingInProgress, setTrainingInProgress } = useTraining();
+  const {
+    trainingInProgress,
+    setTrainingInProgress,
+    updateTrainingInProgress,
+  } = useTraining();
 
   const {
     selectedExercise,
@@ -51,6 +62,53 @@ export default function TrainingInProgressExerciseCard() {
 
   const isCircuit =
     trainingInProgress.selectedComponent.mainSet === MainSet.CIRCUIT;
+
+  const updateExerciseReps = (repsCount: number) => {
+    if (supersetIndex === undefined) return;
+
+    if (setIndex === undefined) return;
+
+    const selectedSet = selectedExercise.sets[setIndex];
+    if (!selectedSet) return;
+
+    const param = selectedExercise.params.find(
+      (p) => p.field === ParamType.VolWork1
+    );
+
+    if (!param) return;
+
+    ['L'].concat(selectedSet.paramValuesR ? ['R'] : []).forEach((lOrR) => {
+      updateExerciseAttributeValues(
+        {
+          newValue: repsCount.toString(),
+          i: setIndex,
+          set: selectedSet,
+          lOrR: lOrR as 'L' | 'R',
+        },
+        {
+          selectedExercises: [selectedExercise],
+          exercise: selectedExercise,
+          param,
+          training: trainingInProgress.training,
+          component: trainingInProgress.selectedComponent,
+          setTraining: () => {},
+          supersets: trainingInProgress.supersets,
+          setDetectedChanges: () => {},
+          selectedSubgroup: null,
+          setSelectedSubgroup: () => {},
+        }
+      );
+    });
+
+    markExerciseSetAsCompleted(
+      { exerciseId: selectedExercise.id, supersetIndex },
+      setIndex + 1,
+      trainingInProgress.exerciseSetTrackingState,
+      setTrainingInProgress
+    );
+
+    updateTrainingInProgress(selectedExercise, supersetIndex);
+  };
 
   const goToNextExercise = () => {
     const currentIndex = selectedSuperset.exercises.indexOf(selectedExercise);
@@ -80,7 +138,13 @@ export default function TrainingInProgressExerciseCard() {
     if (setIndex > 0) setSetIndex(setIndex - 1);
   };
 
-  return (
+  return selectedTrackingMethod === TrackingMethod.CAMERA ? (
+    <MobileMovementValidation
+      selectedExercise={selectedExercise}
+      updateExerciseReps={updateExerciseReps}
+      setSelectedTrackingMethod={setSelectedTrackingMethod}
+    />
+  ) : (
     <SwipeableBox
       onSwipeLeft={expandedSetsView ? undefined : goToNextExercise}
       onSwipeRight={expandedSetsView ? undefined : goToPreviousExercise}
@@ -313,7 +377,25 @@ export default function TrainingInProgressExerciseCard() {
                   color={
                     selectedTrackingMethod === method ? 'primary' : 'default'
                   }
-                  onClick={() => setSelectedTrackingMethod(method)}
+                  onClick={() => {
+                    if (method === TrackingMethod.CAMERA) {
+                      if (!selectedExercise.exercise) return;
+
+                      const hasPoseLogic =
+                        selectedExercise.exercise !== undefined &&
+                        EXERCISE_POSES.some((ep) =>
+                          ep.exerciseIds.includes(selectedExercise.exercise!.id)
+                        );
+
+                      if (!hasPoseLogic) {
+                        toast.error(
+                          'Pose detection is not supported for this exercise yet'
+                        );
+                        return;
+                      }
+                    }
+                    setSelectedTrackingMethod(method);
+                  }}
                 >
                   {method === TrackingMethod.MANUAL ? (
                     <KeyboardOutlined />
