@@ -44,7 +44,8 @@
           "options": [
             { "field": "kg", "defaultValue": "20" },
             { "field": "bw", "defaultValue": "100" },
-            { "field": "rm", "defaultValue": "10" }
+            { "field": "rm", "defaultValue": "10" },
+            { "field": "vbt", "defaultValue": "1" }
           ]
         },
         {
@@ -304,10 +305,7 @@
         {
           "field": "int1",
           "defaultValue": "eff",
-          "options": [
-            { "field": "eff", "defaultValue": "1" },
-            { "field": "vbt", "defaultValue": "1" }
-          ]
+          "options": [{ "field": "eff", "defaultValue": "1" }]
         },
         {
           "field": "volRec",

@@ -3,15 +3,18 @@ import {
   Controller,
   Delete,
   Get,
+  NotFoundException,
   Param,
   Patch,
   Post,
   Query,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { endOfDay, startOfDay } from 'date-fns';
 
 import { DateRangeDto } from '@src/common/dto/date-range.dto';
 import { UserIdDto } from '@src/common/dto/user-id.dto';
+import { InstitutionService } from '@src/institution/service/institution.service';
 
 import { UserRole } from '../auth/enum/user-role.enum';
 import { Auth } from '../common/decorator/auth.decorator';
@@ -32,6 +35,7 @@ export class TrainingController {
   constructor(
     private readonly commonService: CommonService,
     private readonly trainingService: TrainingService,
+    private readonly institutionService: InstitutionService,
   ) {}
 
   @Get()
@@ -52,6 +56,29 @@ export class TrainingController {
       },
       {},
       filter?.populate,
+    );
+  }
+
+  /**
+   * Endpoint for Smart Wall service to get all trainings for institution
+   * for today
+   */
+  @Get('/institution/today')
+  @Auth([UserRole.MANAGER])
+  async findAllByInstitutionToday(@RequestUser() user: User) {
+    const institution = await this.institutionService.getDocByOwner(user.uid);
+    if (!institution)
+      throw new NotFoundException('Institution not found for manager');
+
+    return await this.trainingService.findAll(
+      user,
+      {
+        institutionId: institution.id,
+        from: startOfDay(new Date()),
+        to: endOfDay(new Date()),
+      },
+      {},
+      true,
     );
   }
 

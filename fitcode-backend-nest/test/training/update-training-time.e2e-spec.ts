@@ -50,7 +50,7 @@ describe('Update Training (e2e)', () => {
     c2 = await db.components.create();
     c3 = await db.components.create();
 
-    institution = await db.institutions.create();
+    institution = await db.institutions.createTest();
     group = await db.groups.createTest(institution);
     trainingId = await db.trainings.save(
       generateTrainingStub({
