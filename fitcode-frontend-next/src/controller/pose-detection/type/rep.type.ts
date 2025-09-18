@@ -9,6 +9,7 @@ export type Rep = {
   detectedExtremum: boolean; // if the rep detected an extremum (local max or min)
 
   // set later
+  endValue?: number; // the value when the rep ended
   extremeValue?: number; // the max or min value reached during the rep, also needs to be out of a certain range from the start value
   extremeValueIndex?: number; // the index in the repBuffer of the extremeValue
   startTime?: Date; // when the value starts decending/ascending
