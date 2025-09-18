@@ -13,7 +13,6 @@ import { enableCam, getStatusMessage, loadModel, predictWebcam } from './state';
 import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 import type { SetState } from '@/common/type/state.type';
 import { KeypointHistory } from '@/controller/pose-detection/class/keypoint-history';
-import { ValuesBuffer } from '@/controller/pose-detection/class/values-buffer';
 import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
 import { STATUS_MESSAGES } from '@/controller/pose-detection/const/status-messages';
 import { ConditionDirection } from '@/controller/pose-detection/enum/condition-detection.enum';
@@ -22,13 +21,13 @@ import { KeypointId } from '@/controller/pose-detection/enum/keypoint-id';
 import { KeypointValueType } from '@/controller/pose-detection/enum/keypoint-value-type';
 import { PoseModel } from '@/controller/pose-detection/enum/pose-model.enum';
 import { RepStatus } from '@/controller/pose-detection/enum/rep-state';
+import { RepDetectionService } from '@/controller/pose-detection/rep-detection.service';
 import type { ExerciseDetectionData } from '@/controller/pose-detection/type/exercise-start-condition.type';
 import type { Rep } from '@/controller/pose-detection/type/rep.type';
 import type { RepState } from '@/controller/pose-detection/type/rep-state.type';
 import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useScreenSize } from '@/store/screen-size.provider';
-import { RepDetectionService } from '@/controller/pose-detection/rep-detection.service';
 
 const DEBUG = false;
 

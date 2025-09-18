@@ -1,15 +1,15 @@
 import type { Landmark } from '@mediapipe/tasks-vision';
 import savitzkyGolay from 'ml-savitzky-golay';
+import type { RefObject } from 'react';
+import toast from 'react-hot-toast';
 
+import type { KeypointHistory } from '../class/keypoint-history';
 import { KeypointId } from '../enum/keypoint-id';
 import { KeypointValueType } from '../enum/keypoint-value-type';
 import { PoseModel } from '../enum/pose-model.enum';
+import type { ExerciseDetectionData } from '../type/exercise-start-condition.type';
 import type { Keypoint } from '../type/keypoint.type';
-import { NumericValueFrameNum } from '../type/numeric-value-frame-num';
-import toast from 'react-hot-toast';
-import { RefObject } from 'react';
-import { KeypointHistory } from '../class/keypoint-history';
-import { ExerciseDetectionData } from '../type/exercise-start-condition.type';
+import type { NumericValueFrameNum } from '../type/numeric-value-frame-num';
 
 export class KeypointUtil {
   static getDesiredKeypointsByModel(

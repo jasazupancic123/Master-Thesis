@@ -3,6 +3,7 @@ import {
   FilesetResolver,
   PoseLandmarker,
 } from '@mediapipe/tasks-vision';
+import type { Theme } from '@mui/material';
 import type { RefObject } from 'react';
 
 import type { SetState } from '@/common/type/state.type';
@@ -22,7 +23,6 @@ import type { Rep } from '@/controller/pose-detection/type/rep.type';
 import type { RepState } from '@/controller/pose-detection/type/rep-state.type';
 import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
 import { PoseDetectionGraphsUtil } from '@/controller/pose-detection/util/pose-detection-graphs-util';
-import { Theme } from '@mui/material';
 
 export async function loadModel(state: {
   setPoseLandmarker: SetState<PoseLandmarker | null>;
