@@ -29,6 +29,8 @@ import type { RepState } from '@/controller/pose-detection/type/rep-state.type';
 import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useScreenSize } from '@/store/screen-size.provider';
+import { TimeUtil } from '@/controller/pose-detection/util/time.util';
+import toast from 'react-hot-toast';
 
 const DEBUG = false;
 
@@ -52,7 +54,6 @@ export default function MobileMovementValidation(
     new KeypointHistory([], 100, true)
   ); // first make buffer of 100 frames, later set buffer size to undefined to get all recording of exercise
   const keypointBuffer = new KeypointHistory([], 100); // 100 frames buffer, updates in the main loop based on fps
-  const romBuffer = new ValuesBuffer(100); // range of motion buffer to show on graph, max 3 seconds of frames
 
   const exerciseDetectionData: ExerciseDetectionData | undefined =
     selectedExercise
@@ -103,6 +104,7 @@ export default function MobileMovementValidation(
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const romCanvasRef = useRef<HTMLCanvasElement>(null);
+  const tempoCanvasRef = useRef<HTMLCanvasElement>(null);
   const drawingUtilsRef = useRef<DrawingUtils>(null);
   const canvasCtxRef = useRef<CanvasRenderingContext2D | null>(null);
   const prevFrameTimeRef = useRef<number | null>(null);
@@ -142,7 +144,8 @@ export default function MobileMovementValidation(
         e.preventDefault(); // stop page scroll
         if (!spaceDown) setSpaceDown(true);
 
-        drawGraph();
+        // drawGraph();
+        saveRepTimesToJsonFiles();
       }
     };
 
@@ -240,7 +243,6 @@ export default function MobileMovementValidation(
           poseLandmarker,
           keypointHistory: keypointHistoryRef.current,
           keypointBuffer,
-          romBuffer,
           currentRepRef,
           recordedRepsRef,
           videoRef,
@@ -256,11 +258,158 @@ export default function MobileMovementValidation(
           initedFirstFrameInRecordingMode,
           setFps,
           setStatusMessage,
-          renderROM,
+          renderROM: renderROMAndTempoGraphs,
         }),
       setError,
     });
   }, [poseLandmarker]);
+
+  const drawTempoOverlayBarChart = (state: {
+    ctx: CanvasRenderingContext2D;
+    w: number;
+    h: number;
+    normalizedTimesToExtremeMs: number[];
+    normalizedTimesFromExtremeToEndMs: number[];
+    inset?: number;
+  }) => {
+    const {
+      ctx,
+      w,
+      h,
+      normalizedTimesToExtremeMs,
+      normalizedTimesFromExtremeToEndMs,
+      inset = 12,
+    } = state;
+
+    if (
+      normalizedTimesToExtremeMs.length !==
+      normalizedTimesFromExtremeToEndMs.length
+    ) {
+      toast.error('Tempo times lengths mismatch');
+      return;
+    }
+
+    // HiDPI crispness
+    const dpr = window.devicePixelRatio || 1;
+    if ((ctx as any).__scaledForDPR__ !== dpr) {
+      const canvas = ctx.canvas;
+      const cssW = w,
+        cssH = h;
+      canvas.width = Math.floor(cssW * dpr);
+      canvas.height = Math.floor(cssH * dpr);
+      canvas.style.width = `${cssW}px`;
+      canvas.style.height = `${cssH}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      (ctx as any).__scaledForDPR__ = dpr;
+    }
+
+    ctx.clearRect(0, 0, w, h);
+
+    // Layout
+    const barW = 10; // wider
+    const repGap = 10; // between reps
+    const n = normalizedTimesToExtremeMs.length;
+
+    // center line (dotted)
+    const centerY = h / 2;
+    ctx.save();
+    ctx.setLineDash([4, 6]);
+    ctx.lineDashOffset = 0;
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+    ctx.beginPath();
+    ctx.moveTo(inset, centerY);
+    ctx.lineTo(w - inset, centerY);
+    ctx.stroke();
+    ctx.restore();
+
+    const left = inset; // x-start
+
+    // max drawable half-height
+    const halfH = Math.max(0, centerY - inset);
+
+    // helpers
+    const drawRoundedRect = (
+      x: number,
+      y: number,
+      width: number,
+      height: number,
+      radii: { tl?: number; tr?: number; br?: number; bl?: number }
+    ) => {
+      const r = {
+        tl: radii.tl ?? 0,
+        tr: radii.tr ?? 0,
+        br: radii.br ?? 0,
+        bl: radii.bl ?? 0,
+      };
+      ctx.beginPath();
+      ctx.moveTo(x + r.tl, y);
+      ctx.lineTo(x + width - r.tr, y);
+      if (r.tr) ctx.quadraticCurveTo(x + width, y, x + width, y + r.tr);
+      ctx.lineTo(x + width, y + height - r.br);
+      if (r.br)
+        ctx.quadraticCurveTo(
+          x + width,
+          y + height,
+          x + width - r.br,
+          y + height
+        );
+      ctx.lineTo(x + r.bl, y + height);
+      if (r.bl) ctx.quadraticCurveTo(x, y + height, x, y + height - r.bl);
+      ctx.lineTo(x, y + r.tl);
+      if (r.tl) ctx.quadraticCurveTo(x, y, x + r.tl, y);
+      ctx.closePath();
+    };
+
+    // draw each rep
+    for (let i = 0; i < n; i++) {
+      const x = left + i * (barW + repGap);
+
+      const timeToExtreme = Math.max(0, normalizedTimesToExtremeMs[i]); // 0..1 expected
+      const timeFromExtremeToEnd = Math.max(
+        0,
+        normalizedTimesFromExtremeToEndMs[i]
+      ); // 0..1 expected
+
+      // scale normalized values to pixels
+      const topLen = Math.min(1, timeToExtreme) * halfH;
+      const bottomLen = Math.min(1, timeFromExtremeToEnd) * halfH;
+
+      // subtle shadow for depth
+      ctx.save();
+      ctx.shadowColor = 'rgba(0,0,0,0.25)';
+      ctx.shadowBlur = 3;
+      ctx.shadowOffsetY = 1;
+
+      // bottom segment: center → down (#EAFF48), rounded only at the bottom
+      if (bottomLen > 0) {
+        drawRoundedRect(
+          x,
+          centerY,
+          barW,
+          bottomLen,
+          { br: barW / 2, bl: barW / 2 } // round at far (bottom) end
+        );
+        ctx.fillStyle = '#FFD734';
+        ctx.fill();
+      }
+
+      // top segment: center → up (#FFD734), rounded only at the top
+      if (topLen > 0) {
+        drawRoundedRect(
+          x,
+          centerY - topLen,
+          barW,
+          topLen,
+          { tl: barW / 2, tr: barW / 2 } // round at far (top) end
+        );
+        ctx.fillStyle = '#EAFF48';
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+  };
 
   const drawRomOverlayBarChart = (state: {
     ctx: CanvasRenderingContext2D;
@@ -292,6 +441,7 @@ export default function MobileMovementValidation(
     } = state;
 
     const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
+
     const startN = clamp01(startValueNormalized);
     const endN = clamp01(endValueNormalized);
     const extremeN = clamp01(extremeValueNormalized);
@@ -372,15 +522,75 @@ export default function MobileMovementValidation(
   };
 
   // call this right after you push a new ROM sample into romBuffer
-  const renderROM = () => {
+  const renderROMAndTempoGraphs = () => {
     if (!exerciseDetectionData || !currentRepRef.current) return;
 
-    const canvas = romCanvasRef.current;
-    if (!canvas) return;
+    const canvasROM = romCanvasRef.current;
+    const canvasTempo = tempoCanvasRef.current;
+    if (!canvasROM || !canvasTempo) return;
 
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    const ctxROM = canvasROM.getContext('2d');
+    const ctxTempo = canvasTempo.getContext('2d');
+    if (!ctxROM || !ctxTempo) return;
 
+    // ---- TEMPO GRAPH ----
+    const longestRep = recordedRepsRef.current.length
+      ? recordedRepsRef.current.reduce((longest, current) => {
+          if (!longest.endTimestamp || !current.endTimestamp) return longest;
+          const longestDuration =
+            TimeUtil.getMsDiff(longest.startTimestamp, longest.endTimestamp) -
+            (longest.timeAtExtremeMs || 0);
+          const currentDuration =
+            TimeUtil.getMsDiff(current.startTimestamp, current.endTimestamp) -
+            (current.timeAtExtremeMs || 0);
+
+          return currentDuration > longestDuration ? current : longest;
+        })
+      : currentRepRef.current;
+
+    if (longestRep && longestRep.endTimestamp) {
+      const longestRepDuration =
+        TimeUtil.getMsDiff(longestRep.startTimestamp, longestRep.endTimestamp) -
+        (longestRep.timeAtExtremeMs || 0);
+
+      const normalizedTimesToExtremeMs: number[] = [];
+      const normalizedTimesFromExtremeToEndMs: number[] = [];
+
+      recordedRepsRef.current.forEach((rep) => {
+        if (
+          rep.timeToExtremeMs === undefined ||
+          rep.timeFromExtremeToEndMs === undefined
+        ) {
+          // console.log('Skipping rep ', {
+          //   repNumber: rep.repNumber,
+          //   timeToExtremeMs: rep.timeToExtremeMs,
+          //   timeFromExtremeToEndMs: rep.timeFromExtremeToEndMs,
+          // });
+          return;
+        }
+
+        normalizedTimesToExtremeMs.push(
+          rep.timeToExtremeMs / longestRepDuration
+        );
+        normalizedTimesFromExtremeToEndMs.push(
+          rep.timeFromExtremeToEndMs / longestRepDuration
+        );
+      });
+
+      const tempoRect = canvasTempo.getBoundingClientRect();
+
+      drawTempoOverlayBarChart({
+        ctx: ctxTempo,
+        w: tempoRect.width,
+        h: tempoRect.height,
+        normalizedTimesToExtremeMs,
+        normalizedTimesFromExtremeToEndMs,
+      });
+    } else {
+      console.log({ longestRep, endTimestamp: longestRep.endTimestamp });
+    }
+
+    // ---- ROM GRAPH ----
     // If we haven't reached the extremum yet, then green color and positive bar value, if we have,
     // then red color and negative bar value
 
@@ -472,9 +682,9 @@ export default function MobileMovementValidation(
 
     // draw
     drawRomOverlayBarChart({
-      ctx,
-      w: canvas.width,
-      h: canvas.height,
+      ctx: ctxROM,
+      w: canvasROM.width,
+      h: canvasROM.height,
       currentValueNormalized: clamp01(currentValueNormalized),
       startValueNormalized: clamp01(startValueNormalized),
       endValueNormalized: clamp01(endValueNormalized),
@@ -502,6 +712,30 @@ export default function MobileMovementValidation(
         'whole_exercise'
       );
     });
+  };
+
+  const saveRepTimesToJsonFiles = () => {
+    const repsData = recordedRepsRef.current.map((rep) => ({
+      repNumber: rep.repNumber,
+      idleTime: rep.idleTime,
+      timeToExtremeMs: rep.timeToExtremeMs,
+      timeAtExtremeMs: rep.timeAtExtremeMs,
+      timeFromExtremeToEndMs: rep.timeFromExtremeToEndMs,
+      durationMs: rep.durationMs,
+    }));
+
+    const dataStr =
+      'data:text/json;charset=utf-8,' +
+      encodeURIComponent(JSON.stringify(repsData, null, 2));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute('href', dataStr);
+    downloadAnchorNode.setAttribute(
+      'download',
+      `${selectedExercise?.id || 'exercise'}_reps_times.json`
+    );
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
   };
 
   if (!exerciseDetectionData) {
@@ -566,12 +800,25 @@ export default function MobileMovementValidation(
           style={{ position: 'absolute', left: 0, top: 0 }}
         />
         <canvas
-          ref={romCanvasRef}
+          ref={tempoCanvasRef}
           style={{
-            height: '100%',
+            width: '100%',
+            height: '50%',
             position: 'absolute',
             left: 0,
-            bottom: 0,
+            top: 0, // top half
+            zIndex: 1000,
+          }}
+        />
+
+        <canvas
+          ref={romCanvasRef}
+          style={{
+            width: '100%',
+            height: '50%',
+            position: 'absolute',
+            left: 0,
+            bottom: 0, // bottom half
             zIndex: 1000,
           }}
         />
