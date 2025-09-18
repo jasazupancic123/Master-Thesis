@@ -13,6 +13,8 @@ import type { Rep } from './type/rep.type';
 import type { RepState } from './type/rep-state.type';
 import { KeypointUtil } from './util/keypoint.util';
 import { NumericValueFrameNum } from './type/numeric-value-frame-num';
+import { TimeUtil } from './util/time.util';
+import dayjs from 'dayjs';
 
 export class RepDetectionService {
   /*
@@ -65,9 +67,17 @@ export class RepDetectionService {
 
     switch (repStateRef.current.status) {
       case RepStatus.IN_REP: {
-        // check for rep end
+        // Updates rep's extremeToEndTimestamp if the value falls out of a certain range from the extremeValue
+        this.checkOutOfExtremeRange({
+          currentRepRef,
+          currentFrameKeypoints,
+          keypointId,
+          valueType,
+          direction,
+        });
+
+        // Check for rep end
         const { isRepDone, extremeValueFrameNum } = this.checkHasRepEnded({
-          repStateRef,
           currentRepRef,
           recordedRepsRef,
           keypointHistory,
@@ -83,7 +93,6 @@ export class RepDetectionService {
           currentRepRef.current
         ) {
           // Save rep
-
           this.updateAvgStartAndExtremeValue(
             repStateRef,
             currentRepRef,
@@ -91,11 +100,14 @@ export class RepDetectionService {
           );
 
           this.setRepEndValue(currentRepRef, keypointId, valueType);
-          currentRepRef.current.endValueFrameNum = extremeValueFrameNum;
 
-          // this.postProcessRep(); -> TODO()
+          this.postProcessRep(
+            currentRepRef,
+            extremeValueFrameNum,
+            recordedRepsRef
+          );
 
-          recordedRepsRef.current.push(currentRepRef.current!);
+          recordedRepsRef.current.push(currentRepRef.current);
 
           console.log('RECORDED ', recordedRepsRef.current.length, ' REPS');
 
@@ -105,27 +117,17 @@ export class RepDetectionService {
         break;
       }
       case RepStatus.IDLE: {
-        if (recordedRepsRef.current.length > 0) {
-          const lastRep =
-            recordedRepsRef.current[recordedRepsRef.current.length - 1];
+        // Uses a window for previous rep, which can detect extra extremums
+        this.checkPostWindowForExtraExtremums({
+          recordedRepsRef,
+          keypointHistory,
+          currentFrameKeypoints,
+          keypointId,
+          valueType,
+          direction,
+        });
 
-          const currentFrameNum = keypointHistory.getLatestFrameNum();
-
-          if (
-            typeof lastRep.endValueFrameNum === 'number' &&
-            Math.abs(currentFrameNum - lastRep.endValueFrameNum) <=
-              POSE_DETECTION_CONSTRAINTS.POST_WINDOW_FRAMES_REP_END
-          )
-            this.checkPostWindowForExtraExtremums({
-              lastRep,
-              currentFrameKeypoints,
-              keypointId,
-              valueType,
-              direction,
-            });
-        }
-
-        // check for rep start
+        // Check for rep start
         const { hasRepStarted, startValue, startValueFrameNum } =
           this.checkHasRepStarted({
             currentFrameKeypoints,
@@ -144,10 +146,10 @@ export class RepDetectionService {
           startValue !== undefined &&
           startValueFrameNum !== undefined
         ) {
+          // New rep
           console.log('NEW REP DETECTED with startValue', startValue);
           repStateRef.current.status = RepStatus.IN_REP; // we are now in the rep
 
-          // init new rep
           currentRepRef.current = this.initNewRep(
             recordedRepsRef.current.length + 1,
             startValue,
@@ -163,7 +165,7 @@ export class RepDetectionService {
 
   // Detect whether the value went up/down (opposite dirrection of the rep start direction) consecutive times
   // via the slope of the velocity (K score), example: (rep_direction=NEGATIVE; k=[0.5, 0.75, 1, 2]) -> true
-  static detectExtremum(state: {
+  private static detectExtremum(state: {
     currentRepRef: RefObject<Rep | null>;
     direction: ConditionDirection;
     keypointId: KeypointId;
@@ -223,23 +225,46 @@ export class RepDetectionService {
   }
 
   // A buffer, which after we detect rep end, checks for extra extremums in the next n frames
-  static checkPostWindowForExtraExtremums(state: {
-    lastRep: Rep;
+  private static checkPostWindowForExtraExtremums(state: {
+    recordedRepsRef: RefObject<Rep[]>;
+    keypointHistory: KeypointHistory;
     currentFrameKeypoints: Keypoint[];
     keypointId: KeypointId;
     valueType: KeypointValueType;
     direction: ConditionDirection;
   }) {
-    console.log('checkPostWindowForExtraExtremums');
-    const { lastRep, currentFrameKeypoints, keypointId, valueType, direction } =
-      state;
+    const {
+      recordedRepsRef,
+      keypointHistory,
+      currentFrameKeypoints,
+      keypointId,
+      valueType,
+      direction,
+    } = state;
+
+    if (!recordedRepsRef.current.length) return;
+
+    const lastRep = recordedRepsRef.current[recordedRepsRef.current.length - 1];
 
     if (
       !lastRep.detectedExtremum ||
       typeof lastRep.endValueFrameNum !== 'number' ||
-      typeof lastRep.endValue !== 'number'
+      typeof lastRep.endValue !== 'number' ||
+      lastRep.extremeTimestamp === undefined ||
+      lastRep.endTimestamp === undefined
     )
       return; // if we accidentally pass a new recording rep
+
+    const currentFrameNum = keypointHistory.getLatestFrameNum();
+
+    if (
+      typeof lastRep.endValueFrameNum === 'number' &&
+      Math.abs(currentFrameNum - lastRep.endValueFrameNum) <=
+        POSE_DETECTION_CONSTRAINTS.POST_WINDOW_FRAMES_REP_END
+    ) {
+      console.log('REP IS FULLY DONE!');
+      return;
+    }
 
     const currentKeypoint = KeypointUtil.getDesiredKeypointFromArray(
       currentFrameKeypoints,
@@ -256,37 +281,37 @@ export class RepDetectionService {
     if (currentValue === undefined) return;
 
     if (
-      direction === ConditionDirection.POSITIVE &&
-      currentValue < lastRep.endValue
+      (direction === ConditionDirection.POSITIVE &&
+        currentValue <
+          lastRep.endValue -
+            POSE_DETECTION_CONSTRAINTS.NEW_EXTREMUM_DETECTION_DISTANCE_M) || // local min
+      (direction === ConditionDirection.NEGATIVE &&
+        currentValue >
+          lastRep.endValue +
+            POSE_DETECTION_CONSTRAINTS.NEW_EXTREMUM_DETECTION_DISTANCE_M) // local max
     ) {
-      // local min
-      console.log(
-        'UPDATED EXTREMUM IN POST WINDOW from',
-        lastRep.endValue,
-        ' to ',
-        currentValue
-      );
+      // Found new extremum
+      // Update value
       lastRep.endValue = currentValue;
-      lastRep.endValueFrameNum = currentValue;
-    } else if (
-      direction === ConditionDirection.NEGATIVE &&
-      currentValue > lastRep.endValue
-    ) {
-      // local max
-      console.log(
-        'UPDATED EXTREMUM IN POST WINDOW from',
-        lastRep.endValue,
-        ' to ',
-        currentValue
-      );
+      lastRep.endValueFrameNum = currentFrameNum;
 
-      lastRep.endValue = currentValue;
-      lastRep.endValueFrameNum = currentValue;
+      // Update timestamps and times
+      // lastRep.endTimestamp = new Date();
+      lastRep.timeFromExtremeToEndMs = TimeUtil.getMsDiff(
+        dayjs(lastRep.extremeTimestamp)
+          .add(lastRep.timeAtExtremeMs || 0, 'ms')
+          .toDate(),
+        lastRep.endTimestamp
+      );
+      console.log({ timeFromExtremeToEndMs: lastRep.timeFromExtremeToEndMs });
+      lastRep.durationMs = TimeUtil.getMsDiff(
+        lastRep.startTimestamp,
+        lastRep.endTimestamp
+      );
     }
   }
 
-  static checkHasRepEnded(state: {
-    repStateRef: RefObject<RepState>;
+  private static checkHasRepEnded(state: {
     currentRepRef: RefObject<Rep | null>;
     recordedRepsRef: RefObject<Rep[]>;
     keypointHistory: KeypointHistory;
@@ -296,7 +321,6 @@ export class RepDetectionService {
     avgFps: { value: number; count: number } | null;
   }): { isRepDone: boolean; extremeValueFrameNum?: number } {
     const {
-      repStateRef,
       currentRepRef,
       recordedRepsRef,
       keypointHistory,
@@ -325,12 +349,15 @@ export class RepDetectionService {
     }
 
     // Update extreme value
-    this.updateExtremeRepValue(
+    this.updateExtremeRepValue({
+      keypointHistory,
+      keypointId,
+      valueType,
       direction,
       currentValue,
       currentRepRef,
-      recordedRepsRef
-    );
+      recordedRepsRef,
+    });
 
     // We need to detect an extremum first to finish the rep
     if (
@@ -376,7 +403,7 @@ export class RepDetectionService {
     return { isRepDone: true, extremeValueFrameNum };
   }
 
-  static checkHasRepStarted(state: {
+  private static checkHasRepStarted(state: {
     currentFrameKeypoints: Keypoint[];
     keypointHistory: KeypointHistory;
     currentRepBuffer?: KeypointHistory;
@@ -450,7 +477,7 @@ export class RepDetectionService {
     return { hasRepStarted: true, startValue, startValueFrameNum };
   }
 
-  static findStartOfRep(state: {
+  private static findStartOfRep(state: {
     buffer: KeypointHistory;
     keypointId: KeypointId;
     valueType: KeypointValueType;
@@ -606,12 +633,25 @@ export class RepDetectionService {
     return isValueCloseEnough;
   }
 
-  private static updateExtremeRepValue(
-    direction: ConditionDirection,
-    currentValue: number,
-    currentRepRef: RefObject<Rep | null>,
-    recordedRepsRef: RefObject<Rep[]>
-  ) {
+  private static updateExtremeRepValue(state: {
+    keypointHistory: KeypointHistory;
+    keypointId: KeypointId;
+    valueType: KeypointValueType;
+    direction: ConditionDirection;
+    currentValue: number;
+    currentRepRef: RefObject<Rep | null>;
+    recordedRepsRef: RefObject<Rep[]>;
+  }) {
+    const {
+      keypointHistory,
+      keypointId,
+      valueType,
+      direction,
+      currentValue,
+      currentRepRef,
+      recordedRepsRef,
+    } = state;
+
     if (!currentRepRef.current) return;
 
     const startValue = currentRepRef.current.startValue;
@@ -629,9 +669,60 @@ export class RepDetectionService {
             )) ||
           (extremeValue !== undefined && currentValue > extremeValue)
         ) {
+          // startValue
           currentRepRef.current.extremeValue = currentValue;
           currentRepRef.current.extremeValueIndex =
             currentRepRef.current.buffer.history.length - 1;
+
+          // times
+          currentRepRef.current.extremeTimestamp = new Date();
+
+          // loop keypointHistory from back
+          let timeToFirstExtreme: Date = currentRepRef.current.extremeTimestamp;
+
+          keypointHistory.history.reverse().forEach((frame) => {
+            const keypoint = KeypointUtil.getDesiredKeypointFromArray(
+              frame,
+              keypointId
+            );
+
+            if (!keypoint) return;
+
+            const value = KeypointUtil.getKeypointValueByType(
+              keypoint,
+              valueType
+            );
+
+            if (
+              value === undefined ||
+              !currentRepRef.current ||
+              typeof currentRepRef.current.extremeValue !== 'number'
+            )
+              return;
+
+            const repTotalROM = Math.abs(
+              currentRepRef.current.extremeValue -
+                currentRepRef.current.startValue
+            );
+
+            const diffFromExtreme = Math.abs(
+              value - currentRepRef.current.extremeValue
+            );
+
+            if (
+              diffFromExtreme >
+              repTotalROM *
+                POSE_DETECTION_CONSTRAINTS.CLOSE_ENOUGH_TO_START_VALUE_RATIO
+            )
+              return;
+
+            timeToFirstExtreme = new Date(keypoint.capturedAt);
+          });
+
+          currentRepRef.current.timeToExtremeMs = TimeUtil.getMsDiff(
+            currentRepRef.current.startTimestamp,
+            timeToFirstExtreme
+          );
         }
         break;
       }
@@ -646,9 +737,17 @@ export class RepDetectionService {
             )) ||
           (extremeValue !== undefined && currentValue < extremeValue)
         ) {
+          // extremeValue
           currentRepRef.current.extremeValue = currentValue;
           currentRepRef.current.extremeValueIndex =
             currentRepRef.current.buffer.history.length - 1;
+
+          // times
+          currentRepRef.current.extremeTimestamp = new Date();
+          currentRepRef.current.timeToExtremeMs = TimeUtil.getMsDiff(
+            currentRepRef.current.startTimestamp,
+            currentRepRef.current.extremeTimestamp
+          );
         }
         break;
       }
@@ -813,18 +912,19 @@ export class RepDetectionService {
     };
   }
 
-  static initNewRep(
+  private static initNewRep(
     repNumber: number,
     startValue: number,
     startValueFrameNum: number
   ): Rep {
     return {
       repNumber,
-      createdAt: new Date(),
+      startTimestamp: new Date(),
       startValue,
       startValueFrameNum,
       buffer: new KeypointHistory([]),
       detectedExtremum: false,
+      currentlyInExtremumRange: false,
     };
   }
 
@@ -874,6 +974,110 @@ export class RepDetectionService {
       );
 
       currentRepRef.current.endValue = endValue;
+    }
+  }
+
+  private static checkOutOfExtremeRange(state: {
+    currentRepRef: RefObject<Rep | null>;
+    currentFrameKeypoints: Keypoint[];
+    keypointId: KeypointId;
+    valueType: KeypointValueType;
+    direction: ConditionDirection;
+  }) {
+    const {
+      currentRepRef,
+      currentFrameKeypoints,
+      keypointId,
+      valueType,
+      direction,
+    } = state;
+
+    if (
+      !currentRepRef.current ||
+      currentRepRef.current.extremeValue === undefined ||
+      currentRepRef.current.extremeTimestamp === undefined
+    )
+      return;
+
+    const repTotalROM = Math.abs(
+      currentRepRef.current.extremeValue - currentRepRef.current.startValue
+    );
+
+    const currentKeypoint = KeypointUtil.getDesiredKeypointFromArray(
+      currentFrameKeypoints,
+      keypointId
+    );
+
+    if (!currentKeypoint) return;
+
+    const currentValue = KeypointUtil.getKeypointValueByType(
+      currentKeypoint,
+      valueType
+    );
+
+    if (currentValue === undefined) return;
+
+    const diffFromExtreme = currentRepRef.current.extremeValue - currentValue;
+
+    if (currentRepRef.current.currentlyInExtremumRange) {
+      // We are in extremum range, track if we go out of it and update the timestamp and timeAtExtremeMs if so
+      if (
+        (direction === ConditionDirection.POSITIVE &&
+          diffFromExtreme >=
+            repTotalROM * POSE_DETECTION_CONSTRAINTS.EXTREMUM_RANGE_RATIO) ||
+        (direction === ConditionDirection.NEGATIVE &&
+          diffFromExtreme <=
+            -1 * repTotalROM * POSE_DETECTION_CONSTRAINTS.EXTREMUM_RANGE_RATIO)
+      ) {
+        currentRepRef.current.currentlyInExtremumRange = false;
+
+        currentRepRef.current.extremeToEndTimestamp = new Date();
+
+        currentRepRef.current.timeAtExtremeMs = TimeUtil.getMsDiff(
+          currentRepRef.current.extremeTimestamp,
+          currentRepRef.current.extremeToEndTimestamp
+        );
+      }
+    } else {
+      // We are out of extremum range, track if we go back in it
+      if (
+        diffFromExtreme <
+        repTotalROM * POSE_DETECTION_CONSTRAINTS.EXTREMUM_RANGE_RATIO
+      ) {
+        currentRepRef.current.currentlyInExtremumRange = true;
+      }
+    }
+  }
+
+  private static postProcessRep(
+    rep: RefObject<Rep | null>,
+    extremeValueFrameNum: number,
+    recordedRepsRef: RefObject<Rep[]>
+  ) {
+    if (!rep.current) return;
+
+    rep.current.endValueFrameNum = extremeValueFrameNum;
+    rep.current.endTimestamp = new Date();
+    rep.current.durationMs = TimeUtil.getMsDiff(
+      rep.current.startTimestamp,
+      rep.current.endTimestamp
+    );
+    rep.current.timeFromExtremeToEndMs = TimeUtil.getMsDiff(
+      dayjs(rep.current.extremeTimestamp)
+        .add(rep.current.timeAtExtremeMs || 0, 'ms')
+        .toDate(),
+      rep.current.endTimestamp
+    );
+
+    if (recordedRepsRef.current.length > 0) {
+      const prevRep =
+        recordedRepsRef.current[recordedRepsRef.current.length - 1];
+      if (prevRep.endTimestamp) {
+        rep.current.idleTime = TimeUtil.getMsDiff(
+          prevRep.endTimestamp,
+          rep.current.startTimestamp
+        );
+      }
     }
   }
 }
