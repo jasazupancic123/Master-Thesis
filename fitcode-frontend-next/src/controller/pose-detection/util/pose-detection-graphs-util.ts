@@ -1,10 +1,11 @@
-import { Theme } from '@mui/material';
-import { ExerciseDetectionData } from '../type/exercise-start-condition.type';
-import { RefObject } from 'react';
-import { Rep } from '../type/rep.type';
-import { TimeUtil } from './time.util';
-import { Keypoint } from '../type/keypoint.type';
+import type { Theme } from '@mui/material';
+import type { RefObject } from 'react';
+
+import type { ExerciseDetectionData } from '../type/exercise-start-condition.type';
+import type { Keypoint } from '../type/keypoint.type';
+import type { Rep } from '../type/rep.type';
 import { KeypointUtil } from './keypoint.util';
+import { TimeUtil } from './time.util';
 
 export class PoseDetectionGraphsUtil {
   // Call this right after you push a new ROM sample into romBuffer
@@ -40,13 +41,18 @@ export class PoseDetectionGraphsUtil {
     // ---- TEMPO GRAPH ----
     const longestRep = recordedRepsRef.current.length
       ? recordedRepsRef.current.reduce((longest, current) => {
-          if (!longest.endValueTimestamp || !current.endValueTimestamp) return longest;
+          if (!longest.endValueTimestamp || !current.endValueTimestamp)
+            return longest;
           const longestDuration =
-            TimeUtil.getMsDiff(longest.startTimestamp, longest.endValueTimestamp) -
-            (longest.timeAtExtremeMs || 0);
+            TimeUtil.getMsDiff(
+              longest.startTimestamp,
+              longest.endValueTimestamp
+            ) - (longest.timeAtExtremeMs || 0);
           const currentDuration =
-            TimeUtil.getMsDiff(current.startTimestamp, current.endValueTimestamp) -
-            (current.timeAtExtremeMs || 0);
+            TimeUtil.getMsDiff(
+              current.startTimestamp,
+              current.endValueTimestamp
+            ) - (current.timeAtExtremeMs || 0);
 
           return currentDuration > longestDuration ? current : longest;
         })
@@ -54,8 +60,10 @@ export class PoseDetectionGraphsUtil {
 
     if (longestRep && longestRep.endValueTimestamp) {
       const longestRepDuration =
-        TimeUtil.getMsDiff(longestRep.startTimestamp, longestRep.endValueTimestamp) -
-        (longestRep.timeAtExtremeMs || 0);
+        TimeUtil.getMsDiff(
+          longestRep.startTimestamp,
+          longestRep.endValueTimestamp
+        ) - (longestRep.timeAtExtremeMs || 0);
 
       const normalizedTimesToExtremeMs: number[] = [];
       const normalizedTimesFromExtremeToEndMs: number[] = [];

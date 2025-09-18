@@ -1,5 +1,7 @@
+import dayjs from 'dayjs';
 import type { RefObject } from 'react';
 
+import type { TrainingExercise } from '../training/type/training-exercise.type';
 import { KeypointHistory } from './class/keypoint-history';
 import { POSE_DETECTION_CONSTRAINTS } from './const/pose-detection-constrains.const';
 import { ConditionDirection } from './enum/condition-detection.enum';
@@ -9,13 +11,11 @@ import { RepStatus } from './enum/rep-state';
 import { StatusDetectionService } from './status-detection.service';
 import type { ExerciseRepStartCondition } from './type/exercise-start-condition.type';
 import type { Keypoint } from './type/keypoint.type';
+import type { NumericValueFrameNum } from './type/numeric-value-frame-num';
 import type { Rep } from './type/rep.type';
 import type { RepState } from './type/rep-state.type';
 import { KeypointUtil } from './util/keypoint.util';
-import { NumericValueFrameNum } from './type/numeric-value-frame-num';
 import { TimeUtil } from './util/time.util';
-import dayjs from 'dayjs';
-import { TrainingExercise } from '../training/type/training-exercise.type';
 
 export class RepDetectionService {
   /*
@@ -1118,8 +1118,7 @@ export class RepDetectionService {
 
       if (
         diffFromExtreme <=
-        repTotalROM *
-          POSE_DETECTION_CONSTRAINTS.EXTREMUM_RANGE_RATIO
+        repTotalROM * POSE_DETECTION_CONSTRAINTS.EXTREMUM_RANGE_RATIO
       ) {
         timeToFirstExtreme = new Date(keypoint.capturedAt);
       }
