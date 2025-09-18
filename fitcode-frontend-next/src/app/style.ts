@@ -16,7 +16,7 @@ export const theme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      main: '#34FFBE',
+      main: '#EAFF48',
       dark: '#005d57',
     },
     background: {

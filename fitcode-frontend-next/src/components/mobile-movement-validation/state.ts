@@ -8,14 +8,17 @@ import type { RefObject } from 'react';
 import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
 import type { SetState } from '@/common/type/state.type';
 import type { KeypointHistory } from '@/controller/pose-detection/class/keypoint-history';
+import type { ValuesBuffer } from '@/controller/pose-detection/class/values-buffer';
 import { POSE_DETECTION_CONSTRAINTS } from '@/controller/pose-detection/const/pose-detection-constrains.const';
 import { STATUS_MESSAGES } from '@/controller/pose-detection/const/status-messages';
 import { DetectionStatus } from '@/controller/pose-detection/enum/detection-status';
+import type { KeypointId } from '@/controller/pose-detection/enum/keypoint-id';
+import type { KeypointValueType } from '@/controller/pose-detection/enum/keypoint-value-type';
 import type { PoseModel } from '@/controller/pose-detection/enum/pose-model.enum';
 import { RepStatus } from '@/controller/pose-detection/enum/rep-state';
 import { PoseDetectionService } from '@/controller/pose-detection/pose-detection.service';
 import { RepDetectionService } from '@/controller/pose-detection/rep-detection.service';
-import type { ExerciseRepStartCondition } from '@/controller/pose-detection/type/exercise-start-condition.type';
+import type { ExerciseDetectionData } from '@/controller/pose-detection/type/exercise-start-condition.type';
 import type { Keypoint } from '@/controller/pose-detection/type/keypoint.type';
 import type { Rep } from '@/controller/pose-detection/type/rep.type';
 import type { RepState } from '@/controller/pose-detection/type/rep-state.type';
@@ -111,9 +114,10 @@ export const predictWebcam = async (state: {
   poseLandmarker: PoseLandmarker | null;
   keypointHistory: KeypointHistory;
   keypointBuffer: KeypointHistory;
+  romBuffer: ValuesBuffer;
   currentRepRef: RefObject<Rep | null>;
   recordedRepsRef: RefObject<Rep[]>;
-  exerciseStartConditions: ExerciseRepStartCondition[];
+  exerciseDetectionData: ExerciseDetectionData;
   videoRef: RefObject<HTMLVideoElement | null>;
   canvasRef: RefObject<HTMLCanvasElement | null>;
   drawingUtilsRef: RefObject<DrawingUtils | null>;
@@ -126,6 +130,7 @@ export const predictWebcam = async (state: {
   avgFps: RefObject<{ value: number; count: number } | null>;
   setFps: SetState<number | null>;
   setStatusMessage: SetState<string>;
+  renderROM: () => void;
 }) => {
   const {
     statusRef,
@@ -134,9 +139,10 @@ export const predictWebcam = async (state: {
     poseLandmarker,
     keypointHistory,
     keypointBuffer,
+    romBuffer,
     currentRepRef,
     recordedRepsRef,
-    exerciseStartConditions,
+    exerciseDetectionData,
     videoRef,
     canvasRef,
     drawingUtilsRef,
@@ -149,6 +155,7 @@ export const predictWebcam = async (state: {
     avgFps,
     setFps,
     setStatusMessage,
+    renderROM,
   } = state;
 
   const video = videoRef.current;
@@ -186,7 +193,9 @@ export const predictWebcam = async (state: {
   if (prevFrameTimeRef.current) {
     const delta = startTimeMs - prevFrameTimeRef.current;
     const instFps = Math.round(1000 / delta);
+
     setFps(instFps);
+
     if (!avgFps.current) avgFps.current = { value: instFps, count: 1 };
     else {
       avgFps.current = {
@@ -216,15 +225,16 @@ export const predictWebcam = async (state: {
         statusRef,
         keypointHistory,
         keypointBuffer,
+        romBuffer,
         repStateRef,
         currentRepBuffer: currentRepRef.current?.buffer,
         keypoints,
         isMobile,
         avgFps,
+        keypointId: exerciseDetectionData.romKeypointId,
+        valueType: exerciseDetectionData.romValueType,
       });
 
-      const slopeK = 3; // naklon premice
-      const sustainW = 2; // look for 2 consecutive frames of sustained slope
       const preWindow = Math.min(
         4,
         KeypointUtil.getFramesCountFromSeconds(
@@ -239,7 +249,7 @@ export const predictWebcam = async (state: {
         keypoints,
         setStatusMessage,
         keypointBuffer,
-        exerciseStartConditions,
+        exerciseDetectionData.conditions,
         avgFps.current
       );
 
@@ -247,27 +257,26 @@ export const predictWebcam = async (state: {
         statusRef.current === DetectionStatus.RECORDING &&
         repStateRef.current.status !== RepStatus.NONE
       ) {
-        exerciseStartConditions.forEach((condition) => {
-          // Če hočemo meti več conditionov, pol more checkRepStatus za vsak condition
-          // vrniti status za kerega misi in če so vsi enaki, pol lahko menjamo status
-          // na način ki je trenutno v checkRepStatus
-          RepDetectionService.checkRepStatus({
-            repStateRef,
-            currentRepRef,
-            recordedRepsRef,
-            currentFrameKeypoints: keypoints,
-            keypointHistory: keypointHistory,
-            keypointId: condition.keypointId,
-            valueType: condition.type,
-            direction: condition.direction,
-            slopeK,
-            sustainW,
-            preWindow,
-            exerciseStartConditions,
-            avgFps: avgFps.current,
-            initedFirstFrameInRecordingMode, // this is used to track if no rep was detected yet
-          });
+        RepDetectionService.checkRepStatus({
+          repStateRef,
+          currentRepRef,
+          recordedRepsRef,
+          currentFrameKeypoints: keypoints,
+          keypointHistory: keypointHistory,
+          keypointId: exerciseDetectionData.romKeypointId,
+          valueType: exerciseDetectionData.romValueType,
+          direction: exerciseDetectionData.romStartDirection,
+          exerciseStartConditions: exerciseDetectionData.conditions,
+          avgFps: avgFps.current,
+          initedFirstFrameInRecordingMode, // this is used to track if no rep was detected yet
         });
+      }
+
+      if (
+        repStateRef.current.status === RepStatus.IN_REP &&
+        currentRepRef.current
+      ) {
+        renderROM();
       }
 
       ctx.save();
@@ -278,8 +287,18 @@ export const predictWebcam = async (state: {
       ctx.scale(-1, 1);
 
       for (const landmark of result.landmarks) {
-        drawingUtils.drawLandmarks(landmark);
-        drawingUtils.drawConnectors(landmark, PoseLandmarker.POSE_CONNECTIONS);
+        const keepKeypointsIndexes = Object.values([
+          11, // KeypointId.LEFT_SHOULDER
+          12, // KeypointId.RIGHT_SHOULDER,
+          23, // KeypointId.LEFT_HIP,
+          24, // KeypointId.RIGHT_HIP,
+          15, // KeypointId.LEFT_WRIST,
+          16, // KeypointId.RIGHT_WRIST,
+        ]);
+        drawingUtils.drawLandmarks(
+          landmark.filter((k, i) => keepKeypointsIndexes.includes(i))
+        );
+        // drawingUtils.drawConnectors(landmark, PoseLandmarker.POSE_CONNECTIONS);
       }
 
       ctx.restore();
@@ -293,21 +312,27 @@ function insertKeypointsIntoBuffers(state: {
   statusRef: RefObject<DetectionStatus>;
   keypointHistory: KeypointHistory;
   keypointBuffer: KeypointHistory;
+  romBuffer: ValuesBuffer;
   repStateRef: RefObject<RepState>;
   currentRepBuffer?: KeypointHistory;
   keypoints: Keypoint[];
   isMobile: boolean;
   avgFps: RefObject<{ value: number; count: number } | null>;
+  keypointId: KeypointId;
+  valueType: KeypointValueType;
 }) {
   const {
     statusRef,
     keypointHistory,
     keypointBuffer,
+    romBuffer,
     repStateRef,
     currentRepBuffer,
     keypoints,
     isMobile,
     avgFps,
+    keypointId,
+    valueType,
   } = state;
 
   // if we are in recording state, don't update the keypointHistory's size
@@ -329,6 +354,22 @@ function insertKeypointsIntoBuffers(state: {
   const hasWeakFps = avgFps.current ? avgFps.current.value <= 15 : isMobile;
 
   keypointBuffer.insertFrame(keypoints, avgFps.current, hasWeakFps ? 2 : 3); // keep 2 or 3 seconds of history
+
+  const keypoint = KeypointUtil.getDesiredKeypointFromArray(
+    keypoints,
+    keypointId
+  );
+
+  if (keypoint) {
+    const value = KeypointUtil.getKeypointValueByType(keypoint, valueType);
+    if (value !== undefined)
+      romBuffer.insertFrame(
+        value,
+        avgFps.current,
+        POSE_DETECTION_CONSTRAINTS.ROM_GRAPH_LENGTH_S,
+        true
+      ); // keep max 3 seconds of history
+  }
 }
 
 export function getStatusMessage(status: DetectionStatus) {

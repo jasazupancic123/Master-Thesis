@@ -1,4 +1,4 @@
-export const COLOR = ['#34FFBE', '#A275F7', '#FFA14E', '#FF5C8D'];
+export const COLOR = ['#968686', '#968686', '#968686', '#968686'];
 
 export const COMMON_COLORS = {
   blue: '#3b82f6',

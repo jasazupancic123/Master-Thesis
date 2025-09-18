@@ -37,8 +37,8 @@ export class KeypointHistory {
     // inserts keypoints
     this.history.push(keypoints);
 
+    // Calculate new buffer length based on fps and numSeconds
     if (avgFps && numSeconds && avgFps.count > 10) {
-      // calculate new buffer length based on fps and numSeconds
       const maxBufferLength = Math.ceil(avgFps.value * numSeconds);
       this.bufferLength = maxBufferLength;
     }

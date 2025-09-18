@@ -44,9 +44,6 @@ export class RepDetectionService {
     keypointId: KeypointId;
     valueType: KeypointValueType;
     direction: ConditionDirection;
-    slopeK: number;
-    sustainW: number;
-    preWindow: number;
     exerciseStartConditions: ExerciseRepStartCondition[];
     avgFps: { value: number; count: number } | null;
     initedFirstFrameInRecordingMode: RefObject<boolean>;
@@ -60,9 +57,6 @@ export class RepDetectionService {
       keypointId,
       valueType,
       direction,
-      slopeK,
-      sustainW,
-      preWindow,
       exerciseStartConditions,
       avgFps,
       initedFirstFrameInRecordingMode,
@@ -78,8 +72,6 @@ export class RepDetectionService {
           direction,
           keypointId,
           valueType,
-          slopeK,
-          sustainW,
           avgFps,
         });
 
@@ -91,6 +83,8 @@ export class RepDetectionService {
             currentRepRef,
             recordedRepsRef
           );
+
+          this.setRepEndValue(currentRepRef, keypointId, valueType);
 
           // this.postProcessRep(); -> TODO()
 
@@ -114,14 +108,11 @@ export class RepDetectionService {
           direction,
           exerciseStartConditions,
           avgFps,
-          slopeK,
-          sustainW,
-          preWindow,
           initedFirstFrameInRecordingMode,
         });
 
         if (hasRepStarted && startValue !== undefined) {
-          console.log('NEW REP DETECTED');
+          console.log('NEW REP DETECTED with startValue', startValue);
           repStateRef.current.status = RepStatus.IN_REP; // we are now in the rep
 
           // init new rep
@@ -169,13 +160,13 @@ export class RepDetectionService {
 
     const totalNumFrames = avgFps
       ? Math.max(
-          POSE_DETECTION_CONSTRAINTS.MIN_REP_FRAMES,
+          POSE_DETECTION_CONSTRAINTS.MIN_FRAMES_FOR_EXTREMUM,
           KeypointUtil.getFramesCountFromSeconds(
-            POSE_DETECTION_CONSTRAINTS.MIN_REP_TIME_S,
+            POSE_DETECTION_CONSTRAINTS.MIN_TIME_FOR_EXTREMUM_S,
             avgFps.value
           )
         )
-      : POSE_DETECTION_CONSTRAINTS.MIN_REP_FRAMES; // min 4 total consecutive correct frames (2pos k's, 2neg k's)
+      : POSE_DETECTION_CONSTRAINTS.MIN_FRAMES_FOR_EXTREMUM; // min 4 total consecutive correct frames (2pos k's, 2neg k's)
 
     const startKCheckIndex = buffer.history.length - 1 - totalNumFrames;
 
@@ -205,8 +196,6 @@ export class RepDetectionService {
     direction: ConditionDirection;
     keypointId: KeypointId;
     valueType: KeypointValueType;
-    slopeK: number;
-    sustainW: number;
     avgFps: { value: number; count: number } | null;
   }): boolean {
     const {
@@ -216,8 +205,6 @@ export class RepDetectionService {
       direction,
       keypointId,
       valueType,
-      slopeK,
-      sustainW,
     } = state;
 
     // Detecting the U turn in the rep (extremum), so we can finish it
@@ -271,8 +258,8 @@ export class RepDetectionService {
       velocity,
       scale,
       direction,
-      slopeK,
-      sustainW,
+      slopeK: POSE_DETECTION_CONSTRAINTS.SLOPE_K_REP_END,
+      sustainW: POSE_DETECTION_CONSTRAINTS.SUSTAIN_W_REP_END,
       detectingRepStart: false,
     });
 
@@ -295,9 +282,6 @@ export class RepDetectionService {
     direction: ConditionDirection;
     exerciseStartConditions: ExerciseRepStartCondition[];
     avgFps: { value: number; count: number } | null;
-    slopeK: number;
-    sustainW: number;
-    preWindow: number;
     initedFirstFrameInRecordingMode: RefObject<boolean>;
   }): { hasRepStarted: boolean; startValue?: number } {
     const {
@@ -309,15 +293,14 @@ export class RepDetectionService {
       direction,
       exerciseStartConditions,
       avgFps,
-      slopeK,
-      sustainW,
-      preWindow,
       initedFirstFrameInRecordingMode, // if the very first rep has been inited
     } = state;
 
     const isFirstRep = !initedFirstFrameInRecordingMode.current;
 
-    const currentHistory = isFirstRep ? keypointHistory : currentRepBuffer;
+    // const currentHistory = isFirstRep ? keypointHistory : currentRepBuffer;
+
+    const currentHistory = keypointHistory;
 
     if (!currentHistory) return { hasRepStarted: false };
 
@@ -340,9 +323,6 @@ export class RepDetectionService {
       keypointId,
       valueType,
       direction,
-      slopeK,
-      sustainW,
-      preWindow,
     });
 
     currentHistory.cutAtIndex(startIndex, true);
@@ -366,19 +346,8 @@ export class RepDetectionService {
     keypointId: KeypointId;
     valueType: KeypointValueType;
     direction: ConditionDirection;
-    slopeK: number; // how many std devs below 0 to call “down”
-    sustainW: number; // frames of sustained slope
-    preWindow: number; // look for local max/min in this many frames before the sustain
   }): { startIndex: number; startValue: number } {
-    const {
-      buffer,
-      keypointId,
-      valueType,
-      direction,
-      slopeK,
-      sustainW,
-      preWindow,
-    } = state;
+    const { buffer, keypointId, valueType, direction } = state;
 
     // 1) Get smoothed values of the keypoint's values
     const values = this.getSmoothedValues(buffer, keypointId, valueType);
@@ -401,8 +370,8 @@ export class RepDetectionService {
       velocity,
       scale,
       direction,
-      slopeK,
-      sustainW,
+      slopeK: POSE_DETECTION_CONSTRAINTS.SLOPE_K_REP_START,
+      sustainW: POSE_DETECTION_CONSTRAINTS.SUSTAIN_W_REP_START,
       detectingRepStart: true,
     });
 
@@ -451,9 +420,24 @@ export class RepDetectionService {
     }
 
     // 5) Slope found, find last local extremum before s within preWindow
-    const left = Math.max(0, slope - preWindow);
-    const extremumIdx = left,
+    // If condition is POSITIVE, look for local min; if NEGATIVE, look for local max
+    const left = Math.max(
+      0,
+      slope - POSE_DETECTION_CONSTRAINTS.PRE_WINDOW_FRAMES_REP_START
+    );
+    let extremumIdx = left,
       extremumVal = values[left];
+
+    for (let i = left + 1; i <= slope; i++) {
+      if (
+        (direction === ConditionDirection.POSITIVE &&
+          values[i] <= extremumVal) ||
+        (direction === ConditionDirection.NEGATIVE && values[i] >= extremumVal)
+      ) {
+        extremumVal = values[i];
+        extremumIdx = i;
+      }
+    }
 
     return { startIndex: extremumIdx, startValue: extremumVal };
   }
@@ -592,6 +576,8 @@ export class RepDetectionService {
     while (s >= 0) {
       const K = velocity[s] / Math.max(scale, 1e-6);
 
+      console.log('K', K);
+
       let hit: boolean;
 
       if (detectingRepStart) {
@@ -721,5 +707,30 @@ export class RepDetectionService {
         : (repStateRef.current.avgStartValue! * recordedRepsRef.current.length +
             currentRepRef.current.startValue) /
           (recordedRepsRef.current.length + 1);
+  }
+
+  private static setRepEndValue(
+    currentRepRef: RefObject<Rep | null>,
+    keypointId: KeypointId,
+    valueType: KeypointValueType
+  ) {
+    if (!currentRepRef.current) return;
+
+    const lastIndexKeypoints = currentRepRef.current.buffer
+      .getHistoryById(keypointId)
+      .slice(-1);
+    const lastIndexKeypoint = KeypointUtil.getDesiredKeypointFromArray(
+      lastIndexKeypoints,
+      keypointId
+    );
+
+    if (lastIndexKeypoint) {
+      const endValue = KeypointUtil.getKeypointValueByType(
+        lastIndexKeypoint,
+        valueType
+      );
+
+      currentRepRef.current.endValue = endValue;
+    }
   }
 }
