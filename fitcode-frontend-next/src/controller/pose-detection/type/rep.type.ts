@@ -20,7 +20,7 @@ export type Rep = {
   // endValue
   endValue?: number; // the value when the rep ended
   endValueFrameNum?: number; // the frame number when the rep ended
-  endTimestamp?: Date; // when the value comes back to the starting point
+  endValueTimestamp?: Date; // when the value comes back to the starting point
 
   // extremeValue
   extremeValue?: number; // the max or min value reached during the rep, also needs to be out of a certain range from the start value

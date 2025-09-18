@@ -7,6 +7,9 @@ import { PoseModel } from '../enum/pose-model.enum';
 import type { Keypoint } from '../type/keypoint.type';
 import { NumericValueFrameNum } from '../type/numeric-value-frame-num';
 import toast from 'react-hot-toast';
+import { RefObject } from 'react';
+import { KeypointHistory } from '../class/keypoint-history';
+import { ExerciseDetectionData } from '../type/exercise-start-condition.type';
 
 export class KeypointUtil {
   static getDesiredKeypointsByModel(
@@ -270,5 +273,27 @@ export class KeypointUtil {
     arr: (number | NumericValueFrameNum)[]
   ): arr is NumericValueFrameNum[] => {
     return arr.every((item) => this.checkIsNumericValueFrameNum(item));
+  };
+
+  static saveKeypointValueGraph = (state: {
+    exerciseDetectionData: ExerciseDetectionData | undefined;
+    keypointHistoryRef: RefObject<KeypointHistory>;
+  }) => {
+    const { exerciseDetectionData, keypointHistoryRef } = state;
+
+    if (!exerciseDetectionData) return;
+
+    const keypointIds = exerciseDetectionData.conditions.map(
+      (condition) => condition.keypointId
+    );
+
+    keypointIds.forEach((id) => {
+      KeypointUtil.drawKeypointValuesGraph(
+        keypointHistoryRef.current.history,
+        id,
+        KeypointValueType.POSITION_Y,
+        'whole_exercise'
+      );
+    });
   };
 }

@@ -21,6 +21,8 @@ import type { Keypoint } from '@/controller/pose-detection/type/keypoint.type';
 import type { Rep } from '@/controller/pose-detection/type/rep.type';
 import type { RepState } from '@/controller/pose-detection/type/rep-state.type';
 import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
+import { PoseDetectionGraphsUtil } from '@/controller/pose-detection/util/pose-detection-graphs-util';
+import { Theme } from '@mui/material';
 
 export async function loadModel(state: {
   setPoseLandmarker: SetState<PoseLandmarker | null>;
@@ -122,9 +124,12 @@ export const predictWebcam = async (state: {
   frameCountRef: RefObject<number>;
   initedFirstFrameInRecordingMode: RefObject<boolean>;
   avgFps: RefObject<{ value: number; count: number } | null>;
+  normDomainRef: RefObject<{ min: number; max: number } | null>;
+  romCanvasRef: RefObject<HTMLCanvasElement | null>;
+  tempoCanvasRef: RefObject<HTMLCanvasElement | null>;
+  theme: Theme;
   setFps: SetState<number | null>;
   setStatusMessage: SetState<string>;
-  renderROM: () => void;
 }) => {
   const {
     statusRef,
@@ -146,9 +151,12 @@ export const predictWebcam = async (state: {
     frameCountRef,
     initedFirstFrameInRecordingMode,
     avgFps,
+    normDomainRef,
+    romCanvasRef,
+    tempoCanvasRef,
+    theme,
     setFps,
     setStatusMessage,
-    renderROM,
   } = state;
 
   const video = videoRef.current;
@@ -268,7 +276,15 @@ export const predictWebcam = async (state: {
         repStateRef.current.status === RepStatus.IN_REP &&
         currentRepRef.current
       ) {
-        renderROM();
+        PoseDetectionGraphsUtil.renderROMAndTempoGraphs({
+          exerciseDetectionData,
+          currentRepRef,
+          recordedRepsRef,
+          romCanvasRef,
+          tempoCanvasRef,
+          normDomainRef,
+          theme,
+        });
       }
 
       ctx.save();

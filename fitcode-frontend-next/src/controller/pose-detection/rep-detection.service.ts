@@ -15,6 +15,7 @@ import { KeypointUtil } from './util/keypoint.util';
 import { NumericValueFrameNum } from './type/numeric-value-frame-num';
 import { TimeUtil } from './util/time.util';
 import dayjs from 'dayjs';
+import { TrainingExercise } from '../training/type/training-exercise.type';
 
 export class RepDetectionService {
   /*
@@ -251,7 +252,7 @@ export class RepDetectionService {
       typeof lastRep.endValueFrameNum !== 'number' ||
       typeof lastRep.endValue !== 'number' ||
       lastRep.extremeTimestamp === undefined ||
-      lastRep.endTimestamp === undefined
+      lastRep.endValueTimestamp === undefined
     )
       return; // if we accidentally pass a new recording rep
 
@@ -301,12 +302,12 @@ export class RepDetectionService {
         dayjs(lastRep.extremeTimestamp)
           .add(lastRep.timeAtExtremeMs || 0, 'ms')
           .toDate(),
-        lastRep.endTimestamp
+        lastRep.endValueTimestamp
       );
       console.log({ timeFromExtremeToEndMs: lastRep.timeFromExtremeToEndMs });
       lastRep.durationMs = TimeUtil.getMsDiff(
         lastRep.startTimestamp,
-        lastRep.endTimestamp
+        lastRep.endValueTimestamp
       );
     }
   }
@@ -674,55 +675,27 @@ export class RepDetectionService {
           currentRepRef.current.extremeValueIndex =
             currentRepRef.current.buffer.history.length - 1;
 
+          const timeToFirstExtreme: Date =
+            this.getTimeToFirstExtreme({
+              keypointHistory,
+              keypointId,
+              valueType,
+              direction,
+              currentRepRef,
+            }) || new Date();
+
           // times
-          currentRepRef.current.extremeTimestamp = new Date();
-
-          // loop keypointHistory from back
-          let timeToFirstExtreme: Date = currentRepRef.current.extremeTimestamp;
-
-          keypointHistory.history.reverse().forEach((frame) => {
-            const keypoint = KeypointUtil.getDesiredKeypointFromArray(
-              frame,
-              keypointId
-            );
-
-            if (!keypoint) return;
-
-            const value = KeypointUtil.getKeypointValueByType(
-              keypoint,
-              valueType
-            );
-
-            if (
-              value === undefined ||
-              !currentRepRef.current ||
-              typeof currentRepRef.current.extremeValue !== 'number'
-            )
-              return;
-
-            const repTotalROM = Math.abs(
-              currentRepRef.current.extremeValue -
-                currentRepRef.current.startValue
-            );
-
-            const diffFromExtreme = Math.abs(
-              value - currentRepRef.current.extremeValue
-            );
-
-            if (
-              diffFromExtreme >
-              repTotalROM *
-                POSE_DETECTION_CONSTRAINTS.CLOSE_ENOUGH_TO_START_VALUE_RATIO
-            )
-              return;
-
-            timeToFirstExtreme = new Date(keypoint.capturedAt);
-          });
+          currentRepRef.current.extremeTimestamp = timeToFirstExtreme;
 
           currentRepRef.current.timeToExtremeMs = TimeUtil.getMsDiff(
             currentRepRef.current.startTimestamp,
             timeToFirstExtreme
           );
+
+          // currentRepRef.current.timeToExtremeMs = TimeUtil.getMsDiff(
+          //   currentRepRef.current.startTimestamp,
+          //   currentRepRef.current.extremeTimestamp
+          // );
         }
         break;
       }
@@ -744,10 +717,27 @@ export class RepDetectionService {
 
           // times
           currentRepRef.current.extremeTimestamp = new Date();
+
+          const timeToFirstExtreme: Date =
+            this.getTimeToFirstExtreme({
+              keypointHistory,
+              keypointId,
+              valueType,
+              direction,
+              currentRepRef,
+            }) || new Date();
+
+          // times
+          currentRepRef.current.extremeTimestamp = timeToFirstExtreme;
+
           currentRepRef.current.timeToExtremeMs = TimeUtil.getMsDiff(
             currentRepRef.current.startTimestamp,
-            currentRepRef.current.extremeTimestamp
+            timeToFirstExtreme
           );
+          // currentRepRef.current.timeToExtremeMs = TimeUtil.getMsDiff(
+          //   currentRepRef.current.startTimestamp,
+          //   currentRepRef.current.extremeTimestamp
+          // );
         }
         break;
       }
@@ -1057,27 +1047,115 @@ export class RepDetectionService {
     if (!rep.current) return;
 
     rep.current.endValueFrameNum = extremeValueFrameNum;
-    rep.current.endTimestamp = new Date();
+    rep.current.endValueTimestamp = new Date();
     rep.current.durationMs = TimeUtil.getMsDiff(
       rep.current.startTimestamp,
-      rep.current.endTimestamp
+      rep.current.endValueTimestamp
     );
     rep.current.timeFromExtremeToEndMs = TimeUtil.getMsDiff(
       dayjs(rep.current.extremeTimestamp)
         .add(rep.current.timeAtExtremeMs || 0, 'ms')
         .toDate(),
-      rep.current.endTimestamp
+      rep.current.endValueTimestamp
     );
 
     if (recordedRepsRef.current.length > 0) {
       const prevRep =
         recordedRepsRef.current[recordedRepsRef.current.length - 1];
-      if (prevRep.endTimestamp) {
+      if (prevRep.endValueTimestamp) {
         rep.current.idleTime = TimeUtil.getMsDiff(
-          prevRep.endTimestamp,
+          prevRep.endValueTimestamp,
           rep.current.startTimestamp
         );
       }
     }
   }
+
+  private static getTimeToFirstExtreme(state: {
+    keypointHistory: KeypointHistory;
+    keypointId: KeypointId;
+    valueType: KeypointValueType;
+    currentRepRef: RefObject<Rep | null>;
+    direction: ConditionDirection;
+  }): Date | undefined {
+    const { keypointHistory, keypointId, valueType, currentRepRef, direction } =
+      state;
+
+    if (
+      !currentRepRef.current ||
+      currentRepRef.current.extremeTimestamp === undefined
+    )
+      return;
+
+    let timeToFirstExtreme: Date = currentRepRef.current.extremeTimestamp;
+
+    let i = keypointHistory.history.length - 1;
+    while (i >= 0) {
+      const frame = keypointHistory.history[i];
+      const keypoint = KeypointUtil.getDesiredKeypointFromArray(
+        frame,
+        keypointId
+      );
+
+      if (!keypoint) return;
+
+      const value = KeypointUtil.getKeypointValueByType(keypoint, valueType);
+
+      if (
+        value === undefined ||
+        !currentRepRef.current ||
+        typeof currentRepRef.current.extremeValue !== 'number'
+      )
+        return;
+
+      const repTotalROM = Math.abs(
+        currentRepRef.current.extremeValue - currentRepRef.current.startValue
+      );
+
+      const diffFromExtreme = Math.abs(
+        value - currentRepRef.current.extremeValue
+      );
+
+      if (
+        diffFromExtreme <=
+        repTotalROM *
+          POSE_DETECTION_CONSTRAINTS.EXTREMUM_RANGE_RATIO
+      ) {
+        timeToFirstExtreme = new Date(keypoint.capturedAt);
+      }
+
+      i--;
+    }
+
+    return timeToFirstExtreme;
+  }
+
+  static saveRepTimesToJsonFiles = (state: {
+    recordedRepsRef: RefObject<Rep[]>;
+    selectedExercise: TrainingExercise | undefined;
+  }) => {
+    const { recordedRepsRef, selectedExercise } = state;
+
+    const repsData = recordedRepsRef.current.map((rep) => ({
+      repNumber: rep.repNumber,
+      idleTime: rep.idleTime,
+      timeToExtremeMs: rep.timeToExtremeMs,
+      timeAtExtremeMs: rep.timeAtExtremeMs,
+      timeFromExtremeToEndMs: rep.timeFromExtremeToEndMs,
+      durationMs: rep.durationMs,
+    }));
+
+    const dataStr =
+      'data:text/json;charset=utf-8,' +
+      encodeURIComponent(JSON.stringify(repsData, null, 2));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute('href', dataStr);
+    downloadAnchorNode.setAttribute(
+      'download',
+      `${selectedExercise?.id || 'exercise'}_reps_times.json`
+    );
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+  };
 }
