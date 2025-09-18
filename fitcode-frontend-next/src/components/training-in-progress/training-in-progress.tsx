@@ -12,6 +12,7 @@ import AthleteOptionsContainer from '../athlete-options-container/athlete-option
 import MyModal from '../modal/modal';
 import TrainingInProgressSuperset from '../training-in-progress-superset/training-in-progress-superset';
 import { getUndoneExercises, handleFinishTraining } from './state';
+import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
 import type { SetState } from '@/common/type/state.type';
 import { useHorizontalOverflow } from '@/common/util/horizontal-overflow.util';
@@ -23,7 +24,6 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
-import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 
 interface TrainingInProgressProps {
   setTrainings: SetState<Training[]>;

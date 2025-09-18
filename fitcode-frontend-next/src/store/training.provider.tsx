@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 
 import { useAuthenticatedAuth } from './auth.provider';
+import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 import type { ExerciseOrTraining } from '@/common/type/exercise-or-training.type';
 import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
 import type { ChildrenProps } from '@/common/type/props.type';
@@ -10,7 +11,6 @@ import type { SetState } from '@/common/type/state.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
-import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 
 interface TrainingContextType extends TrainingProviderProps {
   clearTrainingState: () => void;
