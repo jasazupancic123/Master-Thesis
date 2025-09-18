@@ -21,7 +21,7 @@ export const POSE_DETECTION_CONSTRAINTS = {
   PRE_WINDOW_FRAMES_REP_START: 4, // stevilo tock pred zaznano končno, v katerih iščemo ekstremum
 
   // Rep end
-  SLOPE_K_REP_END: 0.04, // naklon premice (K) za konec ponovitve
+  SLOPE_K_REP_END: 0.075, // naklon premice (K) za konec ponovitve
   SUSTAIN_W_REP_END: 2, // stevilo zaporednih tock, ki morajo biti pod naklonom
-  PRE_WINDOW_FRAMES_REP_END: 4, // stevilo tock pred zaznano končno, v katerih iščemo ekstremum
+  POST_WINDOW_FRAMES_REP_END: 8, // stevilo frame-ov po tem ko se rep konča, da najdemo še kakšen ekstremum
 };

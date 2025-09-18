@@ -53,6 +53,15 @@ export class KeypointHistory {
     ) as Keypoint[];
   }
 
+  getLatestFrameNum(): number {
+    const latestFrameKeypoints = this.history[this.history.length - 1];
+    const frameNum = latestFrameKeypoints.find(
+      (kp) => kp.frameNum !== undefined
+    )?.frameNum;
+
+    return frameNum ?? this.history.length - 1;
+  }
+
   cutAtIndex(index: number, clearBufferLength?: boolean) {
     if (index !== -1) {
       this.history = this.history.slice(index);

@@ -5,6 +5,8 @@ import { KeypointId } from '../enum/keypoint-id';
 import { KeypointValueType } from '../enum/keypoint-value-type';
 import { PoseModel } from '../enum/pose-model.enum';
 import type { Keypoint } from '../type/keypoint.type';
+import { NumericValueFrameNum } from '../type/numeric-value-frame-num';
+import toast from 'react-hot-toast';
 
 export class KeypointUtil {
   static getDesiredKeypointsByModel(
@@ -111,11 +113,11 @@ export class KeypointUtil {
   }
 
   static smoothKeypointValues(
-    keypointValues: number[],
+    keypointValues: NumericValueFrameNum[] | number[],
     fps = 30,
     windowSizeProps?: number,
     polynomialProps?: number
-  ): number[] {
+  ): NumericValueFrameNum[] | number[] {
     // ~0.5–1.5 reps/sec → use a small odd window (11–21 for 30 fps)
     const windowSize = windowSizeProps || 11;
     const polynomial = polynomialProps || 3;
@@ -123,13 +125,29 @@ export class KeypointUtil {
     // sampling interval (seconds per sample)
     const dx = 1 / fps;
 
-    return savitzkyGolay(keypointValues, dx, {
-      windowSize,
-      polynomial,
-      derivative: 0,
-      pad: 'pre', // handle edges
-      padValue: 'replicate',
-    });
+    const values = savitzkyGolay(
+      keypointValues.map((k) =>
+        this.checkIsNumericValueFrameNum(k) ? k.value : k
+      ),
+      dx,
+      {
+        windowSize,
+        polynomial,
+        derivative: 0,
+        pad: 'pre', // handle edges
+        padValue: 'replicate',
+      }
+    );
+
+    if (keypointValues.length !== values.length)
+      toast.error('Smoothing error: length mismatch');
+
+    return this.checkIsNumericValueFrameNumArray(keypointValues)
+      ? values.map((v, i) => ({
+          value: v,
+          frameNum: keypointValues[i].frameNum,
+        }))
+      : values;
   }
 
   static drawKeypointValuesGraph(
@@ -168,7 +186,7 @@ export class KeypointUtil {
       ? history
       : seriesFrom(history);
 
-    const smoothedVals = this.smoothKeypointValues(fullVals);
+    const smoothedVals = this.smoothKeypointValues(fullVals) as number[];
 
     const draw = (vals: number[], name: string, stroke: string) => {
       if (vals.length === 0) return;
@@ -241,4 +259,16 @@ export class KeypointUtil {
 
     return velocity;
   }
+
+  private static checkIsNumericValueFrameNum = (
+    item: number | NumericValueFrameNum
+  ): item is NumericValueFrameNum => {
+    return typeof item === 'object' && 'value' in item && 'frameNum' in item;
+  };
+
+  private static checkIsNumericValueFrameNumArray = (
+    arr: (number | NumericValueFrameNum)[]
+  ): arr is NumericValueFrameNum[] => {
+    return arr.every((item) => this.checkIsNumericValueFrameNum(item));
+  };
 }

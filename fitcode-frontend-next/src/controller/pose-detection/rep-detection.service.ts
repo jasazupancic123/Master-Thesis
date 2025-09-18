@@ -12,6 +12,7 @@ import type { Keypoint } from './type/keypoint.type';
 import type { Rep } from './type/rep.type';
 import type { RepState } from './type/rep-state.type';
 import { KeypointUtil } from './util/keypoint.util';
+import { NumericValueFrameNum } from './type/numeric-value-frame-num';
 
 export class RepDetectionService {
   /*
@@ -65,17 +66,22 @@ export class RepDetectionService {
     switch (repStateRef.current.status) {
       case RepStatus.IN_REP: {
         // check for rep end
-        const isRepDone = this.checkHasRepEnded({
+        const { isRepDone, extremeValueFrameNum } = this.checkHasRepEnded({
           repStateRef,
           currentRepRef,
           recordedRepsRef,
+          keypointHistory,
           direction,
           keypointId,
           valueType,
           avgFps,
         });
 
-        if (isRepDone && currentRepRef.current) {
+        if (
+          isRepDone &&
+          extremeValueFrameNum !== undefined &&
+          currentRepRef.current
+        ) {
           // Save rep
 
           this.updateAvgStartAndExtremeValue(
@@ -85,6 +91,7 @@ export class RepDetectionService {
           );
 
           this.setRepEndValue(currentRepRef, keypointId, valueType);
+          currentRepRef.current.endValueFrameNum = extremeValueFrameNum;
 
           // this.postProcessRep(); -> TODO()
 
@@ -98,27 +105,53 @@ export class RepDetectionService {
         break;
       }
       case RepStatus.IDLE: {
-        // check for rep start
-        const { hasRepStarted, startValue } = this.checkHasRepStarted({
-          currentFrameKeypoints,
-          keypointHistory,
-          currentRepBuffer: currentRepRef.current?.buffer,
-          keypointId,
-          valueType,
-          direction,
-          exerciseStartConditions,
-          avgFps,
-          initedFirstFrameInRecordingMode,
-        });
+        if (recordedRepsRef.current.length > 0) {
+          const lastRep =
+            recordedRepsRef.current[recordedRepsRef.current.length - 1];
 
-        if (hasRepStarted && startValue !== undefined) {
+          const currentFrameNum = keypointHistory.getLatestFrameNum();
+
+          if (
+            typeof lastRep.endValueFrameNum === 'number' &&
+            Math.abs(currentFrameNum - lastRep.endValueFrameNum) <=
+              POSE_DETECTION_CONSTRAINTS.POST_WINDOW_FRAMES_REP_END
+          )
+            this.checkPostWindowForExtraExtremums({
+              lastRep,
+              currentFrameKeypoints,
+              keypointId,
+              valueType,
+              direction,
+            });
+        }
+
+        // check for rep start
+        const { hasRepStarted, startValue, startValueFrameNum } =
+          this.checkHasRepStarted({
+            currentFrameKeypoints,
+            keypointHistory,
+            currentRepBuffer: currentRepRef.current?.buffer,
+            keypointId,
+            valueType,
+            direction,
+            exerciseStartConditions,
+            avgFps,
+            initedFirstFrameInRecordingMode,
+          });
+
+        if (
+          hasRepStarted &&
+          startValue !== undefined &&
+          startValueFrameNum !== undefined
+        ) {
           console.log('NEW REP DETECTED with startValue', startValue);
           repStateRef.current.status = RepStatus.IN_REP; // we are now in the rep
 
           // init new rep
           currentRepRef.current = this.initNewRep(
             recordedRepsRef.current.length + 1,
-            startValue
+            startValue,
+            startValueFrameNum
           );
         }
         break;
@@ -189,19 +222,84 @@ export class RepDetectionService {
     }
   }
 
+  // A buffer, which after we detect rep end, checks for extra extremums in the next n frames
+  static checkPostWindowForExtraExtremums(state: {
+    lastRep: Rep;
+    currentFrameKeypoints: Keypoint[];
+    keypointId: KeypointId;
+    valueType: KeypointValueType;
+    direction: ConditionDirection;
+  }) {
+    console.log('checkPostWindowForExtraExtremums');
+    const { lastRep, currentFrameKeypoints, keypointId, valueType, direction } =
+      state;
+
+    if (
+      !lastRep.detectedExtremum ||
+      typeof lastRep.endValueFrameNum !== 'number' ||
+      typeof lastRep.endValue !== 'number'
+    )
+      return; // if we accidentally pass a new recording rep
+
+    const currentKeypoint = KeypointUtil.getDesiredKeypointFromArray(
+      currentFrameKeypoints,
+      keypointId
+    );
+
+    if (!currentKeypoint) return;
+
+    const currentValue = KeypointUtil.getKeypointValueByType(
+      currentKeypoint,
+      valueType
+    );
+
+    if (currentValue === undefined) return;
+
+    if (
+      direction === ConditionDirection.POSITIVE &&
+      currentValue < lastRep.endValue
+    ) {
+      // local min
+      console.log(
+        'UPDATED EXTREMUM IN POST WINDOW from',
+        lastRep.endValue,
+        ' to ',
+        currentValue
+      );
+      lastRep.endValue = currentValue;
+      lastRep.endValueFrameNum = currentValue;
+    } else if (
+      direction === ConditionDirection.NEGATIVE &&
+      currentValue > lastRep.endValue
+    ) {
+      // local max
+      console.log(
+        'UPDATED EXTREMUM IN POST WINDOW from',
+        lastRep.endValue,
+        ' to ',
+        currentValue
+      );
+
+      lastRep.endValue = currentValue;
+      lastRep.endValueFrameNum = currentValue;
+    }
+  }
+
   static checkHasRepEnded(state: {
     repStateRef: RefObject<RepState>;
     currentRepRef: RefObject<Rep | null>;
     recordedRepsRef: RefObject<Rep[]>;
+    keypointHistory: KeypointHistory;
     direction: ConditionDirection;
     keypointId: KeypointId;
     valueType: KeypointValueType;
     avgFps: { value: number; count: number } | null;
-  }): boolean {
+  }): { isRepDone: boolean; extremeValueFrameNum?: number } {
     const {
       repStateRef,
       currentRepRef,
       recordedRepsRef,
+      keypointHistory,
       direction,
       keypointId,
       valueType,
@@ -222,8 +320,9 @@ export class RepDetectionService {
       currentValue === null ||
       !velocity ||
       scale === null
-    )
-      return false;
+    ) {
+      return { isRepDone: false };
+    }
 
     // Update extreme value
     this.updateExtremeRepValue(
@@ -237,10 +336,12 @@ export class RepDetectionService {
     if (
       currentRepRef.current?.extremeValue === undefined ||
       !currentRepRef.current?.detectedExtremum
-    )
-      return false;
+    ) {
+      return { isRepDone: false };
+    }
 
-    if (currentRepRef.current?.buffer.history.length < 2) return false;
+    if (currentRepRef.current?.buffer.history.length < 2)
+      return { isRepDone: false };
 
     // Check if current value is close enough to starting value
     if (
@@ -250,7 +351,7 @@ export class RepDetectionService {
         currentRepRef
       )
     ) {
-      return false;
+      return { isRepDone: false };
     }
 
     // slope = naklon
@@ -263,14 +364,16 @@ export class RepDetectionService {
       detectingRepStart: false,
     });
 
-    if (slope === undefined) return false;
+    if (slope === undefined) return { isRepDone: false };
+
+    const extremeValueFrameNum = keypointHistory.getLatestFrameNum();
 
     // HERE ALSO LOOK FOR LOCAL EXTREMUM, NOT JUST SLOPE
     // If we look for local extremum, we also need to capture the next n frames and get the extremum
     // out of those, or maybe just track the next n frames, if the value is more extreme than the
     // current extreme_value, then update it
 
-    return true;
+    return { isRepDone: true, extremeValueFrameNum };
   }
 
   static checkHasRepStarted(state: {
@@ -283,7 +386,11 @@ export class RepDetectionService {
     exerciseStartConditions: ExerciseRepStartCondition[];
     avgFps: { value: number; count: number } | null;
     initedFirstFrameInRecordingMode: RefObject<boolean>;
-  }): { hasRepStarted: boolean; startValue?: number } {
+  }): {
+    hasRepStarted: boolean;
+    startValue?: number;
+    startValueFrameNum?: number;
+  } {
     const {
       currentFrameKeypoints,
       keypointHistory,
@@ -318,12 +425,13 @@ export class RepDetectionService {
     if (currentHistory.history.length < 2) return { hasRepStarted: false };
 
     // New rep detected, find percise starting point
-    const { startIndex, startValue } = RepDetectionService.findStartOfRep({
-      buffer: currentHistory,
-      keypointId,
-      valueType,
-      direction,
-    });
+    const { startIndex, startValue, startValueFrameNum } =
+      RepDetectionService.findStartOfRep({
+        buffer: currentHistory,
+        keypointId,
+        valueType,
+        direction,
+      });
 
     currentHistory.cutAtIndex(startIndex, true);
 
@@ -334,11 +442,12 @@ export class RepDetectionService {
 
     if (!startKeypoint) return { hasRepStarted: false };
 
-    if (startValue === undefined) return { hasRepStarted: false };
+    if (startValue === undefined || startValueFrameNum === undefined)
+      return { hasRepStarted: false };
 
     initedFirstFrameInRecordingMode.current = true;
 
-    return { hasRepStarted: true, startValue };
+    return { hasRepStarted: true, startValue, startValueFrameNum };
   }
 
   static findStartOfRep(state: {
@@ -346,16 +455,22 @@ export class RepDetectionService {
     keypointId: KeypointId;
     valueType: KeypointValueType;
     direction: ConditionDirection;
-  }): { startIndex: number; startValue: number } {
+  }): { startIndex: number; startValue: number; startValueFrameNum: number } {
     const { buffer, keypointId, valueType, direction } = state;
 
     // 1) Get smoothed values of the keypoint's values
-    const values = this.getSmoothedValues(buffer, keypointId, valueType);
+    const values = this.getSmoothedValues(
+      buffer,
+      keypointId,
+      valueType
+    ) as NumericValueFrameNum[];
 
     const n = values.length;
 
     // 2) Velocity
-    const velocity: number[] = KeypointUtil.getVelocityFromValues(values);
+    const velocity: number[] = KeypointUtil.getVelocityFromValues(
+      values.map((v) => v.value)
+    );
 
     // Used to calculate min and std of the first half of the velocity data (assumes user starts from still)
     const firstHalfVelocity = velocity.slice(1, Math.floor(n / 2));
@@ -385,7 +500,11 @@ export class RepDetectionService {
             minVal = values[i];
             minIdx = i;
           }
-        return { startIndex: minIdx, startValue: minVal };
+        return {
+          startIndex: minIdx,
+          startValue: minVal.value,
+          startValueFrameNum: minVal.frameNum,
+        };
       } else if (direction === ConditionDirection.NEGATIVE) {
         let maxIdx = 0,
           maxVal = values[0];
@@ -394,7 +513,11 @@ export class RepDetectionService {
             maxVal = values[i];
             maxIdx = i;
           }
-        return { startIndex: maxIdx, startValue: maxVal };
+        return {
+          startIndex: maxIdx,
+          startValue: maxVal.value,
+          startValueFrameNum: maxVal.frameNum,
+        };
       } else {
         // infer by overall trend: default to NEGATIVE if end < start
         if (values[n - 1] < values[0]) {
@@ -405,7 +528,11 @@ export class RepDetectionService {
               maxVal = values[i];
               maxIdx = i;
             }
-          return { startIndex: maxIdx, startValue: maxVal };
+          return {
+            startIndex: maxIdx,
+            startValue: maxVal.value,
+            startValueFrameNum: maxVal.frameNum,
+          };
         } else {
           let minIdx = 0,
             minVal = values[0];
@@ -414,7 +541,11 @@ export class RepDetectionService {
               minVal = values[i];
               minIdx = i;
             }
-          return { startIndex: minIdx, startValue: minVal };
+          return {
+            startIndex: minIdx,
+            startValue: minVal.value,
+            startValueFrameNum: minVal.frameNum,
+          };
         }
       }
     }
@@ -439,7 +570,11 @@ export class RepDetectionService {
       }
     }
 
-    return { startIndex: extremumIdx, startValue: extremumVal };
+    return {
+      startIndex: extremumIdx,
+      startValue: extremumVal.value,
+      startValueFrameNum: extremumVal.frameNum,
+    };
   }
 
   private static checkValueCloseEnoughToStartValue(
@@ -524,7 +659,7 @@ export class RepDetectionService {
     buffer: KeypointHistory,
     keypointId: KeypointId,
     valueType: KeypointValueType
-  ) {
+  ): NumericValueFrameNum[] | number[] {
     const rawKeypoints: (Keypoint | undefined)[] =
       buffer.getHistoryById(keypointId);
     const lastUndefIndx = rawKeypoints.lastIndexOf(undefined);
@@ -535,8 +670,11 @@ export class RepDetectionService {
     );
 
     const unsmoothedValues = keypoints
-      .map((k) => KeypointUtil.getKeypointValueByType(k, valueType))
-      .filter((v): v is number => v !== undefined);
+      .map((k) => ({
+        value: KeypointUtil.getKeypointValueByType(k, valueType),
+        frameNum: k.frameNum,
+      }))
+      .filter((v): v is NumericValueFrameNum => v.value !== undefined);
 
     const values = KeypointUtil.smoothKeypointValues(
       unsmoothedValues,
@@ -575,8 +713,6 @@ export class RepDetectionService {
 
     while (s >= 0) {
       const K = velocity[s] / Math.max(scale, 1e-6);
-
-      console.log('K', K);
 
       let hit: boolean;
 
@@ -660,9 +796,11 @@ export class RepDetectionService {
       currentRepBuffer,
       keypointId,
       valueType
-    );
+    ) as NumericValueFrameNum[];
 
-    const velocity: number[] = KeypointUtil.getVelocityFromValues(values);
+    const velocity: number[] = KeypointUtil.getVelocityFromValues(
+      values.map((v) => v.value)
+    );
 
     // Data-driven threshold: k * std(v)
     const scale = this.getScaleFromVelocity(velocity);
@@ -675,11 +813,16 @@ export class RepDetectionService {
     };
   }
 
-  static initNewRep(repNumber: number, startValue: number): Rep {
+  static initNewRep(
+    repNumber: number,
+    startValue: number,
+    startValueFrameNum: number
+  ): Rep {
     return {
       repNumber,
       createdAt: new Date(),
       startValue,
+      startValueFrameNum,
       buffer: new KeypointHistory([]),
       detectedExtremum: false,
     };
