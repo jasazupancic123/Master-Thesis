@@ -54,6 +54,7 @@ import {
   WARMUP_COMPONENT_ID,
 } from '@src/component/constant/warmup-cooldown.constant';
 import { IntType, ParamType } from '@src/component/enum/param.enum';
+import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { DELETE_GROUP_EVENT } from '@src/group/constant/delete-group-event.constant';
 import { Cycle } from '@src/group/entity/cycle.entity';
@@ -73,6 +74,7 @@ import {
   DURATION_TRAINING_COMPONENT_WARMUP_COOLDOWN_IN_MIN,
   MAX_NUM_TRAININGS_PER_DAY,
 } from '../constant/training-limits.constant';
+import { CompleteSetDto } from '../dto/complete-set.dto';
 import {
   CreateTrainingComponentDto,
   CreateTrainingDto,
@@ -112,6 +114,7 @@ export class TrainingService implements Permission<Training, Institution> {
     private readonly workloadService: WorkloadService,
     private readonly groupService: GroupService,
     private readonly institutionService: InstitutionService,
+    private readonly exerciseService: ExerciseService,
   ) {}
 
   async getDocs(query: (query: Query) => Query = (query) => query) {
@@ -155,17 +158,18 @@ export class TrainingService implements Permission<Training, Institution> {
   ): Promise<Training[]> {
     const trainings = await this.repository.findAll(
       logFirestoreQuery(this.logger, (q) => {
-        if (
-          this.firebaseService.isTrainer(user) ||
-          this.firebaseService.isManager(user)
-        )
+        if (this.firebaseService.isTrainer(user))
           q = q.where('ownerId', '==', user.uid);
         else if (this.firebaseService.isAthlete(user))
           q = q.where('membersIds', 'array-contains', user.uid);
 
         // filter by other params
+        if (filter?.institutionId)
+          q.where('institutionId', '==', filter.institutionId);
+
         if (filter?.groupId) q = q.where('groupId', '==', filter.groupId);
         if (filter?.cycleId) q = q.where('cycleId', '==', filter.cycleId);
+
         if (filter?.from)
           q = q.where('from', '>=', Timestamp.fromDate(new Date(filter.from)));
         if (filter?.to)
@@ -199,9 +203,7 @@ export class TrainingService implements Permission<Training, Institution> {
         const foundGroup = groups.find((g) => g.id === t.groupId);
         const group =
           foundGroup || t.groupId
-            ? await this.groupService.findOneById(user, {
-                groupId: t.groupId,
-              })
+            ? await this.groupService.findOneById(user, { groupId: t.groupId })
             : undefined;
 
         if (!foundInstitution && institution) institutions.push(institution);
@@ -209,7 +211,9 @@ export class TrainingService implements Permission<Training, Institution> {
 
         t.institution = institution;
         t.group = group;
-        t.cycle = this.groupService.findCycleOrFail(t.cycleId, t.group);
+
+        if (group)
+          t.cycle = this.groupService.findCycleOrFail(t.cycleId, t.group);
       }
 
       const duration = this.commonService.number.round(
@@ -717,6 +721,45 @@ export class TrainingService implements Permission<Training, Institution> {
     return periodized.sort(
       (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime(),
     );
+  }
+
+  @LogMethod()
+  async completeNextSet(
+    user: User,
+    ref: Pick<WorkloadRef, 'trainingId' | 'exerciseId' | 'userId'>,
+    input: CompleteSetDto,
+  ) {
+    const { userId } = ref;
+    const training = await this.findOneByIdOrFail(user, ref);
+    const athlete = await this.getAthlete(user, userId, training.institution);
+    await this.exerciseService.findOneByIdOrFail(athlete, ref);
+
+    if (
+      !this.commonService.date.isBetween(
+        training.from,
+        startOfDay(new Date()),
+        endOfDay(new Date()),
+      )
+    )
+      throw new ConflictException(
+        'You cannot complete trainings that are not on the same day',
+      );
+
+    return await this.workloadService.completeNextSet(ref, training, input);
+  }
+
+  @LogMethod()
+  async completeProvidedSet(
+    user: User,
+    ref: WorkloadRef,
+    input: CompleteSetDto,
+  ) {
+    const { userId } = ref;
+    const training = await this.findOneByIdOrFail(user, ref);
+    const athlete = await this.getAthlete(user, userId, training.institution);
+    await this.exerciseService.findOneByIdOrFail(athlete, ref);
+
+    return await this.workloadService.completeProvidedSet(ref, training, input);
   }
 
   @LogMethod()

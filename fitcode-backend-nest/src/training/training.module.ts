@@ -27,6 +27,7 @@ import { TrainingController } from './training.controller';
     ExerciseModule,
     GroupModule,
     PeriodizationModule,
+    ExerciseModule,
   ],
   providers: [
     WorkloadRepository,
