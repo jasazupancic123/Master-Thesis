@@ -6,6 +6,7 @@ import type { Keypoint } from '../type/keypoint.type';
 import type { Rep } from '../type/rep.type';
 import { KeypointUtil } from './keypoint.util';
 import { TimeUtil } from './time.util';
+import { X } from '@mui/icons-material';
 
 export class PoseDetectionGraphsUtil {
   // Call this right after you push a new ROM sample into romBuffer
@@ -59,19 +60,26 @@ export class PoseDetectionGraphsUtil {
       : currentRepRef.current;
 
     if (longestRep && longestRep.endValueTimestamp) {
-      const longestRepDuration =
-        TimeUtil.getMsDiff(
-          longestRep.startTimestamp,
-          longestRep.endValueTimestamp
-        ) - (longestRep.timeAtExtremeMs || 0);
+      // const longestRepDuration =
+      //   TimeUtil.getMsDiff(
+      //     longestRep.startTimestamp,
+      //     longestRep.endValueTimestamp
+      //   ) - (longestRep.timeAtExtremeMs || 0);
+
+      const longestRepDuration = TimeUtil.getMsDiff(
+        longestRep.startTimestamp,
+        longestRep.endValueTimestamp
+      );
 
       const normalizedTimesToExtremeMs: number[] = [];
       const normalizedTimesFromExtremeToEndMs: number[] = [];
+      const normalizedTimesAtExtremeMs: number[] = [];
 
       recordedRepsRef.current.forEach((rep) => {
         if (
           rep.timeToExtremeMs === undefined ||
-          rep.timeFromExtremeToEndMs === undefined
+          rep.timeFromExtremeToEndMs === undefined ||
+          rep.timeAtExtremeMs === undefined
         ) {
           return;
         }
@@ -81,6 +89,9 @@ export class PoseDetectionGraphsUtil {
         );
         normalizedTimesFromExtremeToEndMs.push(
           rep.timeFromExtremeToEndMs / longestRepDuration
+        );
+        normalizedTimesAtExtremeMs.push(
+          rep.timeAtExtremeMs / longestRepDuration
         );
       });
 
@@ -92,10 +103,9 @@ export class PoseDetectionGraphsUtil {
         h: tempoRect.height,
         normalizedTimesToExtremeMs,
         normalizedTimesFromExtremeToEndMs,
+        normalizedTimesAtExtremeMs,
         theme,
       });
-    } else {
-      console.log({ longestRep, endTimestamp: longestRep.endValueTimestamp });
     }
 
     // ---- ROM GRAPH ----
@@ -232,6 +242,7 @@ export class PoseDetectionGraphsUtil {
     h: number;
     normalizedTimesToExtremeMs: number[];
     normalizedTimesFromExtremeToEndMs: number[];
+    normalizedTimesAtExtremeMs: number[];
     theme: Theme;
     inset?: number;
   }) => {
@@ -241,13 +252,15 @@ export class PoseDetectionGraphsUtil {
       h,
       normalizedTimesToExtremeMs,
       normalizedTimesFromExtremeToEndMs,
+      normalizedTimesAtExtremeMs,
       theme,
       inset = 12,
     } = state;
 
     if (
       normalizedTimesToExtremeMs.length !==
-      normalizedTimesFromExtremeToEndMs.length
+        normalizedTimesFromExtremeToEndMs.length ||
+      normalizedTimesToExtremeMs.length !== normalizedTimesAtExtremeMs.length
     ) {
       console.error('Tempo times lengths mismatch');
       return;
@@ -368,6 +381,30 @@ export class PoseDetectionGraphsUtil {
           { tl: barW / 2, tr: barW / 2 } // round at far (top) end
         );
         ctx.fillStyle = theme.palette.primary.main;
+        ctx.fill();
+      }
+
+      // Middle black bar for time at extreme (0..1 -> pixels)
+      const atExtremeNorm = Math.max(
+        0,
+        Math.min(1, normalizedTimesAtExtremeMs[i])
+      );
+
+      if (atExtremeNorm > 0) {
+        const blackBarW = 2; // keep it within bar width if you like
+        const blackBarLenPx = -1 * atExtremeNorm * halfH; // full height range around center
+
+        // center the black bar on the same x as the pair, centered over the green/red
+        const bx = x + (barW - blackBarW) / 2;
+        const by = centerY;
+
+        // rounded vertical bar
+        drawRoundedRect(bx, by, blackBarW, blackBarLenPx, {
+          tl: blackBarW,
+          tr: blackBarW,
+        });
+
+        ctx.fillStyle = '#222222';
         ctx.fill();
       }
 
