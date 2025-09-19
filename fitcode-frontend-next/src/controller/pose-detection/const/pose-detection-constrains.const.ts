@@ -14,8 +14,9 @@ export const POSE_DETECTION_CONSTRAINTS = {
   // Extremum detection
   MIN_FRAMES_FOR_EXTREMUM: 4, // min 4 total consecutive correct frames (2pos k's, 2neg k's)
   MIN_TIME_FOR_EXTREMUM_S: 0.2, // in seconds, it's time for the value to go into opposite direction to detect extremum
-  EXTREMUM_RANGE_TIME_TO_EXTREME_RATIO: 0.1, // used to detect timeToExtremum
-  EXTREMUM_RANGE_TIME_AT_EXTREME_RATIO: 0.01, // used to detect timeAtExtremum
+  EXTREMUM_RANGE_TIME_TO_EXTREME_RATIO: 0.1, // used to detect timeToExtremeMs
+  EXTREMUM_RANGE_TIME_AT_EXTREME_RATIO: 0.01, // used to detect timeAtExtremumMs
+  NEW_EXTREMUM_DETECTION_RATIO: 0.02, // if we reach a new extremum, it needs to be at least this % away from the previous one
 
   // Rep start
   SLOPE_K_REP_START: 0.5, // naklon premice (K) za zacetek ponovitve

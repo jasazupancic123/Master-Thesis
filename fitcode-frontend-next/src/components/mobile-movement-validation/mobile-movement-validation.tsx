@@ -343,6 +343,7 @@ export default function MobileMovementValidation(
             position: 'absolute',
             bottom: 10,
             left: 0,
+            zIndex: 100000,
           }}
         >
           <Button

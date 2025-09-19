@@ -24,6 +24,7 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
+import { useAthleteHeader } from '@/store/athlete-header.provider';
 
 interface TrainingInProgressProps {
   setTrainings: SetState<Training[]>;
@@ -39,7 +40,6 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
   const {
     trainingInProgress,
     setTrainingInProgress,
-    selectedTrackingMethod,
     setView,
     clearTrainingState,
   } = useTraining();
@@ -52,6 +52,8 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
     supersetIndex,
     setSetIndex,
   } = useTrainingInProgress();
+
+  const { selectedTrackingMethod } = useAthleteHeader();
 
   const { outerRef, innerRef, isOverflowing } = useHorizontalOverflow();
   const { setTrainings } = props;
