@@ -1014,10 +1014,10 @@ export class RepDetectionService {
       if (
         (direction === ConditionDirection.POSITIVE &&
           diffFromExtreme >=
-            repTotalROM * POSE_DETECTION_CONSTRAINTS.EXTREMUM_RANGE_RATIO) ||
+            repTotalROM * POSE_DETECTION_CONSTRAINTS.EXTREMUM_RANGE_TIME_AT_EXTREME_RATIO) ||
         (direction === ConditionDirection.NEGATIVE &&
           diffFromExtreme <=
-            -1 * repTotalROM * POSE_DETECTION_CONSTRAINTS.EXTREMUM_RANGE_RATIO)
+            -1 * repTotalROM * POSE_DETECTION_CONSTRAINTS.EXTREMUM_RANGE_TIME_AT_EXTREME_RATIO)
       ) {
         currentRepRef.current.currentlyInExtremumRange = false;
 
@@ -1032,7 +1032,7 @@ export class RepDetectionService {
       // We are out of extremum range, track if we go back in it
       if (
         diffFromExtreme <
-        repTotalROM * POSE_DETECTION_CONSTRAINTS.EXTREMUM_RANGE_RATIO
+        repTotalROM * POSE_DETECTION_CONSTRAINTS.EXTREMUM_RANGE_TIME_AT_EXTREME_RATIO
       ) {
         currentRepRef.current.currentlyInExtremumRange = true;
       }
@@ -1118,7 +1118,7 @@ export class RepDetectionService {
 
       if (
         diffFromExtreme <=
-        repTotalROM * POSE_DETECTION_CONSTRAINTS.EXTREMUM_RANGE_RATIO
+        repTotalROM * POSE_DETECTION_CONSTRAINTS.EXTREMUM_RANGE_TIME_TO_EXTREME_RATIO
       ) {
         timeToFirstExtreme = new Date(keypoint.capturedAt);
       }

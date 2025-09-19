@@ -57,12 +57,12 @@ export default function MobileMovementValidation(
       ? EXERCISE_POSES.find((e) => e.exerciseIds.includes(selectedExercise.id))
           ?.data
       : {
-          romKeypointId: KeypointId.LEFT_WRIST,
+          romKeypointId: KeypointId.RIGHT_WRIST,
           romValueType: KeypointValueType.POSITION_Y,
           romStartDirection: ConditionDirection.POSITIVE,
           conditions: [
             {
-              keypointId: KeypointId.LEFT_WRIST,
+              keypointId: KeypointId.RIGHT_WRIST,
               type: KeypointValueType.POSITION_Y,
               direction: ConditionDirection.POSITIVE,
               duration: 750, // ms
