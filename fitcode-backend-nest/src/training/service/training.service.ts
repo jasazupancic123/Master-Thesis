@@ -726,13 +726,41 @@ export class TrainingService implements Permission<Training, Institution> {
   @LogMethod()
   async completeNextSet(
     user: User,
-    ref: Pick<WorkloadRef, 'trainingId' | 'exerciseId' | 'userId'>,
+    ref: Pick<WorkloadRef, 'trainingId' | 'userId'>,
     input: CompleteSetDto,
   ) {
     const { userId } = ref;
+    const { exerciseId } = input;
+
     const training = await this.findOneByIdOrFail(user, ref);
     const athlete = await this.getAthlete(user, userId, training.institution);
-    await this.exerciseService.findOneByIdOrFail(athlete, ref);
+    const exercise = await this.exerciseService.findOneByIdOrFail(athlete, {
+      exerciseId,
+    });
+
+    if (exercise.isBilateral) {
+      const pairs = {
+        reps: [input.reps, input.repsR],
+        time: [input.time, input.timeR],
+        dist: [input.dist, input.distR],
+        load: [input.load, input.loadR],
+        rom: [input.rom, input.romR],
+        velocity: [input.velocity, input.velocityR],
+        tempo: [input.tempo, input.tempoR],
+        photoUrl: [input.photoUrl, input.photoUrlR],
+        tempos: [input.tempos, input.temposR],
+        roms: [input.roms, input.romsR],
+        velocities: [input.velocities, input.velocitiesR],
+        feedback: [input.feedback, input.feedbackR],
+      };
+
+      // check that both sides are filled or none
+      for (const [key, [left, right]] of Object.entries(pairs))
+        if ((left && !right) || (!left && right))
+          throw new BadRequestException(
+            `Both sides must be filled for ${key} or none`,
+          );
+    }
 
     if (
       !this.commonService.date.isBetween(
@@ -741,11 +769,21 @@ export class TrainingService implements Permission<Training, Institution> {
         endOfDay(new Date()),
       )
     )
-      throw new ConflictException(
-        'You cannot complete trainings that are not on the same day',
-      );
+      throw new ConflictException('Training is not scheduled for today');
 
-    return await this.workloadService.completeNextSet(ref, training, input);
+    const prescribedTraining = this.trainingPlanService.getTrainingByAthlete(
+      athlete.uid,
+      training,
+    );
+
+    await this.updateBodyweightSets(athlete.uid, prescribedTraining);
+    await this.updateRepMaxSets(athlete.uid, prescribedTraining);
+
+    return await this.workloadService.completeNextSet(
+      { ...ref, exerciseId },
+      prescribedTraining,
+      input,
+    );
   }
 
   @LogMethod()

@@ -22,6 +22,7 @@ import { RequestUser } from '../common/decorator/request-user.decorator';
 import { CommonService } from '../common/service/common.service';
 import { User } from '../common/type/firebase-auth.type';
 import { AddTrainingComponentsDto } from './dto/add-training-components.dto';
+import { CompleteSetDto } from './dto/complete-set.dto';
 import { CreateTrainingDto } from './dto/create-training.dto';
 import { FilterTrainingQueryDto } from './dto/filter-training-query.dto';
 import { PeriodizeTrainingsDto } from './dto/periodize-training.dto';
@@ -170,6 +171,17 @@ export class TrainingController {
     const ref = { trainingId };
     await this.trainingService.remove(user, ref);
     return {};
+  }
+
+  @Post(':trainingId/complete-next-set')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
+  async completeNextSet(
+    @RequestUser() user: User,
+    @Param('trainingId') trainingId: string,
+    @Body() body: CompleteSetDto,
+  ) {
+    const ref = { trainingId, userId: body.userId };
+    return await this.trainingService.completeNextSet(user, ref, body);
   }
 
   @Patch(':trainingId/component/:componentId/complete')
