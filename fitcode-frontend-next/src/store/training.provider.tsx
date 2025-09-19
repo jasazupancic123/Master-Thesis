@@ -18,8 +18,6 @@ interface TrainingContextType extends TrainingProviderProps {
   setTrainingInProgress: SetState<TrainingInProgress | null>;
   view: ExerciseOrTraining;
   setView: SetState<ExerciseOrTraining>;
-  selectedTrackingMethod: TrackingMethod;
-  setSelectedTrackingMethod: SetState<TrackingMethod>;
   isLoaded: boolean;
   updateTrainingInProgress: (
     exercise: TrainingExercise,
@@ -48,8 +46,6 @@ export const TrainingProvider = (
   const [view, setView] = useState<ExerciseOrTraining>(
     ExerciseTrainingView.ExerciseView
   );
-  const [selectedTrackingMethod, setSelectedTrackingMethod] =
-    useState<TrackingMethod>(TrackingMethod.MANUAL);
 
   const { user } = useAuthenticatedAuth();
 
@@ -134,8 +130,6 @@ export const TrainingProvider = (
         setTrainingInProgress,
         view,
         setView,
-        selectedTrackingMethod,
-        setSelectedTrackingMethod,
         isLoaded,
         updateTrainingInProgress,
       }}

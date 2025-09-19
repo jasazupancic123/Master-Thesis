@@ -25,7 +25,6 @@ export type Rep = {
   // extremeValue
   extremeValue?: number; // the max or min value reached during the rep, also needs to be out of a certain range from the start value
   extremeValueFrameNum?: number; // the frame number when the extreme value was reached
-  extremeValueIndex?: number; // the index in the repBuffer of the extremeValue
   extremeTimestamp?: Date; // when the extreme value was reached
   extremeToEndTimestamp?: Date; // when going from extreme value to end
 

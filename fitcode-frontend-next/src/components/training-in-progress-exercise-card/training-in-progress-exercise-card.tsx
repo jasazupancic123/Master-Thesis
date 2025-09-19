@@ -29,6 +29,7 @@ import { MainSet } from '@/controller/training/enum/main-set.enum';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
+import { useAthleteHeader } from '@/store/athlete-header.provider';
 
 export default function TrainingInProgressExerciseCard() {
   const theme = useTheme();
@@ -37,8 +38,6 @@ export default function TrainingInProgressExerciseCard() {
   const {
     trainingInProgress,
     setTrainingInProgress,
-    selectedTrackingMethod,
-    setSelectedTrackingMethod,
     updateTrainingInProgress,
   } = useTraining();
 
@@ -51,6 +50,9 @@ export default function TrainingInProgressExerciseCard() {
     setIndex,
     setSetIndex,
   } = useTrainingInProgress();
+
+  const { selectedTrackingMethod, setSelectedTrackingMethod } =
+    useAthleteHeader();
 
   const [expandedSetsView, setExpandedSetsView] = useState(false);
   const [imageHeight, setImageHeight] = useState(0);

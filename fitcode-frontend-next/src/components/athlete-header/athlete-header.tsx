@@ -13,11 +13,16 @@ import SettingsIcon from '@/assets/icons/Settings.svg';
 import { LINK_PROFILE } from '@/common/constant/navigation.constant';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
+import { useAthleteHeader } from '@/store/athlete-header.provider';
+import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 
 export default function AthleteHeader() {
   const theme = useTheme();
   const screenSize = useScreenSize();
   const { user } = useAuthenticatedAuth();
+  const { selectedTrackingMethod } = useAthleteHeader();
+
+  if (selectedTrackingMethod === TrackingMethod.CAMERA) return null;
 
   return (
     <>
