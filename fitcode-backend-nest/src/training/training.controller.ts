@@ -1,10 +1,12 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
   NotFoundException,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -173,15 +175,44 @@ export class TrainingController {
     return {};
   }
 
-  @Post(':trainingId/complete-next-set')
+  @Post(':trainingId/exercise/:exerciseId/complete-next-set')
   @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
   async completeNextSet(
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
+    @Param('exerciseId') exerciseId: string,
     @Body() body: CompleteSetDto,
   ) {
-    const ref = { trainingId, userId: body.userId };
+    const ref = { trainingId, exerciseId, userId: body.userId };
     return await this.trainingService.completeNextSet(user, ref, body);
+  }
+
+  @Post(':trainingId/component/:cId/exercise/:eId/superset/:i/set/:s')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
+  async upsertSet(
+    @RequestUser() user: User,
+    @Param('trainingId') trainingId: string,
+    @Param('cId') componentId: string,
+    @Param('eId') exerciseId: string,
+    @Param('i', ParseIntPipe) supersetIndex: number,
+    @Param('s', ParseIntPipe) setNumber: number,
+    @Body() body: CompleteSetDto,
+  ) {
+    if (supersetIndex < 0)
+      throw new BadRequestException('Superset index must be 0 or greater');
+    if (setNumber < 1)
+      throw new BadRequestException('Set number must be 1 or greater');
+
+    const ref = {
+      trainingId,
+      componentId,
+      exerciseId,
+      supersetIndex,
+      setNumber,
+      userId: body.userId,
+    };
+
+    return await this.trainingService.upsertSet(user, ref, body);
   }
 
   @Patch(':trainingId/component/:componentId/complete')

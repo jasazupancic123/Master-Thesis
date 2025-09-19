@@ -28,7 +28,7 @@ import {
 import { TrainingService } from '@src/training/service/training.service';
 import { WorkloadService } from '@src/training/service/workload.service';
 
-describe('Get Trainings (e2e)', () => {
+describe('Complete Next Set (e2e)', () => {
   let app: INestApplication;
   let db: TestDbService;
   let workloadService: WorkloadService;
@@ -36,7 +36,6 @@ describe('Get Trainings (e2e)', () => {
   let institution: TestInstitution;
   let group: Group;
   let component1: Component;
-  let component2: Component;
   let trainingId: string;
 
   function generateSet(setNumber: number, bilateral = true) {
@@ -63,7 +62,7 @@ describe('Get Trainings (e2e)', () => {
 
     group = await db.groups.createTest(institution);
 
-    [component1, component2] = await Promise.all([
+    [component1] = await Promise.all([
       db.components.create({ id: 'c1' }),
       db.components.create({ id: 'c2' }),
     ]);
@@ -143,20 +142,29 @@ describe('Get Trainings (e2e)', () => {
     await app.close();
   });
 
-  async function req(token: string, trainingId: string, body: CompleteSetDto) {
+  async function req(
+    token: string,
+    trainingId: string,
+    exerciseId: string,
+    body: CompleteSetDto,
+  ) {
     return await request(app.getHttpServer())
-      .post(`/training/${trainingId}/complete-next-set`)
+      .post(`/training/${trainingId}/exercise/${exerciseId}/complete-next-set`)
       .set('Authorization', `Bearer ${token}`)
       .send(body);
   }
 
   it('should throw error if training not found', async () => {
-    const res = await req(global.trainer.token, 'invalid-training-id', {
-      userId: global.athlete.uid,
-      exerciseId: 'invalid-exercise-id',
-      from: new Date(),
-      to: new Date(),
-    });
+    const res = await req(
+      global.trainer.token,
+      'invalid-training-id',
+      'invalid-exercise-id',
+      {
+        userId: global.athlete.uid,
+        from: new Date(),
+        to: new Date(),
+      },
+    );
 
     expect(res.status).toBe(400);
     expect(res.body.message).toBe('Training not found');
@@ -172,9 +180,8 @@ describe('Get Trainings (e2e)', () => {
       const trainingService = app.get(TrainingService);
       const spy = jest.spyOn(trainingService as any, 'getAthlete');
 
-      await req(token, trainingId, {
+      await req(token, trainingId, 'invalid-exercise-id', {
         userId: global.athlete.uid,
-        exerciseId: 'invalid-exercise-id',
         from: new Date(),
         to: new Date(),
       });
@@ -190,12 +197,16 @@ describe('Get Trainings (e2e)', () => {
   );
 
   it('should fail if exercise does not exist', async () => {
-    const res = await req(global.trainer.token, trainingId, {
-      userId: global.athlete.uid,
-      exerciseId: 'invalid-exercise-id',
-      from: new Date(),
-      to: new Date(),
-    });
+    const res = await req(
+      global.trainer.token,
+      trainingId,
+      'invalid-exercise-id',
+      {
+        userId: global.athlete.uid,
+        from: new Date(),
+        to: new Date(),
+      },
+    );
 
     expect(res.status).toBe(404);
     expect(res.body.message).toBe('Exercise does not exist');
@@ -208,9 +219,8 @@ describe('Get Trainings (e2e)', () => {
       }),
     );
 
-    const res = await req(global.trainer.token, trainingId, {
+    const res = await req(global.trainer.token, trainingId, exercise.id, {
       userId: global.athlete.uid,
-      exerciseId: exercise.id,
       from: new Date(),
       to: new Date(),
     });
@@ -233,9 +243,8 @@ describe('Get Trainings (e2e)', () => {
       }),
     );
 
-    const res = await req(global.trainer.token, pastTrainingId, {
+    const res = await req(global.trainer.token, pastTrainingId, 'squat', {
       userId: global.athlete.uid,
-      exerciseId: 'squat',
       from: new Date(),
       to: new Date(),
     });
@@ -247,9 +256,8 @@ describe('Get Trainings (e2e)', () => {
   it('should complete first set of exercise (when no workloads are in the database)', async () => {
     const from = new Date();
     const spy = jest.spyOn(workloadService, 'findAllByUserTraining');
-    const res = await req(global.trainer.token, trainingId, {
+    const res = await req(global.trainer.token, trainingId, 'squat', {
       userId: global.athlete.uid,
-      exerciseId: 'squat',
       from,
       to: addHours(from, 1),
       notes: 'left hip too low',
@@ -322,9 +330,8 @@ describe('Get Trainings (e2e)', () => {
 
     const from = new Date();
     const spy = jest.spyOn(workloadService, 'findAllByUserTraining');
-    const res = await req(global.trainer.token, trainingId, {
+    const res = await req(global.trainer.token, trainingId, 'squat', {
       userId: global.athlete.uid,
-      exerciseId: 'squat',
       from,
       to: addHours(from, 1),
       reps: 10,
@@ -395,9 +402,8 @@ describe('Get Trainings (e2e)', () => {
     );
 
     const from = new Date();
-    const res = await req(global.trainer.token, trainingId, {
+    const res = await req(global.trainer.token, trainingId, 'squat', {
       userId: global.athlete.uid,
-      exerciseId: 'squat',
       from,
       to: addHours(from, 1),
       reps: 8,
@@ -497,9 +503,8 @@ describe('Get Trainings (e2e)', () => {
     ]);
 
     const from = new Date();
-    const res1 = await req(global.trainer.token, trainingId2, {
+    const res1 = await req(global.trainer.token, trainingId2, 'squat', {
       userId: global.athlete.uid,
-      exerciseId: 'squat',
       from,
       to: addHours(from, 1),
       reps: 6,
@@ -519,9 +524,8 @@ describe('Get Trainings (e2e)', () => {
     expect(result1.intWork1ValueL).toBe(90);
     expect(result1.intWork1ValueR).toBeUndefined();
 
-    const res2 = await req(global.trainer.token, trainingId2, {
+    const res2 = await req(global.trainer.token, trainingId2, 'squat', {
       userId: global.athlete.uid,
-      exerciseId: 'squat',
       from,
       to: addHours(from, 1),
       reps: 4,
@@ -583,9 +587,8 @@ describe('Get Trainings (e2e)', () => {
     );
 
     const from = new Date();
-    const res = await req(global.trainer.token, trainingId3, {
+    const res = await req(global.trainer.token, trainingId3, exercise.id, {
       userId: global.athlete.uid,
-      exerciseId: exercise.id,
       from,
       to: addHours(from, 1),
       reps: 12,

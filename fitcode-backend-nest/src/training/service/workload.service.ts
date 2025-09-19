@@ -304,6 +304,33 @@ export class WorkloadService {
     // return await this.firebaseService.paginateBatchWrites(operations);
   }
 
+  async upsert(
+    ref: WorkloadRef & CycleRef & InstitutionRef,
+    prescribedSet: ExerciseSet,
+    completedSet: CompleteSetDto,
+  ) {
+    const prescribedWorkload = this.getPrescribedWorkload(prescribedSet);
+    const completedWorkload =
+      this.getCompletedWorkloadFromCompletedSet(completedSet);
+
+    const workloadValue: WorkloadValue = {
+      ...prescribedWorkload,
+      ...completedWorkload,
+    };
+
+    const workloadMeta: WorkloadMeta = {
+      ...ref,
+      id: this.repository.getKey(ref),
+      plannedAt: completedSet.from,
+      status: this.getStatus(workloadValue),
+      notes: completedSet.notes,
+    };
+
+    const workload: Create<Workload> = { ...workloadValue, ...workloadMeta };
+    await this.repository.save(ref, workload);
+    return { ...workload, createdAt: new Date(), updatedAt: new Date() };
+  }
+
   /**
    * Finds next set to be completed for provided exercise in training without
    * actually providing component id, superset index and set number.
@@ -353,40 +380,25 @@ export class WorkloadService {
       prescribedSet = { setNumber, paramValuesL: [], paramValuesR: [] };
     }
 
-    const workloadRef: WorkloadRef = {
-      ...ref,
-      componentId,
-      supersetIndex,
-      setNumber,
-    };
-
-    const prescribedWorkload = this.getPrescribedWorkload(prescribedSet);
-    const completedWorkload = this.getCompletedWorkloadFromCompletedSet(input);
-    const workloadValue: WorkloadValue = {
-      ...prescribedWorkload,
-      ...completedWorkload,
-    };
-
-    const workloadMeta: WorkloadMeta = {
-      id: this.repository.getKey(workloadRef),
-      institutionId: training.institutionId,
-      groupId: training.groupId,
-      cycleId: training.cycleId,
-      ...workloadRef,
-      plannedAt: input.from,
-      status: this.getStatus(workloadValue),
-      notes: input.notes,
-    };
-
-    const workload: Create<Workload> = { ...workloadValue, ...workloadMeta };
-    await this.repository.save(workloadRef, workload);
-    return { ...workload, createdAt: new Date(), updatedAt: new Date() };
+    return await this.upsert(
+      {
+        institutionId: training.institutionId,
+        groupId: training.groupId,
+        cycleId: training.cycleId,
+        componentId,
+        supersetIndex,
+        setNumber,
+        ...ref,
+      },
+      prescribedSet,
+      input,
+    );
   }
 
   /**
    * Upserts provided set as completed for provided workload reference.
    */
-  async completeProvidedSet(
+  async upsertSet(
     ref: WorkloadRef,
     training: Training,
     input: CompleteSetDto,
@@ -419,29 +431,19 @@ export class WorkloadService {
     );
 
     if (!prescribedSet)
-      throw new BadRequestException('Invalid set number provided in workload');
+      throw new BadRequestException('Set number not found in exercise');
 
     // create workload
-    const completedWorkload = this.getCompletedWorkloadFromCompletedSet(input);
-    const workloadMeta: WorkloadMeta = {
-      id: this.repository.getKey(ref),
-      institutionId: training.institutionId,
-      groupId: training.groupId,
-      cycleId: training.cycleId,
-      ...ref,
-      plannedAt: input.from,
-      status: this.getStatus(completedWorkload),
-      notes: input.notes,
-    };
-
-    const workload: Create<Workload> = {
-      ...prescribedSet,
-      ...completedWorkload,
-      ...workloadMeta,
-    };
-
-    await this.repository.save(ref, workload);
-    return { ...workload, createdAt: new Date(), updatedAt: new Date() };
+    return await this.upsert(
+      {
+        ...ref,
+        institutionId: training.institutionId,
+        groupId: training.groupId,
+        cycleId: training.cycleId,
+      },
+      prescribedSet,
+      input,
+    );
   }
 
   async deleteWorkloads(workloads: Workload[]): Promise<void> {
@@ -919,6 +921,32 @@ export class WorkloadService {
     }
 
     return set;
+  }
+
+  checkBilateralInput(isBilateral: boolean, input: CompleteSetDto) {
+    if (!isBilateral) return;
+
+    const pairs = {
+      reps: [input.reps, input.repsR],
+      time: [input.time, input.timeR],
+      dist: [input.dist, input.distR],
+      load: [input.load, input.loadR],
+      rom: [input.rom, input.romR],
+      velocity: [input.velocity, input.velocityR],
+      tempo: [input.tempo, input.tempoR],
+      photoUrl: [input.photoUrl, input.photoUrlR],
+      tempos: [input.tempos, input.temposR],
+      roms: [input.roms, input.romsR],
+      velocities: [input.velocities, input.velocitiesR],
+      feedback: [input.feedback, input.feedbackR],
+    };
+
+    // check that both sides are filled or none
+    for (const [key, [left, right]] of Object.entries(pairs))
+      if ((left && !right) || (!left && right))
+        throw new BadRequestException(
+          `Both sides must be filled for ${key} or none`,
+        );
   }
 
   private parseSelected<T = string>(

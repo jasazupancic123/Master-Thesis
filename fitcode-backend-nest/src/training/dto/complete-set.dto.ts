@@ -191,7 +191,7 @@ export class CompleteRSetDto {
 }
 
 export class CompleteSetDto extends IntersectionType(
-  PickType(WorkloadMeta, ['exerciseId', 'userId', 'notes'] as const),
+  PickType(WorkloadMeta, ['userId', 'notes'] as const),
   DateRangeDto,
   CompleteLSetDto,
   CompleteRSetDto,
