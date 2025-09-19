@@ -1,7 +1,14 @@
 import { IntersectionType, PickType } from '@nestjs/mapped-types';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
-import { IsNumber, IsOptional, Max, Min } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 
 import { DateRangeDto } from '@src/common/dto/date-range.dto';
 
@@ -13,42 +20,86 @@ export class CompleteLSetDto {
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
-  repsL?: number;
+  reps?: number;
 
   @IsNumber()
   @Min(0)
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
-  timeL?: number; // in s
+  time?: number; // in s
 
   @IsNumber()
   @Min(0)
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
-  distL?: number; // in m
+  dist?: number; // in m
 
   @IsNumber()
   @Min(0)
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
-  loadL?: number; // in kg
+  load?: number; // in kg
 
   @IsNumber()
   @Min(0)
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
-  romL?: number; // in cm
+  rom?: number; // in cm
 
   @IsNumber()
   @Min(0)
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
-  velocityL?: number; // in m/s
+  velocity?: number; // in m/s
+
+  @IsNumber()
+  @Min(1000)
+  @Max(9999)
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  tempo?: number; // e.g. 2010 (for 2:0:1:0), average tempo
+
+  @IsString()
+  @IsOptional()
+  @IsNotEmpty()
+  @ApiPropertyOptional()
+  @Expose()
+  photoUrl?: string;
+
+  // the following fields are AI diagnostics
+  @IsNumber({}, { each: true })
+  @Min(1000, { each: true })
+  @Max(9999, { each: true })
+  @IsOptional()
+  @ApiPropertyOptional({ type: [Number] })
+  @Expose()
+  tempos?: number[]; // tempo for each rep
+
+  @IsNumber({}, { each: true })
+  @Min(0, { each: true })
+  @IsOptional()
+  @ApiPropertyOptional({ type: [Number] })
+  @Expose()
+  roms?: number[]; // range of motion for each rep
+
+  @IsNumber({}, { each: true })
+  @Min(0, { each: true })
+  @IsOptional()
+  @ApiPropertyOptional({ type: [Number] })
+  @Expose()
+  velocities?: number[]; // velocity for each rep
+
+  @IsString({ each: true })
+  @IsOptional()
+  @ApiPropertyOptional({ type: [String] })
+  @Expose()
+  feedback?: string[]; // feedback for each rep
 }
 
 export class CompleteRSetDto {
@@ -93,10 +144,54 @@ export class CompleteRSetDto {
   @ApiPropertyOptional()
   @Expose()
   velocityR?: number; // in m/s
+
+  @IsNumber()
+  @Min(1000)
+  @Max(9999)
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  tempoR?: number; // e.g. 2010 (for 2:0:1:0)
+
+  @IsString()
+  @IsOptional()
+  @IsNotEmpty()
+  @ApiPropertyOptional()
+  @Expose()
+  photoUrlR?: string;
+
+  // the following fields are AI diagnostics
+  @IsNumber({}, { each: true })
+  @Min(1000, { each: true })
+  @Max(9999, { each: true })
+  @IsOptional()
+  @ApiPropertyOptional({ type: [Number] })
+  @Expose()
+  temposR?: number[]; // tempo for each rep
+
+  @IsNumber({}, { each: true })
+  @Min(0, { each: true })
+  @IsOptional()
+  @ApiPropertyOptional({ type: [Number] })
+  @Expose()
+  romsR?: number[]; // range of motion for each rep
+
+  @IsNumber({}, { each: true })
+  @Min(0, { each: true })
+  @IsOptional()
+  @ApiPropertyOptional({ type: [Number] })
+  @Expose()
+  velocitiesR?: number[]; // velocity for each rep
+
+  @IsString({ each: true })
+  @IsOptional()
+  @ApiPropertyOptional({ type: [String] })
+  @Expose()
+  feedbackR?: string[]; // feedback for each rep
 }
 
 export class CompleteSetDto extends IntersectionType(
-  PickType(WorkloadMeta, ['trainingId', 'exerciseId', 'notes'] as const),
+  PickType(WorkloadMeta, ['exerciseId', 'userId', 'notes'] as const),
   DateRangeDto,
   CompleteLSetDto,
   CompleteRSetDto,
@@ -107,14 +202,6 @@ export class CompleteSetDto extends IntersectionType(
   @ApiPropertyOptional()
   @Expose()
   eff?: number; // in %
-
-  @IsNumber()
-  @Min(0)
-  @Max(9999)
-  @IsOptional()
-  @ApiPropertyOptional()
-  @Expose()
-  tempo?: number; // e.g. 2010 (for 2:0:1:0)
 
   @IsNumber()
   @Min(0)

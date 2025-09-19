@@ -310,18 +310,13 @@ export class WorkloadService {
    */
   async completeNextSet(
     ref: Pick<WorkloadRef, 'trainingId' | 'exerciseId' | 'userId'>,
-    training: Training,
+    training: Training, // prescribed training for user
     input: CompleteSetDto,
   ): Promise<Workload> {
     // find exercise in training
     const existingExerciseWorkloads = await this.findAllByUserTraining(
       ref.userId,
       ref,
-    );
-
-    const prescribedTraining = this.trainingPlanService.getTrainingByAthlete(
-      ref.userId,
-      training,
     );
 
     // determine in which superset the exercise is being completed and its set number
@@ -331,7 +326,7 @@ export class WorkloadService {
     let prescribedSet: ExerciseSet;
 
     let remaining = existingExerciseWorkloads.length;
-    outer: for (const component of prescribedTraining.components) {
+    outer: for (const component of training.components) {
       for (const [i, superset] of component.supersets.entries()) {
         const found = superset.exercises.find((e) => e.id === ref.exerciseId);
         if (!found) continue;
@@ -354,10 +349,8 @@ export class WorkloadService {
       // component & exercise not found, add exercise to special 'other' component
       componentId = 'other';
       supersetIndex = 0;
-
-      // set number is next available set in existing workloads for exercise
-      const setNumbers = existingExerciseWorkloads.map((w) => w.setNumber);
-      setNumber = setNumbers.length ? Math.max(...setNumbers) + 1 : 1;
+      setNumber = Math.abs(-remaining - 1); // 1-based index
+      prescribedSet = { setNumber, paramValuesL: [], paramValuesR: [] };
     }
 
     const workloadRef: WorkloadRef = {
@@ -369,6 +362,11 @@ export class WorkloadService {
 
     const prescribedWorkload = this.getPrescribedWorkload(prescribedSet);
     const completedWorkload = this.getCompletedWorkloadFromCompletedSet(input);
+    const workloadValue: WorkloadValue = {
+      ...prescribedWorkload,
+      ...completedWorkload,
+    };
+
     const workloadMeta: WorkloadMeta = {
       id: this.repository.getKey(workloadRef),
       institutionId: training.institutionId,
@@ -376,16 +374,11 @@ export class WorkloadService {
       cycleId: training.cycleId,
       ...workloadRef,
       plannedAt: input.from,
-      status: this.getStatus(completedWorkload),
+      status: this.getStatus(workloadValue),
       notes: input.notes,
     };
 
-    const workload: Create<Workload> = {
-      ...prescribedWorkload,
-      ...completedWorkload,
-      ...workloadMeta,
-    };
-
+    const workload: Create<Workload> = { ...workloadValue, ...workloadMeta };
     await this.repository.save(workloadRef, workload);
     return { ...workload, createdAt: new Date(), updatedAt: new Date() };
   }
@@ -601,7 +594,7 @@ export class WorkloadService {
       workloadValue.intRecValueL,
     );
 
-    const fieldStatus = [
+    let fieldStatus = [
       volWork1Status,
       volWork2Status,
       volRecStatus,
@@ -610,36 +603,28 @@ export class WorkloadService {
       intRecStatus,
     ];
 
-    // edge case - every performed value is ignored
+    // edge case - no value is prescribed
     if (fieldStatus.every((status) => status === SetStatus.IGNORED))
       return SetStatus.COMPLETED;
 
-    // not started if every performed value is not started or ignored
-    if (
-      fieldStatus.every((status) =>
-        [SetStatus.NOT_STARTED, SetStatus.IGNORED].includes(status),
-      )
-    )
+    // remove all ignored fields
+    fieldStatus = fieldStatus.filter((status) => status !== SetStatus.IGNORED);
+
+    // not started if every performed value is not started
+    if (fieldStatus.every((status) => status === SetStatus.NOT_STARTED))
       return SetStatus.NOT_STARTED;
 
-    // completed if every performed value is completed or ignored
-    if (
-      fieldStatus.every((status) =>
-        [SetStatus.COMPLETED, SetStatus.IGNORED].includes(status),
-      )
-    )
-      return SetStatus.COMPLETED;
+    // partial if atleast one performed value is partial
+    if (fieldStatus.some((status) => status === SetStatus.PARTIAL))
+      return SetStatus.PARTIAL;
 
-    // over-performed if every performed value is over-performed or ignored
-    if (
-      fieldStatus.every((status) =>
-        [SetStatus.OVER, SetStatus.IGNORED].includes(status),
-      )
-    )
+    // no more partial values, so either completed or over
+    // if some performed value is over, then it's over
+    if (fieldStatus.some((status) => status === SetStatus.OVER))
       return SetStatus.OVER;
 
-    // else, it's partial set
-    return SetStatus.PARTIAL;
+    // all performed are completed
+    return SetStatus.COMPLETED;
   }
 
   private getStatusByField(
@@ -746,15 +731,15 @@ export class WorkloadService {
 
   getCompletedWorkloadFromCompletedSet(input: CompleteSetDto) {
     return {
-      volWork1ValueL: input.repsL || input.timeL || input.distL,
+      volWork1ValueL: input.reps || input.time || input.dist,
       volWork1ValueR: input.repsR || input.timeR || input.distR,
-      volWork2ValueL: input.tempo || input.eff || input.velocityL,
-      volWork2ValueR: input.tempo || input.eff || input.velocityR,
+      volWork2ValueL: input.tempo || input.velocity || input.eff,
+      volWork2ValueR: input.tempoR || input.velocityR || input.eff,
       volRecValueL: input.recTime,
       volRecValueR: input.recTime,
-      intWork1ValueL: input.loadL,
+      intWork1ValueL: input.load,
       intWork1ValueR: input.loadR,
-      intWork2ValueL: input.romL || input.bpm || input.mas,
+      intWork2ValueL: input.rom || input.bpm || input.mas,
       intWork2ValueR: input.romR || input.bpm || input.mas,
       intRecValueL: input.recDist,
       intRecValueR: input.recDist,
