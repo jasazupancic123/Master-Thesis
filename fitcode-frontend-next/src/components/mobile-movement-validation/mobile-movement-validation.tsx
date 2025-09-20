@@ -13,7 +13,6 @@ import { enableCam, getStatusMessage, loadModel, predictWebcam } from './state';
 import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 import type { SetState } from '@/common/type/state.type';
 import { KeypointHistory } from '@/controller/pose-detection/class/keypoint-history';
-import { ValuesBuffer } from '@/controller/pose-detection/class/values-buffer';
 import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
 import { STATUS_MESSAGES } from '@/controller/pose-detection/const/status-messages';
 import { ConditionDirection } from '@/controller/pose-detection/enum/condition-detection.enum';
@@ -22,8 +21,8 @@ import { KeypointId } from '@/controller/pose-detection/enum/keypoint-id';
 import { KeypointValueType } from '@/controller/pose-detection/enum/keypoint-value-type';
 import { PoseModel } from '@/controller/pose-detection/enum/pose-model.enum';
 import { RepStatus } from '@/controller/pose-detection/enum/rep-state';
+import { RepDetectionService } from '@/controller/pose-detection/rep-detection.service';
 import type { ExerciseDetectionData } from '@/controller/pose-detection/type/exercise-start-condition.type';
-import type { Keypoint } from '@/controller/pose-detection/type/keypoint.type';
 import type { Rep } from '@/controller/pose-detection/type/rep.type';
 import type { RepState } from '@/controller/pose-detection/type/rep-state.type';
 import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
@@ -34,8 +33,9 @@ const DEBUG = false;
 
 interface MobileMovementValidationProps {
   selectedExercise: TrainingExercise | undefined;
-  updateExerciseReps: ((repsCount: number) => void) | undefined;
+  selectedTrackingMethod: TrackingMethod | undefined;
   setSelectedTrackingMethod: SetState<TrackingMethod> | undefined;
+  updateExerciseReps: ((repsCount: number) => void) | undefined;
 }
 
 export default function MobileMovementValidation(
@@ -44,27 +44,30 @@ export default function MobileMovementValidation(
   const theme = useTheme();
   const screenSize = useScreenSize();
 
-  const { selectedExercise, updateExerciseReps, setSelectedTrackingMethod } =
-    props;
+  const {
+    selectedExercise,
+    selectedTrackingMethod,
+    setSelectedTrackingMethod,
+    updateExerciseReps,
+  } = props;
 
   // Buffers
   const keypointHistoryRef = useRef<KeypointHistory>(
     new KeypointHistory([], 100, true)
   ); // first make buffer of 100 frames, later set buffer size to undefined to get all recording of exercise
   const keypointBuffer = new KeypointHistory([], 100); // 100 frames buffer, updates in the main loop based on fps
-  const romBuffer = new ValuesBuffer(100); // range of motion buffer to show on graph, max 3 seconds of frames
 
   const exerciseDetectionData: ExerciseDetectionData | undefined =
     selectedExercise
       ? EXERCISE_POSES.find((e) => e.exerciseIds.includes(selectedExercise.id))
           ?.data
       : {
-          romKeypointId: KeypointId.LEFT_WRIST,
+          romKeypointId: KeypointId.RIGHT_WRIST,
           romValueType: KeypointValueType.POSITION_Y,
           romStartDirection: ConditionDirection.POSITIVE,
           conditions: [
             {
-              keypointId: KeypointId.LEFT_WRIST,
+              keypointId: KeypointId.RIGHT_WRIST,
               type: KeypointValueType.POSITION_Y,
               direction: ConditionDirection.POSITIVE,
               duration: 750, // ms
@@ -72,6 +75,20 @@ export default function MobileMovementValidation(
             },
           ],
         };
+  // : {
+  //     romKeypointId: KeypointId.LEFT_HIP,
+  //     romValueType: KeypointValueType.POSITION_Y,
+  //     romStartDirection: ConditionDirection.NEGATIVE,
+  //     conditions: [
+  //       {
+  //         keypointId: KeypointId.LEFT_HIP,
+  //         type: KeypointValueType.POSITION_Y,
+  //         direction: ConditionDirection.NEGATIVE,
+  //         duration: 750, // ms
+  //         distance: 0.05, // meters}
+  //       },
+  //     ],
+  //   };
 
   // Main Status
   const statusRef = useRef<DetectionStatus>(DetectionStatus.NOT_FULLY_IN_FRAME);
@@ -99,35 +116,97 @@ export default function MobileMovementValidation(
   const avgFps = useRef<{ value: number; count: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const centerPosRef = useRef<{ x: number; y: number } | null>(null);
+
   // Helper Refs
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const romCanvasRef = useRef<HTMLCanvasElement>(null);
+  const tempoCanvasRef = useRef<HTMLCanvasElement>(null);
   const drawingUtilsRef = useRef<DrawingUtils>(null);
   const canvasCtxRef = useRef<CanvasRenderingContext2D | null>(null);
   const prevFrameTimeRef = useRef<number | null>(null);
   const lastVideoTimeRef = useRef(-1);
   const frameCountRef = useRef(0);
   const initedFirstFrameInRecordingMode = useRef(false);
-  // Normalization domain that only expands
-  const normDomainRef = useRef<{ min: number; max: number } | null>(null);
+  const normDomainRef = useRef<{ min: number; max: number } | null>(null); // for graphs
+  const dotRef = useRef<HTMLDivElement | null>(null);
+  const dotBackgroundRef = useRef<HTMLDivElement | null>(null);
 
-  const expandDomain = (vals: number[]) => {
-    if (!vals.length) return;
-    const vmin = Math.min(...vals);
-    const vmax = Math.max(...vals);
-    if (!normDomainRef.current) {
-      const safeMax = vmax === vmin ? vmin + 1e-9 : vmax;
-      normDomainRef.current = { min: vmin, max: safeMax };
-      return;
-    }
-    const d = normDomainRef.current;
-    const newMin = Math.min(d.min, vmin);
-    let newMax = Math.max(d.max, vmax);
-    if (newMax === newMin) newMax = newMin + 1e-9;
-    // only expand (never shrink)
-    normDomainRef.current = { min: newMin, max: newMax };
-  };
+  useEffect(() => {
+    let raf: number | null = null;
+
+    const tick = () => {
+      const v = videoRef.current;
+      const background = dotBackgroundRef.current;
+      const c = centerPosRef.current;
+
+      const dot = dotRef.current;
+
+      if (!v || !background || !dot || !c) {
+        raf = requestAnimationFrame(tick);
+        return;
+      }
+
+      const rect = v.getBoundingClientRect();
+
+      // normalized landmark coords [0..1]; flip X if video is mirrored
+      const nx = 1 - c.x;
+      const ny = c.y;
+
+      // intrinsic video size (source space)
+      const vw = v.videoWidth || rect.width;
+      const vh = v.videoHeight || rect.height;
+
+      // element size (display space)
+      const elW = rect.width;
+      const elH = rect.height;
+
+      // account for CSS object-fit
+      const ofit = getComputedStyle(v).objectFit || 'cover';
+
+      let drawnW = elW;
+      let drawnH = elH;
+
+      if (ofit === 'cover') {
+        const scale = Math.max(elW / vw, elH / vh);
+        drawnW = vw * scale;
+        drawnH = vh * scale;
+      } else if (ofit === 'contain' || ofit === 'scale-down') {
+        const scale = Math.min(elW / vw, elH / vh);
+        drawnW = vw * scale;
+        drawnH = vh * scale;
+      } else if (ofit === 'none') {
+        drawnW = vw; // 1:1 pixels
+        drawnH = vh;
+      } // "fill" falls back to element size (stretches to elW x elH)
+
+      // assume object-position: 50% 50% (center) – default for <video>
+      const offsetX = (elW - drawnW) / 2;
+      const offsetY = (elH - drawnH) / 2;
+
+      // map normalized coords -> displayed pixels inside the drawn video
+      const px = offsetX + nx * drawnW;
+      const py = offsetY + ny * drawnH;
+
+      // center the dot element (don’t hardcode; use its actual size)
+      const halfWBackground = (background.offsetWidth || 8) / 2;
+      const halfHBackground = (background.offsetHeight || 8) / 2;
+
+      const halfWDot = (dot.offsetWidth || 8) / 2;
+      const halfHDot = (dot.offsetHeight || 8) / 2;
+
+      background.style.transform = `translate3d(${px - halfWBackground}px, ${py - halfHBackground}px, 0)`;
+      dotRef.current!.style.transform = `translate3d(${px - halfWDot}px, ${py - halfHDot}px, 0)`;
+
+      raf = requestAnimationFrame(tick);
+    };
+
+    raf = requestAnimationFrame(tick);
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [centerPosRef]);
 
   {
     /* <HELPER TO DRAW GRAPH>*/
@@ -142,7 +221,11 @@ export default function MobileMovementValidation(
         e.preventDefault(); // stop page scroll
         if (!spaceDown) setSpaceDown(true);
 
-        drawGraph();
+        // drawGraph();
+        RepDetectionService.saveRepTimesToJsonFiles({
+          recordedRepsRef,
+          selectedExercise,
+        });
       }
     };
 
@@ -209,6 +292,17 @@ export default function MobileMovementValidation(
     document.body.appendChild(script);
   };
 
+  const finishAiDetection = () => {
+    if (
+      updateExerciseReps &&
+      selectedTrackingMethod === TrackingMethod.CAMERA &&
+      setSelectedTrackingMethod
+    ) {
+      setSelectedTrackingMethod(TrackingMethod.MANUAL);
+      updateExerciseReps(recordedRepsRef.current.length);
+    }
+  };
+
   useEffect(() => {
     setStatusMessage(getStatusMessage(statusRef.current));
   }, [statusRef.current]);
@@ -229,6 +323,8 @@ export default function MobileMovementValidation(
   useEffect(() => {
     if (!exerciseDetectionData) return;
 
+    if (statusRef.current === DetectionStatus.STOPPED) return;
+
     enableCam({
       poseLandmarker,
       videoRef,
@@ -240,7 +336,6 @@ export default function MobileMovementValidation(
           poseLandmarker,
           keypointHistory: keypointHistoryRef.current,
           keypointBuffer,
-          romBuffer,
           currentRepRef,
           recordedRepsRef,
           videoRef,
@@ -254,255 +349,18 @@ export default function MobileMovementValidation(
           avgFps,
           exerciseDetectionData: exerciseDetectionData,
           initedFirstFrameInRecordingMode,
+          normDomainRef,
+          romCanvasRef,
+          tempoCanvasRef,
+          theme,
+          centerPosRef,
           setFps,
           setStatusMessage,
-          renderROM,
+          finishAiDetection,
         }),
       setError,
     });
   }, [poseLandmarker]);
-
-  const drawRomOverlayBarChart = (state: {
-    ctx: CanvasRenderingContext2D;
-    w: number;
-    h: number;
-    startValueNormalized: number; // current rep start (0..1)
-    endValueNormalized: number; // current rep end (0..1)
-    extremeValueNormalized: number; // current rep extreme (0..1)
-    currentValueNormalized: number; // current rep current (0..1)
-    previousNormalizedStartValues: number[]; // per rep (0..1)
-    previousNormalizedEndValues: number[]; // per rep (0..1)
-    previousNormalizedExtremeValues: number[]; // per rep (0..1)
-    rising: boolean;
-    inset?: number;
-  }) => {
-    const {
-      ctx,
-      w,
-      h,
-      startValueNormalized,
-      endValueNormalized,
-      extremeValueNormalized,
-      currentValueNormalized,
-      previousNormalizedStartValues,
-      previousNormalizedEndValues,
-      previousNormalizedExtremeValues,
-      rising,
-      inset = 12,
-    } = state;
-
-    const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
-    const startN = clamp01(startValueNormalized);
-    const endN = clamp01(endValueNormalized);
-    const extremeN = clamp01(extremeValueNormalized);
-    const currentN = clamp01(currentValueNormalized);
-
-    // full-canvas drawing area
-    ctx.clearRect(0, 0, w, h);
-    const x0 = inset;
-    const x1 = w - inset;
-    const y0 = inset;
-    const y1 = h - inset;
-    const toY = (v: number) => y1 - v * (y1 - y0);
-
-    // layout: thin bars, tiny gap within a pair, small gap between reps
-    const barW = 5; // thin
-    const pairGap = 0; // between green/red in the same rep
-    const repGap = 10; // between reps
-    const pairWidth = barW * 2 + pairGap;
-
-    let x = x0;
-
-    // helper to draw a vertical segment between two normalized values
-    const drawSegment = (
-      bx: number,
-      fromN: number,
-      toN: number,
-      color: string
-    ) => {
-      const yFrom = toY(clamp01(fromN));
-      const yTo = toY(clamp01(toN));
-      const y = Math.min(yFrom, yTo);
-      const hSeg = Math.max(1, Math.abs(yFrom - yTo));
-      ctx.save();
-      ctx.fillStyle = color;
-      ctx.fillRect(bx, y, barW, hSeg);
-      ctx.restore();
-    };
-
-    // ---- 1) draw all previous reps as frozen pairs ----
-    const Nprev = Math.min(
-      previousNormalizedStartValues.length,
-      previousNormalizedExtremeValues.length
-    );
-    for (let i = 0; i < Nprev; i++) {
-      const startN = clamp01(previousNormalizedStartValues[i]);
-      const endN = clamp01(previousNormalizedEndValues[i]);
-      const extremeN = clamp01(previousNormalizedExtremeValues[i]);
-
-      // stop if no more horizontal space
-      if (x + pairWidth > x1) break;
-
-      const greenX = x;
-      const redX = x + barW + pairGap;
-
-      // for finished reps:
-      //  - green shows start → extreme (upstroke)
-      //  - red shows extreme → start (downstroke)
-      drawSegment(greenX, startN, extremeN, theme.palette.success.main);
-      drawSegment(redX, extremeN, endN, theme.palette.error.main);
-
-      x += pairWidth + repGap;
-    }
-
-    // ---- 2) draw the current rep at the end (live) ----
-    if (x + pairWidth <= x1) {
-      const greenX = x;
-      const redX = x + barW + pairGap;
-
-      if (rising) {
-        // still going up: green live start → current, red empty
-        drawSegment(greenX, startN, currentN, theme.palette.success.main);
-      } else {
-        // going down: green frozen start → extreme, red live extreme → current
-        drawSegment(greenX, startN, extremeN, theme.palette.success.main);
-        drawSegment(redX, extremeN, currentN, theme.palette.error.main);
-      }
-    }
-  };
-
-  // call this right after you push a new ROM sample into romBuffer
-  const renderROM = () => {
-    if (!exerciseDetectionData || !currentRepRef.current) return;
-
-    const canvas = romCanvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    // If we haven't reached the extremum yet, then green color and positive bar value, if we have,
-    // then red color and negative bar value
-
-    const correctKeypointHistory: Keypoint[][] | undefined = recordedRepsRef
-      .current.length
-      ? recordedRepsRef.current
-          .flatMap((r) => r.buffer.history)
-          .concat(currentRepRef.current.buffer.history)
-      : currentRepRef.current
-        ? currentRepRef.current.buffer.history
-        : undefined;
-
-    if (!correctKeypointHistory) return;
-
-    const values = correctKeypointHistory
-      .flat()
-      .filter((k) => k.id === exerciseDetectionData.romKeypointId)
-      .map((k) =>
-        KeypointUtil.getKeypointValueByType(
-          k,
-          exerciseDetectionData.romValueType
-        )
-      )
-      .filter((v): v is number => v !== undefined); // type guard
-
-    const minValue = values.length > 0 ? Math.min(...values) : undefined;
-    const maxValue = values.length > 0 ? Math.max(...values) : undefined;
-
-    if (minValue === undefined || maxValue === undefined) return;
-
-    const detectedExtremum = currentRepRef.current?.detectedExtremum;
-
-    if (currentRepRef.current.extremeValue === undefined && !detectedExtremum)
-      return;
-
-    const n = currentRepRef.current.buffer.history.length;
-
-    const currentKeypoints = currentRepRef.current.buffer.history[n - 1];
-    if (!currentKeypoints) return;
-
-    const currentKeypoint = KeypointUtil.getDesiredKeypointFromArray(
-      currentKeypoints,
-      exerciseDetectionData.romKeypointId
-    );
-    if (!currentKeypoint) return;
-
-    const currentValue = KeypointUtil.getKeypointValueByType(
-      currentKeypoint,
-      exerciseDetectionData.romValueType
-    );
-
-    if (currentValue === undefined) return;
-
-    const allRawForDomain: number[] = [
-      ...values, // from history (recorded + current)
-      currentRepRef.current.startValue,
-      currentRepRef.current.extremeValue!,
-      currentValue,
-    ];
-    expandDomain(allRawForDomain);
-
-    // now normalize with the UPDATED domain
-    const domain = normDomainRef.current!;
-    const norm = (v: number) => (v - domain.min) / (domain.max - domain.min);
-
-    const currentValueNormalized = norm(currentValue);
-    const startValueNormalized = norm(currentRepRef.current.startValue);
-    const endValueNormalized = norm(currentRepRef.current.endValue!);
-    const extremeValueNormalized = norm(currentRepRef.current.extremeValue!);
-
-    // previous reps normalized with the SAME (expanded) domain
-    const previousNormalizedStartValues = recordedRepsRef.current
-      .map((r) => r.startValue)
-      .filter((v): v is number => v !== undefined)
-      .map(norm);
-
-    const previousNormalizedEndValues = recordedRepsRef.current
-      .map((r) => r.endValue)
-      .filter((v): v is number => v !== undefined)
-      .map(norm);
-
-    const previousNormalizedExtremeValues = recordedRepsRef.current
-      .map((r) => r.extremeValue)
-      .filter((v): v is number => v !== undefined)
-      .map(norm);
-
-    // optional: clamp to [0,1] only for drawing safety (should rarely matter now)
-    const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
-
-    // draw
-    drawRomOverlayBarChart({
-      ctx,
-      w: canvas.width,
-      h: canvas.height,
-      currentValueNormalized: clamp01(currentValueNormalized),
-      startValueNormalized: clamp01(startValueNormalized),
-      endValueNormalized: clamp01(endValueNormalized),
-      extremeValueNormalized: clamp01(extremeValueNormalized),
-      previousNormalizedStartValues: previousNormalizedStartValues.map(clamp01),
-      previousNormalizedEndValues: previousNormalizedEndValues.map(clamp01),
-      previousNormalizedExtremeValues:
-        previousNormalizedExtremeValues.map(clamp01),
-      rising: !detectedExtremum,
-    });
-  };
-
-  const drawGraph = () => {
-    if (!exerciseDetectionData) return;
-
-    const keypointIds = exerciseDetectionData.conditions.map(
-      (condition) => condition.keypointId
-    );
-
-    keypointIds.forEach((id) => {
-      KeypointUtil.drawKeypointValuesGraph(
-        keypointHistoryRef.current.history,
-        id,
-        KeypointValueType.POSITION_Y,
-        'whole_exercise'
-      );
-    });
-  };
 
   if (!exerciseDetectionData) {
     return <div>No pose detection logic for this exercise yet</div>;
@@ -519,6 +377,12 @@ export default function MobileMovementValidation(
     >
       {!poseLandmarker && <LoadingOverlay title="Loading model..." />}
 
+      {poseLandmarker && (
+        <MovementValidationHeader
+          statusMessage={error ? `${error}` : statusMessage}
+        />
+      )}
+
       <Box
         width="100%"
         display="flex"
@@ -532,11 +396,6 @@ export default function MobileMovementValidation(
         }}
         gap={1}
       >
-        {poseLandmarker && (
-          <MovementValidationHeader
-            statusMessage={error ? `${error}` : statusMessage}
-          />
-        )}
         <Box width="100%" display="flex" justifyContent="space-between" px={1}>
           <FpsText fps={fps} avgFps={avgFps.current} />
           <RepsCounter reps={recordedRepsRef.current.length} />
@@ -566,12 +425,62 @@ export default function MobileMovementValidation(
           style={{ position: 'absolute', left: 0, top: 0 }}
         />
         <canvas
-          ref={romCanvasRef}
+          ref={tempoCanvasRef}
           style={{
-            height: '100%',
+            width: '100%',
+            height: '50%',
             position: 'absolute',
             left: 0,
-            bottom: 0,
+            top: 0, // top half
+            zIndex: 1000,
+          }}
+        />
+
+        {statusRef.current !== DetectionStatus.STOPPED && (
+          <>
+            {/* Person dot */}
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                pointerEvents: 'none',
+                overflow: 'hidden',
+              }}
+            >
+              <div
+                ref={dotBackgroundRef}
+                style={{
+                  position: 'absolute',
+                  width: 50,
+                  height: 50,
+                  borderRadius: '30%',
+                  background: theme.palette.primary.main,
+                  willChange: 'transform',
+                }}
+              />
+              <div
+                ref={dotRef}
+                style={{
+                  position: 'absolute',
+                  width: 14,
+                  height: 14,
+                  borderRadius: '50%',
+                  background: theme.palette.background.default,
+                  willChange: 'transform',
+                }}
+              />
+            </div>
+          </>
+        )}
+
+        <canvas
+          ref={romCanvasRef}
+          style={{
+            width: '100%',
+            height: '50%',
+            position: 'absolute',
+            left: 0,
+            bottom: 0, // bottom half
             zIndex: 1000,
           }}
         />
@@ -585,9 +494,19 @@ export default function MobileMovementValidation(
             position: 'absolute',
             bottom: 10,
             left: 0,
+            zIndex: 100000,
           }}
         >
-          <Button variant="contained" onClick={drawGraph} sx={{ mt: 2 }}>
+          <Button
+            variant="contained"
+            onClick={() => {
+              KeypointUtil.saveKeypointValueGraph({
+                exerciseDetectionData,
+                keypointHistoryRef,
+              });
+            }}
+            sx={{ mt: 2 }}
+          >
             Save Graph
           </Button>
           <Button

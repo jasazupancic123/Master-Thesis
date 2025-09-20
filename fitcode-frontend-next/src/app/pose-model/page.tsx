@@ -4,8 +4,9 @@ export default function Page() {
   return (
     <MobileMovementValidation
       selectedExercise={undefined}
-      updateExerciseReps={undefined}
+      selectedTrackingMethod={undefined}
       setSelectedTrackingMethod={undefined}
+      updateExerciseReps={undefined}
     />
   );
 }

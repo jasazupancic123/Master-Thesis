@@ -26,6 +26,7 @@ import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 import { ParamType } from '@/controller/component/enum/param.enum';
 import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
+import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
@@ -37,8 +38,6 @@ export default function TrainingInProgressExerciseCard() {
   const {
     trainingInProgress,
     setTrainingInProgress,
-    selectedTrackingMethod,
-    setSelectedTrackingMethod,
     updateTrainingInProgress,
   } = useTraining();
 
@@ -51,6 +50,9 @@ export default function TrainingInProgressExerciseCard() {
     setIndex,
     setSetIndex,
   } = useTrainingInProgress();
+
+  const { selectedTrackingMethod, setSelectedTrackingMethod } =
+    useAthleteHeader();
 
   const [expandedSetsView, setExpandedSetsView] = useState(false);
   const [imageHeight, setImageHeight] = useState(0);
@@ -139,8 +141,9 @@ export default function TrainingInProgressExerciseCard() {
   return selectedTrackingMethod === TrackingMethod.CAMERA ? (
     <MobileMovementValidation
       selectedExercise={selectedExercise}
-      updateExerciseReps={updateExerciseReps}
+      selectedTrackingMethod={selectedTrackingMethod}
       setSelectedTrackingMethod={setSelectedTrackingMethod}
+      updateExerciseReps={updateExerciseReps}
     />
   ) : (
     <SwipeableBox
