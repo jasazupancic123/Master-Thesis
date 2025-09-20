@@ -70,6 +70,20 @@ export default function MobileMovementValidation(
             },
           ],
         };
+  // : {
+  //     romKeypointId: KeypointId.LEFT_HIP,
+  //     romValueType: KeypointValueType.POSITION_Y,
+  //     romStartDirection: ConditionDirection.NEGATIVE,
+  //     conditions: [
+  //       {
+  //         keypointId: KeypointId.LEFT_HIP,
+  //         type: KeypointValueType.POSITION_Y,
+  //         direction: ConditionDirection.NEGATIVE,
+  //         duration: 750, // ms
+  //         distance: 0.05, // meters}
+  //       },
+  //     ],
+  //   };
 
   // Main Status
   const statusRef = useRef<DetectionStatus>(DetectionStatus.NOT_FULLY_IN_FRAME);

@@ -14,14 +14,17 @@ export const POSE_DETECTION_CONSTRAINTS = {
   // Extremum detection
   MIN_FRAMES_FOR_EXTREMUM: 4, // min 4 total consecutive correct frames (2pos k's, 2neg k's)
   MIN_TIME_FOR_EXTREMUM_S: 0.2, // in seconds, it's time for the value to go into opposite direction to detect extremum
-  EXTREMUM_RANGE_TIME_TO_EXTREME_RATIO: 0.1, // used to detect timeToExtremeMs
-  EXTREMUM_RANGE_TIME_AT_EXTREME_RATIO: 0.01, // used to detect timeAtExtremumMs
+  EXTREMUM_RANGE_TIME_TO_EXTREME_RATIO: 0.05, // used to detect timeToExtremeMs
+  EXTREMUM_RANGE_TIME_AT_EXTREME_RATIO: 0.01, // used to detect timeAtExtremumMs, 0.01 for arm-curl, 0.05 for squat
   NEW_EXTREMUM_DETECTION_RATIO: 0.02, // if we reach a new extremum, it needs to be at least this % away from the previous one
 
   // Rep start
   SLOPE_K_REP_START: 0.5, // naklon premice (K) za zacetek ponovitve
   SUSTAIN_W_REP_START: 2, // stevilo zaporednih tock, ki morajo biti nad naklonom
   PRE_WINDOW_FRAMES_REP_START: 4, // stevilo tock pred zaznano končno, v katerih iščemo ekstremum
+  MIN_START_SCALE: 1e-3,
+  MAX_LOOKBACK_REP_START_S: 3, // maksimalno število sekund, ki jih lahko gledamo nazaj, da najdemo začetek ponovitve
+  KEEP_KEYPOINT_HISTORY_DURING_RECORDING_MS: 8000, // koliko sekund hranimo zgodovino keypointov, da lahko gledamo nazaj
 
   // Rep end
   SLOPE_K_REP_END: 0.2, // naklon premice (K) za konec ponovitve
