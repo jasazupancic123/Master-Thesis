@@ -81,6 +81,7 @@ export class PoseDetectionGraphsUtil {
           rep.timeFromExtremeToEndMs === undefined ||
           rep.timeAtExtremeMs === undefined
         ) {
+          console.log('INVALID REP', { rep });
           return;
         }
 

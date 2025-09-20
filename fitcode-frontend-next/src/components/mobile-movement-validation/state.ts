@@ -342,20 +342,25 @@ function insertKeypointsIntoBuffers(state: {
   } = state;
 
   // if we are in recording state, don't update the keypointHistory's size
-  if (statusRef.current === DetectionStatus.RECORDING)
-    keypointHistory.insertFrame(keypoints);
-  else {
+  if (statusRef.current === DetectionStatus.RECORDING) {
+    keypointHistory.insertFrame(
+      keypoints,
+      avgFps.current,
+      POSE_DETECTION_CONSTRAINTS.KEEP_KEYPOINT_HISTORY_DURING_RECORDING_MS / 1000
+    );
+  } else {
     // only keep KEYPOINT_BUFFER_DURATION_MS of frames in history
     keypointHistory.insertFrame(
       keypoints,
       avgFps.current,
-      POSE_DETECTION_CONSTRAINTS.KEYPOINT_BUFFER_DURATION_MS * 1000
+      POSE_DETECTION_CONSTRAINTS.KEYPOINT_BUFFER_DURATION_MS / 1000
     );
   }
 
   // If rep has started, then add frames to current rep buffer
-  if (repStateRef.current.status === RepStatus.IN_REP && currentRepBuffer)
+  if (repStateRef.current.status === RepStatus.IN_REP && currentRepBuffer) {
     currentRepBuffer.insertFrame(keypoints);
+  }
 
   const hasWeakFps = avgFps.current ? avgFps.current.value <= 15 : isMobile;
 
