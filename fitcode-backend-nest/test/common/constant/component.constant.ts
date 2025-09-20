@@ -63,7 +63,7 @@ export const COMPONENT_ENDURANCE: Omit<Component, 'children' | 'parents'> & {
         options: [
           { field: 'mas', defaultValue: '100' },
           { field: 'hrmax', defaultValue: '100' },
-          { field: 'eff', defaultValue: 'mod' },
+          { field: 'eff', defaultValue: '1' },
         ],
       },
     ],
@@ -87,7 +87,7 @@ export const COMPONENT_ENDURANCE: Omit<Component, 'children' | 'parents'> & {
         options: [
           { field: 'mas', defaultValue: '100' },
           { field: 'hrmax', defaultValue: '100' },
-          { field: 'eff', defaultValue: 'mod' },
+          { field: 'eff', defaultValue: '1' },
         ],
       },
       {
@@ -104,7 +104,7 @@ export const COMPONENT_ENDURANCE: Omit<Component, 'children' | 'parents'> & {
         options: [
           { field: 'mas', defaultValue: '100' },
           { field: 'hrmax', defaultValue: '100' },
-          { field: 'eff', defaultValue: 'mod' },
+          { field: 'eff', defaultValue: '1' },
         ],
       },
     ],
@@ -136,7 +136,7 @@ export const COMPONENT_ENDURANCE: Omit<Component, 'children' | 'parents'> & {
         options: [
           { field: 'mas', defaultValue: '100' },
           { field: 'hrmax', defaultValue: '100' },
-          { field: 'eff', defaultValue: 'mod' },
+          { field: 'eff', defaultValue: '1' },
         ],
       },
       {
@@ -145,7 +145,7 @@ export const COMPONENT_ENDURANCE: Omit<Component, 'children' | 'parents'> & {
         options: [
           { field: 'mas', defaultValue: '100' },
           { field: 'hrmax', defaultValue: '100' },
-          { field: 'eff', defaultValue: 'mod' },
+          { field: 'eff', defaultValue: '1' },
         ],
       },
       {
@@ -162,7 +162,7 @@ export const COMPONENT_ENDURANCE: Omit<Component, 'children' | 'parents'> & {
         options: [
           { field: 'mas', defaultValue: '100' },
           { field: 'hrmax', defaultValue: '100' },
-          { field: 'eff', defaultValue: 'mod' },
+          { field: 'eff', defaultValue: '1' },
         ],
       },
     ],
@@ -191,7 +191,7 @@ export const COMPONENT_ENDURANCE: Omit<Component, 'children' | 'parents'> & {
         options: [
           { field: 'mas', defaultValue: '100' },
           { field: 'hrmax', defaultValue: '100' },
-          { field: 'eff', defaultValue: 'mod' },
+          { field: 'eff', defaultValue: '1' },
         ],
       },
       {
@@ -208,7 +208,7 @@ export const COMPONENT_ENDURANCE: Omit<Component, 'children' | 'parents'> & {
         options: [
           { field: 'mas', defaultValue: '100' },
           { field: 'hrmax', defaultValue: '100' },
-          { field: 'eff', defaultValue: 'mod' },
+          { field: 'eff', defaultValue: '1' },
         ],
       },
     ],

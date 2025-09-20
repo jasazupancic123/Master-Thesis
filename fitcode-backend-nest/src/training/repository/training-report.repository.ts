@@ -1,5 +1,4 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { subDays } from 'date-fns';
 import {
   CollectionGroup,
   CollectionReference,
@@ -12,20 +11,20 @@ import { Create, FirestoreEntity, Update } from '@src/common/type/entity.type';
 import {
   FirestoreRepository,
   TrainingRef,
-  WorkloadRef,
+  TrainingReportRef,
 } from '@src/common/type/firestore.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 
-import { Workload } from '../entity/workload.entity';
+import { TrainingReport } from '../entity/training-report.entity';
 import { TrainingRepository } from './training.repository';
 
 @Injectable()
-export class WorkloadRepository extends FirestoreRepository<
-  Workload,
-  TrainingRef
+export class TrainingReportRepository extends FirestoreRepository<
+  TrainingReport,
+  TrainingReportRef
 > {
-  collectionName = FirestoreCollection.TRAINING_WORKLOAD;
+  collectionName = FirestoreCollection.TRAINING_REPORT;
 
   constructor(
     readonly firebaseService: FirebaseService,
@@ -45,21 +44,23 @@ export class WorkloadRepository extends FirestoreRepository<
     return this.firebaseService.firestore.collectionGroup(this.collectionName);
   }
 
-  doc(ref: WorkloadRef): DocumentReference {
+  doc(ref: TrainingReportRef): DocumentReference {
     return this.collection(ref).doc(this.getKey(ref));
   }
 
   async getAllDocs(
     query: (ref: Query) => Query = (ref) => ref,
-  ): Promise<Workload[]> {
+  ): Promise<TrainingReport[]> {
     const snapshot = await query(this.collectionGroup()).get();
     return snapshot.docs.map((doc) =>
-      this.firebaseService.serialize(doc.data() as FirestoreEntity<Workload>),
+      this.firebaseService.serialize(
+        doc.data() as FirestoreEntity<TrainingReport>,
+      ),
     );
   }
 
-  async save(ref: WorkloadRef, data: Create<Workload>) {
-    const query = this.firebaseService.buildCreateQuery<Workload>(data, {
+  async save(ref: TrainingReportRef, data: Create<TrainingReport>) {
+    const query = this.firebaseService.buildCreateQuery<TrainingReport>(data, {
       timestamps: true,
     });
 
@@ -67,42 +68,16 @@ export class WorkloadRepository extends FirestoreRepository<
     return this.getKey(ref);
   }
 
-  async update(ref: WorkloadRef, data: Update<Workload>) {
+  async update(ref: TrainingReportRef, data: Update<TrainingReport>) {
     const query = this.firebaseService.buildUpdateQuery(data);
     await this.doc(ref).update(query);
   }
 
-  async delete(ref: WorkloadRef) {
+  async delete(ref: TrainingReportRef) {
     await this.doc(ref).delete();
   }
 
-  async deleteDocs(ref: WorkloadRef[]) {
-    const batch = this.firebaseService.firestore.batch();
-    ref.forEach((r) => batch.delete(this.doc(r)));
-    await batch.commit();
-  }
-
-  async findExerciseMax(
-    userId: string,
-    exerciseId: string,
-    range = 30, // days
-  ): Promise<Workload | null> {
-    const snapshot = await this.collectionGroup()
-      .where('userId', '==', userId)
-      .where('exerciseId', '==', exerciseId)
-      .where('createdAt', '>=', subDays(new Date(), range))
-      .orderBy('intWork1ValueL', 'desc')
-      .limit(1)
-      .get();
-
-    if (snapshot.empty) return null;
-
-    return this.firebaseService.serialize(
-      snapshot.docs[0].data() as FirestoreEntity<Workload>,
-    );
-  }
-
-  getKey(ref: WorkloadRef) {
-    return `${ref.trainingId}-${ref.userId}-${ref.componentId}-${ref.exerciseId}-${ref.supersetIndex}-${ref.setNumber}`;
+  getKey(ref: TrainingReportRef) {
+    return `${ref.trainingId}-${ref.userId}`;
   }
 }

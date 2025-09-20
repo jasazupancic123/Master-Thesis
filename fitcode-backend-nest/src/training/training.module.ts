@@ -11,9 +11,11 @@ import { InstitutionModule } from '../institution/institution.module';
 import { MethodModule } from '../method/method.module';
 import { Training } from './entity/training.entity';
 import { TrainingRepository } from './repository/training.repository';
+import { TrainingReportRepository } from './repository/training-report.repository';
 import { WorkloadRepository } from './repository/workload.repository';
 import { TrainingService } from './service/training.service';
 import { TrainingPlanService } from './service/training-plan.service';
+import { TrainingReportService } from './service/training-report.service';
 import { WorkloadService } from './service/workload.service';
 import { TrainingController } from './training.controller';
 
@@ -32,8 +34,10 @@ import { TrainingController } from './training.controller';
   providers: [
     WorkloadRepository,
     TrainingService,
+    TrainingReportRepository,
     TrainingRepository,
     WorkloadService,
+    TrainingReportService,
     TrainingPlanService,
   ],
   controllers: [TrainingController],

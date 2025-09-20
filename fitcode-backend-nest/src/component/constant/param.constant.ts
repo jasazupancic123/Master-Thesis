@@ -97,67 +97,19 @@ export const INT_OPTIONS: Attribute[] = [
     field: IntType.Tempo,
     name: 'Tempo',
     description: 'tempo',
-    type: AttributeType.Select,
-    defaultValue: '0',
-    options: [
-      {
-        field: '0',
-        name: '0:0:0',
-        type: AttributeType.Value,
-        defaultValue: '0',
-      },
-      {
-        field: '1',
-        name: '1:0:1',
-        type: AttributeType.Value,
-        defaultValue: '1',
-      },
-      {
-        field: '2',
-        name: '2:0:1',
-        type: AttributeType.Value,
-        defaultValue: '2',
-      },
-      {
-        field: '3',
-        name: '3:0:1',
-        type: AttributeType.Value,
-        defaultValue: '3',
-      },
-    ],
+    type: AttributeType.Number,
+    defaultValue: '1000',
+    min: 1000,
+    max: 9999,
   },
   {
     field: IntType.Eff,
     name: 'Eff',
     description: 'effort',
-    type: AttributeType.Select,
+    type: AttributeType.Number,
     defaultValue: '0',
-    options: [
-      {
-        field: '0',
-        name: 'Easy',
-        type: AttributeType.Value,
-        defaultValue: '0',
-      },
-      {
-        field: '1',
-        name: 'Mod',
-        type: AttributeType.Value,
-        defaultValue: '1',
-      },
-      {
-        field: '2',
-        name: 'Hard',
-        type: AttributeType.Value,
-        defaultValue: '2',
-      },
-      {
-        field: '3',
-        name: 'Max',
-        type: AttributeType.Value,
-        defaultValue: '3',
-      },
-    ],
+    min: 1, // easy
+    max: 4, // max
   },
 ];
 
