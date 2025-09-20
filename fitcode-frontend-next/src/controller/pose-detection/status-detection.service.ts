@@ -2,19 +2,14 @@ import type { RefObject } from 'react';
 
 import type { KeypointHistory } from './class/keypoint-history';
 import { POSE_DETECTION_CONSTRAINTS } from './const/pose-detection-constrains.const';
-import { FACE_CAMERA_MESSAGE } from './const/status-messages';
 import { ConditionDirection } from './enum/condition-detection.enum';
 import { DetectionStatus } from './enum/detection-status';
 import { KeypointId } from './enum/keypoint-id';
-import { KeypointValueType } from './enum/keypoint-value-type';
 import { RepStatus } from './enum/rep-state';
-import { PoseDetectionService } from './pose-detection.service';
 import type { ExerciseRepStartCondition } from './type/exercise-start-condition.type';
 import type { Keypoint } from './type/keypoint.type';
-import type { PoseValidationCondition } from './type/pose-validation-condition.type';
 import type { RepState } from './type/rep-state.type';
 import { KeypointUtil } from './util/keypoint.util';
-import type { SetState } from '@/common/type/state.type';
 
 export class StatusDetectionService {
   // if it returns false, it means we need to return in main loop
@@ -24,8 +19,8 @@ export class StatusDetectionService {
     state: {
       keypoints: Keypoint[];
       statusRef: RefObject<DetectionStatus>;
-      setStatusMessage: SetState<string>;
-      buffer: KeypointHistory;
+      keypointBuffer: KeypointHistory;
+      keypointHistory: KeypointHistory;
       exerciseStartConditions: ExerciseRepStartCondition[];
       avgFps: { value: number; count: number } | null;
     }
@@ -33,8 +28,8 @@ export class StatusDetectionService {
     const {
       keypoints,
       statusRef,
-      setStatusMessage,
-      buffer,
+      keypointBuffer,
+      keypointHistory,
       exerciseStartConditions,
       avgFps,
     } = state;
@@ -51,10 +46,7 @@ export class StatusDetectionService {
         );
       }
       case DetectionStatus.NOT_FACING_CAMERA: {
-        const isFacingCamera = this.checkIsFacingCamera(
-          keypoints,
-          setStatusMessage
-        );
+        const isFacingCamera = this.checkIsFacingCamera(keypoints);
 
         return this.updateStatus(
           statusRef,
@@ -64,12 +56,12 @@ export class StatusDetectionService {
         );
       }
       case DetectionStatus.NOT_STILL: {
-        const isStill = this.checkIsStill(
-          statusRef.current,
+        const isStill = this.checkIsStill({
+          currentStatus: statusRef.current,
           keypoints,
-          buffer,
-          avgFps
-        );
+          buffer: keypointBuffer,
+          avgFps,
+        });
 
         return this.updateStatus(
           statusRef,
@@ -83,7 +75,7 @@ export class StatusDetectionService {
 
         const startedRecording = this.checkExerciseRepStartConditions(
           keypoints,
-          buffer,
+          keypointBuffer,
           exerciseStartConditions,
           avgFps
         );
@@ -100,6 +92,27 @@ export class StatusDetectionService {
           startedRecording,
           DetectionStatus.READY,
           DetectionStatus.RECORDING
+        );
+      }
+      case DetectionStatus.RECORDING: {
+        const numFrames = KeypointUtil.getFramesCountFromSeconds(
+          POSE_DETECTION_CONSTRAINTS.MIN_STILL_TIME_TO_STOP_DETECTION_S,
+          avgFps?.value || 30
+        );
+
+        const isStill = this.checkIsStill({
+          currentStatus: statusRef.current,
+          keypoints,
+          buffer: keypointHistory,
+          avgFps,
+          bufferCutOf: numFrames,
+        });
+
+        return this.updateStatus(
+          statusRef,
+          isStill,
+          DetectionStatus.RECORDING,
+          DetectionStatus.STOPPED
         );
       }
       default: {
@@ -129,18 +142,13 @@ export class StatusDetectionService {
   }
 
   private static checkIsFullyInFrame(keypoints: Keypoint[]): boolean {
-    const count = keypoints.filter(
+    return keypoints.every(
       (kp) =>
         kp.visibility > POSE_DETECTION_CONSTRAINTS.IN_FRAME_VISIBLITY_THRESHOLD
-    ).length;
-
-    return count >= POSE_DETECTION_CONSTRAINTS.MIN_KEYPOINTS_IN_FRAME;
+    );
   }
 
-  private static checkIsFacingCamera(
-    keypoints: Keypoint[],
-    setStatusMessage: SetState<string>
-  ): boolean {
+  private static checkIsFacingCamera(keypoints: Keypoint[]): boolean {
     const facingCameraKeypointIds = [
       KeypointId.LEFT_EYE,
       KeypointId.RIGHT_EYE,
@@ -148,44 +156,17 @@ export class StatusDetectionService {
       KeypointId.RIGHT_SHOULDER,
       KeypointId.LEFT_WRIST,
       KeypointId.RIGHT_WRIST,
-      // KeypointId.LEFT_HIP,
-      // KeypointId.RIGHT_HIP,
+      KeypointId.LEFT_HIP,
+      KeypointId.RIGHT_HIP,
       KeypointId.LEFT_KNEE,
       KeypointId.RIGHT_KNEE,
       KeypointId.LEFT_ANKLE,
       KeypointId.RIGHT_ANKLE,
     ];
 
-    const conditions: PoseValidationCondition[] = [
-      {
-        keypointId1: KeypointId.LEFT_SHOULDER,
-        keypointId2: KeypointId.RIGHT_SHOULDER,
-        relation: KeypointValueType.POSITION_Z,
-        threshold: 0.1,
-        errorMessage: FACE_CAMERA_MESSAGE,
-      },
-      {
-        keypointId1: KeypointId.LEFT_HIP,
-        keypointId2: KeypointId.RIGHT_HIP,
-        relation: KeypointValueType.POSITION_Z,
-        threshold: 0.25,
-        errorMessage: FACE_CAMERA_MESSAGE,
-      },
-    ];
-
     const facingCameraKeypoints = facingCameraKeypointIds.map((id) =>
       KeypointUtil.getDesiredKeypointFromArray(keypoints, id)
     );
-
-    const error = PoseDetectionService.validateKeypointConditions(
-      conditions,
-      keypoints
-    );
-
-    if (error) {
-      setStatusMessage(error);
-      return false;
-    }
 
     return facingCameraKeypoints.every(
       (kp) =>
@@ -195,20 +176,25 @@ export class StatusDetectionService {
     );
   }
 
-  private static checkIsStill(
-    currentStatus: DetectionStatus,
-    keypoints: Keypoint[],
-    buffer: KeypointHistory,
-    avgFps: { value: number; count: number } | null
-  ): boolean {
+  private static checkIsStill(state: {
+    currentStatus: DetectionStatus;
+    keypoints: Keypoint[];
+    buffer: KeypointHistory;
+    avgFps: { value: number; count: number } | null;
+    bufferCutOf?: number;
+  }): boolean {
+    const { currentStatus, keypoints, buffer, avgFps, bufferCutOf } = state;
+
     if (!avgFps) return false;
 
     const timeElapsed = avgFps.count / avgFps.value; // in seconds
-    if (timeElapsed < 4) return false;
+    if (timeElapsed < 3) return false;
 
     const stillnessKeypointIds = [
       KeypointId.LEFT_SHOULDER,
       KeypointId.RIGHT_SHOULDER,
+      KeypointId.LEFT_WRIST,
+      KeypointId.RIGHT_WRIST,
       KeypointId.LEFT_HIP,
       KeypointId.RIGHT_HIP,
       KeypointId.LEFT_KNEE,
@@ -221,13 +207,17 @@ export class StatusDetectionService {
       KeypointUtil.getDesiredKeypointFromArray(keypoints, id)
     );
 
+    if (bufferCutOf !== undefined && buffer.history.length < bufferCutOf)
+      return false;
+
     return stillnessKeypoints.every((kp) => {
       if (!kp) return false;
 
-      const history = buffer.getHistoryById(kp.id);
+      const history = buffer.getHistoryById(kp.id, bufferCutOf);
       if (history.some((h) => !h)) return false;
 
       const stdDev = StatusDetectionService.calculateStandardDeviation(history);
+
       return currentStatus === DetectionStatus.READY
         ? stdDev < POSE_DETECTION_CONSTRAINTS.STILLNESS_THRESHOLD_WHILE_READY_M
         : stdDev < POSE_DETECTION_CONSTRAINTS.STILLNESS_THRESHOLD_M;

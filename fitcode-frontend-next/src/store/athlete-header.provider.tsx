@@ -1,7 +1,8 @@
-import { TrackingMethod } from '@/common/enum/tracking-method.enum';
-import { ChildrenProps } from '@/common/type/props.type';
-import { SetState } from '@/common/type/state.type';
 import { createContext, useContext, useState } from 'react';
+
+import { TrackingMethod } from '@/common/enum/tracking-method.enum';
+import type { ChildrenProps } from '@/common/type/props.type';
+import type { SetState } from '@/common/type/state.type';
 
 interface AthleteHeaderContextProps {
   selectedTrackingMethod: TrackingMethod;

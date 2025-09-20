@@ -6,7 +6,6 @@ import type { Keypoint } from '../type/keypoint.type';
 import type { Rep } from '../type/rep.type';
 import { KeypointUtil } from './keypoint.util';
 import { TimeUtil } from './time.util';
-import { X } from '@mui/icons-material';
 
 export class PoseDetectionGraphsUtil {
   // Call this right after you push a new ROM sample into romBuffer
@@ -81,7 +80,6 @@ export class PoseDetectionGraphsUtil {
           rep.timeFromExtremeToEndMs === undefined ||
           rep.timeAtExtremeMs === undefined
         ) {
-          console.log('INVALID REP', { rep });
           return;
         }
 
@@ -181,37 +179,50 @@ export class PoseDetectionGraphsUtil {
     const extremeValueNormalized = norm(currentRepRef.current.extremeValue!);
 
     // previous reps normalized with the SAME (expanded) domain
-    const previousNormalizedStartValues = recordedRepsRef.current
-      .map((r) => r.startValue)
-      .filter((v): v is number => v !== undefined)
-      .map(norm);
+    // const previousNormalizedStartValues = recordedRepsRef.current
+    //   .map((r) => r.startValue)
+    //   .filter((v): v is number => v !== undefined)
+    //   .map(norm);
 
-    const previousNormalizedEndValues = recordedRepsRef.current
-      .map((r) => r.endValue)
-      .filter((v): v is number => v !== undefined)
-      .map(norm);
+    // const previousNormalizedEndValues = recordedRepsRef.current
+    //   .map((r) => r.endValue)
+    //   .filter((v): v is number => v !== undefined)
+    //   .map(norm);
 
-    const previousNormalizedExtremeValues = recordedRepsRef.current
-      .map((r) => r.extremeValue)
-      .filter((v): v is number => v !== undefined)
-      .map(norm);
+    // const previousNormalizedExtremeValues = recordedRepsRef.current
+    //   .map((r) => r.extremeValue)
+    //   .filter((v): v is number => v !== undefined)
+    //   .map(norm);
 
     // optional: clamp to [0,1] only for drawing safety (should rarely matter now)
     const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
 
+    const maxExtremeValueNormalized = clamp01(
+      Math.max(
+        ...recordedRepsRef.current
+          .map((r) => r.extremeValue)
+          .filter((v): v is number => v !== undefined)
+          .map(norm)
+          .concat([extremeValueNormalized]) // include current rep's extreme too
+      )
+    );
+
+    const romRect = canvasROM.getBoundingClientRect();
+
     // draw
     PoseDetectionGraphsUtil.drawRomOverlayBarChart({
       ctx: ctxROM,
-      w: canvasROM.width,
-      h: canvasROM.height,
+      w: romRect.width,
+      h: romRect.height,
       currentValueNormalized: clamp01(currentValueNormalized),
       startValueNormalized: clamp01(startValueNormalized),
       endValueNormalized: clamp01(endValueNormalized),
       extremeValueNormalized: clamp01(extremeValueNormalized),
-      previousNormalizedStartValues: previousNormalizedStartValues.map(clamp01),
-      previousNormalizedEndValues: previousNormalizedEndValues.map(clamp01),
-      previousNormalizedExtremeValues:
-        previousNormalizedExtremeValues.map(clamp01),
+      maxExtremeValueNormalized,
+      // previousNormalizedStartValues: previousNormalizedStartValues.map(clamp01),
+      // previousNormalizedEndValues: previousNormalizedEndValues.map(clamp01),
+      // previousNormalizedExtremeValues:
+      //   previousNormalizedExtremeValues.map(clamp01),
       rising: !detectedExtremum,
       theme,
     });
@@ -269,7 +280,7 @@ export class PoseDetectionGraphsUtil {
 
     // HiDPI crispness
     const dpr = window.devicePixelRatio || 1;
-    if ((ctx as any).__scaledForDPR__ !== dpr) {
+    if ((ctx as ScaledContext).__scaledForDPR__ !== dpr) {
       const canvas = ctx.canvas;
       const cssW = w,
         cssH = h;
@@ -278,14 +289,14 @@ export class PoseDetectionGraphsUtil {
       canvas.style.width = `${cssW}px`;
       canvas.style.height = `${cssH}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      (ctx as any).__scaledForDPR__ = dpr;
+      (ctx as ScaledContext).__scaledForDPR__ = dpr;
     }
 
     ctx.clearRect(0, 0, w, h);
 
     // Layout
     const barW = 10; // wider
-    const repGap = 10; // between reps
+    const repGap = 2; // between reps
     const n = normalizedTimesToExtremeMs.length;
 
     // center line (dotted)
@@ -417,13 +428,11 @@ export class PoseDetectionGraphsUtil {
     ctx: CanvasRenderingContext2D;
     w: number;
     h: number;
-    startValueNormalized: number; // current rep start (0..1)
-    endValueNormalized: number; // current rep end (0..1)
-    extremeValueNormalized: number; // current rep extreme (0..1)
-    currentValueNormalized: number; // current rep current (0..1)
-    previousNormalizedStartValues: number[]; // per rep (0..1)
-    previousNormalizedEndValues: number[]; // per rep (0..1)
-    previousNormalizedExtremeValues: number[]; // per rep (0..1)
+    startValueNormalized: number; // (kept for compatibility, unused now)
+    endValueNormalized: number; // (kept for compatibility, unused now)
+    extremeValueNormalized: number; // (kept for compatibility, unused now)
+    currentValueNormalized: number; // 0..1 (relative to global full range)
+    maxExtremeValueNormalized: number; // 0..1 (max of extremes across all reps so far; passed in)
     rising: boolean;
     theme: Theme;
     inset?: number;
@@ -432,24 +441,33 @@ export class PoseDetectionGraphsUtil {
       ctx,
       w,
       h,
-      startValueNormalized,
-      endValueNormalized,
-      extremeValueNormalized,
+      // unused but kept: startValueNormalized, endValueNormalized, extremeValueNormalized,
       currentValueNormalized,
-      previousNormalizedStartValues,
-      previousNormalizedEndValues,
-      previousNormalizedExtremeValues,
-      rising,
+      maxExtremeValueNormalized,
       theme,
       inset = 12,
     } = state;
 
-    const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
+    // --- HiDPI crispness (same pattern you used in tempo) ---
+    const dpr = window.devicePixelRatio || 1;
+    if ((ctx as ScaledContext).__scaledForDPR__ !== dpr) {
+      const canvas = ctx.canvas as HTMLCanvasElement;
+      const cssW = w,
+        cssH = h;
+      canvas.width = Math.floor(cssW * dpr);
+      canvas.height = Math.floor(cssH * dpr);
+      canvas.style.width = `${cssW}px`;
+      canvas.style.height = `${cssH}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      (ctx as ScaledContext).__scaledForDPR__ = dpr;
+    }
 
-    const startN = clamp01(startValueNormalized);
-    const endN = clamp01(endValueNormalized);
-    const extremeN = clamp01(extremeValueNormalized);
+    // helper: snap strokes to device pixels (so 1px lines are crisp)
+    const crisp = (v: number) => Math.round(v) + 0.5;
+
+    const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
     const currentN = clamp01(currentValueNormalized);
+    const maxExtremeN = clamp01(maxExtremeValueNormalized);
 
     // full-canvas drawing area
     ctx.clearRect(0, 0, w, h);
@@ -459,69 +477,88 @@ export class PoseDetectionGraphsUtil {
     const y1 = h - inset;
     const toY = (v: number) => y1 - v * (y1 - y0);
 
-    // layout: thin bars, tiny gap within a pair, small gap between reps
-    const barW = 5; // thin
-    const pairGap = 0; // between green/red in the same rep
-    const repGap = 10; // between reps
+    // layout (kept exactly as before)
+    const barW = 20;
+    const pairGap = 0;
     const pairWidth = barW * 2 + pairGap;
 
-    let x = x0;
+    const x = x0;
 
-    // helper to draw a vertical segment between two normalized values
-    const drawSegment = (
-      bx: number,
-      fromN: number,
-      toN: number,
-      color: string
-    ) => {
-      const yFrom = toY(clamp01(fromN));
-      const yTo = toY(clamp01(toN));
-      const y = Math.min(yFrom, yTo);
-      const hSeg = Math.max(1, Math.abs(yFrom - yTo));
-      ctx.save();
-      ctx.fillStyle = color;
-      ctx.fillRect(bx, y, barW, hSeg);
-      ctx.restore();
-    };
-
-    // ---- 1) draw all previous reps as frozen pairs ----
-    const Nprev = Math.min(
-      previousNormalizedStartValues.length,
-      previousNormalizedExtremeValues.length
-    );
-    for (let i = 0; i < Nprev; i++) {
-      const startN = clamp01(previousNormalizedStartValues[i]);
-      const endN = clamp01(previousNormalizedEndValues[i]);
-      const extremeN = clamp01(previousNormalizedExtremeValues[i]);
-
-      // stop if no more horizontal space
-      if (x + pairWidth > x1) break;
-
-      const greenX = x;
-      const redX = x + barW + pairGap;
-
-      // for finished reps:
-      //  - green shows start → extreme (upstroke)
-      //  - red shows extreme → start (downstroke)
-      drawSegment(greenX, startN, extremeN, theme.palette.success.main);
-      drawSegment(redX, extremeN, endN, theme.palette.error.main);
-
-      x += pairWidth + repGap;
-    }
-
-    // ---- 2) draw the current rep at the end (live) ----
+    // ---- Single bar (current value), capped by maxExtremeValue ----
     if (x + pairWidth <= x1) {
-      const greenX = x;
-      const redX = x + barW + pairGap;
+      const barX = x; // same position as your "greenX"
+      const barBaseY = toY(0);
 
-      if (rising) {
-        // still going up: green live start → current, red empty
-        drawSegment(greenX, startN, currentN, theme.palette.success.main);
-      } else {
-        // going down: green frozen start → extreme, red live extreme → current
-        drawSegment(greenX, startN, extremeN, theme.palette.success.main);
-        drawSegment(redX, extremeN, currentN, theme.palette.error.main);
-      }
+      // cap the current value by the running maxExtreme
+      const cappedCurrentN = Math.min(currentN, maxExtremeN);
+
+      // height of the bar is relative to the capped current value
+      const barTopY = toY(cappedCurrentN);
+      const barHeight = Math.max(1, barBaseY - barTopY);
+
+      // threshold at 66% of the *maxExtreme* height
+      const thresholdN = maxExtremeN * 0.66;
+      const thresholdY = toY(thresholdN);
+
+      // color logic (kept from your latest code)
+      const baseColor = theme.palette.primary.main;
+      const overColor = '#22c55e'; // if you want yellow: theme.palette.warning.main or '#FFD734'
+      const fillColor = cappedCurrentN >= thresholdN ? overColor : baseColor;
+
+      // draw the filled bar (fills are crisp without 0.5 offset)
+      ctx.save();
+      ctx.fillStyle = fillColor;
+      ctx.fillRect(
+        Math.round(barX),
+        Math.round(barTopY),
+        Math.round(barW),
+        Math.round(barHeight)
+      );
+      ctx.restore();
+
+      // dotted border around the bar (stroke needs 0.5 alignment)
+      ctx.save();
+      ctx.setLineDash([1, 1]);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = (theme?.palette?.divider as string) || '#222222';
+      ctx.strokeRect(
+        crisp(barX),
+        crisp(barTopY),
+        Math.max(1, Math.round(barW) - 1),
+        Math.max(1, Math.round(barHeight) - 1)
+      );
+      ctx.restore();
+
+      // horizontal threshold line (stroke: snap Y to 0.5)
+      ctx.save();
+      ctx.setLineDash([1, 1]);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle =
+        (theme?.palette?.text?.secondary as string) || '#222222';
+      const pad = 2;
+      ctx.beginPath();
+      const yTh = crisp(thresholdY);
+      ctx.moveTo(Math.round(barX - pad), yTh);
+      ctx.lineTo(Math.round(barX + barW + pad), yTh);
+      ctx.stroke();
+      ctx.restore();
+
+      // faint outline for the *maxExtreme* bar height (stroke: snap)
+      ctx.save();
+      ctx.setLineDash([1, 1]);
+      ctx.strokeStyle = '#222222';
+      const maxTopY = toY(maxExtremeN);
+      ctx.strokeRect(
+        crisp(barX),
+        crisp(maxTopY),
+        Math.max(1, Math.round(barW) - 1),
+        Math.max(1, Math.round(barBaseY - maxTopY) - 1)
+      );
+      ctx.restore();
     }
   };
+}
+
+interface ScaledContext extends CanvasRenderingContext2D {
+  __scaledForDPR__?: number;
 }

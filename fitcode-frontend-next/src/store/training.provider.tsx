@@ -3,7 +3,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 
 import { useAuthenticatedAuth } from './auth.provider';
-import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 import type { ExerciseOrTraining } from '@/common/type/exercise-or-training.type';
 import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
 import type { ChildrenProps } from '@/common/type/props.type';

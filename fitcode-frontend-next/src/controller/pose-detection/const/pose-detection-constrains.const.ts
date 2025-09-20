@@ -1,8 +1,8 @@
 export const POSE_DETECTION_CONSTRAINTS = {
   // State detection
-  MIN_KEYPOINTS_IN_FRAME: 26,
-  IN_FRAME_VISIBLITY_THRESHOLD: 0.2,
-  STILLNESS_THRESHOLD_M: 0.025, // in meters
+  MIN_KEYPOINTS_IN_FRAME: 30,
+  IN_FRAME_VISIBLITY_THRESHOLD: 0.5,
+  STILLNESS_THRESHOLD_M: 0.04, // in meters
   STILLNESS_THRESHOLD_WHILE_READY_M: 0.04, // in meters
   FACING_CAMERA_VISIBLITY_THRESHOLD: 0.5,
 
@@ -31,4 +31,7 @@ export const POSE_DETECTION_CONSTRAINTS = {
   SUSTAIN_W_REP_END: 2, // stevilo zaporednih tock, ki morajo biti pod naklonom
   POST_WINDOW_FRAMES_REP_END: 2, // stevilo frame-ov po tem ko se rep konča, da najdemo še kakšen ekstremum
   NEW_EXTREMUM_DETECTION_DISTANCE_M: 0.005, // če pridemo do novega ekstremuma, mora biti ta oddaljen od prejšnjega za to vrednost (v metrih)
+
+  // Detection end
+  MIN_STILL_TIME_TO_STOP_DETECTION_S: 3, // how many seconds of stillness to stop detection
 };
