@@ -12,4 +12,5 @@ export enum FirestoreCollection {
   INSTITUTION = 'institutions',
   METHOD = 'methods',
   TRAINING_WORKLOAD = 'training-workload',
+  TRAINING_REPORT = 'training-reports',
 }

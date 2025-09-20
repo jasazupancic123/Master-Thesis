@@ -92,6 +92,7 @@ import { UpdateTraining } from '../interface/update-training.interface';
 import { TrainingRepository } from '../repository/training.repository';
 import { WorkloadRepository } from '../repository/workload.repository';
 import { TrainingPlanService } from './training-plan.service';
+import { TrainingReportService } from './training-report.service';
 import { WorkloadService } from './workload.service';
 
 @Injectable()
@@ -112,6 +113,7 @@ export class TrainingService implements Permission<Training, Institution> {
     private readonly trainingPlanService: TrainingPlanService,
     private readonly workloadRepository: WorkloadRepository,
     private readonly workloadService: WorkloadService,
+    private readonly trainingReportService: TrainingReportService,
     private readonly groupService: GroupService,
     private readonly institutionService: InstitutionService,
     private readonly exerciseService: ExerciseService,
