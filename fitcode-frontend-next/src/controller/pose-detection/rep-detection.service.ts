@@ -827,6 +827,7 @@ export class RepDetectionService {
     let s = velocity.length - 1;
     let found = false;
     let run = 0; // length of the current satisfied streak
+    let end = detectingRepStart ? false : true; // used only for detectRepStart
 
     while (s >= 0) {
       const K = velocity[s] / Math.max(scale, 1e-6);
@@ -835,6 +836,12 @@ export class RepDetectionService {
 
       if (detectingRepStart) {
         // when detecting start of rep, check for big K's and check direction
+        if (Math.abs(K) < slopeK) {
+          // if K is too small, we can stop checking, because we are going backwards
+          end = true;
+          break;
+        }
+
         if (direction === ConditionDirection.NEGATIVE) {
           hit = K <= -slopeK;
         } else if (direction === ConditionDirection.POSITIVE) {
@@ -853,7 +860,7 @@ export class RepDetectionService {
         if (run >= sustainW) {
           // s now points to the EARLIEST frame of the sustained block (since we’re walking backwards)
           found = true;
-          break;
+          // break;
         }
       } else {
         run = 0; // reset the streak
@@ -862,7 +869,7 @@ export class RepDetectionService {
       s -= 1;
     }
 
-    return found ? s : undefined;
+    return found && end ? s : undefined;
   }
 
   private static initStartValues(
