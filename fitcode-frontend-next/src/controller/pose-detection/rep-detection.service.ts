@@ -68,7 +68,6 @@ export class RepDetectionService {
 
     switch (repStateRef.current.status) {
       case RepStatus.IN_REP: {
-        console.log('WE ARE IN REP');
         // Updates rep's extremeToEndTimestamp if the value falls out of a certain range from the extremeValue
         this.checkOutOfExtremeRange({
           currentRepRef,
@@ -140,7 +139,6 @@ export class RepDetectionService {
         } = this.checkHasRepStarted({
           currentFrameKeypoints,
           keypointHistory,
-          currentRepBuffer: currentRepRef.current?.buffer,
           keypointId,
           valueType,
           direction,
@@ -357,9 +355,6 @@ export class RepDetectionService {
 
     // Update extreme value
     this.updateExtremeRepValue({
-      keypointHistory,
-      keypointId,
-      valueType,
       direction,
       currentValue,
       currentKeypoint,
@@ -414,7 +409,6 @@ export class RepDetectionService {
   private static checkHasRepStarted(state: {
     currentFrameKeypoints: Keypoint[];
     keypointHistory: KeypointHistory;
-    currentRepBuffer?: KeypointHistory;
     keypointId: KeypointId;
     valueType: KeypointValueType;
     direction: ConditionDirection;
@@ -431,7 +425,6 @@ export class RepDetectionService {
     const {
       currentFrameKeypoints,
       keypointHistory,
-      currentRepBuffer,
       keypointId,
       valueType,
       direction,
@@ -464,7 +457,6 @@ export class RepDetectionService {
         keypointId,
         valueType,
         direction,
-        firstRep: recordedRepsRef.current.length === 0,
         avgFps,
       });
 
@@ -507,11 +499,9 @@ export class RepDetectionService {
     keypointId: KeypointId;
     valueType: KeypointValueType;
     direction: ConditionDirection;
-    firstRep: boolean;
     avgFps: { value: number; count: number } | null;
   }): { startIndex: number; startValue: number; startValueFrameNum: number } {
-    const { buffer, keypointId, valueType, direction, firstRep, avgFps } =
-      state;
+    const { buffer, keypointId, valueType, direction, avgFps } = state;
 
     // 1) Get smoothed values of the keypoint's values
     const values = this.getSmoothedValues(
@@ -679,9 +669,6 @@ export class RepDetectionService {
   }
 
   private static updateExtremeRepValue(state: {
-    keypointHistory: KeypointHistory;
-    keypointId: KeypointId;
-    valueType: KeypointValueType;
     direction: ConditionDirection;
     currentValue: number;
     currentKeypoint: Keypoint;
@@ -689,9 +676,6 @@ export class RepDetectionService {
     recordedRepsRef: RefObject<Rep[]>;
   }) {
     const {
-      keypointHistory,
-      keypointId,
-      valueType,
       direction,
       currentValue,
       currentKeypoint,

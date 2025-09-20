@@ -11,42 +11,51 @@ import { KeypointUtil } from './util/keypoint.util';
 import type { SetState } from '@/common/type/state.type';
 
 export class PoseDetectionService {
-  static checkStatus(
-    statusRef: RefObject<DetectionStatus>,
-    repStateRef: RefObject<RepState>,
-    keypoints: Keypoint[],
-    setStatusMessage: SetState<string>,
-    buffer: KeypointHistory,
-    exerciseStartConditions: ExerciseRepStartCondition[],
-    avgFps: { value: number; count: number } | null
-  ) {
-    if (statusRef.current !== DetectionStatus.RECORDING) {
-      // We are not in recording mode, so we need to make init checks
+  static checkStatus(state: {
+    statusRef: RefObject<DetectionStatus>;
+    repStateRef: RefObject<RepState>;
+    keypoints: Keypoint[];
+    setStatusMessage: SetState<string>;
+    keypointBuffer: KeypointHistory;
+    keypointHistory: KeypointHistory;
+    exerciseStartConditions: ExerciseRepStartCondition[];
+    avgFps: { value: number; count: number } | null;
+  }) {
+    const {
+      statusRef,
+      repStateRef,
+      keypoints,
+      setStatusMessage,
+      keypointBuffer,
+      keypointHistory,
+      exerciseStartConditions,
+      avgFps,
+    } = state;
 
-      const initStatuses = [
-        DetectionStatus.NOT_FULLY_IN_FRAME,
-        DetectionStatus.NOT_FACING_CAMERA,
-        DetectionStatus.NOT_STILL,
-        DetectionStatus.READY,
-      ];
+    const initStatuses =
+      statusRef.current === DetectionStatus.RECORDING
+        ? [DetectionStatus.RECORDING]
+        : [
+            DetectionStatus.NOT_FULLY_IN_FRAME,
+            DetectionStatus.NOT_FACING_CAMERA,
+            DetectionStatus.NOT_STILL,
+            DetectionStatus.READY,
+          ];
 
-      for (const status of initStatuses) {
-        const validStatus = StatusDetectionService.checkAndValidateStatus(
-          status,
-          repStateRef,
-          {
-            keypoints,
-            statusRef,
-            setStatusMessage,
-            buffer,
-            exerciseStartConditions,
-            avgFps,
-          }
-        );
-        if (!validStatus) return;
-      }
-    } else {
-      // We are in recording mode, we cannot go back to previous states
+    for (const status of initStatuses) {
+      const validStatus = StatusDetectionService.checkAndValidateStatus(
+        status,
+        repStateRef,
+        {
+          keypoints,
+          statusRef,
+          keypointBuffer: keypointBuffer,
+          exerciseStartConditions,
+          avgFps,
+          keypointHistory,
+        }
+      );
+      if (!validStatus) return;
     }
   }
 

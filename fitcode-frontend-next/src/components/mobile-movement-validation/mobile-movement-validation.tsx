@@ -33,8 +33,9 @@ const DEBUG = false;
 
 interface MobileMovementValidationProps {
   selectedExercise: TrainingExercise | undefined;
-  updateExerciseReps: ((repsCount: number) => void) | undefined;
+  selectedTrackingMethod: TrackingMethod | undefined;
   setSelectedTrackingMethod: SetState<TrackingMethod> | undefined;
+  updateExerciseReps: ((repsCount: number) => void) | undefined;
 }
 
 export default function MobileMovementValidation(
@@ -43,8 +44,12 @@ export default function MobileMovementValidation(
   const theme = useTheme();
   const screenSize = useScreenSize();
 
-  const { selectedExercise, updateExerciseReps, setSelectedTrackingMethod } =
-    props;
+  const {
+    selectedExercise,
+    selectedTrackingMethod,
+    setSelectedTrackingMethod,
+    updateExerciseReps,
+  } = props;
 
   // Buffers
   const keypointHistoryRef = useRef<KeypointHistory>(
@@ -111,6 +116,8 @@ export default function MobileMovementValidation(
   const avgFps = useRef<{ value: number; count: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const centerPosRef = useRef<{ x: number; y: number } | null>(null);
+
   // Helper Refs
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -123,6 +130,83 @@ export default function MobileMovementValidation(
   const frameCountRef = useRef(0);
   const initedFirstFrameInRecordingMode = useRef(false);
   const normDomainRef = useRef<{ min: number; max: number } | null>(null); // for graphs
+  const dotRef = useRef<HTMLDivElement | null>(null);
+  const dotBackgroundRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    let raf: number | null = null;
+
+    const tick = () => {
+      const v = videoRef.current;
+      const background = dotBackgroundRef.current;
+      const c = centerPosRef.current;
+
+      const dot = dotRef.current;
+
+      if (!v || !background || !dot || !c) {
+        raf = requestAnimationFrame(tick);
+        return;
+      }
+
+      const rect = v.getBoundingClientRect();
+
+      // normalized landmark coords [0..1]; flip X if video is mirrored
+      const nx = 1 - c.x;
+      const ny = c.y;
+
+      // intrinsic video size (source space)
+      const vw = v.videoWidth || rect.width;
+      const vh = v.videoHeight || rect.height;
+
+      // element size (display space)
+      const elW = rect.width;
+      const elH = rect.height;
+
+      // account for CSS object-fit
+      const ofit = getComputedStyle(v).objectFit || 'cover';
+
+      let drawnW = elW;
+      let drawnH = elH;
+
+      if (ofit === 'cover') {
+        const scale = Math.max(elW / vw, elH / vh);
+        drawnW = vw * scale;
+        drawnH = vh * scale;
+      } else if (ofit === 'contain' || ofit === 'scale-down') {
+        const scale = Math.min(elW / vw, elH / vh);
+        drawnW = vw * scale;
+        drawnH = vh * scale;
+      } else if (ofit === 'none') {
+        drawnW = vw; // 1:1 pixels
+        drawnH = vh;
+      } // "fill" falls back to element size (stretches to elW x elH)
+
+      // assume object-position: 50% 50% (center) – default for <video>
+      const offsetX = (elW - drawnW) / 2;
+      const offsetY = (elH - drawnH) / 2;
+
+      // map normalized coords -> displayed pixels inside the drawn video
+      const px = offsetX + nx * drawnW;
+      const py = offsetY + ny * drawnH;
+
+      // center the dot element (don’t hardcode; use its actual size)
+      const halfWBackground = (background.offsetWidth || 8) / 2;
+      const halfHBackground = (background.offsetHeight || 8) / 2;
+
+      const halfWDot = (dot.offsetWidth || 8) / 2;
+      const halfHDot = (dot.offsetHeight || 8) / 2;
+
+      background.style.transform = `translate3d(${px - halfWBackground}px, ${py - halfHBackground}px, 0)`;
+      dotRef.current!.style.transform = `translate3d(${px - halfWDot}px, ${py - halfHDot}px, 0)`;
+
+      raf = requestAnimationFrame(tick);
+    };
+
+    raf = requestAnimationFrame(tick);
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [centerPosRef]);
 
   {
     /* <HELPER TO DRAW GRAPH>*/
@@ -208,6 +292,17 @@ export default function MobileMovementValidation(
     document.body.appendChild(script);
   };
 
+  const finishAiDetection = () => {
+    if (
+      updateExerciseReps &&
+      selectedTrackingMethod === TrackingMethod.CAMERA &&
+      setSelectedTrackingMethod
+    ) {
+      setSelectedTrackingMethod(TrackingMethod.MANUAL);
+      updateExerciseReps(recordedRepsRef.current.length);
+    }
+  };
+
   useEffect(() => {
     setStatusMessage(getStatusMessage(statusRef.current));
   }, [statusRef.current]);
@@ -227,6 +322,8 @@ export default function MobileMovementValidation(
 
   useEffect(() => {
     if (!exerciseDetectionData) return;
+
+    if (statusRef.current === DetectionStatus.STOPPED) return;
 
     enableCam({
       poseLandmarker,
@@ -256,8 +353,10 @@ export default function MobileMovementValidation(
           romCanvasRef,
           tempoCanvasRef,
           theme,
+          centerPosRef,
           setFps,
           setStatusMessage,
+          finishAiDetection,
         }),
       setError,
     });
@@ -278,6 +377,12 @@ export default function MobileMovementValidation(
     >
       {!poseLandmarker && <LoadingOverlay title="Loading model..." />}
 
+      {poseLandmarker && (
+        <MovementValidationHeader
+          statusMessage={error ? `${error}` : statusMessage}
+        />
+      )}
+
       <Box
         width="100%"
         display="flex"
@@ -291,11 +396,6 @@ export default function MobileMovementValidation(
         }}
         gap={1}
       >
-        {poseLandmarker && (
-          <MovementValidationHeader
-            statusMessage={error ? `${error}` : statusMessage}
-          />
-        )}
         <Box width="100%" display="flex" justifyContent="space-between" px={1}>
           <FpsText fps={fps} avgFps={avgFps.current} />
           <RepsCounter reps={recordedRepsRef.current.length} />
@@ -335,6 +435,43 @@ export default function MobileMovementValidation(
             zIndex: 1000,
           }}
         />
+
+        {statusRef.current !== DetectionStatus.STOPPED && (
+          <>
+            {/* Person dot */}
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                pointerEvents: 'none',
+                overflow: 'hidden',
+              }}
+            >
+              <div
+                ref={dotBackgroundRef}
+                style={{
+                  position: 'absolute',
+                  width: 50,
+                  height: 50,
+                  borderRadius: '30%',
+                  background: theme.palette.primary.main,
+                  willChange: 'transform',
+                }}
+              />
+              <div
+                ref={dotRef}
+                style={{
+                  position: 'absolute',
+                  width: 14,
+                  height: 14,
+                  borderRadius: '50%',
+                  background: theme.palette.background.default,
+                  willChange: 'transform',
+                }}
+              />
+            </div>
+          </>
+        )}
 
         <canvas
           ref={romCanvasRef}

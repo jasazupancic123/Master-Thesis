@@ -11,8 +11,6 @@ import type { KeypointHistory } from '@/controller/pose-detection/class/keypoint
 import { POSE_DETECTION_CONSTRAINTS } from '@/controller/pose-detection/const/pose-detection-constrains.const';
 import { STATUS_MESSAGES } from '@/controller/pose-detection/const/status-messages';
 import { DetectionStatus } from '@/controller/pose-detection/enum/detection-status';
-import type { KeypointId } from '@/controller/pose-detection/enum/keypoint-id';
-import type { KeypointValueType } from '@/controller/pose-detection/enum/keypoint-value-type';
 import type { PoseModel } from '@/controller/pose-detection/enum/pose-model.enum';
 import { RepStatus } from '@/controller/pose-detection/enum/rep-state';
 import { PoseDetectionService } from '@/controller/pose-detection/pose-detection.service';
@@ -128,8 +126,10 @@ export const predictWebcam = async (state: {
   romCanvasRef: RefObject<HTMLCanvasElement | null>;
   tempoCanvasRef: RefObject<HTMLCanvasElement | null>;
   theme: Theme;
+  centerPosRef: RefObject<{ x: number; y: number } | null>;
   setFps: SetState<number | null>;
   setStatusMessage: SetState<string>;
+  finishAiDetection: () => void;
 }) => {
   const {
     statusRef,
@@ -155,9 +155,16 @@ export const predictWebcam = async (state: {
     romCanvasRef,
     tempoCanvasRef,
     theme,
+    centerPosRef,
     setFps,
     setStatusMessage,
+    finishAiDetection,
   } = state;
+
+  if (statusRef.current === DetectionStatus.STOPPED) {
+    finishAiDetection();
+    return;
+  }
 
   const video = videoRef.current;
   const canvas = canvasRef.current;
@@ -231,27 +238,18 @@ export const predictWebcam = async (state: {
         keypoints,
         isMobile,
         avgFps,
-        keypointId: exerciseDetectionData.romKeypointId,
-        valueType: exerciseDetectionData.romValueType,
       });
 
-      const preWindow = Math.min(
-        4,
-        KeypointUtil.getFramesCountFromSeconds(
-          0.15,
-          avgFps.current?.value || 30
-        )
-      ); // look for 0.15s of frames of sustained slope, min 4 frames
-
-      PoseDetectionService.checkStatus(
+      PoseDetectionService.checkStatus({
         statusRef,
         repStateRef,
         keypoints,
         setStatusMessage,
         keypointBuffer,
-        exerciseDetectionData.conditions,
-        avgFps.current
-      );
+        exerciseStartConditions: exerciseDetectionData.conditions,
+        avgFps: avgFps.current,
+        keypointHistory,
+      });
 
       if (
         statusRef.current === DetectionStatus.RECORDING &&
@@ -273,8 +271,9 @@ export const predictWebcam = async (state: {
       }
 
       if (
-        repStateRef.current.status === RepStatus.IN_REP &&
-        currentRepRef.current
+        (repStateRef.current.status === RepStatus.IN_REP &&
+          currentRepRef.current) ||
+        recordedRepsRef.current.length > 0
       ) {
         PoseDetectionGraphsUtil.renderROMAndTempoGraphs({
           exerciseDetectionData,
@@ -294,18 +293,49 @@ export const predictWebcam = async (state: {
       ctx.translate(canvas.width, 0);
       ctx.scale(-1, 1);
 
+      let smoothedCenter: {
+        x: number;
+        y: number;
+        z: number;
+        visibility: number;
+      } | null = null;
+
       for (const landmark of result.landmarks) {
-        const keepKeypointsIndexes = Object.values([
-          11, // KeypointId.LEFT_SHOULDER
-          12, // KeypointId.RIGHT_SHOULDER,
-          23, // KeypointId.LEFT_HIP,
-          24, // KeypointId.RIGHT_HIP,
-          15, // KeypointId.LEFT_WRIST,
-          16, // KeypointId.RIGHT_WRIST,
-        ]);
-        drawingUtils.drawLandmarks(
-          landmark.filter((k, i) => keepKeypointsIndexes.includes(i))
+        const keepKeypointsIndexes = [11, 12, 23, 24]; // shoulder & hip indices
+
+        // pick only those 4
+        const kept = landmark.filter((_, i) =>
+          keepKeypointsIndexes.includes(i)
         );
+
+        if (kept.length > 0) {
+          const cx = kept.reduce((s, k) => s + k.x, 0) / kept.length;
+          const cy = kept.reduce((s, k) => s + k.y, 0) / kept.length;
+          const cz = kept.reduce((s, k) => s + (k.z ?? 0), 0) / kept.length;
+          const cv =
+            kept.reduce((s, k) => s + (k.visibility ?? 0), 0) / kept.length;
+
+          const current = { x: cx, y: cy, z: cz, visibility: cv };
+
+          // smoothing factor (0.2 = 20% new, 80% old)
+          const alpha = 10;
+          if (smoothedCenter) {
+            smoothedCenter = {
+              x: smoothedCenter.x * (1 - alpha) + current.x * alpha,
+              y: smoothedCenter.y * (1 - alpha) + current.y * alpha,
+              z: smoothedCenter.z * (1 - alpha) + current.z * alpha,
+              visibility:
+                smoothedCenter.visibility * (1 - alpha) +
+                current.visibility * alpha,
+            };
+          } else {
+            smoothedCenter = current;
+          }
+
+          centerPosRef.current = { x: smoothedCenter.x, y: smoothedCenter.y };
+
+          // drawingUtils.drawLandmarks([smoothedCenter]);
+        }
         // drawingUtils.drawConnectors(landmark, PoseLandmarker.POSE_CONNECTIONS);
       }
 
@@ -325,8 +355,6 @@ function insertKeypointsIntoBuffers(state: {
   keypoints: Keypoint[];
   isMobile: boolean;
   avgFps: RefObject<{ value: number; count: number } | null>;
-  keypointId: KeypointId;
-  valueType: KeypointValueType;
 }) {
   const {
     statusRef,
@@ -337,8 +365,6 @@ function insertKeypointsIntoBuffers(state: {
     keypoints,
     isMobile,
     avgFps,
-    keypointId,
-    valueType,
   } = state;
 
   // if we are in recording state, don't update the keypointHistory's size
@@ -346,7 +372,8 @@ function insertKeypointsIntoBuffers(state: {
     keypointHistory.insertFrame(
       keypoints,
       avgFps.current,
-      POSE_DETECTION_CONSTRAINTS.KEEP_KEYPOINT_HISTORY_DURING_RECORDING_MS / 1000
+      POSE_DETECTION_CONSTRAINTS.KEEP_KEYPOINT_HISTORY_DURING_RECORDING_MS /
+        1000
     );
   } else {
     // only keep KEYPOINT_BUFFER_DURATION_MS of frames in history
