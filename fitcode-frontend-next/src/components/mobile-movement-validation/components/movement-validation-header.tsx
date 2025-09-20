@@ -19,14 +19,24 @@ export default function MovementValidationHeader(
       justifyContent="center"
       alignItems="center"
       sx={{
-        backgroundColor: theme.palette.background.default,
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
         p: 1,
+        zIndex: 100000,
       }}
     >
       <Typography
         textAlign="center"
-        fontSize={20}
-        sx={{ textTransform: 'uppercase' }}
+        fontSize={40}
+        fontWeight={800}
+        sx={{
+          textTransform: 'uppercase',
+          textShadow: `4px 4px 8px ${theme.palette.background.paper}`,
+          color: theme.palette.primary.main,
+          userSelect: 'none',
+        }}
       >
         {statusMessage}
       </Typography>

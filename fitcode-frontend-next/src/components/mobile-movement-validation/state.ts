@@ -3,17 +3,14 @@ import {
   FilesetResolver,
   PoseLandmarker,
 } from '@mediapipe/tasks-vision';
+import type { Theme } from '@mui/material';
 import type { RefObject } from 'react';
 
-import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
 import type { SetState } from '@/common/type/state.type';
 import type { KeypointHistory } from '@/controller/pose-detection/class/keypoint-history';
-import type { ValuesBuffer } from '@/controller/pose-detection/class/values-buffer';
 import { POSE_DETECTION_CONSTRAINTS } from '@/controller/pose-detection/const/pose-detection-constrains.const';
 import { STATUS_MESSAGES } from '@/controller/pose-detection/const/status-messages';
 import { DetectionStatus } from '@/controller/pose-detection/enum/detection-status';
-import type { KeypointId } from '@/controller/pose-detection/enum/keypoint-id';
-import type { KeypointValueType } from '@/controller/pose-detection/enum/keypoint-value-type';
 import type { PoseModel } from '@/controller/pose-detection/enum/pose-model.enum';
 import { RepStatus } from '@/controller/pose-detection/enum/rep-state';
 import { PoseDetectionService } from '@/controller/pose-detection/pose-detection.service';
@@ -23,8 +20,7 @@ import type { Keypoint } from '@/controller/pose-detection/type/keypoint.type';
 import type { Rep } from '@/controller/pose-detection/type/rep.type';
 import type { RepState } from '@/controller/pose-detection/type/rep-state.type';
 import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
-
-const firebaseStorage = FirebaseStorageUtil.Instance;
+import { PoseDetectionGraphsUtil } from '@/controller/pose-detection/util/pose-detection-graphs-util';
 
 export async function loadModel(state: {
   setPoseLandmarker: SetState<PoseLandmarker | null>;
@@ -34,10 +30,9 @@ export async function loadModel(state: {
 }) {
   const { setPoseLandmarker, videoRef, canvasRef, drawingUtilsRef } = state;
 
-  const modelAssetPath = '/models/pose_landmarker/pose_landmarker_full.task';
-
-  // const modelAssetPath = '/models/pose_landmarker/pose_landmarker_full.task'; // full
-  // const modelAssetPath = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task'; // lite
+  // const modelAssetPath = '/models/pose_landmarker/pose_landmarker_lite.task'; // lite
+  const modelAssetPath = '/models/pose_landmarker/pose_landmarker_full.task'; // full
+  // const modelAssetPath = '/models/pose_landmarker/pose_landmarker_heavy.task'; // heavy
 
   const vision = await FilesetResolver.forVisionTasks('/wasm');
 
@@ -114,7 +109,6 @@ export const predictWebcam = async (state: {
   poseLandmarker: PoseLandmarker | null;
   keypointHistory: KeypointHistory;
   keypointBuffer: KeypointHistory;
-  romBuffer: ValuesBuffer;
   currentRepRef: RefObject<Rep | null>;
   recordedRepsRef: RefObject<Rep[]>;
   exerciseDetectionData: ExerciseDetectionData;
@@ -128,9 +122,14 @@ export const predictWebcam = async (state: {
   frameCountRef: RefObject<number>;
   initedFirstFrameInRecordingMode: RefObject<boolean>;
   avgFps: RefObject<{ value: number; count: number } | null>;
+  normDomainRef: RefObject<{ min: number; max: number } | null>;
+  romCanvasRef: RefObject<HTMLCanvasElement | null>;
+  tempoCanvasRef: RefObject<HTMLCanvasElement | null>;
+  theme: Theme;
+  centerPosRef: RefObject<{ x: number; y: number } | null>;
   setFps: SetState<number | null>;
   setStatusMessage: SetState<string>;
-  renderROM: () => void;
+  finishAiDetection: () => void;
 }) => {
   const {
     statusRef,
@@ -139,7 +138,6 @@ export const predictWebcam = async (state: {
     poseLandmarker,
     keypointHistory,
     keypointBuffer,
-    romBuffer,
     currentRepRef,
     recordedRepsRef,
     exerciseDetectionData,
@@ -153,10 +151,20 @@ export const predictWebcam = async (state: {
     frameCountRef,
     initedFirstFrameInRecordingMode,
     avgFps,
+    normDomainRef,
+    romCanvasRef,
+    tempoCanvasRef,
+    theme,
+    centerPosRef,
     setFps,
     setStatusMessage,
-    renderROM,
+    finishAiDetection,
   } = state;
+
+  if (statusRef.current === DetectionStatus.STOPPED) {
+    finishAiDetection();
+    return;
+  }
 
   const video = videoRef.current;
   const canvas = canvasRef.current;
@@ -225,33 +233,23 @@ export const predictWebcam = async (state: {
         statusRef,
         keypointHistory,
         keypointBuffer,
-        romBuffer,
         repStateRef,
         currentRepBuffer: currentRepRef.current?.buffer,
         keypoints,
         isMobile,
         avgFps,
-        keypointId: exerciseDetectionData.romKeypointId,
-        valueType: exerciseDetectionData.romValueType,
       });
 
-      const preWindow = Math.min(
-        4,
-        KeypointUtil.getFramesCountFromSeconds(
-          0.15,
-          avgFps.current?.value || 30
-        )
-      ); // look for 0.15s of frames of sustained slope, min 4 frames
-
-      PoseDetectionService.checkStatus(
+      PoseDetectionService.checkStatus({
         statusRef,
         repStateRef,
         keypoints,
         setStatusMessage,
         keypointBuffer,
-        exerciseDetectionData.conditions,
-        avgFps.current
-      );
+        exerciseStartConditions: exerciseDetectionData.conditions,
+        avgFps: avgFps.current,
+        keypointHistory,
+      });
 
       if (
         statusRef.current === DetectionStatus.RECORDING &&
@@ -273,10 +271,19 @@ export const predictWebcam = async (state: {
       }
 
       if (
-        repStateRef.current.status === RepStatus.IN_REP &&
-        currentRepRef.current
+        (repStateRef.current.status === RepStatus.IN_REP &&
+          currentRepRef.current) ||
+        recordedRepsRef.current.length > 0
       ) {
-        renderROM();
+        PoseDetectionGraphsUtil.renderROMAndTempoGraphs({
+          exerciseDetectionData,
+          currentRepRef,
+          recordedRepsRef,
+          romCanvasRef,
+          tempoCanvasRef,
+          normDomainRef,
+          theme,
+        });
       }
 
       ctx.save();
@@ -286,18 +293,49 @@ export const predictWebcam = async (state: {
       ctx.translate(canvas.width, 0);
       ctx.scale(-1, 1);
 
+      let smoothedCenter: {
+        x: number;
+        y: number;
+        z: number;
+        visibility: number;
+      } | null = null;
+
       for (const landmark of result.landmarks) {
-        const keepKeypointsIndexes = Object.values([
-          11, // KeypointId.LEFT_SHOULDER
-          12, // KeypointId.RIGHT_SHOULDER,
-          23, // KeypointId.LEFT_HIP,
-          24, // KeypointId.RIGHT_HIP,
-          15, // KeypointId.LEFT_WRIST,
-          16, // KeypointId.RIGHT_WRIST,
-        ]);
-        drawingUtils.drawLandmarks(
-          landmark.filter((k, i) => keepKeypointsIndexes.includes(i))
+        const keepKeypointsIndexes = [11, 12, 23, 24]; // shoulder & hip indices
+
+        // pick only those 4
+        const kept = landmark.filter((_, i) =>
+          keepKeypointsIndexes.includes(i)
         );
+
+        if (kept.length > 0) {
+          const cx = kept.reduce((s, k) => s + k.x, 0) / kept.length;
+          const cy = kept.reduce((s, k) => s + k.y, 0) / kept.length;
+          const cz = kept.reduce((s, k) => s + (k.z ?? 0), 0) / kept.length;
+          const cv =
+            kept.reduce((s, k) => s + (k.visibility ?? 0), 0) / kept.length;
+
+          const current = { x: cx, y: cy, z: cz, visibility: cv };
+
+          // smoothing factor (0.2 = 20% new, 80% old)
+          const alpha = 10;
+          if (smoothedCenter) {
+            smoothedCenter = {
+              x: smoothedCenter.x * (1 - alpha) + current.x * alpha,
+              y: smoothedCenter.y * (1 - alpha) + current.y * alpha,
+              z: smoothedCenter.z * (1 - alpha) + current.z * alpha,
+              visibility:
+                smoothedCenter.visibility * (1 - alpha) +
+                current.visibility * alpha,
+            };
+          } else {
+            smoothedCenter = current;
+          }
+
+          centerPosRef.current = { x: smoothedCenter.x, y: smoothedCenter.y };
+
+          // drawingUtils.drawLandmarks([smoothedCenter]);
+        }
         // drawingUtils.drawConnectors(landmark, PoseLandmarker.POSE_CONNECTIONS);
       }
 
@@ -312,64 +350,48 @@ function insertKeypointsIntoBuffers(state: {
   statusRef: RefObject<DetectionStatus>;
   keypointHistory: KeypointHistory;
   keypointBuffer: KeypointHistory;
-  romBuffer: ValuesBuffer;
   repStateRef: RefObject<RepState>;
   currentRepBuffer?: KeypointHistory;
   keypoints: Keypoint[];
   isMobile: boolean;
   avgFps: RefObject<{ value: number; count: number } | null>;
-  keypointId: KeypointId;
-  valueType: KeypointValueType;
 }) {
   const {
     statusRef,
     keypointHistory,
     keypointBuffer,
-    romBuffer,
     repStateRef,
     currentRepBuffer,
     keypoints,
     isMobile,
     avgFps,
-    keypointId,
-    valueType,
   } = state;
 
   // if we are in recording state, don't update the keypointHistory's size
-  if (statusRef.current === DetectionStatus.RECORDING)
-    keypointHistory.insertFrame(keypoints);
-  else {
+  if (statusRef.current === DetectionStatus.RECORDING) {
+    keypointHistory.insertFrame(
+      keypoints,
+      avgFps.current,
+      POSE_DETECTION_CONSTRAINTS.KEEP_KEYPOINT_HISTORY_DURING_RECORDING_MS /
+        1000
+    );
+  } else {
     // only keep KEYPOINT_BUFFER_DURATION_MS of frames in history
     keypointHistory.insertFrame(
       keypoints,
       avgFps.current,
-      POSE_DETECTION_CONSTRAINTS.KEYPOINT_BUFFER_DURATION_MS * 1000
+      POSE_DETECTION_CONSTRAINTS.KEYPOINT_BUFFER_DURATION_MS / 1000
     );
   }
 
   // If rep has started, then add frames to current rep buffer
-  if (repStateRef.current.status === RepStatus.IN_REP && currentRepBuffer)
+  if (repStateRef.current.status === RepStatus.IN_REP && currentRepBuffer) {
     currentRepBuffer.insertFrame(keypoints);
+  }
 
   const hasWeakFps = avgFps.current ? avgFps.current.value <= 15 : isMobile;
 
   keypointBuffer.insertFrame(keypoints, avgFps.current, hasWeakFps ? 2 : 3); // keep 2 or 3 seconds of history
-
-  const keypoint = KeypointUtil.getDesiredKeypointFromArray(
-    keypoints,
-    keypointId
-  );
-
-  if (keypoint) {
-    const value = KeypointUtil.getKeypointValueByType(keypoint, valueType);
-    if (value !== undefined)
-      romBuffer.insertFrame(
-        value,
-        avgFps.current,
-        POSE_DETECTION_CONSTRAINTS.ROM_GRAPH_LENGTH_S,
-        true
-      ); // keep max 3 seconds of history
-  }
 }
 
 export function getStatusMessage(status: DetectionStatus) {

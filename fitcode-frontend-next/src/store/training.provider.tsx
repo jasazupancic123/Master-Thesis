@@ -3,7 +3,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 
 import { useAuthenticatedAuth } from './auth.provider';
-import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 import type { ExerciseOrTraining } from '@/common/type/exercise-or-training.type';
 import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
 import type { ChildrenProps } from '@/common/type/props.type';
@@ -18,8 +17,6 @@ interface TrainingContextType extends TrainingProviderProps {
   setTrainingInProgress: SetState<TrainingInProgress | null>;
   view: ExerciseOrTraining;
   setView: SetState<ExerciseOrTraining>;
-  selectedTrackingMethod: TrackingMethod;
-  setSelectedTrackingMethod: SetState<TrackingMethod>;
   isLoaded: boolean;
   updateTrainingInProgress: (
     exercise: TrainingExercise,
@@ -48,8 +45,6 @@ export const TrainingProvider = (
   const [view, setView] = useState<ExerciseOrTraining>(
     ExerciseTrainingView.ExerciseView
   );
-  const [selectedTrackingMethod, setSelectedTrackingMethod] =
-    useState<TrackingMethod>(TrackingMethod.MANUAL);
 
   const { user } = useAuthenticatedAuth();
 
@@ -134,8 +129,6 @@ export const TrainingProvider = (
         setTrainingInProgress,
         view,
         setView,
-        selectedTrackingMethod,
-        setSelectedTrackingMethod,
         isLoaded,
         updateTrainingInProgress,
       }}
