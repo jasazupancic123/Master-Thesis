@@ -7,7 +7,13 @@ export class TrainingStats {
   @Min(0)
   @ApiProperty()
   @Expose()
-  totalComponents: number; // total number of components in the training
+  totalDuration: number; // in minutes
+
+  @IsNumber()
+  @Min(0)
+  @ApiProperty()
+  @Expose()
+  totalComponents: number;
 
   @IsNumber()
   @Min(0)
@@ -19,7 +25,7 @@ export class TrainingStats {
   @Min(0)
   @ApiProperty()
   @Expose()
-  totalExercises: number;
+  totalExercises: number; // unique
 
   @IsNumber()
   @Min(0)
@@ -35,9 +41,16 @@ export class TrainingStats {
 
   @IsNumber()
   @Min(0)
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Expose()
+  totalRecTime: number; // total recovery time (for all sets, in seconds)
+
+  @IsNumber()
+  @Min(0)
   @ApiProperty()
   @Expose()
-  totalLoad: number; // total weight lifted prescribed in kilograms
+  totalActiveTime: number; // time when executing the training (in seconds) - sets * reps/dist/time * tempo (sum), for example 3 * 12 * 1:0:1 tempo (2s) = 72s @IsNumber()
 
   @IsNumber()
   @Min(0)
@@ -49,20 +62,25 @@ export class TrainingStats {
   @Min(0)
   @ApiProperty()
   @Expose()
-  totalTempo: number; // total tempo prescribed (in seconds)
-
-  @IsNumber()
-  @Min(0)
-  @ApiPropertyOptional()
-  @IsOptional()
-  @Expose()
-  totalRecTime: number; // total recovery time prescribed (in seconds)
+  totalTimeWork: number; // total time under load
 
   @IsNumber()
   @Min(0)
   @ApiProperty()
   @Expose()
-  totalActiveTime: number; // time when executing the training (in seconds) - sets * reps/dist/time * tempo (sum), for example 3 * 12 * 1:0:1 tempo (2s) = 72s
+  totalDistWork: number; // total distance under load
+
+  @IsNumber()
+  @Min(0)
+  @ApiProperty()
+  @Expose()
+  totalPower: number; // total power output (in watts)
+
+  @IsNumber()
+  @Min(0)
+  @ApiProperty()
+  @Expose()
+  totalRealizationScore: number; // tonnage and also time, distance, tempo prescribed - saved as a score of points
 
   @IsNumber()
   @Min(0)
@@ -84,10 +102,4 @@ export class TrainingStats {
   @IsOptional()
   @Expose()
   totalRecDist?: number; // total recovery distance prescribed (in meters)
-
-  @IsNumber()
-  @Min(0)
-  @ApiProperty()
-  @Expose()
-  totalRealizationScore: number; // tonnage and also time, distance, tempo prescribed - saved as a score of points
 }

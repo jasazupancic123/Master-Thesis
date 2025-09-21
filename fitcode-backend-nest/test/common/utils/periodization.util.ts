@@ -33,32 +33,58 @@ export class TestPeriodizationUtil {
     addDaysFromToday: number,
     data?: Partial<Training>,
   ): Training {
+    const options = { bilateral: true };
+
     // same param values for all sets for both left and right side
     const SETS_ALL_PARAMS = [
-      generateExerciseSet(1),
-      generateExerciseSet(2),
-      generateExerciseSet(3),
+      generateExerciseSet(1, null, options),
+      generateExerciseSet(2, null, options),
+      generateExerciseSet(3, null, options),
     ];
 
     // sets with no intensity (only volume 1)
     const SETS_NO_INT = [
-      generateExerciseSet(1, generateComponentParamsStub([ParamType.VolWork1])),
-      generateExerciseSet(2, generateComponentParamsStub([ParamType.VolWork1])),
-      generateExerciseSet(3, generateComponentParamsStub([ParamType.VolWork1])),
+      generateExerciseSet(
+        1,
+        generateComponentParamsStub([ParamType.VolWork1]),
+        options,
+      ),
+      generateExerciseSet(
+        2,
+        generateComponentParamsStub([ParamType.VolWork1]),
+        options,
+      ),
+      generateExerciseSet(
+        3,
+        generateComponentParamsStub([ParamType.VolWork1]),
+        options,
+      ),
     ];
 
     // sets with no volume (only intensity 1)
     const SETS_NO_VOL = [
-      generateExerciseSet(1, generateComponentParamsStub([ParamType.IntWork1])),
-      generateExerciseSet(2, generateComponentParamsStub([ParamType.IntWork1])),
-      generateExerciseSet(3, generateComponentParamsStub([ParamType.IntWork1])),
+      generateExerciseSet(
+        1,
+        generateComponentParamsStub([ParamType.IntWork1]),
+        options,
+      ),
+      generateExerciseSet(
+        2,
+        generateComponentParamsStub([ParamType.IntWork1]),
+        options,
+      ),
+      generateExerciseSet(
+        3,
+        generateComponentParamsStub([ParamType.IntWork1]),
+        options,
+      ),
     ];
 
     // different param values for left and right side
     const SETS_LR_DIFFERENT = [
-      generateExerciseSet(1),
-      generateExerciseSet(2),
-      generateExerciseSet(3),
+      generateExerciseSet(1, null, options),
+      generateExerciseSet(2, null, options),
+      generateExerciseSet(3, null, options),
     ];
 
     const reps = { field: ParamType.VolWork1, selected: VolType.Rep };
@@ -149,7 +175,7 @@ export class TestPeriodizationUtil {
       (p) => p.field === ParamType.IntWork1,
     )?.value;
 
-    const intR = set.paramValuesR.find(
+    const intR = set.paramValuesR?.find(
       (p) => p.field === ParamType.IntWork1,
     )?.value;
 
@@ -157,7 +183,7 @@ export class TestPeriodizationUtil {
       (p) => p.field === ParamType.VolWork1,
     )?.value;
 
-    const volR = set.paramValuesR.find(
+    const volR = set.paramValuesR?.find(
       (p) => p.field === ParamType.VolWork1,
     )?.value;
 

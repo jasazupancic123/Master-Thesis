@@ -30,7 +30,7 @@ export function generateCompletedTrainingExerciseStub(
         continue; // special param that is always present
 
       exerciseSets.push(
-        generateExerciseSet(setNumber, componentParams, random),
+        generateExerciseSet(setNumber, componentParams, { random }),
       );
     }
   }

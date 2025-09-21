@@ -312,6 +312,14 @@ describe('Complete Next Set (e2e)', () => {
     expect(workloads).toHaveLength(1);
     expect(workloads[0].id).toBe(result.id);
 
+    // it should create report as well
+    const report = await db.trainingReports.findById({
+      trainingId,
+      userId: global.athlete.uid,
+    });
+
+    expect(report).toBeDefined();
+
     await db.workloads.deleteAll(trainingId);
   });
 

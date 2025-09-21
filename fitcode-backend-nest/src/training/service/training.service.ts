@@ -755,11 +755,15 @@ export class TrainingService implements Permission<Training, Institution> {
     await this.updateBodyweightSets(athlete.uid, prescribedTraining);
     await this.updateRepMaxSets(athlete.uid, prescribedTraining);
 
-    return await this.workloadService.completeNextSet(
+    const workload = await this.workloadService.completeNextSet(
       ref,
       prescribedTraining,
       input,
     );
+
+    // update report
+    await this.trainingReportService.updateReport(userId, training);
+    return workload;
   }
 
   @LogMethod()
@@ -779,7 +783,14 @@ export class TrainingService implements Permission<Training, Institution> {
     await this.updateBodyweightSets(athlete.uid, prescribedTraining);
     await this.updateRepMaxSets(athlete.uid, prescribedTraining);
 
-    return await this.workloadService.upsertSet(ref, prescribedTraining, input);
+    const workload = await this.workloadService.upsertSet(
+      ref,
+      prescribedTraining,
+      input,
+    );
+
+    await this.trainingReportService.updateReport(userId, training);
+    return workload;
   }
 
   @LogMethod()

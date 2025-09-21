@@ -22,3 +22,6 @@ export const MAX_NUM_EXERCISES_IN_CIRCUIT_SUPERSET = 16;
 
 // training period
 export const AM_PM_HOUR_DIVIDER = 12; // 12 PM
+
+export const REP_TEMPO_TIME_IN_S = 3; // 3 seconds per rep tempo if not specified
+export const DIST_TIME_IN_S = 1; // 1 second per meter if not specified
