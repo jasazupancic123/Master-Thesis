@@ -775,53 +775,13 @@ export class TrainingPlanService {
     return validSets;
   }
 
-  getReps(paramValues: AttributeValue[]): number {
-    const reps = paramValues.find((p) => p.selected === VolType.Rep);
-    return reps ? +reps.value : 0;
-  }
-
-  getTime(paramValues: AttributeValue[]): number {
-    const time = paramValues.find((p) => p.selected === VolType.Time);
-    return time ? +time.value : 0;
-  }
-
-  getDistance(paramValues: AttributeValue[]): number {
-    const distance = paramValues.find((p) => p.selected === VolType.Dist);
-    return distance ? +parseFloat(distance.value).toFixed(2) : 0;
-  }
-
-  getKg(paramValues: AttributeValue[]): number {
-    const kg = paramValues.find((p) => p.selected === IntType.Kg);
-    return kg ? +parseFloat(kg.value).toFixed(2) : 0;
-  }
-
-  getRm(paramValues: AttributeValue[]): number {
-    const rm = paramValues.find((p) => p.selected === IntType.Rm);
-    return rm ? +parseFloat(rm.value).toFixed(2) : 0;
-  }
-
-  getBw(paramValues: AttributeValue[]): number {
-    const bw = paramValues.find((p) => p.selected === IntType.Bw);
-    return bw ? +parseFloat(bw.value).toFixed(2) : 0;
-  }
-
-  getRecTime(paramValues: AttributeValue[]): number {
-    const recTime = paramValues.find((p) => p.field === ParamType.VolRec1);
-    return recTime ? +recTime.value : 0;
-  }
-
-  getRecDist(paramValues: AttributeValue[]): number {
-    const recDist = paramValues.find((p) => p.field === ParamType.IntRec1);
-    return recDist ? +parseFloat(recDist.value).toFixed(2) : 0;
-  }
-
-  getTempoSeconds(paramValues: AttributeValue[]): number {
-    const tempo = paramValues.find((p) => p.selected === IntType.Tempo);
-    if (!tempo) return 0;
-
-    // tempo is saved as x:y:z, sum all parts for total seconds
-    const [x, y, z] = tempo.value.split(':').map(Number);
-    return x + y + z;
+  tempoToSeconds(tempo: number | undefined): number {
+    if (!tempo || isNaN(tempo)) return 0;
+    return tempo
+      .toString()
+      .split('')
+      .map((v) => +v)
+      .reduce((a, b) => a + b, 0);
   }
 
   /**

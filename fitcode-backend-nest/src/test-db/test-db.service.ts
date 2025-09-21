@@ -8,6 +8,7 @@ import { TestAttributeService } from './service/test-attribute.service';
 import { TestComponentService } from './service/test-component.service';
 import { TestExerciseService } from './service/test-exercise.service';
 import { TestWorkloadService } from './service/test-workload.service';
+import { TrainingReportTestRepository } from './service/training-report.test.repository';
 import { TrainingTestRepository } from './service/training-test.repository';
 import { WellnessTestRepository } from './service/wellness-test.repository';
 
@@ -20,6 +21,7 @@ export class TestDbService {
     readonly workloads: TestWorkloadService,
     readonly exercises: TestExerciseService,
     readonly trainings: TrainingTestRepository,
+    readonly trainingReports: TrainingReportTestRepository,
     readonly institutions: InstitutionTestRepository,
     readonly groups: GroupTestRepository,
     readonly wellness: WellnessTestRepository,

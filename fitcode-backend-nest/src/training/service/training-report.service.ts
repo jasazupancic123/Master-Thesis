@@ -2,8 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { compareAsc, differenceInMinutes } from 'date-fns';
 
 import { TrainingReportRef } from '@src/common/type/firestore.type';
-import { IntType, VolType } from '@src/component/enum/param.enum';
+import { IntType, ParamType, VolType } from '@src/component/enum/param.enum';
 
+import {
+  DIST_TIME_IN_S,
+  REP_TEMPO_TIME_IN_S,
+} from '../constant/training-limits.constant';
 import { ExerciseSet } from '../entity/exercise-set.entity';
 import { Training } from '../entity/training.entity';
 import { TrainingReport } from '../entity/training-report.entity';
@@ -34,7 +38,9 @@ export class TrainingReportService {
     const stats = this.getTrainingStats(training);
     const from = workloads[0]?.createdAt || training.from;
     const to = workloads[workloads.length - 1]?.updatedAt || training.to;
+
     const components = new Set(workloads.map((w) => w.componentId));
+    const exercises = new Set(workloads.map((w) => w.exerciseId));
 
     const report: TrainingReport = {
       ...stats,
@@ -43,55 +49,70 @@ export class TrainingReportService {
       to,
       completed: workloads.length >= stats.totalSets,
       duration: differenceInMinutes(to, from),
-      sets: workloads.length,
       components: components.size,
+      exercises: exercises.size,
+      sets: workloads.length,
       reps: 0,
-      tonnage: 0,
-      tempoTime: 0,
       recTime: 0,
       activeTime: 0,
-      realizationPoints: 0,
-      exerciseMuscleValues: [], // to be calculated
-      photoURL: additionalInput?.photoURL,
+      tonnage: 0,
+      timeWork: 0,
+      distWork: 0,
+      power: 0,
+      realizationScore: 0,
+      muscleValues: [], // to be calculated
       completedComponentIds: Array.from(components),
+      photoURL: additionalInput?.photoURL,
     };
 
     for (const workload of workloads) {
-      const info = this.getSetInfo(workload);
-      const tonnage = this.calculateTonnage(1, info.reps, info.load);
-
+      const info = this.getSetStatsFromWorkload(workload);
       report.reps += info.reps;
-      report.tonnage += tonnage;
-      report.tempoTime += info.tempoTime;
       report.recTime += info.recTime;
+      report.activeTime += info.activeTime;
+      report.tonnage += info.tonnage;
+      report.timeWork += info.timeWork;
+      report.distWork += info.distWork;
+      report.power = report.tonnage / report.activeTime; // kg per second
+      report.realizationScore += info.realizationPoints;
 
-      report.activeTime += this.calculateActiveTime(
-        info.reps,
-        info.time || 1,
-        info.tempoTime,
-      );
+      if (info.time > 0) {
+        if (!report.timeVol) report.timeVol = 0;
+        report.timeVol += info.time;
+      }
 
-      report.realizationPoints += this.calculateRealizationPoints(
-        tonnage,
-        info.tempoTime,
-      );
+      if (info.dist > 0) {
+        if (!report.distVol) report.distVol = 0;
+        report.distVol += info.dist;
+      }
+
+      if (info.recDist > 0) {
+        if (!report.recDist) report.recDist = 0;
+        report.recDist += info.recDist;
+      }
     }
 
     await this.repository.save(ref, report);
   }
 
-  private getTrainingStats(training: Training): TrainingStats {
+  getTrainingStats(training: Training): TrainingStats {
     const stats: TrainingStats = {
+      totalDuration: differenceInMinutes(training.to, training.from),
       totalComponents: training.components.length,
       totalSupersets: 0,
-      totalExercises: 0,
+      totalExercises: new Set<string>(
+        training.components.flatMap((c) =>
+          c.supersets.flatMap((s) => s.exercises.map((e) => e.id)),
+        ),
+      ).size,
       totalSets: 0,
       totalReps: 0,
-      totalLoad: 0,
-      totalTonnage: 0,
-      totalTempo: 0,
       totalRecTime: 0,
       totalActiveTime: 0,
+      totalTonnage: 0,
+      totalTimeWork: 0,
+      totalDistWork: 0,
+      totalPower: 0,
       totalRealizationScore: 0,
     };
 
@@ -101,29 +122,18 @@ export class TrainingReportService {
 
         for (const exercise of superset.exercises) {
           const sets = exercise.sets.length;
-          stats.totalExercises += 1;
           stats.totalSets += sets;
 
           for (const set of exercise.sets) {
-            const info = this.getSetInfo(set);
-            const tonnage = this.calculateTonnage(1, info.reps, info.load);
-
+            const info = this.getSetStatsFromExerciseSet(set);
             stats.totalReps += info.reps;
-            stats.totalLoad += info.load;
-            stats.totalTonnage += tonnage;
             stats.totalRecTime += info.recTime;
-            stats.totalTempo += info.tempoTime; // TODO - have default tempo time values for exercises
-
-            stats.totalActiveTime += this.calculateActiveTime(
-              info.reps,
-              info.time || 1,
-              info.tempoTime,
-            );
-
-            stats.totalRealizationScore += this.calculateRealizationPoints(
-              tonnage,
-              info.tempoTime,
-            );
+            stats.totalActiveTime += info.activeTime;
+            stats.totalTonnage += info.tonnage;
+            stats.totalTimeWork += info.timeWork;
+            stats.totalDistWork += info.distWork;
+            stats.totalPower = stats.totalTonnage / stats.totalActiveTime; // kg per second
+            stats.totalRealizationScore += info.realizationPoints;
 
             if (info.time > 0) {
               if (!stats.totalTimeVol) stats.totalTimeVol = 0;
@@ -146,123 +156,185 @@ export class TrainingReportService {
     return stats;
   }
 
-  getSetInfo(set: ExerciseSet | Workload) {
-    return isWorkload(set)
-      ? this.getSetInfoFromWorkload(set)
-      : this.getSetInfoFromSet(set);
-  }
+  private getSetStatsFromExerciseSet(s: ExerciseSet) {
+    // mandatory fields
+    const repsLField = s.paramValuesL.find((p) => p.selected === VolType.Rep);
+    const repsRField = s.paramValuesR?.find((p) => p.selected === VolType.Rep);
+    const repsL = repsLField ? +repsLField.value || 1 : 1; // default 1 rep if not specified
+    const repsR = repsRField ? +repsRField.value || 0 : 0;
 
-  calculateTonnage(sets: number, reps: number, load: number): number {
-    return sets * reps * load;
-  }
+    const fields: string[] = [IntType.Kg, IntType.Bw, IntType.Rm];
+    const loadLField = s.paramValuesL.find((p) => fields.includes(p.selected));
+    const loadRField = s.paramValuesR?.find((p) => fields.includes(p.selected));
+    const loadL = loadLField ? +loadLField.value || 0 : 0; // load is saved as kg, even if prescription is bw or rm
+    const loadR = loadRField ? +loadRField.value || 0 : 0;
 
-  calculateActiveTime(
-    reps: number,
-    volTime: number,
-    tempoTime: number,
-  ): number {
-    return reps * volTime * tempoTime;
-  }
+    const defTmp = REP_TEMPO_TIME_IN_S; // default 3 seconds per rep
+    const tmpLField = s.paramValuesL.find((p) => p.selected === IntType.Tempo);
+    const tmpRField = s.paramValuesR?.find((p) => p.selected === IntType.Tempo);
 
-  calculateRealizationPoints(tonnage: number, tempoTime: number): number {
-    const tempoFactor = tempoTime ? 1 / tempoTime : 1;
-    return tonnage * tempoFactor;
-  }
+    const [tempoL, tempoR] = [
+      this.trainingPlanService.tempoToSeconds(+tmpLField?.value) || defTmp,
+      this.trainingPlanService.tempoToSeconds(+tmpRField?.value) || defTmp,
+    ];
 
-  private getSetInfoFromSet(set: ExerciseSet) {
-    const reps =
-      (this.trainingPlanService.getReps(set.paramValuesL) || 1) +
-      this.trainingPlanService.getReps(set.paramValuesR || []);
-
-    const time =
-      this.trainingPlanService.getTime(set.paramValuesL) +
-      this.trainingPlanService.getTime(set.paramValuesR || []);
-
-    const dist =
-      this.trainingPlanService.getDistance(set.paramValuesL) +
-      this.trainingPlanService.getDistance(set.paramValuesR || []);
-
+    const recField = s.paramValuesL.find((p) => p.field === ParamType.VolRec1);
     const recTime =
-      this.trainingPlanService.getRecTime(set.paramValuesL) +
-      this.trainingPlanService.getRecTime(set.paramValuesR || []);
+      recField && recField.selected === VolType.Time ? +recField.value || 0 : 0; // this is also total recovery time, together for all reps, since is for 1 set only
+
+    // optional fields
+    const tFields: string[] = [ParamType.VolWork1, ParamType.VolWork2];
+    const timeLField = s.paramValuesL.find(
+      (p) => tFields.includes(p.field) && p.selected === VolType.Time,
+    );
+
+    const timeRField = s.paramValuesR?.find(
+      (p) => tFields.includes(p.field) && p.selected === VolType.Time,
+    );
+
+    const timeL = timeLField ? +timeLField.value || 0 : 0;
+    const timeR = timeRField ? +timeRField.value || 0 : 0;
+
+    const distLField = s.paramValuesL.find((p) => p.selected === VolType.Dist);
+    const distRField = s.paramValuesR?.find((p) => p.selected === VolType.Dist);
+    const distL = distLField ? +distLField.value || 0 : 0;
+    const distR = distRField ? +distRField.value || 0 : 0;
+
+    const recDistField = s.paramValuesL.find(
+      (p) => p.field === ParamType.IntRec1,
+    );
 
     const recDist =
-      this.trainingPlanService.getRecDist(set.paramValuesL) +
-      this.trainingPlanService.getRecDist(set.paramValuesR || []);
+      recDistField && recDistField.selected === VolType.Dist
+        ? +recDistField.value || 0
+        : 0;
 
-    const tempoTime =
-      this.trainingPlanService.getTempoSeconds(set.paramValuesL) +
-        this.trainingPlanService.getTempoSeconds(set.paramValuesR || []) || 1;
-
-    const load =
-      this.trainingPlanService.getKg(set.paramValuesL) +
-      this.trainingPlanService.getBw(set.paramValuesL) +
-      this.trainingPlanService.getRm(set.paramValuesL) +
-      this.trainingPlanService.getKg(set.paramValuesR || []) +
-      this.trainingPlanService.getBw(set.paramValuesR || []) +
-      this.trainingPlanService.getRm(set.paramValuesR || []);
-
-    return { reps, time, dist, load, recTime, recDist, tempoTime };
+    return this.calculateFields({
+      repsL,
+      repsR,
+      loadL,
+      loadR,
+      recTime,
+      tempoL,
+      tempoR,
+      timeL,
+      timeR,
+      distL,
+      distR,
+      recDist,
+    });
   }
 
-  private getSetInfoFromWorkload(workload: Workload) {
-    const reps =
-      (workload.volWork1Type === VolType.Rep
-        ? workload.volWork1ValueL || 0 + workload.volWork1ValueR || 0
-        : 1) || 1;
+  private getSetStatsFromWorkload(w: Workload) {
+    // mandatory fields
+    const repsL = w.volWork1Type === VolType.Rep ? w.volWork1ValueL || 1 : 1;
+    const repsR = w.volWork1Type === VolType.Rep ? w.volWork1ValueR || 0 : 0;
 
-    const time =
-      workload.volWork1Type === VolType.Time
-        ? (workload.volWork1ValueL || 0) + (workload.volWork1ValueR || 0)
-        : workload.volWork2Type === VolType.Time
-          ? (workload.volWork2ValueL || 0) + (workload.volWork2ValueR || 0)
-          : 0;
+    const fields = [IntType.Kg, IntType.Bw, IntType.Rm];
+    const loadL = fields.includes(w.intWork1Type) ? w.intWork1ValueL || 0 : 0; // load is saved as kg, even if prescription is bw or rm
+    const loadR = fields.includes(w.intWork1Type) ? w.intWork1ValueR || 0 : 0;
 
-    const dist =
-      workload.volWork1Type === VolType.Dist
-        ? (workload.volWork1ValueL || 0) + (workload.volWork1ValueR || 0)
-        : workload.volWork2Type === VolType.Dist
-          ? (workload.volWork2ValueL || 0) + (workload.volWork2ValueR || 0)
-          : 0;
+    const defaultTempo = REP_TEMPO_TIME_IN_S; // default 3 seconds per rep
+    const [tempoL, tempoR] = [
+      this.trainingPlanService.tempoToSeconds(w.intWork2ValueL) || defaultTempo,
+      this.trainingPlanService.tempoToSeconds(w.intWork2ValueR) || defaultTempo,
+    ];
 
-    const recTime =
-      workload.volRecType === VolType.Time
-        ? (workload.volRecValueL || 0) + (workload.volRecValueR || 0)
-        : 0;
+    const recTime = w.volRecType === VolType.Time ? w.volRecValueL || 0 : 0; // this is also total recovery time, together for all reps, since is for 1 set only
 
-    const recDist =
-      workload.volRecType === VolType.Dist
-        ? (workload.volRecValueL || 0) + (workload.volRecValueR || 0)
-        : 0;
+    // optional fields
+    const timeL = w.volWork1Type === VolType.Time ? w.volWork1ValueL || 0 : 0;
+    const timeR = w.volWork1Type === VolType.Time ? w.volWork1ValueR || 0 : 0;
+    const distL = w.volWork1Type === VolType.Dist ? w.volWork1ValueL || 0 : 0;
+    const distR = w.volWork1Type === VolType.Dist ? w.volWork1ValueR || 0 : 0;
+    const recDist = w.volRecType === VolType.Dist ? w.volRecValueL || 0 : 0;
 
-    const tempoTime =
-      (workload.intWork1Type === IntType.Tempo
-        ? (sumOfDigits(workload.intWork1ValueL) || 0) +
-          (sumOfDigits(workload.intWork1ValueR) || 0)
-        : workload.intWork2Type === IntType.Tempo
-          ? (sumOfDigits(workload.intWork2ValueL) || 0) +
-            (sumOfDigits(workload.intWork2ValueR) || 0)
-          : 1) || 1;
-
-    const load = [IntType.Kg, IntType.Bw, IntType.Rm].includes(
-      workload.intWork1Type,
-    )
-      ? (workload.intWork1ValueL || 0) + (workload.intWork1ValueR || 0)
-      : [IntType.Kg, IntType.Bw, IntType.Rm].includes(workload.intWork2Type)
-        ? (workload.intWork2ValueL || 0) + (workload.intWork2ValueR || 0)
-        : 0;
-
-    return { reps, time, dist, load, recTime, recDist, tempoTime };
+    return this.calculateFields({
+      repsL,
+      repsR,
+      loadL,
+      loadR,
+      recTime,
+      tempoL,
+      tempoR,
+      timeL,
+      timeR,
+      distL,
+      distR,
+      recDist,
+    });
   }
-}
 
-function sumOfDigits(num: number): number {
-  return Math.abs(num) // handle negatives
-    .toString()
-    .split('')
-    .reduce((sum, digit) => sum + Number(digit), 0);
-}
+  private calculateFields(input: {
+    repsL: number;
+    repsR: number;
+    loadL: number;
+    loadR: number;
+    recTime: number;
+    tempoL: number;
+    tempoR: number;
+    timeL: number;
+    timeR: number;
+    distL: number;
+    distR: number;
+    recDist: number;
+  }) {
+    const {
+      repsL,
+      repsR,
+      loadL,
+      loadR,
+      recTime,
+      tempoL,
+      tempoR,
+      timeL,
+      timeR,
+      distL,
+      distR,
+      recDist,
+    } = input;
 
-function isWorkload(entity: ExerciseSet | Workload): entity is Workload {
-  return (entity as Workload).volWork1Type !== undefined;
+    const reps = repsL + repsR;
+    const load = loadL + loadR;
+    const time = timeL + timeR;
+    const dist = distL + distR;
+
+    // calculated fields
+    const tonnage = repsL * loadL + repsR * loadR;
+
+    let activeTime = repsL * tempoL + repsR * tempoR; // defaults to 1 rep x 3 seconds
+    if (time > 0)
+      activeTime = time; // override if time based work is specified
+    else if (dist > 0) {
+      const velocity = DIST_TIME_IN_S; // 1 m per second
+      activeTime = dist * velocity;
+    }
+
+    let timeWork = 0;
+    if (load > 0) {
+      if (time > 0) timeWork = loadL * timeL + loadR * timeR;
+      else timeWork = loadL * repsL * tempoL + loadR * repsR * tempoR; // tempo is time
+    }
+
+    let distWork = 0;
+    if (load > 0 && dist > 0) distWork = loadL * distL + loadR * distR;
+
+    const power = tonnage / activeTime; // kg per second
+    const realizationPoints = tonnage + timeWork + distWork + power * 5;
+
+    return {
+      reps,
+      load,
+      recTime,
+      time,
+      dist,
+      recDist,
+      activeTime,
+      tonnage,
+      timeWork,
+      distWork,
+      power,
+      realizationPoints,
+    };
+  }
 }

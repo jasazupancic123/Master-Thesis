@@ -128,6 +128,11 @@ export function generateTrainingExercise(
   };
 }
 
+type ExerciseSetOptions = {
+  random?: boolean;
+  bilateral?: boolean;
+};
+
 /**
  * Generates an ExerciseSet object. If paramValuesOrComponentParams is not provided,
  * it generates random parameter values for the set, else it uses the provided values
@@ -139,53 +144,35 @@ export function generateTrainingExercise(
  * - array of ComponentParam objects to generate AttributeValues from
  * @param random - if true, generates random values for the set
  */
+
 export function generateExerciseSet(
   setNumber: number,
-  random?: boolean,
-): ExerciseSet;
-export function generateExerciseSet(
-  setNumber: number,
-  paramValues: AttributeValue[],
-  random?: boolean,
-): ExerciseSet;
-export function generateExerciseSet(
-  setNumber: number,
-  componentParams: ComponentParam[],
-  random?: boolean,
-): ExerciseSet;
-export function generateExerciseSet(
-  setNumber: number,
-  paramValuesOrComponentParamsOrRandom?:
+  paramValuesOrComponentParams:
     | AttributeValue[]
     | ComponentParam[]
-    | boolean,
-  random?: boolean,
+    | null = null,
+  options?: ExerciseSetOptions,
 ): ExerciseSet {
-  const isRandom =
-    typeof paramValuesOrComponentParamsOrRandom === 'boolean'
-      ? paramValuesOrComponentParamsOrRandom
-      : random
-        ? random
-        : false;
+  const isRandom = options?.random || false;
+  const isBilateral = options?.bilateral || false;
 
-  const paramValues =
-    typeof paramValuesOrComponentParamsOrRandom === 'boolean' ||
-    !paramValuesOrComponentParamsOrRandom
-      ? generateParamAttributeValuesFromComponentParams(PARAMS, isRandom)
-      : typeof paramValuesOrComponentParamsOrRandom !== 'boolean' &&
-          isAttributeValueArray(paramValuesOrComponentParamsOrRandom)
-        ? paramValuesOrComponentParamsOrRandom
-        : typeof paramValuesOrComponentParamsOrRandom !== 'boolean'
-          ? generateParamAttributeValuesFromComponentParams(
-              paramValuesOrComponentParamsOrRandom,
-              isRandom,
-            )
-          : [];
+  let paramValues: AttributeValue[] =
+    generateParamAttributeValuesFromComponentParams(PARAMS, isRandom);
+
+  if (Array.isArray(paramValuesOrComponentParams)) {
+    if (isAttributeValueArray(paramValuesOrComponentParams))
+      paramValues = paramValuesOrComponentParams;
+    else
+      paramValues = generateParamAttributeValuesFromComponentParams(
+        paramValuesOrComponentParams,
+        isRandom,
+      );
+  }
 
   return {
     setNumber,
     paramValuesL: paramValues,
-    paramValuesR: paramValues,
+    ...(isBilateral && { paramValuesR: paramValues }),
   };
 }
 
