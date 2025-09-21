@@ -22,7 +22,7 @@ describe('Logo component', () => {
   });
 
   it('renders the narrow logo when version="narrow"', () => {
-    render(<Logo version="narrow" />);
+    render(<Logo />);
     const img = screen.getByRole('img', { name: /logo/i });
     expect(img).toHaveAttribute(
       'src',

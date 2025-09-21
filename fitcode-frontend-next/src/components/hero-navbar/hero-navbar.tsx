@@ -76,7 +76,7 @@ export default function HeroNavbar({ showLogin = true }) {
             <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
               {/* Logo Click Handler */}
               <Box onClick={handleLogoClick} sx={{ cursor: 'pointer' }}>
-                <Logo width={52} height={35} version="narrow" />
+                <Logo width={52} height={35} />
               </Box>
               <Box mr={4} />
 

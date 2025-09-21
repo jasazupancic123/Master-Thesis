@@ -36,16 +36,8 @@ export default function TrainerDayView() {
   const auth = useAuthenticatedAuth();
   const controller = TrainingController.getInstance(auth.token);
   const { components, exercises, methods } = useMain();
-  const {
-    group,
-    trainings,
-    cycle,
-    setCycle,
-    setTrainings,
-    setDateFrom,
-    setDateTo,
-    setDetectedChanges,
-  } = useGroup();
+  const { group, trainings, cycle, setCycle, setDateFrom, setDateTo } =
+    useGroup();
 
   const {
     day,
@@ -62,7 +54,6 @@ export default function TrainerDayView() {
     setLoading,
   } = useTrainerDayViewContext();
 
-  const [isUpdatingTraining, setIsUpdatingTraining] = useState(false);
   const [week, setWeek] = useState<number>(1);
   const [days, setDays] = useState(
     commonService.date.getWeekDays().map(({ label, date }) => ({
@@ -82,8 +73,6 @@ export default function TrainerDayView() {
     );
     if (cycleInDate) setCycle(cycleInDate);
   }, [day]);
-
-  const [isSticky, setIsSticky] = useState(false);
 
   {
     /* Sets new training when new period or day is clicked */
@@ -117,25 +106,6 @@ export default function TrainerDayView() {
 
     setWeek(diff);
   }, [day, cycle]);
-
-  useEffect(() => {
-    if (screenSize.isMobile || screenSize.isLandscapeMobile) return;
-
-    const handleScroll = () => {
-      if (screenSize.isMobile || screenSize.isLandscapeMobile) return;
-      if (screenSize.isSmallerThanLaptop) {
-        setIsSticky(false);
-        return;
-      }
-
-      const scrollY = window.scrollY;
-      const screenHeight = window.innerHeight;
-      setIsSticky(scrollY > screenHeight * 0.5);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [screenSize]);
 
   useEffect(() => {
     if (!component) setSelectedSubgroup(null);
@@ -192,55 +162,6 @@ export default function TrainerDayView() {
 
   return (
     <Box width="100%" position="relative">
-      {!screenSize.isSmallerThanLaptop && (
-        <Box
-          justifyContent="flex-end"
-          alignItems="center"
-          sx={{
-            position: 'absolute',
-            right: screenSize.isSmallerThanLaptop ? 2 : 10,
-            top: screenSize.isSmallerThanLaptop ? -38 : -43,
-            zIndex: 1300,
-          }}
-        >
-          <Tooltip title="Save training" placement="bottom" sx={{ mx: 1 }}>
-            <IconButton
-              sx={{ mx: 0, cursor: 'pointer' }}
-              onClick={() =>
-                handleUpdateMultipleTrainings(controller, {
-                  setTrainings,
-                  training,
-                  setTraining,
-                  group,
-                  cycle,
-                  router,
-                  components,
-                  exercises,
-                  methods,
-                  setDetectedChanges,
-                  selectedAthlete,
-                  isSettingAthleteWorkloads,
-                  setIsUpdatingTraining,
-                })
-              }
-            >
-              <Save fontSize="small" />
-            </IconButton>
-          </Tooltip>
-
-          <IconButton
-            sx={{
-              mx: 0,
-              m: screenSize.isSmallerThanLaptop ? 0 : undefined,
-              p: screenSize.isSmallerThanLaptop ? 0 : undefined,
-              mr: screenSize.isSmallerThanLaptop ? 1 : 0,
-              cursor: 'pointer',
-            }}
-          >
-            <CopyAll fontSize="small" />
-          </IconButton>
-        </Box>
-      )}
       <Box
         position="relative"
         sx={{
@@ -252,88 +173,17 @@ export default function TrainerDayView() {
       >
         <VerticalLinesBorders />
 
-        {screenSize.isSmallerThanLaptop && (
-          <Box
-            justifyContent="flex-end"
-            alignItems="center"
-            sx={{
-              position: 'absolute',
-              right: screenSize.isSmallerThanLaptop ? 6 : 10,
-              top: screenSize.isSmallerThanLaptop ? -38 : -43,
-              zIndex: 1300,
-            }}
-          >
-            <Box
-              display="flex"
-              sx={{
-                p: 0,
-                ml: 2,
-                position: 'fixed',
-                bottom: 20,
-                right: 20,
-                zIndex: 1000,
-              }}
-            >
-              <IconButton
-                sx={{
-                  p: 0,
-                  m: 0,
-                }}
-                onClick={() => {
-                  handleUpdateMultipleTrainings(controller, {
-                    setTrainings,
-                    training,
-                    setTraining,
-                    group,
-                    cycle,
-                    router,
-                    components,
-                    exercises,
-                    methods,
-                    setDetectedChanges,
-                    selectedAthlete,
-                    isSettingAthleteWorkloads,
-                    setIsUpdatingTraining,
-                  });
-                }}
-              >
-                <Save
-                  sx={{
-                    cursor: 'pointer',
-                    backgroundColor: theme.palette.primary.main,
-                    borderRadius: '50%',
-                    p: 1,
-                    fontSize: 40,
-                  }}
-                />
-              </IconButton>
-            </Box>
-
-            <IconButton
-              sx={{
-                mx: 0,
-                m: screenSize.isSmallerThanLaptop ? 0 : undefined,
-                p: screenSize.isSmallerThanLaptop ? 0 : undefined,
-                cursor: 'pointer',
-              }}
-            >
-              <CopyAll fontSize="small" />
-            </IconButton>
-          </Box>
-        )}
-
         <Box
           display="flex"
           flexDirection="column"
           alignItems="center"
           width="100%"
-          height={!screenSize.isSmallerThanLaptop ? DIVIDER_HEIGHT : undefined}
           sx={{
             borderBottomRightRadius: !training || !cycle ? 0 : 10,
             borderBottomLeftRadius: !training || !cycle ? 0 : 10,
             bgcolor: 'background.default',
           }}
-          justifyContent="space-evenly"
+          justifyContent="flex-start"
         >
           {/* Header with day and week selection */}
           <GroupTrainerDayViewHeader
@@ -341,26 +191,6 @@ export default function TrainerDayView() {
             setDays={setDays}
             week={week}
           />
-          <Box
-            width="100%"
-            display="flex"
-            flexDirection={screenSize.isSmallerThanLaptop ? 'column' : 'row'}
-            maxWidth={MAX_WIDTH}
-            justifyContent="center"
-            alignItems="center"
-            sx={{
-              p: isSticky ? 0 : undefined,
-              py: selectedAthlete ? 0 : screenSize.isSmallerThanLaptop ? 2 : 5,
-              pt:
-                selectedAthlete && !screenSize.isSmallerThanLaptop
-                  ? 1
-                  : undefined,
-              backgroundColor: theme.palette.background.default,
-            }}
-          >
-            {/* Training members */}
-            <TrainingMembers isSticky={isSticky} />
-          </Box>
         </Box>
         <Box
           display="flex"
@@ -369,6 +199,8 @@ export default function TrainerDayView() {
           maxWidth={MAX_WIDTH}
           sx={{
             mx: 'auto',
+            px: 3,
+            mt: screenSize.isMobile || screenSize.isTablet ? 2 : 0,
           }}
         >
           <CustomDivider />
@@ -378,9 +210,6 @@ export default function TrainerDayView() {
           <GroupTrainerDayViewTrainings />
         </Box>
       </Box>
-      {isUpdatingTraining && (
-        <LoadingOverlay title="Updating training plan..." />
-      )}
     </Box>
   );
 }

@@ -26,6 +26,7 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
+import CustomDivider from '../custom-divider/custom-divider';
 
 const commonService = CommonService.instance;
 
@@ -115,6 +116,11 @@ export default function TrainerCycleView() {
         setValue={(value) => {
           setCycle(group.cycles.find((c) => c.id === value) || undefined);
         }}
+        sx={
+          {
+            // py: '0px !important',
+          }
+        }
         onArrowClick={() => {}}
         cycleView
         checkIsSameValue={(value: string) => {
@@ -133,6 +139,7 @@ export default function TrainerCycleView() {
         mx: 'auto',
         minHeight: 'calc(100vh - 50px)',
         overflowY: 'none',
+        px: 3,
       }}
     >
       <VerticalLinesBorders />
@@ -140,13 +147,13 @@ export default function TrainerCycleView() {
       <Box
         display="flex"
         flexDirection="column"
+        justifyContent="space-around"
         alignItems="center"
         sx={{
           backgroundColor: theme.palette.background.default,
           position: 'relative',
         }}
-        minHeight={DIVIDER_HEIGHT}
-        gap={1}
+        height={!screenSize.isSmallerThanLaptop ? DIVIDER_HEIGHT : undefined}
       >
         <Box
           width="100%"
@@ -156,96 +163,14 @@ export default function TrainerCycleView() {
           {screenSize.isSmallerThanLaptop ? (
             <Box width="100%" display="flex" flexDirection="column">
               <HorizontalItems />
-              <MobileDoubleTextItems
-                item1={{ label: 'Group', value: group.name }}
-                item2={
-                  cycle
-                    ? {
-                        label: 'Duration',
-                        value:
-                          cycle.from && cycle.to
-                            ? `${commonService.date.weeks(cycle.from, cycle.to).length} weeks`
-                            : 'N/A',
-                      }
-                    : undefined
-                }
-              />
             </Box>
           ) : (
             <>
-              <Box width="25%" display="flex" sx={{ mt: 0.75 }}>
-                {cycle && (
-                  <Box
-                    display="flex"
-                    flexDirection="column"
-                    alignItems="flex-start"
-                    sx={{
-                      ml: 2,
-                    }}
-                  >
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        fontSize: '12px',
-                        fontWeight: 400,
-                        textAlign: 'left',
-                      }}
-                    >
-                      Duration
-                    </Typography>
-                    <Typography
-                      textTransform="uppercase"
-                      sx={{
-                        fontSize: '16px',
-                        fontWeight: 600,
-                        textAlign: 'left',
-                      }}
-                    >
-                      {cycle.from && cycle.to
-                        ? `${commonService.date.weeks(cycle.from, cycle.to).length} weeks`
-                        : 'N/A'}
-                    </Typography>
-                  </Box>
-                )}
-              </Box>
+              <Box width="25%"></Box>
               <Box width="50%" display="flex" maxHeight={67}>
                 <HorizontalItems />
               </Box>
-              <Box
-                width="25%"
-                display="flex"
-                justifyContent="flex-end"
-                gap={5}
-                pr={2}
-              >
-                <Box
-                  display="flex"
-                  flexDirection="column"
-                  alignItems="flex-end"
-                  mt={0.75}
-                >
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      fontSize: '12px',
-                      fontWeight: 400,
-                      textAlign: 'right',
-                    }}
-                  >
-                    Group
-                  </Typography>
-                  <Typography
-                    textTransform="uppercase"
-                    sx={{
-                      fontSize: '16px',
-                      fontWeight: 600,
-                      textAlign: 'right',
-                    }}
-                  >
-                    {group.name}
-                  </Typography>
-                </Box>
-              </Box>
+              <Box width="25%"></Box>
             </>
           )}
         </Box>
@@ -254,7 +179,6 @@ export default function TrainerCycleView() {
           flexDirection="column"
           justifyContent="center"
           alignItems="center"
-          pb={!isSticky ? 1 : 0}
           sx={{
             borderBottomRightRadius: isSticky ? '20px' : 0,
             borderBottomLeftRadius: isSticky ? '20px' : 0,
@@ -265,6 +189,7 @@ export default function TrainerCycleView() {
             top: isSticky ? '70px' : undefined,
             zIndex: 1000,
             px: isSticky ? 0.5 : 0,
+            pt: isSticky ? 0.5 : 0,
             transition: 'top 1s ease-in-out',
             boxShadow: isSticky ? '0px 4px 10px rgba(0, 0, 0, 0.1)' : 'none',
             border: isSticky ? '1px solid grey' : 'none',
@@ -288,27 +213,41 @@ export default function TrainerCycleView() {
         </Box>
       </Box>
 
+      {!screenSize.isSmallerThanLaptop && <CustomDivider />}
+
       {cycle && (
-        <Box
-          width="100%"
-          display="flex"
-          flexDirection="column"
-          sx={{
-            backgroundColor: theme.palette.background.dark,
-          }}
-        >
+        <Box width="100%" display="flex" flexDirection="column">
           <Box
             width="100%"
             display="flex"
             alignItems="center"
             justifyContent="space-around"
             sx={{
-              marginX: 'auto',
-              py: 0.5,
+              py: 1,
             }}
           >
-            {['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'].map((day, j) => (
-              <Typography key={j} fontWeight={400} fontSize="12px">
+            {(screenSize.isMobile || screenSize.isSmallTablet
+              ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+              : [
+                  'Monday',
+                  'Tuesday',
+                  'Wednesday',
+                  'Thursday',
+                  'Friday',
+                  'Saturday',
+                  'Sunday',
+                ]
+            ).map((day, j) => (
+              <Typography
+                key={j}
+                width="calc(100% / 7)"
+                fontSize={14}
+                fontWeight={400}
+                textAlign="center"
+                sx={{
+                  mx: 'auto',
+                }}
+              >
                 {day}
               </Typography>
             ))}

@@ -11,6 +11,7 @@ import type { Superset as SupersetClass } from '@/controller/training/type/super
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
+import { useTheme } from '@mui/material';
 
 interface SupersetComponentProps {
   superset: SupersetClass;
@@ -18,13 +19,14 @@ interface SupersetComponentProps {
 }
 
 export default function Superset(props: SupersetComponentProps) {
-  const { superset, supersetIndex } = props;
-
+  const theme = useTheme();
   const screenSize = useScreenSize();
 
   const { selectedExercise, setOpenAddExerciseModal } = useSupersets();
   const { training, component, supersets, selectedSubgroup } =
     useTrainerDayViewContext();
+
+  const { superset, supersetIndex } = props;
 
   const containerId = `${component?.id}-${supersetIndex}`;
   const items = superset.exercises.map((e) => e.id);
@@ -77,18 +79,14 @@ export default function Superset(props: SupersetComponentProps) {
         sx={{
           p: '1px',
           borderRadius: '5px',
-          background: getBorderGradient(
-            supersetIndex,
-            supersets.length === 1 ||
-              (supersets.length === 5 && supersetIndex === 4)
-          ),
+          background: getBorderGradient(theme),
         }}
       >
         <Stack
           p={screenSize.isLandscapeMobile ? 0.5 : 0}
           pt={0}
           sx={{
-            bgcolor: 'background.default',
+            backgroundColor: theme.palette.background.default,
             borderRadius: '5px',
           }}
         >

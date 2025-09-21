@@ -5,7 +5,7 @@ import type { Subgroup } from '@/controller/training/type/subgroup.type';
 
 export const MAX_WIDTH = '1340px';
 
-export const DIVIDER_HEIGHT = '206px';
+export const DIVIDER_HEIGHT = '150px';
 
 export const NUM_MAX_SUPERSETS = 8;
 
