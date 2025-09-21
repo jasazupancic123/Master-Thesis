@@ -25,7 +25,7 @@ export const VOL_OPTIONS: Attribute[] = [
     name: 'Rep',
     description: 'reps',
     type: AttributeType.Number,
-    defaultValue: '12',
+    defaultValue: '10',
   },
   {
     field: VolType.Time,
@@ -52,7 +52,7 @@ export const INT_OPTIONS: Attribute[] = [
     description: 'kilograms',
     unit: 'kg',
     type: AttributeType.Number,
-    defaultValue: '20',
+    defaultValue: '50',
   },
   {
     field: IntType.Bw,
@@ -60,14 +60,14 @@ export const INT_OPTIONS: Attribute[] = [
     description: 'body weight',
     unit: '%',
     type: AttributeType.Number,
-    defaultValue: '100',
+    defaultValue: '50',
   },
   {
     field: IntType.Rm,
     name: 'RM',
     description: 'rep max',
     type: AttributeType.Number,
-    defaultValue: '80',
+    defaultValue: '75',
   },
   {
     field: IntType.Mas,
@@ -107,7 +107,7 @@ export const INT_OPTIONS: Attribute[] = [
     name: 'Eff',
     description: 'effort',
     type: AttributeType.Number,
-    defaultValue: '0',
+    defaultValue: '2',
     min: 1, // easy
     max: 4, // max
   },
