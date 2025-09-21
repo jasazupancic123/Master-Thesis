@@ -36,8 +36,8 @@ export class TrainingReportService {
     ).sort((a, b) => compareAsc(new Date(a.createdAt), new Date(b.createdAt)));
 
     const stats = this.getTrainingStats(training);
-    const from = workloads[0]?.createdAt || training.from;
-    const to = workloads[workloads.length - 1]?.updatedAt || training.to;
+    const from = workloads[0]?.createdAt || new Date();
+    const to = workloads[workloads.length - 1]?.updatedAt || from;
 
     const components = new Set(workloads.map((w) => w.componentId));
     const exercises = new Set(workloads.map((w) => w.exerciseId));
