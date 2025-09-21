@@ -12,6 +12,7 @@ import AthleteOptionsContainer from '../athlete-options-container/athlete-option
 import MyModal from '../modal/modal';
 import TrainingInProgressSuperset from '../training-in-progress-superset/training-in-progress-superset';
 import { getUndoneExercises, handleFinishTraining } from './state';
+import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
 import type { SetState } from '@/common/type/state.type';
 import { useHorizontalOverflow } from '@/common/util/horizontal-overflow.util';
@@ -19,11 +20,11 @@ import { TrainingController } from '@/controller/training/training.controller';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
+import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
-import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 
 interface TrainingInProgressProps {
   setTrainings: SetState<Training[]>;
@@ -39,7 +40,6 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
   const {
     trainingInProgress,
     setTrainingInProgress,
-    selectedTrackingMethod,
     setView,
     clearTrainingState,
   } = useTraining();
@@ -52,6 +52,8 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
     supersetIndex,
     setSetIndex,
   } = useTrainingInProgress();
+
+  const { selectedTrackingMethod } = useAthleteHeader();
 
   const { outerRef, innerRef, isOverflowing } = useHorizontalOverflow();
   const { setTrainings } = props;

@@ -80,9 +80,9 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                 <Box
                   sx={{
                     backgroundColor: theme.palette.primary.main,
-                    width: 4,
-                    height: 16,
-                    borderRadius: 5,
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
                   }}
                 />
               </IconButton>
@@ -90,10 +90,10 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
           ) : (
             <Box
               sx={{
-                backgroundColor: theme.palette.primary.main,
-                width: 4,
-                height: 16,
-                borderRadius: 5,
+                backgroundColor: theme.palette.grey[400],
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
               }}
             />
           )}
@@ -102,7 +102,10 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
             fontSize={12}
             noWrap
             sx={{
-              color: theme.palette.primary.main,
+              color:
+                component?.id === trainingComponent.id
+                  ? theme.palette.primary.main
+                  : theme.palette.grey[400],
               pl: 1,
               mb: 0,
               textTransform: 'uppercase',

@@ -37,8 +37,8 @@ export class KeypointHistory {
     // inserts keypoints
     this.history.push(keypoints);
 
+    // Calculate new buffer length based on fps and numSeconds
     if (avgFps && numSeconds && avgFps.count > 10) {
-      // calculate new buffer length based on fps and numSeconds
       const maxBufferLength = Math.ceil(avgFps.value * numSeconds);
       this.bufferLength = maxBufferLength;
     }
@@ -47,10 +47,23 @@ export class KeypointHistory {
       this.history.shift();
   }
 
-  getHistoryById(keypointId: string): Keypoint[] {
-    return this.history.map((frame) =>
+  getHistoryById(keypointId: string, bufferCutOff?: number): Keypoint[] {
+    const history =
+      bufferCutOff !== undefined
+        ? this.history.slice(-bufferCutOff)
+        : this.history;
+    return history.map((frame) =>
       frame.find((kp) => kp.id === keypointId)
     ) as Keypoint[];
+  }
+
+  getLatestFrameNum(): number {
+    const latestFrameKeypoints = this.history[this.history.length - 1];
+    const frameNum = latestFrameKeypoints.find(
+      (kp) => kp.frameNum !== undefined
+    )?.frameNum;
+
+    return frameNum ?? this.history.length - 1;
   }
 
   cutAtIndex(index: number, clearBufferLength?: boolean) {

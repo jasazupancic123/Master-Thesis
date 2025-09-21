@@ -2,6 +2,7 @@
 
 import type { DrawingUtils, PoseLandmarker } from '@mediapipe/tasks-vision';
 import { Box, Button } from '@mui/material';
+import { useTheme } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 
 import LoadingOverlay from '../loading-overlay/loading-overlay';
@@ -20,7 +21,8 @@ import { KeypointId } from '@/controller/pose-detection/enum/keypoint-id';
 import { KeypointValueType } from '@/controller/pose-detection/enum/keypoint-value-type';
 import { PoseModel } from '@/controller/pose-detection/enum/pose-model.enum';
 import { RepStatus } from '@/controller/pose-detection/enum/rep-state';
-import type { ExerciseRepStartCondition } from '@/controller/pose-detection/type/exercise-start-condition.type';
+import { RepDetectionService } from '@/controller/pose-detection/rep-detection.service';
+import type { ExerciseDetectionData } from '@/controller/pose-detection/type/exercise-start-condition.type';
 import type { Rep } from '@/controller/pose-detection/type/rep.type';
 import type { RepState } from '@/controller/pose-detection/type/rep-state.type';
 import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
@@ -31,17 +33,23 @@ const DEBUG = false;
 
 interface MobileMovementValidationProps {
   selectedExercise: TrainingExercise | undefined;
-  updateExerciseReps: ((repsCount: number) => void) | undefined;
+  selectedTrackingMethod: TrackingMethod | undefined;
   setSelectedTrackingMethod: SetState<TrackingMethod> | undefined;
+  updateExerciseReps: ((repsCount: number) => void) | undefined;
 }
 
 export default function MobileMovementValidation(
   props: MobileMovementValidationProps
 ) {
+  const theme = useTheme();
   const screenSize = useScreenSize();
 
-  const { selectedExercise, updateExerciseReps, setSelectedTrackingMethod } =
-    props;
+  const {
+    selectedExercise,
+    selectedTrackingMethod,
+    setSelectedTrackingMethod,
+    updateExerciseReps,
+  } = props;
 
   // Buffers
   const keypointHistoryRef = useRef<KeypointHistory>(
@@ -49,26 +57,38 @@ export default function MobileMovementValidation(
   ); // first make buffer of 100 frames, later set buffer size to undefined to get all recording of exercise
   const keypointBuffer = new KeypointHistory([], 100); // 100 frames buffer, updates in the main loop based on fps
 
-  const exerciseRepStartConditions: ExerciseRepStartCondition[] | undefined =
+  const exerciseDetectionData: ExerciseDetectionData | undefined =
     selectedExercise
       ? EXERCISE_POSES.find((e) => e.exerciseIds.includes(selectedExercise.id))
-          ?.conditions
-      : [
-          {
-            keypointId: KeypointId.LEFT_WRIST,
-            type: KeypointValueType.POSITION_Y,
-            direction: ConditionDirection.POSITIVE,
-            duration: 750, // ms
-            distance: 0.1, // meters
-          },
-          // {
-          //   keypointId: KeypointId.LEFT_EYE,
-          //   type: KeypointValueType.POSITION_Y,
-          //   direction: ConditionDirection.NEGATIVE,
-          //   duration: 750, // ms
-          //   distance: 0.025, // meters
-          // },
-        ];
+          ?.data
+      : {
+          romKeypointId: KeypointId.RIGHT_WRIST,
+          romValueType: KeypointValueType.POSITION_Y,
+          romStartDirection: ConditionDirection.POSITIVE,
+          conditions: [
+            {
+              keypointId: KeypointId.RIGHT_WRIST,
+              type: KeypointValueType.POSITION_Y,
+              direction: ConditionDirection.POSITIVE,
+              duration: 750, // ms
+              distance: 0.1, // meters
+            },
+          ],
+        };
+  // : {
+  //     romKeypointId: KeypointId.LEFT_HIP,
+  //     romValueType: KeypointValueType.POSITION_Y,
+  //     romStartDirection: ConditionDirection.NEGATIVE,
+  //     conditions: [
+  //       {
+  //         keypointId: KeypointId.LEFT_HIP,
+  //         type: KeypointValueType.POSITION_Y,
+  //         direction: ConditionDirection.NEGATIVE,
+  //         duration: 750, // ms
+  //         distance: 0.05, // meters}
+  //       },
+  //     ],
+  //   };
 
   // Main Status
   const statusRef = useRef<DetectionStatus>(DetectionStatus.NOT_FULLY_IN_FRAME);
@@ -96,15 +116,97 @@ export default function MobileMovementValidation(
   const avgFps = useRef<{ value: number; count: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const centerPosRef = useRef<{ x: number; y: number } | null>(null);
+
   // Helper Refs
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const romCanvasRef = useRef<HTMLCanvasElement>(null);
+  const tempoCanvasRef = useRef<HTMLCanvasElement>(null);
   const drawingUtilsRef = useRef<DrawingUtils>(null);
   const canvasCtxRef = useRef<CanvasRenderingContext2D | null>(null);
   const prevFrameTimeRef = useRef<number | null>(null);
   const lastVideoTimeRef = useRef(-1);
   const frameCountRef = useRef(0);
   const initedFirstFrameInRecordingMode = useRef(false);
+  const normDomainRef = useRef<{ min: number; max: number } | null>(null); // for graphs
+  const dotRef = useRef<HTMLDivElement | null>(null);
+  const dotBackgroundRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    let raf: number | null = null;
+
+    const tick = () => {
+      const v = videoRef.current;
+      const background = dotBackgroundRef.current;
+      const c = centerPosRef.current;
+
+      const dot = dotRef.current;
+
+      if (!v || !background || !dot || !c) {
+        raf = requestAnimationFrame(tick);
+        return;
+      }
+
+      const rect = v.getBoundingClientRect();
+
+      // normalized landmark coords [0..1]; flip X if video is mirrored
+      const nx = 1 - c.x;
+      const ny = c.y;
+
+      // intrinsic video size (source space)
+      const vw = v.videoWidth || rect.width;
+      const vh = v.videoHeight || rect.height;
+
+      // element size (display space)
+      const elW = rect.width;
+      const elH = rect.height;
+
+      // account for CSS object-fit
+      const ofit = getComputedStyle(v).objectFit || 'cover';
+
+      let drawnW = elW;
+      let drawnH = elH;
+
+      if (ofit === 'cover') {
+        const scale = Math.max(elW / vw, elH / vh);
+        drawnW = vw * scale;
+        drawnH = vh * scale;
+      } else if (ofit === 'contain' || ofit === 'scale-down') {
+        const scale = Math.min(elW / vw, elH / vh);
+        drawnW = vw * scale;
+        drawnH = vh * scale;
+      } else if (ofit === 'none') {
+        drawnW = vw; // 1:1 pixels
+        drawnH = vh;
+      } // "fill" falls back to element size (stretches to elW x elH)
+
+      // assume object-position: 50% 50% (center) – default for <video>
+      const offsetX = (elW - drawnW) / 2;
+      const offsetY = (elH - drawnH) / 2;
+
+      // map normalized coords -> displayed pixels inside the drawn video
+      const px = offsetX + nx * drawnW;
+      const py = offsetY + ny * drawnH;
+
+      // center the dot element (don’t hardcode; use its actual size)
+      const halfWBackground = (background.offsetWidth || 8) / 2;
+      const halfHBackground = (background.offsetHeight || 8) / 2;
+
+      const halfWDot = (dot.offsetWidth || 8) / 2;
+      const halfHDot = (dot.offsetHeight || 8) / 2;
+
+      background.style.transform = `translate3d(${px - halfWBackground}px, ${py - halfHBackground}px, 0)`;
+      dotRef.current!.style.transform = `translate3d(${px - halfWDot}px, ${py - halfHDot}px, 0)`;
+
+      raf = requestAnimationFrame(tick);
+    };
+
+    raf = requestAnimationFrame(tick);
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [centerPosRef]);
 
   {
     /* <HELPER TO DRAW GRAPH>*/
@@ -119,7 +221,11 @@ export default function MobileMovementValidation(
         e.preventDefault(); // stop page scroll
         if (!spaceDown) setSpaceDown(true);
 
-        drawGraph();
+        // drawGraph();
+        RepDetectionService.saveRepTimesToJsonFiles({
+          recordedRepsRef,
+          selectedExercise,
+        });
       }
     };
 
@@ -186,6 +292,17 @@ export default function MobileMovementValidation(
     document.body.appendChild(script);
   };
 
+  const finishAiDetection = () => {
+    if (
+      updateExerciseReps &&
+      selectedTrackingMethod === TrackingMethod.CAMERA &&
+      setSelectedTrackingMethod
+    ) {
+      setSelectedTrackingMethod(TrackingMethod.MANUAL);
+      updateExerciseReps(recordedRepsRef.current.length);
+    }
+  };
+
   useEffect(() => {
     setStatusMessage(getStatusMessage(statusRef.current));
   }, [statusRef.current]);
@@ -204,7 +321,9 @@ export default function MobileMovementValidation(
   }, []);
 
   useEffect(() => {
-    if (!exerciseRepStartConditions) return;
+    if (!exerciseDetectionData) return;
+
+    if (statusRef.current === DetectionStatus.STOPPED) return;
 
     enableCam({
       poseLandmarker,
@@ -228,33 +347,22 @@ export default function MobileMovementValidation(
           frameCountRef,
           isMobile: screenSize.isMobile,
           avgFps,
-          exerciseStartConditions: exerciseRepStartConditions,
+          exerciseDetectionData: exerciseDetectionData,
           initedFirstFrameInRecordingMode,
+          normDomainRef,
+          romCanvasRef,
+          tempoCanvasRef,
+          theme,
+          centerPosRef,
           setFps,
           setStatusMessage,
+          finishAiDetection,
         }),
       setError,
     });
   }, [poseLandmarker]);
 
-  const drawGraph = () => {
-    if (!exerciseRepStartConditions) return;
-
-    const keypointIds = exerciseRepStartConditions.map(
-      (condition) => condition.keypointId
-    );
-
-    keypointIds.forEach((id) => {
-      KeypointUtil.drawKeypointValuesGraph(
-        keypointHistoryRef.current.history,
-        id,
-        KeypointValueType.POSITION_Y,
-        'whole_exercise'
-      );
-    });
-  };
-
-  if (!exerciseRepStartConditions) {
+  if (!exerciseDetectionData) {
     return <div>No pose detection logic for this exercise yet</div>;
   }
 
@@ -269,6 +377,12 @@ export default function MobileMovementValidation(
     >
       {!poseLandmarker && <LoadingOverlay title="Loading model..." />}
 
+      {poseLandmarker && (
+        <MovementValidationHeader
+          statusMessage={error ? `${error}` : statusMessage}
+        />
+      )}
+
       <Box
         width="100%"
         display="flex"
@@ -282,11 +396,6 @@ export default function MobileMovementValidation(
         }}
         gap={1}
       >
-        {poseLandmarker && (
-          <MovementValidationHeader
-            statusMessage={error ? `${error}` : statusMessage}
-          />
-        )}
         <Box width="100%" display="flex" justifyContent="space-between" px={1}>
           <FpsText fps={fps} avgFps={avgFps.current} />
           <RepsCounter reps={recordedRepsRef.current.length} />
@@ -315,6 +424,66 @@ export default function MobileMovementValidation(
           ref={canvasRef}
           style={{ position: 'absolute', left: 0, top: 0 }}
         />
+        <canvas
+          ref={tempoCanvasRef}
+          style={{
+            width: '100%',
+            height: '50%',
+            position: 'absolute',
+            left: 0,
+            top: 0, // top half
+            zIndex: 1000,
+          }}
+        />
+
+        {statusRef.current !== DetectionStatus.STOPPED && (
+          <>
+            {/* Person dot */}
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                pointerEvents: 'none',
+                overflow: 'hidden',
+              }}
+            >
+              <div
+                ref={dotBackgroundRef}
+                style={{
+                  position: 'absolute',
+                  width: 50,
+                  height: 50,
+                  borderRadius: '30%',
+                  background: theme.palette.primary.main,
+                  willChange: 'transform',
+                }}
+              />
+              <div
+                ref={dotRef}
+                style={{
+                  position: 'absolute',
+                  width: 14,
+                  height: 14,
+                  borderRadius: '50%',
+                  background: theme.palette.background.default,
+                  willChange: 'transform',
+                }}
+              />
+            </div>
+          </>
+        )}
+
+        <canvas
+          ref={romCanvasRef}
+          style={{
+            width: '100%',
+            height: '50%',
+            position: 'absolute',
+            left: 0,
+            bottom: 0, // bottom half
+            zIndex: 1000,
+          }}
+        />
 
         <Box
           width="100%"
@@ -325,9 +494,19 @@ export default function MobileMovementValidation(
             position: 'absolute',
             bottom: 10,
             left: 0,
+            zIndex: 100000,
           }}
         >
-          <Button variant="contained" onClick={drawGraph} sx={{ mt: 2 }}>
+          <Button
+            variant="contained"
+            onClick={() => {
+              KeypointUtil.saveKeypointValueGraph({
+                exerciseDetectionData,
+                keypointHistoryRef,
+              });
+            }}
+            sx={{ mt: 2 }}
+          >
             Save Graph
           </Button>
           <Button
