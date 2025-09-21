@@ -4,6 +4,8 @@ import { Test } from '@nestjs/testing';
 
 import { AppModule } from '@src/app.module';
 import type { TestInstitution } from '@src/common/type/entity.type';
+import type { TrainingReportRef } from '@src/common/type/firestore.type';
+import type { Component } from '@src/component/entity/component.entity';
 import { ParamType } from '@src/component/enum/param.enum';
 import { generateComponentParamsStub } from '@src/component/mock/component-param.stub';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
@@ -12,6 +14,7 @@ import type { Group } from '@src/group/entity/group.entity';
 import { TestDbService } from '@src/test-db/test-db.service';
 import type { Training } from '@src/training/entity/training.entity';
 import type { TrainingStats } from '@src/training/entity/training-stats.entity';
+import { SetStatus } from '@src/training/enum/set-status.enum';
 import {
   generateExerciseSet,
   generateSuperset,
@@ -28,6 +31,7 @@ describe('Training Report (e2e)', () => {
   let workloadService: WorkloadService;
   let trainingReportService: TrainingReportService;
 
+  let component: Component;
   let institution: TestInstitution;
   let group: Group;
   let training: Training;
@@ -51,7 +55,7 @@ describe('Training Report (e2e)', () => {
 
     group = await db.groups.createTest(institution);
 
-    await Promise.all([
+    [component] = await Promise.all([
       db.components.create({ id: 'c1' }),
       db.components.create({ id: 'c2' }),
     ]);
@@ -161,7 +165,94 @@ describe('Training Report (e2e)', () => {
     await app.close();
   });
 
-  it('should return correct training stats', () => {
+  it('should return default stats for training without any components', () => {
+    const dummy = generateTrainingStub({
+      ownerId: global.trainer.uid,
+      membersIds: [global.athlete.uid],
+    });
+
+    const stats = trainingReportService.getTrainingStats(dummy);
+    expect(stats).toEqual({
+      totalDuration: 120,
+      totalComponents: 0,
+      totalSupersets: 0,
+      totalExercises: 0,
+      totalSets: 0,
+      totalReps: 0,
+      totalRecTime: 0,
+      totalActiveTime: 0,
+      totalTonnage: 0,
+      totalTimeWork: 0,
+      totalDistWork: 0,
+      totalPower: 0,
+      totalRealizationScore: 0,
+    });
+  });
+
+  it('should return correct training stats for training with empty exercises', () => {
+    const dummy = generateTrainingStub({
+      ownerId: global.trainer.uid,
+      membersIds: [global.athlete.uid],
+      components: [
+        generateTrainingComponent({
+          id: 'c1',
+          supersets: [
+            generateSuperset({
+              exercises: [
+                generateTrainingExercise({
+                  id: 'squat',
+                  sets: [{ setNumber: 1, paramValuesL: [] }],
+                }),
+                generateTrainingExercise({
+                  id: 'bench',
+                  sets: [
+                    { setNumber: 1, paramValuesL: [] },
+                    { setNumber: 2, paramValuesL: [] },
+                  ],
+                }),
+              ],
+            }),
+          ],
+        }),
+        generateTrainingComponent({
+          id: 'c2',
+          supersets: [
+            generateSuperset({
+              exercises: [
+                generateTrainingExercise({
+                  id: 'deadlift',
+                  sets: [
+                    { setNumber: 1, paramValuesL: [] },
+                    { setNumber: 2, paramValuesL: [] },
+                    { setNumber: 3, paramValuesL: [] },
+                  ],
+                }),
+              ],
+            }),
+          ],
+        }),
+      ],
+    });
+
+    const stats = trainingReportService.getTrainingStats(dummy);
+    expect(stats).toEqual({
+      totalDuration: 120,
+      totalComponents: 2,
+      totalSupersets: 2,
+      totalExercises: 3, // unique
+      totalSets: 6,
+      totalReps: 6,
+      totalRecTime: 0,
+      totalActiveTime: 18, // 6 sets with default 3 seconds per rep tempo
+      totalTonnage: 0,
+      totalTimeWork: 0,
+      totalDistWork: 0,
+      totalPower: 0,
+      totalRealizationScore: 0,
+    } as TrainingStats);
+  });
+
+  it('should return correct training stats for provided training', () => {
     const stats = trainingReportService.getTrainingStats(training);
     const totalTonnage = 10 * 10 * 50; // 5000 -> 8 sets of 10 reps with 50 kg
     const totalActiveTime = 10 * 10 * 3 + 3 * 30 * 1; // 300 + 90 = 390 -> 10 sets of 10 reps with 2010 (3 second) tempo, 3 sets of 30 m distance with 1 second per meter
@@ -193,11 +284,60 @@ describe('Training Report (e2e)', () => {
     spy.mockRestore();
 
     // report should be created
-    const report = await db.trainingReports.findById({
+    const ref: TrainingReportRef = {
       trainingId: training.id,
       userId: global.athlete.uid,
-    });
+    };
+
+    const report = await db.trainingReports.findById(ref);
+    expect(report).toBeDefined();
+    expect(report.sets).toBe(0);
+
+    await db.workloads.deleteAll(training.id);
+    await db.trainingReports.delete(ref);
+  });
+
+  it('should update existing report for user in training', async () => {
+    await db.workloads.createMany([
+      {
+        userId: global.athlete.uid,
+        trainingId: training.id,
+        component,
+        supersetIndex: 0,
+        exerciseId: 'squat',
+        setNumber: 1,
+        status: SetStatus.COMPLETED,
+      },
+      {
+        userId: global.athlete.uid,
+        trainingId: training.id,
+        component,
+        supersetIndex: 0,
+        exerciseId: 'squat',
+        setNumber: 2,
+        status: SetStatus.COMPLETED,
+      },
+    ]);
+
+    const spy = jest.spyOn(workloadService, 'findAllByUserTraining');
+    await trainingReportService.updateReport(global.athlete.uid, training);
+
+    // workloads should be found
+    expect((await spy.mock.results[0].value).length).toBe(2);
+    spy.mockRestore();
+
+    // report should be updated
+    const ref: TrainingReportRef = {
+      trainingId: training.id,
+      userId: global.athlete.uid,
+    };
+
+    const report = await db.trainingReports.findById(ref);
 
     expect(report).toBeDefined();
+    expect(report.sets).toBe(2);
+
+    await db.workloads.deleteAll(training.id);
+    await db.trainingReports.delete(ref);
   });
 });
