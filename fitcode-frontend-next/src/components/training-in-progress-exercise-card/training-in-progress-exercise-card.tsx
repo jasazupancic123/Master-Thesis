@@ -26,6 +26,7 @@ import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 import { ParamType } from '@/controller/component/enum/param.enum';
 import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
+import { TrainingService } from '@/controller/training/training.service';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
@@ -49,6 +50,7 @@ export default function TrainingInProgressExerciseCard() {
     supersetIndex,
     setIndex,
     setSetIndex,
+    handleUpsertSet,
   } = useTrainingInProgress();
 
   const { selectedTrackingMethod, setSelectedTrackingMethod } =
@@ -408,6 +410,7 @@ export default function TrainingInProgressExerciseCard() {
             </Box>
             <Box display="flex" alignItems="center" gap={0.25}>
               <Typography fontSize={12}>Done</Typography>
+
               <Checkbox
                 icon={<PanoramaFishEye />}
                 checkedIcon={
@@ -423,23 +426,25 @@ export default function TrainingInProgressExerciseCard() {
                     trainingInProgress.exerciseSetTrackingState
                   )
                 }
-                sx={{
-                  '&.MuiCheckbox-root': {
-                    px: 0,
-                  },
-                }}
-                onChange={(e) => {
+                sx={{ '&.MuiCheckbox-root': { px: 0 } }}
+                onChange={async (e) => {
                   if (supersetIndex === undefined || setIndex === undefined)
                     return;
 
                   const isCompleted = e.target.checked;
                   if (isCompleted) {
+                    const set = TrainingService.exerciseSetToCompleteSet(
+                      selectedExercise.sets[setIndex]
+                    );
+
                     markExerciseSetAsCompleted(
                       { exerciseId: selectedExercise.id, supersetIndex },
                       setIndex + 1,
                       trainingInProgress.exerciseSetTrackingState,
                       setTrainingInProgress
                     );
+
+                    await handleUpsertSet(set);
                   } else {
                     unmarkExerciseSetAsCompleted(
                       { exerciseId: selectedExercise.id, supersetIndex },

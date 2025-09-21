@@ -13,6 +13,7 @@ import { ExerciseService } from '@src/exercise/service/exercise.service';
 import type { Group } from '@src/group/entity/group.entity';
 import { TestDbService } from '@src/test-db/test-db.service';
 import type { Training } from '@src/training/entity/training.entity';
+import type { TrainingReport } from '@src/training/entity/training-report.entity';
 import type { TrainingStats } from '@src/training/entity/training-stats.entity';
 import { SetStatus } from '@src/training/enum/set-status.enum';
 import {
@@ -173,6 +174,7 @@ describe('Training Report (e2e)', () => {
 
     const stats = trainingReportService.getTrainingStats(dummy);
     expect(stats).toEqual({
+      plannedComponents: [],
       totalDuration: 120,
       totalComponents: 0,
       totalSupersets: 0,
@@ -186,7 +188,7 @@ describe('Training Report (e2e)', () => {
       totalDistWork: 0,
       totalPower: 0,
       totalRealizationScore: 0,
-    });
+    } as TrainingReport);
   });
 
   it('should return correct training stats for training with empty exercises', () => {
@@ -236,6 +238,7 @@ describe('Training Report (e2e)', () => {
 
     const stats = trainingReportService.getTrainingStats(dummy);
     expect(stats).toEqual({
+      plannedComponents: ['c1', 'c2'],
       totalDuration: 120,
       totalComponents: 2,
       totalSupersets: 2,
@@ -258,6 +261,7 @@ describe('Training Report (e2e)', () => {
     const totalActiveTime = 10 * 10 * 3 + 3 * 30 * 1; // 300 + 90 = 390 -> 10 sets of 10 reps with 2010 (3 second) tempo, 3 sets of 30 m distance with 1 second per meter
 
     expect(stats).toEqual({
+      plannedComponents: ['c1', 'c2'],
       totalDuration: 120,
       totalComponents: 2,
       totalSupersets: 3,

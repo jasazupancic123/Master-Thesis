@@ -14,6 +14,7 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { endOfDay, startOfDay } from 'date-fns';
 
+import { DateFilterDto } from '@src/common/dto/date-filter.dto';
 import { DateRangeDto } from '@src/common/dto/date-range.dto';
 import { UserIdDto } from '@src/common/dto/user-id.dto';
 import { InstitutionService } from '@src/institution/service/institution.service';
@@ -57,9 +58,19 @@ export class TrainingController {
         ...(filter.from && { from: filter.from }),
         ...(filter.to && { to: filter.to }),
       },
-      {},
+      { limit: filter?.limit },
       filter?.populate,
     );
+  }
+
+  @Get('report')
+  @Auth()
+  async findReports(@RequestUser() user: User, @Query() filter: DateFilterDto) {
+    filter = this.commonService.object.clean(filter);
+    return await this.trainingService.findReportsByUser(user, {
+      ...(filter.from && { from: filter.from }),
+      ...(filter.to && { to: filter.to }),
+    });
   }
 
   /**
