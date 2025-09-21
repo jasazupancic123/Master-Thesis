@@ -10,7 +10,6 @@ import type { SetState } from '@/common/type/state.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
-import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 
 interface TrainingContextType extends TrainingProviderProps {
   clearTrainingState: () => void;
@@ -18,8 +17,6 @@ interface TrainingContextType extends TrainingProviderProps {
   setTrainingInProgress: SetState<TrainingInProgress | null>;
   view: ExerciseOrTraining;
   setView: SetState<ExerciseOrTraining>;
-  selectedTrackingMethod: TrackingMethod;
-  setSelectedTrackingMethod: SetState<TrackingMethod>;
   isLoaded: boolean;
   updateTrainingInProgress: (
     exercise: TrainingExercise,
@@ -48,8 +45,6 @@ export const TrainingProvider = (
   const [view, setView] = useState<ExerciseOrTraining>(
     ExerciseTrainingView.ExerciseView
   );
-  const [selectedTrackingMethod, setSelectedTrackingMethod] =
-    useState<TrackingMethod>(TrackingMethod.MANUAL);
 
   const { user } = useAuthenticatedAuth();
 
@@ -134,8 +129,6 @@ export const TrainingProvider = (
         setTrainingInProgress,
         view,
         setView,
-        selectedTrackingMethod,
-        setSelectedTrackingMethod,
         isLoaded,
         updateTrainingInProgress,
       }}

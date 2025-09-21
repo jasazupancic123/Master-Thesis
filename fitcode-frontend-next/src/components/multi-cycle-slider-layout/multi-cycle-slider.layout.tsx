@@ -299,7 +299,7 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
       >
         <IconButton
           sx={{
-            backgroundColor: theme.palette.primary.dark,
+            backgroundColor: theme.palette.primary.main,
             color: theme.palette.text.primary,
             borderRadius: '50%',
             p: 0.3,
@@ -351,7 +351,12 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
             );
           }}
         >
-          <Add fontSize="small" />
+          <Add
+            fontSize="small"
+            sx={{
+              color: theme.palette.background.default,
+            }}
+          />
         </IconButton>
 
         <Box

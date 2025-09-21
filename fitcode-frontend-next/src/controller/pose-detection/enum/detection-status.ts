@@ -4,4 +4,5 @@ export enum DetectionStatus {
   NOT_STILL = 3,
   READY = 4,
   RECORDING = 5,
+  STOPPED = 6,
 }
