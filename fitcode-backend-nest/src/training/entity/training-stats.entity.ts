@@ -1,8 +1,20 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
-import { IsNumber, IsOptional, Min } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Min,
+} from 'class-validator';
 
 export class TrainingStats {
+  @IsString({ each: true })
+  @IsNotEmpty()
+  @ApiProperty()
+  @Expose()
+  plannedComponents: string[];
+
   @IsNumber()
   @Min(0)
   @ApiProperty()

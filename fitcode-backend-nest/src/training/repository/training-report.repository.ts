@@ -59,6 +59,25 @@ export class TrainingReportRepository extends FirestoreRepository<
     );
   }
 
+  async getAllByUser(
+    userId: string,
+    filter: { institutionId?: string; from?: Date; to?: Date },
+  ): Promise<TrainingReport[]> {
+    let q = this.collectionGroup().where('userId', '==', userId);
+    if (filter?.institutionId)
+      q = q.where('institutionId', '==', filter.institutionId);
+
+    if (filter?.from) q = q.where('createdAt', '>=', filter.from);
+    if (filter?.to) q = q.where('createdAt', '<=', filter.to);
+
+    const snapshot = await q.get();
+    return snapshot.docs.map((doc) =>
+      this.firebaseService.serialize(
+        doc.data() as FirestoreEntity<TrainingReport>,
+      ),
+    );
+  }
+
   async save(ref: TrainingReportRef, data: Create<TrainingReport>) {
     const query = this.firebaseService.buildCreateQuery<TrainingReport>(data, {
       timestamps: true,

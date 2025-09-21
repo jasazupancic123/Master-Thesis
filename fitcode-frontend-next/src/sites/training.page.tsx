@@ -9,6 +9,7 @@ import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
 import type { Pagination } from '@/common/type/paginate.type';
 import AthleteOptionsContainer from '@/components/athlete-options-container/athlete-options-container';
 import AthleteTrainingCard from '@/components/athlete-training-card/athlete-training-card';
+import TrainingReportCard from '@/components/athlete-training-card/training-report-card';
 import TrainingInProgress from '@/components/training-in-progress/training-in-progress';
 import type { Training } from '@/controller/training/type/training.type';
 import { useTraining } from '@/store/training.provider';
@@ -31,9 +32,6 @@ export default function TrainingPage() {
   const [filteredPlannedTrainings, setFilteredPlannedTrainings] = useState<
     Training[]
   >([]);
-  const [filteredCompletedTrainings, setFilteredCompletedTrainings] = useState<
-    Training[]
-  >([]);
 
   const [filter, setFilter] = useState<CompletedPlanned>(
     CompletedPlanned.PLANNED
@@ -49,13 +47,6 @@ export default function TrainingPage() {
       pages: Math.ceil(plannedTrainings.length / PAGE_SIZE),
       total: plannedTrainings.length,
     });
-  const [completedTrainingsPagination, setCompletedTrainingsPagination] =
-    useState<Pagination>({
-      page: 0,
-      pageSize: PAGE_SIZE,
-      pages: Math.ceil(completedTrainings.length / PAGE_SIZE),
-      total: completedTrainings.length,
-    });
 
   const [_hasMorePlanned, setHasMorePlanned] = useState(true);
   const [_hasMoreCompleted, setHasMoreCompleted] = useState(true);
@@ -63,44 +54,6 @@ export default function TrainingPage() {
   useEffect(() => {
     handlePaginateTrainings().then();
   }, [filter, plannedTrainings, completedTrainings]);
-
-  /* useEffect(() => {
-    if (loading || view === ExerciseTrainingView.TrainingView) return;
-
-    if (
-      (filter === CompletedPlanned.PLANNED && !hasMorePlanned) ||
-      (filter === CompletedPlanned.COMPLETED && !hasMoreCompleted)
-    )
-      return;
-
-    const observer = new IntersectionObserver(
-      async (entries) => {
-        const entry = entries[0];
-        if (entry.isIntersecting) {
-          setLoading(true);
-          await handlePaginateTrainings();
-          setLoading(false);
-        }
-      },
-      {
-        root: containerRef.current,
-        threshold: 1.0,
-      }
-    );
-
-    const sentinel = sentinelRef.current;
-    if (sentinel) observer.observe(sentinel);
-
-    return () => {
-      if (sentinel) observer.unobserve(sentinel);
-    };
-  }, [
-    loading,
-    filteredPlannedTrainings.length,
-    filteredCompletedTrainings.length,
-    filter,
-    view,
-  ]); */
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -116,16 +69,10 @@ export default function TrainingPage() {
   }, [isLoaded]);
 
   const handlePaginateTrainings = async () => {
-    const allTrainings =
-      filter === CompletedPlanned.PLANNED
-        ? plannedTrainings
-        : completedTrainings;
+    if (filter !== CompletedPlanned.PLANNED) return;
 
-    const currentPagination =
-      filter === CompletedPlanned.PLANNED
-        ? plannedTrainingsPagination
-        : completedTrainingsPagination;
-
+    const allTrainings = plannedTrainings;
+    const currentPagination = plannedTrainingsPagination;
     const { page, pageSize } = currentPagination;
 
     const nextPage = page + 1;
@@ -157,9 +104,6 @@ export default function TrainingPage() {
     if (filter === CompletedPlanned.PLANNED) {
       setFilteredPlannedTrainings((prev) => [...prev, ...newTrainings]);
       setPlannedTrainingsPagination(updatedPagination);
-    } else {
-      setFilteredCompletedTrainings((prev) => [...prev, ...newTrainings]);
-      setCompletedTrainingsPagination(updatedPagination);
     }
   };
 
@@ -181,12 +125,13 @@ export default function TrainingPage() {
           pb: 6,
         }}
       >
-        {(filter === CompletedPlanned.PLANNED
-          ? filteredPlannedTrainings
-          : filteredCompletedTrainings
-        ).map((training) => (
-          <AthleteTrainingCard key={training.id} training={training} />
-        ))}
+        {filter === CompletedPlanned.PLANNED
+          ? filteredPlannedTrainings.map((training) => (
+              <AthleteTrainingCard key={training.id} training={training} />
+            ))
+          : completedTrainings.map((report, i) => (
+              <TrainingReportCard key={i} report={report} />
+            ))}
 
         <Box ref={sentinelRef} height={'1px'} />
       </Box>
@@ -197,7 +142,7 @@ export default function TrainingPage() {
         setTrainings={
           filter === CompletedPlanned.PLANNED
             ? setFilteredPlannedTrainings
-            : setFilteredCompletedTrainings
+            : () => {}
         }
       />
     </TrainingInProgressProvider>

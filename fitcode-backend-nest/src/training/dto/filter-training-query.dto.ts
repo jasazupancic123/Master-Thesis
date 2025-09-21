@@ -1,7 +1,7 @@
 import { IntersectionType, PartialType, PickType } from '@nestjs/mapped-types';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
-import { IsBoolean, IsOptional } from 'class-validator';
+import { IsBoolean, IsNumber, IsOptional, Min } from 'class-validator';
 
 import { DateFilterDto } from '@src/common/dto/date-filter.dto';
 
@@ -16,4 +16,11 @@ export class FilterTrainingQueryDto extends IntersectionType(
   @Expose()
   @ApiPropertyOptional()
   populate?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Expose()
+  @ApiPropertyOptional()
+  limit?: number;
 }

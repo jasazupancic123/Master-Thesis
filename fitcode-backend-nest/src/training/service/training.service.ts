@@ -26,6 +26,7 @@ import {
   MIN_BODYWEIGHT_KG,
 } from '@src/common/constant/weight.constant';
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
+import { DateFilterDto } from '@src/common/dto/date-filter.dto';
 import { DateRangeDto } from '@src/common/dto/date-range.dto';
 import { UpdateMembersDto } from '@src/common/dto/user-id.dto';
 import { Permission } from '@src/common/interface/permission.interface';
@@ -86,6 +87,7 @@ import { Superset } from '../entity/superset.entity';
 import { Training } from '../entity/training.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
+import { TrainingReport } from '../entity/training-report.entity';
 import { Workload } from '../entity/workload.entity';
 import { MainSet } from '../enum/main-set.enum';
 import { UpdateTraining } from '../interface/update-training.interface';
@@ -226,6 +228,14 @@ export class TrainingService implements Permission<Training, Institution> {
     }
 
     return trainings;
+  }
+
+  @LogMethod()
+  async findReportsByUser(
+    user: User,
+    filter?: DateFilterDto,
+  ): Promise<TrainingReport[]> {
+    return await this.trainingReportService.findAllByUser(user.uid, filter);
   }
 
   @LogMethod()

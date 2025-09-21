@@ -25,6 +25,24 @@ export class TrainingReport extends IntersectionType(
   @IsNotEmpty()
   @ApiProperty()
   @Expose()
+  institutionId?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  @Expose()
+  groupId?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  @Expose()
+  cycleId?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  @Expose()
   trainingId: string;
 
   @IsString()

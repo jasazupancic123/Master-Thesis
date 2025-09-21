@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { compareAsc, differenceInMinutes } from 'date-fns';
 
+import { DateFilterDto } from '@src/common/dto/date-filter.dto';
 import { TrainingReportRef } from '@src/common/type/firestore.type';
 import { IntType, ParamType, VolType } from '@src/component/enum/param.enum';
 
@@ -25,6 +26,13 @@ export class TrainingReportService {
     private readonly workloadService: WorkloadService,
   ) {}
 
+  async findAllByUser(
+    userId: string,
+    filter?: DateFilterDto & { institutionId?: string },
+  ): Promise<TrainingReport[]> {
+    return await this.repository.getAllByUser(userId, filter);
+  }
+
   async updateReport(
     userId: string,
     training: Training,
@@ -43,6 +51,10 @@ export class TrainingReportService {
     const exercises = new Set(workloads.map((w) => w.exerciseId));
 
     const report: TrainingReport = {
+      institutionId: training.institutionId,
+      groupId: training.groupId,
+      cycleId: training.cycleId,
+      userId,
       ...stats,
       ...ref,
       from,
@@ -97,6 +109,9 @@ export class TrainingReportService {
 
   getTrainingStats(training: Training): TrainingStats {
     const stats: TrainingStats = {
+      plannedComponents: Array.from(
+        new Set<string>(training.components.map((c) => c.id)),
+      ),
       totalDuration: differenceInMinutes(training.to, training.from),
       totalComponents: training.components.length,
       totalSupersets: 0,

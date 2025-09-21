@@ -1,16 +1,21 @@
 import type { Attribute } from '../attribute/type/attribute.type';
 import type { AttributeValue } from '../attribute/type/attribute-value.type';
 import type { AuthUser } from '../auth/type/user.type';
-import type { IntType, VolType } from '../component/enum/param.enum';
+import { IntType } from '../component/enum/param.enum';
+import { VolType } from '../component/enum/param.enum';
 import { ParamType } from '../component/enum/param.enum';
 import type { Component } from '../component/type/component.type';
 import type { Exercise } from '../exercise/type/exercise.type';
+import type { Group } from '../group/type/group.type';
+import type { Institution } from '../institution/type/institution.type';
 import type { Method } from '../method/type/method.type';
+import type { CompleteSet } from './type/complete-set.type';
 import type { ExerciseSet } from './type/exercise-set.type';
 import type { Superset } from './type/superset.type';
 import type { Training } from './type/training.type';
 import type { TrainingComponent } from './type/training-component.type';
 import type { TrainingExercise } from './type/training-exercise.type';
+import type { TrainingReport } from './type/training-report.type';
 import type { PrescribedWorkload } from './type/workload-value.type';
 import {
   COOLDOWN_ID,
@@ -82,6 +87,97 @@ export class TrainingService {
     );
 
     return item;
+  }
+
+  static mapReport<T extends TrainingReport>(
+    item: T,
+    data: {
+      institutions?: Institution[];
+      groups?: Group[];
+      components?: Component[];
+    }
+  ): T {
+    if (data.institutions)
+      item.institution = data.institutions.find(
+        (inst) => inst.id === item.institutionId
+      );
+
+    if (data.groups) {
+      item.group = data.groups.find((g) => g.id === item.groupId);
+      item.cycle = item.group?.cycles.find((c) => c.id === item.cycleId);
+    }
+
+    if (data.components) {
+      item.mappedPlannedComponents = item.plannedComponents.map(
+        (cId) => data.components!.find((c) => c.id === cId)!
+      );
+    }
+
+    return item;
+  }
+
+  static exerciseSetToCompleteSet(
+    set: ExerciseSet
+  ): Omit<CompleteSet, 'userId'> {
+    const fields = {
+      repsL: set.paramValuesL.find(
+        (p) => p.field === ParamType.VolWork1 && p.selected === VolType.Rep
+      ),
+      repsR: set.paramValuesR?.find(
+        (p) => p.field === ParamType.VolWork1 && p.selected === VolType.Rep
+      ),
+      timeL: set.paramValuesL.find(
+        (p) => p.field === ParamType.VolWork1 && p.selected === VolType.Time
+      ),
+      timeR: set.paramValuesR?.find(
+        (p) => p.field === ParamType.VolWork1 && p.selected === VolType.Time
+      ),
+      distL: set.paramValuesL.find(
+        (p) => p.field === ParamType.VolWork1 && p.selected === VolType.Dist
+      ),
+      distR: set.paramValuesR?.find(
+        (p) => p.field === ParamType.VolWork1 && p.selected === VolType.Dist
+      ),
+      loadL: set.paramValuesL.find(
+        (p) =>
+          p.field === ParamType.IntWork1 &&
+          [IntType.Kg, IntType.Bw, IntType.Rm].includes(p.selected as IntType)
+      ),
+      loadR: set.paramValuesR?.find(
+        (p) =>
+          p.field === ParamType.IntWork1 &&
+          [IntType.Kg, IntType.Bw, IntType.Rm].includes(p.selected as IntType)
+      ),
+      tempoL: set.paramValuesL.find(
+        (p) => p.field === ParamType.IntWork2 && p.selected === IntType.Tempo
+      ),
+      tempoR: set.paramValuesR?.find(
+        (p) => p.field === ParamType.IntWork2 && p.selected === IntType.Tempo
+      ),
+      recTime: set.paramValuesL.find(
+        (p) => p.field === ParamType.VolRec1 && p.selected === VolType.Time
+      ),
+      recDist: set.paramValuesL.find(
+        (p) => p.field === ParamType.VolRec1 && p.selected === VolType.Dist
+      ),
+    };
+
+    return {
+      reps: fields.repsL?.value ? +fields.repsL.value : undefined,
+      repsR: fields.repsR?.value ? +fields.repsR.value : undefined,
+      time: fields.timeL?.value ? +fields.timeL.value : undefined,
+      timeR: fields.timeR?.value ? +fields.timeR.value : undefined,
+      dist: fields.distL?.value ? +fields.distL.value : undefined,
+      distR: fields.distR?.value ? +fields.distR.value : undefined,
+      load: fields.loadL?.value ? +fields.loadL.value : undefined,
+      loadR: fields.loadR?.value ? +fields.loadR.value : undefined,
+      tempo: fields.tempoL?.value ? +fields.tempoL.value : undefined,
+      tempoR: fields.tempoR?.value ? +fields.tempoR.value : undefined,
+      recTime: fields.recTime?.value ? +fields.recTime.value : undefined,
+      recDist: fields.recDist?.value ? +fields.recDist.value : undefined,
+      from: new Date(),
+      to: new Date(),
+    } as Omit<CompleteSet, 'userId'>;
   }
 
   static excludeWarmupCooldown(components: Component[]): Component[] {
@@ -222,83 +318,6 @@ export class TrainingService {
     }
 
     return workload;
-
-    if (!exerciseToUpdate) {
-      const { paramValuesL, paramValuesR } = prescribedSet;
-      const volWork1L = paramValuesL.find(
-        (p) => p.field === ParamType.VolWork1
-      );
-      const volWork1R = paramValuesR?.find(
-        (p) => p.field === ParamType.VolWork1
-      );
-      const volWork2L = paramValuesL.find(
-        (p) => p.field === ParamType.VolWork2
-      );
-      const volWork2R = paramValuesR?.find(
-        (p) => p.field === ParamType.VolWork2
-      );
-      const volRecL = paramValuesL.find((p) => p.field === ParamType.VolRec1);
-      const volRecR = paramValuesR?.find((p) => p.field === ParamType.VolRec1);
-      const intWork1L = paramValuesL.find(
-        (p) => p.field === ParamType.IntWork1
-      );
-      const intWork1R = paramValuesR?.find(
-        (p) => p.field === ParamType.IntWork1
-      );
-      const intWork2L = paramValuesL.find(
-        (p) => p.field === ParamType.IntWork2
-      );
-      const intWork2R = paramValuesR?.find(
-        (p) => p.field === ParamType.IntWork2
-      );
-      const intRecL = paramValuesL.find((p) => p.field === ParamType.IntRec1);
-      const intRecR = paramValuesR?.find((p) => p.field === ParamType.IntRec1);
-
-      return {
-        volWork1Type: this.parseSelected<VolType>(volWork1L),
-        prescribedVolWork1ValueL: this.parseValue(volWork1L) as number,
-        prescribedVolWork1ValueR: baseIsUnilatCurrentIsBilat
-          ? (this.parseValue(volWork1L) as number)
-          : volWork1R
-            ? (this.parseValue(volWork1R) as number)
-            : undefined,
-        volWork2Type: this.parseSelected<VolType>(volWork2L),
-        prescribedVolWork2ValueL: this.parseValue(volWork2L) as number,
-        prescribedVolWork2ValueR: baseIsUnilatCurrentIsBilat
-          ? (this.parseValue(volWork2L) as number)
-          : volWork2R
-            ? (this.parseValue(volWork2R) as number)
-            : undefined,
-        volRecType: this.parseSelected<VolType>(volRecL),
-        prescribedVolRecValueL: this.parseValue(volRecL) as number,
-        prescribedVolRecValueR: baseIsUnilatCurrentIsBilat
-          ? (this.parseValue(volRecL) as number)
-          : volRecR
-            ? (this.parseValue(volRecR) as number)
-            : undefined,
-        intWork1Type: this.parseSelected<IntType>(intWork1L),
-        prescribedIntWork1ValueL: this.parseValue(intWork1L),
-        prescribedIntWork1ValueR: baseIsUnilatCurrentIsBilat
-          ? this.parseValue(intWork1L)
-          : intWork1R
-            ? this.parseValue(intWork1R)
-            : undefined,
-        intWork2Type: this.parseSelected<IntType>(intWork2L),
-        prescribedIntWork2ValueL: this.parseValue(intWork2L),
-        prescribedIntWork2ValueR: baseIsUnilatCurrentIsBilat
-          ? this.parseValue(intWork2L)
-          : intWork2R
-            ? this.parseValue(intWork2R)
-            : undefined,
-        intRecType: this.parseSelected<IntType>(intRecL),
-        prescribedIntRecValueL: this.parseValue(intRecL),
-        prescribedIntRecValueR: baseIsUnilatCurrentIsBilat
-          ? this.parseValue(intRecL)
-          : intRecR
-            ? this.parseValue(intRecR)
-            : undefined,
-      };
-    }
   }
 
   static getPerscribedFieldName(
@@ -367,58 +386,5 @@ export class TrainingService {
       if (!isNaN(+attributeValue.value)) return +attributeValue.value;
 
     return NaN;
-  }
-
-  private static calculateParamTypeAverages(
-    sets: ExerciseSet[]
-  ): Record<ParamType, number> {
-    const sums: Record<ParamType, number> = {} as unknown as Record<
-      ParamType,
-      number
-    >;
-
-    const counts: Record<ParamType, number> = {} as unknown as Record<
-      ParamType,
-      number
-    >;
-
-    // initialize sums and counts for each ParamType
-    Object.values(ParamType).forEach((param) => {
-      sums[param] = 0;
-      counts[param] = 0;
-    });
-
-    // iterate through sets and calculate sums and counts
-    for (const set of sets) {
-      for (const { field, value } of set.paramValuesL.concat(
-        set.paramValuesR || []
-      )) {
-        if (sums.hasOwnProperty(field)) {
-          sums[field as ParamType] += parseFloat(value);
-          counts[field as ParamType] += 1;
-        }
-      }
-    }
-
-    // calculate averages
-    const averages: Record<ParamType, number> = {} as unknown as Record<
-      ParamType,
-      number
-    >;
-
-    Object.keys(sums).forEach((field) => {
-      averages[field as ParamType] = counts[field as ParamType]
-        ? sums[field as ParamType] / counts[field as ParamType]
-        : 0;
-    });
-
-    // round averages to 2 decimal places
-    Object.keys(averages).forEach((field) => {
-      averages[field as ParamType] = parseFloat(
-        averages[field as ParamType].toFixed(2)
-      );
-    });
-
-    return averages;
   }
 }
