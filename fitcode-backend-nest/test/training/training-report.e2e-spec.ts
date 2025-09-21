@@ -163,8 +163,8 @@ describe('Training Report (e2e)', () => {
 
   it('should return correct training stats', () => {
     const stats = trainingReportService.getTrainingStats(training);
-    const totalTonnage = 10 * 12 * 20; // 2400 -> 8 sets of 12 reps with 20 kg
-    const totalActiveTime = 10 * 12 * 3 + 3 * 30 * 1; // 450 + 90 = 540 -> 10 sets of 12 reps with 2010 (3 second) tempo, 3 sets of 30 m distance with 1 second per meter
+    const totalTonnage = 10 * 10 * 50; // 5000 -> 8 sets of 10 reps with 50 kg
+    const totalActiveTime = 10 * 10 * 3 + 3 * 30 * 1; // 300 + 90 = 390 -> 10 sets of 10 reps with 2010 (3 second) tempo, 3 sets of 30 m distance with 1 second per meter
 
     expect(stats).toEqual({
       totalDuration: 120,
@@ -172,11 +172,11 @@ describe('Training Report (e2e)', () => {
       totalSupersets: 3,
       totalExercises: 3, // unique
       totalSets: 11,
-      totalReps: 10 * 12 + 3 * 1, // 99 -> (8 + 2 bilateral) sets of 12 reps, 3 sets of 1 rep (defaults to 1 rep if no `reps` specified)
+      totalReps: 10 * 10 + 3 * 1, // 99 -> (8 + 2 bilateral) sets of 10 reps, 3 sets of 1 rep (defaults to 1 rep if no `reps` specified)
       totalRecTime: 8 * 60, // 480 -> 8 sets with 60 sec recovery, 3 sets with 0 sec recovery (only effort based recovery)
       totalActiveTime,
       totalTonnage,
-      totalTimeWork: 12 * 20 * 3 * 10, // 7200 -> 10 sets of 12 reps with 20 kg and 2010 (3 second) tempo
+      totalTimeWork: 10 * 50 * 3 * 10, // 15000 -> 10 sets of 10 reps with 50 kg and 2010 (3 second) tempo
       totalDistWork: 0,
       totalPower: totalTonnage / totalActiveTime,
       totalRealizationScore: expect.any(Number),

@@ -291,10 +291,10 @@ describe('Complete Next Set (e2e)', () => {
 
     // prescribed workload
     expect(result.volWork1Type).toBe('rep');
-    expect(result.prescribedVolWork1ValueL).toBe(12);
+    expect(result.prescribedVolWork1ValueL).toBe(10);
     expect(result.prescribedVolWork1ValueR).toBeUndefined();
     expect(result.intWork1Type).toBe('kg');
-    expect(result.prescribedIntWork1ValueL).toBe(20);
+    expect(result.prescribedIntWork1ValueL).toBe(50);
     expect(result.prescribedIntWork1ValueR).toBeUndefined();
 
     // completed workload
@@ -367,15 +367,15 @@ describe('Complete Next Set (e2e)', () => {
     expect(result.supersetIndex).toBe(1); // because first superset squat has only 1 set and is already completed
     expect(result.setNumber).toBe(1);
     expect(new Date(result.plannedAt).getTime()).toBe(from.getTime());
-    expect(result.status).toBe(SetStatus.PARTIAL);
+    expect(result.status).toBe(SetStatus.OVER);
     expect(result.notes).toBeUndefined();
 
     // prescribed workload
     expect(result.volWork1Type).toBe('rep');
-    expect(result.prescribedVolWork1ValueL).toBe(12);
+    expect(result.prescribedVolWork1ValueL).toBe(10);
     expect(result.prescribedVolWork1ValueR).toBeUndefined();
     expect(result.intWork1Type).toBe('kg');
-    expect(result.prescribedIntWork1ValueL).toBe(20);
+    expect(result.prescribedIntWork1ValueL).toBe(50);
     expect(result.prescribedIntWork1ValueR).toBeUndefined();
 
     // completed workload

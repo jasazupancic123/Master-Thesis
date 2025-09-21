@@ -225,7 +225,7 @@ describe('getSetData', () => {
 
     expect(result.length).toBe(1);
     expect(result[0].paramValuesL).toEqual([
-      { field: ParamType.IntWork1, selected: IntType.Kg, value: '20' },
+      { field: ParamType.IntWork1, selected: IntType.Kg, value: '50' },
     ]);
   });
 });
