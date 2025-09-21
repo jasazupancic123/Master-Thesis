@@ -1,1 +1,1 @@
-export type GroupDateFilter = 'day' | 'week' | 'cycle' | 'year';
+export type GroupDateFilter = 'day' | 'week' | 'month' | 'year';

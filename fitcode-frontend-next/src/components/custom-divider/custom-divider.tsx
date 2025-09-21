@@ -8,8 +8,8 @@ export default function CustomDivider() {
     <Box
       width="100%"
       sx={{
-        backgroundColor: theme.palette.background.dark,
-        height: '5px',
+        backgroundColor: theme.palette.primary.main,
+        height: '3px',
       }}
     />
   );

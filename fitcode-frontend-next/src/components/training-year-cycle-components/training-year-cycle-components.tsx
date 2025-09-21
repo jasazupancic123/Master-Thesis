@@ -82,7 +82,6 @@ export default function CycleComponents(props: CycleComponentsProps) {
       display="flex"
       flexDirection="column"
       gap={3}
-      mt={3}
       position="relative"
     >
       {parentComponents.toReversed().map((component) => {

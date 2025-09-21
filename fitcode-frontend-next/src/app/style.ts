@@ -7,6 +7,7 @@ declare module '@mui/material/styles' {
     light: string;
     dark: string;
     lightBorder: string;
+    darkBorder: string;
     lightText: string;
     textBackground: string;
   }
@@ -22,11 +23,12 @@ export const theme = createTheme({
       main: '#FFD734',
     },
     background: {
-      light: '#363636',
+      light: '#171717',
       default: '#111111',
       dark: '#212121',
-      paper: '#272727',
+      paper: '#212121',
       lightBorder: '#968686',
+      darkBorder: '#212121',
       lightText: '#D5D5D5',
       textBackground: '#5C5555',
     },
@@ -35,11 +37,12 @@ export const theme = createTheme({
     },
     text: {
       primary: '#D9D9D9', // Replace with your desired color
+      secondary: '#222222', // When on yellow buttons and such
     },
   },
   typography: {
     allVariants: {
-      fontFamily: 'Inter, sans-serif',
+      fontFamily: "'Onest', sans-serif",
       color: '#D9D9D9', // Replace with your desired color
     },
     button: { textTransform: 'none', color: '#EAEBED' },
