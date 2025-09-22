@@ -1,5 +1,5 @@
 import type { SxProps } from '@mui/material';
-import { Box, MenuItem, Select, Typography } from '@mui/material';
+import { Box, MenuItem, Select, SvgIcon, Typography } from '@mui/material';
 import Stack from '@mui/material/Stack';
 import React from 'react';
 
@@ -63,10 +63,15 @@ export default function ExerciseChips(props: ExerciseChipsProps) {
         ...props.sx,
       }}
     >
-      {components.map((c, i) => {
+      {components.reverse().map((c, i) => {
         const IconComponent = getComponentIcon(c.name);
 
         const targets = c.targets || [];
+
+        const isSelected =
+          (Array.isArray(selected) &&
+            selected.some((component) => component.id === c.id)) ||
+          (selected && !Array.isArray(selected) && selected.id === c.id);
 
         return (
           <Box
@@ -75,7 +80,7 @@ export default function ExerciseChips(props: ExerciseChipsProps) {
             alignItems="center"
             key={c.id}
           >
-            <Box sx={{ p: 1 }} key={c.id}>
+            <Box sx={{ pb: 0.5 }} key={c.id}>
               <div
                 key={i}
                 onClick={() => {
@@ -120,17 +125,11 @@ export default function ExerciseChips(props: ExerciseChipsProps) {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  width: screenSize.isMobile ? 30 : 50,
+                  width: screenSize.isMobile ? 30 : 38,
                   height: screenSize.isMobile ? 30 : 50,
-                  borderRadius: '5px',
+                  borderRadius: '15px',
                   border: `2px solid ${
-                    (Array.isArray(selected) &&
-                      selected.some((component) => component.id === c.id)) ||
-                    (selected &&
-                      !Array.isArray(selected) &&
-                      selected.id === c.id)
-                      ? primaryColor
-                      : 'gray'
+                    isSelected ? primaryColor : 'transparent'
                   }`,
                   cursor: 'pointer',
                   backgroundColor:
@@ -139,15 +138,25 @@ export default function ExerciseChips(props: ExerciseChipsProps) {
                     (selected &&
                       !Array.isArray(selected) &&
                       selected.id === c.id)
-                      ? bgColor
+                      ? theme.palette.primary.main
                       : 'transparent',
                 }}
               >
                 {IconComponent && (
-                  <IconComponent
-                    style={{
-                      height: screenSize.isMobile ? 20 : 30,
-                      width: screenSize.isMobile ? 20 : 30,
+                  <SvgIcon
+                    component={IconComponent as React.ElementType} // handles SvgIconComponent or your SvgC
+                    inheritViewBox
+                    sx={{
+                      fontSize: screenSize.isMobile ? 20 : 26,
+                      color: isSelected
+                        ? theme.palette.background.default
+                        : undefined,
+                      // force shapes inside the svg to use currentColor
+                      '& path, & rect, & circle, & polygon, & ellipse, & line, & polyline':
+                        {
+                          fill: 'currentColor',
+                          stroke: 'currentColor',
+                        },
                     }}
                   />
                 )}
@@ -208,6 +217,7 @@ export default function ExerciseChips(props: ExerciseChipsProps) {
                       border: 'none', // hide underline
                     },
                     'div.MuiSelect-select': {
+                      p: '0px',
                       pr: 1.5,
                     },
                   },
@@ -233,8 +243,8 @@ export default function ExerciseChips(props: ExerciseChipsProps) {
               <Typography
                 variant="caption"
                 sx={{
+                  width: screenSize.isMobile ? 30 : 80,
                   textAlign: 'center',
-                  maxWidth: screenSize.isMobile ? 50 : 80,
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',

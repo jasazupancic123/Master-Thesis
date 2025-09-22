@@ -121,9 +121,8 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
         alignItems="center"
         flexDirection={screenSize.isMobile ? 'column' : 'row'}
         flexWrap="wrap"
-        height="70px"
+        height="70px !important"
         gap={1}
-        py={1}
         sx={{
           overflowY:
             isWrapped || screenSize.isMobile || screenSize.isLandscapeMobile
