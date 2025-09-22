@@ -34,6 +34,7 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
   // state for selected items
   const [filter, setFilter] = useState<GroupDateFilter>('day');
   const [group, setGroup] = useState<Group>(providedGroup);
+  const [selectedGroup, setSelectedGroup] = useState({ ...group });
   const [institution, setInstitution] =
     useState<Institution>(providedInstitution);
 
@@ -57,6 +58,8 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
     setInstitution,
     group,
     setGroup,
+    selectedGroup,
+    setSelectedGroup,
     cycle,
     setCycle,
     dateFrom,

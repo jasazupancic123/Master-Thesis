@@ -12,10 +12,9 @@ import type { Cycle } from '@/controller/group/type/cycle.type';
 import { useGroup } from '@/store/group.provider';
 
 export default function TrainerYearView() {
-  const { group } = useGroup();
+  const { group, selectedGroup, setSelectedGroup } = useGroup();
 
   const theme = useTheme();
-  const [selectedGroup, setSelectedGroup] = useState({ ...group });
 
   const [sortedCycles, setSortedCycles] = useState<Cycle[]>([]);
   const [sliderProperties, setSliderProperties] = useState<
@@ -44,7 +43,7 @@ export default function TrainerYearView() {
         width="100%"
         maxWidth="100%"
         pb={10}
-        sx={{ overflowX: 'hidden', px: 3 }}
+        sx={{ overflowX: 'hidden', px: 2 }}
       >
         <Box
           width="100%"

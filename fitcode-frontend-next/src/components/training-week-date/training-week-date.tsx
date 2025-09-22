@@ -138,7 +138,7 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
                       : 'none',
                   backgroundRepeat: 'repeat-x',
                   backgroundPosition: 'bottom left',
-                  backgroundSize: '12px 1px', // controls dash+gap
+                  backgroundSize: '14px 1px', // controls dash+gap
                 }}
                 onClick={() => {
                   handleClickDateCell(
