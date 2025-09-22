@@ -26,8 +26,9 @@ interface TrainingContextType extends TrainingProviderProps {
 }
 
 export interface TrainingProviderProps {
-  plannedTrainings: Training[];
-  completedTrainings: TrainingReport[];
+  trainings: Training[];
+  reports: TrainingReport[];
+  refetchTraining: (trainingId: string) => Promise<void>;
 }
 
 const TrainingContext = createContext<TrainingContextType | undefined>(
@@ -37,7 +38,7 @@ const TrainingContext = createContext<TrainingContextType | undefined>(
 export const TrainingProvider = (
   props: TrainingProviderProps & ChildrenProps
 ) => {
-  const { children, plannedTrainings, completedTrainings } = props;
+  const { children, trainings, reports, refetchTraining } = props;
 
   const STORED_TRAINING_IN_PROGRESS = 'fitcodeTrainingInProgress';
   const [trainingInProgress, setTrainingInProgress] =
@@ -123,8 +124,8 @@ export const TrainingProvider = (
   return (
     <TrainingContext.Provider
       value={{
-        plannedTrainings,
-        completedTrainings,
+        trainings,
+        reports,
         clearTrainingState,
         trainingInProgress,
         setTrainingInProgress,
@@ -132,6 +133,7 @@ export const TrainingProvider = (
         setView,
         isLoaded,
         updateTrainingInProgress,
+        refetchTraining,
       }}
     >
       {children}

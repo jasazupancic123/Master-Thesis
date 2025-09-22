@@ -32,6 +32,7 @@ import { PeriodizeTrainingsDto } from './dto/periodize-training.dto';
 import { UpdateTrainingDto } from './dto/update-training.dto';
 import { CompletedTrainingComponent } from './entity/completed-training.entity';
 import { TrainingService } from './service/training.service';
+import { TrainingReportService } from './service/training-report.service';
 
 @ApiTags('Training')
 @Controller('training')
@@ -39,6 +40,7 @@ export class TrainingController {
   constructor(
     private readonly commonService: CommonService,
     private readonly trainingService: TrainingService,
+    private readonly trainingReportService: TrainingReportService,
     private readonly institutionService: InstitutionService,
   ) {}
 
@@ -63,7 +65,22 @@ export class TrainingController {
     );
   }
 
-  @Get('report')
+  @Get(':trainingId')
+  @Auth()
+  async findOneById(
+    @RequestUser() user: User,
+    @Param('trainingId') trainingId: string,
+  ) {
+    const ref = { trainingId, userId: user.uid };
+    const training = await this.trainingService.findOneByIdOrFail(user, ref, {
+      skipInstitution: true,
+    });
+
+    const report = await this.trainingReportService.findOneById(ref);
+    return { training, report };
+  }
+
+  @Get('report/athlete')
   @Auth()
   async findReports(@RequestUser() user: User, @Query() filter: DateFilterDto) {
     filter = this.commonService.object.clean(filter);

@@ -33,8 +33,15 @@ export class TrainingController extends BaseController {
     });
   }
 
+  async findOneById(trainingId: string) {
+    return this.api.get<{ training: Training; report: TrainingReport }>(
+      `/${trainingId}`,
+      { token: this.getToken() }
+    );
+  }
+
   async findReports(query?: DateRange) {
-    return this.api.get<TrainingReport[]>('/report', {
+    return this.api.get<TrainingReport[]>('/report/athlete', {
       query,
       token: this.getToken(),
     });

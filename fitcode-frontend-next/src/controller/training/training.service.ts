@@ -79,6 +79,8 @@ export class TrainingService {
           if (!Array.isArray(e.params)) e.params = Object.values(e.params);
         }
     }
+
+    return item;
   }
 
   static mapMembers(item: Training, users: AuthUser[]): Training {

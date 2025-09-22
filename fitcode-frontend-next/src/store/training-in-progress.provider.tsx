@@ -31,7 +31,7 @@ const TrainingInProgressContext = createContext<
 
 export const TrainingInProgressProvider = (props: ChildrenProps) => {
   const { token } = useAuthenticatedAuth();
-  const { trainingInProgress } = useTraining();
+  const { trainingInProgress, refetchTraining } = useTraining();
   const router = useRouter();
   const controller = TrainingController.getInstance(token);
 
@@ -70,8 +70,6 @@ export const TrainingInProgressProvider = (props: ChildrenProps) => {
   }, [selectedExercise]);
 
   async function handleUpsertSet(body: Omit<CompleteSet, 'userId'>) {
-    console.log('upserting set', {});
-
     if (
       supersetIndex === undefined ||
       setIndex === undefined ||
@@ -94,7 +92,8 @@ export const TrainingInProgressProvider = (props: ChildrenProps) => {
           { ...body, userId: trainingInProgress.userId }
         ),
       (_workload) => {
-        toast.success('Successfully saved');
+        toast.success('Saved');
+        refetchTraining(trainingInProgress.training.id);
       }
     );
   }
