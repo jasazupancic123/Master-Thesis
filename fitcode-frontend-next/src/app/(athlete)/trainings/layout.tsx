@@ -10,21 +10,24 @@ import { AthleteHeaderProvider } from '@/store/athlete-header.provider';
 
 export default function Layout({ children }: ChildrenProps) {
   return (
-    <Box bgcolor="background.default" minHeight="100vh">
-      <TrainingsInitializer>
-        <TrainingContent>{children}</TrainingContent>
-      </TrainingsInitializer>
-    </Box>
+    <AthleteHeaderProvider>
+      <Box bgcolor="background.default" minHeight="100vh">
+        <TrainingsInitializer>
+          <TrainingContent>{children}</TrainingContent>
+        </TrainingsInitializer>
+      </Box>
+    </AthleteHeaderProvider>
   );
 }
 
 function TrainingContent({ children }: ChildrenProps) {
   return (
-    <AthleteHeaderProvider>
+    <>
       <AthleteHeader />
+
       <Container component="main" sx={{ px: '0px !important' }}>
         <Box>{children}</Box>
       </Container>
-    </AthleteHeaderProvider>
+    </>
   );
 }

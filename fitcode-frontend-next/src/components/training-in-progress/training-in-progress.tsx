@@ -1,42 +1,27 @@
 import { Circle } from '@mui/icons-material';
 import CloseIcon from '@mui/icons-material/Close';
-import DoneIcon from '@mui/icons-material/Done';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { Box, Fab, Menu, MenuItem, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import dayjs from 'dayjs';
-import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 
 import Animation from '../animation/animation';
 import AthleteOptionsContainer from '../athlete-options-container/athlete-options-container';
 import MyModal from '../modal/modal';
 import TrainingInProgressSuperset from '../training-in-progress-superset/training-in-progress-superset';
-import { getUndoneExercises, handleFinishTraining } from './state';
+import { getUndoneExercises } from './state';
 import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
-import type { SetState } from '@/common/type/state.type';
 import { useHorizontalOverflow } from '@/common/util/horizontal-overflow.util';
-import { TrainingController } from '@/controller/training/training.controller';
-import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
-import { useAuthenticatedAuth } from '@/store/auth.provider';
-import { useMain } from '@/store/main.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 
-interface TrainingInProgressProps {
-  setTrainings: SetState<Training[]>;
-}
-
-export default function TrainingInProgress(props: TrainingInProgressProps) {
+export default function TrainingInProgress() {
   const theme = useTheme();
-  const router = useRouter();
-  const { exercises } = useMain();
-  const { user, token } = useAuthenticatedAuth();
-  const controller = TrainingController.getInstance(token);
 
   const {
     trainingInProgress,
@@ -57,10 +42,8 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
   const { selectedTrackingMethod } = useAthleteHeader();
 
   const { outerRef, innerRef, isOverflowing } = useHorizontalOverflow();
-  const { setTrainings } = props;
 
   const [elapsedTime, setElapsedTime] = useState(0);
-  const [openFinishTrainingModal, setOpenFinishTrainingModal] = useState(false);
   const [openCancelTrainingModal, setOpenCancelTrainingModal] = useState(false);
   const [playAnimation, setPlayAnimation] = useState(true);
   const [undoneExercises, setUndoneExercises] = useState<TrainingExercise[]>(
@@ -283,7 +266,6 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
         <TrainingInProgressSuperset
           anchorEl={anchorEl}
           open={open}
-          setOpenFinishTrainingModal={setOpenFinishTrainingModal}
           handleCancel={handleCancel}
           handleOpenMenu={handleOpenMenu}
           handleCloseMenu={handleCloseMenu}
@@ -326,24 +308,6 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
               sx: { mb: 1 }, // Adds a small margin between the FAB and menu
             }}
           >
-            <MenuItem
-              onClick={() =>
-                handleFinishTraining(controller, {
-                  trainingInProgress,
-                  setTrainingInProgress,
-                  user,
-                  router,
-                  setTrainings,
-                  clearTrainingState,
-                  setSelectedSuperset,
-                  setView,
-                  exercises,
-                })
-              }
-            >
-              <DoneIcon sx={{ marginRight: 1 }} />
-              Finish Training
-            </MenuItem>
             <MenuItem onClick={handleCancel} sx={{ color: 'error.main' }}>
               <CloseIcon sx={{ marginRight: 1 }} />
               Cancel Training
@@ -351,30 +315,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
           </Menu>
         </Box>
       )}
-      <MyModal
-        isOpen={openFinishTrainingModal}
-        setIsOpen={(open) => setOpenFinishTrainingModal(open)}
-        cancelText="Cancel"
-        onCancel={() => setOpenFinishTrainingModal(false)}
-        onConfirm={() => {
-          handleFinishTraining(controller, {
-            trainingInProgress,
-            setTrainingInProgress,
-            user,
-            router,
-            setTrainings,
-            clearTrainingState,
-            setSelectedSuperset,
-            setView,
-            exercises,
-          });
-          setOpenFinishTrainingModal(false);
-        }}
-      >
-        <Typography variant="h6" sx={{ width: '100%', textAlign: 'center' }}>
-          Finish Training?
-        </Typography>
-      </MyModal>
+
       <MyModal
         isOpen={openCancelTrainingModal}
         setIsOpen={(open) => setOpenCancelTrainingModal(open)}

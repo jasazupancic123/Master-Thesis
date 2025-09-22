@@ -775,6 +775,15 @@ export class TrainingPlanService {
     return validSets;
   }
 
+  tempoToSeconds(tempo: number | undefined): number {
+    if (!tempo || isNaN(tempo)) return 0;
+    return tempo
+      .toString()
+      .split('')
+      .map((v) => +v)
+      .reduce((a, b) => a + b, 0);
+  }
+
   /**
    * Generates warmup and cooldown components based on the provided training components.
    *

@@ -11,3 +11,8 @@ export type MuscleTip = {
   possibleExercises?: Exercise[];
   focus: boolean;
 };
+
+export type ExerciseMuscleValue = {
+  muscleId: string;
+  value: number;
+};

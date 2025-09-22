@@ -6,10 +6,11 @@ import { useAuthenticatedAuth } from './auth.provider';
 import type { ExerciseOrTraining } from '@/common/type/exercise-or-training.type';
 import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
 import type { ChildrenProps } from '@/common/type/props.type';
-import type { SetState } from '@/common/type/state.type';
+import { type SetState } from '@/common/type/state.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
+import type { TrainingReport } from '@/controller/training/type/training-report.type';
 
 interface TrainingContextType extends TrainingProviderProps {
   clearTrainingState: () => void;
@@ -25,8 +26,9 @@ interface TrainingContextType extends TrainingProviderProps {
 }
 
 export interface TrainingProviderProps {
-  plannedTrainings: Training[];
-  completedTrainings: Training[];
+  trainings: Training[];
+  reports: TrainingReport[];
+  refetchTraining: (trainingId: string) => Promise<void>;
 }
 
 const TrainingContext = createContext<TrainingContextType | undefined>(
@@ -36,7 +38,7 @@ const TrainingContext = createContext<TrainingContextType | undefined>(
 export const TrainingProvider = (
   props: TrainingProviderProps & ChildrenProps
 ) => {
-  const { children, plannedTrainings, completedTrainings } = props;
+  const { children, trainings, reports, refetchTraining } = props;
 
   const STORED_TRAINING_IN_PROGRESS = 'fitcodeTrainingInProgress';
   const [trainingInProgress, setTrainingInProgress] =
@@ -122,8 +124,8 @@ export const TrainingProvider = (
   return (
     <TrainingContext.Provider
       value={{
-        plannedTrainings,
-        completedTrainings,
+        trainings,
+        reports,
         clearTrainingState,
         trainingInProgress,
         setTrainingInProgress,
@@ -131,6 +133,7 @@ export const TrainingProvider = (
         setView,
         isLoaded,
         updateTrainingInProgress,
+        refetchTraining,
       }}
     >
       {children}

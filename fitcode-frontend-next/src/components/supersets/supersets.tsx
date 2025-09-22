@@ -101,10 +101,7 @@ export default function Supersets(props: SupersetsProps) {
     useState<TrainingExercise | null>(null);
 
   const [setsNumbers, setSetsNumbers] = useState<
-    {
-      exerciseId: string;
-      setsNumber: number;
-    }[]
+    { exerciseId: string; setsNumber: number }[]
   >([]);
 
   const [openVideoPlayerModal, setOpenVideoPlayerModal] = useState(false);
@@ -376,7 +373,6 @@ export default function Supersets(props: SupersetsProps) {
               </Grid2>
             )}
       </Grid2>
-
       <DragOverlay>
         {activeExercise ? (
           <Box
@@ -394,7 +390,6 @@ export default function Supersets(props: SupersetsProps) {
           </Box>
         ) : null}
       </DragOverlay>
-
       {/* Component exercises modal */}
       <MyModal
         isOpen={openAddExerciseModal}
@@ -408,10 +403,7 @@ export default function Supersets(props: SupersetsProps) {
               .includes(id)
           );
 
-          setPagination((prev) => ({
-            ...prev,
-            page: 1,
-          }));
+          setPagination((prev) => ({ ...prev, page: 1 }));
           setSelectedExercisesIds(oldExercises);
           setOpenAddExerciseModal(false);
           setSearch('');

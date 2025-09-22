@@ -1,5 +1,6 @@
 'use client';
 
+import { Box } from '@mui/material';
 import { useEffect, useState } from 'react';
 
 import {
@@ -217,26 +218,30 @@ export default function TrainingExerciseCardContainer(
     return () => observer.disconnect();
   }, [window.innerWidth]);
 
-  return exercise.id === selectedExercise?.id ? (
-    <TrainingExerciseSelected
-      supersetIndex={supersetIndex}
-      exercise={exercise}
-      range={range}
-      setRange={setRange}
-      paddingForChartBackground={paddingForChartBackground}
-      percentageForChartBackground={percentageForChartBackground}
-      max={max}
-      data={data}
-      onAthleteView={onAthleteView}
-      superior={superior}
-      selectedParams={selectedParams}
-      setSelectedParams={setSelectedParams}
-    />
-  ) : (
-    <TrainingExerciseCard
-      supersetIndex={supersetIndex}
-      exercise={exercise}
-      superior={superior}
-    />
+  return (
+    <Box>
+      {exercise.id === selectedExercise?.id ? (
+        <TrainingExerciseSelected
+          supersetIndex={supersetIndex}
+          exercise={exercise}
+          range={range}
+          setRange={setRange}
+          paddingForChartBackground={paddingForChartBackground}
+          percentageForChartBackground={percentageForChartBackground}
+          max={max}
+          data={data}
+          onAthleteView={onAthleteView}
+          superior={superior}
+          selectedParams={selectedParams}
+          setSelectedParams={setSelectedParams}
+        />
+      ) : (
+        <TrainingExerciseCard
+          supersetIndex={supersetIndex}
+          exercise={exercise}
+          superior={superior}
+        />
+      )}
+    </Box>
   );
 }

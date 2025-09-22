@@ -25,7 +25,7 @@ export const VOL_OPTIONS: Attribute[] = [
     name: 'Rep',
     description: 'reps',
     type: AttributeType.Number,
-    defaultValue: '12',
+    defaultValue: '10',
   },
   {
     field: VolType.Time,
@@ -33,7 +33,7 @@ export const VOL_OPTIONS: Attribute[] = [
     description: 'time',
     unit: 's',
     type: AttributeType.Number,
-    defaultValue: '30',
+    defaultValue: '60',
   },
   {
     field: VolType.Dist,
@@ -52,7 +52,7 @@ export const INT_OPTIONS: Attribute[] = [
     description: 'kilograms',
     unit: 'kg',
     type: AttributeType.Number,
-    defaultValue: '20',
+    defaultValue: '50',
   },
   {
     field: IntType.Bw,
@@ -60,14 +60,14 @@ export const INT_OPTIONS: Attribute[] = [
     description: 'body weight',
     unit: '%',
     type: AttributeType.Number,
-    defaultValue: '100',
+    defaultValue: '50',
   },
   {
     field: IntType.Rm,
     name: 'RM',
     description: 'rep max',
     type: AttributeType.Number,
-    defaultValue: '10',
+    defaultValue: '75',
   },
   {
     field: IntType.Mas,
@@ -91,73 +91,25 @@ export const INT_OPTIONS: Attribute[] = [
     description: 'velocity based training',
     unit: 'm/s',
     type: AttributeType.Number,
-    defaultValue: '1.0',
+    defaultValue: '1',
   },
   {
     field: IntType.Tempo,
     name: 'Tempo',
     description: 'tempo',
-    type: AttributeType.Select,
-    defaultValue: '0',
-    options: [
-      {
-        field: '0',
-        name: '0:0:0',
-        type: AttributeType.Value,
-        defaultValue: '0',
-      },
-      {
-        field: '1',
-        name: '1:0:1',
-        type: AttributeType.Value,
-        defaultValue: '1',
-      },
-      {
-        field: '2',
-        name: '2:0:1',
-        type: AttributeType.Value,
-        defaultValue: '2',
-      },
-      {
-        field: '3',
-        name: '3:0:1',
-        type: AttributeType.Value,
-        defaultValue: '3',
-      },
-    ],
+    type: AttributeType.Number,
+    defaultValue: '2010',
+    min: 1000,
+    max: 9999,
   },
   {
     field: IntType.Eff,
     name: 'Eff',
     description: 'effort',
-    type: AttributeType.Select,
-    defaultValue: '0',
-    options: [
-      {
-        field: '0',
-        name: 'Easy',
-        type: AttributeType.Value,
-        defaultValue: '0',
-      },
-      {
-        field: '1',
-        name: 'Mod',
-        type: AttributeType.Value,
-        defaultValue: '1',
-      },
-      {
-        field: '2',
-        name: 'Hard',
-        type: AttributeType.Value,
-        defaultValue: '2',
-      },
-      {
-        field: '3',
-        name: 'Max',
-        type: AttributeType.Value,
-        defaultValue: '3',
-      },
-    ],
+    type: AttributeType.Number,
+    defaultValue: '2',
+    min: 1, // easy
+    max: 4, // max
   },
 ];
 

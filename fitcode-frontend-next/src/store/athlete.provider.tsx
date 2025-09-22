@@ -12,8 +12,15 @@ import type { ILink } from '@/common/type/link.type';
 import type { ChildrenProps } from '@/common/type/props.type';
 import type { SetState } from '@/common/type/state.type';
 import { UserRole } from '@/controller/profile/enum/user-role.enum';
+import type { Training } from '@/controller/training/type/training.type';
+import type { TrainingReport } from '@/controller/training/type/training-report.type';
 
-interface AthleteContextProps {
+interface AthleteProviderProps {
+  trainings: Training[];
+  reports: TrainingReport[];
+}
+
+interface AthleteContext extends AthleteProviderProps {
   selectedDate: Dayjs;
   setSelectedDate: SetState<Dayjs>;
   hasJustLoggedIn: boolean;
@@ -22,12 +29,12 @@ interface AthleteContextProps {
   setFilter: SetState<ILink>;
 }
 
-const AthleteContext = createContext<AthleteContextProps | null>(null);
+const AthleteContext = createContext<AthleteContext | null>(null);
 
 export const useAthlete = () => useContext(AthleteContext)!;
 
-export function AthleteProvider(props: ChildrenProps) {
-  const { children } = props;
+export function AthleteProvider(props: AthleteProviderProps & ChildrenProps) {
+  const { children, trainings, reports } = props;
   const [selectedDate, setSelectedDate] = useState(dayjs(new Date()));
   const [hasJustLoggedIn, setHasJustLoggedIn] = useState(true);
 
@@ -42,13 +49,15 @@ export function AthleteProvider(props: ChildrenProps) {
 
   const [filter, setFilter] = useState<ILink>(currentFilter);
 
-  const value: AthleteContextProps = {
+  const value: AthleteContext = {
     selectedDate,
     setSelectedDate,
     hasJustLoggedIn,
     setHasJustLoggedIn,
     filter,
     setFilter,
+    trainings,
+    reports,
   };
 
   return (

@@ -1,8 +1,13 @@
+import { useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 
+import { useAuthenticatedAuth } from './auth.provider';
 import { useTraining } from './training.provider';
 import type { ChildrenProps } from '@/common/type/props.type';
-import type { SetState } from '@/common/type/state.type';
+import { handleApiRequest, type SetState } from '@/common/type/state.type';
+import { TrainingController } from '@/controller/training/training.controller';
+import type { CompleteSet } from '@/controller/training/type/complete-set.type';
 import type { Superset } from '@/controller/training/type/superset.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 
@@ -17,6 +22,7 @@ interface TrainingInProgressContextType {
   setExerciseIndex: SetState<number | undefined>;
   setIndex: number | undefined;
   setSetIndex: SetState<number | undefined>;
+  handleUpsertSet: (body: Omit<CompleteSet, 'userId'>) => Promise<void>;
 }
 
 const TrainingInProgressContext = createContext<
@@ -24,7 +30,10 @@ const TrainingInProgressContext = createContext<
 >(undefined);
 
 export const TrainingInProgressProvider = (props: ChildrenProps) => {
-  const { trainingInProgress } = useTraining();
+  const { token } = useAuthenticatedAuth();
+  const { trainingInProgress, refetchTraining } = useTraining();
+  const router = useRouter();
+  const controller = TrainingController.getInstance(token);
 
   const { children } = props;
 
@@ -60,6 +69,35 @@ export const TrainingInProgressProvider = (props: ChildrenProps) => {
     setExerciseIndex(selectedSuperset?.exercises.indexOf(selectedExercise));
   }, [selectedExercise]);
 
+  async function handleUpsertSet(body: Omit<CompleteSet, 'userId'>) {
+    if (
+      supersetIndex === undefined ||
+      setIndex === undefined ||
+      !selectedExercise ||
+      !trainingInProgress?.selectedComponent ||
+      !trainingInProgress.userId ||
+      !trainingInProgress.training
+    )
+      return;
+
+    handleApiRequest(
+      router,
+      () =>
+        controller.upsertSet(
+          trainingInProgress.training.id,
+          trainingInProgress.selectedComponent.id,
+          selectedExercise!.id,
+          supersetIndex,
+          setIndex + 1,
+          { ...body, userId: trainingInProgress.userId }
+        ),
+      (_workload) => {
+        toast.success('Saved');
+        refetchTraining(trainingInProgress.training.id);
+      }
+    );
+  }
+
   return (
     <TrainingInProgressContext.Provider
       value={{
@@ -73,6 +111,7 @@ export const TrainingInProgressProvider = (props: ChildrenProps) => {
         setExerciseIndex,
         setIndex,
         setSetIndex,
+        handleUpsertSet,
       }}
     >
       {children}

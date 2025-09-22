@@ -1,17 +1,23 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
+  NotFoundException,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { endOfDay, startOfDay } from 'date-fns';
 
+import { DateFilterDto } from '@src/common/dto/date-filter.dto';
 import { DateRangeDto } from '@src/common/dto/date-range.dto';
 import { UserIdDto } from '@src/common/dto/user-id.dto';
+import { InstitutionService } from '@src/institution/service/institution.service';
 
 import { UserRole } from '../auth/enum/user-role.enum';
 import { Auth } from '../common/decorator/auth.decorator';
@@ -19,12 +25,14 @@ import { RequestUser } from '../common/decorator/request-user.decorator';
 import { CommonService } from '../common/service/common.service';
 import { User } from '../common/type/firebase-auth.type';
 import { AddTrainingComponentsDto } from './dto/add-training-components.dto';
+import { CompleteSetDto } from './dto/complete-set.dto';
 import { CreateTrainingDto } from './dto/create-training.dto';
 import { FilterTrainingQueryDto } from './dto/filter-training-query.dto';
 import { PeriodizeTrainingsDto } from './dto/periodize-training.dto';
 import { UpdateTrainingDto } from './dto/update-training.dto';
 import { CompletedTrainingComponent } from './entity/completed-training.entity';
 import { TrainingService } from './service/training.service';
+import { TrainingReportService } from './service/training-report.service';
 
 @ApiTags('Training')
 @Controller('training')
@@ -32,6 +40,8 @@ export class TrainingController {
   constructor(
     private readonly commonService: CommonService,
     private readonly trainingService: TrainingService,
+    private readonly trainingReportService: TrainingReportService,
+    private readonly institutionService: InstitutionService,
   ) {}
 
   @Get()
@@ -50,8 +60,56 @@ export class TrainingController {
         ...(filter.from && { from: filter.from }),
         ...(filter.to && { to: filter.to }),
       },
-      {},
+      { limit: filter?.limit },
       filter?.populate,
+    );
+  }
+
+  @Get(':trainingId')
+  @Auth()
+  async findOneById(
+    @RequestUser() user: User,
+    @Param('trainingId') trainingId: string,
+  ) {
+    const ref = { trainingId, userId: user.uid };
+    const training = await this.trainingService.findOneByIdOrFail(user, ref, {
+      skipInstitution: true,
+    });
+
+    const report = await this.trainingReportService.findOneById(ref);
+    return { training, report };
+  }
+
+  @Get('report/athlete')
+  @Auth()
+  async findReports(@RequestUser() user: User, @Query() filter: DateFilterDto) {
+    filter = this.commonService.object.clean(filter);
+    return await this.trainingService.findReportsByUser(user, {
+      ...(filter.from && { from: filter.from }),
+      ...(filter.to && { to: filter.to }),
+    });
+  }
+
+  /**
+   * Endpoint for Smart Wall service to get all trainings for institution
+   * for today
+   */
+  @Get('/institution/today')
+  @Auth([UserRole.MANAGER])
+  async findAllByInstitutionToday(@RequestUser() user: User) {
+    const institution = await this.institutionService.getDocByOwner(user.uid);
+    if (!institution)
+      throw new NotFoundException('Institution not found for manager');
+
+    return await this.trainingService.findAll(
+      user,
+      {
+        institutionId: institution.id,
+        from: startOfDay(new Date()),
+        to: endOfDay(new Date()),
+      },
+      {},
+      true,
     );
   }
 
@@ -143,6 +201,46 @@ export class TrainingController {
     const ref = { trainingId };
     await this.trainingService.remove(user, ref);
     return {};
+  }
+
+  @Post(':trainingId/exercise/:exerciseId/complete-next-set')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
+  async completeNextSet(
+    @RequestUser() user: User,
+    @Param('trainingId') trainingId: string,
+    @Param('exerciseId') exerciseId: string,
+    @Body() body: CompleteSetDto,
+  ) {
+    const ref = { trainingId, exerciseId, userId: body.userId };
+    return await this.trainingService.completeNextSet(user, ref, body);
+  }
+
+  @Post(':trainingId/component/:cId/exercise/:eId/superset/:i/set/:s')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
+  async upsertSet(
+    @RequestUser() user: User,
+    @Param('trainingId') trainingId: string,
+    @Param('cId') componentId: string,
+    @Param('eId') exerciseId: string,
+    @Param('i', ParseIntPipe) supersetIndex: number,
+    @Param('s', ParseIntPipe) setNumber: number,
+    @Body() body: CompleteSetDto,
+  ) {
+    if (supersetIndex < 0)
+      throw new BadRequestException('Superset index must be 0 or greater');
+    if (setNumber < 1)
+      throw new BadRequestException('Set number must be 1 or greater');
+
+    const ref = {
+      trainingId,
+      componentId,
+      exerciseId,
+      supersetIndex,
+      setNumber,
+      userId: body.userId,
+    };
+
+    return await this.trainingService.upsertSet(user, ref, body);
   }
 
   @Patch(':trainingId/component/:componentId/complete')

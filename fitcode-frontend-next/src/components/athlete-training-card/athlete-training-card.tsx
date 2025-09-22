@@ -48,7 +48,7 @@ export default function AthleteTrainingCard(props: AthleteTrainingCardProps) {
     if (!trainingInProgress || !trainingInProgress.selectedComponent) return;
 
     setSupersets(
-      TrainingService.getPrescribedSupersetsByUser(
+      TrainingService.getSupersetsByAthlete(
         user.uid,
         training.components.find(
           (c) => c.id === trainingInProgress.selectedComponent?.id
@@ -80,7 +80,7 @@ export default function AthleteTrainingCard(props: AthleteTrainingCardProps) {
     return components.reduce(
       (acc, component) =>
         acc +
-        TrainingService.getPrescribedSupersetsByUser(userId, component)
+        TrainingService.getSupersetsByAthlete(userId, component)
           .map((s) => s.exercises.length)
           .reduce((a, b) => a + b, 0),
       0

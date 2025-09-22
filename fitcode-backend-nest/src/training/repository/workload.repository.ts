@@ -38,13 +38,11 @@ export class WorkloadRepository extends FirestoreRepository<
   collection(ref: TrainingRef): CollectionReference {
     return this.trainingRepository
       .doc(ref.trainingId)
-      .collection(FirestoreCollection.TRAINING_WORKLOAD);
+      .collection(this.collectionName);
   }
 
   collectionGroup(): CollectionGroup {
-    return this.firebaseService.firestore.collectionGroup(
-      FirestoreCollection.TRAINING_WORKLOAD,
-    );
+    return this.firebaseService.firestore.collectionGroup(this.collectionName);
   }
 
   doc(ref: WorkloadRef): DocumentReference {

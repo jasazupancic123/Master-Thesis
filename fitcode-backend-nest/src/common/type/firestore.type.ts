@@ -87,3 +87,4 @@ export type WorkloadRef = TrainingExerciseRef & {
   setNumber: number;
 };
 export type TrainingStatusRef = TrainingComponentRef & { userId: string };
+export type TrainingReportRef = TrainingRef & { userId: string };
