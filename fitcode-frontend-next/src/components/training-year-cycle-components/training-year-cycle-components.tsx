@@ -1,4 +1,4 @@
-import { Box, Divider } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 
 import SelectInput from '../select-input/select-input';
@@ -6,14 +6,12 @@ import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
-import { getComponentIcon } from '@/common/service/util/icons.util';
 import type { SetState } from '@/common/type/state.type';
 import { ComponentLevel } from '@/controller/group/enum/component-level.enum';
 import type { Cycle } from '@/controller/group/type/cycle.type';
 import type { Target } from '@/controller/target/type/target.type';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
-import { useScreenSize } from '@/store/screen-size.provider';
 
 interface CycleComponentsProps {
   sortedCycles: Cycle[];
@@ -25,7 +23,6 @@ export default function CycleComponents(props: CycleComponentsProps) {
   const { sortedCycles, setSortedCycles, sliderProperties } = props;
 
   const theme = useTheme();
-  const screenSize = useScreenSize();
 
   const { components } = useMain();
   const { setGroup, setDetectedChanges } = useGroup();
@@ -77,16 +74,8 @@ export default function CycleComponents(props: CycleComponentsProps) {
   };
 
   return (
-    <Box
-      width="100%"
-      display="flex"
-      flexDirection="column"
-      gap={3}
-      position="relative"
-    >
+    <Box width="100%" display="flex" flexDirection="column" position="relative">
       {parentComponents.toReversed().map((component) => {
-        const IconComponent = getComponentIcon(component.name);
-
         return (
           <Box key={component.id} width="100%">
             <Box
@@ -94,6 +83,18 @@ export default function CycleComponents(props: CycleComponentsProps) {
               width="100%"
               sx={{
                 alignItems: 'center',
+                borderBottom: `1px solid transparent`,
+                backgroundImage: `repeating-linear-gradient(
+                          to right,
+                          ${theme.palette.background.lightBorder} 0,
+                          ${theme.palette.background.lightBorder} 6px,
+                          transparent 6px,
+                          transparent 12px
+                        )`,
+                backgroundRepeat: 'repeat-x',
+                backgroundPosition: 'bottom left',
+                backgroundSize: '14px 1px', // controls dash+gap
+                overflowY: 'auto',
               }}
             >
               <Box
@@ -102,6 +103,7 @@ export default function CycleComponents(props: CycleComponentsProps) {
                 sx={{
                   justifyContent: 'center',
                   alignItems: 'center',
+                  minHeight: '140px',
                 }}
               >
                 <Box
@@ -109,20 +111,25 @@ export default function CycleComponents(props: CycleComponentsProps) {
                   sx={{
                     justifyContent: 'center',
                     alignItems: 'center',
-                    backgroundColor: theme.palette.background.light,
-                    p: 1,
-                    px: 0.65,
                     borderRadius: 1,
                   }}
                 >
-                  {IconComponent && (
-                    <IconComponent
-                      style={{
-                        height: screenSize.isMobile ? 15 : 25,
-                        width: screenSize.isMobile ? 15 : 25,
-                      }}
-                    />
-                  )}
+                  <Typography
+                    fontSize={14}
+                    fontWeight={600}
+                    textAlign="center"
+                    sx={{
+                      display: 'flex',
+                      textTransform: 'uppercase',
+                      justifyContent: 'flex-start',
+                      alignItems: 'flex-start',
+                      writingMode: 'vertical-rl',
+                      textOrientation: 'mixed',
+                      transform: 'rotate(180deg)',
+                    }}
+                  >
+                    {component.name}
+                  </Typography>
                 </Box>
               </Box>
               <Box
@@ -316,7 +323,6 @@ export default function CycleComponents(props: CycleComponentsProps) {
                 })}
               </Box>
             </Box>
-            <Divider sx={{ p: 0, mt: 3 }} />
           </Box>
         );
       })}
