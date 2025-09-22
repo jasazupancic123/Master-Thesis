@@ -20,7 +20,10 @@ export default function AthleteHeader() {
   const theme = useTheme();
   const screenSize = useScreenSize();
   const { user } = useAuthenticatedAuth();
-  const { selectedTrackingMethod } = useAthleteHeader();
+
+  const athleteHeaderContext = useAthleteHeader();
+
+  const { selectedTrackingMethod } = athleteHeaderContext || {};
 
   if (selectedTrackingMethod === TrackingMethod.CAMERA) return null;
 

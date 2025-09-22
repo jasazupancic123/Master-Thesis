@@ -1,4 +1,3 @@
-import { Divider } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -84,199 +83,207 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
     deleteTrainingComponent,
   } = props;
 
-  return week.map((date, j) => (
-    <Box
-      key={j}
-      width="calc(100% / 7)"
-      sx={{
-        backgroundColor:
-          cycle &&
-          dayjs(cycle.from).isBefore(date.endOf('day')) &&
-          dayjs(cycle.to).isAfter(date.endOf('day'))
-            ? theme.palette.background.dark
-            : theme.palette.background.default,
-        cursor:
-          components.length &&
-          cycle &&
-          CommonService.instance.date.isBetween(date, cycle.from, cycle.to) &&
-          !dayjs(date).isBefore(dayjs(), 'day')
-            ? 'pointer'
-            : 'default',
-      }}
-    >
-      <Divider />
+  return week.map((date, j) => {
+    const isInCycle =
+      cycle &&
+      dayjs(cycle.from).isBefore(date.endOf('day')) &&
+      dayjs(cycle.to).isAfter(date.endOf('day'));
+    return (
+      <Box
+        key={j}
+        width="calc(100% / 7)"
+        sx={{
+          backgroundColor: theme.palette.background.default,
+          cursor:
+            components.length &&
+            cycle &&
+            CommonService.instance.date.isBetween(date, cycle.from, cycle.to) &&
+            !dayjs(date).isBefore(dayjs(), 'day')
+              ? 'pointer'
+              : 'default',
+        }}
+      >
+        {['AM', 'PM'].map((period) => {
+          const dateString = dayjs(date).format('D. M.');
+          const isSameDayAsToday = dayjs(date).isSame(dayjs(), 'day');
+          const isBeforeToday = dayjs(date).isBefore(dayjs(), 'day');
 
-      {['AM', 'PM'].map((period) => {
-        const dateString = dayjs(date).format('D. M.');
-        const isSameDayAsToday = dayjs(date).isSame(dayjs(), 'day');
-        const isBeforeToday = dayjs(date).isBefore(dayjs(), 'day');
-
-        return (
-          <React.Fragment key={period}>
-            {period === 'PM' && <Divider />}
-            <Box
-              key={period}
-              sx={{
-                position: 'relative',
-                minHeight: '70px',
-                borderRight:
-                  j < 6
-                    ? `2px solid ${theme.palette.background.light}`
-                    : 'none',
-                backgroundColor: isBeforeToday
-                  ? theme.palette.background.default
-                  : undefined,
-              }}
-              onClick={() => {
-                handleClickDateCell(
-                  controller,
-                  { date, period },
-                  {
-                    router,
-                    group,
-                    cycle,
-                    componentCalendarView,
-                    periodizationView,
-                    copyComponent,
-                    trainingComponent,
-                    training,
-                    trainings,
-                    components,
-                    allExercises,
-                    methods,
-                    selected,
-                    selectedTargets,
-                    day,
-                    setTrainings,
-                    setCycle,
-                    setOpenOverwriteModal,
-                    setTrainingInPeriodForModal,
-                  }
-                );
-              }}
-            >
-              {period === 'AM' && (
-                <Typography
-                  sx={{
-                    position: 'absolute',
-                    top: 4,
-                    left: 6,
-                    fontSize: '0.7rem',
-                    opacity: 0.7,
-                    zIndex: 1,
-                    fontWeight: isSameDayAsToday ? 1000 : undefined,
-                  }}
-                >
-                  {dateString}
-                </Typography>
-              )}
-
-              {/* Trainings */}
-              {getFilteredTrainings(
-                { date },
-                {
-                  periodizationView,
-                  trainingComponent,
-                  trainings,
-                  selectedTrainings,
-                  date,
-                  selected,
-                  period,
-                }
-              ).map((training_, key) => {
-                return (
-                  <Box
-                    key={key}
-                    borderRadius={
-                      componentCalendarView || periodizationView ? 0 : 2
+          return (
+            <React.Fragment key={period}>
+              <Box
+                key={period}
+                sx={{
+                  position: 'relative',
+                  height: '70px !important',
+                  borderRight:
+                    j < 6
+                      ? `2px solid ${theme.palette.background.light}`
+                      : 'none',
+                  backgroundColor: isBeforeToday
+                    ? theme.palette.background.default
+                    : undefined,
+                  borderBottom:
+                    period === 'PM' && isInCycle
+                      ? `1px solid transparent`
+                      : 'none',
+                  backgroundImage:
+                    period === 'PM' && isInCycle
+                      ? `repeating-linear-gradient(
+                          to right,
+                          ${theme.palette.background.lightBorder} 0,
+                          ${theme.palette.background.lightBorder} 6px,
+                          transparent 6px,
+                          transparent 12px
+                        )`
+                      : 'none',
+                  backgroundRepeat: 'repeat-x',
+                  backgroundPosition: 'bottom left',
+                  backgroundSize: '12px 1px', // controls dash+gap
+                }}
+                onClick={() => {
+                  handleClickDateCell(
+                    controller,
+                    { date, period },
+                    {
+                      router,
+                      group,
+                      cycle,
+                      componentCalendarView,
+                      periodizationView,
+                      copyComponent,
+                      trainingComponent,
+                      training,
+                      trainings,
+                      components,
+                      allExercises,
+                      methods,
+                      selected,
+                      selectedTargets,
+                      day,
+                      setTrainings,
+                      setCycle,
+                      setOpenOverwriteModal,
+                      setTrainingInPeriodForModal,
                     }
+                  );
+                }}
+              >
+                {period === 'AM' && (
+                  <Typography
                     sx={{
-                      cursor: 'pointer',
-                      p: 0,
-                      m: 0,
-                      backgroundColor: componentCalendarView
-                        ? '#1e3045'
-                        : undefined,
-                    }}
-                    onClick={(e) => {
-                      if (
-                        !cycle ||
-                        !CommonService.instance.date.isBetween(
-                          date,
-                          cycle.from,
-                          cycle.to
-                        )
-                      )
-                        return;
-
-                      if (!props.selected || props.selected?.length === 0) {
-                        if (!periodizationView) {
-                          setOpenAreYouSureModal(true);
-                          setSelectedTraining(training_);
-                          return;
-                        }
-                        return;
-                      }
-
-                      e.stopPropagation();
-
-                      const lastTo = new Date(
-                        training_.components[training_.components.length - 1].to
-                      );
-
-                      addTrainingComponent(training_.id, {
-                        components: props.selected?.map((c, i) => ({
-                          id: c.id,
-                          subgroups: [],
-                          supersets: [],
-                          completedMembersIds: [],
-                          mainSet: MainSet.BLOCK,
-                          from: addMinutes(lastTo, i * 30),
-                          to: addMinutes(addMinutes(lastTo, i * 30), 30),
-                        })),
-                      });
+                      position: 'absolute',
+                      top: 4,
+                      left: 6,
+                      fontSize: '0.7rem',
+                      opacity: 0.7,
+                      zIndex: 1,
+                      fontWeight: isSameDayAsToday ? 1000 : undefined,
                     }}
                   >
-                    {key > 0 && <Divider />}
+                    {dateString}
+                  </Typography>
+                )}
 
-                    <TrainingGridItem
-                      order={key + 1}
-                      training={training_}
-                      addTrainingComponent={props.addTrainingComponent}
-                      deleteTrainingComponent={deleteTrainingComponent}
-                      selected={selectedTrainings?.some(
-                        (t) => t.id === training_.id
-                      )}
-                      selectedTrainings={selectedTrainings}
-                      setSelectedTrainings={setSelectedTrainings}
-                      componentCalendarView={componentCalendarView}
-                      periodizationView={periodizationView}
-                      cycleView={cycleView}
-                      trainingComponent={trainingComponent}
-                      isSameDayAsSelectedComponent={
-                        trainingComponent &&
-                        dayjs(training_.from).isSame(
-                          dayjs(trainingComponent.from),
-                          'date'
-                        ) &&
-                        dayjs(training_.from).hour() >= 12 ===
-                          dayjs(trainingComponent.from).hour() >= 12
-                      }
-                      basePeriodizationTraining={training}
-                      selectedTarget={selectedTarget}
-                    />
-                  </Box>
-                );
-              })}
-            </Box>
-            {period === 'PM' && (
-              <>
-                <Divider />
-              </>
-            )}
-          </React.Fragment>
-        );
-      })}
-    </Box>
-  ));
+                {/* Trainings */}
+                {getFilteredTrainings(
+                  { date },
+                  {
+                    periodizationView,
+                    trainingComponent,
+                    trainings,
+                    selectedTrainings,
+                    date,
+                    selected,
+                    period,
+                  }
+                ).map((training_, key) => {
+                  return (
+                    <Box
+                      key={key}
+                      height="70px !important"
+                      sx={{
+                        cursor: 'pointer',
+                        p: 0,
+                        m: 0,
+                        backgroundColor: componentCalendarView
+                          ? '#1e3045'
+                          : undefined,
+                      }}
+                      onClick={(e) => {
+                        if (
+                          !cycle ||
+                          !CommonService.instance.date.isBetween(
+                            date,
+                            cycle.from,
+                            cycle.to
+                          )
+                        )
+                          return;
+
+                        if (!props.selected || props.selected?.length === 0) {
+                          if (!periodizationView) {
+                            setOpenAreYouSureModal(true);
+                            setSelectedTraining(training_);
+                            return;
+                          }
+                          return;
+                        }
+
+                        e.stopPropagation();
+
+                        const lastTo = new Date(
+                          training_.components[
+                            training_.components.length - 1
+                          ].to
+                        );
+
+                        addTrainingComponent(training_.id, {
+                          components: props.selected?.map((c, i) => ({
+                            id: c.id,
+                            subgroups: [],
+                            supersets: [],
+                            completedMembersIds: [],
+                            mainSet: MainSet.BLOCK,
+                            from: addMinutes(lastTo, i * 30),
+                            to: addMinutes(addMinutes(lastTo, i * 30), 30),
+                          })),
+                        });
+                      }}
+                    >
+                      <TrainingGridItem
+                        order={key + 1}
+                        training={training_}
+                        addTrainingComponent={props.addTrainingComponent}
+                        deleteTrainingComponent={deleteTrainingComponent}
+                        selected={selectedTrainings?.some(
+                          (t) => t.id === training_.id
+                        )}
+                        selectedTrainings={selectedTrainings}
+                        setSelectedTrainings={setSelectedTrainings}
+                        componentCalendarView={componentCalendarView}
+                        periodizationView={periodizationView}
+                        cycleView={cycleView}
+                        trainingComponent={trainingComponent}
+                        isSameDayAsSelectedComponent={
+                          trainingComponent &&
+                          dayjs(training_.from).isSame(
+                            dayjs(trainingComponent.from),
+                            'date'
+                          ) &&
+                          dayjs(training_.from).hour() >= 12 ===
+                            dayjs(trainingComponent.from).hour() >= 12
+                        }
+                        basePeriodizationTraining={training}
+                        selectedTarget={selectedTarget}
+                      />
+                    </Box>
+                  );
+                })}
+              </Box>
+            </React.Fragment>
+          );
+        })}
+      </Box>
+    );
+  });
 }

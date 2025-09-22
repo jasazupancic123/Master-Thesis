@@ -27,6 +27,7 @@ import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 interface TrainingMembersSubgroupProps {
   subgroup: Subgroup;
   subgroupIndex: number;
+  subgroupsLength: number;
   anchorEl: HTMLElement | null;
   setAnchorEl: SetState<HTMLElement | null>;
   members: AuthUser[];
@@ -60,6 +61,7 @@ export default function TrainingMembersSubgroup(
   const {
     subgroup,
     subgroupIndex,
+    subgroupsLength,
     anchorEl,
     setAnchorEl,
     members,
@@ -129,13 +131,6 @@ export default function TrainingMembersSubgroup(
           }}
           style={{
             display: 'inline-block',
-            border:
-              (selectedSubgroup && subgroup.id === selectedSubgroup.id) ||
-              (!selectedSubgroup && subgroup.id === DEFAULT_SUBGROUP_ID)
-                ? `1.5px solid ${theme.palette.background.lightBorder}`
-                : undefined,
-            borderRadius: '5px',
-            backgroundColor: theme.palette.background.dark,
             cursor: 'pointer',
             position: 'relative',
           }}
@@ -201,11 +196,9 @@ export default function TrainingMembersSubgroup(
             )}
           <Box
             display="flex"
-            flexDirection="row"
+            flexDirection={'column'}
             alignItems="center"
             sx={{
-              backgroundColor: theme.palette.background.dark,
-              borderRadius: 10,
               marginRight:
                 subgroup.id !== DEFAULT_SUBGROUP_ID &&
                 selectedSubgroup &&
@@ -214,71 +207,6 @@ export default function TrainingMembersSubgroup(
                   : undefined,
             }}
           >
-            <Box
-              display="flex"
-              flexDirection="column"
-              alignItems="center"
-              justifyContent="center"
-              sx={{
-                backgroundColor: theme.palette.background.dark,
-                borderTopLeftRadius: 10,
-                borderBottomLeftRadius: 10,
-                px: 0.5,
-              }}
-              gap={0.2}
-            >
-              {/* First Typography (Green Box) */}
-              <Box
-                width={20}
-                height={20}
-                sx={{
-                  textAlign: 'center',
-                  display: 'flex', // Center content inside
-                  flex: 1, // Fill remaining space
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderTopLeftRadius: 5,
-                  borderBottomLeftRadius: 5,
-                }}
-              >
-                <Typography
-                  variant="caption"
-                  fontSize="10px"
-                  sx={{ textAlign: 'center', color: 'white' }}
-                >
-                  {`G${subgroupIndex + 1}`}
-                </Typography>
-              </Box>
-
-              {isSubgroupSelected(subgroup.id) && (
-                <Box
-                  sx={{
-                    height: 16,
-                    width: 4,
-                    borderRadius: 5,
-                    backgroundColor: theme.palette.primary.main,
-                  }}
-                ></Box>
-              )}
-
-              {/* Second Typography (Member Count) */}
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center', // Centers text
-                  flex: 1, // Fill remaining space
-                  justifyContent: 'center',
-                }}
-              >
-                <Typography
-                  fontSize="10px"
-                  variant="caption"
-                  sx={{ textAlign: 'center' }}
-                >
-                  {subgroup.membersIds.length}
-                </Typography>
-              </Box>
-            </Box>
             <Card
               key={`card-${subgroup.id}`}
               sx={{
@@ -345,6 +273,7 @@ export default function TrainingMembersSubgroup(
                               width: 50,
                               height: 50,
                               m: selectedAthlete === member ? 0.25 : 0.5,
+                              filter: 'grayscale(100%)',
                             }}
                           >
                             {/* {member.email[0].toUpperCase()} */}
@@ -356,6 +285,18 @@ export default function TrainingMembersSubgroup(
                 );
               })}
             </Card>
+            <Typography
+              fontSize={12}
+              fontWeight={600}
+              sx={{
+                textAlign: 'center',
+                color: isSubgroupSelected(subgroup.id)
+                  ? theme.palette.primary.main
+                  : undefined,
+              }}
+            >
+              {`G${subgroupIndex + 1}-${subgroup.membersIds.length}`}
+            </Typography>
           </Box>
         </div>
       )}

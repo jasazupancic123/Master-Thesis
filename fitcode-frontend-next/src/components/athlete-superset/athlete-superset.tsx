@@ -1,3 +1,4 @@
+import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box/Box';
 import { Fragment, useState } from 'react';
 
@@ -15,6 +16,8 @@ interface AthleteSupersetProps {
 }
 
 export default function AthleteSuperset(props: AthleteSupersetProps) {
+  const theme = useTheme();
+
   const { superset, supersetIndex, supersets, training } = props;
 
   const [expandedSetsView, setExpandedSetsView] = useState(false);
@@ -25,11 +28,7 @@ export default function AthleteSuperset(props: AthleteSupersetProps) {
         sx={{
           p: '1px',
           borderRadius: '5px',
-          background: getBorderGradient(
-            supersetIndex,
-            supersets.length === 1 ||
-              (supersets.length === 5 && supersetIndex === 4)
-          ),
+          background: getBorderGradient(theme),
         }}
       >
         {superset.exercises.map((exercise, i) => (

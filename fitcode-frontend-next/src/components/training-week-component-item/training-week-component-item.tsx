@@ -75,7 +75,6 @@ export default function TrainerWeekViewItem(props: TrainerWeekViewItemProps) {
       alignItems="flex-start"
       sx={{
         p: screenSize.isMobile || screenSize.isSmallTablet ? 0 : 1,
-
         ':hover': {
           backgroundColor: theme.palette.background.light,
         },
@@ -95,22 +94,24 @@ export default function TrainerWeekViewItem(props: TrainerWeekViewItemProps) {
         display="flex"
         justifyContent="flex-start"
         alignItems="center"
-        gap={1}
+        gap={0.75}
       >
         {isComponent && (
           <Box
             sx={{
               backgroundColor: theme.palette.primary.main,
-              width: 4,
-              height: 16,
-              borderRadius: 5,
+              width: 10,
+              height: 10,
+              borderRadius: '50%',
             }}
           />
         )}
 
         <Typography
           fontSize={16}
+          textAlign="center"
           sx={{
+            mt: 0.15,
             textTransform: isComponent ? 'uppercase' : undefined,
             color: isComponent ? theme.palette.primary.main : undefined,
             ml: !isComponent ? 1.66 : undefined,

@@ -1,13 +1,8 @@
-import { COLOR } from '@/common/constant/color.constant';
+import type { Theme } from '@mui/material';
 
-export const getBorderGradient = (
-  supersetIndex: number,
-  onlyOneSuperset: boolean = false
-): string => {
-  const fromColor = COLOR[supersetIndex % COLOR.length];
-  const toColor = onlyOneSuperset
-    ? COLOR[(supersetIndex + 1) % COLOR.length]
-    : COLOR[(supersetIndex + 1) % COLOR.length];
+export const getBorderGradient = (theme: Theme): string => {
+  const fromColor = theme.palette.primary.main;
+  const toColor = theme.palette.background.light;
 
   const dirrection = 'to bottom';
   return `linear-gradient(${dirrection}, ${fromColor}, ${toColor})`;

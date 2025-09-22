@@ -90,12 +90,12 @@ export default function MyModal(props: Props) {
                   </Button>
                 )}
                 {onDelete && (
-                  <Button onClick={handleDelete} color="secondary">
+                  <Button onClick={handleDelete} color="primary">
                     Delete
                   </Button>
                 )}
                 {onCancel && (
-                  <Button onClick={handleClose} color="secondary">
+                  <Button onClick={handleClose} color="primary">
                     {cancelText}
                   </Button>
                 )}
