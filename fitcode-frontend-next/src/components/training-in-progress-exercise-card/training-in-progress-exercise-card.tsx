@@ -1,18 +1,9 @@
-import {
-  ArrowDropDown,
-  ArrowDropUp,
-  CameraAltOutlined,
-  CheckCircle,
-  KeyboardOutlined,
-  PanoramaFishEye,
-} from '@mui/icons-material';
-import { Box, Checkbox, IconButton, Stack, Typography } from '@mui/material';
+import { RadioButtonChecked, RadioButtonUnchecked } from '@mui/icons-material';
+import { Box, Checkbox, Stack, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Image from 'next/image';
-import { useState } from 'react';
 import toast from 'react-hot-toast';
 
-import TrapezoidTitle from '../athlete-options-container/trapezoid-title';
 import AthleteTrainingExerciseSets from '../athlete-training-exercise-sets/athlete-training-exercise-sets';
 import MobileMovementValidation from '../mobile-movement-validation/mobile-movement-validation';
 import SwipeableBox from '../swipeable-box/swipeable-box';
@@ -26,7 +17,6 @@ import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 import { ParamType } from '@/controller/component/enum/param.enum';
 import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
-import { TrainingService } from '@/controller/training/training.service';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
@@ -55,9 +45,6 @@ export default function TrainingInProgressExerciseCard() {
 
   const { selectedTrackingMethod, setSelectedTrackingMethod } =
     useAthleteHeader();
-
-  const [expandedSetsView, setExpandedSetsView] = useState(false);
-  const [imageHeight, setImageHeight] = useState(0);
 
   if (!trainingInProgress || !selectedSuperset || !selectedExercise)
     return null;
@@ -130,16 +117,6 @@ export default function TrainingInProgressExerciseCard() {
     }
   };
 
-  const goToNextSet = () => {
-    if (setIndex === undefined || setIndex === null) return;
-    if (setIndex < selectedExercise.sets.length - 1) setSetIndex(setIndex + 1);
-  };
-
-  const goToPreviousSet = () => {
-    if (setIndex === undefined || setIndex === null) return;
-    if (setIndex > 0) setSetIndex(setIndex - 1);
-  };
-
   return selectedTrackingMethod === TrackingMethod.CAMERA ? (
     <MobileMovementValidation
       selectedExercise={selectedExercise}
@@ -149,10 +126,8 @@ export default function TrainingInProgressExerciseCard() {
     />
   ) : (
     <SwipeableBox
-      onSwipeLeft={expandedSetsView ? undefined : goToNextExercise}
-      onSwipeRight={expandedSetsView ? undefined : goToPreviousExercise}
-      onSwipeUp={expandedSetsView ? undefined : goToNextSet}
-      onSwipeDown={expandedSetsView ? undefined : goToPreviousSet}
+      onSwipeLeft={goToNextExercise}
+      onSwipeRight={goToPreviousExercise}
     >
       <Box
         width="100%"
@@ -161,8 +136,7 @@ export default function TrainingInProgressExerciseCard() {
         flexDirection="column"
         alignItems="center"
         sx={{
-          overflowY: expandedSetsView ? 'auto' : undefined,
-          backgroundColor: theme.palette.background.dark,
+          backgroundColor: theme.palette.background.default,
           pb: '100px',
         }}
       >
@@ -177,6 +151,7 @@ export default function TrainingInProgressExerciseCard() {
             backgroundSize: '100% auto',
             backgroundRepeat: 'no-repeat',
             overflow: 'hidden',
+            py: 1.5,
           }}
         >
           {/* Background Overlay */}
@@ -189,7 +164,7 @@ export default function TrainingInProgressExerciseCard() {
               left: 0,
               right: 0,
               bottom: 0,
-              backgroundColor: theme.palette.background.dark,
+              backgroundColor: theme.palette.background.default,
               zIndex: 0,
             }}
           />
@@ -217,7 +192,7 @@ export default function TrainingInProgressExerciseCard() {
                 >
                   <Typography
                     variant="caption"
-                    color={theme.palette.background.lightBorder}
+                    color={theme.palette.primary.main}
                     sx={{ zIndex: 1 }}
                   >
                     {isCircuit
@@ -238,11 +213,13 @@ export default function TrainingInProgressExerciseCard() {
               }}
             >
               <Typography
-                variant="body1"
-                fontWeight={700}
-                fontSize={12}
+                display="flex"
+                alignItems="center"
+                fontWeight={600} // use numeric instead of "semi-bold"
+                fontSize={20}
+                lineHeight={1} // <-- add this
                 textTransform="uppercase"
-                color={theme.palette.text.primary}
+                color={theme.palette.primary.main}
                 sx={{
                   textAlign: 'center',
                   overflow: 'hidden',
@@ -255,96 +232,38 @@ export default function TrainingInProgressExerciseCard() {
               >
                 {selectedExercise.exercise?.name || 'Unnamed Exercise'}
               </Typography>
-              <IconButton
-                onClick={() => setExpandedSetsView(!expandedSetsView)}
-                sx={{
-                  p: 0,
-                  m: 0,
-                  mb: 0.25,
-                }}
-              >
-                {expandedSetsView ? <ArrowDropUp /> : <ArrowDropDown />}
-              </IconButton>
             </Box>
-            {setIndex !== undefined && (
-              <Box
-                display="flex"
-                flexDirection="column"
-                sx={{ cursor: 'pointer' }}
-              >
-                <Typography
-                  variant="caption"
-                  color={theme.palette.background.lightBorder}
-                  sx={{ zIndex: 1 }}
-                >
-                  Set {setIndex + 1}
-                </Typography>
-              </Box>
-            )}
           </Stack>
         </Stack>
 
-        {expandedSetsView && (
-          <Box
-            width="100%"
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            minHeight={imageHeight ? imageHeight : undefined}
-            sx={{
-              position: 'relative',
-              px: 2,
-            }}
-          >
-            <AthleteTrainingExerciseSets
-              training={trainingInProgress?.training}
-              exercise={selectedExercise}
-              borderBottomRadius={false}
-              expanded={expandedSetsView}
-              trainingInProgressView
-              supersetIndex={supersetIndex}
-              exerciseSetTrackingState={
-                trainingInProgress.exerciseSetTrackingState
-              }
-              dissableBottomPadding
-            />
-          </Box>
-        )}
-
         {/* Image */}
-        {!expandedSetsView &&
-          (selectedExercise.exercise?.videoUrl ? (
-            <video
-              muted
-              playsInline
-              controls
-              poster={selectedExercise.exercise?.imageUrl || undefined}
-              style={{ width: '100%', height: 'auto', display: 'block' }}
-              preload="metadata"
-              onLoadedMetadata={(e) => {
-                const v = e.currentTarget;
-                const renderedHeight =
-                  v.getBoundingClientRect().height || v.videoHeight;
-                setImageHeight(renderedHeight);
-              }}
-              src={selectedExercise.exercise.videoUrl}
+        {selectedExercise.exercise?.videoUrl ? (
+          <video
+            muted
+            playsInline
+            controls
+            poster={selectedExercise.exercise?.imageUrl || undefined}
+            style={{
+              width: '100%',
+              height: 'auto',
+              display: 'block',
+              filter: 'grayscale(100%)',
+            }}
+            preload="metadata"
+            src={selectedExercise.exercise.videoUrl}
+          />
+        ) : (
+          selectedExercise.exercise?.imageUrl && (
+            <Image
+              src={selectedExercise.exercise.imageUrl}
+              alt={selectedExercise.exercise?.name || ''}
+              width={0}
+              height={0}
+              sizes="100vw"
+              style={{ width: '100%', height: 'auto' }}
             />
-          ) : (
-            selectedExercise.exercise?.imageUrl && (
-              <Image
-                src={selectedExercise.exercise.imageUrl}
-                alt={selectedExercise.exercise?.name || ''}
-                width={0}
-                height={0}
-                sizes="100vw"
-                style={{ width: '100%', height: 'auto' }}
-                onLoadingComplete={(img) => {
-                  const { height } = img;
-                  setImageHeight(height);
-                }}
-              />
-            )
-          ))}
+          )
+        )}
 
         {/* Current tracking exercise set */}
         <Box
@@ -353,112 +272,45 @@ export default function TrainingInProgressExerciseCard() {
           flexDirection="column"
           alignItems="center"
           sx={{
-            backgroundColor: theme.palette.background.dark,
-            borderTop: `3px solid ${theme.palette.background.textBackground}`,
+            backgroundColor: theme.palette.background.default,
+            borderTop: `2px solid ${theme.palette.primary.main}`,
             position: 'relative',
+            py: 2,
           }}
           gap={0.5}
         >
-          <TrapezoidTitle title="Tracking" />
-
           <Box
             width="100%"
             display="flex"
-            justifyContent="space-between"
-            pt={0.5}
-            px={2}
-            gap={2}
+            alignItems="center"
+            justifyContent="space-evenly"
           >
-            <Box display="flex" alignItems="center" gap={1}>
-              {[TrackingMethod.MANUAL, TrackingMethod.CAMERA].map((method) => (
-                <IconButton
-                  key={method}
-                  sx={{
-                    p: 0,
-                    m: 0,
-                  }}
-                  color={
-                    selectedTrackingMethod === method ? 'primary' : 'default'
-                  }
-                  onClick={() => {
-                    if (method === TrackingMethod.CAMERA) {
-                      if (!selectedExercise.exercise) return;
-
-                      const hasPoseLogic =
-                        selectedExercise.exercise !== undefined &&
-                        EXERCISE_POSES.some((ep) =>
-                          ep.exerciseIds.includes(selectedExercise.exercise!.id)
-                        );
-
-                      if (!hasPoseLogic) {
-                        toast.error(
-                          'Pose detection is not supported for this exercise yet'
-                        );
-                        return;
-                      }
-                    }
-                    setSelectedTrackingMethod(method);
-                  }}
-                >
-                  {method === TrackingMethod.MANUAL ? (
-                    <KeyboardOutlined />
-                  ) : (
-                    <CameraAltOutlined />
-                  )}
-                </IconButton>
-              ))}
-            </Box>
-            <Box display="flex" alignItems="center" gap={0.25}>
-              <Typography fontSize={12}>Done</Typography>
-
-              <Checkbox
-                icon={
-                  <PanoramaFishEye sx={{ color: theme.palette.primary.main }} />
-                }
-                checkedIcon={
-                  <CheckCircle sx={{ color: theme.palette.primary.main }} />
-                }
-                size="small"
-                checked={
-                  supersetIndex !== undefined &&
-                  setIndex !== undefined &&
-                  isExerciseSetCompleted(
-                    { exerciseId: selectedExercise.id, supersetIndex },
-                    setIndex + 1,
-                    trainingInProgress.exerciseSetTrackingState
-                  )
-                }
-                sx={{ '&.MuiCheckbox-root': { px: 0 } }}
-                onChange={async (e) => {
-                  if (supersetIndex === undefined || setIndex === undefined)
-                    return;
-
-                  const isCompleted = e.target.checked;
-                  if (isCompleted) {
-                    const set = TrainingService.exerciseSetToCompleteSet(
-                      selectedExercise.sets[setIndex]
-                    );
-
-                    markExerciseSetAsCompleted(
-                      { exerciseId: selectedExercise.id, supersetIndex },
-                      setIndex + 1,
-                      trainingInProgress.exerciseSetTrackingState,
-                      setTrainingInProgress
-                    );
-
-                    await handleUpsertSet(set);
-                  } else {
-                    unmarkExerciseSetAsCompleted(
-                      { exerciseId: selectedExercise.id, supersetIndex },
-                      setIndex + 1,
-                      trainingInProgress.exerciseSetTrackingState,
-                      setTrainingInProgress
-                    );
-                  }
+            {selectedExercise.sets.map((s, i) => (
+              <Typography
+                key={i}
+                fontSize={12}
+                textAlign="center"
+                fontWeight="bold"
+                sx={{
+                  px: 1.5,
+                  py: 0.5,
+                  cursor: 'pointer',
+                  borderRadius: '7px',
+                  color:
+                    setIndex === i ? theme.palette.text.secondary : undefined,
+                  backgroundColor:
+                    setIndex === i ? theme.palette.primary.main : undefined,
+                  textTransform: 'uppercase',
                 }}
-              />
-            </Box>
+                onClick={() => {
+                  setSetIndex(i);
+                }}
+              >
+                Set {i + 1}
+              </Typography>
+            ))}
           </Box>
+
           {setIndex !== undefined &&
             setIndex !== null &&
             selectedExercise.sets[setIndex] && (
@@ -468,7 +320,9 @@ export default function TrainingInProgressExerciseCard() {
                 justifyContent="center"
                 alignItems="center"
                 sx={{
-                  px: 2,
+                  px: 1.2,
+                  py: 2,
+                  pb: 0,
                   position: 'relative',
                 }}
               >
@@ -485,6 +339,135 @@ export default function TrainingInProgressExerciseCard() {
                 />
               </Box>
             )}
+
+          <Box
+            width="100%"
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            sx={{
+              px: 2,
+            }}
+          >
+            <Box width="20%">
+              <Box
+                width={22}
+                height={22}
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                sx={{
+                  backgroundColor: theme.palette.primary.main,
+                  borderRadius: '25%',
+                }}
+                onClick={() => {
+                  if (!selectedExercise.exercise) return;
+
+                  const hasPoseLogic =
+                    selectedExercise.exercise !== undefined &&
+                    EXERCISE_POSES.some((ep) =>
+                      ep.exerciseIds.includes(selectedExercise.exercise!.id)
+                    );
+
+                  if (!hasPoseLogic) {
+                    toast.error(
+                      'Pose detection is not supported for this exercise yet'
+                    );
+                    return;
+                  }
+
+                  setSelectedTrackingMethod(TrackingMethod.CAMERA);
+                }}
+              >
+                <Box
+                  width={6}
+                  height={6}
+                  sx={{
+                    backgroundColor: theme.palette.background.default,
+                    borderRadius: '50%',
+                  }}
+                />
+              </Box>
+            </Box>
+            <Box width="60%">
+              <Typography
+                fontSize={20}
+                fontWeight="bold"
+                lineHeight={1}
+                textAlign="center"
+                maxWidth={300}
+                sx={{
+                  mx: 'auto',
+                  py: 1,
+                  px: 2,
+                  textTransform: 'uppercase',
+                  color: theme.palette.primary.main,
+                  borderTop: `1px solid ${theme.palette.background.divider}`,
+                  borderBottom: `1px solid ${theme.palette.background.divider}`,
+                }}
+              >
+                Do it right
+              </Typography>
+            </Box>
+            <Box width="20%">
+              <Box
+                display="flex"
+                justifyContent="flex-end"
+                alignItems="center"
+                gap={0.25}
+              >
+                <Typography fontSize={12}>Done</Typography>
+                <Checkbox
+                  icon={
+                    <RadioButtonUnchecked
+                      sx={{ color: theme.palette.primary.main }}
+                    />
+                  }
+                  checkedIcon={
+                    <RadioButtonChecked
+                      sx={{ color: theme.palette.primary.main }}
+                    />
+                  }
+                  size="small"
+                  checked={
+                    supersetIndex !== undefined &&
+                    setIndex !== undefined &&
+                    isExerciseSetCompleted(
+                      { exerciseId: selectedExercise.id, supersetIndex },
+                      setIndex + 1,
+                      trainingInProgress.exerciseSetTrackingState
+                    )
+                  }
+                  sx={{
+                    '&.MuiCheckbox-root': {
+                      px: 0,
+                    },
+                  }}
+                  onChange={(e) => {
+                    if (supersetIndex === undefined || setIndex === undefined)
+                      return;
+
+                    const isCompleted = e.target.checked;
+                    if (isCompleted) {
+                      markExerciseSetAsCompleted(
+                        { exerciseId: selectedExercise.id, supersetIndex },
+                        setIndex + 1,
+                        trainingInProgress.exerciseSetTrackingState,
+                        setTrainingInProgress
+                      );
+                    } else {
+                      unmarkExerciseSetAsCompleted(
+                        { exerciseId: selectedExercise.id, supersetIndex },
+                        setIndex + 1,
+                        trainingInProgress.exerciseSetTrackingState,
+                        setTrainingInProgress
+                      );
+                    }
+                  }}
+                />
+              </Box>
+            </Box>
+          </Box>
         </Box>
       </Box>
     </SwipeableBox>

@@ -1,15 +1,7 @@
 'use client';
 
 import MenuIcon from '@mui/icons-material/Menu';
-import {
-  Button,
-  Container,
-  Divider,
-  Drawer,
-  MenuItem,
-  Select,
-  Toolbar,
-} from '@mui/material';
+import { Button, Container, Drawer, MenuItem, Toolbar } from '@mui/material';
 import { useTheme } from '@mui/material';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
@@ -22,7 +14,6 @@ import {
   LINK_DASHBOARD,
   LINK_TRAININGS,
   LINKS_AUTH,
-  LINKS_NAVBAR,
 } from '@/common/constant/navigation.constant';
 import Logo from '@/components/logo/logo';
 import { UserRole } from '@/controller/profile/enum/user-role.enum';
@@ -41,17 +32,6 @@ export default function HeroNavbar({ showLogin = true }) {
     [UserRole.TRAINER]: LINK_DASHBOARD,
     [UserRole.MANAGER]: LINK_DASHBOARD,
     [UserRole.ADMIN]: LINK_DASHBOARD,
-  };
-
-  const handleScrollOrRedirect = (id: string) => async () => {
-    if (pathname !== '/') router.push(`/#${id}`);
-    else {
-      const section = document.getElementById(id);
-      if (section)
-        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-
-    setOpen(false); // Close mobile drawer after selection
   };
 
   const handleLogoClick = () => {
@@ -81,53 +61,6 @@ export default function HeroNavbar({ showLogin = true }) {
                 <Logo width={100} />
               </Box>
               <Box mr={4} />
-
-              <Box
-                sx={{
-                  display: { xs: 'none', md: 'flex' },
-                  alignItems: 'center',
-                }}
-              >
-                {Object.values(LINKS_NAVBAR).map(({ id, label }) => (
-                  <MenuItem
-                    key={id}
-                    sx={{ py: 0, px: 2 }}
-                    onClick={handleScrollOrRedirect(id)}
-                  >
-                    <Typography variant="body2" color="text.primary">
-                      {label}
-                    </Typography>
-                  </MenuItem>
-                ))}
-                <MenuItem>
-                  <Select
-                    variant="standard"
-                    displayEmpty
-                    value=""
-                    onChange={(e) => {
-                      router.push(`/model-testing/${e.target.value}`);
-                    }}
-                    sx={{
-                      maxHeight: 40,
-                      '&::before': {
-                        border: 'none',
-                      },
-                      '& .MuiSelect-nativeInput': {
-                        border: 'none',
-                        padding: 0,
-                      },
-                    }}
-                  >
-                    <MenuItem value="" disabled>
-                      Test models
-                    </MenuItem>
-                    <MenuItem value="onnx">onnx</MenuItem>
-                    <MenuItem value="tfjs">tfjs</MenuItem>
-                    <MenuItem value="mediapipe">mediapipe</MenuItem>
-                    <MenuItem value="movenet">movenet</MenuItem>
-                  </Select>
-                </MenuItem>
-              </Box>
             </Box>
 
             {auth.status === 'authenticated' ? (
@@ -172,57 +105,13 @@ export default function HeroNavbar({ showLogin = true }) {
               <Drawer anchor="right" open={open} onClose={toggleDrawer(false)}>
                 <Box
                   sx={{
-                    minWidth: '60dvw',
+                    minWidth: '10dvw',
                     p: 2,
-                    backgroundColor: 'background.paper',
                     flexGrow: 1,
                   }}
                 >
-                  {Object.values(LINKS_NAVBAR).map(({ id, label }) => (
-                    <MenuItem
-                      key={id}
-                      sx={{ p: 1 }}
-                      onClick={handleScrollOrRedirect(id)}
-                    >
-                      <Typography variant="body2" color="text.primary">
-                        {label}
-                      </Typography>
-                    </MenuItem>
-                  ))}
-                  <MenuItem>
-                    <Select
-                      variant="standard"
-                      displayEmpty
-                      value=""
-                      onChange={(e) => {
-                        router.push(`/model-testing/${e.target.value}`);
-                      }}
-                      sx={{
-                        maxHeight: 40,
-                        '&::before': {
-                          border: 'none',
-                        },
-                        '& .MuiSelect-nativeInput': {
-                          border: 'none',
-                          padding: 0,
-                        },
-                      }}
-                    >
-                      <MenuItem value="" disabled>
-                        Test models
-                      </MenuItem>
-                      <MenuItem value="onnx">onnx</MenuItem>
-                      <MenuItem value="tfjs">tfjs</MenuItem>
-                      <MenuItem value="mediapipe">mediapipe</MenuItem>
-                      <MenuItem value="movenet">movenet</MenuItem>
-                    </Select>
-                  </MenuItem>
-
-                  <Divider />
-
                   <Box
                     sx={{
-                      minWidth: '60dvw',
                       backgroundColor: 'background.paper',
                       flexGrow: 1,
                     }}
@@ -230,7 +119,7 @@ export default function HeroNavbar({ showLogin = true }) {
                     {Object.values(LINKS_AUTH).map((item) => (
                       <MenuItem
                         key={item.id}
-                        sx={{ p: 1 }}
+                        sx={{ p: 1, zIndex: 1000 }}
                         onClick={() => {
                           router.push(item.href);
                         }}

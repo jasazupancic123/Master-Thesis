@@ -146,13 +146,14 @@ export default function TrainerCycleView() {
       <Box
         display="flex"
         flexDirection="column"
-        justifyContent="space-around"
+        justifyContent="flex-start"
         alignItems="center"
         sx={{
           backgroundColor: theme.palette.background.default,
           position: 'relative',
         }}
         height={!screenSize.isSmallerThanLaptop ? DIVIDER_HEIGHT : undefined}
+        gap={2}
       >
         <Box
           width="100%"

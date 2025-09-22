@@ -1,10 +1,8 @@
 'use client';
 
 import {
-  Delete,
   KeyboardArrowDownTwoTone,
   KeyboardArrowUpTwoTone,
-  Save,
   Settings,
 } from '@mui/icons-material';
 import {
@@ -25,13 +23,13 @@ import toast from 'react-hot-toast';
 
 import DashboardMenuMobile from '../dashboard-menu-mobile/dashboard-menu-mobile';
 import FilterButton from '../filter-button/filter-button';
+import Logo from '../logo/logo';
 import MyModal from '../modal/modal';
 import ProfileHeaderMenu from '../profile-header-menu/profile-header-menu';
 import { MAX_WIDTH } from '../trainer-day-view/constant';
 import { BACKEND_API_BASE_URL } from '@/common/constant/api.constant';
 import {
   LINK_DASHBOARD,
-  LINK_DASHBOARD_HOME,
   LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS,
 } from '@/common/constant/navigation.constant';
 import { isAdmin } from '@/common/firebase/firebase-auth.util';
@@ -59,12 +57,13 @@ export default function DashboardHeader() {
   } = useDashboard();
 
   const { users } = useMain();
-  const { token, role, user } = useAuthenticatedAuth();
-  const controller = GroupController.getInstance(token);
-
   const screenSize = useScreenSize();
   const theme = useTheme();
   const router = useRouter();
+  const auth = useAuthenticatedAuth();
+  const { token, role } = auth;
+
+  const controller = GroupController.getInstance(token);
 
   const [openProfileMenu, setOpenProfileMenu] = useState(false);
   const [openInstitutionsMenu, setOpenInstitutionsMenu] = useState(false);
@@ -76,26 +75,6 @@ export default function DashboardHeader() {
   const [modal, setModal] = useState({
     remove_group: false,
   });
-
-  const handleSaveGroups = () => {
-    if (!selectedInstitution) return;
-
-    const inputs: { id: string; ownerId: string }[] = [];
-    for (const group of selectedInstitution.groups) {
-      inputs.push({ id: group.id, ownerId: group.ownerId });
-    }
-
-    handleApiRequest(
-      router,
-      () => controller.batchUpdate({ groups: inputs }),
-      () => {
-        setDetectedChanges(false);
-        toast.success('Groups saved successfully');
-      },
-      undefined,
-      'Failed to save groups'
-    );
-  };
 
   const handleRemoveSelectedGroup = () => {
     if (!selectedGroup) return;
@@ -120,131 +99,155 @@ export default function DashboardHeader() {
 
   return (
     <Box
+      display="flex"
+      justifyContent="center"
       width="100%"
+      maxWidth={MAX_WIDTH}
+      position="relative"
       sx={{
-        backgroundColor: theme.palette.background.paper,
+        mx: 'auto',
+        backgroundColor: theme.palette.background.default,
       }}
     >
       {screenSize.isMobile ? (
         <DashboardMenuMobile />
       ) : (
         <Box
+          width="100%"
+          height="50px"
           display="flex"
-          justifyContent="flex-start"
+          justifyContent="space-between"
           alignItems="center"
           sx={{
             position: 'absolute',
-            left: screenSize.isDesktop ? 10 : 6,
-            top: 10,
+            right: 0,
+            top: 0,
+            px: 2,
           }}
-          gap={1}
+          gap={3}
         >
+          <Logo width={101.25} />
           <Box
-            position="relative"
-            onClick={(event) => {
-              setAnchorProfileEl(event.currentTarget);
-              setOpenProfileMenu(!openProfileMenu);
-            }}
+            display="flex"
+            alignItems="center"
+            justifyContent="flex-end"
+            gap={4}
           >
-            <Avatar
-              src={user?.photoURL || '/user_avatar.png'}
-              sx={{
-                width: 34,
-                height: 34,
-                cursor: 'pointer',
-              }}
-            />
-            <IconButton
-              sx={{
-                p: 0,
-                m: 0,
-                position: 'absolute',
-                bottom: -2,
-                right: 0,
-                backgroundColor: theme.palette.background.dark,
-                borderRadius: '50%',
-              }}
-            >
-              {!openProfileMenu ? (
-                <KeyboardArrowDownTwoTone
-                  sx={{
-                    fontSize: 15,
-                  }}
-                />
-              ) : (
-                <KeyboardArrowUpTwoTone
-                  sx={{
-                    fontSize: 15,
-                  }}
-                />
-              )}
-            </IconButton>
-          </Box>
-          {isAdmin(role!) ? (
+            {' '}
             <Box
-              position="relative"
-              onClick={(event) => {
-                setAnchorInstitutionsEl(event.currentTarget);
-                setOpenInstitutionsMenu(!openInstitutionsMenu);
-              }}
+              display="flex"
+              alignItems="center"
+              justifyContent="flex-end"
+              gap={1}
             >
-              <Avatar
-                src={selectedInstitution?.imageUrl || ''}
-                sx={{
-                  width: 34,
-                  height: 34,
-                  cursor: 'pointer',
-                }}
-              />
-              <IconButton
-                sx={{
-                  p: 0,
-                  m: 0,
-                  position: 'absolute',
-                  bottom: -2,
-                  right: 0,
-                  backgroundColor: theme.palette.background.dark,
-                  borderRadius: '50%',
+              <Box
+                position="relative"
+                onClick={(event) => {
+                  setAnchorProfileEl(event.currentTarget);
+                  setOpenProfileMenu(!openProfileMenu);
                 }}
               >
-                {!openInstitutionsMenu ? (
-                  <KeyboardArrowDownTwoTone
-                    sx={{
-                      fontSize: 15,
-                    }}
-                  />
-                ) : (
-                  <KeyboardArrowUpTwoTone
-                    sx={{
-                      fontSize: 15,
-                    }}
-                  />
-                )}
-              </IconButton>
-            </Box>
-          ) : (
-            <Link href={LINK_DASHBOARD.href} passHref>
-              <Tooltip title="Dashboard">
                 <Avatar
-                  src={selectedInstitution?.imageUrl || ''}
+                  src={auth.user?.photoURL || '/user_avatar.png'}
                   sx={{
-                    width: 34,
-                    height: 34,
+                    width: 30,
+                    height: 30,
                     cursor: 'pointer',
                   }}
                 />
+                <IconButton
+                  sx={{
+                    p: 0,
+                    m: 0,
+                    position: 'absolute',
+                    bottom: -2,
+                    right: 0,
+                    backgroundColor: theme.palette.background.dark,
+                    borderRadius: '50%',
+                  }}
+                >
+                  {!openProfileMenu ? (
+                    <KeyboardArrowDownTwoTone
+                      sx={{
+                        fontSize: 15,
+                      }}
+                    />
+                  ) : (
+                    <KeyboardArrowUpTwoTone
+                      sx={{
+                        fontSize: 15,
+                      }}
+                    />
+                  )}
+                </IconButton>
+              </Box>
+              {isAdmin(role!) ? (
+                <Box
+                  position="relative"
+                  onClick={(event) => {
+                    setAnchorInstitutionsEl(event.currentTarget);
+                    setOpenInstitutionsMenu(!openInstitutionsMenu);
+                  }}
+                >
+                  <Avatar
+                    src={selectedInstitution?.imageUrl || ''}
+                    sx={{
+                      width: 34,
+                      height: 34,
+                      cursor: 'pointer',
+                    }}
+                  />
+                  <IconButton
+                    sx={{
+                      p: 0,
+                      m: 0,
+                      position: 'absolute',
+                      bottom: -2,
+                      right: 0,
+                      backgroundColor: theme.palette.background.dark,
+                      borderRadius: '50%',
+                    }}
+                  >
+                    {!openInstitutionsMenu ? (
+                      <KeyboardArrowDownTwoTone
+                        sx={{
+                          fontSize: 15,
+                        }}
+                      />
+                    ) : (
+                      <KeyboardArrowUpTwoTone
+                        sx={{
+                          fontSize: 15,
+                        }}
+                      />
+                    )}
+                  </IconButton>
+                </Box>
+              ) : (
+                <Link href={LINK_DASHBOARD.href} passHref>
+                  <Tooltip title="Dashboard">
+                    <Avatar
+                      src={selectedInstitution?.imageUrl || ''}
+                      sx={{
+                        width: 34,
+                        height: 34,
+                        cursor: 'pointer',
+                      }}
+                    />
+                  </Tooltip>
+                </Link>
+              )}
+              <Tooltip title="Settings">
+                <Settings sx={{ fontSize: 20, cursor: 'pointer' }} />
               </Tooltip>
-            </Link>
-          )}
-          <Tooltip title="Settings">
-            <Settings sx={{ fontSize: 20, cursor: 'pointer' }} />
-          </Tooltip>
+            </Box>
+          </Box>
         </Box>
       )}
+
       <Box
         sx={{
           width: '100%',
-          maxWidth: MAX_WIDTH,
           mx: 'auto',
         }}
       >
@@ -267,15 +270,15 @@ export default function DashboardHeader() {
           }}
           sx={{
             display: 'flex',
-            bgcolor: theme.palette.background.light,
-            maxHeight: '38px',
-            width: screenSize.isMobile
-              ? '66% !important'
-              : screenSize.isTablet
+            alignItems: 'center',
+            height: '50px',
+            justifyContent: 'center',
+            gap: 4,
+            width:
+              screenSize.isMobile || screenSize.isTablet
                 ? '50% !important'
                 : '33% !important',
             mx: 'auto',
-            mt: '12px',
           }}
         >
           {Object.values(LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS(role!)).map(
@@ -296,54 +299,6 @@ export default function DashboardHeader() {
             }
           )}
         </ToggleButtonGroup>
-      </Box>
-      <Box
-        justifyContent="flex-end"
-        alignItems="center"
-        sx={{
-          position: 'absolute',
-          right: screenSize.isSmallerThanLaptop ? 2 : 10,
-          top: 11,
-          zIndex: 1300,
-        }}
-      >
-        {filter === LINK_DASHBOARD_HOME && (
-          <>
-            <Tooltip title="Save groups" placement="bottom" sx={{ mx: 1 }}>
-              <IconButton
-                sx={{
-                  p: 0,
-                  m: 0,
-                  mx: screenSize.isMobile ? 0.25 : 1,
-                  cursor: 'pointer',
-                }}
-                onClick={() => {
-                  handleSaveGroups();
-                }}
-              >
-                <Save fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Delete group" placement="bottom" sx={{ mx: 1 }}>
-              <IconButton
-                sx={{
-                  p: 0,
-                  m: 0,
-                  mx: screenSize.isMobile ? 0.25 : 1,
-                  cursor: 'pointer',
-                }}
-                onClick={() => {
-                  setModal((prev) => ({
-                    ...prev,
-                    remove_group: true,
-                  }));
-                }}
-              >
-                <Delete fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          </>
-        )}
       </Box>
 
       <ProfileHeaderMenu

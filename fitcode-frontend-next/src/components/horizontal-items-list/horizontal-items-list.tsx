@@ -1,6 +1,6 @@
 import { Add, ArrowLeft, ArrowRight, Circle } from '@mui/icons-material';
 import type { SxProps } from '@mui/material';
-import { Box, IconButton, Typography } from '@mui/material';
+import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import dayjs from 'dayjs';
 import type { RefObject } from 'react';
@@ -291,7 +291,11 @@ export default function HorizontalItemsList(props: HorizontalItemsListProps) {
                 {isTrainingInPeriod('AM', item) && (
                   <TrainingDot i={i} top={true} />
                 )}
-                {dayView || weekView || yearView ? (
+                {dayView ||
+                weekView ||
+                yearView ||
+                dashboardView ||
+                dashboardInstitutionsView ? (
                   <Box
                     display="flex"
                     flexDirection="column"
@@ -299,27 +303,40 @@ export default function HorizontalItemsList(props: HorizontalItemsListProps) {
                     alignItems="center"
                     sx={{
                       minWidth: isSameValue ? '42px' : undefined,
-                      py: isSameValue ? 0.75 : 0,
+                      py:
+                        dashboardView || dashboardInstitutionsView
+                          ? 1.5
+                          : isSameValue
+                            ? 0.75
+                            : 0,
                     }}
                   >
-                    <Typography
-                      key={`${item.value}-${i}-label`}
-                      fontSize={isSameValue ? 16 : 12}
-                      textAlign="center"
-                      sx={{
-                        fontWeight: isSameValue ? 800 : 250,
-                        m: 0,
-                        color: isSameValue
-                          ? theme.palette.text.secondary
-                          : undefined,
-                      }}
-                    >
-                      {(dayView && isSameValue && isSameDay) ||
-                      (weekView && isSameValue) ||
-                      (yearView && isSameValue)
-                        ? item.sublabel
-                        : item.label}
-                    </Typography>
+                    <Tooltip title={dashboardView ? item.label : ''}>
+                      <Typography
+                        key={`${item.value}-${i}-label`}
+                        fontSize={isSameValue ? 16 : 12}
+                        textAlign="center"
+                        sx={{
+                          fontWeight: isSameValue ? 800 : 250,
+                          m: 0,
+                          color: isSameValue
+                            ? theme.palette.text.secondary
+                            : undefined,
+                          px: dashboardInstitutionsView ? 0.5 : undefined,
+                        }}
+                      >
+                        {(dayView && isSameValue && isSameDay) ||
+                        (weekView && isSameValue) ||
+                        (yearView && isSameValue)
+                          ? item.sublabel
+                          : dashboardView
+                            ? item.label.substring(0, 3).toUpperCase()
+                            : dashboardInstitutionsView
+                              ? item.label[0].toUpperCase() +
+                                item.label.slice(1).toLowerCase()
+                              : item.label}
+                      </Typography>
+                    </Tooltip>
                     <Typography
                       key={`${item.value}-${i}-sublabel`}
                       fontSize={isSameValue ? 12 : 14}

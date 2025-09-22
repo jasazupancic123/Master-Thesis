@@ -1,5 +1,6 @@
 import SearchIcon from '@mui/icons-material/Search';
 import type { SxProps } from '@mui/material';
+import { useTheme } from '@mui/material';
 
 import { Search, SearchIconWrapper, StyledInputBase } from './style';
 import type { ChildrenProps } from '@/common/type/props.type';
@@ -21,13 +22,26 @@ export function SearchBar({
   sx,
   children,
 }: SearchBarProps) {
+  const theme = useTheme();
+
   return (
     <Search
       maxWidth={maxWidth}
-      sx={{ ...sx, '& .MuiInputBase-root': { width: '100%' } }}
+      sx={{
+        ...sx,
+        '& .MuiInputBase-root': {
+          width: '100%',
+          backgroundColor: theme.palette.background.light,
+        },
+      }}
     >
       <SearchIconWrapper>
-        <SearchIcon />
+        <SearchIcon
+          sx={{
+            color: theme.palette.text.primary + ' !important',
+            zIndex: 1000,
+          }}
+        />
       </SearchIconWrapper>
 
       <StyledInputBase

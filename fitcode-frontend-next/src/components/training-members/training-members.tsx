@@ -243,7 +243,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                 sx={{
                   m: 0.1,
                   ml: 0,
-                  backgroundColor: theme.palette.background.default,
+                  backgroundColor: 'transparent',
                   display: 'flex',
                   flexWrap: 'wrap',
                   justifyContent: 'center',
