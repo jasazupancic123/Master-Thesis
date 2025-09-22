@@ -7,7 +7,7 @@ import { useTheme } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import * as React from 'react';
 
-import { LINKS_SIDEBAR } from '@/common/constant/navigation.constant';
+import { LINKS_SIDEBAR_GROUP_VIEW } from '@/common/constant/navigation.constant';
 import { UserRole } from '@/controller/profile/enum/user-role.enum';
 import { useAthlete } from '@/store/athlete.provider';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
@@ -25,9 +25,9 @@ export default function BottomNavigation() {
     <BN
       value={filter}
       onChange={(_, valueIndex) => {
-        const newValue = Object.values(LINKS_SIDEBAR[UserRole.ATHLETE])[
-          valueIndex
-        ];
+        const newValue = Object.values(
+          LINKS_SIDEBAR_GROUP_VIEW[UserRole.ATHLETE]
+        )[valueIndex];
         if (!newValue) return;
 
         setFilter(newValue);
@@ -43,31 +43,33 @@ export default function BottomNavigation() {
         },
       }}
     >
-      {Object.values(LINKS_SIDEBAR[UserRole.ATHLETE]).map((link, i) => (
-        <BNAction
-          key={i}
-          icon={
-            React.isValidElement(link.icon)
-              ? React.cloneElement(
-                  link.icon as React.ReactElement<{ sx?: object }>
-                )
-              : link.icon
-          }
-          label={link.label}
-          sx={{
-            color:
-              filter.href === link.href ? theme.palette.primary.main : '#fff',
-            minWidth: '48px', // Reduce the minimum width
-            padding: '4px', // Reduce padding
-            '& .MuiBottomNavigationAction-root': {
-              minWidth: '48px', // Override MUI default min-width
-            },
-            '& .MuiSvgIcon-root': {
-              fontSize: '24px !important',
-            },
-          }}
-        />
-      ))}
+      {Object.values(LINKS_SIDEBAR_GROUP_VIEW[UserRole.ATHLETE]).map(
+        (link, i) => (
+          <BNAction
+            key={i}
+            icon={
+              React.isValidElement(link.icon)
+                ? React.cloneElement(
+                    link.icon as React.ReactElement<{ sx?: object }>
+                  )
+                : link.icon
+            }
+            label={link.label}
+            sx={{
+              color:
+                filter.href === link.href ? theme.palette.primary.main : '#fff',
+              minWidth: '48px', // Reduce the minimum width
+              padding: '4px', // Reduce padding
+              '& .MuiBottomNavigationAction-root': {
+                minWidth: '48px', // Override MUI default min-width
+              },
+              '& .MuiSvgIcon-root': {
+                fontSize: '24px !important',
+              },
+            }}
+          />
+        )
+      )}
       <BNAction
         key="logout"
         icon={

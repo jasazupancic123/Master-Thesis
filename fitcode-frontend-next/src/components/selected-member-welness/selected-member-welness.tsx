@@ -1,4 +1,4 @@
-import { Box, Typography } from '@mui/material';
+import { Box, Tooltip, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 
 import setupChartData from '../selected-member-report/state';
@@ -56,16 +56,18 @@ export default function SelectedMemberWelness() {
         {wellnessChartData.some((data) => data.today !== null) ? (
           <Box height={120} display="flex" alignItems="flex-end" gap={1.5}>
             {wellnessChartData.map((data) => (
-              <Box
-                key={data.metric}
-                height={data.today ? `${10 * data.today}%` : 0}
-                sx={{
-                  backgroundColor: theme.palette.primary.main,
-                  width: 10,
-                  borderRadius: 2,
-                  display: data.today ? 'block' : 'none',
-                }}
-              />
+              <Tooltip key={data.metric} title={data.metric}>
+                <Box
+                  key={data.metric}
+                  height={data.today ? `${10 * data.today}%` : 0}
+                  sx={{
+                    backgroundColor: theme.palette.primary.main,
+                    width: 10,
+                    borderRadius: 2,
+                    display: data.today ? 'block' : 'none',
+                  }}
+                />
+              </Tooltip>
             ))}
           </Box>
         ) : (

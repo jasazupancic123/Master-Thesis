@@ -6,7 +6,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { useAuthenticatedAuth } from './auth.provider';
 import { useMain } from './main.provider';
 import {
-  LINK_DASHBOARD_HOME,
+  LINK_DASHBOARD_GROUPS,
   LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS,
 } from '@/common/constant/navigation.constant';
 import { useNestBackendFetch } from '@/common/hooks/use-fetch.hook';
@@ -56,21 +56,19 @@ export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
 
   const { role } = useAuthenticatedAuth();
   const pathname = usePathname();
-  const [currentFilter, setCurrentFilter] = useState(LINK_DASHBOARD_HOME);
 
   useEffect(() => {
     if (!pathname || !role) return;
 
     const lastItemInUrl = pathname.split('/').pop();
     const links = Object.values(LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS(role));
-    const matched = links.find(
-      (link) => lastItemInUrl && link?.href.endsWith(lastItemInUrl)
-    );
+    const matched =
+      lastItemInUrl && links.find((link) => link?.href.endsWith(lastItemInUrl));
 
-    setCurrentFilter(matched || LINK_DASHBOARD_HOME);
+    setFilter(matched || LINK_DASHBOARD_GROUPS);
   }, [pathname, role]);
 
-  const [filter, setFilter] = useState<ILink>(currentFilter);
+  const [filter, setFilter] = useState<ILink>(LINK_DASHBOARD_GROUPS);
   const [institutions, setInstitutions] =
     useState<Institution[]>(propsInstitutions);
   const [selectedInstitution, setSelectedInstitution] =

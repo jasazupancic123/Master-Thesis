@@ -1,20 +1,9 @@
-import {
-  ArrowDropDown,
-  ArrowDropUp,
-  CameraAltOutlined,
-  CheckCircle,
-  KeyboardOutlined,
-  PanoramaFishEye,
-  RadioButtonChecked,
-  RadioButtonUnchecked,
-} from '@mui/icons-material';
-import { Box, Checkbox, IconButton, Stack, Typography } from '@mui/material';
+import { RadioButtonChecked, RadioButtonUnchecked } from '@mui/icons-material';
+import { Box, Checkbox, Stack, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Image from 'next/image';
-import { useState } from 'react';
 import toast from 'react-hot-toast';
 
-import TrapezoidTitle from '../athlete-options-container/trapezoid-title';
 import AthleteTrainingExerciseSets from '../athlete-training-exercise-sets/athlete-training-exercise-sets';
 import MobileMovementValidation from '../mobile-movement-validation/mobile-movement-validation';
 import SwipeableBox from '../swipeable-box/swipeable-box';
@@ -32,7 +21,6 @@ import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
-import { set } from 'date-fns';
 
 export default function TrainingInProgressExerciseCard() {
   const theme = useTheme();
@@ -56,9 +44,6 @@ export default function TrainingInProgressExerciseCard() {
 
   const { selectedTrackingMethod, setSelectedTrackingMethod } =
     useAthleteHeader();
-
-  const [expandedSetsView, setExpandedSetsView] = useState(false);
-  const [imageHeight, setImageHeight] = useState(0);
 
   if (!trainingInProgress || !selectedSuperset || !selectedExercise)
     return null;
@@ -150,7 +135,6 @@ export default function TrainingInProgressExerciseCard() {
         flexDirection="column"
         alignItems="center"
         sx={{
-          overflowY: expandedSetsView ? 'auto' : undefined,
           backgroundColor: theme.palette.background.default,
           pb: '100px',
         }}
@@ -251,72 +235,34 @@ export default function TrainingInProgressExerciseCard() {
           </Stack>
         </Stack>
 
-        {expandedSetsView && (
-          <Box
-            width="100%"
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            minHeight={imageHeight ? imageHeight : undefined}
-            sx={{
-              position: 'relative',
-              px: 2,
-            }}
-          >
-            <AthleteTrainingExerciseSets
-              training={trainingInProgress?.training}
-              exercise={selectedExercise}
-              borderBottomRadius={false}
-              expanded={expandedSetsView}
-              trainingInProgressView
-              supersetIndex={supersetIndex}
-              exerciseSetTrackingState={
-                trainingInProgress.exerciseSetTrackingState
-              }
-              dissableBottomPadding
-            />
-          </Box>
-        )}
-
         {/* Image */}
-        {!expandedSetsView &&
-          (selectedExercise.exercise?.videoUrl ? (
-            <video
-              muted
-              playsInline
-              controls
-              poster={selectedExercise.exercise?.imageUrl || undefined}
-              style={{
-                width: '100%',
-                height: 'auto',
-                display: 'block',
-                filter: 'grayscale(100%)',
-              }}
-              preload="metadata"
-              onLoadedMetadata={(e) => {
-                const v = e.currentTarget;
-                const renderedHeight =
-                  v.getBoundingClientRect().height || v.videoHeight;
-                setImageHeight(renderedHeight);
-              }}
-              src={selectedExercise.exercise.videoUrl}
+        {selectedExercise.exercise?.videoUrl ? (
+          <video
+            muted
+            playsInline
+            controls
+            poster={selectedExercise.exercise?.imageUrl || undefined}
+            style={{
+              width: '100%',
+              height: 'auto',
+              display: 'block',
+              filter: 'grayscale(100%)',
+            }}
+            preload="metadata"
+            src={selectedExercise.exercise.videoUrl}
+          />
+        ) : (
+          selectedExercise.exercise?.imageUrl && (
+            <Image
+              src={selectedExercise.exercise.imageUrl}
+              alt={selectedExercise.exercise?.name || ''}
+              width={0}
+              height={0}
+              sizes="100vw"
+              style={{ width: '100%', height: 'auto' }}
             />
-          ) : (
-            selectedExercise.exercise?.imageUrl && (
-              <Image
-                src={selectedExercise.exercise.imageUrl}
-                alt={selectedExercise.exercise?.name || ''}
-                width={0}
-                height={0}
-                sizes="100vw"
-                style={{ width: '100%', height: 'auto' }}
-                onLoadingComplete={(img) => {
-                  const { height } = img;
-                  setImageHeight(height);
-                }}
-              />
-            )
-          ))}
+          )
+        )}
 
         {/* Current tracking exercise set */}
         <Box

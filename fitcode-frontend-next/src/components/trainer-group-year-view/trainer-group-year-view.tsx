@@ -12,7 +12,7 @@ import type { Cycle } from '@/controller/group/type/cycle.type';
 import { useGroup } from '@/store/group.provider';
 
 export default function TrainerYearView() {
-  const { group, selectedGroup, setSelectedGroup } = useGroup();
+  const { selectedGroup, setSelectedGroup } = useGroup();
 
   const theme = useTheme();
 
