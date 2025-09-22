@@ -14,7 +14,7 @@ import ListItemText from '@mui/material/ListItemText';
 import Link from 'next/link';
 import * as React from 'react';
 
-import { LINKS_SIDEBAR } from '@/common/constant/navigation.constant';
+import { LINKS_SIDEBAR_GROUP_VIEW } from '@/common/constant/navigation.constant';
 import { CommonService } from '@/common/service/common.service';
 import { UserRole } from '@/controller/profile/enum/user-role.enum';
 import { useAthlete } from '@/store/athlete.provider';
@@ -53,7 +53,7 @@ export default function Sidebar() {
                   if (!filter || !setFilter) return;
 
                   const newValue = Object.values(
-                    LINKS_SIDEBAR[UserRole.ATHLETE]
+                    LINKS_SIDEBAR_GROUP_VIEW[UserRole.ATHLETE]
                   )[i];
                   if (!newValue) return;
 
@@ -101,7 +101,7 @@ export default function Sidebar() {
           sx={{
             position: 'fixed',
             top: -1,
-            left: 0,
+            right: 0,
             height: '60px',
             width: '60px',
             display: 'flex',
@@ -117,7 +117,7 @@ export default function Sidebar() {
         </Box>
       </Container>
 
-      <Drawer open={open} onClose={toggle(false)}>
+      <Drawer open={open} onClose={toggle(false)} anchor="right">
         {DrawerList}
       </Drawer>
     </AppBar>

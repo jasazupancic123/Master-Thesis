@@ -14,7 +14,6 @@ export default function TrainingCard(props: TrainingCardProps) {
   const {
     training,
     setTraining,
-    selectedPeriod,
     selectedSubgroup,
     setSelectedSubgroup,
     component,

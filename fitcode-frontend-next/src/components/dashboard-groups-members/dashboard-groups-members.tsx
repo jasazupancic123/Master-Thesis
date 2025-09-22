@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { AddMembersModal } from '../add-members-modal/add-members-modal';
+import CustomDivider from '../custom-divider/custom-divider';
 import DashboardEditAthleteModal from '../dashboard-edit-athlete-modal/dashboard-edit-athlete-modal';
 import MyModal from '../modal/modal';
 import { SearchBar } from '../search-bar/search-bar';
@@ -147,13 +148,7 @@ export default function DashboardGroupsMembers(
         />
       </Box>
       <Box width="100%" display="flex" flexDirection="column">
-        <Box
-          width="100%"
-          sx={{
-            height: 7,
-            backgroundColor: theme.palette.background.paper,
-          }}
-        />
+        <CustomDivider />
         <Box
           width="100%"
           display="flex"

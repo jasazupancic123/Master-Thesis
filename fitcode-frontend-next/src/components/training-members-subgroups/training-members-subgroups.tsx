@@ -61,7 +61,6 @@ export default function TrainingMembersSubgroup(
   const {
     subgroup,
     subgroupIndex,
-    subgroupsLength,
     anchorEl,
     setAnchorEl,
     members,
