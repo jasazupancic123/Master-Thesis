@@ -10,11 +10,11 @@ import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 
 import { deleteSelectedExercises } from '../trainer-group-day-view/state';
+import { CommonService } from '@/common/service/common.service';
 import type { SetState } from '@/common/type/state.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { useGroup } from '@/store/group.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
-import { CommonService } from '@/common/service/common.service';
 
 const commonService = CommonService.instance;
 

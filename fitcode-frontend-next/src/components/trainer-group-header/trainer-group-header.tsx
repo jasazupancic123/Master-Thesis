@@ -23,11 +23,16 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
+import LoadingOverlay from '../loading-overlay/loading-overlay';
+import Logo from '../logo/logo';
 import ProfileHeaderMenu from '../profile-header-menu/profile-header-menu';
 import { MAX_WIDTH } from '../trainer-day-view/constant';
+import { handleUpdateMultipleTrainings } from '../trainer-group-day-view/state';
+import { handleSaveGroup } from '@/app/(trainer)/groups/[group_id]/state';
 import {
   LINK_DASHBOARD,
   LINK_PROFILE,
@@ -37,18 +42,13 @@ import {
 import type { GroupDateFilter } from '@/common/type/filter.type';
 import type { SetState } from '@/common/type/state.type';
 import FilterButton from '@/components/filter-button/filter-button';
+import { GroupController } from '@/controller/group/group.controller';
+import { TrainingController } from '@/controller/training/training.controller';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useGroup } from '@/store/group.provider';
-import { useScreenSize } from '@/store/screen-size.provider';
-import Logo from '../logo/logo';
-import { handleUpdateMultipleTrainings } from '../trainer-group-day-view/state';
-import { TrainingController } from '@/controller/training/training.controller';
 import { useMain } from '@/store/main.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
-import { useRouter } from 'next/navigation';
-import LoadingOverlay from '../loading-overlay/loading-overlay';
-import { handleSaveGroup } from '@/app/(trainer)/groups/[group_id]/state';
-import { GroupController } from '@/controller/group/group.controller';
 
 export interface TrainerGroupHeaderProps {
   filter: GroupDateFilter;
@@ -197,7 +197,7 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
           }}
           gap={3}
         >
-          <Logo height={15} width={101.25} />
+          <Logo width={101.25} />
           <Box
             display="flex"
             alignItems="center"

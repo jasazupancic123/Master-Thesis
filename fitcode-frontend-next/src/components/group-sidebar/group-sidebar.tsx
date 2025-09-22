@@ -2,6 +2,7 @@
 
 import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles';
+
 import TrainerGroupHeader from '../trainer-group-header/trainer-group-header';
 import { AppBar } from './style';
 import { useGroup } from '@/store/group.provider';

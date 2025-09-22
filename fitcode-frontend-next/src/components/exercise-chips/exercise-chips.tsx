@@ -243,8 +243,8 @@ export default function ExerciseChips(props: ExerciseChipsProps) {
               <Typography
                 variant="caption"
                 sx={{
+                  width: screenSize.isMobile ? 30 : 80,
                   textAlign: 'center',
-                  maxWidth: screenSize.isMobile ? 50 : 80,
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',

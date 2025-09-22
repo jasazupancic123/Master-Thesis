@@ -7,14 +7,15 @@ interface Props {
   sx?: React.CSSProperties; // Ensure correct type for styles
 }
 
-export default function Logo({ width = 100, height = 50, marginLeft, sx }: Props) {
+export default function Logo({ width = 100, marginLeft, sx }: Props) {
   return (
     <Image
       src="/blind-off-logo.png"
       alt="Logo"
       width={width}
-      height={height}
+      height={0}
       style={{ marginLeft, ...sx }} // Correctly spread additional styles
+      layout="intrinsic"
     />
   );
 }

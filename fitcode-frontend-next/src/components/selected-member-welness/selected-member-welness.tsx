@@ -1,24 +1,12 @@
-import { theme } from '@/app/style';
 import { Box, Typography } from '@mui/material';
-import {
-  ResponsiveContainer,
-  BarChart,
-  YAxis,
-  XAxis,
-  Tooltip,
-  Bar,
-  Cell,
-} from 'recharts';
-import CustomBarTooltip from '../selected-member-report-custom-tooltip/selected-member-report-custom-tooltip';
-import setupChartData, { colorForZ } from '../selected-member-report/state';
-import { useScreenSize } from '@/store/screen-size.provider';
-import { WellnessChartDataType } from '@/controller/profile/enum/wellness-chart-data-type.enum';
-import { WellnessChartData } from '@/controller/profile/type/wellness.type';
 import { useEffect, useState } from 'react';
+
+import setupChartData from '../selected-member-report/state';
+import { theme } from '@/app/style';
+import { WellnessChartDataType } from '@/controller/profile/enum/wellness-chart-data-type.enum';
+import type { WellnessChartData } from '@/controller/profile/type/wellness.type';
+import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
-import FatigueIcon from '@/assets/icons/Fatigue.svg';
-import SleepIcon from '@/assets/icons/Sleep.svg';
-import SorenessIcon from '@/assets/icons/Soreness.svg';
 
 export default function SelectedMemberWelness() {
   const screenSize = useScreenSize();

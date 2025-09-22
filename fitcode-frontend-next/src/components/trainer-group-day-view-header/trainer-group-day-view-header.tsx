@@ -7,14 +7,14 @@ import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import HorizontalItemsList from '../horizontal-items-list/horizontal-items-list';
+import SelectedMemberReport from '../selected-member-report/selected-member-report';
+import SelectedMemberWelness from '../selected-member-welness/selected-member-welness';
 import { DIVIDER_HEIGHT, MAX_WIDTH } from '../trainer-day-view/constant';
+import TrainingMembers from '../training-members/training-members';
 import { CommonService } from '@/common/service/common.service';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
-import TrainingMembers from '../training-members/training-members';
-import SelectedMemberReport from '../selected-member-report/selected-member-report';
-import SelectedMemberWelness from '../selected-member-welness/selected-member-welness';
 
 dayjs.extend(weekOfYear);
 
