@@ -50,7 +50,9 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
   const { group, setGroup, setCycle } = useGroup();
 
   const [selectedYear, setSelectedYear] = useState(dayjs().year());
-  const [yearsForSelect] = useState<{ label: string; value: string }[]>(() => {
+  const [yearsForSelect] = useState<
+    { label: string; sublabel: string; value: string }[]
+  >(() => {
     const currentYear = dayjs().year();
     const yearsBefore = Array.from(
       { length: 2 },
@@ -58,7 +60,8 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
     );
     const yearsAfter = Array.from({ length: 3 }, (_, i) => currentYear + i);
     return [...yearsBefore.toReversed(), ...yearsAfter].map((year) => ({
-      label: year.toString(),
+      label: 'Year',
+      sublabel: year.toString(),
       value: year.toString(),
     }));
   });
@@ -223,9 +226,6 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
                 display="flex"
                 flexDirection="column"
                 alignItems="flex-start"
-                sx={{
-                  ml: 2,
-                }}
               >
                 <Typography
                   variant="body2"
@@ -253,14 +253,7 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
               <HorizontalItems />
             </Box>
             <Box width="25%" mt={0.75}>
-              <Box
-                display="flex"
-                flexDirection="column"
-                alignItems="flex-end"
-                sx={{
-                  mr: 2,
-                }}
-              >
+              <Box display="flex" flexDirection="column" alignItems="flex-end">
                 <Typography
                   variant="body2"
                   sx={{
@@ -292,9 +285,10 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
         display="flex"
         width="100%"
         alignItems="center"
-        justifyContent="flex-start"
+        justifyContent="space-evenly"
         sx={{
           px: screenSize.isMobile ? 2 : 8,
+          py: screenSize.isSmallerThanLaptop ? 1 : 0,
         }}
       >
         <IconButton
@@ -304,11 +298,7 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
             borderRadius: '50%',
             p: 0.3,
             mr: 1,
-            mt: screenSize.isMobile
-              ? 0
-              : screenSize.isSmallerThanLaptop
-                ? -0.1
-                : 2.7,
+            mt: screenSize.isSmallerThanLaptop ? 0 : -0.4,
             '&:hover': { backgroundColor: 'primary.main' },
           }}
           onClick={() => {
@@ -368,7 +358,7 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
               ? 2
               : screenSize.isSmallerThanLaptop
                 ? 2.5
-                : 5.2,
+                : 2,
           }}
         >
           {/* Slider */}

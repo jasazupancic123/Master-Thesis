@@ -1,9 +1,10 @@
 import { Add, ArrowLeft, ArrowRight, Circle } from '@mui/icons-material';
+import type { SxProps } from '@mui/material';
 import { Box, IconButton, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import dayjs from 'dayjs';
 import type { RefObject } from 'react';
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { Fragment, useEffect, useLayoutEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 
 import type { Day } from '@/common/service/util/date.util';
@@ -19,8 +20,10 @@ interface HorizontalItemsListProps {
   setValue: (value: string) => void;
   checkIsSameValue: (value: string) => boolean;
   onArrowClick?: (direction: 'left' | 'right') => void;
+  sx?: SxProps;
   noItemsText?: string;
   dayView?: boolean;
+  weekView?: boolean;
   cycleView?: boolean;
   yearView?: boolean;
   alertOnChange?: boolean;
@@ -43,8 +46,10 @@ export default function HorizontalItemsList(props: HorizontalItemsListProps) {
     items,
     setValue,
     onArrowClick,
+    sx,
     noItemsText,
     dayView,
+    weekView,
     cycleView,
     yearView,
     checkIsSameValue,
@@ -116,8 +121,8 @@ export default function HorizontalItemsList(props: HorizontalItemsListProps) {
           top: top ? 0 : undefined,
           bottom: !top ? 0 : undefined,
           transform: 'translateX(-50%)',
-          color: theme.palette.text.secondary,
-          fontSize: 4,
+          color: theme.palette.text.primary,
+          fontSize: 6,
         }}
       />
     );
@@ -130,18 +135,20 @@ export default function HorizontalItemsList(props: HorizontalItemsListProps) {
       justifyContent="space-between"
       marginX="auto"
       sx={{
-        py: yearView || (cycleView && !cycle) ? 2.3 : 1,
-        backgroundColor: theme.palette.background.dark,
-        ml: cycleView ? 'auto' : undefined,
+        py: cycleView && !cycle ? 2.3 : 1,
+        backgroundColor: theme.palette.background.default,
         width: screenSize.isMobile
           ? '100%'
           : screenSize.isTablet
             ? cycleView
               ? '50% !important'
               : '100% !important'
-            : '66% !important',
+            : screenSize.isSmallLaptop && dayView
+              ? '100% !important'
+              : '66% !important',
         borderBottomLeftRadius: 5,
         borderBottomRightRadius: 5,
+        ...sx,
       }}
     >
       {/* Left Arrow */}
@@ -172,7 +179,7 @@ export default function HorizontalItemsList(props: HorizontalItemsListProps) {
         }}
       >
         <ArrowLeft
-          sx={{ fontSize: 30, color: theme.palette.background.light }}
+          sx={{ fontSize: 30, color: theme.palette.background.paper }}
         />
       </IconButton>
 
@@ -258,6 +265,10 @@ export default function HorizontalItemsList(props: HorizontalItemsListProps) {
                   cursor: 'pointer',
                   flex: '0 0 auto', // important so it doesn't shrink
                   position: 'relative',
+                  backgroundColor: isSameValue
+                    ? theme.palette.primary.main
+                    : undefined,
+                  borderRadius: isSameValue ? '25%' : 0,
                 }}
                 onClick={() => {
                   if (alertOnChange && detectedChanges) {
@@ -280,75 +291,142 @@ export default function HorizontalItemsList(props: HorizontalItemsListProps) {
                 {isTrainingInPeriod('AM', item) && (
                   <TrainingDot i={i} top={true} />
                 )}
-                <Typography
-                  key={`${item.value}-${i}`}
-                  variant="subtitle2"
-                  textAlign="center"
-                  sx={{
-                    fontSize: isSameValue ? '13px' : '12px',
-                    fontWeight:
-                      dashboardView || dashboardInstitutionsView ? 400 : 250,
-                    p: isSameValue ? 0.5 : 0,
-                    m: 0,
-                    minWidth:
-                      isSameValue || dashboardView || dashboardInstitutionsView
-                        ? '50px'
-                        : undefined,
-                    border: isSameValue
-                      ? `1px solid ${theme.palette.primary.main}`
-                      : undefined,
-                    borderRadius:
-                      isSameValue || dashboardView || dashboardInstitutionsView
-                        ? 1.5
-                        : 0,
-                    color:
-                      isSameValue &&
-                      !dashboardView &&
-                      !dashboardInstitutionsView
-                        ? theme.palette.primary.main
-                        : undefined,
-                    py:
-                      dashboardView || dashboardInstitutionsView
-                        ? 1.5
-                        : undefined,
-                    px: dashboardInstitutionsView ? 1.5 : undefined,
-                    backgroundColor:
-                      dashboardView || dashboardInstitutionsView
-                        ? theme.palette.background.light
-                        : undefined,
-                  }}
-                >
-                  {cycleView ? (
-                    item.label.split(' ').map((word, index) => (
-                      <Box key={`${word}-${index}`}>
-                        {index < 2
-                          ? word +
-                            (index === 1 && item.label.split(' ').length > 2
-                              ? '...'
-                              : '')
-                          : undefined}
-                        {index < 2 &&
-                          index < item.label.split(' ').length - 1 && <br />}
-                      </Box>
-                    ))
-                  ) : dashboardView ? (
-                    getShortGroupName(item.label)
-                  ) : dashboardInstitutionsView ? (
-                    item.label.toUpperCase()
-                  ) : isSameValue ? (
-                    <>
-                      {item.sublabel || ''}
-                      <br />
-                      {isSameDay ? 'Today' : item.label}
-                    </>
-                  ) : (
-                    <>
-                      {item.label}
-                      <br />
-                      {isSameDay ? 'Today' : item.sublabel || ''}
-                    </>
-                  )}
-                </Typography>
+                {dayView || weekView || yearView ? (
+                  <Box
+                    display="flex"
+                    flexDirection="column"
+                    justifyContent="center"
+                    alignItems="center"
+                    sx={{
+                      minWidth: isSameValue ? '42px' : undefined,
+                      py: isSameValue ? 0.75 : 0,
+                    }}
+                  >
+                    <Typography
+                      key={`${item.value}-${i}-label`}
+                      fontSize={isSameValue ? 16 : 12}
+                      textAlign="center"
+                      sx={{
+                        fontWeight: isSameValue ? 800 : 250,
+                        m: 0,
+                        color: isSameValue
+                          ? theme.palette.text.secondary
+                          : undefined,
+                      }}
+                    >
+                      {(dayView && isSameValue && isSameDay) ||
+                      (weekView && isSameValue) ||
+                      (yearView && isSameValue)
+                        ? item.sublabel
+                        : item.label}
+                    </Typography>
+                    <Typography
+                      key={`${item.value}-${i}-sublabel`}
+                      fontSize={isSameValue ? 12 : 14}
+                      textAlign="center"
+                      sx={{
+                        fontWeight: isSameValue ? 800 : 250,
+                        m: 0,
+                        color: isSameValue
+                          ? theme.palette.text.secondary
+                          : undefined,
+                      }}
+                    >
+                      {isSameValue && isSameDay
+                        ? 'Today'
+                        : (weekView && isSameValue) || (yearView && isSameValue)
+                          ? item.label
+                          : item.sublabel || ''}
+                    </Typography>
+                  </Box>
+                ) : (
+                  <Typography
+                    key={`${item.value}-${i}`}
+                    textAlign="center"
+                    sx={{
+                      zIndex: isSameValue ? 10 : 9,
+                      fontSize: isSameValue ? '13px' : '12px',
+                      fontWeight:
+                        dashboardView ||
+                        dashboardInstitutionsView ||
+                        isSameValue
+                          ? 800
+                          : 250,
+                      m: 0,
+                      minWidth:
+                        isSameValue && (weekView || cycleView)
+                          ? '42px'
+                          : isSameValue ||
+                              dashboardView ||
+                              dashboardInstitutionsView
+                            ? '50px'
+                            : undefined,
+                      border:
+                        (dashboardView || dashboardInstitutionsView) &&
+                        isSameValue
+                          ? `1px solid ${theme.palette.primary.main}`
+                          : undefined,
+                      borderRadius:
+                        dashboardView || dashboardInstitutionsView ? 1.5 : 0,
+                      maxWidth: cycleView ? '70px' : undefined,
+                      overflow: cycleView ? 'hidden' : undefined,
+                      textOverflow: cycleView ? 'ellipsis' : undefined,
+                      whiteSpace: cycleView ? 'nowrap' : undefined,
+                      color:
+                        isSameValue &&
+                        !dashboardView &&
+                        !dashboardInstitutionsView
+                          ? theme.palette.text.secondary
+                          : undefined,
+                      py:
+                        dashboardView || dashboardInstitutionsView
+                          ? 1.5
+                          : isSameValue
+                            ? 0.75
+                            : undefined,
+                      px: dashboardInstitutionsView ? 1.5 : undefined,
+                      backgroundColor:
+                        dashboardView || dashboardInstitutionsView
+                          ? theme.palette.background.light
+                          : undefined,
+                    }}
+                  >
+                    {cycleView ? (
+                      (weekView && isSameValue
+                        ? item.label.split(' ').reverse()
+                        : item.label.split(' ')
+                      ).map((word, index) => (
+                        <Fragment key={`${word}-${index}`}>
+                          {index < 2
+                            ? word +
+                              (index === 1 && item.label.split(' ').length > 2
+                                ? '...'
+                                : '')
+                            : undefined}
+                          {index < 2 &&
+                            index < item.label.split(' ').length - 1 && <br />}
+                        </Fragment>
+                      ))
+                    ) : dashboardView ? (
+                      getShortGroupName(item.label)
+                    ) : dashboardInstitutionsView ? (
+                      item.label.toUpperCase()
+                    ) : isSameValue ? (
+                      <>
+                        {item.sublabel || ''}
+                        <br />
+                        {isSameDay ? 'Today' : item.label}
+                      </>
+                    ) : (
+                      <>
+                        {item.label}
+                        <br />
+                        {isSameDay ? 'Today' : item.sublabel || ''}
+                      </>
+                    )}
+                  </Typography>
+                )}
+
                 {isTrainingInPeriod('PM', item) && (
                   <TrainingDot i={i} top={false} />
                 )}
@@ -408,7 +486,7 @@ export default function HorizontalItemsList(props: HorizontalItemsListProps) {
         }}
       >
         <ArrowRight
-          sx={{ fontSize: 30, color: theme.palette.background.light }}
+          sx={{ fontSize: 30, color: theme.palette.background.paper }}
         />
       </IconButton>
     </Box>

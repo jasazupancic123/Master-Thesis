@@ -14,23 +14,28 @@ import { TrainerDayViewProvider } from '@/store/trainer-day-view.provider';
 
 export default function TrainerGroupPage() {
   const context = useGroup();
-  const { group, filter } = context;
+  const { filter } = context;
 
   const mapper: Record<GroupDateFilter, ReactNode> = {
-    day: (
-      <TrainerDayViewProvider {...context}>
-        <TrainerDayView />
-      </TrainerDayViewProvider>
-    ),
+    day: <TrainerDayView />,
     week: <TrainerWeekView />,
-    cycle: <TrainerCycleView />,
+    month: <TrainerCycleView />,
     year: <TrainerYearView />,
   };
 
   return (
     <Box sx={{ overflowX: 'hidden' }} width="100%">
-      <GroupSidebar group={group} />
-      <Box mt="50px">{mapper[filter]}</Box>
+      {filter === 'day' ? (
+        <TrainerDayViewProvider {...context}>
+          <GroupSidebar />
+          <Box mt="50px">{mapper[filter]}</Box>
+        </TrainerDayViewProvider>
+      ) : (
+        <>
+          <GroupSidebar />
+          <Box mt="50px">{mapper[filter]}</Box>
+        </>
+      )}
     </Box>
   );
 }

@@ -16,7 +16,6 @@ import { DragDropContext } from 'react-beautiful-dnd';
 import toast from 'react-hot-toast';
 
 import MyModal from '../modal/modal';
-import SelectedMemberReport from '../selected-member-report/selected-member-report';
 import {
   DEFAULT_SUBGROUP,
   DEFAULT_SUBGROUP_ID,
@@ -198,9 +197,9 @@ export default function TrainingMembers(props: TrainingMembersProps) {
     }
   };
 
-  return selectedAthlete ? (
-    <SelectedMemberReport />
-  ) : (
+  if (selectedAthlete) return null;
+
+  return (
     <Stack
       direction="row"
       px={2}
@@ -227,11 +226,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
           position: isSticky ? 'fixed' : 'relative',
           top: isSticky ? '70px' : undefined,
           boxShadow: isSticky ? '0px 4px 10px rgba(0, 0, 0, 0.1)' : 'none',
-          border: isSticky
-            ? '1px solid grey'
-            : !component
-              ? '1px solid grey'
-              : undefined,
+          border: isSticky ? '1px solid grey' : undefined,
         }}
       >
         <DragDropContext onDragEnd={(result) => handleOnDragEnd(result)}>
@@ -241,88 +236,9 @@ export default function TrainingMembers(props: TrainingMembersProps) {
               No available members
             </Typography>
           )}
-
           {/* Training/component is not selected yet, display the members normally */}
           {!component && (
-            <Box
-              display="flex"
-              flexDirection="row"
-              alignItems="center"
-              sx={{
-                backgroundColor: theme.palette.background.dark,
-                borderRadius: 2,
-              }}
-            >
-              <Box
-                display="flex"
-                flexDirection="column"
-                alignItems="center"
-                justifyContent="center"
-                sx={{
-                  backgroundColor: theme.palette.background.dark,
-                  borderTopLeftRadius: 10,
-                  borderBottomLeftRadius: 10,
-                  px: 0.5,
-                }}
-                gap={0.2}
-              >
-                {/* First Typography (Green Box) */}
-                <Box
-                  width={20}
-                  height={20}
-                  sx={{
-                    textAlign: 'center',
-                    display: 'flex', // Center content inside
-                    flex: 1, // Fill remaining space
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderTopLeftRadius: 5,
-                    borderBottomLeftRadius: 5,
-                  }}
-                >
-                  <Typography
-                    variant="caption"
-                    fontSize="10px"
-                    sx={{ textAlign: 'center', color: 'white' }}
-                  >
-                    G
-                  </Typography>
-                </Box>
-
-                {/*sx={{
-                backgroundColor: theme.palette.primary.main,
-                width: 5,
-                height: 20,
-                borderRadius: 5,
-              }}*/}
-
-                <Box
-                  sx={{
-                    height: 16,
-                    width: 4,
-                    borderRadius: 5,
-                    backgroundColor: theme.palette.primary.main,
-                  }}
-                ></Box>
-
-                {/* Second Typography (Member Count) */}
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center', // Centers text
-                    flex: 1, // Fill remaining space
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Typography
-                    fontSize="10px"
-                    variant="caption"
-                    sx={{ textAlign: 'center' }}
-                  >
-                    {group.membersIds.length}
-                  </Typography>
-                </Box>
-              </Box>
+            <Box display="flex" flexDirection="column" alignItems="center">
               <Card
                 sx={{
                   m: 0.1,
@@ -359,12 +275,6 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                             subgroupId: DEFAULT_SUBGROUP_ID,
                           });
                         }}
-                        borderRadius={selectedAthlete === member ? '50%' : 0}
-                        border={
-                          selectedAthlete === member
-                            ? `2px solid ${theme.palette.primary.main}`
-                            : 'none'
-                        }
                         zIndex={1000}
                       >
                         <Avatar
@@ -378,6 +288,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                             height: 50,
                             m: selectedAthlete === member ? 0.25 : 0.5,
                             cursor: 'pointer',
+                            filter: 'grayscale(100%)',
                           }}
                         />
                       </Box>
@@ -385,28 +296,42 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                   );
                 })}
               </Card>
+              <Typography
+                fontSize={12}
+                fontWeight={600}
+                sx={{
+                  textAlign: 'center',
+                  color: theme.palette.primary.main,
+                }}
+              >
+                {`G-${group.membersIds.length}`}
+              </Typography>
             </Box>
           )}
-
-          {training &&
-            subgroups
-              .filter((sg) => !sg.parentId) // display only top-level subgroups
-              .map((subgroup, subgroupIndex) => {
-                // Assign border color based on the subgroup index
-                return (
-                  <TrainingMembersSubgroup
-                    key={subgroup.id}
-                    subgroup={subgroup}
-                    subgroupIndex={subgroupIndex}
-                    anchorEl={anchorEl}
-                    setAnchorEl={setAnchorEl}
-                    members={sortedMembers}
-                    setEditSubgroupName={setEditSubgroupName}
-                    setEditedSubgroup={setEditedSubgroup}
-                    setModal={setModal}
-                  />
-                );
-              })}
+          <Box display="flex" gap={4}>
+            {training &&
+              subgroups
+                .filter((sg) => !sg.parentId) // display only top-level subgroups
+                .map((subgroup, subgroupIndex) => {
+                  // Assign border color based on the subgroup index
+                  return (
+                    <TrainingMembersSubgroup
+                      key={subgroup.id}
+                      subgroup={subgroup}
+                      subgroupIndex={subgroupIndex}
+                      subgroupsLength={
+                        subgroups.filter((sg) => !sg.parentId).length
+                      }
+                      anchorEl={anchorEl}
+                      setAnchorEl={setAnchorEl}
+                      members={sortedMembers}
+                      setEditSubgroupName={setEditSubgroupName}
+                      setEditedSubgroup={setEditedSubgroup}
+                      setModal={setModal}
+                    />
+                  );
+                })}
+          </Box>
         </DragDropContext>
       </Stack>
       <MyModal

@@ -1,6 +1,6 @@
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v13-appRouter';
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Onest } from 'next/font/google';
 import React from 'react';
 import { Toaster } from 'react-hot-toast';
 
@@ -10,16 +10,17 @@ import { ScreenSizeProvider } from '@/store/screen-size.provider';
 import ThemeRegistry from '@/store/theme.registry';
 
 const inter = Inter({ subsets: ['latin'] });
+const onest = Onest({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Fitcode',
+  title: 'Blind/off',
   description: 'Track workouts more efficiently.',
 };
 
 export default async function RootLayout({ children }: ChildrenProps) {
   return (
     <html lang="en" style={{ scrollBehavior: 'smooth' }}>
-      <body className={inter.className}>
+      <body className={onest.className}>
         <AppRouterCacheProvider>
           <ThemeRegistry>
             <AuthProvider>
