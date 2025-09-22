@@ -47,42 +47,37 @@ export default function TrainingCard(props: TrainingCardProps) {
     <Box width="100%">
       <Box display="flex" width="100%">
         <Box display="flex" width="100%" position="relative">
-          <Typography
-            variant="caption"
-            sx={{
-              mx: 1,
-              fontSize: 10,
-              color: theme.palette.background.lightText,
-              position: 'absolute',
-              top: -1,
-              left: 0,
-            }}
-          >
-            {selectedPeriod?.value === 'AM' ? 'Morning' : 'Afternoon'}
-          </Typography>
-
           {cycle && component ? (
             <Box
               sx={{
                 height: 22,
                 maxHeight: 22,
-                minWidth: 150,
+                minWidth: 170,
                 position: 'absolute',
                 left: '50%',
                 transform: 'translateX(-50%)',
                 textAlign: 'center',
-                backgroundColor: theme.palette.background.dark,
+                backgroundColor: theme.palette.primary.main,
                 borderBottomLeftRadius: 100,
                 borderBottomRightRadius: 100,
-                px: screenSize.isMobile ? 2 : 4,
+                px:
+                  !selectedAthlete && selectedSubgroup
+                    ? 0
+                    : screenSize.isMobile
+                      ? 2
+                      : 4,
               }}
             >
               {selectedAthlete ? (
                 <Typography
                   textAlign="center"
-                  variant="body2"
                   fontSize={12}
-                  sx={{ pb: 0.5, color: theme.palette.background.lightText }}
+                  fontWeight="bold"
+                  sx={{
+                    pb: 0.5,
+                    color: theme.palette.text.secondary,
+                    textTransform: 'uppercase',
+                  }}
                 >
                   {selectedAthlete.displayName}
                 </Typography>
@@ -93,8 +88,6 @@ export default function TrainingCard(props: TrainingCardProps) {
                   size="small"
                   fullWidth
                   sx={{
-                    color: theme.palette.text.primary,
-                    fontSize: 12,
                     textAlign: 'center',
                     width: '100%',
                     p: 0,
@@ -115,9 +108,12 @@ export default function TrainingCard(props: TrainingCardProps) {
                   }}
                   inputProps={{
                     style: {
+                      color: theme.palette.text.secondary,
+                      fontSize: 12,
+                      fontWeight: 'bold',
+                      textTransform: 'uppercase',
                       border: 'none',
                       textAlign: 'center',
-                      fontSize: 12,
                       paddingTop: 0,
                       paddingBottom: 0,
                     },
@@ -153,9 +149,13 @@ export default function TrainingCard(props: TrainingCardProps) {
               ) : (
                 <Typography
                   textAlign="center"
-                  variant="body2"
                   fontSize={12}
-                  sx={{ pb: 0.5, color: theme.palette.background.lightText }}
+                  fontWeight="bold"
+                  sx={{
+                    pb: 0.5,
+                    color: theme.palette.text.secondary,
+                    textTransform: 'uppercase',
+                  }}
                 >
                   Main group
                 </Typography>
@@ -171,7 +171,7 @@ export default function TrainingCard(props: TrainingCardProps) {
                 left: '50%',
                 transform: 'translateX(-50%)',
                 textAlign: 'center',
-                backgroundColor: theme.palette.background.dark,
+                backgroundColor: theme.palette.primary.main,
                 borderBottomLeftRadius: 100,
                 borderBottomRightRadius: 100,
                 px: screenSize.isMobile ? 2 : 4,
@@ -179,9 +179,13 @@ export default function TrainingCard(props: TrainingCardProps) {
             >
               <Typography
                 textAlign="center"
-                variant="body2"
                 fontSize={12}
-                sx={{ pb: 0.5, color: theme.palette.background.lightText }}
+                fontWeight="bold"
+                sx={{
+                  pb: 0.5,
+                  color: theme.palette.text.secondary,
+                  textTransform: 'uppercase',
+                }}
               >
                 {selectedAthlete.displayName}
               </Typography>
@@ -199,7 +203,7 @@ export default function TrainingCard(props: TrainingCardProps) {
         }}
       >
         {training && (
-          <>
+          <Box display="flex" flexDirection="column" gap={1} mt={1}>
             <TrainingComponentLayout
               key={0}
               trainingComponent={training.warmup}
@@ -217,7 +221,7 @@ export default function TrainingCard(props: TrainingCardProps) {
               trainingComponent={training.cooldown}
               day={day}
             />
-          </>
+          </Box>
         )}
       </Box>
     </Box>

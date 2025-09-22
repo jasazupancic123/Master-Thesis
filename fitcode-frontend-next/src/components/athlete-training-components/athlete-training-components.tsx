@@ -1,5 +1,5 @@
 import { Check } from '@mui/icons-material';
-import { Box, Collapse, IconButton } from '@mui/material';
+import { Box, Collapse, IconButton, SvgIcon } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import { useRouter } from 'next/navigation';
@@ -107,7 +107,9 @@ export default function AthleteTrainingComponents(
                   }}
                 >
                   {IconComponent && (
-                    <IconComponent
+                    <SvgIcon
+                      component={IconComponent as React.ElementType} // handles SvgIconComponent or your SvgC
+                      inheritViewBox
                       sx={{
                         fontSize: 26,
                         cursor: 'pointer',
@@ -115,6 +117,12 @@ export default function AthleteTrainingComponents(
                           selectedComponent?.id === component.id
                             ? theme.palette.primary.main
                             : undefined,
+                        // force shapes inside the svg to use currentColor
+                        '& path, & rect, & circle, & polygon, & ellipse, & line, & polyline':
+                          {
+                            fill: 'currentColor',
+                            stroke: 'currentColor',
+                          },
                       }}
                     />
                   )}

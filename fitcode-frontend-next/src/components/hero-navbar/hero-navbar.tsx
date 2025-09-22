@@ -10,6 +10,7 @@ import {
   Select,
   Toolbar,
 } from '@mui/material';
+import { useTheme } from '@mui/material';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -33,6 +34,7 @@ export default function HeroNavbar({ showLogin = true }) {
   const toggleDrawer = (newOpen: boolean) => () => setOpen(newOpen);
   const pathname = usePathname();
   const router = useRouter();
+  const theme = useTheme();
 
   const mainPageMapper = {
     [UserRole.ATHLETE]: LINK_TRAININGS,
@@ -76,7 +78,7 @@ export default function HeroNavbar({ showLogin = true }) {
             <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
               {/* Logo Click Handler */}
               <Box onClick={handleLogoClick} sx={{ cursor: 'pointer' }}>
-                <Logo width={52} height={35} version="narrow" />
+                <Logo width={100} />
               </Box>
               <Box mr={4} />
 
@@ -164,7 +166,7 @@ export default function HeroNavbar({ showLogin = true }) {
                 color="secondary"
                 onClick={toggleDrawer(true)}
               >
-                <MenuIcon />
+                <MenuIcon sx={{ color: theme.palette.text.primary }} />
               </Button>
 
               <Drawer anchor="right" open={open} onClose={toggleDrawer(false)}>

@@ -38,7 +38,7 @@ export default function Alert(props: AlertProps) {
           opacity: 0.07,
         }}
       >
-        <Logo version="narrow" height={100} width={150} />
+        <Logo width={450} />
       </Box>
 
       <Typography fontSize={18} fontWeight={500} textAlign="center">

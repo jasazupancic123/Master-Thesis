@@ -18,13 +18,14 @@ interface Props {
 export default function FilterButton(props: Props) {
   const { value, disabled = false, dashboardView, numValues } = props;
 
+  const screenSize = useScreenSize();
+
   const dashboard = useDashboard() ?? {};
   const group = useGroup() ?? {};
 
   const { filter } = dashboardView ? dashboard : group;
 
   const theme = useTheme();
-  const screenSize = useScreenSize();
 
   const isILink = (val: GroupDateFilter | ILink): val is ILink => {
     return val && typeof val === 'object' && 'href' in val && 'label' in val;
@@ -34,21 +35,45 @@ export default function FilterButton(props: Props) {
     <ToggleButton
       value={isILink(value) ? value : value.toLowerCase()}
       disabled={disabled}
-      sx={{
-        width: numValues !== undefined ? `${100 / numValues}%` : '25%',
-        maxWidth: numValues !== undefined ? `${100 / numValues}%` : '25%',
-        '&.MuiButtonBase-root': {
-          borderBottomLeftRadius: 0,
-          borderBottomRightRadius: 0,
-          backgroundColor: theme.palette.background.light,
-        },
-        border: 'none',
-        '&:hover': {
-          backgroundColor: 'rgba(255, 255, 255, 0.2)',
-          color: '#fff',
-        },
-        textTransform: 'none',
-      }}
+      sx={
+        dashboardView
+          ? {
+              width: numValues !== undefined ? `${100 / numValues}%` : '25%',
+              maxWidth: numValues !== undefined ? `${100 / numValues}%` : '25%',
+              '&.MuiButtonBase-root': {
+                borderBottomLeftRadius: 0,
+                borderBottomRightRadius: 0,
+                backgroundColor: theme.palette.background.light,
+              },
+              border: 'none',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                color: '#fff',
+              },
+              textTransform: 'none',
+            }
+          : {
+              width: '20%',
+              maxWidth: '20%',
+              '&.MuiButtonBase-root': {
+                height: '30px',
+                borderRadius: '12px',
+                py: 1,
+                px: 1,
+                backgroundColor:
+                  filter === value ? theme.palette.primary.main : undefined,
+                zIndex: filter === value ? 10 : 1,
+              },
+              border: 'none',
+              '&:hover': {
+                backgroundColor:
+                  filter === value
+                    ? `${theme.palette.primary.main} !important`
+                    : `${theme.palette.background.default} !important`,
+              },
+              textTransform: 'none',
+            }
+      }
     >
       {isILink(value) ? (
         <Box
@@ -56,17 +81,26 @@ export default function FilterButton(props: Props) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: filter === value ? theme.palette.primary.main : undefined,
+            color:
+              dashboardView && filter === value
+                ? theme.palette.primary.main
+                : undefined,
           }}
         >
           {value.icon}
         </Box>
       ) : (
         <Typography
-          variant="body2"
           sx={{
-            fontSize: screenSize.isMobile ? '12px' : 12,
-            color: filter === value ? theme.palette.primary.main : undefined,
+            fontSize: screenSize.isUltraSmall
+              ? 8
+              : screenSize.isSmallMobile
+                ? 10
+                : screenSize.isMobile
+                  ? 12
+                  : 16,
+            fontWeight: filter === value ? 800 : 400,
+            color: filter === value ? theme.palette.text.secondary : undefined,
           }}
         >
           {value.toUpperCase()}

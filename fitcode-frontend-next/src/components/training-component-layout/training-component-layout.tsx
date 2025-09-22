@@ -1,4 +1,4 @@
-import { Box, Collapse, Divider, Stack, Typography } from '@mui/material';
+import { Box, Collapse, Stack, Typography } from '@mui/material';
 import { useState } from 'react';
 
 import ComponentActionsModal from '../component-actions-modal/component-actions-modal';
@@ -55,12 +55,7 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
         px: 0,
       }}
     >
-      <Box
-        sx={{
-          py: component?.id !== trainingComponent.id ? 1.75 : 0,
-          pt: component?.id === trainingComponent.id ? 1.75 : undefined,
-        }}
-      >
+      <Box>
         <Box
           sx={{
             display: 'flex',
@@ -68,7 +63,6 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
             justifyContent: 'space-between',
           }}
           position="relative"
-          mb={component?.id === trainingComponent.id ? 1 : 0}
         >
           <TrainingComponentMenu
             trainingComponent={trainingComponent}
@@ -119,10 +113,6 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
             </Box>
           </Stack>
         </Box>
-
-        {trainingComponent.id === component?.id && (
-          <Divider sx={{ p: 0, m: 0, mt: 1.8 }} />
-        )}
 
         <Collapse
           in={component && trainingComponent.id === component.id}
@@ -176,15 +166,6 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
         </Collapse>
         {/* )} */}
       </Box>
-
-      <Divider
-        sx={{
-          width: '100%',
-          color: 'white',
-          p: 0,
-          m: 0,
-        }}
-      />
 
       {/* Training Component Calendar Modal */}
       <MyModal

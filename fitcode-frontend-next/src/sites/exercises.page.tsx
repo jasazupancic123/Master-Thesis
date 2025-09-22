@@ -176,6 +176,7 @@ export default function ExercisesPage() {
         </Box>
       )}
       <Box
+        width="100%"
         display="flex"
         justifyContent="center"
         flexDirection="column"
@@ -200,6 +201,7 @@ export default function ExercisesPage() {
           }
           bgColor={theme.palette.background.default}
           primaryColor={theme.palette.primary.main}
+          gap={screenSize.isReallySmall ? 1.5 : 3.5}
         />
 
         {/* Search Input */}

@@ -412,7 +412,9 @@ export default function TrainingInProgressExerciseCard() {
               <Typography fontSize={12}>Done</Typography>
 
               <Checkbox
-                icon={<PanoramaFishEye />}
+                icon={
+                  <PanoramaFishEye sx={{ color: theme.palette.primary.main }} />
+                }
                 checkedIcon={
                   <CheckCircle sx={{ color: theme.palette.primary.main }} />
                 }

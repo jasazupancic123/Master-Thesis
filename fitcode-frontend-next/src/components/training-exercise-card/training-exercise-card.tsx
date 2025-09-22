@@ -69,7 +69,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
       sx={{
         width: '100% !important',
         position: 'relative',
-        backgroundColor: chartView ? 'transparent' : undefined,
+        backgroundColor: theme.palette.background.paper,
         borderRadius: '5px',
         backgroundPosition: 'center',
         backgroundSize: '100% auto',
@@ -88,8 +88,8 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           right: 0,
           bottom: 0,
           backgroundColor: selectedExercises.some((ex) => ex.id === exercise.id)
-            ? theme.palette.background.light
-            : theme.palette.background.dark,
+            ? theme.palette.background.darkBorder
+            : theme.palette.background.light,
           zIndex: 0,
         }}
         onClick={(e) => {

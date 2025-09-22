@@ -141,7 +141,6 @@ export default function FeedbackPage() {
           bottom: 60,
           left: '50%',
           transform: 'translateX(-50%)',
-          color: '#ffffff',
         }}
       >
         Submit
