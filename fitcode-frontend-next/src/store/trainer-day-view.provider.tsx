@@ -1,3 +1,4 @@
+import { isSameDay } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 
@@ -7,11 +8,13 @@ import type {
   GroupContextProps,
   TrainerDayViewContextProps,
 } from '@/app/(trainer)/groups/[group_id]/props';
+import { FirebaseFirestoreUtil } from '@/common/firebase/firebase-firestore.util';
 import { CommonService } from '@/common/service/common.service';
 import type { Day } from '@/common/service/util/date.util';
 import type { Pagination } from '@/common/type/paginate.type';
 import type { ChildrenProps } from '@/common/type/props.type';
 import { handleApiRequest } from '@/common/type/state.type';
+import { firestoreSerialize } from '@/common/util/firebase.util';
 import type { AuthUser } from '@/controller/auth/type/user.type';
 import { Controller } from '@/controller/controller';
 import { ExerciseService } from '@/controller/exercise/exercise.service';
@@ -24,8 +27,13 @@ import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import type { Workload } from '@/controller/training/type/workload.type';
+import {
+  type UserProgress,
+  WorkloadService,
+} from '@/controller/training/workload.service';
 
 const commonService = CommonService.instance;
+const firestore = FirebaseFirestoreUtil.Instance;
 
 export const TrainerDayViewContext =
   createContext<TrainerDayViewContextProps | null>(null);
@@ -61,6 +69,7 @@ export function TrainerDayViewProvider(
   >(undefined);
 
   const [training, setTraining] = useState<Training | undefined>();
+  const [progress, setProgress] = useState<UserProgress[]>([]);
   const [component, setComponent] = useState<TrainingComponent | undefined>();
   const [supersets, setSupersets] = useState<Superset[]>([]);
   const [members, setMembers] = useState<Profile[]>([]);
@@ -156,11 +165,36 @@ export function TrainerDayViewProvider(
     );
   }, [component, pagination.page]);
 
+  useEffect(() => {
+    if (!training) return;
+    if (!isSameDay(day.date.toDate(), new Date())) return; // only for today
+
+    const unsub = firestore.listenCollection<Workload>(
+      `trainings/${training.id}/training-workload`,
+      (snapshot) => {
+        const data = snapshot.docs.map((doc) => firestoreSerialize(doc.data()));
+        const progress = WorkloadService.getProgress(training, data);
+        setProgress(progress);
+      },
+      (error) => {
+        console.error('Error loading workloads:', error);
+      }
+    );
+
+    return () => unsub();
+  }, [training]);
+
+  useEffect(() => {
+    // reset workloads
+    if (!isSameDay(day.date.toDate(), new Date())) setProgress([]);
+  }, [day]);
+
   const value: TrainerDayViewContextProps = {
     day,
     setDay,
     training,
     setTraining,
+    progress,
     selectedPeriod,
     setSelectedPeriod,
     component,

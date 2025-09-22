@@ -1,3 +1,4 @@
+import { connectFirestoreEmulator, getFirestore } from '@firebase/firestore';
 import { connectStorageEmulator, getStorage } from '@firebase/storage';
 import type { FirebaseApp, FirebaseServerApp } from 'firebase/app';
 import { getApps, initializeApp, initializeServerApp } from 'firebase/app';
@@ -36,6 +37,19 @@ export function getFirebaseServerApp(
     getConfig(),
     options?.authIdToken ? { authIdToken: options.authIdToken } : undefined
   );
+}
+
+export function getFirebaseFirestore(options?: FirebaseInitAppOptions) {
+  const app = options?.server
+    ? getFirebaseServerApp(options)
+    : getApps().length
+      ? getApps()[0]
+      : getFirebaseApp();
+
+  const firestore = getFirestore(app);
+
+  if (dev) connectFirestoreEmulator(firestore, 'localhost', 8090);
+  return firestore;
 }
 
 export function getFirebaseAuth(options?: FirebaseInitAppOptions) {

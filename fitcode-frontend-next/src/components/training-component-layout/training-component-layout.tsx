@@ -96,6 +96,7 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
                 expandedExercisesView={expandedExercisesView}
                 setExpandedExercisesView={setExpandedExercisesView}
               />
+
               <Box
                 display="flex"
                 width={screenSize.isMobile ? '100%' : undefined}

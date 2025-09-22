@@ -2,10 +2,23 @@ rules_version = '2';
 
 service cloud.firestore {
     match /databases/{database}/documents {
-        // Allow only admin to create, update and delete components, but allow all authenticated users to read them
-        match /components/{component=**} {
-            allow create, update, delete: if request.auth != null && 'admin' in request.auth.token.role;
-            allow read: if request.auth != null;
+
+        // Trainings collection listener
+        match /trainings/{trainingId} {
+            allow read: if request.auth != null 
+                && (request.auth.uid == resource.data.ownerId 
+                    || request.auth.uid in resource.data.memberIds);
+
+            // Training workloads subcollection
+            match /training-workload/{workloadId} {
+                allow read: if request.auth != null
+                && (
+                    // trainer
+                    request.auth.uid == get(/databases/$(database)/documents/trainings/$(trainingId)).data.ownerId
+                    // or member
+                    || request.auth.uid in get(/databases/$(database)/documents/trainings/$(trainingId)).data.memberIds
+                );
+            }
         }
     }
 }

@@ -166,7 +166,6 @@ export default function SupersetExercise(props: SupersetExerciseProps) {
                 : `${supersetIndex + 1}${String.fromCharCode(65 + exerciseIndex)}`}
             </Typography>
           </Box>
-
           {!selectedAthlete && expandedExercisesView && (
             <Box
               position="absolute"
@@ -189,7 +188,6 @@ export default function SupersetExercise(props: SupersetExerciseProps) {
               </IconButton>
             </Box>
           )}
-
           <TrainingExerciseCardContainer
             supersetIndex={supersetIndex}
             exercise={exercise}
@@ -201,7 +199,6 @@ export default function SupersetExercise(props: SupersetExerciseProps) {
           />
         </Box>
       </Box>
-
       <Menu
         anchorEl={anchorEl}
         open={open}
