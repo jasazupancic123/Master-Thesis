@@ -17,7 +17,6 @@ import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 interface TrainingInProgressSupersetProps {
   anchorEl: HTMLElement | null;
   open: boolean;
-  setOpenFinishTrainingModal: SetState<boolean>;
   handleCancel: () => void;
   handleOpenMenu: (event: React.MouseEvent<HTMLElement>) => void;
   handleCloseMenu: () => void;
@@ -35,7 +34,6 @@ export default function TrainingInProgressSuperset(
   const {
     anchorEl,
     open,
-    setOpenFinishTrainingModal,
     handleCancel,
     handleOpenMenu,
     handleCloseMenu,
@@ -72,8 +70,6 @@ export default function TrainingInProgressSuperset(
       setShowUndoneSetsError(true);
       return;
     }
-
-    setOpenFinishTrainingModal(true);
   };
 
   if (!trainingInProgress || !selectedSuperset) return null;

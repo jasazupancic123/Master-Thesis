@@ -40,6 +40,7 @@ export default function TrainingInProgressExerciseCard() {
     supersetIndex,
     setIndex,
     setSetIndex,
+    handleUpsertSet,
   } = useTrainingInProgress();
 
   const { selectedTrackingMethod, setSelectedTrackingMethod } =

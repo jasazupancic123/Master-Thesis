@@ -26,6 +26,7 @@ import {
   MIN_BODYWEIGHT_KG,
 } from '@src/common/constant/weight.constant';
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
+import { DateFilterDto } from '@src/common/dto/date-filter.dto';
 import { DateRangeDto } from '@src/common/dto/date-range.dto';
 import { UpdateMembersDto } from '@src/common/dto/user-id.dto';
 import { Permission } from '@src/common/interface/permission.interface';
@@ -54,6 +55,7 @@ import {
   WARMUP_COMPONENT_ID,
 } from '@src/component/constant/warmup-cooldown.constant';
 import { IntType, ParamType } from '@src/component/enum/param.enum';
+import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { DELETE_GROUP_EVENT } from '@src/group/constant/delete-group-event.constant';
 import { Cycle } from '@src/group/entity/cycle.entity';
@@ -73,6 +75,7 @@ import {
   DURATION_TRAINING_COMPONENT_WARMUP_COOLDOWN_IN_MIN,
   MAX_NUM_TRAININGS_PER_DAY,
 } from '../constant/training-limits.constant';
+import { CompleteSetDto } from '../dto/complete-set.dto';
 import {
   CreateTrainingComponentDto,
   CreateTrainingDto,
@@ -84,12 +87,14 @@ import { Superset } from '../entity/superset.entity';
 import { Training } from '../entity/training.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
+import { TrainingReport } from '../entity/training-report.entity';
 import { Workload } from '../entity/workload.entity';
 import { MainSet } from '../enum/main-set.enum';
 import { UpdateTraining } from '../interface/update-training.interface';
 import { TrainingRepository } from '../repository/training.repository';
 import { WorkloadRepository } from '../repository/workload.repository';
 import { TrainingPlanService } from './training-plan.service';
+import { TrainingReportService } from './training-report.service';
 import { WorkloadService } from './workload.service';
 
 @Injectable()
@@ -110,8 +115,10 @@ export class TrainingService implements Permission<Training, Institution> {
     private readonly trainingPlanService: TrainingPlanService,
     private readonly workloadRepository: WorkloadRepository,
     private readonly workloadService: WorkloadService,
+    private readonly trainingReportService: TrainingReportService,
     private readonly groupService: GroupService,
     private readonly institutionService: InstitutionService,
+    private readonly exerciseService: ExerciseService,
   ) {}
 
   async getDocs(query: (query: Query) => Query = (query) => query) {
@@ -155,17 +162,18 @@ export class TrainingService implements Permission<Training, Institution> {
   ): Promise<Training[]> {
     const trainings = await this.repository.findAll(
       logFirestoreQuery(this.logger, (q) => {
-        if (
-          this.firebaseService.isTrainer(user) ||
-          this.firebaseService.isManager(user)
-        )
+        if (this.firebaseService.isTrainer(user))
           q = q.where('ownerId', '==', user.uid);
         else if (this.firebaseService.isAthlete(user))
           q = q.where('membersIds', 'array-contains', user.uid);
 
         // filter by other params
+        if (filter?.institutionId)
+          q.where('institutionId', '==', filter.institutionId);
+
         if (filter?.groupId) q = q.where('groupId', '==', filter.groupId);
         if (filter?.cycleId) q = q.where('cycleId', '==', filter.cycleId);
+
         if (filter?.from)
           q = q.where('from', '>=', Timestamp.fromDate(new Date(filter.from)));
         if (filter?.to)
@@ -199,9 +207,7 @@ export class TrainingService implements Permission<Training, Institution> {
         const foundGroup = groups.find((g) => g.id === t.groupId);
         const group =
           foundGroup || t.groupId
-            ? await this.groupService.findOneById(user, {
-                groupId: t.groupId,
-              })
+            ? await this.groupService.findOneById(user, { groupId: t.groupId })
             : undefined;
 
         if (!foundInstitution && institution) institutions.push(institution);
@@ -209,7 +215,9 @@ export class TrainingService implements Permission<Training, Institution> {
 
         t.institution = institution;
         t.group = group;
-        t.cycle = this.groupService.findCycleOrFail(t.cycleId, t.group);
+
+        if (group)
+          t.cycle = this.groupService.findCycleOrFail(t.cycleId, t.group);
       }
 
       const duration = this.commonService.number.round(
@@ -220,6 +228,14 @@ export class TrainingService implements Permission<Training, Institution> {
     }
 
     return trainings;
+  }
+
+  @LogMethod()
+  async findReportsByUser(
+    user: User,
+    filter?: DateFilterDto,
+  ): Promise<TrainingReport[]> {
+    return await this.trainingReportService.findAllByUser(user.uid, filter);
   }
 
   @LogMethod()
@@ -717,6 +733,74 @@ export class TrainingService implements Permission<Training, Institution> {
     return periodized.sort(
       (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime(),
     );
+  }
+
+  @LogMethod()
+  async completeNextSet(
+    user: User,
+    ref: Pick<WorkloadRef, 'trainingId' | 'exerciseId' | 'userId'>,
+    input: CompleteSetDto,
+  ) {
+    const { userId } = ref;
+    const training = await this.findOneByIdOrFail(user, ref);
+    const athlete = await this.getAthlete(user, userId, training.institution);
+
+    const exercise = await this.exerciseService.findOneByIdOrFail(athlete, ref);
+    this.workloadService.checkBilateralInput(exercise.isBilateral, input);
+
+    if (
+      !this.commonService.date.isBetween(
+        training.from,
+        startOfDay(new Date()),
+        endOfDay(new Date()),
+      )
+    )
+      throw new ConflictException('Training is not scheduled for today');
+
+    const prescribedTraining = this.trainingPlanService.getTrainingByAthlete(
+      athlete.uid,
+      training,
+    );
+
+    await this.updateBodyweightSets(athlete.uid, prescribedTraining);
+    await this.updateRepMaxSets(athlete.uid, prescribedTraining);
+
+    const workload = await this.workloadService.completeNextSet(
+      ref,
+      prescribedTraining,
+      input,
+    );
+
+    // update report
+    await this.trainingReportService.updateReport(userId, training);
+    return workload;
+  }
+
+  @LogMethod()
+  async upsertSet(user: User, ref: WorkloadRef, input: CompleteSetDto) {
+    const { userId } = ref;
+    const training = await this.findOneByIdOrFail(user, ref);
+    const athlete = await this.getAthlete(user, userId, training.institution);
+    const exercise = await this.exerciseService.findOneByIdOrFail(athlete, ref);
+
+    this.workloadService.checkBilateralInput(exercise.isBilateral, input);
+
+    const prescribedTraining = this.trainingPlanService.getTrainingByAthlete(
+      athlete.uid,
+      training,
+    );
+
+    await this.updateBodyweightSets(athlete.uid, prescribedTraining);
+    await this.updateRepMaxSets(athlete.uid, prescribedTraining);
+
+    const workload = await this.workloadService.upsertSet(
+      ref,
+      prescribedTraining,
+      input,
+    );
+
+    await this.trainingReportService.updateReport(userId, training);
+    return workload;
   }
 
   @LogMethod()

@@ -172,34 +172,6 @@ describe('getSetData', () => {
     });
   });
 
-  it('should handle nested parameter options correctly', () => {
-    const componentParams: ComponentParam[] = [
-      {
-        field: ParamType.VolWorkSets,
-        options: [{ field: VolWorkSetType.Set, defaultValue: '1' }],
-      },
-      {
-        field: ParamType.IntWork1,
-        options: [
-          { field: IntType.Eff, options: [{ field: '2', defaultValue: '2' }] },
-        ],
-      },
-    ];
-
-    const params = componentService.getParamAttributes(componentParams);
-    const result = service.getSets(false, params);
-
-    expect(result.length).toBe(1);
-    expect(result[0].paramValuesL).toEqual([
-      {
-        field: ParamType.IntWork1,
-        selected: `${IntType.Eff}:2`,
-        value: '2',
-      },
-    ]);
-    expect(result[0].paramValuesR).toBeUndefined();
-  });
-
   it('should filter out VolWorkSets from the param values', () => {
     const componentParams: ComponentParam[] = [
       {
@@ -253,7 +225,7 @@ describe('getSetData', () => {
 
     expect(result.length).toBe(1);
     expect(result[0].paramValuesL).toEqual([
-      { field: ParamType.IntWork1, selected: IntType.Kg, value: '20' },
+      { field: ParamType.IntWork1, selected: IntType.Kg, value: '50' },
     ]);
   });
 });

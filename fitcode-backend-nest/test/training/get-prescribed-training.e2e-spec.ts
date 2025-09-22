@@ -253,11 +253,11 @@ describe('Get prescribed training (e2e)', () => {
     const paramValues = firstExercise.sets[0].paramValuesL;
     const repField = paramValues.find((p) => p.selected === VolType.Rep);
     expect(repField).toBeDefined();
-    expect(+repField.value).toBe(12); // default value
+    expect(+repField.value).toBe(10); // default value
 
     const kgField = paramValues.find((p) => p.selected === IntType.Kg);
     expect(kgField).toBeDefined();
-    expect(+kgField.value).toBe(20);
+    expect(+kgField.value).toBe(50);
   });
 
   it('should get prescribed training for athlete for subgroup', async () => {
@@ -283,11 +283,11 @@ describe('Get prescribed training (e2e)', () => {
     const paramValues = firstExercise.sets[0].paramValuesL;
     const repField = paramValues.find((p) => p.selected === VolType.Rep);
     expect(repField).toBeDefined();
-    expect(+repField.value).toBe(12); // default value
+    expect(+repField.value).toBe(10); // default value
 
     const kgField = paramValues.find((p) => p.selected === IntType.Kg);
     expect(kgField).toBeDefined();
-    expect(+kgField.value).toBe(20);
+    expect(+kgField.value).toBe(50);
 
     const secondExercise = trainingComponent.supersets[1].exercises[0];
     expect(secondExercise.id).toBe('bench');
@@ -300,13 +300,13 @@ describe('Get prescribed training (e2e)', () => {
     );
 
     expect(secondRepField).toBeDefined();
-    expect(+secondRepField.value).toBe(12); // default value
+    expect(+secondRepField.value).toBe(10); // default value
 
     const secondKgField = secondParamValues.find(
       (p) => p.selected === IntType.Kg,
     );
     expect(secondKgField).toBeDefined();
-    expect(+secondKgField.value).toBe(20);
+    expect(+secondKgField.value).toBe(50);
 
     const thirdExercise = trainingComponent.supersets[1].exercises[1];
     expect(thirdExercise.id).toBe('deadlift');
@@ -318,13 +318,13 @@ describe('Get prescribed training (e2e)', () => {
       (p) => p.selected === VolType.Rep,
     );
     expect(thirdRepField).toBeDefined();
-    expect(+thirdRepField.value).toBe(12); // default value
+    expect(+thirdRepField.value).toBe(10); // default value
 
     const thirdKgField = thirdParamValues.find(
       (p) => p.selected === IntType.Kg,
     );
     expect(thirdKgField).toBeDefined();
-    expect(+thirdKgField.value).toBe(20);
+    expect(+thirdKgField.value).toBe(50);
   });
 
   it('should get prescribed training for athlete for child subgroup', async () => {
@@ -439,7 +439,7 @@ describe('Get prescribed training (e2e)', () => {
     firstSet.paramValuesL.forEach((p, i) => {
       if (i !== indexOfInt) {
         if (p.selected === IntType.Kg) expect(p.value).toBe('20');
-        if (p.selected === VolType.Rep) expect(p.value).toBe('12');
+        if (p.selected === VolType.Rep) expect(p.value).toBe('10');
       }
     });
 
@@ -452,15 +452,15 @@ describe('Get prescribed training (e2e)', () => {
     expect(secondSet.paramValuesL[secondIndexOfInt].selected).toBe(IntType.Kg);
     secondSet.paramValuesL.forEach((p, i) => {
       if (i !== secondIndexOfInt) {
-        if (p.selected === IntType.Kg) expect(p.value).toBe('20');
-        if (p.selected === VolType.Rep) expect(p.value).toBe('12');
+        if (p.selected === IntType.Kg) expect(p.value).toBe('50');
+        if (p.selected === VolType.Rep) expect(p.value).toBe('10');
       }
     });
 
     const thirdSet = firstExercise.sets[2];
     thirdSet.paramValuesL.forEach((p) => {
-      if (p.selected === IntType.Kg) expect(p.value).toBe('20');
-      if (p.selected === VolType.Rep) expect(p.value).toBe('12');
+      if (p.selected === IntType.Kg) expect(p.value).toBe('50');
+      if (p.selected === VolType.Rep) expect(p.value).toBe('10');
     });
 
     const secondExercise = trainingComponent.supersets[0].exercises.find(
@@ -472,8 +472,8 @@ describe('Get prescribed training (e2e)', () => {
     expect(secondExercise.sets[0].paramValuesL).toHaveLength(2);
     secondExercise.sets.forEach((set) => {
       set.paramValuesL.forEach((p) => {
-        if (p.selected === IntType.Kg) expect(p.value).toBe('20');
-        if (p.selected === VolType.Rep) expect(p.value).toBe('12');
+        if (p.selected === IntType.Kg) expect(p.value).toBe('50');
+        if (p.selected === VolType.Rep) expect(p.value).toBe('10');
       });
     });
 
@@ -578,8 +578,8 @@ describe('Get prescribed training (e2e)', () => {
     // first exercise should have default values
     for (const set of firstExercise.sets) {
       set.paramValuesL.forEach((p) => {
-        if (p.selected === IntType.Kg) expect(p.value).toBe('20');
-        if (p.selected === VolType.Rep) expect(p.value).toBe('12');
+        if (p.selected === IntType.Kg) expect(p.value).toBe('50');
+        if (p.selected === VolType.Rep) expect(p.value).toBe('10');
       });
     }
 
@@ -599,8 +599,8 @@ describe('Get prescribed training (e2e)', () => {
     expect(firstSet.paramValuesL[indexOfInt].selected).toBe(IntType.Kg);
     firstSet.paramValuesL.forEach((p, i) => {
       if (i !== indexOfInt) {
-        if (p.selected === IntType.Kg) expect(p.value).toBe('20');
-        if (p.selected === VolType.Rep) expect(p.value).toBe('12');
+        if (p.selected === IntType.Kg) expect(p.value).toBe('50');
+        if (p.selected === VolType.Rep) expect(p.value).toBe('10');
       }
     });
 
@@ -613,15 +613,15 @@ describe('Get prescribed training (e2e)', () => {
     expect(secondSet.paramValuesL[secondIndexOfInt].selected).toBe(IntType.Kg);
     secondSet.paramValuesL.forEach((p, i) => {
       if (i !== secondIndexOfInt) {
-        if (p.selected === IntType.Kg) expect(p.value).toBe('20');
-        if (p.selected === VolType.Rep) expect(p.value).toBe('12');
+        if (p.selected === IntType.Kg) expect(p.value).toBe('50');
+        if (p.selected === VolType.Rep) expect(p.value).toBe('10');
       }
     });
 
     const thirdSet = secondExercise.sets[2];
     thirdSet.paramValuesL.forEach((p) => {
-      if (p.selected === IntType.Kg) expect(p.value).toBe('20');
-      if (p.selected === VolType.Rep) expect(p.value).toBe('12');
+      if (p.selected === IntType.Kg) expect(p.value).toBe('50');
+      if (p.selected === VolType.Rep) expect(p.value).toBe('10');
     });
 
     await db.trainings.delete(trainingId);

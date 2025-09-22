@@ -20,14 +20,15 @@ import { IntType, ParamType, VolType } from '@src/component/enum/param.enum';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
 
+import { CompleteSetDto } from '../dto/complete-set.dto';
 import { CreatePrescribedWorkloadDto } from '../dto/create-workload.dto';
 import { CompletedTrainingExercise } from '../entity/completed-training.entity';
 import { ExerciseSet } from '../entity/exercise-set.entity';
+import { Training } from '../entity/training.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
 import { Workload, WorkloadMeta } from '../entity/workload.entity';
 import {
-  CompletedWorkload,
   PrescribedWorkload,
   WorkloadValue,
 } from '../entity/workload-value.entity';
@@ -88,9 +89,11 @@ export class WorkloadService {
    */
   async findAllByUserTraining(
     userId: string,
-    ref: Pick<WorkloadRef, 'trainingId' | 'componentId'>,
+    ref: Partial<
+      Pick<WorkloadRef, 'trainingId' | 'componentId' | 'exerciseId'>
+    >,
   ): Promise<Workload[]> {
-    const { trainingId, componentId } = ref;
+    const { trainingId, componentId, exerciseId } = ref;
     let query = this.firebaseService.firestore.collectionGroup(
       FirestoreCollection.TRAINING_WORKLOAD,
     );
@@ -100,6 +103,8 @@ export class WorkloadService {
       query = query.where('trainingId', '==', trainingId) as CollectionGroup;
     if (componentId)
       query = query.where('componentId', '==', componentId) as CollectionGroup;
+    if (exerciseId)
+      query = query.where('exerciseId', '==', exerciseId) as CollectionGroup;
 
     return query
       .get()
@@ -262,7 +267,8 @@ export class WorkloadService {
                   supersetIndex,
                 });
 
-              const completedWorkload = this.getCompletedWorkload(completedSet);
+              const completedWorkload =
+                this.getCompletedWorkloadFromExerciseSet(completedSet);
               const workloadValue: WorkloadValue = {
                 ...prescribedWorkload,
                 ...completedWorkload,
@@ -296,6 +302,148 @@ export class WorkloadService {
     const results = await batch.commit();
     return results.length; // return number of operations committed
     // return await this.firebaseService.paginateBatchWrites(operations);
+  }
+
+  async upsert(
+    ref: WorkloadRef & CycleRef & InstitutionRef,
+    prescribedSet: ExerciseSet,
+    completedSet: CompleteSetDto,
+  ) {
+    const prescribedWorkload = this.getPrescribedWorkload(prescribedSet);
+    const completedWorkload =
+      this.getCompletedWorkloadFromCompletedSet(completedSet);
+
+    const workloadValue: WorkloadValue = {
+      ...prescribedWorkload,
+      ...completedWorkload,
+    };
+
+    const workloadMeta: WorkloadMeta = {
+      ...ref,
+      id: this.repository.getKey(ref),
+      plannedAt: completedSet.from,
+      status: this.getStatus(workloadValue),
+      notes: completedSet.notes,
+    };
+
+    const workload: Create<Workload> = { ...workloadValue, ...workloadMeta };
+    await this.repository.save(ref, workload);
+    return { ...workload, createdAt: new Date(), updatedAt: new Date() };
+  }
+
+  /**
+   * Finds next set to be completed for provided exercise in training without
+   * actually providing component id, superset index and set number.
+   */
+  async completeNextSet(
+    ref: Pick<WorkloadRef, 'trainingId' | 'exerciseId' | 'userId'>,
+    training: Training, // prescribed training for user
+    input: CompleteSetDto,
+  ): Promise<Workload> {
+    // find exercise in training
+    const existingExerciseWorkloads = await this.findAllByUserTraining(
+      ref.userId,
+      ref,
+    );
+
+    // determine in which superset the exercise is being completed and its set number
+    let componentId: string;
+    let supersetIndex = -1;
+    let setNumber = -1;
+    let prescribedSet: ExerciseSet;
+
+    let remaining = existingExerciseWorkloads.length;
+    outer: for (const component of training.components) {
+      for (const [i, superset] of component.supersets.entries()) {
+        const found = superset.exercises.find((e) => e.id === ref.exerciseId);
+        if (!found) continue;
+
+        for (let j = 0; j < found.sets.length; j++) {
+          if (remaining === 0) {
+            supersetIndex = i;
+            setNumber = j + 1; // 1-based index
+            componentId = component.id;
+            prescribedSet = found.sets[j];
+            break outer;
+          }
+
+          remaining--;
+        }
+      }
+    }
+
+    if (supersetIndex === -1 || setNumber === -1) {
+      // component & exercise not found, add exercise to special 'other' component
+      componentId = 'other';
+      supersetIndex = 0;
+      setNumber = Math.abs(-remaining - 1); // 1-based index
+      prescribedSet = { setNumber, paramValuesL: [], paramValuesR: [] };
+    }
+
+    return await this.upsert(
+      {
+        institutionId: training.institutionId,
+        groupId: training.groupId,
+        cycleId: training.cycleId,
+        componentId,
+        supersetIndex,
+        setNumber,
+        ...ref,
+      },
+      prescribedSet,
+      input,
+    );
+  }
+
+  /**
+   * Upserts provided set as completed for provided workload reference.
+   */
+  async upsertSet(
+    ref: WorkloadRef,
+    training: Training,
+    input: CompleteSetDto,
+  ): Promise<Workload> {
+    // find prescribed set
+    const prescribedTraining = this.trainingPlanService.getTrainingByAthlete(
+      ref.userId,
+      training,
+    );
+
+    const component = prescribedTraining.components.find(
+      (c) => c.id === ref.componentId,
+    );
+
+    if (!component)
+      throw new BadRequestException('Component not found in training');
+
+    const superset = component.supersets[ref.supersetIndex];
+    if (!superset) throw new BadRequestException('Superset not found');
+
+    const prescribedExercise = superset.exercises.find(
+      (e) => e.id === ref.exerciseId,
+    );
+
+    if (!prescribedExercise)
+      throw new BadRequestException('Exercise not found in training');
+
+    const prescribedSet = prescribedExercise?.sets.find(
+      (s) => s.setNumber === ref.setNumber,
+    );
+
+    if (!prescribedSet)
+      throw new BadRequestException('Set number not found in exercise');
+
+    // create workload
+    return await this.upsert(
+      {
+        ...ref,
+        institutionId: training.institutionId,
+        groupId: training.groupId,
+        cycleId: training.cycleId,
+      },
+      prescribedSet,
+      input,
+    );
   }
 
   async deleteWorkloads(workloads: Workload[]): Promise<void> {
@@ -448,7 +596,7 @@ export class WorkloadService {
       workloadValue.intRecValueL,
     );
 
-    const fieldStatus = [
+    let fieldStatus = [
       volWork1Status,
       volWork2Status,
       volRecStatus,
@@ -457,36 +605,28 @@ export class WorkloadService {
       intRecStatus,
     ];
 
-    // edge case - every performed value is ignored
+    // edge case - no value is prescribed
     if (fieldStatus.every((status) => status === SetStatus.IGNORED))
       return SetStatus.COMPLETED;
 
-    // not started if every performed value is not started or ignored
-    if (
-      fieldStatus.every((status) =>
-        [SetStatus.NOT_STARTED, SetStatus.IGNORED].includes(status),
-      )
-    )
+    // remove all ignored fields
+    fieldStatus = fieldStatus.filter((status) => status !== SetStatus.IGNORED);
+
+    // not started if every performed value is not started
+    if (fieldStatus.every((status) => status === SetStatus.NOT_STARTED))
       return SetStatus.NOT_STARTED;
 
-    // completed if every performed value is completed or ignored
-    if (
-      fieldStatus.every((status) =>
-        [SetStatus.COMPLETED, SetStatus.IGNORED].includes(status),
-      )
-    )
-      return SetStatus.COMPLETED;
+    // partial if atleast one performed value is partial
+    if (fieldStatus.some((status) => status === SetStatus.PARTIAL))
+      return SetStatus.PARTIAL;
 
-    // over-performed if every performed value is over-performed or ignored
-    if (
-      fieldStatus.every((status) =>
-        [SetStatus.OVER, SetStatus.IGNORED].includes(status),
-      )
-    )
+    // no more partial values, so either completed or over
+    // if some performed value is over, then it's over
+    if (fieldStatus.some((status) => status === SetStatus.OVER))
       return SetStatus.OVER;
 
-    // else, it's partial set
-    return SetStatus.PARTIAL;
+    // all performed are completed
+    return SetStatus.COMPLETED;
   }
 
   private getStatusByField(
@@ -511,7 +651,7 @@ export class WorkloadService {
   ): WorkloadValue {
     return {
       ...this.getPrescribedWorkload(prescribedSet),
-      ...this.getCompletedWorkload(completedSet),
+      ...this.getCompletedWorkloadFromExerciseSet(completedSet),
     };
   }
 
@@ -519,7 +659,7 @@ export class WorkloadService {
    * Parses values that athlete completed, so it's assumed that `paramValues`
    * are populated with correct values
    */
-  getCompletedWorkload(completedSet: ExerciseSet): CompletedWorkload {
+  getCompletedWorkloadFromExerciseSet(completedSet: ExerciseSet) {
     const { paramValuesL, paramValuesR } = completedSet;
 
     const volWork1ValueL = paramValuesL.find(
@@ -589,6 +729,23 @@ export class WorkloadService {
     }
 
     return workloadValue;
+  }
+
+  getCompletedWorkloadFromCompletedSet(input: CompleteSetDto) {
+    return {
+      volWork1ValueL: input.reps || input.time || input.dist,
+      volWork1ValueR: input.repsR || input.timeR || input.distR,
+      volWork2ValueL: input.tempo || input.velocity || input.eff,
+      volWork2ValueR: input.tempoR || input.velocityR || input.eff,
+      volRecValueL: input.recTime,
+      volRecValueR: input.recTime,
+      intWork1ValueL: input.load,
+      intWork1ValueR: input.loadR,
+      intWork2ValueL: input.rom || input.bpm || input.mas,
+      intWork2ValueR: input.romR || input.bpm || input.mas,
+      intRecValueL: input.recDist,
+      intRecValueR: input.recDist,
+    };
   }
 
   getPrescribedWorkload(prescribedSet: ExerciseSet): PrescribedWorkload {
@@ -764,6 +921,32 @@ export class WorkloadService {
     }
 
     return set;
+  }
+
+  checkBilateralInput(isBilateral: boolean, input: CompleteSetDto) {
+    if (!isBilateral) return;
+
+    const pairs = {
+      reps: [input.reps, input.repsR],
+      time: [input.time, input.timeR],
+      dist: [input.dist, input.distR],
+      load: [input.load, input.loadR],
+      rom: [input.rom, input.romR],
+      velocity: [input.velocity, input.velocityR],
+      tempo: [input.tempo, input.tempoR],
+      photoUrl: [input.photoUrl, input.photoUrlR],
+      tempos: [input.tempos, input.temposR],
+      roms: [input.roms, input.romsR],
+      velocities: [input.velocities, input.velocitiesR],
+      feedback: [input.feedback, input.feedbackR],
+    };
+
+    // check that both sides are filled or none
+    for (const [key, [left, right]] of Object.entries(pairs))
+      if ((left && !right) || (!left && right))
+        throw new BadRequestException(
+          `Both sides must be filled for ${key} or none`,
+        );
   }
 
   private parseSelected<T = string>(

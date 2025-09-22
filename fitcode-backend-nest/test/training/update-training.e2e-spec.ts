@@ -623,7 +623,7 @@ describe('Update Training (e2e)', () => {
 
       expect(existingWorkloads).toHaveLength(1);
       const existingWorkload = existingWorkloads[0];
-      expect(existingWorkload.prescribedIntWork1ValueL).toBe(20); //INT_OPTIONS[0].defaultValue,
+      expect(existingWorkload.prescribedIntWork1ValueL).toBe(50); //INT_OPTIONS[0].defaultValue,
 
       const newWorkload = generateWorkloadStub(component1, {
         trainingId: training.id,

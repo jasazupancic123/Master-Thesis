@@ -67,14 +67,7 @@ export function generateParamAttributeValue({
       value?: number;
     }): AttributeValue {
   if (!value) value = generateRandomParamFieldValue(selected);
-
-  return {
-    field: field,
-    selected: [IntType.Eff, IntType.Tempo].includes(selected as IntType)
-      ? `${selected}:${value}`
-      : selected,
-    value: value.toString(),
-  };
+  return { field: field, selected, value: value.toString() };
 }
 
 export function generateRandomParamFieldValue(selected: string): number {
@@ -95,8 +88,8 @@ export function generateRandomParamFieldValue(selected: string): number {
     case IntType.Hrmax:
       return generateRandomNumber(50, 100); // in percentage
     case IntType.Eff:
-      return generateRandomNumber(0, 3); // effort level
+      return generateRandomNumber(1, 4); // effort level
     case IntType.Tempo:
-      return generateRandomNumber(0, 3); // tempo level
+      return generateRandomNumber(1000, 9999); // tempo level
   }
 }

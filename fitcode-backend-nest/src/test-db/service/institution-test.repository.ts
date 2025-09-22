@@ -20,7 +20,7 @@ export class InstitutionTestRepository extends TestRepositoryMixin<Institution>(
   /**
    * Creates a test institution with associated users.
    */
-  async create(input?: {
+  async createTest(input?: {
     manager?: TestUser;
     athletes?: TestUser[]; // additional athletes
     trainers?: TestUser[]; // additional trainers

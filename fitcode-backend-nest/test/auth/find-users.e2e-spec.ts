@@ -34,12 +34,12 @@ describe('Update Institution (e2e)', () => {
     newAthlete2 = await createAthleteUserAndToken(firebase);
 
     // first institution has 3 global users (manager & trainer & athlete) + 1 additional athlete
-    institution1 = await db.institutions.create({
+    institution1 = await db.institutions.createTest({
       athletes: [global.athlete, newAthlete2],
     });
 
     // second institution has 1 created manager, 1 created trainer, 1 created athlete + 2 additional athletes (one of them is shared with institution 1)
-    institution2 = await db.institutions.create({
+    institution2 = await db.institutions.createTest({
       random: true,
       athletes: [newAthlete1, newAthlete2],
     });

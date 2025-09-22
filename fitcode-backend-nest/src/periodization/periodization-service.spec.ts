@@ -217,9 +217,9 @@ describe('periodize', () => {
                   generateTrainingExercise({
                     id: 'e1',
                     sets: [
-                      generateExerciseSet(1, params),
-                      generateExerciseSet(2, params),
-                      generateExerciseSet(3, params),
+                      generateExerciseSet(1, params, { bilateral: true }),
+                      generateExerciseSet(2, params, { bilateral: true }),
+                      generateExerciseSet(3, params, { bilateral: true }),
                     ],
                   }),
                 ],
@@ -263,7 +263,6 @@ describe('periodize', () => {
       expect(exercise).toBeDefined();
       for (const set of exercise.sets) {
         expect(set.paramValuesL).toHaveLength(2); // only IntWork2 and VolWork2
-        expect(set.paramValuesR).toHaveLength(2);
         expect(set.paramValuesL[0].field).toBe(ParamType.IntWork2);
         expect(set.paramValuesL[1].field).toBe(ParamType.VolWork2);
         expect(set.paramValuesR[0].field).toBe(ParamType.IntWork2);
@@ -408,14 +407,17 @@ describe('periodize', () => {
                       generateExerciseSet(
                         1,
                         generateComponentParamsStub([ParamType.IntRec1]),
+                        { bilateral: true },
                       ),
                       generateExerciseSet(
                         2,
                         generateComponentParamsStub([ParamType.IntRec1]),
+                        { bilateral: true },
                       ),
                       generateExerciseSet(
                         3,
                         generateComponentParamsStub([ParamType.IntRec1]),
+                        { bilateral: true },
                       ),
                     ],
                   }),
@@ -425,14 +427,17 @@ describe('periodize', () => {
                       generateExerciseSet(
                         1,
                         generateComponentParamsStub([ParamType.IntRec1]),
+                        { bilateral: true },
                       ),
                       generateExerciseSet(
                         2,
                         generateComponentParamsStub([ParamType.IntRec1]),
+                        { bilateral: true },
                       ),
                       generateExerciseSet(
                         3,
                         generateComponentParamsStub([ParamType.IntRec1]),
+                        { bilateral: true },
                       ),
                     ],
                   }),
@@ -449,17 +454,35 @@ describe('periodize', () => {
                         id: 'e1',
                         sets: [
                           // random values for L and R params
-                          generateExerciseSet(1, true),
-                          generateExerciseSet(2, true),
-                          generateExerciseSet(3, true),
+                          generateExerciseSet(1, null, {
+                            random: true,
+                            bilateral: true,
+                          }),
+                          generateExerciseSet(2, null, {
+                            random: true,
+                            bilateral: true,
+                          }),
+                          generateExerciseSet(3, null, {
+                            random: true,
+                            bilateral: true,
+                          }),
                         ],
                       }),
                       generateTrainingExercise({
                         id: 'e2',
                         sets: [
-                          generateExerciseSet(1, true),
-                          generateExerciseSet(2, true),
-                          generateExerciseSet(3, true),
+                          generateExerciseSet(1, null, {
+                            random: true,
+                            bilateral: true,
+                          }),
+                          generateExerciseSet(2, null, {
+                            random: true,
+                            bilateral: true,
+                          }),
+                          generateExerciseSet(3, null, {
+                            random: true,
+                            bilateral: true,
+                          }),
                         ],
                       }),
                     ],
@@ -477,17 +500,17 @@ describe('periodize', () => {
                           id: 'e1',
                           sets: [
                             // random values for L and R params
-                            generateExerciseSet(1, true),
-                            generateExerciseSet(2, true),
-                            generateExerciseSet(3, true),
+                            generateExerciseSet(1, null, { random: true }),
+                            generateExerciseSet(2, null, { random: true }),
+                            generateExerciseSet(3, null, { random: true }),
                           ],
                         }),
                         generateTrainingExercise({
                           id: 'e2',
                           sets: [
-                            generateExerciseSet(1, true),
-                            generateExerciseSet(2, true),
-                            generateExerciseSet(3, true),
+                            generateExerciseSet(1, null, { random: true }),
+                            generateExerciseSet(2, null, { random: true }),
+                            generateExerciseSet(3, null, { random: true }),
                           ],
                         }),
                       ],
@@ -674,8 +697,14 @@ describe('periodize', () => {
                 id: 'e1',
                 sets: [
                   // random values for L and R params
-                  generateExerciseSet(1, true),
-                  generateExerciseSet(2, true),
+                  generateExerciseSet(1, null, {
+                    random: true,
+                    bilateral: true,
+                  }),
+                  generateExerciseSet(2, null, {
+                    random: true,
+                    bilateral: true,
+                  }),
                 ],
               }),
             ],
@@ -692,9 +721,18 @@ describe('periodize', () => {
                 id: 'e1',
                 sets: [
                   // random values for L and R params
-                  generateExerciseSet(1, true),
-                  generateExerciseSet(2, true),
-                  generateExerciseSet(3, true),
+                  generateExerciseSet(1, null, {
+                    random: true,
+                    bilateral: true,
+                  }),
+                  generateExerciseSet(2, null, {
+                    random: true,
+                    bilateral: true,
+                  }),
+                  generateExerciseSet(3, null, {
+                    random: true,
+                    bilateral: true,
+                  }),
                 ],
               }),
             ],
@@ -720,14 +758,17 @@ describe('periodize', () => {
                         generateExerciseSet(
                           1,
                           generateComponentParamsStub([ParamType.IntRec1]),
+                          { bilateral: true },
                         ),
                         generateExerciseSet(
                           2,
                           generateComponentParamsStub([ParamType.IntRec1]),
+                          { bilateral: true },
                         ),
                         generateExerciseSet(
                           3,
                           generateComponentParamsStub([ParamType.IntRec1]),
+                          { bilateral: true },
                         ),
                       ],
                     }),
@@ -812,8 +853,14 @@ describe('periodize', () => {
                 id: 'e1',
                 sets: [
                   // random values for L and R params
-                  generateExerciseSet(1, true),
-                  generateExerciseSet(2, true),
+                  generateExerciseSet(1, null, {
+                    random: true,
+                    bilateral: true,
+                  }),
+                  generateExerciseSet(2, null, {
+                    random: true,
+                    bilateral: true,
+                  }),
                 ],
               }),
             ],
@@ -831,9 +878,18 @@ describe('periodize', () => {
                 id: 'e1',
                 sets: [
                   // random values for L and R params
-                  generateExerciseSet(1, true),
-                  generateExerciseSet(2, true),
-                  generateExerciseSet(3, true),
+                  generateExerciseSet(1, null, {
+                    random: true,
+                    bilateral: true,
+                  }),
+                  generateExerciseSet(2, null, {
+                    random: true,
+                    bilateral: true,
+                  }),
+                  generateExerciseSet(3, null, {
+                    random: true,
+                    bilateral: true,
+                  }),
                 ],
               }),
             ],
@@ -842,6 +898,7 @@ describe('periodize', () => {
       });
 
       function generateTraining() {
+        const options = { bilateral: true };
         return generateTrainingStub({
           ownerId: 'owner',
           membersIds: [],
@@ -859,14 +916,17 @@ describe('periodize', () => {
                         generateExerciseSet(
                           1,
                           generateComponentParamsStub([ParamType.IntRec1]),
+                          options,
                         ),
                         generateExerciseSet(
                           2,
                           generateComponentParamsStub([ParamType.IntRec1]),
+                          options,
                         ),
                         generateExerciseSet(
                           3,
                           generateComponentParamsStub([ParamType.IntRec1]),
+                          options,
                         ),
                       ],
                     }),

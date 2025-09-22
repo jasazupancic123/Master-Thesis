@@ -199,6 +199,7 @@ export default function TrainerDayView() {
         >
           <CustomDivider />
         </Box>
+
         {/* Trainings for the day */}
         <Box maxWidth={MAX_WIDTH} mx="auto">
           <GroupTrainerDayViewTrainings />
