@@ -25,6 +25,7 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
+import { Circle } from '@mui/icons-material';
 
 interface TrainingInProgressProps {
   setTrainings: SetState<Training[]>;
@@ -182,16 +183,22 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
       fullScreen={true}
     />
   ) : trainingInProgress ? (
-    <Box width="100%" display="flex" flexDirection="column" alignItems="center">
+    <Box
+      id="training-in-progress-main"
+      width="100%"
+      display="flex"
+      flexDirection="column"
+      alignItems="center"
+      sx={{
+        backgroundColor: theme.palette.background.default,
+      }}
+    >
       {selectedTrackingMethod !== TrackingMethod.CAMERA && (
         <>
           <AthleteOptionsContainer
-            items={[
-              trainingInProgress.selectedComponent.id,
-              `Time: ${formatTime(elapsedTime)}`,
-            ]}
-            selectedItem={trainingInProgress.selectedComponent.id}
-            title="Session"
+            items={['', `Time: ${formatTime(elapsedTime)}`]}
+            selectedItem={'none'}
+            title={trainingInProgress.selectedComponent.id || ''}
             onClick={() => {}}
           />
           <Box
@@ -199,9 +206,9 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
             width="100%"
             sx={{
               overflowX: 'auto',
-              border: `1px solid ${theme.palette.background.textBackground}`,
-              borderLeft: 'none',
-              borderRight: 'none',
+              py: 1.5,
+              pt: 0.7,
+              borderBottom: `1px solid ${theme.palette.primary.main}`,
             }}
           >
             <Box
@@ -224,8 +231,10 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
                     flex: '0 0 auto',
                     color:
                       selectedSuperset === superset
-                        ? theme.palette.text.primary
-                        : theme.palette.grey[700],
+                        ? theme.palette.primary.main
+                        : undefined,
+                    fontWeight:
+                      selectedSuperset === superset ? 'bold' : 'normal',
                   }}
                   onClick={() => {
                     const undoneExercises = getUndoneExercises(
@@ -250,6 +259,16 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
                     });
                   }}
                 >
+                  {selectedSuperset === superset && (
+                    <Circle
+                      sx={{
+                        fontSize: 8,
+                        verticalAlign: 'middle',
+                        marginRight: 0.5,
+                        mb: 0.2,
+                      }}
+                    />
+                  )}
                   Superset {i + 1}
                 </Typography>
               ))}
