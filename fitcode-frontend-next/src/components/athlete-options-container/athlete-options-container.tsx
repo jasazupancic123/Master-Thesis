@@ -22,11 +22,12 @@ export default function AthleteOptionsContainer(
       width="100%"
       display="flex"
       justifyContent="space-between"
+      alignItems="center"
       sx={{
-        backgroundColor: theme.palette.background.dark,
-        py: 1.5,
+        backgroundColor: theme.palette.background.default,
+        py: 0.75,
         px: 1,
-        borderTop: `3px solid ${theme.palette.background.textBackground}`,
+        borderTop: `3px solid ${theme.palette.primary.main}`,
         position: 'relative',
       }}
     >
