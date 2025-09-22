@@ -18,6 +18,7 @@ export default function Alert(props: AlertProps) {
   return (
     <Box
       display="flex"
+      flexDirection="column"
       justifyContent="center"
       alignItems="center"
       sx={{
@@ -25,17 +26,11 @@ export default function Alert(props: AlertProps) {
         height: screenSize.isMobile ? '80vh' : '100vh',
         position: 'relative',
       }}
+      gap={2}
     >
       <Box
         sx={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          opacity: 0.07,
+          opacity: 0.75,
         }}
       >
         <Logo width={450} />
@@ -46,12 +41,6 @@ export default function Alert(props: AlertProps) {
       </Typography>
       {type === 'unauthorized' && (
         <Button
-          sx={{
-            position: 'absolute',
-            top: '60%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-          }}
           variant="contained"
           onClick={() => {
             redirect(LINK_SIGN_IN.href);

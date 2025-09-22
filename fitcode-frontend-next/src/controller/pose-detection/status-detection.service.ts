@@ -265,10 +265,10 @@ export class StatusDetectionService {
       );
       if (!currentFrameKeypoint) return false;
 
-      const currentValue = KeypointUtil.getKeypointValueByType(
-        currentFrameKeypoint,
-        condition.type
-      );
+      // const currentValue = KeypointUtil.getKeypointValueByType(
+      //   currentFrameKeypoint,
+      //   condition.type
+      // );
 
       // console.log(condition.keypointId, 'currentValue', currentValue);
 

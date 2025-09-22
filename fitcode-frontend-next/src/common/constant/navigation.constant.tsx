@@ -97,9 +97,9 @@ export const LINKS_TRAINER_GROUP_SIDEBAR_SUB_ITEMS = {
   signout: link('Sign out', '#', <LogoutIcon />),
 };
 
-export const LINK_DASHBOARD_HOME = link('Home', DASHBOARD_MAIN, <Groups />);
+export const LINK_DASHBOARD_GROUPS = link('Groups', DASHBOARD_MAIN, <Groups />);
 export const LINK_DASHBOARD_INSTITUTION = link(
-  'Home',
+  'Members',
   DASHBOARD_INSTITUTION,
   <PersonAdd />
 );
@@ -114,13 +114,13 @@ export const LINK_EXERCISES_DASHBOARD_NAVIGATION = link(
   <FitnessCenterIcon />
 );
 export const LINK_ADD_INSTITUTION = link(
-  'Add Institution',
+  'Add',
   DASHBOARD_ADD_INSTITUTION,
   <Add />
 );
 
 export const LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS = (role: UserRole) => ({
-  home: LINK_DASHBOARD_HOME,
+  home: LINK_DASHBOARD_GROUPS,
   institution: LINK_DASHBOARD_INSTITUTION,
   exercises: LINK_EXERCISES_DASHBOARD_NAVIGATION,
   addInstitution: role === UserRole.ADMIN ? LINK_ADD_INSTITUTION : undefined,
@@ -145,7 +145,7 @@ export const LINKS_NAVBAR = {
   about: LINK_ABOUT,
 };
 
-export const LINKS_SIDEBAR = {
+export const LINKS_SIDEBAR_GROUP_VIEW = {
   [UserRole.ATHLETE]: {
     trainings: LINK_TRAININGS,
     calendar: LINK_CALENDAR,
@@ -167,6 +167,24 @@ export const LINKS_SIDEBAR = {
     components: LINK_COMPONENTS,
     exercises: LINK_EXERCISES_DASHBOARD,
     dashboard: LINK_DASHBOARD,
+  },
+};
+
+export const LINKS_SIDEBAR_DAHBOARD_VIEW = {
+  [UserRole.ATHLETE]: {},
+  [UserRole.TRAINER]: {
+    profile: LINK_PROFILE,
+    settings: LINK_SETTINGS,
+  },
+  [UserRole.MANAGER]: {
+    profile: LINK_PROFILE,
+    settings: LINK_SETTINGS,
+  },
+  [UserRole.ADMIN]: {
+    profile: LINK_PROFILE,
+    settings: LINK_SETTINGS,
+    users: LINK_USERS,
+    components: LINK_COMPONENTS,
   },
 };
 

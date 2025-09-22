@@ -15,7 +15,6 @@ export default function GroupSidebar() {
     <Box
       sx={{
         display: 'flex',
-        backgroundColor: 'red',
       }}
     >
       <AppBar

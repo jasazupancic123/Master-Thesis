@@ -6,7 +6,6 @@ import {
   KeyboardArrowDownTwoTone,
   KeyboardArrowUpTwoTone,
   Menu,
-  Save,
   SaveOutlined,
   Settings,
 } from '@mui/icons-material';
@@ -37,7 +36,7 @@ import {
   LINK_DASHBOARD,
   LINK_PROFILE,
   LINK_SETTINGS,
-  LINKS_SIDEBAR,
+  LINKS_SIDEBAR_GROUP_VIEW,
 } from '@/common/constant/navigation.constant';
 import type { GroupDateFilter } from '@/common/type/filter.type';
 import type { SetState } from '@/common/type/state.type';
@@ -67,6 +66,7 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
   const groupController = GroupController.getInstance(auth.token);
 
   const {
+    institution,
     group,
     setGroup,
     selectedGroup,
@@ -74,7 +74,6 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
     cycle,
     setCycle,
     setTrainings,
-    institution,
     detectedChanges,
     setDetectedChanges,
   } = useGroup();
@@ -126,61 +125,64 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
           <Drawer anchor="left" open={open} onClose={() => setOpen(false)}>
             <List sx={{ mt: 5 }}>
               {auth.role &&
-                Object.values(LINKS_SIDEBAR[auth.role]).map((link, i) => {
-                  if (!link) return null;
+                Object.values(LINKS_SIDEBAR_GROUP_VIEW[auth.role]).map(
+                  (link, i) => {
+                    if (!link) return null;
 
-                  let Icon: React.ReactNode = null;
+                    let Icon: React.ReactNode = null;
 
-                  switch (link.href) {
-                    case LINK_DASHBOARD.href:
-                      Icon = (
-                        <Avatar
-                          src={institution.imageUrl}
-                          sx={{
-                            width: 34,
-                            height: 34,
-                          }}
-                        />
-                      );
-                      break;
-                    case LINK_PROFILE.href:
-                      Icon = (
-                        <Avatar
-                          src={auth.user?.photoURL || '/user_avatar.png'}
-                          sx={{
-                            width: 34,
-                            height: 34,
-                          }}
-                        />
-                      );
-                      break;
-                    case LINK_SETTINGS.href:
-                      Icon = <Settings sx={{ fontSize: 20, ml: 0.9 }} />;
-                      break;
-                    default:
-                      Icon = null;
+                    switch (link.href) {
+                      case LINK_DASHBOARD.href:
+                        Icon = (
+                          <Avatar
+                            src={institution.imageUrl}
+                            sx={{
+                              width: 34,
+                              height: 34,
+                            }}
+                          />
+                        );
+                        break;
+                      case LINK_PROFILE.href:
+                        Icon = (
+                          <Avatar
+                            src={auth.user?.photoURL || '/user_avatar.png'}
+                            sx={{
+                              width: 34,
+                              height: 34,
+                            }}
+                          />
+                        );
+                        break;
+                      case LINK_SETTINGS.href:
+                        Icon = <Settings sx={{ fontSize: 20, ml: 0.9 }} />;
+                        break;
+                      default:
+                        Icon = null;
+                    }
+
+                    return (
+                      <Tooltip title={link.label} placement="right" key={i}>
+                        <ListItem disablePadding>
+                          <Link href={link.href} passHref>
+                            <Box display="flex" alignItems="center" ml={1}>
+                              {Icon}
+                              <ListItemText
+                                primary={link.label}
+                                sx={{
+                                  px: 2,
+                                  py: 1,
+                                  ml:
+                                    link.href === LINK_SETTINGS.href ? 0.9 : 0,
+                                }}
+                              />
+                            </Box>
+                          </Link>
+                        </ListItem>
+                      </Tooltip>
+                    );
                   }
-
-                  return (
-                    <Tooltip title={link.label} placement="right" key={i}>
-                      <ListItem disablePadding>
-                        <Link href={link.href} passHref>
-                          <Box display="flex" alignItems="center" ml={1}>
-                            {Icon}
-                            <ListItemText
-                              primary={link.label}
-                              sx={{
-                                px: 2,
-                                py: 1,
-                                ml: link.href === LINK_SETTINGS.href ? 0.9 : 0,
-                              }}
-                            />
-                          </Box>
-                        </Link>
-                      </ListItem>
-                    </Tooltip>
-                  );
-                })}
+                )}
             </List>
           </Drawer>
         </>
@@ -199,7 +201,16 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
           }}
           gap={3}
         >
-          <Logo width={101.25} />
+          <Box
+            onClick={() => router.push(LINK_DASHBOARD.href)}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              cursor: 'pointer',
+            }}
+          >
+            <Logo width={101.25} />
+          </Box>
           <Box
             display="flex"
             alignItems="center"
@@ -297,7 +308,7 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
                           )
                         }
                       >
-                        <Save fontSize="small" />
+                        <SaveOutlined />
                       </IconButton>
                     </Tooltip>
                   </Box>
@@ -352,18 +363,6 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
                   )}
                 </IconButton>
               </Box>
-              <Link href={LINK_DASHBOARD.href} passHref>
-                <Tooltip title="Dashboard">
-                  <Avatar
-                    src={institution.imageUrl}
-                    sx={{
-                      width: 30,
-                      height: 30,
-                      cursor: 'pointer',
-                    }}
-                  />
-                </Tooltip>
-              </Link>
               <Tooltip title="Settings">
                 <Settings sx={{ fontSize: 20, cursor: 'pointer' }} />
               </Tooltip>
@@ -419,7 +418,7 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
                     });
                   }}
                 >
-                  <Save
+                  <SaveOutlined
                     sx={{
                       cursor: 'pointer',
                       backgroundColor: theme.palette.primary.main,
@@ -467,7 +466,7 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
                 right: 20,
               }}
             >
-              <Save
+              <SaveOutlined
                 sx={{
                   mr: 0,
                   cursor: 'pointer',

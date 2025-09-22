@@ -91,13 +91,6 @@ export default function SignInPage() {
               autoFocus
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              sx={{
-                '& input:-webkit-autofill': {
-                  WebkitBoxShadow: `0 0 0 100px ${theme.palette.background.paper} inset`, // match bg to theme
-                  WebkitTextFillColor: theme.palette.text.primary, // keep text visible
-                  transition: 'background-color 5000s ease-in-out 0s', // hack to stop flash
-                },
-              }}
             />
 
             <TextField

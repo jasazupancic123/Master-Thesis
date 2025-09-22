@@ -19,11 +19,10 @@ import { useState } from 'react';
 
 import SelectInputHorizontal from '../select-input-horizontal/select-input-horizontal';
 import {
-  LINK_DASHBOARD,
   LINK_PROFILE,
   LINK_SETTINGS,
   LINKS_DASHBOARD_SIDEBAR_SUB_ITEMS,
-  LINKS_SIDEBAR,
+  LINKS_SIDEBAR_DAHBOARD_VIEW,
 } from '@/common/constant/navigation.constant';
 import { isAdmin } from '@/common/firebase/firebase-auth.util';
 import type { Institution } from '@/controller/institution/type/institution.type';
@@ -85,7 +84,7 @@ export default function DashboardMenuMobile() {
 
           {role &&
             [
-              ...Object.values(LINKS_SIDEBAR[role]),
+              ...Object.values(LINKS_SIDEBAR_DAHBOARD_VIEW[role]),
               ...Object.values(LINKS_DASHBOARD_SIDEBAR_SUB_ITEMS),
             ].map((link, i) => {
               if (!link) return null;
@@ -93,17 +92,6 @@ export default function DashboardMenuMobile() {
               let Icon: React.ReactNode = null;
 
               switch (link.href) {
-                case LINK_DASHBOARD.href:
-                  Icon = (
-                    <Avatar
-                      src={selectedInstitution?.imageUrl || ''}
-                      sx={{
-                        width: 25,
-                        height: 25,
-                      }}
-                    />
-                  );
-                  break;
                 case LINK_PROFILE.href:
                   Icon = (
                     <Avatar
@@ -147,7 +135,6 @@ export default function DashboardMenuMobile() {
                           primary={link.label}
                           sx={{
                             px: ![
-                              LINK_DASHBOARD.href,
                               LINK_PROFILE.href,
                               LINK_SETTINGS.href,
                               LINKS_DASHBOARD_SIDEBAR_SUB_ITEMS.signout.href,
