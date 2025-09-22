@@ -227,7 +227,12 @@ export function AddMembersModal(props: AddMembersModalProps) {
                     <ListItemText
                       primary={user.displayName}
                       secondary={user.email}
-                      sx={{ m: 0 }}
+                      sx={{
+                        m: 0,
+                        '& .MuiTypography-body2': {
+                          color: theme.palette.text.primary,
+                        },
+                      }}
                     />
                     {isUserIncluded(user) ? (
                       <Button

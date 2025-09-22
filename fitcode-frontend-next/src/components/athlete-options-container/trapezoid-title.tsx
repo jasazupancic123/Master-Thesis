@@ -13,21 +13,22 @@ export default function TrapezoidTitle(props: TrapezoidTitleProps) {
     <Box
       sx={{
         position: 'absolute',
-        top: -3,
+        top: 0,
         left: '50%',
         transform: 'translateX(-50%)',
         width: 'fit-content',
         px: 4,
-        height: 50,
+        height: 35,
         display: 'flex',
         alignItems: 'flex-start',
         justifyContent: 'center',
         overflow: 'hidden',
+        py: '0px !important',
         '&::before': {
           content: '""',
           position: 'absolute',
           inset: 0,
-          background: theme.palette.background.textBackground,
+          background: theme.palette.primary.main,
           transform: 'perspective(90px) rotateX(-40deg)',
           transformOrigin: 'top center',
           zIndex: 0,
@@ -37,10 +38,13 @@ export default function TrapezoidTitle(props: TrapezoidTitleProps) {
       }}
     >
       <Typography
+        fontWeight="bold"
         sx={{
-          mt: 0.25,
+          mt: -0.1,
           fontSize: 14,
           zIndex: 1, // make sure it sits above the background
+          color: theme.palette.text.secondary,
+          textTransform: 'uppercase',
         }}
       >
         {title}
