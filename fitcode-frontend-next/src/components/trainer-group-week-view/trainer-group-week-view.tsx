@@ -245,7 +245,7 @@ export default function TrainerWeekView() {
               ? `1px solid ${theme.palette.text.primary}`
               : undefined,
             borderBottom: 'none',
-            py: 1,
+            py: 2,
             mx: 'auto',
           }}
         >
@@ -301,17 +301,6 @@ export default function TrainerWeekView() {
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'flex-start',
-                        border: `0.5px solid ${theme.palette.background.dark}`,
-                        borderLeft:
-                          i === 0 && !screenSize.isSmallerThanLaptop
-                            ? 'none'
-                            : undefined,
-                        borderRight:
-                          i === 6 && !screenSize.isSmallerThanLaptop
-                            ? 'none'
-                            : undefined,
-                        borderTop: 'none',
-                        overflowY: 'auto',
                         ...customScrollBarStyle(theme),
                       }}
                     >
@@ -333,14 +322,8 @@ export default function TrainerWeekView() {
                         flexDirection: 'column',
                         justifyContent: 'flex-start',
                         border: `0.5px solid ${theme.palette.background.dark}`,
-                        borderLeft:
-                          i === 0 && !screenSize.isSmallerThanLaptop
-                            ? 'none'
-                            : undefined,
-                        borderRight:
-                          i === 6 && !screenSize.isSmallerThanLaptop
-                            ? 'none'
-                            : undefined,
+                        borderLeft: 'none',
+                        borderRight: 'none',
                         borderBottom: 'none',
                         overflowY: 'auto',
                         ...customScrollBarStyle(theme),

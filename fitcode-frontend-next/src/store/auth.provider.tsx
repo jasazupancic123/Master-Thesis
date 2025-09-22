@@ -33,7 +33,7 @@ const browser = CommonService.instance.browser;
 export const AuthProvider = (
   props: ChildrenProps & { initialToken?: string }
 ) => {
-  const { children, initialToken } = props;
+  const { children } = props;
   const auth = getFirebaseAuth();
   const router = useRouter();
 

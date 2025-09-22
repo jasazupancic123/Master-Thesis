@@ -29,6 +29,8 @@ interface Props {
   athleteView?: boolean;
   dissableSettingValue?: boolean;
   colorToPrimary?: boolean;
+  trainingInProgressView?: boolean;
+  lOrR?: 'L' | 'R';
 }
 
 export function ExerciseParam(props: Props) {
@@ -51,6 +53,8 @@ export function ExerciseParam(props: Props) {
     athleteView,
     dissableSettingValue,
     colorToPrimary,
+    trainingInProgressView,
+    lOrR,
   } = props;
 
   const group = useGroup() ?? {};
@@ -65,7 +69,19 @@ export function ExerciseParam(props: Props) {
   );
 
   return (
-    <Stack direction="column" justifyContent="center" alignItems="center">
+    <Stack
+      direction="column"
+      justifyContent={trainingInProgressView ? 'flex-start' : 'center'}
+      alignItems="center"
+      sx={{
+        minHeight: trainingInProgressView && lOrR === 'L' ? 58 : undefined,
+      }}
+      gap={
+        trainingInProgressView && nestedOption?.type === 'select'
+          ? 0.5
+          : undefined
+      }
+    >
       {showOptions && (
         <FormControl
           variant="filled"
@@ -88,7 +104,6 @@ export function ExerciseParam(props: Props) {
                 justifyContent: 'center',
                 pr: 0,
                 pl: 0,
-                color: theme.palette.background.lightBorder,
               },
               '& .MuiInputBase-input': {
                 textAlign: 'center',
@@ -98,6 +113,13 @@ export function ExerciseParam(props: Props) {
               '&.Mui-disabled': {
                 backgroundColor: 'transparent',
               },
+
+              '&.Mui-disabled .MuiSelect-select': trainingInProgressView
+                ? {
+                    color: theme.palette.text.primary,
+                    WebkitTextFillColor: theme.palette.text.primary, // <-- important for disabled text
+                  }
+                : {},
             }}
             disableUnderline={true}
             value={value.selected.split(':')[0]}
@@ -154,16 +176,22 @@ export function ExerciseParam(props: Props) {
             variant="filled"
             sx={{
               textAlign: 'center',
+              mb:
+                lOrR === 'L' && trainingInProgressView
+                  ? 0.8
+                  : lOrR === 'R' && trainingInProgressView
+                    ? 0.3
+                    : 0,
               '& .MuiSelect-select': { textAlign: 'center' },
               '& .MuiInputBase-input': {
                 py: 0,
                 width: '100% !important',
-                fontSize: 12,
+                fontSize: trainingInProgressView ? 16 : 12,
                 height: 25,
                 textAlign: 'center',
                 px: '0px !important',
                 color: theme.palette.text.primary,
-                fontWeight: 400,
+                fontWeight: trainingInProgressView ? 600 : 400,
               },
               '::before': {
                 border: 'none !important',
@@ -275,7 +303,8 @@ export function ExerciseParam(props: Props) {
               max: max && nestedOption?.type === 'number' ? max : undefined,
               style: {
                 textAlign: 'center',
-                fontSize: 12,
+                fontSize: trainingInProgressView ? 16 : 12,
+                fontWeight: trainingInProgressView ? 600 : undefined,
                 paddingRight: '0px !important',
                 paddingLeft: '0px !important',
                 color: theme.palette.text.primary,

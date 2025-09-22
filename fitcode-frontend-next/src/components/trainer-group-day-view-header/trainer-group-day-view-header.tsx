@@ -253,36 +253,58 @@ export default function GroupTrainerDayViewHeader(
         )
       ) : (
         <Box
-          display="flex"
           width="100%"
-          height={DIVIDER_HEIGHT}
-          justifyContent="space-around"
-          alignItems="flex-start"
+          display="flex"
+          flexDirection="column"
+          minHeight={DIVIDER_HEIGHT}
         >
-          <Box width="25%">
-            <PeriodSelect />
-          </Box>
           <Box
-            width="50%"
             display="flex"
-            flexDirection="column"
-            justifyContent="center"
-            sx={{
-              my: selectedAthlete ? 'auto' : undefined,
-            }}
+            width="100%"
+            height={
+              selectedAthlete ? DIVIDER_HEIGHT : `calc(${DIVIDER_HEIGHT} / 2)`
+            }
+            justifyContent="space-around"
+            alignItems="flex-start"
           >
-            {selectedAthlete ? (
-              <SelectedMemberReport />
-            ) : (
-              <>
-                <HorizontalItems />
-                <TrainingMembers isSticky={isSticky} />
-              </>
-            )}
+            <Box width="25%">
+              <PeriodSelect />
+            </Box>
+            <Box
+              width="50%"
+              display="flex"
+              flexDirection="column"
+              justifyContent="center"
+              sx={{
+                my: selectedAthlete ? 'auto' : undefined,
+              }}
+            >
+              {selectedAthlete ? (
+                <SelectedMemberReport />
+              ) : (
+                <>
+                  <HorizontalItems />
+                </>
+              )}
+            </Box>
+            <Box width="25%">
+              <SelectedMemberWelness />
+            </Box>
           </Box>
-          <Box width="25%">
-            <SelectedMemberWelness />
-          </Box>
+          {!selectedAthlete && (
+            <Box
+              display="flex"
+              width="100%"
+              minHeight={`calc(${DIVIDER_HEIGHT} / 2)`}
+              justifyContent="center"
+              alignItems="cetner"
+              sx={{
+                pb: 1,
+              }}
+            >
+              <TrainingMembers isSticky={isSticky} />
+            </Box>
+          )}
         </Box>
       )}
     </Box>

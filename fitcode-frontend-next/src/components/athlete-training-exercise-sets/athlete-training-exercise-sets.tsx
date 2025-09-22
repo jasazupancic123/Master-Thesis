@@ -59,7 +59,9 @@ export default function AthleteTrainingExerciseSets(
       width="100%"
       gap={0.9}
       sx={{
-        backgroundColor: theme.palette.background.dark,
+        backgroundColor: trainingInProgressView
+          ? theme.palette.background.default
+          : theme.palette.background.dark,
         pb: !dissableBottomPadding ? 1 : undefined,
         borderBottomRightRadius: borderBottomRadius ? '5px' : 0,
         borderBottomLeftRadius: borderBottomRadius ? '5px' : 0,
@@ -86,7 +88,7 @@ export default function AthleteTrainingExerciseSets(
                 mt={
                   i === 0
                     ? trainingInProgressView
-                      ? 3.6
+                      ? 4.25
                       : 3.75
                     : trainingInProgressView
                       ? 3.75
@@ -97,7 +99,7 @@ export default function AthleteTrainingExerciseSets(
                   key="exercise-title"
                   display="flex"
                   flexDirection="column"
-                  gap={0.9}
+                  gap={trainingInProgressView ? 1.35 : 0.9}
                 >
                   {exercise.exercise?.isBilateral ? (
                     <>
@@ -105,7 +107,9 @@ export default function AthleteTrainingExerciseSets(
                       <LeftRightExerciseText title="R" />
                     </>
                   ) : (
-                    <LeftRightExerciseText title="B" />
+                    <LeftRightExerciseText
+                      title={trainingInProgressView ? '' : 'B'}
+                    />
                   )}
                 </Box>
               </Box>
@@ -119,128 +123,136 @@ export default function AthleteTrainingExerciseSets(
                 alignItems="center"
                 gap={1}
               >
-                {exercise.params.map((param, j) => {
-                  /* find the custom workload for the selected athlete if selected, otherwise
+                {exercise.params
+                  .filter((p) => p.field !== ParamType.VolWorkSets)
+                  .map((param, j) => {
+                    /* find the custom workload for the selected athlete if selected, otherwise
                       get the value from the exercise sets */
-                  const { valueL, valueR } = getLAndRValues(
-                    {
-                      set,
-                      param,
-                      setIndex:
-                        setIndex !== undefined && setIndex !== null
-                          ? setIndex
-                          : i,
-                      paramIndex: j - 1,
-                    },
-                    {
-                      training,
-                      exercise,
-                      selectedAthleteWorkloads: [],
-                      selectedAthlete: undefined,
-                    }
-                  );
-
-                  if (!valueL || (exercise.exercise?.isBilateral && !valueR))
-                    return toast.error(
-                      `Invalid parameter field: ${param.field}`
+                    const { valueL, valueR } = getLAndRValues(
+                      {
+                        set,
+                        param,
+                        setIndex:
+                          setIndex !== undefined && setIndex !== null
+                            ? setIndex
+                            : i,
+                        paramIndex: j - 1,
+                      },
+                      {
+                        training,
+                        exercise,
+                        selectedAthleteWorkloads: [],
+                        selectedAthlete: undefined,
+                      }
                     );
 
-                  return (
-                    <Box
-                      key={param.field}
-                      flexBasis={
-                        (100 / exercise.params.length).toString() + '%'
-                      }
-                    >
-                      {['L']
-                        .concat(exercise.exercise?.isBilateral ? ['R'] : [])
-                        .map((lOrR) => (
-                          <ExerciseParam
-                            key={`${param.field}-${lOrR}`}
-                            showOptions={lOrR === 'L'}
-                            disableOptions
-                            disableSets={!trainingInProgressView}
-                            dissableSettingValue={
-                              param.field === ParamType.VolWorkSets ||
-                              (trainingInProgressView && !passedSet)
-                            }
-                            colorToPrimary={
-                              colorSetsToPrimary &&
-                              param.field === ParamType.VolWorkSets
-                            }
-                            param={param}
-                            value={
-                              lOrR === 'L'
-                                ? param.field === ParamType.VolWorkSets
-                                  ? ({
-                                      ...valueL,
-                                      value: passedSet
-                                        ? passedSet.setNumber
-                                        : !expanded
-                                          ? exercise.sets.length
-                                          : set.setNumber.toString(),
-                                    } as AttributeValue)
-                                  : valueL
-                                : param.field === ParamType.VolWorkSets
-                                  ? ({
-                                      ...valueR,
-                                      value: passedSet
-                                        ? passedSet.setNumber
-                                        : !expanded
-                                          ? exercise.sets.length
-                                          : set.setNumber.toString(),
-                                    } as AttributeValue)
-                                  : valueR || undefined
-                            }
-                            onOptionChange={() => {}}
-                            onSubOptionChange={(newValue) => {
-                              if (
-                                !passedSet ||
-                                !trainingInProgressView ||
-                                supersetIndex === undefined ||
-                                supersetIndex === null
-                              )
-                                return;
+                    if (!valueL || (exercise.exercise?.isBilateral && !valueR))
+                      return toast.error(
+                        `Invalid parameter field: ${param.field}`
+                      );
 
-                              if (
-                                !trainingInProgress ||
-                                !trainingInProgress.selectedComponent
-                              )
-                                return null;
+                    return (
+                      <Box
+                        key={param.field}
+                        flexBasis={
+                          (100 / exercise.params.length).toString() + '%'
+                        }
+                      >
+                        {['L']
+                          .concat(exercise.exercise?.isBilateral ? ['R'] : [])
+                          .map((lOrR) => (
+                            <ExerciseParam
+                              key={`${param.field}-${lOrR}`}
+                              showOptions={lOrR === 'L'}
+                              disableOptions
+                              disableSets={!trainingInProgressView}
+                              dissableSettingValue={
+                                param.field === ParamType.VolWorkSets ||
+                                (trainingInProgressView && !passedSet)
+                              }
+                              colorToPrimary={
+                                colorSetsToPrimary &&
+                                param.field === ParamType.VolWorkSets
+                              }
+                              trainingInProgressView
+                              param={param}
+                              lOrR={lOrR as 'L' | 'R'}
+                              value={
+                                lOrR === 'L'
+                                  ? param.field === ParamType.VolWorkSets
+                                    ? ({
+                                        ...valueL,
+                                        value: passedSet
+                                          ? passedSet.setNumber
+                                          : !expanded
+                                            ? exercise.sets.length
+                                            : set.setNumber.toString(),
+                                      } as AttributeValue)
+                                    : valueL
+                                  : param.field === ParamType.VolWorkSets
+                                    ? ({
+                                        ...valueR,
+                                        value: passedSet
+                                          ? passedSet.setNumber
+                                          : !expanded
+                                            ? exercise.sets.length
+                                            : set.setNumber.toString(),
+                                      } as AttributeValue)
+                                    : valueR || undefined
+                              }
+                              onOptionChange={() => {}}
+                              onSubOptionChange={(newValue) => {
+                                if (
+                                  !passedSet ||
+                                  !trainingInProgressView ||
+                                  supersetIndex === undefined ||
+                                  supersetIndex === null
+                                )
+                                  return;
 
-                              if (param.field === ParamType.VolWorkSets) return;
+                                if (
+                                  !trainingInProgress ||
+                                  !trainingInProgress.selectedComponent
+                                )
+                                  return null;
 
-                              if (+newValue < 0) return;
+                                if (param.field === ParamType.VolWorkSets)
+                                  return;
 
-                              updateExerciseAttributeValues(
-                                {
-                                  newValue,
-                                  i,
-                                  set,
-                                  lOrR: lOrR as 'L' | 'R',
-                                },
-                                {
-                                  selectedExercises: [exercise],
-                                  exercise: exercise,
-                                  param,
-                                  training,
-                                  component:
-                                    trainingInProgress.selectedComponent,
-                                  setTraining: () => {},
-                                  supersets: trainingInProgress.supersets,
-                                  setDetectedChanges: () => {},
-                                  selectedSubgroup: null,
-                                  setSelectedSubgroup: () => {},
-                                }
-                              );
+                                if (+newValue < 0) return;
 
-                              updateTrainingInProgress(exercise, supersetIndex);
-                            }}
-                          />
-                        ))}
-                    </Box>
-                  );
-                })}
+                                updateExerciseAttributeValues(
+                                  {
+                                    newValue,
+                                    i,
+                                    set,
+                                    lOrR: lOrR as 'L' | 'R',
+                                  },
+                                  {
+                                    selectedExercises: [exercise],
+                                    exercise: exercise,
+                                    param,
+                                    training,
+                                    component:
+                                      trainingInProgress.selectedComponent,
+                                    setTraining: () => {},
+                                    supersets: trainingInProgress.supersets,
+                                    setDetectedChanges: () => {},
+                                    selectedSubgroup: null,
+                                    setSelectedSubgroup: () => {},
+                                  }
+                                );
+
+                                updateTrainingInProgress(
+                                  exercise,
+                                  supersetIndex
+                                );
+                              }}
+                            />
+                          ))}
+                      </Box>
+                    );
+                  })}
               </Box>
             </Grid2>
             <Grid2 size={0.5} display="flex" alignItems="flex-end">

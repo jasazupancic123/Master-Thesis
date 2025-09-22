@@ -44,7 +44,6 @@ export default function ExerciseChips(props: ExerciseChipsProps) {
     components,
     setSelected,
     direction = 'row',
-    bgColor,
     primaryColor,
     gap,
     cycleView,

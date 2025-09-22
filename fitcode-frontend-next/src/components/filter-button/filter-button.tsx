@@ -1,4 +1,4 @@
-import { Box, ToggleButton, Typography } from '@mui/material';
+import { ToggleButton, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import React from 'react';
 
@@ -40,15 +40,23 @@ export default function FilterButton(props: Props) {
           ? {
               width: numValues !== undefined ? `${100 / numValues}%` : '25%',
               maxWidth: numValues !== undefined ? `${100 / numValues}%` : '25%',
+              color:
+                filter === value ? theme.palette.text.secondary : undefined,
               '&.MuiButtonBase-root': {
-                borderBottomLeftRadius: 0,
-                borderBottomRightRadius: 0,
-                backgroundColor: theme.palette.background.light,
+                height: '30px',
+                borderRadius: '12px',
+                py: 1,
+                px: 1,
+                backgroundColor:
+                  filter === value ? theme.palette.primary.main : undefined,
+                zIndex: filter === value ? 10 : 1,
               },
               border: 'none',
               '&:hover': {
-                backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                color: '#fff',
+                backgroundColor:
+                  filter === value
+                    ? `${theme.palette.primary.main} !important`
+                    : `${theme.palette.background.default} !important`,
               },
               textTransform: 'none',
             }
@@ -75,37 +83,22 @@ export default function FilterButton(props: Props) {
             }
       }
     >
-      {isILink(value) ? (
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color:
-              dashboardView && filter === value
-                ? theme.palette.primary.main
-                : undefined,
-          }}
-        >
-          {value.icon}
-        </Box>
-      ) : (
-        <Typography
-          sx={{
-            fontSize: screenSize.isUltraSmall
-              ? 8
-              : screenSize.isSmallMobile
-                ? 10
-                : screenSize.isMobile
-                  ? 12
-                  : 16,
-            fontWeight: filter === value ? 800 : 400,
-            color: filter === value ? theme.palette.text.secondary : undefined,
-          }}
-        >
-          {value.toUpperCase()}
-        </Typography>
-      )}
+      <Typography
+        sx={{
+          fontSize: screenSize.isUltraSmall
+            ? 8
+            : screenSize.isSmallMobile
+              ? 10
+              : screenSize.isMobile
+                ? 12
+                : 16,
+          fontWeight: filter === value ? 800 : 400,
+          color: filter === value ? theme.palette.text.secondary : undefined,
+          textTransform: 'uppercase',
+        }}
+      >
+        {isILink(value) ? value.label : value.toUpperCase()}
+      </Typography>
     </ToggleButton>
   );
 }
