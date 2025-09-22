@@ -297,54 +297,6 @@ export default function DashboardHeader() {
           )}
         </ToggleButtonGroup>
       </Box>
-      <Box
-        justifyContent="flex-end"
-        alignItems="center"
-        sx={{
-          position: 'absolute',
-          right: screenSize.isSmallerThanLaptop ? 2 : 10,
-          top: 11,
-          zIndex: 1300,
-        }}
-      >
-        {filter === LINK_DASHBOARD_HOME && (
-          <>
-            <Tooltip title="Save groups" placement="bottom" sx={{ mx: 1 }}>
-              <IconButton
-                sx={{
-                  p: 0,
-                  m: 0,
-                  mx: screenSize.isMobile ? 0.25 : 1,
-                  cursor: 'pointer',
-                }}
-                onClick={() => {
-                  handleSaveGroups();
-                }}
-              >
-                <Save fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Delete group" placement="bottom" sx={{ mx: 1 }}>
-              <IconButton
-                sx={{
-                  p: 0,
-                  m: 0,
-                  mx: screenSize.isMobile ? 0.25 : 1,
-                  cursor: 'pointer',
-                }}
-                onClick={() => {
-                  setModal((prev) => ({
-                    ...prev,
-                    remove_group: true,
-                  }));
-                }}
-              >
-                <Delete fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          </>
-        )}
-      </Box>
 
       <ProfileHeaderMenu
         anchorEl={anchorProfileEl}

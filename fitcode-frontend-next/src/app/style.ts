@@ -10,6 +10,7 @@ declare module '@mui/material/styles' {
     darkBorder: string;
     lightText: string;
     textBackground: string;
+    divider: string;
   }
 }
 
@@ -31,6 +32,7 @@ export const theme = createTheme({
       darkBorder: '#212121',
       lightText: '#D5D5D5',
       textBackground: '#5C5555',
+      divider: '#272727',
     },
     error: {
       main: '#ff6859',
