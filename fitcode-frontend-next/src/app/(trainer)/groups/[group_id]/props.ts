@@ -31,6 +31,8 @@ export type GroupContextProps = GroupIdPageProps & {
   setFilter: SetState<GroupDateFilter>;
   group: Group;
   setGroup: SetState<Group>;
+  selectedGroup: Group;
+  setSelectedGroup: SetState<Group>;
   institution: Institution;
   setInstitution: SetState<Institution>;
   cycle: Cycle | undefined;

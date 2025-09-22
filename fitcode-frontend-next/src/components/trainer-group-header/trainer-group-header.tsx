@@ -69,6 +69,8 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
   const {
     group,
     setGroup,
+    selectedGroup,
+    setSelectedGroup,
     cycle,
     setCycle,
     setTrainings,
@@ -285,8 +287,8 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
                         onClick={() =>
                           handleSaveGroup(
                             groupController,
-                            group,
-                            setGroup,
+                            selectedGroup,
+                            setSelectedGroup,
                             cycle,
                             setCycle,
                             setDetectedChanges,
@@ -448,8 +450,8 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
               onClick={() =>
                 handleSaveGroup(
                   groupController,
-                  group,
-                  setGroup,
+                  selectedGroup,
+                  setSelectedGroup,
                   cycle,
                   setCycle,
                   setDetectedChanges,
