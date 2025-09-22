@@ -35,27 +35,45 @@ export default function FilterButton(props: Props) {
     <ToggleButton
       value={isILink(value) ? value : value.toLowerCase()}
       disabled={disabled}
-      sx={{
-        width: '20%',
-        maxWidth: '20%',
-        '&.MuiButtonBase-root': {
-          height: '30px',
-          borderRadius: '12px',
-          py: 1,
-          px: 1,
-          backgroundColor:
-            filter === value ? theme.palette.primary.main : undefined,
-          zIndex: filter === value ? 10 : 1,
-        },
-        border: 'none',
-        '&:hover': {
-          backgroundColor:
-            filter === value
-              ? `${theme.palette.primary.main} !important`
-              : `${theme.palette.background.default} !important`,
-        },
-        textTransform: 'none',
-      }}
+      sx={
+        dashboardView
+          ? {
+              width: numValues !== undefined ? `${100 / numValues}%` : '25%',
+              maxWidth: numValues !== undefined ? `${100 / numValues}%` : '25%',
+              '&.MuiButtonBase-root': {
+                borderBottomLeftRadius: 0,
+                borderBottomRightRadius: 0,
+                backgroundColor: theme.palette.background.light,
+              },
+              border: 'none',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                color: '#fff',
+              },
+              textTransform: 'none',
+            }
+          : {
+              width: '20%',
+              maxWidth: '20%',
+              '&.MuiButtonBase-root': {
+                height: '30px',
+                borderRadius: '12px',
+                py: 1,
+                px: 1,
+                backgroundColor:
+                  filter === value ? theme.palette.primary.main : undefined,
+                zIndex: filter === value ? 10 : 1,
+              },
+              border: 'none',
+              '&:hover': {
+                backgroundColor:
+                  filter === value
+                    ? `${theme.palette.primary.main} !important`
+                    : `${theme.palette.background.default} !important`,
+              },
+              textTransform: 'none',
+            }
+      }
     >
       {isILink(value) ? (
         <Box
@@ -63,6 +81,10 @@ export default function FilterButton(props: Props) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            color:
+              dashboardView && filter === value
+                ? theme.palette.primary.main
+                : undefined,
           }}
         >
           {value.icon}

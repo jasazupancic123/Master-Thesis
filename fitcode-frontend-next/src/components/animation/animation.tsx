@@ -48,7 +48,7 @@ export default function Animation(props: AnimationProps) {
         zIndex: 100000,
       }}
     >
-      <Logo height={100} width={150} />
+      <Logo width={150} />
       {/* <video
         style={{
           backgroundColor: 'transparent',

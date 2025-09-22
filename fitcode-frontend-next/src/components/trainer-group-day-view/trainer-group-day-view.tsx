@@ -1,5 +1,3 @@
-import { CopyAll, Save } from '@mui/icons-material';
-import { IconButton, Tooltip } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import dayjs from 'dayjs';
@@ -8,15 +6,13 @@ import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 
 import CustomDivider from '../custom-divider/custom-divider';
-import LoadingOverlay from '../loading-overlay/loading-overlay';
-import { DIVIDER_HEIGHT, MAX_WIDTH } from '../trainer-day-view/constant';
+import { MAX_WIDTH } from '../trainer-day-view/constant';
 import GroupTrainerDayViewHeader from '../trainer-group-day-view-header/trainer-group-day-view-header';
 import GroupTrainerDayViewTrainings from '../trainer-group-day-view-trainings/group-trainer-day-view-trainings';
 import VerticalLinesBorders from '../vertical-lines-borders/vertical-lines-borders';
-import { handleUpdateMultipleTrainings, setTrainingOnDayView } from './state';
+import { setTrainingOnDayView } from './state';
 import { CommonService } from '@/common/service/common.service';
 import { handleApiRequest } from '@/common/type/state.type';
-import TrainingMembers from '@/components/training-members/training-members';
 import { TrainingController } from '@/controller/training/training.controller';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useGroup } from '@/store/group.provider';

@@ -13,7 +13,7 @@ const inter = Inter({ subsets: ['latin'] });
 const onest = Onest({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Fitcode',
+  title: 'Blind/off',
   description: 'Track workouts more efficiently.',
 };
 

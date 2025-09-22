@@ -16,7 +16,6 @@ import { DragDropContext } from 'react-beautiful-dnd';
 import toast from 'react-hot-toast';
 
 import MyModal from '../modal/modal';
-import SelectedMemberReport from '../selected-member-report/selected-member-report';
 import {
   DEFAULT_SUBGROUP,
   DEFAULT_SUBGROUP_ID,

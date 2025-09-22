@@ -3,6 +3,7 @@
 import { useDroppable } from '@dnd-kit/core';
 import { rectSortingStrategy, SortableContext } from '@dnd-kit/sortable';
 import { Box, Grid2, Stack, Typography } from '@mui/material';
+import { useTheme } from '@mui/material';
 
 import SupersetExercise from '../superset-exercise/superset-exercise';
 import { getBorderGradient } from './state';
@@ -11,7 +12,6 @@ import type { Superset as SupersetClass } from '@/controller/training/type/super
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
-import { useTheme } from '@mui/material';
 
 interface SupersetComponentProps {
   superset: SupersetClass;

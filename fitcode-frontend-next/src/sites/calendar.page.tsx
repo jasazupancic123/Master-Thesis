@@ -148,6 +148,12 @@ export default function CalendarPage() {
               ToolbarProps<CalendarEvent, object>
             >,
           }}
+          eventPropGetter={(event) => ({
+            style: {
+              color: theme.palette.text.secondary,
+              fontWeight: 600,
+            },
+          })}
         />
       </Paper>
     </Box>

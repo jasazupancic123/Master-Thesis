@@ -1,9 +1,10 @@
 import { Add, ArrowLeft, ArrowRight, Circle } from '@mui/icons-material';
-import { Box, IconButton, SxProps, Typography } from '@mui/material';
+import type { SxProps } from '@mui/material';
+import { Box, IconButton, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import dayjs from 'dayjs';
 import type { RefObject } from 'react';
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { Fragment, useEffect, useLayoutEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 
 import type { Day } from '@/common/service/util/date.util';
@@ -142,7 +143,7 @@ export default function HorizontalItemsList(props: HorizontalItemsListProps) {
             ? cycleView
               ? '50% !important'
               : '100% !important'
-            : screenSize.isSmallLaptop
+            : screenSize.isSmallLaptop && dayView
               ? '100% !important'
               : '66% !important',
         borderBottomLeftRadius: 5,
@@ -360,6 +361,13 @@ export default function HorizontalItemsList(props: HorizontalItemsListProps) {
                               dashboardInstitutionsView
                             ? '50px'
                             : undefined,
+                      border:
+                        (dashboardView || dashboardInstitutionsView) &&
+                        isSameValue
+                          ? `1px solid ${theme.palette.primary.main}`
+                          : undefined,
+                      borderRadius:
+                        dashboardView || dashboardInstitutionsView ? 1.5 : 0,
                       maxWidth: cycleView ? '70px' : undefined,
                       overflow: cycleView ? 'hidden' : undefined,
                       textOverflow: cycleView ? 'ellipsis' : undefined,
@@ -388,7 +396,7 @@ export default function HorizontalItemsList(props: HorizontalItemsListProps) {
                         ? item.label.split(' ').reverse()
                         : item.label.split(' ')
                       ).map((word, index) => (
-                        <Box key={`${word}-${index}`}>
+                        <Fragment key={`${word}-${index}`}>
                           {index < 2
                             ? word +
                               (index === 1 && item.label.split(' ').length > 2
@@ -397,7 +405,7 @@ export default function HorizontalItemsList(props: HorizontalItemsListProps) {
                             : undefined}
                           {index < 2 &&
                             index < item.label.split(' ').length - 1 && <br />}
-                        </Box>
+                        </Fragment>
                       ))
                     ) : dashboardView ? (
                       getShortGroupName(item.label)

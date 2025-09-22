@@ -5,9 +5,9 @@ import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 import React, { Fragment, useEffect, useState } from 'react';
 
+import CustomDivider from '../custom-divider/custom-divider';
 import ExerciseChips from '../exercise-chips/exercise-chips';
 import HorizontalItemsList from '../horizontal-items-list/horizontal-items-list';
-import MobileDoubleTextItems from '../mobile-double-text-items/mobile-double-text-items';
 import { DIVIDER_HEIGHT, MAX_WIDTH } from '../trainer-day-view/constant';
 import VerticalLinesBorders from '../vertical-lines-borders/vertical-lines-borders';
 import { CommonService } from '@/common/service/common.service';
@@ -26,7 +26,6 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import CustomDivider from '../custom-divider/custom-divider';
 
 const commonService = CommonService.instance;
 
