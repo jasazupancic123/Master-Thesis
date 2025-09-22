@@ -3,7 +3,6 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { Box, Fab, Menu, MenuItem, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import dayjs from 'dayjs';
-import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 
 import Animation from '../animation/animation';
@@ -13,28 +12,15 @@ import TrainingInProgressSuperset from '../training-in-progress-superset/trainin
 import { getUndoneExercises } from './state';
 import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
-import type { SetState } from '@/common/type/state.type';
 import { useHorizontalOverflow } from '@/common/util/horizontal-overflow.util';
-import { TrainingController } from '@/controller/training/training.controller';
-import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
-import { useAuthenticatedAuth } from '@/store/auth.provider';
-import { useMain } from '@/store/main.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 
-interface TrainingInProgressProps {
-  setTrainings: SetState<Training[]>;
-}
-
-export default function TrainingInProgress(props: TrainingInProgressProps) {
+export default function TrainingInProgress() {
   const theme = useTheme();
-  const router = useRouter();
-  const { exercises } = useMain();
-  const { user, token } = useAuthenticatedAuth();
-  const controller = TrainingController.getInstance(token);
 
   const {
     trainingInProgress,
@@ -55,10 +41,8 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
   const { selectedTrackingMethod } = useAthleteHeader();
 
   const { outerRef, innerRef, isOverflowing } = useHorizontalOverflow();
-  const { setTrainings } = props;
 
   const [elapsedTime, setElapsedTime] = useState(0);
-  const [openFinishTrainingModal, setOpenFinishTrainingModal] = useState(false);
   const [openCancelTrainingModal, setOpenCancelTrainingModal] = useState(false);
   const [playAnimation, setPlayAnimation] = useState(true);
   const [undoneExercises, setUndoneExercises] = useState<TrainingExercise[]>(
@@ -263,7 +247,6 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
         <TrainingInProgressSuperset
           anchorEl={anchorEl}
           open={open}
-          setOpenFinishTrainingModal={setOpenFinishTrainingModal}
           handleCancel={handleCancel}
           handleOpenMenu={handleOpenMenu}
           handleCloseMenu={handleCloseMenu}

@@ -33,6 +33,10 @@ export class TrainingReportService {
     return await this.repository.getAllByUser(userId, filter);
   }
 
+  async findOneById(ref: TrainingReportRef): Promise<TrainingReport | null> {
+    return await this.repository.findById(ref);
+  }
+
   async updateReport(
     userId: string,
     training: Training,

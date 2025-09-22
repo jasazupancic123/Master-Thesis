@@ -22,8 +22,8 @@ export default function TrainingPage() {
   const {
     view,
     setView,
-    plannedTrainings,
-    completedTrainings,
+    trainings: plannedTrainings,
+    reports: completedTrainings,
     clearTrainingState,
     trainingInProgress,
     isLoaded,
@@ -138,13 +138,7 @@ export default function TrainingPage() {
     </Box>
   ) : (
     <TrainingInProgressProvider>
-      <TrainingInProgress
-        setTrainings={
-          filter === CompletedPlanned.PLANNED
-            ? setFilteredPlannedTrainings
-            : () => {}
-        }
-      />
+      <TrainingInProgress />
     </TrainingInProgressProvider>
   );
 }
