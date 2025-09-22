@@ -1,27 +1,20 @@
 'use client';
 
-import { Avatar, IconButton, Tooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
-import dayjs from 'dayjs';
-import Link from 'next/link';
 import * as React from 'react';
 
 import BottomNavigation from '../bottom-navigation/bottom-navigation';
+import Logo from '../logo/logo';
 import Sidebar from '../sidebar/sidebar';
-import SettingsIcon from '@/assets/icons/Settings.svg';
-import { LINK_PROFILE } from '@/common/constant/navigation.constant';
+import { MAX_WIDTH } from '../trainer-day-view/constant';
 import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
-import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import Logo from '../logo/logo';
-import { MAX_WIDTH } from '../trainer-day-view/constant';
 
 export default function AthleteHeader() {
   const theme = useTheme();
   const screenSize = useScreenSize();
-  const { user } = useAuthenticatedAuth();
 
   const athleteHeaderContext = useAthleteHeader();
 

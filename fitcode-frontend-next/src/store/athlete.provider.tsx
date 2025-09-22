@@ -6,7 +6,7 @@ import { createContext, useContext, useState } from 'react';
 
 import {
   LINK_TRAININGS,
-  LINKS_SIDEBAR,
+  LINKS_SIDEBAR_GROUP_VIEW,
 } from '@/common/constant/navigation.constant';
 import type { ILink } from '@/common/type/link.type';
 import type { ChildrenProps } from '@/common/type/props.type';
@@ -34,7 +34,7 @@ export function AthleteProvider(props: ChildrenProps) {
   let currentFilter = LINK_TRAININGS;
   const url = new URL(window.location.href);
   const lastItemInUrl = url.pathname.split('/').pop();
-  Object.values(LINKS_SIDEBAR[UserRole.ATHLETE]).map((link) => {
+  Object.values(LINKS_SIDEBAR_GROUP_VIEW[UserRole.ATHLETE]).map((link) => {
     if (lastItemInUrl && link?.href.endsWith(lastItemInUrl)) {
       currentFilter = link;
     }

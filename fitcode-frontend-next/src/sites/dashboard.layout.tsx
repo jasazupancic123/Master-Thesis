@@ -1,19 +1,17 @@
 'use client';
 
-import { Box, Container } from '@mui/material';
+import { AppBar, Box, Container } from '@mui/material';
+import { useTheme } from '@mui/material';
 
 import type { ChildrenProps } from '@/common/type/props.type';
 import DashboardHeader from '@/components/dashboard-header/dashboard-header';
 import { MAX_WIDTH } from '@/components/trainer-day-view/constant';
 
 export default function DashboardLayout({ children }: ChildrenProps) {
-  const styles = {
-    bgcolor: 'background.default',
-    minHeight: `calc(100vh - ${64}px)`,
-  };
+  const theme = useTheme();
 
   return (
-    <Box {...styles}>
+    <Box>
       <Container
         component="main"
         maxWidth={false}
@@ -28,13 +26,24 @@ export default function DashboardLayout({ children }: ChildrenProps) {
         }}
       >
         <Box width="100%" display="flex" flexDirection="column">
-          <DashboardHeader />
+          <AppBar
+            position="fixed"
+            sx={{
+              width: '100%',
+              transition: 'margin-left 0.3s ease-in-out',
+              boxShadow: 'none',
+              backgroundColor: theme.palette.background.default,
+            }}
+          >
+            <DashboardHeader />
+          </AppBar>
 
           <Box
             width="100%"
             display="flex"
             maxWidth={MAX_WIDTH}
             sx={{
+              mt: '50px',
               mx: 'auto',
             }}
           >

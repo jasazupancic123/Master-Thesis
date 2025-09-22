@@ -1,3 +1,4 @@
+import { Circle } from '@mui/icons-material';
 import CloseIcon from '@mui/icons-material/Close';
 import DoneIcon from '@mui/icons-material/Done';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
@@ -25,7 +26,6 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
-import { Circle } from '@mui/icons-material';
 
 interface TrainingInProgressProps {
   setTrainings: SetState<Training[]>;
