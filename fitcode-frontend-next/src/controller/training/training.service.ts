@@ -1,4 +1,3 @@
-import type { Attribute } from '../attribute/type/attribute.type';
 import type { AttributeValue } from '../attribute/type/attribute-value.type';
 import type { AuthUser } from '../auth/type/user.type';
 import { IntType } from '../component/enum/param.enum';
@@ -14,18 +13,44 @@ import type { ExerciseSet } from './type/exercise-set.type';
 import type { Superset } from './type/superset.type';
 import type { Training } from './type/training.type';
 import type { TrainingComponent } from './type/training-component.type';
-import type { TrainingExercise } from './type/training-exercise.type';
 import type { TrainingReport } from './type/training-report.type';
-import type { PrescribedWorkload } from './type/workload-value.type';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
 
-type PWKey = keyof PrescribedWorkload;
-type Triple = readonly [PWKey, PWKey, PWKey];
+const WARMUP_COMPONENT_ID = 'warmup';
+const COOLDOWN_COMPONENT_ID = 'cooldown';
 
 export class TrainingService {
+  static getTrainingByAthlete(athleteId: string, training: Training): Training {
+    const components = this.getTrainingComponents(training);
+    const athleteComponents: TrainingComponent[] = [];
+
+    for (const component of components) {
+      const athleteComponent = structuredClone(component);
+      athleteComponent.supersets = this.getSupersetsByAthlete(
+        athleteId,
+        athleteComponent
+      );
+
+      athleteComponents.push({ ...athleteComponent, subgroups: [] });
+    }
+
+    return {
+      ...training,
+      components: athleteComponents.filter(
+        (c) => c.id !== WARMUP_COMPONENT_ID && c.id !== COOLDOWN_COMPONENT_ID
+      ),
+      warmup: athleteComponents.find((c) => c.id === WARMUP_COMPONENT_ID)!,
+      cooldown: athleteComponents.find((c) => c.id === COOLDOWN_COMPONENT_ID)!,
+      membersIds: training.membersIds.filter((uid) => uid === athleteId),
+      completedMembersIds: training.completedMembersIds.filter(
+        (uid) => uid === athleteId
+      ),
+    };
+  }
+
   static mapData<T extends Training>(
     item: T,
     data: {
@@ -186,191 +211,45 @@ export class TrainingService {
     return components.filter((c) => c.id !== WARMUP_ID && c.id !== COOLDOWN_ID);
   }
 
-  static getPrescribedSupersetsByUser(
-    userId: string,
-    component: TrainingComponent
+  static getTrainingComponents(training: Training): TrainingComponent[] {
+    const { warmup, cooldown, components } = training;
+    return [warmup, ...components, cooldown];
+  }
+
+  static getSupersetsByAthlete(
+    athleteId: string,
+    trainingComponent: TrainingComponent
   ): Superset[] {
-    // check if user is in subgroups first
-    for (const subgroup of component.subgroups)
-      if (subgroup.membersIds.includes(userId)) return subgroup.supersets;
+    // athlete can be member of the following:
+    //    - main group -> 0 subgroups
+    //    - 1 root subgroup -> 1 subgroup, can be shared with other members in training
+    //    - 1 child subgroup of root subgroup -> 2 subgroups (root & child), root can be shared with other members in training but child cannot
+    //    - direct child of main group -> 1 subgroup, only this athlete is in it
 
-    return component.supersets; // default group
-  }
+    const subgroups = trainingComponent.subgroups.filter((s) =>
+      s.membersIds.includes(athleteId)
+    );
 
-  private static getFieldNames(field: string): Triple | undefined {
-    switch (field) {
-      case ParamType.VolWork1:
-        return [
-          'volWork1Type',
-          'prescribedVolWork1ValueL',
-          'prescribedVolWork1ValueR',
-        ];
-      case ParamType.VolWork2:
-        return [
-          'volWork2Type',
-          'prescribedVolWork2ValueL',
-          'prescribedVolWork2ValueR',
-        ];
-      case ParamType.VolRec1:
-        return [
-          'volRecType',
-          'prescribedVolRecValueL',
-          'prescribedVolRecValueR',
-        ];
-      case ParamType.IntWork1:
-        return [
-          'intWork1Type',
-          'prescribedIntWork1ValueL',
-          'prescribedIntWork1ValueR',
-        ];
-      case ParamType.IntWork2:
-        return [
-          'intWork2Type',
-          'prescribedIntWork2ValueL',
-          'prescribedIntWork2ValueR',
-        ];
-      case ParamType.IntRec1:
-        return [
-          'intRecType',
-          'prescribedIntRecValueL',
-          'prescribedIntRecValueR',
-        ];
-      default:
-        return undefined;
-    }
-  }
-
-  static getPrescribedWorkload(
-    exerciseToUpdate: TrainingExercise,
-    prescribedSet: ExerciseSet,
-    baseIsUnilatCurrentIsBilat = false
-  ): PrescribedWorkload {
-    /*
-      if base is unilat, it only updates L values and if the current exercise is billat,
-      then update L and R to the unilat's L
-    */
-    const paramValuesLToUpdate = exerciseToUpdate.sets[0].paramValuesL;
-    const paramValuesRToUpdate = exerciseToUpdate.sets[0].paramValuesR;
-
-    const prescribedValuesL = prescribedSet.paramValuesL;
-    const prescribedValuesR = prescribedSet.paramValuesR;
-
-    // paramValuesLToUpdate -> ['ref', 'eff', 'time']
-    // prescribedValuesL -> ['ref', 'kg', 'eff', 'time']
-
-    let workload: PrescribedWorkload = {};
-
-    // update L values and if baseIsUnilatCurrentIsBilat is true, then also R values
-    for (const updateParamValueL of paramValuesLToUpdate) {
-      const prescribedParamValueL = prescribedValuesL.find(
-        (p) => p.selected === updateParamValueL.selected
-      );
-      if (!prescribedParamValueL) continue;
-
-      const field = updateParamValueL.field;
-
-      const fieldNames = this.getFieldNames(field);
-      if (!fieldNames) continue;
-
-      const [typeField, valueLField, valueRField] = fieldNames; // all PWKey
-
-      workload = {
-        ...workload,
-        [typeField]: typeField.includes('int')
-          ? this.parseSelected<IntType>(prescribedParamValueL)
-          : this.parseSelected<VolType>(prescribedParamValueL),
-      };
-      workload = {
-        ...workload,
-        [valueLField]: this.parseValue(prescribedParamValueL) as number,
-      };
-      workload = {
-        ...workload,
-        [valueRField]: baseIsUnilatCurrentIsBilat
-          ? (this.parseValue(prescribedParamValueL) as number)
-          : undefined,
-      };
+    if (subgroups.length === 1) {
+      // root subgroup OR direct child of main group
+      const subgroup = subgroups[0];
+      if (subgroup.parentId === trainingComponent.id) return subgroup.supersets; // direct child of main group
+      if (!subgroup.parentId) return subgroup.supersets; // root subgroup
+      return subgroup.supersets; // case of child subgroup without correct parent
     }
 
-    // already updated both L and R values, no need to update R values separately
-    if (baseIsUnilatCurrentIsBilat) return workload;
+    if (subgroups.length === 2) {
+      // 2 subgroups - root and child
+      const root = subgroups.find((s) => !s.parentId);
+      if (!root) return trainingComponent.supersets; // case of 2 child subgroups without root
 
-    // update R values
-    if (paramValuesRToUpdate && prescribedValuesR) {
-      for (const updateParamValueR of paramValuesRToUpdate) {
-        const prescribedParamValueR = prescribedValuesR.find(
-          (p) => p.selected === updateParamValueR.selected
-        );
-        if (!prescribedParamValueR) continue;
+      const child = subgroups.find((s) => s.parentId === root.id);
+      if (!child) return trainingComponent.supersets; // case of root subgroup without child
 
-        const field = updateParamValueR.field;
-
-        const fieldNames = this.getFieldNames(field);
-        if (!fieldNames) continue;
-
-        const [typeField, valueLField, valueRField] = fieldNames; // all PWKey
-
-        workload = {
-          ...workload,
-          [valueRField]: baseIsUnilatCurrentIsBilat
-            ? (this.parseValue(prescribedParamValueR) as number)
-            : undefined,
-        };
-      }
+      return child.supersets;
     }
 
-    return workload;
-  }
-
-  static getPerscribedFieldName(
-    param: Attribute | AttributeValue,
-    leftOrRight: 'L' | 'R'
-  ): keyof PrescribedWorkload {
-    let perscribedFieldName;
-    switch (param.field) {
-      case 'int1':
-        perscribedFieldName =
-          leftOrRight === 'L'
-            ? 'prescribedIntWork1ValueL'
-            : 'prescribedIntWork1ValueR';
-        break;
-      case 'int2':
-        perscribedFieldName =
-          leftOrRight === 'L'
-            ? 'prescribedIntWork2ValueL'
-            : 'prescribedIntWork2ValueR';
-        break;
-      case 'vol1':
-        perscribedFieldName =
-          leftOrRight === 'L'
-            ? 'prescribedVolWork1ValueL'
-            : 'prescribedVolWork1ValueR';
-        break;
-      case 'vol2':
-        perscribedFieldName =
-          leftOrRight === 'L'
-            ? 'prescribedVolWork2ValueL'
-            : 'prescribedVolWork2ValueR';
-        break;
-      case 'intRec':
-        perscribedFieldName =
-          leftOrRight === 'L'
-            ? 'prescribedIntRecValueL'
-            : 'prescribedIntRecValueR';
-        break;
-      case 'volRec':
-        perscribedFieldName =
-          leftOrRight === 'L'
-            ? 'prescribedVolRecValueL'
-            : 'prescribedVolRecValueR';
-        break;
-      default:
-        throw new Error(
-          `Unknown param field: ${param.field}. Cannot determine prescribed field name.`
-        );
-    }
-
-    return perscribedFieldName as keyof PrescribedWorkload;
+    return trainingComponent.supersets; // no subgroups, return all supersets
   }
 
   private static parseSelected<T = string>(

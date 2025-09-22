@@ -1,4 +1,3 @@
-import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import dayjs from 'dayjs';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
@@ -25,7 +24,6 @@ dayjs.extend(weekOfYear);
 const commonService = CommonService.instance;
 
 export default function TrainerDayView() {
-  const theme = useTheme();
   const screenSize = useScreenSize();
   const router = useRouter();
 
@@ -201,6 +199,7 @@ export default function TrainerDayView() {
         >
           <CustomDivider />
         </Box>
+
         {/* Trainings for the day */}
         <Box maxWidth={MAX_WIDTH} mx="auto">
           <GroupTrainerDayViewTrainings />

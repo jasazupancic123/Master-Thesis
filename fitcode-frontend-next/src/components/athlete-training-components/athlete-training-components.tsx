@@ -162,7 +162,7 @@ export default function AthleteTrainingComponents(
             </Typography>
           ) : (
             (() => {
-              const supersets = TrainingService.getPrescribedSupersetsByUser(
+              const supersets = TrainingService.getSupersetsByAthlete(
                 user.uid,
                 selectedComponent
               );

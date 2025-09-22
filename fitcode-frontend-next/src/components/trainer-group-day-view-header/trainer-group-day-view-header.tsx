@@ -32,7 +32,7 @@ export default function GroupTrainerDayViewHeader(
   const theme = useTheme();
   const screenSize = useScreenSize();
 
-  const { days, setDays, week } = props;
+  const { days, setDays } = props;
 
   const {
     trainings,

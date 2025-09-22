@@ -17,6 +17,7 @@ import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import type { Workload } from '@/controller/training/type/workload.type';
+import type { UserProgress } from '@/controller/training/workload.service';
 
 export type GroupIdPageParams = { params: Promise<{ group_id: string }> };
 
@@ -53,6 +54,7 @@ export type TrainerDayViewContextProps = {
   setDay: SetState<Day>;
   training: Training | undefined;
   setTraining: SetStateNullable<Training>;
+  progress: UserProgress[];
   selectedPeriod:
     | {
         key: Date;

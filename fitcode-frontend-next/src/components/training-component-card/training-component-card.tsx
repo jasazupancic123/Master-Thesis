@@ -10,6 +10,7 @@ import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 
 import { deleteSelectedExercises } from '../trainer-group-day-view/state';
+import CompletedMembersGroup from './completed-members-group';
 import { CommonService } from '@/common/service/common.service';
 import type { SetState } from '@/common/type/state.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
@@ -95,6 +96,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                 ? `${trainingComponent.component.name} - ${trainingComponent.target.name}`
                 : trainingComponent.component.name}
             </Typography>
+
             {component?.id === trainingComponent.id && (
               <Box display="flex" justifyContent="flex-start" gap={0.5}>
                 <IconButton
@@ -183,6 +185,12 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                     </Tooltip>
                   )}
                 </>
+              </Box>
+            )}
+
+            {training && (
+              <Box ml={2}>
+                <CompletedMembersGroup componentId={trainingComponent.id} />
               </Box>
             )}
           </Box>
