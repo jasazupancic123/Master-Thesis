@@ -1,4 +1,5 @@
 import { Inject } from '@nestjs/common';
+import type { ConfigService } from '@nestjs/config';
 import admin from 'firebase-admin';
 import { getApps, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
@@ -6,6 +7,7 @@ import { getFirestore, Query } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 
 import type { CommonService } from '@src/common/service/common.service';
+import type { Environment } from '@src/config/environment-validation-schema';
 
 export const FIREBASE_ADMIN = Symbol('FirebaseAdmin');
 
@@ -21,14 +23,17 @@ export interface FirebaseClient {
 }
 
 export function getFirebaseClient(
+  configService: ConfigService<Environment>,
   commonService: CommonService,
 ): FirebaseClient {
-  const envCredentials = commonService.env.getKey('FIREBASE_CREDENTIALS');
   let credential: admin.credential.Credential;
+  let databaseId: string | undefined;
 
-  if (commonService.env.isProduction() || commonService.env.isStaging())
+  const envCredentials = configService.get('FIREBASE_CREDENTIALS');
+  if (commonService.env.isProduction() || commonService.env.isStaging()) {
     credential = admin.credential.applicationDefault();
-  else if (envCredentials)
+    databaseId = configService.get('FIREBASE_DATABASE_ID');
+  } else if (envCredentials)
     credential = admin.credential.cert(JSON.parse(envCredentials));
   else credential = admin.credential.cert(require('../../serviceAccount.json'));
 
@@ -38,13 +43,12 @@ export function getFirebaseClient(
   ) as admin.app.App;
 
   const auth = getAuth(app);
-  const firestore = getFirestore(app);
+  const firestore = getFirestore(app, databaseId);
   const storage = getStorage(app);
 
   if (!apps.length) {
     firestore.settings({ ignoreUndefinedProperties: true });
-
-    const debugLogQueryTimes = commonService.env.getKey(
+    const debugLogQueryTimes = configService.get(
       'DEBUG_FIRESTORE_QUERY_TIME_LOGGING',
     );
 

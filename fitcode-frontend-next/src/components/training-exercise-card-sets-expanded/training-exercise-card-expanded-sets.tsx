@@ -6,6 +6,11 @@ import { ExerciseParam } from '../exercise-param/exercise-param';
 import LeftRightExerciseText from '../left-right-exercise-text/left-right-exercise-text';
 import { getLAndRValues } from '../training-exercise-card/state';
 import { getCorrectValuesForExerciseParam } from '../training-exercise-card-container/state';
+import {
+  combineMinMax,
+  getMethodMinMax,
+  getParamMinMax,
+} from '../training-exercise-card-sets-collapsed/state';
 import { updateExerciseAttributeValues } from './state';
 import type { SetState } from '@/common/type/state.type';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
@@ -152,9 +157,6 @@ export default function TrainingExerciseCardExpandedSets(
                       `Invalid parameter field: ${param.field}`
                     );
 
-                  let min: number | undefined;
-                  let max: number | undefined;
-
                   const method = methods.find(
                     (m) => m.id === component.methodId
                   );
@@ -165,19 +167,23 @@ export default function TrainingExerciseCardExpandedSets(
                     )
                     .find(Boolean);
 
-                  if (attributeRange) {
-                    const foundInOptions = attributeRange.options?.find(
-                      (option) => option.field === valueL.selected
-                    );
+                  const paramMinMax = getParamMinMax(param, valueL);
+                  const methodMinMax = getMethodMinMax(
+                    {
+                      exercise,
+                      attributeRange,
+                      valueL,
+                      setNumber: set.setNumber,
+                    },
+                    { selectedExercises, setsNumbers, setSetsNumbers }
+                  );
 
-                    if (foundInOptions) {
-                      min = foundInOptions.min;
-                      max = foundInOptions.max;
-                    } else {
-                      min = attributeRange.min;
-                      max = attributeRange.max;
-                    }
-                  }
+                  const { min, max } = combineMinMax(
+                    paramMinMax.min,
+                    paramMinMax.max,
+                    methodMinMax.min,
+                    methodMinMax.max
+                  );
 
                   return (
                     <Box

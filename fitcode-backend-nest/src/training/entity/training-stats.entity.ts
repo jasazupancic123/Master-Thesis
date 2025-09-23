@@ -1,19 +1,34 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Expose } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
 import {
   IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
   Min,
+  ValidateNested,
 } from 'class-validator';
 
-export class TrainingStats {
-  @IsString({ each: true })
+export class TraininComponentStats {
+  @IsString()
   @IsNotEmpty()
   @ApiProperty()
   @Expose()
-  plannedComponents: string[];
+  componentId: string;
+
+  @IsNumber()
+  @Min(0)
+  @ApiProperty()
+  @Expose()
+  totalSets: number; // for calculating status
+}
+
+export class TrainingStats {
+  @Type(() => TraininComponentStats)
+  @ValidateNested({ each: true })
+  @ApiProperty({ type: () => TraininComponentStats, isArray: true })
+  @Expose()
+  plannedComponents: TraininComponentStats[];
 
   @IsNumber()
   @Min(0)

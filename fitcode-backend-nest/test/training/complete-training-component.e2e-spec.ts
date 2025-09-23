@@ -558,17 +558,20 @@ describe('Complete training component (e2e)', () => {
       expect(spyResult).toEqual(12); // 4 exercises * 3 sets each
       spy.mockRestore();
 
+      const ref = { trainingId: training.id, userId: athlete1.uid };
       const dbTraining = await db.trainings.findById(training.id);
-      const completedComponent = dbTraining.components.find(
-        (c) => c.id === component1.id,
-      );
+      const report = await db.trainingReports.findById(ref);
 
-      expect(completedComponent.completedMembersIds).toHaveLength(1);
-      expect(completedComponent.completedMembersIds).toContain(
-        global.athlete.uid,
-      );
       expect(dbTraining.stats).toHaveLength(3); // 4 exercises but only 3 unique
-      expect(dbTraining.completedMembersIds).toHaveLength(0);
+      expect(report.componentStatuses).toHaveLength(2);
+      expect(
+        report.componentStatuses.find((s) => s.componentId === component1.id)
+          .status,
+      ).toBe('completed');
+      expect(
+        report.componentStatuses.find((s) => s.componentId === component2.id)
+          .status,
+      ).toBe('not_started');
 
       const workloads = await db.workloads.getAll(training.id);
       expect(workloads).toHaveLength(12); // 4 exercises * 3 sets
@@ -679,15 +682,32 @@ describe('Complete training component (e2e)', () => {
     expect(response2.status).toBe(200);
 
     const dbTraining = await db.trainings.findById(training.id);
-    const completedComponent = dbTraining.components.find(
-      (c) => c.id === component1.id,
-    );
+    const reports = await db.trainingReports
+      .collection({ trainingId: training.id })
+      .get()
+      .then((snap) => snap.docs.map((doc) => doc.data()));
 
-    expect(completedComponent.completedMembersIds).toHaveLength(2);
-    expect(completedComponent.completedMembersIds).toContain(athlete1.uid);
-    expect(completedComponent.completedMembersIds).toContain(athlete2.uid);
     expect(dbTraining.stats).toHaveLength(3); // 4 exercises but only 3 unique
-    expect(dbTraining.completedMembersIds).toHaveLength(0);
+    expect(reports).toHaveLength(2);
+    expect(reports[0].componentStatuses).toHaveLength(2);
+    expect(
+      reports[0].componentStatuses.find((s) => s.componentId === component1.id)
+        .status,
+    ).toBe('completed');
+    expect(
+      reports[0].componentStatuses.find((s) => s.componentId === component2.id)
+        .status,
+    ).toBe('not_started');
+
+    expect(reports[1].componentStatuses).toHaveLength(2);
+    expect(
+      reports[1].componentStatuses.find((s) => s.componentId === component1.id)
+        .status,
+    ).toBe('completed');
+    expect(
+      reports[1].componentStatuses.find((s) => s.componentId === component2.id)
+        .status,
+    ).toBe('not_started');
 
     const workloads = await db.workloads.getAll(training.id);
     expect(workloads).toHaveLength(24); // 12 * 2 athletes
@@ -749,19 +769,23 @@ describe('Complete training component (e2e)', () => {
     expect(response2.status).toBe(200);
 
     const dbTraining = await db.trainings.findById(training.id);
-    const completedComponent1 = dbTraining.components.find(
-      (c) => c.id === component1.id,
-    );
-    const completedComponent2 = dbTraining.components.find(
-      (c) => c.id === component2.id,
-    );
-
-    expect(completedComponent1.completedMembersIds).toHaveLength(1);
-    expect(completedComponent1.completedMembersIds).toContain(athlete1.uid);
-    expect(completedComponent2.completedMembersIds).toHaveLength(1);
-    expect(completedComponent2.completedMembersIds).toContain(athlete1.uid);
-    expect(dbTraining.completedMembersIds).toHaveLength(1);
     expect(dbTraining.stats).toHaveLength(6); // 6 unique exercises across both components
+
+    const reports = await db.trainingReports
+      .collection({ trainingId: training.id })
+      .get()
+      .then((snap) => snap.docs.map((doc) => doc.data()));
+
+    expect(reports).toHaveLength(1);
+    expect(reports[0].componentStatuses).toHaveLength(2);
+    expect(reports[0].componentStatuses).toContainEqual({
+      componentId: component1.id,
+      status: 'completed',
+    });
+    expect(reports[0].componentStatuses).toContainEqual({
+      componentId: component2.id,
+      status: 'completed',
+    });
 
     const workloads = await db.workloads.getAll(training.id);
     expect(workloads).toHaveLength(21); // 1 athlete * 7 exercises (total) * 3 sets
@@ -849,13 +873,33 @@ describe('Complete training component (e2e)', () => {
     expect(response4.status).toBe(200);
 
     const dbTraining = await db.trainings.findById(training.id);
-    expect(dbTraining.components).toHaveLength(2);
-    expect(dbTraining.completedMembersIds).toHaveLength(2);
-    expect(dbTraining.completedMembersIds).toContain(athlete1.uid);
-    expect(dbTraining.completedMembersIds).toContain(athlete2.uid);
     expect(dbTraining.stats).toHaveLength(6); // 6 unique exercises across both components
-    expect(dbTraining.components[0].completedMembersIds).toHaveLength(2);
-    expect(dbTraining.components[1].completedMembersIds).toHaveLength(2);
+    expect(dbTraining.components).toHaveLength(2);
+
+    const reports = await db.trainingReports
+      .collection({ trainingId: training.id })
+      .get()
+      .then((snap) => snap.docs.map((doc) => doc.data()));
+
+    expect(reports).toHaveLength(2);
+    expect(reports[0].componentStatuses).toHaveLength(2);
+    expect(reports[0].componentStatuses).toContainEqual({
+      componentId: component1.id,
+      status: 'completed',
+    });
+    expect(reports[0].componentStatuses).toContainEqual({
+      componentId: component2.id,
+      status: 'completed',
+    });
+    expect(reports[1].componentStatuses).toHaveLength(2);
+    expect(reports[1].componentStatuses).toContainEqual({
+      componentId: component1.id,
+      status: 'completed',
+    });
+    expect(reports[1].componentStatuses).toContainEqual({
+      componentId: component2.id,
+      status: 'completed',
+    });
 
     const workloads = await db.workloads.getAll(training.id);
     expect(workloads).toHaveLength(42); // 2 athletes * 7 exercises (total) * 3 sets

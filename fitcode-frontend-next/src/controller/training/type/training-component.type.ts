@@ -14,7 +14,6 @@ export type TrainingComponent = IdEntity &
   Required<DateRange> & {
     supersets: Superset[];
     subgroups: Subgroup[];
-    completedMembersIds: string[]; // members who completed the component
     methodId?: string;
     mainSet: MainSet;
     target?: Target; // selected target

@@ -1,5 +1,11 @@
-import { IntersectionType, PickType } from '@nestjs/mapped-types';
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { applyDecorators } from '@nestjs/common';
+import { IntersectionType, PickType } from '@nestjs/swagger';
+import {
+  ApiExtraModels,
+  ApiProperty,
+  ApiPropertyOptional,
+  getSchemaPath,
+} from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 import {
   IsNotEmpty,
@@ -188,6 +194,15 @@ export class CompleteRSetDto {
   @ApiPropertyOptional({ type: [String] })
   @Expose()
   feedbackR?: string[]; // feedback for each rep
+}
+
+export function ApiIntersection(...models: Function[]) {
+  return applyDecorators(
+    ApiExtraModels(...models),
+    ApiProperty({
+      allOf: models.map((m) => ({ $ref: getSchemaPath(m) })),
+    }),
+  );
 }
 
 export class CompleteSetDto extends IntersectionType(

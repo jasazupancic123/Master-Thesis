@@ -37,7 +37,11 @@ export class TrainingComponent extends IntersectionType(IdEntity, ColorEntity) {
 
   @IsEnum(MainSet)
   @IsString()
-  @ApiProperty({ type: () => MainSet })
+  @ApiProperty({
+    enum: MainSet,
+    enumName: 'MainSet',
+    description: 'Type of main set',
+  })
   @Expose()
   mainSet: MainSet; // defaults to "block"
 
@@ -66,12 +70,6 @@ export class TrainingComponent extends IntersectionType(IdEntity, ColorEntity) {
   @ApiProperty({ type: () => Subgroup, isArray: true })
   @Expose()
   subgroups: Subgroup[];
-
-  @IsString({ each: true })
-  @IsNotEmpty({ each: true })
-  @ApiProperty()
-  @Expose()
-  completedMembersIds: string[]; // members who completed the training
 
   @Type(() => CopiedFrom)
   @IsOptional()

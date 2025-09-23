@@ -61,7 +61,6 @@ export function generateTrainingStub(
     createdAt: new Date(),
     updatedAt: new Date(),
     deletedAt: null,
-    completedMembersIds: data?.completedMembersIds || [],
     institutionId: data?.institutionId,
     groupId: data?.groupId,
     cycleId: data?.cycleId,
@@ -93,7 +92,6 @@ export function generateTrainingComponent(
     target: data?.target || null,
     methodId: data?.methodId || null,
     mainSet: data?.mainSet || MainSet.BLOCK,
-    completedMembersIds: data?.completedMembersIds || [],
     supersets: data?.supersets || [],
     subgroups: data?.subgroups || [],
   };
