@@ -1,13 +1,13 @@
-import { MoreVert } from '@mui/icons-material';
-import { Box, Divider, IconButton } from '@mui/material';
+import { Box, Divider, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
-import Typography from '@mui/material/Typography';
-import dayjs from 'dayjs';
-import React from 'react';
+import React, { useState } from 'react';
 
-import ComponentsAvatar from '../components-avatar/components-avatar';
-import { MainSet } from '@/controller/training/enum/main-set.enum';
 import type { TrainingReport } from '@/controller/training/type/training-report.type';
+import AthleteTrainingCardHeader from './athlete-training-card-header';
+import { PieChart } from '@mui/x-charts';
+import { PieCenterLabel } from '@/common/util/mui-charts.util';
+import { ChildrenProps } from '@/common/type/props.type';
+import { theme } from '@/app/style';
 
 type TrainingReportCardProps = {
   report: TrainingReport;
@@ -17,21 +17,14 @@ export default function TrainingReportCard(props: TrainingReportCardProps) {
   const theme = useTheme();
   const { report } = props;
 
-  const checkIsActiveTraining = () => {
-    const now = dayjs();
-    const from = dayjs(report.from);
-
-    const isNowAM = now.hour() < 12;
-    const isTrainingAM = from.hour() < 12;
-
-    return isNowAM === isTrainingAM && now.isSame(from, 'day');
-  };
-
-  const isActiveTraining = checkIsActiveTraining();
+  const [realizationScore] = useState(
+    Math.round((report.realizationScore / report.totalRealizationScore) * 100)
+  );
 
   return (
     <>
       <Box
+        id="training-report-card"
         width="100%"
         display="flex"
         flexDirection="column"
@@ -39,140 +32,53 @@ export default function TrainingReportCard(props: TrainingReportCardProps) {
           px: 2,
           py: 2,
           backgroundColor: theme.palette.background.default,
-          border: isActiveTraining
-            ? `1px solid ${theme.palette.primary.main}`
-            : 'none',
-          position: isActiveTraining ? 'relative' : undefined,
         }}
-        gap={1.5}
+        gap={2}
       >
-        {isActiveTraining && (
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 0,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              backgroundColor: theme.palette.primary.main,
-              borderBottomLeftRadius: 40,
-              borderBottomRightRadius: 40,
-              px: 2,
-              zIndex: 1,
-            }}
-          >
-            <Typography
-              sx={{
-                fontSize: 10,
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                color: theme.palette.background.light,
-              }}
+        {/* Group name, cycle name, date */}
+        <AthleteTrainingCardHeader
+          components={report.mappedPlannedComponents || []}
+          group={report.group}
+          cycle={report.cycle}
+          from={report.from}
+          to={report.to}
+        />
+
+        {/* Report charts */}
+        <Box width="100%" display="flex" alignItems="flex-start" gap={'1%'}>
+          <ChartContainer label="Realization">
+            <PieChart
+              height={120}
+              hideLegend
+              series={[
+                {
+                  data: [
+                    {
+                      value: realizationScore,
+                      label: '',
+                    },
+                    {
+                      value: 100 - realizationScore,
+                      label: '',
+                    },
+                  ],
+                  innerRadius: 35,
+                },
+              ]}
+              colors={[
+                theme.palette.primary.main,
+                theme.palette.background.light,
+              ]}
             >
-              Active
-            </Typography>
-          </Box>
-        )}
-
-        <Box
-          width="100%"
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-          gap={1}
-        >
-          {/* Group name, cycle name, date */}
-          <Box display="flex" alignItems="center" gap={1}>
-            <ComponentsAvatar
-              size={50}
-              components={(report.mappedPlannedComponents || []).map((c) => ({
-                id: c.id,
-                completedMembersIds: [],
-                from: new Date(),
-                to: new Date(),
-                mainSet: MainSet.BLOCK,
-                subgroups: [],
-                supersets: [],
-              }))}
-            />
-
-            <Box display="flex" flexDirection="column">
-              <Typography
-                sx={{
-                  fontWeight: 'bold',
-                  fontSize: 15,
-                  height: 20,
-                }}
-              >
-                {report.group?.name}
-              </Typography>
-
-              <Typography sx={{ fontSize: 12, height: 16 }}>
-                {report.cycle?.name}
-              </Typography>
-              <Typography sx={{ fontSize: 12, height: 16 }}>
-                {new Date(report.from).toLocaleDateString('en-US', {
-                  month: 'long',
-                  day: 'numeric',
-                  year: 'numeric',
-                })}{' '}
-                at{' '}
-                {new Date(report.from).toLocaleTimeString('en-US', {
-                  hour: 'numeric',
-                  minute: 'numeric',
-                })}
-              </Typography>
-            </Box>
-          </Box>
-          <IconButton sx={{ p: 0, m: 0 }}>
-            <MoreVert />
-          </IconButton>{' '}
-        </Box>
-
-        {/* Training data info */}
-        <Box
-          width="100%"
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          gap={2}
-        >
-          <Box
-            display="flex"
-            flexDirection="column"
-            alignItems="center"
-            textAlign="center"
-          >
-            <Typography
-              sx={{
-                fontSize: 12,
-                fontWeight: 350,
-              }}
-            >
-              Duration
-            </Typography>
-            <Typography
-              sx={{
-                fontSize: 14,
-                fontWeight: 'bold',
-              }}
-            >
-              {report.duration}´
-            </Typography>
-          </Box>
-
-          <Box
-            display="flex"
-            flexDirection="column"
-            alignItems="center"
-            textAlign="center"
-          >
-            <Typography sx={{ fontSize: 12, fontWeight: 350 }}>
-              Exercises
-            </Typography>
-            <Typography sx={{ fontSize: 14, fontWeight: 'bold' }}>
-              {report.exercises} / {report.totalExercises}
-            </Typography>
-          </Box>
+              <PieCenterLabel label={`${realizationScore}%`} />
+            </PieChart>
+          </ChartContainer>
+          <ChartContainer label="Tonnage">
+            <></>
+          </ChartContainer>
+          <ChartContainer label="TODO">
+            <></>
+          </ChartContainer>
         </Box>
       </Box>
 
@@ -180,3 +86,27 @@ export default function TrainingReportCard(props: TrainingReportCardProps) {
     </>
   );
 }
+
+const ChartContainer = ({
+  children,
+  label,
+}: ChildrenProps & { label: string }) => {
+  return (
+    <Box
+      width="32.33%"
+      display="flex"
+      flexDirection="column"
+      alignItems="center"
+      justifyContent="flex-start"
+    >
+      <Typography
+        fontSize={12}
+        textAlign="center"
+        color={theme.palette.background.lightBorder}
+      >
+        {label}
+      </Typography>
+      {children}
+    </Box>
+  );
+};

@@ -21,6 +21,7 @@ import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
+import { TrainingService } from '@/controller/training/training.service';
 
 export default function TrainingInProgressExerciseCard() {
   const theme = useTheme();
@@ -293,8 +294,6 @@ export default function TrainingInProgressExerciseCard() {
                 fontWeight="bold"
                 sx={{
                   position: 'relative',
-                  zIndex: 10000000,
-
                   px: 1.5,
                   py: 0.5,
                   cursor: 'pointer',
@@ -446,18 +445,24 @@ export default function TrainingInProgressExerciseCard() {
                       px: 0,
                     },
                   }}
-                  onChange={(e) => {
+                  onChange={async (e) => {
                     if (supersetIndex === undefined || setIndex === undefined)
                       return;
 
                     const isCompleted = e.target.checked;
                     if (isCompleted) {
+                      const set = TrainingService.exerciseSetToCompleteSet(
+                        selectedExercise.sets[setIndex]
+                      );
+
                       markExerciseSetAsCompleted(
                         { exerciseId: selectedExercise.id, supersetIndex },
                         setIndex + 1,
                         trainingInProgress.exerciseSetTrackingState,
                         setTrainingInProgress
                       );
+
+                      await handleUpsertSet(set);
                     } else {
                       unmarkExerciseSetAsCompleted(
                         { exerciseId: selectedExercise.id, supersetIndex },

@@ -18,6 +18,7 @@ import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
+import { Cycle } from '../group/type/cycle.type';
 
 const WARMUP_COMPONENT_ID = 'warmup';
 const COOLDOWN_COMPONENT_ID = 'cooldown';

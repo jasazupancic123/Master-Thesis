@@ -258,6 +258,7 @@ export default function TrainingInProgress() {
           anchorEl={anchorEl}
           open={open}
           handleCancel={handleCancel}
+          handleCancelTraining={handleCancelTraining}
           handleOpenMenu={handleOpenMenu}
           handleCloseMenu={handleCloseMenu}
           setUndoneExercises={setUndoneExercises}
