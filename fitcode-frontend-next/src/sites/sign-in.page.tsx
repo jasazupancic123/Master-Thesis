@@ -1,9 +1,7 @@
 'use client';
 
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { TextField } from '@mui/material';
 import { useTheme } from '@mui/material';
-import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
@@ -19,8 +17,10 @@ import {
 } from '@/common/constant/navigation.constant';
 import { FirebaseAuthUtil } from '@/common/firebase/firebase-auth.util';
 import { CommonService } from '@/common/service/common.service';
+import { BLACK_TEXT_FIELD_STYLE } from '@/common/util/styles.util';
 import HeroNavbar from '@/components/hero-navbar/hero-navbar';
 import { useAuth } from '@/store/auth.provider';
+import { HERO_NAVBAR_HEIGHT } from '@/app/state';
 
 const firebaseAuthUtil = FirebaseAuthUtil.getInstance();
 
@@ -50,60 +50,67 @@ export default function SignInPage() {
 
   return (
     <>
-      <HeroNavbar />
+      <HeroNavbar height={HERO_NAVBAR_HEIGHT} />
 
       <Box
         sx={{
+          width: '100%',
           display: 'flex',
           flexDirection: 'column',
           minHeight: '100dvh',
           justifyContent: 'center',
+          backgroundColor: theme.palette.primary.main,
         }}
       >
         <Box
+          width={300}
           sx={{
             justifyItems: 'center',
             padding: 4,
             borderRadius: 3,
+            mx: 'auto',
           }}
         >
-          <Avatar sx={{ m: 1, bgcolor: theme.palette.primary.main }}>
-            <LockOutlinedIcon />
-          </Avatar>
-          <Typography component="h1" variant="h5">
+          <Typography
+            sx={{
+              color: theme.palette.text.secondary,
+              fontSize: 24,
+              fontWeight: 800,
+              textTransform: 'uppercase',
+            }}
+          >
             {LINKS_AUTH.login.label}
           </Typography>
 
-          <Box
-            component="form"
-            onSubmit={handleSubmit}
-            noValidate
-            sx={{ mt: 1 }}
-          >
+          <Box component="form" onSubmit={handleSubmit} noValidate>
             <TextField
+              id="email"
+              variant="standard"
+              label="Email"
               margin="normal"
               required
               fullWidth
-              id="email"
-              label="Email Address"
               name="email"
               autoComplete="email"
               autoFocus
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              sx={BLACK_TEXT_FIELD_STYLE}
             />
 
             <TextField
+              id="password"
+              type="password"
+              variant="standard"
               margin="normal"
               required
               fullWidth
               name="password"
               label="Password"
-              type="password"
-              id="password"
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              sx={BLACK_TEXT_FIELD_STYLE}
             />
 
             <Button
@@ -114,11 +121,13 @@ export default function SignInPage() {
                 mt: 3,
                 mb: 2,
                 px: 2,
-                py: 2,
-                backgroundColor: theme.palette.primary.main,
+                py: 1,
+                backgroundColor: theme.palette.text.secondary,
+                color: theme.palette.text.primary,
+                borderRadius: 20,
               }}
             >
-              {LINKS_AUTH.login.label}
+              Log in
             </Button>
           </Box>
         </Box>
