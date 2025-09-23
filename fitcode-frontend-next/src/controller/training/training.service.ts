@@ -136,7 +136,7 @@ export class TrainingService {
 
     if (data.components) {
       item.mappedPlannedComponents = item.plannedComponents.map(
-        (cId) => data.components!.find((c) => c.id === cId)!
+        (pc) => data.components!.find((c) => c.id === pc.componentId)!
       );
     }
 

@@ -5,6 +5,11 @@ import type { Cycle } from '@/controller/group/type/cycle.type';
 import type { Group } from '@/controller/group/type/group.type';
 import type { Institution } from '@/controller/institution/type/institution.type';
 
+export type TrainingReportComponentStatus = {
+  componentId: string;
+  status: 'not_started' | 'in_progress' | 'completed';
+};
+
 export type TrainingReport = TrainingStats &
   Required<DateRange> & {
     institutionId?: string;
@@ -14,7 +19,7 @@ export type TrainingReport = TrainingStats &
     cycleId?: string;
     cycle?: Cycle;
 
-    completedComponentIds: string[]; // list of completed component ids, just for frontend display
+    componentStatuses: TrainingReportComponentStatus[]; // list of completed component ids, just for frontend display
     trainingId: string;
     userId: string;
     completed: boolean;
@@ -40,8 +45,13 @@ export type TrainingReport = TrainingStats &
     recDist?: number; // total recovery distance prescribed (in meters)
   };
 
+export type TraininComponentStats = {
+  componentId: string;
+  totalSets: number; // for calculating status
+};
+
 export type TrainingStats = {
-  plannedComponents: string[];
+  plannedComponents: TraininComponentStats[];
   mappedPlannedComponents?: Component[];
   totalDuration: number; // in minutes
   totalComponents: number;
