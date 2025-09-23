@@ -37,7 +37,11 @@ export class TrainingComponent extends IntersectionType(IdEntity, ColorEntity) {
 
   @IsEnum(MainSet)
   @IsString()
-  @ApiProperty({ type: () => MainSet })
+  @ApiProperty({
+    enum: MainSet,
+    enumName: 'MainSet',
+    description: 'Type of main set',
+  })
   @Expose()
   mainSet: MainSet; // defaults to "block"
 
