@@ -5,12 +5,16 @@ interface Props {
   height?: number;
   marginLeft?: number;
   sx?: React.CSSProperties; // Ensure correct type for styles
+  version?: 'dark';
 }
 
-export default function Logo({ width = 100, marginLeft, sx }: Props) {
+export default function Logo({ width = 100, marginLeft, sx, version }: Props) {
+  const src =
+    version === 'dark' ? '/blind-off-logo-black.png' : '/blind-off-logo.png';
+
   return (
     <Image
-      src="/blind-off-logo.png"
+      src={src}
       alt="Logo"
       width={width}
       height={0}
