@@ -18,6 +18,7 @@ import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useTraining } from '@/store/training.provider';
+import AthleteTrainingCardHeader from './athlete-training-card-header';
 
 type AthleteTrainingCardProps = {
   training: Training;
@@ -143,52 +144,14 @@ export default function AthleteTrainingCard(props: AthleteTrainingCardProps) {
           </Box>
         )}
 
-        <Box
-          width="100%"
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-          gap={1}
-        >
-          {/* Group name, cycle name, date */}
-          <Box display="flex" alignItems="center" gap={1}>
-            <ComponentsAvatar size={50} components={training.components} />
-            <Box display="flex" flexDirection="column">
-              <Typography
-                sx={{
-                  fontWeight: 'bold',
-                  fontSize: 15,
-                  height: 20,
-                }}
-              >
-                {training.group?.name}
-              </Typography>
-              <Typography
-                sx={{
-                  fontSize: 12,
-                  height: 16,
-                }}
-              >
-                {training.cycle?.name}
-              </Typography>
-              <Typography sx={{ fontSize: 12, height: 16 }}>
-                {new Date(training.from).toLocaleDateString('en-US', {
-                  month: 'long',
-                  day: 'numeric',
-                  year: 'numeric',
-                })}{' '}
-                at{' '}
-                {new Date(training.from).toLocaleTimeString('en-US', {
-                  hour: 'numeric',
-                  minute: 'numeric',
-                })}
-              </Typography>
-            </Box>
-          </Box>
-          <IconButton sx={{ p: 0, m: 0 }}>
-            <MoreVert />
-          </IconButton>{' '}
-        </Box>
+        {/* Group name, cycle name, date */}
+        <AthleteTrainingCardHeader
+          components={training.components || []}
+          group={training.group}
+          cycle={training.cycle}
+          from={training.from}
+          to={training.to}
+        />
 
         {/* Training data info */}
         <Box
@@ -308,7 +271,10 @@ export default function AthleteTrainingCard(props: AthleteTrainingCardProps) {
                   setModal(true);
                 }}
               >
-                <ArrowForwardRounded fontSize="small" />
+                <ArrowForwardRounded
+                  fontSize="small"
+                  sx={{ color: theme.palette.text.secondary }}
+                />
               </IconButton>
             )}
         </Box>
