@@ -300,6 +300,7 @@ export class TrainingService implements Permission<Training, Institution> {
         id: c.id,
         from: addMinutes(from, i * step),
         to: addMinutes(from, (i + 1) * step),
+        target: c.target,
       })),
     );
 
