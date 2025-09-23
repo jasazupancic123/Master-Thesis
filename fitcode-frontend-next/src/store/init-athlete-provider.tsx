@@ -1,15 +1,18 @@
-import { endOfDay, startOfDay, subDays } from 'date-fns';
-
 import { isAthlete } from '@/common/firebase/firebase-auth.util';
-import type { ChildrenProps } from '@/common/type/props.type';
+import { ChildrenProps } from '@/common/type/props.type';
 import { getAuthIdTokenFromCookies } from '@/common/util/auth.util';
 import Alert from '@/components/alert/alert';
 import { Controller } from '@/controller/controller';
 import { TrainingService } from '@/controller/training/training.service';
-import AnimationMinDurationGate from '@/components/animation-min-duration-gate/animation-min-duration-gate';
-import InitAthleteProvider from '@/store/init-athlete-provider';
+import { endOfDay, startOfDay, subDays } from 'date-fns';
+import { AthleteProvider } from './athlete.provider';
+import { AthleteMainProvider } from './main.provider';
 
-export default async function Layout({ children }: ChildrenProps) {
+const MIN_LOADING_MS = 3000;
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+export default async function InitAthleteProvider({ children }: ChildrenProps) {
   const token = await getAuthIdTokenFromCookies();
   if (!token) return <Alert type="unauthorized" />;
 
@@ -20,7 +23,10 @@ export default async function Layout({ children }: ChildrenProps) {
   if (!isAthlete(profile.customClaims.role[0]))
     return <Alert type="unauthorized" />;
 
-  const data = await controller.app.init();
+  const [data] = await Promise.all([
+    controller.app.init(),
+    sleep(MIN_LOADING_MS),
+  ]);
 
   let [trainings, reports] = await Promise.all([
     controller.training.findAll({
@@ -43,8 +49,10 @@ export default async function Layout({ children }: ChildrenProps) {
     .sort((a, b) => new Date(b.from).getTime() - new Date(a.from).getTime());
 
   return (
-    <AnimationMinDurationGate minMs={3000}>
-      <InitAthleteProvider>{children}</InitAthleteProvider>
-    </AnimationMinDurationGate>
+    <AthleteMainProvider {...data}>
+      <AthleteProvider trainings={trainings} reports={reports}>
+        {children}
+      </AthleteProvider>
+    </AthleteMainProvider>
   );
 }
