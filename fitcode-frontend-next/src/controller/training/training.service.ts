@@ -45,9 +45,6 @@ export class TrainingService {
       warmup: athleteComponents.find((c) => c.id === WARMUP_COMPONENT_ID)!,
       cooldown: athleteComponents.find((c) => c.id === COOLDOWN_COMPONENT_ID)!,
       membersIds: training.membersIds.filter((uid) => uid === athleteId),
-      completedMembersIds: training.completedMembersIds.filter(
-        (uid) => uid === athleteId
-      ),
     };
   }
 
