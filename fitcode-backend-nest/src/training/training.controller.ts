@@ -11,7 +11,15 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+} from '@nestjs/swagger';
 import { endOfDay, startOfDay } from 'date-fns';
 
 import { DateFilterDto } from '@src/common/dto/date-filter.dto';
@@ -31,6 +39,7 @@ import { FilterTrainingQueryDto } from './dto/filter-training-query.dto';
 import { PeriodizeTrainingsDto } from './dto/periodize-training.dto';
 import { UpdateTrainingDto } from './dto/update-training.dto';
 import { CompletedTrainingComponent } from './entity/completed-training.entity';
+import { Training } from './entity/training.entity';
 import { TrainingService } from './service/training.service';
 import { TrainingReportService } from './service/training-report.service';
 
@@ -96,7 +105,20 @@ export class TrainingController {
    */
   @Get('/institution/today')
   @Auth([UserRole.MANAGER])
-  async findAllByInstitutionToday(@RequestUser() user: User) {
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: `Get today's trainings for institution`,
+    description: `Get all trainings for the institution managed by the authenticated user for today.`,
+  })
+  @ApiNotFoundResponse({ description: 'Institution not found' })
+  @ApiOkResponse({
+    description: 'List of trainings for institution',
+    type: () => Training,
+    isArray: true,
+  })
+  async findAllByInstitutionToday(
+    @RequestUser() user: User,
+  ): Promise<Training[]> {
     const institution = await this.institutionService.getDocByOwner(user.uid);
     if (!institution)
       throw new NotFoundException('Institution not found for manager');
@@ -205,6 +227,35 @@ export class TrainingController {
 
   @Post(':trainingId/exercise/:exerciseId/complete-next-set')
   @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
+  @ApiBearerAuth()
+  @ApiBody({ type: CompleteSetDto })
+  @ApiParam({
+    name: 'exerciseId',
+    required: true,
+    description: 'ID of the exercise',
+    examples: {
+      curl: { value: 'arm-curl-db', description: 'Dumbbell Arm Curl' },
+      deadlift: { value: 'deadlift', description: 'Deadlift' },
+      squat: { value: 'deep-back-squat', description: 'Barbell Squat' },
+      bench: { value: 'bench-press-bb', description: 'Barbell Bench Press' },
+      pushup: { value: 'push-up-fly', description: 'Push Up' },
+      shoulderPress: {
+        value: 'military-press-db',
+        description: 'Shoulder Press',
+      },
+      splitSquat: {
+        value: 'bulgarian-split-squat',
+        description: 'Split Squat',
+      },
+    },
+  })
+  @ApiOperation({
+    summary: 'Complete next uncompleted set for exercise in training',
+    description:
+      'Complete next uncompleted set for exercise in training for the user specified in body. If userId not specified, completes for the authenticated user.',
+  })
+  @ApiNotFoundResponse({ description: 'Training or exercise not found' })
+  @ApiOkResponse({ description: 'Set completed successfully' })
   async completeNextSet(
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
