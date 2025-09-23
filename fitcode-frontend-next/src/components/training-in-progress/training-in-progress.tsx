@@ -156,16 +156,7 @@ export default function TrainingInProgress() {
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 
-  return playAnimation ? (
-    <Animation
-      text="LOADING YOUR TRAINING"
-      onEnd={() => {
-        setPlayAnimation(false);
-        setView(ExerciseTrainingView.TrainingView);
-      }}
-      fullScreen={true}
-    />
-  ) : trainingInProgress ? (
+  return trainingInProgress ? (
     <Box
       id="training-in-progress-main"
       width="100%"

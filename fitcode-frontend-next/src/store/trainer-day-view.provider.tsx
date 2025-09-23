@@ -172,7 +172,9 @@ export function TrainerDayViewProvider(
     const unsub = firestore.listenCollection<Workload>(
       `trainings/${training.id}/training-workload`,
       (snapshot) => {
-        const data = snapshot.docs.map((doc) => firestoreSerialize(doc.data()));
+        const data: Workload[] = snapshot.docs.map((doc) =>
+          firestoreSerialize(doc.data())
+        );
         const progress = WorkloadService.getProgress(training, data);
         setProgress(progress);
       },

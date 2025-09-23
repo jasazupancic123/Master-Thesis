@@ -15,6 +15,7 @@ export class AppController extends BaseController {
   }
 
   async init() {
+    console.log('AppController.init');
     return this.api.get<MainProviderProps>('/init', { token: this.getToken() });
   }
 }

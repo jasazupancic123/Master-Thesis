@@ -79,7 +79,7 @@ export default function ExercisesPage() {
   const [search, setSearch] = useState('');
   const [pagination, setPagination] = useState<PaginationType>({
     page: 1,
-    pageSize: 6,
+    pageSize: 10,
     pages: 1,
     total: 0,
   });
@@ -205,7 +205,7 @@ export default function ExercisesPage() {
         />
 
         {/* Search Input */}
-        <Box sx={{ py: 1 }}>
+        <Box sx={{ py: 2 }}>
           <SearchBar
             placeholder="Search Exercises"
             value={search}
@@ -243,26 +243,22 @@ export default function ExercisesPage() {
         gap={2}
         mb={10}
       >
-        {filteredExercises.slice(0, 6).map((exercise) => (
+        {filteredExercises.slice(0, 10).map((exercise) => (
           <Box
             key={exercise.id}
-            width={{
-              xs: '100%',
-              sm: '100%',
-              ml: '45%',
-            }}
+            width={screenSize.isTablet || screenSize.isMobile ? '40%' : '18%'}
             sx={{
               cursor: 'pointer',
-              flexBasis: screenSize.isMobile
-                ? '100%'
-                : screenSize.isSmallerThanLaptop
-                  ? '45%'
-                  : '30%',
-              maxWidth: screenSize.isMobile
-                ? '100%'
-                : screenSize.isSmallerThanLaptop
-                  ? '45%'
-                  : '30%',
+              // flexBasis: screenSize.isMobile
+              //   ? '100%'
+              //   : screenSize.isSmallerThanLaptop
+              //     ? '45%'
+              //     : '30%',
+              // maxWidth: screenSize.isMobile
+              //   ? '100%'
+              //   : screenSize.isSmallerThanLaptop
+              //     ? '45%'
+              //     : '30%',
             }}
             onClick={() => {
               setModal({ ...modal, edit: true });

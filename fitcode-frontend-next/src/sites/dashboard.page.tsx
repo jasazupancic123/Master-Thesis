@@ -24,6 +24,7 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
+import Animation from '@/components/animation/animation';
 
 export default function DashboardPage() {
   const screenSize = useScreenSize();
@@ -157,74 +158,6 @@ export default function DashboardPage() {
         </Box>
 
         <DashboardGroups setModal={setModal} modal={modal} />
-
-        {/* {screenSize.isSmallerThanLaptop ? (
-          <Box
-            display="flex"
-            flexDirection="column"
-            mt={2}
-            width="100%"
-            gap={1}
-          >
-            <Grid2
-              container
-              gap={2}
-              wrap={screenSize.isTablet ? 'nowrap' : undefined}
-            >
-              <Grid2 size={screenSize.isMobile ? 12 : 6}>
-                <ReportsContainer
-                  index={0}
-                  reportTypes={[
-                    DashboardReportType.FLAGGED_ATHLETES,
-                    DashboardReportType.ATTENDANCE,
-                  ]}
-                />
-              </Grid2>
-              <Grid2 size={screenSize.isMobile ? 12 : 6}>
-                <ReportsContainer
-                  index={1}
-                  reportTypes={[
-                    DashboardReportType.CYCLE_PROGRESS,
-                    DashboardReportType.TODAYS_SESSIONS,
-                  ]}
-                />
-              </Grid2>
-            </Grid2>
-            <Box
-              width={screenSize.isSmallerThanLaptop ? '100%' : '50%'}
-              margin="auto"
-            >
-              <DashboardChat />
-            </Box>
-          </Box>
-        ) : (
-          <Grid2 container gap={2} wrap="nowrap" mt={2}>
-            <Grid2 size={3}>
-              <ReportsContainer
-                index={0}
-                reportTypes={[
-                  DashboardReportType.FLAGGED_ATHLETES,
-                  DashboardReportType.ATTENDANCE,
-                ]}
-              />
-            </Grid2>
-            <Grid2 size={3}>
-              <ReportsContainer
-                index={1}
-                reportTypes={[DashboardReportType.CYCLE_PROGRESS]}
-              />
-            </Grid2>
-            <Grid2 size={3}>
-              <ReportsContainer
-                index={2}
-                reportTypes={[DashboardReportType.TODAYS_SESSIONS]}
-              />
-            </Grid2>
-            <Grid2 size={3}>
-              <DashboardChat />
-            </Grid2>
-          </Grid2>
-        )} */}
       </Box>
 
       {/* Add Trainer Modal */}

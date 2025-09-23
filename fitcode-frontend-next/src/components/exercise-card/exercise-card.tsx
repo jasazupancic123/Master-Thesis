@@ -1,4 +1,4 @@
-import { Card, CardContent, CardMedia } from '@mui/material';
+import { Box, Card, CardContent, CardMedia } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import React from 'react';
 
@@ -15,40 +15,45 @@ export function ExerciseCard(props: Props) {
     <Card
       sx={{
         borderRadius: 5,
-        height: 250,
       }}
     >
       <CardMedia
-        // components="video" or "img"
         component={
           exercise.videoUrl ? 'video' : exercise.imageUrl ? 'img' : 'div'
         }
         sx={{
-          height: 140,
+          maxHeight: 140,
           background: 'background.dark',
+          filter: 'grayscale(100%)',
         }}
         src={exercise.videoUrl || exercise.imageUrl}
         title={exercise.name}
-        // controls={exercise.videoUrl ? true : undefined}
         muted={exercise.videoUrl ? true : undefined}
         autoPlay={exercise.videoUrl ? true : undefined}
         loop={exercise.videoUrl ? true : undefined}
       />
-      <CardContent>
+      <Box
+        width="100%"
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        sx={{ p: 0.5, overflow: 'hidden' }} // parent can also hide overflow
+      >
         <Typography
-          gutterBottom
-          variant="h6"
+          noWrap
+          fontSize={16}
+          fontWeight={600}
           textAlign="center"
-          fontWeight="bold"
           textTransform="uppercase"
+          sx={{
+            flex: 1, // fill available space
+            minWidth: 0, // <-- key for flex items so ellipsis can kick in
+            px: 1,
+          }}
         >
           {exercise.name}
         </Typography>
-
-        <Typography variant="body2" color="text.secondary" textAlign="center">
-          {exercise.components?.[0].name}
-        </Typography>
-      </CardContent>
+      </Box>
     </Card>
   );
 }

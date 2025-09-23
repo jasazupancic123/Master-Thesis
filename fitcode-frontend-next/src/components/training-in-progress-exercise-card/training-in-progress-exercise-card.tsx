@@ -292,6 +292,9 @@ export default function TrainingInProgressExerciseCard() {
                 textAlign="center"
                 fontWeight="bold"
                 sx={{
+                  position: 'relative',
+                  zIndex: 10000000,
+
                   px: 1.5,
                   py: 0.5,
                   cursor: 'pointer',
