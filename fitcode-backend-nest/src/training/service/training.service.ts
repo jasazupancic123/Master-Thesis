@@ -350,7 +350,6 @@ export class TrainingService implements Permission<Training, Institution> {
       from: warmup.from,
       to: cooldown.to,
       membersIds,
-      completedMembersIds: [],
       stats: [],
       warmup,
       cooldown,
@@ -393,7 +392,7 @@ export class TrainingService implements Permission<Training, Institution> {
     // if no components, delete training
     if (input.components.length === 0) {
       await this.repository.delete(ref.trainingId);
-      return { ...training, completedMembersIds: [] };
+      return training;
     }
 
     input.components.unshift(input.warmup);
@@ -449,7 +448,6 @@ export class TrainingService implements Permission<Training, Institution> {
     const updateTraining: Update<Training> = {
       warmup: input.warmup,
       cooldown: input.cooldown,
-      completedMembersIds: training.completedMembersIds,
       components: trainingComponents.filter(
         (c) => c.id !== WARMUP_COMPONENT_ID && c.id !== COOLDOWN_COMPONENT_ID,
       ),
@@ -837,12 +835,23 @@ export class TrainingService implements Permission<Training, Institution> {
       training.institution,
     );
 
-    if (trainingComponent.completedMembersIds.includes(athlete.uid))
-      throw new ConflictException(
-        this.firebaseService.isAthlete(user)
-          ? `You have already completed this component`
-          : `Athlete already completed this component`,
+    const report = await this.trainingReportService.findOneById({
+      trainingId,
+      userId: athlete.uid,
+    });
+
+    if (report) {
+      const status = report.componentStatuses.find(
+        (s) => s.componentId === componentId,
       );
+
+      if (status && ['in_progress', 'completed'].includes(status.status))
+        throw new ConflictException(
+          this.firebaseService.isAthlete(user)
+            ? `You have already completed this component`
+            : `Athlete already completed this component`,
+        );
+    }
 
     // create workloads
     await this.workloadService.createForTrainingComponent(
@@ -866,18 +875,9 @@ export class TrainingService implements Permission<Training, Institution> {
     );
 
     // mark user as completed (for component and training)
-    const [addCompletedMembersQuery, updatedTraining] =
-      this.trainingPlanService.getAddCompletedMemberQuery(training, {
-        componentId,
-        uid: athlete.uid,
-      });
-
-    await this.repository.update(trainingId, {
-      stats,
-      ...addCompletedMembersQuery,
-    });
-
-    return updatedTraining;
+    await this.trainingReportService.updateReport(athlete.uid, training);
+    await this.repository.update(trainingId, { stats });
+    return { ...training, stats };
   }
 
   @LogMethod()
@@ -961,7 +961,6 @@ export class TrainingService implements Permission<Training, Institution> {
         target: trainingComponent.target,
         methodId: trainingComponent.methodId,
         supersets: newPrescribedSupersets,
-        completedMembersIds: [],
         subgroups: [],
         mainSet: trainingComponent.mainSet,
       });

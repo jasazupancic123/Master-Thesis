@@ -53,12 +53,6 @@ export class Training extends BaseEntity {
   @Expose()
   membersIds: string[]; // all members of the group
 
-  @ApiProperty()
-  @IsString({ each: true })
-  @IsNotEmpty({ each: true })
-  @Expose()
-  completedMembersIds: string[]; // members who completed the training
-
   @IsString()
   @IsNotEmpty()
   @IsOptional()

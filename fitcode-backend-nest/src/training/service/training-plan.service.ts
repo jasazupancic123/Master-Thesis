@@ -21,7 +21,6 @@ import { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
 import { AttributeService } from '@src/attribute/service/attribute.service';
 import { DeepPick } from '@src/common/interface/deep-pick.interface';
 import { CommonService } from '@src/common/service/common.service';
-import { Update } from '@src/common/type/entity.type';
 import { User } from '@src/common/type/firebase-auth.type';
 import { ComponentRef } from '@src/common/type/firestore.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
@@ -180,9 +179,6 @@ export class TrainingPlanService {
       warmup: athleteComponents.find((c) => c.id === WARMUP_COMPONENT_ID)!,
       cooldown: athleteComponents.find((c) => c.id === COOLDOWN_COMPONENT_ID)!,
       membersIds: training.membersIds.filter((uid) => uid === athleteId),
-      completedMembersIds: training.completedMembersIds.filter(
-        (uid) => uid === athleteId,
-      ),
     };
   }
 
@@ -238,36 +234,6 @@ export class TrainingPlanService {
         }
 
     return exercises;
-  }
-
-  getAddCompletedMemberQuery(
-    training: Training,
-    ref: { componentId: string; uid: string },
-  ): [Update<Training>, Training] {
-    const { componentId, uid } = ref;
-
-    // add completed member to the component
-    this.findComponentOrFail(training, componentId);
-    training.components = training.components.map((c) =>
-      c.id !== componentId
-        ? c
-        : { ...c, completedMembersIds: [...c.completedMembersIds, uid] },
-    );
-
-    // check if training is completed and update accordingly
-    const completedMembersIds = training.completedMembersIds || [];
-    if (this.isTrainingCompleted(training, uid))
-      if (!completedMembersIds.includes(uid)) {
-        completedMembersIds.push(uid); // athlete completed the training
-        training.completedMembersIds = completedMembersIds;
-      }
-
-    const query: Update<Training> = {
-      completedMembersIds,
-      components: training.components,
-    };
-
-    return [query, training];
   }
 
   async getAllTrainingExercises(
@@ -351,12 +317,6 @@ export class TrainingPlanService {
     });
   }
 
-  isTrainingCompleted(training: Training, userId: string) {
-    return training.components.every((c) =>
-      c.completedMembersIds.includes(userId),
-    );
-  }
-
   validateTrainingComponents(
     existingTraining: Training | null,
     newTrainingComponents: UpdateTrainingComponentWithoutTime[], // with warmup and cooldown
@@ -415,8 +375,6 @@ export class TrainingPlanService {
         ...newComponent,
         supersets,
         subgroups,
-        completedMembersIds:
-          existingTrainingComponent?.completedMembersIds || [],
       });
     }
 
@@ -813,7 +771,6 @@ export class TrainingPlanService {
       mainSet: MainSet.BLOCK,
       supersets: [],
       subgroups: [],
-      completedMembersIds: [],
     };
 
     const cooldown: TrainingComponent = {
@@ -826,7 +783,6 @@ export class TrainingPlanService {
       mainSet: MainSet.BLOCK,
       supersets: [],
       subgroups: [],
-      completedMembersIds: [],
     };
 
     return { warmup, cooldown };
@@ -872,7 +828,6 @@ export class TrainingPlanService {
         mainSet: sourceTrainingComponent.mainSet,
         supersets: [],
         subgroups: [],
-        completedMembersIds: [],
       };
 
     targetTrainingComponent.copiedFrom = {
@@ -886,7 +841,6 @@ export class TrainingPlanService {
     targetTrainingComponent.target = sourceTrainingComponent.target;
     targetTrainingComponent.color = sourceTrainingComponent.color;
     targetTrainingComponent.mainSet = sourceTrainingComponent.mainSet;
-    targetTrainingComponent.completedMembersIds = []; // reset completed members
 
     if (options) {
       if (options.overrideSupersets)

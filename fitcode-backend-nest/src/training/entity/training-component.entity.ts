@@ -71,12 +71,6 @@ export class TrainingComponent extends IntersectionType(IdEntity, ColorEntity) {
   @Expose()
   subgroups: Subgroup[];
 
-  @IsString({ each: true })
-  @IsNotEmpty({ each: true })
-  @ApiProperty()
-  @Expose()
-  completedMembersIds: string[]; // members who completed the training
-
   @Type(() => CopiedFrom)
   @IsOptional()
   @ApiPropertyOptional({ type: () => CopiedFrom })
