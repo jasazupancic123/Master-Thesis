@@ -1,11 +1,18 @@
-import Container from '@mui/material/Container';
+import { Box } from '@mui/material';
 
 import type { ChildrenProps } from '@/common/type/props.type';
 
 export default function Layout({ children }: ChildrenProps) {
   return (
-    <Container component="main" maxWidth="xs">
+    <Box
+      width="100%"
+      maxWidth={1800}
+      sx={{
+        px: 0,
+        mx: 'auto',
+      }}
+    >
       {children}
-    </Container>
+    </Box>
   );
 }
