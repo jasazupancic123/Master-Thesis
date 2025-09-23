@@ -27,7 +27,7 @@ export class Attribute {
 
   @IsEnum(AttributeType)
   @IsString()
-  @ApiProperty({ type: () => AttributeType })
+  @ApiProperty({ enum: AttributeType, enumName: 'AttributeType' })
   @Expose()
   type: AttributeType; // defaults to "string"
 

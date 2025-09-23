@@ -77,8 +77,22 @@ export class TrainingReportService {
       power: 0,
       realizationScore: 0,
       muscleValues: [], // to be calculated
-      completedComponentIds: Array.from(components),
       photoURL: additionalInput?.photoURL,
+      componentStatuses: stats.plannedComponents.map((pc) => {
+        const completedSets = workloads.filter(
+          (w) => w.componentId === pc.componentId,
+        ).length;
+
+        return {
+          componentId: pc.componentId,
+          status:
+            completedSets === 0
+              ? 'not_started'
+              : completedSets < pc.totalSets
+                ? 'in_progress'
+                : 'completed',
+        };
+      }),
     };
 
     for (const workload of workloads) {
@@ -113,9 +127,14 @@ export class TrainingReportService {
 
   getTrainingStats(training: Training): TrainingStats {
     const stats: TrainingStats = {
-      plannedComponents: Array.from(
-        new Set<string>(training.components.map((c) => c.id)),
-      ),
+      plannedComponents: training.components.map((c) => ({
+        componentId: c.id,
+        totalSets: c.supersets.reduce(
+          (sum, s) =>
+            sum + s.exercises.reduce((s2, e) => s2 + e.sets.length, 0),
+          0,
+        ),
+      })),
       totalDuration: differenceInMinutes(training.to, training.from),
       totalComponents: training.components.length,
       totalSupersets: 0,

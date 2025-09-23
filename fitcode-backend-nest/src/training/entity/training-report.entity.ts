@@ -3,6 +3,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import {
   IsBoolean,
+  IsEnum,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -134,11 +135,11 @@ export class TrainingReport extends IntersectionType(
   @Expose()
   muscleValues: ExerciseMuscleValue[];
 
-  @IsString({ each: true })
-  @IsNotEmpty({ each: true })
-  @ApiProperty()
+  @ValidateNested({ each: true })
+  @Type(() => TrainingReportComponentStatus)
+  @ApiProperty({ type: () => TrainingReportComponentStatus, isArray: true })
   @Expose()
-  completedComponentIds: string[]; // list of completed component ids, just for frontend display
+  componentStatuses: TrainingReportComponentStatus[];
 
   @IsString()
   @IsNotEmpty()
@@ -167,4 +168,17 @@ export class TrainingReport extends IntersectionType(
   @IsOptional()
   @Expose()
   recDist?: number; // total recovery distance prescribed (in meters)
+}
+
+export class TrainingReportComponentStatus {
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  @Expose()
+  componentId: string;
+
+  @IsEnum(['not_started', 'in_progress', 'completed'] as const)
+  @ApiProperty({ enum: ['not_started', 'in_progress', 'completed'] })
+  @Expose()
+  status: 'not_started' | 'in_progress' | 'completed';
 }

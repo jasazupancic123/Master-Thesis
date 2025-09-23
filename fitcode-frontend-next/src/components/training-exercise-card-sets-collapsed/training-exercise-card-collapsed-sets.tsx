@@ -8,7 +8,9 @@ import LeftRightExerciseText from '../left-right-exercise-text/left-right-exerci
 import { getLAndRValues } from '../training-exercise-card/state';
 import { getCorrectValuesForExerciseParam } from '../training-exercise-card-container/state';
 import {
-  getMinMax,
+  combineMinMax,
+  getMethodMinMax,
+  getParamMinMax,
   updateAttributeType,
   updateAttributeValue,
   updateVolWorkSets,
@@ -168,16 +170,23 @@ export default function TrainingExerciseCardCollapsedSets(
               if (setNumber === undefined || setNumber === null) return null;
 
               const method = methods.find((m) => m.id === component.methodId);
-
               const attributeRange = method?.attributes
                 ?.map((a) =>
                   a.options?.find((o) => o.field === valueL.selected)
                 )
                 .find(Boolean);
 
-              const { min, max } = getMinMax(
+              const paramMinMax = getParamMinMax(param, valueL);
+              const methodMinMax = getMethodMinMax(
                 { exercise, attributeRange, valueL, setNumber },
                 { selectedExercises, setsNumbers, setSetsNumbers }
+              );
+
+              const { min, max } = combineMinMax(
+                paramMinMax.min,
+                paramMinMax.max,
+                methodMinMax.min,
+                methodMinMax.max
               );
 
               return (
@@ -227,15 +236,20 @@ export default function TrainingExerciseCardCollapsedSets(
                               )
                               .find(Boolean);
 
-                            const { min: curMin, max: curMax } = getMinMax(
-                              {
-                                exercise,
-                                attributeRange: attributeRangeFresh,
-                                valueL,
-                                setNumber,
-                              },
-                              { selectedExercises, setsNumbers, setSetsNumbers }
-                            );
+                            const { min: curMin, max: curMax } =
+                              getMethodMinMax(
+                                {
+                                  exercise,
+                                  attributeRange: attributeRangeFresh,
+                                  valueL,
+                                  setNumber,
+                                },
+                                {
+                                  selectedExercises,
+                                  setsNumbers,
+                                  setSetsNumbers,
+                                }
+                              );
 
                             updateAttributeType(
                               {

@@ -19,7 +19,6 @@ export type Training = BaseEntity &
     cycleId?: string;
     ownerId: string;
     membersIds: string[];
-    completedMembersIds: string[];
     copiedFromId?: string;
     warmup: TrainingComponent;
     cooldown: TrainingComponent;

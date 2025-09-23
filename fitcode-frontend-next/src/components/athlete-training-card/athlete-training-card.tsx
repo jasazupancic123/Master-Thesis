@@ -293,7 +293,6 @@ export default function AthleteTrainingCard(props: AthleteTrainingCardProps) {
           {selectedComponent &&
             showSupersets &&
             user &&
-            !selectedComponent.completedMembersIds.includes(user.uid) &&
             dayjs(training.from).isSame(new Date(), 'day') && (
               <IconButton
                 sx={{
