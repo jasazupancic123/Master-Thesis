@@ -12,9 +12,15 @@ export function getCorsConfig(app: INestApplication): CorsOptions {
 
   let origin: CorsOptions['origin'] = '*';
   if (commonService.env.isProduction()) {
-    const whitelist = configService.get('FRONTEND_WHITELIST')?.split(',') || [];
+    const whitelist =
+      configService
+        .get('FRONTEND_WHITELIST')
+        ?.split(',')
+        ?.map((url: string) => url.trim()) || [];
+
     if (whitelist.length > 0)
       origin = (requestOrigin, callback) => {
+        if (!requestOrigin) return callback(null, true); // allow REST tools or curl or SSR Next JS
         if (requestOrigin && whitelist.indexOf(requestOrigin) !== -1)
           callback(null, true);
         else callback(new Error('Not allowed by CORS'));

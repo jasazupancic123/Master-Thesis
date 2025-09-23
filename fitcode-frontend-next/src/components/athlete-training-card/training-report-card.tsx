@@ -86,7 +86,6 @@ export default function TrainingReportCard(props: TrainingReportCardProps) {
               size={50}
               components={(report.mappedPlannedComponents || []).map((c) => ({
                 id: c.id,
-                completedMembersIds: [],
                 from: new Date(),
                 to: new Date(),
                 mainSet: MainSet.BLOCK,
