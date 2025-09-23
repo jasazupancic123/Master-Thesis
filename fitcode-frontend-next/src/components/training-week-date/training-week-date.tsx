@@ -242,7 +242,6 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
                             id: c.id,
                             subgroups: [],
                             supersets: [],
-                            completedMembersIds: [],
                             mainSet: MainSet.BLOCK,
                             from: addMinutes(lastTo, i * 30),
                             to: addMinutes(addMinutes(lastTo, i * 30), 30),
