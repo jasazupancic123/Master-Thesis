@@ -1,7 +1,6 @@
 import qs from 'qs';
 
 import type { FetchOptions, Query } from '@/common/type/api.type';
-import { BaseController } from '@/controller/base.controller';
 
 export class ApiUtil {
   private baseUrl: string;
@@ -38,13 +37,11 @@ export class ApiUtil {
       cacheTimeInMs,
     } = options || {};
 
-    const freshToken = (await BaseController.getFreshIdToken()) || token;
-
     const res = await fetch(`${this.baseUrl}${url}${this.query(query)}`, {
       method,
       headers: {
         ...(!formData ? { 'Content-Type': 'application/json' } : {}),
-        ...(freshToken ? { Authorization: `Bearer ${freshToken}` } : {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       ...(body ? { body: JSON.stringify(body) } : {}),
       ...(formData ? { body: formData } : {}),

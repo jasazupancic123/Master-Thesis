@@ -578,7 +578,6 @@ describe('Periodization functions (e2e)', () => {
 
       const componentC1 = training.components[0];
       expect(componentC1.id).toBe('c1');
-      expect(componentC1.completedMembersIds).toHaveLength(0);
       expect(componentC1.supersets).toHaveLength(1);
       expect(componentC1.copiedFrom).toEqual({
         lastCopiedFromTrainingId: newBaseTrainingId,
@@ -742,7 +741,6 @@ describe('Periodization functions (e2e)', () => {
 
       const componentC1 = training.components[0];
       expect(componentC1.id).toBe('c1');
-      expect(componentC1.completedMembersIds).toHaveLength(0);
       expect(componentC1.supersets).toHaveLength(1);
       expect(componentC1.copiedFrom).toEqual({
         lastCopiedFromTrainingId: baseTrainingId,

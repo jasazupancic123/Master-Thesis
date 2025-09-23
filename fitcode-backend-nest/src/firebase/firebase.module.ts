@@ -1,4 +1,7 @@
 import { DynamicModule, Global, Module } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+
+import { Environment } from '@src/config/environment-validation-schema';
 
 import { CommonService } from '../common/service/common.service';
 import { FirebaseService } from './firebase.service';
@@ -13,9 +16,12 @@ export class FirebaseModule {
       providers: [
         {
           provide: FIREBASE_ADMIN,
-          inject: [CommonService],
-          useFactory: async (commonService: CommonService) => {
-            return getFirebaseClient(commonService);
+          inject: [ConfigService<Environment>, CommonService],
+          useFactory: async (
+            configService: ConfigService<Environment>,
+            commonService: CommonService,
+          ) => {
+            return getFirebaseClient(configService, commonService);
           },
         },
         FirebaseService,
