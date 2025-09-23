@@ -382,10 +382,8 @@ describe('Update Institution (e2e)', () => {
               membersIds,
               institutionId,
               date: addDays(new Date(), i + 1),
-              completedMembersIds: [athleteToRemove.uid],
               components: [
                 generateTrainingComponent({
-                  completedMembersIds: [athleteToRemove.uid],
                   subgroups: [
                     generateSubgroup({
                       membersIds: [athleteToRemove.uid, athletes[1].uid],
@@ -403,13 +401,7 @@ describe('Update Institution (e2e)', () => {
 
       for (const training of trainings) {
         expect(training.membersIds).toHaveLength(3);
-        expect(training.completedMembersIds).toHaveLength(1);
-        expect(training.completedMembersIds).toContain(athleteToRemove.uid);
         expect(training.components).toHaveLength(1);
-        expect(training.components[0].completedMembersIds).toContain(
-          athleteToRemove.uid,
-        );
-
         expect(training.components[0].subgroups).toHaveLength(1);
         expect(training.components[0].subgroups[0].membersIds).toContain(
           athleteToRemove.uid,
@@ -428,10 +420,7 @@ describe('Update Institution (e2e)', () => {
 
       for (const training of trainings) {
         expect(training.membersIds).toHaveLength(2);
-        expect(training.completedMembersIds).toHaveLength(0);
         expect(training.components).toHaveLength(1);
-        expect(training.components[0].completedMembersIds).toHaveLength(0);
-
         expect(training.components[0].subgroups).toHaveLength(1);
         expect(training.components[0].subgroups[0].membersIds).toHaveLength(1);
         expect(training.components[0].subgroups[0].membersIds).not.toContain(

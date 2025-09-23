@@ -15,6 +15,47 @@ import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 
+export function getParamMinMax(
+  param: Attribute,
+  valueL: AttributeValue
+): { min: number | undefined; max: number | undefined } {
+  let min: number | undefined;
+  let max: number | undefined;
+
+  if (!param || !valueL) return { min, max };
+
+  const foundInOptions = param.options?.find(
+    (option) => option.field === valueL.selected
+  );
+
+  if (foundInOptions) {
+    min = foundInOptions.min;
+    max = foundInOptions.max;
+  } else {
+    min = param.min;
+    max = param.max;
+  }
+
+  return { min, max };
+}
+
+export function combineMinMax(
+  currentMin: number | undefined,
+  currentMax: number | undefined,
+  newMin: number | undefined,
+  newMax: number | undefined
+): { min: number | undefined; max: number | undefined } {
+  let min = currentMin;
+  let max = currentMax;
+
+  if (newMin !== undefined)
+    min = min !== undefined ? Math.max(min, newMin) : newMin;
+  if (newMax !== undefined)
+    max = max !== undefined ? Math.min(max, newMax) : newMax;
+
+  return { min, max };
+}
+
 export function updateAttributeType(
   input: {
     exercise: TrainingExercise;
@@ -516,7 +557,7 @@ export function updateAttributeValue(
   );
 }
 
-export function getMinMax(
+export function getMethodMinMax(
   input: {
     exercise: TrainingExercise;
     attributeRange?: Attribute;

@@ -101,22 +101,12 @@ export class TrainingRepository extends FirestoreRepository<Training> {
       ref: this.doc(training.id),
       operation: 'update',
       data: {
-        ...(!add && {
-          completedMembersIds: FieldValue.arrayRemove(
-            memberId,
-          ) as unknown as string[],
-        }),
         membersIds: add
           ? (FieldValue.arrayUnion(memberId) as unknown as string[])
           : (FieldValue.arrayRemove(memberId) as unknown as string[]),
         components: training.components.map((tc) =>
           this.firebaseService.buildCreateQuery<TrainingComponent>({
             ...tc,
-            ...(!add && {
-              completedMembersIds: tc.completedMembersIds.filter(
-                (id) => id !== memberId,
-              ),
-            }),
             subgroups: tc.subgroups.map((sg) =>
               !add && sg.membersIds.includes(memberId) // remove member from subgroup
                 ? {
