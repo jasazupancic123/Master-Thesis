@@ -25,7 +25,7 @@ Before developing the project locally, you must install the following programs:
 
 Then, copy environment files for:
 
-- **Backend**: Copy `.env.example` to `.env` and ask another developer for the correct credentials.
+- **Backend**: Copy `.env.example` to `.env.dev` and ask another developer for the correct credentials.
 - **Frontend**: Copy `.env.example` to `.env.local` and ask another developer for the correct credentials.
 
 Next, install all modules using `npm i` in all services and run them:
@@ -57,17 +57,15 @@ Then, visit http://localhost:3000.
 
 ## 📂 Project Structure
 
-This is a mono-repo project with three main folders (and more to come if needed):
+This is a mono-repo project with 2 main folders (and more to come if needed):
 
 - **Backend**: RESTful API, written in [NestJS](https://nestjs.com/), a [Node.js](https://nodejs.org/en) framework built on [Express.js](https://expressjs.com/).
 
 - **Frontend**: Client-side application, written in [Next.js](https://nextjs.org/), built on [React.js](https://react.dev/).
 
-- **Docs**: Documentation library with all features (database, AI modules, etc.) explained in detail.
-
 ## 🔧 Development Workflow
 
-We use **Git Flow**. The `**main**` branch is the primary branch, currently used for test deployment. Project management is done using [Jira](https://bedraczan.atlassian.net/jira/software/projects/FC/boards/1), where tasks are created, and each task has a unique ID (e.g., **FC-12**).
+We use **Git Flow**. The `**main**` branch is the primary branch, currently used for test deployment. Project management is done using [Notion](https://www.notion.so/Web-App-2298f0b8411e80e9a244f175ef7bc5fd), where tasks are created, and each task has a unique ID (e.g., **FCW-12**).
 
 To start working on a task:
 
@@ -92,12 +90,11 @@ john/feat/FC-122/add-stripe-subscriptions
 
 ## 🚀 Deployment
 
-- Backend: Deployed on [Fly.io](https://fly.io/apps/backend-nest-js).
+- Backend: Deployed on [Google Cloud Run](https://console.cloud.google.com/) (managed by Firebase).
 - Frontend: Deployed on [Vercel](https://vercel.com/jeanbabtistas-projects/fitcode).
 
 ## 📞 Contact Information
 
 - **Tomi Jagarinec** (Project Lead): tomiqatar@gmail.com
 - **Žan Bedrač** (Backend Developer): bedrac.zan@gmail.com
-- **Marko Plankelj** (Frontend Developer): mplankelj@gmail.com
-- **Jaša Zupančič** (Frontend Developer): jasa.zupancic@student.um.si
+- **Jaša Zupančič** (Frontend Developer): jasa.zupancic@gmail.com
