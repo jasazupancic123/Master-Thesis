@@ -8,7 +8,7 @@ export type Exercise = BaseEntity & {
   ownerId: string;
   name: string;
   componentIds: string[];
-  isBilateral: boolean;
+  isUnilateral: boolean;
   imageUrl?: string;
   videoUrl?: string;
   instruction?: string;
@@ -30,7 +30,7 @@ export type CreateExercise = Pick<
   Exercise,
   | 'name'
   | 'componentIds'
-  | 'isBilateral'
+  | 'isUnilateral'
   | 'imageUrl'
   | 'videoUrl'
   | 'instruction'
@@ -53,4 +53,4 @@ export type UpsertManyMuscleValues = {
   exercises: CreateExerciseMuscleValues[];
 };
 
-export type UpdateExercise = Omit<CreateExercise, 'isBilateral'>;
+export type UpdateExercise = Omit<CreateExercise, 'isUnilateral'>;

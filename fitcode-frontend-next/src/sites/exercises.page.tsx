@@ -47,7 +47,7 @@ import { useScreenSize } from '@/store/screen-size.provider';
 export const DEFAULT_EXERCISE: Partial<Exercise> = {
   name: '',
   componentIds: [],
-  isBilateral: false,
+  isUnilateral: false,
   valuesObject: {},
 };
 
@@ -370,7 +370,7 @@ export default function ExercisesPage() {
               exercises: importedExercises.map((exercise) => ({
                 name: exercise.name,
                 componentIds: exercise.componentIds,
-                isBilateral: exercise.isBilateral,
+                isUnilateral: exercise.isUnilateral,
                 imageUrl: exercise.imageUrl,
                 videoUrl: exercise.videoUrl,
                 instruction: exercise.instruction,

@@ -417,7 +417,7 @@ export class TrainingPlanService {
 
           tExercise.params = this.componentService.getParamAttributes(params);
           tExercise.sets = this.getSets(
-            exercise.isBilateral,
+            exercise.isUnilateral,
             tExercise.params,
             tExercise.sets,
           );
@@ -437,7 +437,7 @@ export class TrainingPlanService {
 
             tExercise.params = this.componentService.getParamAttributes(params);
             tExercise.sets = this.getSets(
-              exercise.isBilateral,
+              exercise.isUnilateral,
               tExercise.params,
               tExercise.sets,
             );
@@ -502,7 +502,7 @@ export class TrainingPlanService {
           throw new NotFoundException('Training exercise not found');
 
         if (
-          exercise.isBilateral &&
+          exercise.isUnilateral &&
           !trainingExercise.sets.every((s) => s.paramValuesR)
         )
           throw new BadRequestException(
@@ -520,7 +520,7 @@ export class TrainingPlanService {
           this.componentService.getParamAttributes(params);
 
         const sets = this.getSets(
-          exercise.isBilateral,
+          exercise.isUnilateral,
           paramAttributes,
           trainingExercise.sets,
         );
@@ -538,7 +538,7 @@ export class TrainingPlanService {
           for (const set of sets) {
             this.validateMethodParamValues(method, set.paramValuesL);
 
-            if (exercise.isBilateral && set.paramValuesR)
+            if (exercise.isUnilateral && set.paramValuesR)
               this.validateMethodParamValues(method, set.paramValuesR);
           }
 
@@ -680,7 +680,7 @@ export class TrainingPlanService {
   }
 
   getSets(
-    bilateral: boolean,
+    isUnilateral: boolean,
     params: Attribute[],
     existingSets?: ExerciseSet[],
   ): ExerciseSet[] {
@@ -700,7 +700,7 @@ export class TrainingPlanService {
       return Array.from({ length: sets }).map((_, i) => ({
         setNumber: i + 1,
         paramValuesL: generatedParamValues,
-        ...(bilateral && { paramValuesR: generatedParamValues }),
+        ...(isUnilateral && { paramValuesR: generatedParamValues }),
       }));
     }
 
@@ -712,7 +712,7 @@ export class TrainingPlanService {
         params,
       );
 
-      if (bilateral) {
+      if (isUnilateral) {
         if (!existingSet.paramValuesR)
           existingSet.paramValuesR = existingSet.paramValuesL;
 

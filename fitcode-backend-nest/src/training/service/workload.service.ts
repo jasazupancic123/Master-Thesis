@@ -923,8 +923,8 @@ export class WorkloadService {
     return set;
   }
 
-  checkBilateralInput(isBilateral: boolean, input: CompleteSetDto) {
-    if (!isBilateral) return;
+  checkUnilateralInput(isUnilateral: boolean, input: CompleteSetDto) {
+    if (!isUnilateral) return;
 
     const pairs = {
       reps: [input.reps, input.repsR],

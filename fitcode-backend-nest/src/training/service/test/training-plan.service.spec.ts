@@ -178,7 +178,7 @@ describe('TrainingPlanService (unit)', () => {
       },
     });
 
-    const exercise = generateExerciseStub({ id: 'e1', isBilateral: true });
+    const exercise = generateExerciseStub({ id: 'e1', isUnilateral: true });
     const trainingComponent = generateTrainingComponent({
       supersets: [
         generateSuperset({
@@ -346,7 +346,7 @@ describe('TrainingPlanService (unit)', () => {
       },
     });
 
-    const exercise = generateExerciseStub({ id: 'e1', isBilateral: false });
+    const exercise = generateExerciseStub({ id: 'e1', isUnilateral: false });
     const trainingComponent = generateTrainingComponent({
       supersets: [
         generateSuperset({

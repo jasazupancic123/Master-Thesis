@@ -39,7 +39,7 @@ export class ExerciseRepository extends FirestoreRepository<Exercise> {
         ownerId: input.ownerId,
         name: input.name,
         componentIds: input.componentIds,
-        isBilateral: input.isBilateral || false,
+        isUnilateral: input.isUnilateral || false,
         imageUrl: input.imageUrl,
         videoUrl: input.videoUrl,
         instruction: input.instruction || '',

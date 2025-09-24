@@ -2,7 +2,7 @@
   {
     "name": "Squats",
     "componentIds": ["concentric"],
-    "isBilateral": false,
+    "isUnilateral": false,
     "attributeValues": [
       {
         "field": "equipment",
@@ -29,7 +29,7 @@
   {
     "name": "Deadlifts",
     "componentIds": ["concentric"],
-    "isBilateral": false,
+    "isUnilateral": false,
     "attributeValues": [
       {
         "field": "equipment",
@@ -56,7 +56,7 @@
   {
     "name": "Bench Press",
     "componentIds": ["concentric"],
-    "isBilateral": false,
+    "isUnilateral": false,
     "attributeValues": [
       {
         "field": "equipment",
@@ -83,7 +83,7 @@
   {
     "name": "High Plank Reach",
     "componentIds": ["concentric"],
-    "isBilateral": false,
+    "isUnilateral": false,
     "attributeValues": [
       {
         "field": "equipment",
@@ -110,7 +110,7 @@
   {
     "name": "Power Clean",
     "componentIds": ["concentric"],
-    "isBilateral": false,
+    "isUnilateral": false,
     "attributeValues": [
       {
         "field": "equipment",
@@ -137,7 +137,7 @@
   {
     "name": "Sprint",
     "componentIds": ["peak-speed"],
-    "isBilateral": false,
+    "isUnilateral": false,
     "attributeValues": [
       {
         "field": "equipment",
@@ -164,7 +164,7 @@
   {
     "name": "Sleed Acceleration",
     "componentIds": ["resisted"],
-    "isBilateral": false,
+    "isUnilateral": false,
     "attributeValues": [
       {
         "field": "equipment",
@@ -193,7 +193,7 @@
   {
     "name": "Jogging",
     "componentIds": ["aerobic-capacity"],
-    "isBilateral": false,
+    "isUnilateral": false,
     "attributeValues": [
       {
         "field": "equipment",
@@ -220,7 +220,7 @@
   {
     "name": "Bicep Stretching",
     "componentIds": ["passive-stretching"],
-    "isBilateral": true,
+    "isUnilateral": true,
     "attributeValues": [
       {
         "field": "equipment",
@@ -241,7 +241,7 @@
   {
     "name": "Bulgarian Split Squat",
     "componentIds": ["concentric"],
-    "isBilateral": true,
+    "isUnilateral": true,
     "attributeValues": [
       { "field": "coordination", "selected": "true", "value": "true" }
     ]

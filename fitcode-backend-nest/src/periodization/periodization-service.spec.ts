@@ -217,9 +217,9 @@ describe('periodize', () => {
                   generateTrainingExercise({
                     id: 'e1',
                     sets: [
-                      generateExerciseSet(1, params, { bilateral: true }),
-                      generateExerciseSet(2, params, { bilateral: true }),
-                      generateExerciseSet(3, params, { bilateral: true }),
+                      generateExerciseSet(1, params, { isUnilateral: true }),
+                      generateExerciseSet(2, params, { isUnilateral: true }),
+                      generateExerciseSet(3, params, { isUnilateral: true }),
                     ],
                   }),
                 ],
@@ -407,17 +407,17 @@ describe('periodize', () => {
                       generateExerciseSet(
                         1,
                         generateComponentParamsStub([ParamType.IntRec1]),
-                        { bilateral: true },
+                        { isUnilateral: true },
                       ),
                       generateExerciseSet(
                         2,
                         generateComponentParamsStub([ParamType.IntRec1]),
-                        { bilateral: true },
+                        { isUnilateral: true },
                       ),
                       generateExerciseSet(
                         3,
                         generateComponentParamsStub([ParamType.IntRec1]),
-                        { bilateral: true },
+                        { isUnilateral: true },
                       ),
                     ],
                   }),
@@ -427,17 +427,17 @@ describe('periodize', () => {
                       generateExerciseSet(
                         1,
                         generateComponentParamsStub([ParamType.IntRec1]),
-                        { bilateral: true },
+                        { isUnilateral: true },
                       ),
                       generateExerciseSet(
                         2,
                         generateComponentParamsStub([ParamType.IntRec1]),
-                        { bilateral: true },
+                        { isUnilateral: true },
                       ),
                       generateExerciseSet(
                         3,
                         generateComponentParamsStub([ParamType.IntRec1]),
-                        { bilateral: true },
+                        { isUnilateral: true },
                       ),
                     ],
                   }),
@@ -456,15 +456,15 @@ describe('periodize', () => {
                           // random values for L and R params
                           generateExerciseSet(1, null, {
                             random: true,
-                            bilateral: true,
+                            isUnilateral: true,
                           }),
                           generateExerciseSet(2, null, {
                             random: true,
-                            bilateral: true,
+                            isUnilateral: true,
                           }),
                           generateExerciseSet(3, null, {
                             random: true,
-                            bilateral: true,
+                            isUnilateral: true,
                           }),
                         ],
                       }),
@@ -473,15 +473,15 @@ describe('periodize', () => {
                         sets: [
                           generateExerciseSet(1, null, {
                             random: true,
-                            bilateral: true,
+                            isUnilateral: true,
                           }),
                           generateExerciseSet(2, null, {
                             random: true,
-                            bilateral: true,
+                            isUnilateral: true,
                           }),
                           generateExerciseSet(3, null, {
                             random: true,
-                            bilateral: true,
+                            isUnilateral: true,
                           }),
                         ],
                       }),
@@ -699,11 +699,11 @@ describe('periodize', () => {
                   // random values for L and R params
                   generateExerciseSet(1, null, {
                     random: true,
-                    bilateral: true,
+                    isUnilateral: true,
                   }),
                   generateExerciseSet(2, null, {
                     random: true,
-                    bilateral: true,
+                    isUnilateral: true,
                   }),
                 ],
               }),
@@ -723,15 +723,15 @@ describe('periodize', () => {
                   // random values for L and R params
                   generateExerciseSet(1, null, {
                     random: true,
-                    bilateral: true,
+                    isUnilateral: true,
                   }),
                   generateExerciseSet(2, null, {
                     random: true,
-                    bilateral: true,
+                    isUnilateral: true,
                   }),
                   generateExerciseSet(3, null, {
                     random: true,
-                    bilateral: true,
+                    isUnilateral: true,
                   }),
                 ],
               }),
@@ -758,17 +758,17 @@ describe('periodize', () => {
                         generateExerciseSet(
                           1,
                           generateComponentParamsStub([ParamType.IntRec1]),
-                          { bilateral: true },
+                          { isUnilateral: true },
                         ),
                         generateExerciseSet(
                           2,
                           generateComponentParamsStub([ParamType.IntRec1]),
-                          { bilateral: true },
+                          { isUnilateral: true },
                         ),
                         generateExerciseSet(
                           3,
                           generateComponentParamsStub([ParamType.IntRec1]),
-                          { bilateral: true },
+                          { isUnilateral: true },
                         ),
                       ],
                     }),
@@ -855,11 +855,11 @@ describe('periodize', () => {
                   // random values for L and R params
                   generateExerciseSet(1, null, {
                     random: true,
-                    bilateral: true,
+                    isUnilateral: true,
                   }),
                   generateExerciseSet(2, null, {
                     random: true,
-                    bilateral: true,
+                    isUnilateral: true,
                   }),
                 ],
               }),
@@ -880,15 +880,15 @@ describe('periodize', () => {
                   // random values for L and R params
                   generateExerciseSet(1, null, {
                     random: true,
-                    bilateral: true,
+                    isUnilateral: true,
                   }),
                   generateExerciseSet(2, null, {
                     random: true,
-                    bilateral: true,
+                    isUnilateral: true,
                   }),
                   generateExerciseSet(3, null, {
                     random: true,
-                    bilateral: true,
+                    isUnilateral: true,
                   }),
                 ],
               }),
@@ -898,7 +898,7 @@ describe('periodize', () => {
       });
 
       function generateTraining() {
-        const options = { bilateral: true };
+        const options = { isUnilateral: true };
         return generateTrainingStub({
           ownerId: 'owner',
           membersIds: [],
