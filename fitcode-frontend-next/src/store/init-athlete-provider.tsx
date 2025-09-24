@@ -1,12 +1,13 @@
+import { endOfDay, startOfDay, subDays } from 'date-fns';
+
+import { AthleteProvider } from './athlete.provider';
+import { AthleteMainProvider } from './main.provider';
 import { isAthlete } from '@/common/firebase/firebase-auth.util';
-import { ChildrenProps } from '@/common/type/props.type';
+import type { ChildrenProps } from '@/common/type/props.type';
 import { getAuthIdTokenFromCookies } from '@/common/util/auth.util';
 import Alert from '@/components/alert/alert';
 import { Controller } from '@/controller/controller';
 import { TrainingService } from '@/controller/training/training.service';
-import { endOfDay, startOfDay, subDays } from 'date-fns';
-import { AthleteProvider } from './athlete.provider';
-import { AthleteMainProvider } from './main.provider';
 
 const MIN_LOADING_MS = 3000;
 

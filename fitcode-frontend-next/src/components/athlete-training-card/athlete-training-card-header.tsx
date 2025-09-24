@@ -1,11 +1,12 @@
-import { Box, IconButton, Typography } from '@mui/material';
-import ComponentsAvatar from '../components-avatar/components-avatar';
-import { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { Component } from '@/controller/component/type/component.type';
-import { MainSet } from '@/controller/training/enum/main-set.enum';
-import { Group } from '@/controller/group/type/group.type';
-import { Cycle } from '@/controller/group/type/cycle.type';
 import { MoreVert } from '@mui/icons-material';
+import { Box, IconButton, Typography } from '@mui/material';
+
+import ComponentsAvatar from '../components-avatar/components-avatar';
+import type { Component } from '@/controller/component/type/component.type';
+import type { Cycle } from '@/controller/group/type/cycle.type';
+import type { Group } from '@/controller/group/type/group.type';
+import { MainSet } from '@/controller/training/enum/main-set.enum';
+import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 
 interface AthleteTrainingCardHeaderProps {
   components: TrainingComponent[] | Component[];
@@ -18,7 +19,7 @@ interface AthleteTrainingCardHeaderProps {
 export default function AthleteTrainingCardHeader(
   props: AthleteTrainingCardHeaderProps
 ) {
-  const { components, group, cycle, from, to } = props;
+  const { components, group, cycle, from } = props;
 
   const isTrainingComponentArray = (
     components: TrainingComponent[] | Component[]

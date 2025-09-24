@@ -6,7 +6,6 @@ import { useTheme } from '@mui/material';
 import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
 
-import Animation from '../animation/animation';
 import AthleteOptionsContainer from '../athlete-options-container/athlete-options-container';
 import MyModal from '../modal/modal';
 import TrainingInProgressSuperset from '../training-in-progress-superset/training-in-progress-superset';
@@ -45,7 +44,6 @@ export default function TrainingInProgress() {
 
   const [elapsedTime, setElapsedTime] = useState(0);
   const [openCancelTrainingModal, setOpenCancelTrainingModal] = useState(false);
-  const [playAnimation, setPlayAnimation] = useState(true);
   const [undoneExercises, setUndoneExercises] = useState<TrainingExercise[]>(
     []
   );

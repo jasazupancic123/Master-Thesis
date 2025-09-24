@@ -1,5 +1,5 @@
-import { useDrawingArea } from '@mui/x-charts/hooks';
 import { styled } from '@mui/material/styles';
+import { useDrawingArea } from '@mui/x-charts/hooks';
 
 const StyledText = styled('text')(({ theme }) => ({
   fill: theme.palette.text.primary,

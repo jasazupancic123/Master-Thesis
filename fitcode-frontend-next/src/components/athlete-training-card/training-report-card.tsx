@@ -1,18 +1,18 @@
 import { Box, Divider, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
-import React, { useState } from 'react';
-
-import type { TrainingReport } from '@/controller/training/type/training-report.type';
-import AthleteTrainingCardHeader from './athlete-training-card-header';
 import {
   BarPlot,
   ChartContainer,
   ChartsTooltip,
   PieChart,
 } from '@mui/x-charts';
-import { PieCenterLabel } from '@/common/util/mui-charts.util';
-import { ChildrenProps } from '@/common/type/props.type';
+import React, { useState } from 'react';
+
+import AthleteTrainingCardHeader from './athlete-training-card-header';
 import { theme } from '@/app/style';
+import type { ChildrenProps } from '@/common/type/props.type';
+import { PieCenterLabel } from '@/common/util/mui-charts.util';
+import type { TrainingReport } from '@/controller/training/type/training-report.type';
 
 type TrainingReportCardProps = {
   report: TrainingReport;
@@ -155,10 +155,7 @@ export default function TrainingReportCard(props: TrainingReportCardProps) {
             alignItems="center"
             gap={1}
           >
-            <CustomValueBox
-              value={`${report.totalDuration}’`}
-              title="Duration"
-            />
+            <CustomValueBox value={`${report.duration}’`} title="Duration" />
             <CustomValueBox value={`72%`} title="Intensity" />
           </Box>
         </Box>

@@ -1,4 +1,4 @@
-import type { SxProps } from '@mui/material';
+import type { PaperProps, SxProps } from '@mui/material';
 import {
   Dialog,
   DialogActions,
@@ -26,6 +26,9 @@ export interface Props {
   sx?: SxProps;
   dialogueContentSx?: SxProps;
   componentCalendarView?: boolean;
+  PaperProps?: Partial<
+    PaperProps<React.ElementType<any, keyof React.JSX.IntrinsicElements>>
+  >;
 }
 
 export default function MyModal(props: Props) {
@@ -44,6 +47,7 @@ export default function MyModal(props: Props) {
     cancelText = 'Cancel',
     dialogueContentSx,
     componentCalendarView,
+    PaperProps,
   } = props;
 
   const screenSize = useScreenSize();
@@ -67,15 +71,16 @@ export default function MyModal(props: Props) {
           scroll={componentCalendarView ? 'body' : 'paper'}
           maxWidth={componentCalendarView ? false : undefined}
           sx={sx}
+          PaperProps={{ ...PaperProps }}
         >
           {title && <DialogTitle>{title}</DialogTitle>}
           <DialogContent
             dividers
             sx={{
-              ...dialogueContentSx,
               width,
               bgcolor: 'background.default',
               p: screenSize.isMobile ? 0.5 : undefined,
+              ...dialogueContentSx,
             }}
           >
             {children}
