@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useRef, useState } from 'react';
 
 import { useAuthenticatedAuth } from './auth.provider';
 import { useMain } from './main.provider';
+import { useScreenSize } from './screen-size.provider';
 import type {
   GroupContextProps,
   TrainerDayViewContextProps,
@@ -47,8 +48,10 @@ export function TrainerDayViewProvider(
   const { children, cycle, dateFrom, dateTo, group } = props;
 
   const router = useRouter();
+  const screenSize = useScreenSize();
   const { components, exercises } = useMain();
   const { token } = useAuthenticatedAuth();
+
   const controller = Controller.getInstance(token);
 
   // filtering selected component exercises
@@ -56,7 +59,7 @@ export function TrainerDayViewProvider(
   const [search, setSearch] = useState('');
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,
-    pageSize: 6,
+    pageSize: screenSize.isUltraSmall ? 3 : screenSize.isMobile ? 6 : 10,
     pages: 1,
     total: 0,
   });

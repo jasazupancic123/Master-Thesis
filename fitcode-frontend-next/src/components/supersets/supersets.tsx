@@ -157,6 +157,14 @@ export default function Supersets(props: SupersetsProps) {
     });
   }, [component?.method]);
 
+  // detect window width
+  useEffect(() => {
+    setPagination((prev) => ({
+      ...prev,
+      pageSize: screenSize.isUltraSmall ? 3 : screenSize.isMobile ? 6 : 10,
+    }));
+  }, [window.innerWidth]);
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(TouchSensor, {
@@ -408,8 +416,18 @@ export default function Supersets(props: SupersetsProps) {
           setOpenAddExerciseModal(false);
           setSearch('');
         }}
-        width={500}
-        dialogueContentSx={{ px: screenSize.isMobile ? 0 : undefined }}
+        PaperProps={{
+          sx: {
+            minWidth:
+              screenSize.isMobile || screenSize.isTablet ? undefined : 1000,
+            m: 0, // no margins around the dialog
+          },
+        }}
+        dialogueContentSx={{
+          minWidth:
+            screenSize.isMobile || screenSize.isTablet ? undefined : 1000,
+          px: screenSize.isMobile ? 0 : undefined,
+        }}
         onConfirm={() => {
           if (selectedExercisesIds.length === 0) {
             setOpenAddExerciseModal(false);

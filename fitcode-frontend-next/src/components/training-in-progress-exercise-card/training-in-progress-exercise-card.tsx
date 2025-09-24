@@ -22,7 +22,6 @@ import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
-import { TrainingService } from '@/controller/training/training.service';
 
 export default function TrainingInProgressExerciseCard() {
   const theme = useTheme();
@@ -239,33 +238,78 @@ export default function TrainingInProgressExerciseCard() {
         </Stack>
 
         {/* Image */}
-        {selectedExercise.exercise?.videoUrl ? (
-          <video
-            muted
-            playsInline
-            controls
-            poster={selectedExercise.exercise?.imageUrl || undefined}
-            style={{
-              width: '100%',
-              height: 'auto',
-              display: 'block',
-              filter: 'grayscale(100%)',
-            }}
-            preload="metadata"
-            src={selectedExercise.exercise.videoUrl}
-          />
-        ) : (
-          selectedExercise.exercise?.imageUrl && (
+        <Box position="relative">
+          {selectedExercise.exercise?.videoUrl ? (
+            <video
+              muted
+              playsInline
+              controls
+              poster={selectedExercise.exercise?.imageUrl || undefined}
+              style={{
+                width: '100%',
+                height: 'auto',
+                display: 'block',
+                filter: 'grayscale(100%)',
+              }}
+              preload="metadata"
+              src={selectedExercise.exercise.videoUrl}
+            />
+          ) : (
             <Image
-              src={selectedExercise.exercise.imageUrl}
+              src={
+                selectedExercise.exercise?.imageUrl ||
+                '/exercise-image-default.png'
+              }
               alt={selectedExercise.exercise?.name || ''}
               width={0}
               height={0}
               sizes="100vw"
-              style={{ width: '100%', height: 'auto' }}
+              style={{ width: '100vw', height: 'auto' }}
             />
-          )
-        )}
+          )}
+          <Box
+            display="flex"
+            flexDirection="column"
+            sx={{
+              position: 'absolute',
+              top: 5,
+              left: 0,
+              transform: 'translate(50%, 0)',
+            }}
+            gap={1}
+          >
+            {Array.from({ length: selectedSuperset.exercises.length }).map(
+              (_, index) => {
+                const currentExerciseIndex =
+                  selectedSuperset.exercises.indexOf(selectedExercise);
+                const letter = String.fromCharCode(65 + index);
+                return (
+                  <Typography
+                    key={index}
+                    fontWeight={600}
+                    color={
+                      currentExerciseIndex !== undefined &&
+                      currentExerciseIndex === index
+                        ? theme.palette.primary.main
+                        : undefined
+                    }
+                    onClick={() => {
+                      const exerciseToSelect =
+                        selectedSuperset.exercises[index];
+                      if (exerciseToSelect)
+                        setSelectedExercise(exerciseToSelect);
+                    }}
+                    sx={{
+                      textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
+                    }}
+                  >
+                    {letter}
+                  </Typography>
+                );
+              }
+            )}
+          </Box>
+        </Box>
 
         {/* Current tracking exercise set */}
         <Box
@@ -286,7 +330,6 @@ export default function TrainingInProgressExerciseCard() {
             display="flex"
             alignItems="center"
             justifyContent="space-evenly"
-            zIndex={100000}
           >
             {selectedExercise.sets.map((s, i) => (
               <Typography

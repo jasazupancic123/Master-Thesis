@@ -1,43 +1,86 @@
-import { Box, Card, CardContent, CardMedia } from '@mui/material';
-import Typography from '@mui/material/Typography';
+// components/ExerciseCard.tsx
+import { Box, Card, Typography } from '@mui/material';
+import Image from 'next/image';
 import React from 'react';
 
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
+import { useScreenSize } from '@/store/screen-size.provider';
 
-interface Props {
+interface ExerciseCardProps {
   exercise: Exercise;
+  addExerciseForm?: boolean;
+  prioritizeVideo?: boolean;
 }
 
-export function ExerciseCard(props: Props) {
-  const { exercise } = props;
+export function ExerciseCard(props: ExerciseCardProps) {
+  const screenSize = useScreenSize();
+
+  const { exercise, addExerciseForm } = props;
+  const isVideo = false; // exercise.videoUrl !== undefined;
+  const imgSrc = exercise.imageUrl || '/exercise-image-default.png';
+
+  // Fixed media height similar to your previous maxHeight: 140
+  const MEDIA_HEIGHT =
+    screenSize.isMobile || screenSize.isTablet
+      ? 100
+      : addExerciseForm
+        ? 120
+        : 140;
 
   return (
-    <Card
-      sx={{
-        borderRadius: 5,
-      }}
-    >
-      <CardMedia
-        component={
-          exercise.videoUrl ? 'video' : exercise.imageUrl ? 'img' : 'div'
-        }
+    <Card sx={{ borderRadius: 5, overflow: 'hidden' }}>
+      <Box
         sx={{
-          maxHeight: 140,
-          background: 'background.dark',
-          filter: 'grayscale(100%)',
+          position: 'relative',
+          width: '100%',
+          height: MEDIA_HEIGHT,
+          bgcolor: 'background.dark',
+          filter:
+            exercise.videoUrl || exercise.imageUrl
+              ? 'grayscale(100%)'
+              : undefined,
         }}
-        src={exercise.videoUrl || exercise.imageUrl}
-        title={exercise.name}
-        muted={exercise.videoUrl ? true : undefined}
-        autoPlay={exercise.videoUrl ? true : undefined}
-        loop={exercise.videoUrl ? true : undefined}
-      />
+      >
+        {isVideo ? (
+          <Box
+            component="video"
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+            }}
+            src={exercise.videoUrl!}
+            muted
+            loop
+            autoPlay
+            playsInline
+            poster={imgSrc}
+          />
+        ) : (
+          <Image
+            src={imgSrc}
+            alt={exercise.name}
+            height={0}
+            width={140}
+            sizes="100vw"
+            style={{
+              objectFit: 'cover',
+              width: '100%',
+              height: '100%',
+            }}
+          />
+        )}
+      </Box>
+
+      {/* Title */}
       <Box
         width="100%"
         display="flex"
         alignItems="center"
         justifyContent="center"
-        sx={{ p: 0.5, overflow: 'hidden' }} // parent can also hide overflow
+        sx={{ p: 0.5, overflow: 'hidden' }}
       >
         <Typography
           noWrap
@@ -45,11 +88,8 @@ export function ExerciseCard(props: Props) {
           fontWeight={600}
           textAlign="center"
           textTransform="uppercase"
-          sx={{
-            flex: 1, // fill available space
-            minWidth: 0, // <-- key for flex items so ellipsis can kick in
-            px: 1,
-          }}
+          sx={{ flex: 1, minWidth: 0, px: 1 }}
+          title={exercise.name}
         >
           {exercise.name}
         </Typography>

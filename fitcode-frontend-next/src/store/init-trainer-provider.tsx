@@ -1,6 +1,6 @@
 // app/store/init-provider.tsx  (Server Component)
 import { isAthlete } from '@/common/firebase/firebase-auth.util';
-import { ChildrenProps } from '@/common/type/props.type';
+import type { ChildrenProps } from '@/common/type/props.type';
 import { getAuthIdTokenFromCookies } from '@/common/util/auth.util';
 import Alert from '@/components/alert/alert';
 import { Controller } from '@/controller/controller';

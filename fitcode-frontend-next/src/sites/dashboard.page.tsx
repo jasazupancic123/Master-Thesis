@@ -24,7 +24,6 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import Animation from '@/components/animation/animation';
 
 export default function DashboardPage() {
   const screenSize = useScreenSize();

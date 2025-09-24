@@ -26,9 +26,9 @@ import {
 } from '@/common/constant/warmup-cooldown-ids-constants';
 import { isAdmin } from '@/common/firebase/firebase-auth.util';
 import type { Pagination as PaginationType } from '@/common/type/paginate.type';
-import { ExerciseCard } from '@/components/exercise-card/exercise-card';
 import ExerciseChips from '@/components/exercise-chips/exercise-chips';
 import ExerciseModal from '@/components/exercise-modal/exercise-modal';
+import ExercisesList from '@/components/exercises-list/exercises-list';
 import FileUpload from '@/components/file-upload/file-upload';
 import MyModal from '@/components/modal/modal';
 import PageTitle from '@/components/page-title/page-title';
@@ -236,39 +236,11 @@ export default function ExercisesPage() {
           page={pagination.page}
         />
       </Stack>
-      <Box
-        display="flex"
-        flexWrap="wrap"
-        justifyContent="center"
-        gap={2}
-        mb={10}
-      >
-        {filteredExercises.slice(0, 10).map((exercise) => (
-          <Box
-            key={exercise.id}
-            width={screenSize.isTablet || screenSize.isMobile ? '40%' : '18%'}
-            sx={{
-              cursor: 'pointer',
-              // flexBasis: screenSize.isMobile
-              //   ? '100%'
-              //   : screenSize.isSmallerThanLaptop
-              //     ? '45%'
-              //     : '30%',
-              // maxWidth: screenSize.isMobile
-              //   ? '100%'
-              //   : screenSize.isSmallerThanLaptop
-              //     ? '45%'
-              //     : '30%',
-            }}
-            onClick={() => {
-              setModal({ ...modal, edit: true });
-              setExercise(exercise);
-            }}
-          >
-            <ExerciseCard exercise={exercise} />
-          </Box>
-        ))}
-      </Box>
+      <ExercisesList
+        exercises={filteredExercises}
+        setExercise={setExercise}
+        setModal={setModal}
+      />
       {/* Add Exercise Modal*/}
       {modal.add && (
         <ExerciseModal

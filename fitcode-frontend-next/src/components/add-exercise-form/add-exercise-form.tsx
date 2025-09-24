@@ -1,16 +1,8 @@
 import { ArrowLeft, ArrowRight } from '@mui/icons-material';
-import {
-  Box,
-  Button,
-  Grid,
-  Grid2,
-  IconButton,
-  Stack,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Box, IconButton, Stack } from '@mui/material';
 import { useEffect, useState } from 'react';
 
+import ExercisesList from '../exercises-list/exercises-list';
 import { SearchBar } from '../search-bar/search-bar';
 import type { AddExerciseFormProps } from '../trainer-day-view/props';
 import {
@@ -19,11 +11,9 @@ import {
 } from '@/common/constant/warmup-cooldown-ids-constants';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
 import { useMain } from '@/store/main.provider';
-import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 
 export default function AddExerciseForm(props: AddExerciseFormProps) {
-  const screenSize = useScreenSize();
   const { selectedExercisesIds, setSelectedExercisesIds, component } = props;
   const { exercises: allExercises } = useMain();
   const {
@@ -89,12 +79,12 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
 
       {/* Pagination Controls */}
       <Stack
+        width="100%"
         direction="row"
         spacing={2}
         mt={2}
         alignItems="center"
         justifyContent="center"
-        width="100%"
         flexWrap="nowrap"
         px={search === '' ? 0 : 3}
       >
@@ -116,102 +106,12 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
         </IconButton>
 
         {/* Exercise List */}
-        <Box width="100%" maxWidth="100%" overflow="hidden">
-          <Grid2
-            container
-            direction="column"
-            width="100%"
-            overflow="auto"
-            sx={{
-              flexGrow: 1,
-              minWidth: 0,
-              maxHeight: 500,
-              pr: 1,
-              flexWrap: 'nowrap',
-            }}
-          >
-            {filteredExercises
-              .sort((a, b) => a.name.localeCompare(b.name))
-              .map((exercise) => {
-                const isSelected = selectedExercisesIds.includes(exercise.id);
-
-                return (
-                  <Grid
-                    key={exercise.id}
-                    item
-                    xs={12}
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      borderBottom: '1px solid #ddd',
-                      padding: '8px 0',
-                      flexWrap: 'nowrap',
-                      minWidth: 0,
-                    }}
-                  >
-                    {/* Exercise Image */}
-
-                    <Box
-                      sx={{
-                        width: 60,
-                        height: 60,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                        borderRadius: '8px',
-                        flexShrink: 0,
-                        backgroundImage: `url(${exercise.imageUrl || '/fitcode_logo_transparent_square.png'})`,
-                      }}
-                    />
-
-                    {/* Exercise Name */}
-                    <Tooltip title={exercise.name} placement="top">
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          textAlign: 'center',
-                          flexGrow: 1,
-                          minWidth: 0,
-                          px: 2,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                          maxWidth: screenSize.isMobile
-                            ? 150
-                            : search === ''
-                              ? 200
-                              : 175,
-                        }}
-                      >
-                        {exercise.name}
-                      </Typography>
-                    </Tooltip>
-
-                    {/* Select/Deselect Button */}
-                    <Button
-                      sx={{ width: 75, height: 35, flexShrink: 0 }}
-                      variant={isSelected ? 'outlined' : 'contained'}
-                      color="primary"
-                      onClick={() => {
-                        if (!isSelected) {
-                          setSelectedExercisesIds((prev) => [
-                            ...prev,
-                            exercise.id,
-                          ]);
-                        } else {
-                          setSelectedExercisesIds((prev) =>
-                            prev.filter((id) => id !== exercise.id)
-                          );
-                        }
-                      }}
-                    >
-                      {isSelected ? 'Selected' : 'Select'}
-                    </Button>
-                  </Grid>
-                );
-              })}
-          </Grid2>
-        </Box>
+        <ExercisesList
+          exercises={filteredExercises}
+          addExerciseForm
+          setSelectedExercisesIds={setSelectedExercisesIds}
+          selectedExercisesIds={selectedExercisesIds}
+        />
 
         <IconButton
           sx={{

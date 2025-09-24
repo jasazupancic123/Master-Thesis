@@ -2,10 +2,17 @@
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
+
 import Animation from '@/components/animation/animation';
 
 // Fires once its children actually mount (i.e., when Suspense reveals)
-function RevealSensor({ onReveal, children }: { onReveal: () => void; children: React.ReactNode }) {
+function RevealSensor({
+  onReveal,
+  children,
+}: {
+  onReveal: () => void;
+  children: React.ReactNode;
+}) {
   useEffect(() => onReveal(), [onReveal]);
   return <>{children}</>;
 }

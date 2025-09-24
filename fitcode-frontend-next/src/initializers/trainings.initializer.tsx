@@ -4,12 +4,11 @@ import { useState } from 'react';
 
 import type { ChildrenProps } from '@/common/type/props.type';
 import { TrainingController } from '@/controller/training/training.controller';
+import { TrainingService } from '@/controller/training/training.service';
 import { useAthlete } from '@/store/athlete.provider';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
-import { TrainingProvider } from '@/store/training.provider';
-import { TrainingService } from '@/controller/training/training.service';
 import { useMain } from '@/store/main.provider';
-import { GroupService } from '@/controller/group/group.service';
+import { TrainingProvider } from '@/store/training.provider';
 
 export default function TrainingsInitializer(props: ChildrenProps) {
   const { children } = props;
