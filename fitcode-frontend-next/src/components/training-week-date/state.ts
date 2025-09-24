@@ -274,7 +274,6 @@ function handleAddTraining(
       selectedComponents: selected.map((c, i) => ({
         id: c.id,
         subgroups: [],
-        completedMembersIds: [],
         supersets: [],
         mainSet: MainSet.BLOCK,
         from: addMinutes(from, i * 30),

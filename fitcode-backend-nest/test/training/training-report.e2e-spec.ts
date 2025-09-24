@@ -238,7 +238,10 @@ describe('Training Report (e2e)', () => {
 
     const stats = trainingReportService.getTrainingStats(dummy);
     expect(stats).toEqual({
-      plannedComponents: ['c1', 'c2'],
+      plannedComponents: [
+        { componentId: 'c1', totalSets: 3 },
+        { componentId: 'c2', totalSets: 3 },
+      ],
       totalDuration: 120,
       totalComponents: 2,
       totalSupersets: 2,
@@ -261,7 +264,10 @@ describe('Training Report (e2e)', () => {
     const totalActiveTime = 10 * 10 * 3 + 3 * 30 * 1; // 300 + 90 = 390 -> 10 sets of 10 reps with 2010 (3 second) tempo, 3 sets of 30 m distance with 1 second per meter
 
     expect(stats).toEqual({
-      plannedComponents: ['c1', 'c2'],
+      plannedComponents: [
+        { componentId: 'c1', totalSets: 8 },
+        { componentId: 'c2', totalSets: 3 },
+      ],
       totalDuration: 120,
       totalComponents: 2,
       totalSupersets: 3,
