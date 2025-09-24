@@ -15,6 +15,9 @@ const onest = Onest({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'Blind/off',
   description: 'Track workouts more efficiently.',
+  icons: {
+    icon: '/favicon.ico',
+  },
 };
 
 export default async function RootLayout({ children }: ChildrenProps) {

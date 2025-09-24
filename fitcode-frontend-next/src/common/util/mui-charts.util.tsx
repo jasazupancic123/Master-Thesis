@@ -1,6 +1,5 @@
 import { useDrawingArea } from '@mui/x-charts/hooks';
 import { styled } from '@mui/material/styles';
-import { ChildrenProps } from '../type/props.type';
 
 const StyledText = styled('text')(({ theme }) => ({
   fill: theme.palette.text.primary,
@@ -9,11 +8,24 @@ const StyledText = styled('text')(({ theme }) => ({
   fontSize: 14,
 }));
 
-export const PieCenterLabel = ({ label }: { label: string }) => {
+export function PieCenterLabel({
+  label,
+  position,
+}: {
+  label: string;
+  position?: {
+    top?: number;
+    left?: number;
+  };
+}) {
   const { width, height, left, top } = useDrawingArea();
+
+  const x = (position?.left !== undefined ? position.left : left) + width / 2;
+  const y = (position?.top !== undefined ? position.top : top) + height / 2;
+
   return (
-    <StyledText x={left + width / 2} y={top + height / 2}>
+    <StyledText x={x} y={y}>
       {label}
     </StyledText>
   );
-};
+}
