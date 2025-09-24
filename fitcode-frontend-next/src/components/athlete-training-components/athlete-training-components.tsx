@@ -1,4 +1,3 @@
-import { Check } from '@mui/icons-material';
 import { Box, Collapse, IconButton, SvgIcon } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Typography from '@mui/material/Typography';
@@ -86,7 +85,7 @@ export default function AthleteTrainingComponents(
               <Box key={component.id} minWidth="48px">
                 <IconButton
                   sx={[
-                    user && component.completedMembersIds.includes(user.uid)
+                    user
                       ? {
                           opacity:
                             selectedComponent?.id !== component.id ? 0.5 : 1,
@@ -123,18 +122,6 @@ export default function AthleteTrainingComponents(
                             fill: 'currentColor',
                             stroke: 'currentColor',
                           },
-                      }}
-                    />
-                  )}
-
-                  {user && component.completedMembersIds.includes(user.uid) && (
-                    <Check
-                      sx={{
-                        position: 'absolute',
-                        bottom: 2,
-                        right: 0,
-                        color: theme.palette.primary.main,
-                        fontSize: 16,
                       }}
                     />
                   )}
@@ -193,11 +180,6 @@ export default function AthleteTrainingComponents(
 
           if (!selectedComponent) {
             toast.error('No component selected.');
-            return;
-          }
-
-          if (selectedComponent.completedMembersIds.includes(user.uid)) {
-            toast.error('You have already completed this component.');
             return;
           }
 

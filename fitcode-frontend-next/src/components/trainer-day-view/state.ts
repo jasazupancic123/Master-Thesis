@@ -692,7 +692,6 @@ export function prepareGroupAvgWorkloadsForChart(
     const foundExercises: {
       exercise: TrainingExercise;
       membersIds: string[];
-      completedMembersIds: string[];
     }[] = [];
 
     // prioritize selected subgroup supersets, if its the custom workload subgroup (with parentId)
@@ -710,7 +709,6 @@ export function prepareGroupAvgWorkloadsForChart(
       foundExercises.push({
         exercise: foundExerciseInComponent,
         membersIds: membersIdsInMainComponent,
-        completedMembersIds: component.completedMembersIds,
       });
 
     // if not a custom workload subgroup is selected,
@@ -724,7 +722,6 @@ export function prepareGroupAvgWorkloadsForChart(
         foundExercises.push({
           exercise: foundSubgroupExercis,
           membersIds: sg.membersIds,
-          completedMembersIds: component.completedMembersIds,
         });
     });
 
@@ -745,8 +742,6 @@ export function prepareGroupAvgWorkloadsForChart(
             )
           )
             return;
-          const completed =
-            foundExercise.completedMembersIds.includes(memberId);
 
           const workload: Workload = {
             trainingId: t.id,
@@ -758,7 +753,7 @@ export function prepareGroupAvgWorkloadsForChart(
             updatedAt: new Date(),
             userId: memberId,
             supersetIndex: 0,
-            status: completed ? SetStatus.COMPLETED : SetStatus.NOT_STARTED,
+            status: SetStatus.NOT_STARTED,
             intWork1Type: set.paramValuesL.find(
               (paramValue) => paramValue.field === ParamType.IntWork1
             )?.selected as IntType,
@@ -774,7 +769,7 @@ export function prepareGroupAvgWorkloadsForChart(
           };
 
           for (const paramValue of set.paramValuesL) {
-            const fieldName = getWorkloadFieldName(paramValue, completed);
+            const fieldName = getWorkloadFieldName(paramValue, true);
 
             if (!fieldName) continue;
 
@@ -1087,11 +1082,6 @@ export function prepareSelectedAthleteAvgWorkloadsForChart(input: {
     if (t.id === training.id && isCustomWorkloadSubgroup) {
       // if its the current training, take the selectedSubgroup which is used
       // for custom athlete workloads
-
-      const completed = component.completedMembersIds.includes(
-        selectedAthlete.uid
-      );
-
       selectedSubgroup.supersets.forEach((superset, i) => {
         superset.exercises.forEach((e) => {
           if (e.id !== exercise.id) return;
@@ -1106,7 +1096,7 @@ export function prepareSelectedAthleteAvgWorkloadsForChart(input: {
               exerciseId: e.id,
               setNumber: set.setNumber,
               supersetIndex: i,
-              status: completed ? SetStatus.COMPLETED : SetStatus.NOT_STARTED,
+              status: SetStatus.NOT_STARTED,
               intWork1Type: set.paramValuesL.find(
                 (paramValue) => paramValue.field === ParamType.IntWork1
               )?.selected as IntType,
@@ -1125,7 +1115,7 @@ export function prepareSelectedAthleteAvgWorkloadsForChart(input: {
             };
 
             for (const paramValue of set.paramValuesL) {
-              const fieldName = getWorkloadFieldName(paramValue, completed);
+              const fieldName = getWorkloadFieldName(paramValue, true);
 
               if (!fieldName) continue;
 
@@ -1205,10 +1195,6 @@ export function prepareSelectedAthleteAvgWorkloadsForChart(input: {
       )
         return;
 
-      const completed = component.completedMembersIds.includes(
-        selectedAthlete.uid
-      );
-
       const workload: Workload = {
         trainingId: t.id,
         componentId: component.id,
@@ -1219,7 +1205,7 @@ export function prepareSelectedAthleteAvgWorkloadsForChart(input: {
         updatedAt: new Date(),
         userId: selectedAthlete.uid,
         supersetIndex: 0,
-        status: completed ? SetStatus.COMPLETED : SetStatus.NOT_STARTED,
+        status: SetStatus.NOT_STARTED,
         intWork1Type: set.paramValuesL.find(
           (paramValue) => paramValue.field === ParamType.IntWork1
         )?.selected as IntType,
@@ -1235,7 +1221,7 @@ export function prepareSelectedAthleteAvgWorkloadsForChart(input: {
       };
 
       for (const paramValue of set.paramValuesL) {
-        const fieldName = getWorkloadFieldName(paramValue, completed);
+        const fieldName = getWorkloadFieldName(paramValue, true);
 
         if (!fieldName) continue;
 

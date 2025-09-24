@@ -39,6 +39,11 @@ export function link(
   };
 }
 
+// hero navbar
+export const LINK_PRODUCT = link('Product', '#product');
+export const LINK_SERVICES = link('Services', '#services');
+export const LINK_TECHNOLOGY = link('Technology', '#technology');
+
 // all standalone app links
 export const LINK_INDEX = link('Home', '/', null, '');
 export const LINK_SOLUTIONS = link('Solutions', '#solutions');
@@ -47,7 +52,9 @@ export const LINK_FEATURES = link('Features', '#features');
 export const LINK_TRADEMARK = link('Trademark', '#trademark');
 export const LINK_HIGHLIGHTS = link('Highlights', '#highlights');
 export const LINK_ABOUT = link('Our Vision', '#about');
-export const LINK_SIGN_IN = link('Sign In', '/sign-in');
+export const LINK_SIGN_IN = link('Do it right', '/sign-in');
+export const SIGN_OUT_LINK_ID = 'sign-out';
+export const LINK_SIGN_OUT = link('Sign Out', '#', undefined, SIGN_OUT_LINK_ID);
 export const LINK_PROFILE = link('Profile', '/profile', <PersonIcon />);
 export const LINK_USERS = link('Users', '/users');
 export const LINK_EXERCISES_DASHBOARD = link(
@@ -133,6 +140,17 @@ export const LINKS_DASHBOARD_SIDEBAR_SUB_ITEMS = {
 // grouped links (for utility)
 export const LINKS_AUTH = {
   login: LINK_SIGN_IN,
+};
+
+export const LINKS_HERO_NAVBAR = {
+  product: LINK_PRODUCT,
+  services: LINK_SERVICES,
+  technology: LINK_TECHNOLOGY,
+};
+
+export const LINKS_AUTHENTICATED_HERO_NAVBAR = {
+  dashboard: LINK_DASHBOARD,
+  signout: LINK_SIGN_OUT,
 };
 
 export const LINKS_NAVBAR = {

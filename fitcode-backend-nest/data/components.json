@@ -27,68 +27,62 @@
         {
           "field": "volWorkSets",
           "defaultValue": "set",
-          "options": [{ "field": "set", "defaultValue": 3 }]
+          "options": [{ "field": "set" }]
         },
         {
           "field": "vol1",
           "defaultValue": "rep",
           "options": [
-            { "field": "rep", "defaultValue": "12" },
-            { "field": "time", "defaultValue": "60" },
-            { "field": "dist", "defaultValue": "50" }
+            { "field": "rep" },
+            { "field": "time" },
+            { "field": "dist" }
           ]
         },
         {
           "field": "int1",
           "defaultValue": "kg",
           "options": [
-            { "field": "kg", "defaultValue": "20" },
-            { "field": "bw", "defaultValue": "100" },
-            { "field": "rm", "defaultValue": "10" },
-            { "field": "vbt", "defaultValue": "1" }
+            { "field": "kg" },
+            { "field": "bw" },
+            { "field": "rm" },
+            { "field": "vbt" }
           ]
         },
         {
           "field": "int2",
-          "defaultValue": "eff",
-          "options": [
-            { "field": "tempo", "defaultValue": "1" },
-            { "field": "eff", "defaultValue": "1" }
-          ]
+          "defaultValue": "tempo",
+          "options": [{ "field": "tempo" }, { "field": "eff" }]
         },
         {
           "field": "volRec",
           "defaultValue": "time",
-          "options": [{ "field": "time", "defaultValue": "60" }]
+          "options": [{ "field": "time" }]
         }
       ],
       "equipment:!": [
         {
           "field": "volWorkSets",
           "defaultValue": "set",
-          "options": [{ "field": "set", "defaultValue": 3 }]
+          "options": [{ "field": "set" }]
         },
         {
           "field": "vol1",
           "defaultValue": "rep",
           "options": [
-            { "field": "rep", "defaultValue": "12" },
-            { "field": "time", "defaultValue": "60" },
-            { "field": "dist", "defaultValue": "50" }
+            { "field": "rep" },
+            { "field": "time" },
+            { "field": "dist" }
           ]
         },
         {
           "field": "int1",
           "defaultValue": "eff",
-          "options": [
-            { "field": "tempo", "defaultValue": "1" },
-            { "field": "eff", "defaultValue": "1" }
-          ]
+          "options": [{ "field": "tempo" }, { "field": "eff" }]
         },
         {
           "field": "volRec",
           "defaultValue": "time",
-          "options": [{ "field": "time", "defaultValue": "60" }]
+          "options": [{ "field": "time" }]
         }
       ]
     },
@@ -291,26 +285,26 @@
         {
           "field": "volWorkSets",
           "defaultValue": "set",
-          "options": [{ "field": "set", "defaultValue": 3 }]
+          "options": [{ "field": "set" }]
         },
         {
           "field": "vol1",
           "defaultValue": "dist",
           "options": [
-            { "field": "dist", "defaultValue": "50" },
-            { "field": "time", "defaultValue": "60" },
-            { "field": "rep", "defaultValue": "12" }
+            { "field": "dist" },
+            { "field": "time" },
+            { "field": "rep" }
           ]
         },
         {
           "field": "int1",
           "defaultValue": "eff",
-          "options": [{ "field": "eff", "defaultValue": "1" }]
+          "options": [{ "field": "eff" }]
         },
         {
           "field": "volRec",
           "defaultValue": "time",
-          "options": [{ "field": "time", "defaultValue": "60" }]
+          "options": [{ "field": "time" }]
         }
       ]
     },
@@ -573,18 +567,15 @@
         {
           "field": "vol1",
           "defaultValue": "time",
-          "options": [
-            { "field": "time", "defaultValue": "60" },
-            { "field": "dist", "defaultValue": "50" }
-          ]
+          "options": [{ "field": "time" }, { "field": "dist" }]
         },
         {
           "field": "int1",
           "defaultValue": "eff",
           "options": [
-            { "field": "mas", "defaultValue": "100" },
-            { "field": "hrmax", "defaultValue": "100" },
-            { "field": "eff", "defaultValue": "1" }
+            { "field": "mas" },
+            { "field": "hrmax" },
+            { "field": "eff" }
           ]
         }
       ],
@@ -592,40 +583,34 @@
         {
           "field": "volWorkSets",
           "defaultValue": "set",
-          "options": [{ "field": "set", "defaultValue": 3 }]
+          "options": [{ "field": "set" }]
         },
         {
           "field": "vol1",
           "defaultValue": "time",
-          "options": [
-            { "field": "time", "defaultValue": "60" },
-            { "field": "dist", "defaultValue": "50" }
-          ]
+          "options": [{ "field": "time" }, { "field": "dist" }]
         },
         {
           "field": "int1",
           "defaultValue": "eff",
           "options": [
-            { "field": "mas", "defaultValue": "100" },
-            { "field": "hrmax", "defaultValue": "100" },
-            { "field": "eff", "defaultValue": "1" }
+            { "field": "mas" },
+            { "field": "hrmax" },
+            { "field": "eff" }
           ]
         },
         {
           "field": "volRec",
           "defaultValue": "time",
-          "options": [
-            { "field": "time", "defaultValue": "60" },
-            { "field": "dist", "defaultValue": "50" }
-          ]
+          "options": [{ "field": "time" }, { "field": "dist" }]
         },
         {
           "field": "intRec",
           "defaultValue": "eff",
           "options": [
-            { "field": "mas", "defaultValue": "100" },
-            { "field": "hrmax", "defaultValue": "100" },
-            { "field": "eff", "defaultValue": "1" }
+            { "field": "mas" },
+            { "field": "hrmax" },
+            { "field": "eff" }
           ]
         }
       ],
@@ -633,57 +618,48 @@
         {
           "field": "volWorkSets",
           "defaultValue": "set",
-          "options": [{ "field": "set", "defaultValue": 3 }]
+          "options": [{ "field": "set" }]
         },
         {
           "field": "vol1",
           "defaultValue": "time",
-          "options": [
-            { "field": "time", "defaultValue": "60" },
-            { "field": "dist", "defaultValue": "50" }
-          ]
+          "options": [{ "field": "time" }, { "field": "dist" }]
         },
         {
           "field": "vol2",
           "defaultValue": "time",
-          "options": [
-            { "field": "time", "defaultValue": "60" },
-            { "field": "dist", "defaultValue": "50" }
-          ]
+          "options": [{ "field": "time" }, { "field": "dist" }]
         },
         {
           "field": "int1",
           "defaultValue": "eff",
           "options": [
-            { "field": "mas", "defaultValue": "100" },
-            { "field": "hrmax", "defaultValue": "100" },
-            { "field": "eff", "defaultValue": "1" }
+            { "field": "mas" },
+            { "field": "hrmax" },
+            { "field": "eff" }
           ]
         },
         {
           "field": "int2",
           "defaultValue": "eff",
           "options": [
-            { "field": "mas", "defaultValue": "100" },
-            { "field": "hrmax", "defaultValue": "100" },
-            { "field": "eff", "defaultValue": "1" }
+            { "field": "mas" },
+            { "field": "hrmax" },
+            { "field": "eff" }
           ]
         },
         {
           "field": "volRec",
           "defaultValue": "time",
-          "options": [
-            { "field": "time", "defaultValue": "60" },
-            { "field": "dist", "defaultValue": "50" }
-          ]
+          "options": [{ "field": "time" }, { "field": "dist" }]
         },
         {
           "field": "intRec",
           "defaultValue": "eff",
           "options": [
-            { "field": "mas", "defaultValue": "100" },
-            { "field": "hrmax", "defaultValue": "100" },
-            { "field": "eff", "defaultValue": "1" }
+            { "field": "mas" },
+            { "field": "hrmax" },
+            { "field": "eff" }
           ]
         }
       ],
@@ -691,45 +667,39 @@
         {
           "field": "volWorkSets",
           "defaultValue": "set",
-          "options": [{ "field": "set", "defaultValue": 3 }]
+          "options": [{ "field": "set" }]
         },
         {
           "field": "vol1",
           "defaultValue": "rep",
-          "options": [{ "field": "rep", "defaultValue": "12" }]
+          "options": [{ "field": "rep" }]
         },
         {
           "field": "vol2",
           "defaultValue": "time",
-          "options": [
-            { "field": "time", "defaultValue": "60" },
-            { "field": "dist", "defaultValue": "50" }
-          ]
+          "options": [{ "field": "time" }, { "field": "dist" }]
         },
         {
           "field": "int2",
           "defaultValue": "eff",
           "options": [
-            { "field": "mas", "defaultValue": "100" },
-            { "field": "hrmax", "defaultValue": "100" },
-            { "field": "eff", "defaultValue": "1" }
+            { "field": "mas" },
+            { "field": "hrmax" },
+            { "field": "eff" }
           ]
         },
         {
           "field": "volRec",
           "defaultValue": "time",
-          "options": [
-            { "field": "time", "defaultValue": "60" },
-            { "field": "dist", "defaultValue": "50" }
-          ]
+          "options": [{ "field": "time" }, { "field": "dist" }]
         },
         {
           "field": "intRec",
           "defaultValue": "eff",
           "options": [
-            { "field": "mas", "defaultValue": "100" },
-            { "field": "hrmax", "defaultValue": "100" },
-            { "field": "eff", "defaultValue": "1" }
+            { "field": "mas" },
+            { "field": "hrmax" },
+            { "field": "eff" }
           ]
         }
       ]
@@ -836,15 +806,12 @@
         {
           "field": "vol",
           "defaultValue": "rep",
-          "options": [
-            { "field": "rep", "defaultValue": "12" },
-            { "field": "time", "defaultValue": "60" }
-          ]
+          "options": [{ "field": "rep" }, { "field": "time" }]
         },
         {
           "field": "volRec",
           "defaultValue": "time",
-          "options": [{ "field": "time", "defaultValue": "60" }]
+          "options": [{ "field": "time" }]
         }
       ]
     },

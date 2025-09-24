@@ -46,9 +46,6 @@ export class TrainingService {
       warmup: athleteComponents.find((c) => c.id === WARMUP_COMPONENT_ID)!,
       cooldown: athleteComponents.find((c) => c.id === COOLDOWN_COMPONENT_ID)!,
       membersIds: training.membersIds.filter((uid) => uid === athleteId),
-      completedMembersIds: training.completedMembersIds.filter(
-        (uid) => uid === athleteId
-      ),
     };
   }
 
@@ -137,7 +134,7 @@ export class TrainingService {
 
     if (data.components) {
       item.mappedPlannedComponents = item.plannedComponents.map(
-        (cId) => data.components!.find((c) => c.id === cId)!
+        (pc) => data.components!.find((c) => c.id === pc.componentId)!
       );
     }
 

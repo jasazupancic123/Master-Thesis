@@ -17,6 +17,7 @@ import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 import { ParamType } from '@/controller/component/enum/param.enum';
 import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
+import { TrainingService } from '@/controller/training/training.service';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
@@ -285,6 +286,7 @@ export default function TrainingInProgressExerciseCard() {
             display="flex"
             alignItems="center"
             justifyContent="space-evenly"
+            zIndex={100000}
           >
             {selectedExercise.sets.map((s, i) => (
               <Typography
@@ -441,6 +443,7 @@ export default function TrainingInProgressExerciseCard() {
                     )
                   }
                   sx={{
+                    zIndex: 1000,
                     '&.MuiCheckbox-root': {
                       px: 0,
                     },
