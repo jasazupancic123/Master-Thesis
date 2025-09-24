@@ -29,7 +29,7 @@ export class Attribute {
   @IsString()
   @ApiProperty({ enum: AttributeType, enumName: 'AttributeType' })
   @Expose()
-  type: AttributeType; // defaults to "string"
+  type?: AttributeType; // defaults to "value"
 
   @IsBoolean()
   @IsOptional()

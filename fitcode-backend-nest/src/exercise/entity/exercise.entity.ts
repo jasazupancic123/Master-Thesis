@@ -26,18 +26,6 @@ export class Exercise extends BaseEntity {
   @ApiProperty()
   name: string;
 
-  @IsString({ each: true })
-  @IsNotEmpty()
-  @Expose()
-  @ApiProperty()
-  componentIds: string[]; // first component is necessary and cannot be changed, others are for "tags"
-
-  @IsBoolean()
-  @IsOptional()
-  @Expose()
-  @ApiProperty()
-  isUnilateral: boolean; // exercise can be performed with both sides of the body separately, like a single arm row
-
   @IsString()
   @IsOptional()
   @IsNotEmpty()
@@ -59,19 +47,33 @@ export class Exercise extends BaseEntity {
   @ApiProperty()
   instruction?: string;
 
+  // <---- Attributes for filtering ---->
+
+  @IsString({ each: true })
+  @IsNotEmpty()
+  @Expose()
+  @ApiProperty()
+  componentIds: string[]; // first component is necessary and cannot be changed, others are for "tags"
+
+  @IsBoolean()
+  @IsOptional()
+  @Expose()
+  @ApiProperty()
+  isUnilateral: boolean; // exercise can be performed with both sides of the body separately, like a single arm row
+
   @ValidateNested({ each: true })
   @Type(() => ExerciseAttributeValue)
   @ApiProperty({ type: () => ExerciseAttributeValue, isArray: true })
   @Expose()
   attributeValues: ExerciseAttributeValue[]; // sub collection for filtering
 
-  @Type(() => Attribute)
-  @IsOptional()
-  defaultParams?: Attribute[];
-
   @ValidateNested({ each: true })
   @Type(() => AttributeValue)
   @ApiProperty({ type: () => AttributeValue, isArray: true })
   @Expose()
   muscleValues: AttributeValue[];
+
+  @Type(() => Attribute)
+  @IsOptional()
+  defaultParams?: Attribute[];
 }

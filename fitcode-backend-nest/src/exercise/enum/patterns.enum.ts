@@ -1,0 +1,15 @@
+export const Patterns = [
+  'primitive',
+  'torsion',
+  'push',
+  'pull',
+  'legs',
+  'squat',
+  'press',
+  'jump',
+  'walk',
+  'run',
+  'crawl',
+  'carry',
+  'dl-hinge',
+] as const;
