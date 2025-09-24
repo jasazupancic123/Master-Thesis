@@ -3,7 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 
 import { generateAttributeStub } from '@src/attribute/mock/attribute.stub';
-import { generateExerciseAttributeValueStub } from '@src/attribute/mock/attribute-value.stub';
+import { generateAttributeValueStub } from '@src/attribute/mock/attribute-value.stub';
 import { AttributeRepository } from '@src/attribute/repository/attribute.repository';
 import { AttributeService } from '@src/attribute/service/attribute.service';
 import { CacheManagerService } from '@src/cache-manager/cache-manager.service';
@@ -24,8 +24,8 @@ import { generateComponentStub } from '@src/component/mock/component.stub';
 import { ComponentRepository } from '@src/component/repository/component.repository';
 import { validationSchema } from '@src/config/environment-validation-schema';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
-import { ExerciseAttributeValueRepository } from '@src/exercise/repository/exercise-attribute-value.repository';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
+import { ExerciseAttributeService } from '@src/exercise/service/exercise-attribute.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import {
@@ -42,6 +42,7 @@ describe('TrainingPlanService (unit)', () => {
   let service: TrainingPlanService;
   let componentService: ComponentService;
   let exerciseService: ExerciseService;
+  let exerciseAttributeService: ExerciseAttributeService;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -76,10 +77,7 @@ describe('TrainingPlanService (unit)', () => {
           provide: ExerciseService,
           useValue: createMock<ExerciseService>(),
         },
-        {
-          provide: ExerciseAttributeValueRepository,
-          useValue: createMock<ExerciseAttributeValueRepository>(),
-        },
+        ExerciseAttributeService,
         {
           provide: WorkloadRepository,
           useValue: createMock<WorkloadRepository>(),
@@ -95,6 +93,7 @@ describe('TrainingPlanService (unit)', () => {
     service = moduleRef.get(TrainingPlanService);
     componentService = moduleRef.get(ComponentService);
     exerciseService = moduleRef.get(ExerciseService);
+    exerciseAttributeService = moduleRef.get(ExerciseAttributeService);
   });
 
   it('should find all training exercises', async () => {
@@ -192,7 +191,6 @@ describe('TrainingPlanService (unit)', () => {
       [trainingComponent],
       [component],
       [exercise],
-      [],
     );
 
     expect(trainingComponent.supersets[0].exercises[0].params).toEqual([
@@ -360,7 +358,6 @@ describe('TrainingPlanService (unit)', () => {
       [trainingComponent],
       [component],
       [exercise],
-      [],
     );
 
     expect(trainingComponent.supersets[0].exercises[0].params).toEqual([
@@ -415,7 +412,6 @@ describe('TrainingPlanService (unit)', () => {
       [trainingComponent],
       [component],
       [exercise],
-      [],
     );
 
     expect(trainingComponent.supersets[0].exercises[0].params).toEqual([
@@ -438,15 +434,17 @@ describe('TrainingPlanService (unit)', () => {
       },
     });
 
-    const exercise = generateExerciseStub({
-      id: 'e1',
-      attributeValues: [
-        generateExerciseAttributeValueStub({
-          field: attribute.field,
-          value: 'true', // matches the condition
-        }),
-      ],
-    });
+    const exercise = generateExerciseStub({ id: 'e1' });
+    exerciseAttributeService.getAttributes = jest
+      .fn()
+      .mockReturnValueOnce([attribute]);
+
+    exerciseAttributeService.getValues = jest.fn().mockReturnValueOnce([
+      generateAttributeValueStub({
+        field: attribute.field,
+        value: 'true', // matches the condition
+      }),
+    ]);
 
     const trainingComponent = generateTrainingComponent({
       supersets: [
@@ -461,7 +459,6 @@ describe('TrainingPlanService (unit)', () => {
       [trainingComponent],
       [component],
       [exercise],
-      [attribute],
     );
 
     expect(trainingComponent.supersets[0].exercises[0].params).toEqual([
@@ -497,15 +494,17 @@ describe('TrainingPlanService (unit)', () => {
         },
       });
 
-      const exerciseCustomParams = generateExerciseStub({
-        id: 'e1',
-        attributeValues: [
-          generateExerciseAttributeValueStub({
-            field: attribute.field,
-            value: testValue,
-          }),
-        ],
-      });
+      const exerciseCustomParams = generateExerciseStub({ id: 'e1' });
+      exerciseAttributeService.getAttributes = jest
+        .fn()
+        .mockReturnValueOnce([attribute]);
+
+      exerciseAttributeService.getValues = jest.fn().mockReturnValueOnce([
+        generateAttributeValueStub({
+          field: attribute.field,
+          value: testValue,
+        }),
+      ]);
 
       const trainingComponentCustomParams = generateTrainingComponent({
         supersets: [
@@ -520,18 +519,19 @@ describe('TrainingPlanService (unit)', () => {
         [trainingComponentCustomParams],
         [component],
         [exerciseCustomParams],
-        [attribute],
       );
 
-      const exerciseDefaultParams = generateExerciseStub({
-        id: 'e2',
-        attributeValues: [
-          generateExerciseAttributeValueStub({
-            field: attribute.field,
-            value: ['gt', 'gte', 'range'].includes(operator) ? '50' : '200', // ensure this value does not match the condition
-          }),
-        ],
-      });
+      const exerciseDefaultParams = generateExerciseStub({ id: 'e2' });
+      exerciseAttributeService.getAttributes = jest
+        .fn()
+        .mockReturnValueOnce([attribute]);
+
+      exerciseAttributeService.getValues = jest.fn().mockReturnValueOnce([
+        generateAttributeValueStub({
+          field: attribute.field,
+          value: ['gt', 'gte', 'range'].includes(operator) ? '50' : '200',
+        }),
+      ]);
 
       const trainingComponentDefaultParams = generateTrainingComponent({
         supersets: [
@@ -546,7 +546,6 @@ describe('TrainingPlanService (unit)', () => {
         [trainingComponentDefaultParams],
         [component],
         [exerciseDefaultParams],
-        [attribute],
       );
 
       expect(
@@ -575,15 +574,17 @@ describe('TrainingPlanService (unit)', () => {
         },
       });
 
-      const exerciseCustomParams = generateExerciseStub({
-        id: 'e1',
-        attributeValues: [
-          generateExerciseAttributeValueStub({
-            field: attribute.field,
-            value: testValue,
-          }),
-        ],
-      });
+      const exerciseCustomParams = generateExerciseStub({ id: 'e1' });
+      exerciseAttributeService.getAttributes = jest
+        .fn()
+        .mockReturnValueOnce([attribute]);
+
+      exerciseAttributeService.getValues = jest.fn().mockReturnValueOnce([
+        generateAttributeValueStub({
+          field: attribute.field,
+          value: testValue,
+        }),
+      ]);
 
       const trainingComponentCustomParams = generateTrainingComponent({
         supersets: [
@@ -598,18 +599,19 @@ describe('TrainingPlanService (unit)', () => {
         [trainingComponentCustomParams],
         [component],
         [exerciseCustomParams],
-        [attribute],
       );
 
-      const exerciseDefaultParams = generateExerciseStub({
-        id: 'e2',
-        attributeValues: [
-          generateExerciseAttributeValueStub({
-            field: attribute.field,
-            value: operator === 'eq' ? 'time' : 'distance', // Ensure this value does not match the condition
-          }),
-        ],
-      });
+      const exerciseDefaultParams = generateExerciseStub({ id: 'e2' });
+      exerciseAttributeService.getAttributes = jest
+        .fn()
+        .mockReturnValueOnce([attribute]);
+
+      exerciseAttributeService.getValues = jest.fn().mockReturnValueOnce([
+        generateAttributeValueStub({
+          field: attribute.field,
+          value: operator === 'eq' ? 'time' : 'distance', // Ensure this value does not match the condition
+        }),
+      ]);
 
       const trainingComponentDefaultParams = generateTrainingComponent({
         supersets: [
@@ -624,7 +626,6 @@ describe('TrainingPlanService (unit)', () => {
         [trainingComponentDefaultParams],
         [component],
         [exerciseDefaultParams],
-        [attribute],
       );
 
       expect(
@@ -646,16 +647,20 @@ describe('TrainingPlanService (unit)', () => {
       },
     });
 
+    componentService.getRoot = jest.fn().mockReturnValue(component);
+
     // case 1: Attribute value is 'false'
-    const exerciseFalseBoolean = generateExerciseStub({
-      id: 'e1',
-      attributeValues: [
-        generateExerciseAttributeValueStub({
-          field: attribute.field,
-          value: 'false',
-        }),
-      ],
-    });
+    const exerciseFalseBoolean = generateExerciseStub({ id: 'e1' });
+    exerciseAttributeService.getAttributes = jest
+      .fn()
+      .mockReturnValue([attribute]);
+
+    exerciseAttributeService.getValues = jest.fn().mockReturnValue([
+      generateAttributeValueStub({
+        field: attribute.field,
+        value: 'false',
+      }),
+    ]);
 
     const trainingComponentFalseBoolean = generateTrainingComponent({
       supersets: [
@@ -665,8 +670,23 @@ describe('TrainingPlanService (unit)', () => {
       ],
     });
 
+    // Test Case 1: Boolean false
+    service.populateTrainingExerciseParams(
+      [trainingComponentFalseBoolean],
+      [component],
+      [exerciseFalseBoolean],
+    );
+
     // case 2: attribute value does not exist
     const exerciseNonExistingValue = generateExerciseStub({ id: 'e2' });
+    exerciseAttributeService.getAttributes = jest
+      .fn()
+      .mockReturnValue([attribute]);
+
+    exerciseAttributeService.getValues = jest.fn().mockReturnValue([
+      // empty value array
+    ]);
+
     const trainingComponentNonExistingValue = generateTrainingComponent({
       supersets: [
         generateSuperset({
@@ -675,17 +695,15 @@ describe('TrainingPlanService (unit)', () => {
       ],
     });
 
-    // case 3: attribute value is 'true' (does not match the condition)
-    const exerciseDefault = generateExerciseStub({
-      id: 'e3',
-      attributeValues: [
-        generateExerciseAttributeValueStub({
-          field: attribute.field,
-          value: 'true',
-        }),
-      ],
-    });
+    // Test Case 2: Empty value
+    service.populateTrainingExerciseParams(
+      [trainingComponentNonExistingValue],
+      [component],
+      [exerciseNonExistingValue],
+    );
 
+    // case 3: attribute value is 'true' (does not match the condition)
+    const exerciseDefault = generateExerciseStub({ id: 'e3' });
     const trainingComponentDefault = generateTrainingComponent({
       supersets: [
         generateSuperset({
@@ -694,30 +712,21 @@ describe('TrainingPlanService (unit)', () => {
       ],
     });
 
-    componentService.getRoot = jest.fn().mockReturnValue(component);
+    exerciseAttributeService.getAttributes = jest
+      .fn()
+      .mockReturnValue([attribute]);
 
-    // Test Case 1: Boolean false
-    service.populateTrainingExerciseParams(
-      [trainingComponentFalseBoolean],
-      [component],
-      [exerciseFalseBoolean],
-      [attribute],
-    );
-
-    // Test Case 2: Empty value
-    service.populateTrainingExerciseParams(
-      [trainingComponentNonExistingValue],
-      [component],
-      [exerciseNonExistingValue],
-      [attribute],
-    );
+    exerciseAttributeService.getValues = jest
+      .fn()
+      .mockReturnValue([
+        generateAttributeValueStub({ field: attribute.field, value: 'true' }),
+      ]);
 
     // Test Case 3: Default case (true boolean)
     service.populateTrainingExerciseParams(
       [trainingComponentDefault],
       [component],
       [exerciseDefault],
-      [attribute],
     );
 
     // Assertions
@@ -732,6 +741,10 @@ describe('TrainingPlanService (unit)', () => {
     expect(trainingComponentDefault.supersets[0].exercises[0].params).toEqual([
       PARAMS.find((p) => p.field === ParamType.VolWork1),
     ]);
+
+    // clear mocks
+    exerciseAttributeService.getAttributes = jest.fn();
+    exerciseAttributeService.getValues = jest.fn();
   });
 
   it('should correctly populate params based on custom attribute with no operator (boolean true)', () => {
@@ -743,16 +756,20 @@ describe('TrainingPlanService (unit)', () => {
       },
     });
 
+    componentService.getRoot = jest.fn().mockReturnValue(component);
+
     // Case 1: Attribute value is 'true' (matches the condition)
-    const exerciseTrueBoolean = generateExerciseStub({
-      id: 'e1',
-      attributeValues: [
-        generateExerciseAttributeValueStub({
-          field: attribute.field,
-          value: 'true',
-        }),
-      ],
-    });
+    const exerciseTrueBoolean = generateExerciseStub({ id: 'e1' });
+    exerciseAttributeService.getAttributes = jest
+      .fn()
+      .mockReturnValueOnce([attribute]);
+
+    exerciseAttributeService.getValues = jest.fn().mockReturnValueOnce([
+      generateAttributeValueStub({
+        field: attribute.field,
+        value: 'true',
+      }),
+    ]);
 
     const trainingComponentTrueBoolean = generateTrainingComponent({
       supersets: [
@@ -762,17 +779,15 @@ describe('TrainingPlanService (unit)', () => {
       ],
     });
 
-    // Case 2: Attribute value is 'false' (does not match the condition)
-    const exerciseFalseBoolean = generateExerciseStub({
-      id: 'e2',
-      attributeValues: [
-        generateExerciseAttributeValueStub({
-          field: attribute.field,
-          value: 'false',
-        }),
-      ],
-    });
+    // Test Case 1: Boolean true
+    service.populateTrainingExerciseParams(
+      [trainingComponentTrueBoolean],
+      [component],
+      [exerciseTrueBoolean],
+    );
 
+    // Case 2: Attribute value is 'false' (does not match the condition)
+    const exerciseFalseBoolean = generateExerciseStub({ id: 'e2' });
     const trainingComponentFalseBoolean = generateTrainingComponent({
       supersets: [
         generateSuperset({
@@ -781,23 +796,22 @@ describe('TrainingPlanService (unit)', () => {
       ],
     });
 
-    // Mock the componentService.getRoot method
-    componentService.getRoot = jest.fn().mockReturnValue(component);
+    exerciseAttributeService.getAttributes = jest
+      .fn()
+      .mockReturnValue([attribute]);
 
-    // Test Case 1: Boolean true
-    service.populateTrainingExerciseParams(
-      [trainingComponentTrueBoolean],
-      [component],
-      [exerciseTrueBoolean],
-      [attribute],
-    );
+    exerciseAttributeService.getValues = jest.fn().mockReturnValue([
+      generateAttributeValueStub({
+        field: attribute.field,
+        value: 'false',
+      }),
+    ]);
 
     // Test Case 2: Boolean false
     service.populateTrainingExerciseParams(
       [trainingComponentFalseBoolean],
       [component],
       [exerciseFalseBoolean],
-      [attribute],
     );
 
     // Assertions
@@ -835,15 +849,17 @@ describe('TrainingPlanService (unit)', () => {
         },
       });
 
-      const exercise = generateExerciseStub({
-        id: 'e1',
-        attributeValues: [
-          generateExerciseAttributeValueStub({
-            field: attribute.field,
-            value: option,
-          }),
-        ],
-      });
+      const exercise = generateExerciseStub({ id: 'e1' });
+      exerciseAttributeService.getAttributes = jest
+        .fn()
+        .mockReturnValueOnce([attribute]);
+
+      exerciseAttributeService.getValues = jest.fn().mockReturnValueOnce([
+        generateAttributeValueStub({
+          field: attribute.field,
+          value: option,
+        }),
+      ]);
 
       const trainingComponent = generateTrainingComponent({
         supersets: [
@@ -858,7 +874,6 @@ describe('TrainingPlanService (unit)', () => {
         [trainingComponent],
         [component],
         [exercise],
-        [attribute],
       );
 
       expect(trainingComponent.supersets[0].exercises[0].params).toEqual([
@@ -907,10 +922,14 @@ describe('TrainingPlanService (unit)', () => {
         },
       });
 
-      const exercise = generateExerciseStub({
-        id: 'e1',
-        attributeValues: [generateExerciseAttributeValueStub({ field, value })],
-      });
+      const exercise = generateExerciseStub({ id: 'e1' });
+      exerciseAttributeService.getAttributes = jest
+        .fn()
+        .mockReturnValueOnce(attributes);
+
+      exerciseAttributeService.getValues = jest
+        .fn()
+        .mockReturnValueOnce([generateAttributeValueStub({ field, value })]);
 
       const trainingComponent = generateTrainingComponent({
         supersets: [
@@ -925,7 +944,6 @@ describe('TrainingPlanService (unit)', () => {
         [trainingComponent],
         [component],
         [exercise],
-        attributes,
       );
 
       expect(trainingComponent.supersets[0].exercises[0].params).toEqual([

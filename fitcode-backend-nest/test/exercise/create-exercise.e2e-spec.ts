@@ -4,8 +4,9 @@ import { Test } from '@nestjs/testing';
 import * as request from 'supertest';
 
 import { AppModule } from '@src/app.module';
+import type { Attribute } from '@src/attribute/entity/attribute.entity';
 import { generateAttributeStub } from '@src/attribute/mock/attribute.stub';
-import { generateExerciseAttributeValueStub } from '@src/attribute/mock/attribute-value.stub';
+import { generateAttributeValueStub } from '@src/attribute/mock/attribute-value.stub';
 import { AttributeService } from '@src/attribute/service/attribute.service';
 import { AttributeType } from '@src/common/enum/attribute-type.enum';
 import type { TestInstitution } from '@src/common/type/entity.type';
@@ -20,8 +21,8 @@ import { ComponentService } from '@src/component/component.service';
 import type { Component } from '@src/component/entity/component.entity';
 import { generateComponentStub } from '@src/component/mock/component.stub';
 import { GLOBAL_EXERCISE_OWNER } from '@src/exercise/constant/global-exercise-owner.constant';
-import type { ExerciseAttributeValue } from '@src/exercise/entity/exercise-attribute-value.entity';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
+import { ExerciseAttributeService } from '@src/exercise/service/exercise-attribute.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 
@@ -31,6 +32,7 @@ describe('Create Exercise (e2e)', () => {
   let attributeService: AttributeService;
   let componentService: ComponentService;
   let institutionService: InstitutionService;
+  let exerciseAttributeService: ExerciseAttributeService;
 
   let root: Component;
   let leaf: Component;
@@ -48,6 +50,7 @@ describe('Create Exercise (e2e)', () => {
     attributeService = moduleFixture.get(AttributeService);
     componentService = moduleFixture.get(ComponentService);
     institutionService = moduleFixture.get(InstitutionService);
+    exerciseAttributeService = moduleFixture.get(ExerciseAttributeService);
 
     const attribute = await attributeService.create(generateAttributeStub());
     root = await componentService.create(
@@ -78,7 +81,6 @@ describe('Create Exercise (e2e)', () => {
       videoUrl: 'http://example.com/video',
       imageUrl: 'http://example.com/image',
       instruction: 'This is an exercise.',
-      attributeValues: [],
     });
 
     const response = await request(app.getHttpServer())
@@ -103,7 +105,6 @@ describe('Create Exercise (e2e)', () => {
       videoUrl: 'http://example.com/video',
       imageUrl: 'http://example.com/image',
       instruction: 'This is an exercise.',
-      attributeValues: [],
     });
 
     const response = await request(app.getHttpServer())
@@ -125,7 +126,6 @@ describe('Create Exercise (e2e)', () => {
       videoUrl: 'http://example.com/video',
       imageUrl: 'http://example.com/image',
       instruction: 'This is an exercise.',
-      attributeValues: [],
     });
 
     const response = await request(app.getHttpServer())
@@ -146,7 +146,6 @@ describe('Create Exercise (e2e)', () => {
       videoUrl: 'http://example.com/video',
       imageUrl: 'http://example.com/image',
       instruction: 'This is a global exercise.',
-      attributeValues: [],
     });
 
     const response = await request(app.getHttpServer())
@@ -175,8 +174,30 @@ describe('Create Exercise (e2e)', () => {
       videoUrl: 'http://example.com/video',
       imageUrl: 'http://example.com/image',
       instruction: 'This is an exercise.',
-      attributeValues: invalidAttributes as ExerciseAttributeValue[],
+      // attributeValues: invalidAttributes as ExerciseAttributeValue[],
     });
+
+    exerciseAttributeService.getAttributes = jest.fn().mockReturnValue([
+      {
+        field: 'a',
+        name: 'Attribute A',
+        type: AttributeType.String,
+      },
+      {
+        field: 'b',
+        name: 'Attribute B',
+        type: AttributeType.Number,
+      },
+      {
+        field: 'c',
+        name: 'Attribute C',
+        type: AttributeType.Boolean,
+      },
+    ] as Attribute[]);
+
+    exerciseAttributeService.getValues = jest
+      .fn()
+      .mockReturnValue(invalidAttributes);
 
     const response = await request(app.getHttpServer())
       .post('/exercise')
@@ -272,48 +293,50 @@ describe('Create Exercise (e2e)', () => {
       }),
     );
 
-    const exercise = generateExerciseStub({
-      componentIds: [component.id],
-      attributeValues: [
-        generateExerciseAttributeValueStub({
-          field: 'str',
-          value: 'string-value',
-        }),
-        generateExerciseAttributeValueStub({
-          field: 'num',
-          value: '10',
-        }),
-        generateExerciseAttributeValueStub({
-          field: 'bool',
-          value: 'true',
-        }),
-        generateExerciseAttributeValueStub({
-          field: 'select',
-          value: 'opt1',
-          selected: 'opt1',
-        }),
-        generateExerciseAttributeValueStub({
-          field: 'nested-select',
-          value: '10',
-          selected: 'nested-select-opt1:nested-select-opt1-num',
-        }),
-        generateExerciseAttributeValueStub({
-          field: 'multiselect',
-          value: 'optA',
-          selected: 'optA',
-        }),
-        generateExerciseAttributeValueStub({
-          field: 'nested-multiselect',
-          value: 'true',
-          selected: 'nested-multiselect-opt1:nested-multiselect-opt2-bool',
-        }),
-        generateExerciseAttributeValueStub({
-          field: 'nested-multiselect',
-          value: '123',
-          selected: 'nested-multiselect-opt1:nested-multiselect-opt1-num',
-        }),
-      ],
-    });
+    const exercise = generateExerciseStub({ componentIds: [component.id] });
+    exerciseAttributeService.getAttributes = jest
+      .fn()
+      .mockReturnValue(attributes);
+
+    exerciseAttributeService.getValues = jest.fn().mockReturnValue([
+      generateAttributeValueStub({
+        field: 'str',
+        value: 'string-value',
+      }),
+      generateAttributeValueStub({
+        field: 'num',
+        value: '10',
+      }),
+      generateAttributeValueStub({
+        field: 'bool',
+        value: 'true',
+      }),
+      generateAttributeValueStub({
+        field: 'select',
+        value: 'opt1',
+        selected: 'opt1',
+      }),
+      generateAttributeValueStub({
+        field: 'nested-select',
+        value: '10',
+        selected: 'nested-select-opt1:nested-select-opt1-num',
+      }),
+      generateAttributeValueStub({
+        field: 'multiselect',
+        value: 'optA',
+        selected: 'optA',
+      }),
+      generateAttributeValueStub({
+        field: 'nested-multiselect',
+        value: 'true',
+        selected: 'nested-multiselect-opt1:nested-multiselect-opt2-bool',
+      }),
+      generateAttributeValueStub({
+        field: 'nested-multiselect',
+        value: '123',
+        selected: 'nested-multiselect-opt1:nested-multiselect-opt1-num',
+      }),
+    ]);
 
     const response = await request(app.getHttpServer())
       .post('/exercise')
@@ -342,10 +365,11 @@ describe('Create Exercise (e2e)', () => {
       generateComponentStub({ attributes: [attribute.field] }),
     );
 
-    const exercise = generateExerciseStub({
-      componentIds: [component.id],
-      attributeValues: [], // No attributes provided
-    });
+    const exercise = generateExerciseStub({ componentIds: [component.id] });
+    exerciseAttributeService.getValues = jest.fn().mockReturnValue([]);
+    exerciseAttributeService.getAttributes = jest
+      .fn()
+      .mockReturnValue([attribute]);
 
     const response = await request(app.getHttpServer())
       .post('/exercise')

@@ -6,7 +6,6 @@ import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum'
 import { Create, FirestoreEntity } from '@src/common/type/entity.type';
 import { CACHE_KEY_EXERCISES } from '@src/exercise/constant/get-exercises-cache-key.constant';
 import { Exercise } from '@src/exercise/entity/exercise.entity';
-import { ExerciseAttributeValue } from '@src/exercise/entity/exercise-attribute-value.entity';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { FirebaseService } from '@src/firebase/firebase.service';
 
@@ -39,45 +38,17 @@ export class TestExerciseService extends AbstractChangeLogService<Exercise> {
       doc.data() as FirestoreEntity<Exercise>,
     );
 
-    const attributeValues = await this.attributeValuesCollection(id)
-      .get()
-      .then((snapshot) =>
-        snapshot.docs.map((doc) =>
-          this.firebase.serialize(
-            doc.data() as FirestoreEntity<ExerciseAttributeValue>,
-          ),
-        ),
-      );
-
-    return { ...exercise, attributeValues: attributeValues || [] };
+    return exercise;
   }
 
   async getAll(): Promise<Exercise[]> {
-    const exercises = await this.collection()
+    return await this.collection()
       .get()
       .then((snapshot) =>
         snapshot.docs.map((doc) =>
           this.firebase.serialize(doc.data() as FirestoreEntity<Exercise>),
         ),
       );
-
-    return await Promise.all(
-      exercises.map(async (exercise) => {
-        const attributeValues = await this.attributeValuesCollection(
-          exercise.id,
-        )
-          .get()
-          .then((snapshot) =>
-            snapshot.docs.map((doc) =>
-              this.firebase.serialize(
-                doc.data() as FirestoreEntity<ExerciseAttributeValue>,
-              ),
-            ),
-          );
-
-        return { ...exercise, attributeValues: attributeValues || [] };
-      }),
-    );
   }
 
   async create(
@@ -89,22 +60,16 @@ export class TestExerciseService extends AbstractChangeLogService<Exercise> {
     const data = generateExerciseStub(input);
     data.id = data.id || slugify(data.name, { lower: true, strict: true });
 
-    const { attributeValues, ...exerciseData } = data;
+    const query = this.firebase.buildCreateQuery<Exercise>(data, {
+      timestamps: true,
+    });
 
-    const query = this.firebase.buildCreateQuery<Exercise>(
-      { ...exerciseData, attributeValues: [] },
-      { timestamps: true },
-    );
-
-    const ref = this.collection().doc(exerciseData.id);
+    const ref = this.collection().doc(data.id);
     await ref.set(query);
     await this.cache.del(CACHE_KEY_EXERCISES);
     this.trackCreate(ref);
 
-    for (const value of attributeValues || [])
-      await this.createAttributeValue(exerciseData.id, value);
-
-    return await this.get(exerciseData.id);
+    return await this.get(data.id);
   }
 
   async clear() {
@@ -129,17 +94,5 @@ export class TestExerciseService extends AbstractChangeLogService<Exercise> {
     await docRef.delete();
     await this.trackDelete(docRef);
     await this.cache.del(CACHE_KEY_EXERCISES);
-  }
-
-  async createAttributeValue(
-    exerciseId: string,
-    data: Create<ExerciseAttributeValue>,
-  ): Promise<ExerciseAttributeValue> {
-    const ref = this.attributeValuesCollection(exerciseId).doc(data.id);
-    const query = this.firebase.buildCreateQuery<ExerciseAttributeValue>(data);
-
-    await ref.set(query);
-    this.trackCreate(ref);
-    return this.firebase.serialize(query);
   }
 }
