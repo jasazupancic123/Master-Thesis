@@ -118,7 +118,7 @@ export function getTrainingExercisesFromExercises(
         ? Array.from({ length: setsNumber }, (_, i) => ({
             setNumber: i + 1,
             paramValuesL: paramValues,
-            ...(exercise.isBilateral && { paramValuesR: paramValues }),
+            ...(exercise.isUnilateral && { paramValuesR: paramValues }),
           }))
         : [],
     };

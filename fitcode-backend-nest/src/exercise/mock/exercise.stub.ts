@@ -16,7 +16,7 @@ export function generateExerciseStub(data?: Partial<Exercise>): Exercise {
     name: data?.name || generateRandomName(),
     componentIds: data?.componentIds || ['other'],
     ownerId: data?.ownerId || GLOBAL_EXERCISE_OWNER,
-    isBilateral: data?.isBilateral || false,
+    isUnilateral: data?.isUnilateral || false,
     imageUrl: data?.imageUrl || undefined,
     videoUrl: data?.videoUrl || undefined,
     instruction: data?.instruction || '',

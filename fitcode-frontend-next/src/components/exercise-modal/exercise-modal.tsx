@@ -223,11 +223,11 @@ export default function ExerciseModal(props: Props) {
               label={'Bilateral'}
               control={
                 <Checkbox
-                  checked={data.isBilateral || false}
+                  checked={data.isUnilateral || false}
                   onChange={(e) =>
                     setData((prev) => ({
                       ...prev,
-                      isBilateral: e.target.checked,
+                      isUnilateral: e.target.checked,
                     }))
                   }
                 />

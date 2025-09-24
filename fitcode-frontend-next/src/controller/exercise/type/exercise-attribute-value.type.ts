@@ -6,5 +6,5 @@ export type ExerciseAttributeValue = IdEntity &
     exerciseId: string;
     ownerId: string;
     componentIds: string[];
-    isBilateral: boolean;
+    isUnilateral: boolean;
   };

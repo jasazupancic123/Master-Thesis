@@ -279,7 +279,6 @@ export class TrainingService implements Permission<Training, Institution> {
       mainSet: MainSet.BLOCK,
       supersets: [],
       subgroups: [],
-      completedMembersIds: [],
     };
 
     const warmup: TrainingComponent = {
@@ -367,7 +366,6 @@ export class TrainingService implements Permission<Training, Institution> {
           mainSet: c.mainSet,
           subgroups: [],
           supersets: [],
-          completedMembersIds: [],
         })),
     };
 
@@ -566,7 +564,6 @@ export class TrainingService implements Permission<Training, Institution> {
       ...input.map((c, i) => ({
         ...c,
         id: c.id,
-        completedMembersIds: [],
         from: addMinutes(from, i * step),
         to: addMinutes(from, (i + 1) * step),
         mainSet: MainSet.BLOCK,
@@ -745,7 +742,7 @@ export class TrainingService implements Permission<Training, Institution> {
     const athlete = await this.getAthlete(user, userId, training.institution);
 
     const exercise = await this.exerciseService.findOneByIdOrFail(athlete, ref);
-    this.workloadService.checkBilateralInput(exercise.isBilateral, input);
+    this.workloadService.checkUnilateralInput(exercise.isUnilateral, input);
 
     if (
       !this.commonService.date.isBetween(
@@ -782,7 +779,7 @@ export class TrainingService implements Permission<Training, Institution> {
     const athlete = await this.getAthlete(user, userId, training.institution);
     const exercise = await this.exerciseService.findOneByIdOrFail(athlete, ref);
 
-    this.workloadService.checkBilateralInput(exercise.isBilateral, input);
+    this.workloadService.checkUnilateralInput(exercise.isUnilateral, input);
 
     const prescribedTraining = this.trainingPlanService.getTrainingByAthlete(
       athlete.uid,

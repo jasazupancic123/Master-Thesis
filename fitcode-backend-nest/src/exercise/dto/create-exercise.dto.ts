@@ -10,7 +10,7 @@ import { Exercise } from '../entity/exercise.entity';
 export class CreateExerciseDto extends PickType(Exercise, [
   'name',
   'componentIds',
-  'isBilateral',
+  'isUnilateral',
   'imageUrl',
   'videoUrl',
   'instruction',

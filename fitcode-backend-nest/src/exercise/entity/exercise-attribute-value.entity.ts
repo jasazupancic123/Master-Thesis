@@ -37,5 +37,5 @@ export class ExerciseAttributeValue extends IntersectionType(AttributeValue) {
   @IsOptional()
   @Expose()
   @ApiProperty()
-  isBilateral: boolean; // exercise can be performed with both sides of the body separately, like a single arm row
+  isUnilateral: boolean; // exercise can be performed with both sides of the body separately, like a single arm row
 }

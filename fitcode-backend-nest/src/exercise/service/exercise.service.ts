@@ -233,7 +233,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
         'You are not allowed to create exercises',
       );
 
-    const isBilateral = data.isBilateral || false;
+    const isUnilateral = data.isUnilateral || false;
     const attributeValues = this.validateCreateExercise(
       data,
       components,
@@ -250,7 +250,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
         ownerId: ownerId,
         name: data.name,
         componentIds: data.componentIds,
-        isBilateral,
+        isUnilateral,
         videoUrl: data.videoUrl,
         imageUrl: data.imageUrl,
         instruction: data.instruction || '',
@@ -273,7 +273,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
           exerciseId: slug,
           ownerId,
           componentIds: data.componentIds,
-          isBilateral,
+          isUnilateral,
           field: v.field,
           value: v.value,
           selected: v.selected,
@@ -295,7 +295,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
         exerciseId: slug,
         ownerId,
         componentIds: data.componentIds,
-        isBilateral,
+        isUnilateral,
       })),
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -340,7 +340,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
       // NOTE - duplicates are not validated since the operation is 'upsert'
       const row = index + 1;
 
-      const isBilateral = data.isBilateral || false;
+      const isUnilateral = data.isUnilateral || false;
       const attributeValues = this.validateCreateExercise(
         data,
         allComponents,
@@ -363,7 +363,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
         exerciseId: undefined,
         ownerId,
         componentIds: data.componentIds,
-        isBilateral,
+        isUnilateral,
       }));
 
       exercisesToCreate.push(data);
@@ -391,7 +391,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
         ownerId,
         name: e.name,
         componentIds: e.componentIds,
-        isBilateral: e.isBilateral,
+        isUnilateral: e.isUnilateral,
         videoUrl: e.videoUrl,
         imageUrl: e.imageUrl,
         instruction: e.instruction || '',
@@ -416,7 +416,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
             exerciseId: slug,
             ownerId,
             componentIds: e.componentIds,
-            isBilateral: e.isBilateral,
+            isUnilateral: e.isUnilateral,
             field: v.field,
             value: v.value,
             selected: v.selected,
@@ -434,7 +434,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
           exerciseId: slug,
           ownerId,
           componentIds: e.componentIds,
-          isBilateral: e.isBilateral,
+          isUnilateral: e.isUnilateral,
         })),
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -625,7 +625,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
         exerciseId: exercise.id,
         ownerId: institution?.id || GLOBAL_EXERCISE_OWNER,
         componentIds: input.componentIds || exercise.componentIds,
-        isBilateral: exercise.isBilateral,
+        isUnilateral: exercise.isUnilateral,
       }));
 
     const batch = this.firebaseService.firestore.batch();
@@ -647,7 +647,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
           exerciseId: ref.exerciseId,
           ownerId: institution?.id || GLOBAL_EXERCISE_OWNER,
           componentIds: input.componentIds || exercise.componentIds,
-          isBilateral: exercise.isBilateral,
+          isUnilateral: exercise.isUnilateral,
           field: v.field,
           value: v.value,
           selected: v.selected,

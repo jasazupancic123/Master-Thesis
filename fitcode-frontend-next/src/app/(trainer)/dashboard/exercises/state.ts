@@ -161,7 +161,7 @@ export async function handleAddExercise(
       controller.create({
         name: input.name!,
         componentIds: input.componentIds!,
-        isBilateral: input.isBilateral || false,
+        isUnilateral: input.isUnilateral || false,
         imageUrl: input.imageUrl,
         videoUrl: input.videoUrl,
         instruction: input.instruction,
@@ -483,7 +483,7 @@ function getExerciseFromCsvRow(row: string): Exercise | null {
     componentSlug,
     videoUrl,
     imageUrl,
-    isBilateral,
+    isUnilateral,
     instruction,
     coordination,
     muscle,
@@ -625,14 +625,14 @@ function getExerciseFromCsvRow(row: string): Exercise | null {
     componentIds: [componentSlug],
     videoUrl,
     imageUrl,
-    isBilateral: commonService.object.toBoolean(isBilateral),
+    isUnilateral: commonService.object.toBoolean(isUnilateral),
     attributeValues: attributeValues.map((av) => ({
       ...av,
       id: '',
       exerciseId: '',
       ownerId: '',
       componentIds: [],
-      isBilateral: false,
+      isUnilateral: false,
     })),
   };
 }

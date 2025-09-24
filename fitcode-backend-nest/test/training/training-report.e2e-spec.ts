@@ -102,8 +102,8 @@ describe('Training Report (e2e)', () => {
                   generateTrainingExercise({
                     id: 'bench',
                     sets: [
-                      generateExerciseSet(1, opt1, { bilateral: true }), // 12 reps, 20 kg, 60 second recovery
-                      generateExerciseSet(2, opt1, { bilateral: true }), // 12 reps, 20 kg, 60 second recovery
+                      generateExerciseSet(1, opt1, { isUnilateral: true }), // 12 reps, 20 kg, 60 second recovery
+                      generateExerciseSet(2, opt1, { isUnilateral: true }), // 12 reps, 20 kg, 60 second recovery
                     ],
                   }),
                 ],
@@ -273,7 +273,7 @@ describe('Training Report (e2e)', () => {
       totalSupersets: 3,
       totalExercises: 3, // unique
       totalSets: 11,
-      totalReps: 10 * 10 + 3 * 1, // 99 -> (8 + 2 bilateral) sets of 10 reps, 3 sets of 1 rep (defaults to 1 rep if no `reps` specified)
+      totalReps: 10 * 10 + 3 * 1, // 99 -> (8 + 2 unilateral) sets of 10 reps, 3 sets of 1 rep (defaults to 1 rep if no `reps` specified)
       totalRecTime: 8 * 60, // 480 -> 8 sets with 60 sec recovery, 3 sets with 0 sec recovery (only effort based recovery)
       totalActiveTime,
       totalTonnage,

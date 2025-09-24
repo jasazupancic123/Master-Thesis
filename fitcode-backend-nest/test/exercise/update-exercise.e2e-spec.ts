@@ -212,7 +212,7 @@ describe('Update Exercise (e2e)', () => {
             value: 'test',
             exerciseId: exercise.id,
             ownerId: institution.id,
-            isBilateral: false,
+            isUnilateral: false,
             componentIds: [component.id],
           },
         ]);
