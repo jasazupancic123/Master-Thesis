@@ -185,6 +185,24 @@ describe('Update Exercise (e2e)', () => {
       expect(response.body.attributeValues).toEqual([]);
     });
 
+    it('should allow updating exercise unilateral attribute', async () => {
+      const res1 = await request(app.getHttpServer())
+        .patch(`/exercise/${exercise.id}`)
+        .set('Authorization', `Bearer ${global.manager.token}`)
+        .send({ isUnilateral: true });
+
+      expect(res1.status).toBe(200);
+      expect(res1.body.isUnilateral).toBe(true);
+
+      const res2 = await request(app.getHttpServer())
+        .patch(`/exercise/${exercise.id}`)
+        .set('Authorization', `Bearer ${global.manager.token}`)
+        .send({ isUnilateral: false });
+
+      expect(res2.status).toBe(200);
+      expect(res2.body.isUnilateral).toBe(false);
+    });
+
     it('should update an exercise successfully if user is one of the following: admin, institution owner or trainer', async () => {
       const updateData = {
         name: 'Updated Exercise Name',
