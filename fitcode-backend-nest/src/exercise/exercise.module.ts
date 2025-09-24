@@ -16,6 +16,6 @@ import { ExerciseAttributeService } from './service/exercise-attribute.service';
   ],
   controllers: [ExerciseController],
   providers: [ExerciseRepository, ExerciseService, ExerciseAttributeService],
-  exports: [ExerciseService],
+  exports: [ExerciseService, ExerciseAttributeService],
 })
 export class ExerciseModule {}

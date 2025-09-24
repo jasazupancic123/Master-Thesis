@@ -80,8 +80,7 @@ export class TrainingPlanService {
     private readonly componentService: ComponentService,
     @Inject(forwardRef(() => ExerciseService))
     private readonly exerciseService: Wrapper<ExerciseService>,
-    @Inject(forwardRef(() => ExerciseAttributeService))
-    private readonly exerciseAttributeService: Wrapper<ExerciseAttributeService>,
+    private readonly exerciseAttributeService: ExerciseAttributeService,
   ) {}
 
   async getInstitution(exercise: Exercise): Promise<Institution | null> {

@@ -231,7 +231,12 @@ export class ExerciseAttributeService {
   applyFilters(query: Query, filter?: Record<string, string>): Query {
     if (!filter) return query;
 
-    for (const [key, value] of Object.entries(filter)) {
+    const filters = Object.entries(filter);
+    if (filters.length === 0) return query;
+    if (filters.length > 1)
+      throw new BadRequestException('Only one filter can be applied at a time');
+
+    for (const [key, value] of filters) {
       switch (key) {
         case 'category':
           query = query.where('categories', 'array-contains', value);

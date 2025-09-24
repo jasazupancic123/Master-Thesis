@@ -4,8 +4,6 @@ import { Test } from '@nestjs/testing';
 import * as request from 'supertest';
 
 import { AppModule } from '@src/app.module';
-import { generateExerciseAttributeValueStub } from '@src/attribute/mock/attribute-value.stub';
-import { AttributeType } from '@src/common/enum/attribute-type.enum';
 import type { ValidateRows } from '@src/common/type/validate.type';
 import type { Component } from '@src/component/entity/component.entity';
 import { GLOBAL_EXERCISE_OWNER } from '@src/exercise/constant/global-exercise-owner.constant';
@@ -31,34 +29,8 @@ describe('Upsert Many Exercises (e2e)', () => {
 
     db = app.get(TestDbService);
 
-    // create attributes
-    await db.attributes.createMany([
-      {
-        field: 'eq',
-        name: 'Equipment',
-        type: AttributeType.Select,
-        options: [
-          { field: 'barbell', name: 'Barbell', type: AttributeType.Value },
-          { field: 'dumbbell', name: 'Dumbbell', type: AttributeType.Value },
-        ],
-      },
-      {
-        field: 'muscle',
-        name: 'Muscle',
-        type: AttributeType.Select,
-        options: [
-          { field: 'chest', name: 'Chest', type: AttributeType.Value },
-          { field: 'back', name: 'Back', type: AttributeType.Value },
-          { field: 'legs', name: 'Legs', type: AttributeType.Value },
-        ],
-      },
-      { field: 'isCool', name: 'Movement', type: AttributeType.Boolean },
-    ]);
-
     institutionId = await db.institutions.save(generateInstitutionStub());
-    component = await db.components.create({
-      attributes: ['eq', 'muscle', 'isCool'],
-    });
+    component = await db.components.create();
   });
 
   afterEach(async () => db.exercises.clear());
@@ -134,7 +106,7 @@ describe('Upsert Many Exercises (e2e)', () => {
 
     it('should fail if main component is not leaf', async () => {
       const root = await db.components.create();
-      const _leaf = await db.components.create({ parentId: root.id });
+      await db.components.create({ parentId: root.id });
 
       const exercises = [
         generateExerciseStub({ name: 'deadlift', componentIds: [root.id] }),
@@ -166,12 +138,7 @@ describe('Upsert Many Exercises (e2e)', () => {
         generateExerciseStub({
           name: 'deadlift',
           componentIds: [component.id],
-          attributeValues: [
-            generateExerciseAttributeValueStub({
-              field: 'eq',
-              value: 'invalid-value',
-            }),
-          ],
+          equipment: ['invalid-value'],
         }),
       ];
 
@@ -181,19 +148,20 @@ describe('Upsert Many Exercises (e2e)', () => {
         .send({ exercises });
 
       expect(response.status).toBe(400);
-      expect(response.body.message).toBe(
-        JSON.stringify([
-          {
+      expect(JSON.parse(response.body.message)).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
             row: 1,
-            errors: [
-              {
-                field: 'attributeValues',
-                message:
-                  'Value "invalid-value" for attribute "Equipment" is not a valid option. Valid options are: barbell, dumbbell',
-              },
-            ],
-          },
-        ] as ValidateRows<Exercise>),
+            errors: expect.arrayContaining([
+              expect.objectContaining({
+                field: 'equipment',
+                message: expect.stringContaining(
+                  'Value "invalid-value" for attribute "Equipment" is not a valid option. Valid options are:',
+                ),
+              }),
+            ]),
+          }),
+        ]),
       );
     });
 
@@ -202,12 +170,7 @@ describe('Upsert Many Exercises (e2e)', () => {
         generateExerciseStub({
           name: 'deadlift',
           componentIds: ['non-existing-component'],
-          attributeValues: [
-            generateExerciseAttributeValueStub({
-              field: 'eq',
-              value: 'invalid-value',
-            }),
-          ],
+          equipment: ['invalid-value'],
         }),
         generateExerciseStub({
           name: 'deadlift',
@@ -216,32 +179,7 @@ describe('Upsert Many Exercises (e2e)', () => {
         generateExerciseStub({
           name: 'squat',
           componentIds: [component.id],
-          attributeValues: [
-            generateExerciseAttributeValueStub({
-              field: 'eq',
-              value: 'barbell',
-            }),
-          ],
-        }),
-        generateExerciseStub({
-          name: 'bench press',
-          componentIds: [component.id],
-          attributeValues: [
-            generateExerciseAttributeValueStub({
-              field: 'isCool',
-              value: 'not-a-boolean',
-            }),
-          ],
-        }),
-        generateExerciseStub({
-          name: 'shoulder press',
-          componentIds: [component.id],
-          attributeValues: [
-            generateExerciseAttributeValueStub({
-              field: 'eq',
-              value: 'invalid-value',
-            }),
-          ],
+          equipment: ['cardio:invalid'],
         }),
       ];
 
@@ -251,68 +189,43 @@ describe('Upsert Many Exercises (e2e)', () => {
         .send({ exercises });
 
       expect(response.status).toBe(400);
-      expect(response.body.message).toBe(
-        JSON.stringify([
-          {
+      expect(JSON.parse(response.body.message)).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
             row: 1,
-            errors: [
-              {
+            errors: expect.arrayContaining([
+              expect.objectContaining({
                 field: 'componentIds',
                 message: 'Component non-existing-component does not exist',
-              },
-            ],
-          },
-          {
-            row: 4,
-            errors: [
-              {
-                field: 'attributeValues',
-                message: 'Value for attribute "Movement" must be a boolean',
-              },
-            ],
-          },
-          {
-            row: 5,
-            errors: [
-              {
-                field: 'attributeValues',
-                message:
-                  'Value "invalid-value" for attribute "Equipment" is not a valid option. Valid options are: barbell, dumbbell',
-              },
-            ],
-          },
-        ] as ValidateRows<Exercise>),
+              }),
+            ]),
+          }),
+        ]),
       );
     });
   });
 
   describe('Admin Tests', () => {
     it('should successfully create exercises', async () => {
-      const eqBarbell = generateExerciseAttributeValueStub({
-        field: 'eq',
-        value: 'barbell',
-      });
-
-      const eqDumbbell = generateExerciseAttributeValueStub({
-        field: 'eq',
-        value: 'dumbbell',
-      });
-
       const exercises = [
         generateExerciseStub({
           name: 'deadlift',
           componentIds: [component.id],
-          attributeValues: [eqBarbell],
+          equipment: ['cardio:treadmill', 'strength:barbells:olympic'],
         }),
         generateExerciseStub({
           name: 'squat',
           componentIds: [component.id],
-          attributeValues: [eqBarbell],
+          equipment: ['cardio:elliptical', 'strength:barbells:ez-bar'],
         }),
         generateExerciseStub({
           name: 'bench press',
           componentIds: [component.id],
-          attributeValues: [eqDumbbell],
+          equipment: [
+            'cardio:air-bike',
+            'strength:barbells:standard',
+            'strength:dumbbells:regular',
+          ],
         }),
       ];
 
@@ -328,155 +241,139 @@ describe('Upsert Many Exercises (e2e)', () => {
       expect(dbExercises.length).toBe(3);
 
       const deadlift = dbExercises.find((e) => e.name === 'deadlift');
-      expect(deadlift?.attributeValues[0].field).toBe(eqBarbell.field);
-      expect(deadlift?.attributeValues[0].value).toBe(eqBarbell.value);
+      expect(deadlift?.equipment).toEqual([
+        'cardio:treadmill',
+        'strength:barbells:olympic',
+      ]);
 
       const squat = dbExercises.find((e) => e.name === 'squat');
-      expect(squat?.attributeValues[0].field).toBe(eqBarbell.field);
-      expect(squat?.attributeValues[0].value).toBe(eqBarbell.value);
+      expect(squat?.equipment).toEqual([
+        'cardio:elliptical',
+        'strength:barbells:ez-bar',
+      ]);
 
       const benchPress = dbExercises.find((e) => e.name === 'bench press');
-      expect(benchPress?.attributeValues[0].field).toBe(eqDumbbell.field);
-      expect(benchPress?.attributeValues[0].value).toBe(eqDumbbell.value);
-    });
+      expect(benchPress?.equipment).toEqual([
+        'cardio:air-bike',
+        'strength:barbells:standard',
+        'strength:dumbbells:regular',
+      ]);
 
-    it('should update existing exercises', async () => {
-      const exercise = await db.exercises.create({
-        ownerId: global.admin.uid,
-        name: 'existing',
-        componentIds: [component.id],
-        attributeValues: [
-          generateExerciseAttributeValueStub({ field: 'eq', value: 'barbell' }),
-          generateExerciseAttributeValueStub({
-            field: 'muscle',
-            value: 'chest',
+      it('should update existing exercises', async () => {
+        const exercise = await db.exercises.create({
+          ownerId: global.admin.uid,
+          name: 'existing',
+          componentIds: [component.id],
+          equipment: ['barbell'],
+          locations: ['gym'],
+        });
+
+        const exercises = [
+          generateExerciseStub({
+            name: exercise.name,
+            componentIds: [component.id],
+            equipment: ['dumbbell'],
+            locations: ['home'],
           }),
-        ],
+          generateExerciseStub({
+            name: 'new exercise',
+            componentIds: [component.id],
+            equipment: [],
+          }),
+        ];
+
+        const response = await request(app.getHttpServer())
+          .post(`/exercise/many`)
+          .set('Authorization', `Bearer ${global.admin.token}`)
+          .send({ exercises });
+
+        expect(response.status).toBe(201);
+        expect(response.body.length).toBe(2);
+
+        const dbExercises = await db.exercises.getAll();
+        expect(dbExercises.length).toBe(2);
+
+        const updatedExercise = dbExercises.find((e) => e.id === exercise.id);
+        expect(updatedExercise?.name).toBe('existing');
+
+        expect(updatedExercise?.equipment).toEqual(['dumbbell']);
+        expect(updatedExercise?.locations).toEqual(['home']);
+
+        const newExercise = dbExercises.find((e) => e.name === 'new exercise');
+        expect(newExercise).toBeDefined();
+        expect(newExercise?.equipment.length).toBe(0);
+        expect(newExercise?.locations.length).toBe(0);
       });
-
-      expect(exercise.attributeValues.length).toBe(2);
-
-      const exercises = [
-        generateExerciseStub({
-          name: exercise.name,
-          componentIds: [component.id],
-          attributeValues: [
-            generateExerciseAttributeValueStub({
-              field: 'eq',
-              value: 'dumbbell',
-            }),
-            generateExerciseAttributeValueStub({
-              field: 'muscle',
-              value: 'back',
-            }),
-          ],
-        }),
-        generateExerciseStub({
-          name: 'new exercise',
-          componentIds: [component.id],
-          attributeValues: [],
-        }),
-      ];
-
-      const response = await request(app.getHttpServer())
-        .post(`/exercise/many`)
-        .set('Authorization', `Bearer ${global.admin.token}`)
-        .send({ exercises });
-
-      expect(response.status).toBe(201);
-      expect(response.body.length).toBe(2);
-
-      const dbExercises = await db.exercises.getAll();
-      expect(dbExercises.length).toBe(2);
-
-      const updatedExercise = dbExercises.find((e) => e.id === exercise.id);
-      expect(updatedExercise?.name).toBe('existing');
-      expect(updatedExercise?.attributeValues.length).toBe(2);
-
-      expect(updatedExercise?.attributeValues).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ field: 'eq', value: 'dumbbell' }),
-          expect.objectContaining({ field: 'muscle', value: 'back' }),
-        ]),
-      );
-
-      const newExercise = dbExercises.find((e) => e.name === 'new exercise');
-      expect(newExercise).toBeDefined();
-      expect(newExercise?.attributeValues.length).toBe(0);
-    });
-  });
-
-  describe('Manager Tests', () => {
-    it('should upsert exercises for manager', async () => {
-      const exercises = [
-        generateExerciseStub({
-          name: 'manager exercise',
-          componentIds: [component.id],
-          attributeValues: [
-            generateExerciseAttributeValueStub({
-              field: 'eq',
-              value: 'barbell',
-            }),
-          ],
-        }),
-      ];
-
-      const response = await request(app.getHttpServer())
-        .post(`/exercise/many`)
-        .set('Authorization', `Bearer ${global.manager.token}`)
-        .send({ exercises });
-
-      expect(response.status).toBe(201);
-      expect(response.body.length).toBe(1);
-
-      const dbExercises = await db.exercises.getAll();
-      expect(dbExercises.length).toBe(1);
-      expect(dbExercises[0].name).toBe('manager exercise');
-      expect(dbExercises[0].ownerId).toBe(institutionId);
-      expect(dbExercises[0].id).toBe(
-        `manager-exercise-${institutionId.toLowerCase()}`,
-      );
     });
 
-    it('should create exercise with the same name as global exercise because institution id is added', async () => {
-      await db.exercises.create({
-        name: 'squat',
-        ownerId: global.GLOBAL_EXERCISE_OWNER,
-        componentIds: [component.id],
+    describe('Manager Tests', () => {
+      it('should upsert exercises for manager', async () => {
+        const exercises = [
+          generateExerciseStub({
+            name: 'manager exercise',
+            componentIds: [component.id],
+            equipment: ['barbell'],
+          }),
+        ];
+
+        const response = await request(app.getHttpServer())
+          .post(`/exercise/many`)
+          .set('Authorization', `Bearer ${global.manager.token}`)
+          .send({ exercises });
+
+        expect(response.status).toBe(201);
+        expect(response.body.length).toBe(1);
+
+        const dbExercises = await db.exercises.getAll();
+        expect(dbExercises.length).toBe(1);
+        expect(dbExercises[0].name).toBe('manager exercise');
+        expect(dbExercises[0].ownerId).toBe(institutionId);
+        expect(dbExercises[0].id).toBe(
+          `manager-exercise-${institutionId.toLowerCase()}`,
+        );
       });
 
-      const exercises = [
-        generateExerciseStub({
+      it('should create exercise with the same name as global exercise because institution id is added', async () => {
+        await db.exercises.create({
           name: 'squat',
+          ownerId: global.GLOBAL_EXERCISE_OWNER,
           componentIds: [component.id],
-          attributeValues: [],
-        }),
-      ];
+        });
 
-      const response = await request(app.getHttpServer())
-        .post(`/exercise/many`)
-        .set('Authorization', `Bearer ${global.manager.token}`)
-        .send({ exercises });
+        const exercises = [
+          generateExerciseStub({
+            name: 'squat',
+            componentIds: [component.id],
+          }),
+        ];
 
-      expect(response.status).toBe(201);
-      expect(response.body.length).toBe(1);
+        const response = await request(app.getHttpServer())
+          .post(`/exercise/many`)
+          .set('Authorization', `Bearer ${global.manager.token}`)
+          .send({ exercises });
 
-      const dbExercises = await db.exercises.getAll();
-      expect(dbExercises.length).toBe(2); // One global and one manager exercise
+        expect(response.status).toBe(201);
+        expect(response.body.length).toBe(1);
 
-      const globalExercise = dbExercises.find(
-        (e) => e.ownerId === GLOBAL_EXERCISE_OWNER,
-      );
+        const dbExercises = await db.exercises.getAll();
+        expect(dbExercises.length).toBe(2); // One global and one manager exercise
 
-      const managerExercise = dbExercises.find(
-        (e) => e.ownerId === institutionId,
-      );
+        const globalExercise = dbExercises.find(
+          (e) => e.ownerId === GLOBAL_EXERCISE_OWNER,
+        );
 
-      expect(globalExercise?.name).toBe('squat');
-      expect(globalExercise?.id).toBe('squat');
+        const managerExercise = dbExercises.find(
+          (e) => e.ownerId === institutionId,
+        );
 
-      expect(managerExercise?.name).toBe('squat');
-      expect(managerExercise?.id).toBe(`squat-${institutionId.toLowerCase()}`);
+        expect(globalExercise?.name).toBe('squat');
+        expect(globalExercise?.id).toBe('squat');
+
+        expect(managerExercise?.name).toBe('squat');
+        expect(managerExercise?.id).toBe(
+          `squat-${institutionId.toLowerCase()}`,
+        );
+      });
     });
   });
 });

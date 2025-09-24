@@ -8,7 +8,6 @@ import {
 } from '@nestjs/common';
 import { Query } from 'firebase-admin/firestore';
 
-import { AttributeService } from '@src/attribute/service/attribute.service';
 import { CacheManagerService } from '@src/cache-manager/cache-manager.service';
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
 import { Permission } from '@src/common/interface/permission.interface';
@@ -45,7 +44,6 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     private readonly repository: ExerciseRepository,
     private readonly commonService: CommonService,
     private readonly firebaseService: FirebaseService,
-    private readonly attributeService: AttributeService,
     private readonly institutionService: InstitutionService,
     private readonly exerciseAttributeService: ExerciseAttributeService,
     @Inject(forwardRef(() => ComponentService))
@@ -110,7 +108,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     let exercises: Exercise[] = [];
 
     let query = this.repository.collection().where('ownerId', '==', userId);
-    if (filter) {
+    if (filter && !this.commonService.object.isEmpty(filter)) {
       if (filter.componentIds)
         query = this.filterByComponents(
           query,
@@ -118,12 +116,12 @@ export class ExerciseService implements Permission<Exercise, Institution> {
           components,
         );
 
-      this.exerciseAttributeService.applyFilters(query, filter);
+      query = this.exerciseAttributeService.applyFilters(query, filter);
     }
 
     const exerciseIds = await query
       .get()
-      .then(({ docs }) => docs.map((doc) => doc.data().exerciseId as string));
+      .then(({ docs }) => docs.map((doc) => doc.data().id as string));
 
     exercises = await this.getAll(exerciseIds);
     return await this.map(exercises);
