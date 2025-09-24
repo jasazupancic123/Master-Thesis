@@ -2,7 +2,6 @@ import {
   ArrowDropDown,
   ArrowDropUp,
   ArrowForwardRounded,
-  MoreVert,
 } from '@mui/icons-material';
 import { Box, Divider, IconButton } from '@mui/material';
 import { useTheme } from '@mui/material';
@@ -11,7 +10,7 @@ import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
 
 import AthleteTrainingComponents from '../athlete-training-components/athlete-training-components';
-import ComponentsAvatar from '../components-avatar/components-avatar';
+import AthleteTrainingCardHeader from './athlete-training-card-header';
 import { TrainingService } from '@/controller/training/training.service';
 import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
@@ -143,52 +142,14 @@ export default function AthleteTrainingCard(props: AthleteTrainingCardProps) {
           </Box>
         )}
 
-        <Box
-          width="100%"
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-          gap={1}
-        >
-          {/* Group name, cycle name, date */}
-          <Box display="flex" alignItems="center" gap={1}>
-            <ComponentsAvatar size={50} components={training.components} />
-            <Box display="flex" flexDirection="column">
-              <Typography
-                sx={{
-                  fontWeight: 'bold',
-                  fontSize: 15,
-                  height: 20,
-                }}
-              >
-                {training.group?.name}
-              </Typography>
-              <Typography
-                sx={{
-                  fontSize: 12,
-                  height: 16,
-                }}
-              >
-                {training.cycle?.name}
-              </Typography>
-              <Typography sx={{ fontSize: 12, height: 16 }}>
-                {new Date(training.from).toLocaleDateString('en-US', {
-                  month: 'long',
-                  day: 'numeric',
-                  year: 'numeric',
-                })}{' '}
-                at{' '}
-                {new Date(training.from).toLocaleTimeString('en-US', {
-                  hour: 'numeric',
-                  minute: 'numeric',
-                })}
-              </Typography>
-            </Box>
-          </Box>
-          <IconButton sx={{ p: 0, m: 0 }}>
-            <MoreVert />
-          </IconButton>{' '}
-        </Box>
+        {/* Group name, cycle name, date */}
+        <AthleteTrainingCardHeader
+          components={training.components || []}
+          group={training.group}
+          cycle={training.cycle}
+          from={training.from}
+          to={training.to}
+        />
 
         {/* Training data info */}
         <Box
@@ -302,12 +263,16 @@ export default function AthleteTrainingCard(props: AthleteTrainingCardProps) {
                   right: 0,
                   bottom: -6,
                   backgroundColor: theme.palette.primary.main,
+                  zIndex: 10000,
                 }}
                 onClick={() => {
                   setModal(true);
                 }}
               >
-                <ArrowForwardRounded fontSize="small" />
+                <ArrowForwardRounded
+                  fontSize="small"
+                  sx={{ color: theme.palette.text.secondary }}
+                />
               </IconButton>
             )}
         </Box>

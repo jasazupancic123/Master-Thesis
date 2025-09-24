@@ -18,7 +18,7 @@ interface AthleteSupersetProps {
 export default function AthleteSuperset(props: AthleteSupersetProps) {
   const theme = useTheme();
 
-  const { superset, supersetIndex, supersets, training } = props;
+  const { superset, training } = props;
 
   const [expandedSetsView, setExpandedSetsView] = useState(false);
 

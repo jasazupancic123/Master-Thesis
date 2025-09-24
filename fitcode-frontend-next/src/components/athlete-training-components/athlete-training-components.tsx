@@ -1,3 +1,4 @@
+import { Check, Circle } from '@mui/icons-material';
 import { Box, Collapse, IconButton, SvgIcon } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Typography from '@mui/material/Typography';
@@ -16,6 +17,7 @@ import { TrainingService } from '@/controller/training/training.service';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
+import { TrainingComponentStatus } from '@/controller/training/type/training-report.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import { useTraining } from '@/store/training.provider';
@@ -47,7 +49,7 @@ export default function AthleteTrainingComponents(
     timeout,
   } = props;
 
-  const { setTrainingInProgress, setView } = useTraining();
+  const { reports, setTrainingInProgress, setView } = useTraining();
   const { exercises } = useMain();
   const { token, user } = useAuthenticatedAuth();
   const controller = TrainingController.getInstance(token);
@@ -80,6 +82,17 @@ export default function AthleteTrainingComponents(
         >
           {components.map((component) => {
             const IconComponent = getComponentIcon(component.id);
+
+            let componentStatus: TrainingComponentStatus | undefined;
+
+            const trainingReport = reports.find(
+              (r) => r.trainingId === training.id
+            );
+            if (trainingReport) {
+              componentStatus = trainingReport.componentStatuses.find(
+                (cs) => cs.componentId === component.id
+              )?.status;
+            }
 
             return (
               <Box key={component.id} minWidth="48px">
@@ -122,6 +135,30 @@ export default function AthleteTrainingComponents(
                             fill: 'currentColor',
                             stroke: 'currentColor',
                           },
+                      }}
+                    />
+                  )}
+
+                  {componentStatus === TrainingComponentStatus.IN_PROGRESS && (
+                    <Circle
+                      sx={{
+                        position: 'absolute',
+                        bottom: 2,
+                        right: 0,
+                        color: theme.palette.primary.main,
+                        fontSize: 12,
+                      }}
+                    />
+                  )}
+
+                  {componentStatus === TrainingComponentStatus.COMPLETED && (
+                    <Check
+                      sx={{
+                        position: 'absolute',
+                        bottom: 2,
+                        right: 0,
+                        color: theme.palette.success.main,
+                        fontSize: 16,
                       }}
                     />
                   )}

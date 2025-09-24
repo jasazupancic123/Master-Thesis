@@ -6,13 +6,21 @@ export default function Layout({ children }: ChildrenProps) {
   return (
     <Box
       width="100%"
-      maxWidth={1800}
+      height="100vh"
       sx={{
-        px: 0,
-        mx: 'auto',
+        backgroundColor: 'primary.main',
       }}
     >
-      {children}
+      <Box
+        width="100%"
+        maxWidth={1800}
+        sx={{
+          px: 0,
+          mx: 'auto',
+        }}
+      >
+        {children}
+      </Box>
     </Box>
   );
 }

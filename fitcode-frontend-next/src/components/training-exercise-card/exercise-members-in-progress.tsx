@@ -11,8 +11,7 @@ type Props = {
 };
 
 export default function ExerciseMembersInProgress(props: Props) {
-  const { trainingMembersLength, componentId, supersetIndex, exerciseId } =
-    props;
+  const { componentId, supersetIndex, exerciseId } = props;
 
   const { users } = useMain();
   const { progress } = useTrainerDayViewContext();
@@ -40,9 +39,7 @@ export default function ExerciseMembersInProgress(props: Props) {
 
   return (
     <Box zIndex={0} ml={1}>
-      <CircularProgressWithLabel
-        value={(membersInProgress.length / trainingMembersLength) * 100}
-      />
+      <CircularProgressWithLabel value={50} />
     </Box>
   );
 }
@@ -50,7 +47,7 @@ export default function ExerciseMembersInProgress(props: Props) {
 function CircularProgressWithLabel(props: { value: number }) {
   return (
     <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-      <CircularProgress variant="determinate" {...props} size={20} />
+      <CircularProgress variant="determinate" {...props} size={16} />
 
       <Box
         sx={{
@@ -65,7 +62,7 @@ function CircularProgressWithLabel(props: { value: number }) {
         }}
       >
         <Typography
-          fontSize={8}
+          fontSize={6}
           variant="caption"
           component="div"
           sx={{ color: 'primary.main' }}

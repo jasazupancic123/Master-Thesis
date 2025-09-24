@@ -5,9 +5,15 @@ import type { Cycle } from '@/controller/group/type/cycle.type';
 import type { Group } from '@/controller/group/type/group.type';
 import type { Institution } from '@/controller/institution/type/institution.type';
 
+export enum TrainingComponentStatus {
+  NOT_STARTED = 'not_started',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+}
+
 export type TrainingReportComponentStatus = {
   componentId: string;
-  status: 'not_started' | 'in_progress' | 'completed';
+  status: TrainingComponentStatus;
 };
 
 export type TrainingReport = TrainingStats &

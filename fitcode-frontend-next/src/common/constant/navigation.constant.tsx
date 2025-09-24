@@ -52,7 +52,13 @@ export const LINK_FEATURES = link('Features', '#features');
 export const LINK_TRADEMARK = link('Trademark', '#trademark');
 export const LINK_HIGHLIGHTS = link('Highlights', '#highlights');
 export const LINK_ABOUT = link('Our Vision', '#about');
-export const LINK_SIGN_IN = link('Do it right', '/sign-in');
+export const SIGN_IN_LINK_ID = 'sign-in';
+export const LINK_SIGN_IN = link(
+  'Do it right',
+  '/sign-in',
+  undefined,
+  SIGN_IN_LINK_ID
+);
 export const SIGN_OUT_LINK_ID = 'sign-out';
 export const LINK_SIGN_OUT = link('Sign Out', '#', undefined, SIGN_OUT_LINK_ID);
 export const LINK_PROFILE = link('Profile', '/profile', <PersonIcon />);

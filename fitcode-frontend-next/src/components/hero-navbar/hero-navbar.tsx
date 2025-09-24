@@ -15,6 +15,7 @@ import {
   LINKS_AUTH,
   LINKS_AUTHENTICATED_HERO_NAVBAR,
   LINKS_HERO_NAVBAR,
+  SIGN_IN_LINK_ID,
   SIGN_OUT_LINK_ID,
 } from '@/common/constant/navigation.constant';
 import Logo from '@/components/logo/logo';
@@ -133,7 +134,7 @@ export default function HeroNavbar(props: HeroNavbarProps) {
                         textDecoration: 'none',
                       }}
                     >
-                      {item.label}
+                      {item.id === SIGN_IN_LINK_ID ? 'Sign In' : item.label}
                     </Typography>
                   </NextLink>
                 ))}
