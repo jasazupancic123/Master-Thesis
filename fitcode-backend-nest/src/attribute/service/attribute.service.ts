@@ -136,7 +136,7 @@ export class AttributeService {
                 .map((opt) => opt.field)
                 .join(', ');
 
-              message = `Value "${v.selected}" for attribute "${attribute.name}" is not a valid option. Valid options are: ${options}`;
+              message = `Value "${v.selected || v.value}" for attribute "${attribute.name}" is not a valid option. Valid options are: ${options}`;
               break;
             }
 

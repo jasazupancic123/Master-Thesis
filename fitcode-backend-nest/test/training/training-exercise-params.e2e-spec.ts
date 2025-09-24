@@ -5,7 +5,6 @@ import { addDays } from 'date-fns';
 
 import { AppModule } from '@src/app.module';
 import type { Attribute } from '@src/attribute/entity/attribute.entity';
-import { generateAttributeValueStub } from '@src/attribute/mock/attribute-value.stub';
 import { AttributeService } from '@src/attribute/service/attribute.service';
 import type { TestInstitution } from '@src/common/type/entity.type';
 import {
@@ -99,7 +98,9 @@ describe('Training Exercise Params (e2e)', () => {
     await app.close();
   });
 
-  async function createExercise(attributeValues: ExerciseAttributes[]) {
+  async function createExercise(
+    attributeValues: Partial<ExerciseAttributes> = {},
+  ) {
     return await exerciseService.create(
       global.admin,
       generateExerciseStub({ componentIds: [leaf.id], ...attributeValues }),
@@ -168,7 +169,7 @@ describe('Training Exercise Params (e2e)', () => {
 
   describe('Warmup and cooldown components', () => {
     it('should not populate params', async () => {
-      const exercise = await createExercise([]);
+      const exercise = await createExercise();
       const training = await createTraining(exercise.id);
 
       const updated = await trainingService.update(
@@ -214,7 +215,7 @@ describe('Training Exercise Params (e2e)', () => {
 
   describe('Endurance select attribute params test', () => {
     it('should keep default params since no attribute values are passed to exercise', async () => {
-      const exercise = await createExercise([]);
+      const exercise = await createExercise();
       const training = await createTraining(exercise.id);
       const params = training.components[0].supersets[0].exercises[0].params;
 
@@ -244,12 +245,7 @@ describe('Training Exercise Params (e2e)', () => {
     });
 
     it('should populate end-opt-2 params for exercise', async () => {
-      const exercise = await createExercise([
-        generateAttributeValueStub({
-          field: 'end-opts',
-          value: 'end-opt-2',
-        }),
-      ]);
+      const exercise = await createExercise();
 
       const training = await createTraining(exercise.id);
       const params = training.components[0].supersets[0].exercises[0].params;
@@ -299,12 +295,7 @@ describe('Training Exercise Params (e2e)', () => {
     });
 
     it('should populate end-opt-3 params for exercise', async () => {
-      const exercise = await createExercise([
-        generateExerciseAttributeValueStub({
-          field: 'end-opts',
-          value: 'end-opt-3',
-        }),
-      ]);
+      const exercise = await createExercise();
 
       const training = await createTraining(exercise.id);
 
@@ -370,12 +361,7 @@ describe('Training Exercise Params (e2e)', () => {
     });
 
     it('should populate end-opt-4 params for exercise', async () => {
-      const exercise = await createExercise([
-        generateExerciseAttributeValueStub({
-          field: 'end-opts',
-          value: 'end-opt-4',
-        }),
-      ]);
+      const exercise = await createExercise();
 
       const training = await createTraining(exercise.id);
 
