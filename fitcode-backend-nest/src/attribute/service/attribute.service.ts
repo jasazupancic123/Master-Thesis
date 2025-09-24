@@ -43,6 +43,27 @@ export class AttributeService {
     return cached ? cached : await this.repository.findAll();
   }
 
+  parseSelectedValueFromString(
+    s: string,
+  ): Pick<AttributeValue, 'selected' | 'value'> {
+    // value is last part, all before is select
+    const parts = s.split(':');
+    return {
+      selected: parts.slice(0, parts.length - 1).join(':'),
+      value: parts[parts.length - 1],
+    };
+  }
+
+  uniqueAttributeValues(values: AttributeValue[]): AttributeValue[] {
+    const uniqueMap = new Map<string, AttributeValue>();
+    for (const val of values) {
+      const key = `${val.field}:${val.selected}`;
+      if (!uniqueMap.has(key)) uniqueMap.set(key, val);
+    }
+
+    return Array.from(uniqueMap.values());
+  }
+
   validate(
     values: AttributeValue[],
     attributes: Attribute[],

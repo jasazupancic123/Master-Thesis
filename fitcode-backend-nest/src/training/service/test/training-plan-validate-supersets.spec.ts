@@ -13,8 +13,8 @@ import { generateComponentStub } from '@src/component/mock/component.stub';
 import { generateComponentParamsStub } from '@src/component/mock/component-param.stub';
 import { validationSchema } from '@src/config/environment-validation-schema';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
-import { ExerciseAttributeValueRepository } from '@src/exercise/repository/exercise-attribute-value.repository';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
+import { ExerciseAttributeService } from '@src/exercise/service/exercise-attribute.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import type { Method } from '@src/method/entity/method.entity';
@@ -72,8 +72,8 @@ describe('validateSupersets', () => {
           useValue: createMock<ExerciseService>(),
         },
         {
-          provide: ExerciseAttributeValueRepository,
-          useValue: createMock<ExerciseAttributeValueRepository>(),
+          provide: ExerciseAttributeService,
+          useValue: createMock<ExerciseAttributeService>(),
         },
         {
           provide: WorkloadRepository,

@@ -3,8 +3,6 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 
-import { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
-
 import { Exercise } from '../entity/exercise.entity';
 
 export class CreateExerciseDto extends PickType(Exercise, [
@@ -15,13 +13,16 @@ export class CreateExerciseDto extends PickType(Exercise, [
   'videoUrl',
   'instruction',
   'muscleValues',
-] as const) {
-  @ValidateNested({ each: true })
-  @Type(() => AttributeValue)
-  @ApiProperty({ type: () => AttributeValue, isArray: true })
-  @Expose()
-  attributeValues: AttributeValue[];
-}
+  'categories',
+  'equipment',
+  'prescriptions',
+  'patterns',
+  'bodyRegions',
+  'loadingSides',
+  'movementDirections',
+  'locations',
+  'liftPriorities',
+] as const) {}
 
 export class UpsertManyExercisesDto {
   @ValidateNested({ each: true })

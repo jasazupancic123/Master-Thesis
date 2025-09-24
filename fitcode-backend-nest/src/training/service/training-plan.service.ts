@@ -38,8 +38,8 @@ import {
   VolWorkSetType,
 } from '@src/component/enum/param.enum';
 import { Exercise } from '@src/exercise/entity/exercise.entity';
-import { ExerciseAttributeValueRepository } from '@src/exercise/repository/exercise-attribute-value.repository';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
+import { ExerciseAttributeService } from '@src/exercise/service/exercise-attribute.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { Method } from '@src/method/entity/method.entity';
 
@@ -80,8 +80,8 @@ export class TrainingPlanService {
     private readonly componentService: ComponentService,
     @Inject(forwardRef(() => ExerciseService))
     private readonly exerciseService: Wrapper<ExerciseService>,
-    @Inject(forwardRef(() => ExerciseAttributeValueRepository))
-    private readonly exerciseAttributeValueRepository: Wrapper<ExerciseAttributeValueRepository>,
+    @Inject(forwardRef(() => ExerciseAttributeService))
+    private readonly exerciseAttributeService: Wrapper<ExerciseAttributeService>,
   ) {}
 
   async getInstitution(exercise: Exercise): Promise<Institution | null> {
@@ -248,17 +248,7 @@ export class TrainingPlanService {
     ]);
 
     const ids = [...new Set(trainingExercises.map((e) => e.id))];
-    const exercises = await this.exerciseService.getAll(ids);
-
-    return await Promise.all(
-      exercises.map(async (e) => ({
-        ...e,
-        attributeValues:
-          await this.exerciseAttributeValueRepository.getAllByExercise({
-            exerciseId: e.id,
-          }),
-      })),
-    );
+    return await this.exerciseService.getAll(ids);
   }
 
   findComponentOrFail(
@@ -394,7 +384,6 @@ export class TrainingPlanService {
     >[],
     components: Component[],
     exercises: Exercise[], // populate exercise attributes
-    attributes: Attribute[],
   ) {
     for (const tComponent of trainingComponents) {
       if ([WARMUP_COMPONENT_ID, COOLDOWN_COMPONENT_ID].includes(tComponent.id))
@@ -411,8 +400,8 @@ export class TrainingPlanService {
 
           const params = this.componentService.getComponentParamAttributes(
             componentParams,
-            exercise.attributeValues,
-            attributes,
+            this.exerciseAttributeService.getValues(exercise),
+            this.exerciseAttributeService.getAttributes(),
           );
 
           tExercise.params = this.componentService.getParamAttributes(params);
@@ -431,8 +420,8 @@ export class TrainingPlanService {
 
             const params = this.componentService.getComponentParamAttributes(
               componentParams,
-              exercise.attributeValues,
-              attributes,
+              this.exerciseAttributeService.getValues(exercise),
+              this.exerciseAttributeService.getAttributes(),
             );
 
             tExercise.params = this.componentService.getParamAttributes(params);
@@ -512,8 +501,8 @@ export class TrainingPlanService {
         // populate training exercise params and sets
         const params = this.componentService.getComponentParamAttributes(
           componentParams,
-          exercise.attributeValues,
-          attributes,
+          this.exerciseAttributeService.getValues(exercise),
+          this.exerciseAttributeService.getAttributes(),
         );
 
         const paramAttributes =

@@ -16,8 +16,8 @@ import {
 } from '@src/component/enum/param.enum';
 import { ComponentRepository } from '@src/component/repository/component.repository';
 import { validationSchema } from '@src/config/environment-validation-schema';
-import { ExerciseAttributeValueRepository } from '@src/exercise/repository/exercise-attribute-value.repository';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
+import { ExerciseAttributeService } from '@src/exercise/service/exercise-attribute.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { WorkloadRepository } from '@src/training/repository/workload.repository';
@@ -63,8 +63,8 @@ describe('getSetData', () => {
           useValue: createMock<ExerciseService>(),
         },
         {
-          provide: ExerciseAttributeValueRepository,
-          useValue: createMock<ExerciseAttributeValueRepository>(),
+          provide: ExerciseAttributeService,
+          useValue: createMock<ExerciseAttributeService>(),
         },
         {
           provide: WorkloadRepository,

@@ -1,57 +1,71 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Expose } from 'class-transformer';
-import { IsEnum, IsString } from 'class-validator';
+import { Expose, Type } from 'class-transformer';
+import { IsEnum, IsString, ValidateNested } from 'class-validator';
 
 import { IsValidSelectPath } from '@src/attribute/decorator/is-valid-select-path.decorator';
+import { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
 
-import { BodyRegion } from '../enum/body-region.enum';
+import { BodyRegionValues } from '../enum/body-region.enum';
+import { Category } from '../enum/category.enum';
 import { Equipment } from '../enum/equipment.enum';
-import { LiftPriority } from '../enum/lift-priority.enum';
-import { LoadingSide } from '../enum/loading-side.enum';
-import { Location } from '../enum/location.enum';
-import { MovementDirection } from '../enum/movement-direction.enum';
-import { Patterns } from '../enum/patterns.enum';
-import { PrescriptionType } from '../enum/prescription-type.enum';
+import { LiftPriorityValues } from '../enum/lift-priority.enum';
+import { LoadingSideValues } from '../enum/loading-side.enum';
+import { LocationValues } from '../enum/location.enum';
+import { MovementDirectionValues } from '../enum/movement-direction.enum';
+import { PatternValues } from '../enum/patterns.enum';
+import { PrescriptionTypeValues } from '../enum/prescription-type.enum';
 
 export class ExerciseAttributes {
-  @IsEnum(PrescriptionType, { each: true })
-  @ApiProperty({ enum: PrescriptionType, isArray: true })
+  @IsString({ each: true })
+  @ApiProperty()
   @Expose()
-  prescriptions: PrescriptionType[];
-
-  @IsEnum(Patterns, { each: true })
-  @ApiProperty({ enum: Patterns, isArray: true })
-  @Expose()
-  patterns: (typeof Patterns)[number][];
-
-  @IsEnum(BodyRegion, { each: true })
-  @ApiProperty({ enum: BodyRegion, isArray: true })
-  @Expose()
-  bodyRegions: BodyRegion[];
+  @IsValidSelectPath(Category, { each: true })
+  categories: string[];
 
   @IsString({ each: true })
   @ApiProperty()
   @Expose()
   @IsValidSelectPath(Equipment, { each: true })
-  equipment: (typeof Equipment)[number][];
+  equipment: string[];
 
-  @IsEnum(LoadingSide, { each: true })
-  @ApiProperty({ enum: LoadingSide, isArray: true })
+  @ValidateNested({ each: true })
+  @Type(() => AttributeValue)
+  @ApiProperty({ type: () => AttributeValue, isArray: true })
   @Expose()
-  loadingSides: LoadingSide[];
+  muscleValues: AttributeValue[];
 
-  @IsEnum(Location, { each: true })
-  @ApiProperty({ enum: Location, isArray: true })
+  @IsEnum(PrescriptionTypeValues, { each: true })
+  @ApiProperty({ enum: PrescriptionTypeValues, isArray: true })
   @Expose()
-  locations: Location[];
+  prescriptions: (typeof PrescriptionTypeValues)[number][];
 
-  @IsEnum(LiftPriority, { each: true })
-  @ApiProperty({ enum: LiftPriority, isArray: true })
+  @IsEnum(PatternValues, { each: true })
+  @ApiProperty({ enum: PatternValues, isArray: true })
   @Expose()
-  liftPriorities: LiftPriority[];
+  patterns: (typeof PatternValues)[number][];
 
-  @IsEnum(MovementDirection, { each: true })
-  @ApiProperty({ enum: MovementDirection, isArray: true })
+  @IsEnum(BodyRegionValues, { each: true })
+  @ApiProperty({ enum: BodyRegionValues, isArray: true })
   @Expose()
-  movementDirections: MovementDirection[];
+  bodyRegions: (typeof BodyRegionValues)[number][];
+
+  @IsEnum(LoadingSideValues, { each: true })
+  @ApiProperty({ enum: LoadingSideValues, isArray: true })
+  @Expose()
+  loadingSides: (typeof LoadingSideValues)[number][];
+
+  @IsEnum(LocationValues, { each: true })
+  @ApiProperty({ enum: LocationValues, isArray: true })
+  @Expose()
+  locations: (typeof LocationValues)[number][];
+
+  @IsEnum(LiftPriorityValues, { each: true })
+  @ApiProperty({ enum: LiftPriorityValues, isArray: true })
+  @Expose()
+  liftPriorities: (typeof LiftPriorityValues)[number][];
+
+  @IsEnum(MovementDirectionValues, { each: true })
+  @ApiProperty({ enum: MovementDirectionValues, isArray: true })
+  @Expose()
+  movementDirections: (typeof MovementDirectionValues)[number][];
 }

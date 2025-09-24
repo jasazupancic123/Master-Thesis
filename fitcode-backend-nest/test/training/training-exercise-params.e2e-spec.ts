@@ -5,7 +5,7 @@ import { addDays } from 'date-fns';
 
 import { AppModule } from '@src/app.module';
 import type { Attribute } from '@src/attribute/entity/attribute.entity';
-import { generateExerciseAttributeValueStub } from '@src/attribute/mock/attribute-value.stub';
+import { generateAttributeValueStub } from '@src/attribute/mock/attribute-value.stub';
 import { AttributeService } from '@src/attribute/service/attribute.service';
 import type { TestInstitution } from '@src/common/type/entity.type';
 import {
@@ -27,7 +27,7 @@ import {
   VolType,
   VolWorkSetType,
 } from '@src/component/enum/param.enum';
-import type { ExerciseAttributeValue } from '@src/exercise/entity/exercise-attribute-value.entity';
+import type { ExerciseAttributes } from '@src/exercise/entity/exercise-attributes.entity';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
@@ -99,10 +99,10 @@ describe('Training Exercise Params (e2e)', () => {
     await app.close();
   });
 
-  async function createExercise(attributeValues: ExerciseAttributeValue[]) {
+  async function createExercise(attributeValues: ExerciseAttributes[]) {
     return await exerciseService.create(
       global.admin,
-      generateExerciseStub({ componentIds: [leaf.id], attributeValues }),
+      generateExerciseStub({ componentIds: [leaf.id], ...attributeValues }),
     );
   }
 
@@ -245,7 +245,7 @@ describe('Training Exercise Params (e2e)', () => {
 
     it('should populate end-opt-2 params for exercise', async () => {
       const exercise = await createExercise([
-        generateExerciseAttributeValueStub({
+        generateAttributeValueStub({
           field: 'end-opts',
           value: 'end-opt-2',
         }),

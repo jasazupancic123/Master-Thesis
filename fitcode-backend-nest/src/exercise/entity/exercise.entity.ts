@@ -1,19 +1,17 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Expose, Type } from 'class-transformer';
 import {
-  IsBoolean,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  ValidateNested,
-} from 'class-validator';
+  ApiProperty,
+  ApiPropertyOptional,
+  IntersectionType,
+} from '@nestjs/swagger';
+import { Expose, Type } from 'class-transformer';
+import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 import { Attribute } from '@src/attribute/entity/attribute.entity';
-import { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
 import { BaseEntity } from '@src/common/entity/base.entity';
-import { ExerciseAttributeValue } from '@src/exercise/entity/exercise-attribute-value.entity';
 
-export class Exercise extends BaseEntity {
+import { ExerciseAttributes } from './exercise-attributes.entity';
+
+export class Exercise extends IntersectionType(BaseEntity, ExerciseAttributes) {
   @IsString()
   @IsNotEmpty()
   @Expose()
@@ -47,7 +45,9 @@ export class Exercise extends BaseEntity {
   @ApiProperty()
   instruction?: string;
 
-  // <---- Attributes for filtering ---->
+  @Type(() => Attribute)
+  @IsOptional()
+  defaultParams?: Attribute[]; // for frontend display, not stored in db
 
   @IsString({ each: true })
   @IsNotEmpty()
@@ -60,20 +60,4 @@ export class Exercise extends BaseEntity {
   @Expose()
   @ApiProperty()
   isUnilateral: boolean; // exercise can be performed with both sides of the body separately, like a single arm row
-
-  @ValidateNested({ each: true })
-  @Type(() => ExerciseAttributeValue)
-  @ApiProperty({ type: () => ExerciseAttributeValue, isArray: true })
-  @Expose()
-  attributeValues: ExerciseAttributeValue[]; // sub collection for filtering
-
-  @ValidateNested({ each: true })
-  @Type(() => AttributeValue)
-  @ApiProperty({ type: () => AttributeValue, isArray: true })
-  @Expose()
-  muscleValues: AttributeValue[];
-
-  @Type(() => Attribute)
-  @IsOptional()
-  defaultParams?: Attribute[];
 }
