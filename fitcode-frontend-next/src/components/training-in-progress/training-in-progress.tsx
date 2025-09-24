@@ -6,7 +6,6 @@ import { useTheme } from '@mui/material';
 import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
 
-import Animation from '../animation/animation';
 import AthleteOptionsContainer from '../athlete-options-container/athlete-options-container';
 import MyModal from '../modal/modal';
 import TrainingInProgressSuperset from '../training-in-progress-superset/training-in-progress-superset';
@@ -45,7 +44,6 @@ export default function TrainingInProgress() {
 
   const [elapsedTime, setElapsedTime] = useState(0);
   const [openCancelTrainingModal, setOpenCancelTrainingModal] = useState(false);
-  const [playAnimation, setPlayAnimation] = useState(true);
   const [undoneExercises, setUndoneExercises] = useState<TrainingExercise[]>(
     []
   );
@@ -156,16 +154,7 @@ export default function TrainingInProgress() {
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 
-  return playAnimation ? (
-    <Animation
-      text="LOADING YOUR TRAINING"
-      onEnd={() => {
-        setPlayAnimation(false);
-        setView(ExerciseTrainingView.TrainingView);
-      }}
-      fullScreen={true}
-    />
-  ) : trainingInProgress ? (
+  return trainingInProgress ? (
     <Box
       id="training-in-progress-main"
       width="100%"
@@ -267,6 +256,7 @@ export default function TrainingInProgress() {
           anchorEl={anchorEl}
           open={open}
           handleCancel={handleCancel}
+          handleCancelTraining={handleCancelTraining}
           handleOpenMenu={handleOpenMenu}
           handleCloseMenu={handleCloseMenu}
           setUndoneExercises={setUndoneExercises}

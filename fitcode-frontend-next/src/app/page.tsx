@@ -5,12 +5,12 @@ import Typography from '@mui/material/Typography';
 import { redirect, RedirectType } from 'next/navigation';
 import React from 'react';
 
+import { HERO_NAVBAR_HEIGHT } from './state';
 import { theme } from '@/app/style';
 import { SIGN_IN_REDIRECT_MAPPER } from '@/common/constant/navigation.constant';
 import type { ChildrenProps } from '@/common/type/props.type';
 import HeroNavbar from '@/components/hero-navbar/hero-navbar';
 import { useAuth } from '@/store/auth.provider';
-import { HERO_NAVBAR_HEIGHT } from './state';
 
 export type AppPageProps = ChildrenProps & {
   title: string;

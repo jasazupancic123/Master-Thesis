@@ -23,7 +23,7 @@ export default function TrainingPage() {
     view,
     setView,
     trainings: plannedTrainings,
-    reports: completedTrainings,
+    reports,
     clearTrainingState,
     trainingInProgress,
     isLoaded,
@@ -53,7 +53,7 @@ export default function TrainingPage() {
 
   useEffect(() => {
     handlePaginateTrainings().then();
-  }, [filter, plannedTrainings, completedTrainings]);
+  }, [filter, plannedTrainings, reports]);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -129,7 +129,7 @@ export default function TrainingPage() {
           ? filteredPlannedTrainings.map((training) => (
               <AthleteTrainingCard key={training.id} training={training} />
             ))
-          : completedTrainings.map((report, i) => (
+          : reports.map((report, i) => (
               <TrainingReportCard key={i} report={report} />
             ))}
 
