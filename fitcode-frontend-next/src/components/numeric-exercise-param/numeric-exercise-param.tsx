@@ -5,9 +5,9 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import { useSupersets } from '@/store/supersets.provider';
 import { Box, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
-interface NumericParamInputProps {
+interface NumericExerciseParamProps {
   initValue: number;
   param: Attribute;
   exercise?: TrainingExercise;
@@ -15,7 +15,7 @@ interface NumericParamInputProps {
   disabled?: boolean;
 }
 
-export default function NumericParamInput(props: NumericParamInputProps) {
+export default function NumericExerciseParam(props: NumericExerciseParamProps) {
   const theme = useTheme();
   const screenSize = useScreenSize();
 
@@ -33,8 +33,7 @@ export default function NumericParamInput(props: NumericParamInputProps) {
   const { initValue, isInt, disabled, param, exercise } = props;
 
   const [value, setValue] = useState<number>(initValue);
-
-  const inputValues = [0.25, 0.5, 1, 2, 5, 10, 20, 50];
+  const valueBoxRef = useRef<HTMLDivElement | null>(null);
 
   return (
     <Box
@@ -51,15 +50,15 @@ export default function NumericParamInput(props: NumericParamInputProps) {
         userSelect: 'none',
       }}
     >
-      <Typography
-        textAlign="center"
-        fontSize={14}
+      <Box
+        ref={valueBoxRef}
+        px={1}
         onClick={() => {
           if (disabled) return;
 
-          setOpenNumericInput && setOpenNumericInput((o) => !o);
+          setOpenNumericInput && setOpenNumericInput(true);
           setNumericInputAnchorEl &&
-            setNumericInputAnchorEl(document.activeElement as HTMLElement);
+            setNumericInputAnchorEl(valueBoxRef.current);
           if (setSelectedNumericInputParam) {
             const selected =
               param.field === ParamType.VolWorkSets
@@ -73,8 +72,10 @@ export default function NumericParamInput(props: NumericParamInputProps) {
           }
         }}
       >
-        {value}
-      </Typography>
+        <Typography textAlign="center" fontSize={14}>
+          {value}
+        </Typography>
+      </Box>
       {/* {open && (
         <Box
           width={100}

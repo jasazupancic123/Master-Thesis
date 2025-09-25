@@ -10,7 +10,7 @@ import type { Attribute } from '@/controller/attribute/type/attribute.type';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useGroup } from '@/store/group.provider';
-import NumericParamInput from '../numeric-param-input/numeric-param-input';
+import NumericExerciseParam from '../numeric-exercise-param/numeric-exercise-param';
 import { useSupersets } from '@/store/supersets.provider';
 
 interface Props {
@@ -244,7 +244,7 @@ export function ExerciseParam(props: Props) {
           </Select>
         </FormControl>
       ) : (
-        <NumericParamInput
+        <NumericExerciseParam
           initValue={parseFloat(value.value)}
           param={param}
           exercise={propsExercise}

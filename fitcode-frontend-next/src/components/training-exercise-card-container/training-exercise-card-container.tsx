@@ -18,6 +18,7 @@ import { useGroup } from '@/store/group.provider';
 import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 import { useTheme } from '@mui/material';
+import NumericParamInputBox from '../numeric-exercise-param/numeric-param-input-box';
 
 export interface TrainingExerciseCardContainerProps {
   supersetIndex: number;
@@ -61,8 +62,6 @@ export default function TrainingExerciseCardContainer(
   const [range, setRange] = useState<number[]>([1, 6]); // Example range
   const [max, setMax] = useState<number>(10);
   const [selectedParams, setSelectedParams] = useState<ParamType[]>([]);
-
-  const inputValues = [0.25, 0.5, 1, 2, 5, 10, 20, 50];
 
   useEffect(() => {
     if (!selectedExercise) return;
@@ -254,63 +253,7 @@ export default function TrainingExerciseCardContainer(
           superior={superior}
         />
       )}
-      {openNumericInput && (
-        <Popper
-          open={openNumericInput && Boolean(numericInputAnchorEl)}
-          anchorEl={numericInputAnchorEl}
-          placement="right-start"
-          modifiers={[
-            { name: 'offset', options: { offset: [8, 0] } }, // 8px gap to the right
-          ]}
-          sx={{
-            zIndex: 1000,
-          }}
-        >
-          <Box
-            display="flex"
-            flexDirection="column"
-            alignItems="center"
-            sx={{
-              backgroundColor: theme.palette.background.default,
-              border: `1px solid ${theme.palette.primary.main}`,
-              borderRadius: 2,
-            }}
-          >
-            <Typography textAlign="center">
-              {selectedNumericInputParam?.selected &&
-              selectedNumericInputParam?.selected.length
-                ? selectedNumericInputParam.selected[0].toUpperCase() +
-                  selectedNumericInputParam.selected.slice(1)
-                : ''}
-            </Typography>
-            <Box
-              width={100}
-              display="flex"
-              justifyContent="center"
-              flexWrap="wrap"
-              alignItems="flex-start"
-              sx={{
-                px: 1,
-              }}
-            >
-              {inputValues.map((v) => (
-                <Box
-                  key={v}
-                  width={40}
-                  height={40}
-                  display="flex"
-                  justifyContent="center"
-                  alignItems="center"
-                >
-                  <Typography textAlign="center" fontSize={14}>
-                    {v}
-                  </Typography>
-                </Box>
-              ))}
-            </Box>
-          </Box>
-        </Popper>
-      )}
+      {openNumericInput && <NumericParamInputBox />}
     </Box>
   );
 }
