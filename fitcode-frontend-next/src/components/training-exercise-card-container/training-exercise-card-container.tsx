@@ -18,7 +18,6 @@ import { useGroup } from '@/store/group.provider';
 import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 import { useTheme } from '@mui/material';
-import NumericParamInputBox from '../numeric-exercise-param/numeric-param-input-box';
 
 export interface TrainingExerciseCardContainerProps {
   supersetIndex: number;
@@ -32,14 +31,7 @@ export default function TrainingExerciseCardContainer(
 ) {
   const theme = useTheme();
 
-  const {
-    selectedExercise,
-    openNumericInput,
-    numericInputAnchorEl,
-    setsNumbers,
-    setSetsNumbers,
-    selectedNumericInputParam,
-  } = useSupersets();
+  const { selectedExercise, setsNumbers, setSetsNumbers } = useSupersets();
 
   const {
     training,
@@ -253,7 +245,6 @@ export default function TrainingExerciseCardContainer(
           superior={superior}
         />
       )}
-      {openNumericInput && <NumericParamInputBox />}
     </Box>
   );
 }

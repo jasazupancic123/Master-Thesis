@@ -1,42 +1,50 @@
 import { theme } from '@/app/style';
-import { useSupersets } from '@/store/supersets.provider';
-import { AddOutlined, Remove, RemoveOutlined } from '@mui/icons-material';
-import {
-  Popper,
-  Box,
-  Typography,
-  ClickAwayListener,
-  Paper,
-} from '@mui/material';
+import { SetState } from '@/common/type/state.type';
+import { AddOutlined, RemoveOutlined } from '@mui/icons-material';
+import { Popper, Box, Typography, ClickAwayListener } from '@mui/material';
 import { useState } from 'react';
 
-export default function NumericParamInputBox() {
-  const supersetsContext = useSupersets();
+interface NumericParamInputBoxProps {
+  anchorEl: HTMLElement | null;
+  value: number;
+  setOpen: (open: boolean) => void;
+  open: boolean;
+  onSubOptionChange: SetState<string>;
+  isFloat?: boolean;
+}
 
-  const {
-    openNumericInput,
-    setOpenNumericInput,
-    numericInputAnchorEl,
-    setNumericInputAnchorEl,
-    selectedNumericInputParam,
-    setSelectedNumericInputParam,
-  } = supersetsContext || {};
+export default function NumericParamInputBox(props: NumericParamInputBoxProps) {
+  const { anchorEl, value, open, setOpen, onSubOptionChange, isFloat } = props;
 
   const [isNegative, setIsNegative] = useState(false);
 
-  const inputValues = [0.25, 0.5, 1, 2, 5, 10, 20, 50];
+  const inputValues = !isFloat
+    ? [1, 2, 5, 10, 20, 50]
+    : [0.25, 0.5, 1, 2, 5, 10, 20, 50];
 
   const handleMenuClose = (e: MouseEvent) => {
     const t = e.target as HTMLElement | null;
     if (t?.id?.startsWith('numeric-input-')) return;
 
+    if (t?.id === anchorEl?.id) {
+      setOpen(false);
+      return;
+    }
+
     const path = (e.composedPath && e.composedPath()) || [];
     if (path.some((n) => (n as HTMLElement)?.id === 'numeric-input-popper'))
       return;
 
-    setOpenNumericInput && setOpenNumericInput(false);
-    setNumericInputAnchorEl && setNumericInputAnchorEl(null);
-    setSelectedNumericInputParam && setSelectedNumericInputParam(null);
+    setOpen(false);
+  };
+
+  const updateValue = (valueToAddOrSubtract: number) => {
+    if (isNegative && valueToAddOrSubtract > 0)
+      valueToAddOrSubtract = -valueToAddOrSubtract;
+
+    const newValue = value + valueToAddOrSubtract;
+
+    onSubOptionChange(newValue.toString());
   };
 
   return (
@@ -47,11 +55,10 @@ export default function NumericParamInputBox() {
     >
       <Popper
         id="numeric-input-popper"
-        disablePortal
-        open={openNumericInput && Boolean(numericInputAnchorEl)}
-        anchorEl={numericInputAnchorEl}
+        open={open && anchorEl !== null}
+        anchorEl={anchorEl}
         sx={{
-          zIndex: 1000,
+          zIndex: 100000,
           position: 'relative',
         }}
       >
@@ -66,13 +73,6 @@ export default function NumericParamInputBox() {
             p: 0.5,
           }}
         >
-          <Typography textAlign="center">
-            {selectedNumericInputParam?.selected &&
-            selectedNumericInputParam?.selected.length
-              ? selectedNumericInputParam.selected[0].toUpperCase() +
-                selectedNumericInputParam.selected.slice(1)
-              : ''}
-          </Typography>
           <Box display="flex" alignItems="center">
             <Box
               width={30}
@@ -83,12 +83,18 @@ export default function NumericParamInputBox() {
                 border: `1px solid ${theme.palette.divider}`,
                 borderRadius: 1,
                 p: 1,
-                // on hover
                 '&:hover': {
                   borderColor: theme.palette.primary.main,
                   cursor: 'pointer',
                 },
                 position: 'relative',
+                backgroundImage: `linear-gradient(
+                  -45deg,
+                  ${isNegative ? 'transparent' : theme.palette.background.default} calc(50% - 0.5px),
+                  ${theme.palette.divider} calc(50% - 0.5px),
+                  ${theme.palette.divider} calc(50% + 0.5px),
+                  ${!isNegative ? 'transparent' : theme.palette.background.default} calc(50% + 0.5px)
+                )`,
               }}
             >
               <AddOutlined
@@ -136,7 +142,7 @@ export default function NumericParamInputBox() {
                   height={40}
                   component={Typography}
                   textAlign="center"
-                  fontSize={14}
+                  fontSize={13}
                   display="flex"
                   justifyContent="center"
                   alignItems="center"
@@ -145,14 +151,15 @@ export default function NumericParamInputBox() {
                     border: `1px solid ${theme.palette.divider}`,
                     borderRadius: 1,
                     p: 1,
-                    // on hover
                     '&:hover': {
                       borderColor: theme.palette.primary.main,
                       cursor: 'pointer',
                     },
                     userSelect: 'none',
                   }}
+                  onClick={() => updateValue(v)}
                 >
+                  {isNegative ? '-' : ''}
                   {v}
                 </Box>
               ))}

@@ -1,6 +1,12 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useState,
+} from 'react';
 
 import { useAuthenticatedAuth } from './auth.provider';
 import type { ExerciseOrTraining } from '@/common/type/exercise-or-training.type';

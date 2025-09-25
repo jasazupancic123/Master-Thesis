@@ -6,12 +6,14 @@ import { useEffect } from 'react';
 
 import Logo from '@/components/logo/logo';
 import { useScreenSize } from '@/store/screen-size.provider';
+import { useTheme } from '@mui/material';
 
 interface AnimationProps {
   duration?: number; // in milliseconds
 }
 
 export default function Animation(props: AnimationProps) {
+  const theme = useTheme();
   const screenSize = useScreenSize();
 
   const { duration = 6000 } = props;
@@ -30,6 +32,8 @@ export default function Animation(props: AnimationProps) {
       justifyContent="center"
       alignItems="center"
       sx={{
+        backgroundColor: theme.palette.background.default,
+        zIndex: 1000000000,
         my: 'auto',
       }}
     >

@@ -193,57 +193,59 @@ export default function TrainingInProgress() {
                 whiteSpace: 'nowrap',
               }}
             >
-              {trainingInProgress.supersets?.map((superset, i) => (
-                <Typography
-                  key={i}
-                  fontSize={12}
-                  textAlign="center"
-                  noWrap
-                  sx={{
-                    flex: '0 0 auto',
-                    color:
-                      selectedSuperset === superset
+              {trainingInProgress.supersets?.map((superset, i) => {
+                const isSelected =
+                  (trainingInProgress.supersetIndex ?? 0) === i; // <- key change
+                return (
+                  <Typography
+                    key={i}
+                    fontSize={12}
+                    textAlign="center"
+                    noWrap
+                    sx={{
+                      flex: '0 0 auto',
+                      color: isSelected
                         ? theme.palette.primary.main
                         : undefined,
-                    fontWeight:
-                      selectedSuperset === superset ? 'bold' : 'normal',
-                  }}
-                  onClick={() => {
-                    const undoneExercises = getUndoneExercises(
-                      selectedSuperset,
-                      supersetIndex,
-                      trainingInProgress.exerciseSetTrackingState
-                    );
-                    if (undoneExercises.length > 0) {
-                      setUndoneExercises(undoneExercises);
-                      setShowUndoneSetsWarning(true);
-                    }
+                      fontWeight: isSelected ? 'bold' : 'normal',
+                    }}
+                    onClick={() => {
+                      const undoneExercises = getUndoneExercises(
+                        trainingInProgress.supersets[
+                          trainingInProgress.supersetIndex ?? 0
+                        ],
+                        trainingInProgress.supersetIndex ?? 0,
+                        trainingInProgress.exerciseSetTrackingState
+                      );
+                      if (undoneExercises.length > 0) {
+                        setUndoneExercises(undoneExercises);
+                        setShowUndoneSetsWarning(true);
+                      }
 
-                    setSelectedSuperset(superset);
-                    setSelectedExercise(superset.exercises[0] || null);
-                    setSetIndex(0);
-                    setTrainingInProgress((prev) => {
-                      if (!prev) return prev;
-                      return {
-                        ...prev,
-                        supersetIndex: i,
-                      };
-                    });
-                  }}
-                >
-                  {selectedSuperset === superset && (
-                    <Circle
-                      sx={{
-                        fontSize: 8,
-                        verticalAlign: 'middle',
-                        marginRight: 0.5,
-                        mb: 0.2,
-                      }}
-                    />
-                  )}
-                  Superset {i + 1}
-                </Typography>
-              ))}
+                      setSelectedSuperset(superset);
+                      setSelectedExercise(superset.exercises[0] || null);
+                      setSetIndex(0);
+                      setTrainingInProgress((prev) =>
+                        prev && prev.supersetIndex !== i
+                          ? { ...prev, supersetIndex: i }
+                          : prev
+                      );
+                    }}
+                  >
+                    {isSelected && (
+                      <Circle
+                        sx={{
+                          fontSize: 8,
+                          verticalAlign: 'middle',
+                          mr: 0.5,
+                          mb: 0.2,
+                        }}
+                      />
+                    )}
+                    Superset {i + 1}
+                  </Typography>
+                );
+              })}
             </Box>
           </Box>
         </>
