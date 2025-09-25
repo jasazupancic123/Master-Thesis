@@ -174,6 +174,7 @@ export default function AthleteTrainingExerciseSets(
                                 colorSetsToPrimary &&
                                 param.field === ParamType.VolWorkSets
                               }
+                              exercise={exercise}
                               trainingInProgressView
                               param={param}
                               lOrR={lOrR as 'L' | 'R'}
@@ -218,6 +219,8 @@ export default function AthleteTrainingExerciseSets(
 
                                 if (param.field === ParamType.VolWorkSets)
                                   return;
+
+                                console.log('newValue', +newValue);
 
                                 if (+newValue < 0) return;
 

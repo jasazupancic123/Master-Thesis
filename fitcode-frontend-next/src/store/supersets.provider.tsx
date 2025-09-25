@@ -31,14 +31,6 @@ type SupersetsContextInputProps = {
 
 type SupersetsContextProps = SupersetsContextInputProps & {
   handleMenuClose: () => void;
-  openNumericInput: boolean;
-  setOpenNumericInput: SetState<boolean>;
-  numericInputAnchorEl: null | HTMLElement;
-  setNumericInputAnchorEl: SetState<null | HTMLElement>;
-  selectedNumericInputParam: (Attribute & { selected?: string }) | null;
-  setSelectedNumericInputParam: SetState<
-    (Attribute & { selected?: string }) | null
-  >;
 };
 
 const SupersetsContext = createContext<SupersetsContextProps | null>(null);
@@ -64,13 +56,6 @@ export function SupersetsProvider(
     setSetsNumbers,
   } = props;
 
-  const [openNumericInput, setOpenNumericInput] = useState(false);
-  const [numericInputAnchorEl, setNumericInputAnchorEl] =
-    useState<null | HTMLElement>(null);
-  const [selectedNumericInputParam, setSelectedNumericInputParam] = useState<
-    (Attribute & { selected?: string }) | null
-  >(null);
-
   const handleMenuClose = () => {
     setMenuExercise(null);
   };
@@ -89,12 +74,6 @@ export function SupersetsProvider(
     setsNumbers: setsNumbers,
     setSetsNumbers: setSetsNumbers,
     handleMenuClose,
-    openNumericInput,
-    setOpenNumericInput,
-    numericInputAnchorEl,
-    setNumericInputAnchorEl,
-    selectedNumericInputParam,
-    setSelectedNumericInputParam,
   };
 
   return (
