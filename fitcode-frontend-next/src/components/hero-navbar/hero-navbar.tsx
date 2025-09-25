@@ -24,6 +24,7 @@ import { useScreenSize } from '@/store/screen-size.provider';
 
 interface HeroNavbarProps {
   height: string;
+  dissableLogo?: boolean;
 }
 
 export default function HeroNavbar(props: HeroNavbarProps) {
@@ -33,7 +34,7 @@ export default function HeroNavbar(props: HeroNavbarProps) {
   const pathname = usePathname();
   const screenSize = useScreenSize();
 
-  const { height } = props;
+  const { height, dissableLogo } = props;
 
   const [open, setOpen] = useState(false);
 
@@ -92,16 +93,19 @@ export default function HeroNavbar(props: HeroNavbarProps) {
           >
             <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
               {/* Logo Click Handler */}
-              <Box
-                onClick={handleLogoClick}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  cursor: 'pointer',
-                }}
-              >
-                <Logo width={130} version="dark" />
-              </Box>
+              {!dissableLogo && (
+                <Box
+                  onClick={handleLogoClick}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Logo width={130} version="dark" />
+                </Box>
+              )}
+
               <Box mr={4} />
             </Box>
 
