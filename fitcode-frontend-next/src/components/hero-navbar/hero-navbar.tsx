@@ -90,7 +90,7 @@ export default function HeroNavbar(props: HeroNavbarProps) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              px: 0,
+              pr: 0,
             }}
           >
             <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
