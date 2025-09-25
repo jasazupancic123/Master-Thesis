@@ -1,8 +1,10 @@
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useState } from 'react';
 
 import type { ChildrenProps } from '@/common/type/props.type';
 import type { SetState } from '@/common/type/state.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import { ParamType } from '@/controller/component/enum/param.enum';
+import { Attribute } from '@/controller/attribute/type/attribute.type';
 
 type SupersetsContextInputProps = {
   expandedExercisesView: boolean;
@@ -29,6 +31,14 @@ type SupersetsContextInputProps = {
 
 type SupersetsContextProps = SupersetsContextInputProps & {
   handleMenuClose: () => void;
+  openNumericInput: boolean;
+  setOpenNumericInput: SetState<boolean>;
+  numericInputAnchorEl: null | HTMLElement;
+  setNumericInputAnchorEl: SetState<null | HTMLElement>;
+  selectedNumericInputParam: (Attribute & { selected?: string }) | null;
+  setSelectedNumericInputParam: SetState<
+    (Attribute & { selected?: string }) | null
+  >;
 };
 
 const SupersetsContext = createContext<SupersetsContextProps | null>(null);
@@ -54,6 +64,13 @@ export function SupersetsProvider(
     setSetsNumbers,
   } = props;
 
+  const [openNumericInput, setOpenNumericInput] = useState(false);
+  const [numericInputAnchorEl, setNumericInputAnchorEl] =
+    useState<null | HTMLElement>(null);
+  const [selectedNumericInputParam, setSelectedNumericInputParam] = useState<
+    (Attribute & { selected?: string }) | null
+  >(null);
+
   const handleMenuClose = () => {
     setMenuExercise(null);
   };
@@ -72,6 +89,12 @@ export function SupersetsProvider(
     setsNumbers: setsNumbers,
     setSetsNumbers: setSetsNumbers,
     handleMenuClose,
+    openNumericInput,
+    setOpenNumericInput,
+    numericInputAnchorEl,
+    setNumericInputAnchorEl,
+    selectedNumericInputParam,
+    setSelectedNumericInputParam,
   };
 
   return (
