@@ -91,7 +91,8 @@ describe('Create Exercise (e2e)', () => {
       `new-exercise-${institution.id.toLowerCase()}`,
     );
     expect(response.body.name).toBe(exercise.name);
-    expect(response.body.ownerId).toBe(institution.id);
+    expect(response.body.ownerId).toBe(global.manager.uid);
+    expect(response.body.institutionId).toBe(institution.id);
 
     await deleteDoc(firebase, 'EXERCISE', response.body.id);
   });

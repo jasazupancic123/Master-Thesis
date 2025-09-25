@@ -51,14 +51,14 @@ export class ExerciseService implements Permission<Exercise, Institution> {
   ) {}
 
   async findAllGlobal(filter?: Record<string, string>) {
-    return await this.findAllByUser(GLOBAL_EXERCISE_OWNER, filter);
+    return await this.findAllBy('ownerId', GLOBAL_EXERCISE_OWNER, filter);
   }
 
   async findAllByInstitution(
     institutionId: string,
     filter?: Record<string, string>,
   ) {
-    return await this.findAllByUser(institutionId, filter);
+    return await this.findAllBy('institutionId', institutionId, filter);
   }
 
   async getAll(ids?: string[]): Promise<Exercise[]> {
@@ -100,14 +100,18 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     });
   }
 
-  async findAllByUser(
-    userId: string, // either global or institution id
+  async findAllBy(
+    key: 'ownerId' | 'institutionId',
+    userOrInstitutionId: string, // either global or institution id
     filter?: Record<string, string>,
   ): Promise<Exercise[]> {
     const components = await this.componentService.findAllFlat();
     let exercises: Exercise[] = [];
 
-    let query = this.repository.collection().where('ownerId', '==', userId);
+    let query = this.repository
+      .collection()
+      .where(key, '==', userOrInstitutionId);
+
     if (filter && !this.commonService.object.isEmpty(filter)) {
       if (filter.componentIds)
         query = this.filterByComponents(
@@ -132,18 +136,19 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     const exercise = await this.repository.findById(ref.exerciseId);
     if (!exercise) return null;
 
-    if (exercise.ownerId !== GLOBAL_EXERCISE_OWNER) {
-      // institution created an exercise
-      const institution = await this.institutionService.getDoc({
-        institutionId: exercise.ownerId,
+    if (exercise.institutionId)
+      exercise.institution = await this.institutionService.getDoc({
+        institutionId: exercise.institutionId,
       });
 
-      // authorize
-      if (!this.canView(user, exercise, institution))
-        throw new UnauthorizedException(
-          'You are not allowed to view this exercise',
-        );
-    }
+    // authorize
+    if (
+      (exercise.institutionId && !exercise.institution) ||
+      !this.canView(user, exercise, exercise.institution)
+    )
+      throw new UnauthorizedException(
+        'You are not allowed to view this exercise',
+      );
 
     return exercise;
   }
@@ -160,17 +165,12 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     const isAdmin = this.firebaseService.isAdmin(user);
     const isManager = this.firebaseService.isManager(user);
 
+    const ownerId = isAdmin ? GLOBAL_EXERCISE_OWNER : user.uid;
     const institution = isManager
       ? await this.institutionService.getDocByOwner(user.uid)
       : null;
 
-    const ownerId = isAdmin
-      ? GLOBAL_EXERCISE_OWNER
-      : institution
-        ? institution.id
-        : null;
-
-    if ((!institution && !isAdmin) || !ownerId || !this.canAdd(user))
+    if (!this.canAdd(user, institution))
       throw new UnauthorizedException(
         'You are not allowed to create exercises',
       );
@@ -180,7 +180,14 @@ export class ExerciseService implements Permission<Exercise, Institution> {
 
     // create exercise
     const id = this.repository.slug(data.name, institution?.id);
-    const create: Create<Exercise> = { ...data, id, ownerId, isUnilateral };
+    const create: Create<Exercise> = {
+      ...data,
+      id,
+      ownerId,
+      isUnilateral,
+      institutionId: institution?.id,
+    };
+
     await this.repository.save(create);
     await this.cacheManagerService.del(CACHE_KEY_EXERCISES);
 
@@ -196,18 +203,13 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     const components = await this.componentService.findAllFlat();
     const isAdmin = this.firebaseService.isAdmin(user);
     const isManager = this.firebaseService.isManager(user);
+    const ownerId = isAdmin ? GLOBAL_EXERCISE_OWNER : user.uid;
 
     const institution = isManager
       ? await this.institutionService.getDocByOwner(user.uid)
       : null;
 
-    const ownerId = isAdmin
-      ? GLOBAL_EXERCISE_OWNER // if user is admin, exercise is global
-      : institution
-        ? institution.id
-        : null;
-
-    if ((!institution && !isAdmin) || !ownerId || !this.canAdd(user))
+    if (!this.canAdd(user, institution))
       throw new UnauthorizedException(
         'You are not allowed to create exercises',
       );
@@ -247,6 +249,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
         id: slug,
         ownerId,
         name: e.name,
+        institutionId: institution?.id,
         componentIds: e.componentIds,
         isUnilateral: e.isUnilateral,
         videoUrl: e.videoUrl,
@@ -269,7 +272,6 @@ export class ExerciseService implements Permission<Exercise, Institution> {
       });
 
       batch.set(docRef, query);
-
       result.push({
         ...e,
         ...item,
@@ -289,20 +291,12 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     user: User,
     exercises: CreateExerciseMuscleValueDto[],
   ) {
-    const isAdmin = this.firebaseService.isAdmin(user);
     const isManager = this.firebaseService.isManager(user);
-
     const institution = isManager
       ? await this.institutionService.getDocByOwner(user.uid)
       : null;
 
-    const ownerId = isAdmin
-      ? GLOBAL_EXERCISE_OWNER // if user is admin, exercise is global
-      : institution
-        ? institution.id
-        : null;
-
-    if ((!institution && !isAdmin) || !ownerId || !this.canAdd(user))
+    if (!this.canAdd(user, institution))
       throw new UnauthorizedException(
         'You are not allowed to create exercises',
       );
@@ -324,14 +318,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
   @LogMethod()
   async update(user: User, ref: ExerciseRef, input: UpdateExerciseDto) {
     const exercise = await this.findOneByIdOrFail(user, ref);
-
-    let institution: Institution | null = null;
-    if (exercise.ownerId !== GLOBAL_EXERCISE_OWNER)
-      institution = await this.institutionService.getDocByIdOrFail({
-        institutionId: exercise.ownerId,
-      });
-
-    if (!this.canEdit(user, exercise, institution))
+    if (!this.canEdit(user, exercise, exercise.institution))
       throw new UnauthorizedException(
         'You are not allowed to edit this exercise',
       );
@@ -358,14 +345,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
   @LogMethod()
   async delete(user: User, ref: ExerciseRef) {
     const exercise = await this.findOneByIdOrFail(user, ref);
-
-    let institution: Institution | null = null;
-    if (exercise.ownerId !== GLOBAL_EXERCISE_OWNER)
-      institution = await this.institutionService.getDocByIdOrFail({
-        institutionId: exercise.ownerId,
-      });
-
-    if (!this.canEdit(user, exercise, institution))
+    if (!this.canEdit(user, exercise, exercise.institution))
       throw new UnauthorizedException(
         'You are not allowed to edit this exercise',
       );
@@ -473,9 +453,14 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     return false;
   }
 
-  canAdd(user: User) {
+  canAdd(user: User, institution?: Institution) {
     if (this.firebaseService.isAdmin(user)) return true;
-    if (this.firebaseService.isManager(user)) return true;
+    if (
+      this.firebaseService.isManager(user) &&
+      institution?.ownerId === user.uid
+    )
+      return true;
+
     return false;
   }
 }

@@ -330,7 +330,8 @@ describe('Upsert Many Exercises (e2e)', () => {
       const dbExercises = await db.exercises.getAll();
       expect(dbExercises.length).toBe(1);
       expect(dbExercises[0].name).toBe('manager exercise');
-      expect(dbExercises[0].ownerId).toBe(institutionId);
+      expect(dbExercises[0].ownerId).toBe(global.manager.uid);
+      expect(dbExercises[0].institutionId).toBe(institutionId);
       expect(dbExercises[0].id).toBe(
         `manager-exercise-${institutionId.toLowerCase()}`,
       );
@@ -366,7 +367,8 @@ describe('Upsert Many Exercises (e2e)', () => {
       );
 
       const managerExercise = dbExercises.find(
-        (e) => e.ownerId === institutionId,
+        (e) =>
+          e.ownerId === global.manager.uid && e.institutionId === institutionId,
       );
 
       expect(globalExercise?.name).toBe('squat');

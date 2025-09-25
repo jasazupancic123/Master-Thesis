@@ -8,6 +8,7 @@ import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 import { Attribute } from '@src/attribute/entity/attribute.entity';
 import { BaseEntity } from '@src/common/entity/base.entity';
+import { Institution } from '@src/institution/entity/institution.entity';
 
 import { ExerciseAttributes } from './exercise-attributes.entity';
 
@@ -23,6 +24,14 @@ export class Exercise extends IntersectionType(BaseEntity, ExerciseAttributes) {
   @Expose()
   @ApiProperty()
   name: string;
+
+  @IsString()
+  @IsOptional()
+  @IsNotEmpty()
+  @Expose()
+  @ApiPropertyOptional()
+  institutionId?: string;
+  institution?: Institution;
 
   @IsString()
   @IsOptional()

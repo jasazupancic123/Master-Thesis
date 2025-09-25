@@ -36,6 +36,7 @@ export class ExerciseRepository extends FirestoreRepository<Exercise> {
       {
         id: input.id,
         ownerId: input.ownerId,
+        institutionId: input.institutionId,
         name: input.name,
         imageUrl: input.imageUrl,
         videoUrl: input.videoUrl,
