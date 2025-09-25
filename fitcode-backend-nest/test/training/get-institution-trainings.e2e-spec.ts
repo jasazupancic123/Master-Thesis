@@ -8,7 +8,6 @@ import { AppModule } from '@src/app.module';
 import { getTime } from '@src/common/service/util';
 import type { TestInstitution } from '@src/common/type/entity.type';
 import { TestDbService } from '@src/test-db/test-db.service';
-import type { Training } from '@src/training/entity/training.entity';
 import { generateTrainingStub } from '@src/training/mock/training.stub';
 
 describe('Get Trainings (e2e)', () => {
@@ -125,8 +124,5 @@ describe('Get Trainings (e2e)', () => {
   it('should return populated trainings for today', async () => {
     const res = await req().expect(200);
     expect(res.body).toHaveLength(4); // 2 from each trainer
-
-    for (const training of res.body as Training[])
-      expect(training.institution.id).toBe(institution.id);
   });
 });

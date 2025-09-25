@@ -186,7 +186,6 @@ export class TrainingService implements Permission<Training, Institution> {
 
     if (populate) {
       const start = performance.now();
-
       const institutions: Institution[] = [];
       const groups: Group[] = [];
 

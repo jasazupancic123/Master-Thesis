@@ -156,12 +156,12 @@ export class ExerciseAttributeService {
   getValues(exercise: ExerciseAttributes): AttributeValue[] {
     const categoryValues: AttributeValue[] = exercise.categories.map((c) => ({
       field: 'categories',
-      ...this.attributeService.parseSelectedValueFromString(c),
+      ...this.attributeService.parseSelectedValue(c),
     }));
 
     const equipmentValues: AttributeValue[] = exercise.equipment.map((e) => ({
       field: 'equipment',
-      ...this.attributeService.parseSelectedValueFromString(e),
+      ...this.attributeService.parseSelectedValue(e),
     }));
 
     const prescriptionValues: AttributeValue[] = exercise.prescriptions.map(
@@ -215,7 +215,7 @@ export class ExerciseAttributeService {
         value: m,
       }));
 
-    return this.attributeService.uniqueAttributeValues([
+    return this.attributeService.uniqueValues([
       ...categoryValues,
       ...prescriptionValues,
       ...patternValues,

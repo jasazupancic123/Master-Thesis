@@ -1,4 +1,0 @@
-# Expressions
-
-- `PARAMS` are hardcoded parameter attributes which are passed to components. Currently, there are 7 of them, and all are select types - (_volWorkSets_, _volWork1_, _volWork2_, _intWork1_, _intWork2_, _volRec1_, _intRec1_). The first parameter, _volWorkSets_, is special, because it has only one option - number of sets, which must be chosen for EVERY component. This should be hardcoded in another way in the future. Then, we have 3 volume and 3 intensity parameters, volume parameters having same volume options (reps, distance, time), and intensity parameters also having same intensity options (kgs, bw, rm, mas, hrmax, effort, tempo), where special ones are effort and tempo, since they are select types, so they introduce nested select to our hardcoded parameters array. This should also be refactored one day to be a single level select.
-    - Parameters are passed to root components, and each exercise under the chosen component inherits these parameters.
