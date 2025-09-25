@@ -15,6 +15,7 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import Logo from '@/components/logo/logo';
 import { motion, useReducedMotion, type Variants } from 'framer-motion';
 import Image from 'next/image';
+import doItRight from '@/public/do-it-right.png';
 
 export type AppPageProps = ChildrenProps & {
   title: string;
@@ -73,6 +74,18 @@ export default function Home() {
     },
   };
 
+  const comingSoonVariants: Variants = {
+    initial: { opacity: 0 },
+    animate: {
+      opacity: 1,
+      transition: {
+        delay: 5,
+        duration: 2,
+        ease,
+      },
+    },
+  };
+
   const initialWidth = screenSize.isMobile || screenSize.isTablet ? 250 : 600;
 
   return (
@@ -122,23 +135,30 @@ export default function Home() {
             }}
           >
             <Image
-              src={'/do-it-right.png'}
+              src="/do-it-right.png"
               alt="Do it right"
               width={initialWidth / 2}
-              height={0}
-              layout="intrinsic"
+              height={0} // not 0
+              style={{ height: 'auto' }} // keeps aspect ratio while preventing stretch
+              className="block" // removes baseline gap
             />
-            {/* <Typography
+          </motion.div>
+          <motion.div
+            variants={comingSoonVariants}
+            style={{ willChange: 'opacity', marginTop: 40 }}
+          >
+            <Typography
               textAlign="center"
-              fontSize={screenSize.isMobile ? 26 : 40}
-              fontWeight="bold"
+              fontSize={screenSize.isMobile ? 15 : 30}
+              fontWeight={600}
+              lineHeight={1}
               sx={{
                 color: theme.palette.text.secondary,
                 textTransform: 'uppercase',
               }}
             >
-              Do it right
-            </Typography> */}
+              COMING SOON
+            </Typography>
           </motion.div>
         </motion.div>
       </Box>
