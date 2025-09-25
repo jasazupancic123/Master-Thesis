@@ -126,30 +126,79 @@ export class AttributeService {
               break;
             }
 
-            const matchedAttribute = this.validateSelection(
-              v.selected,
-              attribute.options,
-            ); // returns leaf attribute of options, so its not select or multiselect type anymore and we can recurse this validate function to check it again
+            if (!v.selected) {
+              // single-level select
+              const valueAttribute = attribute.options.find(
+                (opt) => opt.field === v.value,
+              );
 
-            if (!matchedAttribute) {
-              const options = attribute.options
-                .map((opt) => opt.field)
-                .join(', ');
+              if (!valueAttribute) {
+                const options = attribute.options
+                  .map((opt) => opt.field)
+                  .join(', ');
 
-              message = `Value "${v.selected || v.value}" for attribute "${attribute.name}" is not a valid option. Valid options are: ${options}`;
-              break;
-            }
-
-            // validate leafs for custom types
-            switch (matchedAttribute.type) {
-              case AttributeType.Number:
-                if (isNaN(+v.value))
-                  message = `Value for attribute "${attribute.name}" must be a number`;
+                message = `Value "${v.value}" for attribute "${attribute.name}" is not a valid option. Valid options are: ${options}`;
                 break;
-              case AttributeType.Boolean:
-                if (v.value !== 'true' && v.value !== 'false')
-                  message = `Value for attribute "${attribute.name}" must be a boolean`;
+              }
+
+              if (valueAttribute.options && valueAttribute.options.length > 0) {
+                const options = valueAttribute.options
+                  .map((opt) => opt.field)
+                  .join(', ');
+
+                message = `Option "${v.value}" has nested options, please select one of the following: ${options}`;
                 break;
+              }
+            } else {
+              // multi-level select
+              const matchedAttribute = this.validateSelection(
+                v.selected,
+                attribute.options,
+              ); // returns leaf attribute of options, so its not select or multiselect type anymore and we can recurse this validate function to check it again
+
+              if (!matchedAttribute) {
+                const options = attribute.options
+                  .map((opt) => opt.field)
+                  .join(', ');
+
+                message = `Value "${v.value}" for attribute "${attribute.name}" is not a valid option. Valid options are: ${options}`;
+                break;
+              }
+
+              // check if provided value is leaf
+              const valueAttribute = matchedAttribute.options?.find(
+                (opt) => opt.field === v.value,
+              );
+
+              if (!valueAttribute && matchedAttribute.options?.length > 0) {
+                const options = matchedAttribute.options
+                  .map((opt) => opt.field)
+                  .join(', ');
+
+                message = `Value "${v.value}" for attribute "${attribute.name}" is not a valid option. Valid options are: ${options}`;
+                break;
+              }
+
+              if (valueAttribute?.options?.length > 0) {
+                const options = valueAttribute.options
+                  .map((opt) => opt.field)
+                  .join(', ');
+
+                message = `Option "${v.value}" has nested options, please select one of the following: ${options}`;
+                break;
+              }
+
+              // validate leafs for custom types
+              switch (matchedAttribute.type) {
+                case AttributeType.Number:
+                  if (isNaN(+v.value))
+                    message = `Value for attribute "${attribute.name}" must be a number`;
+                  break;
+                case AttributeType.Boolean:
+                  if (v.value !== 'true' && v.value !== 'false')
+                    message = `Value for attribute "${attribute.name}" must be a boolean`;
+                  break;
+              }
             }
 
             break;
@@ -365,6 +414,6 @@ export class AttributeService {
       else break;
     }
 
-    return found;
+    return found; // NOTE - can be internal load, not leaf
   }
 }

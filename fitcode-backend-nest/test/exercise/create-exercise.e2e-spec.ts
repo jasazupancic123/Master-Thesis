@@ -174,7 +174,6 @@ describe('Create Exercise (e2e)', () => {
       videoUrl: 'http://example.com/video',
       imageUrl: 'http://example.com/image',
       instruction: 'This is an exercise.',
-      // attributeValues: invalidAttributes as ExerciseAttributeValue[],
     });
 
     exerciseAttributeService.getAttributes = jest.fn().mockReturnValue([
@@ -204,10 +203,10 @@ describe('Create Exercise (e2e)', () => {
       .set('Authorization', `Bearer ${global.manager.token}`)
       .send(exercise);
 
-    expect(response.status).toBe(201);
-    expect(response.body.attributeValues).toEqual([]);
-
-    await deleteDoc(firebase, 'EXERCISE', response.body.id);
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe(
+      'Value for attribute "Attribute B" must be a number',
+    );
   });
 
   it('should pass with all possible attribute types', async () => {
