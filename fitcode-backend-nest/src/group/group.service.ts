@@ -44,8 +44,10 @@ export class GroupService implements Permission<Group, Institution> {
     private readonly institutionService: InstitutionService,
   ) {}
 
-  getCollection() {
-    return this.repository.collection();
+  findAllByInstitution(institutionId: string): Promise<Group[]> {
+    return this.repository.findAll((q) =>
+      q.where('institutionId', '==', institutionId),
+    );
   }
 
   async findAll(user: User): Promise<Group[]> {

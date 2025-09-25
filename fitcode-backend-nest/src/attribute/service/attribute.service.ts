@@ -8,9 +8,17 @@ import { AttributeValue } from '../entity/attribute-value.entity';
 
 @Injectable()
 export class AttributeService {
-  parseSelectedValueFromString(
-    s: string,
-  ): Pick<AttributeValue, 'selected' | 'value'> {
+  /**
+   * @example
+   * ```ts
+   * const parsed = parseSelectedValue('my:selected:value');
+   * // => {
+   * //   selected: 'my:selected',
+   * //   value: 'value'
+   * // }
+   * ```
+   */
+  parseSelectedValue(s: string): Pick<AttributeValue, 'selected' | 'value'> {
     // value is last part, all before is select
     const parts = s.split(':');
     return {
@@ -19,7 +27,7 @@ export class AttributeService {
     };
   }
 
-  uniqueAttributeValues(values: AttributeValue[]): AttributeValue[] {
+  uniqueValues(values: AttributeValue[]): AttributeValue[] {
     const uniqueMap = new Map<string, AttributeValue>();
     for (const val of values) {
       const key = `${val.field}:${val.selected}`;
@@ -65,10 +73,13 @@ export class AttributeService {
       }
 
       for (const v of attributeValues) {
-        if (attribute.required && (v.value === null || v.value === undefined))
-          throw new BadRequestException(
-            `Attribute "${attribute.name}" is required`,
-          );
+        if (attribute.required && (v.value === null || v.value === undefined)) {
+          const message = `Attribute "${attribute.name}" is required`;
+          if (onError) {
+            onError({ field: attribute.field, message });
+            return [];
+          } else throw new BadRequestException(message);
+        }
 
         let message = '';
         switch (attribute.type) {
@@ -251,7 +262,7 @@ export class AttributeService {
       values.push(
         providedParamValue
           ? providedParamValue
-          : { field: param.field, selected, value },
+          : { field: param.field, selected, value: value.toString() },
       );
     }
 

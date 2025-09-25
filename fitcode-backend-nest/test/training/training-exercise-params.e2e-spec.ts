@@ -100,7 +100,7 @@ describe('Training Exercise Params (e2e)', () => {
     );
   }
 
-  async function createTraining(exerciseId: string) {
+  async function createTraining(exerciseId: string, componentId?: string) {
     const trainingId = await db.trainings.save(
       generateTrainingStub({
         ownerId: global.trainer.id,
@@ -148,7 +148,7 @@ describe('Training Exercise Params (e2e)', () => {
         ...training,
         components: [
           generateTrainingComponent({
-            id: COMPONENT_ENDURANCE.id,
+            id: componentId || COMPONENT_ENDURANCE.id,
             supersets: [
               generateSuperset({
                 exercises: [generateTrainingExercise({ id: exerciseId })],
@@ -256,8 +256,15 @@ describe('Training Exercise Params (e2e)', () => {
       equipment: [],
     });
 
-    const training1 = await createTraining(exerciseWithEquipment.id);
-    const training2 = await createTraining(exerciseWithoutEquipment.id);
+    const training1 = await createTraining(
+      exerciseWithEquipment.id,
+      component.id,
+    );
+
+    const training2 = await createTraining(
+      exerciseWithoutEquipment.id,
+      component.id,
+    );
 
     const params1 = training1.components[0].supersets[0].exercises[0].params;
     const params2 = training2.components[0].supersets[0].exercises[0].params;

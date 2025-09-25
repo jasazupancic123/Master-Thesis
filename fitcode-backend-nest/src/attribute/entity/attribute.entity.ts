@@ -58,63 +58,6 @@ export class BaseAttribute {
   defaultValue?: string;
 }
 
-export class ValueAttribute extends BaseAttribute {
-  type: AttributeType.Value;
-}
-
-export class StringAttribute extends BaseAttribute {
-  type: AttributeType.String;
-
-  @IsString()
-  @ApiPropertyOptional()
-  @IsNotEmpty()
-  @IsOptional()
-  @Expose()
-  pattern?: string; // regex pattern for validation
-}
-
-export class BooleanAttribute extends BaseAttribute {
-  type: AttributeType.Boolean;
-}
-
-export class NumberAttribute extends BaseAttribute {
-  type: AttributeType.Number;
-
-  @IsNumber()
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  min?: number;
-
-  @IsNumber()
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  max?: number;
-}
-
-export class SelectAttribute extends BaseAttribute {
-  type: AttributeType.Select;
-
-  @ValidateNested({ each: true })
-  @Type(() => Attribute)
-  @ApiPropertyOptional({ type: () => Attribute, isArray: true })
-  @IsNotEmpty()
-  @Expose()
-  options: Attribute[]; // possible values for select type
-}
-
-export class MultiselectAttribute extends BaseAttribute {
-  type: AttributeType.Multiselect;
-
-  @ValidateNested({ each: true })
-  @Type(() => Attribute)
-  @ApiPropertyOptional({ type: () => Attribute, isArray: true })
-  @IsNotEmpty()
-  @Expose()
-  options: Attribute[]; // possible values for select type
-}
-
 export class Attribute extends BaseAttribute {
   @IsNumber()
   @IsOptional()
@@ -127,6 +70,13 @@ export class Attribute extends BaseAttribute {
   @ApiProperty()
   @Expose()
   max?: number;
+
+  @IsString()
+  @ApiPropertyOptional()
+  @IsNotEmpty()
+  @IsOptional()
+  @Expose()
+  pattern?: string; // regex pattern for validation
 
   @ValidateNested({ each: true })
   @Type(() => Attribute)

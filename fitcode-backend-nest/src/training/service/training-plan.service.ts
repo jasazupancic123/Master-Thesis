@@ -309,11 +309,7 @@ export class TrainingPlanService {
   validateTrainingComponents(
     newTrainingComponents: UpdateTrainingComponentWithoutTime[], // with warmup and cooldown
     trainingMemberIds: string[],
-    data: {
-      exercises: Exercise[];
-      components: Component[];
-      methods: Method[];
-    },
+    data: { exercises: Exercise[]; components: Component[]; methods: Method[] },
   ): TrainingComponentWithoutTime[] {
     const { components, methods } = data;
     const validTrainingComponents: TrainingComponentWithoutTime[] = [];
