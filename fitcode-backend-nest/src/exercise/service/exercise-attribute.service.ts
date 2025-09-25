@@ -153,67 +153,67 @@ export class ExerciseAttributeService {
     ];
   }
 
-  getValues(exercise: ExerciseAttributes): AttributeValue[] {
-    const categoryValues: AttributeValue[] = exercise.categories.map((c) => ({
-      field: 'categories',
-      ...this.attributeService.parseSelectedValue(c),
-    }));
+  getValues(exercise: Partial<ExerciseAttributes>): AttributeValue[] {
+    const categoryValues: AttributeValue[] =
+      exercise.categories?.map((c) => ({
+        field: 'categories',
+        ...this.attributeService.parseSelectedValue(c),
+      })) || [];
 
-    const equipmentValues: AttributeValue[] = exercise.equipment.map((e) => ({
-      field: 'equipment',
-      ...this.attributeService.parseSelectedValue(e),
-    }));
+    const equipmentValues: AttributeValue[] =
+      exercise.equipment?.map((e) => ({
+        field: 'equipment',
+        ...this.attributeService.parseSelectedValue(e),
+      })) || [];
 
-    const prescriptionValues: AttributeValue[] = exercise.prescriptions.map(
-      (p) => ({
+    const prescriptionValues: AttributeValue[] =
+      exercise.prescriptions?.map((p) => ({
         field: 'prescriptions',
         selected: '',
         value: p,
-      }),
-    );
+      })) || [];
 
-    const patternValues: AttributeValue[] = exercise.patterns.map((p) => ({
-      field: 'patterns',
-      selected: '',
-      value: p,
-    }));
+    const patternValues: AttributeValue[] =
+      exercise.patterns?.map((p) => ({
+        field: 'patterns',
+        selected: '',
+        value: p,
+      })) || [];
 
-    const bodyRegionValues: AttributeValue[] = exercise.bodyRegions.map(
-      (b) => ({
+    const bodyRegionValues: AttributeValue[] =
+      exercise.bodyRegions?.map((b) => ({
         field: 'bodyRegions',
         selected: '',
         value: b,
-      }),
-    );
+      })) || [];
 
-    const loadingSideValues: AttributeValue[] = exercise.loadingSides.map(
-      (l) => ({
+    const loadingSideValues: AttributeValue[] =
+      exercise.loadingSides?.map((l) => ({
         field: 'loadingSides',
         selected: '',
         value: l,
-      }),
-    );
+      })) || [];
 
-    const locationValues: AttributeValue[] = exercise.locations.map((l) => ({
-      field: 'locations',
-      selected: '',
-      value: l,
-    }));
+    const locationValues: AttributeValue[] =
+      exercise.locations?.map((l) => ({
+        field: 'locations',
+        selected: '',
+        value: l,
+      })) || [];
 
-    const liftPriorityValues: AttributeValue[] = exercise.liftPriorities.map(
-      (l) => ({
+    const liftPriorityValues: AttributeValue[] =
+      exercise.liftPriorities?.map((l) => ({
         field: 'liftPriorities',
         selected: '',
         value: l,
-      }),
-    );
+      })) || [];
 
     const movementDirectionValues: AttributeValue[] =
-      exercise.movementDirections.map((m) => ({
+      exercise.movementDirections?.map((m) => ({
         field: 'movementDirections',
         selected: '',
         value: m,
-      }));
+      })) || [];
 
     return this.attributeService.uniqueValues([
       ...categoryValues,
