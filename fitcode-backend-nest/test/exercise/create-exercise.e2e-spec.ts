@@ -12,7 +12,6 @@ import { AttributeType } from '@src/common/enum/attribute-type.enum';
 import type { TestInstitution } from '@src/common/type/entity.type';
 import {
   createInstitution,
-  deleteCollection,
   deleteDoc,
   deleteDocs,
   deleteInstitution,
@@ -52,7 +51,7 @@ describe('Create Exercise (e2e)', () => {
     institutionService = moduleFixture.get(InstitutionService);
     exerciseAttributeService = moduleFixture.get(ExerciseAttributeService);
 
-    const attribute = await attributeService.create(generateAttributeStub());
+    const attribute = generateAttributeStub();
     root = await componentService.create(
       generateComponentStub({ attributes: [attribute.field] }),
     );
@@ -67,7 +66,6 @@ describe('Create Exercise (e2e)', () => {
   afterAll(async () => {
     await Promise.all([
       deleteDocs(firebase, 'COMPONENT', [leaf.id, root.id]),
-      deleteCollection(firebase, 'ATTRIBUTE'),
       deleteInstitution(firebase, institution),
     ]);
 
@@ -211,79 +209,65 @@ describe('Create Exercise (e2e)', () => {
 
   it('should pass with all possible attribute types', async () => {
     const attributes = await Promise.all([
-      attributeService.create(
-        generateAttributeStub({ field: 'str', type: AttributeType.String }),
-      ),
-      attributeService.create(
-        generateAttributeStub({ field: 'num', type: AttributeType.Number }),
-      ),
-      attributeService.create(
-        generateAttributeStub({ field: 'bool', type: AttributeType.Boolean }),
-      ),
-      attributeService.create(
-        generateAttributeStub({
-          field: 'select',
-          type: AttributeType.Select,
-          options: [
-            generateAttributeStub({ field: 'opt1', type: AttributeType.Value }),
-            generateAttributeStub({ field: 'opt2', type: AttributeType.Value }),
-          ],
-        }),
-      ),
-      attributeService.create(
-        generateAttributeStub({
-          field: 'nested-select',
-          type: AttributeType.Select,
-          options: [
-            generateAttributeStub({
-              field: 'nested-select-opt1',
-              type: AttributeType.Select,
-              options: [
-                generateAttributeStub({
-                  field: 'nested-select-opt1-num',
-                  type: AttributeType.Number,
-                }),
-                generateAttributeStub({
-                  field: 'nested-select-opt2-bool',
-                  type: AttributeType.Boolean,
-                }),
-              ],
-            }),
-          ],
-        }),
-      ),
-      attributeService.create(
-        generateAttributeStub({
-          field: 'multiselect',
-          type: AttributeType.Multiselect,
-          options: [
-            generateAttributeStub({ field: 'optA', type: AttributeType.Value }),
-            generateAttributeStub({ field: 'optB', type: AttributeType.Value }),
-          ],
-        }),
-      ),
-      attributeService.create(
-        generateAttributeStub({
-          field: 'nested-multiselect',
-          type: AttributeType.Multiselect,
-          options: [
-            generateAttributeStub({
-              field: 'nested-multiselect-opt1',
-              type: AttributeType.Select,
-              options: [
-                generateAttributeStub({
-                  field: 'nested-multiselect-opt1-num',
-                  type: AttributeType.Number,
-                }),
-                generateAttributeStub({
-                  field: 'nested-multiselect-opt2-bool',
-                  type: AttributeType.Boolean,
-                }),
-              ],
-            }),
-          ],
-        }),
-      ),
+      generateAttributeStub({ field: 'str', type: AttributeType.String }),
+      generateAttributeStub({ field: 'num', type: AttributeType.Number }),
+      generateAttributeStub({ field: 'bool', type: AttributeType.Boolean }),
+      generateAttributeStub({
+        field: 'select',
+        type: AttributeType.Select,
+        options: [
+          generateAttributeStub({ field: 'opt1', type: AttributeType.Value }),
+          generateAttributeStub({ field: 'opt2', type: AttributeType.Value }),
+        ],
+      }),
+      generateAttributeStub({
+        field: 'nested-select',
+        type: AttributeType.Select,
+        options: [
+          generateAttributeStub({
+            field: 'nested-select-opt1',
+            type: AttributeType.Select,
+            options: [
+              generateAttributeStub({
+                field: 'nested-select-opt1-num',
+                type: AttributeType.Number,
+              }),
+              generateAttributeStub({
+                field: 'nested-select-opt2-bool',
+                type: AttributeType.Boolean,
+              }),
+            ],
+          }),
+        ],
+      }),
+      generateAttributeStub({
+        field: 'multiselect',
+        type: AttributeType.Multiselect,
+        options: [
+          generateAttributeStub({ field: 'optA', type: AttributeType.Value }),
+          generateAttributeStub({ field: 'optB', type: AttributeType.Value }),
+        ],
+      }),
+      generateAttributeStub({
+        field: 'nested-multiselect',
+        type: AttributeType.Multiselect,
+        options: [
+          generateAttributeStub({
+            field: 'nested-multiselect-opt1',
+            type: AttributeType.Select,
+            options: [
+              generateAttributeStub({
+                field: 'nested-multiselect-opt1-num',
+                type: AttributeType.Number,
+              }),
+              generateAttributeStub({
+                field: 'nested-multiselect-opt2-bool',
+                type: AttributeType.Boolean,
+              }),
+            ],
+          }),
+        ],
+      }),
     ]);
 
     const component = await componentService.create(
@@ -347,18 +331,15 @@ describe('Create Exercise (e2e)', () => {
     await Promise.all([
       deleteDoc(firebase, 'EXERCISE', response.body.id),
       deleteDoc(firebase, 'COMPONENT', component.id),
-      deleteCollection(firebase, 'ATTRIBUTE'),
     ]);
   });
 
   it('should fail if a required attribute is missing', async () => {
-    const attribute = await attributeService.create(
-      generateAttributeStub({
-        required: true,
-        type: AttributeType.String,
-        name: 'is-required',
-      }),
-    );
+    const attribute = generateAttributeStub({
+      required: true,
+      type: AttributeType.String,
+      name: 'is-required',
+    });
 
     const component = await componentService.create(
       generateComponentStub({ attributes: [attribute.field] }),
@@ -380,10 +361,7 @@ describe('Create Exercise (e2e)', () => {
       `Attribute "${attribute.name}" is required`,
     );
 
-    await Promise.all([
-      deleteDoc(firebase, 'COMPONENT', component.id),
-      deleteDoc(firebase, 'ATTRIBUTE', attribute.field),
-    ]);
+    await Promise.all([deleteDoc(firebase, 'COMPONENT', component.id)]);
   });
 
   /* it('should not create more exercises than the limit for user', async () => {

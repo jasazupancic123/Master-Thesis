@@ -24,12 +24,6 @@ export class TestExerciseService extends AbstractChangeLogService<Exercise> {
     return this.firebase.firestore.collection(FirestoreCollection.EXERCISE);
   }
 
-  attributeValuesCollection(exerciseId: string) {
-    return this.collection()
-      .doc(exerciseId)
-      .collection(FirestoreCollection.EXERCISE_ATTRIBUTE_VALUES);
-  }
-
   async get(id: string): Promise<Exercise> {
     const doc = await this.collection().doc(id).get();
     if (!doc.exists) return null;
@@ -82,15 +76,6 @@ export class TestExerciseService extends AbstractChangeLogService<Exercise> {
       return await this.firebase.firestore.recursiveDelete(this.collection());
 
     const docRef = this.collection().doc(id);
-
-    // first, delete all attribute values
-    const attributeValuesRef = this.attributeValuesCollection(id);
-    const attributeValuesSnapshot = await attributeValuesRef.get();
-    for (const doc of attributeValuesSnapshot.docs) {
-      await doc.ref.delete();
-      await this.trackDelete(doc.ref);
-    }
-
     await docRef.delete();
     await this.trackDelete(docRef);
     await this.cache.del(CACHE_KEY_EXERCISES);

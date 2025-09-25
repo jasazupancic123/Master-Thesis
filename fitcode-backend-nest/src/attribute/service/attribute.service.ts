@@ -1,48 +1,13 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 
-import { CacheManagerService } from '@src/cache-manager/cache-manager.service';
 import { AttributeType } from '@src/common/enum/attribute-type.enum';
-import { Create } from '@src/common/type/entity.type';
 import { ValidateError } from '@src/common/type/validate.type';
 
-import { CACHE_KEY_ATTRIBUTES } from '../constant/cache.constant';
 import { Attribute } from '../entity/attribute.entity';
 import { AttributeValue } from '../entity/attribute-value.entity';
-import { AttributeRepository } from '../repository/attribute.repository';
 
 @Injectable()
 export class AttributeService {
-  private logger = new Logger(AttributeService.name);
-
-  constructor(
-    private readonly repository: AttributeRepository,
-    private readonly cacheManagerService: CacheManagerService,
-  ) {}
-
-  async create(data: Create<Attribute>): Promise<Attribute> {
-    this.logger.debug(`Creating attribute with data ${JSON.stringify(data)}`);
-    await this.repository.save(data);
-    await this.cacheManagerService.del(CACHE_KEY_ATTRIBUTES);
-    return data;
-  }
-
-  async findOneBySlug(slug: string): Promise<Attribute> {
-    return await this.repository.findById(slug);
-  }
-
-  async findOneBySlugOrFail(slug: string): Promise<Attribute> {
-    const item = await this.repository.findById(slug);
-    if (!item) throw new BadRequestException('Attribute not found');
-    return item;
-  }
-
-  async findAll(): Promise<Attribute[]> {
-    const cached =
-      await this.cacheManagerService.get<Attribute[]>(CACHE_KEY_ATTRIBUTES);
-
-    return cached ? cached : await this.repository.findAll();
-  }
-
   parseSelectedValueFromString(
     s: string,
   ): Pick<AttributeValue, 'selected' | 'value'> {

@@ -3,8 +3,6 @@ import { DateTime } from 'luxon';
 import { readFile } from 'node:fs/promises';
 
 import { GLOBAL_EXERCISE_OWNER } from '@src//exercise/constant/global-exercise-owner.constant';
-import type { Attribute } from '@src/attribute/entity/attribute.entity';
-import { AttributeService } from '@src/attribute/service/attribute.service';
 import { AuthService } from '@src/auth/auth.service';
 import { UserRole } from '@src/auth/enum/user-role.enum';
 import { ComponentService } from '@src/component/component.service';
@@ -75,7 +73,6 @@ export class DataSetup extends BaseSetup {
 
     try {
       await this.importUsers('data/users.json');
-      await this.importAttributes('data/attributes.json');
       await this.importComponents('data/components.json');
       await this.importExercises('data/exercises.json');
       await this.importMethods('data/methods.json');
@@ -95,22 +92,12 @@ export class DataSetup extends BaseSetup {
     await this.firebaseService.deleteCollection(FirestoreCollection.GROUP);
     await this.firebaseService.deleteCollection(FirestoreCollection.EXERCISE);
     await this.firebaseService.deleteCollection(FirestoreCollection.COMPONENT);
-    await this.firebaseService.deleteCollection(FirestoreCollection.ATTRIBUTE);
     await this.firebaseService.deleteCollection(FirestoreCollection.USER);
     await this.firebaseService.deleteCollection(FirestoreCollection.METHOD);
     await this.firebaseService.deleteCollection(FirestoreCollection.TRAINING);
     await this.firebaseService.deleteCollection(
       FirestoreCollection.INSTITUTION,
     );
-  }
-
-  private async importAttributes(filename: string) {
-    const attributeService = this.app.get(AttributeService);
-
-    const file = await readFile(filename, 'utf-8');
-    const data: Attribute[] = JSON.parse(file);
-
-    for (const item of data) await attributeService.create(item);
   }
 
   private async importComponents(filename: string) {
@@ -137,8 +124,7 @@ export class DataSetup extends BaseSetup {
     const exerciseService = this.app.get(ExerciseService);
 
     const file = await readFile(filename, 'utf-8');
-    const data: Omit<Exercise, 'id' | 'ownerId' | 'attributes'>[] =
-      JSON.parse(file);
+    const data: Omit<Exercise, 'id' | 'ownerId'>[] = JSON.parse(file);
 
     await exerciseService.upsertMany(
       this.admin,

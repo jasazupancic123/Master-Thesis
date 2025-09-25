@@ -2,7 +2,6 @@ import { createMock } from '@golevelup/ts-jest';
 import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 
-import { AttributeRepository } from '@src/attribute/repository/attribute.repository';
 import { AttributeService } from '@src/attribute/service/attribute.service';
 import { CacheManagerService } from '@src/cache-manager/cache-manager.service';
 import { CommonModule } from '@src/common/common.module';
@@ -46,10 +45,6 @@ describe('copySubgroup', () => {
         {
           provide: CacheManagerService,
           useValue: createMock<CacheManagerService>(),
-        },
-        {
-          provide: AttributeRepository,
-          useValue: createMock<AttributeRepository>(),
         },
         {
           provide: AttributeService,
