@@ -10,7 +10,6 @@ import { FirebaseModule } from '@src/firebase/firebase.module';
 
 import type { Attribute } from '../entity/attribute.entity';
 import type { AttributeValue } from '../entity/attribute-value.entity';
-import { AttributeRepository } from '../repository/attribute.repository';
 import { AttributeService } from '../service/attribute.service';
 
 describe('AttributeService (unit)', () => {
@@ -24,7 +23,7 @@ describe('AttributeService (unit)', () => {
         FirebaseModule.forRoot(),
         CommonModule,
       ],
-      providers: [AttributeRepository, AttributeService],
+      providers: [AttributeService],
       exports: [AttributeService],
     }).compile();
 

@@ -84,7 +84,6 @@ describe('Get Exercises (e2e)', () => {
       deleteInstitution(firebase, institution1),
       deleteInstitution(firebase, institution2),
       deleteDoc(firebase, 'COMPONENT', component.id),
-      deleteCollection(firebase, 'ATTRIBUTE'),
     ]);
 
     await app.close();

@@ -7,7 +7,6 @@ import * as request from 'supertest';
 import { AppModule } from '@src/app.module';
 import { getTime } from '@src/common/service/util';
 import type { TestInstitution } from '@src/common/type/entity.type';
-import type { Group } from '@src/group/entity/group.entity';
 import { TestDbService } from '@src/test-db/test-db.service';
 import type { Training } from '@src/training/entity/training.entity';
 import { generateTrainingStub } from '@src/training/mock/training.stub';
@@ -17,7 +16,6 @@ describe('Get Trainings (e2e)', () => {
   let db: TestDbService;
 
   let institution: TestInstitution;
-  let group: Group;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({

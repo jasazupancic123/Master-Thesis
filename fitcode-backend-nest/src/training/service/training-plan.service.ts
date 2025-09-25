@@ -307,14 +307,12 @@ export class TrainingPlanService {
   }
 
   validateTrainingComponents(
-    existingTraining: Training | null,
     newTrainingComponents: UpdateTrainingComponentWithoutTime[], // with warmup and cooldown
     trainingMemberIds: string[],
     data: {
       exercises: Exercise[];
       components: Component[];
       methods: Method[];
-      attributes: Attribute[];
     },
   ): TrainingComponentWithoutTime[] {
     const { components, methods } = data;
@@ -323,9 +321,6 @@ export class TrainingPlanService {
     const duplicates = new Set<string>();
     for (const newComponent of newTrainingComponents) {
       const component = components.find((c) => c.id === newComponent.id);
-      const existingTrainingComponent = existingTraining?.components?.find(
-        (c) => c.id === newComponent.id,
-      );
 
       // validate components are valid
       if (!component) throw new NotFoundException('Component does not exist');
@@ -354,17 +349,14 @@ export class TrainingPlanService {
         newComponent,
         data,
       );
+
       const subgroups = this.validateSubgroups(
         newComponent,
         trainingMemberIds,
         data,
       );
 
-      validTrainingComponents.push({
-        ...newComponent,
-        supersets,
-        subgroups,
-      });
+      validTrainingComponents.push({ ...newComponent, supersets, subgroups });
     }
 
     if (validTrainingComponents.length > MAX_NUM_COMPONENTS_IN_TRAINING + 2)
@@ -439,13 +431,12 @@ export class TrainingPlanService {
     data: {
       components: Component[];
       exercises: Exercise[];
-      attributes: Attribute[];
       methods: Method[];
     },
   ): Superset[] {
     const newSupersets = item.supersets || [];
     const mainSet = item.mainSet || trainingComponent.mainSet;
-    const { components, exercises, attributes, methods } = data;
+    const { components, exercises, methods } = data;
 
     switch (mainSet) {
       case MainSet.BLOCK:
@@ -568,7 +559,6 @@ export class TrainingPlanService {
     data: {
       components: Component[];
       exercises: Exercise[];
-      attributes: Attribute[];
       methods: Method[];
     },
   ): Subgroup[] {
