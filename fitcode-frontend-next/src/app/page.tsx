@@ -32,8 +32,8 @@ export default function Home() {
   }
 
   // Tunables
-  const duration = 1.5;
-  const ease = [0.22, 1, 0.36, 1] as const; // 👈 tuple, not number[]
+  const duration = 3;
+  const ease = [0.22, 0.3, 0.3, 1] as const;
 
   const prefersReducedMotion = false; // if you use useReducedMotion(), keep the ternaries below
 
@@ -49,8 +49,8 @@ export default function Home() {
       y: 0,
       scale: 1,
       transition: {
-        duration,
-        ease,
+        duration: 3,
+        // ease,
       },
     },
   };
@@ -58,14 +58,16 @@ export default function Home() {
   const taglineVariants: Variants = {
     initial: {
       opacity: 0,
+      scale: 0,
       y: -20,
     },
     animate: {
       opacity: 1,
       y: 0,
+      scale: 1,
       transition: {
-        delay: duration / 2,
-        duration: duration * 1.5,
+        delay: 2,
+        duration: 2,
         ease,
       },
     },
@@ -75,7 +77,7 @@ export default function Home() {
 
   return (
     <>
-      <HeroNavbar height={HERO_NAVBAR_HEIGHT} />
+      <HeroNavbar height={HERO_NAVBAR_HEIGHT} dissableLogo />
 
       {/* Hero */}
       <Box
