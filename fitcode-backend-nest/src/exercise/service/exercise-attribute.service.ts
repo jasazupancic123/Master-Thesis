@@ -105,7 +105,7 @@ export class ExerciseAttributeService {
       {
         field: 'equipment',
         name: 'Equipment',
-        type: AttributeType.Select,
+        type: AttributeType.Multiselect,
         options: Equipment,
       },
       {

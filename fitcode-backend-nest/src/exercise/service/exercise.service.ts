@@ -180,7 +180,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
 
     // create exercise
     const id = this.repository.slug(data.name, institution?.id);
-    const create: Create<Exercise> = { id, ownerId, isUnilateral, ...data };
+    const create: Create<Exercise> = { ...data, id, ownerId, isUnilateral };
     await this.repository.save(create);
     await this.cacheManagerService.del(CACHE_KEY_EXERCISES);
 

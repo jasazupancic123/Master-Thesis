@@ -257,11 +257,11 @@ describe('Get Exercises (e2e)', () => {
         }),
         generateExerciseStub({
           componentIds: [component.id],
-          categories: ['strength:general'],
+          categories: ['strength:general:con-ecc'],
         }),
         generateExerciseStub({
           componentIds: [component.id],
-          categories: ['speed:conditioning'],
+          categories: ['speed:acceleration'],
         }),
         generateExerciseStub({
           componentIds: [component.id],
@@ -281,8 +281,8 @@ describe('Get Exercises (e2e)', () => {
         // array of <filter string, expected returned array length>
         ['strength:other', 2],
         ['speed:cod', 2],
-        ['strength:general', 1],
-        ['speed:conditioning', 1],
+        ['strength:general:con-ecc', 1],
+        ['speed:acceleration', 1],
       ];
 
       const responses = await Promise.all(
@@ -311,23 +311,23 @@ describe('Get Exercises (e2e)', () => {
         }),
         generateExerciseStub({
           componentIds: [component.id],
-          categories: ['strength:general'],
+          categories: ['strength:general:con-ecc'],
           equipment: ['cardio:treadmill'],
         }),
         generateExerciseStub({
           componentIds: [component.id],
-          categories: ['speed:conditioning'],
+          categories: ['speed:acceleration'],
           equipment: ['strength:power-rack'],
         }),
         generateExerciseStub({
           componentIds: [component.id],
           categories: ['strength:other'],
-          equipment: ['strength:dumbbell'],
+          equipment: ['strength:cable'],
         }),
         generateExerciseStub({
           componentIds: [component.id],
           categories: ['speed:cod'],
-          equipment: ['strength:dumbbell', 'strength:barbell'],
+          equipment: ['strength:cable', 'strength:barbell'],
         }),
       ];
 
@@ -337,11 +337,11 @@ describe('Get Exercises (e2e)', () => {
 
       const filters: [string, string, number][] = [
         // array of <category filter string, equipment filter string, expected returned array length>
-        ['strength:other', 'strength:dumbbell', 1],
-        ['speed:cod', 'strength:dumbbell', 1],
+        ['strength:other', 'strength:cable', 1],
+        ['speed:cod', 'strength:cable', 1],
         ['speed:cod', 'strength:barbell', 1],
         ['strength:general', 'cardio:treadmill', 1],
-        ['speed:conditioning', 'strength:power-rack', 1],
+        ['speed:acceleration', 'strength:power-rack', 1],
         ['strength:other', 'bodyweight:pull-up-bar', 1],
         ['strength:other', 'strength:barbell', 0],
         ['speed:cod', 'cardio:treadmill', 0],
