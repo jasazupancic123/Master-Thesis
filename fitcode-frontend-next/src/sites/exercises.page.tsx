@@ -55,7 +55,6 @@ export default function ExercisesPage() {
   const { token, role } = useAuthenticatedAuth();
   const {
     components,
-    attributes,
     exercises: allExercises,
     setExercises: setAllExercises,
   } = useMain();
@@ -278,7 +277,6 @@ export default function ExercisesPage() {
         <ExerciseModal
           data={{ ...exercise, imageUrl: undefined, videoUrl: undefined }}
           setData={setExercise}
-          attributes={attributes}
           components={components}
           isOpen={modal.add}
           setIsOpen={(isOpen) => setModal({ ...modal, add: isOpen })}
@@ -310,7 +308,6 @@ export default function ExercisesPage() {
               ), */
           }}
           setData={setExercise}
-          attributes={attributes}
           components={components}
           isOpen={modal.edit}
           setIsOpen={(isOpen) => setModal({ ...modal, edit: isOpen })}
@@ -374,7 +371,15 @@ export default function ExercisesPage() {
                 imageUrl: exercise.imageUrl,
                 videoUrl: exercise.videoUrl,
                 instruction: exercise.instruction,
-                attributeValues: exercise.attributeValues,
+                categories: [],
+                equipment: [],
+                prescriptions: [],
+                patterns: [],
+                bodyRegions: [],
+                loadingSides: [],
+                movementDirections: [],
+                locations: [],
+                liftPriorities: [],
               })),
             },
             { router, setExercises: setAllExercises }

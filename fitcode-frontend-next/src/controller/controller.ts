@@ -1,5 +1,4 @@
 import { AppController } from './app.controller';
-import { AttributeController } from './attribute/attribute.controller';
 import { AuthController } from './auth/auth.controller';
 import { ComponentController } from './component/component.controller';
 import { ExerciseController } from './exercise/exercise.controller';
@@ -12,7 +11,6 @@ import { TrainingController } from './training/training.controller';
 export class Controller {
   private static instance: Controller;
   public auth: AuthController;
-  public attribute: AttributeController;
   public component: ComponentController;
   public exercise: ExerciseController;
   public group: GroupController;
@@ -24,7 +22,6 @@ export class Controller {
 
   private constructor(token: string) {
     this.auth = AuthController.getInstance(token);
-    this.attribute = AttributeController.getInstance(token);
     this.component = ComponentController.getInstance(token);
     this.exercise = ExerciseController.getInstance(token);
     this.group = GroupController.getInstance(token);

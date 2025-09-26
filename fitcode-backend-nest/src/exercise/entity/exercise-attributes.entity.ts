@@ -5,15 +5,15 @@ import { IsEnum, IsString, ValidateNested } from 'class-validator';
 import { IsValidSelectPath } from '@src/attribute/decorator/is-valid-select-path.decorator';
 import { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
 
-import { BodyRegionValues } from '../enum/body-region.enum';
-import { Category } from '../enum/category.enum';
-import { Equipment } from '../enum/equipment.enum';
-import { LiftPriorityValues } from '../enum/lift-priority.enum';
-import { LoadingSideValues } from '../enum/loading-side.enum';
-import { LocationValues } from '../enum/location.enum';
-import { MovementDirectionValues } from '../enum/movement-direction.enum';
-import { PatternValues } from '../enum/patterns.enum';
-import { PrescriptionTypeValues } from '../enum/prescription-type.enum';
+import { BodyRegionValues } from '../constant/body-region.constant';
+import { Category } from '../constant/category.constant';
+import { Equipment } from '../constant/equipment.constant';
+import { LiftPriorityValues } from '../constant/lift-priority.constant';
+import { LoadingSideValues } from '../constant/loading-side.constant';
+import { LocationValues } from '../constant/location.constant';
+import { MovementDirectionValues } from '../constant/movement-direction.constant';
+import { PatternValues } from '../constant/patterns.constant';
+import { PrescriptionTypeValues } from '../constant/prescription-type.constant';
 
 export class ExerciseAttributes {
   @IsString({ each: true })

@@ -5,7 +5,6 @@ import { createContext, useContext, useState } from 'react';
 import { withAuth } from './auth.provider';
 import type { ChildrenProps } from '@/common/type/props.type';
 import type { SetState, SetStateNullable } from '@/common/type/state.type';
-import type { Attribute } from '@/controller/attribute/type/attribute.type';
 import type { AuthUser } from '@/controller/auth/type/user.type';
 import type { Component } from '@/controller/component/type/component.type';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
@@ -20,7 +19,6 @@ export interface MainProviderProps {
   users: AuthUser[];
   components: Component[];
   exercises: Exercise[];
-  attributes: Attribute[];
   methods: Method[];
   institutions: Institution[];
   groups: Group[];
@@ -31,7 +29,6 @@ interface MainContextProps extends MainProviderProps {
   setUsers: SetState<AuthUser[]>;
   setComponents: SetState<Component[]>;
   setExercises: SetState<Exercise[]>;
-  setAttributes: SetState<Attribute[]>;
   setMethods: SetState<Method[]>;
 }
 
@@ -52,7 +49,6 @@ export default function MainProvider(props: ChildrenProps & MainProviderProps) {
   const [profile, setProfile] = useState<Profile | undefined>(props.profile);
   const [users, setUsers] = useState<AuthUser[]>(props.users);
   const [exercises, setExercises] = useState<Exercise[]>(props.exercises);
-  const [attributes, setAttributes] = useState<Attribute[]>(props.attributes);
   const [components, setComponents] = useState<Component[]>(props.components);
   const [methods, setMethods] = useState<Method[]>(props.methods);
 
@@ -65,8 +61,6 @@ export default function MainProvider(props: ChildrenProps & MainProviderProps) {
     setComponents,
     exercises,
     setExercises,
-    attributes,
-    setAttributes,
     methods,
     setMethods,
     institutions: props.institutions,
