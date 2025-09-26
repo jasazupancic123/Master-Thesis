@@ -1,8 +1,9 @@
-import { theme } from '@/app/style';
-import { SetState } from '@/common/type/state.type';
 import { AddOutlined, RemoveOutlined } from '@mui/icons-material';
-import { Popper, Box, Typography, ClickAwayListener } from '@mui/material';
+import { Box, ClickAwayListener, Popper, Typography } from '@mui/material';
 import { useState } from 'react';
+
+import { theme } from '@/app/style';
+import type { SetState } from '@/common/type/state.type';
 
 interface NumericParamInputBoxProps {
   anchorEl: HTMLElement | null;

@@ -1,11 +1,12 @@
-import { Attribute } from '@/controller/attribute/type/attribute.type';
-import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { useScreenSize } from '@/store/screen-size.provider';
 import { Box, Typography } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
+
 import NumericParamInputBox from './numeric-param-input-box';
-import { SetState } from '@/common/type/state.type';
+import type { SetState } from '@/common/type/state.type';
+import type { Attribute } from '@/controller/attribute/type/attribute.type';
 import { IntType } from '@/controller/component/enum/param.enum';
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 interface NumericExerciseParamProps {
   initValue: number;

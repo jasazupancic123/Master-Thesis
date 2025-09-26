@@ -1,12 +1,12 @@
 'use client';
 import { Box, CircularProgress } from '@mui/material';
+import { useTheme } from '@mui/material';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { useEffect } from 'react';
 
 import Logo from '@/components/logo/logo';
 import { useScreenSize } from '@/store/screen-size.provider';
-import { useTheme } from '@mui/material';
 
 interface AnimationProps {
   duration?: number; // in milliseconds

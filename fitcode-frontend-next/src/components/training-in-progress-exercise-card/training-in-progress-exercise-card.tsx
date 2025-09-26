@@ -2,6 +2,7 @@ import { RadioButtonChecked, RadioButtonUnchecked } from '@mui/icons-material';
 import { Box, Checkbox, Stack, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Image from 'next/image';
+import { useMemo, useRef } from 'react';
 import toast from 'react-hot-toast';
 
 import AthleteTrainingExerciseSets from '../athlete-training-exercise-sets/athlete-training-exercise-sets';
@@ -22,8 +23,6 @@ import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
-import { MAX_WIDTH } from '../trainer-day-view/constant';
-import { useMemo, useRef } from 'react';
 
 export default function TrainingInProgressExerciseCard() {
   const theme = useTheme();
@@ -294,16 +293,14 @@ export default function TrainingInProgressExerciseCard() {
           >
             {Array.from({ length: selectedSuperset.exercises.length }).map(
               (_, index) => {
-                const currentExerciseIndex =
-                  selectedSuperset.exercises.indexOf(selectedExercise);
+                if (exerciseIndex === undefined) return null;
                 const letter = String.fromCharCode(65 + index);
                 return (
                   <Typography
                     key={index}
                     fontWeight={600}
                     color={
-                      currentExerciseIndex !== undefined &&
-                      currentExerciseIndex === index
+                      exerciseIndex !== undefined && exerciseIndex === index
                         ? theme.palette.primary.main
                         : undefined
                     }
@@ -315,6 +312,7 @@ export default function TrainingInProgressExerciseCard() {
                     }}
                     sx={{
                       textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
+                      px: 0.5,
                     }}
                   >
                     {letter}

@@ -18,6 +18,21 @@ export const metadata: Metadata = {
   icons: {
     icon: '/favicon.ico',
   },
+  openGraph: {
+    type: 'website',
+    url: '/',
+    siteName: 'Blind/off',
+    title: 'Blind/off',
+    description: 'Track workouts more efficiently.',
+    images: [
+      {
+        url: '/blind-off-logo.png',
+        width: 3708,
+        height: 549,
+        alt: 'Blind/off preview',
+      },
+    ],
+  },
 };
 
 export default async function RootLayout({ children }: ChildrenProps) {

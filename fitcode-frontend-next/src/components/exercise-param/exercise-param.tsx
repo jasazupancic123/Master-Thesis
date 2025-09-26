@@ -1,6 +1,7 @@
 import { FormControl, MenuItem, Select, Stack, TextField } from '@mui/material';
 import { useTheme } from '@mui/material';
 
+import NumericExerciseParam from '../numeric-exercise-param/numeric-exercise-param';
 import {
   disableBorder,
   exerciseCardSetAttributeSx,
@@ -8,10 +9,9 @@ import {
 import type { SetState } from '@/common/type/state.type';
 import type { Attribute } from '@/controller/attribute/type/attribute.type';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
+import { IntType } from '@/controller/component/enum/param.enum';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useGroup } from '@/store/group.provider';
-import NumericExerciseParam from '../numeric-exercise-param/numeric-exercise-param';
-import { IntType } from '@/controller/component/enum/param.enum';
 
 interface Props {
   param: Attribute;
