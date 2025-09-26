@@ -14,6 +14,7 @@ import {
 import { useTheme } from '@mui/material';
 import { useState } from 'react';
 
+import ExerciseMembersInProgress from '../training-exercise-card/exercise-members-in-progress';
 import TrainingExerciseCardContainer from '../training-exercise-card-container/training-exercise-card-container';
 import { deleteSupersetExercise } from './state';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
@@ -166,10 +167,26 @@ export default function SupersetExercise(props: SupersetExerciseProps) {
                 : `${supersetIndex + 1}${String.fromCharCode(65 + exerciseIndex)}`}
             </Typography>
           </Box>
+          {selectedExercise?.id !== exercise.id && (
+            <Box
+              position="absolute"
+              top={7.1}
+              right={expandedExercisesView ? 22 : 10}
+              sx={{ zIndex: 1 }}
+            >
+              <ExerciseMembersInProgress
+                trainingMembersLength={training.membersIds.length}
+                componentId={component.id}
+                supersetIndex={supersetIndex}
+                exerciseId={exercise.id}
+              />
+            </Box>
+          )}
+
           {!selectedAthlete && expandedExercisesView && (
             <Box
               position="absolute"
-              top={5}
+              top={2}
               right={0}
               display={selectedExercise?.id === exercise.id ? 'none' : 'flex'}
               flexDirection="column"

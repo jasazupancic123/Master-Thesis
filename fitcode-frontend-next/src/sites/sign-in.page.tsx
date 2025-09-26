@@ -10,6 +10,7 @@ import type { FormEvent } from 'react';
 import React from 'react';
 import toast from 'react-hot-toast';
 
+import { HERO_NAVBAR_HEIGHT } from '@/app/state';
 import { FIREBASE_AUTH_ID_TOKEN } from '@/common/config/firebase.config';
 import {
   LINKS_AUTH,
@@ -20,7 +21,6 @@ import { CommonService } from '@/common/service/common.service';
 import { BLACK_TEXT_FIELD_STYLE } from '@/common/util/styles.util';
 import HeroNavbar from '@/components/hero-navbar/hero-navbar';
 import { useAuth } from '@/store/auth.provider';
-import { HERO_NAVBAR_HEIGHT } from '@/app/state';
 
 const firebaseAuthUtil = FirebaseAuthUtil.getInstance();
 

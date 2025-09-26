@@ -1,4 +1,5 @@
 import { BaseController } from './base.controller';
+import { ExerciseService } from './exercise/exercise.service';
 import type { MainProviderProps } from '@/store/main.provider';
 
 export class AppController extends BaseController {
@@ -15,6 +16,14 @@ export class AppController extends BaseController {
   }
 
   async init() {
-    return this.api.get<MainProviderProps>('/init', { token: this.getToken() });
+    const data = await this.api.get<MainProviderProps>('/init', {
+      token: this.getToken(),
+    });
+
+    data.exercises = data.exercises.map((e) =>
+      ExerciseService.mapComponents(e, data.components)
+    );
+
+    return data;
   }
 }

@@ -1,12 +1,17 @@
-import { MoreVert } from '@mui/icons-material';
-import { Box, Divider, IconButton } from '@mui/material';
+import { Box, Divider, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
-import Typography from '@mui/material/Typography';
-import dayjs from 'dayjs';
-import React from 'react';
+import {
+  BarPlot,
+  ChartContainer,
+  ChartsTooltip,
+  PieChart,
+} from '@mui/x-charts';
+import React, { useState } from 'react';
 
-import ComponentsAvatar from '../components-avatar/components-avatar';
-import { MainSet } from '@/controller/training/enum/main-set.enum';
+import AthleteTrainingCardHeader from './athlete-training-card-header';
+import { theme } from '@/app/style';
+import type { ChildrenProps } from '@/common/type/props.type';
+import { PieCenterLabel } from '@/common/util/mui-charts.util';
 import type { TrainingReport } from '@/controller/training/type/training-report.type';
 
 type TrainingReportCardProps = {
@@ -17,21 +22,20 @@ export default function TrainingReportCard(props: TrainingReportCardProps) {
   const theme = useTheme();
   const { report } = props;
 
-  const checkIsActiveTraining = () => {
-    const now = dayjs();
-    const from = dayjs(report.from);
-
-    const isNowAM = now.hour() < 12;
-    const isTrainingAM = from.hour() < 12;
-
-    return isNowAM === isTrainingAM && now.isSame(from, 'day');
-  };
-
-  const isActiveTraining = checkIsActiveTraining();
+  const [realizationScore] = useState(
+    Math.round((report.realizationScore / report.totalRealizationScore) * 100)
+  );
+  const [tonnageScore] = useState(
+    Math.round((report.tonnage / report.totalTonnage) * 100)
+  );
+  const [densityScore] = useState(
+    Math.round((report.activeTime / report.recTime) * 100)
+  );
 
   return (
     <>
       <Box
+        id="training-report-card"
         width="100%"
         display="flex"
         flexDirection="column"
@@ -39,138 +43,120 @@ export default function TrainingReportCard(props: TrainingReportCardProps) {
           px: 2,
           py: 2,
           backgroundColor: theme.palette.background.default,
-          border: isActiveTraining
-            ? `1px solid ${theme.palette.primary.main}`
-            : 'none',
-          position: isActiveTraining ? 'relative' : undefined,
         }}
-        gap={1.5}
+        gap={2}
       >
-        {isActiveTraining && (
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 0,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              backgroundColor: theme.palette.primary.main,
-              borderBottomLeftRadius: 40,
-              borderBottomRightRadius: 40,
-              px: 2,
-              zIndex: 1,
-            }}
-          >
-            <Typography
-              sx={{
-                fontSize: 10,
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                color: theme.palette.background.light,
-              }}
+        {/* Group name, cycle name, date */}
+        <AthleteTrainingCardHeader
+          components={report.mappedPlannedComponents || []}
+          group={report.group}
+          cycle={report.cycle}
+          from={report.from}
+          to={report.to}
+        />
+
+        {/* Report charts */}
+        <Box width="100%" display="flex" alignItems="flex-start" gap={'1%'}>
+          <CustomChartContainer label="Realization">
+            <PieChart
+              height={120}
+              hideLegend
+              series={[
+                {
+                  data: [
+                    {
+                      value: realizationScore,
+                      label: '',
+                    },
+                    {
+                      value: 100 - realizationScore,
+                      label: '',
+                    },
+                  ],
+                  innerRadius: 35,
+                },
+              ]}
+              colors={[
+                theme.palette.primary.main,
+                theme.palette.background.light,
+              ]}
             >
-              Active
-            </Typography>
-          </Box>
-        )}
+              <ChartsTooltip trigger="none" />
+              <PieCenterLabel label={`${realizationScore}%`} />
+            </PieChart>
+          </CustomChartContainer>
+          <CustomChartContainer label="Tonnage">
+            <Box
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              justifyContent="center"
+            >
+              <PieChart
+                height={75}
+                margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+                hideLegend
+                series={[
+                  {
+                    startAngle: -90,
+                    endAngle: 90,
+                    data: [
+                      { label: '', value: tonnageScore },
+                      { label: '', value: 100 - tonnageScore },
+                    ],
+                    innerRadius: 30,
+                    outerRadius: 45,
+                    cy: 55,
+                  },
+                ]}
+                colors={[
+                  theme.palette.primary.main,
+                  theme.palette.background.light,
+                ]}
+              >
+                <PieCenterLabel
+                  label={`${tonnageScore}kg`}
+                  position={{ top: 12 }}
+                />
+                <ChartsTooltip trigger="none" />
+              </PieChart>
 
-        <Box
-          width="100%"
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-          gap={1}
-        >
-          {/* Group name, cycle name, date */}
-          <Box display="flex" alignItems="center" gap={1}>
-            <ComponentsAvatar
-              size={50}
-              components={(report.mappedPlannedComponents || []).map((c) => ({
-                id: c.id,
-                from: new Date(),
-                to: new Date(),
-                mainSet: MainSet.BLOCK,
-                subgroups: [],
-                supersets: [],
-              }))}
-            />
-
-            <Box display="flex" flexDirection="column">
               <Typography
+                fontSize={12}
+                textAlign="center"
+                color={theme.palette.background.lightBorder}
+              >
+                Density
+              </Typography>
+              <ChartContainer
+                height={15}
+                series={[
+                  { type: 'bar', data: [densityScore], layout: 'horizontal' },
+                ]}
+                margin={0}
+                xAxis={[{ position: 'none', min: 0, max: 100 }]}
+                yAxis={[{ position: 'none', scaleType: 'band', data: [''] }]}
+                colors={[theme.palette.primary.main]}
                 sx={{
-                  fontWeight: 'bold',
-                  fontSize: 15,
-                  height: 20,
+                  backgroundColor: theme.palette.background.light,
                 }}
               >
-                {report.group?.name}
-              </Typography>
-
-              <Typography sx={{ fontSize: 12, height: 16 }}>
-                {report.cycle?.name}
-              </Typography>
-              <Typography sx={{ fontSize: 12, height: 16 }}>
-                {new Date(report.from).toLocaleDateString('en-US', {
-                  month: 'long',
-                  day: 'numeric',
-                  year: 'numeric',
-                })}{' '}
-                at{' '}
-                {new Date(report.from).toLocaleTimeString('en-US', {
-                  hour: 'numeric',
-                  minute: 'numeric',
-                })}
-              </Typography>
+                <BarPlot />
+                <ChartsTooltip trigger="item" />
+              </ChartContainer>
             </Box>
-          </Box>
-          <IconButton sx={{ p: 0, m: 0 }}>
-            <MoreVert />
-          </IconButton>{' '}
-        </Box>
-
-        {/* Training data info */}
-        <Box
-          width="100%"
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          gap={2}
-        >
+          </CustomChartContainer>
           <Box
+            width="32.33%"
+            height={133}
             display="flex"
             flexDirection="column"
+            justifyContent="center"
             alignItems="center"
-            textAlign="center"
+            gap={1}
           >
-            <Typography
-              sx={{
-                fontSize: 12,
-                fontWeight: 350,
-              }}
-            >
-              Duration
-            </Typography>
-            <Typography
-              sx={{
-                fontSize: 14,
-                fontWeight: 'bold',
-              }}
-            >
-              {report.duration}´
-            </Typography>
-          </Box>
-
-          <Box
-            display="flex"
-            flexDirection="column"
-            alignItems="center"
-            textAlign="center"
-          >
-            <Typography sx={{ fontSize: 12, fontWeight: 350 }}>
-              Exercises
-            </Typography>
-            <Typography sx={{ fontSize: 14, fontWeight: 'bold' }}>
-              {report.exercises} / {report.totalExercises}
-            </Typography>
+            <CustomValueBox value={`${report.duration}’`} title="Duration" />
+            <CustomValueBox value={`72%`} title="Intensity" />
           </Box>
         </Box>
       </Box>
@@ -179,3 +165,53 @@ export default function TrainingReportCard(props: TrainingReportCardProps) {
     </>
   );
 }
+
+const CustomChartContainer = ({
+  children,
+  label,
+}: ChildrenProps & { label: string }) => {
+  return (
+    <Box
+      width="32.33%"
+      display="flex"
+      flexDirection="column"
+      alignItems="center"
+      justifyContent="flex-start"
+    >
+      <Typography
+        fontSize={12}
+        lineHeight={1}
+        textAlign="center"
+        color={theme.palette.background.lightBorder}
+      >
+        {label}
+      </Typography>
+      {children}
+    </Box>
+  );
+};
+
+const CustomValueBox = ({ value, title }: { value: string; title: string }) => {
+  return (
+    <Box
+      width={50}
+      height={50}
+      display="flex"
+      flexDirection="column"
+      justifyContent="center"
+      alignItems="center"
+      sx={{
+        backgroundColor: theme.palette.background.light,
+        border: `1px solid ${theme.palette.primary.main}`,
+        borderRadius: '5px',
+      }}
+    >
+      <Typography fontSize={14} textAlign="center">
+        {value}
+      </Typography>
+      <Typography fontSize={10} textAlign="center">
+        {title}
+      </Typography>
+    </Box>
+  );
+};

@@ -6,7 +6,6 @@ import { useTheme } from '@mui/material';
 import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
 
-import Animation from '../animation/animation';
 import AthleteOptionsContainer from '../athlete-options-container/athlete-options-container';
 import MyModal from '../modal/modal';
 import TrainingInProgressSuperset from '../training-in-progress-superset/training-in-progress-superset';
@@ -45,7 +44,6 @@ export default function TrainingInProgress() {
 
   const [elapsedTime, setElapsedTime] = useState(0);
   const [openCancelTrainingModal, setOpenCancelTrainingModal] = useState(false);
-  const [playAnimation, setPlayAnimation] = useState(true);
   const [undoneExercises, setUndoneExercises] = useState<TrainingExercise[]>(
     []
   );
@@ -156,16 +154,7 @@ export default function TrainingInProgress() {
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 
-  return playAnimation ? (
-    <Animation
-      text="LOADING YOUR TRAINING"
-      onEnd={() => {
-        setPlayAnimation(false);
-        setView(ExerciseTrainingView.TrainingView);
-      }}
-      fullScreen={true}
-    />
-  ) : trainingInProgress ? (
+  return trainingInProgress ? (
     <Box
       id="training-in-progress-main"
       width="100%"
@@ -204,57 +193,59 @@ export default function TrainingInProgress() {
                 whiteSpace: 'nowrap',
               }}
             >
-              {trainingInProgress.supersets?.map((superset, i) => (
-                <Typography
-                  key={i}
-                  fontSize={12}
-                  textAlign="center"
-                  noWrap
-                  sx={{
-                    flex: '0 0 auto',
-                    color:
-                      selectedSuperset === superset
+              {trainingInProgress.supersets?.map((superset, i) => {
+                const isSelected =
+                  (trainingInProgress.supersetIndex ?? 0) === i; // <- key change
+                return (
+                  <Typography
+                    key={i}
+                    fontSize={12}
+                    textAlign="center"
+                    noWrap
+                    sx={{
+                      flex: '0 0 auto',
+                      color: isSelected
                         ? theme.palette.primary.main
                         : undefined,
-                    fontWeight:
-                      selectedSuperset === superset ? 'bold' : 'normal',
-                  }}
-                  onClick={() => {
-                    const undoneExercises = getUndoneExercises(
-                      selectedSuperset,
-                      supersetIndex,
-                      trainingInProgress.exerciseSetTrackingState
-                    );
-                    if (undoneExercises.length > 0) {
-                      setUndoneExercises(undoneExercises);
-                      setShowUndoneSetsWarning(true);
-                    }
+                      fontWeight: isSelected ? 'bold' : 'normal',
+                    }}
+                    onClick={() => {
+                      const undoneExercises = getUndoneExercises(
+                        trainingInProgress.supersets[
+                          trainingInProgress.supersetIndex ?? 0
+                        ],
+                        trainingInProgress.supersetIndex ?? 0,
+                        trainingInProgress.exerciseSetTrackingState
+                      );
+                      if (undoneExercises.length > 0) {
+                        setUndoneExercises(undoneExercises);
+                        setShowUndoneSetsWarning(true);
+                      }
 
-                    setSelectedSuperset(superset);
-                    setSelectedExercise(superset.exercises[0] || null);
-                    setSetIndex(0);
-                    setTrainingInProgress((prev) => {
-                      if (!prev) return prev;
-                      return {
-                        ...prev,
-                        supersetIndex: i,
-                      };
-                    });
-                  }}
-                >
-                  {selectedSuperset === superset && (
-                    <Circle
-                      sx={{
-                        fontSize: 8,
-                        verticalAlign: 'middle',
-                        marginRight: 0.5,
-                        mb: 0.2,
-                      }}
-                    />
-                  )}
-                  Superset {i + 1}
-                </Typography>
-              ))}
+                      setSelectedSuperset(superset);
+                      setSelectedExercise(superset.exercises[0] || null);
+                      setSetIndex(0);
+                      setTrainingInProgress((prev) =>
+                        prev && prev.supersetIndex !== i
+                          ? { ...prev, supersetIndex: i }
+                          : prev
+                      );
+                    }}
+                  >
+                    {isSelected && (
+                      <Circle
+                        sx={{
+                          fontSize: 8,
+                          verticalAlign: 'middle',
+                          mr: 0.5,
+                          mb: 0.2,
+                        }}
+                      />
+                    )}
+                    Superset {i + 1}
+                  </Typography>
+                );
+              })}
             </Box>
           </Box>
         </>
@@ -267,6 +258,7 @@ export default function TrainingInProgress() {
           anchorEl={anchorEl}
           open={open}
           handleCancel={handleCancel}
+          handleCancelTraining={handleCancelTraining}
           handleOpenMenu={handleOpenMenu}
           handleCloseMenu={handleCloseMenu}
           setUndoneExercises={setUndoneExercises}

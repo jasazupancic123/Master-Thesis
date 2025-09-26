@@ -219,7 +219,7 @@ export default function TrainingExerciseCardContainer(
   }, [window.innerWidth]);
 
   return (
-    <Box>
+    <Box position="relative">
       {exercise.id === selectedExercise?.id ? (
         <TrainingExerciseSelected
           supersetIndex={supersetIndex}

@@ -2,6 +2,7 @@ import { RadioButtonChecked, RadioButtonUnchecked } from '@mui/icons-material';
 import { Box, Checkbox, Stack, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Image from 'next/image';
+import { useMemo, useRef } from 'react';
 import toast from 'react-hot-toast';
 
 import AthleteTrainingExerciseSets from '../athlete-training-exercise-sets/athlete-training-exercise-sets';
@@ -47,11 +48,26 @@ export default function TrainingInProgressExerciseCard() {
   const { selectedTrackingMethod, setSelectedTrackingMethod } =
     useAthleteHeader();
 
-  if (!trainingInProgress || !selectedSuperset || !selectedExercise)
-    return null;
-
   const isCircuit =
-    trainingInProgress.selectedComponent.mainSet === MainSet.CIRCUIT;
+    trainingInProgress?.selectedComponent.mainSet === MainSet.CIRCUIT;
+
+  const labelRef = useRef<string>('');
+
+  const computedLabel = useMemo(() => {
+    if (typeof exerciseIndex !== 'number' || typeof supersetIndex !== 'number')
+      return labelRef.current;
+
+    if (isCircuit) return String(exerciseIndex + 1);
+
+    const letter = String.fromCharCode(65 + exerciseIndex);
+    labelRef.current = `${supersetIndex + 1}${letter}`;
+    return `${supersetIndex + 1}${letter}`;
+  }, [exerciseIndex]);
+
+  if (computedLabel) labelRef.current = computedLabel;
+
+  if (!trainingInProgress || !selectedSuperset || !selectedExercise)
+    return labelRef.current;
 
   const updateExerciseReps = (repsCount: number) => {
     if (supersetIndex === undefined) return;
@@ -182,26 +198,19 @@ export default function TrainingInProgressExerciseCard() {
               px: 2,
             }}
           >
-            {exerciseIndex !== undefined &&
-              exerciseIndex !== null &&
-              supersetIndex !== undefined &&
-              supersetIndex !== null && (
-                <Box
-                  display="flex"
-                  flexDirection="column"
-                  sx={{ cursor: 'pointer' }}
-                >
-                  <Typography
-                    variant="caption"
-                    color={theme.palette.primary.main}
-                    sx={{ zIndex: 1 }}
-                  >
-                    {isCircuit
-                      ? `${exerciseIndex + 1}`
-                      : `${supersetIndex + 1}${String.fromCharCode(65 + exerciseIndex).replace('@', '')}`}
-                  </Typography>
-                </Box>
-              )}
+            <Box
+              display="flex"
+              flexDirection="column"
+              sx={{ cursor: 'pointer' }}
+            >
+              <Typography
+                variant="caption"
+                color={theme.palette.primary.main}
+                sx={{ zIndex: 1 }}
+              >
+                {labelRef.current}
+              </Typography>
+            </Box>
             <Box
               width="90%"
               display="flex"
@@ -238,33 +247,81 @@ export default function TrainingInProgressExerciseCard() {
         </Stack>
 
         {/* Image */}
-        {selectedExercise.exercise?.videoUrl ? (
-          <video
-            muted
-            playsInline
-            controls
-            poster={selectedExercise.exercise?.imageUrl || undefined}
-            style={{
-              width: '100%',
-              height: 'auto',
-              display: 'block',
-              filter: 'grayscale(100%)',
-            }}
-            preload="metadata"
-            src={selectedExercise.exercise.videoUrl}
-          />
-        ) : (
-          selectedExercise.exercise?.imageUrl && (
+        <Box position="relative">
+          {selectedExercise.exercise?.videoUrl ? (
+            <video
+              muted
+              playsInline
+              controls
+              poster={selectedExercise.exercise?.imageUrl || undefined}
+              style={{
+                width: '100%',
+                height: 'auto',
+                display: 'block',
+                filter: 'grayscale(100%)',
+              }}
+              preload="metadata"
+              src={selectedExercise.exercise.videoUrl}
+            />
+          ) : (
             <Image
-              src={selectedExercise.exercise.imageUrl}
+              src={
+                selectedExercise.exercise?.imageUrl ||
+                '/exercise-image-default.png'
+              }
               alt={selectedExercise.exercise?.name || ''}
               width={0}
               height={0}
-              sizes="100vw"
-              style={{ width: '100%', height: 'auto' }}
+              sizes={'100vw'}
+              style={{
+                maxWidth: '1200px',
+                width: '100vw',
+                height: 'auto',
+              }}
             />
-          )
-        )}
+          )}
+          <Box
+            display="flex"
+            flexDirection="column"
+            sx={{
+              position: 'absolute',
+              top: 5,
+              left: 0,
+              transform: 'translate(50%, 0)',
+            }}
+            gap={1}
+          >
+            {Array.from({ length: selectedSuperset.exercises.length }).map(
+              (_, index) => {
+                if (exerciseIndex === undefined) return null;
+                const letter = String.fromCharCode(65 + index);
+                return (
+                  <Typography
+                    key={index}
+                    fontWeight={600}
+                    color={
+                      exerciseIndex !== undefined && exerciseIndex === index
+                        ? theme.palette.primary.main
+                        : undefined
+                    }
+                    onClick={() => {
+                      const exerciseToSelect =
+                        selectedSuperset.exercises[index];
+                      if (exerciseToSelect)
+                        setSelectedExercise(exerciseToSelect);
+                    }}
+                    sx={{
+                      textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
+                      px: 0.5,
+                    }}
+                  >
+                    {letter}
+                  </Typography>
+                );
+              }
+            )}
+          </Box>
+        </Box>
 
         {/* Current tracking exercise set */}
         <Box
@@ -285,7 +342,6 @@ export default function TrainingInProgressExerciseCard() {
             display="flex"
             alignItems="center"
             justifyContent="space-evenly"
-            zIndex={100000}
           >
             {selectedExercise.sets.map((s, i) => (
               <Typography
@@ -294,6 +350,7 @@ export default function TrainingInProgressExerciseCard() {
                 textAlign="center"
                 fontWeight="bold"
                 sx={{
+                  position: 'relative',
                   px: 1.5,
                   py: 0.5,
                   cursor: 'pointer',
@@ -441,7 +498,7 @@ export default function TrainingInProgressExerciseCard() {
                     )
                   }
                   sx={{
-                    zIndex: 1000,
+                    zIndex: 10,
                     '&.MuiCheckbox-root': {
                       px: 0,
                     },
