@@ -1,10 +1,8 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext } from 'react';
 
 import type { ChildrenProps } from '@/common/type/props.type';
 import type { SetState } from '@/common/type/state.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { ParamType } from '@/controller/component/enum/param.enum';
-import { Attribute } from '@/controller/attribute/type/attribute.type';
 
 type SupersetsContextInputProps = {
   expandedExercisesView: boolean;

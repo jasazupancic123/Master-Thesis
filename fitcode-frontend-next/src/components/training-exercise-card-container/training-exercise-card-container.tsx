@@ -1,6 +1,6 @@
 'use client';
 
-import { Box, Popper, Typography } from '@mui/material';
+import { Box } from '@mui/material';
 import { useEffect, useState } from 'react';
 
 import {
@@ -17,7 +17,6 @@ import type { TrainingExercise } from '@/controller/training/type/training-exerc
 import { useGroup } from '@/store/group.provider';
 import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
-import { useTheme } from '@mui/material';
 
 export interface TrainingExerciseCardContainerProps {
   supersetIndex: number;
@@ -29,8 +28,6 @@ export interface TrainingExerciseCardContainerProps {
 export default function TrainingExerciseCardContainer(
   props: TrainingExerciseCardContainerProps
 ) {
-  const theme = useTheme();
-
   const { selectedExercise, setsNumbers, setSetsNumbers } = useSupersets();
 
   const {

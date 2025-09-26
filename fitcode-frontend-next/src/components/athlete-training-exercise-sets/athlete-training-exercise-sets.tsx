@@ -220,8 +220,6 @@ export default function AthleteTrainingExerciseSets(
                                 if (param.field === ParamType.VolWorkSets)
                                   return;
 
-                                console.log('newValue', +newValue);
-
                                 if (+newValue < 0) return;
 
                                 updateExerciseAttributeValues(
