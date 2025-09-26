@@ -15,6 +15,21 @@ const onest = Onest({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'Blind/off',
   description: 'Track workouts more efficiently.',
+  openGraph: {
+    type: 'website',
+    url: '/',
+    siteName: 'Blind/off',
+    title: 'Blind/off',
+    description: 'Track workouts more efficiently.',
+    images: [
+      {
+        url: '/blind-off-logo.png',
+        width: 3708,
+        height: 549,
+        alt: 'Blind/off preview',
+      },
+    ],
+  },
 };
 
 export default async function RootLayout({ children }: ChildrenProps) {
