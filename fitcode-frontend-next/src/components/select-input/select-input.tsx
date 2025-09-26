@@ -30,6 +30,8 @@ interface Props<T> {
   minWidth?: string | number | undefined;
   maxWidth?: string | number;
   disableNoneChoice?: boolean;
+  alignToStart?: boolean;
+  selectSx?: SxProps<Theme>;
 }
 
 export default function SelectInput<T>(props: Props<T>) {
@@ -115,6 +117,11 @@ export default function SelectInput<T>(props: Props<T>) {
           '&.Mui-focused .MuiOutlinedInput-notchedOutline': { border: 'none' },
           '&:hover .MuiOutlinedInput-notchedOutline': { border: 'none' },
           fontSize: props.selectedItemSize,
+          pl: props.alignToStart ? 0 : undefined,
+          '& .MuiInputAdornment-root': {
+            mr: props.alignToStart ? 0 : undefined,
+          },
+          ...props.selectSx,
         }}
       >
         {!props.disableNoneChoice && (
