@@ -16,8 +16,6 @@ export type Exercise = BaseEntity &
     defaultParams?: Attribute[];
 
     // mapped properties
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    valuesObject: Record<string, any>;
     components?: Component[];
     rootComponents?: Component[];
   };

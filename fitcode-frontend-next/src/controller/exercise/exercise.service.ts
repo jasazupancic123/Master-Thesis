@@ -122,10 +122,7 @@ export class ExerciseService {
 
     // populate exercises
     filtered.map((exercise) => {
-      ExerciseService.mapComponents(
-        ExerciseService.mapAttributes(exercise),
-        components
-      );
+      ExerciseService.mapComponents(exercise, components);
     });
 
     setFilteredExercises(filtered);
@@ -134,16 +131,6 @@ export class ExerciseService {
       total,
       pages: Math.ceil(total / pagination.pageSize),
     }));
-  }
-
-  static mapAttributes(item: Exercise): Exercise {
-    const attributeValues = this.getValues(item);
-
-    item.valuesObject = commonService.object.flattenObject(
-      ExerciseService.attributeValuesToNestedObject(attributeValues)
-    );
-
-    return item;
   }
 
   static mapComponents(item: Exercise, components: Component[]): Exercise {
@@ -158,8 +145,8 @@ export class ExerciseService {
     return item;
   }
 
-  static getAttributes(): Attribute[] {
-    return [
+  static getAttributes(filter?: Component['attributes']): Attribute[] {
+    const allAttributes = [
       {
         field: 'categories',
         name: 'Categories',
@@ -215,6 +202,9 @@ export class ExerciseService {
         options: MovementDirection,
       },
     ];
+
+    if (!filter || !filter.length) return allAttributes;
+    return allAttributes.filter(({ field }) => filter.includes(field));
   }
 
   static getValues(exercise: Partial<ExerciseAttributes>): AttributeValue[] {
@@ -301,84 +291,5 @@ export class ExerciseService {
       selected: parts.slice(0, parts.length - 1).join(':'),
       value: parts[parts.length - 1],
     };
-  }
-
-  /**
-   * Converts a nested object into a colon-separated string path starting from the root key.
-   *
-   * @example
-   * parseAttributeValue({ a: 'b', b: 'c', c: 1 }, 'a') // => { a: "b:c:1" }
-   * parseAttributeValue({ x: 'y', y: 'z', z: 100 }, 'x') // => { x: "y:z:100" }
-   */
-  static parseAttributeValue<T extends Record<string, unknown>>(
-    obj: T,
-    rootKey: keyof T
-  ): Record<string, string> {
-    const result: Record<string, string> = {};
-    const pathParts: string[] = [];
-
-    let currentKey: string | undefined = String(rootKey);
-    let currentValue: unknown = obj[currentKey];
-
-    while (
-      typeof currentValue === 'string' &&
-      obj[currentValue] !== undefined
-    ) {
-      pathParts.push(currentValue);
-      currentKey = currentValue;
-      currentValue = obj[currentKey];
-    }
-
-    if (currentValue !== undefined) pathParts.push(String(currentValue));
-    result[String(rootKey)] = pathParts.join(':');
-
-    return result;
-  }
-
-  /**
-   * Converts ExerciseAttributeValue array to a nested object structure
-   * where selected path creates nesting and value is placed at the end.
-   *
-   * @example
-   * unparseAttributeValues([
-   *   { field: "target", value: "chest", selected: "muscle" },
-   *   { field: "equipment", value: "bench", selected: "weight-training" }
-   * ])
-   *
-   * => {
-   *   target: { muscle: "chest" },
-   *   equipment: { "weight-training": "bench" }
-   * }
-   */
-  static attributeValuesToNestedObject(
-    attributeValues: AttributeValue[]
-  ): Record<string, unknown> {
-    const result: Record<string, unknown> = {};
-
-    for (const attr of attributeValues) {
-      if (attr.selected === attr.value) {
-        result[attr.field] = attr.value;
-        continue;
-      }
-
-      if (!result[attr.field]) result[attr.field] = {};
-      const pathParts = attr.selected.split(':');
-      let currentLevel = result[attr.field] as Record<string, unknown>;
-
-      // Build the nested structure
-      for (let i = 0; i < pathParts.length; i++) {
-        const part = pathParts[i];
-        if (i === pathParts.length - 1) {
-          // Last part - assign the value
-          currentLevel[part] = attr.value;
-        } else {
-          // Create nested level if it doesn't exist
-          currentLevel[part] = currentLevel[part] || {};
-          currentLevel = currentLevel[part] as Record<string, unknown>;
-        }
-      }
-    }
-
-    return result;
   }
 }

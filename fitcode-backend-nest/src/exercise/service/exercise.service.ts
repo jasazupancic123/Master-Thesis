@@ -197,7 +197,6 @@ export class ExerciseService implements Permission<Exercise, Institution> {
   /**
    * Creates / updates (if exercise with same name exists) exercises in batch.
    */
-  @LogMethod()
   async upsertMany(user: User, exercises: CreateExerciseDto[]) {
     // validate components
     const components = await this.componentService.findAllFlat();

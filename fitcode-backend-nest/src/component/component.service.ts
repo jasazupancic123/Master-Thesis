@@ -42,10 +42,19 @@ export class ComponentService {
       children: Component[];
     },
   ): Promise<Component> {
-    const { children, ...rest } = data;
-    const component = await this.create({ ...rest, parentId: data.parentId });
+    const component = await this.create({
+      id: data.id,
+      parentId: data.parentId,
+      name: data.name,
+      slug: data.slug,
+      targets: data.targets,
+      attributes: data.attributes,
+      params: data.params,
+    });
+
     await this.cacheManagerService.del(CACHE_KEY_FLAT_COMPONENTS);
 
+    const children = data.children || [];
     for (const child of children) {
       const childData = {
         ...child,

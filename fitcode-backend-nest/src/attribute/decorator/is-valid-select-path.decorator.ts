@@ -2,7 +2,6 @@ import type { ValidationArguments, ValidationOptions } from 'class-validator';
 import { registerDecorator } from 'class-validator';
 
 import type { Attribute } from '@src/attribute/entity/attribute.entity';
-import type { ValidationResult } from '@src/attribute/util/attribute.util';
 import { checkPathWithNextOptions } from '@src/attribute/util/attribute.util';
 
 export function IsValidSelectPath(
@@ -11,7 +10,7 @@ export function IsValidSelectPath(
 ) {
   return function (object: Object, propertyName: string) {
     registerDecorator({
-      name: 'isValidEquipmentPathWithHint',
+      name: 'IsValidSelectPath',
       target: object.constructor,
       propertyName: propertyName,
       options,
@@ -26,19 +25,16 @@ export function IsValidSelectPath(
           return result.isValid;
         },
         defaultMessage(args: ValidationArguments) {
-          const validationResult = (args as any)
-            .validationResult as ValidationResult;
+          const key = args.property;
+          const value = (args.value ?? '').toString();
+          const [tree] = args.constraints as [Attribute[]];
 
-          if (!validationResult.isValid) {
-            const nextOptions =
-              validationResult.nextOptions.length > 0
-                ? validationResult.nextOptions.join(', ')
-                : 'no further options';
+          const result = checkPathWithNextOptions(value, tree);
+          const { lastValidPath, nextOptions } = result;
+          const nextOptionsShort = nextOptions.slice(0, 3).join(', ');
+          const moreOptions = nextOptions.length > 3 ? ', ...' : '';
 
-            return `${args.value} is invalid. Last valid path: "${validationResult.lastValidPath}". Next possible options: ${nextOptions}`;
-          }
-
-          return '';
+          return `${key} selection "${value}" is invalid, valid options for ${lastValidPath || key} are: ${nextOptionsShort}${moreOptions}`;
         },
       },
     });

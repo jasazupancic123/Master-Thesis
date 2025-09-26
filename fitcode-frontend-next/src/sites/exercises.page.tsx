@@ -2,13 +2,25 @@
 
 import { Publish } from '@mui/icons-material';
 import AddIcon from '@mui/icons-material/AddOutlined';
-import { Pagination, Tooltip, Typography } from '@mui/material';
+import {
+  Card,
+  CardContent,
+  CardMedia,
+  Checkbox,
+  FormControlLabel,
+  FormGroup,
+  Grid,
+  Pagination,
+  TextField,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import { useTheme } from '@mui/material/styles';
 import { useRouter } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import {
   handleAddExercise,
@@ -48,7 +60,6 @@ export const DEFAULT_EXERCISE: Partial<Exercise> = {
   name: '',
   componentIds: [],
   isUnilateral: false,
-  valuesObject: {},
 };
 
 export default function ExercisesPage() {
@@ -88,6 +99,7 @@ export default function ExercisesPage() {
   const [importedExercises, setImportedExercises] = useState<Exercise[]>([]);
   const [importedMuscleValueExercises, setImportedMuscleValueExercises] =
     useState<CreateExerciseMuscleValues[]>([]);
+
   const [modal, setModal] = useState({
     add: false,
     edit: false,
@@ -163,9 +175,7 @@ export default function ExercisesPage() {
             onClick={() => {
               setModal({ ...modal, muscleValues: true });
             }}
-            sx={{
-              cursor: 'pointer',
-            }}
+            sx={{ cursor: 'pointer' }}
           >
             <IconButton>
               <Publish />
@@ -227,6 +237,7 @@ export default function ExercisesPage() {
           </Tooltip>
         </Stack>
       </Box>
+
       <Stack direction="row" justifyContent="center" my={2} width="100%">
         <Pagination
           count={pagination.pages}
@@ -235,11 +246,13 @@ export default function ExercisesPage() {
           page={pagination.page}
         />
       </Stack>
+
       <ExercisesList
         exercises={filteredExercises}
         setExercise={setExercise}
         setModal={setModal}
       />
+
       {/* Add Exercise Modal*/}
       {modal.add && (
         <ExerciseModal
@@ -249,11 +262,10 @@ export default function ExercisesPage() {
           isOpen={modal.add}
           setIsOpen={(isOpen) => setModal({ ...modal, add: isOpen })}
           title={'Add Exercise'}
-          onConfirm={async (attributes) => {
+          onConfirm={async () => {
             handleAddExercise(token, exercise, {
               router,
               components,
-              attributes,
               component: selectedComponent!,
               filteredExercises,
               setFilteredExercises,
@@ -267,14 +279,7 @@ export default function ExercisesPage() {
       {/* Edit Exercise Modal */}
       {modal.edit && (
         <ExerciseModal
-          data={{
-            ...exercise,
-            /* valuesObject: commonService.object.flattenObject(
-                ExerciseService.attributeValuesToNestedObject(
-                  exercise.attributeValues || []
-                )
-              ), */
-          }}
+          data={exercise}
           setData={setExercise}
           components={components}
           isOpen={modal.edit}
@@ -285,11 +290,10 @@ export default function ExercisesPage() {
               : 'Update Exercise'
           }
           {...((exercise.ownerId !== 'global' || role === UserRole.ADMIN) && {
-            onConfirm: async (attributes) => {
+            onConfirm: async () => {
               handleUpdateExercise(token, exercise!.id!, exercise, {
                 router,
                 components,
-                attributes,
                 setFilteredExercises,
                 setExercises: setAllExercises,
                 setExercise,
@@ -331,26 +335,8 @@ export default function ExercisesPage() {
         onConfirm={() => {
           handleUpsertManyExercises(
             token,
-            {
-              exercises: importedExercises.map((exercise) => ({
-                name: exercise.name,
-                componentIds: exercise.componentIds,
-                isUnilateral: exercise.isUnilateral,
-                imageUrl: exercise.imageUrl,
-                videoUrl: exercise.videoUrl,
-                instruction: exercise.instruction,
-                categories: [],
-                equipment: [],
-                prescriptions: [],
-                patterns: [],
-                bodyRegions: [],
-                loadingSides: [],
-                movementDirections: [],
-                locations: [],
-                liftPriorities: [],
-              })),
-            },
-            { router, setExercises: setAllExercises }
+            { exercises: importedExercises },
+            { router, setAllExercises, setExercises, setFilteredExercises }
           );
 
           setModal((prev) => ({ ...prev, import: false }));
@@ -397,6 +383,121 @@ export default function ExercisesPage() {
           }}
         />
       </MyModal>
+    </Box>
+  );
+}
+
+interface ExerciseGalleryProps {
+  exercises: Exercise[];
+  categories: string[];
+  pageSize?: number;
+}
+
+function ExerciseGallery({
+  exercises,
+  categories,
+  pageSize = 9,
+}: ExerciseGalleryProps) {
+  const [search, setSearch] = useState('');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [page, setPage] = useState(1);
+
+  // Filtering exercises based on search and categories
+  const filteredExercises = useMemo(() => {
+    return exercises.filter((ex) => {
+      const matchesSearch = ex.name
+        .toLowerCase()
+        .includes(search.toLowerCase());
+      const matchesCategory =
+        selectedCategories.length === 0 ||
+        selectedCategories.some((cat) => ex.categories.includes(cat));
+      return matchesSearch && matchesCategory;
+    });
+  }, [exercises, search, selectedCategories]);
+
+  const pageCount = Math.ceil(filteredExercises.length / pageSize);
+
+  const paginatedExercises = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filteredExercises.slice(start, start + pageSize);
+  }, [filteredExercises, page, pageSize]);
+
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategories((prev) =>
+      prev.includes(category)
+        ? prev.filter((c) => c !== category)
+        : [...prev, category]
+    );
+    setPage(1);
+  };
+
+  return (
+    <Box p={3}>
+      {/* Filters */}
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} mb={3}>
+        <TextField
+          label="Search exercises"
+          variant="outlined"
+          fullWidth
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
+        />
+
+        <FormGroup row>
+          {categories.map((cat) => (
+            <FormControlLabel
+              key={cat}
+              control={
+                <Checkbox
+                  checked={selectedCategories.includes(cat)}
+                  onChange={() => handleCategoryChange(cat)}
+                />
+              }
+              label={cat}
+            />
+          ))}
+        </FormGroup>
+      </Stack>
+
+      {/* Exercise grid */}
+      <Grid container spacing={3}>
+        {paginatedExercises.map((exercise) => (
+          <Grid item xs={12} sm={6} md={4} key={exercise.id}>
+            <Card
+              sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+            >
+              <CardMedia
+                component="img"
+                height="180"
+                image={exercise.imageUrl}
+                alt={exercise.name}
+                sx={{ objectFit: 'cover' }}
+              />
+              <CardContent>
+                <Typography variant="h6">{exercise.name}</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {exercise.categories.join(', ')}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+
+      {/* Pagination */}
+      {pageCount > 1 && (
+        <Box mt={4} display="flex" justifyContent="center">
+          <Pagination
+            count={pageCount}
+            page={page}
+            onChange={(_, value) => setPage(value)}
+            color="primary"
+          />
+        </Box>
+      )}
     </Box>
   );
 }

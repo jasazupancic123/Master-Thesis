@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
-import { IsEnum, IsString, ValidateNested } from 'class-validator';
+import { IsIn, IsString, ValidateNested } from 'class-validator';
 
 import { IsValidSelectPath } from '@src/attribute/decorator/is-valid-select-path.decorator';
 import { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
@@ -34,37 +34,37 @@ export class ExerciseAttributes {
   @Expose()
   muscleValues: AttributeValue[];
 
-  @IsEnum(PrescriptionTypeValues, { each: true })
+  @IsIn(PrescriptionTypeValues, { each: true })
   @ApiProperty({ enum: PrescriptionTypeValues, isArray: true })
   @Expose()
   prescriptions: (typeof PrescriptionTypeValues)[number][];
 
-  @IsEnum(PatternValues, { each: true })
+  @IsIn(PatternValues, { each: true })
   @ApiProperty({ enum: PatternValues, isArray: true })
   @Expose()
   patterns: (typeof PatternValues)[number][];
 
-  @IsEnum(BodyRegionValues, { each: true })
+  @IsIn(BodyRegionValues, { each: true })
   @ApiProperty({ enum: BodyRegionValues, isArray: true })
   @Expose()
   bodyRegions: (typeof BodyRegionValues)[number][];
 
-  @IsEnum(LoadingSideValues, { each: true })
+  @IsIn(LoadingSideValues, { each: true })
   @ApiProperty({ enum: LoadingSideValues, isArray: true })
   @Expose()
   loadingSides: (typeof LoadingSideValues)[number][];
 
-  @IsEnum(LocationValues, { each: true })
+  @IsIn(LocationValues, { each: true })
   @ApiProperty({ enum: LocationValues, isArray: true })
   @Expose()
   locations: (typeof LocationValues)[number][];
 
-  @IsEnum(LiftPriorityValues, { each: true })
+  @IsIn(LiftPriorityValues, { each: true })
   @ApiProperty({ enum: LiftPriorityValues, isArray: true })
   @Expose()
   liftPriorities: (typeof LiftPriorityValues)[number][];
 
-  @IsEnum(MovementDirectionValues, { each: true })
+  @IsIn(MovementDirectionValues, { each: true })
   @ApiProperty({ enum: MovementDirectionValues, isArray: true })
   @Expose()
   movementDirections: (typeof MovementDirectionValues)[number][];
