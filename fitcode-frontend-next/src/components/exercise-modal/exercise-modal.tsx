@@ -27,7 +27,6 @@ const firebaseStorage = FirebaseStorageUtil.Instance;
 interface Props {
   data: Partial<Exercise>;
   setData: SetState<Partial<Exercise>>;
-  attributes: Attribute[];
   components: Component[];
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
@@ -42,7 +41,6 @@ export default function ExerciseModal(props: Props) {
   const {
     data,
     setData,
-    attributes,
     components,
     isOpen,
     setIsOpen,
@@ -59,7 +57,7 @@ export default function ExerciseModal(props: Props) {
   const [hasSelectedLeafComponent, setHasSelectedLeafComponent] =
     useState(false);
 
-  const [filteredAttributes, setFilteredAttributes] = useState(attributes);
+  const [filteredAttributes, setFilteredAttributes] = useState<Attribute[]>([]);
 
   function handleSelectChange(field: string, value: string) {
     setData((prev) => ({
@@ -131,9 +129,9 @@ export default function ExerciseModal(props: Props) {
           if (!attributeIds.find((a) => a === attribute))
             attributeIds.push(attribute);
 
-    setFilteredAttributes(
+    /* setFilteredAttributes(
       attributes.filter((a) => attributeIds.includes(a.field))
-    );
+    ); */
 
     setHasSelectedLeafComponent(hasSelectedLeafComponent);
   }, [data.componentIds]);

@@ -1,6 +1,17 @@
+import { AttributeType } from '../attribute/enum/attribute-value.enum';
+import type { Attribute } from '../attribute/type/attribute.type';
+import type { AttributeValue } from '../attribute/type/attribute-value.type';
 import type { Component } from '../component/type/component.type';
-import type { Exercise } from './type/exercise.type';
-import type { ExerciseAttributeValue } from './type/exercise-attribute-value.type';
+import { BodyRegion } from './constant/body-region.constant';
+import { Category } from './constant/category.constant';
+import { Equipment } from './constant/equipment.constant';
+import { LiftPriority } from './constant/lift-priority.constant';
+import { LoadingSide } from './constant/loading-side.constant';
+import { Location } from './constant/location.constant';
+import { MovementDirection } from './constant/movement-direction.constant';
+import { Pattern } from './constant/pattern.constant';
+import { PrescriptionType } from './constant/prescription.constant';
+import type { Exercise, ExerciseAttributes } from './type/exercise.type';
 import { CommonService } from '@/common/service/common.service';
 import type { Pagination } from '@/common/type/paginate.type';
 import type { SetState } from '@/common/type/state.type';
@@ -126,8 +137,10 @@ export class ExerciseService {
   }
 
   static mapAttributes(item: Exercise): Exercise {
+    const attributeValues = this.getValues(item);
+
     item.valuesObject = commonService.object.flattenObject(
-      ExerciseService.attributeValuesToNestedObject(item.attributeValues || [])
+      ExerciseService.attributeValuesToNestedObject(attributeValues)
     );
 
     return item;
@@ -143,6 +156,151 @@ export class ExerciseService {
     );
 
     return item;
+  }
+
+  static getAttributes(): Attribute[] {
+    return [
+      {
+        field: 'categories',
+        name: 'Categories',
+        type: AttributeType.Multiselect,
+        options: Category,
+      },
+      {
+        field: 'equipment',
+        name: 'Equipment',
+        type: AttributeType.Multiselect,
+        options: Equipment,
+      },
+      {
+        field: 'prescriptions',
+        name: 'Prescriptions',
+        type: AttributeType.Multiselect,
+        options: PrescriptionType,
+      },
+      {
+        field: 'patterns',
+        name: 'Patterns',
+        type: AttributeType.Multiselect,
+        options: Pattern,
+      },
+      {
+        field: 'bodyRegions',
+        name: 'Body Regions',
+        type: AttributeType.Multiselect,
+        options: BodyRegion,
+      },
+      {
+        field: 'loadingSides',
+        name: 'Loading Sides',
+        type: AttributeType.Multiselect,
+        options: LoadingSide,
+      },
+      {
+        field: 'locations',
+        name: 'Locations',
+        type: AttributeType.Multiselect,
+        options: Location,
+      },
+      {
+        field: 'liftPriorities',
+        name: 'Lift Priorities',
+        type: AttributeType.Multiselect,
+        options: LiftPriority,
+      },
+      {
+        field: 'movementDirections',
+        name: 'Movement Directions',
+        type: AttributeType.Multiselect,
+        options: MovementDirection,
+      },
+    ];
+  }
+
+  static getValues(exercise: Partial<ExerciseAttributes>): AttributeValue[] {
+    const categoryValues: AttributeValue[] =
+      exercise.categories?.map((c) => ({
+        field: 'categories',
+        ...this.parseSelectedValue(c),
+      })) || [];
+
+    const equipmentValues: AttributeValue[] =
+      exercise.equipment?.map((e) => ({
+        field: 'equipment',
+        ...this.parseSelectedValue(e),
+      })) || [];
+
+    const prescriptionValues: AttributeValue[] =
+      exercise.prescriptions?.map((p) => ({
+        field: 'prescriptions',
+        selected: '',
+        value: p,
+      })) || [];
+
+    const patternValues: AttributeValue[] =
+      exercise.patterns?.map((p) => ({
+        field: 'patterns',
+        selected: '',
+        value: p,
+      })) || [];
+
+    const bodyRegionValues: AttributeValue[] =
+      exercise.bodyRegions?.map((b) => ({
+        field: 'bodyRegions',
+        selected: '',
+        value: b,
+      })) || [];
+
+    const loadingSideValues: AttributeValue[] =
+      exercise.loadingSides?.map((l) => ({
+        field: 'loadingSides',
+        selected: '',
+        value: l,
+      })) || [];
+
+    const locationValues: AttributeValue[] =
+      exercise.locations?.map((l) => ({
+        field: 'locations',
+        selected: '',
+        value: l,
+      })) || [];
+
+    const liftPriorityValues: AttributeValue[] =
+      exercise.liftPriorities?.map((l) => ({
+        field: 'liftPriorities',
+        selected: '',
+        value: l,
+      })) || [];
+
+    const movementDirectionValues: AttributeValue[] =
+      exercise.movementDirections?.map((m) => ({
+        field: 'movementDirections',
+        selected: '',
+        value: m,
+      })) || [];
+
+    return [
+      ...categoryValues,
+      ...prescriptionValues,
+      ...patternValues,
+      ...bodyRegionValues,
+      ...equipmentValues,
+      ...loadingSideValues,
+      ...locationValues,
+      ...liftPriorityValues,
+      ...movementDirectionValues,
+    ];
+  }
+
+  static parseSelectedValue(
+    s: string
+  ): Pick<AttributeValue, 'selected' | 'value'> {
+    // value is last part, all before is select
+    const parts = s.split(':');
+    return {
+      selected: parts.slice(0, parts.length - 1).join(':'),
+      value: parts[parts.length - 1],
+    };
   }
 
   /**
@@ -193,7 +351,7 @@ export class ExerciseService {
    * }
    */
   static attributeValuesToNestedObject(
-    attributeValues: ExerciseAttributeValue[]
+    attributeValues: AttributeValue[]
   ): Record<string, unknown> {
     const result: Record<string, unknown> = {};
 

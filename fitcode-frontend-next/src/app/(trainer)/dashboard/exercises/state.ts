@@ -17,7 +17,6 @@ import type {
   UpsertManyExercises,
   UpsertManyMuscleValues,
 } from '@/controller/exercise/type/exercise.type';
-import type { ExerciseAttributeValue } from '@/controller/exercise/type/exercise-attribute-value.type';
 import { DEFAULT_EXERCISE } from '@/sites/exercises.page';
 
 const commonService = CommonService.instance;
@@ -111,12 +110,12 @@ export async function handleAddExercise(
     return toast.error('Select at least one component to add');
 
   // find all nested select attributes and convert them to a multi-level object
-  const attributeValues: ExerciseAttributeValue[] = [];
+  const attributeValues: AttributeValue[] = [];
   const nestedSelectAttributes = attributes
     .filter(
       (attribute) =>
         [AttributeType.Select, AttributeType.Multiselect].includes(
-          attribute.type
+          attribute.type || AttributeType.Select
         ) &&
         [AttributeType.Select, AttributeType.Multiselect].includes(
           attribute.options?.[0]?.type || AttributeType.Value
@@ -135,8 +134,7 @@ export async function handleAddExercise(
         field: key,
         selected: getBeforeLastColon(nested[key]),
         value: getAfterLastColon(nested[key]),
-        componentIds: input.componentIds || [],
-      } as ExerciseAttributeValue);
+      } as AttributeValue);
   }
 
   // add all other attributes
@@ -152,7 +150,7 @@ export async function handleAddExercise(
         selected: getBeforeLastColon(valueWithColons),
         value: getAfterLastColon(valueWithColons),
         componentIds: input.componentIds || [],
-      } as ExerciseAttributeValue);
+      } as AttributeValue);
   }
 
   handleApiRequest(
@@ -165,7 +163,15 @@ export async function handleAddExercise(
         imageUrl: input.imageUrl,
         videoUrl: input.videoUrl,
         instruction: input.instruction,
-        attributeValues: attributeValues,
+        categories: [],
+        equipment: [],
+        prescriptions: [],
+        patterns: [],
+        bodyRegions: [],
+        loadingSides: [],
+        movementDirections: [],
+        locations: [],
+        liftPriorities: [],
       }),
     (exercise) => {
       const id = exercise.id;
@@ -231,13 +237,11 @@ export async function handleUpdateExercise(
     return toast.error('Select at least one component to add');
 
   // find all nested select attributes and convert them to a multi-level object
-  const attributeValues: ExerciseAttributeValue[] = [];
+  const attributeValues: AttributeValue[] = [];
   const nestedSelectAttributes = attributes
     .filter(
       (attribute) =>
-        [AttributeType.Select, AttributeType.Multiselect].includes(
-          attribute.type
-        ) &&
+        attribute.options &&
         [AttributeType.Select, AttributeType.Multiselect].includes(
           attribute.options?.[0]?.type || AttributeType.Value
         )
@@ -256,7 +260,7 @@ export async function handleUpdateExercise(
         selected: getBeforeLastColon(nested[key]),
         value: getAfterLastColon(nested[key]),
         componentIds: input.componentIds || [],
-      } as ExerciseAttributeValue);
+      } as AttributeValue);
   }
 
   // add all other attributes
@@ -272,7 +276,7 @@ export async function handleUpdateExercise(
         selected: getBeforeLastColon(valueWithColons),
         value: getAfterLastColon(valueWithColons),
         componentIds: input.componentIds || [],
-      } as ExerciseAttributeValue);
+      } as AttributeValue);
   }
 
   handleApiRequest(
@@ -283,7 +287,16 @@ export async function handleUpdateExercise(
         componentIds: input.componentIds!,
         imageUrl: input.imageUrl,
         videoUrl: input.videoUrl,
-        attributeValues,
+        instruction: input.instruction,
+        categories: [],
+        equipment: [],
+        prescriptions: [],
+        patterns: [],
+        bodyRegions: [],
+        loadingSides: [],
+        movementDirections: [],
+        locations: [],
+        liftPriorities: [],
       }),
     (exercise) => {
       exercise = ExerciseService.mapAttributes(exercise);
@@ -626,14 +639,16 @@ function getExerciseFromCsvRow(row: string): Exercise | null {
     videoUrl,
     imageUrl,
     isUnilateral: commonService.object.toBoolean(isUnilateral),
-    attributeValues: attributeValues.map((av) => ({
-      ...av,
-      id: '',
-      exerciseId: '',
-      ownerId: '',
-      componentIds: [],
-      isUnilateral: false,
-    })),
+    instruction,
+    categories: [],
+    equipment: [],
+    prescriptions: [],
+    patterns: [],
+    bodyRegions: [],
+    loadingSides: [],
+    movementDirections: [],
+    locations: [],
+    liftPriorities: [],
   };
 }
 

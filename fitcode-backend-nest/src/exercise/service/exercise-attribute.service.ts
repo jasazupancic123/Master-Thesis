@@ -12,18 +12,18 @@ import { AttributeType } from '@src/common/enum/attribute-type.enum';
 import { ValidateError } from '@src/common/type/validate.type';
 import { Component } from '@src/component/entity/component.entity';
 
+import { BodyRegion } from '../constant/body-region.constant';
+import { Category } from '../constant/category.constant';
+import { Equipment } from '../constant/equipment.constant';
+import { LiftPriority } from '../constant/lift-priority.constant';
+import { LoadingSide } from '../constant/loading-side.constant';
+import { Location } from '../constant/location.constant';
+import { MovementDirection } from '../constant/movement-direction.constant';
+import { Pattern } from '../constant/patterns.constant';
+import { PrescriptionType } from '../constant/prescription-type.constant';
 import { CreateExerciseDto } from '../dto/create-exercise.dto';
 import { Exercise } from '../entity/exercise.entity';
 import { ExerciseAttributes } from '../entity/exercise-attributes.entity';
-import { BodyRegion } from '../enum/body-region.enum';
-import { Category } from '../enum/category.enum';
-import { Equipment } from '../enum/equipment.enum';
-import { LiftPriority } from '../enum/lift-priority.enum';
-import { LoadingSide } from '../enum/loading-side.enum';
-import { Location } from '../enum/location.enum';
-import { MovementDirection } from '../enum/movement-direction.enum';
-import { Pattern } from '../enum/patterns.enum';
-import { PrescriptionType } from '../enum/prescription-type.enum';
 
 @Injectable()
 export class ExerciseAttributeService {
