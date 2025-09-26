@@ -49,7 +49,6 @@ export class Exercise extends IntersectionType(BaseEntity, ExerciseAttributes) {
 
   @IsString()
   @IsOptional()
-  @IsNotEmpty()
   @Expose()
   @ApiProperty()
   instruction?: string;

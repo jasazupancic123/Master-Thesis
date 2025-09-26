@@ -1,12 +1,11 @@
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import Papa from 'papaparse';
 import toast from 'react-hot-toast';
 
 import { CommonService } from '@/common/service/common.service';
 import type { Pagination } from '@/common/type/paginate.type';
 import type { SetState } from '@/common/type/state.type';
 import { handleApiRequest } from '@/common/type/state.type';
-import { AttributeType } from '@/controller/attribute/enum/attribute-value.enum';
-import type { Attribute } from '@/controller/attribute/type/attribute.type';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import type { Component } from '@/controller/component/type/component.type';
 import { ExerciseController } from '@/controller/exercise/exercise.controller';
@@ -20,13 +19,6 @@ import type {
 import { DEFAULT_EXERCISE } from '@/sites/exercises.page';
 
 const commonService = CommonService.instance;
-
-function getBeforeLastColon(str: string) {
-  const lastColonIndex = str.lastIndexOf(':');
-  return lastColonIndex === -1 ? str : str.slice(0, lastColonIndex);
-}
-
-const getAfterLastColon = (str: string) => str.replace(/.*:(.*)/, '$1') || str;
 
 export function handlePaginateExercises(
   filter: { componentsIds?: string[]; name?: string },
@@ -60,10 +52,7 @@ export function handlePaginateExercises(
 
   // populate exercises
   filtered.map((exercise) =>
-    ExerciseService.mapComponents(
-      ExerciseService.mapAttributes(exercise),
-      components
-    )
+    ExerciseService.mapComponents(exercise, components)
   );
 
   setFilteredExercises(filtered);
@@ -76,7 +65,6 @@ export async function handleAddExercise(
   state: {
     router: AppRouterInstance;
     components: Component[];
-    attributes: Attribute[];
     component?: Component;
     filteredExercises: Exercise[];
     setFilteredExercises: SetState<Exercise[]>;
@@ -94,7 +82,6 @@ export async function handleAddExercise(
   const {
     router,
     components,
-    attributes,
     component,
     filteredExercises,
     setFilteredExercises,
@@ -109,50 +96,6 @@ export async function handleAddExercise(
   if (!input.componentIds?.length)
     return toast.error('Select at least one component to add');
 
-  // find all nested select attributes and convert them to a multi-level object
-  const attributeValues: AttributeValue[] = [];
-  const nestedSelectAttributes = attributes
-    .filter(
-      (attribute) =>
-        [AttributeType.Select, AttributeType.Multiselect].includes(
-          attribute.type || AttributeType.Select
-        ) &&
-        [AttributeType.Select, AttributeType.Multiselect].includes(
-          attribute.options?.[0]?.type || AttributeType.Value
-        )
-    )
-    .map((attribute) => attribute.field);
-
-  for (const key of nestedSelectAttributes) {
-    const nested = ExerciseService.parseAttributeValue(
-      input.valuesObject || {},
-      key
-    );
-
-    if (nested[key])
-      attributeValues.push({
-        field: key,
-        selected: getBeforeLastColon(nested[key]),
-        value: getAfterLastColon(nested[key]),
-      } as AttributeValue);
-  }
-
-  // add all other attributes
-  const otherAttributes = attributes.filter(
-    (attribute) => !nestedSelectAttributes.includes(attribute.field)
-  );
-
-  for (const attribute of otherAttributes) {
-    const valueWithColons = input.valuesObject?.[attribute.field];
-    if (valueWithColons)
-      attributeValues.push({
-        field: attribute.field,
-        selected: getBeforeLastColon(valueWithColons),
-        value: getAfterLastColon(valueWithColons),
-        componentIds: input.componentIds || [],
-      } as AttributeValue);
-  }
-
   handleApiRequest(
     router,
     () =>
@@ -163,15 +106,15 @@ export async function handleAddExercise(
         imageUrl: input.imageUrl,
         videoUrl: input.videoUrl,
         instruction: input.instruction,
-        categories: [],
-        equipment: [],
-        prescriptions: [],
-        patterns: [],
-        bodyRegions: [],
-        loadingSides: [],
-        movementDirections: [],
-        locations: [],
-        liftPriorities: [],
+        categories: input.categories || [],
+        equipment: input.equipment || [],
+        prescriptions: input.prescriptions || [],
+        patterns: input.patterns || [],
+        bodyRegions: input.bodyRegions || [],
+        loadingSides: input.loadingSides || [],
+        movementDirections: input.movementDirections || [],
+        locations: input.locations || [],
+        liftPriorities: input.liftPriorities || [],
       }),
     (exercise) => {
       const id = exercise.id;
@@ -207,7 +150,6 @@ export async function handleUpdateExercise(
   state: {
     router: AppRouterInstance;
     components: Component[];
-    attributes: Attribute[];
     setFilteredExercises: SetState<Exercise[]>;
     setExercises: SetState<Exercise[]>;
     setExercise: SetState<Partial<Exercise>>;
@@ -223,7 +165,6 @@ export async function handleUpdateExercise(
   const {
     router,
     components,
-    attributes,
     setFilteredExercises,
     setExercises,
     setExercise,
@@ -236,49 +177,6 @@ export async function handleUpdateExercise(
   if (!input.componentIds?.length)
     return toast.error('Select at least one component to add');
 
-  // find all nested select attributes and convert them to a multi-level object
-  const attributeValues: AttributeValue[] = [];
-  const nestedSelectAttributes = attributes
-    .filter(
-      (attribute) =>
-        attribute.options &&
-        [AttributeType.Select, AttributeType.Multiselect].includes(
-          attribute.options?.[0]?.type || AttributeType.Value
-        )
-    )
-    .map((attribute) => attribute.field);
-
-  for (const key of nestedSelectAttributes) {
-    const nested = ExerciseService.parseAttributeValue(
-      input.valuesObject || {},
-      key
-    );
-
-    if (nested[key])
-      attributeValues.push({
-        field: key,
-        selected: getBeforeLastColon(nested[key]),
-        value: getAfterLastColon(nested[key]),
-        componentIds: input.componentIds || [],
-      } as AttributeValue);
-  }
-
-  // add all other attributes
-  const otherAttributes = attributes.filter(
-    (attribute) => !nestedSelectAttributes.includes(attribute.field)
-  );
-
-  for (const attribute of otherAttributes) {
-    const valueWithColons = input.valuesObject?.[attribute.field];
-    if (valueWithColons)
-      attributeValues.push({
-        field: attribute.field,
-        selected: getBeforeLastColon(valueWithColons),
-        value: getAfterLastColon(valueWithColons),
-        componentIds: input.componentIds || [],
-      } as AttributeValue);
-  }
-
   handleApiRequest(
     router,
     () =>
@@ -288,18 +186,17 @@ export async function handleUpdateExercise(
         imageUrl: input.imageUrl,
         videoUrl: input.videoUrl,
         instruction: input.instruction,
-        categories: [],
-        equipment: [],
-        prescriptions: [],
-        patterns: [],
-        bodyRegions: [],
-        loadingSides: [],
-        movementDirections: [],
-        locations: [],
-        liftPriorities: [],
+        categories: input.categories || [],
+        equipment: input.equipment || [],
+        prescriptions: input.prescriptions || [],
+        patterns: input.patterns || [],
+        bodyRegions: input.bodyRegions || [],
+        loadingSides: input.loadingSides || [],
+        movementDirections: input.movementDirections || [],
+        locations: input.locations || [],
+        liftPriorities: input.liftPriorities || [],
       }),
     (exercise) => {
-      exercise = ExerciseService.mapAttributes(exercise);
       exercise = ExerciseService.mapComponents(exercise, components);
       setExercise(exercise);
 
@@ -351,21 +248,64 @@ export async function handleExerciseCsvFileUpload(
 ) {
   const { setImportedExercises } = state;
 
-  const text = await file.text();
-  const rows = text.split('\n').filter((row) => row);
-
-  // ignore first row if it contains headers
-  if (rows[0].toLowerCase().includes('name')) rows.shift();
-
-  const importedExercises: (Exercise | null)[] = rows.map((row) => {
-    return getExerciseFromCsvRow(row);
+  Papa.parse<Exercise>(file, {
+    header: true,
+    skipEmptyLines: true,
+    error: (e: Error) => toast.error(`Failed to parse CSV file: ${e.message}`),
+    transform: (value, column) => {
+      switch (column) {
+        case 'imageUrl':
+        case 'videoUrl':
+        case 'instruction':
+          return value === '' ? undefined : value;
+        case 'isUnilateral':
+          return value.toLowerCase() === 'true';
+        case 'componentIds':
+        case 'categories':
+        case 'prescriptions':
+        case 'patterns':
+        case 'bodyRegions':
+        case 'equipment':
+        case 'loadingSides':
+        case 'locations':
+        case 'liftPriorities':
+        case 'movementDirections':
+          const array = value.split(',').map((v) => v.trim());
+          return array.every((v) => v === '') ? [] : array;
+        default:
+          return value;
+      }
+    },
+    complete: ({ data }) => {
+      setImportedExercises(
+        data.map((e) => ({
+          id: '',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          ownerId: '',
+          name: e.name || '',
+          componentIds: e.componentIds.map((id) => {
+            // component ids are separated by :, we need only last part
+            const parts = id.split(':').map((p) => p.trim());
+            return parts[parts.length - 1];
+          }),
+          isUnilateral: e.isUnilateral || false,
+          imageUrl: e.imageUrl,
+          videoUrl: e.videoUrl,
+          instruction: e.instruction,
+          categories: e.categories || [],
+          equipment: e.equipment || [],
+          prescriptions: e.prescriptions || [],
+          patterns: e.patterns || [],
+          bodyRegions: e.bodyRegions || [],
+          loadingSides: e.loadingSides || [],
+          movementDirections: e.movementDirections || [],
+          locations: e.locations || [],
+          liftPriorities: e.liftPriorities || [],
+        }))
+      );
+    },
   });
-
-  const validExercises = importedExercises.filter(
-    (e) => e !== null
-  ) as Exercise[];
-
-  setImportedExercises(validExercises);
 }
 
 export async function handleMuscleValuesCsvFileUpload(
@@ -404,24 +344,30 @@ export async function handleUpsertManyExercises(
   input: UpsertManyExercises,
   state: {
     router: AppRouterInstance;
+    setAllExercises: SetState<Exercise[]>;
     setExercises: SetState<Exercise[]>;
+    setFilteredExercises: SetState<Exercise[]>;
   }
 ) {
-  const { router, setExercises } = state;
+  const { router, setExercises, setFilteredExercises, setAllExercises } = state;
   const controller = ExerciseController.getInstance(token);
 
   handleApiRequest(
     router,
     () => controller.upsertMany(input),
     (exercises) => {
-      setExercises((prev) =>
-        // if exercise already exists, update it, otherwise add it
-        [
-          ...prev.filter((e) => !exercises.map((ex) => ex.id).includes(e.id)),
-          ...exercises,
-        ]
-      );
-      toast.success('Successfully imported exercises!');
+      const updateExercisesFn = (prev: Exercise[]) => {
+        const filtered = prev.filter(
+          (e) => !exercises.find((newE) => newE.name === e.name)
+        );
+        return [...filtered, ...exercises];
+      };
+
+      setExercises(updateExercisesFn);
+      setFilteredExercises(updateExercisesFn);
+      setAllExercises(updateExercisesFn);
+
+      toast.success(`Successfully imported ${exercises.length} exercises!`);
     },
     undefined,
     'Failed to import exercises'
@@ -474,182 +420,7 @@ function getMuscleValue(
   const selected = rest.join(':');
   const value = load;
 
-  return {
-    field,
-    selected,
-    value,
-  };
-}
-
-function getExerciseFromCsvRow(row: string): Exercise | null {
-  const columns = row.split(',');
-  if (columns.length !== 21) {
-    toast.error(
-      `Invalid row format. Expected 21 columns, got ${columns.length}.`
-    );
-
-    return null;
-  }
-
-  const [
-    name,
-    componentSlug,
-    videoUrl,
-    imageUrl,
-    isUnilateral,
-    instruction,
-    coordination,
-    muscle,
-    region,
-    equipment,
-    // attributes below are optional
-    coeff,
-    diagnosis,
-    endOpts,
-    loadingSide,
-    location,
-    method,
-    movDir,
-    pattern,
-    prescr,
-    priority,
-    sportTask,
-  ] = columns;
-
-  const attributeValues: AttributeValue[] = [
-    {
-      field: 'instruction',
-      selected: '',
-      value: instruction,
-    },
-    {
-      field: 'coordination',
-      selected: '',
-      value: commonService.object.toBoolean(coordination) ? 'true' : 'false',
-    },
-    {
-      field: 'muscle',
-      selected: muscle,
-      value: muscle,
-    },
-    {
-      field: 'region',
-      selected: region,
-      value: region,
-    },
-    {
-      field: 'equipment',
-      selected: getBeforeLastColon(equipment),
-      value: getAfterLastColon(equipment),
-    },
-  ];
-
-  if (coeff)
-    attributeValues.push({
-      field: 'coeff',
-      selected: '',
-      value: commonService.object.toNumber(coeff).toString(),
-    });
-
-  if (diagnosis)
-    attributeValues.push({
-      field: 'diagnosis',
-      selected: diagnosis,
-      value: diagnosis,
-    });
-
-  if (endOpts) {
-    const option = commonService.object.toNumber(endOpts).toString();
-    attributeValues.push({
-      field: 'endOpts',
-      selected: option,
-      value: option,
-    });
-  }
-
-  if (loadingSide)
-    attributeValues.push({
-      field: 'loadingSide',
-      selected: loadingSide,
-      value: loadingSide,
-    });
-
-  if (location)
-    attributeValues.push({
-      field: 'location',
-      selected: location,
-      value: location,
-    });
-
-  if (method)
-    attributeValues.push({
-      field: 'method',
-      selected: method,
-      value: method,
-    });
-
-  if (movDir)
-    attributeValues.push({
-      field: 'movDir',
-      selected: movDir,
-      value: movDir,
-    });
-
-  if (pattern)
-    attributeValues.push({
-      field: 'pattern',
-      selected: pattern,
-      value: pattern,
-    });
-
-  if (prescr)
-    attributeValues.push({
-      field: 'prescr',
-      selected: prescr,
-      value: prescr,
-    });
-
-  if (priority)
-    attributeValues.push({
-      field: 'priority',
-      selected: priority,
-      value: priority,
-    });
-
-  if (sportTask !== '\r')
-    attributeValues.push({
-      field: 'sportTask',
-      selected: sportTask,
-      value: sportTask,
-    });
-
-  if (!name || !componentSlug) {
-    toast.error('Name and component slug are required.');
-    return null;
-  }
-
-  return {
-    id: '',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    ownerId: '',
-    valuesObject: {},
-    name,
-    componentIds: [componentSlug],
-    videoUrl,
-    imageUrl,
-    isUnilateral: commonService.object.toBoolean(isUnilateral),
-    instruction,
-    categories: [],
-    equipment: [],
-    prescriptions: [],
-    patterns: [],
-    bodyRegions: [],
-    loadingSides: [],
-    movementDirections: [],
-    locations: [],
-    liftPriorities: [],
-  };
+  return { field, selected, value };
 }
 
 function getMuscleValuesFromCsvRow(
