@@ -2,9 +2,13 @@ export const POSE_DETECTION_CONSTRAINTS = {
   // State detection
   MIN_KEYPOINTS_IN_FRAME: 30,
   IN_FRAME_VISIBLITY_THRESHOLD: 0.5,
-  STILLNESS_THRESHOLD_M: 0.04, // in meters
-  STILLNESS_THRESHOLD_WHILE_READY_M: 0.04, // in meters
+  STILLNESS_THRESHOLD_M: 0.03, // in meters
+  STILLNESS_DETECTION_WINDOW_DURING_RECORDING_S: 1, // in seconds
   FACING_CAMERA_VISIBLITY_THRESHOLD: 0.5,
+
+  // Nod detection
+  NOD_DETECTION_BUFFER_DURATION_MS: 1500, // how many ms to track for nod detection
+  Y_POS_HELPER_M: 0.01, // in meters, how much we help the y for better detection
 
   START_CUT_OFF_CONFIDENCE: 0.9, // % of keypoints before the first rep need to be correct to cut off the start
   KEYPOINT_BUFFER_DURATION_MS: 1000, // how many ms to track
@@ -33,5 +37,5 @@ export const POSE_DETECTION_CONSTRAINTS = {
   NEW_EXTREMUM_DETECTION_DISTANCE_M: 0.005, // če pridemo do novega ekstremuma, mora biti ta oddaljen od prejšnjega za to vrednost (v metrih)
 
   // Detection end
-  MIN_STILL_TIME_TO_STOP_DETECTION_S: 3, // how many seconds of stillness to stop detection
+  MIN_STILL_TIME_TO_STOP_DETECTION_S: 2, // at least how many seconds of recording state to stop detection
 };

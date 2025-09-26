@@ -10,6 +10,8 @@ import type { ExerciseRepStartCondition } from './type/exercise-start-condition.
 import type { Keypoint } from './type/keypoint.type';
 import type { RepState } from './type/rep-state.type';
 import { KeypointUtil } from './util/keypoint.util';
+import { PoseDetectionService } from './pose-detection.service';
+import dayjs from 'dayjs';
 
 export class StatusDetectionService {
   // if it returns false, it means we need to return in main loop
@@ -23,6 +25,7 @@ export class StatusDetectionService {
       keypointHistory: KeypointHistory;
       exerciseStartConditions: ExerciseRepStartCondition[];
       avgFps: { value: number; count: number } | null;
+      recordingTimestampRef: RefObject<Date | null>;
     }
   ): boolean {
     const {
@@ -32,6 +35,7 @@ export class StatusDetectionService {
       keypointHistory,
       exerciseStartConditions,
       avgFps,
+      recordingTimestampRef,
     } = state;
 
     switch (detectionStatus) {
@@ -73,44 +77,72 @@ export class StatusDetectionService {
       case DetectionStatus.READY: {
         if (!avgFps || !avgFps.value || avgFps.count < 10) return false;
 
-        const startedRecording = this.checkExerciseRepStartConditions(
-          keypoints,
+        const hasNodded = PoseDetectionService.checkHasNodded({
           keypointBuffer,
-          exerciseStartConditions,
-          avgFps
-        );
+          avgFps,
+        });
 
-        if (repStateRef.current.status === RepStatus.NONE && startedRecording)
-          repStateRef.current = {
-            status: RepStatus.IDLE,
-            avgStartValue: null,
-            avgExtremeValue: null,
-          };
+        if (hasNodded)
+          keypointBuffer.cutAtIndex(keypointBuffer.history.length - 1);
+
+        const isStill = this.checkIsStill({
+          currentStatus: statusRef.current,
+          keypoints,
+          buffer: keypointBuffer,
+          avgFps,
+        });
+
+        const canStartRecording = hasNodded && isStill;
+
+        if (canStartRecording) {
+          recordingTimestampRef.current = new Date();
+
+          if (repStateRef.current.status === RepStatus.NONE)
+            repStateRef.current = {
+              status: RepStatus.IDLE,
+              avgStartValue: null,
+              avgExtremeValue: null,
+            };
+        }
 
         return this.updateStatus(
           statusRef,
-          startedRecording,
+          canStartRecording,
           DetectionStatus.READY,
           DetectionStatus.RECORDING
         );
       }
       case DetectionStatus.RECORDING: {
-        const numFrames = KeypointUtil.getFramesCountFromSeconds(
-          POSE_DETECTION_CONSTRAINTS.MIN_STILL_TIME_TO_STOP_DETECTION_S,
+        if (
+          dayjs(new Date()).diff(
+            dayjs(recordingTimestampRef.current),
+            'second'
+          ) < POSE_DETECTION_CONSTRAINTS.MIN_STILL_TIME_TO_STOP_DETECTION_S
+        )
+          return false;
+
+        // look for 1 second of stillness
+        const bufferCutOf = KeypointUtil.getFramesCountFromSeconds(
+          POSE_DETECTION_CONSTRAINTS.STILLNESS_DETECTION_WINDOW_DURING_RECORDING_S,
           avgFps?.value || 30
         );
 
         const isStill = this.checkIsStill({
           currentStatus: statusRef.current,
           keypoints,
-          buffer: keypointHistory,
+          buffer: keypointBuffer,
           avgFps,
-          bufferCutOf: numFrames,
+          bufferCutOf,
+        });
+
+        const hasNodded = PoseDetectionService.checkHasNodded({
+          keypointBuffer,
+          avgFps,
         });
 
         return this.updateStatus(
           statusRef,
-          isStill,
+          isStill && hasNodded,
           DetectionStatus.RECORDING,
           DetectionStatus.STOPPED
         );
@@ -218,9 +250,7 @@ export class StatusDetectionService {
 
       const stdDev = StatusDetectionService.calculateStandardDeviation(history);
 
-      return currentStatus === DetectionStatus.READY
-        ? stdDev < POSE_DETECTION_CONSTRAINTS.STILLNESS_THRESHOLD_WHILE_READY_M
-        : stdDev < POSE_DETECTION_CONSTRAINTS.STILLNESS_THRESHOLD_M;
+      return stdDev < POSE_DETECTION_CONSTRAINTS.STILLNESS_THRESHOLD_M;
     });
   }
 

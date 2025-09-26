@@ -92,9 +92,7 @@ export default function MobileMovementValidation(
 
   // Main Status
   const statusRef = useRef<DetectionStatus>(DetectionStatus.NOT_FULLY_IN_FRAME);
-  const [statusMessage, setStatusMessage] = useState(
-    STATUS_MESSAGES[statusRef.current]
-  );
+  const statusMessage = useRef<string>(STATUS_MESSAGES[statusRef.current]);
 
   // Rep State
   const repStateRef = useRef<RepState>({
@@ -132,6 +130,7 @@ export default function MobileMovementValidation(
   const normDomainRef = useRef<{ min: number; max: number } | null>(null); // for graphs
   const dotRef = useRef<HTMLDivElement | null>(null);
   const dotBackgroundRef = useRef<HTMLDivElement | null>(null);
+  const recordingTimestampRef = useRef<Date | null>(null);
 
   useEffect(() => {
     let raf: number | null = null;
@@ -293,6 +292,8 @@ export default function MobileMovementValidation(
   };
 
   const finishAiDetection = () => {
+    statusMessage.current = getStatusMessage(DetectionStatus.STOPPED);
+
     if (
       updateExerciseReps &&
       selectedTrackingMethod === TrackingMethod.CAMERA &&
@@ -304,7 +305,7 @@ export default function MobileMovementValidation(
   };
 
   useEffect(() => {
-    setStatusMessage(getStatusMessage(statusRef.current));
+    statusMessage.current = getStatusMessage(statusRef.current);
   }, [statusRef.current]);
 
   useEffect(() => {
@@ -354,8 +355,8 @@ export default function MobileMovementValidation(
           tempoCanvasRef,
           theme,
           centerPosRef,
+          recordingTimestampRef,
           setFps,
-          setStatusMessage,
           finishAiDetection,
         }),
       setError,
@@ -379,7 +380,7 @@ export default function MobileMovementValidation(
 
       {poseLandmarker && (
         <MovementValidationHeader
-          statusMessage={error ? `${error}` : statusMessage}
+          statusMessage={error ? `${error}` : statusMessage.current}
         />
       )}
 
@@ -420,10 +421,12 @@ export default function MobileMovementValidation(
           playsInline
           style={{ transform: 'scaleX(-1)', objectFit: 'cover' }}
         />
+
         <canvas
           ref={canvasRef}
           style={{ position: 'absolute', left: 0, top: 0 }}
         />
+
         <canvas
           ref={tempoCanvasRef}
           style={{
