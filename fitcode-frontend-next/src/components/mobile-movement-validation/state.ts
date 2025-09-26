@@ -127,8 +127,8 @@ export const predictWebcam = async (state: {
   tempoCanvasRef: RefObject<HTMLCanvasElement | null>;
   theme: Theme;
   centerPosRef: RefObject<{ x: number; y: number } | null>;
+  recordingTimestampRef: RefObject<Date | null>;
   setFps: SetState<number | null>;
-  setStatusMessage: SetState<string>;
   finishAiDetection: () => void;
 }) => {
   const {
@@ -156,8 +156,8 @@ export const predictWebcam = async (state: {
     tempoCanvasRef,
     theme,
     centerPosRef,
+    recordingTimestampRef,
     setFps,
-    setStatusMessage,
     finishAiDetection,
   } = state;
 
@@ -244,11 +244,11 @@ export const predictWebcam = async (state: {
         statusRef,
         repStateRef,
         keypoints,
-        setStatusMessage,
         keypointBuffer,
         exerciseStartConditions: exerciseDetectionData.conditions,
         avgFps: avgFps.current,
         keypointHistory,
+        recordingTimestampRef,
       });
 
       if (

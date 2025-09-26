@@ -787,7 +787,7 @@ export class RepDetectionService {
     return values;
   }
 
-  private static getScaleFromVelocity(velocity: number[]): number {
+  static getScaleFromVelocity(velocity: number[]): number {
     const meanV = velocity.reduce((a, b) => a + b, 0) / velocity.length;
     const stdV = Math.sqrt(
       velocity.reduce((a, b) => a + (b - meanV) ** 2, 0) / velocity.length
