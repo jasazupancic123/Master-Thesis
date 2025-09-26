@@ -38,11 +38,13 @@ export default function ExerciseMembersInProgress(props: Props) {
     .map((p) => users.find((u) => u.uid === p.userId))
     .filter((u) => u !== undefined);
 
+  const value = (membersInProgress.length / trainingMembersLength) * 100;
+
+  if (value === 0) return null;
+
   return (
     <Box zIndex={0} ml={1}>
-      <CircularProgressWithLabel
-        value={(membersInProgress.length / trainingMembersLength) * 100}
-      />
+      <CircularProgressWithLabel value={value} />
     </Box>
   );
 }
@@ -50,7 +52,7 @@ export default function ExerciseMembersInProgress(props: Props) {
 function CircularProgressWithLabel(props: { value: number }) {
   return (
     <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-      <CircularProgress variant="determinate" {...props} size={20} />
+      <CircularProgress variant="determinate" {...props} size={16} />
 
       <Box
         sx={{
@@ -65,7 +67,7 @@ function CircularProgressWithLabel(props: { value: number }) {
         }}
       >
         <Typography
-          fontSize={8}
+          fontSize={6}
           variant="caption"
           component="div"
           sx={{ color: 'primary.main' }}

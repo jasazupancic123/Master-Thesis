@@ -12,7 +12,8 @@ import { AttributeType } from '@/controller/attribute/enum/attribute-value.enum'
 import type { Attribute } from '@/controller/attribute/type/attribute.type';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import type { AuthUser } from '@/controller/auth/type/user.type';
-import type { IntType, VolType } from '@/controller/component/enum/param.enum';
+import type { VolType } from '@/controller/component/enum/param.enum';
+import { IntType } from '@/controller/component/enum/param.enum';
 import { ParamType } from '@/controller/component/enum/param.enum';
 import { CustomWorkloadsSubgroupsService } from '@/controller/training/custom-workloads-subgroups.service';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
@@ -972,6 +973,8 @@ function prepareWorkloadsForData(
       (p) => p.field === param.field
     );
     if (!paramValue) continue;
+
+    if (paramValue.selected === IntType.Tempo) continue;
 
     let field:
       | keyof Pick<

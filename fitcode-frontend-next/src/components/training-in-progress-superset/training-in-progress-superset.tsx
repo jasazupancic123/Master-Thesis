@@ -18,6 +18,7 @@ interface TrainingInProgressSupersetProps {
   anchorEl: HTMLElement | null;
   open: boolean;
   handleCancel: () => void;
+  handleCancelTraining: () => void;
   handleOpenMenu: (event: React.MouseEvent<HTMLElement>) => void;
   handleCloseMenu: () => void;
   setUndoneExercises: SetState<TrainingExercise[]>;
@@ -35,6 +36,7 @@ export default function TrainingInProgressSuperset(
     anchorEl,
     open,
     handleCancel,
+    handleCancelTraining,
     handleOpenMenu,
     handleCloseMenu,
     setUndoneExercises,
@@ -70,6 +72,8 @@ export default function TrainingInProgressSuperset(
       setShowUndoneSetsError(true);
       return;
     }
+
+    handleCancelTraining();
   };
 
   if (!trainingInProgress || !selectedSuperset) return null;

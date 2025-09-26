@@ -1,79 +1,74 @@
-import { Box, LinearProgress } from '@mui/material';
+'use client';
+import { Box, CircularProgress } from '@mui/material';
+import { useTheme } from '@mui/material';
+import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
-import Logo from '../logo/logo';
+import Logo from '@/components/logo/logo';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 interface AnimationProps {
-  text: string;
-  onEnd: () => void;
-  fullScreen?: boolean;
+  duration?: number; // in milliseconds
 }
 
 export default function Animation(props: AnimationProps) {
+  const theme = useTheme();
   const screenSize = useScreenSize();
-  const [progress, setProgress] = useState(0);
+
+  const { duration = 6000 } = props;
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setProgress((prevProgress) =>
-        prevProgress >= 100 ? 10 : prevProgress + 10
-      );
-    }, 50);
-
-    return () => clearInterval(timer);
+    const timer = setTimeout(() => {}, duration);
+    return () => clearTimeout(timer);
   }, []);
-
-  useEffect(() => {
-    if (progress === 100) {
-      props.onEnd();
-    }
-  }, [progress]);
 
   return (
     <Box
+      display="flex"
+      flexDirection="column"
+      width="100%"
+      height="100vh"
+      justifyContent="center"
+      alignItems="center"
       sx={{
-        position: props.fullScreen ? 'absolute' : undefined,
-        top: props.fullScreen ? 0 : undefined,
-        left: props.fullScreen ? 0 : undefined,
-        width: props.fullScreen ? '100vw' : undefined,
-        height: props.fullScreen ? '100vh' : undefined,
-        backgroundColor: props.fullScreen ? 'background.default' : undefined,
-        display: 'flex',
-        pt: !props.fullScreen ? (screenSize.isMobile ? 20 : 13) : undefined,
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 100000,
+        backgroundColor: theme.palette.background.default,
+        zIndex: 1000000000,
+        my: 'auto',
       }}
     >
-      <Logo width={150} />
-      {/* <video
-        style={{
-          backgroundColor: 'transparent',
-          mixBlendMode: 'normal',
-          filter: 'contrast(1) brightness(1)',
-        }}
-        ref={videoRef}
-        autoPlay
-        muted
-        width={screenSize.isMobile ? '100%' : '33%'}
-        src="/fitcode_animation.mp4"
-      /> */}
-      <div className="flex flex-col items-center justify-center h-screen bg-gray-800">
-        <p className="text-gray-300 text-lg font-bold tracking-wider uppercase mb-2">
-          {props.text}
-        </p>
-        <LinearProgress variant="determinate" value={progress} />
-      </div>
-      <Image
-        src="/powered_by_aspire.png"
-        alt="Powered by Aspire"
-        width={screenSize.isSmallerThanLaptop ? 320.5 : 427}
-        height={screenSize.isSmallerThanLaptop ? 30 : 40}
-        style={{ marginTop: 20, transform: 'translate(-8.5%, -10%)' }}
-      />
+      <motion.div
+        initial={{ x: -200, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 100, damping: 30 }}
+        className="flex justify-center items-center h-screen bg-black"
+      >
+        <Logo width={screenSize.isMobile ? 200 : 600} />
+      </motion.div>
+      <motion.div
+        initial={{ y: -200, opacity: 0 }}
+        animate={{ x: 0, y: screenSize.isMobile ? 10 : 30, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 100, damping: 30 }}
+        className="flex justify-center items-center h-screen bg-black"
+      >
+        <Image
+          src="/powered_by_aspire.png"
+          alt="Powered by Aspire"
+          width={screenSize.isMobile ? 200 : 400}
+          height={0}
+          layout="intrinsic"
+        />
+      </motion.div>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.25, duration: 1, ease: 'easeInOut' }}
+      >
+        <CircularProgress
+          size={screenSize.isMobile ? 24 : undefined}
+          sx={{ mt: screenSize.isMobile ? 3 : 6 }}
+        />
+      </motion.div>
     </Box>
   );
 }
