@@ -24,6 +24,7 @@ import { useScreenSize } from '@/store/screen-size.provider';
 
 interface HeroNavbarProps {
   height: string;
+  dissableLogo?: boolean;
 }
 
 export default function HeroNavbar(props: HeroNavbarProps) {
@@ -33,7 +34,7 @@ export default function HeroNavbar(props: HeroNavbarProps) {
   const pathname = usePathname();
   const screenSize = useScreenSize();
 
-  const { height } = props;
+  const { height, dissableLogo } = props;
 
   const [open, setOpen] = useState(false);
 
@@ -85,23 +86,28 @@ export default function HeroNavbar(props: HeroNavbarProps) {
           <Toolbar
             variant="dense"
             sx={{
+              width: '100%',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
+              pr: 0,
             }}
           >
             <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
               {/* Logo Click Handler */}
-              <Box
-                onClick={handleLogoClick}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  cursor: 'pointer',
-                }}
-              >
-                <Logo width={130} version="dark" />
-              </Box>
+              {!dissableLogo && (
+                <Box
+                  onClick={handleLogoClick}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Logo width={130} version="dark" />
+                </Box>
+              )}
+
               <Box mr={4} />
             </Box>
 
@@ -158,11 +164,11 @@ export default function HeroNavbar(props: HeroNavbarProps) {
                       minWidth: '10dvw',
                       p: 2,
                       flexGrow: 1,
+                      backgroundColor: theme.palette.primary.main,
                     }}
                   >
                     <Box
                       sx={{
-                        backgroundColor: 'background.paper',
                         flexGrow: 1,
                       }}
                     >
@@ -174,8 +180,14 @@ export default function HeroNavbar(props: HeroNavbarProps) {
                             router.push(item.href);
                           }}
                         >
-                          <Typography variant="body2" color="text.primary">
-                            {item.label}
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            fontWeight={500}
+                          >
+                            {item.id === SIGN_IN_LINK_ID
+                              ? 'Sign In'
+                              : item.label}
                           </Typography>
                         </MenuItem>
                       ))}
