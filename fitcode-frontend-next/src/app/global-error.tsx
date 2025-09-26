@@ -1,13 +1,13 @@
 'use client';
 
+import { Box, Button, Typography } from '@mui/material';
+import { Onest } from 'next/font/google';
 import { redirect } from 'next/navigation';
 import { useEffect } from 'react';
 
 import { FIREBASE_AUTH_ID_TOKEN } from '@/common/config/firebase.config';
 import { LINK_SIGN_IN } from '@/common/constant/navigation.constant';
 import { CommonService } from '@/common/service/common.service';
-import { Box, Button, Typography } from '@mui/material';
-import { Onest } from 'next/font/google';
 
 interface GlobalErrorProps {
   error: Error & { digest?: string };
