@@ -174,6 +174,7 @@ export default function AthleteTrainingExerciseSets(
                                 colorSetsToPrimary &&
                                 param.field === ParamType.VolWorkSets
                               }
+                              exercise={exercise}
                               trainingInProgressView
                               param={param}
                               lOrR={lOrR as 'L' | 'R'}

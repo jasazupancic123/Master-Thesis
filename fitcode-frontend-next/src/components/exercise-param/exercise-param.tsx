@@ -1,6 +1,7 @@
 import { FormControl, MenuItem, Select, Stack, TextField } from '@mui/material';
 import { useTheme } from '@mui/material';
 
+import NumericExerciseParam from '../numeric-exercise-param/numeric-exercise-param';
 import {
   disableBorder,
   exerciseCardSetAttributeSx,
@@ -8,6 +9,7 @@ import {
 import type { SetState } from '@/common/type/state.type';
 import type { Attribute } from '@/controller/attribute/type/attribute.type';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
+import { IntType } from '@/controller/component/enum/param.enum';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useGroup } from '@/store/group.provider';
 
@@ -241,96 +243,118 @@ export function ExerciseParam(props: Props) {
           </Select>
         </FormControl>
       ) : (
-        <FormControl
-          variant="filled"
-          size="small"
-          sx={{
-            ...exerciseCardSetAttributeSx,
-            '& .MuiInputBase-input': disableBorder,
-          }}
-        >
-          <TextField
-            variant="filled"
-            value={value.value}
-            type={nestedOption?.type === 'number' ? 'number' : 'string'}
-            size="small"
-            onChange={(e) => {
-              if (readOnly) return;
-              if ((max || min) && nestedOption?.type === 'number') {
-                const numValue = parseFloat(e.target.value);
-                if (typeof max === 'number' && numValue > max)
-                  e.target.value = max.toString();
-                else if (typeof min === 'number' && numValue < min)
-                  e.target.value = min.toString();
-              }
-              onSubOptionChange(e.target.value as string);
-              if (!athleteView && setDetectedChanges) setDetectedChanges(true);
-            }}
-            onBlur={() => {
-              if (
-                value.field === 'volWorkSets' &&
-                setsNumbers !== undefined &&
-                setsNumbers !== null &&
-                setSetsNumbers &&
-                propsExercise
-              ) {
-                const setsNumber = setsNumbers.find(
-                  (s) => s.exerciseId === propsExercise.id
-                )?.setsNumber;
+        // NUMERIC VALUES
+        <>
+          {trainingInProgressView &&
+          ![IntType.Tempo, IntType.Eff].includes(value.selected as IntType) ? (
+            <NumericExerciseParam
+              initValue={parseFloat(value.value)}
+              param={param}
+              exercise={propsExercise}
+              disabled={readOnly}
+              onSubOptionChange={onSubOptionChange}
+            />
+          ) : (
+            <FormControl
+              variant="filled"
+              size="small"
+              sx={{
+                ...exerciseCardSetAttributeSx,
+                '& .MuiInputBase-input': disableBorder,
+              }}
+            >
+              <TextField
+                variant="filled"
+                value={value.value}
+                type={nestedOption?.type === 'number' ? 'number' : 'string'}
+                size="small"
+                onChange={(e) => {
+                  if (readOnly) return;
+                  if ((max || min) && nestedOption?.type === 'number') {
+                    const numValue = parseFloat(e.target.value);
+                    if (typeof max === 'number' && numValue > max)
+                      e.target.value = max.toString();
+                    else if (typeof min === 'number' && numValue < min)
+                      e.target.value = min.toString();
+                  }
+                  onSubOptionChange(e.target.value as string);
+                  if (!athleteView && setDetectedChanges)
+                    setDetectedChanges(true);
+                }}
+                onBlur={() => {
+                  if (
+                    value.field === 'volWorkSets' &&
+                    setsNumbers !== undefined &&
+                    setsNumbers !== null &&
+                    setSetsNumbers &&
+                    propsExercise
+                  ) {
+                    const setsNumber = setsNumbers.find(
+                      (s) => s.exerciseId === propsExercise.id
+                    )?.setsNumber;
 
-                if (setsNumber === undefined || setsNumber === null) return;
+                    if (setsNumber === undefined || setsNumber === null) return;
 
-                if (setsNumber !== propsExercise.sets.length) {
-                  const newSetsNumber = propsExercise.sets.length;
-                  setSetsNumbers((prev) => {
-                    const newSetsNumbers = prev.filter(
-                      (s) => s.exerciseId !== propsExercise.id
-                    );
-                    newSetsNumbers.push({
-                      exerciseId: propsExercise.id,
-                      setsNumber: newSetsNumber,
-                    });
-                    return newSetsNumbers;
-                  });
+                    if (setsNumber !== propsExercise.sets.length) {
+                      const newSetsNumber = propsExercise.sets.length;
+                      setSetsNumbers((prev) => {
+                        const newSetsNumbers = prev.filter(
+                          (s) => s.exerciseId !== propsExercise.id
+                        );
+                        newSetsNumbers.push({
+                          exerciseId: propsExercise.id,
+                          setsNumber: newSetsNumber,
+                        });
+                        return newSetsNumbers;
+                      });
+                    }
+                  }
+                }}
+                disabled={
+                  readOnly || (nestedOption?.field === 'set' && disableSets)
                 }
-              }
-            }}
-            disabled={
-              readOnly || (nestedOption?.field === 'set' && disableSets)
-            }
-            inputProps={{
-              min: min && nestedOption?.type === 'number' ? min : undefined,
-              max: max && nestedOption?.type === 'number' ? max : undefined,
-              style: {
-                textAlign: 'center',
-                fontSize: trainingInProgressView ? 16 : 12,
-                fontWeight: trainingInProgressView ? 600 : undefined,
-                paddingRight: '0px !important',
-                paddingLeft: '0px !important',
-                color: theme.palette.text.primary,
-              },
-            }}
-            sx={{
-              textAlign: 'center',
-              '& .MuiInputBase-input': {
-                p: 0.5,
-                textAlign: 'center',
-                color: colorToPrimary
-                  ? `${theme.palette.primary.main} !important`
-                  : theme.palette.text.primary,
-                fontSize: 12,
-                fontWeight: 400,
-              },
-              '& .MuiInputBase-input.Mui-disabled': {
-                color: readOnly ? 'white !important' : undefined,
-                WebkitTextFillColor: readOnly ? 'white !important' : undefined,
-              },
-              '& .Mui-disabled': {
-                color: 'rgba(255, 255, 255, 0) !important',
-              },
-            }}
-          />
-        </FormControl>
+                inputProps={{
+                  min: min && nestedOption?.type === 'number' ? min : undefined,
+                  max: max && nestedOption?.type === 'number' ? max : undefined,
+                  style: {
+                    textAlign: 'center',
+                    fontSize: trainingInProgressView ? 16 : 12,
+                    fontWeight: trainingInProgressView ? 600 : undefined,
+                    paddingRight: '0px !important',
+                    paddingLeft: '0px !important',
+                    color: theme.palette.text.primary,
+                  },
+                }}
+                sx={{
+                  textAlign: 'center',
+                  backgroundColor: trainingInProgressView
+                    ? 'transparent !important'
+                    : undefined,
+                  '& .MuiInputBase-input': {
+                    minHeight: trainingInProgressView ? 24 : undefined,
+                    p: 0.5,
+                    py: trainingInProgressView ? 1 : undefined,
+                    textAlign: 'center',
+                    color: colorToPrimary
+                      ? `${theme.palette.primary.main} !important`
+                      : theme.palette.text.primary,
+                    fontSize: 12,
+                    fontWeight: 400,
+                  },
+                  '& .MuiInputBase-input.Mui-disabled': {
+                    color: readOnly ? 'white !important' : undefined,
+                    WebkitTextFillColor: readOnly
+                      ? 'white !important'
+                      : undefined,
+                  },
+                  '& .Mui-disabled': {
+                    color: 'rgba(255, 255, 255, 0) !important',
+                  },
+                }}
+              />
+            </FormControl>
+          )}
+        </>
       )}
     </Stack>
   );

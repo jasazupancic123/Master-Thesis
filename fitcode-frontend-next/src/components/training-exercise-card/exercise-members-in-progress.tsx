@@ -11,7 +11,8 @@ type Props = {
 };
 
 export default function ExerciseMembersInProgress(props: Props) {
-  const { componentId, supersetIndex, exerciseId } = props;
+  const { trainingMembersLength, componentId, supersetIndex, exerciseId } =
+    props;
 
   const { users } = useMain();
   const { progress } = useTrainerDayViewContext();
@@ -37,9 +38,13 @@ export default function ExerciseMembersInProgress(props: Props) {
     .map((p) => users.find((u) => u.uid === p.userId))
     .filter((u) => u !== undefined);
 
+  const value = (membersInProgress.length / trainingMembersLength) * 100;
+
+  if (value === 0) return null;
+
   return (
     <Box zIndex={0} ml={1}>
-      <CircularProgressWithLabel value={50} />
+      <CircularProgressWithLabel value={value} />
     </Box>
   );
 }

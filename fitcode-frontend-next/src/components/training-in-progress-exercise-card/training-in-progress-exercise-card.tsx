@@ -2,6 +2,7 @@ import { RadioButtonChecked, RadioButtonUnchecked } from '@mui/icons-material';
 import { Box, Checkbox, Stack, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Image from 'next/image';
+import { useMemo, useRef } from 'react';
 import toast from 'react-hot-toast';
 
 import AthleteTrainingExerciseSets from '../athlete-training-exercise-sets/athlete-training-exercise-sets';
@@ -47,11 +48,26 @@ export default function TrainingInProgressExerciseCard() {
   const { selectedTrackingMethod, setSelectedTrackingMethod } =
     useAthleteHeader();
 
-  if (!trainingInProgress || !selectedSuperset || !selectedExercise)
-    return null;
-
   const isCircuit =
-    trainingInProgress.selectedComponent.mainSet === MainSet.CIRCUIT;
+    trainingInProgress?.selectedComponent.mainSet === MainSet.CIRCUIT;
+
+  const labelRef = useRef<string>('');
+
+  const computedLabel = useMemo(() => {
+    if (typeof exerciseIndex !== 'number' || typeof supersetIndex !== 'number')
+      return labelRef.current;
+
+    if (isCircuit) return String(exerciseIndex + 1);
+
+    const letter = String.fromCharCode(65 + exerciseIndex);
+    labelRef.current = `${supersetIndex + 1}${letter}`;
+    return `${supersetIndex + 1}${letter}`;
+  }, [exerciseIndex]);
+
+  if (computedLabel) labelRef.current = computedLabel;
+
+  if (!trainingInProgress || !selectedSuperset || !selectedExercise)
+    return labelRef.current;
 
   const updateExerciseReps = (repsCount: number) => {
     if (supersetIndex === undefined) return;
@@ -182,26 +198,19 @@ export default function TrainingInProgressExerciseCard() {
               px: 2,
             }}
           >
-            {exerciseIndex !== undefined &&
-              exerciseIndex !== null &&
-              supersetIndex !== undefined &&
-              supersetIndex !== null && (
-                <Box
-                  display="flex"
-                  flexDirection="column"
-                  sx={{ cursor: 'pointer' }}
-                >
-                  <Typography
-                    variant="caption"
-                    color={theme.palette.primary.main}
-                    sx={{ zIndex: 1 }}
-                  >
-                    {isCircuit
-                      ? `${exerciseIndex + 1}`
-                      : `${supersetIndex + 1}${String.fromCharCode(65 + exerciseIndex).replace('@', '')}`}
-                  </Typography>
-                </Box>
-              )}
+            <Box
+              display="flex"
+              flexDirection="column"
+              sx={{ cursor: 'pointer' }}
+            >
+              <Typography
+                variant="caption"
+                color={theme.palette.primary.main}
+                sx={{ zIndex: 1 }}
+              >
+                {labelRef.current}
+              </Typography>
+            </Box>
             <Box
               width="90%"
               display="flex"
@@ -263,8 +272,12 @@ export default function TrainingInProgressExerciseCard() {
               alt={selectedExercise.exercise?.name || ''}
               width={0}
               height={0}
-              sizes="100vw"
-              style={{ width: '100vw', height: 'auto' }}
+              sizes={'100vw'}
+              style={{
+                maxWidth: '1200px',
+                width: '100vw',
+                height: 'auto',
+              }}
             />
           )}
           <Box
@@ -280,16 +293,14 @@ export default function TrainingInProgressExerciseCard() {
           >
             {Array.from({ length: selectedSuperset.exercises.length }).map(
               (_, index) => {
-                const currentExerciseIndex =
-                  selectedSuperset.exercises.indexOf(selectedExercise);
+                if (exerciseIndex === undefined) return null;
                 const letter = String.fromCharCode(65 + index);
                 return (
                   <Typography
                     key={index}
                     fontWeight={600}
                     color={
-                      currentExerciseIndex !== undefined &&
-                      currentExerciseIndex === index
+                      exerciseIndex !== undefined && exerciseIndex === index
                         ? theme.palette.primary.main
                         : undefined
                     }
@@ -301,6 +312,7 @@ export default function TrainingInProgressExerciseCard() {
                     }}
                     sx={{
                       textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
+                      px: 0.5,
                     }}
                   >
                     {letter}
@@ -486,7 +498,7 @@ export default function TrainingInProgressExerciseCard() {
                     )
                   }
                   sx={{
-                    zIndex: 1000,
+                    zIndex: 10,
                     '&.MuiCheckbox-root': {
                       px: 0,
                     },

@@ -1,5 +1,6 @@
 'use client';
 import { Box, CircularProgress } from '@mui/material';
+import { useTheme } from '@mui/material';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { useEffect } from 'react';
@@ -12,6 +13,7 @@ interface AnimationProps {
 }
 
 export default function Animation(props: AnimationProps) {
+  const theme = useTheme();
   const screenSize = useScreenSize();
 
   const { duration = 6000 } = props;
@@ -30,6 +32,8 @@ export default function Animation(props: AnimationProps) {
       justifyContent="center"
       alignItems="center"
       sx={{
+        backgroundColor: theme.palette.background.default,
+        zIndex: 1000000000,
         my: 'auto',
       }}
     >
