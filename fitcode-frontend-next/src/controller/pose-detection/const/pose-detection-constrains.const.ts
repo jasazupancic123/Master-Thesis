@@ -3,6 +3,7 @@ export const POSE_DETECTION_CONSTRAINTS = {
   MIN_KEYPOINTS_IN_FRAME: 30,
   IN_FRAME_VISIBLITY_THRESHOLD: 0.5,
   STILLNESS_THRESHOLD_M: 0.03, // in meters
+  STILLNESS_THRESHOLD_WHILE_RECORDING_M: 0.01, // in meters
   STILLNESS_DETECTION_WINDOW_DURING_RECORDING_S: 1, // in seconds
   FACING_CAMERA_VISIBLITY_THRESHOLD: 0.5,
 
@@ -29,6 +30,9 @@ export const POSE_DETECTION_CONSTRAINTS = {
   MIN_START_SCALE: 1e-3,
   MAX_LOOKBACK_REP_START_S: 3, // maksimalno število sekund, ki jih lahko gledamo nazaj, da najdemo začetek ponovitve
   KEEP_KEYPOINT_HISTORY_DURING_RECORDING_MS: 8000, // koliko sekund hranimo zgodovino keypointov, da lahko gledamo nazaj
+  REP_START_VELOCITY_M_PER_S: 0.06, // when speed goes under (this_value)m/s, then we started the rep!
+  REP_START_CONSECUTIVE_FRAMES_UNDER_VELOCITY_THRESHOLD_S: 0.4, // if this many frames go under the velocity threshold, then rep started
+  REP_START_JOINT_STILLNESS_VELOCITY_THRESHOLD_M_PER_S: 0.01, // tracking stillness of a joint for rep start
 
   // Rep end
   SLOPE_K_REP_END: 0.2, // naklon premice (K) za konec ponovitve

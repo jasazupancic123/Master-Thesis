@@ -16,6 +16,7 @@ import type { Rep } from './type/rep.type';
 import type { RepState } from './type/rep-state.type';
 import { KeypointUtil } from './util/keypoint.util';
 import { TimeUtil } from './util/time.util';
+import { Direction } from 'react-range';
 
 export class RepDetectionService {
   /*
@@ -78,7 +79,7 @@ export class RepDetectionService {
         });
 
         // Check for rep end
-        const { isRepDone, extremeValueFrameNum } = this.checkHasRepEnded({
+        const { isRepDone, endKeypoint } = this.checkHasRepEnded({
           currentRepRef,
           recordedRepsRef,
           keypointHistory,
@@ -88,11 +89,7 @@ export class RepDetectionService {
           avgFps,
         });
 
-        if (
-          isRepDone &&
-          extremeValueFrameNum !== undefined &&
-          currentRepRef.current
-        ) {
+        if (isRepDone && endKeypoint !== undefined && currentRepRef.current) {
           // Save rep
           this.updateAvgStartAndExtremeValue(
             repStateRef,
@@ -100,15 +97,40 @@ export class RepDetectionService {
             recordedRepsRef
           );
 
-          this.setRepEndValue(currentRepRef, keypointId, valueType);
+          currentRepRef.current.endValueTimestamp = endKeypoint.capturedAt;
 
-          this.postProcessRep({
-            currentRepRef,
-            extremeValueFrameNum,
-            recordedRepsRef,
-            keypointId,
-            valueType,
-          });
+          currentRepRef.current.durationMs = TimeUtil.getMsDiff(
+            currentRepRef.current.startTimestamp,
+            currentRepRef.current.endValueTimestamp
+          );
+
+          currentRepRef.current.timeFromExtremeToEndMs = TimeUtil.getMsDiff(
+            dayjs(currentRepRef.current.extremeTimestamp)
+              .add(currentRepRef.current.timeAtExtremeMs || 0, 'ms')
+              .toDate(),
+            currentRepRef.current.endValueTimestamp
+          );
+
+          if (recordedRepsRef.current.length > 0) {
+            const prevRep =
+              recordedRepsRef.current[recordedRepsRef.current.length - 1];
+            if (prevRep.endValueTimestamp) {
+              currentRepRef.current.idleTimeMs = TimeUtil.getMsDiff(
+                prevRep.endValueTimestamp,
+                currentRepRef.current.startTimestamp
+              );
+            }
+          }
+
+          // this.setRepEndValue(currentRepRef, keypointId, valueType);
+
+          // this.postProcessRep({
+          //   currentRepRef,
+          //   extremeValueFrameNum,
+          //   recordedRepsRef,
+          //   keypointId,
+          //   valueType,
+          // });
 
           recordedRepsRef.current.push(currentRepRef.current);
 
@@ -121,14 +143,14 @@ export class RepDetectionService {
       }
       case RepStatus.IDLE: {
         // Uses a window for previous rep, which can detect extra extremums
-        this.checkPostWindowForExtraExtremums({
-          recordedRepsRef,
-          keypointHistory,
-          currentFrameKeypoints,
-          keypointId,
-          valueType,
-          direction,
-        });
+        // this.checkPostWindowForExtraExtremums({
+        //   recordedRepsRef,
+        //   keypointHistory,
+        //   currentFrameKeypoints,
+        //   keypointId,
+        //   valueType,
+        //   direction,
+        // });
 
         // Check for rep start
         const {
@@ -146,6 +168,7 @@ export class RepDetectionService {
           avgFps,
           initedFirstFrameInRecordingMode,
           recordedRepsRef,
+          currentRepRef,
         });
 
         if (
@@ -162,7 +185,8 @@ export class RepDetectionService {
             recordedRepsRef.current.length + 1,
             startValue,
             startValueFrameNum,
-            startValueCapturedAt
+            startValueCapturedAt,
+            keypointHistory.history.map((h) => [...h])
           );
         }
         break;
@@ -324,7 +348,7 @@ export class RepDetectionService {
     keypointId: KeypointId;
     valueType: KeypointValueType;
     avgFps: { value: number; count: number } | null;
-  }): { isRepDone: boolean; extremeValueFrameNum?: number } {
+  }): { isRepDone: boolean; endKeypoint?: Keypoint } {
     const {
       currentRepRef,
       recordedRepsRef,
@@ -332,6 +356,7 @@ export class RepDetectionService {
       direction,
       keypointId,
       valueType,
+      avgFps,
     } = state;
 
     // Detecting the U turn in the rep (extremum), so we can finish it
@@ -385,6 +410,14 @@ export class RepDetectionService {
     }
 
     // slope = naklon
+
+    /*
+      MAKE 2 SEPERATE FUNCTIONS, ONE FOR REP START AND KEEP THE getSlopeK FUNCTIONALITY FOR IT AS IT IS,
+      BUT FOR REP_END, THE FUNCTION NEEDS TO RETURN A FIXED VALUE OF THEN THE REP HAS ENDED, NOT THE SAME
+      AS THE START, WHICH CAN RETURN THE "BEST" K! AND WHEN THIS FUNCTION HERE RETURNS A VALUE - IT WILL BE
+      A INDEX/FRAME NUM, THEN RETURN THE FRAMENUM WITH isRepDone: true;
+    */
+
     const slope = this.getSlopeK({
       velocity,
       scale,
@@ -392,18 +425,37 @@ export class RepDetectionService {
       slopeK: POSE_DETECTION_CONSTRAINTS.SLOPE_K_REP_END,
       sustainW: POSE_DETECTION_CONSTRAINTS.SUSTAIN_W_REP_END,
       detectingRepStart: false,
+      avgFps,
     });
 
     if (slope === undefined) return { isRepDone: false };
 
-    const extremeValueFrameNum = keypointHistory.getLatestFrameNum();
+    console.log('final slope', slope);
+
+    const endKeypoint = KeypointUtil.getDesiredKeypointFromArray(
+      currentRepRef.current?.buffer.history[slope],
+      keypointId
+    );
+
+    const endKeypointKeypointHistory = KeypointUtil.getDesiredKeypointFromArray(
+      keypointHistory.history[slope],
+      keypointId
+    );
+
+    console.log('endKeypoint', endKeypoint);
+    console.log('endKeypointKeypointHistory', endKeypointKeypointHistory);
+
+    if (!endKeypoint) return { isRepDone: false };
+
+    // replace this with the correct frameNum
+    // const extremeValueFrameNum = keypointHistory.getLatestFrameNum();
 
     // HERE ALSO LOOK FOR LOCAL EXTREMUM, NOT JUST SLOPE
     // If we look for local extremum, we also need to capture the next n frames and get the extremum
     // out of those, or maybe just track the next n frames, if the value is more extreme than the
     // current extreme_value, then update it
 
-    return { isRepDone: true, extremeValueFrameNum };
+    return { isRepDone: true, endKeypoint };
   }
 
   private static checkHasRepStarted(state: {
@@ -416,6 +468,7 @@ export class RepDetectionService {
     avgFps: { value: number; count: number } | null;
     initedFirstFrameInRecordingMode: RefObject<boolean>;
     recordedRepsRef: RefObject<Rep[]>;
+    currentRepRef: RefObject<Rep | null>;
   }): {
     hasRepStarted: boolean;
     startValue?: number;
@@ -432,6 +485,7 @@ export class RepDetectionService {
       avgFps,
       initedFirstFrameInRecordingMode, // if the very first rep has been inited
       recordedRepsRef,
+      currentRepRef,
     } = state;
 
     // const isFirstRep = !initedFirstFrameInRecordingMode.current;
@@ -531,6 +585,7 @@ export class RepDetectionService {
     // 3) Walk backwards using per-frame K score (z-score of velocity)
     // K = v / scale. For NEGATIVE: K >= -slopeK; POSITIVE: K <= +slopeK; ANY: |K| >= slopeK
     // slope = naklon
+
     const slope = this.getSlopeK({
       velocity,
       scale: scaleStart, // <-- use start scale here
@@ -538,6 +593,7 @@ export class RepDetectionService {
       slopeK: POSE_DETECTION_CONSTRAINTS.SLOPE_K_REP_START,
       sustainW: POSE_DETECTION_CONSTRAINTS.SUSTAIN_W_REP_START,
       detectingRepStart: true,
+      avgFps,
     });
 
     // 4) If nothing found, fallback to global extremum consistent with effDir
@@ -804,56 +860,181 @@ export class RepDetectionService {
     slopeK: number;
     sustainW: number;
     detectingRepStart: boolean;
+    avgFps: { value: number; count: number } | null;
   }): number | undefined {
-    const { velocity, scale, direction, slopeK, sustainW, detectingRepStart } =
-      state;
+    const {
+      velocity,
+      scale,
+      direction,
+      slopeK,
+      sustainW,
+      detectingRepStart,
+      avgFps,
+    } = state;
 
-    let s = velocity.length - 1;
-    let found = false;
-    let run = 0; // length of the current satisfied streak
-    let end = detectingRepStart ? false : true; // used only for detectRepStart
+    /*
+      RABIM DETECTAT K PRI 2cm/s
+      probaj LIMIT za K prvo na 0.00066 (0.00066 m/frame) -> 0.066 cm/frame -> 2cm/sec pri 30fps
+
+      // 0.02m/sec -> /avgFrames -> m/frame
+
+      sproti vodi najmanjši naklon K-ja, če ne najdemo enega pod LIMIT, potem returnaj najmanjši,
+      še pozitivni K (za direction == positive) in še negativni K (za direction == negative)
+
+      ALSO TRACK:
+      if lets say 3 consecutive frames have K (velocity) under a very small threshold, 
+      lets say 5mm/sec, then return the last one in the queue for rep start and the first one for rep end
+
+    */
+
+    // if we are over this velocity, then we are still moving - starting or ending the rep!
+    const minVelocityPerFrame =
+      POSE_DETECTION_CONSTRAINTS.REP_START_VELOCITY_M_PER_S /
+      (avgFps?.value || 30); // when we go under this velocity, then we started/ended the rep!
+
+    const stillnessVelocityPerFrameTreshold =
+      POSE_DETECTION_CONSTRAINTS.REP_START_JOINT_STILLNESS_VELOCITY_THRESHOLD_M_PER_S /
+      (avgFps?.value || 30);
+
+    const numConsecutiveStillnessFrames =
+      KeypointUtil.getFramesCountFromSeconds(
+        POSE_DETECTION_CONSTRAINTS.REP_START_CONSECUTIVE_FRAMES_UNDER_VELOCITY_THRESHOLD_S,
+        avgFps?.value || 30
+      );
+
+    // I'VE HARDOCED THIS TO LOOK AT THE LAST 6 FRAMES, IN FUTURE MAKE THIS MORE ROBUST!
+    const cutVelocity = !detectingRepStart
+      ? velocity.slice(velocity.length - 6)
+      : undefined;
+
+    let bestK: number | undefined;
+    let bestS: number | undefined;
+
+    let s = (cutVelocity || velocity).length - 1;
+
+    let consecutiveStillFramesQueue = [];
 
     while (s >= 0) {
-      const K = velocity[s] / Math.max(scale, 1e-6);
-
-      let hit: boolean;
+      // const K = velocity[s] / Math.max(scale, 1e-6);
+      const K = (cutVelocity || velocity)[s];
 
       if (detectingRepStart) {
-        // when detecting start of rep, check for big K's and check direction
-        if (Math.abs(K) < slopeK) {
-          // if K is too small, we can stop checking, because we are going backwards
-          end = true;
+        if (
+          (direction === ConditionDirection.POSITIVE &&
+            K < minVelocityPerFrame &&
+            K > 0) ||
+          (direction === ConditionDirection.NEGATIVE &&
+            K > -minVelocityPerFrame &&
+            K < 0)
+        ) {
+          // we found it, can return here
+          console.log('BEST START');
+          bestK = K;
+          bestS = s;
           break;
         }
 
-        if (direction === ConditionDirection.NEGATIVE) {
-          hit = K <= -slopeK;
-        } else if (direction === ConditionDirection.POSITIVE) {
-          hit = K >= +slopeK;
-        } else {
-          // ANY
-          hit = Math.abs(K) >= slopeK;
+        if (
+          bestK === undefined ||
+          (direction === ConditionDirection.POSITIVE && K <= bestK && K > 0) ||
+          (direction === ConditionDirection.NEGATIVE && K >= bestK && K < 0)
+        ) {
+          // console.log('FOUND OK');
+          bestK = K;
+          bestS = s;
         }
-      } else {
-        // when detecing end of rep, only check for small K's, no need to check direction
-        hit = Math.abs(K) <= slopeK;
-      }
 
-      if (hit) {
-        run += 1;
-        if (run >= sustainW) {
-          // s now points to the EARLIEST frame of the sustained block (since we’re walking backwards)
-          found = true;
-          // break;
+        if (K <= stillnessVelocityPerFrameTreshold)
+          consecutiveStillFramesQueue.push({ s: s, k: K });
+        else consecutiveStillFramesQueue = [];
+
+        if (
+          consecutiveStillFramesQueue.length === numConsecutiveStillnessFrames
+        ) {
+          console.log('STILL START');
+          bestK = consecutiveStillFramesQueue[0].k;
+          bestS = consecutiveStillFramesQueue[0].s;
+          break;
         }
       } else {
-        run = 0; // reset the streak
+        // this is whole rep's velocity, here cut it off when for direction === POSITIVE it
+        // gets negative - falling and for direction === NEGATIVE when it gets positive - rising
+        if (
+          (direction === ConditionDirection.POSITIVE &&
+            K > -minVelocityPerFrame &&
+            K < 0) ||
+          (direction === ConditionDirection.NEGATIVE &&
+            K < minVelocityPerFrame &&
+            K > 0)
+        ) {
+          // we found it, can return here
+          console.log('BEST END');
+          bestK = K;
+          bestS = s;
+          break;
+        }
+
+        // if (
+        //   bestK === undefined ||
+        //   (direction === ConditionDirection.NEGATIVE && K <= bestK && K > 0) ||
+        //   (direction === ConditionDirection.POSITIVE && K >= bestK && K < 0)
+        // ) {
+        //   // console.log('FOUND OK');
+        //   bestK = K;
+        //   bestS = s;
+        // }
+
+        if (
+          (direction === ConditionDirection.POSITIVE &&
+            K >= -stillnessVelocityPerFrameTreshold &&
+            K < 0) ||
+          (direction === ConditionDirection.NEGATIVE &&
+            K <= stillnessVelocityPerFrameTreshold &&
+            K > 0)
+        )
+          consecutiveStillFramesQueue.push({ s: s, k: K });
+        else consecutiveStillFramesQueue = [];
+
+        if (
+          consecutiveStillFramesQueue.length === numConsecutiveStillnessFrames
+        ) {
+          console.log('STILL END');
+          bestK = consecutiveStillFramesQueue[0].k;
+          bestS = consecutiveStillFramesQueue[0].s;
+          break;
+        }
       }
+      // } else {
+      //   // when detecing end of rep, only check for small K's, no need to check direction
+      //   hit = Math.abs(K) <= slopeK;
+      // }
+
+      // if (hit) {
+      //   run += 1;
+      //   if (run >= sustainW) {
+      //     // s now points to the EARLIEST frame of the sustained block (since we’re walking backwards)
+      //     found = true;
+      //     // break;
+      //   }
+      // } else {
+      //   run = 0; // reset the streak
+      // }
 
       s -= 1;
     }
 
-    return found && end ? s : undefined;
+    // console.log('FOUND', found, bestS);
+    //return detectingRepStart ? bestS : found ? s : undefined;
+
+    console.log('bestS', bestS);
+
+    return bestS !== undefined
+      ? detectingRepStart
+        ? bestS
+        : cutVelocity
+          ? bestS + (velocity.length - cutVelocity?.length)
+          : undefined
+      : undefined;
   }
 
   private static initStartValues(
@@ -925,14 +1106,15 @@ export class RepDetectionService {
     repNumber: number,
     startValue: number,
     startValueFrameNum: number,
-    startValueCapturedAt: Date
+    startValueCapturedAt: Date,
+    history: Keypoint[][]
   ): Rep {
     return {
       repNumber,
       startTimestamp: startValueCapturedAt,
       startValue,
       startValueFrameNum,
-      buffer: new KeypointHistory([]),
+      buffer: new KeypointHistory(history),
       detectedExtremum: false,
       currentlyInExtremumRange: false,
       timeAtExtremeMs: 0,
@@ -1103,7 +1285,7 @@ export class RepDetectionService {
       const prevRep =
         recordedRepsRef.current[recordedRepsRef.current.length - 1];
       if (prevRep.endValueTimestamp) {
-        currentRepRef.current.idleTime = TimeUtil.getMsDiff(
+        currentRepRef.current.idleTimeMs = TimeUtil.getMsDiff(
           prevRep.endValueTimestamp,
           currentRepRef.current.startTimestamp
         );
@@ -1217,7 +1399,7 @@ export class RepDetectionService {
 
     const repsData = recordedRepsRef.current.map((rep) => ({
       repNumber: rep.repNumber,
-      idleTime: rep.idleTime,
+      idleTime: rep.idleTimeMs,
       timeToExtremeMs: rep.timeToExtremeMs,
       timeAtExtremeMs: rep.timeAtExtremeMs,
       timeFromExtremeToEndMs: rep.timeFromExtremeToEndMs,
@@ -1237,110 +1419,4 @@ export class RepDetectionService {
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
   };
-
-  static palette = {
-    start: '#F3A712',
-    background: '#111111',
-    extreme: '#F22B29',
-    extremeToEnd: '#3F88C5',
-    end: '#16DB65',
-    default: '#F0F6F6',
-  };
-
-  static buildChartConfig(state: {
-    recordedRepsRef: RefObject<Rep[]>;
-    keypointId: KeypointId;
-    valueType: KeypointValueType;
-  }) {
-    const { recordedRepsRef, keypointId, valueType } = state;
-    const reps = recordedRepsRef.current ?? [];
-
-    const labels: (string | number)[] = [];
-    const datasets: any[] = [];
-
-    reps.forEach((rep, repIndex) => {
-      const points = rep.buffer
-        .getHistoryById(keypointId)
-        .map((k) => {
-          const v = KeypointUtil.getKeypointValueByType(k, valueType);
-          if (v == null) return undefined;
-          const color =
-            k.capturedAt === rep.startTimestamp
-              ? this.palette.start
-              : k.capturedAt === rep.extremeTimestamp
-                ? this.palette.extreme
-                : k.capturedAt === rep.extremeToEndTimestamp
-                  ? this.palette.extremeToEnd
-                  : k.capturedAt === rep.endValueTimestamp
-                    ? this.palette.end
-                    : this.palette.default;
-          return {
-            value: v as number,
-            color,
-            ts: k.capturedAt.getTime() as number,
-          };
-        })
-        .filter(Boolean) as { value: number; color: string; ts: number }[];
-
-      if (!points.length) return;
-
-      if (repIndex === 0) {
-        for (let i = 0; i < points.length; i++) labels.push(i); // or format timestamps
-      }
-
-      datasets.push({
-        type: 'line',
-        label: `Rep ${repIndex + 1}`,
-        data: points.map((p) => p.value),
-        borderWidth: 2,
-        borderColor: '#3F88C5',
-        tension: 0.25,
-        fill: false,
-        pointRadius: 3,
-        pointHoverRadius: 4,
-        pointBackgroundColor: points.map((p) => p.color),
-        pointBorderColor: points.map((p) => p.color),
-      });
-    });
-
-    return {
-      type: 'line',
-      data: { labels, datasets },
-      options: {
-        responsive: false,
-        animation: false,
-        plugins: {
-          legend: { display: true, labels: { color: this.palette.default } },
-          title: {
-            display: true,
-            text: 'Reps Graph',
-            color: this.palette.default,
-            font: { size: 16, weight: '600' },
-          },
-        },
-        scales: {
-          x: {
-            grid: { color: 'rgba(240,246,246,0.15)' },
-            ticks: { color: this.palette.default },
-          },
-          y: {
-            grid: { color: 'rgba(240,246,246,0.15)' },
-            ticks: { color: this.palette.default },
-          },
-        },
-      },
-    };
-  }
-
-  static buildQuickChartURL(
-    config: any,
-    width = 1000,
-    height = 500,
-    backgroundColor = this.palette.background
-  ) {
-    const base = 'https://quickchart.io/chart';
-    const c = encodeURIComponent(JSON.stringify(config));
-    const bg = encodeURIComponent(backgroundColor);
-    return `${base}?c=${c}&width=${width}&height=${height}&backgroundColor=${bg}`;
-  }
 }

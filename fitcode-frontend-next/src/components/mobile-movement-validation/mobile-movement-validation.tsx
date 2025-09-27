@@ -36,7 +36,9 @@ interface MobileMovementValidationProps {
   selectedExercise: TrainingExercise | undefined;
   selectedTrackingMethod: TrackingMethod | undefined;
   setSelectedTrackingMethod: SetState<TrackingMethod> | undefined;
-  updateExerciseReps: ((repsCount: number) => void) | undefined;
+  updateExerciseValues:
+    | ((repsCount: number, tempo: number) => void)
+    | undefined;
 }
 
 export default function MobileMovementValidation(
@@ -49,7 +51,7 @@ export default function MobileMovementValidation(
     selectedExercise,
     selectedTrackingMethod,
     setSelectedTrackingMethod,
-    updateExerciseReps,
+    updateExerciseValues,
   } = props;
 
   // Buffers
@@ -57,6 +59,9 @@ export default function MobileMovementValidation(
     new KeypointHistory([], 100, true)
   ); // first make buffer of 100 frames, later set buffer size to undefined to get all recording of exercise
   const keypointBuffer = new KeypointHistory([], 100); // 100 frames buffer, updates in the main loop based on fps
+  const constantKeypointHistoryRef = useRef<KeypointHistory>(
+    new KeypointHistory([], undefined)
+  ); // never cut, always all history
 
   const exerciseDetectionData: ExerciseDetectionData | undefined =
     selectedExercise
@@ -294,22 +299,80 @@ export default function MobileMovementValidation(
   const finishAiDetection = async () => {
     statusMessage.current = getStatusMessage(DetectionStatus.STOPPED);
 
-    await RepsGraphService.downloadReps(
-      {
-        recordedRepsRef,
-        keypointId: KeypointId.RIGHT_WRIST,
-        valueType: KeypointValueType.POSITION_Y,
-      },
-      { filenameBase: 'session', combine: true }
-    );
+    // await RepsGraphService.downloadReps(
+    //   {
+    //     recordedRepsRef,
+    //     keypointId: KeypointId.RIGHT_WRIST,
+    //     valueType: KeypointValueType.POSITION_Y,
+    //     constantKeypointHistory: constantKeypointHistoryRef.current,
+    //   },
+    //   { filenameBase: 'session', combine: true }
+    // );
+
+    // KeypointUtil.drawKeypointValuesGraph(
+    //   constantKeypointHistoryRef.current.history,
+    //   exerciseDetectionData!.romKeypointId,
+    //   exerciseDetectionData!.romValueType,
+    //   'whole_exercise'
+    // );
+
+    // RepDetectionService.saveRepTimesToJsonFiles({
+    //   recordedRepsRef,
+    //   selectedExercise,
+    // });
 
     if (
-      updateExerciseReps &&
+      updateExerciseValues &&
       selectedTrackingMethod === TrackingMethod.CAMERA &&
       setSelectedTrackingMethod
     ) {
+      let avgTimeToExtremeMs = 0,
+        avgTimeAtExtremeMs = 0,
+        avgTimeFromExtremeToEndMs = 0,
+        avgIdleTimeMs = 0;
+
+      for (const rep of recordedRepsRef.current) {
+        avgTimeToExtremeMs += rep.timeToExtremeMs || 0;
+        avgTimeAtExtremeMs += rep.timeAtExtremeMs || 0;
+        avgTimeFromExtremeToEndMs += rep.timeFromExtremeToEndMs || 0;
+        avgIdleTimeMs += rep.idleTimeMs || 0;
+      }
+
+      avgTimeAtExtremeMs = Math.max(
+        Math.round(avgTimeAtExtremeMs / 1000 / recordedRepsRef.current.length),
+        0
+      );
+      avgTimeToExtremeMs = Math.max(
+        Math.round(avgTimeToExtremeMs / 1000 / recordedRepsRef.current.length),
+        0
+      );
+      avgTimeFromExtremeToEndMs = Math.max(
+        Math.round(
+          avgTimeFromExtremeToEndMs / 1000 / recordedRepsRef.current.length
+        ),
+        0
+      );
+      avgIdleTimeMs = Math.max(
+        Math.round(avgIdleTimeMs / 1000 / recordedRepsRef.current.length),
+        0
+      );
+
+      const tempoString = `${avgTimeToExtremeMs}${avgTimeAtExtremeMs}${avgTimeFromExtremeToEndMs}${avgIdleTimeMs}`;
+
+      let tempo = 2010;
+
+      //check if tempo string can be converted to a number
+      if (
+        tempoString.trim() !== '' &&
+        !isNaN(Number(tempoString)) &&
+        Number(tempoString) > 999
+      )
+        tempo = parseInt(tempoString);
+
+      console.log({ tempoString, tempo });
+
       setSelectedTrackingMethod(TrackingMethod.MANUAL);
-      updateExerciseReps(recordedRepsRef.current.length);
+      updateExerciseValues(recordedRepsRef.current.length, tempo);
     }
   };
 
@@ -346,6 +409,7 @@ export default function MobileMovementValidation(
           poseLandmarker,
           keypointHistory: keypointHistoryRef.current,
           keypointBuffer,
+          constantKeypointHistory: constantKeypointHistoryRef.current,
           currentRepRef,
           recordedRepsRef,
           videoRef,
@@ -524,10 +588,8 @@ export default function MobileMovementValidation(
           <Button
             variant="contained"
             onClick={() => {
-              if (updateExerciseReps && setSelectedTrackingMethod) {
+              if (setSelectedTrackingMethod)
                 setSelectedTrackingMethod(TrackingMethod.MANUAL);
-                updateExerciseReps(recordedRepsRef.current.length);
-              }
             }}
             sx={{ mt: 2 }}
           >
