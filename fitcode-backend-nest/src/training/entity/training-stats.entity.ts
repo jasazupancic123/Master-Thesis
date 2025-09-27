@@ -105,12 +105,6 @@ export class TrainingStats {
 
   @IsNumber()
   @Min(0)
-  @ApiProperty()
-  @Expose()
-  totalRealizationScore: number; // tonnage and also time, distance, tempo prescribed - saved as a score of points
-
-  @IsNumber()
-  @Min(0)
   @ApiPropertyOptional()
   @IsOptional()
   @Expose()

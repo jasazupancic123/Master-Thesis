@@ -15,6 +15,7 @@ import { TrainingReport } from '../entity/training-report.entity';
 import { TrainingStats } from '../entity/training-stats.entity';
 import { Workload } from '../entity/workload.entity';
 import { TrainingReportRepository } from '../repository/training-report.repository';
+import { SetReport, TrainingSet } from '../type/training-set.type';
 import { TrainingPlanService } from './training-plan.service';
 import { WorkloadService } from './workload.service';
 
@@ -75,7 +76,7 @@ export class TrainingReportService {
       timeWork: 0,
       distWork: 0,
       power: 0,
-      realizationScore: 0,
+      realization: 0,
       muscleValues: [], // to be calculated
       photoURL: additionalInput?.photoURL,
       componentStatuses: stats.plannedComponents.map((pc) => {
@@ -96,29 +97,76 @@ export class TrainingReportService {
     };
 
     for (const workload of workloads) {
-      const info = this.getSetStatsFromWorkload(workload);
-      report.reps += info.reps;
-      report.recTime += info.recTime;
-      report.activeTime += info.activeTime;
-      report.tonnage += info.tonnage;
-      report.timeWork += info.timeWork;
-      report.distWork += info.distWork;
+      const prescribed = this.getPrescribedWorkloadSet(workload);
+      const completed = this.getCompletedWorkloadSet(workload);
+      const setReport = this.getSetReport(completed);
+
+      report.reps += setReport.reps;
+      report.recTime += setReport.recTime;
+      report.activeTime += setReport.activeTime;
+      report.tonnage += setReport.tonnage;
+      report.timeWork += setReport.timeWork;
+      report.distWork += setReport.distWork;
       report.power = report.tonnage / report.activeTime; // kg per second
-      report.realizationScore += info.realizationPoints;
 
-      if (info.time > 0) {
+      if (setReport.time > 0) {
         if (!report.timeVol) report.timeVol = 0;
-        report.timeVol += info.time;
+        report.timeVol += setReport.time;
       }
 
-      if (info.dist > 0) {
+      if (setReport.dist > 0) {
         if (!report.distVol) report.distVol = 0;
-        report.distVol += info.dist;
+        report.distVol += setReport.dist;
       }
 
-      if (info.recDist > 0) {
+      if (setReport.recDist > 0) {
         if (!report.recDist) report.recDist = 0;
-        report.recDist += info.recDist;
+        report.recDist += setReport.recDist;
+      }
+
+      /* Example for realization: prescribed 3 sets * 10 reps * 100 kg * 201 tempo * 60 s rec, 
+        completed 1 set of 9 reps * 100 kg * 101 tempo * 100 s rec, this means 1/3 * (9/10*1/4) *
+        (100/100*1/4) * (2/3*1/4) * (60/100*1/4), note that recovery is reversed, more is worse */
+
+      if (prescribed.repsR > 0) {
+        // unilateral exercise
+        const repsLDiv =
+          prescribed.repsL > 0 ? completed.repsL / prescribed.repsL : 1;
+        const repsRDiv =
+          prescribed.repsR > 0 ? completed.repsR / prescribed.repsR : 1;
+        const loadLDiv =
+          prescribed.loadL > 0 ? completed.loadL / prescribed.loadL : 1;
+        const loadRDiv =
+          prescribed.loadR > 0 ? completed.loadR / prescribed.loadR : 1;
+        const tempoLDiv =
+          prescribed.tempoL > 0 ? completed.tempoL / prescribed.tempoL : 1;
+        const tempoRDiv =
+          prescribed.tempoR > 0 ? completed.tempoR / prescribed.tempoR : 1;
+        const recDiv =
+          prescribed.recTime > 0 ? prescribed.recTime / completed.recTime : 1; // less is better
+
+        report.realization +=
+          (1 / stats.totalSets) *
+          (0.125 * repsLDiv +
+            0.125 * repsRDiv +
+            0.125 * loadLDiv +
+            0.125 * loadRDiv +
+            0.125 * tempoLDiv +
+            0.125 * tempoRDiv +
+            0.25 * recDiv);
+      } else {
+        const repsDiv =
+          prescribed.repsL > 0 ? completed.repsL / prescribed.repsL : 1;
+        const loadDiv =
+          prescribed.loadL > 0 ? completed.loadL / prescribed.loadL : 1;
+        const tempoDiv =
+          prescribed.tempoL > 0 ? completed.tempoL / prescribed.tempoL : 1;
+        const recDiv =
+          prescribed.recTime > 0 ? prescribed.recTime / completed.recTime : 1; // less is better
+
+        report.realization +=
+          (1 / stats.totalSets) *
+          (0.25 * repsDiv + 0.25 * loadDiv + 0.25 * tempoDiv + 0.25 * recDiv);
       }
     }
 
@@ -151,7 +199,6 @@ export class TrainingReportService {
       totalTimeWork: 0,
       totalDistWork: 0,
       totalPower: 0,
-      totalRealizationScore: 0,
     };
 
     for (const component of training.components)
@@ -163,29 +210,30 @@ export class TrainingReportService {
           stats.totalSets += sets;
 
           for (const set of exercise.sets) {
-            const info = this.getSetStatsFromExerciseSet(set);
-            stats.totalReps += info.reps;
-            stats.totalRecTime += info.recTime;
-            stats.totalActiveTime += info.activeTime;
-            stats.totalTonnage += info.tonnage;
-            stats.totalTimeWork += info.timeWork;
-            stats.totalDistWork += info.distWork;
+            const data = this.getPrescribedSet(set);
+            const setReport = this.getSetReport(data);
+
+            stats.totalReps += setReport.reps;
+            stats.totalRecTime += setReport.recTime;
+            stats.totalActiveTime += setReport.activeTime;
+            stats.totalTonnage += setReport.tonnage;
+            stats.totalTimeWork += setReport.timeWork;
+            stats.totalDistWork += setReport.distWork;
             stats.totalPower = stats.totalTonnage / stats.totalActiveTime; // kg per second
-            stats.totalRealizationScore += info.realizationPoints;
 
-            if (info.time > 0) {
+            if (setReport.time > 0) {
               if (!stats.totalTimeVol) stats.totalTimeVol = 0;
-              stats.totalTimeVol += info.time;
+              stats.totalTimeVol += setReport.time;
             }
 
-            if (info.dist > 0) {
+            if (setReport.dist > 0) {
               if (!stats.totalDistVol) stats.totalDistVol = 0;
-              stats.totalDistVol += info.dist;
+              stats.totalDistVol += setReport.dist;
             }
 
-            if (info.recDist > 0) {
+            if (setReport.recDist > 0) {
               if (!stats.totalRecDist) stats.totalRecDist = 0;
-              stats.totalRecDist += info.recDist;
+              stats.totalRecDist += setReport.recDist;
             }
           }
         }
@@ -194,7 +242,7 @@ export class TrainingReportService {
     return stats;
   }
 
-  private getSetStatsFromExerciseSet(s: ExerciseSet) {
+  private getPrescribedSet(s: ExerciseSet): TrainingSet {
     // mandatory fields
     const repsLField = s.paramValuesL.find((p) => p.selected === VolType.Rep);
     const repsRField = s.paramValuesR?.find((p) => p.selected === VolType.Rep);
@@ -247,7 +295,7 @@ export class TrainingReportService {
         ? +recDistField.value || 0
         : 0;
 
-    return this.calculateFields({
+    return {
       repsL,
       repsR,
       loadL,
@@ -260,10 +308,10 @@ export class TrainingReportService {
       distL,
       distR,
       recDist,
-    });
+    };
   }
 
-  private getSetStatsFromWorkload(w: Workload) {
+  private getCompletedWorkloadSet(w: Workload): TrainingSet {
     // mandatory fields
     const repsL = w.volWork1Type === VolType.Rep ? w.volWork1ValueL || 1 : 1;
     const repsR = w.volWork1Type === VolType.Rep ? w.volWork1ValueR || 0 : 0;
@@ -287,7 +335,7 @@ export class TrainingReportService {
     const distR = w.volWork1Type === VolType.Dist ? w.volWork1ValueR || 0 : 0;
     const recDist = w.volRecType === VolType.Dist ? w.volRecValueL || 0 : 0;
 
-    return this.calculateFields({
+    return {
       repsL,
       repsR,
       loadL,
@@ -300,23 +348,67 @@ export class TrainingReportService {
       distL,
       distR,
       recDist,
-    });
+    };
   }
 
-  private calculateFields(input: {
-    repsL: number;
-    repsR: number;
-    loadL: number;
-    loadR: number;
-    recTime: number;
-    tempoL: number;
-    tempoR: number;
-    timeL: number;
-    timeR: number;
-    distL: number;
-    distR: number;
-    recDist: number;
-  }) {
+  private getPrescribedWorkloadSet(w: Workload): TrainingSet {
+    const repsL =
+      w.volWork1Type === VolType.Rep ? w.prescribedVolWork1ValueL || 1 : 1;
+
+    const repsR =
+      w.volWork1Type === VolType.Rep ? w.prescribedVolWork1ValueR || 0 : 0;
+
+    const fields = [IntType.Kg, IntType.Bw, IntType.Rm];
+    const loadL = fields.includes(w.intWork1Type)
+      ? w.prescribedIntWork1ValueL || 0
+      : 0;
+    const loadR = fields.includes(w.intWork1Type)
+      ? w.prescribedIntWork1ValueR || 0
+      : 0;
+
+    const defaultTempo = REP_TEMPO_TIME_IN_S;
+    const [tempoL, tempoR] = [
+      this.trainingPlanService.tempoToSeconds(w.prescribedIntWork2ValueL) ||
+        defaultTempo,
+      this.trainingPlanService.tempoToSeconds(w.prescribedIntWork2ValueR) ||
+        defaultTempo,
+    ];
+
+    const recTime =
+      w.volRecType === VolType.Time ? w.prescribedVolRecValueL || 0 : 0;
+
+    const timeL =
+      w.volWork1Type === VolType.Time ? w.prescribedVolWork1ValueL || 0 : 0;
+
+    const timeR =
+      w.volWork1Type === VolType.Time ? w.prescribedVolWork1ValueR || 0 : 0;
+
+    const distL =
+      w.volWork1Type === VolType.Dist ? w.prescribedVolWork1ValueL || 0 : 0;
+
+    const distR =
+      w.volWork1Type === VolType.Dist ? w.prescribedVolWork1ValueR || 0 : 0;
+
+    const recDist =
+      w.volRecType === VolType.Dist ? w.prescribedVolRecValueL || 0 : 0;
+
+    return {
+      repsL,
+      repsR,
+      loadL,
+      loadR,
+      recTime,
+      tempoL,
+      tempoR,
+      timeL,
+      timeR,
+      distL,
+      distR,
+      recDist,
+    };
+  }
+
+  private getSetReport(set: TrainingSet): SetReport {
     const {
       repsL,
       repsR,
@@ -330,7 +422,7 @@ export class TrainingReportService {
       distL,
       distR,
       recDist,
-    } = input;
+    } = set;
 
     const reps = repsL + repsR;
     const load = loadL + loadR;
@@ -358,7 +450,6 @@ export class TrainingReportService {
     if (load > 0 && dist > 0) distWork = loadL * distL + loadR * distR;
 
     const power = tonnage / activeTime; // kg per second
-    const realizationPoints = tonnage + timeWork + distWork + power * 5;
 
     return {
       reps,
@@ -372,7 +463,6 @@ export class TrainingReportService {
       timeWork,
       distWork,
       power,
-      realizationPoints,
     };
   }
 }
