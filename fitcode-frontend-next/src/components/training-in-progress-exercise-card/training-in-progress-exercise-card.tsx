@@ -69,7 +69,7 @@ export default function TrainingInProgressExerciseCard() {
   if (!trainingInProgress || !selectedSuperset || !selectedExercise)
     return labelRef.current;
 
-  const updateExerciseReps = (repsCount: number) => {
+  const updateExerciseValues = (repsCount: number, tempo: number) => {
     if (supersetIndex === undefined) return;
 
     if (setIndex === undefined) return;
@@ -77,34 +77,63 @@ export default function TrainingInProgressExerciseCard() {
     const selectedSet = selectedExercise.sets[setIndex];
     if (!selectedSet) return;
 
-    const param = selectedExercise.params.find(
+    const repParam = selectedExercise.params.find(
       (p) => p.field === ParamType.VolWork1
     );
 
-    if (!param) return;
+    if (repParam) {
+      ['L'].concat(selectedSet.paramValuesR ? ['R'] : []).forEach((lOrR) => {
+        updateExerciseAttributeValues(
+          {
+            newValue: repsCount.toString(),
+            i: setIndex,
+            set: selectedSet,
+            lOrR: lOrR as 'L' | 'R',
+          },
+          {
+            selectedExercises: [selectedExercise],
+            exercise: selectedExercise,
+            param: repParam,
+            training: trainingInProgress.training,
+            component: trainingInProgress.selectedComponent,
+            setTraining: () => {},
+            supersets: trainingInProgress.supersets,
+            setDetectedChanges: () => {},
+            selectedSubgroup: null,
+            setSelectedSubgroup: () => {},
+          }
+        );
+      });
+    }
 
-    ['L'].concat(selectedSet.paramValuesR ? ['R'] : []).forEach((lOrR) => {
-      updateExerciseAttributeValues(
-        {
-          newValue: repsCount.toString(),
-          i: setIndex,
-          set: selectedSet,
-          lOrR: lOrR as 'L' | 'R',
-        },
-        {
-          selectedExercises: [selectedExercise],
-          exercise: selectedExercise,
-          param,
-          training: trainingInProgress.training,
-          component: trainingInProgress.selectedComponent,
-          setTraining: () => {},
-          supersets: trainingInProgress.supersets,
-          setDetectedChanges: () => {},
-          selectedSubgroup: null,
-          setSelectedSubgroup: () => {},
-        }
-      );
-    });
+    const tempoParam = selectedExercise.params.find(
+      (p) => p.field === ParamType.IntWork2
+    );
+
+    if (tempoParam) {
+      ['L'].concat(selectedSet.paramValuesR ? ['R'] : []).forEach((lOrR) => {
+        updateExerciseAttributeValues(
+          {
+            newValue: tempo.toString(),
+            i: setIndex,
+            set: selectedSet,
+            lOrR: lOrR as 'L' | 'R',
+          },
+          {
+            selectedExercises: [selectedExercise],
+            exercise: selectedExercise,
+            param: tempoParam,
+            training: trainingInProgress.training,
+            component: trainingInProgress.selectedComponent,
+            setTraining: () => {},
+            supersets: trainingInProgress.supersets,
+            setDetectedChanges: () => {},
+            selectedSubgroup: null,
+            setSelectedSubgroup: () => {},
+          }
+        );
+      });
+    }
 
     markExerciseSetAsCompleted(
       { exerciseId: selectedExercise.id, supersetIndex },
@@ -139,7 +168,7 @@ export default function TrainingInProgressExerciseCard() {
       selectedExercise={selectedExercise}
       selectedTrackingMethod={selectedTrackingMethod}
       setSelectedTrackingMethod={setSelectedTrackingMethod}
-      updateExerciseReps={updateExerciseReps}
+      updateExerciseValues={updateExerciseValues}
     />
   ) : (
     <SwipeableBox

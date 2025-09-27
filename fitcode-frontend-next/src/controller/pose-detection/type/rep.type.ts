@@ -29,7 +29,7 @@ export type Rep = {
   extremeToEndTimestamp?: Date; // when going from extreme value to end
 
   // times
-  idleTime?: number; // startTime - endTime of the previous rep
+  idleTimeMs?: number; // startTime - endTime of the previous rep
   timeToExtremeMs?: number; // extremeTimestamp - startTime
   timeAtExtremeMs: number; // extremeToEndTime - extremeTimestamp, inited to 0
   timeFromExtremeToEndMs?: number; // timeAtExtreme - extremeTimestamp

@@ -6,6 +6,7 @@ import type { Keypoint } from '../type/keypoint.type';
 import type { Rep } from '../type/rep.type';
 import { KeypointUtil } from './keypoint.util';
 import { TimeUtil } from './time.util';
+import { ConditionDirection } from '../enum/condition-detection.enum';
 
 export class PoseDetectionGraphsUtil {
   // Call this right after you push a new ROM sample into romBuffer
