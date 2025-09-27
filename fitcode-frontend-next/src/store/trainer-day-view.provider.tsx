@@ -155,7 +155,7 @@ export function TrainerDayViewProvider(
 
     ExerciseService.paginate(
       {
-        componentsIds: [component.id],
+        componentIds: [component.id],
         name: search,
       },
       {

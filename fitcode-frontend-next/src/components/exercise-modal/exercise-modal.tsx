@@ -19,7 +19,7 @@ import type {
   Component,
   TreeComponent,
 } from '@/controller/component/type/component.type';
-import { ExerciseService } from '@/controller/exercise/exercise.service';
+import { ExerciseAttributeService } from '@/controller/exercise/exercise-attribute.service';
 import type {
   Exercise,
   ExerciseAttributes,
@@ -110,7 +110,7 @@ export default function ExerciseModal(props: Props) {
 
     selected[component.parents.length] = component.id;
     setSelectedComponents(selected);
-    setFilteredAttributes(ExerciseService.getAttributes(attributes));
+    setFilteredAttributes(ExerciseAttributeService.getAttributes(attributes));
   }, [data?.id]);
 
   useEffect(() => {
@@ -146,7 +146,7 @@ export default function ExerciseModal(props: Props) {
           if (!attributeIds.find((a) => a === attribute))
             attributeIds.push(attribute);
 
-    setFilteredAttributes(ExerciseService.getAttributes(attributeIds));
+    setFilteredAttributes(ExerciseAttributeService.getAttributes(attributeIds));
     setHasSelectedLeafComponent(hasSelectedLeafComponent);
   }, [data.componentIds]);
 
