@@ -1,17 +1,5 @@
-import { AttributeType } from '../attribute/enum/attribute-value.enum';
-import type { Attribute } from '../attribute/type/attribute.type';
-import type { AttributeValue } from '../attribute/type/attribute-value.type';
 import type { Component } from '../component/type/component.type';
-import { BodyRegion } from './constant/body-region.constant';
-import { Category } from './constant/category.constant';
-import { Equipment } from './constant/equipment.constant';
-import { LiftPriority } from './constant/lift-priority.constant';
-import { LoadingSide } from './constant/loading-side.constant';
-import { Location } from './constant/location.constant';
-import { MovementDirection } from './constant/movement-direction.constant';
-import { Pattern } from './constant/pattern.constant';
-import { PrescriptionType } from './constant/prescription.constant';
-import type { Exercise, ExerciseAttributes } from './type/exercise.type';
+import type { Exercise } from './type/exercise.type';
 import { CommonService } from '@/common/service/common.service';
 import type { Pagination } from '@/common/type/paginate.type';
 import type { SetState } from '@/common/type/state.type';
@@ -24,33 +12,22 @@ export class ExerciseService {
    */
   static filter(
     data: Exercise[],
-    options: {
-      ids?: string[];
-      componentsIds?: string[];
-      name?: string;
-      attributeValues?: Record<string, unknown>;
-    },
+    filter: Partial<Exercise>,
     components: Component[]
   ): Exercise[] {
-    const { ids, componentsIds, name, attributeValues } = options;
+    const { componentIds, ...rest } = filter;
     let filtered = data;
 
-    // filter by ids
-    if (ids?.length)
-      filtered = data.filter((exercise) => ids.includes(exercise.id));
-
-    // filter by  components
-    if (componentsIds?.length) {
+    // filter by components
+    if (componentIds?.length) {
       const allComponentsIds: string[] = [];
 
-      for (const componentId of componentsIds) {
+      for (const componentId of componentIds) {
         const component = components.find((c) => c.id === componentId);
         if (!component) continue;
 
-        // filter by root node
+        // filter by root node & filter by all its children
         allComponentsIds.push(component.id);
-
-        // filter by all its children
         const tree = commonService.tree.fromArray(components, {
           rootId: component.id,
           idPropertyName: 'id',
@@ -70,21 +47,49 @@ export class ExerciseService {
         );
     }
 
-    if (name)
-      filtered = filtered.filter((exercise) =>
-        exercise.name.toLowerCase().includes(name.toLowerCase())
-      );
+    Object.entries(rest).forEach(([key, value]) => {
+      if (value === undefined) return;
 
-    if (attributeValues) throw new Error('not implemented yet');
+      filtered = filtered.filter((exercise) => {
+        const exValue = exercise[key as keyof Exercise];
+
+        if (typeof value === 'boolean') return exValue === value;
+        if (Array.isArray(value)) {
+          // filter by int range
+          if (typeof value[0] === 'number' && typeof value[1] === 'number') {
+            const [min, max] = value as unknown as [number, number];
+            return (
+              typeof exValue === 'number' && exValue >= min && exValue <= max
+            );
+          }
+
+          // filter by array contains
+          if (Array.isArray(exValue)) {
+            value = (value as string[]).map((id) => {
+              // remove only the first part before colon if it is the same as key
+              const parts = id.split(':').map((p) => p.trim());
+              return parts.length > 1 && parts[0] === key
+                ? parts.slice(1).join(':')
+                : id;
+            });
+
+            return value.some((v) => exValue.includes(v as never));
+          }
+        }
+
+        // string match
+        return (
+          typeof exValue === 'string' &&
+          exValue.toLowerCase().includes(String(value).toLowerCase())
+        );
+      });
+    });
 
     return filtered;
   }
 
   static paginate(
-    filter: {
-      componentsIds: string[];
-      name?: string;
-    },
+    filter: Partial<Exercise>,
     state: {
       pagination: Pagination;
       exercises: Exercise[];
@@ -101,13 +106,7 @@ export class ExerciseService {
       setPagination,
     } = state;
 
-    let filtered;
-    if (
-      filter.componentsIds.includes('warmup') ||
-      filter.componentsIds.includes('cooldown')
-    )
-      filtered = [...exercises]; // all exercises for warmup and cooldown
-    else filtered = ExerciseService.filter(exercises, filter, components);
+    let filtered = ExerciseService.filter(exercises, filter, components);
     const total = filtered.length;
 
     // paginate
@@ -143,153 +142,5 @@ export class ExerciseService {
     );
 
     return item;
-  }
-
-  static getAttributes(filter?: Component['attributes']): Attribute[] {
-    const allAttributes = [
-      {
-        field: 'categories',
-        name: 'Categories',
-        type: AttributeType.Multiselect,
-        options: Category,
-      },
-      {
-        field: 'equipment',
-        name: 'Equipment',
-        type: AttributeType.Multiselect,
-        options: Equipment,
-      },
-      {
-        field: 'prescriptions',
-        name: 'Prescriptions',
-        type: AttributeType.Multiselect,
-        options: PrescriptionType,
-      },
-      {
-        field: 'patterns',
-        name: 'Patterns',
-        type: AttributeType.Multiselect,
-        options: Pattern,
-      },
-      {
-        field: 'bodyRegions',
-        name: 'Body Regions',
-        type: AttributeType.Multiselect,
-        options: BodyRegion,
-      },
-      {
-        field: 'loadingSides',
-        name: 'Loading Sides',
-        type: AttributeType.Multiselect,
-        options: LoadingSide,
-      },
-      {
-        field: 'locations',
-        name: 'Locations',
-        type: AttributeType.Multiselect,
-        options: Location,
-      },
-      {
-        field: 'liftPriorities',
-        name: 'Lift Priorities',
-        type: AttributeType.Multiselect,
-        options: LiftPriority,
-      },
-      {
-        field: 'movementDirections',
-        name: 'Movement Directions',
-        type: AttributeType.Multiselect,
-        options: MovementDirection,
-      },
-    ];
-
-    if (!filter || !filter.length) return allAttributes;
-    return allAttributes.filter(({ field }) => filter.includes(field));
-  }
-
-  static getValues(exercise: Partial<ExerciseAttributes>): AttributeValue[] {
-    const categoryValues: AttributeValue[] =
-      exercise.categories?.map((c) => ({
-        field: 'categories',
-        ...this.parseSelectedValue(c),
-      })) || [];
-
-    const equipmentValues: AttributeValue[] =
-      exercise.equipment?.map((e) => ({
-        field: 'equipment',
-        ...this.parseSelectedValue(e),
-      })) || [];
-
-    const prescriptionValues: AttributeValue[] =
-      exercise.prescriptions?.map((p) => ({
-        field: 'prescriptions',
-        selected: '',
-        value: p,
-      })) || [];
-
-    const patternValues: AttributeValue[] =
-      exercise.patterns?.map((p) => ({
-        field: 'patterns',
-        selected: '',
-        value: p,
-      })) || [];
-
-    const bodyRegionValues: AttributeValue[] =
-      exercise.bodyRegions?.map((b) => ({
-        field: 'bodyRegions',
-        selected: '',
-        value: b,
-      })) || [];
-
-    const loadingSideValues: AttributeValue[] =
-      exercise.loadingSides?.map((l) => ({
-        field: 'loadingSides',
-        selected: '',
-        value: l,
-      })) || [];
-
-    const locationValues: AttributeValue[] =
-      exercise.locations?.map((l) => ({
-        field: 'locations',
-        selected: '',
-        value: l,
-      })) || [];
-
-    const liftPriorityValues: AttributeValue[] =
-      exercise.liftPriorities?.map((l) => ({
-        field: 'liftPriorities',
-        selected: '',
-        value: l,
-      })) || [];
-
-    const movementDirectionValues: AttributeValue[] =
-      exercise.movementDirections?.map((m) => ({
-        field: 'movementDirections',
-        selected: '',
-        value: m,
-      })) || [];
-
-    return [
-      ...categoryValues,
-      ...prescriptionValues,
-      ...patternValues,
-      ...bodyRegionValues,
-      ...equipmentValues,
-      ...loadingSideValues,
-      ...locationValues,
-      ...liftPriorityValues,
-      ...movementDirectionValues,
-    ];
-  }
-
-  static parseSelectedValue(
-    s: string
-  ): Pick<AttributeValue, 'selected' | 'value'> {
-    // value is last part, all before is select
-    const parts = s.split(':');
-    return {
-      selected: parts.slice(0, parts.length - 1).join(':'),
-      value: parts[parts.length - 1],
-    };
   }
 }

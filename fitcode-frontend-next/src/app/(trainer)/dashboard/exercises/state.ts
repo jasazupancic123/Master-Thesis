@@ -21,7 +21,8 @@ import { DEFAULT_EXERCISE } from '@/sites/exercises.page';
 const commonService = CommonService.instance;
 
 export function handlePaginateExercises(
-  filter: { componentsIds?: string[]; name?: string },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  filter: Partial<Record<keyof Exercise, any>>,
   state: {
     components: Component[];
     exercises: Exercise[];
@@ -258,8 +259,6 @@ export async function handleExerciseCsvFileUpload(
         case 'videoUrl':
         case 'instruction':
           return value === '' ? undefined : value;
-        case 'isUnilateral':
-          return value.toLowerCase() === 'true';
         case 'componentIds':
         case 'categories':
         case 'prescriptions':
@@ -289,7 +288,11 @@ export async function handleExerciseCsvFileUpload(
             const parts = id.split(':').map((p) => p.trim());
             return parts[parts.length - 1];
           }),
-          isUnilateral: e.isUnilateral || false,
+          isUnilateral: e.prescriptions.some((p) =>
+            p.toLowerCase().includes('uni')
+          )
+            ? true
+            : false,
           imageUrl: e.imageUrl,
           videoUrl: e.videoUrl,
           instruction: e.instruction,
