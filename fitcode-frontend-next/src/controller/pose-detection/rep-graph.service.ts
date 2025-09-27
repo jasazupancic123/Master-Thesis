@@ -1,6 +1,7 @@
 // reps-graph.service.ts
 'use client';
 
+import { KeypointHistory } from './class/keypoint-history';
 import { KeypointId } from './enum/keypoint-id';
 import { KeypointValueType } from './enum/keypoint-value-type';
 import { Rep } from './type/rep.type';
@@ -31,6 +32,7 @@ export class RepsGraphService {
       recordedRepsRef: React.RefObject<Rep[]>;
       keypointId: KeypointId;
       valueType: KeypointValueType;
+      constantKeypointHistory: KeypointHistory;
     },
     opts?: {
       filenameBase?: string; // base name for files
@@ -52,7 +54,8 @@ export class RepsGraphService {
       useGetUrl = false,
     } = opts ?? {};
 
-    const perRepConfigs = this.buildConfigsPerRep(state);
+    const { configs: perRepConfigs, chunksLength } =
+      this.buildConfigsPerRep(state);
     if (perRepConfigs.length === 0) {
       throw new Error('No reps found with data to plot.');
     }
@@ -80,12 +83,16 @@ export class RepsGraphService {
     // Try to combine into one image (if requested)
     if (combine) {
       try {
-        const combinedBlob = await this.combinePngsVertically(validBlobs, {
-          width,
-          height,
-          spacing,
-          backgroundColor,
-        });
+        const combinedBlob = await this.combinePngsVertically(
+          validBlobs,
+          {
+            width,
+            height,
+            spacing,
+            backgroundColor,
+          },
+          { historyChunkCount: chunksLength }
+        );
         this.downloadBlob(combinedBlob, `${filenameBase}_all.png`);
         return;
       } catch (err) {
@@ -108,6 +115,7 @@ export class RepsGraphService {
       recordedRepsRef: React.RefObject<Rep[]>;
       keypointId: KeypointId;
       valueType: KeypointValueType;
+      constantKeypointHistory: KeypointHistory;
     },
     opts?: {
       filenameBase?: string;
@@ -125,7 +133,8 @@ export class RepsGraphService {
       useGetUrl = false,
     } = opts ?? {};
 
-    const perRepConfigs = this.buildConfigsPerRep(state);
+    const { configs: perRepConfigs, chunksLength } =
+      this.buildConfigsPerRep(state);
     if (!perRepConfigs.length)
       throw new Error('No reps found with data to plot.');
 
@@ -151,6 +160,7 @@ export class RepsGraphService {
       recordedRepsRef: React.RefObject<Rep[]>;
       keypointId: KeypointId;
       valueType: KeypointValueType;
+      constantKeypointHistory: KeypointHistory;
     },
     opts?: {
       filename?: string;
@@ -170,7 +180,8 @@ export class RepsGraphService {
       useGetUrl = false,
     } = opts ?? {};
 
-    const perRepConfigs = this.buildConfigsPerRep(state);
+    const { configs: perRepConfigs, chunksLength } =
+      this.buildConfigsPerRep(state);
     if (!perRepConfigs.length)
       throw new Error('No reps found with data to plot.');
 
@@ -185,12 +196,16 @@ export class RepsGraphService {
       )
     );
 
-    const combined = await this.combinePngsVertically(blobs, {
-      width,
-      height,
-      spacing,
-      backgroundColor,
-    });
+    const combined = await this.combinePngsVertically(
+      blobs,
+      {
+        width,
+        height,
+        spacing,
+        backgroundColor,
+      },
+      { historyChunkCount: chunksLength }
+    );
 
     this.downloadBlob(combined, filename);
   }
@@ -204,8 +219,10 @@ export class RepsGraphService {
     recordedRepsRef: React.RefObject<Rep[]>;
     keypointId: KeypointId;
     valueType: KeypointValueType;
+    constantKeypointHistory: KeypointHistory;
   }) {
-    const { recordedRepsRef, keypointId, valueType } = state;
+    const { recordedRepsRef, keypointId, valueType, constantKeypointHistory } =
+      state;
     const reps = recordedRepsRef.current ?? [];
     const configs: any[] = [];
 
@@ -289,9 +306,101 @@ export class RepsGraphService {
       configs.push(config);
     });
 
+    // make chunks of length 400 of constantKeypointHistory
+
+    const chunkSize = 250;
+    const chunks = [];
+    for (
+      let i = 0;
+      i < constantKeypointHistory.history.length;
+      i += chunkSize
+    ) {
+      chunks.push(constantKeypointHistory.history.slice(i, i + chunkSize));
+    }
+
+    chunks.forEach((chunk, chunkIdx) => {
+      const points = chunk
+        .map((c) => c.find((k) => k.id === keypointId))
+        .filter((k) => k != null)
+        .map((k) => {
+          const v = KeypointUtil.getKeypointValueByType(k, valueType);
+          if (v == null) return undefined;
+
+          const color = reps.some((rep) => k.capturedAt === rep.startTimestamp)
+            ? this.palette.start
+            : reps.some((rep) => k.capturedAt === rep.extremeTimestamp)
+              ? this.palette.extreme
+              : reps.some((rep) => k.capturedAt === rep.extremeToEndTimestamp)
+                ? this.palette.extremeToEnd
+                : reps.some((rep) => k.capturedAt === rep.endValueTimestamp)
+                  ? this.palette.end
+                  : this.palette.default;
+
+          const ts =
+            typeof (k as any).capturedAt === 'number'
+              ? (k as any).capturedAt
+              : ((k as any).capturedAt?.getTime?.() ?? 0);
+
+          return { value: v as number, color, ts: ts as number };
+        })
+        .filter(Boolean) as { value: number; color: string; ts: number }[];
+
+      if (!points.length) return;
+
+      // simple index labels; switch to timestamp formatting if you prefer
+      const labels: (string | number)[] = Array.from(
+        { length: points.length },
+        (_, i) => i
+      );
+
+      const dataset = {
+        type: 'line',
+        label: `Whole Exercise (part ${chunkIdx + 1})`,
+        data: points.map((p) => p.value),
+        borderWidth: 2,
+        borderColor: '#3F88C5',
+        tension: 0.25,
+        fill: false,
+        pointRadius: 3,
+        pointHoverRadius: 4,
+        pointBackgroundColor: points.map((p) => p.color),
+        pointBorderColor: points.map((p) => p.color),
+      };
+
+      const config = {
+        type: 'line',
+        data: { labels, datasets: [dataset] },
+        options: {
+          responsive: false,
+          animation: false,
+          plugins: {
+            legend: { display: true, labels: { color: this.palette.default } },
+            title: {
+              display: true,
+              text: `Reps Graph - Whole Exercise (part ${chunkIdx + 1})`,
+              color: this.palette.default,
+              font: { size: 16, weight: '600' },
+            },
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(240,246,246,0.15)' },
+              ticks: { color: this.palette.default },
+            },
+            y: {
+              grid: { color: 'rgba(240,246,246,0.15)' },
+              ticks: { color: this.palette.default },
+            },
+          },
+        },
+      };
+
+      configs.push(config);
+    });
+
     console.log('configs', configs, 'reps', reps.length);
 
-    return configs;
+    return { configs, chunksLength: chunks.length };
   }
 
   // ---------- rendering via QuickChart ----------
@@ -344,7 +453,7 @@ export class RepsGraphService {
     });
     if (!res.ok) {
       const text = await res.text().catch(() => '');
-      console.log(`QuickChart POST failed: ${res.status} ${text}`)
+      console.log(`QuickChart POST failed: ${res.status} ${text}`);
       throw new Error(`QuickChart POST failed: ${res.status} ${text}`);
     }
     return await res.blob();
@@ -363,34 +472,85 @@ export class RepsGraphService {
       height: number;
       spacing: number;
       backgroundColor: string;
-    }
+    },
+    group?: { historyChunkCount?: number } // last N blobs are history chunks
   ): Promise<Blob> {
     const { width, height, spacing, backgroundColor } = opts;
+    const historyChunkCount = Math.max(0, group?.historyChunkCount ?? 0);
 
-    // Load to ImageBitmap (fast) or HTMLImageElement fallback
+    // Decode all images
     const bitmaps = await Promise.all(blobs.map((b) => this.blobToBitmap(b)));
+    const total = bitmaps.length;
+    const repCount = Math.max(0, total - historyChunkCount);
 
-    const totalHeight =
-      bitmaps.length * height + (bitmaps.length - 1) * spacing;
+    // History row width
+    const croppedLeft = 64;
+    const historyRowWidth =
+      historyChunkCount > 0
+        ? width +
+          Math.max(0, historyChunkCount - 1) * (width - croppedLeft) +
+          Math.max(0, historyChunkCount - 1) * spacing
+        : 0;
+
+    const canvasWidth = Math.max(width, historyRowWidth);
+    const rowCount = repCount + (historyChunkCount > 0 ? 1 : 0);
+    const canvasHeight =
+      rowCount * height + Math.max(0, rowCount - 1) * spacing;
 
     const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = totalHeight;
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
 
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('2D canvas not available');
 
-    // Fill background
+    // Background
     ctx.fillStyle = backgroundColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw each chart stacked
+    // Draw reps vertically, cropping 20px from right
+    const croppedRight = 20;
     let y = 0;
-    for (const bmp of bitmaps) {
-      ctx.drawImage(bmp as any, 0, y, width, height);
+    for (let i = 0; i < repCount; i++) {
+      const bmp = bitmaps[i] as any;
+      const srcX = 0;
+      const srcY = 0;
+      const srcW = Math.max(1, (bmp.width ?? width) - croppedRight);
+      const srcH = bmp.height ?? height;
+
+      const destW = Math.max(1, width - croppedRight);
+      const destH = height;
+
+      ctx.drawImage(bmp, srcX, srcY, srcW, srcH, 0, y, destW, destH);
       y += height + spacing;
     }
 
+    // Draw history parts in one horizontal row
+    if (historyChunkCount > 0) {
+      let xHistory = 0;
+
+      // First history chunk: full width
+      const firstBmp = bitmaps[repCount];
+      ctx.drawImage(firstBmp as any, 0, y, width, height);
+      xHistory += width + spacing;
+
+      // Remaining history chunks: crop 64px from left
+      for (let j = 1; j < historyChunkCount; j++) {
+        const bmp = bitmaps[repCount + j] as any;
+        const srcX = croppedLeft;
+        const srcY = 0;
+        const srcW = Math.max(1, (bmp.width ?? width) - croppedLeft);
+        const srcH = bmp.height ?? height;
+
+        const destW = Math.max(1, width - croppedLeft);
+        const destH = height;
+
+        ctx.drawImage(bmp, srcX, srcY, srcW, srcH, xHistory, y, destW, destH);
+        xHistory += destW + spacing;
+      }
+    }
+
+    // Export
     return await new Promise<Blob>((resolve, reject) =>
       canvas.toBlob(
         (blob) => (blob ? resolve(blob) : reject(new Error('toBlob failed'))),

@@ -250,7 +250,10 @@ export class StatusDetectionService {
 
       const stdDev = StatusDetectionService.calculateStandardDeviation(history);
 
-      return stdDev < POSE_DETECTION_CONSTRAINTS.STILLNESS_THRESHOLD_M;
+      return currentStatus === DetectionStatus.RECORDING
+        ? stdDev <
+            POSE_DETECTION_CONSTRAINTS.STILLNESS_THRESHOLD_WHILE_RECORDING_M
+        : stdDev < POSE_DETECTION_CONSTRAINTS.STILLNESS_THRESHOLD_M;
     });
   }
 

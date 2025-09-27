@@ -102,6 +102,7 @@ export class PoseDetectionService {
     let earsBelowEyesStart = false;
     let earsAboveEyes = false;
     let earsBelowEyesEnd = false;
+    let shouldersAlwaysAboveHips = true;
 
     for (const frame of frames) {
       const leftEyeKeypoint = KeypointUtil.getDesiredKeypointFromArray(
@@ -124,11 +125,35 @@ export class PoseDetectionService {
         KeypointId.RIGHT_EAR
       );
 
+      const leftHipKeypoint = KeypointUtil.getDesiredKeypointFromArray(
+        frame,
+        KeypointId.LEFT_HIP
+      );
+
+      const rightHipKeypoint = KeypointUtil.getDesiredKeypointFromArray(
+        frame,
+        KeypointId.RIGHT_HIP
+      );
+
+      const leftShoulderKeypoint = KeypointUtil.getDesiredKeypointFromArray(
+        frame,
+        KeypointId.LEFT_SHOULDER
+      );
+
+      const rightShoulderKeypoint = KeypointUtil.getDesiredKeypointFromArray(
+        frame,
+        KeypointId.RIGHT_SHOULDER
+      );
+
       if (
         !leftEyeKeypoint ||
         !rightEyeKeypoint ||
         !leftEarKeypoint ||
-        !rightEarKeypoint
+        !rightEarKeypoint ||
+        !leftHipKeypoint ||
+        !rightHipKeypoint ||
+        !leftShoulderKeypoint ||
+        !rightShoulderKeypoint
       )
         continue;
 
@@ -150,11 +175,33 @@ export class PoseDetectionService {
         KeypointValueType.POSITION_Y
       );
 
+      const leftHipY = KeypointUtil.getKeypointValueByType(
+        leftHipKeypoint,
+        KeypointValueType.POSITION_Y
+      );
+      const rightHipY = KeypointUtil.getKeypointValueByType(
+        rightHipKeypoint,
+        KeypointValueType.POSITION_Y
+      );
+
+      const leftShoulderY = KeypointUtil.getKeypointValueByType(
+        leftShoulderKeypoint,
+        KeypointValueType.POSITION_Y
+      );
+      const rightShoulderY = KeypointUtil.getKeypointValueByType(
+        rightShoulderKeypoint,
+        KeypointValueType.POSITION_Y
+      );
+
       if (
         leftEyeY === undefined ||
         rightEyeY === undefined ||
         leftEarY === undefined ||
-        rightEarY === undefined
+        rightEarY === undefined ||
+        leftHipY === undefined ||
+        rightHipY === undefined ||
+        leftShoulderY === undefined ||
+        rightShoulderY === undefined
       )
         continue;
 
@@ -180,9 +227,19 @@ export class PoseDetectionService {
           break;
         }
       }
+
+      const avgHipY = (leftHipY + rightHipY) / 2;
+      const avgShoulderY = (leftShoulderY + rightShoulderY) / 2;
+
+      if (avgShoulderY - 0.2 <= avgHipY) shouldersAlwaysAboveHips = false;
     }
 
     // if (earsBelowEyesEnd) console.log('NOD DETECTED');
-    return earsBelowEyesStart && earsAboveEyes && earsBelowEyesEnd;
+    return (
+      earsBelowEyesStart &&
+      earsAboveEyes &&
+      earsBelowEyesEnd &&
+      shouldersAlwaysAboveHips
+    );
   }
 }
