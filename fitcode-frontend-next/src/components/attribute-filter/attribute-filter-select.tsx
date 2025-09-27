@@ -72,7 +72,12 @@ export default function AttributeFilterSelect({
         {selected.size > 0 ? `${selected.size} selected` : 'Select...'}
       </Button>
 
-      <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
+      <Menu
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleClose}
+        sx={{ zIndex: 1500 }}
+      >
         {attributes.map((attr) => renderAttribute(attr))}
       </Menu>
     </FormControl>
