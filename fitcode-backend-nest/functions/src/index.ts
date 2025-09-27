@@ -19,7 +19,7 @@ const Collection = {
 
 export const createUserWithRole = https.onCall(async (data, context) => {
   // validate fields
-  const { displayName, email, password, role: requesteeRole } = data;
+  const { displayName, email, password, photoURL, role: requesteeRole } = data;
   if (!displayName || !email || !password || !requesteeRole) {
     throw new https.HttpsError('invalid-argument', 'Missing user details.');
   }
@@ -30,7 +30,7 @@ export const createUserWithRole = https.onCall(async (data, context) => {
       // register user
       const newUser = await admin
         .auth()
-        .createUser({ displayName, email, password });
+        .createUser({ displayName, email, password, photoURL });
 
       await admin
         .auth()
@@ -89,7 +89,7 @@ export const createUserWithRole = https.onCall(async (data, context) => {
 
     const newUser = await admin
       .auth()
-      .createUser({ displayName, email, password });
+      .createUser({ displayName, email, password, photoURL });
 
     await admin
       .auth()

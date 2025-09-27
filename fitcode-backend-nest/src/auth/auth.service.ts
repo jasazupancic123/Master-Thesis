@@ -127,11 +127,12 @@ export class AuthService {
 
   @LogMethod()
   async registerAthlete(input: Omit<CreateUser, 'customClaims'>) {
-    const { email, displayName, password } = input;
+    const { email, displayName, password, photoURL } = input;
     return await this.firebaseService.auth.createUser({
       email,
       displayName,
       password,
+      photoURL,
     });
   }
 
