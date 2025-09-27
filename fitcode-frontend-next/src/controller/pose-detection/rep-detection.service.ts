@@ -1237,4 +1237,110 @@ export class RepDetectionService {
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
   };
+
+  static palette = {
+    start: '#F3A712',
+    background: '#111111',
+    extreme: '#F22B29',
+    extremeToEnd: '#3F88C5',
+    end: '#16DB65',
+    default: '#F0F6F6',
+  };
+
+  static buildChartConfig(state: {
+    recordedRepsRef: RefObject<Rep[]>;
+    keypointId: KeypointId;
+    valueType: KeypointValueType;
+  }) {
+    const { recordedRepsRef, keypointId, valueType } = state;
+    const reps = recordedRepsRef.current ?? [];
+
+    const labels: (string | number)[] = [];
+    const datasets: any[] = [];
+
+    reps.forEach((rep, repIndex) => {
+      const points = rep.buffer
+        .getHistoryById(keypointId)
+        .map((k) => {
+          const v = KeypointUtil.getKeypointValueByType(k, valueType);
+          if (v == null) return undefined;
+          const color =
+            k.capturedAt === rep.startTimestamp
+              ? this.palette.start
+              : k.capturedAt === rep.extremeTimestamp
+                ? this.palette.extreme
+                : k.capturedAt === rep.extremeToEndTimestamp
+                  ? this.palette.extremeToEnd
+                  : k.capturedAt === rep.endValueTimestamp
+                    ? this.palette.end
+                    : this.palette.default;
+          return {
+            value: v as number,
+            color,
+            ts: k.capturedAt.getTime() as number,
+          };
+        })
+        .filter(Boolean) as { value: number; color: string; ts: number }[];
+
+      if (!points.length) return;
+
+      if (repIndex === 0) {
+        for (let i = 0; i < points.length; i++) labels.push(i); // or format timestamps
+      }
+
+      datasets.push({
+        type: 'line',
+        label: `Rep ${repIndex + 1}`,
+        data: points.map((p) => p.value),
+        borderWidth: 2,
+        borderColor: '#3F88C5',
+        tension: 0.25,
+        fill: false,
+        pointRadius: 3,
+        pointHoverRadius: 4,
+        pointBackgroundColor: points.map((p) => p.color),
+        pointBorderColor: points.map((p) => p.color),
+      });
+    });
+
+    return {
+      type: 'line',
+      data: { labels, datasets },
+      options: {
+        responsive: false,
+        animation: false,
+        plugins: {
+          legend: { display: true, labels: { color: this.palette.default } },
+          title: {
+            display: true,
+            text: 'Reps Graph',
+            color: this.palette.default,
+            font: { size: 16, weight: '600' },
+          },
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(240,246,246,0.15)' },
+            ticks: { color: this.palette.default },
+          },
+          y: {
+            grid: { color: 'rgba(240,246,246,0.15)' },
+            ticks: { color: this.palette.default },
+          },
+        },
+      },
+    };
+  }
+
+  static buildQuickChartURL(
+    config: any,
+    width = 1000,
+    height = 500,
+    backgroundColor = this.palette.background
+  ) {
+    const base = 'https://quickchart.io/chart';
+    const c = encodeURIComponent(JSON.stringify(config));
+    const bg = encodeURIComponent(backgroundColor);
+    return `${base}?c=${c}&width=${width}&height=${height}&backgroundColor=${bg}`;
+  }
 }

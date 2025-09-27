@@ -28,6 +28,7 @@ import type { RepState } from '@/controller/pose-detection/type/rep-state.type';
 import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useScreenSize } from '@/store/screen-size.provider';
+import { RepsGraphService } from '@/controller/pose-detection/rep-graph.service';
 
 const DEBUG = false;
 
@@ -220,7 +221,6 @@ export default function MobileMovementValidation(
         e.preventDefault(); // stop page scroll
         if (!spaceDown) setSpaceDown(true);
 
-        // drawGraph();
         RepDetectionService.saveRepTimesToJsonFiles({
           recordedRepsRef,
           selectedExercise,
@@ -291,8 +291,17 @@ export default function MobileMovementValidation(
     document.body.appendChild(script);
   };
 
-  const finishAiDetection = () => {
+  const finishAiDetection = async () => {
     statusMessage.current = getStatusMessage(DetectionStatus.STOPPED);
+
+    await RepsGraphService.downloadReps(
+      {
+        recordedRepsRef,
+        keypointId: KeypointId.RIGHT_WRIST,
+        valueType: KeypointValueType.POSITION_Y,
+      },
+      { filenameBase: 'session', combine: true }
+    );
 
     if (
       updateExerciseReps &&

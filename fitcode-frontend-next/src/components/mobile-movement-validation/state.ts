@@ -129,7 +129,7 @@ export const predictWebcam = async (state: {
   centerPosRef: RefObject<{ x: number; y: number } | null>;
   recordingTimestampRef: RefObject<Date | null>;
   setFps: SetState<number | null>;
-  finishAiDetection: () => void;
+  finishAiDetection: () => Promise<void>;
 }) => {
   const {
     statusRef,
@@ -162,7 +162,7 @@ export const predictWebcam = async (state: {
   } = state;
 
   if (statusRef.current === DetectionStatus.STOPPED) {
-    finishAiDetection();
+    await finishAiDetection();
     return;
   }
 
