@@ -33,6 +33,8 @@ describe('Training Report (e2e)', () => {
   let trainingReportService: TrainingReportService;
 
   let component: Component;
+  let component2: Component;
+
   let institution: TestInstitution;
   let group: Group;
   let training: Training;
@@ -56,7 +58,7 @@ describe('Training Report (e2e)', () => {
 
     group = await db.groups.createTest(institution);
 
-    [component] = await Promise.all([
+    [component, component2] = await Promise.all([
       db.components.create({ id: 'c1' }),
       db.components.create({ id: 'c2' }),
     ]);
@@ -69,8 +71,8 @@ describe('Training Report (e2e)', () => {
 
     const opt1 = generateComponentParamsStub([
       ParamType.VolWorkSets, // sets
-      ParamType.VolWork1, // reps, defaults to 12 reps
-      ParamType.IntWork1, // kg, defaults to 20 kg
+      ParamType.VolWork1, // reps, defaults to 10 reps
+      ParamType.IntWork1, // kg, defaults to 50 kg
       ParamType.VolRec1, // rec, defaults to 60 sec
     ]);
 
@@ -121,8 +123,8 @@ describe('Training Report (e2e)', () => {
                   generateTrainingExercise({
                     id: 'squat',
                     sets: [
-                      generateExerciseSet(1, opt1), // 12 reps, 20 kg, 60 second recovery
-                      generateExerciseSet(2, opt1), // 12 reps, 20 kg, 60 second recovery
+                      generateExerciseSet(1, opt1), // 10 reps, 50 kg, 60 second recovery
+                      generateExerciseSet(2, opt1), // 10 reps, 50 kg, 60 second recovery
                     ],
                   }),
                 ],
@@ -137,9 +139,9 @@ describe('Training Report (e2e)', () => {
                   generateTrainingExercise({
                     id: 'squat',
                     sets: [
-                      generateExerciseSet(1, opt1), // 12 reps, 20 kg, 60 second recovery
-                      generateExerciseSet(2, opt1), // 12 reps, 20 kg, 60 second recovery
-                      generateExerciseSet(3, opt1), // 12 reps, 20 kg, 60 second recovery
+                      generateExerciseSet(1, opt1), // 10 reps, 50 kg, 60 second recovery
+                      generateExerciseSet(2, opt1), // 10 reps, 50 kg, 60 second recovery
+                      generateExerciseSet(3, opt1), // 10 reps, 50 kg, 60 second recovery
                     ],
                   }),
                 ],
@@ -187,7 +189,6 @@ describe('Training Report (e2e)', () => {
       totalTimeWork: 0,
       totalDistWork: 0,
       totalPower: 0,
-      totalRealizationScore: 0,
     } as TrainingReport);
   });
 
@@ -254,7 +255,6 @@ describe('Training Report (e2e)', () => {
       totalTimeWork: 0,
       totalDistWork: 0,
       totalPower: 0,
-      totalRealizationScore: 0,
     } as TrainingStats);
   });
 
@@ -280,7 +280,6 @@ describe('Training Report (e2e)', () => {
       totalTimeWork: 10 * 50 * 3 * 10, // 15000 -> 10 sets of 10 reps with 50 kg and 2010 (3 second) tempo
       totalDistWork: 0,
       totalPower: totalTonnage / totalActiveTime,
-      totalRealizationScore: expect.any(Number),
       totalDistVol: 3 * 30, // 90 -> 3 sets of 30 m distance
     } as TrainingStats);
   });
@@ -350,4 +349,69 @@ describe('Training Report (e2e)', () => {
     await db.workloads.deleteAll(training.id);
     await db.trainingReports.delete(ref);
   });
+
+  /* it('should calculate realization correctly', async () => {
+    // 3 sets 10 reps, 50 kg, 60 second recovery
+    //   - 1st set 100% completed
+    //   - 2nd set 80% completed
+    //   - 3rd set 50% completed
+    // => total realization: (100 + 80 + 50) / 300 = 76.67%
+
+    await db.workloads.createMany([
+      {
+        // first set fully completed
+        userId: global.athlete.uid,
+        trainingId: training.id,
+        component: component2,
+        supersetIndex: 0,
+        exerciseId: 'pullup',
+        setNumber: 1,
+        status: SetStatus.COMPLETED,
+        volWork1ValueL: 10,
+        intWork1ValueL: 50,
+        volRecValueL: 60,
+      },
+      {
+        // second set 80% completed
+        userId: global.athlete.uid,
+        trainingId: training.id,
+        component: component2,
+        supersetIndex: 0,
+        exerciseId: 'pullup',
+        setNumber: 2,
+        status: SetStatus.COMPLETED,
+        volWork1ValueL: 8,
+        intWork1ValueL: 40,
+        volRecValueL: 72,
+      },
+      {
+        // third set 50% completed
+        userId: global.athlete.uid,
+        trainingId: training.id,
+        component: component2,
+        supersetIndex: 0,
+        exerciseId: 'pullup',
+        setNumber: 3,
+        status: SetStatus.COMPLETED,
+        volWork1ValueL: 5,
+        intWork1ValueL: 25,
+        volRecValueL: 90,
+      },
+    ]);
+
+    await trainingReportService.updateReport(global.athlete.uid, training);
+
+    const ref: TrainingReportRef = {
+      trainingId: training.id,
+      userId: global.athlete.uid,
+    };
+
+    const report = await db.trainingReports.findById(ref);
+    expect(report).toBeDefined();
+    expect(report.sets).toBe(3);
+    expect(report.realization).toBeCloseTo(76.67, 1);
+
+    await db.workloads.deleteAll(training.id);
+    await db.trainingReports.delete(ref);
+  }); */
 });

@@ -22,9 +22,7 @@ export default function TrainingReportCard(props: TrainingReportCardProps) {
   const theme = useTheme();
   const { report } = props;
 
-  const [realizationScore] = useState(
-    Math.round((report.realizationScore / report.totalRealizationScore) * 100)
-  );
+  const [realizationScore] = useState(Math.round(report.realization * 100));
   const [tonnageScore] = useState(
     Math.round((report.tonnage / report.totalTonnage) * 100)
   );
