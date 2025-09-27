@@ -9,11 +9,11 @@ import {
   Typography,
 } from '@mui/material';
 import { useRouter } from 'next/navigation';
+import Papa from 'papaparse';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { theme } from '@/app/style';
-import { BACKEND_API_BASE_URL } from '@/common/constant/api.constant';
 import { AthletesTrainers } from '@/common/enum/athletes-trainer.enum';
 import { isManager } from '@/common/firebase/firebase-auth.util';
 import { FirebaseFunctionsUtil } from '@/common/firebase/firebase-functions.util';
@@ -159,67 +159,33 @@ export default function DashboardInstitutionPage() {
   const handleCsvFileUpload = async (file: File) => {
     setIsUploadingMembers(true);
 
-    const text = await file.text();
-    const rows = text.split('\n').filter((row) => row);
+    Papa.parse<AuthUser & { password: string; role: string }>(file, {
+      header: true,
+      skipEmptyLines: true,
+      error: (e: Error) =>
+        toast.error(`Failed to parse CSV file: ${e.message}`),
+      transform: (value, _column) => value.trim(),
+      complete: async (results) => {
+        const rows = results.data.filter((row) => row.email && row.password);
+        const data = rows.map((r) => ({
+          displayName: r.displayName || '',
+          email: r.email!.toLowerCase()!,
+          photoURL: r.photoURL || undefined,
+          password: r.password,
+          role: [UserRole.ATHLETE, UserRole.TRAINER].includes(
+            r.role as UserRole
+          )
+            ? (r.role as UserRole)
+            : UserRole.ATHLETE,
+        }));
 
-    rows.forEach((row, i) => {
-      let [displayName, email, password, role] = row.split(',');
-
-      displayName = displayName.trim();
-      email = email.trim();
-      password = password.trim();
-      role = role.trim();
-
-      if (!displayName || !email || !password || !role) {
-        toast.error(`Row ${i + 1} is missing required fields`);
-        return;
-      }
-
-      if (![UserRole.ATHLETE, UserRole.TRAINER].includes(role as UserRole)) {
-        toast.error(`Row ${i + 1} has an invalid role: ${role}`);
-        return;
-      }
-
-      const input = {
-        displayName,
-        email,
-        password,
-        role: role as UserRole,
-      };
-
-      // user already exists
-      if (users.some((user) => user.email === email)) {
-        setCsvUserEmails((prev) => [...prev, email]);
-
-        if (i === rows.length - 1) {
-          refetchUsers();
-          refetchMembers(
-            `${BACKEND_API_BASE_URL}/institution/${selectedInstitution?.id}/find/all`
-          );
-        }
-
-        return;
-      }
-
-      handleApiRequest(
-        router,
-        () => firebaseFunctions.createUserWithRole(input),
-        () => {
-          setCsvUserEmails((prev) => [...prev, email]);
-
-          if (i === rows.length - 1) {
-            refetchUsers();
-            refetchMembers(
-              `${BACKEND_API_BASE_URL}/institution/${selectedInstitution?.id}/find/all`
-            );
-          }
-        },
-        () => {
-          setIsUploadingMembers(false);
-        },
-        `Failed to register user ${email} at row ${i + 1}`
-      );
+        await Promise.all(
+          data.map((user) => firebaseFunctions.createUserWithRole(user))
+        );
+      },
     });
+
+    setIsUploadingMembers(false);
   };
 
   const HorizontalItems = () => {

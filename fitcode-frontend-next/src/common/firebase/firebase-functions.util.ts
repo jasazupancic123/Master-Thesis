@@ -22,6 +22,7 @@ export class FirebaseFunctionsUtil {
     password: string;
     role: UserRole;
     displayName: string;
+    photoURL?: string;
   }) {
     try {
       await httpsCallable(this.functions, 'createUserWithRole')(input);
