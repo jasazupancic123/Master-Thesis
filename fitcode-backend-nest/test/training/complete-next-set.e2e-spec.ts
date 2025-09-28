@@ -38,9 +38,9 @@ describe('Complete Next Set (e2e)', () => {
   let component1: Component;
   let trainingId: string;
 
-  function generateSet(setNumber: number, bilateral = true) {
+  function generateSet(setNumber: number, isUnilateral = true) {
     const set = generateExerciseSet(setNumber, COMPONENT_PARAMS_OPT1);
-    if (bilateral) set.paramValuesR = undefined;
+    if (isUnilateral) set.paramValuesR = undefined;
     return set;
   }
 
@@ -559,12 +559,12 @@ describe('Complete Next Set (e2e)', () => {
     await db.trainings.delete(trainingId2);
   });
 
-  it('should fail if exercise is bilateral and both sides are not specified', async () => {
+  it('should fail if exercise is unilateral and both sides are not specified', async () => {
     const exercise = await db.exercises.create(
       generateExerciseStub({
-        name: 'bilateral-exercise',
+        name: 'unilateral-exercise',
         componentIds: ['c1'],
-        isBilateral: true,
+        isUnilateral: true,
       }),
     );
 

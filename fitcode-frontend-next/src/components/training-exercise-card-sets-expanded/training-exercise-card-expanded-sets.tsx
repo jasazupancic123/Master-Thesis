@@ -114,7 +114,7 @@ export default function TrainingExerciseCardExpandedSets(
                   flexDirection="column"
                   gap={0.9}
                 >
-                  {exercise.exercise?.isBilateral ? (
+                  {exercise.exercise?.isUnilateral ? (
                     <>
                       <LeftRightExerciseText title="L" />
                       <LeftRightExerciseText title="R" />
@@ -152,7 +152,7 @@ export default function TrainingExerciseCardExpandedSets(
                     }
                   );
 
-                  if (!valueL || (exercise.exercise?.isBilateral && !valueR))
+                  if (!valueL || (exercise.exercise?.isUnilateral && !valueR))
                     return toast.error(
                       `Invalid parameter field: ${param.field}`
                     );
@@ -193,7 +193,7 @@ export default function TrainingExerciseCardExpandedSets(
                       }
                     >
                       {['L']
-                        .concat(exercise.exercise?.isBilateral ? ['R'] : [])
+                        .concat(exercise.exercise?.isUnilateral ? ['R'] : [])
                         .map((lOrR) => (
                           <ExerciseParam
                             key={`${param.field}-${lOrR}`}

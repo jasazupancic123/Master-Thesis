@@ -102,7 +102,7 @@ export default function AthleteTrainingExerciseSets(
                   flexDirection="column"
                   gap={trainingInProgressView ? 1.35 : 0.9}
                 >
-                  {exercise.exercise?.isBilateral ? (
+                  {exercise.exercise?.isUnilateral ? (
                     <>
                       <LeftRightExerciseText title="L" />
                       <LeftRightExerciseText title="R" />
@@ -147,7 +147,7 @@ export default function AthleteTrainingExerciseSets(
                       }
                     );
 
-                    if (!valueL || (exercise.exercise?.isBilateral && !valueR))
+                    if (!valueL || (exercise.exercise?.isUnilateral && !valueR))
                       return toast.error(
                         `Invalid parameter field: ${param.field}`
                       );
@@ -160,7 +160,7 @@ export default function AthleteTrainingExerciseSets(
                         }
                       >
                         {['L']
-                          .concat(exercise.exercise?.isBilateral ? ['R'] : [])
+                          .concat(exercise.exercise?.isUnilateral ? ['R'] : [])
                           .map((lOrR) => (
                             <ExerciseParam
                               key={`${param.field}-${lOrR}`}

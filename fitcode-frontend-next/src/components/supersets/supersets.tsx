@@ -398,6 +398,7 @@ export default function Supersets(props: SupersetsProps) {
           </Box>
         ) : null}
       </DragOverlay>
+
       {/* Component exercises modal */}
       <MyModal
         isOpen={openAddExerciseModal}

@@ -1,19 +1,18 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Expose, Type } from 'class-transformer';
 import {
-  IsBoolean,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  ValidateNested,
-} from 'class-validator';
+  ApiProperty,
+  ApiPropertyOptional,
+  IntersectionType,
+} from '@nestjs/swagger';
+import { Expose, Type } from 'class-transformer';
+import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 import { Attribute } from '@src/attribute/entity/attribute.entity';
-import { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
 import { BaseEntity } from '@src/common/entity/base.entity';
-import { ExerciseAttributeValue } from '@src/exercise/entity/exercise-attribute-value.entity';
+import { Institution } from '@src/institution/entity/institution.entity';
 
-export class Exercise extends BaseEntity {
+import { ExerciseAttributes } from './exercise-attributes.entity';
+
+export class Exercise extends IntersectionType(BaseEntity, ExerciseAttributes) {
   @IsString()
   @IsNotEmpty()
   @Expose()
@@ -26,17 +25,13 @@ export class Exercise extends BaseEntity {
   @ApiProperty()
   name: string;
 
-  @IsString({ each: true })
+  @IsString()
+  @IsOptional()
   @IsNotEmpty()
   @Expose()
-  @ApiProperty()
-  componentIds: string[]; // first component is necessary and cannot be changed, others are for "tags"
-
-  @IsBoolean()
-  @IsOptional()
-  @Expose()
-  @ApiProperty()
-  isBilateral: boolean; // exercise can be performed with both sides of the body separately, like a single arm row
+  @ApiPropertyOptional()
+  institutionId?: string;
+  institution?: Institution;
 
   @IsString()
   @IsOptional()
@@ -54,24 +49,23 @@ export class Exercise extends BaseEntity {
 
   @IsString()
   @IsOptional()
-  @IsNotEmpty()
   @Expose()
   @ApiProperty()
   instruction?: string;
 
-  @ValidateNested({ each: true })
-  @Type(() => ExerciseAttributeValue)
-  @ApiProperty({ type: () => ExerciseAttributeValue, isArray: true })
-  @Expose()
-  attributeValues: ExerciseAttributeValue[]; // sub collection for filtering
-
   @Type(() => Attribute)
   @IsOptional()
-  defaultParams?: Attribute[];
+  defaultParams?: Attribute[]; // for frontend display, not stored in db
 
-  @ValidateNested({ each: true })
-  @Type(() => AttributeValue)
-  @ApiProperty({ type: () => AttributeValue, isArray: true })
+  @IsString({ each: true })
+  @IsNotEmpty()
   @Expose()
-  muscleValues: AttributeValue[];
+  @ApiProperty()
+  componentIds: string[]; // first component is necessary and cannot be changed, others are for "tags"
+
+  @IsBoolean()
+  @IsOptional()
+  @Expose()
+  @ApiProperty()
+  isUnilateral: boolean; // exercise can be performed with both sides of the body separately, like a single arm row
 }

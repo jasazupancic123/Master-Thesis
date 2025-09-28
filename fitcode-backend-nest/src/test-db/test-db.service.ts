@@ -4,7 +4,6 @@ import { FirebaseService } from '@src/firebase/firebase.service';
 
 import { GroupTestRepository } from './service/group-test.repository';
 import { InstitutionTestRepository } from './service/institution-test.repository';
-import { TestAttributeService } from './service/test-attribute.service';
 import { TestComponentService } from './service/test-component.service';
 import { TestExerciseService } from './service/test-exercise.service';
 import { TestWorkloadService } from './service/test-workload.service';
@@ -16,7 +15,6 @@ import { WellnessTestRepository } from './service/wellness-test.repository';
 export class TestDbService {
   constructor(
     private readonly firebase: FirebaseService,
-    readonly attributes: TestAttributeService,
     readonly components: TestComponentService,
     readonly workloads: TestWorkloadService,
     readonly exercises: TestExerciseService,
@@ -28,7 +26,6 @@ export class TestDbService {
   ) {}
 
   private SERVICES = [
-    this.attributes,
     this.components,
     this.workloads,
     this.exercises,

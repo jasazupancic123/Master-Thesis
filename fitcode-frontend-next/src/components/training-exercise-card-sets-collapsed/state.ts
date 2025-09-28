@@ -109,14 +109,14 @@ export function updateAttributeType(
       )
         continue;
 
-      const paramValuesLOrR = exercise.exercise?.isBilateral
-        ? exerciseToUpdate.exercise?.isBilateral
+      const paramValuesLOrR = exercise.exercise?.isUnilateral
+        ? exerciseToUpdate.exercise?.isUnilateral
           ? [
               exerciseToUpdate.sets[0].paramValuesL,
               exerciseToUpdate.sets[0].paramValuesR,
             ]
           : [exerciseToUpdate.sets[0].paramValuesL]
-        : exerciseToUpdate.exercise?.isBilateral
+        : exerciseToUpdate.exercise?.isUnilateral
           ? [
               exerciseToUpdate.sets[0].paramValuesL,
               exerciseToUpdate.sets[0].paramValuesR,
@@ -414,8 +414,8 @@ export const updateSelectedExercisesCollapsedSets = (
                 }) as AttributeValue
             )
           : undefined;
-        return exercise.exercise?.isBilateral
-          ? exerciseToUpdate.exercise?.isBilateral
+        return exercise.exercise?.isUnilateral
+          ? exerciseToUpdate.exercise?.isUnilateral
             ? lOrR === 'L'
               ? {
                   setNumber: set.setNumber,
@@ -432,7 +432,7 @@ export const updateSelectedExercisesCollapsedSets = (
                 paramValuesL: updatedParamValuesL,
                 paramValuesR: set.paramValuesR,
               }
-          : exerciseToUpdate.exercise?.isBilateral
+          : exerciseToUpdate.exercise?.isUnilateral
             ? {
                 setNumber: set.setNumber,
                 paramValuesL: updatedParamValuesL,

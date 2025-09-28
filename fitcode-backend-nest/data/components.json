@@ -91,57 +91,45 @@
         "name": "Power",
         "slug": "power",
         "attributes": [
-          "location",
+          "locations",
           "equipment",
-          "pattern",
-          "loadingSide",
-          "movDir",
-          "coeff",
-          "method",
-          "prescr",
-          "priority",
-          "sportTask"
+          "patterns",
+          "loadingSides",
+          "movementDirections",
+          "prescriptions"
         ],
         "children": [
           {
             "name": "Olympic Lifts",
-            "slug": "olympic-lifts",
-            "children": []
+            "slug": "olympic-lifts"
           },
           {
             "name": "Fast General",
-            "slug": "fast-general",
-            "children": []
+            "slug": "fast-general"
           },
           {
             "name": "Jumping",
-            "slug": "jumping",
-            "children": []
+            "slug": "jumping"
           },
           {
             "name": "Throwing",
-            "slug": "throwing",
-            "children": []
+            "slug": "throwing"
           },
           {
             "name": "Running Based",
-            "slug": "running-based",
-            "children": []
+            "slug": "running-based"
           },
           {
             "name": "Reactive",
-            "slug": "reactive",
-            "children": []
+            "slug": "reactive"
           },
           {
             "name": "Explosive",
-            "slug": "explosive",
-            "children": []
+            "slug": "explosive"
           },
           {
             "name": "Braking",
-            "slug": "braking",
-            "children": []
+            "slug": "braking"
           }
         ]
       },
@@ -149,16 +137,12 @@
         "name": "Other",
         "slug": "other-1",
         "attributes": [
-          "location",
+          "locations",
           "equipment",
-          "pattern",
-          "loadingSide",
-          "movDir",
-          "coeff",
-          "method",
-          "prescr",
-          "priority",
-          "sportTask"
+          "patterns",
+          "loadingSides",
+          "movementDirections",
+          "prescriptions"
         ],
         "children": []
       },
@@ -166,37 +150,29 @@
         "name": "General",
         "slug": "general-strength",
         "attributes": [
-          "location",
+          "locations",
           "equipment",
-          "pattern",
-          "loadingSide",
-          "movDir",
-          "coeff",
-          "method",
-          "prescr",
-          "priority",
-          "sportTask"
+          "patterns",
+          "loadingSides",
+          "movementDirections",
+          "prescriptions"
         ],
         "children": [
           {
             "name": "Concentric",
-            "slug": "concentric",
-            "children": []
+            "slug": "concentric"
           },
           {
             "name": "Eccentric",
-            "slug": "eccentric",
-            "children": []
+            "slug": "eccentric"
           },
           {
             "name": "Isometric",
-            "slug": "isometric",
-            "children": []
+            "slug": "isometric"
           },
           {
             "name": "Con-Ecc",
-            "slug": "con-ecc",
-            "children": []
+            "slug": "con-ecc"
           }
         ]
       },
@@ -204,42 +180,32 @@
         "name": "Corrective",
         "slug": "corrective",
         "attributes": [
-          "location",
+          "locations",
           "equipment",
-          "pattern",
-          "loadingSide",
-          "coeff",
-          "method",
-          "prescr",
-          "priority",
-          "diagnosis",
-          "muscle"
+          "patterns",
+          "loadingSides",
+          "prescriptions"
         ],
         "children": [
           {
             "name": "Spine",
-            "slug": "spine",
-            "children": []
+            "slug": "spine"
           },
           {
             "name": "Hip",
-            "slug": "hip",
-            "children": []
+            "slug": "hip"
           },
           {
             "name": "Shoulder",
-            "slug": "shoulder",
-            "children": []
+            "slug": "shoulder"
           },
           {
             "name": "Ankle",
-            "slug": "ankle",
-            "children": []
+            "slug": "ankle"
           },
           {
             "name": "Knee",
-            "slug": "knee",
-            "children": []
+            "slug": "knee"
           }
         ]
       }
@@ -313,14 +279,11 @@
         "name": "Acceleration",
         "slug": "acceleration",
         "attributes": [
-          "location",
-          "pattern",
-          "loadingSide",
-          "movDir",
-          "coeff",
-          "method",
-          "prescr",
-          "sportTask"
+          "locations",
+          "patterns",
+          "loadingSides",
+          "movementDirections",
+          "prescriptions"
         ],
         "children": [
           {
@@ -329,25 +292,21 @@
             "children": [
               {
                 "name": "Resisted",
-                "slug": "resisted",
-                "children": []
+                "slug": "resisted"
               },
               {
                 "name": "Assisted",
-                "slug": "assisted",
-                "children": []
+                "slug": "assisted"
               }
             ]
           },
           {
             "name": "Game Specific",
-            "slug": "game-specific",
-            "children": []
+            "slug": "game-specific"
           },
           {
             "name": "Hybrid",
-            "slug": "hybrid",
-            "children": []
+            "slug": "hybrid"
           }
         ]
       },
@@ -355,14 +314,11 @@
         "name": "Deceleration",
         "slug": "deceleration",
         "attributes": [
-          "location",
-          "pattern",
-          "loadingSide",
-          "movDir",
-          "coeff",
-          "method",
-          "prescr",
-          "sportTask"
+          "locations",
+          "patterns",
+          "loadingSides",
+          "movementDirections",
+          "prescriptions"
         ],
         "children": [
           {
@@ -371,25 +327,21 @@
             "children": [
               {
                 "name": "Resisted",
-                "slug": "resisted",
-                "children": []
+                "slug": "resisted"
               },
               {
                 "name": "Assisted",
-                "slug": "assisted",
-                "children": []
+                "slug": "assisted"
               }
             ]
           },
           {
             "name": "Game Specific",
-            "slug": "game-specific",
-            "children": []
+            "slug": "game-specific"
           },
           {
             "name": "Hybrid",
-            "slug": "hybrid",
-            "children": []
+            "slug": "hybrid"
           }
         ]
       },
@@ -397,14 +349,11 @@
         "name": "Peak Speed",
         "slug": "peak-speed",
         "attributes": [
-          "location",
-          "pattern",
-          "loadingSide",
-          "movDir",
-          "coeff",
-          "method",
-          "prescr",
-          "sportTask"
+          "locations",
+          "patterns",
+          "loadingSides",
+          "movementDirections",
+          "prescriptions"
         ],
         "children": [
           {
@@ -413,25 +362,21 @@
             "children": [
               {
                 "name": "Resisted",
-                "slug": "resisted",
-                "children": []
+                "slug": "resisted"
               },
               {
                 "name": "Assisted",
-                "slug": "assisted",
-                "children": []
+                "slug": "assisted"
               }
             ]
           },
           {
             "name": "Game Specific",
-            "slug": "game-specific",
-            "children": []
+            "slug": "game-specific"
           },
           {
             "name": "Hybrid",
-            "slug": "hybrid",
-            "children": []
+            "slug": "hybrid"
           }
         ]
       },
@@ -439,14 +384,11 @@
         "name": "COD",
         "slug": "cod",
         "attributes": [
-          "location",
-          "pattern",
-          "loadingSide",
-          "movDir",
-          "coeff",
-          "method",
-          "prescr",
-          "sportTask"
+          "locations",
+          "patterns",
+          "loadingSides",
+          "movementDirections",
+          "prescriptions"
         ],
         "children": [
           {
@@ -455,25 +397,21 @@
             "children": [
               {
                 "name": "Resisted",
-                "slug": "resisted",
-                "children": []
+                "slug": "resisted"
               },
               {
                 "name": "Assisted",
-                "slug": "assisted",
-                "children": []
+                "slug": "assisted"
               }
             ]
           },
           {
             "name": "Game Specific",
-            "slug": "game-specific",
-            "children": []
+            "slug": "game-specific"
           },
           {
             "name": "Hybrid",
-            "slug": "hybrid",
-            "children": []
+            "slug": "hybrid"
           }
         ]
       },
@@ -481,14 +419,11 @@
         "name": "Agility",
         "slug": "agility",
         "attributes": [
-          "location",
-          "pattern",
-          "loadingSide",
-          "movDir",
-          "coeff",
-          "method",
-          "prescr",
-          "sportTask"
+          "locations",
+          "patterns",
+          "loadingSides",
+          "movementDirections",
+          "prescriptions"
         ],
         "children": [
           {
@@ -497,25 +432,21 @@
             "children": [
               {
                 "name": "Resisted",
-                "slug": "resisted",
-                "children": []
+                "slug": "resisted"
               },
               {
                 "name": "Assisted",
-                "slug": "assisted",
-                "children": []
+                "slug": "assisted"
               }
             ]
           },
           {
             "name": "Game Specific",
-            "slug": "game-specific",
-            "children": []
+            "slug": "game-specific"
           },
           {
             "name": "Hybrid",
-            "slug": "hybrid",
-            "children": []
+            "slug": "hybrid"
           }
         ]
       }
@@ -708,26 +639,22 @@
       {
         "name": "Aerobic Capacity",
         "slug": "aerobic-capacity",
-        "attributes": ["pattern", "coeff", "method", "sportTask", "end-opts"],
-        "children": []
+        "attributes": ["patterns"]
       },
       {
         "name": "Aerobic Power",
         "slug": "aerobic-power",
-        "attributes": ["pattern", "coeff", "method", "sportTask", "end-opts"],
-        "children": []
+        "attributes": ["patterns"]
       },
       {
         "name": "Anaerobic Capacity",
         "slug": "anaerobic-capacity",
-        "attributes": ["pattern", "coeff", "method", "sportTask", "end-opts"],
-        "children": []
+        "attributes": ["patterns"]
       },
       {
         "name": "Anaerobic Power",
         "slug": "anaerobic-power",
-        "attributes": ["pattern", "coeff", "method", "sportTask", "end-opts"],
-        "children": []
+        "attributes": ["patterns"]
       }
     ]
   },
@@ -739,48 +666,39 @@
     "children": [
       {
         "name": "Technical Work",
-        "slug": "technical-work",
-        "children": []
+        "slug": "technical-work"
       },
       {
         "name": "Running Mechanics",
-        "slug": "running-mechanics",
-        "children": []
+        "slug": "running-mechanics"
       },
       {
         "name": "Jumping / Landing",
-        "slug": "jumping-landing",
-        "children": []
+        "slug": "jumping-landing"
       },
       {
         "name": "Orientation",
-        "slug": "orientation",
-        "children": []
+        "slug": "orientation"
       },
       {
         "name": "Dissociation",
-        "slug": "dissociation",
-        "children": []
+        "slug": "dissociation"
       },
       {
         "name": "Balance",
-        "slug": "balance",
-        "children": []
+        "slug": "balance"
       },
       {
         "name": "Foot Alignment",
-        "slug": "foot-alignment",
-        "children": []
+        "slug": "foot-alignment"
       },
       {
         "name": "Reaction",
-        "slug": "reaction",
-        "children": []
+        "slug": "reaction"
       },
       {
         "name": "Breathing",
-        "slug": "breathing",
-        "children": []
+        "slug": "breathing"
       }
     ]
   },
@@ -819,69 +737,58 @@
       {
         "name": "Flexibility",
         "slug": "flexibility",
-        "attributes": ["location", "diagnosis", "muscle"],
+        "attributes": ["locations"],
         "children": [
           {
             "name": "Ballistic Stretching",
-            "slug": "ballistic-stretching",
-            "children": []
+            "slug": "ballistic-stretching"
           },
           {
             "name": "Dynamic Stretching",
-            "slug": "dynamic-stretching",
-            "children": []
+            "slug": "dynamic-stretching"
           },
           {
             "name": "Active Stretching",
-            "slug": "active-stretching",
-            "children": []
+            "slug": "active-stretching"
           },
           {
             "name": "Passive Stretching",
-            "slug": "passive-stretching",
-            "children": []
+            "slug": "passive-stretching"
           },
           {
             "name": "Static Stretching",
-            "slug": "static-stretching",
-            "children": []
+            "slug": "static-stretching"
           },
           {
             "name": "Isometric Stretching",
-            "slug": "isometric-stretching",
-            "children": []
+            "slug": "isometric-stretching"
           },
           {
             "name": "PNF Stretching",
-            "slug": "pnf-stretching",
-            "children": []
+            "slug": "pnf-stretching"
           }
         ]
       },
       {
         "name": "Mobility",
         "slug": "mobility",
-        "attributes": ["location", "diagnosis", "muscle"],
+        "attributes": ["locations"],
         "children": [
           {
             "name": "Dynamic WU",
-            "slug": "dynamic-wu",
-            "children": []
+            "slug": "dynamic-wu"
           },
           {
             "name": "WOD",
-            "slug": "wod",
-            "children": []
+            "slug": "wod"
           },
           {
             "name": "Use Of Load",
-            "slug": "use-of-load",
-            "children": []
+            "slug": "use-of-load"
           },
           {
             "name": "Exercise ROM",
-            "slug": "exercise-rom",
-            "children": []
+            "slug": "exercise-rom"
           }
         ]
       }

@@ -904,9 +904,10 @@ function prepareWorkloadsForSingleParam(
   >)[]
 ) {
   if (
-    ![AttributeType.Number, AttributeType.Select].includes(
-      selectedParam.type
-    ) ||
+    (selectedParam.type &&
+      ![AttributeType.Number, AttributeType.Select].includes(
+        selectedParam.type
+      )) ||
     !paramFields.length
   )
     return;
