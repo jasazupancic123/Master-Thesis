@@ -15,7 +15,11 @@ import {
   unmarkExerciseSetAsCompleted,
 } from './state';
 import { TrackingMethod } from '@/common/enum/tracking-method.enum';
-import { ParamType } from '@/controller/component/enum/param.enum';
+import {
+  IntType,
+  ParamType,
+  VolType,
+} from '@/controller/component/enum/param.enum';
 import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
 import { TrainingService } from '@/controller/training/training.service';
@@ -77,8 +81,22 @@ export default function TrainingInProgressExerciseCard() {
     const selectedSet = selectedExercise.sets[setIndex];
     if (!selectedSet) return;
 
+    let repParamField: ParamType | undefined;
+    let tempoParamField: ParamType | undefined;
+
+    const repParamFieldSet = selectedSet.paramValuesL.find(
+      (p) => p.selected === VolType.Rep
+    );
+    if (repParamFieldSet) repParamField = repParamFieldSet.field as ParamType;
+
+    const tempoParamFieldSet = selectedSet.paramValuesL.find(
+      (p) => p.selected === IntType.Tempo
+    );
+    if (tempoParamFieldSet)
+      tempoParamField = tempoParamFieldSet.field as ParamType;
+
     const repParam = selectedExercise.params.find(
-      (p) => p.field === ParamType.VolWork1
+      (p) => p.field === repParamField
     );
 
     if (repParam) {
@@ -107,7 +125,7 @@ export default function TrainingInProgressExerciseCard() {
     }
 
     const tempoParam = selectedExercise.params.find(
-      (p) => p.field === ParamType.IntWork2
+      (p) => p.field === tempoParamField
     );
 
     if (tempoParam) {
