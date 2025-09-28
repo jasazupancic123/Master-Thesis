@@ -31,26 +31,34 @@ export class ExerciseRepository extends FirestoreRepository<Exercise> {
     return this.collection().doc(ref);
   }
 
-  async save(input: Create<Omit<Exercise, 'attributeValues'>>) {
-    const { id } = this.collection().doc();
+  async save(input: Create<Exercise>) {
     const query = this.firebaseService.buildCreateQuery<Exercise>(
       {
-        id,
+        id: input.id,
         ownerId: input.ownerId,
+        institutionId: input.institutionId,
         name: input.name,
-        componentIds: input.componentIds,
-        isBilateral: input.isBilateral || false,
         imageUrl: input.imageUrl,
         videoUrl: input.videoUrl,
         instruction: input.instruction || '',
-        attributeValues: undefined,
+        componentIds: input.componentIds,
+        isUnilateral: input.isUnilateral || false,
+        categories: input.categories || [],
         muscleValues: input.muscleValues || [],
+        prescriptions: input.prescriptions || [],
+        patterns: input.patterns || [],
+        bodyRegions: input.bodyRegions || [],
+        equipment: input.equipment || [],
+        loadingSides: input.loadingSides || [],
+        movementDirections: input.movementDirections || [],
+        locations: input.locations || [],
+        liftPriorities: input.liftPriorities || [],
       },
       { timestamps: true },
     );
 
-    await this.doc(id).set(query);
-    return id;
+    await this.doc(input.id).set(query);
+    return input.id;
   }
 
   async update(exerciseId: string, input: Update<Exercise>) {

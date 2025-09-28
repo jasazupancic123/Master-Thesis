@@ -12,7 +12,7 @@ import {
 
 import { AttributeType } from '@src/common/enum/attribute-type.enum';
 
-export class Attribute {
+export class BaseAttribute {
   @IsString()
   @ApiProperty()
   @IsNotEmpty()
@@ -29,7 +29,7 @@ export class Attribute {
   @IsString()
   @ApiProperty({ enum: AttributeType, enumName: 'AttributeType' })
   @Expose()
-  type: AttributeType; // defaults to "string"
+  type?: AttributeType; // defaults to "value"
 
   @IsBoolean()
   @IsOptional()
@@ -56,7 +56,9 @@ export class Attribute {
   @IsOptional()
   @Expose()
   defaultValue?: string;
+}
 
+export class Attribute extends BaseAttribute {
   @IsNumber()
   @IsOptional()
   @ApiProperty()
@@ -68,6 +70,13 @@ export class Attribute {
   @ApiProperty()
   @Expose()
   max?: number;
+
+  @IsString()
+  @ApiPropertyOptional()
+  @IsNotEmpty()
+  @IsOptional()
+  @Expose()
+  pattern?: string; // regex pattern for validation
 
   @ValidateNested({ each: true })
   @Type(() => Attribute)

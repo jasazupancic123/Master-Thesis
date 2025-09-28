@@ -5,8 +5,8 @@ import { ComponentModule } from '../component/component.module';
 import { InstitutionModule } from '../institution/institution.module';
 import { ExerciseController } from './exercise.controller';
 import { ExerciseRepository } from './repository/exercise.repository';
-import { ExerciseAttributeValueRepository } from './repository/exercise-attribute-value.repository';
 import { ExerciseService } from './service/exercise.service';
+import { ExerciseAttributeService } from './service/exercise-attribute.service';
 
 @Module({
   imports: [
@@ -15,11 +15,7 @@ import { ExerciseService } from './service/exercise.service';
     forwardRef(() => ComponentModule),
   ],
   controllers: [ExerciseController],
-  providers: [
-    ExerciseAttributeValueRepository,
-    ExerciseRepository,
-    ExerciseService,
-  ],
-  exports: [ExerciseService, ExerciseAttributeValueRepository],
+  providers: [ExerciseRepository, ExerciseService, ExerciseAttributeService],
+  exports: [ExerciseService, ExerciseAttributeService],
 })
 export class ExerciseModule {}

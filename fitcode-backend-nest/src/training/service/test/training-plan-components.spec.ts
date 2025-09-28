@@ -3,7 +3,6 @@ import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import { addMinutes, subMinutes } from 'date-fns';
 
-import { AttributeRepository } from '@src/attribute/repository/attribute.repository';
 import { AttributeService } from '@src/attribute/service/attribute.service';
 import { CacheManagerService } from '@src/cache-manager/cache-manager.service';
 import { CommonModule } from '@src/common/common.module';
@@ -18,8 +17,8 @@ import {
 import { generateComponentStub } from '@src/component/mock/component.stub';
 import { validationSchema } from '@src/config/environment-validation-schema';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
-import { ExerciseAttributeValueRepository } from '@src/exercise/repository/exercise-attribute-value.repository';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
+import { ExerciseAttributeService } from '@src/exercise/service/exercise-attribute.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { MAIN_GROUP_PARENT_ID } from '@src/training/constant/main-group-parent-id.constant';
@@ -53,10 +52,6 @@ describe('validateTrainingComponents', () => {
           provide: CacheManagerService,
           useValue: createMock<CacheManagerService>(),
         },
-        {
-          provide: AttributeRepository,
-          useValue: createMock<AttributeRepository>(),
-        },
         AttributeService,
         {
           provide: ComponentService,
@@ -71,8 +66,8 @@ describe('validateTrainingComponents', () => {
           useValue: createMock<ExerciseService>(),
         },
         {
-          provide: ExerciseAttributeValueRepository,
-          useValue: createMock<ExerciseAttributeValueRepository>(),
+          provide: ExerciseAttributeService,
+          useValue: createMock<ExerciseAttributeService>(),
         },
         {
           provide: WorkloadRepository,
@@ -112,12 +107,7 @@ describe('validateTrainingComponents', () => {
     generateExerciseStub({ id: 'e5', componentIds: ['leaf3'] }),
   ];
 
-  const data = {
-    exercises,
-    components,
-    methods: [],
-    attributes: [],
-  };
+  const data = { exercises, components, methods: [] };
 
   beforeEach(() => {
     jest
@@ -139,7 +129,7 @@ describe('validateTrainingComponents', () => {
     ];
 
     expect(() =>
-      service.validateTrainingComponents(null, trainingComponents, [], data),
+      service.validateTrainingComponents(trainingComponents, [], data),
     ).toThrow('Component does not exist');
   });
 
@@ -158,7 +148,7 @@ describe('validateTrainingComponents', () => {
     ];
 
     expect(() =>
-      service.validateTrainingComponents(null, trainingComponents, [], data),
+      service.validateTrainingComponents(trainingComponents, [], data),
     ).toThrow(`Component Leaf 1 cannot be selected for training`);
   });
 
@@ -173,7 +163,7 @@ describe('validateTrainingComponents', () => {
     ];
 
     expect(() =>
-      service.validateTrainingComponents(null, trainingComponents, [], data),
+      service.validateTrainingComponents(trainingComponents, [], data),
     ).toThrow(`Duplicate component Component 1`);
   });
 
@@ -243,12 +233,7 @@ describe('validateTrainingComponents', () => {
     ];
 
     expect(() =>
-      service.validateTrainingComponents(
-        null,
-        trainingComponents,
-        memberIds,
-        data,
-      ),
+      service.validateTrainingComponents(trainingComponents, memberIds, data),
     ).toThrow('Invalid member');
   });
 
@@ -275,12 +260,7 @@ describe('validateTrainingComponents', () => {
     ];
 
     expect(() =>
-      service.validateTrainingComponents(
-        null,
-        trainingComponents,
-        memberIds,
-        data,
-      ),
+      service.validateTrainingComponents(trainingComponents, memberIds, data),
     ).toThrow('Member is already in another subgroup');
   });
 
@@ -304,7 +284,7 @@ describe('validateTrainingComponents', () => {
     ];
 
     expect(() =>
-      service.validateTrainingComponents(null, trainingComponents, [], data),
+      service.validateTrainingComponents(trainingComponents, [], data),
     ).toThrow('You can only have up to 5 components per training');
   });
 
@@ -353,12 +333,7 @@ describe('validateTrainingComponents', () => {
     jest.spyOn(componentService, 'getParamAttributes').mockReturnValue(PARAMS);
 
     expect(() =>
-      service.validateTrainingComponents(
-        null,
-        trainingComponents,
-        ['m1'],
-        data,
-      ),
+      service.validateTrainingComponents(trainingComponents, ['m1'], data),
     ).not.toThrow();
   });
 
@@ -387,12 +362,7 @@ describe('validateTrainingComponents', () => {
     ];
 
     expect(() =>
-      service.validateTrainingComponents(
-        null,
-        trainingComponents,
-        memberIds,
-        data,
-      ),
+      service.validateTrainingComponents(trainingComponents, memberIds, data),
     ).toThrow('Only one member can be selected');
   });
 
@@ -422,12 +392,7 @@ describe('validateTrainingComponents', () => {
     ];
 
     expect(() =>
-      service.validateTrainingComponents(
-        null,
-        trainingComponents,
-        memberIds,
-        data,
-      ),
+      service.validateTrainingComponents(trainingComponents, memberIds, data),
     ).toThrow('Member is already in another subgroup');
   });
 
@@ -469,12 +434,7 @@ describe('validateTrainingComponents', () => {
     ];
 
     expect(() =>
-      service.validateTrainingComponents(
-        null,
-        trainingComponents,
-        memberIds,
-        data,
-      ),
+      service.validateTrainingComponents(trainingComponents, memberIds, data),
     ).toThrow(
       'Training prescription must be the same for all members in the selected group',
     );

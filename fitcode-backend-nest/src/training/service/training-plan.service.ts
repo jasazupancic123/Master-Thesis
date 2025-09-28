@@ -38,8 +38,8 @@ import {
   VolWorkSetType,
 } from '@src/component/enum/param.enum';
 import { Exercise } from '@src/exercise/entity/exercise.entity';
-import { ExerciseAttributeValueRepository } from '@src/exercise/repository/exercise-attribute-value.repository';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
+import { ExerciseAttributeService } from '@src/exercise/service/exercise-attribute.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { Method } from '@src/method/entity/method.entity';
 
@@ -80,8 +80,7 @@ export class TrainingPlanService {
     private readonly componentService: ComponentService,
     @Inject(forwardRef(() => ExerciseService))
     private readonly exerciseService: Wrapper<ExerciseService>,
-    @Inject(forwardRef(() => ExerciseAttributeValueRepository))
-    private readonly exerciseAttributeValueRepository: Wrapper<ExerciseAttributeValueRepository>,
+    private readonly exerciseAttributeService: ExerciseAttributeService,
   ) {}
 
   async getInstitution(exercise: Exercise): Promise<Institution | null> {
@@ -248,17 +247,7 @@ export class TrainingPlanService {
     ]);
 
     const ids = [...new Set(trainingExercises.map((e) => e.id))];
-    const exercises = await this.exerciseService.getAll(ids);
-
-    return await Promise.all(
-      exercises.map(async (e) => ({
-        ...e,
-        attributeValues:
-          await this.exerciseAttributeValueRepository.getAllByExercise({
-            exerciseId: e.id,
-          }),
-      })),
-    );
+    return await this.exerciseService.getAll(ids);
   }
 
   findComponentOrFail(
@@ -318,15 +307,9 @@ export class TrainingPlanService {
   }
 
   validateTrainingComponents(
-    existingTraining: Training | null,
     newTrainingComponents: UpdateTrainingComponentWithoutTime[], // with warmup and cooldown
     trainingMemberIds: string[],
-    data: {
-      exercises: Exercise[];
-      components: Component[];
-      methods: Method[];
-      attributes: Attribute[];
-    },
+    data: { exercises: Exercise[]; components: Component[]; methods: Method[] },
   ): TrainingComponentWithoutTime[] {
     const { components, methods } = data;
     const validTrainingComponents: TrainingComponentWithoutTime[] = [];
@@ -334,9 +317,6 @@ export class TrainingPlanService {
     const duplicates = new Set<string>();
     for (const newComponent of newTrainingComponents) {
       const component = components.find((c) => c.id === newComponent.id);
-      const existingTrainingComponent = existingTraining?.components?.find(
-        (c) => c.id === newComponent.id,
-      );
 
       // validate components are valid
       if (!component) throw new NotFoundException('Component does not exist');
@@ -365,17 +345,14 @@ export class TrainingPlanService {
         newComponent,
         data,
       );
+
       const subgroups = this.validateSubgroups(
         newComponent,
         trainingMemberIds,
         data,
       );
 
-      validTrainingComponents.push({
-        ...newComponent,
-        supersets,
-        subgroups,
-      });
+      validTrainingComponents.push({ ...newComponent, supersets, subgroups });
     }
 
     if (validTrainingComponents.length > MAX_NUM_COMPONENTS_IN_TRAINING + 2)
@@ -394,7 +371,6 @@ export class TrainingPlanService {
     >[],
     components: Component[],
     exercises: Exercise[], // populate exercise attributes
-    attributes: Attribute[],
   ) {
     for (const tComponent of trainingComponents) {
       if ([WARMUP_COMPONENT_ID, COOLDOWN_COMPONENT_ID].includes(tComponent.id))
@@ -411,13 +387,13 @@ export class TrainingPlanService {
 
           const params = this.componentService.getComponentParamAttributes(
             componentParams,
-            exercise.attributeValues,
-            attributes,
+            this.exerciseAttributeService.getValues(exercise),
+            this.exerciseAttributeService.getAttributes(),
           );
 
           tExercise.params = this.componentService.getParamAttributes(params);
           tExercise.sets = this.getSets(
-            exercise.isBilateral,
+            exercise.isUnilateral,
             tExercise.params,
             tExercise.sets,
           );
@@ -431,13 +407,13 @@ export class TrainingPlanService {
 
             const params = this.componentService.getComponentParamAttributes(
               componentParams,
-              exercise.attributeValues,
-              attributes,
+              this.exerciseAttributeService.getValues(exercise),
+              this.exerciseAttributeService.getAttributes(),
             );
 
             tExercise.params = this.componentService.getParamAttributes(params);
             tExercise.sets = this.getSets(
-              exercise.isBilateral,
+              exercise.isUnilateral,
               tExercise.params,
               tExercise.sets,
             );
@@ -451,13 +427,12 @@ export class TrainingPlanService {
     data: {
       components: Component[];
       exercises: Exercise[];
-      attributes: Attribute[];
       methods: Method[];
     },
   ): Superset[] {
     const newSupersets = item.supersets || [];
     const mainSet = item.mainSet || trainingComponent.mainSet;
-    const { components, exercises, attributes, methods } = data;
+    const { components, exercises, methods } = data;
 
     switch (mainSet) {
       case MainSet.BLOCK:
@@ -502,7 +477,7 @@ export class TrainingPlanService {
           throw new NotFoundException('Training exercise not found');
 
         if (
-          exercise.isBilateral &&
+          exercise.isUnilateral &&
           !trainingExercise.sets.every((s) => s.paramValuesR)
         )
           throw new BadRequestException(
@@ -512,15 +487,15 @@ export class TrainingPlanService {
         // populate training exercise params and sets
         const params = this.componentService.getComponentParamAttributes(
           componentParams,
-          exercise.attributeValues,
-          attributes,
+          this.exerciseAttributeService.getValues(exercise),
+          this.exerciseAttributeService.getAttributes(),
         );
 
         const paramAttributes =
           this.componentService.getParamAttributes(params);
 
         const sets = this.getSets(
-          exercise.isBilateral,
+          exercise.isUnilateral,
           paramAttributes,
           trainingExercise.sets,
         );
@@ -538,7 +513,7 @@ export class TrainingPlanService {
           for (const set of sets) {
             this.validateMethodParamValues(method, set.paramValuesL);
 
-            if (exercise.isBilateral && set.paramValuesR)
+            if (exercise.isUnilateral && set.paramValuesR)
               this.validateMethodParamValues(method, set.paramValuesR);
           }
 
@@ -580,7 +555,6 @@ export class TrainingPlanService {
     data: {
       components: Component[];
       exercises: Exercise[];
-      attributes: Attribute[];
       methods: Method[];
     },
   ): Subgroup[] {
@@ -680,7 +654,7 @@ export class TrainingPlanService {
   }
 
   getSets(
-    bilateral: boolean,
+    isUnilateral: boolean,
     params: Attribute[],
     existingSets?: ExerciseSet[],
   ): ExerciseSet[] {
@@ -700,7 +674,7 @@ export class TrainingPlanService {
       return Array.from({ length: sets }).map((_, i) => ({
         setNumber: i + 1,
         paramValuesL: generatedParamValues,
-        ...(bilateral && { paramValuesR: generatedParamValues }),
+        ...(isUnilateral && { paramValuesR: generatedParamValues }),
       }));
     }
 
@@ -712,7 +686,7 @@ export class TrainingPlanService {
         params,
       );
 
-      if (bilateral) {
+      if (isUnilateral) {
         if (!existingSet.paramValuesR)
           existingSet.paramValuesR = existingSet.paramValuesL;
 

@@ -2,10 +2,15 @@
 
 import { Publish } from '@mui/icons-material';
 import AddIcon from '@mui/icons-material/AddOutlined';
-import { Pagination, Tooltip, Typography } from '@mui/material';
+import {
+  Grid2,
+  Pagination,
+  SpeedDial,
+  SpeedDialAction,
+  SpeedDialIcon,
+  Typography,
+} from '@mui/material';
 import Box from '@mui/material/Box';
-import IconButton from '@mui/material/IconButton';
-import Stack from '@mui/material/Stack';
 import { useTheme } from '@mui/material/styles';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
@@ -24,15 +29,14 @@ import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
-import { isAdmin } from '@/common/firebase/firebase-auth.util';
+import { isAdmin, isManager } from '@/common/firebase/firebase-auth.util';
 import type { Pagination as PaginationType } from '@/common/type/paginate.type';
 import ExerciseChips from '@/components/exercise-chips/exercise-chips';
 import ExerciseModal from '@/components/exercise-modal/exercise-modal';
+import ExerciseFilter from '@/components/exercises-list/exercise-filter';
 import ExercisesList from '@/components/exercises-list/exercises-list';
 import FileUpload from '@/components/file-upload/file-upload';
 import MyModal from '@/components/modal/modal';
-import PageTitle from '@/components/page-title/page-title';
-import { SearchBar } from '@/components/search-bar/search-bar';
 import { ComponentService } from '@/controller/component/component.service';
 import type { Component } from '@/controller/component/type/component.type';
 import type {
@@ -44,18 +48,25 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 
+type AttributeValue =
+  | string
+  | number
+  | boolean
+  | [number, number] // range
+  | Set<string>; // select/multiselect
+
+export type AttributeFilters = Record<string, AttributeValue | undefined>;
+
 export const DEFAULT_EXERCISE: Partial<Exercise> = {
   name: '',
   componentIds: [],
-  isBilateral: false,
-  valuesObject: {},
+  isUnilateral: false,
 };
 
 export default function ExercisesPage() {
   const { token, role } = useAuthenticatedAuth();
   const {
     components,
-    attributes,
     exercises: allExercises,
     setExercises: setAllExercises,
   } = useMain();
@@ -65,18 +76,12 @@ export default function ExercisesPage() {
   const screenSize = useScreenSize();
 
   // filter exercises
-  const [selectedComponent, setSelectedComponent] = useState<Component | null>(
-    null
-  );
+  const [filters, setFilters] = useState<AttributeFilters>({});
+  const [selectedComponent, setSelectedComponent] =
+    useState<Component | null>();
 
-  const [exercises, setExercises] = useState<Exercise[]>([]);
-
-  useEffect(() => {
-    setExercises([...allExercises.filter((e) => !e.deletedAt)]);
-  }, [allExercises]);
-
+  const [exercises, setExercises] = useState<Exercise[]>(allExercises);
   const [filteredExercises, setFilteredExercises] = useState<Exercise[]>([]);
-  const [search, setSearch] = useState('');
   const [pagination, setPagination] = useState<PaginationType>({
     page: 1,
     pageSize: 10,
@@ -89,6 +94,8 @@ export default function ExercisesPage() {
   const [importedExercises, setImportedExercises] = useState<Exercise[]>([]);
   const [importedMuscleValueExercises, setImportedMuscleValueExercises] =
     useState<CreateExerciseMuscleValues[]>([]);
+
+  const [openFilters, setOpenFilters] = useState(false);
   const [modal, setModal] = useState({
     add: false,
     edit: false,
@@ -97,30 +104,48 @@ export default function ExercisesPage() {
     confirmDelete: false,
   });
 
+  const actions = [
+    {
+      icon: <AddIcon />,
+      name: 'Create Exercise',
+      onClick: () => {
+        setModal((prev) => ({ ...prev, add: true }));
+        setExercise(DEFAULT_EXERCISE);
+      },
+    },
+    {
+      icon: <Publish />,
+      name: 'Import Exercises',
+      onClick: () => setModal((prev) => ({ ...prev, import: true })),
+    },
+    {
+      icon: <Publish />,
+      name: 'Import Muscle Values',
+      onClick: () => setModal((prev) => ({ ...prev, muscleValues: true })),
+    },
+  ];
+
   /**
    * Filter exercises
    */
   useEffect(() => {
-    handlePaginateExercises(
-      {
-        ...(selectedComponent?.id && {
-          componentsIds: [selectedComponent.id],
-        }),
-        ...(search && { name: search }),
-      },
-      {
-        components,
-        exercises,
-        pagination,
-        setPagination,
-        setFilteredExercises,
-      }
-    );
+    const filter: Partial<Exercise> = {
+      ...(selectedComponent?.id && { componentIds: [selectedComponent.id] }),
+      ...filters,
+    };
+
+    handlePaginateExercises(filter, {
+      components,
+      exercises,
+      pagination,
+      setPagination,
+      setFilteredExercises,
+    });
   }, [
     components,
-    search,
     exercises.length,
     selectedComponent,
+    filters,
     pagination.page,
     pagination.pageSize,
     pagination.pages,
@@ -128,53 +153,6 @@ export default function ExercisesPage() {
 
   return (
     <Box p={2} px={screenSize.isMobile ? 0 : undefined}>
-      {/* Import Button */}
-      {role && isAdmin(role) && (
-        <Box
-          width="100%"
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          gap={4}
-        >
-          <Box
-            display="flex"
-            flexDirection="column"
-            alignItems="center"
-            justifyContent="center"
-            gap={1}
-            sx={{
-              cursor: 'pointer',
-            }}
-            onClick={() => {
-              setModal({ ...modal, import: true });
-            }}
-          >
-            <IconButton>
-              <Publish />
-            </IconButton>
-            <Typography>Import Exercises</Typography>
-          </Box>
-          <Box
-            display="flex"
-            flexDirection="column"
-            alignItems="center"
-            justifyContent="center"
-            gap={1}
-            onClick={() => {
-              setModal({ ...modal, muscleValues: true });
-            }}
-            sx={{
-              cursor: 'pointer',
-            }}
-          >
-            <IconButton>
-              <Publish />
-            </IconButton>
-            <Typography>Import Muscle Values</Typography>
-          </Box>
-        </Box>
-      )}
       <Box
         width="100%"
         display="flex"
@@ -186,10 +164,6 @@ export default function ExercisesPage() {
         pb={1}
         bgcolor={theme.palette.background.default}
       >
-        <Box pb={1}>
-          <PageTitle title="Exercises" />
-        </Box>
-
         <ExerciseChips
           noSelectionLabel="All"
           components={ComponentService.toTree(
@@ -203,59 +177,121 @@ export default function ExercisesPage() {
           primaryColor={theme.palette.primary.main}
           gap={screenSize.isReallySmall ? 1.5 : 3.5}
         />
-
-        {/* Search Input */}
-        <Box sx={{ py: 2 }}>
-          <SearchBar
-            placeholder="Search Exercises"
-            value={search}
-            handleSearchChange={(e) => setSearch(e.target.value)}
-            maxWidth="100%"
-          />
-        </Box>
-
-        <Stack direction="row">
-          {/* Add Button */}
-          <Tooltip title="Create">
-            <IconButton
-              onClick={() => {
-                setModal({ ...modal, add: true });
-                setExercise(DEFAULT_EXERCISE);
-              }}
-            >
-              <AddIcon />
-            </IconButton>
-          </Tooltip>
-        </Stack>
       </Box>
-      <Stack direction="row" justifyContent="center" my={2} width="100%">
-        <Pagination
-          count={pagination.pages}
-          color="primary"
-          onChange={(_, page) => setPagination({ ...pagination, page })}
-          page={pagination.page}
-        />
-      </Stack>
+
+      <Grid2 container alignItems="center" spacing={2} sx={{ m: 2 }}>
+        {/* Left empty space (desktop only) */}
+        <Grid2
+          size={{ xs: screenSize.isMobile ? 6 : 4 }}
+          container
+          order={1}
+          justifyContent={{ xs: 'flex-end', md: 'flex-start' }}
+          alignItems="center"
+        >
+          {(isAdmin(role) || isManager(role)) && (
+            <Box position="relative">
+              <SpeedDial
+                ariaLabel="Exercise Actions"
+                icon={<SpeedDialIcon />}
+                direction={screenSize.isMobile ? 'left' : 'right'}
+                FabProps={{ size: 'small', color: 'primary' }}
+                sx={{
+                  '& .MuiSpeedDial-fab': {
+                    width: 40,
+                    height: 40,
+                    minHeight: 0,
+                  },
+                  '& .MuiSpeedDialAction-fab': {
+                    width: 32,
+                    height: 32,
+                    minHeight: 0,
+                  },
+                }}
+              >
+                {actions.map((action) => (
+                  <SpeedDialAction
+                    key={action.name}
+                    icon={action.icon}
+                    onClick={action.onClick}
+                    slotProps={{
+                      tooltip: { title: action.name },
+                      fab: { size: 'small', color: 'primary' },
+                    }}
+                    sx={{ bgcolor: theme.palette.primary.main }}
+                  />
+                ))}
+              </SpeedDial>
+            </Box>
+          )}
+        </Grid2>
+
+        {/* Pagination */}
+        <Grid2
+          size={{ xs: screenSize.isMobile ? 12 : 4 }}
+          container
+          justifyContent="center"
+          order={screenSize.isMobile ? 3 : 2}
+        >
+          <Pagination
+            size="small"
+            count={pagination.pages}
+            color="primary"
+            page={pagination.page}
+            onChange={(_, page) => setPagination({ ...pagination, page })}
+          />
+        </Grid2>
+
+        {/* Filters & Results */}
+        <Grid2
+          order={screenSize.isMobile ? 2 : 3}
+          size={{ xs: screenSize.isMobile ? 6 : 4 }}
+          container
+          justifyContent={screenSize.isMobile ? 'flex-start' : 'flex-end'}
+          alignItems="center"
+        >
+          <Box
+            sx={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 1,
+              alignItems: 'center',
+            }}
+          >
+            {!screenSize.isMobile && (
+              <Typography variant="body2" color="text.primary">
+                {pagination.total} results
+              </Typography>
+            )}
+
+            <ExerciseFilter
+              filters={filters}
+              setFilters={setFilters}
+              open={openFilters}
+              setOpen={setOpenFilters}
+            />
+          </Box>
+        </Grid2>
+      </Grid2>
+
       <ExercisesList
         exercises={filteredExercises}
         setExercise={setExercise}
         setModal={setModal}
       />
+
       {/* Add Exercise Modal*/}
       {modal.add && (
         <ExerciseModal
           data={{ ...exercise, imageUrl: undefined, videoUrl: undefined }}
           setData={setExercise}
-          attributes={attributes}
           components={components}
           isOpen={modal.add}
           setIsOpen={(isOpen) => setModal({ ...modal, add: isOpen })}
           title={'Add Exercise'}
-          onConfirm={async (attributes) => {
+          onConfirm={async () => {
             handleAddExercise(token, exercise, {
               router,
               components,
-              attributes,
               component: selectedComponent!,
               filteredExercises,
               setFilteredExercises,
@@ -266,19 +302,12 @@ export default function ExercisesPage() {
           }}
         />
       )}
+
       {/* Edit Exercise Modal */}
       {modal.edit && (
         <ExerciseModal
-          data={{
-            ...exercise,
-            /* valuesObject: commonService.object.flattenObject(
-                ExerciseService.attributeValuesToNestedObject(
-                  exercise.attributeValues || []
-                )
-              ), */
-          }}
+          data={exercise}
           setData={setExercise}
-          attributes={attributes}
           components={components}
           isOpen={modal.edit}
           setIsOpen={(isOpen) => setModal({ ...modal, edit: isOpen })}
@@ -288,11 +317,10 @@ export default function ExercisesPage() {
               : 'Update Exercise'
           }
           {...((exercise.ownerId !== 'global' || role === UserRole.ADMIN) && {
-            onConfirm: async (attributes) => {
+            onConfirm: async () => {
               handleUpdateExercise(token, exercise!.id!, exercise, {
                 router,
                 components,
-                attributes,
                 setFilteredExercises,
                 setExercises: setAllExercises,
                 setExercise,
@@ -306,6 +334,7 @@ export default function ExercisesPage() {
           })}
         />
       )}
+
       <MyModal
         isOpen={modal.confirmDelete}
         setIsOpen={(open) =>
@@ -334,18 +363,8 @@ export default function ExercisesPage() {
         onConfirm={() => {
           handleUpsertManyExercises(
             token,
-            {
-              exercises: importedExercises.map((exercise) => ({
-                name: exercise.name,
-                componentIds: exercise.componentIds,
-                isBilateral: exercise.isBilateral,
-                imageUrl: exercise.imageUrl,
-                videoUrl: exercise.videoUrl,
-                instruction: exercise.instruction,
-                attributeValues: exercise.attributeValues,
-              })),
-            },
-            { router, setExercises: setAllExercises }
+            { exercises: importedExercises },
+            { router, setAllExercises, setExercises, setFilteredExercises }
           );
 
           setModal((prev) => ({ ...prev, import: false }));
@@ -359,6 +378,7 @@ export default function ExercisesPage() {
           }}
         />
       </MyModal>
+
       <MyModal
         isOpen={modal.muscleValues}
         setIsOpen={(open) =>

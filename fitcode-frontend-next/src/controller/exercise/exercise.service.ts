@@ -1,6 +1,5 @@
 import type { Component } from '../component/type/component.type';
 import type { Exercise } from './type/exercise.type';
-import type { ExerciseAttributeValue } from './type/exercise-attribute-value.type';
 import { CommonService } from '@/common/service/common.service';
 import type { Pagination } from '@/common/type/paginate.type';
 import type { SetState } from '@/common/type/state.type';
@@ -13,33 +12,22 @@ export class ExerciseService {
    */
   static filter(
     data: Exercise[],
-    options: {
-      ids?: string[];
-      componentsIds?: string[];
-      name?: string;
-      attributeValues?: Record<string, unknown>;
-    },
+    filter: Partial<Exercise>,
     components: Component[]
   ): Exercise[] {
-    const { ids, componentsIds, name, attributeValues } = options;
+    const { componentIds, ...rest } = filter;
     let filtered = data;
 
-    // filter by ids
-    if (ids?.length)
-      filtered = data.filter((exercise) => ids.includes(exercise.id));
-
-    // filter by  components
-    if (componentsIds?.length) {
+    // filter by components
+    if (componentIds?.length) {
       const allComponentsIds: string[] = [];
 
-      for (const componentId of componentsIds) {
+      for (const componentId of componentIds) {
         const component = components.find((c) => c.id === componentId);
         if (!component) continue;
 
-        // filter by root node
+        // filter by root node & filter by all its children
         allComponentsIds.push(component.id);
-
-        // filter by all its children
         const tree = commonService.tree.fromArray(components, {
           rootId: component.id,
           idPropertyName: 'id',
@@ -59,21 +47,49 @@ export class ExerciseService {
         );
     }
 
-    if (name)
-      filtered = filtered.filter((exercise) =>
-        exercise.name.toLowerCase().includes(name.toLowerCase())
-      );
+    Object.entries(rest).forEach(([key, value]) => {
+      if (value === undefined) return;
 
-    if (attributeValues) throw new Error('not implemented yet');
+      filtered = filtered.filter((exercise) => {
+        const exValue = exercise[key as keyof Exercise];
+
+        if (typeof value === 'boolean') return exValue === value;
+        if (Array.isArray(value)) {
+          // filter by int range
+          if (typeof value[0] === 'number' && typeof value[1] === 'number') {
+            const [min, max] = value as unknown as [number, number];
+            return (
+              typeof exValue === 'number' && exValue >= min && exValue <= max
+            );
+          }
+
+          // filter by array contains
+          if (Array.isArray(exValue)) {
+            value = (value as string[]).map((id) => {
+              // remove only the first part before colon if it is the same as key
+              const parts = id.split(':').map((p) => p.trim());
+              return parts.length > 1 && parts[0] === key
+                ? parts.slice(1).join(':')
+                : id;
+            });
+
+            return value.some((v) => exValue.includes(v as never));
+          }
+        }
+
+        // string match
+        return (
+          typeof exValue === 'string' &&
+          exValue.toLowerCase().includes(String(value).toLowerCase())
+        );
+      });
+    });
 
     return filtered;
   }
 
   static paginate(
-    filter: {
-      componentsIds: string[];
-      name?: string;
-    },
+    filter: Partial<Exercise>,
     state: {
       pagination: Pagination;
       exercises: Exercise[];
@@ -90,13 +106,7 @@ export class ExerciseService {
       setPagination,
     } = state;
 
-    let filtered;
-    if (
-      filter.componentsIds.includes('warmup') ||
-      filter.componentsIds.includes('cooldown')
-    )
-      filtered = [...exercises]; // all exercises for warmup and cooldown
-    else filtered = ExerciseService.filter(exercises, filter, components);
+    let filtered = ExerciseService.filter(exercises, filter, components);
     const total = filtered.length;
 
     // paginate
@@ -111,10 +121,7 @@ export class ExerciseService {
 
     // populate exercises
     filtered.map((exercise) => {
-      ExerciseService.mapComponents(
-        ExerciseService.mapAttributes(exercise),
-        components
-      );
+      ExerciseService.mapComponents(exercise, components);
     });
 
     setFilteredExercises(filtered);
@@ -123,14 +130,6 @@ export class ExerciseService {
       total,
       pages: Math.ceil(total / pagination.pageSize),
     }));
-  }
-
-  static mapAttributes(item: Exercise): Exercise {
-    item.valuesObject = commonService.object.flattenObject(
-      ExerciseService.attributeValuesToNestedObject(item.attributeValues || [])
-    );
-
-    return item;
   }
 
   static mapComponents(item: Exercise, components: Component[]): Exercise {
@@ -143,84 +142,5 @@ export class ExerciseService {
     );
 
     return item;
-  }
-
-  /**
-   * Converts a nested object into a colon-separated string path starting from the root key.
-   *
-   * @example
-   * parseAttributeValue({ a: 'b', b: 'c', c: 1 }, 'a') // => { a: "b:c:1" }
-   * parseAttributeValue({ x: 'y', y: 'z', z: 100 }, 'x') // => { x: "y:z:100" }
-   */
-  static parseAttributeValue<T extends Record<string, unknown>>(
-    obj: T,
-    rootKey: keyof T
-  ): Record<string, string> {
-    const result: Record<string, string> = {};
-    const pathParts: string[] = [];
-
-    let currentKey: string | undefined = String(rootKey);
-    let currentValue: unknown = obj[currentKey];
-
-    while (
-      typeof currentValue === 'string' &&
-      obj[currentValue] !== undefined
-    ) {
-      pathParts.push(currentValue);
-      currentKey = currentValue;
-      currentValue = obj[currentKey];
-    }
-
-    if (currentValue !== undefined) pathParts.push(String(currentValue));
-    result[String(rootKey)] = pathParts.join(':');
-
-    return result;
-  }
-
-  /**
-   * Converts ExerciseAttributeValue array to a nested object structure
-   * where selected path creates nesting and value is placed at the end.
-   *
-   * @example
-   * unparseAttributeValues([
-   *   { field: "target", value: "chest", selected: "muscle" },
-   *   { field: "equipment", value: "bench", selected: "weight-training" }
-   * ])
-   *
-   * => {
-   *   target: { muscle: "chest" },
-   *   equipment: { "weight-training": "bench" }
-   * }
-   */
-  static attributeValuesToNestedObject(
-    attributeValues: ExerciseAttributeValue[]
-  ): Record<string, unknown> {
-    const result: Record<string, unknown> = {};
-
-    for (const attr of attributeValues) {
-      if (attr.selected === attr.value) {
-        result[attr.field] = attr.value;
-        continue;
-      }
-
-      if (!result[attr.field]) result[attr.field] = {};
-      const pathParts = attr.selected.split(':');
-      let currentLevel = result[attr.field] as Record<string, unknown>;
-
-      // Build the nested structure
-      for (let i = 0; i < pathParts.length; i++) {
-        const part = pathParts[i];
-        if (i === pathParts.length - 1) {
-          // Last part - assign the value
-          currentLevel[part] = attr.value;
-        } else {
-          // Create nested level if it doesn't exist
-          currentLevel[part] = currentLevel[part] || {};
-          currentLevel = currentLevel[part] as Record<string, unknown>;
-        }
-      }
-    }
-
-    return result;
   }
 }
