@@ -49,6 +49,7 @@ export default function AthleteSuperset(props: AthleteSupersetProps) {
                 training={training}
                 exercise={exercise}
                 borderBottomRadius={i === superset.exercises.length - 1}
+                expanded={expandedSetsView}
               />
             )}
           </Fragment>
