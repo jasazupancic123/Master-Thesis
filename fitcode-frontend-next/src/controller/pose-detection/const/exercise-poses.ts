@@ -22,6 +22,9 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
       'squat-rows-fw',
       'staggered-half-back-squat',
       'toe-squat',
+      'goblet-squat',
+      'split-squat',
+      'carioca-lunge',
     ],
     data: {
       romKeypointId: KeypointId.LEFT_SHOULDER,
