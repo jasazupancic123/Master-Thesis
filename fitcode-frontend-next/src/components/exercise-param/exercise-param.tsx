@@ -163,7 +163,7 @@ export function ExerciseParam(props: Props) {
       )}
 
       {/* Value */}
-      {nestedOption?.type === 'select' ? (
+      {nestedOption?.type === 'select' || value.selected === IntType.Eff ? (
         <FormControl
           variant="filled"
           size="small"
@@ -176,6 +176,7 @@ export function ExerciseParam(props: Props) {
           <Select
             disabled={readOnly || dissableSettingValue}
             variant="filled"
+            value={value.value}
             sx={{
               textAlign: 'center',
               mb:
@@ -222,24 +223,40 @@ export function ExerciseParam(props: Props) {
                   : undefined,
               },
             }}
-            value={value.value}
             onChange={(e) => {
               onSubOptionChange(e.target.value as string);
               if (!athleteView && setDetectedChanges) setDetectedChanges(true);
             }}
           >
-            {nestedOption?.options?.map((value) => (
-              <MenuItem
-                key={value.name}
-                value={value.field}
-                sx={{
-                  textAlign: 'center',
-                  textShadow: '1px 1px 2px rgba(23, 16, 16, 0.5)',
-                }}
-              >
-                {value.name[0].toUpperCase() + value.name.slice(1)}
-              </MenuItem>
-            ))}
+            {value.selected === IntType.Eff ? (
+              ['Easy', 'Mod', 'Hard', 'Max'].map((v, i) => (
+                <MenuItem
+                  key={v}
+                  value={i}
+                  sx={{
+                    textAlign: 'center',
+                    textShadow: '1px 1px 2px rgba(23, 16, 16, 0.5)',
+                  }}
+                >
+                  {v}
+                </MenuItem>
+              ))
+            ) : (
+              <>
+                {nestedOption?.options?.map((value) => (
+                  <MenuItem
+                    key={value.name}
+                    value={value.field}
+                    sx={{
+                      textAlign: 'center',
+                      textShadow: '1px 1px 2px rgba(23, 16, 16, 0.5)',
+                    }}
+                  >
+                    {value.name[0].toUpperCase() + value.name.slice(1)}
+                  </MenuItem>
+                ))}
+              </>
+            )}
           </Select>
         </FormControl>
       ) : (
