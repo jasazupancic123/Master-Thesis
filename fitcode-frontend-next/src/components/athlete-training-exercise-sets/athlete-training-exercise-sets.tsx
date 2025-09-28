@@ -54,6 +54,7 @@ export default function AthleteTrainingExerciseSets(
 
   return (
     <Box
+      id="athlete-training-exercise-sets-container"
       display="flex"
       flexDirection="column"
       width="100%"
@@ -89,10 +90,10 @@ export default function AthleteTrainingExerciseSets(
                   i === 0
                     ? trainingInProgressView
                       ? 4.25
-                      : 3.75
+                      : 3.7
                     : trainingInProgressView
                       ? 3.75
-                      : 0.5
+                      : 3.7
                 }
               >
                 <Box
@@ -175,7 +176,7 @@ export default function AthleteTrainingExerciseSets(
                                 param.field === ParamType.VolWorkSets
                               }
                               exercise={exercise}
-                              trainingInProgressView
+                              // trainingInProgressView
                               param={param}
                               lOrR={lOrR as 'L' | 'R'}
                               value={
