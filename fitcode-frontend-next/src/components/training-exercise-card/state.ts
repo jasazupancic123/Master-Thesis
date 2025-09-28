@@ -162,7 +162,7 @@ export function updateSelectedExercisesVolWorkSets(input: {
         ...Array.from({ length: newSets - prevSets }, (_, i) => ({
           setNumber: prevSets + i + 1,
           paramValuesL: paramValues,
-          ...(foundExercise.isBilateral && { paramValuesR: paramValues }),
+          ...(foundExercise.isUnilateral && { paramValuesR: paramValues }),
         })),
       ];
     }
@@ -206,7 +206,7 @@ export function updateSingleExerciseVolWorkSets(input: {
       ...Array.from({ length: newSets - prevSets }, (_, i) => ({
         setNumber: prevSets + i + 1,
         paramValuesL: paramValues,
-        ...(foundExercise.isBilateral && { paramValuesR: paramValues }),
+        ...(foundExercise.isUnilateral && { paramValuesR: paramValues }),
       })),
     ];
   }

@@ -6,7 +6,7 @@ export default function Page() {
       selectedExercise={undefined}
       selectedTrackingMethod={undefined}
       setSelectedTrackingMethod={undefined}
-      updateExerciseReps={undefined}
+      updateExerciseValues={undefined}
     />
   );
 }

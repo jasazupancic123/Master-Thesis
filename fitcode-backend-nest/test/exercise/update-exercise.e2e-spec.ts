@@ -4,9 +4,7 @@ import { Test } from '@nestjs/testing';
 import * as request from 'supertest';
 
 import { AppModule } from '@src/app.module';
-import type { Attribute } from '@src/attribute/entity/attribute.entity';
-import { generateAttributeStub } from '@src/attribute/mock/attribute.stub';
-import { AttributeService } from '@src/attribute/service/attribute.service';
+import type { Update } from '@src/common/type/entity.type';
 import {
   createAthleteUserAndToken,
   createManagerUserAndToken,
@@ -31,12 +29,10 @@ import { InstitutionService } from '@src/institution/service/institution.service
 describe('Update Exercise (e2e)', () => {
   let app: INestApplication;
   let firebase: FirebaseService;
-  let attributeService: AttributeService;
   let componentService: ComponentService;
   let exerciseService: ExerciseService;
   let institutionService: InstitutionService;
 
-  let attribute: Attribute;
   let exercise: Exercise;
   let component: Component;
   let institution: Institution;
@@ -50,17 +46,12 @@ describe('Update Exercise (e2e)', () => {
     await app.init();
 
     firebase = moduleFixture.get(FirebaseService);
-    attributeService = moduleFixture.get(AttributeService);
     componentService = moduleFixture.get(ComponentService);
     exerciseService = moduleFixture.get(ExerciseService);
     institutionService = moduleFixture.get(InstitutionService);
 
     institution = await createInstitution(institutionService);
-    attribute = await attributeService.create(generateAttributeStub());
-    component = await componentService.create(
-      generateComponentStub({ attributes: [attribute.field] }),
-    );
-
+    component = await componentService.create(generateComponentStub());
     exercise = await exerciseService.create(
       global.manager,
       generateExerciseStub({ componentIds: [component.id] }),
@@ -72,7 +63,6 @@ describe('Update Exercise (e2e)', () => {
       deleteInstitution(firebase, institution),
       deleteDoc(firebase, 'EXERCISE', exercise.id),
       deleteDoc(firebase, 'COMPONENT', component.id),
-      deleteDoc(firebase, 'ATTRIBUTE', attribute.field),
     ]);
 
     await app.close();
@@ -161,7 +151,6 @@ describe('Update Exercise (e2e)', () => {
 
     it('should not allow updating componentId', async () => {
       const updateData = { componentIds: ['new-component-id'] };
-
       const response = await request(app.getHttpServer())
         .patch(`/exercise/${exercise.id}`)
         .set('Authorization', `Bearer ${global.manager.token}`)
@@ -174,21 +163,42 @@ describe('Update Exercise (e2e)', () => {
     });
 
     it('should validate attribute values before updating', async () => {
-      const invalidAttributes = [{ field: 'invalid', value: 'wrong' }];
-
       const response = await request(app.getHttpServer())
         .patch(`/exercise/${exercise.id}`)
         .set('Authorization', `Bearer ${global.manager.token}`)
-        .send({ attributeValues: invalidAttributes });
+        .send({ equipment: ['cardio'] });
 
-      expect(response.status).toBe(200);
-      expect(response.body.attributeValues).toEqual([]);
+      expect(response.status).toBe(400);
+      expect(response.body.message).toEqual(
+        expect.stringContaining(
+          'Option "cardio" has nested options, please select one of the following:',
+        ),
+      );
+    });
+
+    it('should allow updating exercise unilateral attribute', async () => {
+      const res1 = await request(app.getHttpServer())
+        .patch(`/exercise/${exercise.id}`)
+        .set('Authorization', `Bearer ${global.manager.token}`)
+        .send({ isUnilateral: true });
+
+      expect(res1.status).toBe(200);
+      expect(res1.body.isUnilateral).toBe(true);
+
+      const res2 = await request(app.getHttpServer())
+        .patch(`/exercise/${exercise.id}`)
+        .set('Authorization', `Bearer ${global.manager.token}`)
+        .send({ isUnilateral: false });
+
+      expect(res2.status).toBe(200);
+      expect(res2.body.isUnilateral).toBe(false);
     });
 
     it('should update an exercise successfully if user is one of the following: admin, institution owner or trainer', async () => {
-      const updateData = {
+      const updateData: Update<Exercise> = {
         name: 'Updated Exercise Name',
-        attributeValues: [{ field: attribute.field, value: 'test' }],
+        bodyRegions: ['upper', 'core'],
+        loadingSides: ['quadruped'],
       };
 
       async function updateExercise(token: string) {
@@ -206,16 +216,8 @@ describe('Update Exercise (e2e)', () => {
       for (const response of responses) {
         expect(response.status).toBe(200);
         expect(response.body.name).toBe(updateData.name);
-        expect(response.body.attributeValues).toEqual([
-          {
-            field: attribute.field,
-            value: 'test',
-            exerciseId: exercise.id,
-            ownerId: institution.id,
-            isBilateral: false,
-            componentIds: [component.id],
-          },
-        ]);
+        expect(response.body.bodyRegions).toEqual(updateData.bodyRegions);
+        expect(response.body.loadingSides).toEqual(updateData.loadingSides);
       }
     });
   });

@@ -128,7 +128,7 @@ export function generateTrainingExercise(
 
 type ExerciseSetOptions = {
   random?: boolean;
-  bilateral?: boolean;
+  isUnilateral?: boolean;
 };
 
 /**
@@ -152,7 +152,7 @@ export function generateExerciseSet(
   options?: ExerciseSetOptions,
 ): ExerciseSet {
   const isRandom = options?.random || false;
-  const isBilateral = options?.bilateral || false;
+  const isUnilateral = options?.isUnilateral || false;
 
   let paramValues: AttributeValue[] =
     generateParamAttributeValuesFromComponentParams(PARAMS, isRandom);
@@ -170,7 +170,7 @@ export function generateExerciseSet(
   return {
     setNumber,
     paramValuesL: paramValues,
-    ...(isBilateral && { paramValuesR: paramValues }),
+    ...(isUnilateral && { paramValuesR: paramValues }),
   };
 }
 

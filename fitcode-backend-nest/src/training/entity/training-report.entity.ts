@@ -8,6 +8,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  Max,
   Min,
   ValidateNested,
 } from 'class-validator';
@@ -125,9 +126,10 @@ export class TrainingReport extends IntersectionType(
 
   @IsNumber()
   @Min(0)
+  @Max(100)
   @ApiProperty()
   @Expose()
-  realizationScore: number;
+  realization: number; // percentage of the prescribed training that was actually completed, from 0 to 100
 
   @ValidateNested({ each: true })
   @Type(() => ExerciseMuscleValue)

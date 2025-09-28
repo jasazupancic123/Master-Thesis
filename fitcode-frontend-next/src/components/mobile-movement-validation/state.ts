@@ -109,6 +109,7 @@ export const predictWebcam = async (state: {
   poseLandmarker: PoseLandmarker | null;
   keypointHistory: KeypointHistory;
   keypointBuffer: KeypointHistory;
+  constantKeypointHistory: KeypointHistory;
   currentRepRef: RefObject<Rep | null>;
   recordedRepsRef: RefObject<Rep[]>;
   exerciseDetectionData: ExerciseDetectionData;
@@ -127,9 +128,9 @@ export const predictWebcam = async (state: {
   tempoCanvasRef: RefObject<HTMLCanvasElement | null>;
   theme: Theme;
   centerPosRef: RefObject<{ x: number; y: number } | null>;
+  recordingTimestampRef: RefObject<Date | null>;
   setFps: SetState<number | null>;
-  setStatusMessage: SetState<string>;
-  finishAiDetection: () => void;
+  finishAiDetection: () => Promise<void>;
 }) => {
   const {
     statusRef,
@@ -138,6 +139,7 @@ export const predictWebcam = async (state: {
     poseLandmarker,
     keypointHistory,
     keypointBuffer,
+    constantKeypointHistory,
     currentRepRef,
     recordedRepsRef,
     exerciseDetectionData,
@@ -156,13 +158,13 @@ export const predictWebcam = async (state: {
     tempoCanvasRef,
     theme,
     centerPosRef,
+    recordingTimestampRef,
     setFps,
-    setStatusMessage,
     finishAiDetection,
   } = state;
 
   if (statusRef.current === DetectionStatus.STOPPED) {
-    finishAiDetection();
+    await finishAiDetection();
     return;
   }
 
@@ -233,6 +235,7 @@ export const predictWebcam = async (state: {
         statusRef,
         keypointHistory,
         keypointBuffer,
+        constantKeypointHistory: constantKeypointHistory,
         repStateRef,
         currentRepBuffer: currentRepRef.current?.buffer,
         keypoints,
@@ -244,11 +247,11 @@ export const predictWebcam = async (state: {
         statusRef,
         repStateRef,
         keypoints,
-        setStatusMessage,
         keypointBuffer,
         exerciseStartConditions: exerciseDetectionData.conditions,
         avgFps: avgFps.current,
         keypointHistory,
+        recordingTimestampRef,
       });
 
       if (
@@ -350,6 +353,7 @@ function insertKeypointsIntoBuffers(state: {
   statusRef: RefObject<DetectionStatus>;
   keypointHistory: KeypointHistory;
   keypointBuffer: KeypointHistory;
+  constantKeypointHistory: KeypointHistory;
   repStateRef: RefObject<RepState>;
   currentRepBuffer?: KeypointHistory;
   keypoints: Keypoint[];
@@ -360,6 +364,7 @@ function insertKeypointsIntoBuffers(state: {
     statusRef,
     keypointHistory,
     keypointBuffer,
+    constantKeypointHistory,
     repStateRef,
     currentRepBuffer,
     keypoints,
@@ -375,6 +380,8 @@ function insertKeypointsIntoBuffers(state: {
       POSE_DETECTION_CONSTRAINTS.KEEP_KEYPOINT_HISTORY_DURING_RECORDING_MS /
         1000
     );
+
+    constantKeypointHistory.insertFrame(keypoints); // never cut, always all history
   } else {
     // only keep KEYPOINT_BUFFER_DURATION_MS of frames in history
     keypointHistory.insertFrame(

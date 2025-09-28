@@ -54,6 +54,7 @@ export default function AthleteTrainingExerciseSets(
 
   return (
     <Box
+      id="athlete-training-exercise-sets-container"
       display="flex"
       flexDirection="column"
       width="100%"
@@ -89,10 +90,10 @@ export default function AthleteTrainingExerciseSets(
                   i === 0
                     ? trainingInProgressView
                       ? 4.25
-                      : 3.75
+                      : 3.7
                     : trainingInProgressView
                       ? 3.75
-                      : 0.5
+                      : 3.7
                 }
               >
                 <Box
@@ -101,7 +102,7 @@ export default function AthleteTrainingExerciseSets(
                   flexDirection="column"
                   gap={trainingInProgressView ? 1.35 : 0.9}
                 >
-                  {exercise.exercise?.isBilateral ? (
+                  {exercise.exercise?.isUnilateral ? (
                     <>
                       <LeftRightExerciseText title="L" />
                       <LeftRightExerciseText title="R" />
@@ -146,7 +147,7 @@ export default function AthleteTrainingExerciseSets(
                       }
                     );
 
-                    if (!valueL || (exercise.exercise?.isBilateral && !valueR))
+                    if (!valueL || (exercise.exercise?.isUnilateral && !valueR))
                       return toast.error(
                         `Invalid parameter field: ${param.field}`
                       );
@@ -159,7 +160,7 @@ export default function AthleteTrainingExerciseSets(
                         }
                       >
                         {['L']
-                          .concat(exercise.exercise?.isBilateral ? ['R'] : [])
+                          .concat(exercise.exercise?.isUnilateral ? ['R'] : [])
                           .map((lOrR) => (
                             <ExerciseParam
                               key={`${param.field}-${lOrR}`}
@@ -175,7 +176,7 @@ export default function AthleteTrainingExerciseSets(
                                 param.field === ParamType.VolWorkSets
                               }
                               exercise={exercise}
-                              trainingInProgressView
+                              // trainingInProgressView
                               param={param}
                               lOrR={lOrR as 'L' | 'R'}
                               value={

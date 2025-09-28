@@ -2,13 +2,11 @@ import type { INestApplication } from '@nestjs/common';
 import { DateTime } from 'luxon';
 import { readFile } from 'node:fs/promises';
 
-import { GLOBAL_EXERCISE_OWNER } from '@src//exercise/constant/global-exercise-owner.constant';
-import type { Attribute } from '@src/attribute/entity/attribute.entity';
-import { AttributeService } from '@src/attribute/service/attribute.service';
 import { AuthService } from '@src/auth/auth.service';
 import { UserRole } from '@src/auth/enum/user-role.enum';
 import { ComponentService } from '@src/component/component.service';
 import type { Component } from '@src/component/entity/component.entity';
+import type { CreateExerciseDto } from '@src/exercise/dto/create-exercise.dto';
 import type { Exercise } from '@src/exercise/entity/exercise.entity';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
@@ -21,6 +19,7 @@ import { ProfileRepository } from '@src/profile/repository/profile.repository';
 import { WellnessService } from '@src/profile/service/wellness.service';
 
 import { FirestoreCollection } from '../enum/firestore-collection.enum';
+import type { Update } from '../type/entity.type';
 import type { User } from '../type/firebase-auth.type';
 import { BaseSetup } from './base.setup';
 
@@ -75,9 +74,8 @@ export class DataSetup extends BaseSetup {
 
     try {
       await this.importUsers('data/users.json');
-      await this.importAttributes('data/attributes.json');
       await this.importComponents('data/components.json');
-      await this.importExercises('data/exercises.json');
+      await this.importExercises();
       await this.importMethods('data/methods.json');
 
       this.logger.debug(
@@ -95,22 +93,12 @@ export class DataSetup extends BaseSetup {
     await this.firebaseService.deleteCollection(FirestoreCollection.GROUP);
     await this.firebaseService.deleteCollection(FirestoreCollection.EXERCISE);
     await this.firebaseService.deleteCollection(FirestoreCollection.COMPONENT);
-    await this.firebaseService.deleteCollection(FirestoreCollection.ATTRIBUTE);
     await this.firebaseService.deleteCollection(FirestoreCollection.PROFILE);
     await this.firebaseService.deleteCollection(FirestoreCollection.METHOD);
     await this.firebaseService.deleteCollection(FirestoreCollection.TRAINING);
     await this.firebaseService.deleteCollection(
       FirestoreCollection.INSTITUTION,
     );
-  }
-
-  private async importAttributes(filename: string) {
-    const attributeService = this.app.get(AttributeService);
-
-    const file = await readFile(filename, 'utf-8');
-    const data: Attribute[] = JSON.parse(file);
-
-    for (const item of data) await attributeService.create(item);
   }
 
   private async importComponents(filename: string) {
@@ -133,17 +121,30 @@ export class DataSetup extends BaseSetup {
     for (const m of data) await methodsService.create(this.admin, m);
   }
 
-  private async importExercises(filename: string) {
+  private async importExercises() {
     const exerciseService = this.app.get(ExerciseService);
+    const data: Update<Exercise>[] = [
+      { name: 'Squats', componentIds: ['concentric'] },
+      { name: 'Deadlifts', componentIds: ['concentric'] },
+      { name: 'Bench Press', componentIds: ['concentric'] },
+      { name: 'High Plank Reach', componentIds: ['concentric'] },
+      { name: 'Power Clean', componentIds: ['concentric'] },
+      { name: 'Sprint', componentIds: ['peak-speed'] },
+      { name: 'Sleed Acceleration', componentIds: ['resisted'] },
+      { name: 'Jogging', componentIds: ['aerobic-capacity'] },
+      {
+        name: 'Bicep Stretching',
+        componentIds: ['passive-stretching'],
+        isUnilateral: true,
+      },
+      {
+        name: 'Bulgarian Split Squat',
+        componentIds: ['concentric'],
+        isUnilateral: true,
+      },
+    ];
 
-    const file = await readFile(filename, 'utf-8');
-    const data: Omit<Exercise, 'id' | 'ownerId' | 'attributes'>[] =
-      JSON.parse(file);
-
-    await exerciseService.upsertMany(
-      this.admin,
-      data.map((d) => ({ ...d, ownerId: GLOBAL_EXERCISE_OWNER })),
-    );
+    await exerciseService.upsertMany(this.admin, data as CreateExerciseDto[]);
   }
 
   private async importUsers(filename: string) {

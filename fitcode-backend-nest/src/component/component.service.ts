@@ -42,10 +42,19 @@ export class ComponentService {
       children: Component[];
     },
   ): Promise<Component> {
-    const { children, ...rest } = data;
-    const component = await this.create({ ...rest, parentId: data.parentId });
+    const component = await this.create({
+      id: data.id,
+      parentId: data.parentId,
+      name: data.name,
+      slug: data.slug,
+      targets: data.targets,
+      attributes: data.attributes,
+      params: data.params,
+    });
+
     await this.cacheManagerService.del(CACHE_KEY_FLAT_COMPONENTS);
 
+    const children = data.children || [];
     for (const child of children) {
       const childData = {
         ...child,
@@ -158,7 +167,7 @@ export class ComponentService {
       selectedAttributes.push({
         ...attribute,
         ...(options.length > 0 ? { options } : {}),
-        defaultValue: param.defaultValue || attribute.defaultValue,
+        defaultValue: (param.defaultValue as string) || attribute.defaultValue,
       });
     }
 
@@ -317,7 +326,11 @@ export class ComponentService {
 
       // recursively map nested options
       const nestedOptions: Attribute[] = [];
-      if (attributeOption.options?.length > 0) {
+      if (
+        (attributeOption.type === AttributeType.Select ||
+          attributeOption.type === AttributeType.Multiselect) &&
+        attributeOption.options?.length > 0
+      ) {
         nestedOptions.push(
           ...this.mapOptionsRecursively(
             paramOption.options || attributeOption.options,
@@ -329,7 +342,9 @@ export class ComponentService {
       mappedOptions.push({
         ...attributeOption,
         ...(nestedOptions.length > 0 ? { options: nestedOptions } : {}),
-        defaultValue: paramOption.defaultValue || attributeOption.defaultValue,
+        defaultValue:
+          (paramOption.defaultValue as string) ||
+          (attributeOption.defaultValue as string),
       });
     }
 

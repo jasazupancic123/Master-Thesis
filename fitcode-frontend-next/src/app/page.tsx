@@ -2,6 +2,8 @@
 
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import { motion, type Variants } from 'framer-motion';
+import Image from 'next/image';
 import { redirect, RedirectType } from 'next/navigation';
 import React from 'react';
 
@@ -10,12 +12,9 @@ import { theme } from '@/app/style';
 import { SIGN_IN_REDIRECT_MAPPER } from '@/common/constant/navigation.constant';
 import type { ChildrenProps } from '@/common/type/props.type';
 import HeroNavbar from '@/components/hero-navbar/hero-navbar';
+import Logo from '@/components/logo/logo';
 import { useAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import Logo from '@/components/logo/logo';
-import { motion, useReducedMotion, type Variants } from 'framer-motion';
-import Image from 'next/image';
-import doItRight from '@/public/do-it-right.png';
 
 export type AppPageProps = ChildrenProps & {
   title: string;

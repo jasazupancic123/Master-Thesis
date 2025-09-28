@@ -7,22 +7,32 @@ import type { ExerciseDetectionDataWithExerciseIds } from '../type/exercise-star
 export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
   {
     exerciseIds: [
+      'acceleration-squat-fw',
+      'bulgarian-split-squat',
       'deep-back-squat',
       'half-back-squat-bb',
       'half-squat-fw',
       'half-squat-ks',
       'half-squat-tb',
+      'sa-squat-jump-db',
+      'sissy-squat-belt',
+      'sl-acceleration-squat-fw',
+      'sl-squat-ks',
+      'spooky-squat-di',
       'squat-rows-fw',
       'staggered-half-back-squat',
       'toe-squat',
+      'goblet-squat',
+      'split-squat',
+      'carioca-lunge',
     ],
     data: {
-      romKeypointId: KeypointId.LEFT_HIP,
+      romKeypointId: KeypointId.LEFT_SHOULDER,
       romValueType: KeypointValueType.POSITION_Y,
       romStartDirection: ConditionDirection.NEGATIVE,
       conditions: [
         {
-          keypointId: KeypointId.LEFT_HIP,
+          keypointId: KeypointId.LEFT_SHOULDER,
           type: KeypointValueType.POSITION_Y,
           direction: ConditionDirection.NEGATIVE,
           duration: 750, // ms
@@ -78,6 +88,23 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
           direction: ConditionDirection.POSITIVE,
           duration: 750, // ms
           distance: 0.15, // meters
+        },
+      ],
+    },
+  },
+  {
+    exerciseIds: ['sl-rdl-bw', 'sl-rdl-db'],
+    data: {
+      romKeypointId: KeypointId.LEFT_SHOULDER,
+      romValueType: KeypointValueType.POSITION_Y,
+      romStartDirection: ConditionDirection.NEGATIVE,
+      conditions: [
+        {
+          keypointId: KeypointId.LEFT_SHOULDER,
+          type: KeypointValueType.POSITION_Y,
+          direction: ConditionDirection.NEGATIVE,
+          duration: 750, // ms
+          distance: 0.04, // meters
         },
       ],
     },

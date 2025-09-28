@@ -42,7 +42,7 @@ export type TrainingReport = TrainingStats &
     timeWork: number;
     distWork: number;
     power: number;
-    realizationScore: number;
+    realization: number;
 
     muscleValues: ExerciseMuscleValue[];
     photoURL?: string; // "best" photo of the training session
@@ -71,7 +71,6 @@ export type TrainingStats = {
   totalTimeWork: number; // total time under load
   totalDistWork: number; // total distance under load
   totalPower: number; // total power output (in watts)
-  totalRealizationScore: number; // tonnage and also time, distance, tempo prescribed - saved as a score of points
   totalTimeVol?: number; // total time prescribed (in seconds)
   totalDistVol?: number; // total distance prescribed (in meters)
   totalRecDist?: number; // total recovery distance prescribed (in meters)

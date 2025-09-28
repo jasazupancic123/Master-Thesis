@@ -28,6 +28,7 @@ import type { RepState } from '@/controller/pose-detection/type/rep-state.type';
 import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useScreenSize } from '@/store/screen-size.provider';
+import { RepsGraphService } from '@/controller/pose-detection/rep-graph.service';
 
 const DEBUG = false;
 
@@ -35,7 +36,9 @@ interface MobileMovementValidationProps {
   selectedExercise: TrainingExercise | undefined;
   selectedTrackingMethod: TrackingMethod | undefined;
   setSelectedTrackingMethod: SetState<TrackingMethod> | undefined;
-  updateExerciseReps: ((repsCount: number) => void) | undefined;
+  updateExerciseValues:
+    | ((repsCount: number, tempo: number) => void)
+    | undefined;
 }
 
 export default function MobileMovementValidation(
@@ -48,7 +51,7 @@ export default function MobileMovementValidation(
     selectedExercise,
     selectedTrackingMethod,
     setSelectedTrackingMethod,
-    updateExerciseReps,
+    updateExerciseValues,
   } = props;
 
   // Buffers
@@ -56,6 +59,9 @@ export default function MobileMovementValidation(
     new KeypointHistory([], 100, true)
   ); // first make buffer of 100 frames, later set buffer size to undefined to get all recording of exercise
   const keypointBuffer = new KeypointHistory([], 100); // 100 frames buffer, updates in the main loop based on fps
+  const constantKeypointHistoryRef = useRef<KeypointHistory>(
+    new KeypointHistory([], undefined)
+  ); // never cut, always all history
 
   const exerciseDetectionData: ExerciseDetectionData | undefined =
     selectedExercise
@@ -92,9 +98,7 @@ export default function MobileMovementValidation(
 
   // Main Status
   const statusRef = useRef<DetectionStatus>(DetectionStatus.NOT_FULLY_IN_FRAME);
-  const [statusMessage, setStatusMessage] = useState(
-    STATUS_MESSAGES[statusRef.current]
-  );
+  const statusMessage = useRef<string>(STATUS_MESSAGES[statusRef.current]);
 
   // Rep State
   const repStateRef = useRef<RepState>({
@@ -132,6 +136,7 @@ export default function MobileMovementValidation(
   const normDomainRef = useRef<{ min: number; max: number } | null>(null); // for graphs
   const dotRef = useRef<HTMLDivElement | null>(null);
   const dotBackgroundRef = useRef<HTMLDivElement | null>(null);
+  const recordingTimestampRef = useRef<Date | null>(null);
 
   useEffect(() => {
     let raf: number | null = null;
@@ -221,7 +226,6 @@ export default function MobileMovementValidation(
         e.preventDefault(); // stop page scroll
         if (!spaceDown) setSpaceDown(true);
 
-        // drawGraph();
         RepDetectionService.saveRepTimesToJsonFiles({
           recordedRepsRef,
           selectedExercise,
@@ -292,19 +296,88 @@ export default function MobileMovementValidation(
     document.body.appendChild(script);
   };
 
-  const finishAiDetection = () => {
+  const finishAiDetection = async () => {
+    statusMessage.current = getStatusMessage(DetectionStatus.STOPPED);
+
+    // await RepsGraphService.downloadReps(
+    //   {
+    //     recordedRepsRef,
+    //     keypointId: KeypointId.RIGHT_WRIST,
+    //     valueType: KeypointValueType.POSITION_Y,
+    //     constantKeypointHistory: constantKeypointHistoryRef.current,
+    //   },
+    //   { filenameBase: 'session', combine: true }
+    // );
+
+    // KeypointUtil.drawKeypointValuesGraph(
+    //   constantKeypointHistoryRef.current.history,
+    //   exerciseDetectionData!.romKeypointId,
+    //   exerciseDetectionData!.romValueType,
+    //   'whole_exercise'
+    // );
+
+    // RepDetectionService.saveRepTimesToJsonFiles({
+    //   recordedRepsRef,
+    //   selectedExercise,
+    // });
+
     if (
-      updateExerciseReps &&
+      updateExerciseValues &&
       selectedTrackingMethod === TrackingMethod.CAMERA &&
       setSelectedTrackingMethod
     ) {
+      let avgTimeToExtremeMs = 0,
+        avgTimeAtExtremeMs = 0,
+        avgTimeFromExtremeToEndMs = 0,
+        avgIdleTimeMs = 0;
+
+      for (const rep of recordedRepsRef.current) {
+        avgTimeToExtremeMs += rep.timeToExtremeMs || 0;
+        avgTimeAtExtremeMs += rep.timeAtExtremeMs || 0;
+        avgTimeFromExtremeToEndMs += rep.timeFromExtremeToEndMs || 0;
+        avgIdleTimeMs += rep.idleTimeMs || 0;
+      }
+
+      avgTimeAtExtremeMs = Math.max(
+        Math.round(avgTimeAtExtremeMs / 1000 / recordedRepsRef.current.length),
+        0
+      );
+      avgTimeToExtremeMs = Math.max(
+        Math.round(avgTimeToExtremeMs / 1000 / recordedRepsRef.current.length),
+        0
+      );
+      avgTimeFromExtremeToEndMs = Math.max(
+        Math.round(
+          avgTimeFromExtremeToEndMs / 1000 / recordedRepsRef.current.length
+        ),
+        0
+      );
+      avgIdleTimeMs = Math.max(
+        Math.round(avgIdleTimeMs / 1000 / recordedRepsRef.current.length),
+        0
+      );
+
+      const tempoString = `${avgTimeToExtremeMs}${avgTimeAtExtremeMs}${avgTimeFromExtremeToEndMs}${avgIdleTimeMs}`;
+
+      let tempo = 2010;
+
+      //check if tempo string can be converted to a number
+      if (
+        tempoString.trim() !== '' &&
+        !isNaN(Number(tempoString)) &&
+        Number(tempoString) > 999
+      )
+        tempo = parseInt(tempoString);
+
+      console.log({ tempoString, tempo });
+
       setSelectedTrackingMethod(TrackingMethod.MANUAL);
-      updateExerciseReps(recordedRepsRef.current.length);
+      updateExerciseValues(recordedRepsRef.current.length, tempo);
     }
   };
 
   useEffect(() => {
-    setStatusMessage(getStatusMessage(statusRef.current));
+    statusMessage.current = getStatusMessage(statusRef.current);
   }, [statusRef.current]);
 
   useEffect(() => {
@@ -336,6 +409,7 @@ export default function MobileMovementValidation(
           poseLandmarker,
           keypointHistory: keypointHistoryRef.current,
           keypointBuffer,
+          constantKeypointHistory: constantKeypointHistoryRef.current,
           currentRepRef,
           recordedRepsRef,
           videoRef,
@@ -354,8 +428,8 @@ export default function MobileMovementValidation(
           tempoCanvasRef,
           theme,
           centerPosRef,
+          recordingTimestampRef,
           setFps,
-          setStatusMessage,
           finishAiDetection,
         }),
       setError,
@@ -379,7 +453,7 @@ export default function MobileMovementValidation(
 
       {poseLandmarker && (
         <MovementValidationHeader
-          statusMessage={error ? `${error}` : statusMessage}
+          statusMessage={error ? `${error}` : statusMessage.current}
         />
       )}
 
@@ -420,10 +494,12 @@ export default function MobileMovementValidation(
           playsInline
           style={{ transform: 'scaleX(-1)', objectFit: 'cover' }}
         />
+
         <canvas
           ref={canvasRef}
           style={{ position: 'absolute', left: 0, top: 0 }}
         />
+
         <canvas
           ref={tempoCanvasRef}
           style={{
@@ -512,10 +588,8 @@ export default function MobileMovementValidation(
           <Button
             variant="contained"
             onClick={() => {
-              if (updateExerciseReps && setSelectedTrackingMethod) {
+              if (setSelectedTrackingMethod)
                 setSelectedTrackingMethod(TrackingMethod.MANUAL);
-                updateExerciseReps(recordedRepsRef.current.length);
-              }
             }}
             sx={{ mt: 2 }}
           >

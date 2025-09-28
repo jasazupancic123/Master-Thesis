@@ -19,12 +19,12 @@ interface ExercisesListProps {
   }>;
   setExercise?: SetState<Partial<Exercise>>;
   addExerciseForm?: boolean;
+  children?: React.ReactNode;
 }
 
 export default function ExercisesList(props: ExercisesListProps) {
   const theme = useTheme();
   const screenSize = useScreenSize();
-
   const {
     exercises,
     setModal,
@@ -32,7 +32,9 @@ export default function ExercisesList(props: ExercisesListProps) {
     addExerciseForm,
     selectedExercisesIds,
     setSelectedExercisesIds,
+    children,
   } = props;
+
   return (
     <Box
       display="flex"
@@ -91,6 +93,7 @@ export default function ExercisesList(props: ExercisesListProps) {
           <ExerciseCard exercise={exercise} addExerciseForm />
         </Box>
       ))}
+      {children}
     </Box>
   );
 }

@@ -2,7 +2,6 @@ import { Controller, Get, Logger } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
 import { AppService } from './app.service';
-import { AttributeService } from './attribute/service/attribute.service';
 import { AuthService } from './auth/auth.service';
 import { Auth } from './common/decorator/auth.decorator';
 import { RequestUser } from './common/decorator/request-user.decorator';
@@ -25,7 +24,6 @@ export class AppController {
     private readonly authService: AuthService,
     private readonly profileService: ProfileService,
     private readonly exerciseService: ExerciseService,
-    private readonly attributeService: AttributeService,
     private readonly componentService: ComponentService,
     private readonly methodService: MethodService,
     private readonly institutionService: InstitutionService,
@@ -43,7 +41,6 @@ export class AppController {
     const [
       usersRes,
       exercisesRes,
-      attributesRes,
       componentsRes,
       methodsRes,
       institutionsRes,
@@ -58,11 +55,6 @@ export class AppController {
       measureAsync(
         'exerciseService.findAllGlobal()',
         () => this.exerciseService.findAllGlobal(),
-        this.logger,
-      ),
-      measureAsync(
-        'attributeService.findAll()',
-        () => this.attributeService.findAll(),
         this.logger,
       ),
       measureAsync(
@@ -94,7 +86,6 @@ export class AppController {
 
     const users = usersRes.result;
     const exercises = exercisesRes.result;
-    const attributes = attributesRes.result;
     const components = componentsRes.result;
     const methods = methodsRes.result;
     const institutions = institutionsRes.result;
@@ -113,7 +104,6 @@ export class AppController {
       profile,
       users,
       exercises,
-      attributes,
       components,
       methods,
       institutions,
