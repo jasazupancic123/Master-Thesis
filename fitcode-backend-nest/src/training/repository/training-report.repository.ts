@@ -27,11 +27,11 @@ export class TrainingReportRepository extends FirestoreRepository<
   collectionName = FirestoreCollection.TRAINING_REPORT;
 
   constructor(
-    readonly firebaseService: FirebaseService,
+    readonly firebase: FirebaseService,
     @Inject(forwardRef(() => TrainingRepository))
     private readonly trainingRepository: Wrapper<TrainingRepository>,
   ) {
-    super(firebaseService);
+    super(firebase);
   }
 
   collection(ref: TrainingRef): CollectionReference {
@@ -41,7 +41,7 @@ export class TrainingReportRepository extends FirestoreRepository<
   }
 
   collectionGroup(): CollectionGroup {
-    return this.firebaseService.firestore.collectionGroup(this.collectionName);
+    return this.firebase.firestore.collectionGroup(this.collectionName);
   }
 
   doc(ref: TrainingReportRef): DocumentReference {
@@ -53,9 +53,7 @@ export class TrainingReportRepository extends FirestoreRepository<
   ): Promise<TrainingReport[]> {
     const snapshot = await query(this.collectionGroup()).get();
     return snapshot.docs.map((doc) =>
-      this.firebaseService.serialize(
-        doc.data() as FirestoreEntity<TrainingReport>,
-      ),
+      this.firebase.serialize(doc.data() as FirestoreEntity<TrainingReport>),
     );
   }
 
@@ -72,14 +70,12 @@ export class TrainingReportRepository extends FirestoreRepository<
 
     const snapshot = await q.get();
     return snapshot.docs.map((doc) =>
-      this.firebaseService.serialize(
-        doc.data() as FirestoreEntity<TrainingReport>,
-      ),
+      this.firebase.serialize(doc.data() as FirestoreEntity<TrainingReport>),
     );
   }
 
   async save(ref: TrainingReportRef, data: Create<TrainingReport>) {
-    const query = this.firebaseService.buildCreateQuery<TrainingReport>(data, {
+    const query = this.firebase.buildCreateQuery<TrainingReport>(data, {
       timestamps: true,
     });
 
@@ -88,7 +84,7 @@ export class TrainingReportRepository extends FirestoreRepository<
   }
 
   async update(ref: TrainingReportRef, data: Update<TrainingReport>) {
-    const query = this.firebaseService.buildUpdateQuery(data);
+    const query = this.firebase.buildUpdateQuery(data);
     await this.doc(ref).update(query);
   }
 

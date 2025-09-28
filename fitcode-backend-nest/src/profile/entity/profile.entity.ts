@@ -2,12 +2,12 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Transform } from 'class-transformer';
 import { IsEnum, IsOptional, IsString } from 'class-validator';
 
-import { IdEntity } from '@src/common/entity/id.entity';
+import { BaseEntity } from '@src/common/entity/base.entity';
 
 import { Gender } from '../enum/gender.enum';
 import { SportLevel } from '../enum/sport-level.enum';
 
-export class Profile extends IdEntity {
+export class Profile extends BaseEntity {
   @IsOptional()
   @IsString()
   @ApiPropertyOptional()

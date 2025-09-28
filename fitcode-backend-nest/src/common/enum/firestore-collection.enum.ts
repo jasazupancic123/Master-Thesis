@@ -1,7 +1,7 @@
 export enum FirestoreCollection {
   MIGRATION = 'migrations',
   LOCAL_DEV = 'local-dev',
-  USER = 'users',
+  PROFILE = 'profile',
   COMPONENT = 'components',
   ATTRIBUTE = 'attributes',
   EXERCISE = 'exercises',

@@ -15,12 +15,12 @@ import { Attribute } from '../entity/attribute.entity';
 export class AttributeRepository extends FirestoreRepository<Attribute> {
   collectionName = FirestoreCollection.ATTRIBUTE;
 
-  constructor(readonly firebaseService: FirebaseService) {
-    super(firebaseService);
+  constructor(readonly firebase: FirebaseService) {
+    super(firebase);
   }
 
   collection(): CollectionReference {
-    return this.firebaseService.firestore.collection(this.collectionName);
+    return this.firebase.firestore.collection(this.collectionName);
   }
 
   doc(ref: string): DocumentReference {
@@ -28,13 +28,13 @@ export class AttributeRepository extends FirestoreRepository<Attribute> {
   }
 
   async save(input: Create<Attribute>) {
-    const query = this.firebaseService.buildCreateQuery<Attribute>(input);
+    const query = this.firebase.buildCreateQuery<Attribute>(input);
     await this.doc(input.field).set(query);
     return input.field;
   }
 
   async update(slug: string, input: Update<Attribute>) {
-    const query = this.firebaseService.buildUpdateQuery(input);
+    const query = this.firebase.buildUpdateQuery(input);
     await this.doc(slug).update(query);
   }
 

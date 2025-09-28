@@ -54,21 +54,21 @@ export class DataSetup extends BaseSetup {
       email: this.configService.getOrThrow('ADMIN_EMAIL'),
       password: this.configService.getOrThrow('ADMIN_PASSWORD'),
       displayName: 'Admin',
-      customClaims: { role: [UserRole.ADMIN] },
+      role: UserRole.ADMIN,
     });
 
     this.manager = await this.authService.upsert({
       email: 'manager@mail.com',
       password: 'password',
       displayName: 'Manager',
-      customClaims: { role: [UserRole.MANAGER] },
+      role: UserRole.MANAGER,
     });
 
     this.trainer = await this.authService.upsert({
       email: 'trainer@mail.com',
       password: 'password',
       displayName: 'Trainer',
-      customClaims: { role: [UserRole.TRAINER] },
+      role: UserRole.TRAINER,
     });
 
     await this.clearData();
@@ -96,7 +96,7 @@ export class DataSetup extends BaseSetup {
     await this.firebaseService.deleteCollection(FirestoreCollection.EXERCISE);
     await this.firebaseService.deleteCollection(FirestoreCollection.COMPONENT);
     await this.firebaseService.deleteCollection(FirestoreCollection.ATTRIBUTE);
-    await this.firebaseService.deleteCollection(FirestoreCollection.USER);
+    await this.firebaseService.deleteCollection(FirestoreCollection.PROFILE);
     await this.firebaseService.deleteCollection(FirestoreCollection.METHOD);
     await this.firebaseService.deleteCollection(FirestoreCollection.TRAINING);
     await this.firebaseService.deleteCollection(
@@ -171,7 +171,7 @@ export class DataSetup extends BaseSetup {
           email: userData.email,
           displayName: userData.displayName,
           password: 'password',
-          customClaims: { role: [userData.role || UserRole.ATHLETE] },
+          role: userData.role || UserRole.ATHLETE,
         }),
       );
     }

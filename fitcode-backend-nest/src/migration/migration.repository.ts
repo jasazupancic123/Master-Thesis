@@ -15,12 +15,12 @@ import { MigrationEntity } from './migration.interface';
 export class MigrationRepository extends FirestoreRepository<MigrationEntity> {
   collectionName = FirestoreCollection.MIGRATION;
 
-  constructor(readonly firebaseService: FirebaseService) {
-    super(firebaseService);
+  constructor(readonly firebase: FirebaseService) {
+    super(firebase);
   }
 
   collection(): CollectionReference {
-    return this.firebaseService.firestore.collection(this.collectionName);
+    return this.firebase.firestore.collection(this.collectionName);
   }
 
   doc(ref: string): DocumentReference {
@@ -28,7 +28,7 @@ export class MigrationRepository extends FirestoreRepository<MigrationEntity> {
   }
 
   async save(input: Create<MigrationEntity>): Promise<string> {
-    const query = this.firebaseService.buildCreateQuery<MigrationEntity>(input);
+    const query = this.firebase.buildCreateQuery<MigrationEntity>(input);
     const ref = this.doc(input.id);
     await ref.set(query);
     return input.id;

@@ -86,7 +86,7 @@ export class TrainingPlanService {
 
   async getInstitution(exercise: Exercise): Promise<Institution | null> {
     if (exercise.ownerId !== GLOBAL_EXERCISE_OWNER)
-      return await this.institutionService.getDoc({
+      return await this.institutionService.findById({
         institutionId: exercise.ownerId,
       });
 

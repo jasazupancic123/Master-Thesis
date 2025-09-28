@@ -82,7 +82,7 @@ export class AppController {
       ),
       measureAsync(
         'profileService.findProfile()',
-        () => this.profileService.findProfile(user),
+        () => this.profileService.findById(user),
         this.logger,
       ),
       measureAsync(

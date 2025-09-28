@@ -190,7 +190,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
 
     if (exercise.ownerId !== GLOBAL_EXERCISE_OWNER) {
       // institution created an exercise
-      const institution = await this.institutionService.getDoc({
+      const institution = await this.institutionService.findById({
         institutionId: exercise.ownerId,
       });
 
@@ -219,7 +219,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     const isManager = this.firebaseService.isManager(user);
 
     const institution = isManager
-      ? await this.institutionService.getDocByOwner(user.uid)
+      ? await this.institutionService.findByOwnerId(user.uid)
       : null;
 
     const ownerId = isAdmin
@@ -315,7 +315,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     const isManager = this.firebaseService.isManager(user);
 
     const institution = isManager
-      ? await this.institutionService.getDocByOwner(user.uid)
+      ? await this.institutionService.findByOwnerId(user.uid)
       : null;
 
     const ownerId = isAdmin
@@ -456,7 +456,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     const isManager = this.firebaseService.isManager(user);
 
     const institution = isManager
-      ? await this.institutionService.getDocByOwner(user.uid)
+      ? await this.institutionService.findByOwnerId(user.uid)
       : null;
 
     const ownerId = isAdmin
@@ -584,7 +584,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
 
     let institution: Institution | null = null;
     if (exercise.ownerId !== GLOBAL_EXERCISE_OWNER)
-      institution = await this.institutionService.getDocByIdOrFail({
+      institution = await this.institutionService.findByIdOrFail({
         institutionId: exercise.ownerId,
       });
 
@@ -676,7 +676,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
 
     let institution: Institution | null = null;
     if (exercise.ownerId !== GLOBAL_EXERCISE_OWNER)
-      institution = await this.institutionService.getDocByIdOrFail({
+      institution = await this.institutionService.findByIdOrFail({
         institutionId: exercise.ownerId,
       });
 

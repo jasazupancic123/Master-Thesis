@@ -13,14 +13,14 @@ import type { FirestoreEntity } from './entity.type';
 export abstract class FirestoreRepository<Model extends object, Ref = string> {
   abstract collectionName: string;
 
-  readonly firebaseService: FirebaseService;
+  readonly firebase: FirebaseService;
 
   constructor(firebaseService: FirebaseService) {
-    this.firebaseService = firebaseService;
+    this.firebase = firebaseService;
   }
 
   serialize(snapshot: DocumentSnapshot | QueryDocumentSnapshot): Model {
-    const serialized = this.firebaseService.serialize(
+    const serialized = this.firebase.serialize(
       snapshot.data() as FirestoreEntity<Model>,
     );
 

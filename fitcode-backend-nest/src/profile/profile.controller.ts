@@ -22,7 +22,7 @@ export class ProfileController {
   @Auth()
   async findProfile(@RequestUser() user: User) {
     const ref = { uid: user.uid };
-    return await this.profileService.findProfile(ref);
+    return await this.profileService.findById(ref);
   }
 
   @Patch()
@@ -63,6 +63,6 @@ export class ProfileController {
   async getWellnessByInstitution(
     @Param('institutionId') institutionId: string,
   ) {
-    return await this.wellnessService.getDocsByInstitution({ institutionId });
+    return await this.wellnessService.findAllByInstitution({ institutionId });
   }
 }
