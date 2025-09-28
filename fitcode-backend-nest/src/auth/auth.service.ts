@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   forwardRef,
   Inject,
@@ -7,14 +8,16 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { UserRecord } from 'firebase-admin/auth';
+import slugify from 'slugify';
 
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
 import { User } from '@src/common/type/firebase-auth.type';
+import { ValidateRowError } from '@src/common/type/validate.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 
-import { CreateUser } from './dto/create-user.dto';
+import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateCustomClaimsDto } from './dto/custom-claims.dto';
 import { FilterUserQueryDto } from './dto/filter-user-query.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -107,33 +110,72 @@ export class AuthService {
     });
   }
 
-  async upsert(data: CreateUser): Promise<User> {
+  async upsert(data: CreateUserDto): Promise<User> {
     const { auth } = this.firebaseService;
-    const { email, password, displayName, customClaims /* institutionId */ } =
-      data;
+    const { email, password, displayName, role, photoURL } = data;
 
     let user: UserRecord;
     try {
       user = await auth.getUserByEmail(email);
     } catch (_) {
-      this.logger.log(`Creating user (${email}, ${JSON.stringify(data)})`);
-      user = await auth.createUser({ email, password, displayName });
+      user = await auth.createUser({ email, password, displayName, photoURL });
     } finally {
-      if (user?.uid) await auth.setCustomUserClaims(user.uid, customClaims);
+      if (user?.uid) await auth.setCustomUserClaims(user.uid, { role: [role] });
     }
 
     return user?.uid ? ((await auth.getUser(user.uid)) as User) : null;
   }
 
+  async importUsers(
+    input: CreateUserDto[],
+  ): Promise<{ failureCount: number; successCount: number }> {
+    try {
+      const response = await this.firebaseService.auth.importUsers(
+        input.map((user) => ({
+          uid: user.uid || this.uidFromEmail(user.email),
+          email: user.email,
+          passwordHash: Buffer.from(user.password, 'utf-8'),
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+          customClaims: { role: [user.role] },
+        })),
+        { hash: { algorithm: 'BCRYPT' } },
+      );
+
+      if (response.failureCount > 0) {
+        const errors: ValidateRowError[] = response.errors.map((e) => ({
+          row: e.index + 1,
+          errors: [{ field: 'email', message: e.error.message }],
+        }));
+
+        throw new BadRequestException(JSON.stringify(errors));
+      }
+
+      return {
+        failureCount: response.failureCount,
+        successCount: response.successCount,
+      };
+    } catch (e) {
+      throw new BadRequestException(`Error importing users: ${e.message}`);
+    }
+  }
+
+  uidFromEmail(email: string): string {
+    const localPart = email.split('@')[0];
+
+    let uid = slugify(localPart, { lower: true, strict: true });
+    if (!uid) uid = 'user';
+
+    // avoid collisions
+    const hash = Buffer.from(email).toString('base64url').slice(0, 6);
+    uid = `${uid}-${hash}`;
+
+    return uid.slice(0, 128); // firebase UID max length = 128
+  }
+
   @LogMethod()
-  async registerAthlete(input: Omit<CreateUser, 'customClaims'>) {
-    const { email, displayName, password, photoURL } = input;
-    return await this.firebaseService.auth.createUser({
-      email,
-      displayName,
-      password,
-      photoURL,
-    });
+  async registerAthlete(input: CreateUserDto) {
+    return await this.firebaseService.auth.createUser(input);
   }
 
   async getUserToUpdate(mainUser: User, userToUpdateId: string): Promise<User> {

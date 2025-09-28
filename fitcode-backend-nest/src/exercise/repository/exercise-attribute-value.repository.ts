@@ -20,10 +20,10 @@ export class ExerciseAttributeValueRepository extends FirestoreRepository<
   collectionName = FirestoreCollection.EXERCISE_ATTRIBUTE_VALUES;
 
   constructor(
-    readonly firebaseService: FirebaseService,
+    readonly firebase: FirebaseService,
     private readonly exerciseRepository: ExerciseRepository,
   ) {
-    super(firebaseService);
+    super(firebase);
   }
 
   collection(ref: ExerciseRef) {
@@ -33,7 +33,7 @@ export class ExerciseAttributeValueRepository extends FirestoreRepository<
   }
 
   collectionGroup() {
-    return this.firebaseService.firestore.collectionGroup(
+    return this.firebase.firestore.collectionGroup(
       FirestoreCollection.EXERCISE_ATTRIBUTE_VALUES,
     );
   }
@@ -47,7 +47,7 @@ export class ExerciseAttributeValueRepository extends FirestoreRepository<
       .get()
       .then(({ docs }) =>
         docs.map((doc) =>
-          this.firebaseService.serialize(
+          this.firebase.serialize(
             doc.data() as FirestoreEntity<ExerciseAttributeValue>,
           ),
         ),
@@ -70,8 +70,7 @@ export class ExerciseAttributeValueRepository extends FirestoreRepository<
     input: Create<ExerciseAttributeValue>,
     ref: ExerciseAttributeValueRef,
   ): Promise<string> {
-    const query =
-      this.firebaseService.buildCreateQuery<ExerciseAttributeValue>(input);
+    const query = this.firebase.buildCreateQuery<ExerciseAttributeValue>(input);
 
     const docRef = this.collection(ref).doc();
     const exerciseAttributeValueId = docRef.id;
@@ -84,8 +83,7 @@ export class ExerciseAttributeValueRepository extends FirestoreRepository<
     ref: ExerciseAttributeValueRef,
     input: Update<ExerciseAttributeValue>,
   ): Promise<void> {
-    const query =
-      this.firebaseService.buildUpdateQuery<ExerciseAttributeValue>(input);
+    const query = this.firebase.buildUpdateQuery<ExerciseAttributeValue>(input);
     await this.doc(ref).update(query);
   }
 

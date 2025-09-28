@@ -15,12 +15,12 @@ import { Method } from '../entity/method.entity';
 export class MethodRepository extends FirestoreRepository<Method> {
   collectionName = FirestoreCollection.METHOD;
 
-  constructor(readonly firebaseService: FirebaseService) {
-    super(firebaseService);
+  constructor(readonly firebase: FirebaseService) {
+    super(firebase);
   }
 
   collection(): CollectionReference {
-    return this.firebaseService.firestore.collection(this.collectionName);
+    return this.firebase.firestore.collection(this.collectionName);
   }
 
   doc(ref: string): DocumentReference {
@@ -33,7 +33,7 @@ export class MethodRepository extends FirestoreRepository<Method> {
     if (!input.componentId)
       throw new BadRequestException('Method must have a componentId');
 
-    const query = this.firebaseService.buildCreateQuery<Method>({
+    const query = this.firebase.buildCreateQuery<Method>({
       id: input.id,
       name: input.name,
       componentId: input.componentId,
@@ -51,7 +51,7 @@ export class MethodRepository extends FirestoreRepository<Method> {
   }
 
   async update(id: string, input: Update<Method>) {
-    const query = this.firebaseService.buildUpdateQuery<Method>({
+    const query = this.firebase.buildUpdateQuery<Method>({
       name: input.name,
       componentId: input.componentId,
       ability: input.ability,

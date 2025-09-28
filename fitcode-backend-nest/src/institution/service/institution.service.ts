@@ -10,6 +10,7 @@ import {
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 import { AuthService } from '@src/auth/auth.service';
+import { UserRole } from '@src/auth/enum/user-role.enum';
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
 import { Permission } from '@src/common/interface/permission.interface';
 import { CommonService } from '@src/common/service/common.service';
@@ -36,7 +37,7 @@ export class InstitutionService implements Permission<Institution> {
   private logger = new Logger(InstitutionService.name);
 
   constructor(
-    private readonly firebaseService: FirebaseService,
+    private readonly firebase: FirebaseService,
     private readonly commonService: CommonService,
     private readonly eventEmitter: EventEmitter2,
     @Inject(forwardRef(() => AuthService))
@@ -45,38 +46,41 @@ export class InstitutionService implements Permission<Institution> {
     private readonly profileService: ProfileService,
   ) {}
 
-  async getDoc(ref: InstitutionRef): Promise<Institution | null> {
+  async findById(ref: InstitutionRef): Promise<Institution | null> {
     return await this.repository.findById(ref.institutionId);
   }
 
-  async getDocByOwner(ownerId: string): Promise<Institution | null> {
+  async findByOwnerId(ownerId: string): Promise<Institution | null> {
     return (
       await this.repository.findAll((q) => q.where('ownerId', '==', ownerId))
     )?.[0];
   }
 
-  async getDocByIdOrFail(ref: InstitutionRef): Promise<Institution> {
-    const institution = await this.getDoc(ref);
+  async findByIdOrFail(ref: InstitutionRef): Promise<Institution> {
+    const institution = await this.findById(ref);
     if (!institution) throw new NotFoundException('Institution not found');
     return institution;
   }
 
   async findAll(user: User): Promise<Institution[]> {
-    return await this.repository.findAll((q) =>
-      this.firebaseService.isAdmin(user) // admin sees all institutions
-        ? q
-        : this.firebaseService.isManager(user) // institution owner
-          ? q.where('ownerId', '==', user.uid)
-          : this.firebaseService.isTrainer(user)
-            ? q.where('trainerIds', 'array-contains', user.uid)
-            : q.where('athleteIds', 'array-contains', user.uid),
-    );
+    switch (this.firebase.getRole(user)) {
+      case UserRole.ADMIN:
+        return await this.repository.findAllByAdmin();
+      case UserRole.MANAGER:
+        return await this.repository.findAllByManager(user.uid);
+      case UserRole.TRAINER:
+        return await this.repository.findAllByTrainer(user.uid);
+      case UserRole.ATHLETE:
+        return await this.repository.findAllByAthlete(user.uid);
+      default:
+        return [];
+    }
   }
 
+  @LogMethod()
   async create(user: User, input: CreateInstitutionDto): Promise<Institution> {
-    this.logger.log(
-      `User ${user.uid} is creating institution: ${JSON.stringify(input)}`,
-    );
+    if (!this.firebase.isAdmin(user))
+      throw new UnauthorizedException('Only admin can create institutions');
 
     const owner = await this.authService.findOneBy('id', input.ownerId);
     if (!owner)
@@ -84,7 +88,7 @@ export class InstitutionService implements Permission<Institution> {
         'Owner of the new institution does not exist',
       );
 
-    if (!this.firebaseService.isManager(owner))
+    if (!this.firebase.isManager(owner))
       throw new BadRequestException(
         'Owner of the institution must be a manager',
       );
@@ -98,7 +102,7 @@ export class InstitutionService implements Permission<Institution> {
       imageUrl: input.imageUrl,
     };
 
-    const query = this.firebaseService.buildCreateQuery(data, {
+    const query = this.firebase.buildCreateQuery(data, {
       timestamps: true,
     });
 
@@ -120,7 +124,7 @@ export class InstitutionService implements Permission<Institution> {
       `User ${user.uid} is updating institution ${ref.institutionId}: ${JSON.stringify(input)}`,
     );
 
-    const institution = await this.getDocByIdOrFail(ref);
+    const institution = await this.findByIdOrFail(ref);
     if (!this.canEdit(user, institution))
       throw new UnauthorizedException('You cannot edit this institution');
 
@@ -132,21 +136,20 @@ export class InstitutionService implements Permission<Institution> {
     ref: InstitutionRef,
     type: GetMembersType,
   ): Promise<Profile[]> {
-    const institution = await this.getDocByIdOrFail(ref);
-    const collection = this.profileService.getCollection();
+    const institution = await this.findByIdOrFail(ref);
+    const profiles =
+      await this.profileService.findAllByInstitution(institution);
 
-    const ids =
-      type === GetMembersType.ATHLETES
-        ? institution.athleteIds
-        : type === GetMembersType.TRAINERS
-          ? institution.trainerIds
-          : [
-              ...institution.athleteIds,
-              ...institution.trainerIds,
-              institution.ownerId,
-            ];
-
-    return this.firebaseService.batchIn('id', ids, collection);
+    switch (type) {
+      case GetMembersType.ALL:
+        return profiles;
+      case GetMembersType.ATHLETES:
+        return profiles.filter((p) => institution.athleteIds.includes(p.id));
+      case GetMembersType.TRAINERS:
+        return profiles.filter((p) => institution.trainerIds.includes(p.id));
+      default:
+        return [];
+    }
   }
 
   @LogMethod()
@@ -157,7 +160,7 @@ export class InstitutionService implements Permission<Institution> {
   ) {
     const { add, trainer } = input;
 
-    const institution = await this.getDocByIdOrFail(ref);
+    const institution = await this.findByIdOrFail(ref);
     if (!this.canEdit(user, institution))
       throw new UnauthorizedException('You cannot edit this institution');
 
@@ -165,7 +168,7 @@ export class InstitutionService implements Permission<Institution> {
     if (!member) throw new BadRequestException('Member does not exist');
 
     if (trainer) {
-      if (!this.firebaseService.isTrainer(member))
+      if (!this.firebase.isTrainer(member))
         throw new BadRequestException(
           'Member must be a trainer to be added as a trainer',
         );
@@ -198,13 +201,13 @@ export class InstitutionService implements Permission<Institution> {
           }),
         );
 
-      await this.firebaseService.paginateBatches(operations);
+      await this.firebase.paginateBatches(operations);
     }
   }
 
   canView(user: User, institution: Institution) {
     // app admin
-    if (this.firebaseService.isAdmin(user)) return true;
+    if (this.firebase.isAdmin(user)) return true;
 
     // institution owner
     if (institution.ownerId === user.uid) return true;
@@ -220,13 +223,10 @@ export class InstitutionService implements Permission<Institution> {
 
   canEdit(user: User, institution: Institution) {
     // app admin
-    if (this.firebaseService.isAdmin(user)) return true;
+    if (this.firebase.isAdmin(user)) return true;
 
     // institution owner
-    if (
-      this.firebaseService.isManager(user) &&
-      institution.ownerId === user.uid
-    )
+    if (this.firebase.isManager(user) && institution.ownerId === user.uid)
       return true;
 
     return false;

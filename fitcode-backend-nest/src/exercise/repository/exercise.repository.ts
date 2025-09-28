@@ -17,14 +17,14 @@ export class ExerciseRepository extends FirestoreRepository<Exercise> {
   collectionName = FirestoreCollection.EXERCISE;
 
   constructor(
-    readonly firebaseService: FirebaseService,
+    readonly firebase: FirebaseService,
     private readonly commonService: CommonService,
   ) {
-    super(firebaseService);
+    super(firebase);
   }
 
   collection(): CollectionReference {
-    return this.firebaseService.firestore.collection(this.collectionName);
+    return this.firebase.firestore.collection(this.collectionName);
   }
 
   doc(ref: string): DocumentReference {
@@ -33,7 +33,7 @@ export class ExerciseRepository extends FirestoreRepository<Exercise> {
 
   async save(input: Create<Omit<Exercise, 'attributeValues'>>) {
     const { id } = this.collection().doc();
-    const query = this.firebaseService.buildCreateQuery<Exercise>(
+    const query = this.firebase.buildCreateQuery<Exercise>(
       {
         id,
         ownerId: input.ownerId,
@@ -54,13 +54,13 @@ export class ExerciseRepository extends FirestoreRepository<Exercise> {
   }
 
   async update(exerciseId: string, input: Update<Exercise>) {
-    const data = this.firebaseService.buildUpdateQuery(input);
+    const data = this.firebase.buildUpdateQuery(input);
     await this.doc(exerciseId).update(data);
   }
 
   async delete(exerciseId: string) {
     // soft delete
-    const query = this.firebaseService.buildUpdateQuery<Exercise>({
+    const query = this.firebase.buildUpdateQuery<Exercise>({
       deletedAt: new Date(),
     });
 

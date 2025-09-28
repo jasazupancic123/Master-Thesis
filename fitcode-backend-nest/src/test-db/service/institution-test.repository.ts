@@ -37,13 +37,13 @@ export class InstitutionTestRepository extends TestRepositoryMixin<Institution>(
 
     const { random = false } = input || {};
     if (random || input?.createRandomManager)
-      input.manager = await createManagerUserAndToken(this.firebaseService);
+      input.manager = await createManagerUserAndToken(this.firebase);
 
     if (random || input?.createRandomTrainer)
-      trainers.push(await createTrainerUserAndToken(this.firebaseService));
+      trainers.push(await createTrainerUserAndToken(this.firebase));
 
     if (random || input?.createRandomAthlete)
-      athletes.push(await createAthleteUserAndToken(this.firebaseService));
+      athletes.push(await createAthleteUserAndToken(this.firebase));
 
     const manager = input?.manager || global.manager;
     if (!athletes.length) athletes.push(global.athlete);
@@ -78,7 +78,7 @@ export class InstitutionTestRepository extends TestRepositoryMixin<Institution>(
         ].includes(uid),
     );
 
-    await deleteUsersByIds(this.firebaseService, userIds);
+    await deleteUsersByIds(this.firebase, userIds);
     await this.delete(institutionId);
   }
 }

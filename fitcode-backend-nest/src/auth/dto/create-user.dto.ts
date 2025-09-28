@@ -1,19 +1,20 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Expose, Type } from 'class-transformer';
-import {
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  ValidateNested,
-} from 'class-validator';
-
-import { CustomClaimsDto } from '@src/auth/dto/custom-claims.dto';
+import { Expose } from 'class-transformer';
+import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 import { AuthUser } from '../entities/user.entity';
+import { UserRole } from '../enum/user-role.enum';
 
 export type CreateUser = AuthUser & { password: string };
 
-export class CreateUserDto implements CreateUser {
+export class CreateUserDto implements Omit<CreateUser, 'uid' | 'customClaims'> {
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  uid?: string;
+
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
@@ -39,9 +40,9 @@ export class CreateUserDto implements CreateUser {
   @IsOptional()
   photoURL?: string;
 
-  @Type(() => CustomClaimsDto)
-  @ValidateNested()
-  @ApiProperty({ type: () => CustomClaimsDto })
+  @IsEnum(UserRole)
+  @IsNotEmpty()
+  @ApiProperty({ enum: UserRole })
   @Expose()
-  customClaims: CustomClaimsDto;
+  role: UserRole;
 }

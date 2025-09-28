@@ -1,7 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { startOfDay } from 'date-fns';
+import { startOfDay, subDays } from 'date-fns';
 
 import { ChangeLogManager } from '@src/change-log/change-log.manager';
+import { DateFilterDto } from '@src/common/dto/date-filter.dto';
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { FirestoreEntity } from '@src/common/type/entity.type';
 import {
@@ -10,6 +11,7 @@ import {
   WellnessRef,
 } from '@src/common/type/firestore.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
+import { Institution } from '@src/institution/entity/institution.entity';
 
 import { Wellness } from '../entity/wellness.entity';
 import { ProfileRepository } from './profile.repository';
@@ -22,12 +24,12 @@ export class WellnessRepository extends FirestoreRepository<
   collectionName = FirestoreCollection.WELLNESS;
 
   constructor(
-    readonly firebaseService: FirebaseService,
-    private readonly parentRepository: ProfileRepository,
+    readonly firebase: FirebaseService,
+    private readonly parent: ProfileRepository,
     @Inject(Wellness)
     readonly changeLog: ChangeLogManager<Wellness>,
   ) {
-    super(firebaseService);
+    super(firebase);
   }
 
   getKey(ref: WellnessRef): string {
@@ -35,17 +37,37 @@ export class WellnessRepository extends FirestoreRepository<
   }
 
   collection(ref: UserRef) {
-    return this.parentRepository
-      .doc(ref.uid)
-      .collection(FirestoreCollection.WELLNESS);
+    return this.parent.doc(ref.uid).collection(FirestoreCollection.WELLNESS);
+  }
+
+  collectionGroup() {
+    return this.firebase.firestore.collectionGroup(this.collectionName);
   }
 
   doc(ref: WellnessRef) {
     return this.collection(ref).doc(this.getKey(ref));
   }
 
+  async findAllByInstitution(
+    institution: Institution,
+    range?: DateFilterDto,
+  ): Promise<Wellness[]> {
+    const {
+      from = subDays(startOfDay(new Date()), 10), // default to 10 days ago
+      to = startOfDay(new Date()), // default to now
+    } = range || {};
+
+    await this.parent.findManyOrCreate(institution.athleteIds);
+    return await this.firebase.batchIn<Wellness>(
+      'userId',
+      institution.athleteIds,
+      this.collectionGroup(),
+      (q) => q.where('date', '>=', from).where('date', '<=', to),
+    );
+  }
+
   async save(input: Omit<Wellness, 'date'>, ref: WellnessRef): Promise<string> {
-    const query = this.firebaseService.buildCreateQuery<Wellness>(
+    const query = this.firebase.buildCreateQuery<Wellness>(
       { ...input, date: startOfDay(ref.date) },
       { timestamps: true },
     );
@@ -58,7 +80,7 @@ export class WellnessRepository extends FirestoreRepository<
   }
 
   async update(ref: WellnessRef, input: Wellness): Promise<void> {
-    const query = this.firebaseService.buildUpdateQuery(input);
+    const query = this.firebase.buildUpdateQuery(input);
     const docRef = this.doc(ref);
     await this.changeLog.trackUpdate(docRef);
     await docRef.update(query);
@@ -77,7 +99,7 @@ export class WellnessRepository extends FirestoreRepository<
       .get();
 
     if (snapshot.empty) return null;
-    return this.firebaseService.serialize(
+    return this.firebase.serialize(
       snapshot.docs[0].data() as FirestoreEntity<Wellness>,
     );
   }
@@ -94,7 +116,7 @@ export class WellnessRepository extends FirestoreRepository<
 
     if (snapshot.empty) return null;
 
-    return this.firebaseService.serialize(
+    return this.firebase.serialize(
       snapshot.docs[0].data() as FirestoreEntity<Wellness>,
     ).weight!;
   }
