@@ -10,7 +10,6 @@ import { FirebaseModule } from '@src/firebase/firebase.module';
 
 import type { Attribute } from '../entity/attribute.entity';
 import type { AttributeValue } from '../entity/attribute-value.entity';
-import { AttributeRepository } from '../repository/attribute.repository';
 import { AttributeService } from '../service/attribute.service';
 
 describe('AttributeService (unit)', () => {
@@ -24,7 +23,7 @@ describe('AttributeService (unit)', () => {
         FirebaseModule.forRoot(),
         CommonModule,
       ],
-      providers: [AttributeRepository, AttributeService],
+      providers: [AttributeService],
       exports: [AttributeService],
     }).compile();
 
@@ -201,19 +200,15 @@ describe('AttributeService (unit)', () => {
     ];
 
     const validValues: AttributeValue[] = [
-      { field: 'difficulty', value: 'expert', selected: 'hard:expert' },
+      { field: 'difficulty', value: 'expert', selected: 'hard' },
     ];
 
     const invalidValues: AttributeValue[] = [
-      {
-        field: 'difficulty',
-        value: 'nonexistent',
-        selected: 'hard:nonexistent',
-      },
+      { field: 'difficulty', value: 'nonexistent', selected: 'hard' },
     ];
 
     const validSimpleValues: AttributeValue[] = [
-      { field: 'difficulty', value: 'easy', selected: 'easy' },
+      { field: 'difficulty', value: 'easy', selected: '' },
     ];
 
     expect(service.validate(validValues, attributes)).toEqual(validValues);
@@ -221,7 +216,7 @@ describe('AttributeService (unit)', () => {
       BadRequestException,
     );
     expect(() => service.validate(invalidValues, attributes)).toThrow(
-      `Value "hard:nonexistent" for attribute "Difficulty" is not a valid option`,
+      `Value "nonexistent" for attribute "Difficulty" is not a valid option. Valid options are: extreme, expert`,
     );
     expect(service.validate(validSimpleValues, attributes)).toEqual(
       validSimpleValues,
@@ -452,15 +447,15 @@ describe('AttributeService (unit)', () => {
     ];
 
     const validValues: AttributeValue[] = [
-      { field: 'preferences', value: 'vegan', selected: 'food:vegan' },
-      { field: 'preferences', value: 'football', selected: 'sports:football' },
+      { field: 'preferences', value: 'vegan', selected: 'food' },
+      { field: 'preferences', value: 'football', selected: 'sports' },
     ];
 
     const invalidValues: AttributeValue[] = [
       {
         field: 'preferences',
         value: 'basketball',
-        selected: 'sports:basketball',
+        selected: 'sports',
       },
     ];
 
@@ -469,7 +464,7 @@ describe('AttributeService (unit)', () => {
       BadRequestException,
     );
     expect(() => service.validate(invalidValues, attributes)).toThrow(
-      `Value "sports:basketball" for attribute "Preferences" is not a valid option`,
+      `Value "basketball" for attribute "Preferences" is not a valid option. Valid options are: football, tennis`,
     );
   });
 });

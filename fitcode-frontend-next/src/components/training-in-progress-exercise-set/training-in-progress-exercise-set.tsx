@@ -17,7 +17,7 @@ interface TrainingInProgressExerciseSetProps {
   selectedSuperset: Superset;
   setSelectedSuperset: SetState<Superset | undefined>;
   i: number;
-  isBilateral: boolean;
+  isUnilateral: boolean;
 }
 
 export default function TrainingInProgressExerciseSet(
@@ -31,7 +31,7 @@ export default function TrainingInProgressExerciseSet(
     selectedSuperset,
     setSelectedSuperset,
     i,
-    isBilateral,
+    isUnilateral,
   } = props;
 
   if (!trainingInProgress) return null;
@@ -45,7 +45,7 @@ export default function TrainingInProgressExerciseSet(
       alignItems="center"
       gap={1}
     >
-      {isBilateral && (
+      {isUnilateral && (
         <Box
           display="flex"
           flexDirection="column"
@@ -78,7 +78,7 @@ export default function TrainingInProgressExerciseSet(
 
           const value = valueL;
 
-          return isBilateral ? (
+          return isUnilateral ? (
             <Box
               key={param.field}
               flexBasis={(100 / exercise.params.length).toString() + '%'}
@@ -153,7 +153,7 @@ export default function TrainingInProgressExerciseSet(
                 }}
               />
 
-              {isBilateral && valueR && (
+              {isUnilateral && valueR && (
                 <ExerciseParam
                   showOptions={false}
                   disableSets

@@ -68,7 +68,7 @@ export default function StubTrainingExerciseCardCollapsedSets(
             flexDirection="column"
             gap={1}
           >
-            {exercise.exercise?.isBilateral ? (
+            {exercise.exercise?.isUnilateral ? (
               <>
                 <LeftRightExerciseText key="L" title="L" />
                 <LeftRightExerciseText key="R" title="R" />
@@ -88,7 +88,7 @@ export default function StubTrainingExerciseCardCollapsedSets(
           display="flex"
           width="100%"
           justifyContent="center"
-          alignItems={exercise.exercise?.isBilateral ? 'center' : 'flex-start'}
+          alignItems={exercise.exercise?.isUnilateral ? 'center' : 'flex-start'}
           gap={1}
           sx={{
             height: 77,
@@ -114,7 +114,7 @@ export default function StubTrainingExerciseCardCollapsedSets(
                 }
               );
 
-              if (!valueL || (exercise.exercise?.isBilateral && !valueR)) {
+              if (!valueL || (exercise.exercise?.isUnilateral && !valueR)) {
                 toast.error(`Invalid parameter field: ${param.field}`);
                 return null;
               }
@@ -124,7 +124,7 @@ export default function StubTrainingExerciseCardCollapsedSets(
                   key={param.field}
                   flexBasis={(100 / exercise.params.length).toString() + '%'}
                 >
-                  {['L', ...(exercise.exercise?.isBilateral ? ['R'] : [])].map(
+                  {['L', ...(exercise.exercise?.isUnilateral ? ['R'] : [])].map(
                     (lOrR) => {
                       return (
                         <ExerciseParam

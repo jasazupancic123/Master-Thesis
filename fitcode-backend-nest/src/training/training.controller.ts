@@ -131,7 +131,7 @@ export class TrainingController {
         to: endOfDay(new Date()),
       },
       {},
-      true,
+      false,
     );
   }
 

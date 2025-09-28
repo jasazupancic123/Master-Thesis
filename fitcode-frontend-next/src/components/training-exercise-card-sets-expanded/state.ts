@@ -110,8 +110,8 @@ export const updateSelectedExercisesExpandedSets = (
             )
           : undefined;
 
-        return exercise.exercise?.isBilateral
-          ? exerciseToUpdate.exercise?.isBilateral
+        return exercise.exercise?.isUnilateral
+          ? exerciseToUpdate.exercise?.isUnilateral
             ? lOrR === 'L'
               ? {
                   setNumber: set.setNumber,
@@ -128,7 +128,7 @@ export const updateSelectedExercisesExpandedSets = (
                 paramValuesL: updatedParamValuesL,
                 paramValuesR: set.paramValuesR,
               }
-          : exerciseToUpdate.exercise?.isBilateral
+          : exerciseToUpdate.exercise?.isUnilateral
             ? {
                 setNumber: set.setNumber,
                 paramValuesL: updatedParamValuesL,

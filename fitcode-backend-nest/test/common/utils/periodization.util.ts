@@ -33,7 +33,7 @@ export class TestPeriodizationUtil {
     addDaysFromToday: number,
     data?: Partial<Training>,
   ): Training {
-    const options = { bilateral: true };
+    const options = { isUnilateral: true };
 
     // same param values for all sets for both left and right side
     const SETS_ALL_PARAMS = [

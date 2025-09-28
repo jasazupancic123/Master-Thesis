@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     description: 'Track workouts more efficiently.',
     images: [
       {
-        url: '/blind-off-logo.png',
+        url: '/url-logo.jpg',
         width: 3708,
         height: 549,
         alt: 'Blind/off preview',

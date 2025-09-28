@@ -3,7 +3,6 @@ import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 
 import type { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
-import { AttributeRepository } from '@src/attribute/repository/attribute.repository';
 import { AttributeService } from '@src/attribute/service/attribute.service';
 import { CacheManagerService } from '@src/cache-manager/cache-manager.service';
 import { CommonModule } from '@src/common/common.module';
@@ -16,8 +15,8 @@ import {
 } from '@src/component/enum/param.enum';
 import { ComponentRepository } from '@src/component/repository/component.repository';
 import { validationSchema } from '@src/config/environment-validation-schema';
-import { ExerciseAttributeValueRepository } from '@src/exercise/repository/exercise-attribute-value.repository';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
+import { ExerciseAttributeService } from '@src/exercise/service/exercise-attribute.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { WorkloadRepository } from '@src/training/repository/workload.repository';
@@ -44,10 +43,6 @@ describe('getSetData', () => {
           provide: CacheManagerService,
           useValue: createMock<CacheManagerService>(),
         },
-        {
-          provide: AttributeRepository,
-          useValue: createMock<AttributeRepository>(),
-        },
         AttributeService,
         {
           provide: ComponentRepository,
@@ -63,8 +58,8 @@ describe('getSetData', () => {
           useValue: createMock<ExerciseService>(),
         },
         {
-          provide: ExerciseAttributeValueRepository,
-          useValue: createMock<ExerciseAttributeValueRepository>(),
+          provide: ExerciseAttributeService,
+          useValue: createMock<ExerciseAttributeService>(),
         },
         {
           provide: WorkloadRepository,

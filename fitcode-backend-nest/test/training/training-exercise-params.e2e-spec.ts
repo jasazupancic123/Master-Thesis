@@ -5,8 +5,6 @@ import { addDays } from 'date-fns';
 
 import { AppModule } from '@src/app.module';
 import type { Attribute } from '@src/attribute/entity/attribute.entity';
-import { generateExerciseAttributeValueStub } from '@src/attribute/mock/attribute-value.stub';
-import { AttributeService } from '@src/attribute/service/attribute.service';
 import type { TestInstitution } from '@src/common/type/entity.type';
 import {
   createGroupWithCycles,
@@ -21,13 +19,9 @@ import {
   WARMUP_COMPONENT_ID,
 } from '@src/component/constant/warmup-cooldown.constant';
 import type { Component } from '@src/component/entity/component.entity';
-import {
-  IntType,
-  ParamType,
-  VolType,
-  VolWorkSetType,
-} from '@src/component/enum/param.enum';
-import type { ExerciseAttributeValue } from '@src/exercise/entity/exercise-attribute-value.entity';
+import { IntType, ParamType, VolType } from '@src/component/enum/param.enum';
+import { generateComponentStub } from '@src/component/mock/component.stub';
+import type { Exercise } from '@src/exercise/entity/exercise.entity';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
@@ -43,7 +37,6 @@ import {
 } from '@src/training/mock/training.stub';
 import { TrainingService } from '@src/training/service/training.service';
 
-import { ATTRIBUTE_ENDURANCE_OPTIONS } from '../common/constant/attribute.constant';
 import { COMPONENT_ENDURANCE } from '../common/constant/component.constant';
 
 describe('Training Exercise Params (e2e)', () => {
@@ -51,7 +44,6 @@ describe('Training Exercise Params (e2e)', () => {
   let db: TestDbService;
   let firebase: FirebaseService;
   let componentService: ComponentService;
-  let attributeService: AttributeService;
   let exerciseService: ExerciseService;
   let trainingService: TrainingService;
   let groupService: GroupService;
@@ -72,14 +64,12 @@ describe('Training Exercise Params (e2e)', () => {
 
     db = moduleFixture.get(TestDbService);
     firebase = moduleFixture.get(FirebaseService);
-    attributeService = moduleFixture.get(AttributeService);
     componentService = moduleFixture.get(ComponentService);
     exerciseService = moduleFixture.get(ExerciseService);
     trainingService = moduleFixture.get(TrainingService);
     groupService = moduleFixture.get(GroupService);
     institutionService = moduleFixture.get(InstitutionService);
 
-    attribute = await attributeService.create(ATTRIBUTE_ENDURANCE_OPTIONS);
     await componentService.createFromTree(COMPONENT_ENDURANCE);
     const flat = await componentService.findAllFlat();
     leaf = componentService.leafsFromFlat(flat)[0];
@@ -93,20 +83,24 @@ describe('Training Exercise Params (e2e)', () => {
       deleteDoc(firebase, 'GROUP', group.id),
       deleteInstitution(firebase, institution),
       deleteCollection(firebase, 'COMPONENT'),
-      deleteDoc(firebase, 'ATTRIBUTE', attribute.field),
+      deleteCollection(firebase, 'EXERCISE'),
+      deleteCollection(firebase, 'TRAINING'),
     ]);
 
     await app.close();
   });
 
-  async function createExercise(attributeValues: ExerciseAttributeValue[]) {
+  async function createExercise(data: Partial<Exercise> = {}) {
     return await exerciseService.create(
       global.admin,
-      generateExerciseStub({ componentIds: [leaf.id], attributeValues }),
+      generateExerciseStub({
+        componentIds: data.componentIds || [leaf.id],
+        ...data,
+      }),
     );
   }
 
-  async function createTraining(exerciseId: string) {
+  async function createTraining(exerciseId: string, componentId?: string) {
     const trainingId = await db.trainings.save(
       generateTrainingStub({
         ownerId: global.trainer.id,
@@ -154,7 +148,7 @@ describe('Training Exercise Params (e2e)', () => {
         ...training,
         components: [
           generateTrainingComponent({
-            id: COMPONENT_ENDURANCE.id,
+            id: componentId || COMPONENT_ENDURANCE.id,
             supersets: [
               generateSuperset({
                 exercises: [generateTrainingExercise({ id: exerciseId })],
@@ -168,7 +162,7 @@ describe('Training Exercise Params (e2e)', () => {
 
   describe('Warmup and cooldown components', () => {
     it('should not populate params', async () => {
-      const exercise = await createExercise([]);
+      const exercise = await createExercise();
       const training = await createTraining(exercise.id);
 
       const updated = await trainingService.update(
@@ -212,221 +206,101 @@ describe('Training Exercise Params (e2e)', () => {
     });
   });
 
-  describe('Endurance select attribute params test', () => {
-    it('should keep default params since no attribute values are passed to exercise', async () => {
-      const exercise = await createExercise([]);
-      const training = await createTraining(exercise.id);
-      const params = training.components[0].supersets[0].exercises[0].params;
+  it('should keep default params since no attribute values are passed to exercise', async () => {
+    const exercise = await createExercise();
+    const training = await createTraining(exercise.id);
+    const params = training.components[0].supersets[0].exercises[0].params;
 
-      // only vol1 (time, dist) and int1 (mas, hrmax, eff)
-      expect(params).toEqual([
-        expect.objectContaining({
-          field: ParamType.VolWork1,
-          options: [
-            expect.objectContaining({ field: VolType.Time }),
-            expect.objectContaining({ field: VolType.Dist }),
-          ],
-        }),
+    // only vol1 (time, dist) and int1 (mas, hrmax, eff)
+    expect(params).toEqual([
+      expect.objectContaining({
+        field: ParamType.VolWork1,
+        options: [
+          expect.objectContaining({ field: VolType.Time }),
+          expect.objectContaining({ field: VolType.Dist }),
+        ],
+      }),
+      expect.objectContaining({
+        field: ParamType.IntWork1,
+        options: [
+          expect.objectContaining({ field: IntType.Mas }),
+          expect.objectContaining({ field: IntType.Hrmax }),
+          expect.objectContaining({ field: IntType.Eff }),
+        ],
+      }),
+    ]);
+
+    await Promise.all([
+      deleteDoc(firebase, 'TRAINING', training.id),
+      deleteDoc(firebase, 'EXERCISE', exercise.id),
+    ]);
+  });
+
+  it('should apply different attributes if there is no equipment', async () => {
+    const component = await componentService.create(
+      generateComponentStub({
+        params: {
+          default: [{ field: 'int1', options: [{ field: 'kg' }] }],
+          'equipment:!': [{ field: 'int1', options: [{ field: 'bw' }] }],
+        },
+      }),
+    );
+
+    const exerciseWithEquipment = await createExercise({
+      componentIds: [component.id],
+      equipment: ['strength:barbells:olympic'],
+    });
+
+    const exerciseWithoutEquipment = await createExercise({
+      componentIds: [component.id],
+      equipment: [],
+    });
+
+    const training1 = await createTraining(
+      exerciseWithEquipment.id,
+      component.id,
+    );
+
+    const training2 = await createTraining(
+      exerciseWithoutEquipment.id,
+      component.id,
+    );
+
+    const params1 = training1.components[0].supersets[0].exercises[0].params;
+    const params2 = training2.components[0].supersets[0].exercises[0].params;
+
+    expect(params1).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           field: ParamType.IntWork1,
-          options: [
-            expect.objectContaining({ field: IntType.Mas }),
-            expect.objectContaining({ field: IntType.Hrmax }),
-            expect.objectContaining({ field: IntType.Eff }),
-          ],
+          options: [expect.objectContaining({ field: IntType.Kg })],
         }),
-      ]);
+      ]),
+    );
 
-      await Promise.all([
-        deleteDoc(firebase, 'TRAINING', training.id),
-        deleteDoc(firebase, 'EXERCISE', exercise.id),
-      ]);
-    });
-
-    it('should populate end-opt-2 params for exercise', async () => {
-      const exercise = await createExercise([
-        generateExerciseAttributeValueStub({
-          field: 'end-opts',
-          value: 'end-opt-2',
-        }),
-      ]);
-
-      const training = await createTraining(exercise.id);
-      const params = training.components[0].supersets[0].exercises[0].params;
-
-      // only vol1 (time, dist) and int1 (mas, hrmax, eff)
-      expect(params).toEqual([
-        expect.objectContaining({
-          field: ParamType.VolWorkSets,
-          options: [expect.objectContaining({ field: VolWorkSetType.Set })],
-        }),
-        expect.objectContaining({
-          field: ParamType.VolWork1,
-          options: [
-            expect.objectContaining({ field: VolType.Time }),
-            expect.objectContaining({ field: VolType.Dist }),
-          ],
-        }),
+    expect(params1).toEqual(
+      expect.not.arrayContaining([
         expect.objectContaining({
           field: ParamType.IntWork1,
-          options: [
-            expect.objectContaining({ field: IntType.Mas }),
-            expect.objectContaining({ field: IntType.Hrmax }),
-            expect.objectContaining({ field: IntType.Eff }),
-          ],
+          options: [expect.objectContaining({ field: IntType.Bw })],
         }),
-        expect.objectContaining({
-          field: ParamType.VolRec1,
-          options: [
-            expect.objectContaining({ field: VolType.Time }),
-            expect.objectContaining({ field: VolType.Dist }),
-          ],
-        }),
-        expect.objectContaining({
-          field: ParamType.IntRec1,
-          options: [
-            expect.objectContaining({ field: IntType.Mas }),
-            expect.objectContaining({ field: IntType.Hrmax }),
-            expect.objectContaining({ field: IntType.Eff }),
-          ],
-        }),
-      ]);
+      ]),
+    );
 
-      await Promise.all([
-        deleteDoc(firebase, 'TRAINING', training.id),
-        deleteDoc(firebase, 'EXERCISE', exercise.id),
-      ]);
-    });
+    expect(params2).toEqual([
+      expect.objectContaining({
+        field: ParamType.IntWork1,
+        options: [expect.objectContaining({ field: IntType.Bw })],
+      }),
+    ]);
 
-    it('should populate end-opt-3 params for exercise', async () => {
-      const exercise = await createExercise([
-        generateExerciseAttributeValueStub({
-          field: 'end-opts',
-          value: 'end-opt-3',
-        }),
-      ]);
-
-      const training = await createTraining(exercise.id);
-
-      const params = training.components[0].supersets[0].exercises[0].params;
-
-      // only vol1 (time, dist) and int1 (mas, hrmax, eff)
-      expect(params).toEqual([
-        expect.objectContaining({
-          field: ParamType.VolWorkSets,
-          options: [expect.objectContaining({ field: VolWorkSetType.Set })],
-        }),
-        expect.objectContaining({
-          field: ParamType.VolWork1,
-          options: [
-            expect.objectContaining({ field: VolType.Time }),
-            expect.objectContaining({ field: VolType.Dist }),
-          ],
-        }),
-        expect.objectContaining({
-          field: ParamType.VolWork2,
-          options: [
-            expect.objectContaining({ field: VolType.Time }),
-            expect.objectContaining({ field: VolType.Dist }),
-          ],
-        }),
+    expect(params2).toEqual(
+      expect.not.arrayContaining([
         expect.objectContaining({
           field: ParamType.IntWork1,
-          options: [
-            expect.objectContaining({ field: IntType.Mas }),
-            expect.objectContaining({ field: IntType.Hrmax }),
-            expect.objectContaining({ field: IntType.Eff }),
-          ],
+          options: [expect.objectContaining({ field: IntType.Kg })],
         }),
-        expect.objectContaining({
-          field: ParamType.IntWork2,
-          options: [
-            expect.objectContaining({ field: IntType.Mas }),
-            expect.objectContaining({ field: IntType.Hrmax }),
-            expect.objectContaining({ field: IntType.Eff }),
-          ],
-        }),
-        expect.objectContaining({
-          field: ParamType.VolRec1,
-          options: [
-            expect.objectContaining({ field: VolType.Time }),
-            expect.objectContaining({ field: VolType.Dist }),
-          ],
-        }),
-        expect.objectContaining({
-          field: ParamType.IntRec1,
-          options: [
-            expect.objectContaining({ field: IntType.Mas }),
-            expect.objectContaining({ field: IntType.Hrmax }),
-            expect.objectContaining({ field: IntType.Eff }),
-          ],
-        }),
-      ]);
-
-      await Promise.all([
-        deleteDoc(firebase, 'TRAINING', training.id),
-        deleteDoc(firebase, 'EXERCISE', exercise.id),
-      ]);
-    });
-
-    it('should populate end-opt-4 params for exercise', async () => {
-      const exercise = await createExercise([
-        generateExerciseAttributeValueStub({
-          field: 'end-opts',
-          value: 'end-opt-4',
-        }),
-      ]);
-
-      const training = await createTraining(exercise.id);
-
-      const params = training.components[0].supersets[0].exercises[0].params;
-
-      // only vol1 (time, dist) and int1 (mas, hrmax, eff)
-      expect(params).toEqual([
-        expect.objectContaining({
-          field: ParamType.VolWorkSets,
-          options: [expect.objectContaining({ field: VolWorkSetType.Set })],
-        }),
-        expect.objectContaining({
-          field: ParamType.VolWork1,
-          options: [expect.objectContaining({ field: VolType.Rep })],
-        }),
-        expect.objectContaining({
-          field: ParamType.VolWork2,
-          options: [
-            expect.objectContaining({ field: VolType.Time }),
-            expect.objectContaining({ field: VolType.Dist }),
-          ],
-        }),
-        expect.objectContaining({
-          field: ParamType.IntWork2,
-          options: [
-            expect.objectContaining({ field: IntType.Mas }),
-            expect.objectContaining({ field: IntType.Hrmax }),
-            expect.objectContaining({ field: IntType.Eff }),
-          ],
-        }),
-        expect.objectContaining({
-          field: ParamType.VolRec1,
-          options: [
-            expect.objectContaining({ field: VolType.Time }),
-            expect.objectContaining({ field: VolType.Dist }),
-          ],
-        }),
-        expect.objectContaining({
-          field: ParamType.IntRec1,
-          options: [
-            expect.objectContaining({ field: IntType.Mas }),
-            expect.objectContaining({ field: IntType.Hrmax }),
-            expect.objectContaining({ field: IntType.Eff }),
-          ],
-        }),
-      ]);
-
-      await Promise.all([
-        deleteDoc(firebase, 'TRAINING', training.id),
-        deleteDoc(firebase, 'EXERCISE', exercise.id),
-      ]);
-    });
+      ]),
+    );
   });
 });

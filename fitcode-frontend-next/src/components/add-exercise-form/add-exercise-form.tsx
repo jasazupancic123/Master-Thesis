@@ -1,28 +1,32 @@
-import { ArrowLeft, ArrowRight } from '@mui/icons-material';
-import { Box, IconButton, Stack } from '@mui/material';
+import { Box, Grid2, Pagination, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 
+import ExerciseFilter from '../exercises-list/exercise-filter';
 import ExercisesList from '../exercises-list/exercises-list';
-import { SearchBar } from '../search-bar/search-bar';
 import type { AddExerciseFormProps } from '../trainer-day-view/props';
+import { handlePaginateExercises } from '@/app/(trainer)/dashboard/exercises/state';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
+import type { AttributeFilters } from '@/sites/exercises.page';
 import { useMain } from '@/store/main.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 
 export default function AddExerciseForm(props: AddExerciseFormProps) {
   const { selectedExercisesIds, setSelectedExercisesIds, component } = props;
-  const { exercises: allExercises } = useMain();
+  const { exercises: allExercises, components } = useMain();
   const {
     filteredExercises: exercises,
+    pagination,
     setPagination,
-    search,
-    setSearch,
   } = useTrainerDayViewContext();
+  const screenSize = useScreenSize();
 
+  const [filters, setFilters] = useState<AttributeFilters>({});
+  const [openFilters, setOpenFilters] = useState(false);
   const [filteredExercises, setFilteredExercises] =
     useState<Exercise[]>(exercises);
 
@@ -43,93 +47,98 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
     );
   }, [component]);
 
+  /**
+   * Filter exercises
+   */
   useEffect(() => {
-    if (search === '') {
-      setFilteredExercises(exercises);
-    }
-  }, [search]);
+    const filter: Partial<Exercise> = {
+      ...(component?.id && { componentIds: [component.id] }),
+      ...filters,
+    };
 
-  useEffect(() => {
-    setSearch('');
-    setFilteredExercises(exercises);
-  }, [exercises]);
+    handlePaginateExercises(filter, {
+      components,
+      exercises: componentExercises,
+      pagination,
+      setPagination,
+      setFilteredExercises,
+    });
+  }, [
+    components,
+    exercises.length,
+    component,
+    filters,
+    pagination.page,
+    pagination.pageSize,
+    pagination.pages,
+  ]);
 
   return (
-    <Box
-      display="flex"
-      flexDirection="column"
-      alignItems="center"
-      width="100%"
-      maxWidth="100%"
-      overflow="hidden"
-    >
-      {/* Search Bar */}
-      <SearchBar
-        placeholder="Search Exercises"
-        value={search}
-        handleSearchChange={(e) => {
-          const filteredExercises = componentExercises.filter((exercise) =>
-            exercise.name.toLowerCase().includes(e.target.value.toLowerCase())
-          );
-          setFilteredExercises(filteredExercises);
-          setSearch(e.target.value);
-        }}
-        maxWidth="85%"
-      />
-
-      {/* Pagination Controls */}
-      <Stack
-        width="100%"
-        direction="row"
-        spacing={2}
-        mt={2}
-        alignItems="center"
-        justifyContent="center"
-        flexWrap="nowrap"
-        px={search === '' ? 0 : 3}
-      >
-        <IconButton
-          sx={{
-            width: 40,
-            height: 40,
-            p: 1,
-            display: search === '' ? undefined : 'none',
-          }}
-          onClick={() => {
-            setPagination((prev) => ({
-              ...prev,
-              page: prev.page - 1 >= 1 ? prev.page - 1 : 1,
-            }));
-          }}
-        >
-          <ArrowLeft />
-        </IconButton>
-
-        {/* Exercise List */}
-        <ExercisesList
-          exercises={filteredExercises}
-          addExerciseForm
-          setSelectedExercisesIds={setSelectedExercisesIds}
-          selectedExercisesIds={selectedExercisesIds}
+    <>
+      <Grid2 container alignItems="center" spacing={2} sx={{ m: 2 }}>
+        {/* Left empty space (desktop only) */}
+        <Grid2
+          size={{ xs: screenSize.isMobile ? 6 : 4 }}
+          container
+          order={1}
+          justifyContent={{ xs: 'flex-end', md: 'flex-start' }}
+          alignItems="center"
         />
 
-        <IconButton
-          sx={{
-            width: 40,
-            height: 40,
-            p: 1,
-            display: search === '' ? undefined : 'none',
-          }}
-          onClick={() => {
-            setPagination((prev) => ({
-              ...prev,
-              page: prev.page + 1 <= prev.pages ? prev.page + 1 : prev.pages,
-            }));
-          }}
+        {/* Pagination */}
+        <Grid2
+          size={{ xs: screenSize.isMobile ? 12 : 4 }}
+          container
+          justifyContent="center"
+          order={screenSize.isMobile ? 3 : 2}
         >
-          <ArrowRight />
-        </IconButton>
-      </Stack>
-    </Box>
+          <Pagination
+            size="small"
+            count={pagination.pages}
+            color="primary"
+            page={pagination.page}
+            onChange={(_, page) => setPagination({ ...pagination, page })}
+          />
+        </Grid2>
+
+        {/* Filters & Results */}
+        <Grid2
+          order={screenSize.isMobile ? 2 : 3}
+          size={{ xs: screenSize.isMobile ? 6 : 4 }}
+          container
+          justifyContent={screenSize.isMobile ? 'flex-start' : 'flex-end'}
+          alignItems="center"
+        >
+          <Box
+            sx={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 1,
+              alignItems: 'center',
+            }}
+          >
+            {!screenSize.isMobile && (
+              <Typography variant="body2" color="text.primary">
+                {pagination.total} results
+              </Typography>
+            )}
+
+            <ExerciseFilter
+              filters={filters}
+              setFilters={setFilters}
+              open={openFilters}
+              setOpen={setOpenFilters}
+            />
+          </Box>
+        </Grid2>
+      </Grid2>
+
+      <ExercisesList
+        exercises={filteredExercises}
+        addExerciseForm
+        setSelectedExercisesIds={setSelectedExercisesIds}
+        selectedExercisesIds={selectedExercisesIds}
+      />
+    </>
   );
 }

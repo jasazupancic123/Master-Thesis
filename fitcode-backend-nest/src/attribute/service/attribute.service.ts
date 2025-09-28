@@ -1,46 +1,40 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 
-import { CacheManagerService } from '@src/cache-manager/cache-manager.service';
 import { AttributeType } from '@src/common/enum/attribute-type.enum';
-import { Create } from '@src/common/type/entity.type';
 import { ValidateError } from '@src/common/type/validate.type';
 
-import { CACHE_KEY_ATTRIBUTES } from '../constant/cache.constant';
 import { Attribute } from '../entity/attribute.entity';
 import { AttributeValue } from '../entity/attribute-value.entity';
-import { AttributeRepository } from '../repository/attribute.repository';
 
 @Injectable()
 export class AttributeService {
-  private logger = new Logger(AttributeService.name);
-
-  constructor(
-    private readonly repository: AttributeRepository,
-    private readonly cacheManagerService: CacheManagerService,
-  ) {}
-
-  async create(data: Create<Attribute>): Promise<Attribute> {
-    this.logger.debug(`Creating attribute with data ${JSON.stringify(data)}`);
-    await this.repository.save(data);
-    await this.cacheManagerService.del(CACHE_KEY_ATTRIBUTES);
-    return data;
+  /**
+   * @example
+   * ```ts
+   * const parsed = parseSelectedValue('my:selected:value');
+   * // => {
+   * //   selected: 'my:selected',
+   * //   value: 'value'
+   * // }
+   * ```
+   */
+  parseSelectedValue(s: string): Pick<AttributeValue, 'selected' | 'value'> {
+    // value is last part, all before is select
+    const parts = s.split(':');
+    return {
+      selected: parts.slice(0, parts.length - 1).join(':'),
+      value: parts[parts.length - 1],
+    };
   }
 
-  async findOneBySlug(slug: string): Promise<Attribute> {
-    return await this.repository.findById(slug);
-  }
+  uniqueValues(values: AttributeValue[]): AttributeValue[] {
+    const uniqueMap = new Map<string, AttributeValue>();
+    for (const val of values) {
+      const key = `${val.field}:${val.selected}`;
+      if (!uniqueMap.has(key)) uniqueMap.set(key, val);
+    }
 
-  async findOneBySlugOrFail(slug: string): Promise<Attribute> {
-    const item = await this.repository.findById(slug);
-    if (!item) throw new BadRequestException('Attribute not found');
-    return item;
-  }
-
-  async findAll(): Promise<Attribute[]> {
-    const cached =
-      await this.cacheManagerService.get<Attribute[]>(CACHE_KEY_ATTRIBUTES);
-
-    return cached ? cached : await this.repository.findAll();
+    return Array.from(uniqueMap.values());
   }
 
   validate(
@@ -79,10 +73,13 @@ export class AttributeService {
       }
 
       for (const v of attributeValues) {
-        if (attribute.required && (v.value === null || v.value === undefined))
-          throw new BadRequestException(
-            `Attribute "${attribute.name}" is required`,
-          );
+        if (attribute.required && (v.value === null || v.value === undefined)) {
+          const message = `Attribute "${attribute.name}" is required`;
+          if (onError) {
+            onError({ field: attribute.field, message });
+            return [];
+          } else throw new BadRequestException(message);
+        }
 
         let message = '';
         switch (attribute.type) {
@@ -105,30 +102,79 @@ export class AttributeService {
               break;
             }
 
-            const matchedAttribute = this.validateSelection(
-              v.selected,
-              attribute.options,
-            ); // returns leaf attribute of options, so its not select or multiselect type anymore and we can recurse this validate function to check it again
+            if (!v.selected) {
+              // single-level select
+              const valueAttribute = attribute.options.find(
+                (opt) => opt.field === v.value,
+              );
 
-            if (!matchedAttribute) {
-              const options = attribute.options
-                .map((opt) => opt.field)
-                .join(', ');
+              if (!valueAttribute) {
+                const options = attribute.options
+                  .map((opt) => opt.field)
+                  .join(', ');
 
-              message = `Value "${v.selected}" for attribute "${attribute.name}" is not a valid option. Valid options are: ${options}`;
-              break;
-            }
-
-            // validate leafs for custom types
-            switch (matchedAttribute.type) {
-              case AttributeType.Number:
-                if (isNaN(+v.value))
-                  message = `Value for attribute "${attribute.name}" must be a number`;
+                message = `Value "${v.value}" for attribute "${attribute.name}" is not a valid option. Valid options are: ${options}`;
                 break;
-              case AttributeType.Boolean:
-                if (v.value !== 'true' && v.value !== 'false')
-                  message = `Value for attribute "${attribute.name}" must be a boolean`;
+              }
+
+              if (valueAttribute.options && valueAttribute.options.length > 0) {
+                const options = valueAttribute.options
+                  .map((opt) => opt.field)
+                  .join(', ');
+
+                message = `Option "${v.value}" has nested options, please select one of the following: ${options}`;
                 break;
+              }
+            } else {
+              // multi-level select
+              const matchedAttribute = this.validateSelection(
+                v.selected,
+                attribute.options,
+              ); // returns leaf attribute of options, so its not select or multiselect type anymore and we can recurse this validate function to check it again
+
+              if (!matchedAttribute) {
+                const options = attribute.options
+                  .map((opt) => opt.field)
+                  .join(', ');
+
+                message = `Value "${v.value}" for attribute "${attribute.name}" is not a valid option. Valid options are: ${options}`;
+                break;
+              }
+
+              // check if provided value is leaf
+              const valueAttribute = matchedAttribute.options?.find(
+                (opt) => opt.field === v.value,
+              );
+
+              if (!valueAttribute && matchedAttribute.options?.length > 0) {
+                const options = matchedAttribute.options
+                  .map((opt) => opt.field)
+                  .join(', ');
+
+                message = `Value "${v.value}" for attribute "${attribute.name}" is not a valid option. Valid options are: ${options}`;
+                break;
+              }
+
+              if (valueAttribute?.options?.length > 0) {
+                const options = valueAttribute.options
+                  .map((opt) => opt.field)
+                  .join(', ');
+
+                message = `Option "${v.value}" has nested options, please select one of the following: ${options}`;
+                break;
+              }
+
+              // validate leafs for custom types
+              switch (matchedAttribute.type) {
+                case AttributeType.Number:
+                  if (isNaN(+v.value))
+                    message = `Value for attribute "${attribute.name}" must be a number`;
+                  break;
+                case AttributeType.Boolean:
+                  if (v.value !== 'true' && v.value !== 'false')
+                    message = `Value for attribute "${attribute.name}" must be a boolean`;
+                  break;
+              }
             }
 
             break;
@@ -216,7 +262,7 @@ export class AttributeService {
       values.push(
         providedParamValue
           ? providedParamValue
-          : { field: param.field, selected, value },
+          : { field: param.field, selected, value: value.toString() },
       );
     }
 
@@ -344,6 +390,6 @@ export class AttributeService {
       else break;
     }
 
-    return found;
+    return found; // NOTE - can be internal load, not leaf
   }
 }

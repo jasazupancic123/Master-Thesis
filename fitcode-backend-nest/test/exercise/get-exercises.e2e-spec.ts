@@ -4,13 +4,6 @@ import { Test } from '@nestjs/testing';
 import * as request from 'supertest';
 
 import { AppModule } from '@src/app.module';
-import {
-  generateAttributeStub,
-  generateMultiselectAttribute,
-} from '@src/attribute/mock/attribute.stub';
-import { generateExerciseAttributeValueStub } from '@src/attribute/mock/attribute-value.stub';
-import { AttributeService } from '@src/attribute/service/attribute.service';
-import { AttributeType } from '@src/common/enum/attribute-type.enum';
 import type { TestInstitution } from '@src/common/type/entity.type';
 import {
   createInstitution,
@@ -34,7 +27,6 @@ describe('Get Exercises (e2e)', () => {
   let firebase: FirebaseService;
   let exerciseService: ExerciseService;
   let componentService: ComponentService;
-  let attributeService: AttributeService;
   let institutionService: InstitutionService;
 
   // global
@@ -60,7 +52,6 @@ describe('Get Exercises (e2e)', () => {
     firebase = moduleFixture.get(FirebaseService);
     exerciseService = moduleFixture.get(ExerciseService);
     componentService = moduleFixture.get(ComponentService);
-    attributeService = moduleFixture.get(AttributeService);
     institutionService = moduleFixture.get(InstitutionService);
 
     component = await componentService.create(generateComponentStub());
@@ -93,7 +84,6 @@ describe('Get Exercises (e2e)', () => {
       deleteInstitution(firebase, institution1),
       deleteInstitution(firebase, institution2),
       deleteDoc(firebase, 'COMPONENT', component.id),
-      deleteCollection(firebase, 'ATTRIBUTE'),
     ]);
 
     await app.close();
@@ -258,75 +248,27 @@ describe('Get Exercises (e2e)', () => {
       ]);
     });
 
-    it('should filter exercises by multiselect attribute', async () => {
-      const attribute = await attributeService.create(
-        generateMultiselectAttribute(),
-      );
-
-      const component = await componentService.create(
-        generateComponentStub({ attributes: [attribute.field] }),
-      );
-
+    it('should filter exercises by one field', async () => {
       const exercises = [
         generateExerciseStub({
           componentIds: [component.id],
-          attributeValues: [
-            generateExerciseAttributeValueStub({
-              field: attribute.field,
-              selected: 'first:a',
-              value: 'a',
-            }),
-            generateExerciseAttributeValueStub({
-              field: attribute.field,
-              selected: 'first:b',
-              value: 'b',
-            }),
-            generateExerciseAttributeValueStub({
-              field: attribute.field,
-              selected: 'first:c',
-              value: 'my custom string',
-            }),
-            generateExerciseAttributeValueStub({
-              field: attribute.field,
-              selected: 'second:a',
-              value: '123',
-            }),
-            generateExerciseAttributeValueStub({
-              field: attribute.field,
-              selected: 'second:b',
-              value: 'true',
-            }),
-          ],
+          categories: ['strength:other', 'speed:cod'],
         }),
         generateExerciseStub({
           componentIds: [component.id],
-          attributeValues: [
-            generateExerciseAttributeValueStub({
-              field: attribute.field,
-              selected: 'first:a',
-              value: 'a',
-            }),
-          ],
+          categories: ['strength:general:con-ecc'],
         }),
         generateExerciseStub({
           componentIds: [component.id],
-          attributeValues: [
-            generateExerciseAttributeValueStub({
-              field: attribute.field,
-              selected: 'second:a',
-              value: '125',
-            }),
-          ],
+          categories: ['speed:acceleration'],
         }),
         generateExerciseStub({
           componentIds: [component.id],
-          attributeValues: [
-            generateExerciseAttributeValueStub({
-              field: attribute.field,
-              selected: 'second:b',
-              value: 'true',
-            }),
-          ],
+          categories: ['strength:other'],
+        }),
+        generateExerciseStub({
+          componentIds: [component.id],
+          categories: ['speed:cod'],
         }),
       ];
 
@@ -334,134 +276,57 @@ describe('Get Exercises (e2e)', () => {
         await exerciseService.upsertMany(global.admin, exercises)
       ).map((e) => e.id);
 
-      const attributeValues = (await exerciseService.findAllGlobal()).flatMap(
-        (e) => e.attributeValues,
-      );
-
-      expect(attributeValues).toHaveLength(8);
-
       const filters: [string, number][] = [
         // array of <filter string, expected returned array length>
-        [`field=${attribute.field}&selected=first:a`, 2],
-        [`field=${attribute.field}&selected=first:b`, 1],
-        [`field=${attribute.field}&selected=second:a`, 2],
-        [`field=${attribute.field}&selected=second:a&value=125`, 1],
-        [`field=${attribute.field}&selected=second:b&value=true`, 2],
-        [`field=${attribute.field}&selected=second:b&value=false`, 0],
+        ['strength:other', 2],
+        ['speed:cod', 2],
+        ['strength:general:con-ecc', 1],
+        ['speed:acceleration', 1],
       ];
 
-      for (const [filter, expectedLength] of filters) {
-        const response = await request(app.getHttpServer())
-          .get(`/exercise/global?${filter}`)
-          .set('Authorization', `Bearer ${institution1.athletes[0].token}`);
+      const responses = await Promise.all(
+        filters.map((f) =>
+          request(app.getHttpServer())
+            .get(`/exercise/global?category=${f[0]}`)
+            .set('Authorization', `Bearer ${institution1.athletes[0].token}`),
+        ),
+      );
 
+      for (let i = 0; i < responses.length; i++) {
+        const response = responses[i];
         expect(response.status).toEqual(200);
-        expect(response.body).toHaveLength(expectedLength);
+        expect(response.body).toHaveLength(filters[i][1]);
       }
 
-      await Promise.all([
-        deleteDoc(firebase, 'ATTRIBUTE', attribute.field),
-        deleteDoc(firebase, 'COMPONENT', component.id),
-        deleteDocs(firebase, 'EXERCISE', exerciseIds),
-      ]);
+      await deleteDocs(firebase, 'EXERCISE', exerciseIds);
     });
 
-    it('should filter by combined properties', async () => {
-      const attribute = await attributeService.create(
-        generateMultiselectAttribute(),
-      );
-
-      const boolAttr = await attributeService.create(
-        generateAttributeStub({ type: AttributeType.Boolean }),
-      );
-
-      const stringAttr = await attributeService.create(
-        generateAttributeStub({ type: AttributeType.String }),
-      );
-
-      const comp1 = await componentService.create(
-        generateComponentStub({
-          attributes: [attribute.field, boolAttr.field],
-        }),
-      );
-
-      const comp2 = await componentService.create(
-        generateComponentStub({
-          attributes: [attribute.field, stringAttr.field],
-        }),
-      );
-
+    it('should not filter exercises by multiple fields', async () => {
       const exercises = [
         generateExerciseStub({
-          componentIds: [comp1.id],
-          attributeValues: [
-            generateExerciseAttributeValueStub({
-              field: boolAttr.field,
-              value: 'true',
-            }),
-            generateExerciseAttributeValueStub({
-              field: attribute.field,
-              selected: 'first:a',
-              value: 'a',
-            }),
-          ],
+          componentIds: [component.id],
+          categories: ['strength:other', 'speed:cod'],
+          equipment: ['bodyweight:pull-up-bar'],
         }),
         generateExerciseStub({
-          componentIds: [comp1.id],
-          attributeValues: [
-            generateExerciseAttributeValueStub({
-              field: boolAttr.field,
-              value: 'false',
-            }),
-            generateExerciseAttributeValueStub({
-              field: attribute.field,
-              selected: 'first:a',
-              value: 'a',
-            }),
-            generateExerciseAttributeValueStub({
-              field: attribute.field,
-              selected: 'first:b',
-              value: 'b',
-            }),
-          ],
+          componentIds: [component.id],
+          categories: ['strength:general:con-ecc'],
+          equipment: ['cardio:treadmill'],
         }),
         generateExerciseStub({
-          componentIds: [comp2.id],
-          attributeValues: [
-            generateExerciseAttributeValueStub({
-              field: stringAttr.field,
-              value: 'test 2',
-            }),
-            generateExerciseAttributeValueStub({
-              field: attribute.field,
-              selected: 'first:a',
-              value: 'a',
-            }),
-            generateExerciseAttributeValueStub({
-              field: attribute.field,
-              selected: 'first:c',
-              value: 'test',
-            }),
-          ],
+          componentIds: [component.id],
+          categories: ['speed:acceleration'],
+          equipment: ['strength:power-rack'],
         }),
         generateExerciseStub({
-          componentIds: [comp2.id],
-          attributeValues: [
-            generateExerciseAttributeValueStub({
-              field: stringAttr.field,
-              value: 'test 2',
-            }),
-            generateExerciseAttributeValueStub({
-              field: attribute.field,
-              selected: 'first:b',
-              value: 'b',
-            }),
-            generateExerciseAttributeValueStub({
-              field: attribute.field,
-              selected: 'first:c',
-              value: 'test 2',
-            }),
-          ],
+          componentIds: [component.id],
+          categories: ['strength:other'],
+          equipment: ['strength:cable'],
+        }),
+        generateExerciseStub({
+          componentIds: [component.id],
+          categories: ['speed:cod'],
+          equipment: ['strength:cable', 'strength:barbell'],
         }),
       ];
 
@@ -469,45 +334,35 @@ describe('Get Exercises (e2e)', () => {
         await exerciseService.upsertMany(global.admin, exercises)
       ).map((e) => e.id);
 
-      const attributeValues = (await exerciseService.findAllGlobal()).flatMap(
-        (e) => e.attributeValues,
-      );
-
-      expect(attributeValues).toHaveLength(11);
-
-      const filters: [string, number][] = [
-        // array of <filter string, expected returned array length>
-        [`value=test 2`, 2],
-        [`field=${boolAttr.field}&value=true`, 1],
-        [`field=${boolAttr.field}&value=false`, 1],
-        [`field=${attribute.field}&selected=first:a`, 3],
-        [
-          `componentIds=${comp1.id}&field=${attribute.field}&selected=first:a`,
-          2,
-        ],
-        [
-          `componentIds=${comp2.id}&field=${attribute.field}&selected=first:a`,
-          1,
-        ],
-        [
-          `componentIds=${comp1.id},${comp2.id}&field=${attribute.field}&selected=first:a`,
-          3,
-        ],
+      const filters: [string, string, number][] = [
+        // array of <category filter string, equipment filter string, expected returned array length>
+        ['strength:other', 'strength:cable', 1],
+        ['speed:cod', 'strength:cable', 1],
+        ['speed:cod', 'strength:barbell', 1],
+        ['strength:general', 'cardio:treadmill', 1],
+        ['speed:acceleration', 'strength:power-rack', 1],
+        ['strength:other', 'bodyweight:pull-up-bar', 1],
+        ['strength:other', 'strength:barbell', 0],
+        ['speed:cod', 'cardio:treadmill', 0],
       ];
 
-      for (const [filter, expectedLength] of filters) {
-        const response = await request(app.getHttpServer())
-          .get(`/exercise/global?${filter}`)
-          .set('Authorization', `Bearer ${institution1.manager.token}`);
+      const responses = await Promise.all(
+        filters.map((f) =>
+          request(app.getHttpServer())
+            .get(`/exercise/global?category=${f[0]}&equipment=${f[1]}`)
+            .set('Authorization', `Bearer ${institution1.athletes[0].token}`),
+        ),
+      );
 
-        expect(response.status).toEqual(200);
-        expect(response.body).toHaveLength(expectedLength);
+      for (let i = 0; i < responses.length; i++) {
+        const response = responses[i];
+        expect(response.status).toEqual(400);
+        expect(response.body.message).toEqual(
+          'Only one filter can be applied at a time',
+        );
       }
 
-      await Promise.all([
-        deleteDocs(firebase, 'COMPONENT', [comp1.id, comp2.id]),
-        deleteDocs(firebase, 'EXERCISE', exerciseIds),
-      ]);
+      await deleteDocs(firebase, 'EXERCISE', exerciseIds);
     });
   });
 });

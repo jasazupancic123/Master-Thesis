@@ -6,7 +6,7 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import React, { useEffect, useState } from 'react';
 
-import SelectAttribute from '../select-attribute/select-attribute';
+import FlatSelectAttribute from '../select-attribute/flat-select-attribute';
 import SelectComponent from '../select-component/select-component';
 import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
 import { CommonService } from '@/common/service/common.service';
@@ -19,7 +19,11 @@ import type {
   Component,
   TreeComponent,
 } from '@/controller/component/type/component.type';
-import type { Exercise } from '@/controller/exercise/type/exercise.type';
+import { ExerciseAttributeService } from '@/controller/exercise/exercise-attribute.service';
+import type {
+  Exercise,
+  ExerciseAttributes,
+} from '@/controller/exercise/type/exercise.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 const firebaseStorage = FirebaseStorageUtil.Instance;
@@ -27,7 +31,6 @@ const firebaseStorage = FirebaseStorageUtil.Instance;
 interface Props {
   data: Partial<Exercise>;
   setData: SetState<Partial<Exercise>>;
-  attributes: Attribute[];
   components: Component[];
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
@@ -42,7 +45,6 @@ export default function ExerciseModal(props: Props) {
   const {
     data,
     setData,
-    attributes,
     components,
     isOpen,
     setIsOpen,
@@ -59,16 +61,22 @@ export default function ExerciseModal(props: Props) {
   const [hasSelectedLeafComponent, setHasSelectedLeafComponent] =
     useState(false);
 
-  const [filteredAttributes, setFilteredAttributes] = useState(attributes);
+  const [filteredAttributes, setFilteredAttributes] = useState<Attribute[]>([]);
 
-  function handleSelectChange(field: string, value: string) {
-    setData((prev) => ({
-      ...prev,
-      valuesObject: {
-        ...prev.valuesObject,
-        [field]: value,
-      },
-    }));
+  function handleSelectChange(
+    field: keyof Exercise,
+    value: string | string[] | boolean
+  ) {
+    setData((prev) => {
+      let newValue = value;
+
+      // normalize select/multiselect into string[]
+      if (Array.isArray(value)) newValue = value;
+      else if (typeof value === 'string' && prev?.[field] instanceof Array)
+        newValue = [value];
+
+      return { ...prev, [field]: newValue };
+    });
   }
 
   useEffect(() => {
@@ -82,6 +90,7 @@ export default function ExerciseModal(props: Props) {
     const component = components.find((c) => c.id === data.componentIds![0]);
     if (!component) return;
 
+    const attributes: string[] = []; // all attributes from the component and its parents
     const selected: { [key: number]: string } = {};
     let level = component.parents.length;
 
@@ -92,10 +101,16 @@ export default function ExerciseModal(props: Props) {
 
       selected[--level] = parent.id;
       parentId = parent.parentId;
+
+      if (parent.attributes)
+        for (const attribute of parent.attributes)
+          if (!attributes.find((a) => a === attribute))
+            attributes.push(attribute);
     }
 
     selected[component.parents.length] = component.id;
     setSelectedComponents(selected);
+    setFilteredAttributes(ExerciseAttributeService.getAttributes(attributes));
   }, [data?.id]);
 
   useEffect(() => {
@@ -131,10 +146,7 @@ export default function ExerciseModal(props: Props) {
           if (!attributeIds.find((a) => a === attribute))
             attributeIds.push(attribute);
 
-    setFilteredAttributes(
-      attributes.filter((a) => attributeIds.includes(a.field))
-    );
-
+    setFilteredAttributes(ExerciseAttributeService.getAttributes(attributeIds));
     setHasSelectedLeafComponent(hasSelectedLeafComponent);
   }, [data.componentIds]);
 
@@ -220,14 +232,14 @@ export default function ExerciseModal(props: Props) {
 
           <Grid size={{ xs: 6 }}>
             <FormControlLabel
-              label={'Bilateral'}
+              label={'Unilateral'}
               control={
                 <Checkbox
-                  checked={data.isBilateral || false}
+                  checked={data.isUnilateral || false}
                   onChange={(e) =>
                     setData((prev) => ({
                       ...prev,
-                      isBilateral: e.target.checked,
+                      isUnilateral: e.target.checked,
                     }))
                   }
                 />
@@ -256,10 +268,14 @@ export default function ExerciseModal(props: Props) {
                 <Grid size={{ xs: 6 }} key={attribute.field}>
                   {attribute.type === 'select' ||
                   attribute.type === 'multiselect' ? (
-                    <SelectAttribute
+                    <FlatSelectAttribute
                       attribute={attribute}
-                      onChange={handleSelectChange}
-                      initialValue={data.valuesObject}
+                      onChange={(field, values) =>
+                        handleSelectChange(field as keyof Exercise, values)
+                      }
+                      initialValue={
+                        data?.[attribute.field as keyof Exercise] as string[]
+                      }
                       label
                     />
                   ) : attribute.type === 'boolean' ? (
@@ -267,14 +283,16 @@ export default function ExerciseModal(props: Props) {
                       control={
                         <Checkbox
                           checked={
-                            typeof data.valuesObject?.[attribute.field] ===
+                            typeof data?.[attribute.field as keyof Exercise] ===
                             'boolean'
-                              ? (data.valuesObject[attribute.field] as boolean)
+                              ? (data[
+                                  attribute.field as keyof Exercise
+                                ] as unknown as boolean)
                               : false
                           }
                           onChange={(e) =>
                             handleSelectChange(
-                              attribute.field,
+                              attribute.field as keyof ExerciseAttributes,
                               e.target.checked ? 'true' : 'false'
                             )
                           }
@@ -288,9 +306,15 @@ export default function ExerciseModal(props: Props) {
                       label={attribute.name}
                       type={type}
                       variant="outlined"
-                      value={data.valuesObject?.[attribute.field] || ''}
+                      value={
+                        data?.[attribute.field as keyof ExerciseAttributes] ||
+                        ''
+                      }
                       onChange={(e) =>
-                        handleSelectChange(attribute.field, e.target.value)
+                        handleSelectChange(
+                          attribute.field as keyof ExerciseAttributes,
+                          e.target.value
+                        )
                       }
                     />
                   )}

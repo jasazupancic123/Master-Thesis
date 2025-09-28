@@ -2,7 +2,7 @@ import type { INestApplication } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { expectDatesToMatchUpToMinute } from '@test/common/utils/date.util';
-import { addDays, subDays } from 'date-fns';
+import { addDays, startOfDay, subDays } from 'date-fns';
 import * as request from 'supertest';
 
 import { AppModule } from '@src/app.module';
@@ -185,7 +185,7 @@ describe('Update Training (e2e)', () => {
   });
 
   it('should throw error if new `to` extends beyond next components `to`', async () => {
-    const trainingDate = addDays(new Date(), 4);
+    const trainingDate = addDays(startOfDay(new Date()), 4);
     const newTrainingId = await db.trainings.save(
       generateTrainingStub(
         {
@@ -227,7 +227,7 @@ describe('Update Training (e2e)', () => {
   });
 
   it('should throw error if new `from` is before previous components `from`', async () => {
-    const trainingDate = addDays(new Date(), 4);
+    const trainingDate = addDays(startOfDay(new Date()), 4);
     const newTrainingId = await db.trainings.save(
       generateTrainingStub(
         {

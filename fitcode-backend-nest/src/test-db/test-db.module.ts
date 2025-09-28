@@ -6,7 +6,6 @@ import { TrainingModule } from '@src/training/training.module';
 
 import { GroupTestRepository } from './service/group-test.repository';
 import { InstitutionTestRepository } from './service/institution-test.repository';
-import { TestAttributeService } from './service/test-attribute.service';
 import { TestComponentService } from './service/test-component.service';
 import { TestExerciseService } from './service/test-exercise.service';
 import { TestWorkloadService } from './service/test-workload.service';
@@ -19,7 +18,6 @@ import { TestDbService } from './test-db.service';
   imports: [FirebaseModule.forRoot(), TrainingModule],
   providers: [
     TestDbService,
-    TestAttributeService,
     TestComponentService,
     TestWorkloadService,
     TestExerciseService,

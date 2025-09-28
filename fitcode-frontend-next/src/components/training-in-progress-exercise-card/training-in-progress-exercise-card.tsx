@@ -15,7 +15,11 @@ import {
   unmarkExerciseSetAsCompleted,
 } from './state';
 import { TrackingMethod } from '@/common/enum/tracking-method.enum';
-import { ParamType } from '@/controller/component/enum/param.enum';
+import {
+  IntType,
+  ParamType,
+  VolType,
+} from '@/controller/component/enum/param.enum';
 import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
 import { TrainingService } from '@/controller/training/training.service';
@@ -69,7 +73,7 @@ export default function TrainingInProgressExerciseCard() {
   if (!trainingInProgress || !selectedSuperset || !selectedExercise)
     return labelRef.current;
 
-  const updateExerciseReps = (repsCount: number) => {
+  const updateExerciseValues = (repsCount: number, tempo: number) => {
     if (supersetIndex === undefined) return;
 
     if (setIndex === undefined) return;
@@ -77,34 +81,77 @@ export default function TrainingInProgressExerciseCard() {
     const selectedSet = selectedExercise.sets[setIndex];
     if (!selectedSet) return;
 
-    const param = selectedExercise.params.find(
-      (p) => p.field === ParamType.VolWork1
+    let repParamField: ParamType | undefined;
+    let tempoParamField: ParamType | undefined;
+
+    const repParamFieldSet = selectedSet.paramValuesL.find(
+      (p) => p.selected === VolType.Rep
+    );
+    if (repParamFieldSet) repParamField = repParamFieldSet.field as ParamType;
+
+    const tempoParamFieldSet = selectedSet.paramValuesL.find(
+      (p) => p.selected === IntType.Tempo
+    );
+    if (tempoParamFieldSet)
+      tempoParamField = tempoParamFieldSet.field as ParamType;
+
+    const repParam = selectedExercise.params.find(
+      (p) => p.field === repParamField
     );
 
-    if (!param) return;
+    if (repParam) {
+      ['L'].concat(selectedSet.paramValuesR ? ['R'] : []).forEach((lOrR) => {
+        updateExerciseAttributeValues(
+          {
+            newValue: repsCount.toString(),
+            i: setIndex,
+            set: selectedSet,
+            lOrR: lOrR as 'L' | 'R',
+          },
+          {
+            selectedExercises: [selectedExercise],
+            exercise: selectedExercise,
+            param: repParam,
+            training: trainingInProgress.training,
+            component: trainingInProgress.selectedComponent,
+            setTraining: () => {},
+            supersets: trainingInProgress.supersets,
+            setDetectedChanges: () => {},
+            selectedSubgroup: null,
+            setSelectedSubgroup: () => {},
+          }
+        );
+      });
+    }
 
-    ['L'].concat(selectedSet.paramValuesR ? ['R'] : []).forEach((lOrR) => {
-      updateExerciseAttributeValues(
-        {
-          newValue: repsCount.toString(),
-          i: setIndex,
-          set: selectedSet,
-          lOrR: lOrR as 'L' | 'R',
-        },
-        {
-          selectedExercises: [selectedExercise],
-          exercise: selectedExercise,
-          param,
-          training: trainingInProgress.training,
-          component: trainingInProgress.selectedComponent,
-          setTraining: () => {},
-          supersets: trainingInProgress.supersets,
-          setDetectedChanges: () => {},
-          selectedSubgroup: null,
-          setSelectedSubgroup: () => {},
-        }
-      );
-    });
+    const tempoParam = selectedExercise.params.find(
+      (p) => p.field === tempoParamField
+    );
+
+    if (tempoParam) {
+      ['L'].concat(selectedSet.paramValuesR ? ['R'] : []).forEach((lOrR) => {
+        updateExerciseAttributeValues(
+          {
+            newValue: tempo.toString(),
+            i: setIndex,
+            set: selectedSet,
+            lOrR: lOrR as 'L' | 'R',
+          },
+          {
+            selectedExercises: [selectedExercise],
+            exercise: selectedExercise,
+            param: tempoParam,
+            training: trainingInProgress.training,
+            component: trainingInProgress.selectedComponent,
+            setTraining: () => {},
+            supersets: trainingInProgress.supersets,
+            setDetectedChanges: () => {},
+            selectedSubgroup: null,
+            setSelectedSubgroup: () => {},
+          }
+        );
+      });
+    }
 
     markExerciseSetAsCompleted(
       { exerciseId: selectedExercise.id, supersetIndex },
@@ -139,7 +186,7 @@ export default function TrainingInProgressExerciseCard() {
       selectedExercise={selectedExercise}
       selectedTrackingMethod={selectedTrackingMethod}
       setSelectedTrackingMethod={setSelectedTrackingMethod}
-      updateExerciseReps={updateExerciseReps}
+      updateExerciseValues={updateExerciseValues}
     />
   ) : (
     <SwipeableBox
