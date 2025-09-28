@@ -75,7 +75,7 @@ export class KeypointUtil {
     keypoints: Keypoint[],
     keypointId: KeypointId
   ): Keypoint | undefined {
-    return keypoints.find((kp) => kp.id === keypointId);
+    return (keypoints || []).find((kp) => kp.id === keypointId);
   }
 
   static getKeypointsValuesByType(
