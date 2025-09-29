@@ -17,6 +17,8 @@ export class RepsGraphService {
     extremeToEnd: '#3F88C5',
     end: '#16DB65',
     default: '#F0F6F6',
+    atExtremumStart: '#ec1fffff',
+    atExtremumEnd: '#eaff00ff',
   };
 
   // ---------- public API ----------
@@ -255,7 +257,11 @@ export class RepsGraphService {
                   ? this.palette.extremeToEnd
                   : k.capturedAt === rep.endValueTimestamp
                     ? this.palette.end
-                    : this.palette.default;
+                    : k.capturedAt === rep.timeAtExtremumStartTimestamp
+                      ? this.palette.atExtremumStart
+                      : k.capturedAt === rep.timeAtExtremumEndTimestamp
+                        ? this.palette.atExtremumEnd
+                        : this.palette.default;
 
           const ts =
             typeof (k as any).capturedAt === 'number'
@@ -349,7 +355,17 @@ export class RepsGraphService {
                 ? this.palette.extremeToEnd
                 : reps.some((rep) => k.capturedAt === rep.endValueTimestamp)
                   ? this.palette.end
-                  : this.palette.default;
+                  : reps.some(
+                        (rep) =>
+                          k.capturedAt === rep.timeAtExtremumStartTimestamp
+                      )
+                    ? this.palette.atExtremumStart
+                    : reps.some(
+                          (rep) =>
+                            k.capturedAt === rep.timeAtExtremumEndTimestamp
+                        )
+                      ? this.palette.atExtremumEnd
+                      : this.palette.default;
 
           const ts =
             typeof (k as any).capturedAt === 'number'

@@ -1,4 +1,5 @@
 import type { KeypointHistory } from '../class/keypoint-history';
+import { Keypoint } from './keypoint.type';
 
 export type Rep = {
   // INIT
@@ -24,9 +25,15 @@ export type Rep = {
 
   // extremeValue
   extremeValue?: number; // the max or min value reached during the rep, also needs to be out of a certain range from the start value
-  extremeValueFrameNum?: number; // the frame number when the extreme value was reached
+  extremeKeypoint?: Keypoint; // the keypoint when the extreme value was reached
   extremeTimestamp?: Date; // when the extreme value was reached
   extremeToEndTimestamp?: Date; // when going from extreme value to end
+
+  // timeAtExtremum
+  timeAtExtremumStartKeypoint?: Keypoint;
+  timeAtExtremumEndKeypoint?: Keypoint;
+  timeAtExtremumStartTimestamp?: Date;
+  timeAtExtremumEndTimestamp?: Date;
 
   // times
   idleTimeMs?: number; // startTime - endTime of the previous rep
