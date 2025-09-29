@@ -42,6 +42,10 @@ export const POSE_DETECTION_CONSTRAINTS = {
   POST_WINDOW_FRAMES_REP_END: 2, // stevilo frame-ov po tem ko se rep konča, da najdemo še kakšen ekstremum
   NEW_EXTREMUM_DETECTION_DISTANCE_M: 0.005, // če pridemo do novega ekstremuma, mora biti ta oddaljen od prejšnjega za to vrednost (v metrih)
 
+  // Time at extremum
+  TIME_AT_EXTREMUM_VELOCITY_THRESHOLD_M_PER_S: 0.05, // when going over this, then we are out of the extremum range
+  TIME_AT_EXTREMUM_VELOCITY_SUSTAIN_S: 0.25, // for at least this amount of time the value needs to be over the threshold
+
   // Detection end
   MIN_STILL_TIME_TO_STOP_DETECTION_S: 2, // at least how many seconds of recording state to stop detection
 };

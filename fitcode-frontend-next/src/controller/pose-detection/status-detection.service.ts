@@ -92,7 +92,8 @@ export class StatusDetectionService {
           avgFps,
         });
 
-        const canStartRecording = hasNodded && isStill;
+        // const canStartRecording = hasNodded && isStill;
+        const canStartRecording = isStill;
 
         if (canStartRecording) {
           recordingTimestampRef.current = new Date();
