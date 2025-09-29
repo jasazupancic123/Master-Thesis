@@ -68,19 +68,34 @@ export default function MobileMovementValidation(
       ? EXERCISE_POSES.find((e) => e.exerciseIds.includes(selectedExercise.id))
           ?.data
       : {
-          romKeypointId: KeypointId.RIGHT_WRIST,
+          romKeypointId: KeypointId.LEFT_HIP,
           romValueType: KeypointValueType.POSITION_Y,
-          romStartDirection: ConditionDirection.POSITIVE,
+          romStartDirection: ConditionDirection.NEGATIVE,
           conditions: [
             {
-              keypointId: KeypointId.RIGHT_WRIST,
+              keypointId: KeypointId.LEFT_HIP,
               type: KeypointValueType.POSITION_Y,
-              direction: ConditionDirection.POSITIVE,
-              duration: 750, // ms
-              distance: 0.1, // meters
+              direction: ConditionDirection.NEGATIVE,
+              duration: 1000, // ms
+              distance: 0.04, // meters}
             },
           ],
         };
+
+  // {
+  // romKeypointId: KeypointId.RIGHT_WRIST,
+  // romValueType: KeypointValueType.POSITION_Y,
+  // romStartDirection: ConditionDirection.POSITIVE,
+  // conditions: [
+  //   {
+  //     keypointId: KeypointId.RIGHT_WRIST,
+  //     type: KeypointValueType.POSITION_Y,
+  //     direction: ConditionDirection.POSITIVE,
+  //     duration: 750, // ms
+  //     distance: 0.1, // meters
+  //   },
+  // ],
+  // };
   // : {
   //     romKeypointId: KeypointId.LEFT_HIP,
   //     romValueType: KeypointValueType.POSITION_Y,
@@ -299,15 +314,16 @@ export default function MobileMovementValidation(
   const finishAiDetection = async () => {
     statusMessage.current = getStatusMessage(DetectionStatus.STOPPED);
 
-    // await RepsGraphService.downloadReps(
-    //   {
-    //     recordedRepsRef,
-    //     keypointId: KeypointId.RIGHT_WRIST,
-    //     valueType: KeypointValueType.POSITION_Y,
-    //     constantKeypointHistory: constantKeypointHistoryRef.current,
-    //   },
-    //   { filenameBase: 'session', combine: true }
-    // );
+    await RepsGraphService.downloadReps(
+      {
+        recordedRepsRef,
+        keypointId: exerciseDetectionData!.romKeypointId,
+        valueType: exerciseDetectionData!.romValueType,
+        constantKeypointHistory: constantKeypointHistoryRef.current,
+        smooth: true,
+      },
+      { filenameBase: 'session', combine: true }
+    );
 
     // KeypointUtil.drawKeypointValuesGraph(
     //   constantKeypointHistoryRef.current.history,

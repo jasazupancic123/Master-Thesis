@@ -13,8 +13,9 @@ export const POSE_DETECTION_CONSTRAINTS = {
 
   START_CUT_OFF_CONFIDENCE: 0.9, // % of keypoints before the first rep need to be correct to cut off the start
   KEYPOINT_BUFFER_DURATION_MS: 1000, // how many ms to track
-  CLOSE_ENOUGH_TO_START_VALUE_RATIO: 0.3, // how close to the start value the rep needs to be to be considered finished
+  CLOSE_ENOUGH_TO_START_VALUE_RATIO: 0.2, // how close to the start value the rep needs to be to be considered finished
   ROM_GRAPH_LENGTH_S: 3, // in seconds, how many seconds of history to keep for the ROM graph
+  HIGH_FPS_THRESHOLD: 17, // fps above which we consider it high fps
 
   // Extremum detection
   MIN_FRAMES_FOR_EXTREMUM: 4, // min 4 total consecutive correct frames (2pos k's, 2neg k's)
@@ -24,15 +25,16 @@ export const POSE_DETECTION_CONSTRAINTS = {
   NEW_EXTREMUM_DETECTION_RATIO: 0.02, // if we reach a new extremum, it needs to be at least this % away from the previous one
 
   // Rep start
-  SLOPE_K_REP_START: 0.5, // naklon premice (K) za zacetek ponovitve
-  SUSTAIN_W_REP_START: 2, // stevilo zaporednih tock, ki morajo biti nad naklonom
   PRE_WINDOW_FRAMES_REP_START: 4, // stevilo tock pred zaznano končno, v katerih iščemo ekstremum
-  MIN_START_SCALE: 1e-3,
   MAX_LOOKBACK_REP_START_S: 3, // maksimalno število sekund, ki jih lahko gledamo nazaj, da najdemo začetek ponovitve
   KEEP_KEYPOINT_HISTORY_DURING_RECORDING_MS: 8000, // koliko sekund hranimo zgodovino keypointov, da lahko gledamo nazaj
-  REP_START_VELOCITY_M_PER_S: 0.06, // when speed goes under (this_value)m/s, then we started the rep!
-  REP_START_CONSECUTIVE_FRAMES_UNDER_VELOCITY_THRESHOLD_S: 0.4, // if this many frames go under the velocity threshold, then rep started
+  REP_START_VELOCITY_HIGH_FPS_M_PER_S: 0.04, // when speed goes under (this_value)m/s, then we started the rep!
+  REP_START_VELOCITY_LOW_FPS_M_PER_S: 0.02, // when speed goes under (this_value)m/s, then we started the rep!
+  REP_START_VELOCITY_SUSTAIN_S: 0.3, // if this many frames go under the velocity threshold, then rep started
+  REP_START_CONSECUTIVE_FRAMES_UNDER_VELOCITY_THRESHOLD_S: 0.2, // if this many frames go under the velocity threshold, then rep started
   REP_START_JOINT_STILLNESS_VELOCITY_THRESHOLD_M_PER_S: 0.01, // tracking stillness of a joint for rep start
+  REP_END_VELOCITY_M_PER_S: 0.02, // when speed goes under (this_value)m/s, then we ended the rep!
+  REP_END_LOOKBACK_S: 0.25, // how many seconds the velocity buffer is long to detect rep end
 
   // Rep end
   SLOPE_K_REP_END: 0.2, // naklon premice (K) za konec ponovitve
