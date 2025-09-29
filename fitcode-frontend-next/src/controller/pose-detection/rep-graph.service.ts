@@ -4,6 +4,7 @@
 import { KeypointHistory } from './class/keypoint-history';
 import { KeypointId } from './enum/keypoint-id';
 import { KeypointValueType } from './enum/keypoint-value-type';
+import { RepDetectionService } from './rep-detection.service';
 import { Rep } from './type/rep.type';
 import { KeypointUtil } from './util/keypoint.util';
 
@@ -33,6 +34,7 @@ export class RepsGraphService {
       keypointId: KeypointId;
       valueType: KeypointValueType;
       constantKeypointHistory: KeypointHistory;
+      smooth?: boolean;
     },
     opts?: {
       filenameBase?: string; // base name for files
@@ -93,7 +95,10 @@ export class RepsGraphService {
           },
           { historyChunkCount: chunksLength }
         );
-        this.downloadBlob(combinedBlob, `${filenameBase}_all.png`);
+        this.downloadBlob(
+          combinedBlob,
+          `${filenameBase}_all_${state.keypointId}_${state.smooth ? '_smooth' : ''}.png`
+        );
         return;
       } catch (err) {
         console.warn(
@@ -116,6 +121,7 @@ export class RepsGraphService {
       keypointId: KeypointId;
       valueType: KeypointValueType;
       constantKeypointHistory: KeypointHistory;
+      smooth?: boolean;
     },
     opts?: {
       filenameBase?: string;
@@ -161,6 +167,7 @@ export class RepsGraphService {
       keypointId: KeypointId;
       valueType: KeypointValueType;
       constantKeypointHistory: KeypointHistory;
+      smooth?: boolean;
     },
     opts?: {
       filename?: string;
@@ -220,9 +227,15 @@ export class RepsGraphService {
     keypointId: KeypointId;
     valueType: KeypointValueType;
     constantKeypointHistory: KeypointHistory;
+    smooth?: boolean;
   }) {
-    const { recordedRepsRef, keypointId, valueType, constantKeypointHistory } =
-      state;
+    const {
+      recordedRepsRef,
+      keypointId,
+      valueType,
+      constantKeypointHistory,
+      smooth,
+    } = state;
     const reps = recordedRepsRef.current ?? [];
     const configs: any[] = [];
 
@@ -318,6 +331,8 @@ export class RepsGraphService {
       chunks.push(constantKeypointHistory.history.slice(i, i + chunkSize));
     }
 
+    const allPointsValues: number[] = [];
+
     chunks.forEach((chunk, chunkIdx) => {
       const points = chunk
         .map((c) => c.find((k) => k.id === keypointId))
@@ -346,6 +361,23 @@ export class RepsGraphService {
         .filter(Boolean) as { value: number; color: string; ts: number }[];
 
       if (!points.length) return;
+
+      // SMOOTH VALUES
+      if (smooth) {
+        const smoothedValues = KeypointUtil.smoothKeypointValues(
+          points.map((p) => p.value),
+          undefined,
+          13,
+          2
+        );
+
+        // apply smoothed values to points
+        smoothedValues.forEach((sv, i) => {
+          points[i].value = sv as number;
+        });
+      }
+
+      allPointsValues.push(...points.map((p) => p.value));
 
       // simple index labels; switch to timestamp formatting if you prefer
       const labels: (string | number)[] = Array.from(
@@ -397,6 +429,25 @@ export class RepsGraphService {
 
       configs.push(config);
     });
+
+    // after you've finished filling allPointsValues
+
+    function downloadCSV(filename: string, text: string) {
+      const blob = new Blob([text], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    // usage:
+
+    // const csv = allPointsValues.map((v) => String(v)).join('\n') + '\n'; // newline at end is nice-to-have
+    // downloadCSV('all_points.csv', csv);
 
     console.log('configs', configs, 'reps', reps.length);
 
