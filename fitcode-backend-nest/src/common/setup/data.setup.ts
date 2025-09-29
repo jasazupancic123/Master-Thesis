@@ -1,7 +1,6 @@
 import type { INestApplication } from '@nestjs/common';
 import { subDays } from 'date-fns';
 import { readFile } from 'node:fs/promises';
-import slugify from 'slugify';
 
 import { AuthService } from '@src/auth/auth.service';
 import { UserRole } from '@src/auth/enum/user-role.enum';
@@ -51,7 +50,6 @@ export class DataSetup extends BaseSetup {
 
     // create / update admin user
     this.admin = await this.authService.upsert({
-      uid: 'admin',
       email: this.configService.getOrThrow('ADMIN_EMAIL'),
       password: this.configService.getOrThrow('ADMIN_PASSWORD'),
       displayName: 'Admin',
@@ -59,7 +57,6 @@ export class DataSetup extends BaseSetup {
     });
 
     this.manager = await this.authService.upsert({
-      uid: 'manager',
       email: 'manager@mail.com',
       password: 'password',
       displayName: 'Manager',
@@ -67,7 +64,6 @@ export class DataSetup extends BaseSetup {
     });
 
     this.trainer = await this.authService.upsert({
-      uid: 'trainer',
       email: 'trainer@mail.com',
       password: 'password',
       displayName: 'Trainer',
@@ -173,7 +169,6 @@ export class DataSetup extends BaseSetup {
     for (const userData of data) {
       createdUsers.push(
         await this.authService.upsert({
-          uid: slugify(userData.email, { lower: true }),
           email: userData.email,
           displayName: userData.displayName,
           password: 'password',
