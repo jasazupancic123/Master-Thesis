@@ -10,6 +10,7 @@ import {
   UserImportResult,
   UserRecord,
 } from 'firebase-admin/auth';
+import { v4 } from 'uuid';
 
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
 import { User } from '@src/common/type/firebase-auth.type';
@@ -105,14 +106,14 @@ export class AuthService {
 
   async upsert(data: CreateUserDto): Promise<User> {
     const { auth } = this.firebase;
-    const { uid, email, password, displayName, role, photoURL } = data;
+    const { email, password, displayName, role, photoURL } = data;
 
     let user: UserRecord;
     try {
       user = await auth.getUserByEmail(email);
     } catch (_) {
       user = await auth.createUser({
-        uid,
+        uid: v4(),
         email,
         password,
         displayName,
@@ -125,7 +126,9 @@ export class AuthService {
     return user?.uid ? ((await auth.getUser(user.uid)) as User) : null;
   }
 
-  async importUsers(input: CreateUserDto[]): Promise<UserImportResult> {
+  async importUsers(
+    input: (CreateUserDto & { uid: string })[],
+  ): Promise<UserImportResult> {
     const data: UserImportRecord[] = input.map((user) => ({
       uid: user.uid,
       email: user.email,

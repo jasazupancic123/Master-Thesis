@@ -1,7 +1,6 @@
 import type { INestApplication } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import type { UserImportResult } from 'firebase-admin/auth';
 import * as request from 'supertest';
 
 import { AppModule } from '@src/app.module';
@@ -49,7 +48,6 @@ describe('Import Users (e2e)', () => {
   ])('should not allow %s to import users', async (_, token) => {
     const result = await req(token, [
       {
-        uid: '1',
         email: 'test@mail.com',
         displayName: 'Test',
         password: 'password',
@@ -66,7 +64,6 @@ describe('Import Users (e2e)', () => {
   it('should fail if some role is invalid', async () => {
     const result = await req(global.manager.token, [
       {
-        uid: '1',
         email: 'test@mail.com',
         displayName: 'Test',
         password: 'password',
@@ -81,10 +78,10 @@ describe('Import Users (e2e)', () => {
   });
 
   it('should create profiles only for users that were successfully imported', async () => {
+    const spy = jest.spyOn(firebase.auth, 'importUsers');
     const result = await req(
       global.manager.token,
       Array.from({ length: 10 }).map((_, i) => ({
-        uid: `${i + 1}`,
         email: i % 2 === 0 ? `test${i + 1}@mail.com` : `invalid`, // invalid email
         displayName: `Test ${i + 1}`,
         password: 'password',
@@ -92,41 +89,31 @@ describe('Import Users (e2e)', () => {
       })),
     );
 
+    expect(spy).toHaveBeenCalledTimes(1);
+    const { successCount, failureCount, errors } =
+      await spy.mock.results[0].value;
+
+    expect(successCount).toBe(5);
+    expect(failureCount).toBe(5);
+    expect(errors).toHaveLength(5);
+    spy.mockRestore();
+
     expect(result.status).toBe(201);
-    const body = result.body as UserImportResult;
-    expect(body.successCount).toBe(5);
-    expect(body.failureCount).toBe(5);
-    expect(body.errors).toHaveLength(5);
+    const body = result.body as { uid: string; email: string }[];
+    expect(body).toHaveLength(5);
 
-    // there should be 5 auth users created and 5 profiles
-    const authUsers = await firebase.auth.listUsers();
-    for (let i = 0; i < 10; i++) {
-      const authUser = authUsers.users.find((u) => u.uid === `${i + 1}`);
-      const profile = await db.profiles.findById(`${i + 1}`);
-
-      if (i % 2 === 0) {
-        expect(authUser.uid).toBe(`${i + 1}`);
-        expect(authUser.email).toBe(`test${i + 1}@mail.com`);
-        expect(profile.id).toBe(`${i + 1}`);
-      } else {
-        expect(authUser).toBeUndefined();
-        expect(profile).toBeNull();
-      }
-    }
-
+    // delete users
     await deleteUsersByIds(
       firebase,
-      Array.from({ length: 10 })
-        .map((_, i) => `${i + 1}`)
-        .filter((_, i) => i % 2 === 0),
+      body.map((p) => p.uid),
     );
   });
 
   it('should successfully import users', async () => {
+    const spy = jest.spyOn(firebase.auth, 'importUsers');
     const result = await req(
       global.manager.token,
       Array.from({ length: 50 }).map((_, i) => ({
-        uid: `${i + 1}`,
         email: `test${i + 1}@mail.com`,
         displayName: `Test ${i + 1}`,
         password: 'password',
@@ -134,23 +121,26 @@ describe('Import Users (e2e)', () => {
       })),
     );
 
+    expect(spy).toHaveBeenCalledTimes(1);
+    const { successCount, failureCount, errors } =
+      await spy.mock.results[0].value;
+
+    expect(successCount).toBe(50);
+    expect(failureCount).toBe(0);
+    expect(errors).toHaveLength(0);
+    spy.mockRestore();
+
     expect(result.status).toBe(201);
-    const body = result.body as UserImportResult;
-    expect(body.successCount).toBe(50);
-    expect(body.failureCount).toBe(0);
-    expect(body.errors).toHaveLength(0);
+    const body = result.body as { uid: string; email: string }[];
+    expect(body).toHaveLength(50);
 
     const allUsers = await firebase.auth.listUsers();
     const allProfiles = (await db.profiles.findAll()).filter((p) =>
-      Array.from({ length: 50 })
-        .map((_, i) => `${i + 1}`)
-        .includes(p.id),
+      body.map((u) => u.uid).includes(p.id),
     );
 
     const importedUsers = allUsers.users.filter((u) =>
-      Array.from({ length: 50 })
-        .map((_, i) => `${i + 1}`)
-        .includes(u.uid),
+      body.map((u) => u.uid).includes(u.uid),
     );
 
     expect(allProfiles).toHaveLength(50);
@@ -158,7 +148,7 @@ describe('Import Users (e2e)', () => {
 
     await deleteUsersByIds(
       firebase,
-      Array.from({ length: 50 }).map((_, i) => `${i + 1}`),
+      body.map((p) => p.uid),
     );
   });
 
@@ -167,7 +157,6 @@ describe('Import Users (e2e)', () => {
     let result = await req(
       global.manager.token,
       Array.from({ length: 10 }).map((_, i) => ({
-        uid: `${i + 1}`,
         email: `test${i + 1}@mail.com`,
         displayName: `Test ${i + 1}`,
         password: 'password',
@@ -176,12 +165,13 @@ describe('Import Users (e2e)', () => {
     );
 
     expect(result.status).toBe(201);
+    let body = result.body as { uid: string; email: string }[];
+    expect(body).toHaveLength(10);
 
     // second import
     result = await req(
       global.manager.token,
       Array.from({ length: 10 }).map((_, i) => ({
-        uid: `${i + 1}`,
         email: `test${i + 1}@mail.com`,
         displayName: `Test ${i + 1}`,
         password: 'password',
@@ -190,18 +180,15 @@ describe('Import Users (e2e)', () => {
     );
 
     expect(result.status).toBe(201);
+    expect(body).toHaveLength(10); // no new users should be created
 
     const allUsers = await firebase.auth.listUsers();
     const allProfiles = (await db.profiles.findAll()).filter((p) =>
-      Array.from({ length: 10 })
-        .map((_, i) => `${i + 1}`)
-        .includes(p.id),
+      body.map((u) => u.uid).includes(p.id),
     );
 
     const importedUsers = allUsers.users.filter((u) =>
-      Array.from({ length: 10 })
-        .map((_, i) => `${i + 1}`)
-        .includes(u.uid),
+      body.map((u) => u.uid).includes(u.uid),
     );
 
     expect(allProfiles).toHaveLength(10);
@@ -209,7 +196,7 @@ describe('Import Users (e2e)', () => {
 
     await deleteUsersByIds(
       firebase,
-      Array.from({ length: 10 }).map((_, i) => `${i + 1}`),
+      body.map((p) => p.uid),
     );
   });
 });

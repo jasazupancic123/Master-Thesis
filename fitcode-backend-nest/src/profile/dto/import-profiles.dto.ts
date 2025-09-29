@@ -8,13 +8,7 @@ import { Profile } from '../entity/profile.entity';
 
 export class ImportProfileDto extends IntersectionType(
   CreateUserDto,
-  PickType(Profile, [
-    'customId',
-    'sport',
-    'level',
-    'gender',
-    'birthDate',
-  ] as const),
+  PickType(Profile, ['sport', 'level', 'gender', 'birthDate'] as const),
 ) {}
 
 export class ImportProfilesDto {

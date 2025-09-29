@@ -4,7 +4,8 @@ import {
   Inject,
   Injectable,
 } from '@nestjs/common';
-import { UidIdentifier, UserImportResult } from 'firebase-admin/auth';
+import { UidIdentifier } from 'firebase-admin/auth';
+import { v4 } from 'uuid';
 
 import { AuthService } from '@src/auth/auth.service';
 import { UserRole } from '@src/auth/enum/user-role.enum';
@@ -38,7 +39,7 @@ export class ProfileService implements Permission<Profile, Institution> {
     return await this.repository.findAllByInstitution(institution);
   }
 
-  async importProfiles(input: ImportProfileDto[]): Promise<UserImportResult> {
+  async importProfiles(input: ImportProfileDto[]) {
     if (input.length === 0)
       return { successCount: 0, failureCount: 0, errors: [] };
 
@@ -48,24 +49,32 @@ export class ProfileService implements Permission<Profile, Institution> {
         throw new BadRequestException('Invalid role');
     });
 
-    const result = await this.authService.importUsers(input);
+    const importInput = input.map((user) => ({ ...user, uid: v4() }));
+    await this.authService.importUsers(importInput);
+    const { notFound } = await this.firebase.auth.getUsers(importInput);
 
-    // filter out failed imports
-    const failedIndexes = result.errors.map((e) => e.index);
-    input = input.filter((_, i) => !failedIndexes.includes(i));
-    if (input.length === 0) return result; // all imports failed
+    // filter out only successfully imported users
+    const data = importInput.filter((user) =>
+      notFound.every((nf: UidIdentifier) => nf.uid !== user.uid),
+    );
 
     // create profiles for successfully imported users
-    const operations: BatchSetOperation<Profile>[] = input.map(
-      ({ uid: id }: UidIdentifier) => ({
+    const operations: BatchSetOperation<Profile>[] = data.map(
+      ({ uid, sport, level, gender, birthDate }) => ({
         operation: 'set',
-        ref: this.repository.doc(id),
-        data: this.firebase.buildCreateQuery<Profile>({ id }),
+        ref: this.repository.doc(uid),
+        data: this.firebase.buildCreateQuery<Profile>({
+          id: uid,
+          sport,
+          level,
+          gender,
+          birthDate,
+        }),
       }),
     );
 
     await this.firebase.paginateBatches(operations);
-    return result;
+    return data.map((u) => ({ uid: u.uid, email: u.email }));
   }
 
   @LogMethod()

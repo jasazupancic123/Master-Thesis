@@ -6,13 +6,7 @@ import { IsNotEmpty, IsString } from 'class-validator';
 import { Profile } from '../entity/profile.entity';
 
 export class UpdateProfileDto extends PartialType(
-  PickType(Profile, [
-    'customId',
-    'sport',
-    'level',
-    'gender',
-    'birthDate',
-  ] as const),
+  PickType(Profile, ['sport', 'level', 'gender', 'birthDate'] as const),
 ) {
   @IsString()
   @IsNotEmpty()
