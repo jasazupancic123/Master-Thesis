@@ -6,6 +6,7 @@ import { TrainingModule } from '@src/training/training.module';
 
 import { GroupTestRepository } from './service/group-test.repository';
 import { InstitutionTestRepository } from './service/institution-test.repository';
+import { ProfileTestRepository } from './service/profile-test.repository';
 import { TestComponentService } from './service/test-component.service';
 import { TestExerciseService } from './service/test-exercise.service';
 import { TestWorkloadService } from './service/test-workload.service';
@@ -25,6 +26,7 @@ import { TestDbService } from './test-db.service';
     InstitutionTestRepository,
     GroupTestRepository,
     ProfileRepository,
+    ProfileTestRepository,
     WellnessTestRepository,
     TrainingTestRepository,
   ],

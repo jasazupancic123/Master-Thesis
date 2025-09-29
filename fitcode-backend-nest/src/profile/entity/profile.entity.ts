@@ -12,6 +12,12 @@ export class Profile extends BaseEntity {
   @IsString()
   @ApiPropertyOptional()
   @Expose()
+  customId?: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional()
+  @Expose()
   sport?: string;
 
   @IsEnum(SportLevel)

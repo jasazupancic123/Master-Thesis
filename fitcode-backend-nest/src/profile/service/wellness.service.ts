@@ -1,10 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { startOfDay, subDays } from 'date-fns';
-import { DateTime } from 'luxon';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { isBefore, isSameDay, startOfDay, subDays } from 'date-fns';
 
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
 import { DateFilterDto } from '@src/common/dto/date-filter.dto';
 import { CommonService } from '@src/common/service/common.service';
+import { User } from '@src/common/type/firebase-auth.type';
 import {
   InstitutionRef,
   UserRef,
@@ -25,12 +25,8 @@ export class WellnessService {
   ) {}
 
   @LogMethod()
-  async upsert(ref: WellnessRef, input: Wellness): Promise<Wellness> {
-    const found = await this.repository.findById(ref);
-    if (!found) await this.repository.save(input, ref);
-    else await this.repository.update(ref, input);
-
-    return input;
+  async upsert(ref: WellnessRef, input: Wellness): Promise<void> {
+    await this.repository.save(input, ref);
   }
 
   async update(ref: WellnessRef, input: Wellness): Promise<void> {
@@ -45,34 +41,38 @@ export class WellnessService {
     return await this.repository.getLastBodyweight(ref);
   }
 
-  async findAllByInstitution(ref: InstitutionRef): Promise<WellnessZScore[]> {
+  async findAllByInstitution(
+    user: User,
+    ref: InstitutionRef,
+  ): Promise<WellnessZScore[]> {
     const range: DateFilterDto = {
       from: subDays(startOfDay(new Date()), 10), // default to 10 days ago
       to: startOfDay(new Date()), // default to now
     };
 
     const institution = await this.institutionService.findByIdOrFail(ref);
+    if (
+      !this.institutionService.canView(user, institution) ||
+      institution.athleteIds.includes(user.uid) // only managers and trainers can view wellnesses
+    )
+      throw new UnauthorizedException();
+
     const wellnesses = await this.repository.findAllByInstitution(
       institution,
       range,
     );
 
-    return wellnesses.map((_w) => this.zScore(wellnesses, new Date()));
+    return wellnesses.map((_) => this.zScore(wellnesses, new Date()));
   }
 
   private zScore(docs: Wellness[], date: Date): WellnessZScore | null {
-    const dayStart = DateTime.fromJSDate(date).startOf('day');
-    const found = docs.find((wd) =>
-      DateTime.fromJSDate(wd.date).hasSame(dayStart, 'day'),
-    );
+    const dayStart = startOfDay(date);
+    const found = docs.find((wd) => isSameDay(wd.date, dayStart));
 
     if (!found) return null;
     if (docs.length < 2) return found;
 
-    const history = docs.filter(
-      (wd) => DateTime.fromJSDate(wd.date) < dayStart,
-    );
-
+    const history = docs.filter((wd) => isBefore(wd.date, dayStart));
     const hist = {
       sleep: history
         .map((w) => w.sleep)
