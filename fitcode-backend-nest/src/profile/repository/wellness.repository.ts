@@ -66,9 +66,12 @@ export class WellnessRepository extends FirestoreRepository<
     );
   }
 
-  async save(input: Omit<Wellness, 'date'>, ref: WellnessRef): Promise<string> {
+  async save(
+    input: Omit<Wellness, 'userId' | 'date'>,
+    ref: WellnessRef,
+  ): Promise<string> {
     const query = this.firebase.buildCreateQuery<Wellness>(
-      { ...input, date: startOfDay(ref.date) },
+      { ...input, date: startOfDay(ref.date), userId: ref.uid },
       { timestamps: true },
     );
 
@@ -101,6 +104,15 @@ export class WellnessRepository extends FirestoreRepository<
     if (snapshot.empty) return null;
     return this.firebase.serialize(
       snapshot.docs[0].data() as FirestoreEntity<Wellness>,
+    );
+  }
+
+  async getAllByUser(ref: UserRef): Promise<Wellness[]> {
+    const snapshot = await this.collection(ref).orderBy('date', 'desc').get();
+    if (snapshot.empty) return [];
+
+    return snapshot.docs.map((doc) =>
+      this.firebase.serialize(doc.data() as FirestoreEntity<Wellness>),
     );
   }
 

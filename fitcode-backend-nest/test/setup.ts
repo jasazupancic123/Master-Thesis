@@ -35,9 +35,9 @@ export default async function () {
 
   [global.athlete, global.trainer, global.manager, global.admin] =
     await Promise.all([
-      createAthleteUserAndToken(firebaseService),
-      createTrainerUserAndToken(firebaseService),
-      createManagerUserAndToken(firebaseService),
-      createAdminUserAndToken(firebaseService),
+      createAthleteUserAndToken(firebaseService, 'athlete'),
+      createTrainerUserAndToken(firebaseService, 'trainer'),
+      createManagerUserAndToken(firebaseService, 'manager'),
+      createAdminUserAndToken(firebaseService, 'admin'),
     ]);
 }

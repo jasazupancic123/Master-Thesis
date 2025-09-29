@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
 
+import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { FirebaseService } from '@src/firebase/firebase.service';
 
 import { GroupTestRepository } from './service/group-test.repository';
 import { InstitutionTestRepository } from './service/institution-test.repository';
+import { ProfileTestRepository } from './service/profile-test.repository';
 import { TestComponentService } from './service/test-component.service';
 import { TestExerciseService } from './service/test-exercise.service';
 import { TestWorkloadService } from './service/test-workload.service';
@@ -23,6 +25,7 @@ export class TestDbService {
     readonly institutions: InstitutionTestRepository,
     readonly groups: GroupTestRepository,
     readonly wellness: WellnessTestRepository,
+    readonly profiles: ProfileTestRepository,
   ) {}
 
   private SERVICES = [
@@ -49,5 +52,20 @@ export class TestDbService {
     const batch = this.firebase.firestore.batch();
     for (const service of this.SERVICES) await service.cleanup(false, batch);
     await batch.commit();
+  }
+
+  async clear() {
+    const { firebase } = this;
+
+    await Promise.all([
+      firebase.deleteCollection(FirestoreCollection.EXERCISE),
+      firebase.deleteCollection(FirestoreCollection.INSTITUTION),
+      firebase.deleteCollection(FirestoreCollection.GROUP),
+      firebase.deleteCollection(FirestoreCollection.PROFILE),
+      firebase.deleteCollection(FirestoreCollection.TRAINING),
+      firebase.deleteCollection(FirestoreCollection.COMPONENT),
+      firebase.deleteCollection(FirestoreCollection.TRAINING),
+      firebase.deleteCollection(FirestoreCollection.METHOD),
+    ]);
   }
 }

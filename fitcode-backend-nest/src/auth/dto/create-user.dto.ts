@@ -7,13 +7,19 @@ import { UserRole } from '../enum/user-role.enum';
 
 export type CreateUser = AuthUser & { password: string };
 
-export class CreateUserDto implements Omit<CreateUser, 'uid' | 'customClaims'> {
+export class CreateUserDto implements Omit<CreateUser, 'customClaims'> {
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  @Expose()
+  uid: string;
+
   @IsString()
   @IsNotEmpty()
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
-  uid?: string;
+  customId?: string;
 
   @IsString()
   @IsNotEmpty()
