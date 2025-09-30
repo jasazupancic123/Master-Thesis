@@ -404,14 +404,9 @@ export class WorkloadService {
     input: CompleteSetDto,
   ): Promise<Workload> {
     // find prescribed set
-    const prescribedTraining = this.trainingPlanService.getTrainingByAthlete(
-      ref.userId,
-      training,
-    );
-
-    const component = prescribedTraining.components.find(
-      (c) => c.id === ref.componentId,
-    );
+    const component = this.trainingPlanService
+      .getTrainingComponents(training)
+      .find((c) => c.id === ref.componentId);
 
     if (!component)
       throw new BadRequestException('Component not found in training');

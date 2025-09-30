@@ -43,20 +43,14 @@ export class ProfileService implements Permission<Profile, Institution> {
     return await this.repository.findAllByInstitution(institution);
   }
 
-  async importProfiles(
-    user: User,
-    input: ImportProfileDto[],
-  ): Promise<{
-    failed: { email: string; reason: string }[];
-    successCount: number;
-  }> {
+  async importProfiles(user: User, input: ImportProfileDto[]) {
     if (!this.firebase.isManager(user)) throw new UnauthorizedException();
 
     const institution = await this.institutionService.findByOwnerId(user.uid);
     if (!institution)
       throw new BadRequestException('User does not own any institution');
 
-    if (input.length === 0) return { successCount: 0, failed: [] };
+    if (input.length === 0) return { successful: [], failed: [] };
     if (input.length > 100)
       throw new ConflictException('Cannot import more than 100 users at once');
 
@@ -99,7 +93,7 @@ export class ProfileService implements Permission<Profile, Institution> {
       ...(institutionOperations as BatchOperation<unknown>[]),
     ]);
 
-    return { successCount: successfulUsers.length, failed: failedUsers };
+    return { successful: successfulUsers, failed: failedUsers };
   }
 
   @LogMethod()
