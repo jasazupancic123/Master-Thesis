@@ -9,14 +9,17 @@ import {
   CollectionReference,
   DocumentReference,
   FieldValue,
+  Query,
+  Timestamp,
 } from 'firebase-admin/firestore';
 
+import { UserRole } from '@src/auth/enum/user-role.enum';
 import { ChangeLogManager } from '@src/change-log/change-log.manager';
 import { DateRangeDto } from '@src/common/dto/date-range.dto';
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { Create, Update } from '@src/common/type/entity.type';
 import { FirestoreRepository } from '@src/common/type/firestore.type';
-import { BatchWriteOperation } from '@src/common/type/orm.type';
+import { BatchWriteOperation, Filter } from '@src/common/type/orm.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 
 import { DURATION_TRAINING_COMPONENT_WARMUP_COOLDOWN_IN_MIN } from '../constant/training-limits.constant';
@@ -28,24 +31,83 @@ export class TrainingRepository extends FirestoreRepository<Training> {
   collectionName = FirestoreCollection.TRAINING;
 
   constructor(
-    readonly firebaseService: FirebaseService,
+    readonly firebase: FirebaseService,
     @Inject(Training)
     readonly changeLog: ChangeLogManager<Training>,
   ) {
-    super(firebaseService);
+    super(firebase);
   }
 
   collection(): CollectionReference {
-    return this.firebaseService.firestore.collection(this.collectionName);
+    return this.firebase.firestore.collection(this.collectionName);
   }
 
   doc(ref: string): DocumentReference {
     return this.collection().doc(ref);
   }
 
+  buildGetQuery(
+    input: { uid: string; role: UserRole; institutionId?: string },
+    filter?: Filter<Training>,
+    options?: { limit?: number },
+  ): Query {
+    let q = this.collection() as Query;
+    switch (input.role) {
+      case UserRole.ADMIN:
+        break;
+      case UserRole.MANAGER:
+        if (!input.institutionId)
+          throw new BadRequestException(
+            'You have to provide institution ID for manager role to get trainings',
+          );
+
+        q = this.getQueryByInstitution(q, input.institutionId);
+        break;
+      case UserRole.TRAINER:
+        q = this.getQueryByTrainer(q, input.uid);
+        break;
+      case UserRole.ATHLETE:
+        q = this.getQueryByMember(q, input.uid);
+        break;
+    }
+
+    if (filter) q = this.filterQuery(q, filter);
+    q = q.orderBy('from', 'asc');
+    if (options?.limit) q = q.limit(options.limit);
+
+    return q;
+  }
+
+  filterQuery(q: Query, filter: Filter<Training>): Query {
+    if (filter.institutionId)
+      q = q.where('institutionId', '==', filter.institutionId);
+
+    if (filter.groupId) q = q.where('groupId', '==', filter.groupId);
+    if (filter.cycleId) q = q.where('cycleId', '==', filter.cycleId);
+
+    if (filter.from)
+      q = q.where('from', '>=', Timestamp.fromDate(new Date(filter.from)));
+    if (filter.to)
+      q = q.where('to', '<=', Timestamp.fromDate(new Date(filter.to)));
+
+    return q;
+  }
+
+  private getQueryByInstitution(q: Query, institutionId: string): Query {
+    return q.where('institutionId', '==', institutionId);
+  }
+
+  private getQueryByTrainer(q: Query, trainerId: string): Query {
+    return q.where('ownerId', '==', trainerId);
+  }
+
+  private getQueryByMember(q: Query, memberId: string): Query {
+    return q.where('membersIds', 'array-contains', memberId);
+  }
+
   async save(input: Create<Training>): Promise<string> {
     const { id } = this.collection().doc();
-    const query = this.firebaseService.buildCreateQuery<Training>(
+    const query = this.firebase.buildCreateQuery<Training>(
       { ...input, id },
       { timestamps: true },
     );
@@ -58,7 +120,7 @@ export class TrainingRepository extends FirestoreRepository<Training> {
   }
 
   async update(id: string, input: Update<Training>) {
-    const query = this.firebaseService.buildUpdateQuery<Training>(input);
+    const query = this.firebase.buildUpdateQuery<Training>(input);
     const ref = this.doc(id);
     await this.changeLog.trackUpdate(ref);
     await ref.update(query);
@@ -105,7 +167,7 @@ export class TrainingRepository extends FirestoreRepository<Training> {
           ? (FieldValue.arrayUnion(memberId) as unknown as string[])
           : (FieldValue.arrayRemove(memberId) as unknown as string[]),
         components: training.components.map((tc) =>
-          this.firebaseService.buildCreateQuery<TrainingComponent>({
+          this.firebase.buildCreateQuery<TrainingComponent>({
             ...tc,
             subgroups: tc.subgroups.map((sg) =>
               !add && sg.membersIds.includes(memberId) // remove member from subgroup

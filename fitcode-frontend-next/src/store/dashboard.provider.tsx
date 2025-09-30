@@ -32,6 +32,8 @@ interface DashboardContextProps {
   refetchUsers: () => void;
   members: Profile[];
   refetchMembers: (providedUrl?: string) => void;
+  setMembers: SetState<Profile[]>;
+  setUsers: SetState<AuthUser[]>;
 }
 
 export interface DashboardPageProps {
@@ -39,6 +41,7 @@ export interface DashboardPageProps {
   selectedInstitution: Institution | null;
   members: Profile[];
   refetchMembers: (providedUrl?: string) => void;
+  setMembers: SetState<Profile[]>;
 }
 
 const DashboardContext = createContext<DashboardContextProps | null>(null);
@@ -52,6 +55,7 @@ export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
     children,
     members,
     refetchMembers,
+    setMembers,
   } = props;
 
   const { role } = useAuthenticatedAuth();
@@ -103,6 +107,8 @@ export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
     setSelectedGroup,
     members,
     refetchMembers,
+    setMembers,
+    setUsers,
   };
 
   return (

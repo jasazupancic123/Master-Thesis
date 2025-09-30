@@ -55,7 +55,8 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<
     Omit<Profile, 'createdAt' | 'updatedAt'>
   >({
-    id: user.uid,
+    uid: user.uid,
+    email: user.email!,
     sport: profileGlobal?.sport,
     level: profileGlobal?.level,
     gender: profileGlobal?.gender,
@@ -108,7 +109,7 @@ export default function ProfilePage() {
             level,
             gender,
             birthDate,
-            userId: profile.id,
+            userId: profile.uid,
           }),
         (_) => {
           setProfileGlobal((prev) => ({

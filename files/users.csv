@@ -1,16 +1,16 @@
-﻿displayName,email,password,photoURL,role
-Abdulrahman Musleh,abdulrahman.musleh@mail.com,password,https://iamaspire.aspire.qa/assets/players/79182.png,athlete
-Ali Abbas,ali.abbas@mail.com,password,https://iamaspire.aspire.qa/assets/players/71979.png,athlete
-Faris Obaidah Alzaareer,faris.obaidah@mail.com,password,https://iamaspire.aspire.qa/assets/players/114233.png,athlete
-Loaie Ahmed Touni,loaie.ahmed@mail.com,password,https://iamaspire.aspire.qa/assets/players/49579.png,athlete
-Mahmoud Alismail Rimi,mahmoud.alismail@mail.com,password,https://iamaspire.aspire.qa/assets/players/49684.png,athlete
-Mahmoud Turjman,mahmoud.turjman@mail.com,password,https://iamaspire.aspire.qa/assets/players/87795.png,athlete
-Malek,malek@mail.com,password,https://iamaspire.aspire.qa/assets/players/114557.png,athlete
-Mohammed Abdullah Mohammed Al-Jabri,mohammed.abdullah@mail.com,password,https://iamaspire.aspire.qa/assets/players/76993.png,athlete
-Omar Ahmed Rashed Mohamed Ghaly,omar.ahmed@mail.com,password,https://iamaspire.aspire.qa/assets/players/114381.png,athlete
-Omar Atia,omar.atia@mail.com,password,https://iamaspire.aspire.qa/assets/players/49232.png,athlete
-Omar Ayaman Mahmoud,omar.ayaman@mail.com,password,https://iamaspire.aspire.qa/assets/players/46697.png,athlete
-Younes Mirad,younes.mirad@mail.com,password,https://iamaspire.aspire.qa/assets/players/65993.png,athlete
-Youssef Helal,youssef.helal@mail.com,password,https://iamaspire.aspire.qa/assets/players/113290.png,athlete
-Ali Youssef,ali.youssef@mail.com,password,https://iamaspire.aspire.qa/assets/players/47440.png,athlete
-,,,,
+﻿email,password,displayName,photoURL,role,sport,level,gender,birthDate
+abdulrahman.musleh@mail.com,password,Abdulrahman Musleh,https://iamaspire.aspire.qa/assets/players/79182.png,athlete,Football,intermediate,male,5/12/06
+ali.abbas@mail.com,password,Ali Abbas,https://iamaspire.aspire.qa/assets/players/71979.png,athlete,Football,beginner,male,5/13/06
+faris.obaidah@mail.com,password,Faris Obaidah Alzaareer,https://iamaspire.aspire.qa/assets/players/114233.png,athlete,Football,advanced,male,5/14/06
+loaie.ahmed@mail.com,password,Loaie Ahmed Touni,https://iamaspire.aspire.qa/assets/players/49579.png,athlete,Football,intermediate,male,5/15/06
+mahmoud.alismail@mail.com,password,Mahmoud Alismail Rimi,https://iamaspire.aspire.qa/assets/players/49684.png,athlete,Football,intermediate,male,5/16/06
+mahmoud.turjman@mail.com,password,Mahmoud Turjman,https://iamaspire.aspire.qa/assets/players/87795.png,athlete,Football,intermediate,male,5/17/06
+malek@mail.com,password,Malek,https://iamaspire.aspire.qa/assets/players/114557.png,athlete,Football,intermediate,male,5/18/06
+mohammed.abdullah@mail.com,password,Mohammed Abdullah Mohammed Al-Jabri,https://iamaspire.aspire.qa/assets/players/76993.png,athlete,Football,intermediate,male,5/19/06
+omar.ahmed@mail.com,password,Omar Ahmed Rashed Mohamed Ghaly,https://iamaspire.aspire.qa/assets/players/114381.png,athlete,Football,intermediate,male,5/20/06
+omar.atia@mail.com,password,Omar Atia,https://iamaspire.aspire.qa/assets/players/49232.png,athlete,Football,intermediate,male,5/21/06
+omar.ayaman@mail.com,password,Omar Ayaman Mahmoud,https://iamaspire.aspire.qa/assets/players/46697.png,athlete,Football,intermediate,male,5/22/06
+younes.mirad@mail.com,password,Younes Mirad,https://iamaspire.aspire.qa/assets/players/65993.png,athlete,Football,intermediate,male,5/23/06
+youssef.helal@mail.com,password,Youssef Helal,https://iamaspire.aspire.qa/assets/players/113290.png,athlete,Football,intermediate,male,5/24/06
+ali.youssef@mail.com,password,Ali Youssef,https://iamaspire.aspire.qa/assets/players/47440.png,athlete,Football,intermediate,male,5/25/06
+,,,,,,,,

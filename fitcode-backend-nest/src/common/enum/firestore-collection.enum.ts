@@ -1,15 +1,21 @@
 export enum FirestoreCollection {
+  // system
   MIGRATION = 'migrations',
   LOCAL_DEV = 'local-dev',
-  USER = 'users',
-  COMPONENT = 'components',
+
+  // root
   EXERCISE = 'exercises',
-  WELLNESS = 'wellness',
-  GROUP = 'groups',
-  SUBGROUP = 'subgroups',
-  TRAINING = 'trainings',
   INSTITUTION = 'institutions',
-  METHOD = 'methods',
+  GROUP = 'groups',
+  PROFILE = 'profile',
+  WELLNESS = 'wellness',
+
+  // training
+  TRAINING = 'trainings',
   TRAINING_WORKLOAD = 'training-workload',
   TRAINING_REPORT = 'training-reports',
+
+  // to be removed
+  COMPONENT = 'components',
+  METHOD = 'methods',
 }

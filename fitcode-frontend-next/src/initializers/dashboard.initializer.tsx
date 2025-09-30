@@ -71,12 +71,13 @@ function DashboardInitializer({
       selectedInstitution,
       members: members || [],
       refetchMembers,
+      setMembers,
     });
   }, []);
 
   if (!state) return null;
   return (
-    <DashboardProvider {...state!}>
+    <DashboardProvider {...state!} setMembers={setMembers}>
       <DashboardLayout>{children}</DashboardLayout>
     </DashboardProvider>
   );

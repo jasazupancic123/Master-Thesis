@@ -16,7 +16,7 @@ export class MigrationService {
   constructor(private readonly repository: MigrationRepository) {}
 
   async runMigrations(dryRun = false) {
-    const db = this.repository.firebaseService.firestore;
+    const db = this.repository.firebase.firestore;
 
     for (const migration of this.migrations) {
       const applied = await this.repository.doc(migration.id).get();
@@ -42,7 +42,7 @@ export class MigrationService {
   }
 
   async rollbackMigration(id: string) {
-    const db = this.repository.firebaseService.firestore;
+    const db = this.repository.firebase.firestore;
     const migration = this.migrations.find((m) => m.id === id);
     if (!migration) {
       this.logger.warn(`Migration ${id} not found`);

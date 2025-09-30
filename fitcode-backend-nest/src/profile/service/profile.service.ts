@@ -1,91 +1,118 @@
 import {
   BadRequestException,
+  ConflictException,
   forwardRef,
   Inject,
   Injectable,
+  UnauthorizedException,
 } from '@nestjs/common';
-import { Query } from 'firebase-admin/firestore';
+import { v4 } from 'uuid';
 
 import { AuthService } from '@src/auth/auth.service';
+import { UserRole } from '@src/auth/enum/user-role.enum';
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
 import { Permission } from '@src/common/interface/permission.interface';
-import { CustomClaims, User } from '@src/common/type/firebase-auth.type';
-import { UserRef } from '@src/common/type/firestore.type';
+import { User } from '@src/common/type/firebase-auth.type';
+import { BatchOperation, BatchWriteOperation } from '@src/common/type/orm.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { Institution } from '@src/institution/entity/institution.entity';
+import { InstitutionService } from '@src/institution/service/institution.service';
 
+import { ImportProfileDto } from '../dto/import-profiles.dto';
 import { UpdateProfileDto } from '../dto/update-profile.dto';
 import { Profile } from '../entity/profile.entity';
 import { ProfileRepository } from '../repository/profile.repository';
 
-type CreateUser = Pick<User, 'email' | 'displayName'> & {
-  password: string;
-  institutionId?: string;
-} & { customClaims: CustomClaims };
-
 @Injectable()
 export class ProfileService implements Permission<Profile, Institution> {
   constructor(
+    private readonly firebase: FirebaseService,
+    private readonly repository: ProfileRepository,
     @Inject(forwardRef(() => AuthService))
     private readonly authService: Wrapper<AuthService>,
-    private readonly firebaseService: FirebaseService,
-    private readonly profile: ProfileRepository,
+    @Inject(forwardRef(() => InstitutionService))
+    private readonly institutionService: Wrapper<InstitutionService>,
   ) {}
 
-  async findOne(id: string): Promise<Profile | null> {
-    return await this.profile.findById(id);
+  async findOneById(uid: string): Promise<Profile> {
+    return await this.repository.findOneOrCreate(uid);
   }
 
-  async findOneByIdOrFail(id: string): Promise<Profile> {
-    const item = await this.profile.findById(id);
-    if (!item) throw new BadRequestException('User not found');
-    return item;
+  async findAllByInstitution(institution: Institution) {
+    return await this.repository.findAllByInstitution(institution);
   }
 
-  getDoc(id: string) {
-    return this.profile.doc(id);
-  }
+  async importProfiles(user: User, input: ImportProfileDto[]) {
+    if (!this.firebase.isManager(user)) throw new UnauthorizedException();
 
-  getCollection() {
-    return this.profile.collection();
-  }
+    const institution = await this.institutionService.findByOwnerId(user.uid);
+    if (!institution)
+      throw new BadRequestException('User does not own any institution');
 
-  async getDocs(query: (query: Query) => Query = (query) => query) {
-    return await this.profile.findAll(query);
-  }
+    if (input.length === 0) return { successful: [], failed: [] };
+    if (input.length > 100)
+      throw new ConflictException('Cannot import more than 100 users at once');
 
-  async findOneOrFail(id: string): Promise<Profile> {
-    const user = await this.findOne(id);
-    if (!user) throw new BadRequestException('User not found');
-    return user;
-  }
-  async findProfile(ref: UserRef) {
-    return await this.profile.findById(ref.uid);
-  }
+    // roles can be only trainer and athlete
+    input.forEach((user) => {
+      if (![UserRole.TRAINER, UserRole.ATHLETE].includes(user.role))
+        throw new BadRequestException('Invalid role');
+    });
 
-  async upsert(data: CreateUser): Promise<void> {
-    const user = await this.authService.upsert(data);
-    if (user) await this.profile.save({ id: user.uid });
+    // only keep profiles that don’t exist yet
+    const profilesToImport = input.map((u) => ({ ...u, uid: v4() }));
+    const result = await this.authService.importUsers(profilesToImport);
+
+    const successfulUsers = profilesToImport.filter(
+      (_, i) => !result.errors.find((e) => e.index === i),
+    );
+
+    const failedUsers = result.errors.map((e) => ({
+      email: profilesToImport[e.index].email,
+      reason: e.error.message,
+    }));
+
+    // create profiles for successful imports
+    const profileOperations: BatchOperation<Profile>[] = successfulUsers.map(
+      (profile) => ({
+        ref: this.repository.doc(profile.uid),
+        operation: 'set',
+        data: this.firebase.buildCreateQuery<Profile>(profile),
+      }),
+    );
+
+    // add users to institution
+    const institutionOperations: BatchWriteOperation<Institution>[] =
+      successfulUsers.map(({ uid }) =>
+        this.institutionService.buildAddAthleteOperation(institution.id, uid),
+      );
+
+    await this.firebase.paginateBatches([
+      ...(profileOperations.filter(Boolean) as BatchOperation<unknown>[]),
+      ...(institutionOperations as BatchOperation<unknown>[]),
+    ]);
+
+    return { successful: successfulUsers, failed: failedUsers };
   }
 
   @LogMethod()
   async updateProfile(user: User, input: UpdateProfileDto) {
     const { userId } = input;
     delete input.userId;
-    await this.profile.update(userId, input);
+    await this.repository.update(userId, input);
   }
 
   canView(user: User, entity: Profile, institution?: Institution) {
-    if (this.firebaseService.isAdmin(user)) return true; // admin can view any user
-    if (user.uid === entity.id) return true; // user can view their own profile
+    if (this.firebase.isAdmin(user)) return true; // admin can view any user
+    if (user.uid === entity.uid) return true; // user can view their own profile
 
     if (institution) {
       const members = institution.trainerIds
         .concat(institution.athleteIds)
         .concat([institution.ownerId]);
 
-      if (!members.includes(user.uid) || !members.includes(entity.id))
+      if (!members.includes(user.uid) || !members.includes(entity.uid))
         return false;
 
       return true; // institution members can view each other
@@ -95,22 +122,22 @@ export class ProfileService implements Permission<Profile, Institution> {
   }
 
   canEdit(user: User, entity: Profile, institution?: Institution) {
-    if (this.firebaseService.isAdmin(user)) return true; // admin can edit any user
-    if (user.uid === entity.id) return true; // user can edit their own profile
+    if (this.firebase.isAdmin(user)) return true; // admin can edit any user
+    if (user.uid === entity.uid) return true; // user can edit their own profile
 
     if (institution) {
       const members = institution.trainerIds.concat(institution.athleteIds); // no owner
 
       if (
-        this.firebaseService.isManager(user) &&
+        this.firebase.isManager(user) &&
         institution.ownerId === user.uid &&
-        members.includes(entity.id)
+        members.includes(entity.uid)
       )
         return true; // manager can edit institution members
 
       if (
-        this.firebaseService.isTrainer(user) &&
-        institution.athleteIds.includes(entity.id)
+        this.firebase.isTrainer(user) &&
+        institution.athleteIds.includes(entity.uid)
       )
         return true; // trainer can edit athletes
     }

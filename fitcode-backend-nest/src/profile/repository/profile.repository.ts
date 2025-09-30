@@ -6,46 +6,120 @@ import {
 } from 'firebase-admin/firestore';
 
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
-import { Update } from '@src/common/type/entity.type';
+import { Create, Update } from '@src/common/type/entity.type';
 import { FirestoreRepository } from '@src/common/type/firestore.type';
+import { BatchSetOperation } from '@src/common/type/orm.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
+import { Institution } from '@src/institution/entity/institution.entity';
 
 import { Profile } from '../entity/profile.entity';
 
 @Injectable()
 export class ProfileRepository extends FirestoreRepository<Profile> {
-  collectionName = FirestoreCollection.USER;
+  collectionName = FirestoreCollection.PROFILE;
 
-  constructor(readonly firebaseService: FirebaseService) {
-    super(firebaseService);
+  constructor(readonly firebase: FirebaseService) {
+    super(firebase);
   }
 
   collection(): CollectionReference {
-    return this.firebaseService.firestore.collection(this.collectionName);
+    return this.firebase.firestore.collection(this.collectionName);
   }
 
-  doc(id: string): DocumentReference {
-    return this.collection().doc(id);
+  doc(uid: string): DocumentReference {
+    return this.collection().doc(uid);
   }
 
-  async save(input: Partial<Profile>) {
-    if (!input.id) throw new Error('User ID is required');
+  async findAllByInstitution(institution: Institution) {
+    const userIds = [
+      institution.ownerId,
+      ...(institution.trainerIds || []),
+      ...(institution.athleteIds || []),
+    ];
 
-    const query = this.firebaseService.buildCreateQuery<Profile>(
-      { id: input.id },
-      { timestamps: true },
+    const uniqueUserIds = Array.from(new Set(userIds));
+    return await this.findManyOrCreate(uniqueUserIds);
+  }
+
+  /**
+   * Sometimes, the users they are created in Auth but not in Firestore.
+   * This can happen when importing users in bulk, registering new athlete,
+   * registering new trainer, etc. This function will check if auth user
+   * exists, and if so, create a corresponding profile in Firestore. If the
+   * profile already exists, it will return the existing profile.
+   */
+  async findOneOrCreate(uid: string): Promise<Profile> {
+    let profile = await this.findById(uid);
+    if (!profile) {
+      const user = await this.firebase.auth.getUser(uid);
+      await this.save({ uid, email: user.email! });
+
+      profile = {
+        uid,
+        email: user.email!,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+    }
+
+    return profile;
+  }
+
+  async findManyOrCreate(ids: string[]): Promise<Profile[]> {
+    if (ids.length === 0) return [];
+
+    const profiles = await this.firebase.batchIn<Profile>(
+      'uid',
+      ids,
+      this.collection(),
     );
 
-    await this.doc(input.id).set(query);
-    return input.id;
+    const existingIds = profiles.map((p) => p.uid);
+    const missingIds = ids.filter((id) => !existingIds.includes(id));
+    const { users } = await this.firebase.auth.getUsers(
+      missingIds.map((uid) => ({ uid })),
+    );
+
+    if (missingIds.length > 0) {
+      const operations: BatchSetOperation<Profile>[] = [];
+      missingIds.forEach((uid) => {
+        const user = users.find((u) => u.uid === uid);
+        const profile = { uid, email: user.email };
+
+        profiles.push({
+          ...profile,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+
+        operations.push({
+          operation: 'set',
+          ref: this.doc(uid),
+          data: this.firebase.buildCreateQuery(profile, { timestamps: true }),
+        });
+      });
+
+      await this.firebase.paginateBatches(operations);
+    }
+
+    return profiles;
   }
 
-  async update(id: string, input: Update<Profile>) {
-    const query = this.firebaseService.buildUpdateQuery(input);
-    await this.doc(id).update(query);
+  async save(input: Create<Profile>) {
+    const query = this.firebase.buildCreateQuery<Profile>(input, {
+      timestamps: true,
+    });
+
+    await this.doc(input.uid).set(query);
+    return input.uid;
   }
 
-  async delete(id: string) {
-    await this.doc(id).update({ deletedAt: Timestamp.now() });
+  async update(uid: string, input: Update<Profile>) {
+    const query = this.firebase.buildUpdateQuery(input);
+    await this.doc(uid).update(query);
+  }
+
+  async delete(uid: string) {
+    await this.doc(uid).update({ deletedAt: Timestamp.now() });
   }
 }

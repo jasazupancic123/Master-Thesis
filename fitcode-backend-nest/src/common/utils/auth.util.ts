@@ -4,13 +4,16 @@ import { generateRandomEmail } from '@src/common/utils/random.util';
 import type { FirebaseService } from '@src/firebase/firebase.service';
 import type { Profile } from '@src/profile/entity/profile.entity';
 
+import { FirestoreCollection } from '../enum/firestore-collection.enum';
 import type { TestUser } from '../type/entity.type';
 
 export async function createTestUserAndToken(
   firebaseService: FirebaseService,
   role: UserRole,
+  uid?: string,
 ): Promise<TestUser> {
   const user = (await firebaseService.auth.createUser({
+    uid,
     email: generateRandomEmail(),
     password: 'password',
   })) as User;
@@ -20,12 +23,12 @@ export async function createTestUserAndToken(
   await firebaseService.auth.setCustomUserClaims(user.uid, customClaims);
 
   const createUserQuery = firebaseService.buildCreateQuery<Profile>(
-    { id: user.uid },
+    { uid: user.uid, email: user.email },
     { timestamps: true },
   );
 
   await firebaseService.firestore
-    .collection('users')
+    .collection(FirestoreCollection.PROFILE)
     .doc(user.uid)
     .set(createUserQuery);
 
@@ -46,26 +49,30 @@ export async function createTestUserAndToken(
 
 export async function createAthleteUserAndToken(
   firebaseService: FirebaseService,
+  uid?: string,
 ) {
-  return await createTestUserAndToken(firebaseService, UserRole.ATHLETE);
+  return await createTestUserAndToken(firebaseService, UserRole.ATHLETE, uid);
 }
 
 export async function createTrainerUserAndToken(
   firebaseService: FirebaseService,
+  uid?: string,
 ) {
-  return await createTestUserAndToken(firebaseService, UserRole.TRAINER);
+  return await createTestUserAndToken(firebaseService, UserRole.TRAINER, uid);
 }
 
 export async function createManagerUserAndToken(
   firebaseService: FirebaseService,
+  uid?: string,
 ) {
-  return await createTestUserAndToken(firebaseService, UserRole.MANAGER);
+  return await createTestUserAndToken(firebaseService, UserRole.MANAGER, uid);
 }
 
 export async function createAdminUserAndToken(
   firebaseService: FirebaseService,
+  uid?: string,
 ) {
-  return await createTestUserAndToken(firebaseService, UserRole.ADMIN);
+  return await createTestUserAndToken(firebaseService, UserRole.ADMIN, uid);
 }
 
 export async function deleteTestUser(
