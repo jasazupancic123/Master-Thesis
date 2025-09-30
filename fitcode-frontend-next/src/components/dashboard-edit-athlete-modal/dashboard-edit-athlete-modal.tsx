@@ -67,7 +67,7 @@ export default function DashboardEditAthleteModal(
 
   useEffect(() => {
     if (!userToEdit) return;
-    const profile = members.find((m) => m.id === userToEdit.uid);
+    const profile = members.find((m) => m.uid === userToEdit.uid);
     setProfileToEdit(profile);
   }, [userToEdit]);
 

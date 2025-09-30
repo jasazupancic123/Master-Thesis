@@ -1,5 +1,6 @@
+import type { CreateUser } from '../auth/type/user.type';
 import { BaseController } from '../base.controller';
-import type { Profile, UpdateProfile } from './type/user.type';
+import type { ImportProfiles, Profile, UpdateProfile } from './type/user.type';
 import type {
   CreateWellness,
   Wellness,
@@ -17,6 +18,15 @@ export class ProfileController extends BaseController {
     if (!this.instance) this.instance = new ProfileController();
     this.instance.setToken(token);
     return this.instance;
+  }
+
+  async importProfiles(input: ImportProfiles) {
+    return this.api.post<{
+      failed: { email: string; reason: string }[];
+      successful: ({ uid: string } & CreateUser & Profile)[];
+    }>('/import', input, {
+      token: this.getToken(),
+    });
   }
 
   async findProfile() {

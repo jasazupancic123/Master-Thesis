@@ -1,5 +1,9 @@
 import type { Component } from '../component/type/component.type';
 import type { Exercise } from './type/exercise.type';
+import {
+  COOLDOWN_ID,
+  WARMUP_ID,
+} from '@/common/constant/warmup-cooldown-ids-constants';
 import { CommonService } from '@/common/service/common.service';
 import type { Pagination } from '@/common/type/paginate.type';
 import type { SetState } from '@/common/type/state.type';
@@ -19,7 +23,10 @@ export class ExerciseService {
     let filtered = data;
 
     // filter by components
-    if (componentIds?.length) {
+    if (
+      componentIds?.length &&
+      !componentIds.some((id) => id === WARMUP_ID || id === COOLDOWN_ID)
+    ) {
       const allComponentsIds: string[] = [];
 
       for (const componentId of componentIds) {

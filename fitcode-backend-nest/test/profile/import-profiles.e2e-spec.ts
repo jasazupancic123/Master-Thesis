@@ -104,10 +104,10 @@ describe('Import Users (e2e)', () => {
     expect(result.status).toBe(201);
     const body = result.body as {
       failed: { email: string; reason: string }[];
-      successCount: number;
+      successful: { email: string; uid: string }[];
     };
 
-    expect(body.successCount).toBe(5);
+    expect(body.successful).toHaveLength(5);
     expect(body.failed).toHaveLength(5);
     body.failed.forEach((f) => {
       expect(f.email).toMatch(/invalid/);
@@ -165,10 +165,10 @@ describe('Import Users (e2e)', () => {
     expect(result.status).toBe(201);
     const body = result.body as {
       failed: { email: string; reason: string }[];
-      successCount: number;
+      successful: { email: string; uid: string }[];
     };
 
-    expect(body.successCount).toBe(50);
+    expect(body.successful).toHaveLength(50);
     expect(body.failed).toHaveLength(0);
 
     // it should add members to institution
@@ -210,10 +210,10 @@ describe('Import Users (e2e)', () => {
     expect(result.status).toBe(201);
     let body = result.body as {
       failed: { email: string; reason: string }[];
-      successCount: number;
+      successful: { email: string; uid: string }[];
     };
 
-    expect(body.successCount).toBe(10);
+    expect(body.successful).toHaveLength(10);
     expect(body.failed).toHaveLength(0);
 
     let institution = await db.institutions.findById(institutionId);
@@ -234,12 +234,9 @@ describe('Import Users (e2e)', () => {
     );
 
     expect(result.status).toBe(201);
-    body = result.body as {
-      failed: { email: string; reason: string }[];
-      successCount: number;
-    };
+    body = result.body;
 
-    expect(body.successCount).toBe(0);
+    expect(body.successful).toHaveLength(0);
     expect(body.failed).toHaveLength(10);
     body.failed.forEach((f) => {
       expect(f.email).toMatch(/test\d+@mail\.com/);
