@@ -1,10 +1,10 @@
 // reps-graph.service.ts
 'use client';
 
-import { KeypointHistory } from './class/keypoint-history';
-import { KeypointId } from './enum/keypoint-id';
-import { KeypointValueType } from './enum/keypoint-value-type';
-import { Rep } from './type/rep.type';
+import type { KeypointHistory } from './class/keypoint-history';
+import type { KeypointId } from './enum/keypoint-id';
+import type { KeypointValueType } from './enum/keypoint-value-type';
+import type { Rep } from './type/rep.type';
 import { KeypointUtil } from './util/keypoint.util';
 
 export class RepsGraphService {
@@ -16,6 +16,8 @@ export class RepsGraphService {
     extremeToEnd: '#3F88C5',
     end: '#16DB65',
     default: '#F0F6F6',
+    atExtremumStart: '#ec1fffff',
+    atExtremumEnd: '#eaff00ff',
   };
 
   // ---------- public API ----------
@@ -33,6 +35,7 @@ export class RepsGraphService {
       keypointId: KeypointId;
       valueType: KeypointValueType;
       constantKeypointHistory: KeypointHistory;
+      smooth?: boolean;
     },
     opts?: {
       filenameBase?: string; // base name for files
@@ -93,7 +96,10 @@ export class RepsGraphService {
           },
           { historyChunkCount: chunksLength }
         );
-        this.downloadBlob(combinedBlob, `${filenameBase}_all.png`);
+        this.downloadBlob(
+          combinedBlob,
+          `${filenameBase}_all_${state.keypointId}_${state.smooth ? '_smooth' : ''}.png`
+        );
         return;
       } catch (err) {
         console.warn(
@@ -116,6 +122,7 @@ export class RepsGraphService {
       keypointId: KeypointId;
       valueType: KeypointValueType;
       constantKeypointHistory: KeypointHistory;
+      smooth?: boolean;
     },
     opts?: {
       filenameBase?: string;
@@ -133,8 +140,7 @@ export class RepsGraphService {
       useGetUrl = false,
     } = opts ?? {};
 
-    const { configs: perRepConfigs, chunksLength } =
-      this.buildConfigsPerRep(state);
+    const { configs: perRepConfigs } = this.buildConfigsPerRep(state);
     if (!perRepConfigs.length)
       throw new Error('No reps found with data to plot.');
 
@@ -161,6 +167,7 @@ export class RepsGraphService {
       keypointId: KeypointId;
       valueType: KeypointValueType;
       constantKeypointHistory: KeypointHistory;
+      smooth?: boolean;
     },
     opts?: {
       filename?: string;
@@ -220,9 +227,15 @@ export class RepsGraphService {
     keypointId: KeypointId;
     valueType: KeypointValueType;
     constantKeypointHistory: KeypointHistory;
+    smooth?: boolean;
   }) {
-    const { recordedRepsRef, keypointId, valueType, constantKeypointHistory } =
-      state;
+    const {
+      recordedRepsRef,
+      keypointId,
+      valueType,
+      constantKeypointHistory,
+      smooth,
+    } = state;
     const reps = recordedRepsRef.current ?? [];
     const configs: any[] = [];
 
@@ -231,7 +244,7 @@ export class RepsGraphService {
         .getHistoryById(keypointId)
         .map((k) => {
           const v = KeypointUtil.getKeypointValueByType(k, valueType);
-          if (v == null) return undefined;
+          if (v === null) return undefined;
 
           const color =
             k.capturedAt === rep.startTimestamp
@@ -242,12 +255,16 @@ export class RepsGraphService {
                   ? this.palette.extremeToEnd
                   : k.capturedAt === rep.endValueTimestamp
                     ? this.palette.end
-                    : this.palette.default;
+                    : k.capturedAt === rep.timeAtExtremumStartTimestamp
+                      ? this.palette.atExtremumStart
+                      : k.capturedAt === rep.timeAtExtremumEndTimestamp
+                        ? this.palette.atExtremumEnd
+                        : this.palette.default;
 
           const ts =
-            typeof (k as any).capturedAt === 'number'
-              ? (k as any).capturedAt
-              : ((k as any).capturedAt?.getTime?.() ?? 0);
+            typeof k.capturedAt === 'number'
+              ? k.capturedAt
+              : (k.capturedAt?.getTime?.() ?? 0);
 
           return { value: v as number, color, ts: ts as number };
         })
@@ -318,13 +335,15 @@ export class RepsGraphService {
       chunks.push(constantKeypointHistory.history.slice(i, i + chunkSize));
     }
 
+    const allPointsValues: number[] = [];
+
     chunks.forEach((chunk, chunkIdx) => {
       const points = chunk
         .map((c) => c.find((k) => k.id === keypointId))
-        .filter((k) => k != null)
+        .filter((k) => k !== null && k !== undefined)
         .map((k) => {
           const v = KeypointUtil.getKeypointValueByType(k, valueType);
-          if (v == null) return undefined;
+          if (v === null) return undefined;
 
           const color = reps.some((rep) => k.capturedAt === rep.startTimestamp)
             ? this.palette.start
@@ -334,18 +353,45 @@ export class RepsGraphService {
                 ? this.palette.extremeToEnd
                 : reps.some((rep) => k.capturedAt === rep.endValueTimestamp)
                   ? this.palette.end
-                  : this.palette.default;
+                  : reps.some(
+                        (rep) =>
+                          k.capturedAt === rep.timeAtExtremumStartTimestamp
+                      )
+                    ? this.palette.atExtremumStart
+                    : reps.some(
+                          (rep) =>
+                            k.capturedAt === rep.timeAtExtremumEndTimestamp
+                        )
+                      ? this.palette.atExtremumEnd
+                      : this.palette.default;
 
           const ts =
-            typeof (k as any).capturedAt === 'number'
-              ? (k as any).capturedAt
-              : ((k as any).capturedAt?.getTime?.() ?? 0);
+            typeof k.capturedAt === 'number'
+              ? k.capturedAt
+              : (k.capturedAt?.getTime?.() ?? 0);
 
           return { value: v as number, color, ts: ts as number };
         })
         .filter(Boolean) as { value: number; color: string; ts: number }[];
 
       if (!points.length) return;
+
+      // SMOOTH VALUES
+      if (smooth) {
+        const smoothedValues = KeypointUtil.smoothKeypointValues(
+          points.map((p) => p.value),
+          undefined,
+          13,
+          2
+        );
+
+        // apply smoothed values to points
+        smoothedValues.forEach((sv, i) => {
+          points[i].value = sv as number;
+        });
+      }
+
+      allPointsValues.push(...points.map((p) => p.value));
 
       // simple index labels; switch to timestamp formatting if you prefer
       const labels: (string | number)[] = Array.from(
@@ -398,7 +444,22 @@ export class RepsGraphService {
       configs.push(config);
     });
 
-    console.log('configs', configs, 'reps', reps.length);
+    // after you've finished filling allPointsValues
+
+    // function downloadCSV(filename: string, text: string) {
+    //   const blob = new Blob([text], { type: 'text/csv;charset=utf-8' });
+    //   const url = URL.createObjectURL(blob);
+    //   const a = document.createElement('a');
+    //   a.href = url;
+    //   a.download = filename;
+    //   document.body.appendChild(a);
+    //   a.click();
+    //   a.remove();
+    //   URL.revokeObjectURL(url);
+    // }
+
+    // const csv = allPointsValues.map((v) => String(v)).join('\n') + '\n'; // newline at end is nice-to-have
+    // downloadCSV('all_points.csv', csv);
 
     return { configs, chunksLength: chunks.length };
   }
@@ -591,7 +652,7 @@ export class RepsGraphService {
     for (let i = 0; i < blobs.length; i++) {
       this.downloadBlob(blobs[i], `${filenameBase}_rep${i + 1}.png`);
       // Small gap helps some browsers finish downloads cleanly
-      // eslint-disable-next-line no-await-in-loop
+
       await new Promise((r) => setTimeout(r, 20));
     }
   }
