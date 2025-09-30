@@ -3,12 +3,16 @@ export const POSE_DETECTION_CONSTRAINTS = {
   IN_FRAME_VISIBLITY_THRESHOLD: 0.5,
   STILLNESS_THRESHOLD_M: 0.03, // in meters
   STILLNESS_THRESHOLD_WHILE_RECORDING_M: 0.01, // in meters
-  STILLNESS_DETECTION_WINDOW_DURING_RECORDING_S: 1, // in seconds
+  STILLNESS_DETECTION_WINDOW_DURING_RECORDING_S: 1.5, // in seconds
   FACING_CAMERA_VISIBLITY_THRESHOLD: 0.5,
+  MIN_TIME_PASSED_TO_DETECT_STILLNESS_S: 3, // in seconds
 
   // Nod detection
-  NOD_DETECTION_BUFFER_DURATION_MS: 1500, // how many ms to track for nod detection
-  Y_POS_HELPER_M: 0.01, // in meters, how much we help the y for better detection
+  NOD_DETECTION_BUFFER_DURATION_S: 1.5, // how many ms to track for nod detection
+  Y_POS_HELPER_M: 0.001335, // in meters, how much we help the y for better detection
+
+  // Head shake
+  HEAD_SHAKE_DETECTION_BUFFER_DURATION_S: 1.5, // how many ms to track for head shake detection
 
   KEYPOINT_BUFFER_DURATION_MS: 1000, // how many ms to track
   CLOSE_ENOUGH_TO_START_VALUE_RATIO: 0.2, // how close to the start value the rep needs to be to be considered finished

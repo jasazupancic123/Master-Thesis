@@ -104,6 +104,8 @@ export function enableCam(state: {
 
 export const predictWebcam = async (state: {
   statusRef: RefObject<DetectionStatus>;
+  statusMessage: RefObject<string>;
+  canProceedIntoReadyStateRef: RefObject<boolean>;
   repStateRef: RefObject<RepState>;
   model: PoseModel;
   poseLandmarker: PoseLandmarker | null;
@@ -134,6 +136,8 @@ export const predictWebcam = async (state: {
 }) => {
   const {
     statusRef,
+    statusMessage,
+    canProceedIntoReadyStateRef,
     repStateRef,
     model,
     poseLandmarker,
@@ -245,6 +249,7 @@ export const predictWebcam = async (state: {
 
       PoseDetectionService.checkStatus({
         statusRef,
+        canProceedIntoReadyStateRef,
         repStateRef,
         keypoints,
         keypointBuffer,
@@ -252,6 +257,7 @@ export const predictWebcam = async (state: {
         avgFps: avgFps.current,
         keypointHistory,
         recordingTimestampRef,
+        statusMessage,
       });
 
       if (

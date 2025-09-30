@@ -1,11 +1,10 @@
 // reps-graph.service.ts
 'use client';
 
-import { KeypointHistory } from './class/keypoint-history';
-import { KeypointId } from './enum/keypoint-id';
-import { KeypointValueType } from './enum/keypoint-value-type';
-import { RepDetectionService } from './rep-detection.service';
-import { Rep } from './type/rep.type';
+import type { KeypointHistory } from './class/keypoint-history';
+import type { KeypointId } from './enum/keypoint-id';
+import type { KeypointValueType } from './enum/keypoint-value-type';
+import type { Rep } from './type/rep.type';
 import { KeypointUtil } from './util/keypoint.util';
 
 export class RepsGraphService {
@@ -141,8 +140,7 @@ export class RepsGraphService {
       useGetUrl = false,
     } = opts ?? {};
 
-    const { configs: perRepConfigs, chunksLength } =
-      this.buildConfigsPerRep(state);
+    const { configs: perRepConfigs } = this.buildConfigsPerRep(state);
     if (!perRepConfigs.length)
       throw new Error('No reps found with data to plot.');
 
@@ -246,7 +244,7 @@ export class RepsGraphService {
         .getHistoryById(keypointId)
         .map((k) => {
           const v = KeypointUtil.getKeypointValueByType(k, valueType);
-          if (v == null) return undefined;
+          if (v === null) return undefined;
 
           const color =
             k.capturedAt === rep.startTimestamp
@@ -264,9 +262,9 @@ export class RepsGraphService {
                         : this.palette.default;
 
           const ts =
-            typeof (k as any).capturedAt === 'number'
-              ? (k as any).capturedAt
-              : ((k as any).capturedAt?.getTime?.() ?? 0);
+            typeof k.capturedAt === 'number'
+              ? k.capturedAt
+              : (k.capturedAt?.getTime?.() ?? 0);
 
           return { value: v as number, color, ts: ts as number };
         })
@@ -342,10 +340,10 @@ export class RepsGraphService {
     chunks.forEach((chunk, chunkIdx) => {
       const points = chunk
         .map((c) => c.find((k) => k.id === keypointId))
-        .filter((k) => k != null)
+        .filter((k) => k !== null && k !== undefined)
         .map((k) => {
           const v = KeypointUtil.getKeypointValueByType(k, valueType);
-          if (v == null) return undefined;
+          if (v === null) return undefined;
 
           const color = reps.some((rep) => k.capturedAt === rep.startTimestamp)
             ? this.palette.start
@@ -368,9 +366,9 @@ export class RepsGraphService {
                       : this.palette.default;
 
           const ts =
-            typeof (k as any).capturedAt === 'number'
-              ? (k as any).capturedAt
-              : ((k as any).capturedAt?.getTime?.() ?? 0);
+            typeof k.capturedAt === 'number'
+              ? k.capturedAt
+              : (k.capturedAt?.getTime?.() ?? 0);
 
           return { value: v as number, color, ts: ts as number };
         })
@@ -448,24 +446,20 @@ export class RepsGraphService {
 
     // after you've finished filling allPointsValues
 
-    function downloadCSV(filename: string, text: string) {
-      const blob = new Blob([text], { type: 'text/csv;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-    }
-
-    // usage:
+    // function downloadCSV(filename: string, text: string) {
+    //   const blob = new Blob([text], { type: 'text/csv;charset=utf-8' });
+    //   const url = URL.createObjectURL(blob);
+    //   const a = document.createElement('a');
+    //   a.href = url;
+    //   a.download = filename;
+    //   document.body.appendChild(a);
+    //   a.click();
+    //   a.remove();
+    //   URL.revokeObjectURL(url);
+    // }
 
     // const csv = allPointsValues.map((v) => String(v)).join('\n') + '\n'; // newline at end is nice-to-have
     // downloadCSV('all_points.csv', csv);
-
-    console.log('configs', configs, 'reps', reps.length);
 
     return { configs, chunksLength: chunks.length };
   }
@@ -658,7 +652,7 @@ export class RepsGraphService {
     for (let i = 0; i < blobs.length; i++) {
       this.downloadBlob(blobs[i], `${filenameBase}_rep${i + 1}.png`);
       // Small gap helps some browsers finish downloads cleanly
-      // eslint-disable-next-line no-await-in-loop
+
       await new Promise((r) => setTimeout(r, 20));
     }
   }

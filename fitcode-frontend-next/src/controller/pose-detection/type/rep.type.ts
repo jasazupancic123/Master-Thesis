@@ -1,5 +1,5 @@
 import type { KeypointHistory } from '../class/keypoint-history';
-import { Keypoint } from './keypoint.type';
+import type { Keypoint } from './keypoint.type';
 
 export type Rep = {
   // INIT

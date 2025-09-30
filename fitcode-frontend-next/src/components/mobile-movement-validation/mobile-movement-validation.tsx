@@ -1,7 +1,7 @@
 'use client';
 
 import type { DrawingUtils, PoseLandmarker } from '@mediapipe/tasks-vision';
-import { Box, Button } from '@mui/material';
+import { Box } from '@mui/material';
 import { useTheme } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 
@@ -25,10 +25,8 @@ import { RepDetectionService } from '@/controller/pose-detection/rep-detection.s
 import type { ExerciseDetectionData } from '@/controller/pose-detection/type/exercise-start-condition.type';
 import type { Rep } from '@/controller/pose-detection/type/rep.type';
 import type { RepState } from '@/controller/pose-detection/type/rep-state.type';
-import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useScreenSize } from '@/store/screen-size.provider';
-import { RepsGraphService } from '@/controller/pose-detection/rep-graph.service';
 
 const DEBUG = false;
 
@@ -114,6 +112,7 @@ export default function MobileMovementValidation(
   // Main Status
   const statusRef = useRef<DetectionStatus>(DetectionStatus.NOT_FULLY_IN_FRAME);
   const statusMessage = useRef<string>(STATUS_MESSAGES[statusRef.current]);
+  const canProceedIntoReadyStateRef = useRef(false); // used for clearing buffer before detecting stillness
 
   // Rep State
   const repStateRef = useRef<RepState>({
@@ -314,16 +313,16 @@ export default function MobileMovementValidation(
   const finishAiDetection = async () => {
     statusMessage.current = getStatusMessage(DetectionStatus.STOPPED);
 
-    await RepsGraphService.downloadReps(
-      {
-        recordedRepsRef,
-        keypointId: exerciseDetectionData!.romKeypointId,
-        valueType: exerciseDetectionData!.romValueType,
-        constantKeypointHistory: constantKeypointHistoryRef.current,
-        smooth: true,
-      },
-      { filenameBase: 'session', combine: true }
-    );
+    // await RepsGraphService.downloadReps(
+    //   {
+    //     recordedRepsRef,
+    //     keypointId: exerciseDetectionData!.romKeypointId,
+    //     valueType: exerciseDetectionData!.romValueType,
+    //     constantKeypointHistory: constantKeypointHistoryRef.current,
+    //     smooth: true,
+    //   },
+    //   { filenameBase: 'session', combine: true }
+    // );
 
     // KeypointUtil.drawKeypointValuesGraph(
     //   constantKeypointHistoryRef.current.history,
@@ -385,8 +384,6 @@ export default function MobileMovementValidation(
       )
         tempo = parseInt(tempoString);
 
-      console.log({ tempoString, tempo });
-
       setSelectedTrackingMethod(TrackingMethod.MANUAL);
       updateExerciseValues(recordedRepsRef.current.length, tempo);
     }
@@ -420,6 +417,8 @@ export default function MobileMovementValidation(
       predictWebcam: async () =>
         await predictWebcam({
           statusRef,
+          statusMessage,
+          canProceedIntoReadyStateRef,
           repStateRef,
           model,
           poseLandmarker,
@@ -576,42 +575,6 @@ export default function MobileMovementValidation(
             zIndex: 1000,
           }}
         />
-
-        <Box
-          width="100%"
-          display="flex"
-          justifyContent="center"
-          gap={2}
-          sx={{
-            position: 'absolute',
-            bottom: 10,
-            left: 0,
-            zIndex: 100000,
-          }}
-        >
-          <Button
-            variant="contained"
-            onClick={() => {
-              KeypointUtil.saveKeypointValueGraph({
-                exerciseDetectionData,
-                keypointHistoryRef,
-              });
-            }}
-            sx={{ mt: 2 }}
-          >
-            Save Graph
-          </Button>
-          <Button
-            variant="contained"
-            onClick={() => {
-              if (setSelectedTrackingMethod)
-                setSelectedTrackingMethod(TrackingMethod.MANUAL);
-            }}
-            sx={{ mt: 2 }}
-          >
-            Finish
-          </Button>
-        </Box>
 
         {/* 🔧 Optional floating debug button (only shows if you want) */}
         {DEBUG && (

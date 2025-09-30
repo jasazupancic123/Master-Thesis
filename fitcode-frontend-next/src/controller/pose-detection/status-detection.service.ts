@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import type { RefObject } from 'react';
 
 import type { KeypointHistory } from './class/keypoint-history';
@@ -6,12 +7,12 @@ import { ConditionDirection } from './enum/condition-detection.enum';
 import { DetectionStatus } from './enum/detection-status';
 import { KeypointId } from './enum/keypoint-id';
 import { RepStatus } from './enum/rep-state';
+import { PoseDetectionService } from './pose-detection.service';
 import type { ExerciseRepStartCondition } from './type/exercise-start-condition.type';
 import type { Keypoint } from './type/keypoint.type';
 import type { RepState } from './type/rep-state.type';
 import { KeypointUtil } from './util/keypoint.util';
-import { PoseDetectionService } from './pose-detection.service';
-import dayjs from 'dayjs';
+import { getStatusMessage } from '@/components/mobile-movement-validation/state';
 
 export class StatusDetectionService {
   // if it returns false, it means we need to return in main loop
@@ -21,42 +22,60 @@ export class StatusDetectionService {
     state: {
       keypoints: Keypoint[];
       statusRef: RefObject<DetectionStatus>;
+      canProceedIntoReadyStateRef: RefObject<boolean>;
       keypointBuffer: KeypointHistory;
-      keypointHistory: KeypointHistory;
-      exerciseStartConditions: ExerciseRepStartCondition[];
       avgFps: { value: number; count: number } | null;
       recordingTimestampRef: RefObject<Date | null>;
+      statusMessage: RefObject<string>;
     }
   ): boolean {
     const {
       keypoints,
       statusRef,
+      canProceedIntoReadyStateRef,
       keypointBuffer,
-      keypointHistory,
-      exerciseStartConditions,
       avgFps,
       recordingTimestampRef,
+      statusMessage,
     } = state;
 
     switch (detectionStatus) {
       case DetectionStatus.NOT_FULLY_IN_FRAME: {
         const isFullyInFrame = this.checkIsFullyInFrame(keypoints);
 
+        const canProceedIntoNotFacingCamera = isFullyInFrame;
+
+        if (!canProceedIntoNotFacingCamera)
+          canProceedIntoReadyStateRef.current = false;
+
         return this.updateStatus(
           statusRef,
           isFullyInFrame,
           DetectionStatus.NOT_FULLY_IN_FRAME,
-          DetectionStatus.NOT_FACING_CAMERA
+          DetectionStatus.NOT_FACING_CAMERA,
+          statusMessage
         );
       }
       case DetectionStatus.NOT_FACING_CAMERA: {
         const isFacingCamera = this.checkIsFacingCamera(keypoints);
 
+        const canUpdateToNotStill = isFacingCamera;
+
+        if (
+          canProceedIntoReadyStateRef.current === false &&
+          canUpdateToNotStill
+        ) {
+          keypointBuffer.clear();
+          canProceedIntoReadyStateRef.current = true;
+        } else if (!canUpdateToNotStill)
+          canProceedIntoReadyStateRef.current = false;
+
         return this.updateStatus(
           statusRef,
-          isFacingCamera,
+          canUpdateToNotStill,
           DetectionStatus.NOT_FACING_CAMERA,
-          DetectionStatus.NOT_STILL
+          DetectionStatus.NOT_STILL,
+          statusMessage
         );
       }
       case DetectionStatus.NOT_STILL: {
@@ -71,19 +90,20 @@ export class StatusDetectionService {
           statusRef,
           isStill,
           DetectionStatus.NOT_STILL,
-          DetectionStatus.READY
+          DetectionStatus.READY,
+          statusMessage
         );
       }
       case DetectionStatus.READY: {
         if (!avgFps || !avgFps.value || avgFps.count < 10) return false;
 
-        const hasNodded = PoseDetectionService.checkHasNodded({
-          keypointBuffer,
-          avgFps,
-        });
+        // const hasNodded = PoseDetectionService.checkHasNodded({
+        //   keypointBuffer,
+        //   avgFps,
+        // });
 
-        if (hasNodded)
-          keypointBuffer.cutAtIndex(keypointBuffer.history.length - 1);
+        // if (hasNodded)
+        //   keypointBuffer.cutAtIndex(keypointBuffer.history.length - 1);
 
         const isStill = this.checkIsStill({
           currentStatus: statusRef.current,
@@ -110,7 +130,8 @@ export class StatusDetectionService {
           statusRef,
           canStartRecording,
           DetectionStatus.READY,
-          DetectionStatus.RECORDING
+          DetectionStatus.RECORDING,
+          statusMessage
         );
       }
       case DetectionStatus.RECORDING: {
@@ -136,16 +157,22 @@ export class StatusDetectionService {
           bufferCutOf,
         });
 
-        const hasNodded = PoseDetectionService.checkHasNodded({
+        // const hasNodded = PoseDetectionService.checkHasNodded({
+        //   keypointBuffer,
+        //   avgFps,
+        // });
+
+        const hasShakedHead = PoseDetectionService.checkHasShakedHead({
           keypointBuffer,
           avgFps,
         });
 
         return this.updateStatus(
           statusRef,
-          isStill && hasNodded,
+          isStill && hasShakedHead,
           DetectionStatus.RECORDING,
-          DetectionStatus.STOPPED
+          DetectionStatus.STOPPED,
+          statusMessage
         );
       }
       default: {
@@ -159,15 +186,19 @@ export class StatusDetectionService {
     statusRef: RefObject<DetectionStatus>,
     condition: boolean,
     currentStatus: DetectionStatus,
-    nextStatus: DetectionStatus
+    nextStatus: DetectionStatus,
+    statusMessage: RefObject<string>
   ): boolean {
     if (!condition && statusRef.current === currentStatus) {
       return false;
     } else if (!condition) {
       statusRef.current = currentStatus;
+      statusMessage.current = getStatusMessage(currentStatus);
       return false;
     } else if (condition && statusRef.current === currentStatus) {
       statusRef.current = nextStatus;
+      statusMessage.current = getStatusMessage(nextStatus);
+
       return false;
     }
 
@@ -175,10 +206,21 @@ export class StatusDetectionService {
   }
 
   private static checkIsFullyInFrame(keypoints: Keypoint[]): boolean {
-    return keypoints.every(
-      (kp) =>
-        kp.visibility > POSE_DETECTION_CONSTRAINTS.IN_FRAME_VISIBLITY_THRESHOLD
-    );
+    const requiredKeypointCombinations = [
+      [KeypointId.LEFT_SHOULDER, KeypointId.LEFT_EYE, KeypointId.LEFT_ANKLE],
+      [KeypointId.RIGHT_SHOULDER, KeypointId.RIGHT_EYE, KeypointId.RIGHT_ANKLE],
+    ]; // at least one of these needs to be true
+
+    return requiredKeypointCombinations.some((combination) => {
+      return combination.every((id) => {
+        const kp = KeypointUtil.getDesiredKeypointFromArray(keypoints, id);
+        return (
+          kp &&
+          kp.visibility >
+            POSE_DETECTION_CONSTRAINTS.IN_FRAME_VISIBLITY_THRESHOLD
+        );
+      });
+    });
   }
 
   private static checkIsFacingCamera(keypoints: Keypoint[]): boolean {
@@ -187,8 +229,6 @@ export class StatusDetectionService {
       KeypointId.RIGHT_EYE,
       KeypointId.LEFT_SHOULDER,
       KeypointId.RIGHT_SHOULDER,
-      KeypointId.LEFT_WRIST,
-      KeypointId.RIGHT_WRIST,
       KeypointId.LEFT_HIP,
       KeypointId.RIGHT_HIP,
       KeypointId.LEFT_KNEE,
@@ -221,7 +261,19 @@ export class StatusDetectionService {
     if (!avgFps) return false;
 
     const timeElapsed = avgFps.count / avgFps.value; // in seconds
-    if (timeElapsed < 3) return false;
+
+    const framesNeededInBuffer = Math.min(
+      buffer.bufferLength || Infinity,
+      POSE_DETECTION_CONSTRAINTS.MIN_TIME_PASSED_TO_DETECT_STILLNESS_S *
+        avgFps.value
+    ); // need at least 3 seconds of data
+
+    if (
+      timeElapsed <
+        POSE_DETECTION_CONSTRAINTS.MIN_TIME_PASSED_TO_DETECT_STILLNESS_S ||
+      buffer.history.length < framesNeededInBuffer
+    )
+      return false;
 
     const stillnessKeypointIds = [
       KeypointId.LEFT_SHOULDER,
@@ -251,10 +303,21 @@ export class StatusDetectionService {
 
       const stdDev = StatusDetectionService.calculateStandardDeviation(history);
 
-      return currentStatus === DetectionStatus.RECORDING
-        ? stdDev <
+      const isKeypointStill =
+        currentStatus === DetectionStatus.RECORDING
+          ? stdDev <
             POSE_DETECTION_CONSTRAINTS.STILLNESS_THRESHOLD_WHILE_RECORDING_M
-        : stdDev < POSE_DETECTION_CONSTRAINTS.STILLNESS_THRESHOLD_M;
+          : stdDev < POSE_DETECTION_CONSTRAINTS.STILLNESS_THRESHOLD_M;
+
+      // if (!isKeypointStill) {
+      //   console.log('KEYPOINT NOT STILL', {
+      //     kpId: kp.id,
+      //     stdDev,
+      //     isKeypointStill,
+      //   });
+      // }
+
+      return isKeypointStill;
     });
   }
 

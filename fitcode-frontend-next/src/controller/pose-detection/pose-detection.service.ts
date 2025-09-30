@@ -1,20 +1,21 @@
 import type { RefObject } from 'react';
 
 import type { KeypointHistory } from './class/keypoint-history';
+import { POSE_DETECTION_CONSTRAINTS } from './const/pose-detection-constrains.const';
 import { DetectionStatus } from './enum/detection-status';
+import { KeypointId } from './enum/keypoint-id';
+import { KeypointValueType } from './enum/keypoint-value-type';
 import { StatusDetectionService } from './status-detection.service';
 import type { ExerciseRepStartCondition } from './type/exercise-start-condition.type';
 import type { Keypoint } from './type/keypoint.type';
 import type { PoseValidationCondition } from './type/pose-validation-condition.type';
 import type { RepState } from './type/rep-state.type';
 import { KeypointUtil } from './util/keypoint.util';
-import { KeypointId } from './enum/keypoint-id';
-import { POSE_DETECTION_CONSTRAINTS } from './const/pose-detection-constrains.const';
-import { KeypointValueType } from './enum/keypoint-value-type';
 
 export class PoseDetectionService {
   static checkStatus(state: {
     statusRef: RefObject<DetectionStatus>;
+    canProceedIntoReadyStateRef: RefObject<boolean>;
     repStateRef: RefObject<RepState>;
     keypoints: Keypoint[];
     keypointBuffer: KeypointHistory;
@@ -22,9 +23,11 @@ export class PoseDetectionService {
     exerciseStartConditions: ExerciseRepStartCondition[];
     avgFps: { value: number; count: number } | null;
     recordingTimestampRef: RefObject<Date | null>;
+    statusMessage: RefObject<string>;
   }) {
     const {
       statusRef,
+      canProceedIntoReadyStateRef,
       repStateRef,
       keypoints,
       keypointBuffer,
@@ -32,6 +35,7 @@ export class PoseDetectionService {
       exerciseStartConditions,
       avgFps,
       recordingTimestampRef,
+      statusMessage,
     } = state;
 
     const initStatuses =
@@ -51,13 +55,14 @@ export class PoseDetectionService {
         {
           keypoints,
           statusRef,
+          canProceedIntoReadyStateRef,
           keypointBuffer: keypointBuffer,
-          exerciseStartConditions,
           avgFps,
-          keypointHistory,
           recordingTimestampRef,
+          statusMessage,
         }
       );
+
       if (!validStatus) return;
     }
   }
@@ -86,6 +91,85 @@ export class PoseDetectionService {
     }
   }
 
+  static checkHasShakedHead(state: {
+    keypointBuffer: KeypointHistory;
+    avgFps: { value: number; count: number } | null;
+  }): boolean {
+    const { keypointBuffer, avgFps } = state;
+
+    const numFrames = KeypointUtil.getFramesCountFromSeconds(
+      POSE_DETECTION_CONSTRAINTS.HEAD_SHAKE_DETECTION_BUFFER_DURATION_S,
+      avgFps?.value || 30
+    );
+
+    const frames = keypointBuffer.history.slice(-numFrames);
+
+    const startMouthLeftKeypoint = KeypointUtil.getDesiredKeypointFromArray(
+      frames[0],
+      KeypointId.MOUTH_LEFT
+    );
+
+    const startMouthRightKeypoint = KeypointUtil.getDesiredKeypointFromArray(
+      frames[0],
+      KeypointId.MOUTH_RIGHT
+    );
+
+    if (!startMouthLeftKeypoint || !startMouthRightKeypoint) return false;
+
+    const startMouthLeftKeypointX = KeypointUtil.getKeypointValueByType(
+      startMouthLeftKeypoint,
+      KeypointValueType.POSITION_X
+    );
+
+    const startMouthRightKeypointX = KeypointUtil.getKeypointValueByType(
+      startMouthRightKeypoint,
+      KeypointValueType.POSITION_X
+    );
+
+    if (
+      startMouthLeftKeypointX === undefined ||
+      startMouthRightKeypointX === undefined
+    )
+      return false;
+
+    let hasMovedLeft = false,
+      hasMovedRight = false;
+
+    for (const frame of frames) {
+      const leftEye = KeypointUtil.getDesiredKeypointFromArray(
+        frame,
+        KeypointId.LEFT_EYE
+      );
+
+      const rightEye = KeypointUtil.getDesiredKeypointFromArray(
+        frame,
+        KeypointId.RIGHT_EYE
+      );
+
+      if (leftEye && !hasMovedLeft) {
+        const leftEyeX = KeypointUtil.getKeypointValueByType(
+          leftEye,
+          KeypointValueType.POSITION_X
+        );
+
+        if (leftEyeX !== undefined && leftEyeX < startMouthRightKeypointX)
+          hasMovedLeft = true;
+      }
+
+      if (rightEye && !hasMovedRight) {
+        const rightEyeX = KeypointUtil.getKeypointValueByType(
+          rightEye,
+          KeypointValueType.POSITION_X
+        );
+
+        if (rightEyeX !== undefined && rightEyeX > startMouthLeftKeypointX)
+          hasMovedRight = true;
+      }
+    }
+
+    return hasMovedLeft && hasMovedRight;
+  }
+
   static checkHasNodded(state: {
     keypointBuffer: KeypointHistory;
     avgFps: { value: number; count: number } | null;
@@ -93,12 +177,13 @@ export class PoseDetectionService {
     const { keypointBuffer, avgFps } = state;
 
     const numFrames = KeypointUtil.getFramesCountFromSeconds(
-      POSE_DETECTION_CONSTRAINTS.NOD_DETECTION_BUFFER_DURATION_MS / 1000,
+      POSE_DETECTION_CONSTRAINTS.NOD_DETECTION_BUFFER_DURATION_S,
       avgFps?.value || 30
     );
 
     const frames = keypointBuffer.history.slice(-numFrames);
 
+    // conditions for nod
     let earsBelowEyesStart = false;
     let earsAboveEyes = false;
     let earsBelowEyesEnd = false;
@@ -234,7 +319,6 @@ export class PoseDetectionService {
       if (avgShoulderY - 0.2 <= avgHipY) shouldersAlwaysAboveHips = false;
     }
 
-    // if (earsBelowEyesEnd) console.log('NOD DETECTED');
     return (
       earsBelowEyesStart &&
       earsAboveEyes &&
