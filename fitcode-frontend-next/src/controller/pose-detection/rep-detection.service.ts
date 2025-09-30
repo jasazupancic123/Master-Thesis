@@ -16,7 +16,6 @@ import type { Rep } from './type/rep.type';
 import type { RepState } from './type/rep-state.type';
 import { KeypointUtil } from './util/keypoint.util';
 import { TimeUtil } from './util/time.util';
-import { Direction } from 'react-range';
 
 export class RepDetectionService {
   /*
@@ -96,7 +95,6 @@ export class RepDetectionService {
           // Set all the times
           this.postProcessRep({
             currentRepRef,
-            endKeypoint,
             recordedRepsRef,
             keypointId,
             valueType,
@@ -258,7 +256,6 @@ export class RepDetectionService {
       currentValue,
       currentKeypoint,
       currentRepRef,
-      recordedRepsRef,
     });
 
     // We need to detect an extremum first to finish the rep
@@ -303,11 +300,6 @@ export class RepDetectionService {
 
     const endKeypoint = KeypointUtil.getDesiredKeypointFromArray(
       currentRepRef.current?.buffer.history[slope],
-      keypointId
-    );
-
-    const endKeypointKeypointHistory = KeypointUtil.getDesiredKeypointFromArray(
-      keypointHistory.history[slope],
       keypointId
     );
 
@@ -579,15 +571,8 @@ export class RepDetectionService {
     currentValue: number;
     currentKeypoint: Keypoint;
     currentRepRef: RefObject<Rep | null>;
-    recordedRepsRef: RefObject<Rep[]>;
   }) {
-    const {
-      direction,
-      currentValue,
-      currentKeypoint,
-      currentRepRef,
-      recordedRepsRef,
-    } = state;
+    const { direction, currentValue, currentKeypoint, currentRepRef } = state;
 
     if (!currentRepRef.current) return;
 
@@ -683,7 +668,7 @@ export class RepDetectionService {
       avgFps?.value > POSE_DETECTION_CONSTRAINTS.HIGH_FPS_THRESHOLD;
 
     // if we are over this velocity, then we are still moving - starting or ending the rep!
-    let minVelocityPerFrame =
+    const minVelocityPerFrame =
       (detectingRepStart
         ? isHighFps
           ? POSE_DETECTION_CONSTRAINTS.REP_START_VELOCITY_HIGH_FPS_M_PER_S
@@ -731,7 +716,7 @@ export class RepDetectionService {
           (direction === ConditionDirection.NEGATIVE &&
             K > -minVelocityPerFrame)
         ) {
-          console.log('BEST START');
+          // console.log('BEST START');
 
           if (
             bestK === undefined ||
@@ -766,7 +751,7 @@ export class RepDetectionService {
           (direction === ConditionDirection.POSITIVE && K <= bestK) ||
           (direction === ConditionDirection.NEGATIVE && K >= bestK)
         ) {
-          console.log('FOUND OK START');
+          // console.log('FOUND OK START');
           bestK = K;
           bestS = s;
         }
@@ -776,7 +761,7 @@ export class RepDetectionService {
             K > -minVelocityPerFrame) ||
           (direction === ConditionDirection.NEGATIVE && K < minVelocityPerFrame)
         ) {
-          console.log('BEST END');
+          // console.log('BEST END');
 
           if (
             bestK === undefined ||
@@ -905,7 +890,6 @@ export class RepDetectionService {
 
   private static postProcessRep(state: {
     currentRepRef: RefObject<Rep | null>;
-    endKeypoint: Keypoint;
     recordedRepsRef: RefObject<Rep[]>;
     keypointId: KeypointId;
     valueType: KeypointValueType;
@@ -914,7 +898,6 @@ export class RepDetectionService {
   }) {
     const {
       currentRepRef,
-      endKeypoint,
       recordedRepsRef,
       keypointId,
       valueType,
@@ -944,18 +927,12 @@ export class RepDetectionService {
       2
     ) as number[];
 
-    if (keypoints.length !== velocity.length)
-      console.log('LENGTH MISSMATCH:', { keypoints, smoothedValues: velocity });
-
     const indexOfExtreme = currentRepRef.current.buffer.history.findIndex(
       (keypoints) =>
         keypoints.some((k) => k.frameNum === extremeKeypoint.frameNum)
     );
 
-    if (indexOfExtreme === -1) {
-      console.log('index of extreme not found!');
-      return;
-    }
+    if (indexOfExtreme === -1) return;
 
     const kTreshold =
       POSE_DETECTION_CONSTRAINTS.TIME_AT_EXTREMUM_VELOCITY_THRESHOLD_M_PER_S /
@@ -1006,13 +983,6 @@ export class RepDetectionService {
         currentRepRef.current.timeAtExtremumStartTimestamp =
           timeAtExtremumStartKeypoint?.capturedAt;
 
-        console.log({
-          timeAtExtremumStartKeypoint:
-            currentRepRef.current.timeAtExtremumStartKeypoint,
-          timeAtExtremumStartTimestamp:
-            currentRepRef.current.timeAtExtremumStartTimestamp,
-        });
-
         break;
       }
     }
@@ -1059,13 +1029,6 @@ export class RepDetectionService {
 
         currentRepRef.current.timeAtExtremumEndTimestamp =
           timeAtExtremumEndKeypoint?.capturedAt;
-
-        console.log({
-          timeAtExtremumEndKeypoint:
-            currentRepRef.current.timeAtExtremumEndKeypoint,
-          timeAtExtremumEndTimestamp:
-            currentRepRef.current.timeAtExtremumEndTimestamp,
-        });
 
         break;
       }

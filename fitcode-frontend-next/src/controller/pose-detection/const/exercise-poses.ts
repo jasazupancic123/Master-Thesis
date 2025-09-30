@@ -27,16 +27,16 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
       'carioca-lunge',
     ],
     data: {
-      romKeypointId: KeypointId.LEFT_SHOULDER,
+      romKeypointId: KeypointId.LEFT_HIP,
       romValueType: KeypointValueType.POSITION_Y,
       romStartDirection: ConditionDirection.NEGATIVE,
       conditions: [
         {
-          keypointId: KeypointId.LEFT_SHOULDER,
+          keypointId: KeypointId.LEFT_HIP,
           type: KeypointValueType.POSITION_Y,
           direction: ConditionDirection.NEGATIVE,
-          duration: 750, // ms
-          distance: 0.05, // meters}
+          duration: 1000, // ms
+          distance: 0.04, // meters}
         },
       ],
     },
