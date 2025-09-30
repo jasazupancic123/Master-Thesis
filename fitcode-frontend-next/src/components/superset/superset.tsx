@@ -60,7 +60,7 @@ export default function Superset(props: SupersetComponentProps) {
                   ? 12
                   : screenSize.isLandscapeMobile
                     ? 4
-                    : 6,
+                    : 12,
               md:
                 selectedExercise &&
                 superset.exercises.some((e) => e.id === selectedExercise.id)
@@ -69,7 +69,11 @@ export default function Superset(props: SupersetComponentProps) {
                     : 6
                   : screenSize.isLandscapeMobile
                     ? 4
-                    : 3,
+                    : screenSize.isSmallerThanLaptop
+                      ? 6
+                      : screenSize.isLaptop
+                        ? 4
+                        : 3,
             }
       }
       sx={{ px: 0.5 }}
