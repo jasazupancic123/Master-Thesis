@@ -16,7 +16,6 @@ import toast from 'react-hot-toast';
 import { theme } from '@/app/style';
 import { AthletesTrainers } from '@/common/enum/athletes-trainer.enum';
 import { isManager } from '@/common/firebase/firebase-auth.util';
-import { FirebaseFunctionsUtil } from '@/common/firebase/firebase-functions.util';
 import { handleApiRequest } from '@/common/type/state.type';
 import DashboardEditAthleteModal from '@/components/dashboard-edit-athlete-modal/dashboard-edit-athlete-modal';
 import RegisterUsersDashboard from '@/components/dashboard-register-users-modal/dashboard-register-users-modal';
@@ -27,13 +26,15 @@ import { SearchBar } from '@/components/search-bar/search-bar';
 import { MAX_WIDTH } from '@/components/trainer-day-view/constant';
 import type { AuthUser } from '@/controller/auth/type/user.type';
 import { InstitutionController } from '@/controller/institution/institution.controller';
+import { Gender } from '@/controller/profile/enum/gender.enum';
+import { SportLevel } from '@/controller/profile/enum/sport-level.enum';
 import { UserRole } from '@/controller/profile/enum/user-role.enum';
+import { ProfileController } from '@/controller/profile/profile.controller';
+import type { ImportProfile } from '@/controller/profile/type/user.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-
-const firebaseFunctions = FirebaseFunctionsUtil.Instance;
 
 export default function DashboardInstitutionPage() {
   const screenSize = useScreenSize();
@@ -41,12 +42,8 @@ export default function DashboardInstitutionPage() {
   const { token, role } = useAuthenticatedAuth();
   const { users } = useMain();
 
-  const {
-    selectedInstitution,
-    setSelectedInstitution,
-    refetchMembers,
-    refetchUsers,
-  } = useDashboard();
+  const { selectedInstitution, setSelectedInstitution, setMembers, setUsers } =
+    useDashboard();
 
   const controller = InstitutionController.getInstance(token);
 
@@ -159,28 +156,113 @@ export default function DashboardInstitutionPage() {
   const handleCsvFileUpload = async (file: File) => {
     setIsUploadingMembers(true);
 
-    Papa.parse<AuthUser & { password: string; role: string }>(file, {
+    Papa.parse<ImportProfile>(file, {
       header: true,
       skipEmptyLines: true,
       error: (e: Error) =>
         toast.error(`Failed to parse CSV file: ${e.message}`),
-      transform: (value, _column) => value.trim(),
+      transform: (value, column: keyof ImportProfile) => {
+        switch (column) {
+          case 'email':
+            value = value.trim().toLowerCase();
+            break;
+          case 'password':
+            value = value.trim();
+            break;
+          case 'displayName':
+            value = value.trim();
+            break;
+          case 'photoURL':
+            value = value.trim();
+            break;
+          case 'role':
+            value = value.trim().toLowerCase();
+            if (
+              ![UserRole.ATHLETE, UserRole.TRAINER].includes(value as UserRole)
+            )
+              value = UserRole.ATHLETE;
+
+            break;
+          case 'level':
+            value = value.trim().toLowerCase();
+            if (
+              ![
+                SportLevel.BEGINNER,
+                SportLevel.INTERMEDIATE,
+                SportLevel.ADVANCED,
+              ].includes(value as SportLevel)
+            )
+              value = SportLevel.BEGINNER;
+            break;
+          case 'gender':
+            value = value.trim().toLowerCase();
+            if (value && ![Gender.M, Gender.F].includes(value as Gender))
+              value = Gender.M;
+            break;
+          case 'birthDate':
+            value = value.trim();
+            if (value && isNaN(new Date(value).getTime())) value = '';
+            break;
+        }
+
+        return value;
+      },
       complete: async (results) => {
-        const rows = results.data.filter((row) => row.email && row.password);
-        const data = rows.map((r) => ({
-          displayName: r.displayName || '',
-          email: r.email!.toLowerCase()!,
-          photoURL: r.photoURL || undefined,
+        results.data.pop();
+
+        // validate rows
+        const errors: { row: number; message: string }[] = [];
+        results.data.forEach((r) => {
+          const row = results.data.indexOf(r) + 2;
+          if (!r.email) errors.push({ row, message: 'Missing email' });
+          if (!r.password) errors.push({ row, message: 'Missing password' });
+          if (!r.displayName) errors.push({ row, message: 'Missing name' });
+          if (!r.role) errors.push({ row, message: 'Missing role' });
+        });
+
+        if (errors.length) {
+          toast.error(
+            `Errors in CSV file:\n${errors
+              .map((e) => `Row ${e.row}: ${e.message}`)
+              .join('\n')}`
+          );
+
+          setIsUploadingMembers(false);
+          return;
+        }
+
+        const data: ImportProfile[] = results.data.map((r) => ({
+          email: r.email,
           password: r.password,
-          role: [UserRole.ATHLETE, UserRole.TRAINER].includes(
-            r.role as UserRole
-          )
-            ? (r.role as UserRole)
-            : UserRole.ATHLETE,
+          displayName: r.displayName,
+          photoURL: r.photoURL,
+          role: r.role,
+          sport: r.sport || undefined,
+          level: r.level || undefined,
+          gender: r.gender || undefined,
+          birthDate: r.birthDate ? new Date(r.birthDate) : undefined,
         }));
 
-        await Promise.all(
-          data.map((user) => firebaseFunctions.createUserWithRole(user))
+        const controller = ProfileController.getInstance(token);
+        await handleApiRequest(
+          router,
+          () => controller.importProfiles({ profiles: data }),
+          (res) => {
+            setModal((prev) => ({ ...prev, add_member_via_csv: false }));
+            setCsvUserEmails(data.map((d) => d.email));
+            setMembers((prev) => [...prev, ...(res.successful || [])]);
+
+            const authUsers = (res.successful || []).map((u) => ({
+              ...u,
+              customClaims: { role: [u.role] },
+            }));
+
+            setUsers((prev) => [...prev, ...authUsers]);
+            setCurrentUsers((prev) => [...prev, ...authUsers]);
+            setFilteredUsers((prev) => [...prev, ...authUsers]);
+          },
+          undefined,
+          'Failed to register users'
         );
       },
     });

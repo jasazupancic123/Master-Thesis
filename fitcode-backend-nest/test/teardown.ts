@@ -3,7 +3,7 @@ import { config } from 'dotenv';
 
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { CommonService } from '@src/common/service/common.service';
-import { deleteUsers } from '@src/common/utils/data.util';
+import { deleteUsersByIds } from '@src/common/utils/data.util';
 import type {
   Environment,
   NodeEnv,
@@ -34,11 +34,13 @@ export default async function () {
     firebase.deleteCollection(FirestoreCollection.WELLNESS),
     firebase.deleteCollection(FirestoreCollection.GROUP),
     firebase.deleteCollection(FirestoreCollection.TRAINING),
-    deleteUsers(firebase, [
-      global.athlete,
-      global.trainer,
-      global.manager,
-      global.admin,
-    ]),
+    firebase.deleteCollection(FirestoreCollection.PROFILE),
+  ]);
+
+  await deleteUsersByIds(firebase, [
+    global.athlete.uid,
+    global.trainer.uid,
+    global.manager.uid,
+    global.admin.uid,
   ]);
 }

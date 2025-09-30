@@ -1,9 +1,10 @@
-import { Timestamp } from '@google-cloud/firestore';
-import { Injectable } from '@nestjs/common';
-import { DateTime } from 'luxon';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { isBefore, isSameDay, startOfDay, subDays } from 'date-fns';
 
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
+import { DateFilterDto } from '@src/common/dto/date-filter.dto';
 import { CommonService } from '@src/common/service/common.service';
+import { User } from '@src/common/type/firebase-auth.type';
 import {
   InstitutionRef,
   UserRef,
@@ -23,17 +24,9 @@ export class WellnessService {
     private readonly institutionService: InstitutionService,
   ) {}
 
-  async getDoc(ref: WellnessRef): Promise<Wellness> {
-    return await this.repository.findById(ref);
-  }
-
   @LogMethod()
-  async upsert(ref: WellnessRef, input: Wellness): Promise<Wellness> {
-    const meta = await this.repository.findById(ref);
-    if (!meta) await this.repository.save(input, ref);
-    else await this.repository.update(ref, input);
-
-    return input;
+  async upsert(ref: WellnessRef, input: Wellness): Promise<void> {
+    await this.repository.save(input, ref);
   }
 
   async update(ref: WellnessRef, input: Wellness): Promise<void> {
@@ -48,54 +41,38 @@ export class WellnessService {
     return await this.repository.getLastBodyweight(ref);
   }
 
-  async getDocsByInstitution(ref: InstitutionRef): Promise<WellnessZScore[]> {
-    const institution = await this.institutionService.getDocByIdOrFail(ref);
-    const userIds: UserRef[] = institution.athleteIds.map((id) => ({
-      uid: id,
-    }));
+  async findAllByInstitution(
+    user: User,
+    ref: InstitutionRef,
+  ): Promise<WellnessZScore[]> {
+    const range: DateFilterDto = {
+      from: subDays(startOfDay(new Date()), 10), // default to 10 days ago
+      to: startOfDay(new Date()), // default to now
+    };
 
-    const now = DateTime.now();
-    const startOfToday = now.startOf('day').toJSDate();
-    const startOf10DaysBefore = now
-      .startOf('day')
-      .minus({ days: 10 })
-      .startOf('day')
-      .toJSDate();
+    const institution = await this.institutionService.findByIdOrFail(ref);
+    if (
+      !this.institutionService.canView(user, institution) ||
+      institution.athleteIds.includes(user.uid) // only managers and trainers can view wellnesses
+    )
+      throw new UnauthorizedException();
 
-    const wellness = userIds.length
-      ? await Promise.all(
-          userIds.map(async (userRef) => {
-            const wellnessDocs = await this.repository.findAll(
-              (q) =>
-                q
-                  .where('userId', '==', userRef.uid)
-                  .where('date', '>=', Timestamp.fromDate(startOf10DaysBefore)),
-              { ...userRef, date: null },
-            );
+    const wellnesses = await this.repository.findAllByInstitution(
+      institution,
+      range,
+    );
 
-            const todayZ = this.zScore(wellnessDocs, startOfToday);
-
-            return [todayZ].filter((z) => z !== null);
-          }),
-        )
-      : [];
-
-    return wellness.flat();
+    return wellnesses.map((_) => this.zScore(wellnesses, new Date()));
   }
 
   private zScore(docs: Wellness[], date: Date): WellnessZScore | null {
-    const dayStart = DateTime.fromJSDate(date).startOf('day');
-    const found = docs.find((wd) =>
-      DateTime.fromJSDate(wd.date).hasSame(dayStart, 'day'),
-    );
+    const dayStart = startOfDay(date);
+    const found = docs.find((wd) => isSameDay(wd.date, dayStart));
 
     if (!found) return null;
     if (docs.length < 2) return found;
 
-    const history = docs.filter(
-      (wd) => DateTime.fromJSDate(wd.date) < dayStart,
-    );
-
+    const history = docs.filter((wd) => isBefore(wd.date, dayStart));
     const hist = {
       sleep: history
         .map((w) => w.sleep)

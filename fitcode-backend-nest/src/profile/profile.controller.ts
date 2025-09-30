@@ -5,6 +5,7 @@ import { UserRole } from '../auth/enum/user-role.enum';
 import { Auth } from '../common/decorator/auth.decorator';
 import { RequestUser } from '../common/decorator/request-user.decorator';
 import type { User } from '../common/type/firebase-auth.type';
+import { ImportProfilesDto } from './dto/import-profiles.dto';
 import { SaveWellnessDto } from './dto/save-wellness.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ProfileService } from './service/profile.service';
@@ -18,11 +19,20 @@ export class ProfileController {
     private readonly wellnessService: WellnessService,
   ) {}
 
+  @Post('/import')
+  @Auth([UserRole.MANAGER])
+  async importProfiles(
+    @RequestUser() user: User,
+    @Body()
+    { profiles }: ImportProfilesDto,
+  ) {
+    return await this.profileService.importProfiles(user, profiles);
+  }
+
   @Get()
   @Auth()
   async findProfile(@RequestUser() user: User) {
-    const ref = { uid: user.uid };
-    return await this.profileService.findProfile(ref);
+    return await this.profileService.findOneById(user.uid);
   }
 
   @Patch()
@@ -61,8 +71,11 @@ export class ProfileController {
   @Get('/wellness/institution/:institutionId')
   @Auth([UserRole.MANAGER, UserRole.TRAINER])
   async getWellnessByInstitution(
+    @RequestUser() user: User,
     @Param('institutionId') institutionId: string,
   ) {
-    return await this.wellnessService.getDocsByInstitution({ institutionId });
+    return await this.wellnessService.findAllByInstitution(user, {
+      institutionId,
+    });
   }
 }

@@ -17,7 +17,7 @@ import {
   startOfDay,
   subMinutes,
 } from 'date-fns';
-import { Query, Timestamp } from 'firebase-admin/firestore';
+import { Timestamp } from 'firebase-admin/firestore';
 
 import { AuthService } from '@src/auth/auth.service';
 import {
@@ -47,7 +47,6 @@ import {
 } from '@src/common/type/orm.type';
 import { Filter } from '@src/common/type/orm.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
-import { logFirestoreQuery } from '@src/common/utils/firestore-query.util';
 import { ComponentService } from '@src/component/component.service';
 import {
   COOLDOWN_COMPONENT_ID,
@@ -101,7 +100,7 @@ export class TrainingService implements Permission<Training, Institution> {
   private logger = new Logger(TrainingService.name);
 
   constructor(
-    private readonly firebaseService: FirebaseService,
+    private readonly firebase: FirebaseService,
     @Inject(forwardRef(() => AuthService))
     private readonly authService: Wrapper<AuthService>,
     private readonly commonService: CommonService,
@@ -119,10 +118,6 @@ export class TrainingService implements Permission<Training, Institution> {
     private readonly exerciseService: ExerciseService,
   ) {}
 
-  async getDocs(query: (query: Query) => Query = (query) => query) {
-    return query(this.repository.collection()).get();
-  }
-
   async findOneById(
     user: User,
     ref: TrainingRef,
@@ -134,7 +129,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
     if (!options?.skipInstitution)
       if (training.institutionId)
-        training.institution = await this.institutionService.getDoc({
+        training.institution = await this.institutionService.findById({
           institutionId: training.institutionId,
         });
 
@@ -158,30 +153,22 @@ export class TrainingService implements Permission<Training, Institution> {
     options?: { limit?: number },
     populate?: boolean,
   ): Promise<Training[]> {
-    const trainings = await this.repository.findAll(
-      logFirestoreQuery(this.logger, (q) => {
-        if (this.firebaseService.isTrainer(user))
-          q = q.where('ownerId', '==', user.uid);
-        else if (this.firebaseService.isAthlete(user))
-          q = q.where('membersIds', 'array-contains', user.uid);
+    let institutionId: string | undefined;
+    if (this.firebase.isManager(user))
+      institutionId = await this.institutionService
+        .findByOwnerId(user.uid)
+        .then((i) => i?.id);
 
-        // filter by other params
-        if (filter?.institutionId)
-          q.where('institutionId', '==', filter.institutionId);
-
-        if (filter?.groupId) q = q.where('groupId', '==', filter.groupId);
-        if (filter?.cycleId) q = q.where('cycleId', '==', filter.cycleId);
-
-        if (filter?.from)
-          q = q.where('from', '>=', Timestamp.fromDate(new Date(filter.from)));
-        if (filter?.to)
-          q = q.where('to', '<=', Timestamp.fromDate(new Date(filter.to)));
-
-        q = q.orderBy('from', 'asc');
-        if (options?.limit) q = q.limit(options.limit);
-
-        return q;
-      }),
+    const trainings = await this.repository.findAll((_) =>
+      this.repository.buildGetQuery(
+        {
+          uid: user.uid,
+          role: this.firebase.getRole(user),
+          institutionId,
+        },
+        filter,
+        options,
+      ),
     );
 
     if (populate) {
@@ -196,7 +183,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
         const institution =
           foundInstitution || t.institutionId
-            ? await this.institutionService.getDoc({
+            ? await this.institutionService.findById({
                 institutionId: t.institutionId,
               })
             : undefined;
@@ -421,12 +408,12 @@ export class TrainingService implements Permission<Training, Institution> {
 
         operations.push({
           operation: 'set',
-          data: this.firebaseService.buildCreateQuery<Workload>(w),
+          data: this.firebase.buildCreateQuery<Workload>(w),
           ref: this.workloadRepository.doc(ref),
         });
       }
 
-      const batch = this.firebaseService.firestore.batch();
+      const batch = this.firebase.firestore.batch();
       for (const { ref, data } of operations) batch.set(ref, data);
       await batch.commit();
     }
@@ -502,7 +489,7 @@ export class TrainingService implements Permission<Training, Institution> {
     // check if member exists
     const member = await this.authService.findOneBy('id', memberId);
     if (!member) throw new BadRequestException('Member does not exist');
-    if (!this.firebaseService.isAthlete(member))
+    if (!this.firebase.isAthlete(member))
       throw new BadRequestException('Member must be an athlete');
 
     // check if member is already in training
@@ -707,11 +694,11 @@ export class TrainingService implements Permission<Training, Institution> {
       (t) => ({
         operation: 'update',
         ref: this.repository.doc(t.id),
-        data: this.firebaseService.buildUpdateQuery(t),
+        data: this.firebase.buildUpdateQuery(t),
       }),
     );
 
-    await this.firebaseService.paginateBatches(operations);
+    await this.firebase.paginateBatches(operations);
     return periodized.sort(
       (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime(),
     );
@@ -830,7 +817,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
       if (status && ['in_progress', 'completed'].includes(status.status))
         throw new ConflictException(
-          this.firebaseService.isAthlete(user)
+          this.firebase.isAthlete(user)
             ? `You have already completed this component`
             : `Athlete already completed this component`,
         );
@@ -868,10 +855,7 @@ export class TrainingService implements Permission<Training, Institution> {
     const training = await this.findOneByIdOrFail(user, ref);
     const athlete = await this.getAthlete(user, ref.uid, training.institution);
 
-    if (
-      this.firebaseService.isTrainer(user) ||
-      this.firebaseService.isManager(user)
-    )
+    if (this.firebase.isTrainer(user) || this.firebase.isManager(user))
       this.validateCanView(user, training, training.institution);
 
     const athleteTraining = this.trainingPlanService.getTrainingByAthlete(
@@ -1059,7 +1043,7 @@ export class TrainingService implements Permission<Training, Institution> {
     athleteId: string,
     institution?: Institution,
   ) {
-    if (this.firebaseService.isAthlete(user)) return user;
+    if (this.firebase.isAthlete(user)) return user;
     if (!athleteId) throw new BadRequestException('You must provide athlete');
 
     const found = await this.authService.findOneBy('id', athleteId);
@@ -1193,18 +1177,15 @@ export class TrainingService implements Permission<Training, Institution> {
   }
 
   canEdit(user: User, training: Training, institution?: Institution) {
-    if (this.firebaseService.isTrainer(user) && training.ownerId === user.uid)
+    if (this.firebase.isTrainer(user) && training.ownerId === user.uid)
       return true;
 
     if (institution) {
-      if (
-        this.firebaseService.isManager(user) &&
-        institution.ownerId === user.uid
-      )
+      if (this.firebase.isManager(user) && institution.ownerId === user.uid)
         return true;
 
       if (
-        this.firebaseService.isTrainer(user) &&
+        this.firebase.isTrainer(user) &&
         institution.trainerIds.includes(user.uid)
       )
         return true;
@@ -1214,17 +1195,14 @@ export class TrainingService implements Permission<Training, Institution> {
   }
 
   canAdd(user: User, institution?: Institution) {
-    if (this.firebaseService.isTrainer(user)) return true;
+    if (this.firebase.isTrainer(user)) return true;
 
     if (institution) {
-      if (
-        this.firebaseService.isManager(user) &&
-        institution.ownerId === user.uid
-      )
+      if (this.firebase.isManager(user) && institution.ownerId === user.uid)
         return true;
 
       if (
-        this.firebaseService.isTrainer(user) &&
+        this.firebase.isTrainer(user) &&
         institution.trainerIds.includes(user.uid)
       )
         return true;

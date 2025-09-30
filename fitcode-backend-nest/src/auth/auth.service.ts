@@ -3,10 +3,14 @@ import {
   forwardRef,
   Inject,
   Injectable,
-  Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { UserRecord } from 'firebase-admin/auth';
+import {
+  UserImportRecord,
+  UserImportResult,
+  UserRecord,
+} from 'firebase-admin/auth';
+import { v4 } from 'uuid';
 
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
 import { User } from '@src/common/type/firebase-auth.type';
@@ -14,17 +18,15 @@ import { Wrapper } from '@src/common/type/wrapper.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 
-import { CreateUser } from './dto/create-user.dto';
+import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateCustomClaimsDto } from './dto/custom-claims.dto';
 import { FilterUserQueryDto } from './dto/filter-user-query.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class AuthService {
-  private logger = new Logger(AuthService.name);
-
   constructor(
-    private readonly firebaseService: FirebaseService,
+    private readonly firebase: FirebaseService,
     @Inject(forwardRef(() => InstitutionService))
     private readonly institutionService: Wrapper<InstitutionService>,
   ) {}
@@ -33,11 +35,9 @@ export class AuthService {
     try {
       switch (key) {
         case 'id':
-          return (await this.firebaseService.auth.getUser(value)) as User;
+          return (await this.firebase.auth.getUser(value)) as User;
         case 'email':
-          return (await this.firebaseService.auth.getUserByEmail(
-            value,
-          )) as User;
+          return (await this.firebase.auth.getUserByEmail(value)) as User;
         default:
           throw new Error('Invalid key');
       }
@@ -47,11 +47,10 @@ export class AuthService {
   }
 
   async findAll(user: User, filter?: FilterUserQueryDto): Promise<User[]> {
+    const allUsers = await this.firebase.authUsers(filter);
+    if (this.firebase.isAdmin(user)) return allUsers;
+
     const institutions = await this.institutionService.findAll(user);
-    const allUsers = await this.firebaseService.authUsers(filter);
-
-    if (this.firebaseService.isAdmin(user)) return allUsers;
-
     const users = allUsers.filter((u) =>
       institutions.some((institution) =>
         [
@@ -82,9 +81,7 @@ export class AuthService {
           throw new BadRequestException('Invalid members provided'); */
 
       if (filter.role)
-        users = users.filter((u) =>
-          this.firebaseService.checkRole(u, filter.role),
-        );
+        users = users.filter((u) => this.firebase.checkRole(u, filter.role));
     }
 
     return users;
@@ -92,7 +89,7 @@ export class AuthService {
 
   async updateUser(user: User, uid: string, data: UpdateUserDto) {
     const userToUpdate = await this.getUserToUpdate(user, uid);
-    await this.firebaseService.auth.updateUser(userToUpdate.uid, data);
+    await this.firebase.auth.updateUser(userToUpdate.uid, data);
   }
 
   async updateCustomClaims(
@@ -101,39 +98,55 @@ export class AuthService {
     claims: UpdateCustomClaimsDto,
   ): Promise<void> {
     const userToUpdate = await this.getUserToUpdate(user, uid);
-    await this.firebaseService.auth.setCustomUserClaims(userToUpdate.uid, {
+    await this.firebase.auth.setCustomUserClaims(userToUpdate.uid, {
       ...userToUpdate.customClaims,
       ...claims,
     });
   }
 
-  async upsert(data: CreateUser): Promise<User> {
-    const { auth } = this.firebaseService;
-    const { email, password, displayName, customClaims /* institutionId */ } =
-      data;
+  async upsert(data: CreateUserDto): Promise<User> {
+    const { auth } = this.firebase;
+    const { email, password, displayName, role, photoURL } = data;
 
     let user: UserRecord;
     try {
       user = await auth.getUserByEmail(email);
     } catch (_) {
-      this.logger.log(`Creating user (${email}, ${JSON.stringify(data)})`);
-      user = await auth.createUser({ email, password, displayName });
+      user = await auth.createUser({
+        uid: v4(),
+        email,
+        password,
+        displayName,
+        photoURL,
+      });
     } finally {
-      if (user?.uid) await auth.setCustomUserClaims(user.uid, customClaims);
+      if (user?.uid) await auth.setCustomUserClaims(user.uid, { role: [role] });
     }
 
     return user?.uid ? ((await auth.getUser(user.uid)) as User) : null;
   }
 
-  @LogMethod()
-  async registerAthlete(input: Omit<CreateUser, 'customClaims'>) {
-    const { email, displayName, password, photoURL } = input;
-    return await this.firebaseService.auth.createUser({
-      email,
-      displayName,
-      password,
-      photoURL,
+  async importUsers(
+    input: (CreateUserDto & { uid: string })[],
+  ): Promise<UserImportResult> {
+    const data: UserImportRecord[] = input.map((user) => ({
+      uid: user.uid,
+      email: user.email,
+      passwordHash: Buffer.from(user.password, 'utf-8'),
+      displayName: user.displayName,
+      photoURL: user.photoURL,
+      customClaims: { role: [user.role] },
+    }));
+
+    if (data.length === 0) return;
+    return await this.firebase.auth.importUsers(data, {
+      hash: { algorithm: 'BCRYPT' },
     });
+  }
+
+  @LogMethod()
+  async registerAthlete(input: CreateUserDto) {
+    return await this.firebase.auth.createUser(input);
   }
 
   async getUserToUpdate(mainUser: User, userToUpdateId: string): Promise<User> {
@@ -148,11 +161,11 @@ export class AuthService {
 
   async canUpdate(mainUser: User, userToUpdate: User): Promise<boolean> {
     // admin can update anyone
-    if (this.firebaseService.isAdmin(mainUser)) return true;
+    if (this.firebase.isAdmin(mainUser)) return true;
 
     // athlete can update only himself
     if (
-      this.firebaseService.isAthlete(userToUpdate) &&
+      this.firebase.isAthlete(userToUpdate) &&
       mainUser.uid === userToUpdate.uid
     )
       return true;
@@ -161,18 +174,18 @@ export class AuthService {
     // trainer can update himself and athletes in his institutions
     const institutions = await this.institutionService.findAll(mainUser);
 
-    if (this.firebaseService.isManager(mainUser)) {
+    if (this.firebase.isManager(mainUser)) {
       const institution = institutions.find((i) => i.ownerId === mainUser.uid);
       if (!institution) return false;
 
       if (
-        this.firebaseService.isTrainer(userToUpdate) &&
+        this.firebase.isTrainer(userToUpdate) &&
         institution.trainerIds.includes(userToUpdate.uid)
       )
         return true;
 
       if (
-        this.firebaseService.isAthlete(userToUpdate) &&
+        this.firebase.isAthlete(userToUpdate) &&
         institution.athleteIds.includes(userToUpdate.uid)
       )
         return true;
@@ -180,13 +193,13 @@ export class AuthService {
       return mainUser.uid === userToUpdate.uid;
     }
 
-    if (this.firebaseService.isTrainer(mainUser)) {
+    if (this.firebase.isTrainer(mainUser)) {
       const trainerInstitutions = institutions.filter((i) =>
         i.trainerIds.includes(mainUser.uid),
       );
 
       if (
-        this.firebaseService.isAthlete(userToUpdate) &&
+        this.firebase.isAthlete(userToUpdate) &&
         trainerInstitutions.some((i) => i.athleteIds.includes(userToUpdate.uid))
       )
         return true;

@@ -1,23 +1,7 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { Expose } from 'class-transformer';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { OmitType } from '@nestjs/swagger';
 
-export class RegisterAthleteDto {
-  @IsString()
-  @IsNotEmpty()
-  @ApiProperty()
-  @Expose()
-  email: string;
+import { CreateUserDto } from './create-user.dto';
 
-  @IsString()
-  @IsNotEmpty()
-  @ApiProperty()
-  @Expose()
-  displayName: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @ApiProperty()
-  @Expose()
-  password: string;
-}
+export class RegisterAthleteDto extends OmitType(CreateUserDto, [
+  'role',
+] as const) {}
