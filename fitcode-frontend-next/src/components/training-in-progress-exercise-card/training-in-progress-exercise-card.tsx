@@ -15,11 +15,8 @@ import {
   unmarkExerciseSetAsCompleted,
 } from './state';
 import { TrackingMethod } from '@/common/enum/tracking-method.enum';
-import {
-  IntType,
-  ParamType,
-  VolType,
-} from '@/controller/component/enum/param.enum';
+import type { ParamType } from '@/controller/component/enum/param.enum';
+import { IntType, VolType } from '@/controller/component/enum/param.enum';
 import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
 import { TrainingService } from '@/controller/training/training.service';

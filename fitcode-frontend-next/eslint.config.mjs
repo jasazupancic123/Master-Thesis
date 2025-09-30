@@ -124,6 +124,7 @@ const eslintConfig = [
       '**/.turbo',
       'src/app/model-testing/**',
       'src/components/mediapipe-react-app/**',
+      'src/controller/pose-detection/rep-graph.service.ts',
       'public/wasm/**',
     ],
   },
