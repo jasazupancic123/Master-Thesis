@@ -23,7 +23,7 @@ export async function createTestUserAndToken(
   await firebaseService.auth.setCustomUserClaims(user.uid, customClaims);
 
   const createUserQuery = firebaseService.buildCreateQuery<Profile>(
-    { id: user.uid },
+    { uid: user.uid, email: user.email },
     { timestamps: true },
   );
 

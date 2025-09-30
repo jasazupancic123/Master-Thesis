@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { FirebaseService } from '@src/firebase/firebase.service';
+import { Profile } from '@src/profile/entity/profile.entity';
 
 import { GroupTestRepository } from './service/group-test.repository';
 import { InstitutionTestRepository } from './service/institution-test.repository';
@@ -55,17 +56,33 @@ export class TestDbService {
   }
 
   async clear() {
-    const { firebase } = this;
-
     await Promise.all([
-      firebase.deleteCollection(FirestoreCollection.EXERCISE),
-      firebase.deleteCollection(FirestoreCollection.INSTITUTION),
-      firebase.deleteCollection(FirestoreCollection.GROUP),
-      firebase.deleteCollection(FirestoreCollection.PROFILE),
-      firebase.deleteCollection(FirestoreCollection.TRAINING),
-      firebase.deleteCollection(FirestoreCollection.COMPONENT),
-      firebase.deleteCollection(FirestoreCollection.TRAINING),
-      firebase.deleteCollection(FirestoreCollection.METHOD),
+      this.firebase.deleteCollection(FirestoreCollection.EXERCISE),
+      this.firebase.deleteCollection(FirestoreCollection.INSTITUTION),
+      this.firebase.deleteCollection(FirestoreCollection.GROUP),
+      this.firebase.deleteCollection(FirestoreCollection.PROFILE),
+      this.firebase.deleteCollection(FirestoreCollection.TRAINING),
+      this.firebase.deleteCollection(FirestoreCollection.COMPONENT),
+      this.firebase.deleteCollection(FirestoreCollection.TRAINING),
+      this.firebase.deleteCollection(FirestoreCollection.METHOD),
     ]);
+
+    // add back profiles for global manager, admin, trainer and athlete
+    for (const [uid, email] of [
+      [global.athlete.uid, global.athlete.email],
+      [global.trainer.uid, global.trainer.email],
+      [global.manager.uid, global.manager.email],
+      [global.admin.uid, global.admin.email],
+    ]) {
+      await this.firebase.firestore
+        .collection(FirestoreCollection.PROFILE)
+        .doc(uid)
+        .set(
+          this.firebase.buildCreateQuery<Profile>(
+            { uid, email },
+            { timestamps: true },
+          ),
+        );
+    }
   }
 }
