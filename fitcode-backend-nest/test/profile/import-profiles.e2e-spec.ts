@@ -18,6 +18,8 @@ describe('Import Users (e2e)', () => {
   let firebase: FirebaseService;
   let db: TestDbService;
 
+  let institutionId: string;
+
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
@@ -28,6 +30,8 @@ describe('Import Users (e2e)', () => {
 
     db = moduleFixture.get(TestDbService);
     firebase = moduleFixture.get(FirebaseService);
+
+    institutionId = (await db.institutions.createTest()).id;
   });
 
   afterAll(async () => {
@@ -57,8 +61,6 @@ describe('Import Users (e2e)', () => {
 
     expect(result.status).toBe(403);
     expect(result.body.message).toBe('Forbidden resource');
-
-    await deleteUsersByIds(firebase, ['1']);
   });
 
   it('should fail if some role is invalid', async () => {
@@ -73,11 +75,12 @@ describe('Import Users (e2e)', () => {
 
     expect(result.status).toBe(400);
     expect(result.body.message).toBe('Invalid role');
-
-    await deleteUsersByIds(firebase, ['1']);
   });
 
   it('should create profiles only for users that were successfully imported', async () => {
+    const allProfilesBefore = await db.profiles.findAll();
+    expect(allProfilesBefore).toHaveLength(4); // global test profiles
+
     const spy = jest.spyOn(firebase.auth, 'importUsers');
     const result = await req(
       global.manager.token,
@@ -99,17 +102,46 @@ describe('Import Users (e2e)', () => {
     spy.mockRestore();
 
     expect(result.status).toBe(201);
-    const body = result.body as { uid: string; email: string }[];
-    expect(body).toHaveLength(5);
+    const body = result.body as {
+      failed: { email: string; reason: string }[];
+      successCount: number;
+    };
+
+    expect(body.successCount).toBe(5);
+    expect(body.failed).toHaveLength(5);
+    body.failed.forEach((f) => {
+      expect(f.email).toMatch(/invalid/);
+      expect(f.reason).toBe('The email address is improperly formatted.');
+    });
+
+    // it should add members to institution
+    let institution = await db.institutions.findById(institutionId);
+    expect(institution.athleteIds).toHaveLength(5 + 1); // +1 for global.athlete
+
+    const allProfilesAfter = await db.profiles.findAll();
+    expect(allProfilesAfter).toHaveLength(9); // 4 + 5 new
 
     // delete users
+    const allUsers = await firebase.auth.listUsers();
     await deleteUsersByIds(
       firebase,
-      body.map((p) => p.uid),
+      allUsers.users
+        .filter((u) => u.email?.startsWith('test') ?? false)
+        .map((u) => u.uid),
     );
+
+    await db.institutions.update(institutionId, {
+      athleteIds: [global.athlete.uid], // reset members
+    });
   });
 
-  it('should successfully import users', async () => {
+  it('should successfully import all users', async () => {
+    const allProfilesBefore = await db.profiles.findAll();
+    expect(allProfilesBefore).toHaveLength(4); // global test profiles
+
+    let institution = await db.institutions.findById(institutionId);
+    expect(institution.athleteIds).toHaveLength(1); // only global.athlete
+
     const spy = jest.spyOn(firebase.auth, 'importUsers');
     const result = await req(
       global.manager.token,
@@ -131,28 +163,39 @@ describe('Import Users (e2e)', () => {
     spy.mockRestore();
 
     expect(result.status).toBe(201);
-    const body = result.body as { uid: string; email: string }[];
-    expect(body).toHaveLength(50);
+    const body = result.body as {
+      failed: { email: string; reason: string }[];
+      successCount: number;
+    };
 
+    expect(body.successCount).toBe(50);
+    expect(body.failed).toHaveLength(0);
+
+    // it should add members to institution
+    institution = await db.institutions.findById(institutionId);
+    expect(institution.athleteIds).toHaveLength(50 + 1); // +1 for global.athlete
+
+    const allProfilesAfter = await db.profiles.findAll();
+    expect(allProfilesAfter).toHaveLength(54); // 4 + 50 new
+
+    // delete users
     const allUsers = await firebase.auth.listUsers();
-    const allProfiles = (await db.profiles.findAll()).filter((p) =>
-      body.map((u) => u.uid).includes(p.id),
-    );
-
-    const importedUsers = allUsers.users.filter((u) =>
-      body.map((u) => u.uid).includes(u.uid),
-    );
-
-    expect(allProfiles).toHaveLength(50);
-    expect(importedUsers).toHaveLength(50);
-
     await deleteUsersByIds(
       firebase,
-      body.map((p) => p.uid),
+      allUsers.users
+        .filter((u) => u.email?.startsWith('test') ?? false)
+        .map((u) => u.uid),
     );
+
+    await db.institutions.update(institutionId, {
+      athleteIds: [global.athlete.uid], // reset members
+    });
   });
 
   it('should not throw error if users already exist', async () => {
+    const allProfilesBefore = await db.profiles.findAll();
+    expect(allProfilesBefore).toHaveLength(4); // global test profiles
+
     // first import
     let result = await req(
       global.manager.token,
@@ -165,8 +208,19 @@ describe('Import Users (e2e)', () => {
     );
 
     expect(result.status).toBe(201);
-    let body = result.body as { uid: string; email: string }[];
-    expect(body).toHaveLength(10);
+    let body = result.body as {
+      failed: { email: string; reason: string }[];
+      successCount: number;
+    };
+
+    expect(body.successCount).toBe(10);
+    expect(body.failed).toHaveLength(0);
+
+    let institution = await db.institutions.findById(institutionId);
+    expect(institution.athleteIds).toHaveLength(10 + 1); // +1 for global.athlete
+
+    const allProfilesAfterFirst = await db.profiles.findAll();
+    expect(allProfilesAfterFirst).toHaveLength(14); // 4 + 10 new
 
     // second import
     result = await req(
@@ -180,23 +234,35 @@ describe('Import Users (e2e)', () => {
     );
 
     expect(result.status).toBe(201);
-    expect(body).toHaveLength(10); // no new users should be created
+    body = result.body as {
+      failed: { email: string; reason: string }[];
+      successCount: number;
+    };
 
+    expect(body.successCount).toBe(0);
+    expect(body.failed).toHaveLength(10);
+    body.failed.forEach((f) => {
+      expect(f.email).toMatch(/test\d+@mail\.com/);
+      expect(f.reason).toContain('duplicate');
+    });
+
+    institution = await db.institutions.findById(institutionId);
+    expect(institution.athleteIds).toHaveLength(10 + 1); // +1 for global.athlete
+
+    const allProfilesAfterSecond = await db.profiles.findAll();
+    expect(allProfilesAfterSecond).toHaveLength(14); // no new profiles
+
+    // delete users
     const allUsers = await firebase.auth.listUsers();
-    const allProfiles = (await db.profiles.findAll()).filter((p) =>
-      body.map((u) => u.uid).includes(p.id),
-    );
-
-    const importedUsers = allUsers.users.filter((u) =>
-      body.map((u) => u.uid).includes(u.uid),
-    );
-
-    expect(allProfiles).toHaveLength(10);
-    expect(importedUsers).toHaveLength(10);
-
     await deleteUsersByIds(
       firebase,
-      body.map((p) => p.uid),
+      allUsers.users
+        .filter((u) => u.email?.startsWith('test') ?? false)
+        .map((u) => u.uid),
     );
+
+    await db.institutions.update(institutionId, {
+      athleteIds: [global.athlete.uid], // reset members
+    });
   });
 });

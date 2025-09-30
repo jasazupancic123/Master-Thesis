@@ -35,7 +35,6 @@ describe('Find Profiles (e2e)', () => {
 
   it('should return profile by id or create', async () => {
     const user = await firebase.auth.createUser({
-      uid: '1',
       email: 'test1@mail.com',
       displayName: 'Test 1',
       password: 'password',
@@ -43,7 +42,8 @@ describe('Find Profiles (e2e)', () => {
 
     const profile = await profileService.findOneById(user.uid);
     expect(profile).toBeDefined();
-    expect(profile.id).toBe(user.uid);
+    expect(profile.uid).toBe(user.uid);
+    expect(profile.email).toBe(user.email);
 
     await deleteUsersByIds(firebase, [user.uid]);
   });
@@ -65,11 +65,11 @@ describe('Find Profiles (e2e)', () => {
     const profileIds = await Promise.all(
       users
         .filter((_, i) => i < 5)
-        .map((user) => db.profiles.save({ id: user.uid })),
+        .map((user) => db.profiles.save({ uid: user.uid, email: user.email })),
     );
 
     const profilesBefore = (await db.profiles.findAll()).filter((p) =>
-      profileIds.includes(p.id),
+      profileIds.includes(p.uid),
     );
 
     expect(profilesBefore).toHaveLength(5);

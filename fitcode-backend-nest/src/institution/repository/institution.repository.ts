@@ -77,6 +77,8 @@ export class InstitutionRepository extends FirestoreRepository<Institution> {
       ownerId: input.ownerId,
       name: input.name,
       imageUrl: input.imageUrl,
+      ...(input.athleteIds && { athleteIds: input.athleteIds }),
+      ...(input.trainerIds && { trainerIds: input.trainerIds }),
     });
 
     const ref = this.doc(id);

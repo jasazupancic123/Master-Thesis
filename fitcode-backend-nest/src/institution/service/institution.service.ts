@@ -144,9 +144,9 @@ export class InstitutionService implements Permission<Institution> {
       case GetMembersType.ALL:
         return profiles;
       case GetMembersType.ATHLETES:
-        return profiles.filter((p) => institution.athleteIds.includes(p.id));
+        return profiles.filter((p) => institution.athleteIds.includes(p.uid));
       case GetMembersType.TRAINERS:
-        return profiles.filter((p) => institution.trainerIds.includes(p.id));
+        return profiles.filter((p) => institution.trainerIds.includes(p.uid));
       default:
         return [];
     }
@@ -203,6 +203,17 @@ export class InstitutionService implements Permission<Institution> {
 
       await this.firebase.paginateBatches(operations);
     }
+  }
+
+  buildAddAthleteOperation(
+    institutionId: string,
+    athleteId: string,
+  ): BatchWriteOperation<Institution> {
+    return this.repository.getUpdateAthleteOperation(
+      institutionId,
+      athleteId,
+      true,
+    );
   }
 
   canView(user: User, institution: Institution) {

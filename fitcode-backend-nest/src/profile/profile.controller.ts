@@ -22,17 +22,17 @@ export class ProfileController {
   @Post('/import')
   @Auth([UserRole.MANAGER])
   async importProfiles(
+    @RequestUser() user: User,
     @Body()
     { profiles }: ImportProfilesDto,
   ) {
-    return await this.profileService.importProfiles(profiles);
+    return await this.profileService.importProfiles(user, profiles);
   }
 
   @Get()
   @Auth()
   async findProfile(@RequestUser() user: User) {
-    const ref = { uid: user.uid };
-    return await this.profileService.findOneById(ref.uid);
+    return await this.profileService.findOneById(user.uid);
   }
 
   @Patch()

@@ -7,7 +7,7 @@ import {
 
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { Create, Update } from '@src/common/type/entity.type';
-import { FirestoreRepository, UserRef } from '@src/common/type/firestore.type';
+import { FirestoreRepository } from '@src/common/type/firestore.type';
 import { BatchSetOperation } from '@src/common/type/orm.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { Institution } from '@src/institution/entity/institution.entity';
@@ -26,8 +26,8 @@ export class ProfileRepository extends FirestoreRepository<Profile> {
     return this.firebase.firestore.collection(this.collectionName);
   }
 
-  doc(id: string): DocumentReference {
-    return this.collection().doc(id);
+  doc(uid: string): DocumentReference {
+    return this.collection().doc(uid);
   }
 
   async findAllByInstitution(institution: Institution) {
@@ -48,11 +48,18 @@ export class ProfileRepository extends FirestoreRepository<Profile> {
    * exists, and if so, create a corresponding profile in Firestore. If the
    * profile already exists, it will return the existing profile.
    */
-  async findOneOrCreate(ref: UserRef): Promise<Profile> {
-    let profile = await this.findById(ref.uid);
+  async findOneOrCreate(uid: string): Promise<Profile> {
+    let profile = await this.findById(uid);
     if (!profile) {
-      await this.save({ id: ref.uid });
-      profile = { id: ref.uid, createdAt: new Date(), updatedAt: new Date() };
+      const user = await this.firebase.auth.getUser(uid);
+      await this.save({ uid, email: user.email! });
+
+      profile = {
+        uid,
+        email: user.email!,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
     }
 
     return profile;
@@ -62,22 +69,33 @@ export class ProfileRepository extends FirestoreRepository<Profile> {
     if (ids.length === 0) return [];
 
     const profiles = await this.firebase.batchIn<Profile>(
-      'id',
+      'uid',
       ids,
       this.collection(),
     );
 
-    const existingIds = profiles.map((p) => p.id);
+    const existingIds = profiles.map((p) => p.uid);
     const missingIds = ids.filter((id) => !existingIds.includes(id));
+    const { users } = await this.firebase.auth.getUsers(
+      missingIds.map((uid) => ({ uid })),
+    );
 
     if (missingIds.length > 0) {
       const operations: BatchSetOperation<Profile>[] = [];
-      missingIds.forEach((id) => {
-        profiles.push({ id, createdAt: new Date(), updatedAt: new Date() });
+      missingIds.forEach((uid) => {
+        const user = users.find((u) => u.uid === uid);
+        const profile = { uid, email: user.email };
+
+        profiles.push({
+          ...profile,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+
         operations.push({
           operation: 'set',
-          ref: this.doc(id),
-          data: this.firebase.buildCreateQuery({ id }, { timestamps: true }),
+          ref: this.doc(uid),
+          data: this.firebase.buildCreateQuery(profile, { timestamps: true }),
         });
       });
 
@@ -88,23 +106,20 @@ export class ProfileRepository extends FirestoreRepository<Profile> {
   }
 
   async save(input: Create<Profile>) {
-    if (!input.id) throw new Error('User ID is required');
+    const query = this.firebase.buildCreateQuery<Profile>(input, {
+      timestamps: true,
+    });
 
-    const query = this.firebase.buildCreateQuery<Profile>(
-      { id: input.id, ...input },
-      { timestamps: true },
-    );
-
-    await this.doc(input.id).set(query);
-    return input.id;
+    await this.doc(input.uid).set(query);
+    return input.uid;
   }
 
-  async update(id: string, input: Update<Profile>) {
+  async update(uid: string, input: Update<Profile>) {
     const query = this.firebase.buildUpdateQuery(input);
-    await this.doc(id).update(query);
+    await this.doc(uid).update(query);
   }
 
-  async delete(id: string) {
-    await this.doc(id).update({ deletedAt: Timestamp.now() });
+  async delete(uid: string) {
+    await this.doc(uid).update({ deletedAt: Timestamp.now() });
   }
 }

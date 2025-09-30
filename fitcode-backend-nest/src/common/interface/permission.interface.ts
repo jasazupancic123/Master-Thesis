@@ -1,9 +1,8 @@
 import type { BaseEntity } from '../entity/base.entity';
-import type { IdEntity } from '../entity/id.entity';
 import type { User } from '../type/firebase-auth.type';
 
 export abstract class Permission<
-  Entity extends IdEntity,
+  Entity,
   RootEntity extends BaseEntity = never,
 > {
   abstract canAdd?(user: User, root?: RootEntity): boolean | Promise<boolean>;

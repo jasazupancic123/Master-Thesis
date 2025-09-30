@@ -68,7 +68,7 @@ export type ExerciseAttributeValueRef = ExerciseRef & {
 };
 
 export type UserRef = { uid: string }; // auth user uid
-export type ProfileRef = UserRef & { profileId: string }; // our custom firestore profile id
+export type ProfileRef = UserRef;
 export type WellnessRef = UserRef & { date: Date };
 export type GroupRef = { groupId: string };
 export type CycleRef = GroupRef & { cycleId: string };
