@@ -101,6 +101,8 @@ export class KeypointUtil {
     keypoint: Keypoint,
     type: KeypointValueType
   ): number | undefined {
+    if (!keypoint) return undefined;
+
     switch (type) {
       case KeypointValueType.POSITION_X:
         return keypoint.position.x;

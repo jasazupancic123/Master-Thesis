@@ -333,8 +333,12 @@ export default function Supersets(props: SupersetsProps) {
               <Grid2
                 size={{
                   xs: 12,
-                  sm: screenSize.isLandscapeMobile ? 4 : 6,
-                  md: 3,
+                  sm: screenSize.isLandscapeMobile ? 4 : 12,
+                  md: screenSize.isSmallerThanLaptop
+                    ? 6
+                    : screenSize.isLaptop
+                      ? 4
+                      : 3,
                 }}
                 sx={{
                   mx:
