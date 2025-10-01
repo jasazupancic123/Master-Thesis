@@ -28,7 +28,6 @@ import { CreateInstitutionDto } from '../dto/create-institution.dto';
 import { UpdateInstitutionDto } from '../dto/update-institution.dto';
 import { UpdateInstitutionMembersDto } from '../dto/update-institution-members.dto';
 import { Institution } from '../entity/institution.entity';
-import { GetMembersType } from '../enum/institution-get-members.enum';
 import { UpdateInstitutionAthleteEvent } from '../event/update-institution-athlete.event';
 import { InstitutionRepository } from '../repository/institution.repository';
 
@@ -132,24 +131,9 @@ export class InstitutionService implements Permission<Institution> {
     return { ...institution, ...this.commonService.object.clean(input) };
   }
 
-  async findMembers(
-    ref: InstitutionRef,
-    type: GetMembersType,
-  ): Promise<Profile[]> {
+  async findMembers(ref: InstitutionRef): Promise<Profile[]> {
     const institution = await this.findByIdOrFail(ref);
-    const profiles =
-      await this.profileService.findAllByInstitution(institution);
-
-    switch (type) {
-      case GetMembersType.ALL:
-        return profiles;
-      case GetMembersType.ATHLETES:
-        return profiles.filter((p) => institution.athleteIds.includes(p.uid));
-      case GetMembersType.TRAINERS:
-        return profiles.filter((p) => institution.trainerIds.includes(p.uid));
-      default:
-        return [];
-    }
+    return await this.profileService.findAllByInstitution(institution);
   }
 
   @LogMethod()

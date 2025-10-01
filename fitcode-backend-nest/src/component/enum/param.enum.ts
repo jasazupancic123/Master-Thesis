@@ -28,3 +28,9 @@ export enum IntType {
   Hrmax = 'hrmax',
   VBT = 'vbt',
 }
+
+export enum LoadType {
+  Kg = 'kg',
+  Bw = 'bw',
+  Rm = 'rm',
+}

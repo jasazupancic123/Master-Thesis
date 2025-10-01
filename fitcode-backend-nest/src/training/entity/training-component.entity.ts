@@ -1,8 +1,4 @@
-import {
-  ApiProperty,
-  ApiPropertyOptional,
-  IntersectionType,
-} from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Transform, Type } from 'class-transformer';
 import {
   IsDate,
@@ -13,7 +9,6 @@ import {
   ValidateNested,
 } from 'class-validator';
 
-import { ColorEntity } from '@src/common/entity/color.entity';
 import { IdEntity } from '@src/common/entity/id.entity';
 import { Target } from '@src/target/entity/target.entity';
 
@@ -22,7 +17,7 @@ import { CopiedFrom } from './copied-from.entity';
 import { Subgroup } from './subgroup.entity';
 import { Superset } from './superset.entity';
 
-export class TrainingComponent extends IntersectionType(IdEntity, ColorEntity) {
+export class TrainingComponent extends IdEntity {
   @IsDate()
   @ApiProperty()
   @Expose()
@@ -37,11 +32,7 @@ export class TrainingComponent extends IntersectionType(IdEntity, ColorEntity) {
 
   @IsEnum(MainSet)
   @IsString()
-  @ApiProperty({
-    enum: MainSet,
-    enumName: 'MainSet',
-    description: 'Type of main set',
-  })
+  @ApiProperty({ enum: MainSet })
   @Expose()
   mainSet: MainSet; // defaults to "block"
 

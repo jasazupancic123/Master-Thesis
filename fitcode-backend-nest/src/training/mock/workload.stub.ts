@@ -76,7 +76,7 @@ export function generatePrescribedWorkloadStub(
   componentParams: ComponentParam[],
   random = false,
 ): PrescribedWorkload {
-  const w: PrescribedWorkload = {};
+  const w: PrescribedWorkload = { pRecTime: 0, pReps: 1 };
 
   for (const param of componentParams) {
     const selected = parseDefaultValueOrFirstOption(param); // set, rep, kg, ...
@@ -86,31 +86,41 @@ export function generatePrescribedWorkloadStub(
 
     switch (param.field) {
       case ParamType.VolWork1:
+        w.pReps = value;
+        w.pRepsR = value;
         w.volWork1Type = selected as VolType;
         w.prescribedVolWork1ValueL = value;
         w.prescribedVolWork1ValueR = value;
         break;
       case ParamType.VolWork2:
+        w.pTime = value;
+        w.pTimeR = value;
         w.volWork2Type = selected as VolType;
         w.prescribedVolWork2ValueL = value;
         w.prescribedVolWork2ValueR = value;
         break;
       case ParamType.VolRec1:
+        w.pRecTime = value;
         w.volRecType = selected as VolType;
         w.prescribedVolRecValueL = value;
         w.prescribedVolRecValueR = value;
         break;
       case ParamType.IntWork1:
+        w.pLoad = value;
+        w.pLoadR = value;
         w.intWork1Type = selected as IntType;
         w.prescribedIntWork1ValueL = value;
         w.prescribedIntWork1ValueR = value;
         break;
       case ParamType.IntWork2:
+        w.pDist = value;
+        w.pDistR = value;
         w.intWork2Type = selected as IntType;
         w.prescribedIntWork2ValueL = value;
         w.prescribedIntWork2ValueR = value;
         break;
       case ParamType.IntRec1:
+        w.pDist = value;
         w.intRecType = selected as IntType;
         w.prescribedIntRecValueL = value;
         w.prescribedIntRecValueR = value;
@@ -125,7 +135,7 @@ export function generateCompletedWorkloadStub(
   componentParams: ComponentParam[] = PARAMS,
   random = false,
 ): CompletedWorkload {
-  const w: CompletedWorkload = {};
+  const w: CompletedWorkload = { recTime: 0, reps: 1 };
 
   for (const param of componentParams) {
     const selected = parseDefaultValueOrFirstOption(param); // set, rep, kg, ...
@@ -135,26 +145,36 @@ export function generateCompletedWorkloadStub(
 
     switch (param.field) {
       case ParamType.VolWork1:
+        w.reps = value;
+        w.repsR = value;
         w.volWork1ValueL = value;
         w.volWork1ValueR = value;
         break;
       case ParamType.VolWork2:
+        w.time = value;
+        w.timeR = value;
         w.volWork2ValueL = value;
         w.volWork2ValueR = value;
         break;
       case ParamType.VolRec1:
+        w.recTime = value;
         w.volRecValueL = value;
         w.volRecValueR = value;
         break;
       case ParamType.IntWork1:
+        w.load = value;
+        w.loadR = value;
         w.intWork1ValueL = value;
         w.intWork1ValueR = value;
         break;
       case ParamType.IntWork2:
+        w.dist = value;
+        w.distR = value;
         w.intWork2ValueL = value;
         w.intWork2ValueR = value;
         break;
       case ParamType.IntRec1:
+        w.recDist = value;
         w.intRecValueL = value;
         w.intRecValueR = value;
         break;
@@ -182,8 +202,45 @@ export function parseOptionValueOrDefault(
   return +(foundOption?.defaultValue || 0);
 }
 
-function getPrescribedWorkloadFields(data: WorkloadValue): PrescribedWorkload {
+function tempoToString(tempo: number): string {
+  if (!tempo) return undefined;
+  return tempo.toString().split('').join(':');
+}
+
+function getPrescribedWorkloadFields(
+  data: Partial<WorkloadValue>,
+): PrescribedWorkload {
+  const pRecTime = data.prescribedVolRecValueL || 0;
+  const pRecDist = data.prescribedVolRecValueR || 0;
+
+  const pReps = data.prescribedVolWork1ValueL || 1;
+  const pRepsR = data.prescribedVolWork1ValueR;
+
+  const pLoad = data.prescribedIntWork1ValueL;
+  const pLoadR = data.prescribedIntWork1ValueR;
+
+  const pTempo = tempoToString(data.prescribedIntWork2ValueL);
+  const pTempoR = tempoToString(data.prescribedIntWork2ValueR);
+
+  const pTime = data.prescribedIntRecValueL;
+  const pTimeR = data.prescribedIntRecValueR;
+
+  const pDist = data.prescribedVolWork2ValueL;
+  const pDistR = data.prescribedVolWork2ValueR;
+
   return {
+    pRecTime,
+    pRecDist,
+    pReps,
+    pRepsR,
+    pLoad,
+    pLoadR,
+    pTempo,
+    pTempoR,
+    pTime,
+    pTimeR,
+    pDist,
+    pDistR,
     ...(data.volWork1Type && { volWork1Type: data.volWork1Type }),
     ...(data.prescribedVolWork1ValueL && {
       prescribedVolWork1ValueL: data.prescribedVolWork1ValueL,
@@ -229,8 +286,40 @@ function getPrescribedWorkloadFields(data: WorkloadValue): PrescribedWorkload {
   };
 }
 
-function getCompletedWorkloadFields(data: WorkloadValue): CompletedWorkload {
+function getCompletedWorkloadFields(
+  data: Partial<WorkloadValue>,
+): CompletedWorkload {
+  const recTime = data.volRecValueL || 0;
+  const recDist = data.volRecValueR;
+
+  const reps = data.volWork1ValueL || 1;
+  const repsR = data.volWork1ValueR;
+
+  const load = data.intWork1ValueL;
+  const loadR = data.intWork1ValueR;
+
+  const tempo = tempoToString(data.intWork2ValueL);
+  const tempoR = tempoToString(data.intWork2ValueR);
+
+  const time = data.intRecValueL;
+  const timeR = data.intRecValueR;
+
+  const dist = data.volWork2ValueL;
+  const distR = data.volWork2ValueR;
+
   return {
+    recTime,
+    recDist,
+    reps,
+    repsR,
+    load,
+    loadR,
+    tempo,
+    tempoR,
+    time,
+    timeR,
+    dist,
+    distR,
     ...(data.volWork1ValueL && { volWork1ValueL: data.volWork1ValueL }),
     ...(data.volWork1ValueR && { volWork1ValueR: data.volWork1ValueR }),
     ...(data.volWork2ValueL && { volWork2ValueL: data.volWork2ValueL }),

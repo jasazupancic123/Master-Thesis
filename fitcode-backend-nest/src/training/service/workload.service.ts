@@ -9,12 +9,9 @@ import {
   CycleRef,
   ExerciseRef,
   InstitutionRef,
-  TrainingComponentRef,
   TrainingRef,
-  UserRef,
   WorkloadRef,
 } from '@src/common/type/firestore.type';
-import { BatchWriteOperation } from '@src/common/type/orm.type';
 import { PARAMS } from '@src/component/constant/param.constant';
 import { IntType, ParamType, VolType } from '@src/component/enum/param.enum';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
@@ -22,7 +19,6 @@ import { FirebaseService } from '@src/firebase/firebase.service';
 
 import { CompleteSetDto } from '../dto/complete-set.dto';
 import { CreatePrescribedWorkloadDto } from '../dto/create-workload.dto';
-import { CompletedTrainingExercise } from '../entity/completed-training.entity';
 import { ExerciseSet } from '../entity/exercise-set.entity';
 import { Training } from '../entity/training.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
@@ -139,171 +135,6 @@ export class WorkloadService {
     );
   }
 
-  /**
-   * Creates workloads for provided user for training component
-   * with completed set data input. It loops through all prescribed
-   * values and finds corresponding input exercises and sets that
-   * are provided as completed.
-   */
-  async createForTrainingComponent(
-    trainingComponent: TrainingComponent,
-    ref: InstitutionRef & CycleRef & TrainingComponentRef & UserRef,
-    input: CompletedTrainingExercise[],
-  ) {
-    // get all exercises for their names in case of error
-    const allExercises = await this.trainingPlanService.getAllTrainingExercises(
-      [trainingComponent],
-    );
-
-    // custom workloads in the future that are already prescribed (and none of them is completed),
-    // that's why we can enforce type of (WorkloadMeta & PrescribedWorkload)[]
-    const customPrescribedWorkloads: (WorkloadMeta & PrescribedWorkload)[] =
-      await this.findAllByUserTraining(ref.uid, {
-        trainingId: ref.trainingId,
-        componentId: ref.componentId,
-      });
-
-    // find prescribed supersets (either from subgroup or main group)
-    const subgroup = trainingComponent.subgroups.find((s) =>
-      s.membersIds.includes(ref.uid),
-    );
-
-    const prescribedSupersets = subgroup
-      ? subgroup.supersets
-      : trainingComponent.supersets;
-
-    const collection = this.repository.collection(ref);
-    const operations: BatchWriteOperation<Workload>[] = [];
-
-    prescribedSupersets.forEach(
-      ({ exercises: prescribedExercises }, supersetIndex) => {
-        prescribedExercises.forEach((prescribedExercise) => {
-          const exerciseName = allExercises.find(
-            (e) => e.id === prescribedExercise.id,
-          )?.name;
-
-          const completedExercise = input.find(
-            (e) =>
-              e.id === prescribedExercise.id &&
-              e.supersetIndex === supersetIndex,
-          );
-
-          if (!completedExercise)
-            throw new BadRequestException(
-              `You have to complete prescribed exercise ${exerciseName} in superset ${supersetIndex + 1}`,
-            );
-
-          prescribedExercise.sets.forEach((prescribedSet) => {
-            const key = this.repository.getKey({
-              trainingId: ref.trainingId,
-              componentId: ref.componentId,
-              exerciseId: prescribedExercise.id,
-              supersetIndex,
-              setNumber: prescribedSet.setNumber,
-              userId: ref.uid,
-            });
-
-            const customPrescribedWorkload = customPrescribedWorkloads.find(
-              (w) =>
-                w.componentId === ref.componentId &&
-                w.exerciseId === prescribedExercise.id &&
-                w.supersetIndex === supersetIndex &&
-                w.setNumber === prescribedSet.setNumber &&
-                w.userId === ref.uid,
-            );
-
-            const prescribedWorkload = customPrescribedWorkload
-              ? customPrescribedWorkload
-              : this.getPrescribedWorkload(prescribedSet);
-
-            const workloadMeta: WorkloadMeta = {
-              id: key,
-              institutionId: ref.institutionId,
-              groupId: ref.groupId,
-              cycleId: ref.cycleId,
-              userId: ref.uid,
-              trainingId: ref.trainingId,
-              componentId: ref.componentId,
-              exerciseId: prescribedExercise.id,
-              setNumber: prescribedSet.setNumber,
-              supersetIndex,
-              plannedAt: trainingComponent.from,
-              status: SetStatus.IGNORED,
-              notes: '',
-            };
-
-            const completedSet = completedExercise.sets.find(
-              (set) => set.setNumber === prescribedSet.setNumber,
-            );
-
-            if (!completedSet)
-              // create workload with status IGNORED and no completed values
-              operations.push({
-                operation: 'set',
-                ref: collection.doc(key),
-                data: this.firebaseService.buildCreateQuery(
-                  { ...workloadMeta, ...prescribedWorkload },
-                  { timestamps: true },
-                ),
-              });
-            else {
-              const { added, removed } = this.commonService.array.diff(
-                prescribedSet.paramValuesL.map((p) => p.field),
-                completedSet.paramValuesL.map((p) => p.field),
-              );
-
-              // throw error for all added or removed fields
-              if (added.length)
-                this.checkParamDifference(added, 'complete', {
-                  prescribedSet,
-                  exerciseName,
-                  supersetIndex,
-                });
-
-              if (removed.length)
-                this.checkParamDifference(removed, 'remove', {
-                  prescribedSet,
-                  exerciseName,
-                  supersetIndex,
-                });
-
-              const completedWorkload =
-                this.getCompletedWorkloadFromExerciseSet(completedSet);
-              const workloadValue: WorkloadValue = {
-                ...prescribedWorkload,
-                ...completedWorkload,
-              };
-
-              operations.push({
-                operation: 'set',
-                ref: collection.doc(key),
-                data: this.firebaseService.buildCreateQuery(
-                  {
-                    ...workloadMeta,
-                    ...workloadValue,
-                    status: this.getStatus(workloadValue),
-                  },
-                  { timestamps: true },
-                ),
-              });
-            }
-          });
-        });
-      },
-    );
-
-    const batch = this.firebaseService.firestore.batch();
-    operations.forEach((op) => {
-      const { operation, ref, data } = op;
-      if (operation === 'set') batch.set(ref, data, { merge: true });
-      else if (operation === 'update') batch.update(ref, data);
-    });
-
-    const results = await batch.commit();
-    return results.length; // return number of operations committed
-    // return await this.firebaseService.paginateBatchWrites(operations);
-  }
-
   async upsert(
     ref: WorkloadRef & CycleRef & InstitutionRef,
     prescribedSet: ExerciseSet,
@@ -314,6 +145,10 @@ export class WorkloadService {
       this.getCompletedWorkloadFromCompletedSet(completedSet);
 
     const workloadValue: WorkloadValue = {
+      pReps: 1,
+      reps: 1,
+      pRecTime: 0,
+      recTime: 0,
       ...prescribedWorkload,
       ...completedWorkload,
     };
@@ -377,7 +212,13 @@ export class WorkloadService {
       componentId = 'other';
       supersetIndex = 0;
       setNumber = Math.abs(-remaining - 1); // 1-based index
-      prescribedSet = { setNumber, paramValuesL: [], paramValuesR: [] };
+      prescribedSet = {
+        setNumber,
+        reps: 1,
+        recTime: 0,
+        paramValuesL: [],
+        paramValuesR: [],
+      };
     }
 
     return await this.upsert(
@@ -554,6 +395,8 @@ export class WorkloadService {
         status: SetStatus.NOT_STARTED, // meaning custom for user
         plannedAt: trainingComponent.from,
         trainingId,
+        reps: 1,
+        recTime: 0,
       });
     }
 
@@ -682,6 +525,10 @@ export class WorkloadService {
     );
 
     const workloadValue: WorkloadValue = {
+      reps: 1,
+      pReps: 1,
+      recTime: 0,
+      pRecTime: 0,
       volWork1ValueL: this.parseValue(volWork1ValueL),
       volWork2ValueL: this.parseValue(volWork2ValueL),
       volRecValueL: this.parseValue(volRecValueL),
@@ -730,14 +577,14 @@ export class WorkloadService {
     return {
       volWork1ValueL: input.reps || input.time || input.dist,
       volWork1ValueR: input.repsR || input.timeR || input.distR,
-      volWork2ValueL: input.tempo || input.velocity || input.eff,
-      volWork2ValueR: input.tempoR || input.velocityR || input.eff,
+      volWork2ValueL: /* input.tempo || */ input.velocity || input.eff,
+      volWork2ValueR: /* input.tempoR || */ input.velocityR || input.eff,
       volRecValueL: input.recTime,
       volRecValueR: input.recTime,
       intWork1ValueL: input.load,
       intWork1ValueR: input.loadR,
-      intWork2ValueL: input.rom || input.bpm || input.mas,
-      intWork2ValueR: input.romR || input.bpm || input.mas,
+      intWork2ValueL: input.rom,
+      intWork2ValueR: input.romR,
       intRecValueL: input.recDist,
       intRecValueR: input.recDist,
     };
@@ -754,6 +601,8 @@ export class WorkloadService {
     const intRecL = paramValuesL.find((p) => p.field === ParamType.IntRec1);
 
     const prescribedWorkload: PrescribedWorkload = {
+      pReps: 1,
+      pRecTime: 0,
       volWork1Type: this.parseSelected<VolType>(volWork1L),
       prescribedVolWork1ValueL: this.parseValue(volWork1L) as number,
       volWork2Type: this.parseSelected<VolType>(volWork2L),
@@ -815,6 +664,8 @@ export class WorkloadService {
   getExerciseSet(workload: Workload): ExerciseSet {
     const set: ExerciseSet = {
       setNumber: workload.setNumber,
+      reps: 1,
+      recTime: 0,
       paramValuesL: [],
       paramValuesR: [],
     };

@@ -163,6 +163,8 @@ describe('Complete Next Set (e2e)', () => {
         userId: global.athlete.uid,
         from: new Date(),
         to: new Date(),
+        reps: 1,
+        recTime: 0,
       },
     );
 
@@ -184,6 +186,8 @@ describe('Complete Next Set (e2e)', () => {
         userId: global.athlete.uid,
         from: new Date(),
         to: new Date(),
+        reps: 1,
+        recTime: 0,
       });
 
       const spyResult = spy.mock.results[0].value;
@@ -205,6 +209,8 @@ describe('Complete Next Set (e2e)', () => {
         userId: global.athlete.uid,
         from: new Date(),
         to: new Date(),
+        reps: 1,
+        recTime: 0,
       },
     );
 
@@ -223,6 +229,8 @@ describe('Complete Next Set (e2e)', () => {
       userId: global.athlete.uid,
       from: new Date(),
       to: new Date(),
+      reps: 1,
+      recTime: 0,
     });
 
     expect(res.status).toBe(401);
@@ -247,6 +255,8 @@ describe('Complete Next Set (e2e)', () => {
       userId: global.athlete.uid,
       from: new Date(),
       to: new Date(),
+      reps: 1,
+      recTime: 0,
     });
 
     expect(res.status).toBe(409);
@@ -264,7 +274,7 @@ describe('Complete Next Set (e2e)', () => {
       reps: 12,
       load: 100,
       recTime: 60,
-      tempo: 2020,
+      tempo: '2:0:2:0',
     });
 
     // workloads should not exist yet
@@ -333,6 +343,10 @@ describe('Complete Next Set (e2e)', () => {
         supersetIndex: 0,
         setNumber: 1,
         status: SetStatus.PARTIAL,
+        reps: 1,
+        pReps: 1,
+        recTime: 0,
+        pRecTime: 0,
       },
     ]);
 
@@ -345,7 +359,7 @@ describe('Complete Next Set (e2e)', () => {
       reps: 10,
       load: 80,
       recTime: 90,
-      tempo: 2020,
+      tempo: '2:0:2:0',
     });
 
     // workloads should exist now
@@ -406,6 +420,10 @@ describe('Complete Next Set (e2e)', () => {
         supersetIndex: 0,
         setNumber: i,
         status: SetStatus.PARTIAL,
+        reps: 1,
+        pReps: 1,
+        recTime: 0,
+        pRecTime: 0,
       })),
     );
 
@@ -417,7 +435,7 @@ describe('Complete Next Set (e2e)', () => {
       reps: 8,
       load: 60,
       recTime: 120,
-      tempo: 2020,
+      tempo: '2:0:2:0',
     });
 
     expect(res.status).toBe(201);
@@ -507,6 +525,10 @@ describe('Complete Next Set (e2e)', () => {
         status: SetStatus.PARTIAL,
         volWork1ValueL: 1, // 1 rep
         intWork1ValueL: 120, // 120 kg
+        reps: 1,
+        pReps: 1,
+        recTime: 0,
+        pRecTime: 0,
       },
     ]);
 
@@ -517,6 +539,7 @@ describe('Complete Next Set (e2e)', () => {
       to: addHours(from, 1),
       reps: 6,
       load: 90,
+      recTime: 0,
     });
 
     expect(res1.status).toBe(201);
@@ -538,6 +561,7 @@ describe('Complete Next Set (e2e)', () => {
       to: addHours(from, 1),
       reps: 4,
       load: 70,
+      recTime: 0,
     });
 
     expect(res2.status).toBe(201);
@@ -602,6 +626,7 @@ describe('Complete Next Set (e2e)', () => {
       reps: 12,
       repsR: 11,
       load: 60,
+      recTime: 0,
       // loadR should be provided
     });
 

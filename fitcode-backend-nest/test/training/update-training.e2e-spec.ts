@@ -616,6 +616,10 @@ describe('Update Training (e2e)', () => {
           setNumber: 1,
           randomValues: false,
           status: SetStatus.NOT_STARTED,
+          reps: 1,
+          pReps: 1,
+          recTime: 0,
+          pRecTime: 0,
         },
       ]);
 
@@ -670,6 +674,10 @@ describe('Update Training (e2e)', () => {
           supersetIndex: 0,
           setNumber: 1,
           status: SetStatus.NOT_STARTED,
+          reps: 1,
+          pReps: 1,
+          recTime: 0,
+          pRecTime: 0,
         },
         {
           trainingId: training.id,
@@ -679,6 +687,10 @@ describe('Update Training (e2e)', () => {
           supersetIndex: 0,
           setNumber: 2,
           status: SetStatus.NOT_STARTED,
+          reps: 1,
+          pReps: 1,
+          recTime: 0,
+          pRecTime: 0,
         },
         {
           trainingId: training.id,
@@ -688,6 +700,10 @@ describe('Update Training (e2e)', () => {
           supersetIndex: 0,
           setNumber: 1,
           status: SetStatus.NOT_STARTED,
+          reps: 1,
+          pReps: 1,
+          recTime: 0,
+          pRecTime: 0,
         },
       ]);
 

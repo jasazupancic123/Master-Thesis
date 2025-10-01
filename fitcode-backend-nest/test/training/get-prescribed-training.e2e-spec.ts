@@ -384,6 +384,10 @@ describe('Get prescribed training (e2e)', () => {
         setNumber: 1,
         prescribedIntWork1ValueL: 100,
         status: SetStatus.NOT_STARTED,
+        reps: 1,
+        pReps: 1,
+        recTime: 0,
+        pRecTime: 0,
       },
       {
         trainingId,
@@ -394,6 +398,10 @@ describe('Get prescribed training (e2e)', () => {
         setNumber: 2,
         prescribedIntWork1ValueL: 101,
         status: SetStatus.NOT_STARTED,
+        reps: 1,
+        pReps: 1,
+        recTime: 0,
+        pRecTime: 0,
       },
     ]);
 
@@ -530,6 +538,10 @@ describe('Get prescribed training (e2e)', () => {
         setNumber: 1,
         prescribedIntWork1ValueL: 100,
         status: SetStatus.NOT_STARTED,
+        reps: 1,
+        pReps: 1,
+        recTime: 0,
+        pRecTime: 0,
       },
       {
         trainingId: training.id,
@@ -540,6 +552,10 @@ describe('Get prescribed training (e2e)', () => {
         setNumber: 2,
         prescribedIntWork1ValueL: 101,
         status: SetStatus.NOT_STARTED,
+        reps: 1,
+        pReps: 1,
+        recTime: 0,
+        pRecTime: 0,
       },
     ]);
 
@@ -815,6 +831,10 @@ describe('Get prescribed training (e2e)', () => {
         createdAt: date,
         intWork1ValueL: weight,
         volWork1ValueL: reps,
+        reps: 1,
+        pReps: 1,
+        recTime: 0,
+        pRecTime: 0,
       };
     }
 

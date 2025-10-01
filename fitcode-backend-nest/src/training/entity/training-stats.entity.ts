@@ -9,7 +9,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 
-export class TraininComponentStats {
+export class TrainingComponentStats {
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
@@ -24,11 +24,11 @@ export class TraininComponentStats {
 }
 
 export class TrainingStats {
-  @Type(() => TraininComponentStats)
+  @Type(() => TrainingComponentStats)
   @ValidateNested({ each: true })
-  @ApiProperty({ type: () => TraininComponentStats, isArray: true })
+  @ApiProperty({ type: () => TrainingComponentStats, isArray: true })
   @Expose()
-  plannedComponents: TraininComponentStats[];
+  plannedComponents: TrainingComponentStats[];
 
   @IsNumber()
   @Min(0)
