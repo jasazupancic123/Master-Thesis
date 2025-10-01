@@ -22,7 +22,10 @@ interface TrainingInProgressContextType {
   setExerciseIndex: SetState<number | undefined>;
   setIndex: number | undefined;
   setSetIndex: SetState<number | undefined>;
-  handleUpsertSet: (body: Omit<CompleteSet, 'userId'>) => Promise<void>;
+  handleUpsertSet: (
+    body: Omit<CompleteSet, 'userId'>,
+    state: { exerciseId: string; supersetIndex: number; setIndex: number }
+  ) => Promise<void>;
 }
 
 const TrainingInProgressContext = createContext<
@@ -69,11 +72,17 @@ export const TrainingInProgressProvider = (props: ChildrenProps) => {
     setExerciseIndex(selectedSuperset?.exercises.indexOf(selectedExercise));
   }, [selectedExercise]);
 
-  async function handleUpsertSet(body: Omit<CompleteSet, 'userId'>) {
+  async function handleUpsertSet(
+    body: Omit<CompleteSet, 'userId'>,
+    state: { exerciseId: string; supersetIndex: number; setIndex: number }
+  ) {
+    const {
+      exerciseId,
+      supersetIndex: stateSupersetIndex,
+      setIndex: stateSetIndex,
+    } = state || {};
+
     if (
-      supersetIndex === undefined ||
-      setIndex === undefined ||
-      !selectedExercise ||
       !trainingInProgress?.selectedComponent ||
       !trainingInProgress.userId ||
       !trainingInProgress.training
@@ -86,9 +95,9 @@ export const TrainingInProgressProvider = (props: ChildrenProps) => {
         controller.upsertSet(
           trainingInProgress.training.id,
           trainingInProgress.selectedComponent.id,
-          selectedExercise!.id,
-          supersetIndex,
-          setIndex + 1,
+          exerciseId,
+          stateSupersetIndex,
+          stateSetIndex + 1,
           { ...body, userId: trainingInProgress.userId }
         ),
       (_workload) => {

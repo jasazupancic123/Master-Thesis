@@ -14,7 +14,7 @@ export const getUndoneExercises = (
 
   superset.exercises.forEach((exercise) => {
     const tracking = exerciseSetTrackingState.find(
-      (t) => t.exerciseId === exercise.id && t.supersetIndex === supersetIndex
+      (t) => t.exerciseId === exercise.id
     );
     exercise.sets.forEach((set) => {
       if (

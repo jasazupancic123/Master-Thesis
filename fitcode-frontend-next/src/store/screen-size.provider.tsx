@@ -38,7 +38,9 @@ export const ScreenSizeProvider = ({ children }: ChildrenProps) => {
   );
   const isTablet = useMediaQuery('(min-width:600px) and (max-width:1024px)');
   const isDesktop = useMediaQuery('(min-width:1700px)');
-  const isSmallerThanLaptop = useMediaQuery('(max-width:1024px)');
+  const isSmallerThanLaptop = useMediaQuery(
+    '(max-width:1024px) or (max-height:650px)'
+  );
   const isSmallLaptop = useMediaQuery(
     '(min-width:1024px) and (max-width:1240px)'
   );
