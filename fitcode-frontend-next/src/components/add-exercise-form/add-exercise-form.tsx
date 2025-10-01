@@ -97,7 +97,7 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
             count={pagination.pages}
             color="primary"
             page={pagination.page}
-            onChange={(_, page) => setPagination({ ...pagination, page })}
+            onChange={(_, page) => setPagination((prev) => ({ ...prev, page }))}
           />
         </Grid2>
 
@@ -126,6 +126,7 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
             <ExerciseFilter
               filters={filters}
               setFilters={setFilters}
+              setPagination={setPagination}
               open={openFilters}
               setOpen={setOpenFilters}
             />

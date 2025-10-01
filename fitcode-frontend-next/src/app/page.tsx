@@ -31,8 +31,6 @@ export default function Home() {
     redirect(SIGN_IN_REDIRECT_MAPPER[auth.role].href, RedirectType.replace);
   }
 
-  // Tunables
-  const duration = 3;
   const ease = [0.22, 0.3, 0.3, 1] as const;
 
   const prefersReducedMotion = false; // if you use useReducedMotion(), keep the ternaries below
