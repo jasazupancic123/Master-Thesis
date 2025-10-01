@@ -16,7 +16,8 @@ export function ExerciseCard(props: ExerciseCardProps) {
   const screenSize = useScreenSize();
 
   const { exercise, addExerciseForm } = props;
-  const isVideo = false; // exercise.videoUrl !== undefined;
+  const isVideo = false;
+  // const isVideo = exercise.videoUrl !== undefined;
   const imgSrc = exercise.imageUrl || '/exercise-image-default.png';
 
   // Fixed media height similar to your previous maxHeight: 140
@@ -35,10 +36,7 @@ export function ExerciseCard(props: ExerciseCardProps) {
           width: '100%',
           height: MEDIA_HEIGHT,
           bgcolor: 'background.dark',
-          filter:
-            exercise.videoUrl || exercise.imageUrl
-              ? 'grayscale(100%)'
-              : undefined,
+          filter: 'grayscale(100%)',
         }}
       >
         {isVideo ? (

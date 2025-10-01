@@ -3,30 +3,25 @@ import type { SetState } from '@/common/type/state.type';
 import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
 
 export const isExerciseSetCompleted = (
-  exerciseIdentifier: { exerciseId: string; supersetIndex: number },
+  exerciseIdentifier: { exerciseId: string },
   setNumber: number,
   exerciseSetTrackingState: ExerciseSetTracking[]
 ) => {
   for (const key of Array.from(exerciseSetTrackingState)) {
-    if (
-      key.exerciseId === exerciseIdentifier.exerciseId &&
-      key.supersetIndex === exerciseIdentifier.supersetIndex
-    )
+    if (key.exerciseId === exerciseIdentifier.exerciseId)
       return key.completedSetNumbers.includes(setNumber);
   }
   return false;
 };
 
 export const markExerciseSetAsCompleted = (
-  exerciseIdentifier: { exerciseId: string; supersetIndex: number },
+  exerciseIdentifier: { exerciseId: string },
   setNumber: number,
   exerciseSetTrackingState: ExerciseSetTracking[],
   setTrainingInProgress: SetState<TrainingInProgress | null>
 ) => {
   const key = Array.from(exerciseSetTrackingState).find(
-    (k) =>
-      k.exerciseId === exerciseIdentifier.exerciseId &&
-      k.supersetIndex === exerciseIdentifier.supersetIndex
+    (k) => k.exerciseId === exerciseIdentifier.exerciseId
   );
 
   if (key) {
@@ -51,15 +46,13 @@ export const markExerciseSetAsCompleted = (
 };
 
 export const unmarkExerciseSetAsCompleted = (
-  exerciseIdentifier: { exerciseId: string; supersetIndex: number },
+  exerciseIdentifier: { exerciseId: string },
   setNumber: number,
   exerciseSetTrackingState: ExerciseSetTracking[],
   setTrainingInProgress: SetState<TrainingInProgress | null>
 ) => {
   const key = Array.from(exerciseSetTrackingState).find(
-    (k) =>
-      k.exerciseId === exerciseIdentifier.exerciseId &&
-      k.supersetIndex === exerciseIdentifier.supersetIndex
+    (k) => k.exerciseId === exerciseIdentifier.exerciseId
   );
   if (!key) return;
 

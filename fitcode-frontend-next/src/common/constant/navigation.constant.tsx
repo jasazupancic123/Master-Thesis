@@ -43,6 +43,8 @@ export function link(
 export const LINK_PRODUCT = link('Product', '#product');
 export const LINK_SERVICES = link('Services', '#services');
 export const LINK_TECHNOLOGY = link('Technology', '#technology');
+export const LINK_CONTACT_US = link('Contact Us', '/contact-us');
+export const LINK_ABOUT_US = link('About Us', '/about-us');
 
 // all standalone app links
 export const LINK_INDEX = link('Home', '/', null, '');
@@ -149,9 +151,18 @@ export const LINKS_AUTH = {
 };
 
 export const LINKS_HERO_NAVBAR = {
-  product: LINK_PRODUCT,
-  services: LINK_SERVICES,
-  technology: LINK_TECHNOLOGY,
+  aboutUs: LINK_ABOUT_US,
+  contactUs: LINK_CONTACT_US,
+};
+
+export const LINKS_CONTACT_US_HERO_NAVBAR = {
+  home: LINK_INDEX,
+  aboutUs: LINK_ABOUT_US,
+};
+
+export const LINKS_ABOUT_US_HERO_NAVBAR = {
+  home: LINK_INDEX,
+  contactUs: LINK_CONTACT_US,
 };
 
 export const LINKS_AUTHENTICATED_HERO_NAVBAR = {

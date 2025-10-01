@@ -10,6 +10,7 @@ import AthleteOptionsContainer from '../athlete-options-container/athlete-option
 import MyModal from '../modal/modal';
 import TrainingInProgressSuperset from '../training-in-progress-superset/training-in-progress-superset';
 import { getUndoneExercises } from './state';
+import UndoneExercisesList from './training-in-progress-undone-exercises-list';
 import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
 import { useHorizontalOverflow } from '@/common/util/horizontal-overflow.util';
@@ -122,6 +123,34 @@ export default function TrainingInProgress() {
     return () => clearInterval(interval);
   }, [trainingInProgress?.startOfTraining]);
 
+  useEffect(() => {
+    if (!undoneExercises.length) {
+      setShowUndoneSetsWarning(false);
+      setShowUndoneSetsError(false);
+      return;
+    }
+
+    if (!trainingInProgress) return;
+
+    undoneExercises.forEach((undoneExercise) => {
+      const setTrackingState = trainingInProgress.exerciseSetTrackingState.find(
+        (state) => state.exerciseId === undoneExercise.id
+      );
+
+      if (!setTrackingState) return;
+
+      const hasUndoneSets =
+        setTrackingState.completedSetNumbers.length <
+        undoneExercise.sets.length;
+
+      if (!hasUndoneSets) {
+        setUndoneExercises((prev) => {
+          return prev.filter((e) => e.id !== undoneExercise.id);
+        });
+      }
+    });
+  }, [undoneExercises, trainingInProgress]);
+
   const handleCancelTraining = () => {
     clearTrainingState();
     setView(ExerciseTrainingView.ExerciseView);
@@ -196,6 +225,7 @@ export default function TrainingInProgress() {
               {trainingInProgress.supersets?.map((superset, i) => {
                 const isSelected =
                   (trainingInProgress.supersetIndex ?? 0) === i; // <- key change
+
                 return (
                   <Typography
                     key={i}
@@ -324,16 +354,16 @@ export default function TrainingInProgress() {
       </MyModal>
       <MyModal
         isOpen={showUndoneSetsWarning}
-        setIsOpen={(open) => setShowUndoneSetsWarning(open)}
+        setIsOpen={(open) => {
+          if (!undoneExercises.length) setShowUndoneSetsWarning(false);
+          else setShowUndoneSetsWarning(open);
+        }}
         onConfirm={() => {
           setShowUndoneSetsWarning(false);
           setUndoneExercises([]);
         }}
       >
-        <Typography variant="h6" sx={{ width: '100%', textAlign: 'center' }}>
-          {undoneExercises.map((e) => e.exercise?.name).join(', ')} undone in
-          current superset
-        </Typography>
+        <UndoneExercisesList undoneExercises={undoneExercises} />
       </MyModal>
       <MyModal
         isOpen={showUndoneSetsError}
@@ -343,10 +373,7 @@ export default function TrainingInProgress() {
           setUndoneExercises([]);
         }}
       >
-        <Typography variant="h6" sx={{ width: '100%', textAlign: 'center' }}>
-          {undoneExercises.map((e) => e.exercise?.name).join(', ')} undone in
-          training, complete them before finishing
-        </Typography>
+        <UndoneExercisesList undoneExercises={undoneExercises} />
       </MyModal>
     </Box>
   ) : null;

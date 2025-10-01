@@ -41,12 +41,7 @@ export default function DashboardInstitutionPage() {
   const { token, role } = useAuthenticatedAuth();
   const { users } = useMain();
 
-  const {
-    selectedInstitution,
-    setSelectedInstitution,
-    refetchMembers,
-    refetchUsers,
-  } = useDashboard();
+  const { selectedInstitution, setSelectedInstitution } = useDashboard();
 
   const controller = InstitutionController.getInstance(token);
 

@@ -92,6 +92,9 @@ export default function SupersetExercise(props: SupersetExerciseProps) {
     zIndex: isDragging ? 1000 : 'auto',
     // Hide the original while dragging so the overlay represents the item
     opacity: isDragging ? 0 : 1,
+    touchAction: 'none' /* critical for mobile dragging */,
+    userSelect: 'none',
+    willChange: 'transform',
   };
 
   if (!component || !training) return null;

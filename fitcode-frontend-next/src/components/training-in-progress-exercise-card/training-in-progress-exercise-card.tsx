@@ -1,5 +1,5 @@
-import { RadioButtonChecked, RadioButtonUnchecked } from '@mui/icons-material';
-import { Box, Checkbox, Stack, Typography } from '@mui/material';
+import { Circle } from '@mui/icons-material';
+import { Box, Stack, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Image from 'next/image';
 import { useMemo, useRef } from 'react';
@@ -9,17 +9,13 @@ import AthleteTrainingExerciseSets from '../athlete-training-exercise-sets/athle
 import MobileMovementValidation from '../mobile-movement-validation/mobile-movement-validation';
 import SwipeableBox from '../swipeable-box/swipeable-box';
 import { updateExerciseAttributeValues } from '../training-exercise-card-sets-expanded/state';
-import {
-  isExerciseSetCompleted,
-  markExerciseSetAsCompleted,
-  unmarkExerciseSetAsCompleted,
-} from './state';
+import { markExerciseSetAsCompleted } from './state';
+import TrainingExerciseSetDoneCheckbox from './training-exercise-set-done-checkbox';
 import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 import type { ParamType } from '@/controller/component/enum/param.enum';
 import { IntType, VolType } from '@/controller/component/enum/param.enum';
 import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
-import { TrainingService } from '@/controller/training/training.service';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
@@ -43,7 +39,6 @@ export default function TrainingInProgressExerciseCard() {
     supersetIndex,
     setIndex,
     setSetIndex,
-    handleUpsertSet,
   } = useTrainingInProgress();
 
   const { selectedTrackingMethod, setSelectedTrackingMethod } =
@@ -151,7 +146,7 @@ export default function TrainingInProgressExerciseCard() {
     }
 
     markExerciseSetAsCompleted(
-      { exerciseId: selectedExercise.id, supersetIndex },
+      { exerciseId: selectedExercise.id },
       setIndex + 1,
       trainingInProgress.exerciseSetTrackingState,
       setTrainingInProgress
@@ -333,21 +328,25 @@ export default function TrainingInProgressExerciseCard() {
               left: 0,
               transform: 'translate(50%, 0)',
             }}
-            gap={1}
+            gap={2}
           >
             {Array.from({ length: selectedSuperset.exercises.length }).map(
               (_, index) => {
                 if (exerciseIndex === undefined) return null;
                 const letter = String.fromCharCode(65 + index);
+
+                const isSelected =
+                  exerciseIndex !== undefined && exerciseIndex === index;
+
                 return (
                   <Typography
                     key={index}
+                    display="flex"
+                    alignItems="center"
                     fontWeight={600}
-                    color={
-                      exerciseIndex !== undefined && exerciseIndex === index
-                        ? theme.palette.primary.main
-                        : undefined
-                    }
+                    color={isSelected ? theme.palette.primary.main : undefined}
+                    lineHeight={1}
+                    gap={0.5}
                     onClick={() => {
                       const exerciseToSelect =
                         selectedSuperset.exercises[index];
@@ -356,10 +355,18 @@ export default function TrainingInProgressExerciseCard() {
                     }}
                     sx={{
                       textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
-                      px: 0.5,
+                      pr: 1.5,
                     }}
                   >
                     {letter}
+                    {isSelected && (
+                      <Circle
+                        sx={{
+                          color: theme.palette.primary.main,
+                          fontSize: 10,
+                        }}
+                      />
+                    )}
                   </Typography>
                 );
               }
@@ -520,60 +527,10 @@ export default function TrainingInProgressExerciseCard() {
                 gap={0.25}
               >
                 <Typography fontSize={12}>Done</Typography>
-                <Checkbox
-                  icon={
-                    <RadioButtonUnchecked
-                      sx={{ color: theme.palette.primary.main }}
-                    />
-                  }
-                  checkedIcon={
-                    <RadioButtonChecked
-                      sx={{ color: theme.palette.primary.main }}
-                    />
-                  }
-                  size="small"
-                  checked={
-                    supersetIndex !== undefined &&
-                    setIndex !== undefined &&
-                    isExerciseSetCompleted(
-                      { exerciseId: selectedExercise.id, supersetIndex },
-                      setIndex + 1,
-                      trainingInProgress.exerciseSetTrackingState
-                    )
-                  }
-                  sx={{
-                    zIndex: 10,
-                    '&.MuiCheckbox-root': {
-                      px: 0,
-                    },
-                  }}
-                  onChange={async (e) => {
-                    if (supersetIndex === undefined || setIndex === undefined)
-                      return;
-
-                    const isCompleted = e.target.checked;
-                    if (isCompleted) {
-                      const set = TrainingService.exerciseSetToCompleteSet(
-                        selectedExercise.sets[setIndex]
-                      );
-
-                      markExerciseSetAsCompleted(
-                        { exerciseId: selectedExercise.id, supersetIndex },
-                        setIndex + 1,
-                        trainingInProgress.exerciseSetTrackingState,
-                        setTrainingInProgress
-                      );
-
-                      await handleUpsertSet(set);
-                    } else {
-                      unmarkExerciseSetAsCompleted(
-                        { exerciseId: selectedExercise.id, supersetIndex },
-                        setIndex + 1,
-                        trainingInProgress.exerciseSetTrackingState,
-                        setTrainingInProgress
-                      );
-                    }
-                  }}
+                <TrainingExerciseSetDoneCheckbox
+                  exercise={selectedExercise}
+                  setIndex={setIndex!}
+                  exerciseView
                 />
               </Box>
             </Box>
