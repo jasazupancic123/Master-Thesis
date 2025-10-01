@@ -137,8 +137,7 @@ export default function ContactUsPage() {
             height={`calc(100vh - ${HERO_NAVBAR_HEIGHT})`}
             display="flex"
             flexDirection="column"
-            justifyContent="center"
-            gap={10}
+            justifyContent="space-evenly"
             sx={{
               mx: screenSize.isSmallerThanLaptop ? 'auto' : undefined,
             }}
