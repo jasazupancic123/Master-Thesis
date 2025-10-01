@@ -38,7 +38,7 @@ export class GroupService implements Permission<Group, Institution> {
   constructor(
     private readonly repository: GroupRepository,
     private readonly commonService: CommonService,
-    private readonly firebaseService: FirebaseService,
+    private readonly firebase: FirebaseService,
     private readonly eventEmitter: EventEmitter2,
     private readonly authService: AuthService,
     private readonly institutionService: InstitutionService,
@@ -51,22 +51,17 @@ export class GroupService implements Permission<Group, Institution> {
   }
 
   async findAll(user: User): Promise<Group[]> {
-    const institutions = await this.institutionService.findAll(user);
+    if (this.firebase.isAdmin(user))
+      return await this.repository.findAllByAdmin();
 
-    return await this.repository.findAll((q) => {
-      return this.firebaseService.isAdmin(user) // admin sees all institutions
-        ? q
-        : this.firebaseService.isTrainer(user) ||
-            this.firebaseService.isManager(user)
-          ? q.where(
-              'institutionId',
-              'in',
-              institutions.map((i) => i.id),
-            )
-          : this.firebaseService.isAthlete(user)
-            ? q.where('membersIds', 'array-contains', user.uid)
-            : q;
-    });
+    if (this.firebase.isAthlete(user))
+      return await this.repository.findAllByAthlete(user.uid);
+
+    const institutions = await this.institutionService.findAll(user);
+    const institutionIds = institutions.map((i) => i.id);
+    return institutionIds.length > 0
+      ? await this.repository.findAllByInstitutions(institutionIds)
+      : [];
   }
 
   async findOneById(user: User, ref: GroupRef): Promise<Group | null> {
@@ -75,7 +70,7 @@ export class GroupService implements Permission<Group, Institution> {
     if (!group || group.deletedAt) return null;
 
     // authorize
-    group.institution = await this.institutionService.getDocByIdOrFail(group);
+    group.institution = await this.institutionService.findByIdOrFail(group);
     if (!this.canView(user, group, group.institution))
       throw new UnauthorizedException('You are not allowed to view this group');
 
@@ -93,8 +88,9 @@ export class GroupService implements Permission<Group, Institution> {
     const { name, membersIds, institutionId, ownerId } = input;
 
     // validate
-    const institution = await this.institutionService.getDocByIdOrFail(input);
+    const institution = await this.institutionService.findByIdOrFail(input);
     await this.authService.findAllOrFail(user, { ids: membersIds });
+
     if (!this.institutionService.canEdit(user, institution))
       throw new UnauthorizedException(
         'You are not allowed to create group in this institution',
@@ -141,7 +137,7 @@ export class GroupService implements Permission<Group, Institution> {
     // validate owner
     if (input.ownerId)
       if (
-        !this.firebaseService.isManager(user) ||
+        !this.firebase.isManager(user) ||
         group.institution.ownerId !== user.uid
       )
         throw new UnauthorizedException('You are not allowed to update owner');
@@ -198,7 +194,7 @@ export class GroupService implements Permission<Group, Institution> {
       operations.push({
         ref: this.repository.doc(id),
         operation: 'update',
-        data: this.firebaseService.buildUpdateQuery<Group>({
+        data: this.firebase.buildUpdateQuery<Group>({
           ...existingGroup,
           name,
           cycles: inputCycles,
@@ -206,7 +202,7 @@ export class GroupService implements Permission<Group, Institution> {
       });
     }
 
-    await this.firebaseService.paginateBatches(operations);
+    await this.firebase.paginateBatches(operations);
   }
 
   @LogMethod()
@@ -242,7 +238,7 @@ export class GroupService implements Permission<Group, Institution> {
       {
         ref: this.repository.doc(ref.groupId),
         operation: 'update',
-        data: this.firebaseService.buildUpdateQuery<Group>({
+        data: this.firebase.buildUpdateQuery<Group>({
           cycles: group.cycles.filter((c) => c.id !== cycle.id),
         }),
       },
@@ -257,7 +253,7 @@ export class GroupService implements Permission<Group, Institution> {
       }),
     );
 
-    await this.firebaseService.paginateBatches(operations);
+    await this.firebase.paginateBatches(operations);
   }
 
   @LogMethod()
@@ -272,7 +268,7 @@ export class GroupService implements Permission<Group, Institution> {
     // check if member exists
     const member = await this.authService.findOneBy('id', memberId);
     if (!member) throw new BadRequestException('Member does not exist');
-    if (!this.firebaseService.isAthlete(member))
+    if (!this.firebase.isAthlete(member))
       throw new BadRequestException('Member must be an athlete');
 
     // check if member is already in group
@@ -296,12 +292,12 @@ export class GroupService implements Permission<Group, Institution> {
         operations,
         institutionId: group.institutionId,
         userId: member.uid,
-        add,
         groupId: group.id,
+        add,
       }),
     );
 
-    await this.firebaseService.paginateBatches(operations);
+    await this.firebase.paginateBatches(operations);
   }
 
   @OnEvent(INSTITUTION_ATHLETE_EVENT, { async: true, promisify: true })
@@ -310,22 +306,27 @@ export class GroupService implements Permission<Group, Institution> {
     event: UpdateInstitutionAthleteEvent,
   ) {
     // add or remove user from all groups in the institution
-    const { operations, institutionId, userId, add } = event;
+    const { operations, institutionId, userId, add, groupId } = event;
 
-    const groups = await this.repository.findAll((q) =>
-      q.where('institutionId', '==', institutionId),
-    );
-
-    for (const group of groups)
+    if (groupId)
+      // only handle single group update
       operations.push(
-        this.repository.getUpdateMemberOperation(group.id, userId, add),
+        this.repository.getUpdateMemberOperation(groupId, userId, add),
       );
+    else {
+      // handle all groups in the institution
+      const groups = await this.repository.findAllByInstitution(institutionId);
+      for (const group of groups)
+        operations.push(
+          this.repository.getUpdateMemberOperation(group.id, userId, add),
+        );
+    }
   }
 
   @LogMethod()
   async delete(user: User, ref: GroupRef): Promise<void> {
     const group = await this.findOneByIdOrFail(user, ref);
-    const institution = await this.institutionService.getDocByIdOrFail(group);
+    const institution = await this.institutionService.findByIdOrFail(group);
 
     if (!this.canDelete(user, group, institution))
       throw new UnauthorizedException(
@@ -342,7 +343,7 @@ export class GroupService implements Permission<Group, Institution> {
       new DeleteGroupOrCycleEvent({ operations, groupId: group.id }),
     );
 
-    await this.firebaseService.paginateBatches(operations);
+    await this.firebase.paginateBatches(operations);
   }
 
   findCycle(cycleId: string, group: Group) {
@@ -361,7 +362,7 @@ export class GroupService implements Permission<Group, Institution> {
     if (!input.length)
       throw new BadRequestException('Do not provide an empty array of groups');
 
-    const groups = await this.firebaseService.batchIn<Group>(
+    const groups = await this.firebase.batchIn<Group>(
       'id',
       input.map((g) => g.id),
       this.repository.collection(),
@@ -379,9 +380,7 @@ export class GroupService implements Permission<Group, Institution> {
         'You can only update groups from the same institution',
       );
 
-    const institution = await this.institutionService.getDocByIdOrFail(
-      groups[0],
-    );
+    const institution = await this.institutionService.findByIdOrFail(groups[0]);
 
     for (const group of groups) group.institution = institution;
     return groups;
@@ -423,15 +422,12 @@ export class GroupService implements Permission<Group, Institution> {
 
   canEdit(user: User, group: Group, institution: Institution) {
     if (
-      this.firebaseService.isTrainer(user) &&
+      this.firebase.isTrainer(user) &&
       institution.trainerIds.includes(user.uid)
     )
       return true; // owner of the group (trainer) can edit group
 
-    if (
-      this.firebaseService.isManager(user) &&
-      institution.ownerId === user.uid
-    )
+    if (this.firebase.isManager(user) && institution.ownerId === user.uid)
       // manager can edit all groups
       return true;
 
@@ -440,7 +436,7 @@ export class GroupService implements Permission<Group, Institution> {
 
   canDelete(user: User, entity: Group, root?: Institution) {
     // only if user is manager and institution owner
-    if (this.firebaseService.isManager(user) && root?.ownerId === user.uid)
+    if (this.firebase.isManager(user) && root?.ownerId === user.uid)
       return true;
   }
 }

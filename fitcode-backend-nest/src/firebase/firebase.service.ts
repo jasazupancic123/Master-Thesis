@@ -296,6 +296,11 @@ export class FirebaseService implements OnApplicationBootstrap {
     return user?.role?.includes(role);
   }
 
+  getRole(user: User | DecodedUser): UserRole {
+    if (isUser(user)) return user?.customClaims?.role?.[0] || UserRole.ATHLETE;
+    return user?.role?.[0] || UserRole.ATHLETE;
+  }
+
   private cleanUser(user: User): Partial<User> {
     return {
       uid: user.uid,

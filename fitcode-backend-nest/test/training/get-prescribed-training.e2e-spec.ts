@@ -27,7 +27,6 @@ import type { Group } from '@src/group/entity/group.entity';
 import { GroupService } from '@src/group/group.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import type { Wellness } from '@src/profile/entity/wellness.entity';
-import { ProfileService } from '@src/profile/service/profile.service';
 import { WellnessService } from '@src/profile/service/wellness.service';
 import { TestDbService } from '@src/test-db/test-db.service';
 import type { Training } from '@src/training/entity/training.entity';
@@ -54,7 +53,6 @@ describe('Get prescribed training (e2e)', () => {
   let componentService: ComponentService;
   let exerciseService: ExerciseService;
   let workloadService: WorkloadService;
-  let userService: ProfileService;
   let wellnessService: WellnessService;
 
   let component: Component;
@@ -78,7 +76,6 @@ describe('Get prescribed training (e2e)', () => {
     componentService = app.get(ComponentService);
     exerciseService = app.get(ExerciseService);
     workloadService = app.get(WorkloadService);
-    userService = app.get(ProfileService);
     wellnessService = app.get(WellnessService);
 
     const institutionService = app.get(InstitutionService);

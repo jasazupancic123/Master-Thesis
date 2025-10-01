@@ -58,7 +58,7 @@ export const updateUserProfile = async (
           sport: profileToEdit.sport,
           birthDate: profileToEdit.birthDate,
           gender: profileToEdit.gender,
-          userId: profileToEdit.id,
+          userId: profileToEdit.uid,
         });
 
       if (userToEdit && isEditedUser)

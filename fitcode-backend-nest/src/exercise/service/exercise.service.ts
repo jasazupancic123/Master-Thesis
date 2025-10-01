@@ -137,7 +137,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     if (!exercise) return null;
 
     if (exercise.institutionId)
-      exercise.institution = await this.institutionService.getDoc({
+      exercise.institution = await this.institutionService.findById({
         institutionId: exercise.institutionId,
       });
 
@@ -167,7 +167,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
 
     const ownerId = isAdmin ? GLOBAL_EXERCISE_OWNER : user.uid;
     const institution = isManager
-      ? await this.institutionService.getDocByOwner(user.uid)
+      ? await this.institutionService.findByOwnerId(user.uid)
       : null;
 
     if (!this.canAdd(user, institution))
@@ -205,7 +205,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     const ownerId = isAdmin ? GLOBAL_EXERCISE_OWNER : user.uid;
 
     const institution = isManager
-      ? await this.institutionService.getDocByOwner(user.uid)
+      ? await this.institutionService.findByOwnerId(user.uid)
       : null;
 
     if (!this.canAdd(user, institution))
@@ -292,7 +292,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
   ) {
     const isManager = this.firebaseService.isManager(user);
     const institution = isManager
-      ? await this.institutionService.getDocByOwner(user.uid)
+      ? await this.institutionService.findByOwnerId(user.uid)
       : null;
 
     if (!this.canAdd(user, institution))

@@ -19,24 +19,44 @@ export class InstitutionRepository extends FirestoreRepository<Institution> {
   collectionName = FirestoreCollection.INSTITUTION;
 
   constructor(
-    readonly firebaseService: FirebaseService,
+    readonly firebase: FirebaseService,
     @Inject(Institution)
     readonly changeLog: ChangeLogManager<Institution>,
   ) {
-    super(firebaseService);
+    super(firebase);
   }
 
   collection(): CollectionReference {
-    return this.firebaseService.firestore.collection(this.collectionName);
+    return this.firebase.firestore.collection(this.collectionName);
   }
 
   doc(ref: string): DocumentReference {
     return this.collection().doc(ref);
   }
 
+  async findAllByAdmin() {
+    return await this.findAll();
+  }
+
+  async findAllByManager(managerId: string) {
+    return await this.findAll((q) => q.where('ownerId', '==', managerId));
+  }
+
+  async findAllByTrainer(trainerId: string) {
+    return await this.findAll((q) =>
+      q.where('trainerIds', 'array-contains', trainerId),
+    );
+  }
+
+  async findAllByAthlete(athleteId: string) {
+    return await this.findAll((q) =>
+      q.where('athleteIds', 'array-contains', athleteId),
+    );
+  }
+
   async save(input: Create<Institution>): Promise<string> {
     const { id } = this.collection().doc();
-    const query = this.firebaseService.buildCreateQuery<Institution>({
+    const query = this.firebase.buildCreateQuery<Institution>({
       id,
       ownerId: input.ownerId,
       trainerIds: input.trainerIds || [],
@@ -53,10 +73,12 @@ export class InstitutionRepository extends FirestoreRepository<Institution> {
   }
 
   async update(id: string, input: Update<Institution>) {
-    const query = this.firebaseService.buildUpdateQuery<Institution>({
+    const query = this.firebase.buildUpdateQuery<Institution>({
       ownerId: input.ownerId,
       name: input.name,
       imageUrl: input.imageUrl,
+      ...(input.athleteIds && { athleteIds: input.athleteIds }),
+      ...(input.trainerIds && { trainerIds: input.trainerIds }),
     });
 
     const ref = this.doc(id);

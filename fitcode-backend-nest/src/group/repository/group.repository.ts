@@ -7,7 +7,7 @@ import {
 
 import { ChangeLogManager } from '@src/change-log/change-log.manager';
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
-import { Create, Update } from '@src/common/type/entity.type';
+import { Create, FirestoreEntity, Update } from '@src/common/type/entity.type';
 import { FirestoreRepository } from '@src/common/type/firestore.type';
 import { BatchWriteOperation } from '@src/common/type/orm.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
@@ -20,24 +20,60 @@ export class GroupRepository extends FirestoreRepository<Group> {
   collectionName = FirestoreCollection.GROUP;
 
   constructor(
-    readonly firebaseService: FirebaseService,
+    readonly firebase: FirebaseService,
     @Inject(Group)
     readonly changeLog: ChangeLogManager<Group>,
   ) {
-    super(firebaseService);
+    super(firebase);
   }
 
   collection(): CollectionReference {
-    return this.firebaseService.firestore.collection(this.collectionName);
+    return this.firebase.firestore.collection(this.collectionName);
   }
 
   doc(ref: string): DocumentReference {
     return this.collection().doc(ref);
   }
 
+  async findAllByAdmin() {
+    const snapshot = await this.collection().get();
+    return snapshot.docs.map((doc) =>
+      this.firebase.serialize(doc.data() as FirestoreEntity<Group>),
+    );
+  }
+
+  async findAllByInstitution(institutionId: string) {
+    const query = this.collection().where('institutionId', '==', institutionId);
+    const snapshot = await query.get();
+    return snapshot.docs.map((doc) =>
+      this.firebase.serialize(doc.data() as FirestoreEntity<Group>),
+    );
+  }
+
+  async findAllByInstitutions(ids: string[]) {
+    return await this.firebase.batchIn<Group>(
+      'institutionId',
+      ids,
+      this.collection(),
+    );
+  }
+
+  async findAllByAthlete(athleteId: string) {
+    const query = this.collection().where(
+      'membersIds',
+      'array-contains',
+      athleteId,
+    );
+
+    const snapshot = await query.get();
+    return snapshot.docs.map((doc) =>
+      this.firebase.serialize(doc.data() as FirestoreEntity<Group>),
+    );
+  }
+
   async save(input: Create<Group>) {
     const { id } = this.collection().doc();
-    const query = this.firebaseService.buildCreateQuery<Group>(
+    const query = this.firebase.buildCreateQuery<Group>(
       {
         id,
         name: input.name,
@@ -56,7 +92,7 @@ export class GroupRepository extends FirestoreRepository<Group> {
   }
 
   async update(id: string, input: Update<Group>) {
-    const query = this.firebaseService.buildUpdateQuery<Group>({
+    const query = this.firebase.buildUpdateQuery<Group>({
       name: input.name,
       cycles: input.cycles,
     });
@@ -102,7 +138,7 @@ export class GroupRepository extends FirestoreRepository<Group> {
 
   async addCycle(group: Group, cycle: Create<Cycle>) {
     const ref = this.doc(group.id);
-    const query = this.firebaseService.buildUpdateQuery<Group>({
+    const query = this.firebase.buildUpdateQuery<Group>({
       cycles: [
         ...group.cycles,
         { ...cycle, createdAt: new Date(), updatedAt: new Date() },
@@ -117,7 +153,7 @@ export class GroupRepository extends FirestoreRepository<Group> {
     const ref = this.doc(group.id);
     const cycles = group.cycles.filter((cycle) => cycle.id !== cycleId);
 
-    const query = this.firebaseService.buildUpdateQuery<Group>({
+    const query = this.firebase.buildUpdateQuery<Group>({
       cycles: cycles,
     });
 

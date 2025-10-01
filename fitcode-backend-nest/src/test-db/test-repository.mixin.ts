@@ -8,7 +8,7 @@ export function TestRepositoryMixin<Model extends object, Ref = string>() {
   ) {
     abstract class TestRepository extends Base {
       async clear(): Promise<void> {
-        await this.firebaseService.deleteCollection(this.collectionName);
+        await this.firebase.deleteCollection(this.collectionName);
       }
     }
 
