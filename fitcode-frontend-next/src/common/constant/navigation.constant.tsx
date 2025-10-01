@@ -71,7 +71,13 @@ export const LINK_EXERCISES_DASHBOARD = link(
 );
 export const LINK_COMPONENTS = link('Components', '/components');
 export const LINK_GROUPS = link('Trainings', '/groups', <FitnessCenterIcon />);
-export const LINK_DASHBOARD = link('Dashboard', '/dashboard', <HomeIcon />);
+export const DASHBOARD_LINK_ID = 'dashboard';
+export const LINK_DASHBOARD = link(
+  'Dashboard',
+  '/dashboard',
+  <HomeIcon />,
+  DASHBOARD_LINK_ID
+);
 export const LINK_TRAININGS = link(
   'Trainings',
   '/trainings',
