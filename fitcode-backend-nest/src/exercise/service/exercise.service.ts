@@ -22,11 +22,11 @@ import {
 } from '@src/common/type/validate.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
 import { ComponentService } from '@src/component/component.service';
-import { DEFAULT_PARAMS_KEY } from '@src/component/constant/param.constant';
 import { Component } from '@src/component/entity/component.entity';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { Institution } from '@src/institution/entity/institution.entity';
 import { InstitutionService } from '@src/institution/service/institution.service';
+import { DEFAULT_PARAMS_KEY } from '@src/training/constant/param.constant';
 
 import { CACHE_KEY_EXERCISES } from '../constant/get-exercises-cache-key.constant';
 import { GLOBAL_EXERCISE_OWNER } from '../constant/global-exercise-owner.constant';

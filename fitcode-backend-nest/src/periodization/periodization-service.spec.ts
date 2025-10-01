@@ -4,11 +4,11 @@ import { TestPeriodizationUtil } from '@test/common/utils/periodization.util';
 
 import { CommonModule } from '@src/common/common.module';
 import type { TrainingComponentRef } from '@src/common/type/firestore.type';
-import { ParamType } from '@src/component/enum/param.enum';
 import { generateComponentParamsStub } from '@src/component/mock/component-param.stub';
 import { validationSchema } from '@src/config/environment-validation-schema';
 import { MAIN_GROUP_PARENT_ID } from '@src/training/constant/main-group-parent-id.constant';
 import type { TrainingExercise } from '@src/training/entity/training-exercise.entity';
+import { ParamType } from '@src/training/enum/load-type.enum';
 import { PeriodizationType } from '@src/training/enum/periodization-type.enum';
 import {
   generateExerciseSet,

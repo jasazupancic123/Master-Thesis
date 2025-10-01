@@ -1,6 +1,6 @@
-import { PARAMS } from '../constant/param.constant';
+import { PARAMS } from '@src/training/constant/param.constant';
+
 import type { ComponentParam } from '../entity/component-param.entity';
-import type { ParamType } from '../enum/param.enum';
 
 /**
  * Generates a mock ComponentParam object based on the provided field.
@@ -8,7 +8,7 @@ import type { ParamType } from '../enum/param.enum';
  * returns a ComponentParam object with the field, defaultValue and
  * all of the options of the parameter.
  */
-export function generateComponentParamStub(field: ParamType): ComponentParam {
+export function generateComponentParamStub(field: string): ComponentParam {
   const param = PARAMS.find((p) => p.field === field);
   if (!param)
     throw new Error(`Component parameter with field ${field} not found`);
@@ -20,7 +20,7 @@ export function generateComponentParamStub(field: ParamType): ComponentParam {
 }
 
 export function generateComponentParamsStub(
-  fields: ParamType[] = PARAMS.map((p) => p.field as ParamType),
+  fields: string[] = PARAMS.map((p) => p.field),
 ): ComponentParam[] {
   return fields.map((field) => generateComponentParamStub(field));
 }

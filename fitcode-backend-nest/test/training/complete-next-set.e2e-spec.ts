@@ -8,13 +8,13 @@ import * as request from 'supertest';
 import { AppModule } from '@src/app.module';
 import type { TestInstitution } from '@src/common/type/entity.type';
 import type { Component } from '@src/component/entity/component.entity';
-import { IntType, ParamType, VolType } from '@src/component/enum/param.enum';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import type { Group } from '@src/group/entity/group.entity';
 import { TestDbService } from '@src/test-db/test-db.service';
 import type { CompleteSetDto } from '@src/training/dto/complete-set.dto';
 import type { Workload } from '@src/training/entity/workload.entity';
+import { IntType, ParamType, VolType } from '@src/training/enum/load-type.enum';
 import { SetStatus } from '@src/training/enum/set-status.enum';
 import { generateParamAttributeValue } from '@src/training/mock/param-values.stub';
 import {

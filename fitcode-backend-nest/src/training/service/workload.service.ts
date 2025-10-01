@@ -12,10 +12,10 @@ import {
   TrainingRef,
   WorkloadRef,
 } from '@src/common/type/firestore.type';
-import { PARAMS } from '@src/component/constant/param.constant';
-import { IntType, ParamType, VolType } from '@src/component/enum/param.enum';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
+import { PARAMS } from '@src/training/constant/param.constant';
+import { IntType, ParamType, VolType } from '@src/training/enum/load-type.enum';
 
 import { CompleteSetDto } from '../dto/complete-set.dto';
 import { CreatePrescribedWorkloadDto } from '../dto/create-workload.dto';

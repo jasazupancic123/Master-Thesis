@@ -7,7 +7,6 @@ import { AttributeService } from '@src/attribute/service/attribute.service';
 import { CacheManagerService } from '@src/cache-manager/cache-manager.service';
 import { CommonModule } from '@src/common/common.module';
 import { ComponentService } from '@src/component/component.service';
-import { PARAMS } from '@src/component/constant/param.constant';
 import {
   COOLDOWN_COMPONENT,
   COOLDOWN_COMPONENT_ID,
@@ -22,6 +21,7 @@ import { ExerciseAttributeService } from '@src/exercise/service/exercise-attribu
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { MAIN_GROUP_PARENT_ID } from '@src/training/constant/main-group-parent-id.constant';
+import { PARAMS } from '@src/training/constant/param.constant';
 import {
   generateSubgroup,
   generateSuperset,

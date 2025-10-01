@@ -9,16 +9,6 @@ import { CacheManagerService } from '@src/cache-manager/cache-manager.service';
 import { CommonModule } from '@src/common/common.module';
 import { AttributeType } from '@src/common/enum/attribute-type.enum';
 import { ComponentService } from '@src/component/component.service';
-import {
-  DEFAULT_PARAMS_KEY,
-  PARAMS,
-  VOL_WORK_SET_OPTIONS,
-} from '@src/component/constant/param.constant';
-import {
-  IntType,
-  ParamType,
-  VolWorkSetType,
-} from '@src/component/enum/param.enum';
 import { generateComponentStub } from '@src/component/mock/component.stub';
 import { ComponentRepository } from '@src/component/repository/component.repository';
 import { validationSchema } from '@src/config/environment-validation-schema';
@@ -27,6 +17,16 @@ import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { ExerciseAttributeService } from '@src/exercise/service/exercise-attribute.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
+import {
+  DEFAULT_PARAMS_KEY,
+  PARAMS,
+  VOL_WORK_SET_OPTIONS,
+} from '@src/training/constant/param.constant';
+import {
+  IntType,
+  ParamType,
+  VolWorkSetType,
+} from '@src/training/enum/load-type.enum';
 import {
   generateSuperset,
   generateTrainingComponent,

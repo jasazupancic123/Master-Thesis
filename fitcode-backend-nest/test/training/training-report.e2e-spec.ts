@@ -6,7 +6,6 @@ import { AppModule } from '@src/app.module';
 import type { TestInstitution } from '@src/common/type/entity.type';
 import type { TrainingReportRef } from '@src/common/type/firestore.type';
 import type { Component } from '@src/component/entity/component.entity';
-import { ParamType } from '@src/component/enum/param.enum';
 import { generateComponentParamsStub } from '@src/component/mock/component-param.stub';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
@@ -15,6 +14,7 @@ import { TestDbService } from '@src/test-db/test-db.service';
 import type { Training } from '@src/training/entity/training.entity';
 import type { TrainingReport } from '@src/training/entity/training-report.entity';
 import type { TrainingStats } from '@src/training/entity/training-stats.entity';
+import { ParamType } from '@src/training/enum/load-type.enum';
 import { SetStatus } from '@src/training/enum/set-status.enum';
 import {
   generateExerciseSet,

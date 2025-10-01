@@ -19,7 +19,6 @@ import {
   WARMUP_COMPONENT_ID,
 } from '@src/component/constant/warmup-cooldown.constant';
 import type { Component } from '@src/component/entity/component.entity';
-import { IntType, ParamType, VolType } from '@src/component/enum/param.enum';
 import { generateComponentStub } from '@src/component/mock/component.stub';
 import type { Exercise } from '@src/exercise/entity/exercise.entity';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
@@ -29,6 +28,7 @@ import type { Group } from '@src/group/entity/group.entity';
 import { GroupService } from '@src/group/group.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { TestDbService } from '@src/test-db/test-db.service';
+import { IntType, ParamType, VolType } from '@src/training/enum/load-type.enum';
 import {
   generateSuperset,
   generateTrainingComponent,

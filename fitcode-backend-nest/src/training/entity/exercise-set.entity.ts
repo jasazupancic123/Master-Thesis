@@ -3,19 +3,11 @@ import {
   ApiPropertyOptional,
   IntersectionType,
 } from '@nestjs/swagger';
-import { Expose, Type } from 'class-transformer';
-import {
-  IsEnum,
-  IsInt,
-  IsOptional,
-  Max,
-  Min,
-  ValidateNested,
-} from 'class-validator';
+import { Expose } from 'class-transformer';
+import { IsEnum, IsInt, IsOptional, Max, Min } from 'class-validator';
 
-import { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
 import { IsTempo } from '@src/common/decorator/is-tempo.decorator';
-import { LoadType } from '@src/component/enum/param.enum';
+import { LoadType } from '@src/training/enum/load-type.enum';
 
 export class ExerciseSetPrimarySide {
   @IsInt()
@@ -117,18 +109,4 @@ export class ExerciseSet extends IntersectionType(
   @ApiPropertyOptional({ enum: LoadType })
   @Expose()
   loadType?: LoadType;
-
-  /* ---------------------- Deprecated ---------------------- */
-  @ValidateNested({ each: true })
-  @Type(() => AttributeValue)
-  @ApiProperty({ type: () => AttributeValue, isArray: true })
-  @Expose()
-  paramValuesL: AttributeValue[];
-
-  @IsOptional()
-  @ValidateNested({ each: true })
-  @Type(() => AttributeValue)
-  @ApiPropertyOptional({ type: () => AttributeValue, isArray: true })
-  @Expose()
-  paramValuesR?: AttributeValue[];
 }

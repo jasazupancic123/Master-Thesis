@@ -51,7 +51,6 @@ import {
   COOLDOWN_COMPONENT_ID,
   WARMUP_COMPONENT_ID,
 } from '@src/component/constant/warmup-cooldown.constant';
-import { IntType, ParamType } from '@src/component/enum/param.enum';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { DELETE_GROUP_EVENT } from '@src/group/constant/delete-group-event.constant';
@@ -66,6 +65,7 @@ import { InstitutionService } from '@src/institution/service/institution.service
 import { MethodService } from '@src/method/service/method.service';
 import { PeriodizationService } from '@src/periodization/periodization.service';
 import { WellnessService } from '@src/profile/service/wellness.service';
+import { IntType, ParamType } from '@src/training/enum/load-type.enum';
 
 import {
   DURATION_TRAINING_COMPONENT_IN_MIN,

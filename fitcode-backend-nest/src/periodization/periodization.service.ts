@@ -6,13 +6,13 @@ import type {
   SubgroupRef,
   TrainingComponentRef,
 } from '@src/common/type/firestore.type';
-import { ParamType } from '@src/component/enum/param.enum';
 import { MAIN_GROUP_PARENT_ID } from '@src/training/constant/main-group-parent-id.constant';
 import { ExerciseSet } from '@src/training/entity/exercise-set.entity';
 import { Subgroup } from '@src/training/entity/subgroup.entity';
 import { Training } from '@src/training/entity/training.entity';
 import { TrainingComponent } from '@src/training/entity/training-component.entity';
 import { TrainingExercise } from '@src/training/entity/training-exercise.entity';
+import { ParamType } from '@src/training/enum/load-type.enum';
 import { MainSet } from '@src/training/enum/main-set.enum';
 import { PeriodizationType } from '@src/training/enum/periodization-type.enum';
 
