@@ -2,12 +2,11 @@ import type {
   TrainingExercise,
   UpdateTrainingExercise,
 } from './training-exercise.type';
-import type { ColorEntity } from '@/common/type/entity.type';
 
-export type Superset = ColorEntity & {
+export type Superset = {
   exercises: TrainingExercise[];
 };
 
-export type UpdateSuperset = Pick<Superset, 'color'> & {
+export type UpdateSuperset = {
   exercises: UpdateTrainingExercise[];
 };

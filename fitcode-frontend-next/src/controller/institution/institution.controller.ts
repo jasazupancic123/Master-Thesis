@@ -31,14 +31,8 @@ export class InstitutionController extends BaseController {
     });
   }
 
-  async findAthletes(id: string) {
-    return this.api.get<Profile[]>(`/${id}/find/athletes`, {
-      token: this.getToken(),
-    });
-  }
-
-  async findTrainers(id: string) {
-    return this.api.get<Profile[]>(`/${id}/find/trainers`, {
+  async findMembers(id: string) {
+    return this.api.get<Profile[]>(`/${id}/members`, {
       token: this.getToken(),
     });
   }

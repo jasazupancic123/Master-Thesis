@@ -1,5 +1,5 @@
 import type { SetStatus } from '../enum/set-status.enum';
-import type { PrescribedWorkload, WorkloadValue } from './workload-value.type';
+import type { WorkloadValue } from './workload-value.type';
 import type { TimestampEntity } from '@/common/type/entity.type';
 
 export type Workload = TimestampEntity & WorkloadMeta & WorkloadValue;
@@ -18,14 +18,3 @@ export type WorkloadMeta = {
   plannedAt: Date;
   notes?: string;
 };
-
-export type CreatePrescribedWorkload = Pick<
-  WorkloadMeta,
-  | 'userId'
-  | 'componentId'
-  | 'exerciseId'
-  | 'setNumber'
-  | 'supersetIndex'
-  | 'notes'
-> &
-  PrescribedWorkload;

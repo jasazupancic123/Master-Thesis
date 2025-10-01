@@ -119,7 +119,7 @@ export function TrainerDayViewProvider(
     async function fetchMembers() {
       handleApiRequest(
         router,
-        () => controller.institution.findAthletes(group.institutionId),
+        () => controller.institution.findMembers(group.institutionId),
         (members) => setMembers(members),
         undefined
       );

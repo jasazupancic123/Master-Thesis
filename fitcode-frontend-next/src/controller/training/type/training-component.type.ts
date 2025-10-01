@@ -3,14 +3,13 @@ import type { CopiedFrom } from './copied-from.type';
 import type { Subgroup, UpdateSubgroup } from './subgroup.type';
 import type { Superset, UpdateSuperset } from './superset.type';
 import type { DateRange } from '@/common/type/date-range.type';
-import type { ColorEntity, IdEntity } from '@/common/type/entity.type';
+import type { IdEntity } from '@/common/type/entity.type';
 import type { Component } from '@/controller/component/type/component.type';
 import type { Method } from '@/controller/method/type/method.type';
 import type { Target } from '@/controller/target/type/target.type';
 import type { MainSet } from '@/controller/training/enum/main-set.enum';
 
 export type TrainingComponent = IdEntity &
-  ColorEntity &
   Required<DateRange> & {
     supersets: Superset[];
     subgroups: Subgroup[];
