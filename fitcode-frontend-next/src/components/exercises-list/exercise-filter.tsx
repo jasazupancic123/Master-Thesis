@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 
 import AttributeFilter from '../attribute-filter/attribute-filter';
+import type { Pagination } from '@/common/type/paginate.type';
 import type { SetState } from '@/common/type/state.type';
 import { AttributeType } from '@/controller/attribute/enum/attribute-value.enum';
 import type { Attribute } from '@/controller/attribute/type/attribute.type';
@@ -29,12 +30,13 @@ interface Props {
   setFilters: SetState<AttributeFilters>;
   open: boolean;
   setOpen: SetState<boolean>;
+  setPagination?: SetState<Pagination>;
 }
 
 const attributes = ExerciseAttributeService.getAttributes();
 
 export default function ExerciseFilter(props: Props) {
-  const { filters, setFilters, open, setOpen } = props;
+  const { filters, setFilters, open, setOpen, setPagination } = props;
 
   function handleFilterChange(
     field: string,
@@ -43,6 +45,7 @@ export default function ExerciseFilter(props: Props) {
     if (Array.isArray(value) && !value.length) value = undefined;
     if (typeof value === 'string' && value.trim() === '') value = undefined;
     setFilters((prev) => ({ ...prev, [field]: value }));
+    setPagination?.((prev) => ({ ...prev, page: 1 }));
   }
 
   function renderAttributeFilter(attribute: Attribute<Exercise>) {

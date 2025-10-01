@@ -40,11 +40,13 @@ export function handlePaginateExercises(
   } = state;
 
   let filtered = ExerciseService.filter(exercises, filter, components);
+
   const total = filtered.length;
 
   // paginate
-  const pages = Math.ceil(total / pagination.pageSize);
-  const page = pages < pagination.pages ? 1 : pagination.page;
+  const pages = Math.max(1, Math.ceil(total / pagination.pageSize));
+  const page = Math.min(Math.max(1, pagination.page), pages);
+
   filtered = commonService.generic.paginate(filtered, {
     page,
     pageSize: pagination.pageSize,

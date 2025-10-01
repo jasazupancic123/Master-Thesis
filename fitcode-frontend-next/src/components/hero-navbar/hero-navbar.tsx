@@ -12,8 +12,10 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import {
+  LINKS_ABOUT_US_HERO_NAVBAR,
   LINKS_AUTH,
   LINKS_AUTHENTICATED_HERO_NAVBAR,
+  LINKS_CONTACT_US_HERO_NAVBAR,
   LINKS_HERO_NAVBAR,
   SIGN_IN_LINK_ID,
   SIGN_OUT_LINK_ID,
@@ -25,6 +27,8 @@ import { useScreenSize } from '@/store/screen-size.provider';
 interface HeroNavbarProps {
   height: string;
   dissableLogo?: boolean;
+  position?: 'absolute' | 'fixed' | 'relative' | 'static' | 'sticky';
+  currentView?: 'contact-us' | 'about-us' | 'home';
 }
 
 export default function HeroNavbar(props: HeroNavbarProps) {
@@ -34,7 +38,7 @@ export default function HeroNavbar(props: HeroNavbarProps) {
   const pathname = usePathname();
   const screenSize = useScreenSize();
 
-  const { height, dissableLogo } = props;
+  const { height, dissableLogo, position, currentView } = props;
 
   const [open, setOpen] = useState(false);
 
@@ -45,8 +49,15 @@ export default function HeroNavbar(props: HeroNavbarProps) {
     else window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const currentLinks =
+    currentView === 'contact-us'
+      ? LINKS_CONTACT_US_HERO_NAVBAR
+      : currentView === 'about-us'
+        ? LINKS_ABOUT_US_HERO_NAVBAR
+        : LINKS_HERO_NAVBAR;
+
   const [links, setLinks] = useState(
-    Object.values(LINKS_HERO_NAVBAR).concat(
+    Object.values(currentLinks).concat(
       auth.status === 'authenticated'
         ? Object.values(LINKS_AUTHENTICATED_HERO_NAVBAR)
         : Object.values(LINKS_AUTH)
@@ -55,7 +66,7 @@ export default function HeroNavbar(props: HeroNavbarProps) {
 
   useEffect(() => {
     setLinks(
-      Object.values(LINKS_HERO_NAVBAR).concat(
+      Object.values(currentLinks).concat(
         auth.status === 'authenticated'
           ? Object.values(LINKS_AUTHENTICATED_HERO_NAVBAR)
           : Object.values(LINKS_AUTH)
@@ -67,7 +78,7 @@ export default function HeroNavbar(props: HeroNavbarProps) {
     <div>
       <AppBar
         elevation={0}
-        position="fixed"
+        position={position || 'fixed'}
         sx={{
           height,
           bgcolor: theme.palette.primary.main,
@@ -77,7 +88,7 @@ export default function HeroNavbar(props: HeroNavbarProps) {
       >
         <Box
           width="100%"
-          maxWidth={1800}
+          // maxWidth={1800}
           sx={{
             px: 0,
             mx: 'auto',
