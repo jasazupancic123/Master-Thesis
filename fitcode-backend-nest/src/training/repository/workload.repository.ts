@@ -5,7 +5,6 @@ import {
   CollectionReference,
   DocumentReference,
 } from 'firebase-admin/firestore';
-import { Query } from 'firebase-admin/lib/firestore';
 
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { Create, FirestoreEntity, Update } from '@src/common/type/entity.type';
@@ -28,11 +27,11 @@ export class WorkloadRepository extends FirestoreRepository<
   collectionName = FirestoreCollection.TRAINING_WORKLOAD;
 
   constructor(
-    readonly firebaseService: FirebaseService,
+    readonly firebase: FirebaseService,
     @Inject(forwardRef(() => TrainingRepository))
     private readonly trainingRepository: Wrapper<TrainingRepository>,
   ) {
-    super(firebaseService);
+    super(firebase);
   }
 
   collection(ref: TrainingRef): CollectionReference {
@@ -42,24 +41,15 @@ export class WorkloadRepository extends FirestoreRepository<
   }
 
   collectionGroup(): CollectionGroup {
-    return this.firebaseService.firestore.collectionGroup(this.collectionName);
+    return this.firebase.firestore.collectionGroup(this.collectionName);
   }
 
   doc(ref: WorkloadRef): DocumentReference {
     return this.collection(ref).doc(this.getKey(ref));
   }
 
-  async getAllDocs(
-    query: (ref: Query) => Query = (ref) => ref,
-  ): Promise<Workload[]> {
-    const snapshot = await query(this.collectionGroup()).get();
-    return snapshot.docs.map((doc) =>
-      this.firebaseService.serialize(doc.data() as FirestoreEntity<Workload>),
-    );
-  }
-
   async save(ref: WorkloadRef, data: Create<Workload>) {
-    const query = this.firebaseService.buildCreateQuery<Workload>(data, {
+    const query = this.firebase.buildCreateQuery<Workload>(data, {
       timestamps: true,
     });
 
@@ -68,7 +58,7 @@ export class WorkloadRepository extends FirestoreRepository<
   }
 
   async update(ref: WorkloadRef, data: Update<Workload>) {
-    const query = this.firebaseService.buildUpdateQuery(data);
+    const query = this.firebase.buildUpdateQuery(data);
     await this.doc(ref).update(query);
   }
 
@@ -77,7 +67,7 @@ export class WorkloadRepository extends FirestoreRepository<
   }
 
   async deleteDocs(ref: WorkloadRef[]) {
-    const batch = this.firebaseService.firestore.batch();
+    const batch = this.firebase.firestore.batch();
     ref.forEach((r) => batch.delete(this.doc(r)));
     await batch.commit();
   }
@@ -97,7 +87,7 @@ export class WorkloadRepository extends FirestoreRepository<
 
     if (snapshot.empty) return null;
 
-    return this.firebaseService.serialize(
+    return this.firebase.serialize(
       snapshot.docs[0].data() as FirestoreEntity<Workload>,
     );
   }

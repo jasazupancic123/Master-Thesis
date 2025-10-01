@@ -51,7 +51,7 @@ export async function createInstitution(
       { add: true, userId: trainer.uid, trainer: true },
     );
 
-  const data = await institutionService.getDoc({
+  const data = await institutionService.findById({
     institutionId: institution.id,
   })!;
 
@@ -174,7 +174,7 @@ export async function deleteUsers(
   await Promise.all([
     deleteDocs(
       firebase,
-      'USER',
+      'PROFILE',
       users.map((u) => u.uid),
     ),
     firebase.auth.deleteUsers(users.map((u) => u.uid)),
@@ -186,7 +186,7 @@ export async function deleteUsersByIds(
   userIds: string[],
 ) {
   await Promise.all([
-    deleteDocs(firebase, 'USER', userIds),
+    deleteDocs(firebase, 'PROFILE', userIds),
     firebase.auth.deleteUsers(userIds),
   ]);
 }

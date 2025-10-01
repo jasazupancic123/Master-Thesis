@@ -1,9 +1,12 @@
 import { Injectable } from '@nestjs/common';
 
+import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { FirebaseService } from '@src/firebase/firebase.service';
+import { Profile } from '@src/profile/entity/profile.entity';
 
 import { GroupTestRepository } from './service/group-test.repository';
 import { InstitutionTestRepository } from './service/institution-test.repository';
+import { ProfileTestRepository } from './service/profile-test.repository';
 import { TestComponentService } from './service/test-component.service';
 import { TestExerciseService } from './service/test-exercise.service';
 import { TestWorkloadService } from './service/test-workload.service';
@@ -23,6 +26,7 @@ export class TestDbService {
     readonly institutions: InstitutionTestRepository,
     readonly groups: GroupTestRepository,
     readonly wellness: WellnessTestRepository,
+    readonly profiles: ProfileTestRepository,
   ) {}
 
   private SERVICES = [
@@ -49,5 +53,36 @@ export class TestDbService {
     const batch = this.firebase.firestore.batch();
     for (const service of this.SERVICES) await service.cleanup(false, batch);
     await batch.commit();
+  }
+
+  async clear() {
+    await Promise.all([
+      this.firebase.deleteCollection(FirestoreCollection.EXERCISE),
+      this.firebase.deleteCollection(FirestoreCollection.INSTITUTION),
+      this.firebase.deleteCollection(FirestoreCollection.GROUP),
+      this.firebase.deleteCollection(FirestoreCollection.PROFILE),
+      this.firebase.deleteCollection(FirestoreCollection.TRAINING),
+      this.firebase.deleteCollection(FirestoreCollection.COMPONENT),
+      this.firebase.deleteCollection(FirestoreCollection.TRAINING),
+      this.firebase.deleteCollection(FirestoreCollection.METHOD),
+    ]);
+
+    // add back profiles for global manager, admin, trainer and athlete
+    for (const [uid, email] of [
+      [global.athlete.uid, global.athlete.email],
+      [global.trainer.uid, global.trainer.email],
+      [global.manager.uid, global.manager.email],
+      [global.admin.uid, global.admin.email],
+    ]) {
+      await this.firebase.firestore
+        .collection(FirestoreCollection.PROFILE)
+        .doc(uid)
+        .set(
+          this.firebase.buildCreateQuery<Profile>(
+            { uid, email },
+            { timestamps: true },
+          ),
+        );
+    }
   }
 }

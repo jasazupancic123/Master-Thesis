@@ -15,10 +15,10 @@ import { WellnessService } from './service/wellness.service';
   imports: [InstitutionModule, ChangeLogModule.forEntity(Wellness)],
   controllers: [ProfileController],
   providers: [
-    WellnessRepository,
     ProfileRepository,
-    WellnessService,
     ProfileService,
+    WellnessRepository,
+    WellnessService,
   ],
   exports: [ProfileService, WellnessService],
 })

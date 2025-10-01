@@ -119,7 +119,7 @@ export class TrainingController {
   async findAllByInstitutionToday(
     @RequestUser() user: User,
   ): Promise<Training[]> {
-    const institution = await this.institutionService.getDocByOwner(user.uid);
+    const institution = await this.institutionService.findByOwnerId(user.uid);
     if (!institution)
       throw new NotFoundException('Institution not found for manager');
 

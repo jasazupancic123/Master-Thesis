@@ -1,5 +1,5 @@
 import type { INestApplication } from '@nestjs/common';
-import { DateTime } from 'luxon';
+import { subDays } from 'date-fns';
 import { readFile } from 'node:fs/promises';
 
 import { AuthService } from '@src/auth/auth.service';
@@ -53,21 +53,21 @@ export class DataSetup extends BaseSetup {
       email: this.configService.getOrThrow('ADMIN_EMAIL'),
       password: this.configService.getOrThrow('ADMIN_PASSWORD'),
       displayName: 'Admin',
-      customClaims: { role: [UserRole.ADMIN] },
+      role: UserRole.ADMIN,
     });
 
     this.manager = await this.authService.upsert({
       email: 'manager@mail.com',
       password: 'password',
       displayName: 'Manager',
-      customClaims: { role: [UserRole.MANAGER] },
+      role: UserRole.MANAGER,
     });
 
     this.trainer = await this.authService.upsert({
       email: 'trainer@mail.com',
       password: 'password',
       displayName: 'Trainer',
-      customClaims: { role: [UserRole.TRAINER] },
+      role: UserRole.TRAINER,
     });
 
     await this.clearData();
@@ -93,7 +93,7 @@ export class DataSetup extends BaseSetup {
     await this.firebaseService.deleteCollection(FirestoreCollection.GROUP);
     await this.firebaseService.deleteCollection(FirestoreCollection.EXERCISE);
     await this.firebaseService.deleteCollection(FirestoreCollection.COMPONENT);
-    await this.firebaseService.deleteCollection(FirestoreCollection.USER);
+    await this.firebaseService.deleteCollection(FirestoreCollection.PROFILE);
     await this.firebaseService.deleteCollection(FirestoreCollection.METHOD);
     await this.firebaseService.deleteCollection(FirestoreCollection.TRAINING);
     await this.firebaseService.deleteCollection(
@@ -172,7 +172,7 @@ export class DataSetup extends BaseSetup {
           email: userData.email,
           displayName: userData.displayName,
           password: 'password',
-          customClaims: { role: [userData.role || UserRole.ATHLETE] },
+          role: userData.role || UserRole.ATHLETE,
         }),
       );
     }
@@ -181,7 +181,8 @@ export class DataSetup extends BaseSetup {
       createdUsers.map(async (user) => {
         const u = data.find((u) => u.email === user.email);
         await userRepository.save({
-          id: user.uid,
+          uid: user.uid,
+          email: user.email,
           level: (u?.level as SportLevel) || SportLevel.BEGINNER,
         });
 
@@ -190,13 +191,10 @@ export class DataSetup extends BaseSetup {
           length: user.email === 'mike.tyson@mail.com' ? 1 : 10,
         }).forEach(async (_, j) => {
           await this.wellnessService.upsert(
-            {
-              uid: user.uid,
-              date: DateTime.now().minus({ days: j }).toJSDate(),
-            },
+            { uid: user.uid, date: subDays(new Date(), j) },
             {
               userId: user.uid,
-              date: DateTime.now().minus({ days: j }).toJSDate(),
+              date: subDays(new Date(), j),
               weight: u.weight,
               sleep: Math.floor(Math.random() * 10) + 1,
               fatigue: Math.floor(Math.random() * 10) + 1,

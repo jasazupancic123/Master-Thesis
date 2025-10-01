@@ -1,8 +1,7 @@
 import { BaseController } from '../base.controller';
 import type { CustomClaims } from './type/custom-claims.type';
 import type { FilterUsers } from './type/filter-user-query.type';
-import type { RegisterAthlete } from './type/register-athlete.type';
-import type { AuthUser, UpdateUser } from './type/user.type';
+import type { AuthUser, CreateUser, UpdateUser } from './type/user.type';
 
 export class AuthController extends BaseController {
   private static instance: AuthController;
@@ -41,7 +40,7 @@ export class AuthController extends BaseController {
     });
   }
 
-  async registerAthlete(input: RegisterAthlete) {
+  async registerAthlete(input: CreateUser) {
     return this.api.post<AuthUser>('/athlete/register', input, {
       token: this.getToken(),
     });

@@ -34,7 +34,7 @@ export class InstitutionController {
   @Get(':institutionId')
   @Auth([UserRole.ADMIN, UserRole.TRAINER, UserRole.ATHLETE])
   async findById(@Param('institutionId') institutionId: string) {
-    return this.institutionService.getDocByIdOrFail({ institutionId });
+    return this.institutionService.findByIdOrFail({ institutionId });
   }
 
   @Get(':institutionId/find/:type')

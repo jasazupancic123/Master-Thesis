@@ -62,6 +62,9 @@ export class AuthController {
     @RequestUser() user: User,
     @Body() body: RegisterAthleteDto,
   ) {
-    return await this.authService.registerAthlete(body);
+    return await this.authService.registerAthlete({
+      ...body,
+      role: UserRole.ATHLETE,
+    });
   }
 }

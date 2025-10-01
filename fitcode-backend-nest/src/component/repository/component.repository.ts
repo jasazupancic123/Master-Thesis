@@ -18,13 +18,13 @@ export class ComponentRepository extends FirestoreRepository<Component> {
 
   constructor(
     private readonly commonService: CommonService,
-    readonly firebaseService: FirebaseService,
+    readonly firebase: FirebaseService,
   ) {
-    super(firebaseService);
+    super(firebase);
   }
 
   collection(): CollectionReference {
-    return this.firebaseService.firestore.collection(this.collectionName);
+    return this.firebase.firestore.collection(this.collectionName);
   }
 
   doc(ref: string): DocumentReference {
@@ -34,7 +34,7 @@ export class ComponentRepository extends FirestoreRepository<Component> {
   async save(input: Create<Component>) {
     const slug = await this.slug(input.name);
 
-    const query = this.firebaseService.buildCreateQuery<Component>({
+    const query = this.firebase.buildCreateQuery<Component>({
       id: slug,
       slug,
       parentId: input.parentId || null,
@@ -52,7 +52,7 @@ export class ComponentRepository extends FirestoreRepository<Component> {
     slug: string,
     input: Update<Component, 'name' | 'parentId' | 'slug'>,
   ) {
-    const query = this.firebaseService.buildUpdateQuery<Component>(input);
+    const query = this.firebase.buildUpdateQuery<Component>(input);
     await this.doc(slug).update(query);
   }
 
