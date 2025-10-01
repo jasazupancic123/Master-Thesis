@@ -25,23 +25,23 @@ import { User } from '@src/common/type/firebase-auth.type';
 import { ComponentRef } from '@src/common/type/firestore.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
 import { ComponentService } from '@src/component/component.service';
-import { DEFAULT_PARAMS_KEY } from '@src/component/constant/param.constant';
 import {
   COOLDOWN_COMPONENT_ID,
   WARMUP_COMPONENT_ID,
 } from '@src/component/constant/warmup-cooldown.constant';
 import { Component } from '@src/component/entity/component.entity';
-import {
-  IntType,
-  ParamType,
-  VolType,
-  VolWorkSetType,
-} from '@src/component/enum/param.enum';
 import { Exercise } from '@src/exercise/entity/exercise.entity';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { ExerciseAttributeService } from '@src/exercise/service/exercise-attribute.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { Method } from '@src/method/entity/method.entity';
+import { DEFAULT_PARAMS_KEY } from '@src/training/constant/param.constant';
+import {
+  IntType,
+  ParamType,
+  VolType,
+  VolWorkSetType,
+} from '@src/training/enum/load-type.enum';
 
 import { MAIN_GROUP_PARENT_ID } from '../constant/main-group-parent-id.constant';
 import {

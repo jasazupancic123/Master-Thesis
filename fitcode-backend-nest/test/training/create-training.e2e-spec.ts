@@ -17,9 +17,7 @@ import {
 } from '@src/common/utils/data.util';
 import { getTime } from '@src/common/utils/date.util';
 import { ComponentService } from '@src/component/component.service';
-import { DEFAULT_PARAMS_KEY } from '@src/component/constant/param.constant';
 import type { Component } from '@src/component/entity/component.entity';
-import { ParamType } from '@src/component/enum/param.enum';
 import { generateComponentStub } from '@src/component/mock/component.stub';
 import { generateComponentParamsStub } from '@src/component/mock/component-param.stub';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
@@ -29,6 +27,8 @@ import type { Group } from '@src/group/entity/group.entity';
 import { GroupService } from '@src/group/group.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { TestDbService } from '@src/test-db/test-db.service';
+import { DEFAULT_PARAMS_KEY } from '@src/training/constant/param.constant';
+import { ParamType } from '@src/training/enum/load-type.enum';
 import {
   generateSuperset,
   generateTrainingComponent,

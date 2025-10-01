@@ -3,7 +3,7 @@ import { compareAsc, differenceInMinutes } from 'date-fns';
 
 import { DateFilterDto } from '@src/common/dto/date-filter.dto';
 import { TrainingReportRef } from '@src/common/type/firestore.type';
-import { IntType, ParamType, VolType } from '@src/component/enum/param.enum';
+import { IntType, ParamType, VolType } from '@src/training/enum/load-type.enum';
 
 import {
   DIST_TIME_IN_S,

@@ -1,13 +1,13 @@
 import { v4 } from 'uuid';
 
+import type { Component } from '@src/component/entity/component.entity';
+import type { ComponentParam } from '@src/component/entity/component-param.entity';
 import {
   DEFAULT_PARAMS_KEY,
   PARAMS,
-} from '@src/component/constant/param.constant';
-import type { Component } from '@src/component/entity/component.entity';
-import type { ComponentParam } from '@src/component/entity/component-param.entity';
-import type { IntType, VolType } from '@src/component/enum/param.enum';
-import { ParamType } from '@src/component/enum/param.enum';
+} from '@src/training/constant/param.constant';
+import type { IntType, VolType } from '@src/training/enum/load-type.enum';
+import { ParamType } from '@src/training/enum/load-type.enum';
 
 import type { Workload, WorkloadMeta } from '../entity/workload.entity';
 import type {

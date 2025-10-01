@@ -1,13 +1,13 @@
 import type { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
 import { generateRandomNumber } from '@src/common/utils/random.util';
-import { PARAMS } from '@src/component/constant/param.constant';
 import type { ComponentParam } from '@src/component/entity/component-param.entity';
-import { ParamType } from '@src/component/enum/param.enum';
+import { PARAMS } from '@src/training/constant/param.constant';
+import { ParamType } from '@src/training/enum/load-type.enum';
 import {
   IntType,
   VolType,
   VolWorkSetType,
-} from '@src/component/enum/param.enum';
+} from '@src/training/enum/load-type.enum';
 
 import type {
   ParamToSelectedMap,

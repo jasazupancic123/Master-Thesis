@@ -9,16 +9,7 @@ export const WARMUP_COMPONENT: Component = {
   parentId: null,
   slug: 'warmup',
   targets: [],
-  attributes: [
-    'pattern',
-    'loadingSide',
-    'movDir',
-    'coeff',
-    'method',
-    'prescr',
-    'priority',
-    'sportTask',
-  ],
+  attributes: [],
 };
 
 export const COOLDOWN_COMPONENT: Component = {
@@ -27,14 +18,5 @@ export const COOLDOWN_COMPONENT: Component = {
   parentId: null,
   slug: 'Cooldown',
   targets: [],
-  attributes: [
-    'pattern',
-    'loadingSide',
-    'movDir',
-    'coeff',
-    'method',
-    'prescr',
-    'priority',
-    'sportTask',
-  ],
+  attributes: [],
 };

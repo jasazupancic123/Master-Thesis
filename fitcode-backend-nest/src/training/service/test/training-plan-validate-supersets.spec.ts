@@ -6,8 +6,6 @@ import { AttributeService } from '@src/attribute/service/attribute.service';
 import { CacheManagerService } from '@src/cache-manager/cache-manager.service';
 import { CommonModule } from '@src/common/common.module';
 import { ComponentService } from '@src/component/component.service';
-import { PARAMS } from '@src/component/constant/param.constant';
-import { IntType, ParamType, VolType } from '@src/component/enum/param.enum';
 import { generateComponentStub } from '@src/component/mock/component.stub';
 import { generateComponentParamsStub } from '@src/component/mock/component-param.stub';
 import { validationSchema } from '@src/config/environment-validation-schema';
@@ -17,10 +15,12 @@ import { ExerciseAttributeService } from '@src/exercise/service/exercise-attribu
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import type { Method } from '@src/method/entity/method.entity';
+import { PARAMS } from '@src/training/constant/param.constant';
 import {
   MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT,
   MAX_NUM_SUPERSETS_IN_CIRCUIT_COMPONENT,
 } from '@src/training/constant/training-limits.constant';
+import { IntType, ParamType, VolType } from '@src/training/enum/load-type.enum';
 import { MainSet } from '@src/training/enum/main-set.enum';
 import {
   generateExerciseSet,

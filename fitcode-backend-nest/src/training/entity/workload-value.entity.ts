@@ -1,10 +1,9 @@
 import { IntersectionType } from '@nestjs/mapped-types';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
-import { IsEnum, IsInt, IsNumber, IsOptional, Min } from 'class-validator';
+import { IsInt, IsNumber, IsOptional, Min } from 'class-validator';
 
 import { IsTempo } from '@src/common/decorator/is-tempo.decorator';
-import { IntType, VolType } from '@src/component/enum/param.enum';
 
 export class PrescribedWorkload {
   @IsInt()
@@ -89,127 +88,6 @@ export class PrescribedWorkload {
   @ApiPropertyOptional()
   @Expose()
   pDistR?: number;
-
-  /* --------------- Deprecated --------------- */
-  @IsEnum(VolType)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  volWork1Type?: VolType;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  prescribedVolWork1ValueL?: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  prescribedVolWork1ValueR?: number;
-
-  @IsEnum(VolType)
-  @IsOptional()
-  @ApiProperty({ enum: VolType })
-  @Expose()
-  volWork2Type?: VolType;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  prescribedVolWork2ValueL?: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  prescribedVolWork2ValueR?: number;
-
-  @IsEnum(VolType)
-  @IsOptional()
-  @ApiProperty({ enum: VolType })
-  @Expose()
-  volRecType?: VolType;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  prescribedVolRecValueL?: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  prescribedVolRecValueR?: number;
-
-  @IsEnum(IntType)
-  @IsOptional()
-  @ApiProperty({ enum: IntType })
-  @Expose()
-  intWork1Type?: IntType;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  prescribedIntWork1ValueL?: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  prescribedIntWork1ValueR?: number;
-
-  @IsEnum(IntType)
-  @IsOptional()
-  @ApiProperty({ enum: IntType })
-  @Expose()
-  intWork2Type?: IntType;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  prescribedIntWork2ValueL?: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  prescribedIntWork2ValueR?: number;
-
-  @IsEnum(IntType)
-  @IsOptional()
-  @ApiProperty({ enum: IntType })
-  @Expose()
-  intRecType?: IntType;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  prescribedIntRecValueL?: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  prescribedIntRecValueR?: number;
 }
 
 export class CompletedWorkload {
@@ -294,91 +172,6 @@ export class CompletedWorkload {
   @ApiPropertyOptional()
   @Expose()
   distR?: number;
-
-  /* --------------- Deprecated --------------- */
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  volWork1ValueL?: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  volWork1ValueR?: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  volWork2ValueL?: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  volWork2ValueR?: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  volRecValueL?: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  volRecValueR?: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  intWork1ValueL?: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  intWork1ValueR?: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  intWork2ValueL?: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  intWork2ValueR?: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  intRecValueL?: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  intRecValueR?: number;
 }
 
 export class WorkloadValue extends IntersectionType(

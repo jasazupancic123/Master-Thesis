@@ -4,13 +4,13 @@ import { v4 } from 'uuid';
 import type { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
 import { getTime } from '@src/common/service/util/date.util';
 import { generateRandomName } from '@src/common/utils/random.util';
-import { PARAMS } from '@src/component/constant/param.constant';
 import {
   COOLDOWN_COMPONENT_ID,
   WARMUP_COMPONENT_ID,
 } from '@src/component/constant/warmup-cooldown.constant';
 import type { ComponentParam } from '@src/component/entity/component-param.entity';
-import { LoadType } from '@src/component/enum/param.enum';
+import { PARAMS } from '@src/training/constant/param.constant';
+import { LoadType } from '@src/training/enum/load-type.enum';
 
 import type { ExerciseSet } from '../entity/exercise-set.entity';
 import type { Subgroup } from '../entity/subgroup.entity';

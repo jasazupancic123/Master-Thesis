@@ -7,8 +7,11 @@ import { LogMethod } from '../common/decorator/log-method.decorator';
 import { AttributeType } from '../common/enum/attribute-type.enum';
 import { CommonService } from '../common/service/common.service';
 import { Create, Update } from '../common/type/entity.type';
+import {
+  DEFAULT_PARAMS_KEY,
+  PARAMS,
+} from '../training/constant/param.constant';
 import { CACHE_KEY_FLAT_COMPONENTS } from './constant/cache.constant';
-import { DEFAULT_PARAMS_KEY, PARAMS } from './constant/param.constant';
 import {
   COOLDOWN_COMPONENT,
   WARMUP_COMPONENT,

@@ -5,9 +5,9 @@ import type {
   TrainingExerciseRef,
   TrainingSupersetRef,
 } from '@src/common/type/firestore.type';
-import { IntType, ParamType, VolType } from '@src/component/enum/param.enum';
 import { generateComponentParamsStub } from '@src/component/mock/component-param.stub';
 import type { Training } from '@src/training/entity/training.entity';
+import { IntType, ParamType, VolType } from '@src/training/enum/load-type.enum';
 import { generateParamAttributeValue } from '@src/training/mock/param-values.stub';
 import {
   generateExerciseSet,
