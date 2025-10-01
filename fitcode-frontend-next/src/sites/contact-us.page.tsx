@@ -151,7 +151,7 @@ export default function ContactUsPage() {
               justifyContent="center"
               gap={10}
               sx={{
-                px: screenSize.isMobile ? 2 : 10,
+                px: screenSize.isMobile ? 0 : 10,
                 py: screenSize.isSmallerThanLaptop ? 10 : undefined,
                 backgroundColor: screenSize.isSmallerThanLaptop
                   ? theme.palette.primary.main
@@ -175,6 +175,7 @@ export default function ContactUsPage() {
                   sx={{
                     maxWidth: 800,
                     mx: 'auto',
+                    px: screenSize.isMobile ? 2 : undefined,
                   }}
                 >
                   <TextField
@@ -182,7 +183,6 @@ export default function ContactUsPage() {
                     name="name"
                     type="text"
                     label="Name"
-                    fullWidth
                     sx={BLACK_TEXT_FIELD_STYLE}
                   />
                   <TextField
@@ -190,7 +190,6 @@ export default function ContactUsPage() {
                     name="email"
                     type="email"
                     label="Email"
-                    fullWidth
                     sx={BLACK_TEXT_FIELD_STYLE}
                   />
                   <TextField
@@ -200,7 +199,6 @@ export default function ContactUsPage() {
                     multiline
                     minRows={3}
                     maxRows={10}
-                    fullWidth
                     sx={BLACK_TEXT_FIELD_STYLE}
                     style={{
                       marginTop: 20,
