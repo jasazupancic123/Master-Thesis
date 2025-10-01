@@ -174,9 +174,7 @@ describe('Training Exercise Params (e2e)', () => {
             id: WARMUP_COMPONENT_ID,
             supersets: [
               generateSuperset({
-                exercises: [
-                  generateTrainingExercise({ id: exercise.id, color: 'red' }),
-                ],
+                exercises: [generateTrainingExercise({ id: exercise.id })],
               }),
             ],
           }),
@@ -184,9 +182,7 @@ describe('Training Exercise Params (e2e)', () => {
             id: COOLDOWN_COMPONENT_ID,
             supersets: [
               generateSuperset({
-                exercises: [
-                  generateTrainingExercise({ id: exercise.id, color: 'red' }),
-                ],
+                exercises: [generateTrainingExercise({ id: exercise.id })],
               }),
             ],
           }),

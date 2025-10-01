@@ -3,16 +3,14 @@ import { v4 } from 'uuid';
 
 import type { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
 import { getTime } from '@src/common/service/util/date.util';
-import {
-  generateRandomColor,
-  generateRandomName,
-} from '@src/common/utils/random.util';
+import { generateRandomName } from '@src/common/utils/random.util';
 import { PARAMS } from '@src/component/constant/param.constant';
 import {
   COOLDOWN_COMPONENT_ID,
   WARMUP_COMPONENT_ID,
 } from '@src/component/constant/warmup-cooldown.constant';
 import type { ComponentParam } from '@src/component/entity/component-param.entity';
+import { LoadType } from '@src/component/enum/param.enum';
 
 import type { ExerciseSet } from '../entity/exercise-set.entity';
 import type { Subgroup } from '../entity/subgroup.entity';
@@ -66,7 +64,6 @@ export function generateTrainingStub(
     cycleId: data?.cycleId,
     ownerId: data?.ownerId || global.trainer.uid,
     membersIds: data?.membersIds || [global.athlete.uid],
-    stats: data?.stats || [],
     copiedFromId: data?.copiedFromId || null,
     from,
     to,
@@ -86,7 +83,6 @@ export function generateTrainingComponent(
 
   return {
     id: data?.id ?? v4(),
-    color: data?.color || generateRandomColor(),
     from,
     to: data?.to || addHours(from, 1),
     target: data?.target || null,
@@ -99,7 +95,6 @@ export function generateTrainingComponent(
 
 export function generateSuperset(data?: Partial<Superset>): Superset {
   return {
-    color: data?.color || generateRandomColor(),
     exercises: data?.exercises || [],
   };
 }
@@ -120,7 +115,6 @@ export function generateTrainingExercise(
 ): TrainingExercise {
   return {
     id: data?.id ?? v4(),
-    color: data?.color || generateRandomColor(),
     params: data?.params || [],
     sets: data?.sets || [],
   };
@@ -157,7 +151,7 @@ export function generateExerciseSet(
   let paramValues: AttributeValue[] =
     generateParamAttributeValuesFromComponentParams(PARAMS, isRandom);
 
-  if (Array.isArray(paramValuesOrComponentParams)) {
+  if (Array.isArray(paramValuesOrComponentParams))
     if (isAttributeValueArray(paramValuesOrComponentParams))
       paramValues = paramValuesOrComponentParams;
     else
@@ -165,10 +159,22 @@ export function generateExerciseSet(
         paramValuesOrComponentParams,
         isRandom,
       );
-  }
 
   return {
     setNumber,
+    recTime: 0,
+    recDist: 0,
+    loadType: LoadType.Kg,
+    reps: 1,
+    repsR: 1,
+    load: 0,
+    loadR: 0,
+    tempo: '1:0:1:0',
+    tempoR: '1:0:1:0',
+    time: 0,
+    timeR: 0,
+    dist: 0,
+    distR: 0,
     paramValuesL: paramValues,
     ...(isUnilateral && { paramValuesR: paramValues }),
   };

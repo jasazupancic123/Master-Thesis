@@ -53,7 +53,6 @@ import {
   MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT,
   MAX_NUM_SUPERSETS_IN_CIRCUIT_COMPONENT,
 } from '../constant/training-limits.constant';
-import { CompletedTrainingExercise } from '../entity/completed-training.entity';
 import { ExerciseSet } from '../entity/exercise-set.entity';
 import { Subgroup } from '../entity/subgroup.entity';
 import { Superset } from '../entity/superset.entity';
@@ -63,7 +62,6 @@ import {
   TrainingComponentWithoutTime,
 } from '../entity/training-component.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
-import { TrainingExerciseAverageStats } from '../entity/training-exercise-average-stats.entity';
 import { MainSet } from '../enum/main-set.enum';
 import { TrainingPeriod } from '../enum/training-period.enum';
 import {
@@ -261,49 +259,6 @@ export class TrainingPlanService {
       throw new NotFoundException(`Training component not found`);
 
     return foundComponent;
-  }
-
-  /**
-   * Called when athlete completes training component, used to recalculate average
-   * stats for exercises.
-   */
-  recalculateCompletedTrainingStats(
-    trainingComponentId: string,
-    completedStats: TrainingExerciseAverageStats[], // existing training stats
-    completedExercises: CompletedTrainingExercise[], // completed exercises by athlete
-  ) {
-    const stats: TrainingExerciseAverageStats[] = completedStats.filter(
-      (s) => s.rootComponentId === trainingComponentId,
-    );
-
-    for (const { id, sets } of completedExercises) {
-      const { intensity, volume } = this.getAverageIntVol(sets);
-      const foundStat =
-        stats.find((s) => s.exerciseId === id) ||
-        completedStats.find((s) => s.exerciseId === id); // it's possible that one exercise is completed in multiple supersets
-
-      if (foundStat) {
-        // update existing stat
-        foundStat.intensity += intensity;
-        foundStat.volume += volume;
-        foundStat.numMembers += 1;
-      } else {
-        // create new stat for completed exercise
-        completedStats.push({
-          intensity,
-          volume,
-          numMembers: 1,
-          exerciseId: id,
-          rootComponentId: trainingComponentId,
-        });
-      }
-    }
-
-    return completedStats.map((s) => {
-      const intensity = parseFloat(s.intensity.toFixed(2));
-      const volume = parseFloat(s.volume.toFixed(2));
-      return { ...s, intensity, volume };
-    });
   }
 
   validateTrainingComponents(
@@ -519,7 +474,6 @@ export class TrainingPlanService {
 
         validTrainingExercises.push({
           id: trainingExercise.id,
-          color: trainingExercise.color,
           params: paramAttributes,
           sets,
         });
@@ -540,10 +494,7 @@ export class TrainingPlanService {
           ); */
       }
 
-      validSupersets.push({
-        color: superset.color,
-        exercises: validTrainingExercises,
-      });
+      validSupersets.push({ exercises: validTrainingExercises });
     }
 
     return validSupersets;
@@ -673,6 +624,8 @@ export class TrainingPlanService {
 
       return Array.from({ length: sets }).map((_, i) => ({
         setNumber: i + 1,
+        reps: 1,
+        recTime: 0,
         paramValuesL: generatedParamValues,
         ...(isUnilateral && { paramValuesR: generatedParamValues }),
       }));
@@ -813,7 +766,6 @@ export class TrainingPlanService {
 
     targetTrainingComponent.methodId = sourceTrainingComponent.methodId;
     targetTrainingComponent.target = sourceTrainingComponent.target;
-    targetTrainingComponent.color = sourceTrainingComponent.color;
     targetTrainingComponent.mainSet = sourceTrainingComponent.mainSet;
 
     if (options) {
@@ -1038,60 +990,6 @@ export class TrainingPlanService {
             `Value for ${field} cannot be greater than ${attribute.max}`,
           );
     }
-  }
-
-  /**
-   * Calculates average intensity and volume for a list of sets.
-   * It takes into account both left and right param values.
-   * If there are no sets, it returns 0 for both intensity and volume.
-   */
-  private getAverageIntVol(
-    sets: ExerciseSet[],
-  ): Pick<TrainingExerciseAverageStats, 'intensity' | 'volume'> {
-    const averages = this.calculateParamTypeAverages(sets);
-
-    const intensity = parseFloat(averages[ParamType.IntWork1].toFixed(2));
-    const volume = parseFloat(averages[ParamType.VolWork1].toFixed(2));
-
-    return { intensity, volume };
-  }
-
-  private calculateParamTypeAverages(
-    sets: ExerciseSet[],
-  ): Record<ParamType, number> {
-    const sums: Record<ParamType, number> = {} as any;
-    const counts: Record<ParamType, number> = {} as any;
-
-    // initialize sums and counts for each ParamType
-    Object.values(ParamType).forEach((param) => {
-      sums[param] = 0;
-      counts[param] = 0;
-    });
-
-    // iterate through sets and calculate sums and counts
-    for (const set of sets) {
-      for (const { field, value } of set.paramValuesL.concat(
-        set.paramValuesR || [],
-      )) {
-        if (sums.hasOwnProperty(field)) {
-          sums[field] += parseFloat(value);
-          counts[field] += 1;
-        }
-      }
-    }
-
-    // calculate averages
-    const averages: Record<ParamType, number> = {} as any;
-    Object.keys(sums).forEach((field: ParamType) => {
-      averages[field] = counts[field] ? sums[field] / counts[field] : 0;
-    });
-
-    // round averages to 2 decimal places
-    Object.keys(averages).forEach((field: ParamType) => {
-      averages[field] = parseFloat(averages[field].toFixed(2));
-    });
-
-    return averages;
   }
 
   private matchesParamType(

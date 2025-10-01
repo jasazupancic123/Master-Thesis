@@ -20,12 +20,10 @@ import {
   generateTrainingExercise,
   generateTrainingStub,
 } from '@src/training/mock/training.stub';
-import { WorkloadService } from '@src/training/service/workload.service';
 
 describe('Complete Next Set (e2e)', () => {
   let app: INestApplication;
   let db: TestDbService;
-  let workloadService: WorkloadService;
 
   let institution: TestInstitution;
   let group: Group;
@@ -38,7 +36,6 @@ describe('Complete Next Set (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    workloadService = moduleFixture.get(WorkloadService);
     const exerciseService = moduleFixture.get(ExerciseService);
     await app.init();
 
@@ -159,7 +156,13 @@ describe('Complete Next Set (e2e)', () => {
       'squat',
       0,
       1,
-      { userId: global.athlete.uid, from: new Date(), to: new Date() },
+      {
+        userId: global.athlete.uid,
+        from: new Date(),
+        to: new Date(),
+        reps: 1,
+        recTime: 0,
+      },
     );
 
     expect(res.status).toBe(400);
@@ -174,7 +177,13 @@ describe('Complete Next Set (e2e)', () => {
       'squat',
       10,
       1,
-      { userId: global.athlete.uid, from: new Date(), to: new Date() },
+      {
+        userId: global.athlete.uid,
+        from: new Date(),
+        to: new Date(),
+        reps: 1,
+        recTime: 0,
+      },
     );
 
     expect(res.status).toBe(400);
@@ -189,7 +198,13 @@ describe('Complete Next Set (e2e)', () => {
       'bench',
       0,
       1,
-      { userId: global.athlete.uid, from: new Date(), to: new Date() },
+      {
+        userId: global.athlete.uid,
+        from: new Date(),
+        to: new Date(),
+        reps: 1,
+        recTime: 0,
+      },
     );
 
     expect(res.status).toBe(400);
@@ -204,7 +219,13 @@ describe('Complete Next Set (e2e)', () => {
       'squat',
       0,
       10,
-      { userId: global.athlete.uid, from: new Date(), to: new Date() },
+      {
+        userId: global.athlete.uid,
+        from: new Date(),
+        to: new Date(),
+        recTime: 0,
+        reps: 1,
+      },
     );
 
     expect(res.status).toBe(400);
@@ -219,7 +240,13 @@ describe('Complete Next Set (e2e)', () => {
       'squat',
       0,
       1,
-      { userId: global.athlete.uid, from: new Date(), to: new Date(), reps: 6 },
+      {
+        userId: global.athlete.uid,
+        from: new Date(),
+        to: new Date(),
+        reps: 6,
+        recTime: 0,
+      },
     );
 
     expect(res.status).toBe(201);
@@ -244,6 +271,10 @@ describe('Complete Next Set (e2e)', () => {
         userId: global.athlete.uid,
         status: SetStatus.COMPLETED,
         volWork1ValueL: 6,
+        reps: 1,
+        pReps: 1,
+        recTime: 0,
+        pRecTime: 0,
       },
     ]);
 
@@ -257,7 +288,13 @@ describe('Complete Next Set (e2e)', () => {
       'squat',
       0,
       1,
-      { userId: global.athlete.uid, from: new Date(), to: new Date(), reps: 6 },
+      {
+        userId: global.athlete.uid,
+        from: new Date(),
+        to: new Date(),
+        reps: 6,
+        recTime: 0,
+      },
     );
 
     expect(res.status).toBe(201);

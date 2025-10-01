@@ -38,7 +38,6 @@ import { CreateTrainingDto } from './dto/create-training.dto';
 import { FilterTrainingQueryDto } from './dto/filter-training-query.dto';
 import { PeriodizeTrainingsDto } from './dto/periodize-training.dto';
 import { UpdateTrainingDto } from './dto/update-training.dto';
-import { CompletedTrainingComponent } from './entity/completed-training.entity';
 import { Training } from './entity/training.entity';
 import { TrainingService } from './service/training.service';
 import { TrainingReportService } from './service/training-report.service';
@@ -292,22 +291,6 @@ export class TrainingController {
     };
 
     return await this.trainingService.upsertSet(user, ref, body);
-  }
-
-  @Patch(':trainingId/component/:componentId/complete')
-  @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
-  async completeTrainingComponent(
-    @RequestUser() user: User,
-    @Param('trainingId') trainingId: string,
-    @Param('componentId') componentId: string,
-    @Body() body: CompletedTrainingComponent,
-  ) {
-    const ref = { trainingId, componentId };
-    return await this.trainingService.completeTrainingComponent(
-      user,
-      ref,
-      body,
-    );
   }
 
   @Post(':trainingId/component')

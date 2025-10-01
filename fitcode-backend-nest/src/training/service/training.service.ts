@@ -33,7 +33,6 @@ import { CommonService } from '@src/common/service/common.service';
 import { Create, Update } from '@src/common/type/entity.type';
 import { User } from '@src/common/type/firebase-auth.type';
 import {
-  ComponentRef,
   CycleRef,
   SubgroupRef,
   TrainingComponentRef,
@@ -79,7 +78,6 @@ import {
   CreateTrainingDto,
 } from '../dto/create-training.dto';
 import { PeriodizeTrainingsDto } from '../dto/periodize-training.dto';
-import { CompletedTrainingComponent } from '../entity/completed-training.entity';
 import { ExerciseSet } from '../entity/exercise-set.entity';
 import { Superset } from '../entity/superset.entity';
 import { Training } from '../entity/training.entity';
@@ -327,7 +325,6 @@ export class TrainingService implements Permission<Training, Institution> {
       from: warmup.from,
       to: cooldown.to,
       membersIds,
-      stats: [],
       warmup,
       cooldown,
       components: inputComponents
@@ -773,84 +770,6 @@ export class TrainingService implements Permission<Training, Institution> {
   }
 
   @LogMethod()
-  async completeTrainingComponent(
-    user: User,
-    ref: TrainingRef & ComponentRef,
-    input: CompletedTrainingComponent,
-  ): Promise<Training> {
-    const { trainingId, componentId } = ref;
-    const training = await this.findOneByIdOrFail(user, ref);
-
-    // if training does not start within the current day, throw error
-    if (
-      !this.commonService.date.isBetween(
-        training.from,
-        startOfDay(new Date()),
-        endOfDay(new Date()),
-      )
-    )
-      throw new ConflictException(
-        'You cannot complete trainings that are not on the same day',
-      );
-
-    const trainingComponent = this.trainingPlanService.findComponentOrFail(
-      training,
-      componentId,
-    );
-
-    // validate athlete input for manager / trainer
-    const athlete = await this.getAthlete(
-      user,
-      input.userId,
-      training.institution,
-    );
-
-    const report = await this.trainingReportService.findOneById({
-      trainingId,
-      userId: athlete.uid,
-    });
-
-    if (report) {
-      const status = report.componentStatuses.find(
-        (s) => s.componentId === componentId,
-      );
-
-      if (status && ['in_progress', 'completed'].includes(status.status))
-        throw new ConflictException(
-          this.firebase.isAthlete(user)
-            ? `You have already completed this component`
-            : `Athlete already completed this component`,
-        );
-    }
-
-    // create workloads
-    await this.workloadService.createForTrainingComponent(
-      trainingComponent,
-      {
-        institutionId: training.institutionId,
-        groupId: training.groupId,
-        cycleId: training.cycleId,
-        trainingId,
-        componentId,
-        uid: athlete.uid,
-      },
-      input.exercises,
-    );
-
-    // update stats
-    const stats = this.trainingPlanService.recalculateCompletedTrainingStats(
-      trainingComponent.id,
-      training.stats,
-      input.exercises,
-    );
-
-    // mark user as completed (for component and training)
-    await this.trainingReportService.updateReport(athlete.uid, training);
-    await this.repository.update(trainingId, { stats });
-    return { ...training, stats };
-  }
-
-  @LogMethod()
   async getPrescribedTraining(user: User, ref: TrainingRef & UserRef) {
     const training = await this.findOneByIdOrFail(user, ref);
     const athlete = await this.getAthlete(user, ref.uid, training.institution);
@@ -906,16 +825,12 @@ export class TrainingService implements Permission<Training, Institution> {
 
             newPrescribedExercises.push({
               id: prescribedExercise.id,
-              color: prescribedExercise.color,
               params: prescribedExercise.params,
               sets: newPrescribedSets,
             });
           });
 
-          newPrescribedSupersets.push({
-            color: trainingComponent.color,
-            exercises: newPrescribedExercises,
-          });
+          newPrescribedSupersets.push({ exercises: newPrescribedExercises });
         },
       );
 
@@ -923,13 +838,12 @@ export class TrainingService implements Permission<Training, Institution> {
         id: trainingComponent.id,
         from: trainingComponent.from,
         to: trainingComponent.to,
-        color: trainingComponent.color,
         copiedFrom: trainingComponent.copiedFrom,
         target: trainingComponent.target,
         methodId: trainingComponent.methodId,
+        mainSet: trainingComponent.mainSet,
         supersets: newPrescribedSupersets,
         subgroups: [],
-        mainSet: trainingComponent.mainSet,
       });
     }
 

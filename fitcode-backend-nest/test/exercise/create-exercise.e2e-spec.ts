@@ -7,7 +7,6 @@ import { AppModule } from '@src/app.module';
 import type { Attribute } from '@src/attribute/entity/attribute.entity';
 import { generateAttributeStub } from '@src/attribute/mock/attribute.stub';
 import { generateAttributeValueStub } from '@src/attribute/mock/attribute-value.stub';
-import { AttributeService } from '@src/attribute/service/attribute.service';
 import { AttributeType } from '@src/common/enum/attribute-type.enum';
 import type { TestInstitution } from '@src/common/type/entity.type';
 import {
@@ -28,7 +27,6 @@ import { InstitutionService } from '@src/institution/service/institution.service
 describe('Create Exercise (e2e)', () => {
   let app: INestApplication;
   let firebase: FirebaseService;
-  let attributeService: AttributeService;
   let componentService: ComponentService;
   let institutionService: InstitutionService;
   let exerciseAttributeService: ExerciseAttributeService;
@@ -46,7 +44,6 @@ describe('Create Exercise (e2e)', () => {
     await app.init();
 
     firebase = moduleFixture.get(FirebaseService);
-    attributeService = moduleFixture.get(AttributeService);
     componentService = moduleFixture.get(ComponentService);
     institutionService = moduleFixture.get(InstitutionService);
     exerciseAttributeService = moduleFixture.get(ExerciseAttributeService);

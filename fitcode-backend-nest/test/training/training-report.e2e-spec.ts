@@ -204,13 +204,15 @@ describe('Training Report (e2e)', () => {
               exercises: [
                 generateTrainingExercise({
                   id: 'squat',
-                  sets: [{ setNumber: 1, paramValuesL: [] }],
+                  sets: [
+                    { setNumber: 1, paramValuesL: [], reps: 10, recTime: 60 },
+                  ],
                 }),
                 generateTrainingExercise({
                   id: 'bench',
                   sets: [
-                    { setNumber: 1, paramValuesL: [] },
-                    { setNumber: 2, paramValuesL: [] },
+                    { setNumber: 1, paramValuesL: [], reps: 10, recTime: 60 },
+                    { setNumber: 2, paramValuesL: [], reps: 10, recTime: 60 },
                   ],
                 }),
               ],
@@ -225,9 +227,9 @@ describe('Training Report (e2e)', () => {
                 generateTrainingExercise({
                   id: 'deadlift',
                   sets: [
-                    { setNumber: 1, paramValuesL: [] },
-                    { setNumber: 2, paramValuesL: [] },
-                    { setNumber: 3, paramValuesL: [] },
+                    { setNumber: 1, paramValuesL: [], reps: 10, recTime: 60 },
+                    { setNumber: 2, paramValuesL: [], reps: 10, recTime: 60 },
+                    { setNumber: 3, paramValuesL: [], reps: 10, recTime: 60 },
                   ],
                 }),
               ],
@@ -316,6 +318,10 @@ describe('Training Report (e2e)', () => {
         exerciseId: 'squat',
         setNumber: 1,
         status: SetStatus.COMPLETED,
+        reps: 1,
+        pReps: 1,
+        recTime: 0,
+        pRecTime: 0,
       },
       {
         userId: global.athlete.uid,
@@ -325,6 +331,10 @@ describe('Training Report (e2e)', () => {
         exerciseId: 'squat',
         setNumber: 2,
         status: SetStatus.COMPLETED,
+        reps: 1,
+        pReps: 1,
+        recTime: 0,
+        pRecTime: 0,
       },
     ]);
 

@@ -375,15 +375,17 @@ describe('TrainingPlanService (unit)', () => {
       },
     ]);
 
-    expect(trainingComponent.supersets[0].exercises[0].sets).toEqual([
-      {
-        setNumber: 1,
-        paramValuesL: [
-          { field: ParamType.IntWork1, selected: IntType.Kg, value: '50' },
-        ],
-        paramValuesR: undefined,
-      },
-    ]);
+    expect(trainingComponent.supersets[0].exercises[0].sets).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          setNumber: 1,
+          paramValuesL: [
+            { field: ParamType.IntWork1, selected: IntType.Kg, value: '50' },
+          ],
+          paramValuesR: undefined,
+        }),
+      ]),
+    );
   });
 
   it('should select all options if component params do not populate nested options', () => {

@@ -154,7 +154,7 @@ describe('getSetData', () => {
 
     const params = componentService.getParamAttributes(componentParams);
     const result = service.getSets(false, params, [
-      { setNumber: 1, paramValuesL: paramValues },
+      { setNumber: 1, paramValuesL: paramValues, reps: 1, recTime: 0 },
     ]);
 
     expect(result.length).toBe(1);
