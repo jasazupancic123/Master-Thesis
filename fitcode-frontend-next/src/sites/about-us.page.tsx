@@ -15,7 +15,9 @@ export default function AboutUsPage() {
       height="100vh"
       display="flex"
       flexDirection="column"
-      justifyContent={screenSize.isSmallerThanLaptop ? 'flex-end' : 'center'}
+      justifyContent={
+        screenSize.isSmallerThanLaptop ? 'flex-end' : 'flex-start'
+      }
     >
       <HeroNavbar height={HERO_NAVBAR_HEIGHT} currentView="about-us" />
 

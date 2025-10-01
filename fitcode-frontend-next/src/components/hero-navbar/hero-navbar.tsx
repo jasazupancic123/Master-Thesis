@@ -12,6 +12,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import {
+  DASHBOARD_LINK_ID,
   LINKS_ABOUT_US_HERO_NAVBAR,
   LINKS_AUTH,
   LINKS_AUTHENTICATED_HERO_NAVBAR,
@@ -146,7 +147,13 @@ export default function HeroNavbar(props: HeroNavbarProps) {
                         lineHeight: 1,
                         fontSize: 14,
                         fontWeight: 600,
-                        textTransform: 'uppercase',
+                        textTransform: [
+                          SIGN_IN_LINK_ID,
+                          SIGN_OUT_LINK_ID,
+                          DASHBOARD_LINK_ID,
+                        ].includes(item.id)
+                          ? undefined
+                          : 'uppercase',
                         color: 'text.secondary',
                         textDecoration: 'none',
                       }}
