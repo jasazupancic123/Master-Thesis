@@ -19,7 +19,7 @@ import {
 } from 'date-fns';
 import { Timestamp } from 'firebase-admin/firestore';
 
-import { AuthService } from '@src/auth/auth.service';
+import { AuthService } from '@src/auth/service/auth.service';
 import {
   DEFAULT_WEIGHT_KG,
   MIN_BODYWEIGHT_KG,
