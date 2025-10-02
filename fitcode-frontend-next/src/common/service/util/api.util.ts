@@ -43,6 +43,7 @@ export class ApiUtil {
         ...(!formData ? { 'Content-Type': 'application/json' } : {}),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
+      credentials: 'include',
       ...(body ? { body: JSON.stringify(body) } : {}),
       ...(formData ? { body: formData } : {}),
       ...(cacheTimeInMs ? { next: { revalidate: cacheTimeInMs } } : {}),

@@ -2,7 +2,7 @@ import { Controller, Get, Logger } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
 import { AppService } from './app.service';
-import { AuthService } from './auth/auth.service';
+import { AuthService } from './auth/service/auth.service';
 import { Auth } from './common/decorator/auth.decorator';
 import { RequestUser } from './common/decorator/request-user.decorator';
 import { User } from './common/type/firebase-auth.type';

@@ -2,6 +2,7 @@ import type { INestApplication } from '@nestjs/common';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpAdapterHost, NestFactory } from '@nestjs/core';
+import cookieParser from 'cookie-parser';
 import { config } from 'dotenv';
 import { json, urlencoded } from 'express';
 
@@ -28,6 +29,7 @@ async function createApp(): Promise<INestApplication> {
   app.use(json({ limit: '10mb' }));
   app.use(urlencoded({ extended: true, limit: '10mb' }));
   app.enableCors(getCorsConfig(app));
+  app.use(cookieParser());
 
   app.useGlobalPipes(
     new ValidationPipe({

@@ -6,22 +6,38 @@ import {
   Patch,
   Post,
   Query,
+  Res,
 } from '@nestjs/common';
+import { Response } from 'express';
 
 import { Auth } from '@src/common/decorator/auth.decorator';
 import { RequestUser } from '@src/common/decorator/request-user.decorator';
 import { User } from '@src/common/type/firebase-auth.type';
 
-import { AuthService } from './auth.service';
 import { UpdateCustomClaimsDto } from './dto/custom-claims.dto';
 import { FilterUserQueryDto } from './dto/filter-user-query.dto';
+import { AuthTokensDto } from './dto/login.dto';
 import { RegisterAthleteDto } from './dto/register-athlete.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserRole } from './enum/user-role.enum';
+import { AuthService } from './service/auth.service';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  @Post('login')
+  async login(
+    @Body() body: AuthTokensDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return await this.authService.login(body.idToken, body.refreshToken, res);
+  }
+
+  @Post('logout')
+  async logout(@Res({ passthrough: true }) res: Response) {
+    await this.authService.logout(res);
+  }
 
   @Get()
   @Auth()
