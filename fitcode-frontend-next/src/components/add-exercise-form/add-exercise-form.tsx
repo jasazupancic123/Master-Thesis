@@ -25,8 +25,6 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
   } = useTrainerDayViewContext();
   const screenSize = useScreenSize();
 
-  console.log('filteredExercises', exercises);
-
   const [filters, setFilters] = useState<AttributeFilters>({});
   const [openFilters, setOpenFilters] = useState(false);
   const [filteredExercises, setFilteredExercises] =
