@@ -102,7 +102,7 @@ export default function TrainingReportCard(props: TrainingReportCardProps) {
                       { label: '', value: tonnageScore },
                       { label: '', value: 100 - tonnageScore },
                     ],
-                    innerRadius: 30,
+                    innerRadius: 35,
                     outerRadius: 45,
                     cy: 55,
                   },
@@ -113,8 +113,9 @@ export default function TrainingReportCard(props: TrainingReportCardProps) {
                 ]}
               >
                 <PieCenterLabel
-                  label={`${tonnageScore}kg`}
+                  label={`${report.tonnage}kg`}
                   position={{ top: 12 }}
+                  fontSize={12}
                 />
                 <ChartsTooltip trigger="none" />
               </PieChart>
