@@ -11,12 +11,14 @@ const StyledText = styled('text')(({ theme }) => ({
 export function PieCenterLabel({
   label,
   position,
+  fontSize,
 }: {
   label: string;
   position?: {
     top?: number;
     left?: number;
   };
+  fontSize?: number;
 }) {
   const { width, height, left, top } = useDrawingArea();
 
@@ -24,7 +26,7 @@ export function PieCenterLabel({
   const y = (position?.top !== undefined ? position.top : top) + height / 2;
 
   return (
-    <StyledText x={x} y={y}>
+    <StyledText x={x} y={y} sx={{ fontSize: fontSize ?? 14 }}>
       {label}
     </StyledText>
   );
