@@ -143,12 +143,12 @@ export class TrainingReport extends IntersectionType(
   @Expose()
   componentStatuses: TrainingReportComponentStatus[];
 
-  @IsString()
-  @IsNotEmpty()
-  @ApiPropertyOptional()
+  @IsString({ each: true })
+  @IsNotEmpty({ each: true })
+  @ApiPropertyOptional({ type: String, isArray: true })
   @IsOptional()
   @Expose()
-  photoURL?: string; // "best" photo of the training session
+  photoURLs?: string[]; // "best" photo(s) of the training session
 
   @IsNumber()
   @Min(0)

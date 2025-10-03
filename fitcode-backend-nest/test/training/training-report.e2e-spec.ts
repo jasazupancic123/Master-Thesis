@@ -33,8 +33,6 @@ describe('Training Report (e2e)', () => {
   let trainingReportService: TrainingReportService;
 
   let component: Component;
-  let component2: Component;
-
   let institution: TestInstitution;
   let group: Group;
   let training: Training;
@@ -58,7 +56,7 @@ describe('Training Report (e2e)', () => {
 
     group = await db.groups.createTest(institution);
 
-    [component, component2] = await Promise.all([
+    [component] = await Promise.all([
       db.components.create({ id: 'c1' }),
       db.components.create({ id: 'c2' }),
     ]);
@@ -345,6 +343,35 @@ describe('Training Report (e2e)', () => {
 
     expect(report).toBeDefined();
     expect(report.sets).toBe(2);
+
+    await db.workloads.deleteAll(training.id);
+    await db.trainingReports.delete(ref);
+  });
+
+  it('should add photos to report', async () => {
+    const photoURLs = ['photo1', 'photo2'];
+    await trainingReportService.updateReport(global.athlete.uid, training, {
+      photoURLs,
+    });
+
+    const ref: TrainingReportRef = {
+      trainingId: training.id,
+      userId: global.athlete.uid,
+    };
+
+    const report = await db.trainingReports.findById(ref);
+    expect(report).toBeDefined();
+    expect(report.photoURLs).toEqual(photoURLs);
+
+    // add more photos
+    const newPhotoURLs = ['photo3', 'photo4'];
+    await trainingReportService.updateReport(global.athlete.uid, training, {
+      photoURLs: newPhotoURLs,
+    });
+
+    const updatedReport = await db.trainingReports.findById(ref);
+    expect(updatedReport).toBeDefined();
+    expect(updatedReport.photoURLs).toEqual(newPhotoURLs);
 
     await db.workloads.deleteAll(training.id);
     await db.trainingReports.delete(ref);

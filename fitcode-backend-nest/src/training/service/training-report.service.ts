@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { compareAsc, differenceInMinutes } from 'date-fns';
 
 import { DateFilterDto } from '@src/common/dto/date-filter.dto';
@@ -34,14 +34,20 @@ export class TrainingReportService {
     return await this.repository.getAllByUser(userId, filter);
   }
 
-  async findOneById(ref: TrainingReportRef): Promise<TrainingReport | null> {
+  async findById(ref: TrainingReportRef): Promise<TrainingReport | null> {
     return await this.repository.findById(ref);
+  }
+
+  async findByIdOrFail(ref: TrainingReportRef): Promise<TrainingReport> {
+    const report = await this.repository.findById(ref);
+    if (!report) throw new NotFoundException('Training report not found');
+    return report;
   }
 
   async updateReport(
     userId: string,
     training: Training,
-    additionalInput?: { photoURL?: string },
+    input?: { photoURLs?: string[] },
   ): Promise<void> {
     const ref: TrainingReportRef = { trainingId: training.id, userId };
     const workloads = (
@@ -78,7 +84,7 @@ export class TrainingReportService {
       power: 0,
       realization: 0,
       muscleValues: [], // to be calculated
-      photoURL: additionalInput?.photoURL,
+      photoURLs: input?.photoURLs || [],
       componentStatuses: stats.plannedComponents.map((pc) => {
         const completedSets = workloads.filter(
           (w) => w.componentId === pc.componentId,
