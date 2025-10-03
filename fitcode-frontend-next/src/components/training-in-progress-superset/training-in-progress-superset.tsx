@@ -8,9 +8,11 @@ import { useRef, useState } from 'react';
 import MyModal from '../modal/modal';
 import { getUndoneExercises } from '../training-in-progress/state';
 import TrainingInProgressExerciseCard from '../training-in-progress-exercise-card/training-in-progress-exercise-card';
+import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 import type { SetState } from '@/common/type/state.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
+import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 
@@ -31,6 +33,8 @@ export default function TrainingInProgressSuperset(
   const theme = useTheme();
 
   const { trainingInProgress, setTrainingInProgress } = useTraining();
+
+  const { selectedTrackingMethod } = useAthleteHeader();
 
   const {
     anchorEl,
@@ -92,18 +96,21 @@ export default function TrainingInProgressSuperset(
         {selectedExercise && <TrainingInProgressExerciseCard />}
       </Box>
 
-      <Fab
-        size="small"
-        sx={{
-          backgroundColor: theme.palette.primary.main,
-          position: 'fixed',
-          bottom: 60,
-          right: 16,
-        }}
-        onClick={handleOpenMenu}
-      >
-        <MoreVertIcon fontSize="small" />
-      </Fab>
+      {selectedTrackingMethod !== TrackingMethod.CAMERA && (
+        <Fab
+          size="small"
+          sx={{
+            backgroundColor: theme.palette.primary.main,
+            position: 'fixed',
+            bottom: 60,
+            right: 16,
+          }}
+          onClick={handleOpenMenu}
+        >
+          <MoreVertIcon fontSize="small" />
+        </Fab>
+      )}
+
       <Menu
         anchorEl={anchorEl}
         open={open}

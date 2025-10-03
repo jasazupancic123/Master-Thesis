@@ -42,43 +42,57 @@ export default function TrainingExerciseSetDoneCheckbox(
     return null;
   }
 
-  const handleMoveToNextSet = () => {
+  const handleAdvanceInSuperset = () => {
+    // go to next exercise
+
     if (!exerciseView || supersetIndex === undefined) return;
 
-    const nextSetIndex = setIndex + 1;
+    const currentSuperset =
+      trainingInProgress.selectedComponent.supersets[supersetIndex];
 
-    if (nextSetIndex >= exercise.sets.length) {
-      const currentSuperset =
-        trainingInProgress.selectedComponent.supersets[supersetIndex];
+    if (!currentSuperset) return;
 
-      if (!currentSuperset) return;
+    const isLastExercise =
+      currentSuperset.exercises.findIndex((ex) => ex.id === exercise.id) ===
+      currentSuperset.exercises.length - 1;
 
-      const isLastExercise =
-        currentSuperset.exercises.findIndex((ex) => ex.id === exercise.id) ===
-        currentSuperset.exercises.length - 1;
+    if (isLastExercise && setIndex === exercise.sets.length - 1) {
+      // move to next superset
 
-      if (isLastExercise) {
-        const isLastSuperset =
-          supersetIndex ===
-          trainingInProgress.selectedComponent.supersets.length - 1;
-        if (isLastSuperset) return;
+      const isLastSuperset =
+        supersetIndex ===
+        trainingInProgress.selectedComponent.supersets.length - 1;
 
-        const nextSuperset =
-          trainingInProgress.selectedComponent.supersets[supersetIndex + 1];
+      if (isLastSuperset) return;
 
-        if (!nextSuperset) return;
+      const nextSuperset =
+        trainingInProgress.selectedComponent.supersets[supersetIndex + 1];
 
-        setTrainingInProgress((prev) => ({
-          ...prev!,
-          supersetIndex: supersetIndex + 1,
-        }));
-        setSelectedExercise(nextSuperset.exercises[0]);
-        setSetIndex(0);
-        setSelectedSuperset(nextSuperset);
-        setSupersetIndex(supersetIndex + 1);
-        return;
-      }
+      if (!nextSuperset) return;
 
+      setTrainingInProgress((prev) => ({
+        ...prev!,
+        supersetIndex: supersetIndex + 1,
+      }));
+      setSelectedExercise(nextSuperset.exercises[0]);
+      setSetIndex(0);
+      setSelectedSuperset(nextSuperset);
+      setSupersetIndex(supersetIndex + 1);
+
+      return;
+    } else if (isLastExercise) {
+      // move to next set in first exercise of superset
+      const firstExercise = currentSuperset.exercises[0];
+      if (!firstExercise) return;
+
+      if (firstExercise.sets.length < setIndex + 2) return;
+
+      setSelectedExercise(firstExercise);
+      setSetIndex((prev) => (prev !== undefined ? prev + 1 : 0));
+
+      return;
+    } else {
+      // move to next exercise
       const currentExerciseSupersetIndex = currentSuperset.exercises.findIndex(
         (ex) => ex.id === exercise.id
       );
@@ -91,11 +105,7 @@ export default function TrainingExerciseSetDoneCheckbox(
       if (!nextExercise) return;
 
       setSelectedExercise(nextExercise);
-      setSetIndex(0);
-      return;
     }
-
-    setSetIndex(nextSetIndex);
   };
 
   return (
@@ -165,7 +175,7 @@ export default function TrainingExerciseSetDoneCheckbox(
             supersetIndex,
           });
 
-          handleMoveToNextSet();
+          handleAdvanceInSuperset();
         } else {
           unmarkExerciseSetAsCompleted(
             { exerciseId: exercise.id },

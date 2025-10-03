@@ -8,11 +8,12 @@ import {
   SwipeableDrawer,
   Typography,
 } from '@mui/material';
+import { useState } from 'react';
 
 import AttributeFilter from '../attribute-filter/attribute-filter';
+import { SearchBar } from '../search-bar/search-bar';
 import type { Pagination } from '@/common/type/paginate.type';
 import type { SetState } from '@/common/type/state.type';
-import { AttributeType } from '@/controller/attribute/enum/attribute-value.enum';
 import type { Attribute } from '@/controller/attribute/type/attribute.type';
 import { ExerciseAttributeService } from '@/controller/exercise/exercise-attribute.service';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
@@ -38,6 +39,8 @@ const attributes = ExerciseAttributeService.getAttributes();
 export default function ExerciseFilter(props: Props) {
   const { filters, setFilters, open, setOpen, setPagination } = props;
 
+  const [search, setSearch] = useState<string>('');
+
   function handleFilterChange(
     field: string,
     value: AttributeValue | undefined
@@ -50,16 +53,36 @@ export default function ExerciseFilter(props: Props) {
 
   function renderAttributeFilter(attribute: Attribute<Exercise>) {
     if (!attribute) return null;
+
     return (
       <Box key={attribute.field} mb={2}>
         <Typography variant="subtitle2" fontWeight={600} gutterBottom>
           {attribute.name}
         </Typography>
 
+        {attribute.searchBar && (
+          <Box
+            sx={{
+              py: 1,
+              width: '50%',
+              minWidth: 240,
+              maxWidth: 400,
+            }}
+          >
+            <SearchBar
+              placeholder="Search Equipment"
+              value={search}
+              handleSearchChange={(e) => setSearch(e.target.value)}
+              maxWidth="100%"
+            />
+          </Box>
+        )}
+
         <AttributeFilter
           attribute={attribute}
           value={filters[attribute.field]}
           onChange={(val) => handleFilterChange(attribute.field, val)}
+          search={search}
         />
 
         <Divider sx={{ mt: 2 }} />
@@ -68,9 +91,7 @@ export default function ExerciseFilter(props: Props) {
   }
 
   const attributeList: Attribute<Exercise>[] = [
-    { field: 'name', name: 'Name', type: AttributeType.String },
     attributes.find((a) => a.field === 'equipment')!,
-    attributes.find((a) => a.field === 'prescriptions')!,
     attributes.find((a) => a.field === 'bodyRegions')!,
     attributes.find((a) => a.field === 'loadingSides')!,
     attributes.find((a) => a.field === 'locations')!,

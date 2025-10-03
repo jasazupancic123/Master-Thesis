@@ -14,6 +14,7 @@ import UndoneExercisesList from './training-in-progress-undone-exercises-list';
 import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
 import { useHorizontalOverflow } from '@/common/util/horizontal-overflow.util';
+import { preloadPoseLandmarker } from '@/controller/pose-detection/util/pose-landmarker-loader.util';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
@@ -35,7 +36,6 @@ export default function TrainingInProgress() {
     setSelectedExercise,
     selectedSuperset,
     setSelectedSuperset,
-    supersetIndex,
     setSetIndex,
   } = useTrainingInProgress();
 
@@ -50,6 +50,15 @@ export default function TrainingInProgress() {
   );
   const [showUndoneSetsWarning, setShowUndoneSetsWarning] = useState(false);
   const [showUndoneSetsError, setShowUndoneSetsError] = useState(false);
+
+  {
+    /* Preload pose landmarker */
+  }
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    // preload ASAP (or during idle below)
+    preloadPoseLandmarker();
+  }, []);
 
   useEffect(() => {
     if (!trainingInProgress) return;
@@ -163,6 +172,8 @@ export default function TrainingInProgress() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleOpenMenu = (event: any) => {
+    if (selectedTrackingMethod === TrackingMethod.CAMERA) return;
+
     setAnchorEl(event.currentTarget);
   };
 

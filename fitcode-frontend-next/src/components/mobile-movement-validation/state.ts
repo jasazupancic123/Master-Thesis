@@ -1,8 +1,5 @@
-import {
-  DrawingUtils,
-  FilesetResolver,
-  PoseLandmarker,
-} from '@mediapipe/tasks-vision';
+import type { PoseLandmarker } from '@mediapipe/tasks-vision';
+import { DrawingUtils } from '@mediapipe/tasks-vision';
 import type { Theme } from '@mui/material';
 import type { RefObject } from 'react';
 
@@ -22,34 +19,12 @@ import type { RepState } from '@/controller/pose-detection/type/rep-state.type';
 import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
 import { PoseDetectionGraphsUtil } from '@/controller/pose-detection/util/pose-detection-graphs-util';
 
-export async function loadModel(state: {
-  setPoseLandmarker: SetState<PoseLandmarker | null>;
+export async function setupVideoAndContex(state: {
   videoRef: RefObject<HTMLVideoElement | null>;
   canvasRef: RefObject<HTMLCanvasElement | null>;
   drawingUtilsRef: RefObject<DrawingUtils | null>;
 }) {
-  const { setPoseLandmarker, videoRef, canvasRef, drawingUtilsRef } = state;
-
-  // const modelAssetPath = '/models/pose_landmarker/pose_landmarker_lite.task'; // lite
-  const modelAssetPath = '/models/pose_landmarker/pose_landmarker_full.task'; // full
-  // const modelAssetPath = '/models/pose_landmarker/pose_landmarker_heavy.task'; // heavy
-
-  const vision = await FilesetResolver.forVisionTasks('/wasm');
-
-  const landmarker = await PoseLandmarker.createFromOptions(vision, {
-    baseOptions: {
-      modelAssetPath,
-      delegate: 'GPU',
-    },
-    runningMode: 'VIDEO',
-    numPoses: 1,
-    minPoseDetectionConfidence: 0.5,
-    minPosePresenceConfidence: 0.5,
-    minTrackingConfidence: 0.5,
-    outputSegmentationMasks: true,
-  });
-
-  setPoseLandmarker(landmarker);
+  const { videoRef, canvasRef, drawingUtilsRef } = state;
 
   if (!videoRef?.current || !canvasRef?.current) return;
 
@@ -76,35 +51,38 @@ export async function loadModel(state: {
 export function enableCam(state: {
   poseLandmarker: PoseLandmarker | null;
   videoRef: RefObject<HTMLVideoElement | null>;
-  predictWebcam: () => Promise<void>;
+  onPlaying: () => void; // ⬅️ pass the loop starter
   setError: SetState<string | null>;
 }) {
-  const { poseLandmarker, videoRef, predictWebcam, setError } = state;
-
+  const { poseLandmarker, videoRef, onPlaying, setError } = state;
   if (!poseLandmarker) return;
+  if (!videoRef?.current) return;
 
-  // Activate the webcam stream.
-  if (videoRef !== null && videoRef.current !== null) {
-    navigator.mediaDevices
-      .getUserMedia({
-        video: {
-          frameRate: { ideal: 30, max: 60 },
-        },
-        audio: false,
-      })
-      .then((stream) => {
-        videoRef.current!.srcObject = stream;
-        videoRef.current!.addEventListener('loadeddata', predictWebcam);
-      })
-      .catch((err) => {
-        setError(err || 'Error accessing webcam');
-      });
-  }
+  const video = videoRef.current;
+
+  navigator.mediaDevices
+    .getUserMedia({
+      video: { frameRate: { ideal: 30, max: 60 } },
+      audio: false,
+    })
+    .then((stream) => {
+      video.srcObject = stream;
+      // ensure we start only when frames are playing
+      const handler = () => {
+        video.removeEventListener('playing', handler);
+        onPlaying();
+      };
+      video.addEventListener('playing', handler);
+      // Safari sometimes needs an explicit play()
+      video.play?.();
+    })
+    .catch((err) => setError(err || 'Error accessing webcam'));
 }
 
 export const predictWebcam = async (state: {
   statusRef: RefObject<DetectionStatus>;
   statusMessage: RefObject<string>;
+  stillnessCountdownRef: RefObject<Date | null>;
   canProceedIntoReadyStateRef: RefObject<boolean>;
   repStateRef: RefObject<RepState>;
   model: PoseModel;
@@ -137,6 +115,7 @@ export const predictWebcam = async (state: {
   const {
     statusRef,
     statusMessage,
+    stillnessCountdownRef,
     canProceedIntoReadyStateRef,
     repStateRef,
     model,
@@ -222,6 +201,39 @@ export const predictWebcam = async (state: {
   }
 
   if (lastVideoTimeRef.current !== video.currentTime) {
+    // --- FOR TESTING PURPOSES ONLY ---
+    // const newRep = {
+    //   repNumber: 1,
+    //   startValue: 1,
+    //   startValueFrameNum: 1,
+    //   startTimestamp: new Date(),
+    //   buffer: new KeypointHistory([]),
+    //   detectedExtremum: true,
+    //   currentlyInExtremumRange: false,
+    //   idleTimeMs: 1000,
+    //   timeToExtremeMs: 1000,
+    //   timeAtExtremeMs: 500,
+    //   timeFromExtremeToEndMs: 1000,
+    //   durationMs: 2500,
+    //   endValueTimestamp: new Date(),
+    // } as Rep;
+
+    // if (!recordedRepsRef.current.length) {
+    //   recordedRepsRef.current.push(newRep);
+    // }
+
+    // currentRepRef.current = newRep;
+
+    // PoseDetectionGraphsUtil.renderROMAndTempoGraphs({
+    //   exerciseDetectionData,
+    //   currentRepRef,
+    //   recordedRepsRef,
+    //   romCanvasRef,
+    //   tempoCanvasRef,
+    //   normDomainRef,
+    //   theme,
+    // });
+
     lastVideoTimeRef.current = video.currentTime;
     prevFrameTimeRef.current = startTimeMs;
 
@@ -230,6 +242,7 @@ export const predictWebcam = async (state: {
 
       const keypoints = KeypointUtil.getDesiredKeypointsByModel(
         result.worldLandmarks[0], // unit: m, origin: center of hips
+        result.landmarks[0],
         model,
         new Date(),
         frameCountRef.current
@@ -258,6 +271,8 @@ export const predictWebcam = async (state: {
         keypointHistory,
         recordingTimestampRef,
         statusMessage,
+        stillnessCountdownRef,
+        videoHeight: video.videoHeight,
       });
 
       if (
