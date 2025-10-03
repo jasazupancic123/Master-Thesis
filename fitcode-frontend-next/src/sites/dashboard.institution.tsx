@@ -23,6 +23,7 @@ import FileUpload from '@/components/file-upload/file-upload';
 import HorizontalItemsList from '@/components/horizontal-items-list/horizontal-items-list';
 import MyModal from '@/components/modal/modal';
 import { SearchBar } from '@/components/search-bar/search-bar';
+import SimpleCircle from '@/components/simple-circle/simple-circle';
 import { MAX_WIDTH } from '@/components/trainer-day-view/constant';
 import type { AuthUser } from '@/controller/auth/type/user.type';
 import { InstitutionController } from '@/controller/institution/institution.controller';
@@ -41,7 +42,6 @@ export default function DashboardInstitutionPage() {
   const router = useRouter();
   const { token, role } = useAuthenticatedAuth();
   const { users } = useMain();
-
 
   const { selectedInstitution, setSelectedInstitution, setMembers, setUsers } =
     useDashboard();
@@ -320,14 +320,8 @@ export default function DashboardInstitutionPage() {
               gap={0.75}
               sx={{ mx: 'auto' }}
             >
-              <Box
-                sx={{
-                  height: 16,
-                  width: 4,
-                  borderRadius: 5,
-                  backgroundColor: theme.palette.primary.main,
-                }}
-              />
+              <SimpleCircle />
+
               <Typography
                 fontWeight={600}
                 fontSize={16}
@@ -368,15 +362,7 @@ export default function DashboardInstitutionPage() {
               mt: 1,
             }}
           >
-            <Box
-              sx={{
-                height: 16,
-                width: 4,
-                borderRadius: 5,
-                backgroundColor: theme.palette.primary.main,
-                ml: 1,
-              }}
-            />
+            <SimpleCircle />
 
             <Typography
               fontWeight={600}

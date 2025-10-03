@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import DashboardGroupsMembers from '../dashboard-groups-members/dashboard-groups-members';
 import HorizontalItemsList from '../horizontal-items-list/horizontal-items-list';
+import SimpleCircle from '../simple-circle/simple-circle';
 import { MAX_WIDTH } from '../trainer-day-view/constant';
 import { ADD_GROUP } from '@/common/constant/add-group.constant';
 import { isManager } from '@/common/firebase/firebase-auth.util';
@@ -184,15 +185,7 @@ export default function DashboardGroups(props: DashboardGroupsProps) {
               mt: 1,
             }}
           >
-            <Box
-              sx={{
-                height: 16,
-                width: 4,
-                borderRadius: 5,
-                backgroundColor: theme.palette.primary.main,
-                ml: !screenSize.isDesktop ? 1 : 0,
-              }}
-            />
+            <SimpleCircle />
 
             <Typography
               fontWeight={600}

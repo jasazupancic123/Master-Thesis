@@ -1,11 +1,14 @@
 export const POSE_DETECTION_CONSTRAINTS = {
   // State detection
   IN_FRAME_VISIBLITY_THRESHOLD: 0.5,
+  STILLNESS_LOWER_THRESHOLD_M: 0.02, // in meters
   STILLNESS_THRESHOLD_M: 0.03, // in meters
+  STILLNESS_Z_AXIS_PERCENTAGE_THRESHOLD: 0.15, // if we move for 15% in z axis, then we are not still
   STILLNESS_THRESHOLD_WHILE_RECORDING_M: 0.01, // in meters
   STILLNESS_DETECTION_WINDOW_DURING_RECORDING_S: 1.5, // in seconds
   FACING_CAMERA_VISIBLITY_THRESHOLD: 0.5,
-  MIN_TIME_PASSED_TO_DETECT_STILLNESS_S: 3, // in seconds
+  STILLNESS_COUNTDOWN_DURATION_S: 3, // in seconds
+  MIN_TIME_PASSED_TO_DETECT_STILLNESS_S: 1, // in seconds
 
   // Nod detection
   NOD_DETECTION_BUFFER_DURATION_S: 1.5, // how many ms to track for nod detection

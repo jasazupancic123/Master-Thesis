@@ -2,9 +2,7 @@ import type { Theme } from '@mui/material';
 import type { RefObject } from 'react';
 
 import type { ExerciseDetectionData } from '../type/exercise-start-condition.type';
-import type { Keypoint } from '../type/keypoint.type';
 import type { Rep } from '../type/rep.type';
-import { KeypointUtil } from './keypoint.util';
 import { TimeUtil } from './time.util';
 
 export class PoseDetectionGraphsUtil {
@@ -32,200 +30,206 @@ export class PoseDetectionGraphsUtil {
 
     const canvasROM = romCanvasRef.current;
     const canvasTempo = tempoCanvasRef.current;
-    if (!canvasROM || !canvasTempo) return;
 
-    const ctxROM = canvasROM.getContext('2d');
-    const ctxTempo = canvasTempo.getContext('2d');
-    if (!ctxROM || !ctxTempo) return;
+    // if (!canvasROM || !canvasTempo) return;
 
-    // ---- TEMPO GRAPH ----
-    const longestRep = recordedRepsRef.current.length
-      ? recordedRepsRef.current.reduce((longest, current) => {
-          if (!longest.endValueTimestamp || !current.endValueTimestamp)
-            return longest;
-          const longestDuration =
-            TimeUtil.getMsDiff(
-              longest.startTimestamp,
-              longest.endValueTimestamp
-            ) - (longest.timeAtExtremeMs || 0);
-          const currentDuration =
-            TimeUtil.getMsDiff(
-              current.startTimestamp,
-              current.endValueTimestamp
-            ) - (current.timeAtExtremeMs || 0);
+    const ctxROM = canvasROM?.getContext('2d');
+    const ctxTempo = canvasTempo?.getContext('2d');
 
-          return currentDuration > longestDuration ? current : longest;
-        })
-      : currentRepRef.current;
+    // if (!ctxROM || !ctxTempo) return;
 
-    if (longestRep && longestRep.endValueTimestamp) {
-      // const longestRepDuration =
-      //   TimeUtil.getMsDiff(
-      //     longestRep.startTimestamp,
-      //     longestRep.endValueTimestamp
-      //   ) - (longestRep.timeAtExtremeMs || 0);
+    // if (canvasROM && ctxROM) {
+    //   // ---- ROM GRAPH ----
+    //   // If we haven't reached the extremum yet, then green color and positive bar value, if we have,
+    //   // then red color and negative bar value
 
-      const longestRepDuration = TimeUtil.getMsDiff(
-        longestRep.startTimestamp,
-        longestRep.endValueTimestamp
-      );
+    //   const correctKeypointHistory: Keypoint[][] | undefined = recordedRepsRef
+    //     .current.length
+    //     ? recordedRepsRef.current
+    //         .flatMap((r) => r.buffer.history)
+    //         .concat(currentRepRef.current.buffer.history)
+    //     : currentRepRef.current
+    //       ? currentRepRef.current.buffer.history
+    //       : undefined;
 
-      const normalizedTimesToExtremeMs: number[] = [];
-      const normalizedTimesFromExtremeToEndMs: number[] = [];
-      const normalizedTimesAtExtremeMs: number[] = [];
+    //   if (!correctKeypointHistory) return;
 
-      recordedRepsRef.current.forEach((rep) => {
-        if (
-          rep.timeToExtremeMs === undefined ||
-          rep.timeFromExtremeToEndMs === undefined ||
-          rep.timeAtExtremeMs === undefined
-        ) {
-          return;
-        }
+    //   const values = correctKeypointHistory
+    //     .flat()
+    //     .filter((k) => k.id === exerciseDetectionData.romKeypointId)
+    //     .map((k) =>
+    //       KeypointUtil.getKeypointValueByType(
+    //         k,
+    //         exerciseDetectionData.romValueType
+    //       )
+    //     )
+    //     .filter((v): v is number => v !== undefined); // type guard
 
-        normalizedTimesToExtremeMs.push(
-          rep.timeToExtremeMs / longestRepDuration
+    //   const minValue = values.length > 0 ? Math.min(...values) : undefined;
+    //   const maxValue = values.length > 0 ? Math.max(...values) : undefined;
+
+    //   if (minValue === undefined || maxValue === undefined) return;
+
+    //   const detectedExtremum = currentRepRef.current?.detectedExtremum;
+
+    //   if (currentRepRef.current.extremeValue === undefined && !detectedExtremum)
+    //     return;
+
+    //   const n = currentRepRef.current.buffer.history.length;
+
+    //   const currentKeypoints = currentRepRef.current.buffer.history[n - 1];
+    //   if (!currentKeypoints) return;
+
+    //   const currentKeypoint = KeypointUtil.getDesiredKeypointFromArray(
+    //     currentKeypoints,
+    //     exerciseDetectionData.romKeypointId
+    //   );
+    //   if (!currentKeypoint) return;
+
+    //   const currentValue = KeypointUtil.getKeypointValueByType(
+    //     currentKeypoint,
+    //     exerciseDetectionData.romValueType
+    //   );
+
+    //   if (currentValue === undefined) return;
+
+    //   const allRawForDomain: number[] = [
+    //     ...values, // from history (recorded + current)
+    //     currentRepRef.current.startValue,
+    //     currentRepRef.current.extremeValue!,
+    //     currentValue,
+    //   ];
+    //   this.expandDomain(allRawForDomain, normDomainRef);
+
+    //   // now normalize with the UPDATED domain
+    //   const domain = normDomainRef.current!;
+    //   const norm = (v: number) => (v - domain.min) / (domain.max - domain.min);
+
+    //   const currentValueNormalized = norm(currentValue);
+    //   const startValueNormalized = norm(currentRepRef.current.startValue);
+    //   const endValueNormalized = norm(currentRepRef.current.endValue!);
+    //   const extremeValueNormalized = norm(currentRepRef.current.extremeValue!);
+
+    //   // previous reps normalized with the SAME (expanded) domain
+    //   // const previousNormalizedStartValues = recordedRepsRef.current
+    //   //   .map((r) => r.startValue)
+    //   //   .filter((v): v is number => v !== undefined)
+    //   //   .map(norm);
+
+    //   // const previousNormalizedEndValues = recordedRepsRef.current
+    //   //   .map((r) => r.endValue)
+    //   //   .filter((v): v is number => v !== undefined)
+    //   //   .map(norm);
+
+    //   // const previousNormalizedExtremeValues = recordedRepsRef.current
+    //   //   .map((r) => r.extremeValue)
+    //   //   .filter((v): v is number => v !== undefined)
+    //   //   .map(norm);
+
+    //   // optional: clamp to [0,1] only for drawing safety (should rarely matter now)
+    //   const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
+
+    //   const maxExtremeValueNormalized = clamp01(
+    //     Math.max(
+    //       ...recordedRepsRef.current
+    //         .map((r) => r.extremeValue)
+    //         .filter((v): v is number => v !== undefined)
+    //         .map(norm)
+    //         .concat([extremeValueNormalized]) // include current rep's extreme too
+    //     )
+    //   );
+
+    //   const romRect = canvasROM.getBoundingClientRect();
+
+    //   // draw
+    //   PoseDetectionGraphsUtil.drawRomOverlayBarChart({
+    //     ctx: ctxROM,
+    //     w: romRect.width,
+    //     h: romRect.height,
+    //     currentValueNormalized: clamp01(currentValueNormalized),
+    //     startValueNormalized: clamp01(startValueNormalized),
+    //     endValueNormalized: clamp01(endValueNormalized),
+    //     extremeValueNormalized: clamp01(extremeValueNormalized),
+    //     maxExtremeValueNormalized,
+    //     // previousNormalizedStartValues: previousNormalizedStartValues.map(clamp01),
+    //     // previousNormalizedEndValues: previousNormalizedEndValues.map(clamp01),
+    //     // previousNormalizedExtremeValues:
+    //     //   previousNormalizedExtremeValues.map(clamp01),
+    //     rising: !detectedExtremum,
+    //     theme,
+    //   });
+    // }
+
+    if (ctxTempo && canvasTempo) {
+      // ---- TEMPO GRAPH ----
+      const longestRep = recordedRepsRef.current.length
+        ? recordedRepsRef.current.reduce((longest, current) => {
+            if (!longest.endValueTimestamp || !current.endValueTimestamp)
+              return longest;
+            const longestDuration =
+              TimeUtil.getMsDiff(
+                longest.startTimestamp,
+                longest.endValueTimestamp
+              ) - (longest.timeAtExtremeMs || 0);
+            const currentDuration =
+              TimeUtil.getMsDiff(
+                current.startTimestamp,
+                current.endValueTimestamp
+              ) - (current.timeAtExtremeMs || 0);
+
+            return currentDuration > longestDuration ? current : longest;
+          })
+        : currentRepRef.current;
+
+      if (longestRep && longestRep.endValueTimestamp) {
+        // const longestRepDuration =
+        //   TimeUtil.getMsDiff(
+        //     longestRep.startTimestamp,
+        //     longestRep.endValueTimestamp
+        //   ) - (longestRep.timeAtExtremeMs || 0);
+
+        const longestRepDuration = TimeUtil.getMsDiff(
+          longestRep.startTimestamp,
+          longestRep.endValueTimestamp
         );
-        normalizedTimesFromExtremeToEndMs.push(
-          rep.timeFromExtremeToEndMs / longestRepDuration
-        );
-        normalizedTimesAtExtremeMs.push(
-          rep.timeAtExtremeMs / longestRepDuration
-        );
-      });
 
-      const tempoRect = canvasTempo.getBoundingClientRect();
+        const normalizedTimesToExtremeMs: number[] = [];
+        const normalizedTimesFromExtremeToEndMs: number[] = [];
+        const normalizedTimesAtExtremeMs: number[] = [];
 
-      PoseDetectionGraphsUtil.drawTempoOverlayBarChart({
-        ctx: ctxTempo,
-        w: tempoRect.width,
-        h: tempoRect.height,
-        normalizedTimesToExtremeMs,
-        normalizedTimesFromExtremeToEndMs,
-        normalizedTimesAtExtremeMs,
-        theme,
-      });
+        recordedRepsRef.current.forEach((rep) => {
+          if (
+            rep.timeToExtremeMs === undefined ||
+            rep.timeFromExtremeToEndMs === undefined ||
+            rep.timeAtExtremeMs === undefined
+          ) {
+            return;
+          }
+
+          normalizedTimesToExtremeMs.push(
+            rep.timeToExtremeMs / longestRepDuration
+          );
+          normalizedTimesFromExtremeToEndMs.push(
+            rep.timeFromExtremeToEndMs / longestRepDuration
+          );
+          normalizedTimesAtExtremeMs.push(
+            rep.timeAtExtremeMs / longestRepDuration
+          );
+        });
+
+        const tempoRect = canvasTempo.getBoundingClientRect();
+
+        PoseDetectionGraphsUtil.drawTempoOverlayBarChart({
+          ctx: ctxTempo,
+          w: tempoRect.width,
+          h: tempoRect.height,
+          normalizedTimesToExtremeMs,
+          normalizedTimesFromExtremeToEndMs,
+          normalizedTimesAtExtremeMs,
+          theme,
+        });
+      }
     }
-
-    // ---- ROM GRAPH ----
-    // If we haven't reached the extremum yet, then green color and positive bar value, if we have,
-    // then red color and negative bar value
-
-    const correctKeypointHistory: Keypoint[][] | undefined = recordedRepsRef
-      .current.length
-      ? recordedRepsRef.current
-          .flatMap((r) => r.buffer.history)
-          .concat(currentRepRef.current.buffer.history)
-      : currentRepRef.current
-        ? currentRepRef.current.buffer.history
-        : undefined;
-
-    if (!correctKeypointHistory) return;
-
-    const values = correctKeypointHistory
-      .flat()
-      .filter((k) => k.id === exerciseDetectionData.romKeypointId)
-      .map((k) =>
-        KeypointUtil.getKeypointValueByType(
-          k,
-          exerciseDetectionData.romValueType
-        )
-      )
-      .filter((v): v is number => v !== undefined); // type guard
-
-    const minValue = values.length > 0 ? Math.min(...values) : undefined;
-    const maxValue = values.length > 0 ? Math.max(...values) : undefined;
-
-    if (minValue === undefined || maxValue === undefined) return;
-
-    const detectedExtremum = currentRepRef.current?.detectedExtremum;
-
-    if (currentRepRef.current.extremeValue === undefined && !detectedExtremum)
-      return;
-
-    const n = currentRepRef.current.buffer.history.length;
-
-    const currentKeypoints = currentRepRef.current.buffer.history[n - 1];
-    if (!currentKeypoints) return;
-
-    const currentKeypoint = KeypointUtil.getDesiredKeypointFromArray(
-      currentKeypoints,
-      exerciseDetectionData.romKeypointId
-    );
-    if (!currentKeypoint) return;
-
-    const currentValue = KeypointUtil.getKeypointValueByType(
-      currentKeypoint,
-      exerciseDetectionData.romValueType
-    );
-
-    if (currentValue === undefined) return;
-
-    const allRawForDomain: number[] = [
-      ...values, // from history (recorded + current)
-      currentRepRef.current.startValue,
-      currentRepRef.current.extremeValue!,
-      currentValue,
-    ];
-    this.expandDomain(allRawForDomain, normDomainRef);
-
-    // now normalize with the UPDATED domain
-    const domain = normDomainRef.current!;
-    const norm = (v: number) => (v - domain.min) / (domain.max - domain.min);
-
-    const currentValueNormalized = norm(currentValue);
-    const startValueNormalized = norm(currentRepRef.current.startValue);
-    const endValueNormalized = norm(currentRepRef.current.endValue!);
-    const extremeValueNormalized = norm(currentRepRef.current.extremeValue!);
-
-    // previous reps normalized with the SAME (expanded) domain
-    // const previousNormalizedStartValues = recordedRepsRef.current
-    //   .map((r) => r.startValue)
-    //   .filter((v): v is number => v !== undefined)
-    //   .map(norm);
-
-    // const previousNormalizedEndValues = recordedRepsRef.current
-    //   .map((r) => r.endValue)
-    //   .filter((v): v is number => v !== undefined)
-    //   .map(norm);
-
-    // const previousNormalizedExtremeValues = recordedRepsRef.current
-    //   .map((r) => r.extremeValue)
-    //   .filter((v): v is number => v !== undefined)
-    //   .map(norm);
-
-    // optional: clamp to [0,1] only for drawing safety (should rarely matter now)
-    const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
-
-    const maxExtremeValueNormalized = clamp01(
-      Math.max(
-        ...recordedRepsRef.current
-          .map((r) => r.extremeValue)
-          .filter((v): v is number => v !== undefined)
-          .map(norm)
-          .concat([extremeValueNormalized]) // include current rep's extreme too
-      )
-    );
-
-    const romRect = canvasROM.getBoundingClientRect();
-
-    // draw
-    PoseDetectionGraphsUtil.drawRomOverlayBarChart({
-      ctx: ctxROM,
-      w: romRect.width,
-      h: romRect.height,
-      currentValueNormalized: clamp01(currentValueNormalized),
-      startValueNormalized: clamp01(startValueNormalized),
-      endValueNormalized: clamp01(endValueNormalized),
-      extremeValueNormalized: clamp01(extremeValueNormalized),
-      maxExtremeValueNormalized,
-      // previousNormalizedStartValues: previousNormalizedStartValues.map(clamp01),
-      // previousNormalizedEndValues: previousNormalizedEndValues.map(clamp01),
-      // previousNormalizedExtremeValues:
-      //   previousNormalizedExtremeValues.map(clamp01),
-      rising: !detectedExtremum,
-      theme,
-    });
   };
 
   private static expandDomain = (

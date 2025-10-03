@@ -1,21 +1,11 @@
 'use client';
 
-import {
-  Avatar,
-  Box,
-  Card,
-  Stack,
-  TextField,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Avatar, Box, Card, Stack, Tooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import { useEffect, useState } from 'react';
 import type { DropResult } from 'react-beautiful-dnd';
 import { DragDropContext } from 'react-beautiful-dnd';
-import toast from 'react-hot-toast';
 
-import MyModal from '../modal/modal';
 import {
   DEFAULT_SUBGROUP,
   DEFAULT_SUBGROUP_ID,
@@ -56,9 +46,6 @@ export default function TrainingMembers(props: TrainingMembersProps) {
   const [subgroups, setSubgroups] = useState<Subgroup[]>([]);
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [modal, setModal] = useState({ editSubgroup: false });
-  const [editSubgroupName, setEditSubgroupName] = useState<string>('');
-  const [editedSubgroup, setEditedSubgroup] = useState<Subgroup | null>(null);
 
   const sortedMembers = [...members].sort((a, b) => {
     if (!training) return 0;
@@ -304,7 +291,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                   color: theme.palette.primary.main,
                 }}
               >
-                {`G-${group.membersIds.length}`}
+                {`G#${group.membersIds.length}`}
               </Typography>
             </Box>
           )}
@@ -325,80 +312,12 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                       anchorEl={anchorEl}
                       setAnchorEl={setAnchorEl}
                       members={sortedMembers}
-                      setEditSubgroupName={setEditSubgroupName}
-                      setEditedSubgroup={setEditedSubgroup}
-                      setModal={setModal}
                     />
                   );
                 })}
           </Box>
         </DragDropContext>
       </Stack>
-      <MyModal
-        isOpen={modal.editSubgroup}
-        setIsOpen={(editSubgroup) =>
-          setModal((prev) => ({ ...prev, editSubgroup }))
-        }
-        title="Edit Subgroup"
-        onCancel={() => {
-          setEditedSubgroup(null);
-          setModal((prev) => ({ ...prev, editSubgroup: false }));
-          setEditSubgroupName('');
-        }}
-        onConfirm={() => {
-          if (!editSubgroupName.length)
-            return toast.error('Name cannot be empty');
-          if (!editedSubgroup || !component || !training) return;
-
-          const updatedSubgroup = {
-            ...editedSubgroup,
-            name: editSubgroupName,
-          };
-
-          const updatedSubgroups = subgroups
-            .map((subgroup) =>
-              subgroup.id === updatedSubgroup.id ? updatedSubgroup : subgroup
-            )
-            .filter((sg) => sg.id !== DEFAULT_SUBGROUP_ID);
-
-          const newComponent = { ...component!, subgroups: updatedSubgroups };
-          const newTraining = {
-            ...training,
-            components: training.components.map((c) =>
-              c.id === newComponent.id ? newComponent : c
-            ),
-          };
-
-          if (selectedSubgroup && updatedSubgroup.id === selectedSubgroup.id)
-            setSelectedSubgroup((prev) => {
-              if (!prev) return prev;
-
-              return {
-                ...prev,
-                subgroup: updatedSubgroup,
-              };
-            });
-          setSubgroups(updatedSubgroups);
-          setComponent(newComponent);
-          setTraining(newTraining);
-
-          setModal((prev) => ({ ...prev, editSubgroup: false }));
-          setEditSubgroupName('');
-          setDetectedChanges(true);
-        }}
-      >
-        <Stack spacing={4} p={1}>
-          {/* Name */}
-          <TextField
-            label="Name"
-            fullWidth
-            value={editSubgroupName}
-            variant="outlined"
-            size="small"
-            onChange={(e) => setEditSubgroupName(e.target.value)}
-          />
-        </Stack>
-      </MyModal>
     </Stack>
   );
 }

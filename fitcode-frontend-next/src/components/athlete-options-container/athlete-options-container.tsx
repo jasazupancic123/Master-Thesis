@@ -2,6 +2,7 @@
 
 import { Box, Typography, useTheme } from '@mui/material';
 
+import SimpleCircle from '../simple-circle/simple-circle';
 import TrapezoidTitle from './trapezoid-title';
 
 interface AthleteOptionsContainerProps {
@@ -40,16 +41,7 @@ export default function AthleteOptionsContainer(
           alignItems="center" // center the inline-sized text inside the column
           gap={0.75}
         >
-          {type === selectedItem && i === 0 && (
-            <Box
-              sx={{
-                backgroundColor: theme.palette.primary.main,
-                width: 4,
-                height: 16,
-                borderRadius: 5,
-              }}
-            />
-          )}
+          {type === selectedItem && i === 0 && <SimpleCircle />}
 
           <Typography
             onClick={() => onClick(type)}
@@ -63,16 +55,7 @@ export default function AthleteOptionsContainer(
             {type}
           </Typography>
 
-          {type === selectedItem && i === 1 && (
-            <Box
-              sx={{
-                backgroundColor: theme.palette.primary.main,
-                width: 4,
-                height: 16,
-                borderRadius: 5,
-              }}
-            />
-          )}
+          {type === selectedItem && i === 1 && <SimpleCircle />}
         </Box>
       ))}
     </Box>
