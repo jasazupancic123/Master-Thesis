@@ -1,8 +1,9 @@
-import { Box, Grid2, Pagination, Typography } from '@mui/material';
+import { Box, Pagination, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 
 import ExerciseFilter from '../exercises-list/exercise-filter';
 import ExercisesList from '../exercises-list/exercises-list';
+import { SearchBar } from '../search-bar/search-bar';
 import type { AddExerciseFormProps } from '../trainer-day-view/props';
 import { handlePaginateExercises } from '@/app/(trainer)/dashboard/exercises/state';
 import {
@@ -25,14 +26,13 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
   } = useTrainerDayViewContext();
   const screenSize = useScreenSize();
 
-  console.log('filteredExercises', exercises);
-
   const [filters, setFilters] = useState<AttributeFilters>({});
   const [openFilters, setOpenFilters] = useState(false);
   const [filteredExercises, setFilteredExercises] =
     useState<Exercise[]>(exercises);
 
   const [componentExercises, setComponentExercises] = useState<Exercise[]>([]);
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     if (!component) return;
@@ -55,6 +55,7 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
   useEffect(() => {
     const filter: Partial<Exercise> = {
       ...(component?.id && { componentIds: [component.id] }),
+      ...(search && { name: search }),
       ...filters,
     };
 
@@ -62,6 +63,7 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
       components,
       exercises: componentExercises,
       pagination,
+      search,
       setPagination,
       setFilteredExercises,
     });
@@ -71,29 +73,37 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
     exercises,
     component,
     filters,
+    search,
     pagination.page,
     pagination.pageSize,
     pagination.pages,
   ]);
 
   return (
-    <>
-      <Grid2 container alignItems="center" spacing={2} sx={{ m: 2 }}>
-        {/* Left empty space (desktop only) */}
-        <Grid2
-          size={{ xs: screenSize.isMobile ? 6 : 4 }}
-          container
-          order={1}
-          justifyContent={{ xs: 'flex-end', md: 'flex-start' }}
-          alignItems="center"
+    <Box width="100%" display="flex" flexDirection="column" alignItems="center">
+      <Box
+        sx={{ py: 1, width: '50%', minWidth: 240, maxWidth: 400, mx: 'auto' }}
+      >
+        <SearchBar
+          placeholder="Search Exercises"
+          value={search}
+          handleSearchChange={(e) => setSearch(e.target.value)}
+          maxWidth="100%"
         />
-
-        {/* Pagination */}
-        <Grid2
-          size={{ xs: screenSize.isMobile ? 12 : 4 }}
-          container
+      </Box>
+      <Box
+        width="100%"
+        display="flex"
+        flexDirection={screenSize.isMobile ? 'column-reverse' : 'row'}
+        alignItems="center"
+        justifyContent="center"
+        sx={{ m: 2 }}
+      >
+        <Box width="15%" />
+        <Box
+          width={screenSize.isMobile ? '100%' : '70%'}
+          display="flex"
           justifyContent="center"
-          order={screenSize.isMobile ? 3 : 2}
         >
           <Pagination
             size="small"
@@ -102,14 +112,15 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
             page={pagination.page}
             onChange={(_, page) => setPagination((prev) => ({ ...prev, page }))}
           />
-        </Grid2>
+        </Box>
 
         {/* Filters & Results */}
-        <Grid2
-          order={screenSize.isMobile ? 2 : 3}
-          size={{ xs: screenSize.isMobile ? 6 : 4 }}
-          container
-          justifyContent={screenSize.isMobile ? 'flex-start' : 'flex-end'}
+        <Box
+          width="15%"
+          display="flex"
+          justifyContent={
+            screenSize.isSmallerThanLaptop ? 'center' : 'flex-end'
+          }
           alignItems="center"
         >
           <Box
@@ -120,7 +131,7 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
               alignItems: 'center',
             }}
           >
-            {!screenSize.isMobile && (
+            {!screenSize.isSmallerThanLaptop && (
               <Typography variant="body2" color="text.primary">
                 {pagination.total} results
               </Typography>
@@ -134,8 +145,8 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
               setOpen={setOpenFilters}
             />
           </Box>
-        </Grid2>
-      </Grid2>
+        </Box>
+      </Box>
 
       <ExercisesList
         exercises={filteredExercises}
@@ -143,6 +154,6 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
         setSelectedExercisesIds={setSelectedExercisesIds}
         selectedExercisesIds={selectedExercisesIds}
       />
-    </>
+    </Box>
   );
 }
