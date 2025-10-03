@@ -54,7 +54,7 @@ export class AppController {
       ),
       measureAsync(
         'exerciseService.findAllGlobal()',
-        () => this.exerciseService.findAllGlobal(),
+        () => this.exerciseService.findAllGlobal(user),
         this.logger,
       ),
       measureAsync(
@@ -94,7 +94,7 @@ export class AppController {
 
     const institutionExercises = await Promise.all(
       institutions.map((inst) =>
-        this.exerciseService.findAllByInstitution(inst.id),
+        this.exerciseService.findAllByInstitution(user, inst.id),
       ),
     );
 

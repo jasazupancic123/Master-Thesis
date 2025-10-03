@@ -17,6 +17,7 @@ export function generateExerciseStub(data?: Partial<Exercise>): Exercise {
     componentIds: data?.componentIds || ['other'],
     ownerId: data?.ownerId || GLOBAL_EXERCISE_OWNER,
     isUnilateral: data?.isUnilateral || false,
+    disabled: data?.disabled || false,
     imageUrl: data?.imageUrl || undefined,
     videoUrl: data?.videoUrl || undefined,
     instruction: data?.instruction || '',
