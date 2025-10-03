@@ -16,6 +16,9 @@ import type { Rep } from './type/rep.type';
 import type { RepState } from './type/rep-state.type';
 import { KeypointUtil } from './util/keypoint.util';
 import { TimeUtil } from './util/time.util';
+import { CommonService } from '@/common/service/common.service';
+
+const commonService = CommonService.instance;
 
 export class RepDetectionService {
   /*
@@ -608,9 +611,12 @@ export class RepDetectionService {
     // timestamp
     currentRepRef.current.extremeTimestamp = timeToFirstExtreme;
 
-    currentRepRef.current.timeToExtremeMs = TimeUtil.getMsDiff(
-      currentRepRef.current.startTimestamp,
-      timeToFirstExtreme
+    currentRepRef.current.timeToExtremeMs = commonService.number.roundToStep(
+      TimeUtil.getMsDiff(
+        currentRepRef.current.startTimestamp,
+        timeToFirstExtreme
+      ),
+      200
     );
   }
 
@@ -1038,9 +1044,12 @@ export class RepDetectionService {
     // durationMs, idleTimeMs, timeToExtremeMs, timeAtExtremeMs, timeFromExtremeToEndMs
 
     if (currentRepRef.current.endValueTimestamp) {
-      currentRepRef.current.durationMs = TimeUtil.getMsDiff(
-        currentRepRef.current.startTimestamp,
-        currentRepRef.current.endValueTimestamp
+      currentRepRef.current.durationMs = commonService.number.roundToStep(
+        TimeUtil.getMsDiff(
+          currentRepRef.current.startTimestamp,
+          currentRepRef.current.endValueTimestamp
+        ),
+        200
       );
     }
 
@@ -1048,31 +1057,49 @@ export class RepDetectionService {
       const prevRep =
         recordedRepsRef.current[recordedRepsRef.current.length - 1];
       if (prevRep.endValueTimestamp) {
-        currentRepRef.current.idleTimeMs = TimeUtil.getMsDiff(
-          prevRep.endValueTimestamp,
-          currentRepRef.current.startTimestamp
+        currentRepRef.current.idleTimeMs = commonService.number.roundToStep(
+          TimeUtil.getMsDiff(
+            prevRep.endValueTimestamp,
+            currentRepRef.current.startTimestamp
+          ),
+          200
         );
       }
     }
 
     if (timeAtExtremumStartKeypoint) {
-      currentRepRef.current.timeToExtremeMs = TimeUtil.getMsDiff(
-        currentRepRef.current.startTimestamp,
-        timeAtExtremumStartKeypoint.capturedAt
+      currentRepRef.current.timeToExtremeMs = commonService.number.roundToStep(
+        TimeUtil.getMsDiff(
+          currentRepRef.current.startTimestamp,
+          timeAtExtremumStartKeypoint.capturedAt
+        ),
+        200
       );
     }
 
-    if (timeAtExtremumEndKeypoint && currentRepRef.current.endValueTimestamp) {
-      currentRepRef.current.timeFromExtremeToEndMs = TimeUtil.getMsDiff(
-        timeAtExtremumEndKeypoint.capturedAt,
-        currentRepRef.current.endValueTimestamp
-      );
+    if (
+      (timeAtExtremumEndKeypoint !== undefined ||
+        currentRepRef.current.extremeKeypoint !== undefined) &&
+      currentRepRef.current.endValueTimestamp
+    ) {
+      currentRepRef.current.timeFromExtremeToEndMs =
+        commonService.number.roundToStep(
+          TimeUtil.getMsDiff(
+            (timeAtExtremumEndKeypoint ||
+              currentRepRef.current.extremeKeypoint)!.capturedAt,
+            currentRepRef.current.endValueTimestamp
+          ),
+          200
+        );
     }
 
     if (timeAtExtremumStartKeypoint && timeAtExtremumEndKeypoint) {
-      currentRepRef.current.timeAtExtremeMs = TimeUtil.getMsDiff(
-        timeAtExtremumStartKeypoint.capturedAt,
-        timeAtExtremumEndKeypoint.capturedAt
+      currentRepRef.current.timeAtExtremeMs = commonService.number.roundToStep(
+        TimeUtil.getMsDiff(
+          timeAtExtremumStartKeypoint.capturedAt,
+          timeAtExtremumEndKeypoint.capturedAt
+        ),
+        200
       );
     }
   }

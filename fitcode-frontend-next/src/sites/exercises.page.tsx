@@ -37,6 +37,7 @@ import ExerciseFilter from '@/components/exercises-list/exercise-filter';
 import ExercisesList from '@/components/exercises-list/exercises-list';
 import FileUpload from '@/components/file-upload/file-upload';
 import MyModal from '@/components/modal/modal';
+import { SearchBar } from '@/components/search-bar/search-bar';
 import { ComponentService } from '@/controller/component/component.service';
 import type { Component } from '@/controller/component/type/component.type';
 import type {
@@ -63,6 +64,8 @@ export const DEFAULT_EXERCISE: Partial<Exercise> = {
   isUnilateral: false,
 };
 
+export const EXERCISES_PAGE_SIZE = 20;
+
 export default function ExercisesPage() {
   const { token, role } = useAuthenticatedAuth();
   const {
@@ -82,9 +85,11 @@ export default function ExercisesPage() {
 
   const [exercises, setExercises] = useState<Exercise[]>(allExercises);
   const [filteredExercises, setFilteredExercises] = useState<Exercise[]>([]);
+
+  const [search, setSearch] = useState('');
   const [pagination, setPagination] = useState<PaginationType>({
     page: 1,
-    pageSize: 10,
+    pageSize: EXERCISES_PAGE_SIZE,
     pages: 1,
     total: 0,
   });
@@ -131,6 +136,7 @@ export default function ExercisesPage() {
   useEffect(() => {
     const filter: Partial<Exercise> = {
       ...(selectedComponent?.id && { componentIds: [selectedComponent.id] }),
+      ...(search && { name: search }),
       ...filters,
     };
 
@@ -138,6 +144,7 @@ export default function ExercisesPage() {
       components,
       exercises,
       pagination,
+      search,
       setPagination,
       setFilteredExercises,
     });
@@ -146,6 +153,7 @@ export default function ExercisesPage() {
     exercises.length,
     selectedComponent,
     filters,
+    search,
     pagination.page,
     pagination.pageSize,
     pagination.pages,
@@ -176,6 +184,17 @@ export default function ExercisesPage() {
           bgColor={theme.palette.background.default}
           primaryColor={theme.palette.primary.main}
           gap={screenSize.isReallySmall ? 1.5 : 3.5}
+        />
+      </Box>
+
+      <Box
+        sx={{ py: 2, width: '50%', minWidth: 240, maxWidth: 400, mx: 'auto' }}
+      >
+        <SearchBar
+          placeholder="Search Exercises"
+          value={search}
+          handleSearchChange={(e) => setSearch(e.target.value)}
+          maxWidth="100%"
         />
       </Box>
 

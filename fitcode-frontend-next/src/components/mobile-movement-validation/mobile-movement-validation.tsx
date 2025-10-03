@@ -1,19 +1,26 @@
 'use client';
 
 import type { DrawingUtils, PoseLandmarker } from '@mediapipe/tasks-vision';
-import { Box } from '@mui/material';
+import { Box, Button, Divider, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
+import dayjs from 'dayjs';
 import { useEffect, useRef, useState } from 'react';
 
 import LoadingOverlay from '../loading-overlay/loading-overlay';
 import FpsText from './components/fps-text';
 import MovementValidationHeader from './components/movement-validation-header';
-import RepsCounter from './components/reps-counter';
-import { enableCam, getStatusMessage, loadModel, predictWebcam } from './state';
+import {
+  enableCam,
+  getStatusMessage,
+  predictWebcam,
+  setupVideoAndContex,
+} from './state';
 import { TrackingMethod } from '@/common/enum/tracking-method.enum';
+import { CommonService } from '@/common/service/common.service';
 import type { SetState } from '@/common/type/state.type';
 import { KeypointHistory } from '@/controller/pose-detection/class/keypoint-history';
 import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
+import { POSE_DETECTION_CONSTRAINTS } from '@/controller/pose-detection/const/pose-detection-constrains.const';
 import { STATUS_MESSAGES } from '@/controller/pose-detection/const/status-messages';
 import { ConditionDirection } from '@/controller/pose-detection/enum/condition-detection.enum';
 import { DetectionStatus } from '@/controller/pose-detection/enum/detection-status';
@@ -25,10 +32,13 @@ import { RepDetectionService } from '@/controller/pose-detection/rep-detection.s
 import type { ExerciseDetectionData } from '@/controller/pose-detection/type/exercise-start-condition.type';
 import type { Rep } from '@/controller/pose-detection/type/rep.type';
 import type { RepState } from '@/controller/pose-detection/type/rep-state.type';
+import { getPoseLandmarker } from '@/controller/pose-detection/util/pose-landmarker-loader.util';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 const DEBUG = false;
+
+const commonService = CommonService.instance;
 
 interface MobileMovementValidationProps {
   selectedExercise: TrainingExercise | undefined;
@@ -113,6 +123,13 @@ export default function MobileMovementValidation(
   const statusRef = useRef<DetectionStatus>(DetectionStatus.NOT_FULLY_IN_FRAME);
   const statusMessage = useRef<string>(STATUS_MESSAGES[statusRef.current]);
   const canProceedIntoReadyStateRef = useRef(false); // used for clearing buffer before detecting stillness
+  const stillnessCountdownRef = useRef<Date | null>(null); // countdown to recording start when stillness is detected
+
+  // Model and PoseLandmarker
+  const [model, setModel] = useState<PoseModel>(PoseModel.MEDIAPIPE);
+  const [poseLandmarker, setPoseLandmarker] = useState<PoseLandmarker | null>(
+    null
+  );
 
   // Rep State
   const repStateRef = useRef<RepState>({
@@ -123,12 +140,6 @@ export default function MobileMovementValidation(
   const currentRepRef = useRef<Rep | null>(null);
   const recordedRepsRef = useRef<Rep[]>([]);
 
-  // Model and PoseLandmarker
-  const [model, setModel] = useState<PoseModel>(PoseModel.MEDIAPIPE);
-  const [poseLandmarker, setPoseLandmarker] = useState<PoseLandmarker | null>(
-    null
-  );
-
   // FPS and Error
   const [fps, setFps] = useState<number | null>(null);
   const avgFps = useRef<{ value: number; count: number } | null>(null);
@@ -138,6 +149,8 @@ export default function MobileMovementValidation(
 
   // Helper Refs
   const videoRef = useRef<HTMLVideoElement>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const detectRafRef = useRef<number | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const romCanvasRef = useRef<HTMLCanvasElement>(null);
   const tempoCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -310,6 +323,89 @@ export default function MobileMovementValidation(
     document.body.appendChild(script);
   };
 
+  const startDetectionLoop = () => {
+    const step = async () => {
+      // Bail quickly if we’ve stopped
+      if (statusRef.current === DetectionStatus.STOPPED) return;
+
+      // Run one iteration of your detection
+      await predictWebcam({
+        statusRef,
+        statusMessage,
+        stillnessCountdownRef,
+        canProceedIntoReadyStateRef,
+        repStateRef,
+        model,
+        poseLandmarker,
+        keypointHistory: keypointHistoryRef.current,
+        keypointBuffer,
+        constantKeypointHistory: constantKeypointHistoryRef.current,
+        currentRepRef,
+        recordedRepsRef,
+        videoRef,
+        canvasRef,
+        drawingUtilsRef,
+        canvasCtxRef,
+        prevFrameTimeRef,
+        lastVideoTimeRef,
+        frameCountRef,
+        isMobile: screenSize.isMobile,
+        avgFps,
+        exerciseDetectionData: exerciseDetectionData!,
+        initedFirstFrameInRecordingMode,
+        normDomainRef,
+        romCanvasRef,
+        tempoCanvasRef,
+        theme,
+        centerPosRef,
+        recordingTimestampRef,
+        setFps,
+        finishAiDetection,
+      });
+
+      // Queue next frame
+      detectRafRef.current = requestAnimationFrame(step);
+    };
+
+    // Kick it off
+    detectRafRef.current = requestAnimationFrame(step);
+  };
+
+  const stopCameraAndLoops = () => {
+    if (!setSelectedTrackingMethod && !updateExerciseValues) return;
+
+    // tell your detection loop to stop ASAP
+    statusRef.current = DetectionStatus.STOPPED;
+
+    // cancel *our* rAFs (you already cancel the centering dot rAF elsewhere)
+    if (detectRafRef.current !== null) {
+      cancelAnimationFrame(detectRafRef.current);
+      detectRafRef.current = null;
+    }
+
+    // stop camera tracks
+    const v = videoRef.current;
+    const stream = (v?.srcObject as MediaStream) || mediaStreamRef.current;
+    if (stream) {
+      stream.getTracks().forEach((t) => t.stop());
+      mediaStreamRef.current = null;
+    }
+
+    // fully release the <video> element
+    if (v) {
+      try {
+        v.pause();
+      } catch {}
+      try {
+        (v as any).srcObject = null;
+      } catch {}
+      v.removeAttribute('src');
+      try {
+        v.load();
+      } catch {}
+    }
+  };
+
   const finishAiDetection = async () => {
     statusMessage.current = getStatusMessage(DetectionStatus.STOPPED);
 
@@ -353,26 +449,29 @@ export default function MobileMovementValidation(
         avgIdleTimeMs += rep.idleTimeMs || 0;
       }
 
-      avgTimeAtExtremeMs = Math.max(
-        Math.round(avgTimeAtExtremeMs / 1000 / recordedRepsRef.current.length),
-        0
+      const step = 0.2; // round to 0.2
+
+      const avgTimeToExtremeS = commonService.number.roundToStep(
+        Math.max(avgTimeToExtremeMs / 1000 / recordedRepsRef.current.length, 0),
+        step
       );
-      avgTimeToExtremeMs = Math.max(
-        Math.round(avgTimeToExtremeMs / 1000 / recordedRepsRef.current.length),
-        0
+      const avgTimeAtExtremeS = commonService.number.roundToStep(
+        Math.max(avgTimeAtExtremeMs / 1000 / recordedRepsRef.current.length, 0),
+        step
       );
-      avgTimeFromExtremeToEndMs = Math.max(
-        Math.round(
-          avgTimeFromExtremeToEndMs / 1000 / recordedRepsRef.current.length
+      const avgTimeFromExtremeToEndS = commonService.number.roundToStep(
+        Math.max(
+          avgTimeFromExtremeToEndMs / 1000 / recordedRepsRef.current.length,
+          0
         ),
-        0
+        step
       );
-      avgIdleTimeMs = Math.max(
-        Math.round(avgIdleTimeMs / 1000 / recordedRepsRef.current.length),
-        0
+      const avgIdleTimeS = commonService.number.roundToStep(
+        Math.max(avgIdleTimeMs / 1000 / recordedRepsRef.current.length, 0),
+        step
       );
 
-      const tempoString = `${avgTimeToExtremeMs}${avgTimeAtExtremeMs}${avgTimeFromExtremeToEndMs}${avgIdleTimeMs}`;
+      const tempoString = `${avgTimeToExtremeS}${avgTimeAtExtremeS}${avgTimeFromExtremeToEndS}${avgIdleTimeS}`;
 
       let tempo = 2010;
 
@@ -385,6 +484,7 @@ export default function MobileMovementValidation(
         tempo = parseInt(tempoString);
 
       setSelectedTrackingMethod(TrackingMethod.MANUAL);
+      stopCameraAndLoops();
       updateExerciseValues(recordedRepsRef.current.length, tempo);
     }
   };
@@ -394,62 +494,59 @@ export default function MobileMovementValidation(
   }, [statusRef.current]);
 
   useEffect(() => {
-    if (canvasRef.current) {
+    if (canvasRef.current)
       canvasCtxRef.current = canvasRef.current.getContext('2d');
-    }
 
-    loadModel({
+    const loadModel = async () => {
+      const lm = await getPoseLandmarker();
+      setPoseLandmarker(lm);
+    };
+
+    loadModel();
+
+    setupVideoAndContex({
       videoRef,
       canvasRef,
       drawingUtilsRef,
-      setPoseLandmarker,
     });
-  }, []);
+  }, [canvasRef]);
+
+  useEffect(() => {
+    if (selectedTrackingMethod !== TrackingMethod.CAMERA) {
+      stopCameraAndLoops();
+    }
+  }, [selectedTrackingMethod]);
 
   useEffect(() => {
     if (!exerciseDetectionData) return;
-
     if (statusRef.current === DetectionStatus.STOPPED) return;
+    if (!poseLandmarker) return;
+
+    let cancelled = false;
 
     enableCam({
       poseLandmarker,
       videoRef,
-      predictWebcam: async () =>
-        await predictWebcam({
-          statusRef,
-          statusMessage,
-          canProceedIntoReadyStateRef,
-          repStateRef,
-          model,
-          poseLandmarker,
-          keypointHistory: keypointHistoryRef.current,
-          keypointBuffer,
-          constantKeypointHistory: constantKeypointHistoryRef.current,
-          currentRepRef,
-          recordedRepsRef,
-          videoRef,
-          canvasRef,
-          drawingUtilsRef,
-          canvasCtxRef,
-          prevFrameTimeRef,
-          lastVideoTimeRef,
-          frameCountRef,
-          isMobile: screenSize.isMobile,
-          avgFps,
-          exerciseDetectionData: exerciseDetectionData,
-          initedFirstFrameInRecordingMode,
-          normDomainRef,
-          romCanvasRef,
-          tempoCanvasRef,
-          theme,
-          centerPosRef,
-          recordingTimestampRef,
-          setFps,
-          finishAiDetection,
-        }),
+      onPlaying: () => {
+        if (!cancelled) {
+          // start the rAF loop
+          startDetectionLoop();
+        }
+      },
       setError,
     });
-  }, [poseLandmarker]);
+
+    // remember the stream for hard stop
+    const v = videoRef.current;
+    if (v && v.srcObject && !mediaStreamRef.current) {
+      mediaStreamRef.current = v.srcObject as MediaStream;
+    }
+
+    return () => {
+      cancelled = true;
+      stopCameraAndLoops(); // stops rAF + tracks + releases <video>
+    };
+  }, [poseLandmarker, videoRef, canvasRef, canvasCtxRef, drawingUtilsRef]); // fires on mount and when model becomes ready
 
   if (!exerciseDetectionData) {
     return <div>No pose detection logic for this exercise yet</div>;
@@ -464,11 +561,56 @@ export default function MobileMovementValidation(
         position: 'relative',
       }}
     >
-      {!poseLandmarker && <LoadingOverlay title="Loading model..." />}
+      {!poseLandmarker && (
+        <Box
+          width="100%"
+          display="flex"
+          flexDirection="column"
+          sx={{
+            position: 'relative',
+          }}
+        >
+          <LoadingOverlay title="Loading model...">
+            <Button
+              variant="contained"
+              sx={{
+                position: 'fixed',
+                bottom: 16,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                mx: 'auto',
+                zIndex: 100000,
+              }}
+              onClick={() => {
+                stopCameraAndLoops();
+                setSelectedTrackingMethod?.(TrackingMethod.MANUAL);
+              }}
+            >
+              Cancel
+            </Button>
+          </LoadingOverlay>
+        </Box>
+      )}
 
       {poseLandmarker && (
         <MovementValidationHeader
+          statusRef={statusRef}
           statusMessage={error ? `${error}` : statusMessage.current}
+          countdownValue={
+            statusRef.current === DetectionStatus.NOT_STILL &&
+            stillnessCountdownRef.current !== null
+              ? Math.max(
+                  dayjs(stillnessCountdownRef.current)
+                    .add(
+                      POSE_DETECTION_CONSTRAINTS.STILLNESS_COUNTDOWN_DURATION_S +
+                        1,
+                      'seconds'
+                    )
+                    .diff(dayjs(), 'second'),
+                  0
+                )
+              : null
+          }
         />
       )}
 
@@ -487,7 +629,7 @@ export default function MobileMovementValidation(
       >
         <Box width="100%" display="flex" justifyContent="space-between" px={1}>
           <FpsText fps={fps} avgFps={avgFps.current} />
-          <RepsCounter reps={recordedRepsRef.current.length} />
+          {/* <RepsCounter reps={recordedRepsRef.current.length} /> */}
         </Box>
       </Box>
 
@@ -515,17 +657,134 @@ export default function MobileMovementValidation(
           style={{ position: 'absolute', left: 0, top: 0 }}
         />
 
-        <canvas
-          ref={tempoCanvasRef}
+        <Box
+          width={'100%'}
+          height={140}
+          display="flex"
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            zIndex: 1000,
+          }}
+        >
+          <Box
+            width={160}
+            height="100%"
+            display="flex"
+            flexDirection="column"
+            justifyContent="flex-end"
+            sx={{
+              position: 'relative',
+            }}
+          >
+            <Box
+              width="100%"
+              height="50%"
+              display="flex"
+              flexDirection="column"
+              justifyContent="center"
+              alignItems="center"
+              sx={{
+                backgroundColor: theme.palette.background.dark,
+              }}
+            >
+              <Typography
+                fontSize={8}
+                lineHeight={1.2}
+                textAlign="center"
+                sx={{
+                  color: theme.palette.background.lightBorder,
+                }}
+              >
+                Rep
+              </Typography>
+              <Typography
+                fontSize={36}
+                lineHeight={1.2}
+                fontWeight="bold"
+                textAlign="center"
+              >
+                {recordedRepsRef.current.length}
+              </Typography>
+            </Box>
+            <Divider
+              sx={{ backgroundColor: theme.palette.background.lightBorder }}
+            />
+            <Box
+              width="100%"
+              height="50%"
+              display="flex"
+              flexDirection="column"
+              justifyContent="center"
+              alignItems="center"
+              sx={{
+                backgroundColor: theme.palette.background.dark,
+              }}
+            >
+              <Typography
+                fontSize={8}
+                lineHeight={1.2}
+                textAlign="center"
+                sx={{
+                  color: theme.palette.background.lightBorder,
+                }}
+              >
+                Tempo
+              </Typography>
+              <Typography
+                fontSize={36}
+                lineHeight={1.2}
+                fontWeight="bold"
+                textAlign="center"
+              >
+                {recordedRepsRef.current.length
+                  ? `${recordedRepsRef.current[recordedRepsRef.current.length - 1]?.timeToExtremeMs !== undefined ? recordedRepsRef.current[recordedRepsRef.current.length - 1].timeToExtremeMs! / 1000 : '-'} - ${recordedRepsRef.current[recordedRepsRef.current.length - 1]?.timeFromExtremeToEndMs !== undefined ? recordedRepsRef.current[recordedRepsRef.current.length - 1].timeFromExtremeToEndMs! / 1000 : '-'}`
+                  : '- : -'}
+              </Typography>
+            </Box>
+          </Box>
+          {/* <BarChart
+            height={100}
+            dataset={recordedRepsRef.current.map((rep, i) => {
+              return {
+                id: `rep_${i + 1}`,
+                timeToExtremum: rep.timeToExtremeMs,
+                timeFromExtremumToEnd: rep.timeFromExtremeToEndMs,
+              };
+            })}
+            grid={{ horizontal: true }}
+            series={[
+              { dataKey: 'timeToExtremum', stack: 'timeFromExtremumToEnd' },
+            ]}
+            margin={{ left: 0, top: 0, right: 0, bottom: 0 }}
+            sx={{
+              mt: 2,
+            }}
+          /> */}
+          <canvas
+            ref={tempoCanvasRef}
+            style={{
+              height: 140,
+              width: 'calc(100% - 140px)',
+              zIndex: 1000,
+              backgroundColor: theme.palette.background.default,
+              opacity: 0.5,
+            }}
+          />
+        </Box>
+
+        {/* <canvas
+          ref={romCanvasRef}
           style={{
             width: '100%',
             height: '50%',
             position: 'absolute',
             left: 0,
-            top: 0, // top half
+            bottom: 0, // bottom half
             zIndex: 1000,
           }}
-        />
+        /> */}
 
         {statusRef.current !== DetectionStatus.STOPPED && (
           <>
@@ -564,17 +823,22 @@ export default function MobileMovementValidation(
           </>
         )}
 
-        <canvas
-          ref={romCanvasRef}
-          style={{
-            width: '100%',
-            height: '50%',
-            position: 'absolute',
-            left: 0,
-            bottom: 0, // bottom half
-            zIndex: 1000,
+        <Button
+          variant="contained"
+          sx={{
+            position: 'fixed',
+            bottom: 16,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            mx: 'auto',
+            zIndex: 100000,
           }}
-        />
+          onClick={async () => {
+            await finishAiDetection();
+          }}
+        >
+          Finish
+        </Button>
 
         {/* 🔧 Optional floating debug button (only shows if you want) */}
         {DEBUG && (
