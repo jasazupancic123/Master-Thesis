@@ -61,6 +61,7 @@ export const DEFAULT_EXERCISE: Partial<Exercise> = {
   name: '',
   componentIds: [],
   isUnilateral: false,
+  disabled: false,
 };
 
 export default function ExercisesPage() {
