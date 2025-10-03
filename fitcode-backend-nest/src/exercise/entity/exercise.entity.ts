@@ -66,6 +66,11 @@ export class Exercise extends IntersectionType(BaseEntity, ExerciseAttributes) {
   @IsBoolean()
   @IsOptional()
   @Expose()
-  @ApiProperty()
+  @ApiPropertyOptional()
   isUnilateral: boolean; // exercise can be performed with both sides of the body separately, like a single arm row
+
+  @IsBoolean()
+  @Expose()
+  @ApiProperty()
+  disabled: boolean; // exercise is disabled and cannot be used for new programs, but existing programs are not affected
 }

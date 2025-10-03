@@ -43,6 +43,7 @@ export class ExerciseRepository extends FirestoreRepository<Exercise> {
         instruction: input.instruction || '',
         componentIds: input.componentIds,
         isUnilateral: input.isUnilateral || false,
+        disabled: input.disabled || false,
         categories: input.categories || [],
         muscleValues: input.muscleValues || [],
         prescriptions: input.prescriptions || [],
@@ -67,12 +68,7 @@ export class ExerciseRepository extends FirestoreRepository<Exercise> {
   }
 
   async delete(exerciseId: string) {
-    // soft delete
-    const query = this.firebase.buildUpdateQuery<Exercise>({
-      deletedAt: new Date(),
-    });
-
-    await this.doc(exerciseId).update(query);
+    await this.doc(exerciseId).delete();
   }
 
   slug(name: string, institutionTitle?: string): string {
