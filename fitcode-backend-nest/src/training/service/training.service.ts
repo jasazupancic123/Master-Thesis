@@ -741,7 +741,10 @@ export class TrainingService implements Permission<Training, Institution> {
     );
 
     // update report
-    await this.trainingReportService.updateReport(userId, training);
+    await this.trainingReportService.updateReport(userId, training, {
+      photoURLs: [input.photoUrl, input.photoUrlR].filter(Boolean),
+    });
+
     return workload;
   }
 
@@ -768,7 +771,10 @@ export class TrainingService implements Permission<Training, Institution> {
       input,
     );
 
-    await this.trainingReportService.updateReport(userId, training);
+    await this.trainingReportService.updateReport(userId, training, {
+      photoURLs: [input.photoUrl, input.photoUrlR].filter(Boolean),
+    });
+
     return workload;
   }
 
@@ -805,7 +811,7 @@ export class TrainingService implements Permission<Training, Institution> {
       training.institution,
     );
 
-    const report = await this.trainingReportService.findOneById({
+    const report = await this.trainingReportService.findById({
       trainingId,
       userId: athlete.uid,
     });

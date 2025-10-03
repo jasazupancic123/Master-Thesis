@@ -85,7 +85,7 @@ export class TrainingController {
       skipInstitution: true,
     });
 
-    const report = await this.trainingReportService.findOneById(ref);
+    const report = await this.trainingReportService.findById(ref);
     return { training, report };
   }
 
