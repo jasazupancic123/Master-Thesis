@@ -45,7 +45,7 @@ export type TrainingReport = TrainingStats &
     realization: number;
 
     muscleValues: ExerciseMuscleValue[];
-    photoURL?: string; // "best" photo of the training session
+    photoURLs?: string[]; // "best" photo(s) of the training session
     timeVol?: number; // total time prescribed (in seconds)
     distVol?: number; // total distance prescribed (in meters)
     recDist?: number; // total recovery distance prescribed (in meters)

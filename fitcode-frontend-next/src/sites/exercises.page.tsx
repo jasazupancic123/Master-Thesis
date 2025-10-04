@@ -62,6 +62,7 @@ export const DEFAULT_EXERCISE: Partial<Exercise> = {
   name: '',
   componentIds: [],
   isUnilateral: false,
+  disabled: false,
 };
 
 export const EXERCISES_PAGE_SIZE = 20;

@@ -4,7 +4,7 @@ import InitTrainerProvider from '@/store/init-trainer-provider';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <AnimationMinDurationGate minMs={3000}>
+    <AnimationMinDurationGate>
       <InitTrainerProvider>{children}</InitTrainerProvider>
     </AnimationMinDurationGate>
   );

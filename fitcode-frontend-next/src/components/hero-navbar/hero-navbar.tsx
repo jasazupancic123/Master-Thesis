@@ -195,6 +195,11 @@ export default function HeroNavbar(props: HeroNavbarProps) {
                           key={item.id}
                           sx={{ p: 1, zIndex: 1000 }}
                           onClick={() => {
+                            if (
+                              item.id === SIGN_OUT_LINK_ID &&
+                              auth.status === 'authenticated'
+                            )
+                              auth.logout();
                             router.push(item.href);
                           }}
                         >

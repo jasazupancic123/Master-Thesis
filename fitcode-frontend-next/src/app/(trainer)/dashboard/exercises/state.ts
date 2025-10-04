@@ -114,6 +114,7 @@ export async function handleAddExercise(
         name: input.name!,
         componentIds: input.componentIds!,
         isUnilateral: input.isUnilateral || false,
+        disabled: input.disabled || false,
         imageUrl: input.imageUrl,
         videoUrl: input.videoUrl,
         instruction: input.instruction,
@@ -197,6 +198,7 @@ export async function handleUpdateExercise(
         imageUrl: input.imageUrl,
         videoUrl: input.videoUrl,
         instruction: input.instruction,
+        disabled: input.disabled || false,
         categories: input.categories || [],
         equipment: input.equipment || [],
         prescriptions: input.prescriptions || [],
@@ -265,6 +267,9 @@ export async function handleExerciseCsvFileUpload(
     error: (e: Error) => toast.error(`Failed to parse CSV file: ${e.message}`),
     transform: (value, column) => {
       switch (column) {
+        case 'disabled':
+          return value.toLowerCase() === 'true';
+        case 'name':
         case 'imageUrl':
         case 'videoUrl':
         case 'instruction':
@@ -303,6 +308,7 @@ export async function handleExerciseCsvFileUpload(
           )
             ? true
             : false,
+          disabled: e.disabled || false,
           imageUrl: e.imageUrl,
           videoUrl: e.videoUrl,
           instruction: e.instruction,

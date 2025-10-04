@@ -46,6 +46,7 @@ export class ApiUtil {
       ...(body ? { body: JSON.stringify(body) } : {}),
       ...(formData ? { body: formData } : {}),
       ...(cacheTimeInMs ? { next: { revalidate: cacheTimeInMs } } : {}),
+      credentials: 'include',
     });
 
     if (!res.ok) {

@@ -4,16 +4,13 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { motion, type Variants } from 'framer-motion';
 import Image from 'next/image';
-import { redirect, RedirectType } from 'next/navigation';
 import React from 'react';
 
 import { HERO_NAVBAR_HEIGHT } from './state';
 import { theme } from '@/app/style';
-import { SIGN_IN_REDIRECT_MAPPER } from '@/common/constant/navigation.constant';
 import type { ChildrenProps } from '@/common/type/props.type';
 import HeroNavbar from '@/components/hero-navbar/hero-navbar';
 import Logo from '@/components/logo/logo';
-import { useAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 export type AppPageProps = ChildrenProps & {
@@ -23,16 +20,8 @@ export type AppPageProps = ChildrenProps & {
 };
 
 export default function Home() {
-  const auth = useAuth();
   const screenSize = useScreenSize();
-  // const prefersReducedMotion = useReducedMotion();
-
-  if (auth.status === 'authenticated') {
-    redirect(SIGN_IN_REDIRECT_MAPPER[auth.role].href, RedirectType.replace);
-  }
-
   const ease = [0.22, 0.3, 0.3, 1] as const;
-
   const prefersReducedMotion = false; // if you use useReducedMotion(), keep the ternaries below
 
   const logoVariants: Variants = {

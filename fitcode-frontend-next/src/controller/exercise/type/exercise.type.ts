@@ -10,6 +10,7 @@ export type Exercise = BaseEntity &
     componentIds: string[];
     institutionId?: string;
     isUnilateral: boolean;
+    disabled: boolean;
     imageUrl?: string;
     videoUrl?: string;
     instruction?: string;
@@ -41,6 +42,7 @@ export type CreateExercise = Pick<
   | 'name'
   | 'componentIds'
   | 'isUnilateral'
+  | 'disabled'
   | 'imageUrl'
   | 'videoUrl'
   | 'instruction'

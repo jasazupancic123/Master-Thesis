@@ -1,30 +1,20 @@
 import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
 
-import { FIREBASE_AUTH_ID_TOKEN } from '../config/firebase.config';
-import { LINK_SIGN_IN } from '../constant/navigation.constant';
+import { AuthController } from '@/controller/auth/auth.controller';
 
 export async function getAuthIdTokenFromCookies(): Promise<string | undefined> {
-  const cookieStore = await cookies();
-  const payload = cookieStore.get(FIREBASE_AUTH_ID_TOKEN)?.value;
-  if (!payload) return undefined;
+  const controller = AuthController.getInstance('');
 
-  let value = '';
-  let expiresAt = 0;
+  const cookieStore = await cookies();
+  const idToken = cookieStore.get('idToken')?.value;
+  const refreshToken = cookieStore.get('refreshToken')?.value;
 
   try {
-    const parsed = JSON.parse(payload);
-    value = parsed.value;
-    expiresAt = parsed.expiresAt;
-  } catch (error) {
-    console.error('Error parsing auth token from cookies:', error);
+    const response = await controller.login(idToken!, refreshToken!);
+    return response.idToken;
+  } catch (e) {
+    console.error('Error refreshing token:', e);
+    await controller.logout();
     return undefined;
   }
-
-  if (Date.now() > expiresAt) {
-    console.warn('Auth token has expired');
-    return redirect(LINK_SIGN_IN.href);
-  }
-
-  return value;
 }
