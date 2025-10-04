@@ -2,7 +2,7 @@ import type { ExerciseSet } from './exercise-set.type';
 import type { ColorEntity, IdEntity } from '@/common/type/entity.type';
 import type { Attribute } from '@/controller/attribute/type/attribute.type';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
-import { Rep } from '@/controller/pose-detection/type/rep.type';
+import { Rep, RepInfo } from '@/controller/pose-detection/type/rep.type';
 
 export type TrainingExercise = IdEntity &
   ColorEntity & {
@@ -22,7 +22,7 @@ export type RepImage = {
 export type TrainingExerciseRecording = TrainingExercise & {
   recordedSets?: {
     setIndex: number;
-    reps: Rep[];
+    reps: RepInfo[];
     images: RepImage[];
   }[];
 };

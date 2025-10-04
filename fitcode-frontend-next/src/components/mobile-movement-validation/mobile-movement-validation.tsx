@@ -30,7 +30,7 @@ import { PoseModel } from '@/controller/pose-detection/enum/pose-model.enum';
 import { RepStatus } from '@/controller/pose-detection/enum/rep-state';
 import { RepDetectionService } from '@/controller/pose-detection/rep-detection.service';
 import type { ExerciseDetectionData } from '@/controller/pose-detection/type/exercise-start-condition.type';
-import type { Rep } from '@/controller/pose-detection/type/rep.type';
+import type { Rep, RepInfo } from '@/controller/pose-detection/type/rep.type';
 import type { RepState } from '@/controller/pose-detection/type/rep-state.type';
 import { getPoseLandmarker } from '@/controller/pose-detection/util/pose-landmarker-loader.util';
 import type { TrainingExerciseRecording } from '@/controller/training/type/training-exercise.type';
@@ -503,7 +503,22 @@ export default function MobileMovementValidation(
         updatedExercise = {
           ...selectedExercise,
           recordedSets: !selectedExercise.recordedSets
-            ? [{ setIndex, images, reps: recordedRepsRef.current }]
+            ? [
+                {
+                  setIndex,
+                  images,
+                  reps: recordedRepsRef.current.map((rep) => {
+                    return {
+                      repNumber: rep.repNumber,
+                      idleTimeMs: rep.idleTimeMs,
+                      timeToExtremeMs: rep.timeToExtremeMs,
+                      timeAtExtremeMs: rep.timeAtExtremeMs,
+                      timeFromExtremeToEndMs: rep.timeFromExtremeToEndMs,
+                      durationMs: rep.durationMs,
+                    } as RepInfo;
+                  }),
+                },
+              ]
             : [
                 ...selectedExercise.recordedSets.map(
                   (si) => si.setIndex !== setIndex
@@ -511,7 +526,16 @@ export default function MobileMovementValidation(
                 {
                   setIndex,
                   images,
-                  reps: recordedRepsRef.current,
+                  reps: recordedRepsRef.current.map((rep) => {
+                    return {
+                      repNumber: rep.repNumber,
+                      idleTimeMs: rep.idleTimeMs,
+                      timeToExtremeMs: rep.timeToExtremeMs,
+                      timeAtExtremeMs: rep.timeAtExtremeMs,
+                      timeFromExtremeToEndMs: rep.timeFromExtremeToEndMs,
+                      durationMs: rep.durationMs,
+                    } as RepInfo;
+                  }),
                 },
               ],
         } as TrainingExerciseRecording;

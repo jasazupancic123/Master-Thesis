@@ -22,7 +22,7 @@ import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import ImageGallery from './image-gallery';
 import { TrainingExerciseRecording } from '@/controller/training/type/training-exercise.type';
-import TrainingInProgressExerciseCharts from './training-in-progress-exercise-charts';
+import TrainingInProgressTempoChart from './training-in-progress-exercise-charts';
 
 export default function TrainingInProgressExerciseCard() {
   const theme = useTheme();
@@ -550,14 +550,22 @@ export default function TrainingInProgressExerciseCard() {
             </Box>
           </Box>
         </Box>
-        <ImageGallery
-          images={
-            (selectedExercise.recordedSets || []).find(
-              (set) => set.setIndex === setIndex
-            )?.images || []
-          }
-        />
-        <TrainingInProgressExerciseCharts selectedExercise={selectedExercise} />
+        <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
+          {setIndex !== undefined && (
+            <TrainingInProgressTempoChart
+              selectedExercise={selectedExercise}
+              setIndex={setIndex}
+              width={Math.min(window.innerWidth * 0.95, 620)} // max 620px
+            />
+          )}
+          <ImageGallery
+            images={
+              (selectedExercise.recordedSets || []).find(
+                (set) => set.setIndex === setIndex
+              )?.images || []
+            }
+          />
+        </Box>
       </Box>
     </SwipeableBox>
   );
