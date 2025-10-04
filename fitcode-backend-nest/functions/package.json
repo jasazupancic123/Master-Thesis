@@ -7,7 +7,7 @@
     "serve": "npm run build && firebase emulators:start --only functions",
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
-    "deploy": "firebase deploy --only functions",
+    "deploy:prod": "firebase deploy --project blindoff-web-app --only functions",
     "logs": "firebase functions:log"
   },
   "engines": {
