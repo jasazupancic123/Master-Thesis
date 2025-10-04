@@ -7,7 +7,6 @@ import { AppModule } from '@src/app.module';
 import type { Attribute } from '@src/attribute/entity/attribute.entity';
 import { generateAttributeStub } from '@src/attribute/mock/attribute.stub';
 import { generateAttributeValueStub } from '@src/attribute/mock/attribute-value.stub';
-import { AttributeService } from '@src/attribute/service/attribute.service';
 import { AttributeType } from '@src/common/enum/attribute-type.enum';
 import type { TestInstitution } from '@src/common/type/entity.type';
 import {
@@ -24,14 +23,15 @@ import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseAttributeService } from '@src/exercise/service/exercise-attribute.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
+import { TestDbService } from '@src/test-db/test-db.service';
 
 describe('Create Exercise (e2e)', () => {
   let app: INestApplication;
   let firebase: FirebaseService;
-  let attributeService: AttributeService;
   let componentService: ComponentService;
   let institutionService: InstitutionService;
   let exerciseAttributeService: ExerciseAttributeService;
+  let db: TestDbService;
 
   let root: Component;
   let leaf: Component;
@@ -45,8 +45,8 @@ describe('Create Exercise (e2e)', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
 
+    db = moduleFixture.get(TestDbService);
     firebase = moduleFixture.get(FirebaseService);
-    attributeService = moduleFixture.get(AttributeService);
     componentService = moduleFixture.get(ComponentService);
     institutionService = moduleFixture.get(InstitutionService);
     exerciseAttributeService = moduleFixture.get(ExerciseAttributeService);
@@ -347,10 +347,10 @@ describe('Create Exercise (e2e)', () => {
     );
 
     const exercise = generateExerciseStub({ componentIds: [component.id] });
-    exerciseAttributeService.getValues = jest.fn().mockReturnValue([]);
+    exerciseAttributeService.getValues = jest.fn().mockReturnValueOnce([]);
     exerciseAttributeService.getAttributes = jest
       .fn()
-      .mockReturnValue([attribute]);
+      .mockReturnValueOnce([attribute]);
 
     const response = await request(app.getHttpServer())
       .post('/exercise')
@@ -364,6 +364,60 @@ describe('Create Exercise (e2e)', () => {
 
     await Promise.all([deleteDoc(firebase, 'COMPONENT', component.id)]);
   });
+
+  it('should create disabled exercise for an admin user', async () => {
+    const exercise = generateExerciseStub({
+      name: 'Disabled Exercise',
+      componentIds: [leaf.id],
+      videoUrl: 'http://example.com/video',
+      imageUrl: 'http://example.com/image',
+      instruction: 'This is a disabled exercise.',
+      disabled: true,
+    });
+
+    exerciseAttributeService.getValues = jest.fn().mockReturnValueOnce([]);
+    exerciseAttributeService.getAttributes = jest.fn().mockReturnValueOnce([]);
+
+    const response = await request(app.getHttpServer())
+      .post('/exercise')
+      .set('Authorization', `Bearer ${global.admin.token}`)
+      .send(exercise);
+
+    expect(response.status).toBe(201);
+    expect(response.body.id).toBe(`disabled-exercise`);
+    expect(response.body.name).toBe(exercise.name);
+    expect(response.body.ownerId).toBe(GLOBAL_EXERCISE_OWNER); // Should be global owner
+    expect(response.body.disabled).toBe(true);
+
+    const fetched = await db.exercises.get(response.body.id);
+    expect(fetched?.disabled).toBe(true);
+
+    await db.exercises.delete(response.body.id);
+  });
+
+  it.each([['manager', global.manager.token]])(
+    'should not allow %s to create disabled exercise',
+    async (role, token) => {
+      const exercise = generateExerciseStub({
+        name: 'Disabled Exercise',
+        componentIds: [leaf.id],
+        videoUrl: 'http://example.com/video',
+        imageUrl: 'http://example.com/image',
+        instruction: 'This is a disabled exercise.',
+        disabled: true,
+      });
+
+      const response = await request(app.getHttpServer())
+        .post('/exercise')
+        .set('Authorization', `Bearer ${token}`)
+        .send(exercise);
+
+      expect(response.status).toBe(401);
+      expect(response.body.message).toBe(
+        'You cannot create disabled exercises',
+      );
+    },
+  );
 
   /* it('should not create more exercises than the limit for user', async () => {
     await firebaseService.deleteCollection(FirestoreCollection.EXERCISE);

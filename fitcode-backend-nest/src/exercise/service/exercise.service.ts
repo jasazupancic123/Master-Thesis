@@ -50,15 +50,16 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     private readonly componentService: Wrapper<ComponentService>,
   ) {}
 
-  async findAllGlobal(filter?: Record<string, string>) {
-    return await this.findAllBy('ownerId', GLOBAL_EXERCISE_OWNER, filter);
+  async findAllGlobal(user: User, filter?: Record<string, string>) {
+    return await this.findAllBy('ownerId', GLOBAL_EXERCISE_OWNER, user, filter);
   }
 
   async findAllByInstitution(
+    user: User,
     institutionId: string,
     filter?: Record<string, string>,
   ) {
-    return await this.findAllBy('institutionId', institutionId, filter);
+    return await this.findAllBy('institutionId', institutionId, user, filter);
   }
 
   async getAll(ids?: string[]): Promise<Exercise[]> {
@@ -103,6 +104,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
   async findAllBy(
     key: 'ownerId' | 'institutionId',
     userOrInstitutionId: string, // either global or institution id
+    user: User,
     filter?: Record<string, string>,
   ): Promise<Exercise[]> {
     const components = await this.componentService.findAllFlat();
@@ -111,6 +113,10 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     let query = this.repository
       .collection()
       .where(key, '==', userOrInstitutionId);
+
+    // if admin, return all exercises, else only non-disabled
+    if (!this.firebaseService.isAdmin(user))
+      query = query.where('disabled', '==', false);
 
     if (filter && !this.commonService.object.isEmpty(filter)) {
       if (filter.componentIds)
@@ -175,6 +181,9 @@ export class ExerciseService implements Permission<Exercise, Institution> {
         'You are not allowed to create exercises',
       );
 
+    if (data.disabled && !isAdmin)
+      throw new UnauthorizedException('You cannot create disabled exercises');
+
     const isUnilateral = data.isUnilateral || false;
     this.exerciseAttributeService.validate(data, { components });
 
@@ -212,6 +221,9 @@ export class ExerciseService implements Permission<Exercise, Institution> {
       throw new UnauthorizedException(
         'You are not allowed to create exercises',
       );
+
+    if (isManager && exercises.some((e) => e.disabled))
+      throw new UnauthorizedException('You cannot create disabled exercises');
 
     const errors: ValidateRowError<Exercise>[] = [];
     const exercisesToCreate: CreateExerciseDto[] = [];
@@ -251,6 +263,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
         institutionId: institution?.id,
         componentIds: e.componentIds,
         isUnilateral: e.isUnilateral,
+        disabled: e.disabled || false,
         videoUrl: e.videoUrl,
         imageUrl: e.imageUrl,
         instruction: e.instruction || '',

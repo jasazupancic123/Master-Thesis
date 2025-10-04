@@ -2,14 +2,13 @@ import { endOfDay, startOfDay, subDays } from 'date-fns';
 
 import { AthleteProvider } from './athlete.provider';
 import { AthleteMainProvider } from './main.provider';
+import { LOADING_ANIMATION_MIN_DURATION_MS } from '@/common/constant/loading.constant';
 import { isAthlete } from '@/common/firebase/firebase-auth.util';
 import type { ChildrenProps } from '@/common/type/props.type';
 import { getAuthIdTokenFromCookies } from '@/common/util/auth.util';
 import Alert from '@/components/alert/alert';
 import { Controller } from '@/controller/controller';
 import { TrainingService } from '@/controller/training/training.service';
-
-const MIN_LOADING_MS = 3000;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -26,7 +25,7 @@ export default async function InitAthleteProvider({ children }: ChildrenProps) {
 
   const [data] = await Promise.all([
     controller.app.init(),
-    sleep(MIN_LOADING_MS),
+    sleep(LOADING_ANIMATION_MIN_DURATION_MS),
   ]);
 
   let [trainings, reports] = await Promise.all([

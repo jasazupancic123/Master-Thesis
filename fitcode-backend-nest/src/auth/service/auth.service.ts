@@ -5,6 +5,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { CookieOptions, Response } from 'express';
 import {
   UserImportRecord,
   UserImportResult,
@@ -13,23 +15,80 @@ import {
 import { v4 } from 'uuid';
 
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
+import { CommonService } from '@src/common/service/common.service';
 import { User } from '@src/common/type/firebase-auth.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
+import { Environment } from '@src/config/environment-validation-schema';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateCustomClaimsDto } from './dto/custom-claims.dto';
-import { FilterUserQueryDto } from './dto/filter-user-query.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import {
+  ID_TOKEN_COOKIE_NAME,
+  REFRESH_TOKEN_COOKIE_NAME,
+} from '../constant/cookie.constant';
+import { CreateUserDto } from '../dto/create-user.dto';
+import { UpdateCustomClaimsDto } from '../dto/custom-claims.dto';
+import { FilterUserQueryDto } from '../dto/filter-user-query.dto';
+import { AuthTokensDto } from '../dto/login.dto';
+import { UpdateUserDto } from '../dto/update-user.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
+    private readonly config: ConfigService<Environment>,
+    private readonly commonService: CommonService,
     private readonly firebase: FirebaseService,
     @Inject(forwardRef(() => InstitutionService))
     private readonly institutionService: Wrapper<InstitutionService>,
   ) {}
+
+  async login(
+    idToken: string,
+    refreshToken: string,
+    res: Response,
+  ): Promise<AuthTokensDto> {
+    try {
+      await this.verify(idToken);
+    } catch {
+      const refreshed = await this.refreshIdToken(refreshToken);
+      if (!refreshed) throw new ForbiddenException('Invalid session');
+
+      idToken = refreshed.id_token;
+      refreshToken = refreshed.refresh_token;
+    }
+
+    this.setCredentialsCookies(idToken, refreshToken, res);
+    return { idToken, refreshToken };
+  }
+
+  async logout(res: Response) {
+    res.clearCookie(ID_TOKEN_COOKIE_NAME);
+    res.clearCookie(REFRESH_TOKEN_COOKIE_NAME);
+  }
+
+  async verify(idToken: string): Promise<User> {
+    const decoded = await this.firebase.auth.verifyIdToken(idToken);
+    const user = (await this.firebase.auth.getUser(decoded.uid)) as User;
+
+    if (!user) throw new NotFoundException('User not found');
+    return user;
+  }
+
+  async refresh(refreshToken: string, res: Response): Promise<AuthTokensDto> {
+    const refreshed = await this.refreshIdToken(refreshToken);
+    if (!refreshed) throw new ForbiddenException('Invalid session');
+
+    this.setCredentialsCookies(
+      refreshed.id_token,
+      refreshed.refresh_token,
+      res,
+    );
+
+    return {
+      idToken: refreshed.id_token,
+      refreshToken: refreshed.refresh_token,
+    };
+  }
 
   async findOneBy(key: 'id' | 'email', value: string): Promise<User | null> {
     try {
@@ -208,5 +267,61 @@ export class AuthService {
     }
 
     return false;
+  }
+
+  private async refreshIdToken(refreshToken: string): Promise<{
+    id_token: string;
+    refresh_token: string;
+    expires_in: string;
+  } | null> {
+    const apiKey = this.config.get('FIREBASE_API_KEY');
+    const isEmulator = this.config.get('FIREBASE_AUTH_EMULATOR_HOST')
+      ? true
+      : false;
+
+    const url = isEmulator
+      ? 'http://localhost:9099/securetoken.googleapis.com/v1/token?key=fake-api-key'
+      : `https://securetoken.googleapis.com/v1/token?key=${apiKey}`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken,
+      }),
+    });
+
+    if (!response.ok) return null;
+    return response.json(); // contains new id_token, refresh_token, expires_in, etc.
+  }
+
+  /**
+   * Note - same site on dev and prod is 'strict' because backend and frontend
+   * are on the same domain (localhost and blindoff), but on staging, we have
+   * google's backend server and vercel's preview frontend domain, so we need
+   * to set it to 'none' to allow cross-site cookies.
+   */
+  setCredentialsCookies(idToken: string, refreshToken: string, res: Response) {
+    const options: CookieOptions = {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      domain:
+        this.commonService.env.isProduction() ||
+        this.commonService.env.isStaging()
+          ? '.blindoff.com'
+          : undefined,
+    };
+
+    res.cookie(ID_TOKEN_COOKIE_NAME, idToken, {
+      ...options,
+      maxAge: 60 * 60 * 1000,
+    }); // 1 hour
+
+    res.cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {
+      ...options,
+      maxAge: 60 * 60 * 24 * 7 * 1000, // 7 days
+    });
   }
 }

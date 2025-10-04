@@ -1,12 +1,11 @@
 // app/store/init-provider.tsx  (Server Component)
+import { LOADING_ANIMATION_MIN_DURATION_MS } from '@/common/constant/loading.constant';
 import { isAthlete } from '@/common/firebase/firebase-auth.util';
 import type { ChildrenProps } from '@/common/type/props.type';
 import { getAuthIdTokenFromCookies } from '@/common/util/auth.util';
 import Alert from '@/components/alert/alert';
 import { Controller } from '@/controller/controller';
 import { CoachMainProvider } from '@/store/main.provider';
-
-const MIN_LOADING_MS = 3000;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -24,7 +23,7 @@ export default async function InitTrainerProvider({ children }: ChildrenProps) {
   // Only delay for authorized users; race init() with the minimum
   const [data] = await Promise.all([
     controller.app.init(),
-    sleep(MIN_LOADING_MS), // ensures the server doesn’t reveal *too fast*
+    sleep(LOADING_ANIMATION_MIN_DURATION_MS), // ensures the server doesn’t reveal *too fast*
   ]);
 
   return <CoachMainProvider {...data}>{children}</CoachMainProvider>;

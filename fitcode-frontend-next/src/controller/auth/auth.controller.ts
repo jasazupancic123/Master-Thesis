@@ -16,6 +16,17 @@ export class AuthController extends BaseController {
     return this.instance;
   }
 
+  async login(idToken: string, refreshToken: string) {
+    return this.api.post<{ idToken: string; refreshToken: string }>('/login', {
+      idToken,
+      refreshToken,
+    });
+  }
+
+  async logout() {
+    return this.api.post('/logout', {}, { token: this.getToken() });
+  }
+
   async findAll(query?: FilterUsers) {
     return this.api.get<AuthUser[]>('/', { token: this.getToken(), query });
   }

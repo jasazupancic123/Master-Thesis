@@ -3,7 +3,7 @@ import { forwardRef, Global, Module } from '@nestjs/common';
 import { InstitutionModule } from '@src/institution/institution.module';
 
 import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
+import { AuthService } from './service/auth.service';
 
 @Global()
 @Module({

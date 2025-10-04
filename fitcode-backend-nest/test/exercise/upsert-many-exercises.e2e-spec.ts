@@ -227,6 +227,11 @@ describe('Upsert Many Exercises (e2e)', () => {
             'strength:dumbbells:regular',
           ],
         }),
+        generateExerciseStub({
+          name: 'disabled exercise',
+          componentIds: [component.id],
+          disabled: true,
+        }),
       ];
 
       const response = await request(app.getHttpServer())
@@ -235,10 +240,10 @@ describe('Upsert Many Exercises (e2e)', () => {
         .send({ exercises });
 
       expect(response.status).toBe(201);
-      expect(response.body.length).toBe(3);
+      expect(response.body.length).toBe(4);
 
       const dbExercises = await db.exercises.getAll();
-      expect(dbExercises.length).toBe(3);
+      expect(dbExercises.length).toBe(4);
 
       const deadlift = dbExercises.find((e) => e.name === 'deadlift');
       expect(deadlift?.equipment).toEqual([
@@ -310,6 +315,26 @@ describe('Upsert Many Exercises (e2e)', () => {
   });
 
   describe('Manager Tests', () => {
+    it('should fail to upsert if manager wants to upsert disabled exercise', async () => {
+      const exercises = [
+        generateExerciseStub({
+          name: 'disabled exercise',
+          componentIds: [component.id],
+          disabled: true,
+        }),
+      ];
+
+      const response = await request(app.getHttpServer())
+        .post(`/exercise/many`)
+        .set('Authorization', `Bearer ${global.manager.token}`)
+        .send({ exercises });
+
+      expect(response.status).toBe(401);
+      expect(response.body.message).toBe(
+        'You cannot create disabled exercises',
+      );
+    });
+
     it('should upsert exercises for manager', async () => {
       const exercises = [
         generateExerciseStub({
