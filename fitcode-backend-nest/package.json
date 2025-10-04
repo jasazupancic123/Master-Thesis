@@ -10,7 +10,7 @@
     "start": "node dist/main",
     "deploy": "cross-env NODE_ENV=production && gcloud app deploy",
     "deploy:staging": "cross-env NODE_ENV=staging && gcloud app deploy --project=blindoff-web-app app-staging.yaml",
-    "firebase:dev": "firebase emulators:start --only firestore,auth,storage,functions",
+    "firebase:dev": "firebase emulators:start --project blindoff-web-app --only firestore,auth,storage,functions",
     "firestore:deploy:indexes": "firebase deploy --only firestore:indexes",
     "firestore:deploy:rules": "firebase deploy --only firestore:rules",
     "start:dev": "nest start -b swc --watch",

@@ -35,15 +35,12 @@ export function getFirebaseClient(
     databaseId = configService.get('FIREBASE_DATABASE_ID');
   } else if (envCredentials)
     credential = admin.credential.cert(JSON.parse(envCredentials));
-  else
-    /* credential = admin.credential.cert(
-      require('../../serviceAccount-production.json'),
-    ); */
-    credential = admin.credential.applicationDefault();
 
   const apps = getApps();
   const app = (
-    !apps.length ? initializeApp({ credential }) : apps[0]
+    !apps.length
+      ? initializeApp(!credential ? undefined : { credential })
+      : apps[0]
   ) as admin.app.App;
 
   const auth = getAuth(app);
