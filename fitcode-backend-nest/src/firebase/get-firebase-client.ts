@@ -37,7 +37,7 @@ export function getFirebaseClient(
     credential = admin.credential.cert(JSON.parse(envCredentials));
   else
     credential = admin.credential.cert(
-      require('../../serviceAccount-staging.json'),
+      require('../../serviceAccount-production.json'),
     );
 
   const apps = getApps();
