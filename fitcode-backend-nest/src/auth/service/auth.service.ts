@@ -15,6 +15,7 @@ import {
 import { v4 } from 'uuid';
 
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
+import { CommonService } from '@src/common/service/common.service';
 import { User } from '@src/common/type/firebase-auth.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
 import { Environment } from '@src/config/environment-validation-schema';
@@ -35,6 +36,7 @@ import { UpdateUserDto } from '../dto/update-user.dto';
 export class AuthService {
   constructor(
     private readonly config: ConfigService<Environment>,
+    private readonly commonService: CommonService,
     private readonly firebase: FirebaseService,
     @Inject(forwardRef(() => InstitutionService))
     private readonly institutionService: Wrapper<InstitutionService>,
@@ -294,11 +296,22 @@ export class AuthService {
     return response.json(); // contains new id_token, refresh_token, expires_in, etc.
   }
 
+  /**
+   * Note - same site on dev and prod is 'strict' because backend and frontend
+   * are on the same domain (localhost and blindoff), but on staging, we have
+   * google's backend server and vercel's preview frontend domain, so we need
+   * to set it to 'none' to allow cross-site cookies.
+   */
   setCredentialsCookies(idToken: string, refreshToken: string, res: Response) {
     const options: CookieOptions = {
       httpOnly: true,
-      secure: this.config.get('NODE_ENV') === 'production' ? true : false,
+      secure: true,
       sameSite: 'strict',
+      domain:
+        this.commonService.env.isProduction() ||
+        this.commonService.env.isStaging()
+          ? '.blindoff.com'
+          : undefined,
     };
 
     res.cookie(ID_TOKEN_COOKIE_NAME, idToken, {
