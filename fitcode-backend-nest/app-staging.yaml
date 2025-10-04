@@ -1,5 +1,4 @@
 runtime: nodejs20
-service: nest-backend-staging
 
 env: standard
 instance_class: F1
