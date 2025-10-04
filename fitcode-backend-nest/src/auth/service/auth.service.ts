@@ -49,12 +49,17 @@ export class AuthService {
   ): Promise<AuthTokensDto> {
     try {
       await this.verify(idToken);
-    } catch {
-      const refreshed = await this.refreshIdToken(refreshToken);
-      if (!refreshed) throw new ForbiddenException('Invalid session');
+    } catch (e) {
+      if (
+        e.code === 'auth/id-token-expired' ||
+        e.message?.includes('expired')
+      ) {
+        const refreshed = await this.refreshIdToken(refreshToken);
+        if (!refreshed) throw new ForbiddenException('Invalid session');
 
-      idToken = refreshed.id_token;
-      refreshToken = refreshed.refresh_token;
+        idToken = refreshed.id_token;
+        refreshToken = refreshed.refresh_token;
+      } else throw e;
     }
 
     this.setCredentialsCookies(idToken, refreshToken, res);

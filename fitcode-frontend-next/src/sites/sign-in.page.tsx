@@ -36,6 +36,8 @@ export default function SignInPage() {
 
     try {
       const result = await firebaseAuthUtil.login(email, password);
+      console.log('login result from sign-in page', result);
+
       const { token } = await result.user.getIdTokenResult();
       await AuthController.getInstance('').login(
         token,
