@@ -39,80 +39,91 @@ export default function ImageGallery(props: ImageGalleryProps) {
     <Box
       width="100%"
       display="flex"
-      justifyContent="center"
+      flexDirection="column"
       alignItems="center"
-      sx={{
-        position: 'relative',
-      }}
+      gap={1}
     >
-      {currentIndex > 0 && (
-        <IconButton
-          onClick={() =>
-            setCurrentIndex((prev) => (prev > 0 ? prev - 1 : prev))
-          }
-          sx={{
-            position: 'absolute',
-            left: 2,
-            zIndex: 100,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            color: theme.palette.text.primary,
-          }}
-        >
-          <ChevronLeft />
-        </IconButton>
-      )}
-
-      {isRepImageArray(images) && !images[currentIndex]?.url ? null : (
-        <Image
-          src={
-            isRepImageArray(images)
-              ? images[currentIndex]?.url
-              : images[currentIndex]
-          }
-          alt="Exercise Image"
-          width={width}
-          height={0}
-          layout="intrinsic"
-        />
-      )}
-
-      {currentIndex < images.length - 1 && (
-        <IconButton
-          onClick={() =>
-            setCurrentIndex((prev) =>
-              prev < images.length - 1 ? prev + 1 : prev
-            )
-          }
-          sx={{
-            position: 'absolute',
-            right: 2,
-            zIndex: 100,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            color: theme.palette.text.primary,
-          }}
-        >
-          <ChevronRight />
-        </IconButton>
-      )}
-
-      <Typography
-        textAlign="center"
+      <Typography textAlign="center" fontSize={18}>
+        Gallery
+      </Typography>
+      <Box
+        width="100%"
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
         sx={{
-          color: theme.palette.primary.main,
-          position: 'absolute',
-          bottom: 2,
-          textShadow: `1px 1px 2px ${theme.palette.background.default}`,
-          left: '50%',
-          transform: 'translateX(-50%)',
+          position: 'relative',
         }}
       >
-        {isRepImageArray(images) &&
-        images[currentIndex]?.repNumber !== undefined
-          ? `Rep ${images[currentIndex]?.repNumber}`
-          : `${currentIndex + 1} / ${images.length}`}
-      </Typography>
+        {currentIndex > 0 && (
+          <IconButton
+            onClick={() =>
+              setCurrentIndex((prev) => (prev > 0 ? prev - 1 : prev))
+            }
+            sx={{
+              position: 'absolute',
+              left: 2,
+              zIndex: 100,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              color: theme.palette.text.primary,
+            }}
+          >
+            <ChevronLeft />
+          </IconButton>
+        )}
+
+        {isRepImageArray(images) && !images[currentIndex]?.url ? null : (
+          <Image
+            src={
+              isRepImageArray(images)
+                ? images[currentIndex]?.url
+                : images[currentIndex]
+            }
+            alt="Exercise Image"
+            width={width}
+            height={0}
+            layout="intrinsic"
+          />
+        )}
+
+        {currentIndex < images.length - 1 && (
+          <IconButton
+            onClick={() =>
+              setCurrentIndex((prev) =>
+                prev < images.length - 1 ? prev + 1 : prev
+              )
+            }
+            sx={{
+              position: 'absolute',
+              right: 2,
+              zIndex: 100,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              color: theme.palette.text.primary,
+            }}
+          >
+            <ChevronRight />
+          </IconButton>
+        )}
+
+        <Typography
+          textAlign="center"
+          sx={{
+            color: theme.palette.primary.main,
+            position: 'absolute',
+            bottom: 2,
+            textShadow: `1px 1px 2px ${theme.palette.background.default}`,
+            left: '50%',
+            transform: 'translateX(-50%)',
+          }}
+        >
+          {isRepImageArray(images) &&
+          images[currentIndex]?.repNumber !== undefined
+            ? `Rep ${images[currentIndex]?.repNumber}`
+            : `${currentIndex + 1} / ${images.length}`}
+        </Typography>
+      </Box>
     </Box>
   );
 }
