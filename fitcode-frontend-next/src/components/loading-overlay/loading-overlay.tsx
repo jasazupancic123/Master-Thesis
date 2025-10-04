@@ -10,12 +10,13 @@ interface LoadingOverlayProps {
   title: string;
   children?: React.ReactNode;
   showLogos?: boolean;
+  topDownCircularProgress?: boolean; // if true, show circular progress at the top, then title
 }
 
 export default function LoadingOverlay(props: LoadingOverlayProps) {
   const screenSize = useScreenSize();
 
-  const { title, children, showLogos } = props;
+  const { title, children, showLogos, topDownCircularProgress } = props;
   return (
     <Box
       position="fixed"
@@ -34,7 +35,13 @@ export default function LoadingOverlay(props: LoadingOverlayProps) {
       }}
     >
       {showLogos && <Logo width={screenSize.isMobile ? 200 : 250} />}
-      <Box display="flex" justifyContent="center" alignItems="center" gap={2}>
+      <Box
+        display="flex"
+        flexDirection={topDownCircularProgress ? 'column' : 'row'}
+        justifyContent="center"
+        alignItems="center"
+        gap={2}
+      >
         <Typography fontSize={20}>{title}</Typography>
         <CircularProgress size={24} />
       </Box>

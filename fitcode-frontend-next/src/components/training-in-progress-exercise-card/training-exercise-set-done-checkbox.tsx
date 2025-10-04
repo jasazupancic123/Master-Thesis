@@ -3,6 +3,7 @@ import { Checkbox, useTheme } from '@mui/material';
 import toast from 'react-hot-toast';
 
 import {
+  finishSet,
   isExerciseSetCompleted,
   markExerciseSetAsCompleted,
   unmarkExerciseSetAsCompleted,
@@ -147,32 +148,12 @@ export default function TrainingExerciseSetDoneCheckbox(
 
         const isCompleted = e.target.checked;
         if (isCompleted) {
-          const set = TrainingService.exerciseSetToCompleteSet(
-            exercise.sets[setIndex]
-          );
-
-          markExerciseSetAsCompleted(
-            { exerciseId: exercise.id },
-            setIndex + 1,
-            trainingInProgress.exerciseSetTrackingState,
-            setTrainingInProgress
-          );
-
-          const supersetIndex =
-            trainingInProgress.selectedComponent.supersets.findIndex(
-              (superset) =>
-                superset.exercises.find((ex) => ex.id === exercise.id)
-            );
-
-          if (supersetIndex === -1) {
-            toast.error('Superset not found');
-            return;
-          }
-
-          await handleUpsertSet(set, {
-            exerciseId: exercise.id,
+          await finishSet({
+            exercise,
             setIndex,
-            supersetIndex,
+            trainingInProgress,
+            setTrainingInProgress,
+            handleUpsertSet,
           });
 
           handleAdvanceInSuperset();

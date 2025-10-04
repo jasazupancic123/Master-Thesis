@@ -1,7 +1,11 @@
 import type { PeriodizationType } from '../enum/periodization-type.enum';
 import type { CopiedFrom } from './copied-from.type';
 import type { Subgroup, UpdateSubgroup } from './subgroup.type';
-import type { Superset, UpdateSuperset } from './superset.type';
+import type {
+  Superset,
+  SupersetRecording,
+  UpdateSuperset,
+} from './superset.type';
 import type { DateRange } from '@/common/type/date-range.type';
 import type { ColorEntity, IdEntity } from '@/common/type/entity.type';
 import type { Component } from '@/controller/component/type/component.type';
@@ -28,6 +32,13 @@ export type TrainingComponent = IdEntity &
 
 export type TrainingComponentWithTrainingId = TrainingComponent & {
   trainingId: string;
+};
+
+export type TrainingComponentRecording = Omit<
+  TrainingComponent,
+  'supersets'
+> & {
+  supersets: SupersetRecording[];
 };
 
 export type CreateTrainingComponent = Pick<

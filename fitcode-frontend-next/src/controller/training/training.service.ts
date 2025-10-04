@@ -141,7 +141,8 @@ export class TrainingService {
   }
 
   static exerciseSetToCompleteSet(
-    set: ExerciseSet
+    set: ExerciseSet,
+    photoUrl?: string
   ): Omit<CompleteSet, 'userId'> {
     const fields = {
       repsL: set.paramValuesL.find(
@@ -201,6 +202,7 @@ export class TrainingService {
       recDist: fields.recDist?.value ? +fields.recDist.value : undefined,
       from: new Date(),
       to: new Date(),
+      photoUrl,
     } as Omit<CompleteSet, 'userId'>;
   }
 
