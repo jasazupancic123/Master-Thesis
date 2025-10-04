@@ -28,6 +28,8 @@ export type Rep = {
   extremeKeypoint?: Keypoint; // the keypoint when the extreme value was reached
   extremeTimestamp?: Date; // when the extreme value was reached
   extremeToEndTimestamp?: Date; // when going from extreme value to end
+  extremumImage?: Blob;
+  extremumImageUrl?: string;
 
   // timeAtExtremum
   timeAtExtremumStartKeypoint?: Keypoint;

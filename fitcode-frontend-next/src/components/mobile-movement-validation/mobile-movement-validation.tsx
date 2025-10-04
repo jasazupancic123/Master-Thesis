@@ -33,20 +33,36 @@ import type { ExerciseDetectionData } from '@/controller/pose-detection/type/exe
 import type { Rep } from '@/controller/pose-detection/type/rep.type';
 import type { RepState } from '@/controller/pose-detection/type/rep-state.type';
 import { getPoseLandmarker } from '@/controller/pose-detection/util/pose-landmarker-loader.util';
-import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import type { TrainingExerciseRecording } from '@/controller/training/type/training-exercise.type';
 import { useScreenSize } from '@/store/screen-size.provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { FrameBitmapBuffer } from '@/controller/pose-detection/class/frame-bitmap-buffer';
+import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
+import { finishSet } from '../training-in-progress-exercise-card/state';
+import { useTraining } from '@/store/training.provider';
+import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 
 const DEBUG = false;
 
 const commonService = CommonService.instance;
+const firebaseStorage = FirebaseStorageUtil.Instance;
 
 interface MobileMovementValidationProps {
-  selectedExercise: TrainingExercise | undefined;
+  selectedExercise: TrainingExerciseRecording | undefined;
+  setSelectedExercise: SetState<TrainingExerciseRecording | undefined>;
   selectedTrackingMethod: TrackingMethod | undefined;
   setSelectedTrackingMethod: SetState<TrackingMethod> | undefined;
   updateExerciseValues:
-    | ((repsCount: number, tempo: number) => void)
+    | ((
+        repsCount: number,
+        tempo: number,
+        updatedExercise?: TrainingExerciseRecording
+      ) => void)
     | undefined;
+  trainingId: string;
+  componentId: string;
+  supersetIndex: number;
+  setIndex: number;
 }
 
 export default function MobileMovementValidation(
@@ -55,11 +71,25 @@ export default function MobileMovementValidation(
   const theme = useTheme();
   const screenSize = useScreenSize();
 
+  const trainingContext = useTraining();
+  const { trainingInProgress, setTrainingInProgress } = trainingContext || {};
+
+  const trainingInProgressContext = useTrainingInProgress();
+  const { handleUpsertSet } = trainingInProgressContext || {};
+
+  const authenticatedAuthContext = useAuthenticatedAuth();
+  const { user } = authenticatedAuthContext || { user: null };
+
   const {
     selectedExercise,
+    setSelectedExercise,
     selectedTrackingMethod,
     setSelectedTrackingMethod,
     updateExerciseValues,
+    trainingId,
+    componentId,
+    supersetIndex,
+    setIndex,
   } = props;
 
   // Buffers
@@ -70,6 +100,9 @@ export default function MobileMovementValidation(
   const constantKeypointHistoryRef = useRef<KeypointHistory>(
     new KeypointHistory([], undefined)
   ); // never cut, always all history
+  const frameBitmapBufferRef = useRef<FrameBitmapBuffer>(
+    new FrameBitmapBuffer(60)
+  ); // buffer of image blobs
 
   const exerciseDetectionData: ExerciseDetectionData | undefined =
     selectedExercise
@@ -139,6 +172,7 @@ export default function MobileMovementValidation(
   });
   const currentRepRef = useRef<Rep | null>(null);
   const recordedRepsRef = useRef<Rep[]>([]);
+  const [repCount, setRepCount] = useState(0);
 
   // FPS and Error
   const [fps, setFps] = useState<number | null>(null);
@@ -149,8 +183,6 @@ export default function MobileMovementValidation(
 
   // Helper Refs
   const videoRef = useRef<HTMLVideoElement>(null);
-  const mediaStreamRef = useRef<MediaStream | null>(null);
-  const detectRafRef = useRef<number | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const romCanvasRef = useRef<HTMLCanvasElement>(null);
   const tempoCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -164,6 +196,8 @@ export default function MobileMovementValidation(
   const dotRef = useRef<HTMLDivElement | null>(null);
   const dotBackgroundRef = useRef<HTMLDivElement | null>(null);
   const recordingTimestampRef = useRef<Date | null>(null);
+  const isCurrentlySavingImageRef = useRef(false);
+  const canExitWhenImageIsDoneSavingRef = useRef(false);
 
   useEffect(() => {
     let raf: number | null = null;
@@ -323,88 +357,55 @@ export default function MobileMovementValidation(
     document.body.appendChild(script);
   };
 
-  const startDetectionLoop = () => {
-    const step = async () => {
-      // Bail quickly if we’ve stopped
-      if (statusRef.current === DetectionStatus.STOPPED) return;
+  useEffect(() => {
+    if (!exerciseDetectionData) return;
 
-      // Run one iteration of your detection
-      await predictWebcam({
-        statusRef,
-        statusMessage,
-        stillnessCountdownRef,
-        canProceedIntoReadyStateRef,
-        repStateRef,
-        model,
-        poseLandmarker,
-        keypointHistory: keypointHistoryRef.current,
-        keypointBuffer,
-        constantKeypointHistory: constantKeypointHistoryRef.current,
-        currentRepRef,
-        recordedRepsRef,
-        videoRef,
-        canvasRef,
-        drawingUtilsRef,
-        canvasCtxRef,
-        prevFrameTimeRef,
-        lastVideoTimeRef,
-        frameCountRef,
-        isMobile: screenSize.isMobile,
-        avgFps,
-        exerciseDetectionData: exerciseDetectionData!,
-        initedFirstFrameInRecordingMode,
-        normDomainRef,
-        romCanvasRef,
-        tempoCanvasRef,
-        theme,
-        centerPosRef,
-        recordingTimestampRef,
-        setFps,
-        finishAiDetection,
-      });
+    if (statusRef.current === DetectionStatus.STOPPED) return;
 
-      // Queue next frame
-      detectRafRef.current = requestAnimationFrame(step);
-    };
-
-    // Kick it off
-    detectRafRef.current = requestAnimationFrame(step);
-  };
-
-  const stopCameraAndLoops = () => {
-    if (!setSelectedTrackingMethod && !updateExerciseValues) return;
-
-    // tell your detection loop to stop ASAP
-    statusRef.current = DetectionStatus.STOPPED;
-
-    // cancel *our* rAFs (you already cancel the centering dot rAF elsewhere)
-    if (detectRafRef.current !== null) {
-      cancelAnimationFrame(detectRafRef.current);
-      detectRafRef.current = null;
-    }
-
-    // stop camera tracks
-    const v = videoRef.current;
-    const stream = (v?.srcObject as MediaStream) || mediaStreamRef.current;
-    if (stream) {
-      stream.getTracks().forEach((t) => t.stop());
-      mediaStreamRef.current = null;
-    }
-
-    // fully release the <video> element
-    if (v) {
-      try {
-        v.pause();
-      } catch {}
-      try {
-        (v as any).srcObject = null;
-      } catch {}
-      v.removeAttribute('src');
-      try {
-        v.load();
-      } catch {}
-    }
-  };
+    enableCam({
+      poseLandmarker,
+      videoRef,
+      setError,
+      predictWebcam: async () =>
+        await predictWebcam({
+          statusRef,
+          statusMessage,
+          stillnessCountdownRef,
+          canProceedIntoReadyStateRef,
+          repStateRef,
+          model,
+          poseLandmarker,
+          keypointHistory: keypointHistoryRef.current,
+          keypointBuffer,
+          constantKeypointHistory: constantKeypointHistoryRef.current,
+          frameBitmapBufferRef,
+          currentRepRef,
+          recordedRepsRef,
+          videoRef,
+          canvasRef,
+          drawingUtilsRef,
+          canvasCtxRef,
+          prevFrameTimeRef,
+          lastVideoTimeRef,
+          frameCountRef,
+          isMobile: screenSize.isMobile,
+          avgFps,
+          exerciseDetectionData: exerciseDetectionData!,
+          initedFirstFrameInRecordingMode,
+          normDomainRef,
+          romCanvasRef,
+          tempoCanvasRef,
+          theme,
+          centerPosRef,
+          recordingTimestampRef,
+          isCurrentlySavingImageRef,
+          canExitWhenImageIsDoneSavingRef,
+          setFps,
+          finishAiDetection,
+          setRepCount,
+        }),
+    });
+  }, [poseLandmarker]);
 
   const finishAiDetection = async () => {
     statusMessage.current = getStatusMessage(DetectionStatus.STOPPED);
@@ -435,7 +436,14 @@ export default function MobileMovementValidation(
     if (
       updateExerciseValues &&
       selectedTrackingMethod === TrackingMethod.CAMERA &&
-      setSelectedTrackingMethod
+      setSelectedTrackingMethod &&
+      trainingInProgress &&
+      setTrainingInProgress !== undefined &&
+      handleUpsertSet !== undefined &&
+      selectedExercise !== undefined &&
+      setIndex !== undefined &&
+      user !== null &&
+      user !== undefined
     ) {
       let avgTimeToExtremeMs = 0,
         avgTimeAtExtremeMs = 0,
@@ -475,6 +483,44 @@ export default function MobileMovementValidation(
 
       let tempo = 2010;
 
+      const images: ({ repNumber: number; url: string } | null)[] =
+        recordedRepsRef.current
+          .map((rep) => {
+            if (!rep.extremumImageUrl) return null;
+
+            return {
+              repNumber: rep.repNumber,
+              url: rep.extremumImageUrl || '',
+            };
+          })
+          .filter((i) => i !== null) as { repNumber: number; url: string }[];
+
+      let updatedExercise = {
+        ...selectedExercise,
+      } as TrainingExerciseRecording;
+
+      if (selectedExercise) {
+        updatedExercise = {
+          ...selectedExercise,
+          recordedSets: !selectedExercise.recordedSets
+            ? [{ setIndex, images, reps: recordedRepsRef.current }]
+            : [
+                ...selectedExercise.recordedSets.map(
+                  (si) => si.setIndex !== setIndex
+                ),
+                {
+                  setIndex,
+                  images,
+                  reps: recordedRepsRef.current,
+                },
+              ],
+        } as TrainingExerciseRecording;
+
+        console.log('setIndex', setIndex, 'updatedExercise', updatedExercise);
+
+        setSelectedExercise(updatedExercise);
+      }
+
       //check if tempo string can be converted to a number
       if (
         tempoString.trim() !== '' &&
@@ -483,9 +529,21 @@ export default function MobileMovementValidation(
       )
         tempo = parseInt(tempoString);
 
+      updateExerciseValues(
+        recordedRepsRef.current.length,
+        tempo,
+        updatedExercise
+      );
+
+      await finishSet({
+        exercise: updatedExercise,
+        setIndex,
+        trainingInProgress,
+        setTrainingInProgress,
+        handleUpsertSet,
+      });
+
       setSelectedTrackingMethod(TrackingMethod.MANUAL);
-      stopCameraAndLoops();
-      updateExerciseValues(recordedRepsRef.current.length, tempo);
     }
   };
 
@@ -512,41 +570,68 @@ export default function MobileMovementValidation(
   }, [canvasRef]);
 
   useEffect(() => {
-    if (selectedTrackingMethod !== TrackingMethod.CAMERA) {
-      stopCameraAndLoops();
-    }
-  }, [selectedTrackingMethod]);
+    console.log('recorded reps ref length', recordedRepsRef.current.length);
+    // Post save images to firestore
+    if (!recordedRepsRef.current.length) return;
+
+    const postImages = async () => {
+      isCurrentlySavingImageRef.current = true;
+
+      const lastRep =
+        recordedRepsRef.current[recordedRepsRef.current.length - 1];
+
+      if (!lastRep || lastRep.extremumImageUrl || !lastRep.extremeKeypoint) {
+        console.log('invalid last rep', { lastRep });
+        return; // already posted or no extremum
+      }
+
+      const blob = await frameBitmapBufferRef.current.toBlobByFrameNum(
+        lastRep.extremeKeypoint.frameNum,
+        undefined,
+        undefined,
+        document
+      );
+
+      if (!blob) {
+        console.log('invalid blob', { blob });
+        return;
+      } // should not happen
+
+      // training/trainingId-userId-componentId-supersetIndex-exerciseId-setIndex-repNumber
+      const fileName = `${user.uid}:${componentId}:${supersetIndex}:${selectedExercise?.id}:${setIndex}:${lastRep.repNumber}`;
+
+      const file = new File([blob], `${fileName}.jpg`, {
+        type: blob.type || 'image/jpeg',
+      });
+
+      const path = `training/${trainingId}/${file.name}`;
+
+      console.log('updloading image to', { path, file });
+      const url = await firebaseStorage.uploadFile(file, path);
+
+      lastRep.extremumImageUrl = url;
+
+      isCurrentlySavingImageRef.current = false;
+
+      console.log('UPLOADED', { url, lastRep });
+    };
+
+    postImages();
+  }, [repCount]);
 
   useEffect(() => {
-    if (!exerciseDetectionData) return;
-    if (statusRef.current === DetectionStatus.STOPPED) return;
-    if (!poseLandmarker) return;
-
-    let cancelled = false;
-
-    enableCam({
-      poseLandmarker,
-      videoRef,
-      onPlaying: () => {
-        if (!cancelled) {
-          // start the rAF loop
-          startDetectionLoop();
-        }
-      },
-      setError,
-    });
-
-    // remember the stream for hard stop
-    const v = videoRef.current;
-    if (v && v.srcObject && !mediaStreamRef.current) {
-      mediaStreamRef.current = v.srcObject as MediaStream;
-    }
-
-    return () => {
-      cancelled = true;
-      stopCameraAndLoops(); // stops rAF + tracks + releases <video>
+    const checkExit = async () => {
+      if (
+        isCurrentlySavingImageRef.current === false &&
+        canExitWhenImageIsDoneSavingRef.current === true
+      ) {
+        await finishAiDetection();
+        canExitWhenImageIsDoneSavingRef.current = false;
+      }
     };
-  }, [poseLandmarker, videoRef, canvasRef, canvasCtxRef, drawingUtilsRef]); // fires on mount and when model becomes ready
+
+    checkExit();
+  }, [isCurrentlySavingImageRef.current]);
 
   if (!exerciseDetectionData) {
     return <div>No pose detection logic for this exercise yet</div>;
@@ -561,6 +646,10 @@ export default function MobileMovementValidation(
         position: 'relative',
       }}
     >
+      {canExitWhenImageIsDoneSavingRef.current === true && (
+        <LoadingOverlay title="Saving images..." topDownCircularProgress />
+      )}
+
       {!poseLandmarker && (
         <Box
           width="100%"
@@ -582,7 +671,6 @@ export default function MobileMovementValidation(
                 zIndex: 100000,
               }}
               onClick={() => {
-                stopCameraAndLoops();
                 setSelectedTrackingMethod?.(TrackingMethod.MANUAL);
               }}
             >
@@ -700,7 +788,7 @@ export default function MobileMovementValidation(
                 Rep
               </Typography>
               <Typography
-                fontSize={36}
+                fontSize={32}
                 lineHeight={1.2}
                 fontWeight="bold"
                 textAlign="center"
@@ -733,7 +821,7 @@ export default function MobileMovementValidation(
                 Tempo
               </Typography>
               <Typography
-                fontSize={36}
+                fontSize={32}
                 lineHeight={1.2}
                 fontWeight="bold"
                 textAlign="center"
@@ -744,24 +832,7 @@ export default function MobileMovementValidation(
               </Typography>
             </Box>
           </Box>
-          {/* <BarChart
-            height={100}
-            dataset={recordedRepsRef.current.map((rep, i) => {
-              return {
-                id: `rep_${i + 1}`,
-                timeToExtremum: rep.timeToExtremeMs,
-                timeFromExtremumToEnd: rep.timeFromExtremeToEndMs,
-              };
-            })}
-            grid={{ horizontal: true }}
-            series={[
-              { dataKey: 'timeToExtremum', stack: 'timeFromExtremumToEnd' },
-            ]}
-            margin={{ left: 0, top: 0, right: 0, bottom: 0 }}
-            sx={{
-              mt: 2,
-            }}
-          /> */}
+
           <canvas
             ref={tempoCanvasRef}
             style={{

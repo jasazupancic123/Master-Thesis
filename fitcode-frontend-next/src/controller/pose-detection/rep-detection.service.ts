@@ -17,6 +17,7 @@ import type { RepState } from './type/rep-state.type';
 import { KeypointUtil } from './util/keypoint.util';
 import { TimeUtil } from './util/time.util';
 import { CommonService } from '@/common/service/common.service';
+import { SetState } from '@/common/type/state.type';
 
 const commonService = CommonService.instance;
 
@@ -54,6 +55,7 @@ export class RepDetectionService {
     exerciseStartConditions: ExerciseRepStartCondition[];
     avgFps: { value: number; count: number } | null;
     initedFirstFrameInRecordingMode: RefObject<boolean>;
+    setRepCount: SetState<number>;
   }) {
     const {
       repStateRef,
@@ -67,6 +69,7 @@ export class RepDetectionService {
       exerciseStartConditions,
       avgFps,
       initedFirstFrameInRecordingMode,
+      setRepCount,
     } = state;
 
     switch (repStateRef.current.status) {
@@ -106,6 +109,8 @@ export class RepDetectionService {
           });
 
           recordedRepsRef.current.push(currentRepRef.current);
+
+          setRepCount(recordedRepsRef.current.length);
 
           console.log('RECORDED ', recordedRepsRef.current.length, ' REPS');
 
@@ -894,7 +899,7 @@ export class RepDetectionService {
     };
   }
 
-  private static postProcessRep(state: {
+  private static async postProcessRep(state: {
     currentRepRef: RefObject<Rep | null>;
     recordedRepsRef: RefObject<Rep[]>;
     keypointId: KeypointId;

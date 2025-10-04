@@ -20,6 +20,9 @@ import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
+import ImageGallery from './image-gallery';
+import { TrainingExerciseRecording } from '@/controller/training/type/training-exercise.type';
+import TrainingInProgressExerciseCharts from './training-in-progress-exercise-charts';
 
 export default function TrainingInProgressExerciseCard() {
   const theme = useTheme();
@@ -65,12 +68,18 @@ export default function TrainingInProgressExerciseCard() {
   if (!trainingInProgress || !selectedSuperset || !selectedExercise)
     return labelRef.current;
 
-  const updateExerciseValues = (repsCount: number, tempo: number) => {
+  const updateExerciseValues = (
+    repsCount: number,
+    tempo: number,
+    passedExercise?: TrainingExerciseRecording
+  ) => {
     if (supersetIndex === undefined) return;
 
     if (setIndex === undefined) return;
 
-    const selectedSet = selectedExercise.sets[setIndex];
+    const updatableExercise = passedExercise || selectedExercise;
+
+    const selectedSet = updatableExercise.sets[setIndex];
     if (!selectedSet) return;
 
     let repParamField: ParamType | undefined;
@@ -87,7 +96,7 @@ export default function TrainingInProgressExerciseCard() {
     if (tempoParamFieldSet)
       tempoParamField = tempoParamFieldSet.field as ParamType;
 
-    const repParam = selectedExercise.params.find(
+    const repParam = updatableExercise.params.find(
       (p) => p.field === repParamField
     );
 
@@ -101,8 +110,8 @@ export default function TrainingInProgressExerciseCard() {
             lOrR: lOrR as 'L' | 'R',
           },
           {
-            selectedExercises: [selectedExercise],
-            exercise: selectedExercise,
+            selectedExercises: [updatableExercise],
+            exercise: updatableExercise,
             param: repParam,
             training: trainingInProgress.training,
             component: trainingInProgress.selectedComponent,
@@ -116,7 +125,7 @@ export default function TrainingInProgressExerciseCard() {
       });
     }
 
-    const tempoParam = selectedExercise.params.find(
+    const tempoParam = updatableExercise.params.find(
       (p) => p.field === tempoParamField
     );
 
@@ -130,8 +139,8 @@ export default function TrainingInProgressExerciseCard() {
             lOrR: lOrR as 'L' | 'R',
           },
           {
-            selectedExercises: [selectedExercise],
-            exercise: selectedExercise,
+            selectedExercises: [updatableExercise],
+            exercise: updatableExercise,
             param: tempoParam,
             training: trainingInProgress.training,
             component: trainingInProgress.selectedComponent,
@@ -145,14 +154,14 @@ export default function TrainingInProgressExerciseCard() {
       });
     }
 
-    markExerciseSetAsCompleted(
-      { exerciseId: selectedExercise.id },
-      setIndex + 1,
-      trainingInProgress.exerciseSetTrackingState,
-      setTrainingInProgress
-    );
+    // markExerciseSetAsCompleted(
+    //   { exerciseId: updatableExercise.id },
+    //   setIndex + 1,
+    //   trainingInProgress.exerciseSetTrackingState,
+    //   setTrainingInProgress
+    // );
 
-    updateTrainingInProgress(selectedExercise, supersetIndex);
+    updateTrainingInProgress(updatableExercise, supersetIndex);
   };
 
   const goToNextExercise = () => {
@@ -176,9 +185,14 @@ export default function TrainingInProgressExerciseCard() {
   return selectedTrackingMethod === TrackingMethod.CAMERA ? (
     <MobileMovementValidation
       selectedExercise={selectedExercise}
+      setSelectedExercise={setSelectedExercise}
       selectedTrackingMethod={selectedTrackingMethod}
       setSelectedTrackingMethod={setSelectedTrackingMethod}
       updateExerciseValues={updateExerciseValues}
+      trainingId={trainingInProgress.training.id}
+      componentId={trainingInProgress.selectedComponent.id}
+      supersetIndex={supersetIndex!}
+      setIndex={setIndex!}
     />
   ) : (
     <SwipeableBox
@@ -536,6 +550,14 @@ export default function TrainingInProgressExerciseCard() {
             </Box>
           </Box>
         </Box>
+        <ImageGallery
+          images={
+            (selectedExercise.recordedSets || []).find(
+              (set) => set.setIndex === setIndex
+            )?.images || []
+          }
+        />
+        <TrainingInProgressExerciseCharts selectedExercise={selectedExercise} />
       </Box>
     </SwipeableBox>
   );
