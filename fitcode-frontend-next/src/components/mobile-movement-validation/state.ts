@@ -17,8 +17,6 @@ import type { Keypoint } from '@/controller/pose-detection/type/keypoint.type';
 import type { Rep } from '@/controller/pose-detection/type/rep.type';
 import type { RepState } from '@/controller/pose-detection/type/rep-state.type';
 import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
-import { PoseDetectionGraphsUtil } from '@/controller/pose-detection/util/pose-detection-graphs-util';
-import { User } from '@firebase/auth';
 import { FrameBitmapBuffer } from '@/controller/pose-detection/class/frame-bitmap-buffer';
 
 export async function loadModel(state: {
@@ -155,10 +153,6 @@ export const predictWebcam = async (state: {
   frameCountRef: RefObject<number>;
   initedFirstFrameInRecordingMode: RefObject<boolean>;
   avgFps: RefObject<{ value: number; count: number } | null>;
-  normDomainRef: RefObject<{ min: number; max: number } | null>;
-  romCanvasRef: RefObject<HTMLCanvasElement | null>;
-  tempoCanvasRef: RefObject<HTMLCanvasElement | null>;
-  theme: Theme;
   centerPosRef: RefObject<{ x: number; y: number } | null>;
   recordingTimestampRef: RefObject<Date | null>;
   isCurrentlySavingImageRef: RefObject<boolean>;
@@ -192,10 +186,6 @@ export const predictWebcam = async (state: {
     frameCountRef,
     initedFirstFrameInRecordingMode,
     avgFps,
-    normDomainRef,
-    romCanvasRef,
-    tempoCanvasRef,
-    theme,
     centerPosRef,
     recordingTimestampRef,
     isCurrentlySavingImageRef,
@@ -223,7 +213,7 @@ export const predictWebcam = async (state: {
 
   if (
     !frameBitmapBufferRef.current.canvas ||
-    frameBitmapBufferRef.current.canvas?.height ||
+    !frameBitmapBufferRef.current.canvas?.height ||
     !frameBitmapBufferRef.current.canvas?.width
   ) {
     frameBitmapBufferRef.current.setCanvasWidthHeight(document, video);
@@ -242,17 +232,21 @@ export const predictWebcam = async (state: {
   }
 
   // Set actual drawing resolution
-  canvas.width = videoWidth;
-  canvas.height = videoHeight;
+  if (canvas.width !== videoWidth || canvas.height !== videoHeight) {
+    canvas.width = videoWidth;
+    canvas.height = videoHeight;
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+  }
 
-  // Optional: scale the visible canvas with CSS
-  canvas.style.width = '100%';
-  canvas.style.height = '100%';
+  let startTimeMs = performance.now();
 
-  video.width = videoWidth;
-  video.height = videoHeight;
-
-  const startTimeMs = performance.now();
+  if (
+    prevFrameTimeRef.current != null &&
+    startTimeMs <= prevFrameTimeRef.current
+  ) {
+    startTimeMs = prevFrameTimeRef.current + 0.01;
+  }
 
   if (prevFrameTimeRef.current) {
     const delta = startTimeMs - prevFrameTimeRef.current;
@@ -317,6 +311,16 @@ export const predictWebcam = async (state: {
         document
       );
 
+      const hasPose =
+        result.landmarks &&
+        result.landmarks.length > 0 &&
+        result.worldLandmarks &&
+        result.worldLandmarks.length > 0;
+
+      if (!hasPose) {
+        return;
+      }
+
       // console.log(
       //   frameCountRef.current,
       //   frameBitmapBufferRef.current.history[0]?.frameNum,
@@ -377,22 +381,6 @@ export const predictWebcam = async (state: {
           avgFps: avgFps.current,
           initedFirstFrameInRecordingMode, // this is used to track if no rep was detected yet
           setRepCount,
-        });
-      }
-
-      if (
-        (repStateRef.current.status === RepStatus.IN_REP &&
-          currentRepRef.current) ||
-        recordedRepsRef.current.length > 0
-      ) {
-        PoseDetectionGraphsUtil.renderROMAndTempoGraphs({
-          exerciseDetectionData,
-          currentRepRef,
-          recordedRepsRef,
-          romCanvasRef,
-          tempoCanvasRef,
-          normDomainRef,
-          theme,
         });
       }
 

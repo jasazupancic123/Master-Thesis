@@ -41,11 +41,15 @@ import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
 import { finishSet } from '../training-in-progress-exercise-card/state';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
+import TrainingInProgressTempoChart from '../training-in-progress-exercise-card/training-in-progress-tempo-chart';
+import { RepsGraphService } from '@/controller/pose-detection/rep-graph.service';
 
 const DEBUG = false;
 
 const commonService = CommonService.instance;
 const firebaseStorage = FirebaseStorageUtil.Instance;
+
+export const EXERCISE_TIMES_ROUNDING_STEP_S = 0.2; // round to 0.2
 
 interface MobileMovementValidationProps {
   selectedExercise: TrainingExerciseRecording | undefined;
@@ -56,7 +60,8 @@ interface MobileMovementValidationProps {
     | ((
         repsCount: number,
         tempo: number,
-        updatedExercise?: TrainingExerciseRecording
+        updatedExercise?: TrainingExerciseRecording,
+        updateSelectedExercise?: boolean
       ) => void)
     | undefined;
   trainingId: string;
@@ -184,15 +189,12 @@ export default function MobileMovementValidation(
   // Helper Refs
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const romCanvasRef = useRef<HTMLCanvasElement>(null);
-  const tempoCanvasRef = useRef<HTMLCanvasElement>(null);
   const drawingUtilsRef = useRef<DrawingUtils>(null);
   const canvasCtxRef = useRef<CanvasRenderingContext2D | null>(null);
   const prevFrameTimeRef = useRef<number | null>(null);
   const lastVideoTimeRef = useRef(-1);
   const frameCountRef = useRef(0);
   const initedFirstFrameInRecordingMode = useRef(false);
-  const normDomainRef = useRef<{ min: number; max: number } | null>(null); // for graphs
   const dotRef = useRef<HTMLDivElement | null>(null);
   const dotBackgroundRef = useRef<HTMLDivElement | null>(null);
   const recordingTimestampRef = useRef<Date | null>(null);
@@ -392,10 +394,6 @@ export default function MobileMovementValidation(
           avgFps,
           exerciseDetectionData: exerciseDetectionData!,
           initedFirstFrameInRecordingMode,
-          normDomainRef,
-          romCanvasRef,
-          tempoCanvasRef,
-          theme,
           centerPosRef,
           recordingTimestampRef,
           isCurrentlySavingImageRef,
@@ -410,16 +408,16 @@ export default function MobileMovementValidation(
   const finishAiDetection = async () => {
     statusMessage.current = getStatusMessage(DetectionStatus.STOPPED);
 
-    // await RepsGraphService.downloadReps(
-    //   {
-    //     recordedRepsRef,
-    //     keypointId: exerciseDetectionData!.romKeypointId,
-    //     valueType: exerciseDetectionData!.romValueType,
-    //     constantKeypointHistory: constantKeypointHistoryRef.current,
-    //     smooth: true,
-    //   },
-    //   { filenameBase: 'session', combine: true }
-    // );
+    await RepsGraphService.downloadReps(
+      {
+        recordedRepsRef,
+        keypointId: exerciseDetectionData!.romKeypointId,
+        valueType: exerciseDetectionData!.romValueType,
+        constantKeypointHistory: constantKeypointHistoryRef.current,
+        smooth: true,
+      },
+      { filenameBase: 'session', combine: true }
+    );
 
     // KeypointUtil.drawKeypointValuesGraph(
     //   constantKeypointHistoryRef.current.history,
@@ -432,6 +430,14 @@ export default function MobileMovementValidation(
     //   recordedRepsRef,
     //   selectedExercise,
     // });
+
+    if (
+      !recordedRepsRef.current.length &&
+      setSelectedTrackingMethod !== undefined
+    ) {
+      setSelectedTrackingMethod(TrackingMethod.MANUAL);
+      return;
+    }
 
     if (
       updateExerciseValues &&
@@ -457,29 +463,38 @@ export default function MobileMovementValidation(
         avgIdleTimeMs += rep.idleTimeMs || 0;
       }
 
-      const step = 0.2; // round to 0.2
-
-      const avgTimeToExtremeS = commonService.number.roundToStep(
-        Math.max(avgTimeToExtremeMs / 1000 / recordedRepsRef.current.length, 0),
-        step
+      const avgTimeToExtremeS = Math.max(
+        EXERCISE_TIMES_ROUNDING_STEP_S,
+        commonService.number.roundToStep(
+          Math.max(
+            avgTimeToExtremeMs / 1000 / recordedRepsRef.current.length,
+            0
+          ),
+          EXERCISE_TIMES_ROUNDING_STEP_S
+        )
       );
+
       const avgTimeAtExtremeS = commonService.number.roundToStep(
         Math.max(avgTimeAtExtremeMs / 1000 / recordedRepsRef.current.length, 0),
-        step
-      );
-      const avgTimeFromExtremeToEndS = commonService.number.roundToStep(
-        Math.max(
-          avgTimeFromExtremeToEndMs / 1000 / recordedRepsRef.current.length,
-          0
-        ),
-        step
-      );
-      const avgIdleTimeS = commonService.number.roundToStep(
-        Math.max(avgIdleTimeMs / 1000 / recordedRepsRef.current.length, 0),
-        step
+        EXERCISE_TIMES_ROUNDING_STEP_S
       );
 
-      const tempoString = `${avgTimeToExtremeS}${avgTimeAtExtremeS}${avgTimeFromExtremeToEndS}${avgIdleTimeS}`;
+      const avgTimeFromExtremeToEndS = Math.max(
+        commonService.number.roundToStep(
+          Math.max(
+            avgTimeFromExtremeToEndMs / 1000 / recordedRepsRef.current.length,
+            0
+          ),
+          EXERCISE_TIMES_ROUNDING_STEP_S
+        )
+      );
+
+      const avgIdleTimeS = commonService.number.roundToStep(
+        Math.max(avgIdleTimeMs / 1000 / recordedRepsRef.current.length, 0),
+        EXERCISE_TIMES_ROUNDING_STEP_S
+      );
+
+      const tempoString = `${avgTimeToExtremeS}:${avgTimeAtExtremeS}:${avgTimeFromExtremeToEndS}:${avgIdleTimeS}`;
 
       let tempo = 2010;
 
@@ -520,7 +535,7 @@ export default function MobileMovementValidation(
                 },
               ]
             : [
-                ...selectedExercise.recordedSets.map(
+                ...selectedExercise.recordedSets.filter(
                   (si) => si.setIndex !== setIndex
                 ),
                 {
@@ -542,10 +557,13 @@ export default function MobileMovementValidation(
 
         console.log('setIndex', setIndex, 'updatedExercise', updatedExercise);
 
-        setSelectedExercise(updatedExercise);
+        // setSelectedExercise(updatedExercise);
       }
 
       //check if tempo string can be converted to a number
+
+      console.log({ tempoString, tempo });
+
       if (
         tempoString.trim() !== '' &&
         !isNaN(Number(tempoString)) &&
@@ -556,7 +574,8 @@ export default function MobileMovementValidation(
       updateExerciseValues(
         recordedRepsRef.current.length,
         tempo,
-        updatedExercise
+        updatedExercise,
+        true
       );
 
       await finishSet({
@@ -568,6 +587,14 @@ export default function MobileMovementValidation(
       });
 
       setSelectedTrackingMethod(TrackingMethod.MANUAL);
+    }
+
+    if (videoRef.current && videoRef.current.srcObject) {
+      console.log('stopping video stream');
+      const stream = videoRef.current.srcObject as MediaStream;
+      const tracks = stream.getTracks();
+      tracks.forEach((track) => track.stop());
+      videoRef.current.srcObject = null;
     }
   };
 
@@ -705,25 +732,32 @@ export default function MobileMovementValidation(
       )}
 
       {poseLandmarker && (
-        <MovementValidationHeader
-          statusRef={statusRef}
-          statusMessage={error ? `${error}` : statusMessage.current}
-          countdownValue={
-            statusRef.current === DetectionStatus.NOT_STILL &&
-            stillnessCountdownRef.current !== null
-              ? Math.max(
-                  dayjs(stillnessCountdownRef.current)
-                    .add(
-                      POSE_DETECTION_CONSTRAINTS.STILLNESS_COUNTDOWN_DURATION_S +
-                        1,
-                      'seconds'
+        <>
+          {statusRef.current === DetectionStatus.RECORDING &&
+          recordedRepsRef.current.length ? (
+            <></>
+          ) : (
+            <MovementValidationHeader
+              statusRef={statusRef}
+              statusMessage={error ? `${error}` : statusMessage.current}
+              countdownValue={
+                statusRef.current === DetectionStatus.NOT_STILL &&
+                stillnessCountdownRef.current !== null
+                  ? Math.max(
+                      dayjs(stillnessCountdownRef.current)
+                        .add(
+                          POSE_DETECTION_CONSTRAINTS.STILLNESS_COUNTDOWN_DURATION_S +
+                            1,
+                          'seconds'
+                        )
+                        .diff(dayjs(), 'second'),
+                      0
                     )
-                    .diff(dayjs(), 'second'),
-                  0
-                )
-              : null
-          }
-        />
+                  : null
+              }
+            />
+          )}
+        </>
       )}
 
       <Box
@@ -780,6 +814,29 @@ export default function MobileMovementValidation(
             zIndex: 1000,
           }}
         >
+          {statusRef.current !== DetectionStatus.RECORDING &&
+            selectedExercise &&
+            selectedExercise.exercise && (
+              <Typography
+                textAlign="center"
+                fontSize={30}
+                sx={{
+                  color: theme.palette.primary.main,
+                  textShadow: `0 0 4px ${theme.palette.background.default}, 0 0 8px ${theme.palette.background.default}`,
+                  position: 'absolute',
+                  textTransform: 'uppercase',
+                  bottom: 0,
+                  left: '50%',
+                  transform: 'translate(-50%, 100%)',
+                  zIndex: 10000,
+                  fontSize: 12,
+                  backgroundColor: theme.palette.background.default,
+                }}
+              >
+                {selectedExercise.exercise.name}
+              </Typography>
+            )}
+
           <Box
             width={160}
             height="100%"
@@ -788,6 +845,7 @@ export default function MobileMovementValidation(
             justifyContent="flex-end"
             sx={{
               position: 'relative',
+              zIndex: 0,
             }}
           >
             <Box
@@ -857,29 +915,32 @@ export default function MobileMovementValidation(
             </Box>
           </Box>
 
-          <canvas
-            ref={tempoCanvasRef}
-            style={{
-              height: 140,
-              width: 'calc(100% - 140px)',
-              zIndex: 1000,
-              backgroundColor: theme.palette.background.default,
-              opacity: 0.5,
-            }}
-          />
+          {recordedRepsRef.current.length ? (
+            <TrainingInProgressTempoChart
+              selectedExercise={selectedExercise}
+              setIndex={-1}
+              width={window.innerWidth - 160}
+              height={140}
+              passedReps={recordedRepsRef.current}
+              hideLabels={true}
+              aiRecordingView
+              sx={{
+                width: '100% !important',
+                backgroundColor: theme.palette.background.default,
+                opacity: 0.8,
+              }}
+            />
+          ) : (
+            <Box
+              width={window.innerWidth - 160}
+              height={140}
+              sx={{
+                backgroundColor: theme.palette.background.default,
+                opacity: 0.8,
+              }}
+            />
+          )}
         </Box>
-
-        {/* <canvas
-          ref={romCanvasRef}
-          style={{
-            width: '100%',
-            height: '50%',
-            position: 'absolute',
-            left: 0,
-            bottom: 0, // bottom half
-            zIndex: 1000,
-          }}
-        /> */}
 
         {statusRef.current !== DetectionStatus.STOPPED && (
           <>

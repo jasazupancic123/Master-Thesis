@@ -1,24 +1,21 @@
-import { Box, IconButton, Typography } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { Box, Typography } from '@mui/material';
 import Image from 'next/image';
-import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import { theme } from '@/app/style';
 import { RepImage } from '@/controller/training/type/training-exercise.type';
+import ImagePickerSlider from './image-picker-slider';
+import { useState } from 'react';
 
 interface ImageGalleryProps {
   images: string[] | RepImage[];
+  enableImagePickerSlider?: boolean;
 }
 
 export default function ImageGallery(props: ImageGalleryProps) {
-  const { images } = props;
+  const { images, enableImagePickerSlider = false } = props;
 
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  useEffect(() => {
-    setCurrentIndex(0);
-  }, [images]);
-
-  const width = Math.min(600, window.innerWidth * 0.75);
+  const width = Math.min(600, window.innerWidth);
 
   // check if it's array of strings or array of objects
   function isRepImageArray(
@@ -46,6 +43,13 @@ export default function ImageGallery(props: ImageGalleryProps) {
       <Typography textAlign="center" fontSize={18}>
         Gallery
       </Typography>
+      {enableImagePickerSlider && (
+        <ImagePickerSlider
+          images={isRepImageArray(images) ? images.map((i) => i.url) : images}
+          onClick={setCurrentIndex}
+        />
+      )}
+
       <Box
         width="100%"
         display="flex"
@@ -55,24 +59,6 @@ export default function ImageGallery(props: ImageGalleryProps) {
           position: 'relative',
         }}
       >
-        {currentIndex > 0 && (
-          <IconButton
-            onClick={() =>
-              setCurrentIndex((prev) => (prev > 0 ? prev - 1 : prev))
-            }
-            sx={{
-              position: 'absolute',
-              left: 2,
-              zIndex: 100,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: theme.palette.text.primary,
-            }}
-          >
-            <ChevronLeft />
-          </IconButton>
-        )}
-
         {isRepImageArray(images) && !images[currentIndex]?.url ? null : (
           <Image
             src={
@@ -85,26 +71,6 @@ export default function ImageGallery(props: ImageGalleryProps) {
             height={0}
             layout="intrinsic"
           />
-        )}
-
-        {currentIndex < images.length - 1 && (
-          <IconButton
-            onClick={() =>
-              setCurrentIndex((prev) =>
-                prev < images.length - 1 ? prev + 1 : prev
-              )
-            }
-            sx={{
-              position: 'absolute',
-              right: 2,
-              zIndex: 100,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: theme.palette.text.primary,
-            }}
-          >
-            <ChevronRight />
-          </IconButton>
         )}
 
         <Typography

@@ -126,7 +126,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     },
   },
   {
-    exerciseIds: ['arm-curl', 'arm-curl-db'],
+    exerciseIds: ['arm-curl', 'arm-curl-db', 'biceps-curl-db'],
     data: {
       romKeypointId: KeypointId.RIGHT_WRIST,
       romValueType: KeypointValueType.POSITION_Y,
@@ -177,7 +177,16 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     },
   },
   {
-    exerciseIds: ['sl-rdl-bw', 'sl-rdl-db'],
+    exerciseIds: [
+      'sl-rdl-bw',
+      'sl-rdl-db',
+      'rdl-bb',
+      'rdl-clean-to-box-bb',
+      'rdl-clean-to-box-step-up-bb',
+      'rdl-kb',
+      'rdl-landmine',
+      'rdl-tb',
+    ],
     data: {
       romKeypointId: KeypointId.LEFT_SHOULDER,
       romValueType: KeypointValueType.POSITION_Y,

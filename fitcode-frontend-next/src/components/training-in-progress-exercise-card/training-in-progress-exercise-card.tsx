@@ -22,7 +22,8 @@ import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import ImageGallery from './image-gallery';
 import { TrainingExerciseRecording } from '@/controller/training/type/training-exercise.type';
-import TrainingInProgressTempoChart from './training-in-progress-exercise-charts';
+import TrainingInProgressTempoChart from './training-in-progress-tempo-chart';
+import { SetState } from '@/common/type/state.type';
 
 export default function TrainingInProgressExerciseCard() {
   const theme = useTheme();
@@ -71,7 +72,8 @@ export default function TrainingInProgressExerciseCard() {
   const updateExerciseValues = (
     repsCount: number,
     tempo: number,
-    passedExercise?: TrainingExerciseRecording
+    passedExercise?: TrainingExerciseRecording,
+    updateSelectedExercise?: boolean
   ) => {
     if (supersetIndex === undefined) return;
 
@@ -160,6 +162,8 @@ export default function TrainingInProgressExerciseCard() {
     //   trainingInProgress.exerciseSetTrackingState,
     //   setTrainingInProgress
     // );
+
+    if (updateSelectedExercise) setSelectedExercise(updatableExercise);
 
     updateTrainingInProgress(updatableExercise, supersetIndex);
   };
@@ -400,7 +404,6 @@ export default function TrainingInProgressExerciseCard() {
             position: 'relative',
             py: 2,
           }}
-          gap={0.5}
         >
           <Box
             width="100%"
@@ -564,6 +567,7 @@ export default function TrainingInProgressExerciseCard() {
                 (set) => set.setIndex === setIndex
               )?.images || []
             }
+            enableImagePickerSlider
           />
         </Box>
       </Box>
