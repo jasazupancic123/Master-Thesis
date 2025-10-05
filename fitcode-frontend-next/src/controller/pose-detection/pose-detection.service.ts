@@ -24,6 +24,8 @@ export class PoseDetectionService {
     avgFps: { value: number; count: number } | null;
     recordingTimestampRef: RefObject<Date | null>;
     statusMessage: RefObject<string>;
+    stillnessCountdownRef: RefObject<Date | null>;
+    videoHeight: number;
   }) {
     const {
       statusRef,
@@ -36,6 +38,8 @@ export class PoseDetectionService {
       avgFps,
       recordingTimestampRef,
       statusMessage,
+      stillnessCountdownRef,
+      videoHeight,
     } = state;
 
     const initStatuses =
@@ -60,6 +64,8 @@ export class PoseDetectionService {
           avgFps,
           recordingTimestampRef,
           statusMessage,
+          stillnessCountdownRef,
+          videoHeight,
         }
       );
 

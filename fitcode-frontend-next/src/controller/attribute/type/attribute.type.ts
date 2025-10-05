@@ -12,4 +12,6 @@ export interface Attribute<T = any> {
   min?: number; // minimum value for range
   max?: number; // maximum value for range
   options?: Attribute[]; // possible values for select type
+  leafesOnly?: boolean; // if true, only leaf nodes can be selected in a single multiselect
+  searchBar?: boolean; // if true, show a search bar for select/multiselect
 }
