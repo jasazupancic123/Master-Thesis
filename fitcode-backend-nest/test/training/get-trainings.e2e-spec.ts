@@ -1,11 +1,7 @@
-import type { INestApplication } from '@nestjs/common';
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { TestApp } from '@test/common/utils/app.util';
 import { addDays, subDays } from 'date-fns';
 import { stringify } from 'qs';
-import * as request from 'supertest';
 
-import { AppModule } from '@src/app.module';
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { getTime } from '@src/common/service/util';
 import type { TestInstitution, TestUser } from '@src/common/type/entity.type';
@@ -31,7 +27,7 @@ import type { FilterTrainingQueryDto } from '@src/training/dto/filter-training-q
 import { generateTrainingStub } from '@src/training/mock/training.stub';
 
 describe('Get Trainings (e2e)', () => {
-  let app: INestApplication;
+  let testApp: TestApp;
   let firebase: FirebaseService;
   let db: TestDbService;
   let componentService: ComponentService;
@@ -48,18 +44,12 @@ describe('Get Trainings (e2e)', () => {
   let athlete2: TestUser;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
-
-    db = moduleFixture.get(TestDbService);
-    firebase = moduleFixture.get(FirebaseService);
-    componentService = moduleFixture.get(ComponentService);
-    groupService = moduleFixture.get(GroupService);
-    institutionService = moduleFixture.get(InstitutionService);
+    testApp = await TestApp.init();
+    db = testApp.module.get(TestDbService);
+    firebase = testApp.module.get(FirebaseService);
+    componentService = testApp.module.get(ComponentService);
+    groupService = testApp.module.get(GroupService);
+    institutionService = testApp.module.get(InstitutionService);
 
     component = await componentService.create(generateComponentStub());
     institution = await createInstitution(institutionService);
@@ -189,7 +179,7 @@ describe('Get Trainings (e2e)', () => {
       deleteUsers(firebase, [trainer2, athlete2]),
     ]);
 
-    await app.close();
+    await testApp.close();
   });
 
   function url(query: FilterTrainingQueryDto = {}) {
@@ -201,72 +191,59 @@ describe('Get Trainings (e2e)', () => {
     return `/training${q}`;
   }
 
-  it('should return all trainings by trainer', async () => {
-    const response1 = await request(app.getHttpServer())
-      .get(url())
-      .set('Authorization', `Bearer ${trainer1.token}`);
+  async function req(query: FilterTrainingQueryDto = {}, token: string) {
+    return testApp.http.get(url(query), token);
+  }
 
+  it('should return all trainings by trainer', async () => {
+    const response1 = await req({}, trainer1.token);
     expect(response1.status).toBe(200);
     expect(response1.body.length).toBe(7);
 
-    const response2 = await request(app.getHttpServer())
-      .get(url())
-      .set('Authorization', `Bearer ${trainer2.token}`);
-
+    const response2 = await req({}, trainer2.token);
     expect(response2.status).toBe(200);
     expect(response2.body.length).toBe(2);
   });
 
   it('should return trainings by athlete', async () => {
-    const response1 = await request(app.getHttpServer())
-      .get(url())
-      .set('Authorization', `Bearer ${athlete1.token}`);
-
+    const response1 = await req({}, athlete1.token);
     expect(response1.status).toBe(200);
     expect(response1.body.length).toBe(7);
 
-    const response2 = await request(app.getHttpServer())
-      .get(url())
-      .set('Authorization', `Bearer ${athlete2.token}`);
-
+    const response2 = await req({}, athlete2.token);
     expect(response2.status).toBe(200);
     expect(response2.body.length).toBe(6);
   });
 
   it('should filter by group', async () => {
-    const response1 = await request(app.getHttpServer())
-      .get(url({ groupId: group.id }))
-      .set('Authorization', `Bearer ${trainer1.token}`);
-
+    const response1 = await req({ groupId: group.id }, trainer1.token);
     expect(response1.status).toBe(200);
     expect(response1.body.length).toBe(3);
 
-    const response2 = await request(app.getHttpServer())
-      .get(url({ groupId: 'test-group' }))
-      .set('Authorization', `Bearer ${trainer1.token}`);
-
+    const response2 = await req({ groupId: 'test-group' }, trainer1.token);
     expect(response2.status).toBe(200);
     expect(response2.body.length).toBe(4);
   });
 
   it('should filter by date range', async () => {
     const today = new Date();
-    const response1 = await request(app.getHttpServer())
-      // from today 00:00 to today 23:59
-      .get(url({ from: getTime(today, 0, 0), to: getTime(today, 23, 59) }))
-      .set('Authorization', `Bearer ${trainer1.token}`);
+
+    // from today 00:00 to today 23:59
+    const response1 = await req(
+      { from: getTime(today, 0, 0), to: getTime(today, 23, 59) },
+      trainer1.token,
+    );
 
     expect(response1.status).toBe(200);
     expect(response1.body.length).toBe(2);
 
-    const response2 = await request(app.getHttpServer())
-      .get(
-        url({
-          from: getTime(subDays(today, 1), 0, 0), // yesterday, 00:00
-          to: getTime(addDays(today, 1), 23, 59), // tomorrow, 23:59
-        }),
-      )
-      .set('Authorization', `Bearer ${trainer1.token}`);
+    const response2 = await req(
+      {
+        from: getTime(subDays(today, 1), 0, 0), // yesterday, 00:00
+        to: getTime(addDays(today, 1), 23, 59), // tomorrow, 23:59
+      },
+      trainer1.token,
+    );
 
     expect(response2.status).toBe(200);
     expect(response2.body.length).toBe(5);
@@ -274,9 +251,7 @@ describe('Get Trainings (e2e)', () => {
 
   it('should filter by only start date range', async () => {
     const today = new Date();
-    const response1 = await request(app.getHttpServer())
-      .get(url({ from: getTime(today, 0, 0) }))
-      .set('Authorization', `Bearer ${trainer1.token}`);
+    const response1 = await req({ from: getTime(today, 0, 0) }, trainer1.token);
 
     expect(response1.status).toBe(200);
     expect(response1.body.length).toBe(5);
@@ -284,9 +259,7 @@ describe('Get Trainings (e2e)', () => {
 
   it('should filter by only end date range', async () => {
     const today = new Date();
-    const response1 = await request(app.getHttpServer())
-      .get(url({ to: getTime(today, 23, 59) }))
-      .set('Authorization', `Bearer ${trainer1.token}`);
+    const response1 = await req({ to: getTime(today, 23, 59) }, trainer1.token);
 
     expect(response1.status).toBe(200);
     expect(response1.body.length).toBe(4);
@@ -295,9 +268,10 @@ describe('Get Trainings (e2e)', () => {
   it('should filter by multiple properties', async () => {
     // 1. filter by trainer1 and group1 with from date being today 00:00
     const today = new Date();
-    const response1 = await request(app.getHttpServer())
-      .get(url({ groupId: group.id, from: getTime(today, 0, 0) }))
-      .set('Authorization', `Bearer ${trainer1.token}`);
+    const response1 = await req(
+      { groupId: group.id, from: getTime(today, 0, 0) },
+      trainer1.token,
+    );
 
     expect(response1.status).toBe(200);
     expect(response1.body.length).toBe(1);

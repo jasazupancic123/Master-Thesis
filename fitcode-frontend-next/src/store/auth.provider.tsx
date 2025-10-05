@@ -1,6 +1,5 @@
 'use client';
 
-import { type User } from '@firebase/auth';
 import { useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useState } from 'react';
 
@@ -19,23 +18,19 @@ export const useAuth = () => useContext(AuthContext)!;
 
 export type AuthState = {
   status: AuthStatus;
-  token?: string;
-  user?: User;
+  user?: AuthUser;
   role?: UserRole;
   customClaims?: CustomClaims;
 };
 
-export const AuthProvider = (
-  props: ChildrenProps & { initialToken?: string }
-) => {
-  const { children } = props;
+export const AuthProvider = (props: ChildrenProps) => {
   const auth = getFirebaseAuth();
+  const { children } = props;
   const router = useRouter();
-  const controller = AuthController.getInstance('');
+  const controller = AuthController.getInstance();
 
   const [state, setState] = useState<AuthState>({
     status: 'loading',
-    token: undefined,
     user: undefined,
     role: undefined,
     customClaims: undefined,
@@ -43,10 +38,7 @@ export const AuthProvider = (
 
   function setCustomClaims(claims: CustomClaims) {
     if (state.status === 'authenticated')
-      setState((prevState) => ({
-        ...prevState,
-        customClaims: claims,
-      }));
+      setState((prevState) => ({ ...prevState, customClaims: claims }));
   }
 
   function setUser(data: Partial<Pick<AuthUser, 'displayName' | 'photoURL'>>) {
@@ -57,45 +49,24 @@ export const AuthProvider = (
     }));
   }
 
-  useEffect(() => {
-    async function init() {
-      await auth.authStateReady();
-      await handleUserChange(auth.currentUser);
-    }
-
-    init().then();
-  }, []);
-
-  useEffect(() => {
-    const unsubscribe = auth.onIdTokenChanged(async (user) => {
-      const newUser = await handleUserChange(user);
-      if (user) await controller.login(newUser.token!, user.refreshToken);
-    });
-
-    return () => unsubscribe();
-  }, [auth]);
-
-  async function handleUserChange(user: User | null): Promise<AuthState> {
+  function handleUserChange(user: AuthUser | null): AuthState {
     let newState: AuthState = { ...state, status: 'loading' };
 
     if (!user) {
       // user is logged out
       newState = {
         status: 'unauthenticated',
-        token: undefined,
         user: undefined,
         role: undefined,
         customClaims: undefined,
       };
     } else {
       // user is logged in
-      const { token, claims } = await user.getIdTokenResult();
-      const customClaims = claims as unknown as CustomClaims;
+      const customClaims = user.customClaims;
       const role = customClaims.role?.[0];
 
       newState = {
         status: 'authenticated',
-        token,
         user,
         role,
         customClaims,
@@ -107,16 +78,34 @@ export const AuthProvider = (
   }
 
   async function logout(redirect = true): Promise<void> {
+    handleUserChange(null);
     await auth.signOut();
-    await handleUserChange(null);
     await controller.logout();
     if (redirect) router.push(LINK_SIGN_IN.href);
   }
 
+  useEffect(() => {
+    auth.authStateReady().then();
+  }, [auth]);
+
+  useEffect(() => {
+    const unsubscribe = auth.onIdTokenChanged(async (firebaseUser) => {
+      if (firebaseUser) {
+        const idToken = await firebaseUser.getIdToken();
+        const user = await controller.sessionLogin(idToken);
+        handleUserChange(user);
+      } else {
+        await AuthController.getInstance().logout();
+        handleUserChange(null);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [auth]);
+
   if (
-    auth?.currentUser &&
+    auth.currentUser &&
     state.status === 'authenticated' &&
-    state.token &&
     state.user &&
     state.role &&
     state.customClaims
@@ -125,7 +114,6 @@ export const AuthProvider = (
       <AuthContext.Provider
         value={{
           status: 'authenticated',
-          token: state.token!,
           user: state.user!,
           role: state.role!,
           customClaims: state.customClaims!,
@@ -141,16 +129,14 @@ export const AuthProvider = (
 
   if (state.status === 'loading')
     return (
-      <AuthContext.Provider
-        value={{ status: 'loading', token: undefined, handleUserChange }}
-      >
+      <AuthContext.Provider value={{ status: 'loading', handleUserChange }}>
         {children}
       </AuthContext.Provider>
     );
 
   return (
     <AuthContext.Provider
-      value={{ status: 'unauthenticated', token: undefined, handleUserChange }}
+      value={{ status: 'unauthenticated', handleUserChange }}
     >
       {children}
     </AuthContext.Provider>

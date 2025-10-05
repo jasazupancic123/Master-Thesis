@@ -1,14 +1,10 @@
-import type { INestApplication } from '@nestjs/common';
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
 import {
   COMPONENT_PARAMS_OPT1,
   COMPONENT_PARAMS_OPT2,
 } from '@test/common/constant/component-params.constant';
+import { TestApp } from '@test/common/utils/app.util';
 import { addDays, addHours, subDays } from 'date-fns';
-import * as request from 'supertest';
 
-import { AppModule } from '@src/app.module';
 import type { TestInstitution, TestUser } from '@src/common/type/entity.type';
 import { createAthleteUserAndToken } from '@src/common/utils/auth.util';
 import {
@@ -35,6 +31,7 @@ import type { Group } from '@src/group/entity/group.entity';
 import { GroupService } from '@src/group/group.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { TestDbService } from '@src/test-db/test-db.service';
+import type { CompletedTrainingComponent } from '@src/training/entity/completed-training.entity';
 import type { Training } from '@src/training/entity/training.entity';
 import { SetStatus } from '@src/training/enum/set-status.enum';
 import { generateCompletedTrainingExerciseStub } from '@src/training/mock/completed-training.stub';
@@ -49,7 +46,7 @@ import { TrainingService } from '@src/training/service/training.service';
 import { WorkloadService } from '@src/training/service/workload.service';
 
 describe('Complete training component (e2e)', () => {
-  let app: INestApplication;
+  let testApp: TestApp;
   let db: TestDbService;
 
   let firebase: FirebaseService;
@@ -90,21 +87,15 @@ describe('Complete training component (e2e)', () => {
   let exercises: Exercise[];
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
-
-    db = moduleFixture.get(TestDbService);
-    firebase = moduleFixture.get(FirebaseService);
-    componentService = moduleFixture.get(ComponentService);
-    exerciseService = moduleFixture.get(ExerciseService);
-    trainingService = moduleFixture.get(TrainingService);
-    groupService = moduleFixture.get(GroupService);
-    institutionService = moduleFixture.get(InstitutionService);
-    workloadService = moduleFixture.get(WorkloadService);
+    testApp = await TestApp.init();
+    db = testApp.module.get(TestDbService);
+    firebase = testApp.module.get(FirebaseService);
+    componentService = testApp.module.get(ComponentService);
+    exerciseService = testApp.module.get(ExerciseService);
+    trainingService = testApp.module.get(TrainingService);
+    groupService = testApp.module.get(GroupService);
+    institutionService = testApp.module.get(InstitutionService);
+    workloadService = testApp.module.get(WorkloadService);
 
     component1 = await componentService.create(
       generateComponentStub({
@@ -157,7 +148,7 @@ describe('Complete training component (e2e)', () => {
       deleteUsers(firebase, [athlete2]),
     ]);
 
-    await app.close();
+    await testApp.close();
   });
 
   async function createTraining(): Promise<Training> {
@@ -262,11 +253,22 @@ describe('Complete training component (e2e)', () => {
     return `/training/${trainingId}/component/${componentId}/complete`;
   }
 
+  async function req(
+    token: string,
+    trainingId: string,
+    componentId: string,
+    body: Partial<CompletedTrainingComponent>,
+  ) {
+    return await testApp.http.patch(url(trainingId, componentId), token, body);
+  }
+
   it('should throw error if training not found', async () => {
-    const response = await request(app.getHttpServer())
-      .patch(url('invalid-training-id', 'component-id'))
-      .set('Authorization', `Bearer ${athlete1.token}`)
-      .send({});
+    const response = await req(
+      global.trainer.token,
+      'invalid-training-id',
+      'component-id',
+      {},
+    );
 
     expect(response.status).toBe(400);
     expect(response.body.message).toBe('Training not found');
@@ -281,10 +283,12 @@ describe('Complete training component (e2e)', () => {
       }),
     );
 
-    const response = await request(app.getHttpServer())
-      .patch(url(trainingTomorrowId, 'component-id'))
-      .set('Authorization', `Bearer ${athlete1.token}`)
-      .send({});
+    const response = await req(
+      athlete1.token,
+      trainingTomorrowId,
+      'component-id',
+      {},
+    );
 
     expect(response.status).toBe(409);
     expect(response.body.message).toBe(
@@ -303,10 +307,12 @@ describe('Complete training component (e2e)', () => {
       }),
     );
 
-    const response = await request(app.getHttpServer())
-      .patch(url(trainingYesterdayId, 'component-id'))
-      .set('Authorization', `Bearer ${athlete1.token}`)
-      .send({});
+    const response = await req(
+      athlete1.token,
+      trainingYesterdayId,
+      'component-id',
+      {},
+    );
 
     expect(response.status).toBe(409);
     expect(response.body.message).toBe(
@@ -317,11 +323,7 @@ describe('Complete training component (e2e)', () => {
   });
 
   it('should throw error if training component does not exist', async () => {
-    const response = await request(app.getHttpServer())
-      .patch(url(training.id, 'component-id'))
-      .set('Authorization', `Bearer ${athlete1.token}`)
-      .send({});
-
+    const response = await req(athlete1.token, training.id, 'component-id', {});
     expect(response.status).toBe(404);
     expect(response.body.message).toBe('Training component not found');
   });
@@ -332,21 +334,19 @@ describe('Complete training component (e2e)', () => {
   ])(
     'should throw error if current user is %s and does not provide athleteId',
     async (_, token) => {
-      const response = await request(app.getHttpServer())
-        .patch(url(training.id, component1.id))
-        .set('Authorization', `Bearer ${token}`)
-        .send({});
-
+      const response = await req(token, training.id, component1.id, {});
       expect(response.status).toBe(400);
       expect(response.body.message).toBe('You must provide athlete');
     },
   );
 
   it('should throw error if provided athlete does not exist', async () => {
-    const response = await request(app.getHttpServer())
-      .patch(url(training.id, component1.id))
-      .set('Authorization', `Bearer ${global.trainer.token}`)
-      .send({ userId: 'unknown-athlete-id' });
+    const response = await req(
+      global.trainer.token,
+      training.id,
+      component1.id,
+      { userId: 'unknown-athlete-id' },
+    );
 
     expect(response.status).toBe(404);
     expect(response.body.message).toBe('Athlete does not exist');
@@ -354,11 +354,12 @@ describe('Complete training component (e2e)', () => {
 
   it('should throw error if provided athlete is not part of the institution', async () => {
     const newAthlete = await createAthleteUserAndToken(firebase);
-
-    const response = await request(app.getHttpServer())
-      .patch(url(training.id, component1.id))
-      .set('Authorization', `Bearer ${global.trainer.token}`)
-      .send({ userId: newAthlete.uid });
+    const response = await req(
+      global.trainer.token,
+      training.id,
+      component1.id,
+      { userId: newAthlete.uid },
+    );
 
     expect(response.status).toBe(401);
     expect(response.body.message).toBe(
@@ -436,13 +437,10 @@ describe('Complete training component (e2e)', () => {
     ])(
       'should throw error if any prescribed exercise in superset is omitted (%s)',
       async (_, { correctExercise, supersetIndex }, exercises) => {
-        const response = await request(app.getHttpServer())
-          .patch(url(training.id, component1.id))
-          .set('Authorization', `Bearer ${athlete1.token}`)
-          .send({
-            userId: athlete1.uid,
-            exercises,
-          });
+        const response = await req(athlete1.token, training.id, component1.id, {
+          userId: athlete1.uid,
+          exercises,
+        });
 
         expect(response.status).toBe(400);
         expect(response.body.message).toBe(
@@ -511,13 +509,10 @@ describe('Complete training component (e2e)', () => {
         { correctExercise, supersetIndex, invalidSetText },
         exercises,
       ) => {
-        const response = await request(app.getHttpServer())
-          .patch(url(training.id, component1.id))
-          .set('Authorization', `Bearer ${athlete1.token}`)
-          .send({
-            userId: athlete1.uid,
-            exercises,
-          });
+        const response = await req(athlete1.token, training.id, component1.id, {
+          userId: athlete1.uid,
+          exercises,
+        });
 
         expect(response.status).toBe(400);
         expect(response.body.message).toBe(
@@ -528,10 +523,11 @@ describe('Complete training component (e2e)', () => {
 
     it('should successfully create all workloads and update training stats and completed members', async () => {
       const spy = jest.spyOn(workloadService, 'createForTrainingComponent');
-      const response = await request(app.getHttpServer())
-        .patch(url(training.id, component1.id))
-        .set('Authorization', `Bearer ${global.athlete.token}`)
-        .send({
+      const response = await req(
+        global.athlete.token,
+        training.id,
+        component1.id,
+        {
           userId: global.athlete.uid,
           exercises: [
             generateCompletedTrainingExerciseStub(component1, 1, {
@@ -551,7 +547,8 @@ describe('Complete training component (e2e)', () => {
               supersetIndex: 1,
             }),
           ],
-        });
+        },
+      );
 
       const spyResult = await spy.mock.results[0].value;
       expect(response.status).toBe(200);
@@ -588,57 +585,51 @@ describe('Complete training component (e2e)', () => {
     async (token, message) => {
       training = await createTraining();
 
-      const response1 = await request(app.getHttpServer())
-        .patch(url(training.id, component1.id))
-        .set('Authorization', `Bearer ${athlete1.token}`)
-        .send({
-          userId: athlete1.uid,
-          exercises: [
-            generateCompletedTrainingExerciseStub(component1, 1, {
-              id: 'squat-l1',
-              supersetIndex: 0,
-            }),
-            generateCompletedTrainingExerciseStub(component1, 1, {
-              id: 'bench-l1',
-              supersetIndex: 0,
-            }),
-            generateCompletedTrainingExerciseStub(component1, 1, {
-              id: 'squat-l1',
-              supersetIndex: 1,
-            }),
-            generateCompletedTrainingExerciseStub(component1, 1, {
-              id: 'deadlift-l1',
-              supersetIndex: 1,
-            }),
-          ],
-        });
+      const response1 = await req(athlete1.token, training.id, component1.id, {
+        userId: athlete1.uid,
+        exercises: [
+          generateCompletedTrainingExerciseStub(component1, 1, {
+            id: 'squat-l1',
+            supersetIndex: 0,
+          }),
+          generateCompletedTrainingExerciseStub(component1, 1, {
+            id: 'bench-l1',
+            supersetIndex: 0,
+          }),
+          generateCompletedTrainingExerciseStub(component1, 1, {
+            id: 'squat-l1',
+            supersetIndex: 1,
+          }),
+          generateCompletedTrainingExerciseStub(component1, 1, {
+            id: 'deadlift-l1',
+            supersetIndex: 1,
+          }),
+        ],
+      });
 
       expect(response1.status).toBe(200);
 
-      const response2 = await request(app.getHttpServer())
-        .patch(url(training.id, component1.id))
-        .set('Authorization', `Bearer ${token}`)
-        .send({
-          userId: athlete1.uid,
-          exercises: [
-            generateCompletedTrainingExerciseStub(component1, 1, {
-              id: 'squat-l1',
-              supersetIndex: 0,
-            }),
-            generateCompletedTrainingExerciseStub(component1, 1, {
-              id: 'bench-l1',
-              supersetIndex: 0,
-            }),
-            generateCompletedTrainingExerciseStub(component1, 1, {
-              id: 'squat-l1',
-              supersetIndex: 1,
-            }),
-            generateCompletedTrainingExerciseStub(component1, 1, {
-              id: 'deadlift-l1',
-              supersetIndex: 1,
-            }),
-          ],
-        });
+      const response2 = await req(token, training.id, component1.id, {
+        userId: athlete1.uid,
+        exercises: [
+          generateCompletedTrainingExerciseStub(component1, 1, {
+            id: 'squat-l1',
+            supersetIndex: 0,
+          }),
+          generateCompletedTrainingExerciseStub(component1, 1, {
+            id: 'bench-l1',
+            supersetIndex: 0,
+          }),
+          generateCompletedTrainingExerciseStub(component1, 1, {
+            id: 'squat-l1',
+            supersetIndex: 1,
+          }),
+          generateCompletedTrainingExerciseStub(component1, 1, {
+            id: 'deadlift-l1',
+            supersetIndex: 1,
+          }),
+        ],
+      });
 
       expect(response2.status).toBe(409);
       expect(response2.body.message).toBe(message);
@@ -667,17 +658,17 @@ describe('Complete training component (e2e)', () => {
       }),
     ];
 
-    const response1 = await request(app.getHttpServer())
-      .patch(url(training.id, component1.id))
-      .set('Authorization', `Bearer ${athlete1.token}`)
-      .send({ userId: athlete1.uid, exercises });
+    const response1 = await req(athlete1.token, training.id, component1.id, {
+      userId: athlete1.uid,
+      exercises,
+    });
 
     expect(response1.status).toBe(200);
 
-    const response2 = await request(app.getHttpServer())
-      .patch(url(training.id, component1.id))
-      .set('Authorization', `Bearer ${athlete2.token}`)
-      .send({ userId: athlete2.uid, exercises });
+    const response2 = await req(athlete2.token, training.id, component1.id, {
+      userId: athlete2.uid,
+      exercises,
+    });
 
     expect(response2.status).toBe(200);
 
@@ -717,54 +708,48 @@ describe('Complete training component (e2e)', () => {
     training = await createTraining();
 
     // complete first component
-    const response1 = await request(app.getHttpServer())
-      .patch(url(training.id, component1.id))
-      .set('Authorization', `Bearer ${athlete1.token}`)
-      .send({
-        userId: athlete1.uid,
-        exercises: [
-          generateCompletedTrainingExerciseStub(component1, 1, {
-            id: 'squat-l1',
-            supersetIndex: 0,
-          }),
-          generateCompletedTrainingExerciseStub(component1, 1, {
-            id: 'bench-l1',
-            supersetIndex: 0,
-          }),
-          generateCompletedTrainingExerciseStub(component1, 1, {
-            id: 'squat-l1',
-            supersetIndex: 1,
-          }),
-          generateCompletedTrainingExerciseStub(component1, 1, {
-            id: 'deadlift-l1',
-            supersetIndex: 1,
-          }),
-        ],
-      });
+    const response1 = await req(athlete1.token, training.id, component1.id, {
+      userId: athlete1.uid,
+      exercises: [
+        generateCompletedTrainingExerciseStub(component1, 1, {
+          id: 'squat-l1',
+          supersetIndex: 0,
+        }),
+        generateCompletedTrainingExerciseStub(component1, 1, {
+          id: 'bench-l1',
+          supersetIndex: 0,
+        }),
+        generateCompletedTrainingExerciseStub(component1, 1, {
+          id: 'squat-l1',
+          supersetIndex: 1,
+        }),
+        generateCompletedTrainingExerciseStub(component1, 1, {
+          id: 'deadlift-l1',
+          supersetIndex: 1,
+        }),
+      ],
+    });
 
     expect(response1.status).toBe(200);
 
     // complete second component
-    const response2 = await request(app.getHttpServer())
-      .patch(url(training.id, component2.id))
-      .set('Authorization', `Bearer ${athlete1.token}`)
-      .send({
-        userId: athlete1.uid,
-        exercises: [
-          generateCompletedTrainingExerciseStub(component2, 1, {
-            id: 'bench-l2',
-            supersetIndex: 0,
-          }),
-          generateCompletedTrainingExerciseStub(component2, 1, {
-            id: 'deadlift-l2',
-            supersetIndex: 0,
-          }),
-          generateCompletedTrainingExerciseStub(component2, 1, {
-            id: 'squat-l2',
-            supersetIndex: 1,
-          }),
-        ],
-      });
+    const response2 = await req(athlete1.token, training.id, component2.id, {
+      userId: athlete1.uid,
+      exercises: [
+        generateCompletedTrainingExerciseStub(component2, 1, {
+          id: 'bench-l2',
+          supersetIndex: 0,
+        }),
+        generateCompletedTrainingExerciseStub(component2, 1, {
+          id: 'deadlift-l2',
+          supersetIndex: 0,
+        }),
+        generateCompletedTrainingExerciseStub(component2, 1, {
+          id: 'squat-l2',
+          supersetIndex: 1,
+        }),
+      ],
+    });
 
     expect(response2.status).toBe(200);
 
@@ -828,47 +813,34 @@ describe('Complete training component (e2e)', () => {
       }),
     ];
 
-    // Complete first component for athlete1
-    const response1 = await request(app.getHttpServer())
-      .patch(url(training.id, component1.id))
-      .set('Authorization', `Bearer ${athlete1.token}`)
-      .send({
-        userId: athlete1.uid,
-        exercises: exercises1,
-      });
+    const response1 = await req(athlete1.token, training.id, component1.id, {
+      userId: athlete1.uid,
+      exercises: exercises1,
+    });
 
     expect(response1.status).toBe(200);
 
     // Complete second component for athlete1
-    const response2 = await request(app.getHttpServer())
-      .patch(url(training.id, component2.id))
-      .set('Authorization', `Bearer ${athlete1.token}`)
-      .send({
-        userId: athlete1.uid,
-        exercises: exercises2,
-      });
+    const response2 = await req(athlete1.token, training.id, component2.id, {
+      userId: athlete1.uid,
+      exercises: exercises2,
+    });
 
     expect(response2.status).toBe(200);
 
     // Complete first component for athlete2
-    const response3 = await request(app.getHttpServer())
-      .patch(url(training.id, component1.id))
-      .set('Authorization', `Bearer ${athlete2.token}`)
-      .send({
-        userId: athlete2.uid,
-        exercises: exercises1,
-      });
+    const response3 = await req(athlete2.token, training.id, component1.id, {
+      userId: athlete2.uid,
+      exercises: exercises1,
+    });
 
     expect(response3.status).toBe(200);
 
     // Complete second component for athlete2
-    const response4 = await request(app.getHttpServer())
-      .patch(url(training.id, component2.id))
-      .set('Authorization', `Bearer ${athlete2.token}`)
-      .send({
-        userId: athlete2.uid,
-        exercises: exercises2,
-      });
+    const response4 = await req(athlete2.token, training.id, component2.id, {
+      userId: athlete2.uid,
+      exercises: exercises2,
+    });
 
     expect(response4.status).toBe(200);
 
@@ -947,30 +919,27 @@ describe('Complete training component (e2e)', () => {
     expect(existingBenchWorkload.prescribedIntRecValueR).toBe(98);
 
     const spy = jest.spyOn(workloadService, 'getPrescribedWorkload');
-    const response = await request(app.getHttpServer())
-      .patch(url(training.id, component1.id))
-      .set('Authorization', `Bearer ${athlete1.token}`)
-      .send({
-        userId: athlete1.uid,
-        exercises: [
-          generateCompletedTrainingExerciseStub(component1, 1, {
-            id: 'squat-l1',
-            supersetIndex: 0,
-          }),
-          generateCompletedTrainingExerciseStub(component1, 1, {
-            id: 'bench-l1',
-            supersetIndex: 0,
-          }),
-          generateCompletedTrainingExerciseStub(component1, 2, {
-            id: 'squat-l1',
-            supersetIndex: 1,
-          }),
-          generateCompletedTrainingExerciseStub(component1, 2, {
-            id: 'deadlift-l1',
-            supersetIndex: 1,
-          }),
-        ],
-      });
+    const response = await req(athlete1.token, training.id, component1.id, {
+      userId: athlete1.uid,
+      exercises: [
+        generateCompletedTrainingExerciseStub(component1, 1, {
+          id: 'squat-l1',
+          supersetIndex: 0,
+        }),
+        generateCompletedTrainingExerciseStub(component1, 1, {
+          id: 'bench-l1',
+          supersetIndex: 0,
+        }),
+        generateCompletedTrainingExerciseStub(component1, 2, {
+          id: 'squat-l1',
+          supersetIndex: 1,
+        }),
+        generateCompletedTrainingExerciseStub(component1, 2, {
+          id: 'deadlift-l1',
+          supersetIndex: 1,
+        }),
+      ],
+    });
 
     expect(response.status).toBe(200);
     expect(spy).toHaveBeenCalledTimes(10); // 12 workloads in total, but 2 already exist, so 10

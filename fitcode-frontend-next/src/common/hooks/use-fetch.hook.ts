@@ -1,14 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { BACKEND_API_BASE_URL } from '../constant/api.constant';
-import { useAuthenticatedAuth } from '@/store/auth.provider';
 
 export function useNestBackendFetch<T = unknown>(
   url: string,
   options?: { enabled?: boolean }
 ) {
-  const { token } = useAuthenticatedAuth();
-
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -19,7 +16,7 @@ export function useNestBackendFetch<T = unknown>(
 
     try {
       const response = await fetch(`${BACKEND_API_BASE_URL}${url}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include',
       });
 
       if (!response.ok)
@@ -32,7 +29,7 @@ export function useNestBackendFetch<T = unknown>(
     } finally {
       setLoading(false);
     }
-  }, [url, token]);
+  }, [url]);
 
   useEffect(() => {
     if (options?.enabled && url) fetchData();

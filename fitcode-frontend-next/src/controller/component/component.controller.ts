@@ -9,16 +9,14 @@ export class ComponentController extends BaseController {
     super('/component');
   }
 
-  static getInstance(token: string) {
+  static getInstance() {
     if (!this.instance) this.instance = new ComponentController();
-    this.instance.setToken(token);
     return this.instance;
   }
 
   async findAll() {
     return await this.api.get<Component[]>('/', {
       cacheTimeInMs: ONE_HOUR_IN_MS,
-      token: this.getToken(),
     });
   }
 }

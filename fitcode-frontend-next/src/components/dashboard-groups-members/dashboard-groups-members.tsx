@@ -43,8 +43,7 @@ export default function DashboardGroupsMembers(
   const { users } = useMain();
 
   const { role } = useAuthenticatedAuth();
-  const auth = useAuthenticatedAuth();
-  const controller = GroupController.getInstance(auth.token);
+  const controller = GroupController.getInstance();
 
   const {
     selectedInstitution,

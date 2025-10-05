@@ -1,13 +1,9 @@
-import { type INestApplication } from '@nestjs/common';
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
 import {
   COMPONENT_PARAMS_OPT1,
   COMPONENT_PARAMS_OPT2,
 } from '@test/common/constant/component-params.constant';
-import * as request from 'supertest';
+import { TestApp } from '@test/common/utils/app.util';
 
-import { AppModule } from '@src/app.module';
 import type { TestInstitution } from '@src/common/type/entity.type';
 import {
   createGroupWithCycles,
@@ -31,6 +27,7 @@ import { InstitutionService } from '@src/institution/service/institution.service
 import { TestDbService } from '@src/test-db/test-db.service';
 import type { Training } from '@src/training/entity/training.entity';
 import { SetStatus } from '@src/training/enum/set-status.enum';
+import type { UpdateTraining } from '@src/training/interface/update-training.interface';
 import {
   generateExerciseSet,
   generateSuperset,
@@ -45,7 +42,7 @@ import {
 import { TrainingService } from '@src/training/service/training.service';
 
 describe('Update Training (e2e)', () => {
-  let app: INestApplication;
+  let testApp: TestApp;
   let db: TestDbService;
 
   let firebase: FirebaseService;
@@ -67,19 +64,13 @@ describe('Update Training (e2e)', () => {
   let otherGroup: Group;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
-
-    db = moduleFixture.get(TestDbService);
-    firebase = moduleFixture.get(FirebaseService);
-    componentService = moduleFixture.get(ComponentService);
-    trainingService = moduleFixture.get(TrainingService);
-    groupService = moduleFixture.get(GroupService);
-    institutionService = moduleFixture.get(InstitutionService);
+    testApp = await TestApp.init();
+    db = testApp.module.get(TestDbService);
+    firebase = testApp.module.get(FirebaseService);
+    componentService = testApp.module.get(ComponentService);
+    trainingService = testApp.module.get(TrainingService);
+    groupService = testApp.module.get(GroupService);
+    institutionService = testApp.module.get(InstitutionService);
 
     component1 = await componentService.create(
       generateComponentStub({
@@ -115,7 +106,7 @@ describe('Update Training (e2e)', () => {
       deleteDoc(firebase, 'COMPONENT', component2.id),
     ]);
 
-    await app.close();
+    await testApp.close();
   });
 
   async function createTraining(data?: Partial<Training>) {
@@ -134,25 +125,24 @@ describe('Update Training (e2e)', () => {
     return db.trainings.findById(trainingId);
   }
 
+  async function req(
+    body: Partial<UpdateTraining>,
+    _trainingId = training.id,
+    token: string = global.trainer.token,
+  ) {
+    return await testApp.http.patch(`/training/${_trainingId}`, token, body);
+  }
+
   describe('Update training', () => {
     it('should fail to update training if training id not found', async () => {
-      const response = await request(app.getHttpServer())
-        .patch(`/training/invalid-id`)
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send(training);
-
+      const response = await req(training, 'invalid-id');
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(`Training not found`);
     });
 
     it('should fail to update training if users from same institution without permission try to edit it', async () => {
       const responses = await Promise.all(
-        [global.athlete].map((user) =>
-          request(app.getHttpServer())
-            .patch(`/training/${training.id}`)
-            .set('Authorization', `Bearer ${user.token}`)
-            .send(training),
-        ),
+        [global.athlete].map((user) => req(training, undefined, user.token)),
       );
 
       for (const response of responses) {
@@ -167,12 +157,7 @@ describe('Update Training (e2e)', () => {
           otherInstitution.athletes[0],
           otherInstitution.trainers[0],
           otherInstitution.manager,
-        ].map((user) =>
-          request(app.getHttpServer())
-            .patch(`/training/${training.id}`)
-            .set('Authorization', `Bearer ${user.token}`)
-            .send(training),
-        ),
+        ].map((user) => req(training, undefined, user.token)),
       );
 
       for (const response of responses) {
@@ -182,11 +167,7 @@ describe('Update Training (e2e)', () => {
     });
 
     it('should delete training if there are not any components left', async () => {
-      const response = await request(app.getHttpServer())
-        .patch(`/training/${training.id}`)
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send({ ...training, components: [] });
-
+      const response = await req({ ...training, components: [] });
       const trainings = await trainingService.findAll(global.trainer);
       expect(response.status).toBe(200);
       expect(trainings).toHaveLength(0);
@@ -206,24 +187,21 @@ describe('Update Training (e2e)', () => {
       const sets = [generateExerciseSet(1, COMPONENT_PARAMS_OPT1)];
       sets[0].paramValuesR = undefined; // Only left side set
 
-      const response = await request(app.getHttpServer())
-        .patch(`/training/${training.id}`)
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send({
-          ...training,
-          components: [
-            generateTrainingComponent({
-              id: component1.id,
-              supersets: [
-                generateSuperset({
-                  exercises: [
-                    generateTrainingExercise({ id: exercise.id, sets }),
-                  ],
-                }),
-              ],
-            }),
-          ],
-        });
+      const response = await req({
+        ...training,
+        components: [
+          generateTrainingComponent({
+            id: component1.id,
+            supersets: [
+              generateSuperset({
+                exercises: [
+                  generateTrainingExercise({ id: exercise.id, sets }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      });
 
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
@@ -231,40 +209,6 @@ describe('Update Training (e2e)', () => {
       );
 
       await db.exercises.delete(exercise.id);
-    });
-  });
-
-  describe('Copy training', () => {
-    it('should fail to copy training if group not found', async () => {
-      const data = generateTrainingStub({
-        ...training,
-        groupId: 'invalid-group-id',
-      });
-
-      const response = await request(app.getHttpServer())
-        .post('/training')
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send(data);
-
-      expect(response.status).toBe(404);
-      expect(response.body.message).toBe(`Group does not exist`);
-    });
-  });
-
-  describe('Delete training', () => {
-    it('should fail to delete training if group not found', async () => {
-      const data = generateTrainingStub({
-        ...training,
-        groupId: 'invalid-group-id',
-      });
-
-      const response = await request(app.getHttpServer())
-        .post('/training')
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send(data);
-
-      expect(response.status).toBe(404);
-      expect(response.body.message).toBe(`Group does not exist`);
     });
   });
 
@@ -332,15 +276,12 @@ describe('Update Training (e2e)', () => {
     });
 
     it('should fail if training component is invalid', async () => {
-      const response = await request(app.getHttpServer())
-        .patch(`/training/${training.id}`)
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send({
-          ...training,
-          workloads: [
-            generateWorkloadMetaStub({ componentId: 'invalid-component-id' }),
-          ],
-        });
+      const response = await req({
+        ...training,
+        workloads: [
+          generateWorkloadMetaStub({ componentId: 'invalid-component-id' }),
+        ],
+      });
 
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
@@ -349,18 +290,15 @@ describe('Update Training (e2e)', () => {
     });
 
     it('should fail if exercise does not exist', async () => {
-      const response = await request(app.getHttpServer())
-        .patch(`/training/${training.id}`)
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send({
-          ...training,
-          workloads: [
-            generateWorkloadMetaStub({
-              componentId: component1.id,
-              exerciseId: 'invalid-exercise-id',
-            }),
-          ],
-        });
+      const response = await req({
+        ...training,
+        workloads: [
+          generateWorkloadMetaStub({
+            componentId: component1.id,
+            exerciseId: 'invalid-exercise-id',
+          }),
+        ],
+      });
 
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(`Exercise does not exist`);
@@ -373,19 +311,16 @@ describe('Update Training (e2e)', () => {
         componentIds: [component1.id],
       });
 
-      const response = await request(app.getHttpServer())
-        .patch(`/training/${training.id}`)
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send({
-          ...training,
-          workloads: [
-            generateWorkloadMetaStub({
-              componentId: component1.id,
-              exerciseId: otherExercise.id,
-              supersetIndex: 0,
-            }),
-          ],
-        });
+      const response = await req({
+        ...training,
+        workloads: [
+          generateWorkloadMetaStub({
+            componentId: component1.id,
+            exerciseId: otherExercise.id,
+            supersetIndex: 0,
+          }),
+        ],
+      });
 
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
@@ -396,20 +331,17 @@ describe('Update Training (e2e)', () => {
     });
 
     it('should fail if invalid set number is provided', async () => {
-      const response = await request(app.getHttpServer())
-        .patch(`/training/${training.id}`)
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send({
-          ...training,
-          workloads: [
-            generateWorkloadMetaStub({
-              componentId: component1.id,
-              exerciseId: exercise1.id,
-              supersetIndex: 0,
-              setNumber: 5, // Invalid set number
-            }),
-          ],
-        });
+      const response = await req({
+        ...training,
+        workloads: [
+          generateWorkloadMetaStub({
+            componentId: component1.id,
+            exerciseId: exercise1.id,
+            supersetIndex: 0,
+            setNumber: 5, // Invalid set number
+          }),
+        ],
+      });
 
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
@@ -440,20 +372,17 @@ describe('Update Training (e2e)', () => {
     ])(
       'should fail if there are missing parameters in custom workload',
       async (componentParams, { invalidParamText }) => {
-        const response = await request(app.getHttpServer())
-          .patch(`/training/${training.id}`)
-          .set('Authorization', `Bearer ${global.trainer.token}`)
-          .send({
-            ...training,
-            workloads: [
-              generateWorkloadStub(component1, {
-                exerciseId: exercise1.id,
-                supersetIndex: 0,
-                setNumber: 1,
-                customComponentParams: componentParams,
-              }),
-            ],
-          });
+        const response = await req({
+          ...training,
+          workloads: [
+            generateWorkloadStub(component1, {
+              exerciseId: exercise1.id,
+              supersetIndex: 0,
+              setNumber: 1,
+              customComponentParams: componentParams,
+            }),
+          ],
+        });
 
         expect(response.status).toBe(400);
         expect(response.body.message).toBe(
@@ -474,10 +403,7 @@ describe('Update Training (e2e)', () => {
       });
 
       workload.prescribedVolWork1ValueL = undefined; // No value
-      let response = await request(app.getHttpServer())
-        .patch(`/training/${training.id}`)
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send({ ...training, workloads: [workload] });
+      let response = await req({ ...training, workloads: [workload] });
 
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
@@ -485,10 +411,7 @@ describe('Update Training (e2e)', () => {
       );
 
       workload.prescribedVolWork1ValueL = -5; // Negative value
-      response = await request(app.getHttpServer())
-        .patch(`/training/${training.id}`)
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send({ ...training, workloads: [workload] });
+      response = await req({ ...training, workloads: [workload] });
 
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
@@ -497,24 +420,21 @@ describe('Update Training (e2e)', () => {
     });
 
     it('should update training with custom workloads', async () => {
-      const response = await request(app.getHttpServer())
-        .patch(`/training/${training.id}`)
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send({
-          ...training,
-          workloads: [
-            generateWorkloadStub(component1, {
-              exerciseId: exercise1.id,
-              supersetIndex: 0,
-              setNumber: 1,
-              randomValues: true,
-              customComponentParams: generateComponentParamsStub([
-                ParamType.VolWork1,
-                ParamType.IntWork1,
-              ]),
-            }),
-          ],
-        });
+      const response = await req({
+        ...training,
+        workloads: [
+          generateWorkloadStub(component1, {
+            exerciseId: exercise1.id,
+            supersetIndex: 0,
+            setNumber: 1,
+            randomValues: true,
+            customComponentParams: generateComponentParamsStub([
+              ParamType.VolWork1,
+              ParamType.IntWork1,
+            ]),
+          }),
+        ],
+      });
 
       expect(response.status).toBe(200);
 
@@ -555,47 +475,44 @@ describe('Update Training (e2e)', () => {
     });
 
     it('should update training with multiple custom workloads', async () => {
-      const response = await request(app.getHttpServer())
-        .patch(`/training/${training.id}`)
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send({
-          ...training,
-          workloads: [
-            generateWorkloadStub(component1, {
-              userId: global.athlete.uid,
-              exerciseId: exercise1.id,
-              supersetIndex: 0,
-              setNumber: 1,
-              randomValues: true,
-            }),
-            generateWorkloadStub(component1, {
-              userId: global.athlete.uid,
-              exerciseId: exercise1.id,
-              supersetIndex: 0,
-              setNumber: 2,
-              randomValues: true,
-            }),
-            generateWorkloadStub(component1, {
-              userId: global.athlete.uid,
-              exerciseId: exercise1.id,
-              supersetIndex: 0,
-              setNumber: 3,
-              randomValues: true,
-            }),
-            generateWorkloadStub(component2, {
-              exerciseId: exercise2.id,
-              supersetIndex: 0,
-              setNumber: 1,
-              randomValues: true,
-            }),
-            generateWorkloadStub(component2, {
-              exerciseId: exercise2.id,
-              supersetIndex: 0,
-              setNumber: 2,
-              randomValues: true,
-            }),
-          ],
-        });
+      const response = await req({
+        ...training,
+        workloads: [
+          generateWorkloadStub(component1, {
+            userId: global.athlete.uid,
+            exerciseId: exercise1.id,
+            supersetIndex: 0,
+            setNumber: 1,
+            randomValues: true,
+          }),
+          generateWorkloadStub(component1, {
+            userId: global.athlete.uid,
+            exerciseId: exercise1.id,
+            supersetIndex: 0,
+            setNumber: 2,
+            randomValues: true,
+          }),
+          generateWorkloadStub(component1, {
+            userId: global.athlete.uid,
+            exerciseId: exercise1.id,
+            supersetIndex: 0,
+            setNumber: 3,
+            randomValues: true,
+          }),
+          generateWorkloadStub(component2, {
+            exerciseId: exercise2.id,
+            supersetIndex: 0,
+            setNumber: 1,
+            randomValues: true,
+          }),
+          generateWorkloadStub(component2, {
+            exerciseId: exercise2.id,
+            supersetIndex: 0,
+            setNumber: 2,
+            randomValues: true,
+          }),
+        ],
+      });
 
       expect(response.status).toBe(200);
 
@@ -635,13 +552,10 @@ describe('Update Training (e2e)', () => {
 
       newWorkload.prescribedIntWork1ValueL = 22;
 
-      const response = await request(app.getHttpServer())
-        .patch(`/training/${training.id}`)
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send({
-          ...training,
-          workloads: [newWorkload], // this should update the existing workload
-        });
+      const response = await req({
+        ...training,
+        workloads: [newWorkload], // this should update the existing workload
+      });
 
       expect(response.status).toBe(200);
 
@@ -730,13 +644,10 @@ describe('Update Training (e2e)', () => {
         }),
       ];
 
-      const response = await request(app.getHttpServer())
-        .patch(`/training/${training.id}`)
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send({
-          ...training,
-          workloads,
-        });
+      const response = await req({
+        ...training,
+        workloads, // this should update the existing workload
+      });
 
       expect(response.status).toBe(200);
 

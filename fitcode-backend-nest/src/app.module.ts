@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 
@@ -6,7 +6,6 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AttributeModule } from './attribute/attribute.module';
 import { AuthModule } from './auth/auth.module';
-import { RefreshAuthTokenMiddleware } from './auth/service/auth.middleware';
 import { CacheManagerModule } from './cache-manager/cache-manager.module';
 import { CommonModule } from './common/common.module';
 import { ComponentModule } from './component/component.module';
@@ -41,8 +40,4 @@ import { TrainingModule } from './training/training.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(RefreshAuthTokenMiddleware).forRoutes('*');
-  }
-}
+export class AppModule {}

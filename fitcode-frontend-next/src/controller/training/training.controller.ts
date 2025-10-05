@@ -11,6 +11,7 @@ import type {
 import type { TrainingComponent } from './type/training-component.type';
 import type { TrainingReport } from './type/training-report.type';
 import type { Workload } from './type/workload.type';
+import type { FetchOptions } from '@/common/type/api.type';
 import type { DateRange } from '@/common/type/date-range.type';
 
 export class TrainingController extends BaseController {
@@ -20,58 +21,54 @@ export class TrainingController extends BaseController {
     super('/training');
   }
 
-  static getInstance(token: string) {
+  static getInstance() {
     if (!this.instance) this.instance = new TrainingController();
-    this.instance.setToken(token);
     return this.instance;
   }
 
-  async findAll(query?: FilterTrainings) {
-    return this.api.get<Training[]>('/', {
-      query,
-      token: this.getToken(),
-    });
+  async findAll(query?: FilterTrainings, options?: FetchOptions) {
+    return this.api.get<Training[]>('/', { query, ...options });
   }
 
-  async findOneById(trainingId: string) {
+  async findOneById(trainingId: string, options?: FetchOptions) {
     return this.api.get<{ training: Training; report: TrainingReport }>(
       `/${trainingId}`,
-      { token: this.getToken() }
+      options
     );
   }
 
-  async findReports(query?: DateRange) {
+  async findReports(query?: DateRange, options?: FetchOptions) {
     return this.api.get<TrainingReport[]>('/report/athlete', {
       query,
-      token: this.getToken(),
+      ...options,
     });
   }
 
-  async findAllByInstitutionToday() {
-    return this.api.get<Training[]>('/institution/today', {
-      token: this.getToken(),
-    });
+  async findAllByInstitutionToday(options?: FetchOptions) {
+    return this.api.get<Training[]>('/institution/today', options);
   }
 
   async getPrescribedTraining(
     trainingId: string,
-    userId: string
+    userId: string,
+    options?: FetchOptions
   ): Promise<Training | null> {
     return this.api.get<Training | null>(
       `/${trainingId}/athlete/${userId}/prescribed`,
-      { token: this.getToken() }
+      options
     );
   }
 
   async completeNextSet(
     trainingId: string,
     exerciseId: string,
-    body: CompleteSet
+    body: CompleteSet,
+    options?: FetchOptions
   ) {
     return this.api.post<Workload>(
       `/${trainingId}/exercise/${exerciseId}/complete-next-set`,
       body,
-      { token: this.getToken() }
+      options
     );
   }
 
@@ -81,92 +78,95 @@ export class TrainingController extends BaseController {
     exerciseId: string,
     supersetIndex: number,
     setNumber: number,
-    body: CompleteSet
+    body: CompleteSet,
+    options?: FetchOptions
   ) {
     return this.api.post<Workload>(
       `/${trainingId}/component/${componentId}/exercise/${exerciseId}/superset/${supersetIndex}/set/${setNumber}`,
       body,
-      { token: this.getToken() }
+      options
     );
   }
 
-  async findCompletedAthleteWorkloads(trainingId: string, userId: string) {
+  async findCompletedAthleteWorkloads(
+    trainingId: string,
+    userId: string,
+    options?: FetchOptions
+  ) {
     return this.api.get<Workload[]>(
       `/${trainingId}/athlete/${userId}/workloads`,
-      { token: this.getToken() }
+      options
     );
   }
 
-  async create(body: CreateTraining): Promise<Training> {
-    return this.api.post<Training>('/', body, {
-      token: this.getToken(),
-    });
+  async create(
+    body: CreateTraining,
+    options?: FetchOptions
+  ): Promise<Training> {
+    return this.api.post<Training>('/', body, options);
   }
 
-  async update(trainingId: string, body: UpdateTraining) {
-    return this.api.patch<Training>(`/${trainingId}`, body, {
-      token: this.getToken(),
-    });
+  async update(
+    trainingId: string,
+    body: UpdateTraining,
+    options?: FetchOptions
+  ) {
+    return this.api.patch<Training>(`/${trainingId}`, body, options);
   }
 
   async updateComponentTime(
     trainingId: string,
     componentId: string,
-    body: Required<DateRange>
+    body: Required<DateRange>,
+    options?: FetchOptions
   ) {
     return this.api.patch<
       Pick<Training, 'components' | 'warmup' | 'cooldown' | 'from' | 'to'>
-    >(`/${trainingId}/component/${componentId}/time`, body, {
-      token: this.getToken(),
-    });
+    >(`/${trainingId}/component/${componentId}/time`, body, options);
   }
 
-  async delete(trainingId: string) {
-    await this.api.delete<null>(`/${trainingId}`, {
-      token: this.getToken(),
-    });
-
+  async delete(trainingId: string, options?: FetchOptions) {
+    await this.api.delete<null>(`/${trainingId}`, options);
     return null;
   }
 
   async periodize(
     baseTrainingId: string,
     componentId: string,
-    body: PeriodizeTrainings
+    body: PeriodizeTrainings,
+    options?: FetchOptions
   ) {
     return this.api.patch<Training[]>(
       `/${baseTrainingId}/periodize/component/${componentId}`,
       body,
-      { token: this.getToken() }
+      options
     );
   }
 
   async addComponents(
     trainingId: string,
-    body: { components: TrainingComponent[] }
+    body: { components: TrainingComponent[] },
+    options?: FetchOptions
   ) {
-    return this.api.post<Training>(`/${trainingId}/component`, body, {
-      token: this.getToken(),
-    });
+    return this.api.post<Training>(`/${trainingId}/component`, body, options);
   }
 
-  async deleteComponent(trainingId: string, componentId: string) {
+  async deleteComponent(
+    trainingId: string,
+    componentId: string,
+    options?: FetchOptions
+  ) {
     return this.api.delete<Training>(
       `/${trainingId}/component/${componentId}`,
-      { token: this.getToken() }
+      options
     );
   }
 
-  async addMember(trainingId: string, body: UserId) {
-    return this.api.patch<void>(`/${trainingId}/member`, body, {
-      token: this.getToken(),
-    });
+  async addMember(trainingId: string, body: UserId, options?: FetchOptions) {
+    return this.api.patch<void>(`/${trainingId}/member`, body, options);
   }
 
-  async removeMember(trainingId: string, body: UserId) {
-    return this.api.delete<void>(`/${trainingId}/member`, {
-      body,
-      token: this.getToken(),
-    });
+  async removeMember(trainingId: string, body: UserId, options?: FetchOptions) {
+    return this.api.delete<void>(`/${trainingId}/member`, { body, ...options });
   }
 }

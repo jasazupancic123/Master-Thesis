@@ -1,8 +1,5 @@
-import type { INestApplication } from '@nestjs/common';
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { TestApp } from '@test/common/utils/app.util';
 
-import { AppModule } from '@src/app.module';
 import type { TestInstitution } from '@src/common/type/entity.type';
 import type { TrainingReportRef } from '@src/common/type/firestore.type';
 import type { Component } from '@src/component/entity/component.entity';
@@ -27,7 +24,7 @@ import { TrainingReportService } from '@src/training/service/training-report.ser
 import { WorkloadService } from '@src/training/service/workload.service';
 
 describe('Training Report (e2e)', () => {
-  let app: INestApplication;
+  let testApp: TestApp;
   let db: TestDbService;
   let workloadService: WorkloadService;
   let trainingReportService: TrainingReportService;
@@ -38,17 +35,12 @@ describe('Training Report (e2e)', () => {
   let training: Training;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
+    testApp = await TestApp.init();
+    workloadService = testApp.module.get(WorkloadService);
+    trainingReportService = testApp.module.get(TrainingReportService);
+    const exerciseService = testApp.module.get(ExerciseService);
 
-    app = moduleFixture.createNestApplication();
-    workloadService = moduleFixture.get(WorkloadService);
-    trainingReportService = moduleFixture.get(TrainingReportService);
-    const exerciseService = moduleFixture.get(ExerciseService);
-    await app.init();
-
-    db = moduleFixture.get(TestDbService);
+    db = testApp.module.get(TestDbService);
     institution = await db.institutions.createTest({
       createRandomAthlete: true,
       athletes: [global.athlete],
@@ -163,7 +155,7 @@ describe('Training Report (e2e)', () => {
       db.components.clear(),
     ]);
 
-    await app.close();
+    await testApp.close();
   });
 
   it('should return default stats for training without any components', () => {

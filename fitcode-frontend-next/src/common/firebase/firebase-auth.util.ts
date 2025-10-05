@@ -6,7 +6,6 @@ import {
   updateProfile,
 } from 'firebase/auth';
 
-import type { FirebaseInitAppOptions } from '@/common/config/firebase.config';
 import { getFirebaseAuth } from '@/common/config/firebase.config';
 import { UserRole } from '@/controller/profile/enum/user-role.enum';
 
@@ -19,12 +18,12 @@ export class FirebaseAuthUtil {
   private static instance: FirebaseAuthUtil;
   private auth: Auth;
 
-  private constructor(options?: FirebaseInitAppOptions) {
-    this.auth = getFirebaseAuth(options);
+  private constructor() {
+    this.auth = getFirebaseAuth();
   }
 
-  static getInstance(options?: FirebaseInitAppOptions) {
-    if (!this.instance) this.instance = new FirebaseAuthUtil(options);
+  static getInstance() {
+    if (!this.instance) this.instance = new FirebaseAuthUtil();
     return this.instance;
   }
 

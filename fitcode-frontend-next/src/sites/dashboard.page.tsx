@@ -30,8 +30,8 @@ export default function DashboardPage() {
   const router = useRouter();
 
   const { users, profile, groups: allGroups } = useMain();
-  const { role, token } = useAuthenticatedAuth();
-  const controller = GroupController.getInstance(token);
+  const { role } = useAuthenticatedAuth();
+  const controller = GroupController.getInstance();
 
   const {
     institutions,

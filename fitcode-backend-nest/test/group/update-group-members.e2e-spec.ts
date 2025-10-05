@@ -1,10 +1,6 @@
-import type { INestApplication } from '@nestjs/common';
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { TestApp } from '@test/common/utils/app.util';
 import { addDays, startOfDay, subDays } from 'date-fns';
-import * as request from 'supertest';
 
-import { AppModule } from '@src/app.module';
 import type { TestUser } from '@src/common/type/entity.type';
 import {
   createAthleteUserAndToken,
@@ -18,7 +14,7 @@ import { TestDbService } from '@src/test-db/test-db.service';
 import { generateTrainingStub } from '@src/training/mock/training.stub';
 
 describe('Update Group (e2e)', () => {
-  let app: INestApplication;
+  let testApp: TestApp;
   let db: TestDbService;
   let firebase: FirebaseService;
 
@@ -27,15 +23,9 @@ describe('Update Group (e2e)', () => {
   let athletes: TestUser[];
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
-
-    firebase = moduleFixture.get(FirebaseService);
-    db = moduleFixture.get(TestDbService);
+    testApp = await TestApp.init();
+    firebase = testApp.module.get(FirebaseService);
+    db = testApp.module.get(TestDbService);
 
     athletes = await Promise.all([
       createAthleteUserAndToken(firebase),
@@ -59,25 +49,43 @@ describe('Update Group (e2e)', () => {
   afterAll(async () => {
     await deleteUsers(firebase, athletes);
     await db.cleanup();
-    await app.close();
+    await testApp.close();
   });
+
+  async function addMemberReq(groupId: string, token: string, userId: string) {
+    return await testApp.http.patch(`/group/${groupId}/member`, token, {
+      userId,
+    });
+  }
+
+  async function deleteMemberReq(
+    groupId: string,
+    token: string,
+    userId: string,
+  ) {
+    return await testApp.http.delete(`/group/${groupId}/member`, token, {
+      userId,
+    });
+  }
 
   it('should fail if group does not exist', async () => {
     const nonExistentGroupId = 'non-existent-id';
-    const response = await request(app.getHttpServer())
-      .patch(`/group/${nonExistentGroupId}/member`)
-      .set('Authorization', `Bearer ${global.manager.token}`)
-      .send({ userId: 'userId' });
+    const response = await addMemberReq(
+      nonExistentGroupId,
+      global.manager.token,
+      'userId',
+    );
 
     expect(response.status).toBe(404);
     expect(response.body.message).toBe('Group does not exist');
   });
 
   it('should fail if user does not have permission to update group members', async () => {
-    const response = await request(app.getHttpServer())
-      .patch(`/group/${groupId}/member`)
-      .set('Authorization', `Bearer ${athletes[0].token}`)
-      .send({ userId: athletes[1].uid });
+    const response = await testApp.http.patch(
+      `/group/${groupId}/member`,
+      athletes[0].token,
+      { userId: athletes[1].uid },
+    );
 
     expect(response.status).toBe(403);
     expect(response.body.message).toBe('Forbidden resource');
@@ -85,10 +93,11 @@ describe('Update Group (e2e)', () => {
 
   it('should fail if other trainer tries to update group members', async () => {
     const newTrainer = await createTrainerUserAndToken(firebase);
-    const response = await request(app.getHttpServer())
-      .patch(`/group/${groupId}/member`)
-      .set('Authorization', `Bearer ${newTrainer.token}`)
-      .send({ userId: athletes[0].uid });
+    const response = await testApp.http.patch(
+      `/group/${groupId}/member`,
+      newTrainer.token,
+      { userId: athletes[0].uid },
+    );
 
     expect(response.status).toBe(401);
     expect(response.body.message).toBe(
@@ -99,30 +108,33 @@ describe('Update Group (e2e)', () => {
   });
 
   it('should fail if member does not exist', async () => {
-    const response = await request(app.getHttpServer())
-      .patch(`/group/${groupId}/member`)
-      .set('Authorization', `Bearer ${global.trainer.token}`)
-      .send({ userId: 'non-existent-user-id' });
+    const response = await addMemberReq(
+      groupId,
+      global.trainer.token,
+      'non-existent-user-id',
+    );
 
     expect(response.status).toBe(400);
     expect(response.body.message).toBe('Member does not exist');
   });
 
   it('should fail if member is not an athlete', async () => {
-    const response = await request(app.getHttpServer())
-      .patch(`/group/${groupId}/member`)
-      .set('Authorization', `Bearer ${global.trainer.token}`)
-      .send({ userId: global.manager.uid });
+    const response = await addMemberReq(
+      groupId,
+      global.trainer.token,
+      global.manager.uid,
+    );
 
     expect(response.status).toBe(400);
     expect(response.body.message).toBe('Member must be an athlete');
   });
 
   it('should fail if member is already in the group', async () => {
-    const response = await request(app.getHttpServer())
-      .patch(`/group/${groupId}/member`)
-      .set('Authorization', `Bearer ${global.trainer.token}`)
-      .send({ userId: athletes[0].uid });
+    const response = await addMemberReq(
+      groupId,
+      global.trainer.token,
+      athletes[0].uid,
+    );
 
     expect(response.status).toBe(400);
     expect(response.body.message).toBe('Member is already in the group');
@@ -130,10 +142,11 @@ describe('Update Group (e2e)', () => {
 
   it('should fail if member is not part of the institution', async () => {
     const newAthlete = await createAthleteUserAndToken(firebase);
-    const response = await request(app.getHttpServer())
-      .patch(`/group/${groupId}/member`)
-      .set('Authorization', `Bearer ${global.trainer.token}`)
-      .send({ userId: newAthlete.uid });
+    const response = await addMemberReq(
+      groupId,
+      global.trainer.token,
+      newAthlete.uid,
+    );
 
     expect(response.status).toBe(400);
     expect(response.body.message).toBe('Member is not part of the institution');
@@ -166,10 +179,11 @@ describe('Update Group (e2e)', () => {
     const newAthlete = await createAthleteUserAndToken(firebase);
     await db.institutions.addAthlete(institutionId, newAthlete.uid);
 
-    const response = await request(app.getHttpServer())
-      .patch(`/group/${groupId}/member`)
-      .set('Authorization', `Bearer ${global.trainer.token}`)
-      .send({ userId: newAthlete.uid });
+    const response = await addMemberReq(
+      groupId,
+      global.trainer.token,
+      newAthlete.uid,
+    );
 
     expect(response.status).toBe(200);
 
@@ -226,10 +240,11 @@ describe('Update Group (e2e)', () => {
       db.trainings.save(training(addDays(new Date(), 3))),
     ]);
 
-    const response = await request(app.getHttpServer())
-      .delete(`/group/${groupId}/member`)
-      .set('Authorization', `Bearer ${global.trainer.token}`)
-      .send({ userId: athletes[0].uid });
+    const response = await deleteMemberReq(
+      groupId,
+      global.trainer.token,
+      athletes[0].uid,
+    );
 
     expect(response.status).toBe(200);
 
@@ -314,10 +329,11 @@ describe('Update Group (e2e)', () => {
     const newAthlete = await createAthleteUserAndToken(firebase);
     await db.institutions.addAthlete(institutionId, newAthlete.uid);
 
-    const response = await request(app.getHttpServer())
-      .patch(`/group/${groupId}/member`)
-      .set('Authorization', `Bearer ${global.trainer.token}`)
-      .send({ userId: newAthlete.uid });
+    const response = await addMemberReq(
+      groupId,
+      global.trainer.token,
+      newAthlete.uid,
+    );
 
     expect(response.status).toBe(200);
 
