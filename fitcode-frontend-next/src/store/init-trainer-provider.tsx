@@ -13,11 +13,13 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 export default async function InitTrainerProvider({ children }: ChildrenProps) {
   try {
     const cookieStore = await cookies();
+    console.log('all cookies:', cookieStore.getAll());
     const session = cookieStore.get(SESSION_COOKIE_NAME)?.value;
     if (!session) return <Alert type="unauthorized" />;
 
     const controller = Controller.getInstance();
     const profile = await controller.auth.findMe({ session });
+    console.log('profile:', profile);
     if (!profile) return <Alert type="unauthorized" />;
 
     if (isAthlete(profile.customClaims.role[0]))
