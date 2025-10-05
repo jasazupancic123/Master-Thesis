@@ -17,14 +17,14 @@ export default async function InitAthleteProvider({ children }: ChildrenProps) {
   try {
     const cookieStore = await cookies();
     const session = cookieStore.get(SESSION_COOKIE_NAME)?.value;
-    if (!session) return <Alert type="unauthorized" />;
+    if (!session) throw new Error('No session');
 
     const controller = Controller.getInstance();
     const profile = await controller.auth.findMe({ session });
-    if (!profile) return <Alert type="unauthorized" />;
+    if (!profile) throw new Error('No profile found');
 
     if (!isAthlete(profile.customClaims.role[0]))
-      return <Alert type="unauthorized" />;
+      throw new Error('Not an athlete');
 
     const [data] = await Promise.all([
       controller.app.init({ session }),
@@ -33,18 +33,11 @@ export default async function InitAthleteProvider({ children }: ChildrenProps) {
 
     let [trainings, reports] = await Promise.all([
       controller.training.findAll(
-        {
-          from: startOfDay(new Date()),
-          populate: true,
-          limit: 100,
-        },
+        { from: startOfDay(new Date()), populate: true, limit: 100 },
         { session }
       ),
       controller.training.findReports(
-        {
-          from: subDays(new Date(), 30),
-          to: endOfDay(new Date()),
-        },
+        { from: subDays(new Date(), 30), to: endOfDay(new Date()) },
         { session }
       ),
     ]);
@@ -64,7 +57,8 @@ export default async function InitAthleteProvider({ children }: ChildrenProps) {
         </AthleteProvider>
       </AthleteMainProvider>
     );
-  } catch {
+  } catch (e) {
+    console.error('[AthleteProvider] error', e);
     return <Alert type="unauthorized" />;
   }
 }
