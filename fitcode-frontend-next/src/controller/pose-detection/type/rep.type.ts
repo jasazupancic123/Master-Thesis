@@ -28,6 +28,8 @@ export type Rep = {
   extremeKeypoint?: Keypoint; // the keypoint when the extreme value was reached
   extremeTimestamp?: Date; // when the extreme value was reached
   extremeToEndTimestamp?: Date; // when going from extreme value to end
+  extremumImage?: Blob;
+  extremumImageUrl?: string;
 
   // timeAtExtremum
   timeAtExtremumStartKeypoint?: Keypoint;
@@ -36,6 +38,15 @@ export type Rep = {
   timeAtExtremumEndTimestamp?: Date;
 
   // times
+  idleTimeMs?: number; // startTime - endTime of the previous rep
+  timeToExtremeMs?: number; // extremeTimestamp - startTime
+  timeAtExtremeMs: number; // extremeToEndTime - extremeTimestamp, inited to 0
+  timeFromExtremeToEndMs?: number; // timeAtExtreme - extremeTimestamp
+  durationMs?: number; // endTime - startTime
+};
+
+export type RepInfo = {
+  repNumber: number; // id
   idleTimeMs?: number; // startTime - endTime of the previous rep
   timeToExtremeMs?: number; // extremeTimestamp - startTime
   timeAtExtremeMs: number; // extremeToEndTime - extremeTimestamp, inited to 0

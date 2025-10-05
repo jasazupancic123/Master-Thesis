@@ -27,6 +27,8 @@ export class StatusDetectionService {
       avgFps: { value: number; count: number } | null;
       recordingTimestampRef: RefObject<Date | null>;
       statusMessage: RefObject<string>;
+      stillnessCountdownRef: RefObject<Date | null>;
+      videoHeight: number;
     }
   ): boolean {
     const {
@@ -37,6 +39,8 @@ export class StatusDetectionService {
       avgFps,
       recordingTimestampRef,
       statusMessage,
+      stillnessCountdownRef,
+      videoHeight,
     } = state;
 
     switch (detectionStatus) {
@@ -45,8 +49,10 @@ export class StatusDetectionService {
 
         const canProceedIntoNotFacingCamera = isFullyInFrame;
 
-        if (!canProceedIntoNotFacingCamera)
+        if (!canProceedIntoNotFacingCamera) {
           canProceedIntoReadyStateRef.current = false;
+          stillnessCountdownRef.current = null;
+        }
 
         return this.updateStatus(
           statusRef,
@@ -67,8 +73,10 @@ export class StatusDetectionService {
         ) {
           keypointBuffer.clear();
           canProceedIntoReadyStateRef.current = true;
-        } else if (!canUpdateToNotStill)
+        } else if (!canUpdateToNotStill) {
           canProceedIntoReadyStateRef.current = false;
+          stillnessCountdownRef.current = null;
+        }
 
         return this.updateStatus(
           statusRef,
@@ -79,11 +87,19 @@ export class StatusDetectionService {
         );
       }
       case DetectionStatus.NOT_STILL: {
+        const bufferCutOf = KeypointUtil.getFramesCountFromSeconds(
+          1,
+          avgFps?.value || 30
+        );
+
         const isStill = this.checkIsStill({
           currentStatus: statusRef.current,
           keypoints,
           buffer: keypointBuffer,
           avgFps,
+          stillnessCountdownRef,
+          bufferCutOf,
+          videoHeight,
         });
 
         return this.updateStatus(
@@ -110,6 +126,7 @@ export class StatusDetectionService {
           keypoints,
           buffer: keypointBuffer,
           avgFps,
+          videoHeight,
         });
 
         // const canStartRecording = hasNodded && isStill;
@@ -155,6 +172,7 @@ export class StatusDetectionService {
           buffer: keypointBuffer,
           avgFps,
           bufferCutOf,
+          videoHeight,
         });
 
         // const hasNodded = PoseDetectionService.checkHasNodded({
@@ -254,26 +272,27 @@ export class StatusDetectionService {
     keypoints: Keypoint[];
     buffer: KeypointHistory;
     avgFps: { value: number; count: number } | null;
+    videoHeight: number;
     bufferCutOf?: number;
+    stillnessCountdownRef?: RefObject<Date | null>;
   }): boolean {
-    const { currentStatus, keypoints, buffer, avgFps, bufferCutOf } = state;
+    const {
+      currentStatus,
+      keypoints,
+      buffer,
+      avgFps,
+      videoHeight,
+      bufferCutOf: bufferCutOff,
+      stillnessCountdownRef,
+    } = state;
 
     if (!avgFps) return false;
-
-    const timeElapsed = avgFps.count / avgFps.value; // in seconds
 
     const framesNeededInBuffer = Math.min(
       buffer.bufferLength || Infinity,
       POSE_DETECTION_CONSTRAINTS.MIN_TIME_PASSED_TO_DETECT_STILLNESS_S *
-        avgFps.value
-    ); // need at least 3 seconds of data
-
-    if (
-      timeElapsed <
-        POSE_DETECTION_CONSTRAINTS.MIN_TIME_PASSED_TO_DETECT_STILLNESS_S ||
-      buffer.history.length < framesNeededInBuffer
-    )
-      return false;
+        avgFps.value // at least this much second of data
+    );
 
     const stillnessKeypointIds = [
       KeypointId.LEFT_SHOULDER,
@@ -292,34 +311,118 @@ export class StatusDetectionService {
       KeypointUtil.getDesiredKeypointFromArray(keypoints, id)
     );
 
-    if (bufferCutOf !== undefined && buffer.history.length < bufferCutOf)
+    if (buffer.history.length < framesNeededInBuffer) return false;
+
+    if (bufferCutOff !== undefined && buffer.history.length < bufferCutOff)
       return false;
 
-    return stillnessKeypoints.every((kp) => {
+    const isStillXY = stillnessKeypoints.every((kp) => {
       if (!kp) return false;
 
-      const history = buffer.getHistoryById(kp.id, bufferCutOf);
+      const history = buffer.getHistoryById(kp.id, bufferCutOff);
       if (history.some((h) => !h)) return false;
 
       const stdDev = StatusDetectionService.calculateStandardDeviation(history);
 
       const isKeypointStill =
-        currentStatus === DetectionStatus.RECORDING
-          ? stdDev <
-            POSE_DETECTION_CONSTRAINTS.STILLNESS_THRESHOLD_WHILE_RECORDING_M
-          : stdDev < POSE_DETECTION_CONSTRAINTS.STILLNESS_THRESHOLD_M;
-
-      // if (!isKeypointStill) {
-      //   console.log('KEYPOINT NOT STILL', {
-      //     kpId: kp.id,
-      //     stdDev,
-      //     isKeypointStill,
-      //   });
-      // }
+        stdDev < POSE_DETECTION_CONSTRAINTS.STILLNESS_THRESHOLD_M;
 
       return isKeypointStill;
     });
+
+    const isStillZ = this.isZAxisStill({
+      buffer: buffer,
+      videoHeight,
+      bufferCutOff,
+      tresholdPercentage:
+        POSE_DETECTION_CONSTRAINTS.STILLNESS_Z_AXIS_PERCENTAGE_THRESHOLD,
+    });
+
+    const isStill = isStillXY && isStillZ;
+
+    if (!isStill && stillnessCountdownRef) stillnessCountdownRef.current = null;
+    else if (isStill && stillnessCountdownRef && !stillnessCountdownRef.current)
+      stillnessCountdownRef.current = new Date();
+
+    if (stillnessCountdownRef) {
+      const now = new Date();
+      const diff = dayjs(now).diff(
+        dayjs(stillnessCountdownRef.current),
+        'second'
+      );
+
+      const passedDiff =
+        diff >= POSE_DETECTION_CONSTRAINTS.STILLNESS_COUNTDOWN_DURATION_S;
+
+      return isStill && passedDiff;
+    }
+
+    return isStill;
   }
+
+  private static isZAxisStill = (state: {
+    buffer: KeypointHistory;
+    videoHeight: number;
+    tresholdPercentage: number;
+    bufferCutOff?: number;
+  }) => {
+    const { buffer, videoHeight, tresholdPercentage, bufferCutOff } = state;
+
+    let biggestValueBetweenNoseAndFoots: number | undefined,
+      smallestValueBetweenNoseAndFoots: number | undefined;
+
+    buffer.history.slice(bufferCutOff ? bufferCutOff : 0).forEach((frame) => {
+      const nose = KeypointUtil.getDesiredKeypointFromArray(
+        frame,
+        KeypointId.NOSE
+      );
+      const leftFoot = KeypointUtil.getDesiredKeypointFromArray(
+        frame,
+        KeypointId.LEFT_FOOT_INDEX
+      );
+      const rightFoot = KeypointUtil.getDesiredKeypointFromArray(
+        frame,
+        KeypointId.RIGHT_FOOT_INDEX
+      );
+
+      if (!nose || !leftFoot || !rightFoot) return;
+
+      if (
+        !nose.pixelPosition ||
+        !leftFoot.pixelPosition ||
+        !rightFoot.pixelPosition
+      )
+        return;
+
+      const noseY = nose.pixelPosition.y * videoHeight;
+      const meanFootY =
+        ((leftFoot.pixelPosition.y + rightFoot.pixelPosition.y) / 2) *
+        videoHeight;
+
+      if (!biggestValueBetweenNoseAndFoots)
+        biggestValueBetweenNoseAndFoots = Math.abs(noseY - meanFootY);
+      if (!smallestValueBetweenNoseAndFoots)
+        smallestValueBetweenNoseAndFoots = Math.abs(noseY - meanFootY);
+
+      if (Math.abs(noseY - meanFootY) > biggestValueBetweenNoseAndFoots)
+        biggestValueBetweenNoseAndFoots = Math.abs(noseY - meanFootY);
+
+      if (Math.abs(noseY - meanFootY) < smallestValueBetweenNoseAndFoots)
+        smallestValueBetweenNoseAndFoots = Math.abs(noseY - meanFootY);
+    });
+
+    return (
+      biggestValueBetweenNoseAndFoots !== undefined &&
+      smallestValueBetweenNoseAndFoots !== undefined &&
+      ((Math.abs(biggestValueBetweenNoseAndFoots) +
+        Math.abs(smallestValueBetweenNoseAndFoots)) /
+        2) *
+        tresholdPercentage >=
+        Math.abs(
+          biggestValueBetweenNoseAndFoots - smallestValueBetweenNoseAndFoots
+        )
+    );
+  };
 
   private static calculateStandardDeviation = (keypoints: Keypoint[]) => {
     if (keypoints.length === 0) return 0;

@@ -1,4 +1,4 @@
-import type { Landmark } from '@mediapipe/tasks-vision';
+import type { Landmark, NormalizedLandmark } from '@mediapipe/tasks-vision';
 import savitzkyGolay from 'ml-savitzky-golay';
 import type { RefObject } from 'react';
 import toast from 'react-hot-toast';
@@ -15,6 +15,7 @@ export class KeypointUtil {
   static getDesiredKeypointsByModel(
     // add different types to currentFrameKeypoints for different models
     currentFrameKeypoints: Landmark[] | undefined,
+    currentFrameKeypointsPixel2D: NormalizedLandmark[] | undefined,
     model: PoseModel,
     capturedAt: Date,
     frameNum: number,
@@ -27,6 +28,8 @@ export class KeypointUtil {
       case PoseModel.MEDIAPIPE: {
         const keypointIds = Object.values(KeypointId);
         currentFrameKeypoints.forEach((kp, i) => {
+          const kp2D = currentFrameKeypointsPixel2D?.[i];
+
           keypoints.push({
             id: keypointIds[i] as unknown as KeypointId,
             position: {
@@ -34,6 +37,12 @@ export class KeypointUtil {
               y: kp.y,
               z: kp.z,
             },
+            pixelPosition: kp2D
+              ? {
+                  x: kp2D.x,
+                  y: kp2D.y,
+                }
+              : undefined,
             velocity: 0,
             isValid: true,
             frameNum,

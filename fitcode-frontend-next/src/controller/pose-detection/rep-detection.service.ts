@@ -16,6 +16,11 @@ import type { Rep } from './type/rep.type';
 import type { RepState } from './type/rep-state.type';
 import { KeypointUtil } from './util/keypoint.util';
 import { TimeUtil } from './util/time.util';
+import { CommonService } from '@/common/service/common.service';
+import type { SetState } from '@/common/type/state.type';
+import { EXERCISE_TIMES_ROUNDING_STEP_S } from '@/components/mobile-movement-validation/mobile-movement-validation';
+
+const commonService = CommonService.instance;
 
 export class RepDetectionService {
   /*
@@ -51,6 +56,7 @@ export class RepDetectionService {
     exerciseStartConditions: ExerciseRepStartCondition[];
     avgFps: { value: number; count: number } | null;
     initedFirstFrameInRecordingMode: RefObject<boolean>;
+    setRepCount: SetState<number>;
   }) {
     const {
       repStateRef,
@@ -64,6 +70,7 @@ export class RepDetectionService {
       exerciseStartConditions,
       avgFps,
       initedFirstFrameInRecordingMode,
+      setRepCount,
     } = state;
 
     switch (repStateRef.current.status) {
@@ -103,6 +110,8 @@ export class RepDetectionService {
           });
 
           recordedRepsRef.current.push(currentRepRef.current);
+
+          setRepCount(recordedRepsRef.current.length);
 
           console.log('RECORDED ', recordedRepsRef.current.length, ' REPS');
 
@@ -608,9 +617,15 @@ export class RepDetectionService {
     // timestamp
     currentRepRef.current.extremeTimestamp = timeToFirstExtreme;
 
-    currentRepRef.current.timeToExtremeMs = TimeUtil.getMsDiff(
-      currentRepRef.current.startTimestamp,
-      timeToFirstExtreme
+    currentRepRef.current.timeToExtremeMs = Math.max(
+      EXERCISE_TIMES_ROUNDING_STEP_S * 1000,
+      commonService.number.roundToStep(
+        TimeUtil.getMsDiff(
+          currentRepRef.current.startTimestamp,
+          timeToFirstExtreme
+        ),
+        EXERCISE_TIMES_ROUNDING_STEP_S * 1000 // 200ms
+      )
     );
   }
 
@@ -888,7 +903,7 @@ export class RepDetectionService {
     };
   }
 
-  private static postProcessRep(state: {
+  private static async postProcessRep(state: {
     currentRepRef: RefObject<Rep | null>;
     recordedRepsRef: RefObject<Rep[]>;
     keypointId: KeypointId;
@@ -1038,9 +1053,12 @@ export class RepDetectionService {
     // durationMs, idleTimeMs, timeToExtremeMs, timeAtExtremeMs, timeFromExtremeToEndMs
 
     if (currentRepRef.current.endValueTimestamp) {
-      currentRepRef.current.durationMs = TimeUtil.getMsDiff(
-        currentRepRef.current.startTimestamp,
-        currentRepRef.current.endValueTimestamp
+      currentRepRef.current.durationMs = commonService.number.roundToStep(
+        TimeUtil.getMsDiff(
+          currentRepRef.current.startTimestamp,
+          currentRepRef.current.endValueTimestamp
+        ),
+        EXERCISE_TIMES_ROUNDING_STEP_S * 1000
       );
     }
 
@@ -1048,31 +1066,62 @@ export class RepDetectionService {
       const prevRep =
         recordedRepsRef.current[recordedRepsRef.current.length - 1];
       if (prevRep.endValueTimestamp) {
-        currentRepRef.current.idleTimeMs = TimeUtil.getMsDiff(
-          prevRep.endValueTimestamp,
-          currentRepRef.current.startTimestamp
+        currentRepRef.current.idleTimeMs = commonService.number.roundToStep(
+          TimeUtil.getMsDiff(
+            prevRep.endValueTimestamp,
+            currentRepRef.current.startTimestamp
+          ),
+          EXERCISE_TIMES_ROUNDING_STEP_S * 1000
         );
       }
     }
 
     if (timeAtExtremumStartKeypoint) {
-      currentRepRef.current.timeToExtremeMs = TimeUtil.getMsDiff(
-        currentRepRef.current.startTimestamp,
-        timeAtExtremumStartKeypoint.capturedAt
+      currentRepRef.current.timeToExtremeMs = Math.max(
+        EXERCISE_TIMES_ROUNDING_STEP_S * 1000,
+        commonService.number.roundToStep(
+          TimeUtil.getMsDiff(
+            currentRepRef.current.startTimestamp,
+            timeAtExtremumStartKeypoint.capturedAt
+          ),
+          EXERCISE_TIMES_ROUNDING_STEP_S * 1000
+        )
+      );
+    } else {
+      currentRepRef.current.timeToExtremeMs =
+        EXERCISE_TIMES_ROUNDING_STEP_S * 1000;
+    }
+
+    if (
+      (timeAtExtremumEndKeypoint !== undefined ||
+        currentRepRef.current.extremeKeypoint !== undefined) &&
+      currentRepRef.current.endValueTimestamp
+    ) {
+      currentRepRef.current.timeFromExtremeToEndMs = Math.max(
+        EXERCISE_TIMES_ROUNDING_STEP_S * 1000,
+        commonService.number.roundToStep(
+          TimeUtil.getMsDiff(
+            (timeAtExtremumEndKeypoint ||
+              currentRepRef.current.extremeKeypoint)!.capturedAt,
+            currentRepRef.current.endValueTimestamp
+          ),
+          EXERCISE_TIMES_ROUNDING_STEP_S * 1000
+        )
       );
     }
 
-    if (timeAtExtremumEndKeypoint && currentRepRef.current.endValueTimestamp) {
-      currentRepRef.current.timeFromExtremeToEndMs = TimeUtil.getMsDiff(
-        timeAtExtremumEndKeypoint.capturedAt,
-        currentRepRef.current.endValueTimestamp
-      );
+    if (currentRepRef.current.timeFromExtremeToEndMs === undefined) {
+      currentRepRef.current.timeFromExtremeToEndMs =
+        EXERCISE_TIMES_ROUNDING_STEP_S * 1000;
     }
 
     if (timeAtExtremumStartKeypoint && timeAtExtremumEndKeypoint) {
-      currentRepRef.current.timeAtExtremeMs = TimeUtil.getMsDiff(
-        timeAtExtremumStartKeypoint.capturedAt,
-        timeAtExtremumEndKeypoint.capturedAt
+      currentRepRef.current.timeAtExtremeMs = commonService.number.roundToStep(
+        TimeUtil.getMsDiff(
+          timeAtExtremumStartKeypoint.capturedAt,
+          timeAtExtremumEndKeypoint.capturedAt
+        ),
+        EXERCISE_TIMES_ROUNDING_STEP_S * 1000
       );
     }
   }
