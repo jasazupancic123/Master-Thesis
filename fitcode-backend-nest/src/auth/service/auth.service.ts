@@ -48,12 +48,15 @@ export class AuthService {
         expiresIn,
       });
 
+      const isLive =
+        this.common.env.isProduction() || this.common.env.isStaging();
+
       res.cookie(SESSION_COOKIE_NAME, session, {
         maxAge: expiresIn,
         httpOnly: true,
-        secure: this.common.env.isStaging() || this.common.env.isProduction(),
+        secure: isLive,
         sameSite: 'strict',
-        domain: this.common.env.isProduction() ? '.blindoff.com' : undefined,
+        domain: isLive ? '.blindoff.com' : undefined,
         path: '/',
       });
 
