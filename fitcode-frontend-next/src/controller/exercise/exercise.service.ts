@@ -80,7 +80,12 @@ export class ExerciseService {
                 : id;
             });
 
-            return value.some((v) => exValue.includes(v as never));
+            return value.some(
+              (v) =>
+                exValue.includes(v as never) ||
+                (key === 'equipment' &&
+                  exValue.some((ev) => ev.toString().includes(v)))
+            );
           }
         }
 

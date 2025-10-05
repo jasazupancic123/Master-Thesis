@@ -16,7 +16,7 @@ import type {
   UpsertManyExercises,
   UpsertManyMuscleValues,
 } from '@/controller/exercise/type/exercise.type';
-import { DEFAULT_EXERCISE } from '@/sites/exercises.page';
+import { DEFAULT_EXERCISE, EXERCISES_PAGE_SIZE } from '@/sites/exercises.page';
 
 const commonService = CommonService.instance;
 
@@ -29,12 +29,14 @@ export function handlePaginateExercises(
     pagination: Pagination;
     setFilteredExercises: SetState<Exercise[]>;
     setPagination: SetState<Pagination>;
+    search?: string;
   }
 ) {
   const {
     components,
     exercises,
     pagination,
+    search,
     setFilteredExercises,
     setPagination,
   } = state;
@@ -59,7 +61,13 @@ export function handlePaginateExercises(
   );
 
   setFilteredExercises(filtered);
-  setPagination((prev) => ({ ...prev, page, total, pages }));
+  setPagination((prev) => ({
+    ...prev,
+    page,
+    total,
+    pages,
+    pageSize: search && search.length ? Infinity : EXERCISES_PAGE_SIZE,
+  }));
 }
 
 export async function handleAddExercise(

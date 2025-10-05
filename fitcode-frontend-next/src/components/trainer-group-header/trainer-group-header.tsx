@@ -532,7 +532,7 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
         setAnchorEl={setAnchorProfileEl}
       />
       {isUpdatingTraining && (
-        <LoadingOverlay title="Updating training plan..." />
+        <LoadingOverlay title="Updating training plan..." showLogos />
       )}
     </Box>
   );

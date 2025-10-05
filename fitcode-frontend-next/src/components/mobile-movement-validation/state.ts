@@ -1,12 +1,11 @@
-import {
-  DrawingUtils,
-  FilesetResolver,
-  PoseLandmarker,
-} from '@mediapipe/tasks-vision';
-import type { Theme } from '@mui/material';
+import { PoseLandmarker } from '@mediapipe/tasks-vision';
+import { DrawingUtils, FilesetResolver } from '@mediapipe/tasks-vision';
 import type { RefObject } from 'react';
 
+import { EXERCISE_TIMES_ROUNDING_STEP_S } from './mobile-movement-validation';
+import type { CommonService } from '@/common/service/common.service';
 import type { SetState } from '@/common/type/state.type';
+import type { FrameBitmapBuffer } from '@/controller/pose-detection/class/frame-bitmap-buffer';
 import type { KeypointHistory } from '@/controller/pose-detection/class/keypoint-history';
 import { POSE_DETECTION_CONSTRAINTS } from '@/controller/pose-detection/const/pose-detection-constrains.const';
 import { STATUS_MESSAGES } from '@/controller/pose-detection/const/status-messages';
@@ -20,7 +19,6 @@ import type { Keypoint } from '@/controller/pose-detection/type/keypoint.type';
 import type { Rep } from '@/controller/pose-detection/type/rep.type';
 import type { RepState } from '@/controller/pose-detection/type/rep-state.type';
 import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
-import { PoseDetectionGraphsUtil } from '@/controller/pose-detection/util/pose-detection-graphs-util';
 
 export async function loadModel(state: {
   setPoseLandmarker: SetState<PoseLandmarker | null>;
@@ -73,11 +71,40 @@ export async function loadModel(state: {
   drawingUtilsRef.current = new DrawingUtils(canvas.getContext('2d')!);
 }
 
+export async function setupVideoAndContex(state: {
+  videoRef: RefObject<HTMLVideoElement | null>;
+  canvasRef: RefObject<HTMLCanvasElement | null>;
+  drawingUtilsRef: RefObject<DrawingUtils | null>;
+}) {
+  const { videoRef, canvasRef, drawingUtilsRef } = state;
+
+  if (!videoRef?.current || !canvasRef?.current) return;
+
+  const video = videoRef.current!;
+  const canvas = canvasRef.current!;
+
+  // Get native resolution from video feed
+  const w = video.videoWidth;
+  const h = video.videoHeight;
+
+  // Match canvas drawing resolution to video
+  canvas.width = w;
+  canvas.height = h;
+
+  // Match CSS display size (this ensures it visually fits)
+  canvas.style.width = '100%';
+  canvas.style.height = '100%';
+  video.style.width = '100%';
+  video.style.height = '100%';
+
+  drawingUtilsRef.current = new DrawingUtils(canvas.getContext('2d')!);
+}
+
 export function enableCam(state: {
   poseLandmarker: PoseLandmarker | null;
   videoRef: RefObject<HTMLVideoElement | null>;
-  predictWebcam: () => Promise<void>;
   setError: SetState<string | null>;
+  predictWebcam: () => Promise<void>;
 }) {
   const { poseLandmarker, videoRef, predictWebcam, setError } = state;
 
@@ -105,6 +132,7 @@ export function enableCam(state: {
 export const predictWebcam = async (state: {
   statusRef: RefObject<DetectionStatus>;
   statusMessage: RefObject<string>;
+  stillnessCountdownRef: RefObject<Date | null>;
   canProceedIntoReadyStateRef: RefObject<boolean>;
   repStateRef: RefObject<RepState>;
   model: PoseModel;
@@ -112,6 +140,7 @@ export const predictWebcam = async (state: {
   keypointHistory: KeypointHistory;
   keypointBuffer: KeypointHistory;
   constantKeypointHistory: KeypointHistory;
+  frameBitmapBufferRef: RefObject<FrameBitmapBuffer>;
   currentRepRef: RefObject<Rep | null>;
   recordedRepsRef: RefObject<Rep[]>;
   exerciseDetectionData: ExerciseDetectionData;
@@ -125,18 +154,18 @@ export const predictWebcam = async (state: {
   frameCountRef: RefObject<number>;
   initedFirstFrameInRecordingMode: RefObject<boolean>;
   avgFps: RefObject<{ value: number; count: number } | null>;
-  normDomainRef: RefObject<{ min: number; max: number } | null>;
-  romCanvasRef: RefObject<HTMLCanvasElement | null>;
-  tempoCanvasRef: RefObject<HTMLCanvasElement | null>;
-  theme: Theme;
   centerPosRef: RefObject<{ x: number; y: number } | null>;
   recordingTimestampRef: RefObject<Date | null>;
+  isCurrentlySavingImageRef: RefObject<boolean>;
+  canExitWhenImageIsDoneSavingRef: RefObject<boolean>;
   setFps: SetState<number | null>;
   finishAiDetection: () => Promise<void>;
+  setRepCount: SetState<number>;
 }) => {
   const {
     statusRef,
     statusMessage,
+    stillnessCountdownRef,
     canProceedIntoReadyStateRef,
     repStateRef,
     model,
@@ -144,6 +173,7 @@ export const predictWebcam = async (state: {
     keypointHistory,
     keypointBuffer,
     constantKeypointHistory,
+    frameBitmapBufferRef,
     currentRepRef,
     recordedRepsRef,
     exerciseDetectionData,
@@ -157,18 +187,21 @@ export const predictWebcam = async (state: {
     frameCountRef,
     initedFirstFrameInRecordingMode,
     avgFps,
-    normDomainRef,
-    romCanvasRef,
-    tempoCanvasRef,
-    theme,
     centerPosRef,
     recordingTimestampRef,
+    isCurrentlySavingImageRef,
+    canExitWhenImageIsDoneSavingRef,
     setFps,
     finishAiDetection,
+    setRepCount,
   } = state;
 
   if (statusRef.current === DetectionStatus.STOPPED) {
-    await finishAiDetection();
+    if (isCurrentlySavingImageRef.current === true) {
+      canExitWhenImageIsDoneSavingRef.current = true;
+    } else {
+      await finishAiDetection();
+    }
     return;
   }
 
@@ -178,6 +211,14 @@ export const predictWebcam = async (state: {
   const drawingUtils = drawingUtilsRef.current;
 
   if (!video || !canvas || !ctx || !poseLandmarker || !drawingUtils) return;
+
+  if (
+    !frameBitmapBufferRef.current.canvas ||
+    !frameBitmapBufferRef.current.canvas?.height ||
+    !frameBitmapBufferRef.current.canvas?.width
+  ) {
+    frameBitmapBufferRef.current.setCanvasWidthHeight(document, video);
+  }
 
   const videoWidth = video.videoWidth;
   const videoHeight = video.videoHeight;
@@ -192,17 +233,21 @@ export const predictWebcam = async (state: {
   }
 
   // Set actual drawing resolution
-  canvas.width = videoWidth;
-  canvas.height = videoHeight;
+  if (canvas.width !== videoWidth || canvas.height !== videoHeight) {
+    canvas.width = videoWidth;
+    canvas.height = videoHeight;
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+  }
 
-  // Optional: scale the visible canvas with CSS
-  canvas.style.width = '100%';
-  canvas.style.height = '100%';
+  let startTimeMs = performance.now();
 
-  video.width = videoWidth;
-  video.height = videoHeight;
-
-  const startTimeMs = performance.now();
+  if (
+    prevFrameTimeRef.current !== null &&
+    startTimeMs <= prevFrameTimeRef.current
+  ) {
+    startTimeMs = prevFrameTimeRef.current + 0.01;
+  }
 
   if (prevFrameTimeRef.current) {
     const delta = startTimeMs - prevFrameTimeRef.current;
@@ -222,14 +267,72 @@ export const predictWebcam = async (state: {
   }
 
   if (lastVideoTimeRef.current !== video.currentTime) {
+    // --- FOR TESTING PURPOSES ONLY ---
+    // const newRep = {
+    //   repNumber: 1,
+    //   startValue: 1,
+    //   startValueFrameNum: 1,
+    //   startTimestamp: new Date(),
+    //   buffer: new KeypointHistory([]),
+    //   detectedExtremum: true,
+    //   currentlyInExtremumRange: false,
+    //   idleTimeMs: 1000,
+    //   timeToExtremeMs: 1000,
+    //   timeAtExtremeMs: 500,
+    //   timeFromExtremeToEndMs: 1000,
+    //   durationMs: 2500,
+    //   endValueTimestamp: new Date(),
+    // } as Rep;
+
+    // if (!recordedRepsRef.current.length) {
+    //   recordedRepsRef.current.push(newRep);
+    // }
+
+    // currentRepRef.current = newRep;
+
+    // PoseDetectionGraphsUtil.renderROMAndTempoGraphs({
+    //   exerciseDetectionData,
+    //   currentRepRef,
+    //   recordedRepsRef,
+    //   romCanvasRef,
+    //   tempoCanvasRef,
+    //   normDomainRef,
+    //   theme,
+    // });
+
     lastVideoTimeRef.current = video.currentTime;
     prevFrameTimeRef.current = startTimeMs;
 
     poseLandmarker.detectForVideo(video, startTimeMs, (result) => {
       frameCountRef.current += 1;
 
+      frameBitmapBufferRef.current.insertFrame(
+        frameCountRef.current,
+        video,
+        document
+      );
+
+      const hasPose =
+        result.landmarks &&
+        result.landmarks.length > 0 &&
+        result.worldLandmarks &&
+        result.worldLandmarks.length > 0;
+
+      if (!hasPose) {
+        return;
+      }
+
+      // console.log(
+      //   frameCountRef.current,
+      //   frameBitmapBufferRef.current.history[0]?.frameNum,
+      //   frameBitmapBufferRef.current.history[
+      //     frameBitmapBufferRef.current.history.length - 1
+      //   ]?.frameNum
+      // );
+
       const keypoints = KeypointUtil.getDesiredKeypointsByModel(
         result.worldLandmarks[0], // unit: m, origin: center of hips
+        result.landmarks[0],
         model,
         new Date(),
         frameCountRef.current
@@ -258,6 +361,8 @@ export const predictWebcam = async (state: {
         keypointHistory,
         recordingTimestampRef,
         statusMessage,
+        stillnessCountdownRef,
+        videoHeight: video.videoHeight,
       });
 
       if (
@@ -276,22 +381,7 @@ export const predictWebcam = async (state: {
           exerciseStartConditions: exerciseDetectionData.conditions,
           avgFps: avgFps.current,
           initedFirstFrameInRecordingMode, // this is used to track if no rep was detected yet
-        });
-      }
-
-      if (
-        (repStateRef.current.status === RepStatus.IN_REP &&
-          currentRepRef.current) ||
-        recordedRepsRef.current.length > 0
-      ) {
-        PoseDetectionGraphsUtil.renderROMAndTempoGraphs({
-          exerciseDetectionData,
-          currentRepRef,
-          recordedRepsRef,
-          romCanvasRef,
-          tempoCanvasRef,
-          normDomainRef,
-          theme,
+          setRepCount,
         });
       }
 
@@ -409,4 +499,69 @@ function insertKeypointsIntoBuffers(state: {
 
 export function getStatusMessage(status: DetectionStatus) {
   return STATUS_MESSAGES[status - 1];
+}
+
+export function getTempoString(state: {
+  recordedRepsRef: RefObject<Rep[]>;
+  commonService: CommonService;
+}): string {
+  const { recordedRepsRef, commonService } = state;
+
+  let avgTimeToExtremeMs = 0,
+    avgTimeAtExtremeMs = 0,
+    avgTimeFromExtremeToEndMs = 0,
+    avgIdleTimeMs = 0;
+
+  for (const rep of recordedRepsRef.current) {
+    avgTimeToExtremeMs += rep.timeToExtremeMs || 0;
+    avgTimeAtExtremeMs += rep.timeAtExtremeMs || 0;
+    avgTimeFromExtremeToEndMs += rep.timeFromExtremeToEndMs || 0;
+    avgIdleTimeMs += rep.idleTimeMs || 0;
+  }
+
+  const avgTimeToExtremeS = Math.max(
+    EXERCISE_TIMES_ROUNDING_STEP_S,
+    commonService.number.roundToStep(
+      Math.max(avgTimeToExtremeMs / 1000 / recordedRepsRef.current.length, 0),
+      EXERCISE_TIMES_ROUNDING_STEP_S
+    )
+  );
+
+  const avgTimeAtExtremeS = commonService.number.roundToStep(
+    Math.max(avgTimeAtExtremeMs / 1000 / recordedRepsRef.current.length, 0),
+    EXERCISE_TIMES_ROUNDING_STEP_S
+  );
+
+  const avgTimeFromExtremeToEndS = Math.max(
+    commonService.number.roundToStep(
+      Math.max(
+        avgTimeFromExtremeToEndMs / 1000 / recordedRepsRef.current.length,
+        0
+      ),
+      EXERCISE_TIMES_ROUNDING_STEP_S
+    )
+  );
+
+  const avgIdleTimeS = commonService.number.roundToStep(
+    Math.max(avgIdleTimeMs / 1000 / recordedRepsRef.current.length, 0),
+    EXERCISE_TIMES_ROUNDING_STEP_S
+  );
+
+  const avgTimesSStrings = [
+    avgTimeToExtremeS.toString(),
+    avgTimeAtExtremeS.toString(),
+    avgTimeFromExtremeToEndS.toString(),
+    avgIdleTimeS.toString(),
+  ];
+
+  const avgTimesSStringsSliced = avgTimesSStrings.map((s) => {
+    const dotIndex = s.indexOf('.');
+    if (dotIndex === -1) return s;
+
+    if (s.length > dotIndex + 2) return s.slice(0, dotIndex + 2);
+
+    return s;
+  });
+
+  return avgTimesSStringsSliced.join(':');
 }

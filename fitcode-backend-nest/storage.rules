@@ -2,9 +2,10 @@ rules_version = '2';
 
 // Craft rules based on data in your Firestore database
 // allow write: if firestore.get(
-//    /databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin;
+//    /databases/(default)/documents/users/$(request.uid)).data.isAdmin;
 service firebase.storage {
   match /b/{bucket}/o {
+    // Helper: fetch the user's role doc once
     match /media/exercise/{fileId} {
       allow read: if true;
       allow write: if request.auth != null;
@@ -17,6 +18,17 @@ service firebase.storage {
     match /user/{userId}/{fileId} {
       allow read: if true;
       allow write: if request.auth != null;
+    }
+
+    function hasAnyRole(roles) {
+      return request.auth != null
+        && request.auth.token.role is list
+        && request.auth.token.role.hasAny(roles);
+    }
+
+    match /training/{trainingId}/{fileId} {
+      allow read:  if hasAnyRole(['athlete','trainer']);
+      allow write: if hasAnyRole(['athlete']);
     }
   }
 }

@@ -59,9 +59,7 @@ export class RepsGraphService {
 
     const { configs: perRepConfigs, chunksLength } =
       this.buildConfigsPerRep(state);
-    if (perRepConfigs.length === 0) {
-      throw new Error('No reps found with data to plot.');
-    }
+    if (perRepConfigs.length === 0) return;
 
     // Fetch PNG blobs for each rep
     const blobs = await Promise.all(
@@ -141,8 +139,7 @@ export class RepsGraphService {
     } = opts ?? {};
 
     const { configs: perRepConfigs } = this.buildConfigsPerRep(state);
-    if (!perRepConfigs.length)
-      throw new Error('No reps found with data to plot.');
+    if (!perRepConfigs.length) return;
 
     const blobs = await Promise.all(
       perRepConfigs.map((cfg) =>
@@ -189,8 +186,7 @@ export class RepsGraphService {
 
     const { configs: perRepConfigs, chunksLength } =
       this.buildConfigsPerRep(state);
-    if (!perRepConfigs.length)
-      throw new Error('No reps found with data to plot.');
+    if (!perRepConfigs.length) return;
 
     const blobs = await Promise.all(
       perRepConfigs.map((cfg) =>
