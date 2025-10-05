@@ -1,10 +1,6 @@
-import type { INestApplication } from '@nestjs/common';
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { TestApp } from '@test/common/utils/app.util';
 import { addDays } from 'date-fns';
 
-import { AppModule } from '@src/app.module';
-import type { Attribute } from '@src/attribute/entity/attribute.entity';
 import type { TestInstitution } from '@src/common/type/entity.type';
 import {
   createGroupWithCycles,
@@ -40,7 +36,7 @@ import { TrainingService } from '@src/training/service/training.service';
 import { COMPONENT_ENDURANCE } from '../common/constant/component.constant';
 
 describe('Training Exercise Params (e2e)', () => {
-  let app: INestApplication;
+  let testApp: TestApp;
   let db: TestDbService;
   let firebase: FirebaseService;
   let componentService: ComponentService;
@@ -49,26 +45,19 @@ describe('Training Exercise Params (e2e)', () => {
   let groupService: GroupService;
   let institutionService: InstitutionService;
 
-  let attribute: Attribute;
   let leaf: Component;
   let institution: TestInstitution;
   let group: Group;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
-
-    db = moduleFixture.get(TestDbService);
-    firebase = moduleFixture.get(FirebaseService);
-    componentService = moduleFixture.get(ComponentService);
-    exerciseService = moduleFixture.get(ExerciseService);
-    trainingService = moduleFixture.get(TrainingService);
-    groupService = moduleFixture.get(GroupService);
-    institutionService = moduleFixture.get(InstitutionService);
+    testApp = await TestApp.init();
+    db = testApp.module.get(TestDbService);
+    firebase = testApp.module.get(FirebaseService);
+    componentService = testApp.module.get(ComponentService);
+    exerciseService = testApp.module.get(ExerciseService);
+    trainingService = testApp.module.get(TrainingService);
+    groupService = testApp.module.get(GroupService);
+    institutionService = testApp.module.get(InstitutionService);
 
     await componentService.createFromTree(COMPONENT_ENDURANCE);
     const flat = await componentService.findAllFlat();
@@ -87,7 +76,7 @@ describe('Training Exercise Params (e2e)', () => {
       deleteCollection(firebase, 'TRAINING'),
     ]);
 
-    await app.close();
+    await testApp.close();
   });
 
   async function createExercise(data: Partial<Exercise> = {}) {

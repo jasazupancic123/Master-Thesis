@@ -13,12 +13,9 @@ import {
   setCachedProfile,
   setCachedUser,
 } from '@/session-cache/profile.session-cache';
-import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { ProfileProvider } from '@/store/profile.provider';
 
 export default function ProfileInitializer({ children }: ChildrenProps) {
-  const { token } = useAuthenticatedAuth();
-
   const [user, setUser] = useState<AuthUser | undefined>(
     getCachedUser() || undefined
   );
@@ -31,12 +28,12 @@ export default function ProfileInitializer({ children }: ChildrenProps) {
     async function init() {
       if (user || profile) return; // already cached
 
-      const fetchedUser = await AuthController.getInstance(token).findMe();
+      const fetchedUser = await AuthController.getInstance().findMe();
       setCachedUser(fetchedUser);
       setUser(fetchedUser);
 
       const fetchedProfile =
-        await ProfileController.getInstance(token).findProfile();
+        await ProfileController.getInstance().findProfile();
       setCachedProfile(fetchedProfile);
       setProfile(fetchedProfile);
     }

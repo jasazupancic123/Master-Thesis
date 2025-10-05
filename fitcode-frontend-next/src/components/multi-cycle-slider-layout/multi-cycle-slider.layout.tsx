@@ -16,7 +16,6 @@ import type { SetState } from '@/common/type/state.type';
 import { GroupController } from '@/controller/group/group.controller';
 import type { Cycle } from '@/controller/group/type/cycle.type';
 import type { Group } from '@/controller/group/type/group.type';
-import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 
@@ -45,8 +44,7 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
   const screenSize = useScreenSize();
   const theme = useTheme();
 
-  const auth = useAuthenticatedAuth();
-  const controller = GroupController.getInstance(auth.token);
+  const controller = GroupController.getInstance();
   const { group, setGroup, setCycle } = useGroup();
 
   const [selectedYear, setSelectedYear] = useState(dayjs().year());

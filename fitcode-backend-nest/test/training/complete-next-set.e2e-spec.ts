@@ -1,11 +1,7 @@
-import type { INestApplication } from '@nestjs/common';
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
 import { COMPONENT_PARAMS_OPT1 } from '@test/common/constant/component-params.constant';
+import { TestApp } from '@test/common/utils/app.util';
 import { addHours, subDays } from 'date-fns';
-import * as request from 'supertest';
 
-import { AppModule } from '@src/app.module';
 import type { TestInstitution } from '@src/common/type/entity.type';
 import type { Component } from '@src/component/entity/component.entity';
 import { IntType, ParamType, VolType } from '@src/component/enum/param.enum';
@@ -29,7 +25,7 @@ import { TrainingService } from '@src/training/service/training.service';
 import { WorkloadService } from '@src/training/service/workload.service';
 
 describe('Complete Next Set (e2e)', () => {
-  let app: INestApplication;
+  let testApp: TestApp;
   let db: TestDbService;
   let workloadService: WorkloadService;
 
@@ -45,16 +41,11 @@ describe('Complete Next Set (e2e)', () => {
   }
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
+    testApp = await TestApp.init();
+    workloadService = testApp.module.get(WorkloadService);
+    const exerciseService = testApp.module.get(ExerciseService);
 
-    app = moduleFixture.createNestApplication();
-    workloadService = moduleFixture.get(WorkloadService);
-    const exerciseService = moduleFixture.get(ExerciseService);
-    await app.init();
-
-    db = moduleFixture.get(TestDbService);
+    db = testApp.module.get(TestDbService);
     institution = await db.institutions.createTest({
       createRandomAthlete: true,
       athletes: [global.athlete],
@@ -139,7 +130,7 @@ describe('Complete Next Set (e2e)', () => {
       db.components.clear(),
     ]);
 
-    await app.close();
+    await testApp.close();
   });
 
   async function req(
@@ -148,10 +139,11 @@ describe('Complete Next Set (e2e)', () => {
     exerciseId: string,
     body: CompleteSetDto,
   ) {
-    return await request(app.getHttpServer())
-      .post(`/training/${trainingId}/exercise/${exerciseId}/complete-next-set`)
-      .set('Authorization', `Bearer ${token}`)
-      .send(body);
+    return await testApp.http.post(
+      `/training/${trainingId}/exercise/${exerciseId}/complete-next-set`,
+      token,
+      body,
+    );
   }
 
   it('should throw error if training not found', async () => {
@@ -177,7 +169,7 @@ describe('Complete Next Set (e2e)', () => {
   ])(
     'should fetch athlete from request by %s for completing next set',
     async (_, token) => {
-      const trainingService = app.get(TrainingService);
+      const trainingService = testApp.module.get(TrainingService);
       const spy = jest.spyOn(trainingService as any, 'getAthlete');
 
       await req(token, trainingId, 'invalid-exercise-id', {

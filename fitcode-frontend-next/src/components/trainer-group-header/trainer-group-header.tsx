@@ -62,8 +62,8 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
   const { filter, setFilter } = props;
 
   const auth = useAuthenticatedAuth();
-  const trainingController = TrainingController.getInstance(auth.token);
-  const groupController = GroupController.getInstance(auth.token);
+  const trainingController = TrainingController.getInstance();
+  const groupController = GroupController.getInstance();
 
   const {
     institution,

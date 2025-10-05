@@ -19,11 +19,9 @@ import type {
   Wellness,
 } from '@/controller/profile/type/wellness.type';
 import { setCachedWellness } from '@/session-cache/wellness.session-cache';
-import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useWellness } from '@/store/wellness-provider';
 
 export async function submitWellness(
-  token: string,
   input: CreateWellness,
   state: {
     router: AppRouterInstance;
@@ -34,7 +32,7 @@ export async function submitWellness(
 
   handleApiRequest(
     router,
-    () => ProfileController.getInstance(token).upsertWellness(input),
+    () => ProfileController.getInstance().upsertWellness(input),
     (_wellness) => {
       setCachedWellness(_wellness);
       toast.success('Successfully submitted wellness');
@@ -47,7 +45,6 @@ export async function submitWellness(
 export default function FeedbackPage() {
   const theme = useTheme();
   const router = useRouter();
-  const { token } = useAuthenticatedAuth();
 
   const [filter, setFilter] = useState<WellnessAnthropometry>(
     WellnessAnthropometry.WELLNESS
@@ -109,7 +106,6 @@ export default function FeedbackPage() {
           <AthleteWellnessForm
             onSubmit={(data) =>
               submitWellness(
-                token,
                 { date: new Date(), ...data },
                 { router, setCachedWellness }
               )
@@ -131,7 +127,6 @@ export default function FeedbackPage() {
         variant="contained"
         onClick={() => {
           submitWellness(
-            token,
             { ...state, date: new Date() },
             { router, setCachedWellness }
           );

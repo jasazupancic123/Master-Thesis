@@ -58,7 +58,7 @@ export default function DashboardEditAthleteModal(
 
   const screenSize = useScreenSize();
   const router = useRouter();
-  const { token, user } = useAuthenticatedAuth();
+  const { user } = useAuthenticatedAuth();
   const { selectedInstitution, members, refetchMembers, refetchUsers } =
     useDashboard();
 
@@ -110,7 +110,7 @@ export default function DashboardEditAthleteModal(
       cancelText="Close"
       onConfirm={() => {
         if ((isEditedProfile && profileToEdit) || (userToEdit && isEditedUser))
-          updateUserProfile(token, {
+          updateUserProfile({
             router,
             userToEdit,
             isEditedUser,

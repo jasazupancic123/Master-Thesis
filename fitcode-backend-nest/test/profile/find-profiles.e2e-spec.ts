@@ -1,8 +1,5 @@
-import type { INestApplication } from '@nestjs/common';
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { TestApp } from '@test/common/utils/app.util';
 
-import { AppModule } from '@src/app.module';
 import { deleteUsersByIds } from '@src/common/utils/data.util';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { generateInstitutionStub } from '@src/institution/mock/institution.mock';
@@ -10,27 +7,21 @@ import { ProfileService } from '@src/profile/service/profile.service';
 import { TestDbService } from '@src/test-db/test-db.service';
 
 describe('Find Profiles (e2e)', () => {
-  let app: INestApplication;
+  let testApp: TestApp;
   let firebase: FirebaseService;
   let profileService: ProfileService;
   let db: TestDbService;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
-
-    db = moduleFixture.get(TestDbService);
-    firebase = moduleFixture.get(FirebaseService);
-    profileService = moduleFixture.get(ProfileService);
+    testApp = await TestApp.init();
+    db = testApp.module.get(TestDbService);
+    firebase = testApp.module.get(FirebaseService);
+    profileService = testApp.module.get(ProfileService);
   });
 
   afterAll(async () => {
     await db.clear();
-    await app.close();
+    await testApp.close();
   });
 
   it('should return profile by id or create', async () => {

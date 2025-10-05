@@ -16,7 +16,8 @@ export function getCorsConfig(app: INestApplication): CorsOptions {
       ?.split(',')
       ?.map((url: string) => url.trim()) || [];
 
-  if (commonService.env.isDev()) whitelist.push(`http://localhost:3000`);
+  if (commonService.env.isDev())
+    whitelist.push('http://localhost:3000', 'http://localhost:8080');
 
   return {
     origin: (requestOrigin, callback) => {
