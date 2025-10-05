@@ -8,7 +8,7 @@
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "node dist/main",
-    "firebase:dev": "firebase emulators:start --project blindoff-staging --only firestore,auth,storage,functions",
+    "firebase:dev": "firebase emulators:start --only firestore,auth,storage,functions",
     "start:dev": "nest start -b swc --watch",
     "start:debug": "nest start --debug --watch",
     "deploy:staging": "cross-env NODE_ENV=staging    && gcloud app deploy --project=blindoff-staging app-staging.yaml",
@@ -18,7 +18,7 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/jest/bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json --runInBand",
+    "test:e2e": "jest --config ./test/jest-e2e.json --runInBand --detectOpenHandles",
     "prepare": "if [ \"$CI\" != \"true\" ]; then cd .. && husky fitcode-backend-nest/.husky; fi"
   },
   "dependencies": {

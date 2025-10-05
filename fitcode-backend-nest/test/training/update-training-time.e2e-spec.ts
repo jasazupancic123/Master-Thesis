@@ -1,11 +1,7 @@
-import type { INestApplication } from '@nestjs/common';
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { TestApp } from '@test/common/utils/app.util';
 import { expectDatesToMatchUpToMinute } from '@test/common/utils/date.util';
 import { addDays, startOfDay, subDays } from 'date-fns';
-import * as request from 'supertest';
 
-import { AppModule } from '@src/app.module';
 import type { DateRangeDto } from '@src/common/dto/date-range.dto';
 import { getTime } from '@src/common/service/util';
 import type { TestInstitution } from '@src/common/type/entity.type';
@@ -23,7 +19,7 @@ import {
 } from '@src/training/mock/training.stub';
 
 describe('Update Training (e2e)', () => {
-  let app: INestApplication;
+  let testApp: TestApp;
   let db: TestDbService;
 
   let c1: Component;
@@ -37,14 +33,8 @@ describe('Update Training (e2e)', () => {
   const trainingDate = getTime(addDays(new Date(), 2), 8, 0); // 2 days in the future, 8:00 AM
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
-
-    db = moduleFixture.get(TestDbService);
+    testApp = await TestApp.init();
+    db = testApp.module.get(TestDbService);
 
     c1 = await db.components.create();
     c2 = await db.components.create();
@@ -70,7 +60,7 @@ describe('Update Training (e2e)', () => {
     await db.groups.delete(group.id);
     await db.trainings.delete(trainingId);
     await db.components.delete(c1.id);
-    await app.close();
+    await testApp.close();
   });
 
   async function req(
@@ -79,10 +69,11 @@ describe('Update Training (e2e)', () => {
     _componentId = c1.id,
     token: string = global.trainer.token,
   ) {
-    return await request(app.getHttpServer())
-      .patch(`/training/${_trainingId}/component/${_componentId}/time`)
-      .set('Authorization', `Bearer ${token}`)
-      .send(body);
+    return await testApp.http.patch(
+      `/training/${_trainingId}/component/${_componentId}/time`,
+      token,
+      body,
+    );
   }
 
   it('should fail if component is invalid', async () => {

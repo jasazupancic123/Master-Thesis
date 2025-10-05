@@ -16,9 +16,10 @@ import { User } from '@src/common/type/firebase-auth.type';
 
 import { UpdateCustomClaimsDto } from './dto/custom-claims.dto';
 import { FilterUserQueryDto } from './dto/filter-user-query.dto';
-import { AuthTokensDto } from './dto/login.dto';
+import { IdTokenDto } from './dto/login.dto';
 import { RegisterAthleteDto } from './dto/register-athlete.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { AuthUser } from './entities/user.entity';
 import { UserRole } from './enum/user-role.enum';
 import { AuthService } from './service/auth.service';
 
@@ -26,12 +27,12 @@ import { AuthService } from './service/auth.service';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('login')
-  async login(
-    @Body() body: AuthTokensDto,
+  @Post('session-login')
+  async sessionLogin(
+    @Body() { idToken }: IdTokenDto,
     @Res({ passthrough: true }) res: Response,
-  ) {
-    return await this.authService.login(body.idToken, body.refreshToken, res);
+  ): Promise<AuthUser | null> {
+    return await this.authService.sessionLogin(idToken, res);
   }
 
   @Post('logout')

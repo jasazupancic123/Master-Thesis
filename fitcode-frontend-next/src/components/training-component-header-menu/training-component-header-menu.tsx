@@ -21,7 +21,6 @@ import { PeriodizationType } from '@/controller/training/enum/periodization-type
 import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
@@ -37,8 +36,7 @@ export default function TrainingComponentHeaderMenu() {
     exercises: allExercises,
   } = useMain();
 
-  const auth = useAuthenticatedAuth();
-  const controller = TrainingController.getInstance(auth.token);
+  const controller = TrainingController.getInstance();
   const { detectedChanges, setDetectedChanges, trainings, setTrainings } =
     useGroup();
 

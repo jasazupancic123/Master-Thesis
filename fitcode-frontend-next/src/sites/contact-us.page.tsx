@@ -207,7 +207,11 @@ export default function ContactUsPage() {
                   <Button
                     type="submit"
                     variant="contained"
-                    onClick={(e) => sendEmail(e as any)}
+                    onClick={(e) =>
+                      sendEmail(
+                        e as unknown as React.FormEvent<HTMLFormElement>
+                      )
+                    }
                     sx={{
                       my: 2,
                       mx: 'auto',

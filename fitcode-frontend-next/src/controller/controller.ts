@@ -20,20 +20,20 @@ export class Controller {
   public profile: ProfileController;
   public app: AppController;
 
-  private constructor(token: string) {
-    this.auth = AuthController.getInstance(token);
-    this.component = ComponentController.getInstance(token);
-    this.exercise = ExerciseController.getInstance(token);
-    this.group = GroupController.getInstance(token);
-    this.institution = InstitutionController.getInstance(token);
-    this.method = MethodController.getInstance(token);
-    this.training = TrainingController.getInstance(token);
-    this.profile = ProfileController.getInstance(token);
-    this.app = AppController.getInstance(token);
+  private constructor() {
+    this.auth = AuthController.getInstance();
+    this.component = ComponentController.getInstance();
+    this.exercise = ExerciseController.getInstance();
+    this.group = GroupController.getInstance();
+    this.institution = InstitutionController.getInstance();
+    this.method = MethodController.getInstance();
+    this.training = TrainingController.getInstance();
+    this.profile = ProfileController.getInstance();
+    this.app = AppController.getInstance();
   }
 
-  public static getInstance(token: string): Controller {
-    Controller.instance = new Controller(token);
+  public static getInstance(): Controller {
+    Controller.instance = new Controller();
     return Controller.instance;
   }
 }

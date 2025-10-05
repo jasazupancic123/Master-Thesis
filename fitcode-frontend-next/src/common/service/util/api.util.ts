@@ -1,5 +1,6 @@
 import qs from 'qs';
 
+import { SESSION_COOKIE_NAME } from '@/common/constant/auth.constant';
 import type { FetchOptions, Query } from '@/common/type/api.type';
 
 export class ApiUtil {
@@ -30,7 +31,7 @@ export class ApiUtil {
   async fetch<T>(url: string, options?: FetchOptions): Promise<T> {
     const {
       method = 'GET',
-      token,
+      session,
       body,
       query,
       formData,
@@ -41,7 +42,7 @@ export class ApiUtil {
       method,
       headers: {
         ...(!formData ? { 'Content-Type': 'application/json' } : {}),
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(session ? { cookie: `${SESSION_COOKIE_NAME}=${session}` } : {}),
       },
       ...(body ? { body: JSON.stringify(body) } : {}),
       ...(formData ? { body: formData } : {}),
@@ -63,7 +64,7 @@ export class ApiUtil {
 
   async get<T>(
     url: string,
-    options?: Pick<FetchOptions, 'token' | 'query' | 'cacheTimeInMs'>
+    options?: Pick<FetchOptions, 'session' | 'query' | 'cacheTimeInMs'>
   ): Promise<T> {
     return this.fetch<T>(url, { ...(options || {}), method: 'GET' });
   }
@@ -71,7 +72,7 @@ export class ApiUtil {
   async post<T>(
     url: string,
     body: object,
-    options?: Pick<FetchOptions, 'token' | 'query' | 'formData'>
+    options?: Pick<FetchOptions, 'session' | 'query' | 'formData'>
   ): Promise<T> {
     return await this.fetch<T>(url, {
       ...(options || {}),
@@ -83,14 +84,14 @@ export class ApiUtil {
   async patch<T>(
     url: string,
     body: object,
-    options?: Pick<FetchOptions, 'token' | 'query' | 'formData'>
+    options?: Pick<FetchOptions, 'session' | 'query' | 'formData'>
   ): Promise<T> {
     return this.fetch<T>(url, { ...(options || {}), method: 'PATCH', body });
   }
 
   async delete<T>(
     url: string,
-    options?: Pick<FetchOptions, 'token' | 'query' | 'body'>
+    options?: Pick<FetchOptions, 'session' | 'query' | 'body'>
   ): Promise<T> {
     return this.fetch<T>(url, { ...(options || {}), method: 'DELETE' });
   }

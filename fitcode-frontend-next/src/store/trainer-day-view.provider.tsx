@@ -2,7 +2,6 @@ import { isSameDay } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 
-import { useAuthenticatedAuth } from './auth.provider';
 import { useMain } from './main.provider';
 import { useScreenSize } from './screen-size.provider';
 import type {
@@ -50,9 +49,7 @@ export function TrainerDayViewProvider(
   const router = useRouter();
   const screenSize = useScreenSize();
   const { components, exercises } = useMain();
-  const { token } = useAuthenticatedAuth();
-
-  const controller = Controller.getInstance(token);
+  const controller = Controller.getInstance();
 
   // filtering selected component exercises
   const [filteredExercises, setFilteredExercises] = useState<Exercise[]>([]);
@@ -178,6 +175,7 @@ export function TrainerDayViewProvider(
         const data: Workload[] = snapshot.docs.map((doc) =>
           firestoreSerialize(doc.data())
         );
+
         const progress = WorkloadService.getProgress(training, data);
         setProgress(progress);
       },

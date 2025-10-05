@@ -1,9 +1,5 @@
-import type { INestApplication } from '@nestjs/common';
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
-import * as request from 'supertest';
+import { TestApp } from '@test/common/utils/app.util';
 
-import { AppModule } from '@src/app.module';
 import { UserRole } from '@src/auth/enum/user-role.enum';
 import { deleteUsersByIds } from '@src/common/utils/data.util';
 import { FirebaseService } from '@src/firebase/firebase.service';
@@ -14,36 +10,28 @@ import type {
 import { TestDbService } from '@src/test-db/test-db.service';
 
 describe('Import Users (e2e)', () => {
-  let app: INestApplication;
+  let testApp: TestApp;
   let firebase: FirebaseService;
   let db: TestDbService;
 
   let institutionId: string;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
-
-    db = moduleFixture.get(TestDbService);
-    firebase = moduleFixture.get(FirebaseService);
-
+    testApp = await TestApp.init();
+    db = testApp.module.get(TestDbService);
+    firebase = testApp.module.get(FirebaseService);
     institutionId = (await db.institutions.createTest()).id;
   });
 
   afterAll(async () => {
     await db.clear();
-    await app.close();
+    await testApp.close();
   });
 
   async function req(token: string, input: ImportProfileDto[]) {
-    return await request(app.getHttpServer())
-      .post('/profile/import')
-      .set('Authorization', `Bearer ${token}`)
-      .send({ profiles: input } as ImportProfilesDto);
+    return await testApp.http.post('/profile/import', token, {
+      profiles: input,
+    } as ImportProfilesDto);
   }
 
   it.each([

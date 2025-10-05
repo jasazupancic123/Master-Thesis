@@ -8,7 +8,6 @@ import type { GroupIdPageProps } from '@/app/(trainer)/groups/[group_id]/props';
 import type { ChildrenProps } from '@/common/type/props.type';
 import { Controller } from '@/controller/controller';
 import { TrainingService } from '@/controller/training/training.service';
-import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { GroupProvider } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 
@@ -17,8 +16,7 @@ export default function GroupInitializer({ children }: ChildrenProps) {
   const [state, setState] = useState<GroupIdPageProps | null>(null);
 
   const { components, exercises, methods, groups, institutions } = useMain();
-  const auth = useAuthenticatedAuth();
-  const controller = Controller.getInstance(auth.token);
+  const controller = Controller.getInstance();
 
   useEffect(() => {
     async function init() {

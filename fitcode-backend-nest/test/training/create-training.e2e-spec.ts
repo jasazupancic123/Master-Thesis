@@ -1,11 +1,7 @@
-import type { INestApplication } from '@nestjs/common';
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { TestApp } from '@test/common/utils/app.util';
 import { expectDatesToMatchUpToMinute } from '@test/common/utils/date.util';
 import { addDays, addHours, subDays, subHours } from 'date-fns';
-import * as request from 'supertest';
 
-import { AppModule } from '@src/app.module';
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import type { TestInstitution } from '@src/common/type/entity.type';
 import {
@@ -29,6 +25,7 @@ import type { Group } from '@src/group/entity/group.entity';
 import { GroupService } from '@src/group/group.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { TestDbService } from '@src/test-db/test-db.service';
+import type { CreateTrainingDto } from '@src/training/dto/create-training.dto';
 import {
   generateSuperset,
   generateTrainingComponent,
@@ -38,7 +35,7 @@ import {
 import { TrainingService } from '@src/training/service/training.service';
 
 describe('Create Training (e2e)', () => {
-  let app: INestApplication;
+  let testApp: TestApp;
   let db: TestDbService;
   let firebase: FirebaseService;
   let componentService: ComponentService;
@@ -52,20 +49,14 @@ describe('Create Training (e2e)', () => {
   let component: Component;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
-
-    db = moduleFixture.get(TestDbService);
-    firebase = moduleFixture.get(FirebaseService);
-    componentService = moduleFixture.get(ComponentService);
-    exerciseService = moduleFixture.get(ExerciseService);
-    trainingService = moduleFixture.get(TrainingService);
-    groupService = moduleFixture.get(GroupService);
-    institutionService = moduleFixture.get(InstitutionService);
+    testApp = await TestApp.init();
+    db = testApp.module.get(TestDbService);
+    firebase = testApp.module.get(FirebaseService);
+    componentService = testApp.module.get(ComponentService);
+    exerciseService = testApp.module.get(ExerciseService);
+    trainingService = testApp.module.get(TrainingService);
+    groupService = testApp.module.get(GroupService);
+    institutionService = testApp.module.get(InstitutionService);
 
     component = await componentService.create(generateComponentStub());
     institution = await createInstitution(institutionService);
@@ -79,8 +70,12 @@ describe('Create Training (e2e)', () => {
       deleteDoc(firebase, 'COMPONENT', component.id),
     ]);
 
-    await app.close();
+    await testApp.close();
   });
+
+  async function req(token: string, input: Partial<CreateTrainingDto>) {
+    return await testApp.http.post('/training', token, input);
+  }
 
   describe('Create training', () => {
     it('should fail to create new training if group provided and not found', async () => {
@@ -90,11 +85,7 @@ describe('Create Training (e2e)', () => {
         groupId: 'invalid-group-id',
       });
 
-      const response = await request(app.getHttpServer())
-        .post('/training')
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send(training);
-
+      const response = await req(global.trainer.token, training);
       expect(response.status).toBe(404);
       expect(response.body.message).toBe(`Group does not exist`);
     });
@@ -107,11 +98,7 @@ describe('Create Training (e2e)', () => {
         cycleId: 'invalid-cycle-id',
       });
 
-      const response = await request(app.getHttpServer())
-        .post('/training')
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send(training);
-
+      const response = await req(global.trainer.token, training);
       expect(response.status).toBe(404);
       expect(response.body.message).toBe(`Cycle does not exist`);
     });
@@ -124,11 +111,7 @@ describe('Create Training (e2e)', () => {
         cycleId: 'invalid-cycle-id',
       });
 
-      const response = await request(app.getHttpServer())
-        .post('/training')
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send(training);
-
+      const response = await req(global.trainer.token, training);
       expect(response.status).toBe(404);
       expect(response.body.message).toBe(`Cycle does not exist`);
     });
@@ -141,11 +124,7 @@ describe('Create Training (e2e)', () => {
         cycleId: group.cycles[0].id,
       });
 
-      const response = await request(app.getHttpServer())
-        .post('/training')
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send(training);
-
+      const response = await req(global.trainer.token, training);
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
         'Training must have at least one component',
@@ -161,11 +140,7 @@ describe('Create Training (e2e)', () => {
         components: [generateTrainingComponent()],
       });
 
-      const response = await request(app.getHttpServer())
-        .post('/training')
-        .set('Authorization', `Bearer ${global.athlete.token}`)
-        .send(training);
-
+      const response = await req(global.athlete.token, training);
       expect(response.status).toBe(401);
       expect(response.body.message).toBe('You cannot add training');
     });
@@ -180,11 +155,7 @@ describe('Create Training (e2e)', () => {
         components: [generateTrainingComponent()],
       });
 
-      const response = await request(app.getHttpServer())
-        .post('/training')
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send(training);
-
+      const response = await req(global.trainer.token, training);
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
         'Training falls outside of the selected cycle',
@@ -201,11 +172,7 @@ describe('Create Training (e2e)', () => {
         components: [generateTrainingComponent()],
       });
 
-      const response = await request(app.getHttpServer())
-        .post('/training')
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send(training);
-
+      const response = await req(global.trainer.token, training);
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
         'You cannot add or update trainings in the past',
@@ -253,11 +220,7 @@ describe('Create Training (e2e)', () => {
         components: [generateTrainingComponent({ id: component.id })],
       });
 
-      const response = await request(app.getHttpServer())
-        .post('/training')
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send(training);
-
+      const response = await req(global.trainer.token, training);
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
         'Maximum number of trainings per day reached',
@@ -296,11 +259,7 @@ describe('Create Training (e2e)', () => {
           components: [generateTrainingComponent({ id: component.id })],
         });
 
-        const response = await request(app.getHttpServer())
-          .post('/training')
-          .set('Authorization', `Bearer ${global.trainer.token}`)
-          .send(training);
-
+        const response = await req(global.trainer.token, training);
         expect(response.status).toBe(400);
         expect(response.body.message).toBe(
           'Training overlaps with other training',
@@ -331,11 +290,7 @@ describe('Create Training (e2e)', () => {
         ],
       });
 
-      const response = await request(app.getHttpServer())
-        .post('/training')
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send(training);
-
+      const response = await req(global.trainer.token, training);
       expect(response.status).toBe(404);
       expect(response.body.message).toBe('Component does not exist');
     });
@@ -388,11 +343,7 @@ describe('Create Training (e2e)', () => {
         ],
       });
 
-      const response = await request(app.getHttpServer())
-        .post('/training')
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send(training);
-
+      const response = await req(global.trainer.token, training);
       expect(response.status).toBe(409);
       expect(response.body.message).toBe(
         'You can only have up to 5 components per training',
@@ -418,11 +369,7 @@ describe('Create Training (e2e)', () => {
         components: [generateTrainingComponent({ id: leaf.id })],
       });
 
-      const response = await request(app.getHttpServer())
-        .post('/training')
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send(training);
-
+      const response = await req(global.trainer.token, training);
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
         `Component ${leaf.name} cannot be selected for training`,
@@ -452,11 +399,7 @@ describe('Create Training (e2e)', () => {
         ],
       });
 
-      const response = await request(app.getHttpServer())
-        .post('/training')
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send(training);
-
+      const response = await req(global.trainer.token, training);
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
         `Duplicate component ${component.name}`,
@@ -514,11 +457,7 @@ describe('Create Training (e2e)', () => {
           ],
         });
 
-        const response = await request(app.getHttpServer())
-          .post('/training')
-          .set('Authorization', `Bearer ${user.token}`)
-          .send(training);
-
+        const response = await req(user.token, training);
         expect(response.status).toBe(201);
         expect(response.body.groupId).toBe(group.id);
         expect(response.body.cycleId).toBe(group.cycles[1].id);
@@ -538,11 +477,24 @@ describe('Create Training (e2e)', () => {
   });
 
   describe('Training components', () => {
+    async function addComponentReq(
+      token: string,
+      trainingId: string,
+      components: Partial<CreateTrainingDto>['components'],
+    ) {
+      return await testApp.http.post(
+        `/training/${trainingId}/component`,
+        token,
+        { components },
+      );
+    }
+
     it('should fail to add components if training does not exist', async () => {
-      const response = await request(app.getHttpServer())
-        .post('/training/invalid-training-id/component')
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send({ components: [generateTrainingComponent()] });
+      const response = await addComponentReq(
+        global.trainer.token,
+        'invalid-training-id',
+        [generateTrainingComponent()],
+      );
 
       expect(response.status).toBe(400);
       expect(response.body.message).toBe('Training not found');
@@ -565,12 +517,11 @@ describe('Create Training (e2e)', () => {
         }),
       );
 
-      const response = await request(app.getHttpServer())
-        .post(`/training/${training.id}/component`)
-        .set('Authorization', `Bearer ${global.athlete.token}`)
-        .send({
-          components: [generateTrainingComponent({})],
-        });
+      const response = await addComponentReq(
+        global.athlete.token,
+        training.id,
+        [generateTrainingComponent({})],
+      );
 
       expect(response.status).toBe(401);
       expect(response.body.message).toBe('You cannot edit this training');
@@ -601,10 +552,11 @@ describe('Create Training (e2e)', () => {
           ),
         );
 
-      const response = await request(app.getHttpServer())
-        .post(`/training/${training.id}/component`)
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send({ components: [generateTrainingComponent()] });
+      const response = await addComponentReq(
+        global.trainer.token,
+        training.id,
+        [generateTrainingComponent()],
+      );
 
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
@@ -632,18 +584,17 @@ describe('Create Training (e2e)', () => {
         }),
       );
 
-      const response = await request(app.getHttpServer())
-        .post(`/training/${training.id}/component`)
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send({
-          components: [
-            generateTrainingComponent({
-              id: component.id,
-              from: getTime(addDays(new Date(), 2), 9, 0),
-              to: getTime(addDays(new Date(), 2), 10, 0),
-            }),
-          ],
-        });
+      const response = await addComponentReq(
+        global.trainer.token,
+        training.id,
+        [
+          generateTrainingComponent({
+            id: component.id,
+            from: getTime(addDays(new Date(), 2), 9, 0),
+            to: getTime(addDays(new Date(), 2), 10, 0),
+          }),
+        ],
+      );
 
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
@@ -671,12 +622,11 @@ describe('Create Training (e2e)', () => {
         }),
       );
 
-      const response = await request(app.getHttpServer())
-        .post(`/training/${training.id}/component`)
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send({
-          components: [generateTrainingComponent({ id: newComponent.id })],
-        });
+      const response = await addComponentReq(
+        global.trainer.token,
+        training.id,
+        [generateTrainingComponent({ id: newComponent.id })],
+      );
 
       expect(response.status).toBe(201);
       expect(response.body.id).toBe(training.id);
@@ -747,9 +697,10 @@ describe('Create Training (e2e)', () => {
         }),
       );
 
-      const response = await request(app.getHttpServer())
-        .delete(`/training/${training.id}/component/${newComponent.id}`)
-        .set('Authorization', `Bearer ${global.trainer.token}`);
+      const response = await testApp.http.delete(
+        `/training/${training.id}/component/${newComponent.id}`,
+        global.trainer.token,
+      );
 
       expect(response.status).toBe(200);
       expect(response.body.id).toBe(training.id);
@@ -778,9 +729,10 @@ describe('Create Training (e2e)', () => {
         }),
       );
 
-      const response = await request(app.getHttpServer())
-        .delete(`/training/${training.id}/component/${component.id}`)
-        .set('Authorization', `Bearer ${global.trainer.token}`);
+      const response = await testApp.http.delete(
+        `/training/${training.id}/component/${component.id}`,
+        global.trainer.token,
+      );
 
       expect(response.status).toBe(200);
       expect(response.body.id).toBe(training.id);
