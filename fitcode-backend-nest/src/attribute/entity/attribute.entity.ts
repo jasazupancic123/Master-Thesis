@@ -71,12 +71,10 @@ export class Attribute extends BaseAttribute {
   @Expose()
   max?: number;
 
-  @IsString()
   @ApiPropertyOptional()
-  @IsNotEmpty()
   @IsOptional()
   @Expose()
-  pattern?: string; // regex pattern for validation
+  pattern?: RegExp; // regex pattern for validation
 
   @ValidateNested({ each: true })
   @Type(() => Attribute)

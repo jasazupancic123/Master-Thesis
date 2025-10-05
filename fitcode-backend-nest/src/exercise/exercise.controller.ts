@@ -30,17 +30,25 @@ export class ExerciseController {
 
   @Get('global')
   @Auth()
-  async findAllGlobal(@Query() query?: Record<string, string>) {
-    return this.exerciseService.findAllGlobal(query);
+  async findAllGlobal(
+    @RequestUser() user: User,
+    @Query() query?: Record<string, string>,
+  ) {
+    return this.exerciseService.findAllGlobal(user, query);
   }
 
   @Get('institution/:institutionId')
   @Auth()
   async findAll(
+    @RequestUser() user: User,
     @Param('institutionId') institutionId: string,
     @Query() query?: Record<string, string>,
   ) {
-    return this.exerciseService.findAllByInstitution(institutionId, query);
+    return this.exerciseService.findAllByInstitution(
+      user,
+      institutionId,
+      query,
+    );
   }
 
   @Post()

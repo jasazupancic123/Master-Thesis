@@ -264,7 +264,7 @@ describe('Complete Next Set (e2e)', () => {
       reps: 12,
       load: 100,
       recTime: 60,
-      tempo: 2020,
+      tempo: '2:0:2:0',
     });
 
     // workloads should not exist yet
@@ -345,7 +345,7 @@ describe('Complete Next Set (e2e)', () => {
       reps: 10,
       load: 80,
       recTime: 90,
-      tempo: 2020,
+      tempo: '2:0:2:0',
     });
 
     // workloads should exist now
@@ -417,7 +417,7 @@ describe('Complete Next Set (e2e)', () => {
       reps: 8,
       load: 60,
       recTime: 120,
-      tempo: 2020,
+      tempo: '2:0:2:0',
     });
 
     expect(res.status).toBe(201);

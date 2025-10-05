@@ -3,6 +3,7 @@ import {
   CollectionGroup,
   CollectionReference,
   DocumentReference,
+  FieldValue,
 } from 'firebase-admin/firestore';
 import { Query } from 'firebase-admin/lib/firestore';
 
@@ -86,6 +87,13 @@ export class TrainingReportRepository extends FirestoreRepository<
   async update(ref: TrainingReportRef, data: Update<TrainingReport>) {
     const query = this.firebase.buildUpdateQuery(data);
     await this.doc(ref).update(query);
+  }
+
+  async addPhotos(ref: TrainingReportRef, photoURLs: string[]) {
+    if (!photoURLs?.length) return;
+    await this.doc(ref).update({
+      photoURLs: FieldValue.arrayUnion(...photoURLs) as unknown as string[],
+    });
   }
 
   async delete(ref: TrainingReportRef) {

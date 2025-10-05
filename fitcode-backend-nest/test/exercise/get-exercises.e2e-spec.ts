@@ -157,6 +157,48 @@ describe('Get Exercises (e2e)', () => {
       for (const exercise of institution2Exercises)
         expect(responseExerciseIds).not.toContain(exercise.id);
     });
+
+    it('should return all exercises for admin, even disabled', async () => {
+      const disabledExercise = await exerciseService.create(global.admin, {
+        ...generateExerciseStub({ componentIds: [component.id] }),
+        disabled: true,
+      });
+
+      const response = await request(app.getHttpServer())
+        .get(`/exercise/global`)
+        .set('Authorization', `Bearer ${global.admin.token}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.length).toBeGreaterThan(0);
+      expect(
+        response.body.find((e: Exercise) => e.id === disabledExercise.id),
+      ).toBeDefined();
+
+      await deleteDoc(firebase, 'EXERCISE', disabledExercise.id);
+    });
+
+    it.each([
+      ['athlete', global.athlete.token],
+      ['trainer', global.trainer.token],
+      ['manager', global.manager.token],
+    ])('should return only enabled exercises for %s', async (_role, token) => {
+      const disabledExercise = await exerciseService.create(global.admin, {
+        ...generateExerciseStub({ componentIds: [component.id] }),
+        disabled: true,
+      });
+
+      const response = await request(app.getHttpServer())
+        .get(`/exercise/global`)
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.length).toBeGreaterThan(0);
+      expect(
+        response.body.find((e: Exercise) => e.id === disabledExercise.id),
+      ).toBeUndefined();
+
+      await deleteDoc(firebase, 'EXERCISE', disabledExercise.id);
+    });
   });
 
   describe('Filtering Exercises', () => {

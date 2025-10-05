@@ -10,8 +10,6 @@ export type FirebaseInitAppOptions = {
   server?: boolean;
 };
 
-export const FIREBASE_AUTH_ID_TOKEN = 'authIdToken';
-
 const dev = process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === 'true';
 
 function getConfig() {

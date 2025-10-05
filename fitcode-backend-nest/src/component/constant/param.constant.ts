@@ -10,6 +10,8 @@ import {
 
 export const DEFAULT_PARAMS_KEY = 'default';
 
+export const TEMPO_REGEX = /^\d+(\.\d)?:\d+(\.\d)?:\d+(\.\d)?:\d+(\.\d)?$/;
+
 export const VOL_WORK_SET_OPTIONS: Attribute[] = [
   {
     field: VolWorkSetType.Set,
@@ -97,10 +99,9 @@ export const INT_OPTIONS: Attribute[] = [
     field: IntType.Tempo,
     name: 'Tempo',
     description: 'tempo',
-    type: AttributeType.Number,
-    defaultValue: '2010',
-    min: 1000,
-    max: 9999,
+    type: AttributeType.String,
+    defaultValue: '2:0:1:0',
+    pattern: TEMPO_REGEX,
   },
   {
     field: IntType.Eff,
