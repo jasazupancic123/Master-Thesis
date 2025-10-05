@@ -1,9 +1,4 @@
-import { theme } from '@/app/style';
-import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
-import { ConditionDirection } from '@/controller/pose-detection/enum/condition-detection.enum';
-import { Rep, RepInfo } from '@/controller/pose-detection/type/rep.type';
-import { TrainingExerciseRecording } from '@/controller/training/type/training-exercise.type';
-import { SxProps } from '@mui/material';
+import type { SxProps } from '@mui/material';
 import {
   axisClasses,
   BarChart,
@@ -12,6 +7,12 @@ import {
   useYScale,
 } from '@mui/x-charts';
 import { useRef } from 'react';
+
+import { theme } from '@/app/style';
+import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
+import { ConditionDirection } from '@/controller/pose-detection/enum/condition-detection.enum';
+import type { Rep, RepInfo } from '@/controller/pose-detection/type/rep.type';
+import type { TrainingExerciseRecording } from '@/controller/training/type/training-exercise.type';
 
 function IsoOverlay({ reps }: { reps: RepInfo[] }) {
   const xScale = useXScale(); // band scale
@@ -24,7 +25,7 @@ function IsoOverlay({ reps }: { reps: RepInfo[] }) {
     <g pointerEvents="none">
       {reps.map((r) => {
         const xBase = (xScale as any)(r.repNumber.toString());
-        if (xBase == null) return null;
+        if (xBase === null) return null;
         const xCenter = hasBandwidth
           ? xBase + (xScale as any).bandwidth() / 2
           : xBase;
@@ -127,12 +128,13 @@ export default function TrainingInProgressTempoChart(
       ? {
           id: r.repNumber,
           label: `${r.repNumber}`,
-          concentric:
+          concentric: (r.timeToExtremeMs || 0) / 1000,
+          eccentric:
             r.timeFromExtremeToEndMs !== undefined
-              ? -1 * (r.timeFromExtremeToEndMs / 1000)
+              ? (-1 * r.timeFromExtremeToEndMs) / 1000
               : 0,
-          eccentric: (r.timeToExtremeMs || 0) / 1000,
           isometric: (r.timeAtExtremeMs || 0) / 1000,
+          isometricFake: 0,
         }
       : {
           id: r.repNumber,
@@ -143,6 +145,7 @@ export default function TrainingInProgressTempoChart(
               : 0,
           eccentric: (-1 * (r.timeToExtremeMs || 0)) / 1000,
           isometric: (r.timeAtExtremeMs || 0) / 1000,
+          isometricFake: 0,
         };
   });
 
@@ -181,10 +184,9 @@ export default function TrainingInProgressTempoChart(
           dataKey: 'concentric',
           label: 'Concentric',
           stack: 'time',
-          valueFormatter: (v, ctx) => {
-            if (!v) return '0 (0%)';
-
-            return `${Math.abs(v).toFixed(2)} (${Math.round(Math.abs(v) * 100)}%)`;
+          valueFormatter: (v) => {
+            if (!v) return '–';
+            return `Concentric phase: ${Math.abs(v).toFixed(1)}s`;
           },
           color: theme.palette.primary.main,
         },
@@ -193,11 +195,21 @@ export default function TrainingInProgressTempoChart(
           label: 'Eccentric',
           stack: 'time',
           valueFormatter: (v) => {
-            if (!v) return '0 (0%)';
-
-            return `${Math.abs(v).toFixed(2)} (${Math.round(Math.abs(v) * 100)}%)`;
+            if (!v) return '–';
+            return `Eccentric phase: ${Math.abs(v).toFixed(1)}s`;
           },
           color: theme.palette.secondary.main,
+        },
+        {
+          dataKey: 'isometricFake',
+          label: 'Isometric',
+          stack: 'time',
+          valueFormatter: (v, ctx) => {
+            const row = rows.find((r) => r.id === ctx.dataIndex + 1);
+            if (!row || !row.isometric) return 'Isometric phase: –';
+            return `Isometric phase: ${Math.abs(row.isometric).toFixed(1)}s`;
+          },
+          color: 'none',
         },
       ]}
       width={width}

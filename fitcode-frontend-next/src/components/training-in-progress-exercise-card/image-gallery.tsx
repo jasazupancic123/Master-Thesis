@@ -1,9 +1,10 @@
 import { Box, Typography } from '@mui/material';
 import Image from 'next/image';
-import { theme } from '@/app/style';
-import { RepImage } from '@/controller/training/type/training-exercise.type';
-import ImagePickerSlider from './image-picker-slider';
 import { useState } from 'react';
+
+import ImagePickerSlider from './image-picker-slider';
+import { theme } from '@/app/style';
+import type { RepImage } from '@/controller/training/type/training-exercise.type';
 
 interface ImageGalleryProps {
   images: string[] | RepImage[];

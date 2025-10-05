@@ -2,7 +2,7 @@ export const POSE_DETECTION_CONSTRAINTS = {
   // State detection
   IN_FRAME_VISIBLITY_THRESHOLD: 0.5,
   STILLNESS_LOWER_THRESHOLD_M: 0.02, // in meters
-  STILLNESS_THRESHOLD_M: 0.03, // in meters
+  STILLNESS_THRESHOLD_M: 0.06, // in meters
   STILLNESS_Z_AXIS_PERCENTAGE_THRESHOLD: 0.15, // if we move for 15% in z axis, then we are not still
   STILLNESS_THRESHOLD_WHILE_RECORDING_M: 0.01, // in meters
   STILLNESS_DETECTION_WINDOW_DURING_RECORDING_S: 1.5, // in seconds

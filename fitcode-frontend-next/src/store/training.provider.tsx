@@ -79,19 +79,6 @@ export const TrainingProvider = (
     if (!trainingInProgress) return;
 
     if (trainingInProgress.startOfTraining) {
-      console.log(
-        'Training in progress, saving to localStorage',
-        trainingInProgress
-      );
-
-      // log how big is the trainingInProgress object
-      const size = new Blob([JSON.stringify(trainingInProgress)]).size;
-      console.log(
-        `Training in progress object size: ${size} bytes (${(
-          size / 1024
-        ).toFixed(2)} KB)`
-      );
-
       localStorage.setItem(
         STORED_TRAINING_IN_PROGRESS,
         JSON.stringify(trainingInProgress)

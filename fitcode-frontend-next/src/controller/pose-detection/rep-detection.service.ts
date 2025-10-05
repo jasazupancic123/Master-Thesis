@@ -17,7 +17,7 @@ import type { RepState } from './type/rep-state.type';
 import { KeypointUtil } from './util/keypoint.util';
 import { TimeUtil } from './util/time.util';
 import { CommonService } from '@/common/service/common.service';
-import { SetState } from '@/common/type/state.type';
+import type { SetState } from '@/common/type/state.type';
 import { EXERCISE_TIMES_ROUNDING_STEP_S } from '@/components/mobile-movement-validation/mobile-movement-validation';
 
 const commonService = CommonService.instance;

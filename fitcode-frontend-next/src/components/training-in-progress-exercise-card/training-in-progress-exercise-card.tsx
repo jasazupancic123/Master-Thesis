@@ -9,31 +9,25 @@ import AthleteTrainingExerciseSets from '../athlete-training-exercise-sets/athle
 import MobileMovementValidation from '../mobile-movement-validation/mobile-movement-validation';
 import SwipeableBox from '../swipeable-box/swipeable-box';
 import { updateExerciseAttributeValues } from '../training-exercise-card-sets-expanded/state';
-import { markExerciseSetAsCompleted } from './state';
+import ImageGallery from './image-gallery';
 import TrainingExerciseSetDoneCheckbox from './training-exercise-set-done-checkbox';
+import TrainingInProgressTempoChart from './training-in-progress-tempo-chart';
 import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 import type { ParamType } from '@/controller/component/enum/param.enum';
 import { IntType, VolType } from '@/controller/component/enum/param.enum';
 import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
+import type { TrainingExerciseRecording } from '@/controller/training/type/training-exercise.type';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
-import ImageGallery from './image-gallery';
-import { TrainingExerciseRecording } from '@/controller/training/type/training-exercise.type';
-import TrainingInProgressTempoChart from './training-in-progress-tempo-chart';
-import { SetState } from '@/common/type/state.type';
 
 export default function TrainingInProgressExerciseCard() {
   const theme = useTheme();
   const screenSize = useScreenSize();
 
-  const {
-    trainingInProgress,
-    setTrainingInProgress,
-    updateTrainingInProgress,
-  } = useTraining();
+  const { trainingInProgress, updateTrainingInProgress } = useTraining();
 
   const {
     selectedExercise,
@@ -71,7 +65,7 @@ export default function TrainingInProgressExerciseCard() {
 
   const updateExerciseValues = (
     repsCount: number,
-    tempo: number,
+    tempo: string,
     passedExercise?: TrainingExerciseRecording,
     updateSelectedExercise?: boolean
   ) => {
@@ -155,13 +149,6 @@ export default function TrainingInProgressExerciseCard() {
         );
       });
     }
-
-    // markExerciseSetAsCompleted(
-    //   { exerciseId: updatableExercise.id },
-    //   setIndex + 1,
-    //   trainingInProgress.exerciseSetTrackingState,
-    //   setTrainingInProgress
-    // );
 
     if (updateSelectedExercise) setSelectedExercise(updatableExercise);
 

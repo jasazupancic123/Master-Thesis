@@ -7,17 +7,22 @@ import dayjs from 'dayjs';
 import { useEffect, useRef, useState } from 'react';
 
 import LoadingOverlay from '../loading-overlay/loading-overlay';
+import { finishSet } from '../training-in-progress-exercise-card/state';
+import TrainingInProgressTempoChart from '../training-in-progress-exercise-card/training-in-progress-tempo-chart';
 import FpsText from './components/fps-text';
 import MovementValidationHeader from './components/movement-validation-header';
 import {
   enableCam,
   getStatusMessage,
+  getTempoString,
   predictWebcam,
   setupVideoAndContex,
 } from './state';
 import { TrackingMethod } from '@/common/enum/tracking-method.enum';
+import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
 import { CommonService } from '@/common/service/common.service';
 import type { SetState } from '@/common/type/state.type';
+import { FrameBitmapBuffer } from '@/controller/pose-detection/class/frame-bitmap-buffer';
 import { KeypointHistory } from '@/controller/pose-detection/class/keypoint-history';
 import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
 import { POSE_DETECTION_CONSTRAINTS } from '@/controller/pose-detection/const/pose-detection-constrains.const';
@@ -34,15 +39,10 @@ import type { Rep, RepInfo } from '@/controller/pose-detection/type/rep.type';
 import type { RepState } from '@/controller/pose-detection/type/rep-state.type';
 import { getPoseLandmarker } from '@/controller/pose-detection/util/pose-landmarker-loader.util';
 import type { TrainingExerciseRecording } from '@/controller/training/type/training-exercise.type';
-import { useScreenSize } from '@/store/screen-size.provider';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
-import { FrameBitmapBuffer } from '@/controller/pose-detection/class/frame-bitmap-buffer';
-import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
-import { finishSet } from '../training-in-progress-exercise-card/state';
+import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
-import TrainingInProgressTempoChart from '../training-in-progress-exercise-card/training-in-progress-tempo-chart';
-import { RepsGraphService } from '@/controller/pose-detection/rep-graph.service';
 
 const DEBUG = false;
 
@@ -53,13 +53,15 @@ export const EXERCISE_TIMES_ROUNDING_STEP_S = 0.2; // round to 0.2
 
 interface MobileMovementValidationProps {
   selectedExercise: TrainingExerciseRecording | undefined;
-  setSelectedExercise: SetState<TrainingExerciseRecording | undefined>;
+  setSelectedExercise:
+    | SetState<TrainingExerciseRecording | undefined>
+    | undefined;
   selectedTrackingMethod: TrackingMethod | undefined;
   setSelectedTrackingMethod: SetState<TrackingMethod> | undefined;
   updateExerciseValues:
     | ((
         repsCount: number,
-        tempo: number,
+        tempo: string,
         updatedExercise?: TrainingExerciseRecording,
         updateSelectedExercise?: boolean
       ) => void)
@@ -408,16 +410,16 @@ export default function MobileMovementValidation(
   const finishAiDetection = async () => {
     statusMessage.current = getStatusMessage(DetectionStatus.STOPPED);
 
-    await RepsGraphService.downloadReps(
-      {
-        recordedRepsRef,
-        keypointId: exerciseDetectionData!.romKeypointId,
-        valueType: exerciseDetectionData!.romValueType,
-        constantKeypointHistory: constantKeypointHistoryRef.current,
-        smooth: true,
-      },
-      { filenameBase: 'session', combine: true }
-    );
+    // await RepsGraphService.downloadReps(
+    //   {
+    //     recordedRepsRef,
+    //     keypointId: exerciseDetectionData!.romKeypointId,
+    //     valueType: exerciseDetectionData!.romValueType,
+    //     constantKeypointHistory: constantKeypointHistoryRef.current,
+    //     smooth: true,
+    //   },
+    //   { filenameBase: 'session', combine: true }
+    // );
 
     // KeypointUtil.drawKeypointValuesGraph(
     //   constantKeypointHistoryRef.current.history,
@@ -451,53 +453,6 @@ export default function MobileMovementValidation(
       user !== null &&
       user !== undefined
     ) {
-      let avgTimeToExtremeMs = 0,
-        avgTimeAtExtremeMs = 0,
-        avgTimeFromExtremeToEndMs = 0,
-        avgIdleTimeMs = 0;
-
-      for (const rep of recordedRepsRef.current) {
-        avgTimeToExtremeMs += rep.timeToExtremeMs || 0;
-        avgTimeAtExtremeMs += rep.timeAtExtremeMs || 0;
-        avgTimeFromExtremeToEndMs += rep.timeFromExtremeToEndMs || 0;
-        avgIdleTimeMs += rep.idleTimeMs || 0;
-      }
-
-      const avgTimeToExtremeS = Math.max(
-        EXERCISE_TIMES_ROUNDING_STEP_S,
-        commonService.number.roundToStep(
-          Math.max(
-            avgTimeToExtremeMs / 1000 / recordedRepsRef.current.length,
-            0
-          ),
-          EXERCISE_TIMES_ROUNDING_STEP_S
-        )
-      );
-
-      const avgTimeAtExtremeS = commonService.number.roundToStep(
-        Math.max(avgTimeAtExtremeMs / 1000 / recordedRepsRef.current.length, 0),
-        EXERCISE_TIMES_ROUNDING_STEP_S
-      );
-
-      const avgTimeFromExtremeToEndS = Math.max(
-        commonService.number.roundToStep(
-          Math.max(
-            avgTimeFromExtremeToEndMs / 1000 / recordedRepsRef.current.length,
-            0
-          ),
-          EXERCISE_TIMES_ROUNDING_STEP_S
-        )
-      );
-
-      const avgIdleTimeS = commonService.number.roundToStep(
-        Math.max(avgIdleTimeMs / 1000 / recordedRepsRef.current.length, 0),
-        EXERCISE_TIMES_ROUNDING_STEP_S
-      );
-
-      const tempoString = `${avgTimeToExtremeS}:${avgTimeAtExtremeS}:${avgTimeFromExtremeToEndS}:${avgIdleTimeS}`;
-
-      let tempo = 2010;
-
       const images: ({ repNumber: number; url: string } | null)[] =
         recordedRepsRef.current
           .map((rep) => {
@@ -560,16 +515,10 @@ export default function MobileMovementValidation(
         // setSelectedExercise(updatedExercise);
       }
 
-      //check if tempo string can be converted to a number
-
-      console.log({ tempoString, tempo });
-
-      if (
-        tempoString.trim() !== '' &&
-        !isNaN(Number(tempoString)) &&
-        Number(tempoString) > 999
-      )
-        tempo = parseInt(tempoString);
+      const tempo = getTempoString({
+        recordedRepsRef,
+        commonService,
+      });
 
       updateExerciseValues(
         recordedRepsRef.current.length,
@@ -590,7 +539,6 @@ export default function MobileMovementValidation(
     }
 
     if (videoRef.current && videoRef.current.srcObject) {
-      console.log('stopping video stream');
       const stream = videoRef.current.srcObject as MediaStream;
       const tracks = stream.getTracks();
       tracks.forEach((track) => track.stop());
@@ -621,7 +569,6 @@ export default function MobileMovementValidation(
   }, [canvasRef]);
 
   useEffect(() => {
-    console.log('recorded reps ref length', recordedRepsRef.current.length);
     // Post save images to firestore
     if (!recordedRepsRef.current.length) return;
 
@@ -631,10 +578,8 @@ export default function MobileMovementValidation(
       const lastRep =
         recordedRepsRef.current[recordedRepsRef.current.length - 1];
 
-      if (!lastRep || lastRep.extremumImageUrl || !lastRep.extremeKeypoint) {
-        console.log('invalid last rep', { lastRep });
-        return; // already posted or no extremum
-      }
+      if (!lastRep || lastRep.extremumImageUrl || !lastRep.extremeKeypoint)
+        return;
 
       const blob = await frameBitmapBufferRef.current.toBlobByFrameNum(
         lastRep.extremeKeypoint.frameNum,
@@ -643,10 +588,7 @@ export default function MobileMovementValidation(
         document
       );
 
-      if (!blob) {
-        console.log('invalid blob', { blob });
-        return;
-      } // should not happen
+      if (!blob) return;
 
       // training/trainingId-userId-componentId-supersetIndex-exerciseId-setIndex-repNumber
       const fileName = `${user.uid}:${componentId}:${supersetIndex}:${selectedExercise?.id}:${setIndex}:${lastRep.repNumber}`;
@@ -657,14 +599,11 @@ export default function MobileMovementValidation(
 
       const path = `training/${trainingId}/${file.name}`;
 
-      console.log('updloading image to', { path, file });
       const url = await firebaseStorage.uploadFile(file, path);
 
       lastRep.extremumImageUrl = url;
 
       isCurrentlySavingImageRef.current = false;
-
-      console.log('UPLOADED', { url, lastRep });
     };
 
     postImages();
@@ -766,9 +705,8 @@ export default function MobileMovementValidation(
         flexDirection="column"
         sx={{
           position: 'absolute',
-          top: 0,
-          left: '50%',
-          transform: 'translateX(-50%)',
+          bottom: 0,
+          transform: ' translateY(-50%)',
           zIndex: 1000,
         }}
         gap={1}
@@ -919,7 +857,9 @@ export default function MobileMovementValidation(
             <TrainingInProgressTempoChart
               selectedExercise={selectedExercise}
               setIndex={-1}
-              width={window.innerWidth - 160}
+              width={
+                typeof window !== 'undefined' ? window.innerWidth - 160 : 300
+              }
               height={140}
               passedReps={recordedRepsRef.current}
               hideLabels={true}
@@ -932,7 +872,9 @@ export default function MobileMovementValidation(
             />
           ) : (
             <Box
-              width={window.innerWidth - 160}
+              width={
+                typeof window !== 'undefined' ? window.innerWidth - 160 : '100%'
+              }
               height={140}
               sx={{
                 backgroundColor: theme.palette.background.default,

@@ -1,12 +1,13 @@
+import toast from 'react-hot-toast';
+
 import type { ExerciseSetTracking } from '@/common/type/exercise-set-tracking-state.type';
 import type { SetState } from '@/common/type/state.type';
 import { KeypointHistory } from '@/controller/pose-detection/class/keypoint-history';
-import { Rep } from '@/controller/pose-detection/type/rep.type';
+import type { Rep } from '@/controller/pose-detection/type/rep.type';
 import { TrainingService } from '@/controller/training/training.service';
-import { CompleteSet } from '@/controller/training/type/complete-set.type';
-import { TrainingExerciseRecording } from '@/controller/training/type/training-exercise.type';
+import type { CompleteSet } from '@/controller/training/type/complete-set.type';
+import type { TrainingExerciseRecording } from '@/controller/training/type/training-exercise.type';
 import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
-import toast from 'react-hot-toast';
 
 export const finishSet = async (state: {
   exercise: TrainingExerciseRecording;
