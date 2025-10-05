@@ -9,13 +9,15 @@ import AthleteTrainingExerciseSets from '../athlete-training-exercise-sets/athle
 import MobileMovementValidation from '../mobile-movement-validation/mobile-movement-validation';
 import SwipeableBox from '../swipeable-box/swipeable-box';
 import { updateExerciseAttributeValues } from '../training-exercise-card-sets-expanded/state';
-import { markExerciseSetAsCompleted } from './state';
+import ImageGallery from './image-gallery';
 import TrainingExerciseSetDoneCheckbox from './training-exercise-set-done-checkbox';
+import TrainingInProgressTempoChart from './training-in-progress-tempo-chart';
 import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 import type { ParamType } from '@/controller/component/enum/param.enum';
 import { IntType, VolType } from '@/controller/component/enum/param.enum';
 import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
+import type { TrainingExerciseRecording } from '@/controller/training/type/training-exercise.type';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
@@ -25,11 +27,7 @@ export default function TrainingInProgressExerciseCard() {
   const theme = useTheme();
   const screenSize = useScreenSize();
 
-  const {
-    trainingInProgress,
-    setTrainingInProgress,
-    updateTrainingInProgress,
-  } = useTraining();
+  const { trainingInProgress, updateTrainingInProgress } = useTraining();
 
   const {
     selectedExercise,
@@ -65,12 +63,19 @@ export default function TrainingInProgressExerciseCard() {
   if (!trainingInProgress || !selectedSuperset || !selectedExercise)
     return labelRef.current;
 
-  const updateExerciseValues = (repsCount: number, tempo: number) => {
+  const updateExerciseValues = (
+    repsCount: number,
+    tempo: string,
+    passedExercise?: TrainingExerciseRecording,
+    updateSelectedExercise?: boolean
+  ) => {
     if (supersetIndex === undefined) return;
 
     if (setIndex === undefined) return;
 
-    const selectedSet = selectedExercise.sets[setIndex];
+    const updatableExercise = passedExercise || selectedExercise;
+
+    const selectedSet = updatableExercise.sets[setIndex];
     if (!selectedSet) return;
 
     let repParamField: ParamType | undefined;
@@ -87,7 +92,7 @@ export default function TrainingInProgressExerciseCard() {
     if (tempoParamFieldSet)
       tempoParamField = tempoParamFieldSet.field as ParamType;
 
-    const repParam = selectedExercise.params.find(
+    const repParam = updatableExercise.params.find(
       (p) => p.field === repParamField
     );
 
@@ -101,8 +106,8 @@ export default function TrainingInProgressExerciseCard() {
             lOrR: lOrR as 'L' | 'R',
           },
           {
-            selectedExercises: [selectedExercise],
-            exercise: selectedExercise,
+            selectedExercises: [updatableExercise],
+            exercise: updatableExercise,
             param: repParam,
             training: trainingInProgress.training,
             component: trainingInProgress.selectedComponent,
@@ -116,7 +121,7 @@ export default function TrainingInProgressExerciseCard() {
       });
     }
 
-    const tempoParam = selectedExercise.params.find(
+    const tempoParam = updatableExercise.params.find(
       (p) => p.field === tempoParamField
     );
 
@@ -130,8 +135,8 @@ export default function TrainingInProgressExerciseCard() {
             lOrR: lOrR as 'L' | 'R',
           },
           {
-            selectedExercises: [selectedExercise],
-            exercise: selectedExercise,
+            selectedExercises: [updatableExercise],
+            exercise: updatableExercise,
             param: tempoParam,
             training: trainingInProgress.training,
             component: trainingInProgress.selectedComponent,
@@ -145,14 +150,9 @@ export default function TrainingInProgressExerciseCard() {
       });
     }
 
-    markExerciseSetAsCompleted(
-      { exerciseId: selectedExercise.id },
-      setIndex + 1,
-      trainingInProgress.exerciseSetTrackingState,
-      setTrainingInProgress
-    );
+    if (updateSelectedExercise) setSelectedExercise(updatableExercise);
 
-    updateTrainingInProgress(selectedExercise, supersetIndex);
+    updateTrainingInProgress(updatableExercise, supersetIndex);
   };
 
   const goToNextExercise = () => {
@@ -176,9 +176,14 @@ export default function TrainingInProgressExerciseCard() {
   return selectedTrackingMethod === TrackingMethod.CAMERA ? (
     <MobileMovementValidation
       selectedExercise={selectedExercise}
+      setSelectedExercise={setSelectedExercise}
       selectedTrackingMethod={selectedTrackingMethod}
       setSelectedTrackingMethod={setSelectedTrackingMethod}
       updateExerciseValues={updateExerciseValues}
+      trainingId={trainingInProgress.training.id}
+      componentId={trainingInProgress.selectedComponent.id}
+      supersetIndex={supersetIndex!}
+      setIndex={setIndex!}
     />
   ) : (
     <SwipeableBox
@@ -386,7 +391,6 @@ export default function TrainingInProgressExerciseCard() {
             position: 'relative',
             py: 2,
           }}
-          gap={0.5}
         >
           <Box
             width="100%"
@@ -535,6 +539,23 @@ export default function TrainingInProgressExerciseCard() {
               </Box>
             </Box>
           </Box>
+        </Box>
+        <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
+          {setIndex !== undefined && (
+            <TrainingInProgressTempoChart
+              selectedExercise={selectedExercise}
+              setIndex={setIndex}
+              width={Math.min(window.innerWidth * 0.95, 620)} // max 620px
+            />
+          )}
+          <ImageGallery
+            images={
+              (selectedExercise.recordedSets || []).find(
+                (set) => set.setIndex === setIndex
+              )?.images || []
+            }
+            enableImagePickerSlider
+          />
         </Box>
       </Box>
     </SwipeableBox>

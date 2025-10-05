@@ -37,33 +37,33 @@ export default function Mediapipe() {
     setSelectedModel(localStorage.getItem('selectedModelMediapipe') || 'lite');
   }, []);
 
-  useEffect(() => {
-    const loadModel = async () => {
-      let modelPath;
-      if (selectedModel === 'lite') {
-        modelPath = '/models/pose_landmarker/pose_landmarker_lite.task';
-      } else if (selectedModel === 'full') {
-        modelPath = '/models/pose_landmarker/pose_landmarker_full.task';
-      } else if (selectedModel === 'heavy') {
-        modelPath = '/models/pose_landmarker/pose_landmarker_heavy.task';
-      } else {
-        return;
-      }
-      const vision = await FilesetResolver.forVisionTasks('/wasm');
-      const landmarker = await PoseLandmarker.createFromOptions(vision, {
-        baseOptions: {
-          modelAssetPath: modelPath,
-          delegate: 'GPU',
-        },
-        runningMode: 'VIDEO',
-        numPoses: 1,
-      });
+  // useEffect(() => {
+  //   const loadModel = async () => {
+  //     let modelPath;
+  //     if (selectedModel === 'lite') {
+  //       modelPath = '/models/pose_landmarker/pose_landmarker_lite.task';
+  //     } else if (selectedModel === 'full') {
+  //       modelPath = '/models/pose_landmarker/pose_landmarker_full.task';
+  //     } else if (selectedModel === 'heavy') {
+  //       modelPath = '/models/pose_landmarker/pose_landmarker_heavy.task';
+  //     } else {
+  //       return;
+  //     }
+  //     const vision = await FilesetResolver.forVisionTasks('/wasm');
+  //     const landmarker = await PoseLandmarker.createFromOptions(vision, {
+  //       baseOptions: {
+  //         modelAssetPath: modelPath,
+  //         delegate: 'GPU',
+  //       },
+  //       runningMode: 'VIDEO',
+  //       numPoses: 1,
+  //     });
 
-      setPoseLandmarker(landmarker);
-    };
+  //     setPoseLandmarker(landmarker);
+  //   };
 
-    loadModel();
-  }, [selectedModel]);
+  //   loadModel();
+  // }, [selectedModel]);
 
   const enableCam = async () => {
     if (!poseLandmarker) {

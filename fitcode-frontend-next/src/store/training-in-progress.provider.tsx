@@ -8,14 +8,14 @@ import type { ChildrenProps } from '@/common/type/props.type';
 import { handleApiRequest, type SetState } from '@/common/type/state.type';
 import { TrainingController } from '@/controller/training/training.controller';
 import type { CompleteSet } from '@/controller/training/type/complete-set.type';
-import type { Superset } from '@/controller/training/type/superset.type';
-import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import type { SupersetRecording } from '@/controller/training/type/superset.type';
+import type { TrainingExerciseRecording } from '@/controller/training/type/training-exercise.type';
 
 interface TrainingInProgressContextType {
-  selectedSuperset: Superset | undefined;
-  setSelectedSuperset: SetState<Superset | undefined>;
-  selectedExercise: TrainingExercise | undefined;
-  setSelectedExercise: SetState<TrainingExercise | undefined>;
+  selectedSuperset: SupersetRecording | undefined;
+  setSelectedSuperset: SetState<SupersetRecording | undefined>;
+  selectedExercise: TrainingExerciseRecording | undefined;
+  setSelectedExercise: SetState<TrainingExerciseRecording | undefined>;
   supersetIndex: number | undefined;
   setSupersetIndex: SetState<number | undefined>;
   exerciseIndex: number | undefined;
@@ -41,10 +41,10 @@ export const TrainingInProgressProvider = (props: ChildrenProps) => {
   const { children } = props;
 
   const [selectedSuperset, setSelectedSuperset] = useState<
-    Superset | undefined
+    SupersetRecording | undefined
   >(undefined);
   const [selectedExercise, setSelectedExercise] = useState<
-    TrainingExercise | undefined
+    TrainingExerciseRecording | undefined
   >(undefined);
   const [supersetIndex, setSupersetIndex] = useState<number | undefined>(
     undefined
@@ -69,7 +69,18 @@ export const TrainingInProgressProvider = (props: ChildrenProps) => {
       setExerciseIndex(undefined);
       return;
     }
-    setExerciseIndex(selectedSuperset?.exercises.indexOf(selectedExercise));
+
+    const foundExercise = selectedSuperset?.exercises.find(
+      (ex) => ex.id === selectedExercise.id
+    );
+
+    if (foundExercise) {
+      const newExerciseIndex =
+        selectedSuperset?.exercises.indexOf(foundExercise);
+
+      if (newExerciseIndex !== undefined && newExerciseIndex > -1)
+        setExerciseIndex(newExerciseIndex);
+    }
   }, [selectedExercise]);
 
   async function handleUpsertSet(

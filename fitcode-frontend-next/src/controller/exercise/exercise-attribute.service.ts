@@ -28,6 +28,8 @@ export class ExerciseAttributeService {
         name: 'Equipment',
         type: AttributeType.Multiselect,
         options: Equipment,
+        leafesOnly: true,
+        searchBar: true,
       },
       {
         field: 'prescriptions',
