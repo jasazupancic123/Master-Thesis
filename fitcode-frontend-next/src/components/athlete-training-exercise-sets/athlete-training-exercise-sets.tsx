@@ -78,7 +78,13 @@ export default function AthleteTrainingExerciseSets(
             container
             spacing={0.5}
             columns={11}
-            px={screenSize.isSmallerThanLaptop ? 1 : 0}
+            px={
+              trainingInProgressView
+                ? 0
+                : screenSize.isSmallerThanLaptop
+                  ? 1
+                  : 0
+            }
           >
             <Grid2 size={0.5}>
               <Box
@@ -114,7 +120,6 @@ export default function AthleteTrainingExerciseSets(
                 width="100%"
                 justifyContent="center"
                 alignItems="center"
-                gap={1}
               >
                 {exercise.params
                   .filter((p) => p.field !== ParamType.VolWorkSets)
@@ -147,8 +152,13 @@ export default function AthleteTrainingExerciseSets(
                     return (
                       <Box
                         key={param.field}
-                        flexBasis={
-                          (100 / exercise.params.length).toString() + '%'
+                        width={
+                          (
+                            100 /
+                            (trainingInProgress
+                              ? exercise.params.length - 1
+                              : exercise.params.length)
+                          ).toString() + '%'
                         }
                       >
                         {['L']

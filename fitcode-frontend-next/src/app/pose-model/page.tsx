@@ -11,6 +11,7 @@ export default function Page() {
       componentId="componentId"
       supersetIndex={0}
       setIndex={0}
+      setSelectedExercise={undefined}
     />
   );
 }

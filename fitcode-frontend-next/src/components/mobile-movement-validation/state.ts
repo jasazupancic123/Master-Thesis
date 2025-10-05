@@ -1,9 +1,11 @@
 import { PoseLandmarker } from '@mediapipe/tasks-vision';
 import { DrawingUtils, FilesetResolver } from '@mediapipe/tasks-vision';
-import type { Theme } from '@mui/material';
 import type { RefObject } from 'react';
 
+import { EXERCISE_TIMES_ROUNDING_STEP_S } from './mobile-movement-validation';
+import type { CommonService } from '@/common/service/common.service';
 import type { SetState } from '@/common/type/state.type';
+import type { FrameBitmapBuffer } from '@/controller/pose-detection/class/frame-bitmap-buffer';
 import type { KeypointHistory } from '@/controller/pose-detection/class/keypoint-history';
 import { POSE_DETECTION_CONSTRAINTS } from '@/controller/pose-detection/const/pose-detection-constrains.const';
 import { STATUS_MESSAGES } from '@/controller/pose-detection/const/status-messages';
@@ -17,7 +19,6 @@ import type { Keypoint } from '@/controller/pose-detection/type/keypoint.type';
 import type { Rep } from '@/controller/pose-detection/type/rep.type';
 import type { RepState } from '@/controller/pose-detection/type/rep-state.type';
 import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
-import { FrameBitmapBuffer } from '@/controller/pose-detection/class/frame-bitmap-buffer';
 
 export async function loadModel(state: {
   setPoseLandmarker: SetState<PoseLandmarker | null>;
@@ -242,7 +243,7 @@ export const predictWebcam = async (state: {
   let startTimeMs = performance.now();
 
   if (
-    prevFrameTimeRef.current != null &&
+    prevFrameTimeRef.current !== null &&
     startTimeMs <= prevFrameTimeRef.current
   ) {
     startTimeMs = prevFrameTimeRef.current + 0.01;
@@ -498,4 +499,69 @@ function insertKeypointsIntoBuffers(state: {
 
 export function getStatusMessage(status: DetectionStatus) {
   return STATUS_MESSAGES[status - 1];
+}
+
+export function getTempoString(state: {
+  recordedRepsRef: RefObject<Rep[]>;
+  commonService: CommonService;
+}): string {
+  const { recordedRepsRef, commonService } = state;
+
+  let avgTimeToExtremeMs = 0,
+    avgTimeAtExtremeMs = 0,
+    avgTimeFromExtremeToEndMs = 0,
+    avgIdleTimeMs = 0;
+
+  for (const rep of recordedRepsRef.current) {
+    avgTimeToExtremeMs += rep.timeToExtremeMs || 0;
+    avgTimeAtExtremeMs += rep.timeAtExtremeMs || 0;
+    avgTimeFromExtremeToEndMs += rep.timeFromExtremeToEndMs || 0;
+    avgIdleTimeMs += rep.idleTimeMs || 0;
+  }
+
+  const avgTimeToExtremeS = Math.max(
+    EXERCISE_TIMES_ROUNDING_STEP_S,
+    commonService.number.roundToStep(
+      Math.max(avgTimeToExtremeMs / 1000 / recordedRepsRef.current.length, 0),
+      EXERCISE_TIMES_ROUNDING_STEP_S
+    )
+  );
+
+  const avgTimeAtExtremeS = commonService.number.roundToStep(
+    Math.max(avgTimeAtExtremeMs / 1000 / recordedRepsRef.current.length, 0),
+    EXERCISE_TIMES_ROUNDING_STEP_S
+  );
+
+  const avgTimeFromExtremeToEndS = Math.max(
+    commonService.number.roundToStep(
+      Math.max(
+        avgTimeFromExtremeToEndMs / 1000 / recordedRepsRef.current.length,
+        0
+      ),
+      EXERCISE_TIMES_ROUNDING_STEP_S
+    )
+  );
+
+  const avgIdleTimeS = commonService.number.roundToStep(
+    Math.max(avgIdleTimeMs / 1000 / recordedRepsRef.current.length, 0),
+    EXERCISE_TIMES_ROUNDING_STEP_S
+  );
+
+  const avgTimesSStrings = [
+    avgTimeToExtremeS.toString(),
+    avgTimeAtExtremeS.toString(),
+    avgTimeFromExtremeToEndS.toString(),
+    avgIdleTimeS.toString(),
+  ];
+
+  const avgTimesSStringsSliced = avgTimesSStrings.map((s) => {
+    const dotIndex = s.indexOf('.');
+    if (dotIndex === -1) return s;
+
+    if (s.length > dotIndex + 2) return s.slice(0, dotIndex + 2);
+
+    return s;
+  });
+
+  return avgTimesSStringsSliced.join(':');
 }

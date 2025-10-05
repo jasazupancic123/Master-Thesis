@@ -1,14 +1,11 @@
 import { RadioButtonChecked, RadioButtonUnchecked } from '@mui/icons-material';
 import { Checkbox, useTheme } from '@mui/material';
-import toast from 'react-hot-toast';
 
 import {
   finishSet,
   isExerciseSetCompleted,
-  markExerciseSetAsCompleted,
   unmarkExerciseSetAsCompleted,
 } from './state';
-import { TrainingService } from '@/controller/training/training.service';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';

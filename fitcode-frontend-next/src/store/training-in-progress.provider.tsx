@@ -8,14 +8,8 @@ import type { ChildrenProps } from '@/common/type/props.type';
 import { handleApiRequest, type SetState } from '@/common/type/state.type';
 import { TrainingController } from '@/controller/training/training.controller';
 import type { CompleteSet } from '@/controller/training/type/complete-set.type';
-import type {
-  Superset,
-  SupersetRecording,
-} from '@/controller/training/type/superset.type';
-import type {
-  TrainingExercise,
-  TrainingExerciseRecording,
-} from '@/controller/training/type/training-exercise.type';
+import type { SupersetRecording } from '@/controller/training/type/superset.type';
+import type { TrainingExerciseRecording } from '@/controller/training/type/training-exercise.type';
 
 interface TrainingInProgressContextType {
   selectedSuperset: SupersetRecording | undefined;
@@ -93,7 +87,6 @@ export const TrainingInProgressProvider = (props: ChildrenProps) => {
     body: Omit<CompleteSet, 'userId'>,
     state: { exerciseId: string; supersetIndex: number; setIndex: number }
   ) {
-    console.log('handleUpsertSet');
     const {
       exerciseId,
       supersetIndex: stateSupersetIndex,

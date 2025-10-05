@@ -30,6 +30,7 @@ export default function MovementValidationHeader(
         transform: 'translate(-50%, -50%)',
         p: 1,
         zIndex: 100000,
+        opacity: 0.8,
       }}
     >
       <Typography
