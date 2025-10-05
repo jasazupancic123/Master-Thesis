@@ -61,10 +61,9 @@ export default function DashboardHeader() {
   const theme = useTheme();
   const router = useRouter();
   const auth = useAuthenticatedAuth();
-  const { token, role } = auth;
+  const { role } = auth;
 
-  const controller = GroupController.getInstance(token);
-
+  const controller = GroupController.getInstance();
   const [openProfileMenu, setOpenProfileMenu] = useState(false);
   const [openInstitutionsMenu, setOpenInstitutionsMenu] = useState(false);
   const [anchorProfileEl, setAnchorProfileEl] = useState<HTMLElement | null>(

@@ -14,9 +14,8 @@ export class ProfileController extends BaseController {
     super('/profile');
   }
 
-  static getInstance(token: string) {
+  static getInstance() {
     if (!this.instance) this.instance = new ProfileController();
-    this.instance.setToken(token);
     return this.instance;
   }
 
@@ -24,37 +23,28 @@ export class ProfileController extends BaseController {
     return this.api.post<{
       failed: { email: string; reason: string }[];
       successful: ({ uid: string } & CreateUser & Profile)[];
-    }>('/import', input, {
-      token: this.getToken(),
-    });
+    }>('/import', input);
   }
 
   async findProfile() {
-    return this.api.get<Profile>('/', {
-      token: this.getToken(),
-    });
+    return this.api.get<Profile>('/');
   }
 
   async update(input: UpdateProfile) {
-    return this.api.patch<object>('/', input, {
-      token: this.getToken(),
-    });
+    return this.api.patch<object>('/', input);
   }
 
   async upsertWellness(body: CreateWellness) {
-    return this.api.post<Wellness>('/', body, {
-      token: this.getToken(),
-    });
+    return this.api.post<Wellness>('/', body);
   }
 
   async getLatestWellnessByUser() {
-    return this.api.get<Wellness>('/wellness', { token: this.getToken() });
+    return this.api.get<Wellness>('/wellness');
   }
 
   async getWellnessByInstitution(institutionId: string) {
     return this.api.get<WellnessZScore[]>(
-      `/wellness/institution/${institutionId}`,
-      { token: this.getToken() }
+      `/wellness/institution/${institutionId}`
     );
   }
 }

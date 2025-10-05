@@ -1,3 +1,1 @@
-export const ID_TOKEN_COOKIE_NAME = 'idToken';
-
-export const REFRESH_TOKEN_COOKIE_NAME = 'refreshToken';
+export const SESSION_COOKIE_NAME = '__session';
