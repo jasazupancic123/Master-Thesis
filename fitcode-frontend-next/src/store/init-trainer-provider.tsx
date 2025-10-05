@@ -29,7 +29,8 @@ export default async function InitTrainerProvider({ children }: ChildrenProps) {
     ]);
 
     return <CoachMainProvider {...data}>{children}</CoachMainProvider>;
-  } catch {
+  } catch (e) {
+    console.log('[InitTrainerProvider] error', e);
     return <Alert type="unauthorized" />;
   }
 }
