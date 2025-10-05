@@ -13,17 +13,15 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 export default async function InitTrainerProvider({ children }: ChildrenProps) {
   try {
     const cookieStore = await cookies();
-    console.log('all cookies:', cookieStore.getAll());
     const session = cookieStore.get(SESSION_COOKIE_NAME)?.value;
-    if (!session) return <Alert type="unauthorized" />;
+    if (!session) throw new Error('No session');
 
     const controller = Controller.getInstance();
     const profile = await controller.auth.findMe({ session });
-    console.log('profile:', profile);
-    if (!profile) return <Alert type="unauthorized" />;
+    if (!profile) throw new Error('No profile found');
 
     if (isAthlete(profile.customClaims.role[0]))
-      return <Alert type="unauthorized" />;
+      throw new Error('Not a trainer or manager');
 
     const [data] = await Promise.all([
       controller.app.init({ session }),
@@ -32,7 +30,7 @@ export default async function InitTrainerProvider({ children }: ChildrenProps) {
 
     return <CoachMainProvider {...data}>{children}</CoachMainProvider>;
   } catch (e) {
-    console.log('[InitTrainerProvider] error', e);
+    console.error('[TrainerProvider] error', e);
     return <Alert type="unauthorized" />;
   }
 }
