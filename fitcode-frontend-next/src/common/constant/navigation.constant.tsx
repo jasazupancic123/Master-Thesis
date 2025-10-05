@@ -171,9 +171,14 @@ export const LINKS_ABOUT_US_HERO_NAVBAR = {
   contactUs: LINK_CONTACT_US,
 };
 
-export const LINKS_AUTHENTICATED_HERO_NAVBAR = {
-  dashboard: LINK_DASHBOARD,
-  signout: LINK_SIGN_OUT,
+export const LINKS_AUTHENTICATED_HERO_NAVBAR: Record<
+  UserRole,
+  Record<string, ILink>
+> = {
+  [UserRole.ATHLETE]: { trainings: LINK_TRAININGS, signout: LINK_SIGN_OUT },
+  [UserRole.TRAINER]: { dashboard: LINK_DASHBOARD, signout: LINK_SIGN_OUT },
+  [UserRole.MANAGER]: { dashboard: LINK_DASHBOARD, signout: LINK_SIGN_OUT },
+  [UserRole.ADMIN]: { dashboard: LINK_DASHBOARD, signout: LINK_SIGN_OUT },
 };
 
 export const LINKS_NAVBAR = {

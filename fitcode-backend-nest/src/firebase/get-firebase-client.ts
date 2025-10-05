@@ -27,18 +27,12 @@ export function getFirebaseClient(
   commonService: CommonService,
 ): FirebaseClient {
   let credential: admin.credential.Credential;
-  let databaseId: string | undefined;
 
   const envCredentials = configService.get('FIREBASE_CREDENTIALS');
   if (commonService.env.isProduction() || commonService.env.isStaging()) {
     credential = admin.credential.applicationDefault();
-    databaseId = configService.get('FIREBASE_DATABASE_ID');
   } else if (envCredentials)
     credential = admin.credential.cert(JSON.parse(envCredentials));
-  /* else
-    credential = admin.credential.cert(
-      require('../../serviceAccount-staging.json'),
-    ); */
 
   const apps = getApps();
   const app = (
@@ -48,7 +42,7 @@ export function getFirebaseClient(
   ) as admin.app.App;
 
   const auth = getAuth(app);
-  const firestore = getFirestore(app, databaseId);
+  const firestore = getFirestore(app);
   const storage = getStorage(app);
 
   if (!apps.length) {

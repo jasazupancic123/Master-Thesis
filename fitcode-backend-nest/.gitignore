@@ -403,3 +403,4 @@ dist
 # Firebase
 serviceAccount*.json
 *debug.log
+firebase-auth-hash-config.json

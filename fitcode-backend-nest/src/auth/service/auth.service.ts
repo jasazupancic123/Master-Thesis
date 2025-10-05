@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import {
+  UserImportOptions,
   UserImportRecord,
   UserImportResult,
   UserRecord,
@@ -189,9 +190,23 @@ export class AuthService {
     }));
 
     if (data.length === 0) return;
-    return await this.firebase.auth.importUsers(data, {
-      hash: { algorithm: 'BCRYPT' },
-    });
+
+    let hash: UserImportOptions['hash'] = { algorithm: 'BCRYPT' };
+    try {
+      const hashConfigFile = require('../../../firebase-auth-hash-config.json');
+      if (hashConfigFile)
+        hash = {
+          algorithm: hashConfigFile.algorithm,
+          key: Buffer.from(hashConfigFile.key, 'base64'),
+          saltSeparator: Buffer.from(hashConfigFile.saltSeparator, 'base64'),
+          rounds: hashConfigFile.rounds,
+          memoryCost: hashConfigFile.memoryCost,
+        };
+    } catch {
+      this.logger.warn('No hash config file found, using default BCRYPT');
+    }
+
+    return await this.firebase.auth.importUsers(data, { hash });
   }
 
   @LogMethod()

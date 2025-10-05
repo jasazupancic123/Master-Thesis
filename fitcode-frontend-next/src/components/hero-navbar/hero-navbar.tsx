@@ -60,7 +60,7 @@ export default function HeroNavbar(props: HeroNavbarProps) {
   const [links, setLinks] = useState(
     Object.values(currentLinks).concat(
       auth.status === 'authenticated'
-        ? Object.values(LINKS_AUTHENTICATED_HERO_NAVBAR)
+        ? Object.values(LINKS_AUTHENTICATED_HERO_NAVBAR[auth.role])
         : Object.values(LINKS_AUTH)
     )
   );
@@ -69,7 +69,7 @@ export default function HeroNavbar(props: HeroNavbarProps) {
     setLinks(
       Object.values(currentLinks).concat(
         auth.status === 'authenticated'
-          ? Object.values(LINKS_AUTHENTICATED_HERO_NAVBAR)
+          ? Object.values(LINKS_AUTHENTICATED_HERO_NAVBAR[auth.role])
           : Object.values(LINKS_AUTH)
       )
     );
