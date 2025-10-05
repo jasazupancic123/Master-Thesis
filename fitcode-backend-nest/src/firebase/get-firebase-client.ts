@@ -42,7 +42,9 @@ export function getFirebaseClient(
 
   const apps = getApps();
   const app = (
-    !apps.length ? initializeApp({ credential }) : apps[0]
+    !apps.length
+      ? initializeApp(!credential ? undefined : { credential })
+      : apps[0]
   ) as admin.app.App;
 
   const auth = getAuth(app);

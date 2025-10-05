@@ -1,6 +1,0 @@
-dispatch:
-  - url: 'api.blindoff.com/*'
-    service: default
-
-  - url: 'staging.api.blindoff.com/*'
-    service: nest-backend-staging

@@ -2,6 +2,7 @@ import type { PeriodizationType } from '../enum/periodization-type.enum';
 import type {
   CreateTrainingComponent,
   TrainingComponent,
+  TrainingComponentRecording,
   UpdateTrainingComponent,
 } from './training-component.type';
 import type { DateRange } from '@/common/type/date-range.type';
@@ -31,6 +32,15 @@ export type Training = BaseEntity &
     cycle?: Cycle;
     members?: AuthUser[];
   };
+
+export type TrainingRecording = Omit<
+  Training,
+  'components' | 'warmup' | 'cooldown'
+> & {
+  components: TrainingComponentRecording[];
+  warmup: TrainingComponentRecording;
+  cooldown: TrainingComponentRecording;
+};
 
 export type CreateTraining = Pick<
   Training,
