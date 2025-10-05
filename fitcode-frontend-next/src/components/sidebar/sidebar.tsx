@@ -41,6 +41,7 @@ export default function Sidebar() {
             <ListItemText />
           </ListItemButton>
         </ListItem>
+
         {commonService.navigation
           .getSidebarLinksByUserRole(role)
           .map(({ href, label }, i) => (

@@ -2,8 +2,8 @@ import type { INestApplication } from '@nestjs/common';
 import { subDays } from 'date-fns';
 import { readFile } from 'node:fs/promises';
 
-import { AuthService } from '@src/auth/auth.service';
 import { UserRole } from '@src/auth/enum/user-role.enum';
+import { AuthService } from '@src/auth/service/auth.service';
 import { ComponentService } from '@src/component/component.service';
 import type { Component } from '@src/component/entity/component.entity';
 import type { CreateExerciseDto } from '@src/exercise/dto/create-exercise.dto';

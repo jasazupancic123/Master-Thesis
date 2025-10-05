@@ -9,6 +9,7 @@ export class CreateExerciseDto extends PickType(Exercise, [
   'name',
   'componentIds',
   'isUnilateral',
+  'disabled',
   'imageUrl',
   'videoUrl',
   'instruction',

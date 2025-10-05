@@ -220,6 +220,22 @@ describe('Update Exercise (e2e)', () => {
         expect(response.body.loadingSides).toEqual(updateData.loadingSides);
       }
     });
+
+    it('should disable an exercise successfully', async () => {
+      const response = await request(app.getHttpServer())
+        .patch(`/exercise/${exercise.id}`)
+        .set('Authorization', `Bearer ${global.manager.token}`)
+        .send({ disabled: true });
+
+      expect(response.status).toBe(200);
+      expect(response.body.disabled).toBe(true);
+
+      const fetched = await exerciseService.findOneByIdOrFail(global.manager, {
+        exerciseId: exercise.id,
+      });
+
+      expect(fetched.disabled).toBe(true);
+    });
   });
 
   describe('Delete Exercise', () => {

@@ -12,11 +12,12 @@ import {
   IsNumber,
   IsOptional,
   IsString,
-  Max,
+  Matches,
   Min,
 } from 'class-validator';
 
 import { DateRangeDto } from '@src/common/dto/date-range.dto';
+import { TEMPO_REGEX } from '@src/component/constant/param.constant';
 
 import { WorkloadMeta } from '../entity/workload.entity';
 
@@ -63,13 +64,13 @@ export class CompleteLSetDto {
   @Expose()
   velocity?: number; // in m/s
 
-  @IsNumber()
-  @Min(1000)
-  @Max(9999)
+  @Matches(TEMPO_REGEX, { message: 'tempo must match the pattern X:X:X:X' })
+  @IsString()
+  @IsNotEmpty()
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
-  tempo?: number; // e.g. 2010 (for 2:0:1:0), average tempo
+  tempo?: string; // e.g. 2010 (for 2:0:1:0), average tempo
 
   @IsString()
   @IsOptional()
@@ -79,13 +80,16 @@ export class CompleteLSetDto {
   photoUrl?: string;
 
   // the following fields are AI diagnostics
-  @IsNumber({}, { each: true })
-  @Min(1000, { each: true })
-  @Max(9999, { each: true })
+  @Matches(TEMPO_REGEX, {
+    message: 'tempo must match the pattern X:X:X:X',
+    each: true,
+  })
+  @IsString({ each: true })
+  @IsNotEmpty({ each: true })
   @IsOptional()
-  @ApiPropertyOptional({ type: [Number] })
+  @ApiPropertyOptional({ type: String, isArray: true })
   @Expose()
-  tempos?: number[]; // tempo for each rep
+  tempos?: string[]; // tempo for each rep
 
   @IsNumber({}, { each: true })
   @Min(0, { each: true })
@@ -151,13 +155,13 @@ export class CompleteRSetDto {
   @Expose()
   velocityR?: number; // in m/s
 
-  @IsNumber()
-  @Min(1000)
-  @Max(9999)
+  @Matches(TEMPO_REGEX, { message: 'tempo must match the pattern X:X:X:X' })
+  @IsString()
+  @IsNotEmpty()
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
-  tempoR?: number; // e.g. 2010 (for 2:0:1:0)
+  tempoR?: string; // e.g. 2010 (for 2:0:1:0), average tempo
 
   @IsString()
   @IsOptional()
@@ -167,13 +171,17 @@ export class CompleteRSetDto {
   photoUrlR?: string;
 
   // the following fields are AI diagnostics
-  @IsNumber({}, { each: true })
-  @Min(1000, { each: true })
-  @Max(9999, { each: true })
+
+  @Matches(TEMPO_REGEX, {
+    message: 'tempo must match the pattern X:X:X:X',
+    each: true,
+  })
+  @IsString({ each: true })
+  @IsNotEmpty({ each: true })
   @IsOptional()
-  @ApiPropertyOptional({ type: [Number] })
+  @ApiPropertyOptional({ type: String, isArray: true })
   @Expose()
-  temposR?: number[]; // tempo for each rep
+  temposR?: string[]; // tempo for each rep
 
   @IsNumber({}, { each: true })
   @Min(0, { each: true })

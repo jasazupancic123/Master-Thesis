@@ -1,17 +1,14 @@
 'use client';
 
-import type { User } from '@firebase/auth';
+import { type User } from '@firebase/auth';
 import { useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useState } from 'react';
 
-import {
-  FIREBASE_AUTH_ID_TOKEN,
-  getFirebaseAuth,
-} from '@/common/config/firebase.config';
+import { getFirebaseAuth } from '@/common/config/firebase.config';
 import { LINK_SIGN_IN } from '@/common/constant/navigation.constant';
-import { CommonService } from '@/common/service/common.service';
 import type { AuthContextType, AuthStatus } from '@/common/type/context.type';
 import type { ChildrenProps } from '@/common/type/props.type';
+import { AuthController } from '@/controller/auth/auth.controller';
 import type { CustomClaims } from '@/controller/auth/type/custom-claims.type';
 import type { AuthUser } from '@/controller/auth/type/user.type';
 import type { UserRole } from '@/controller/profile/enum/user-role.enum';
@@ -28,14 +25,13 @@ export type AuthState = {
   customClaims?: CustomClaims;
 };
 
-const browser = CommonService.instance.browser;
-
 export const AuthProvider = (
   props: ChildrenProps & { initialToken?: string }
 ) => {
   const { children } = props;
   const auth = getFirebaseAuth();
   const router = useRouter();
+  const controller = AuthController.getInstance('');
 
   const [state, setState] = useState<AuthState>({
     status: 'loading',
@@ -61,7 +57,6 @@ export const AuthProvider = (
     }));
   }
 
-  // first time init get token from cookies and refresh if needed
   useEffect(() => {
     async function init() {
       await auth.authStateReady();
@@ -72,7 +67,11 @@ export const AuthProvider = (
   }, []);
 
   useEffect(() => {
-    const unsubscribe = auth.onIdTokenChanged(handleUserChange);
+    const unsubscribe = auth.onIdTokenChanged(async (user) => {
+      const newUser = await handleUserChange(user);
+      if (user) await controller.login(newUser.token!, user.refreshToken);
+    });
+
     return () => unsubscribe();
   }, [auth]);
 
@@ -88,8 +87,6 @@ export const AuthProvider = (
         role: undefined,
         customClaims: undefined,
       };
-
-      browser.removeClientCookie(FIREBASE_AUTH_ID_TOKEN);
     } else {
       // user is logged in
       const { token, claims } = await user.getIdTokenResult();
@@ -103,8 +100,6 @@ export const AuthProvider = (
         role,
         customClaims,
       };
-
-      browser.setClientCookie(FIREBASE_AUTH_ID_TOKEN, token, 1800);
     }
 
     setState(newState);
@@ -114,6 +109,7 @@ export const AuthProvider = (
   async function logout(redirect = true): Promise<void> {
     await auth.signOut();
     await handleUserChange(null);
+    await controller.logout();
     if (redirect) router.push(LINK_SIGN_IN.href);
   }
 

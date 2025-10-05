@@ -727,17 +727,20 @@ export class WorkloadService {
   }
 
   getCompletedWorkloadFromCompletedSet(input: CompleteSetDto) {
+    const tempo = input.tempo ? tempoToInt(input.tempo) : undefined;
+    const tempoR = input.tempoR ? tempoToInt(input.tempoR) : undefined;
+
     return {
       volWork1ValueL: input.reps || input.time || input.dist,
       volWork1ValueR: input.repsR || input.timeR || input.distR,
-      volWork2ValueL: input.tempo || input.velocity || input.eff,
-      volWork2ValueR: input.tempoR || input.velocityR || input.eff,
+      volWork2ValueL: tempo || input.velocity || input.eff,
+      volWork2ValueR: tempoR || input.velocityR || input.eff,
       volRecValueL: input.recTime,
       volRecValueR: input.recTime,
       intWork1ValueL: input.load,
       intWork1ValueR: input.loadR,
-      intWork2ValueL: input.rom || input.bpm || input.mas,
-      intWork2ValueR: input.romR || input.bpm || input.mas,
+      intWork2ValueL: tempo || input.rom || input.bpm || input.mas,
+      intWork2ValueR: tempoR || input.romR || input.bpm || input.mas,
       intRecValueL: input.recDist,
       intRecValueR: input.recDist,
     };
@@ -1071,4 +1074,18 @@ export class WorkloadService {
       );
     }
   }
+}
+
+function tempoToInt(tempo: string): number {
+  const parts = tempo.split(':');
+  if (parts.length !== 4) return 0;
+
+  // round each part to nearest int
+  const rounded = parts.map((p) => {
+    const num = parseFloat(p);
+    if (isNaN(num)) throw new Error(`Invalid tempo value: ${p}`);
+    return Math.round(num).toString();
+  });
+
+  return parseInt(rounded.join(''), 10);
 }

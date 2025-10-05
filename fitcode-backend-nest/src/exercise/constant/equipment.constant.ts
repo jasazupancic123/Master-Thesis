@@ -72,6 +72,7 @@ export const Equipment: Attribute[] = [
       { field: 'back-extension-bench', name: 'Back Extension Bench' },
       { field: 'flywheel', name: 'Flywheel' },
       { field: 'technogym', name: 'Technogym' },
+      { field: 'partner', name: 'Partner' },
     ],
   },
   {

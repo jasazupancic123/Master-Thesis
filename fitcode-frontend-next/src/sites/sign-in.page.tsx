@@ -11,15 +11,14 @@ import React from 'react';
 import toast from 'react-hot-toast';
 
 import { HERO_NAVBAR_HEIGHT } from '@/app/state';
-import { FIREBASE_AUTH_ID_TOKEN } from '@/common/config/firebase.config';
 import {
   LINKS_AUTH,
   SIGN_IN_REDIRECT_MAPPER,
 } from '@/common/constant/navigation.constant';
 import { FirebaseAuthUtil } from '@/common/firebase/firebase-auth.util';
-import { CommonService } from '@/common/service/common.service';
 import { BLACK_TEXT_FIELD_STYLE } from '@/common/util/styles.util';
 import HeroNavbar from '@/components/hero-navbar/hero-navbar';
+import { AuthController } from '@/controller/auth/auth.controller';
 import { useAuth } from '@/store/auth.provider';
 
 const firebaseAuthUtil = FirebaseAuthUtil.getInstance();
@@ -36,8 +35,13 @@ export default function SignInPage() {
     e.preventDefault();
 
     try {
-      CommonService.instance.browser.removeClientCookie(FIREBASE_AUTH_ID_TOKEN);
       const result = await firebaseAuthUtil.login(email, password);
+      const { token } = await result.user.getIdTokenResult();
+      await AuthController.getInstance('').login(
+        token,
+        result.user.refreshToken
+      );
+
       const { role } = await handleUserChange(result.user);
       if (role) {
         toast.success('Signed in successfully');
