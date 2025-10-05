@@ -17,6 +17,8 @@ import type { RepState } from './type/rep-state.type';
 import { KeypointUtil } from './util/keypoint.util';
 import { TimeUtil } from './util/time.util';
 import { CommonService } from '@/common/service/common.service';
+import type { SetState } from '@/common/type/state.type';
+import { EXERCISE_TIMES_ROUNDING_STEP_S } from '@/components/mobile-movement-validation/mobile-movement-validation';
 
 const commonService = CommonService.instance;
 
@@ -54,6 +56,7 @@ export class RepDetectionService {
     exerciseStartConditions: ExerciseRepStartCondition[];
     avgFps: { value: number; count: number } | null;
     initedFirstFrameInRecordingMode: RefObject<boolean>;
+    setRepCount: SetState<number>;
   }) {
     const {
       repStateRef,
@@ -67,6 +70,7 @@ export class RepDetectionService {
       exerciseStartConditions,
       avgFps,
       initedFirstFrameInRecordingMode,
+      setRepCount,
     } = state;
 
     switch (repStateRef.current.status) {
@@ -106,6 +110,8 @@ export class RepDetectionService {
           });
 
           recordedRepsRef.current.push(currentRepRef.current);
+
+          setRepCount(recordedRepsRef.current.length);
 
           console.log('RECORDED ', recordedRepsRef.current.length, ' REPS');
 
@@ -611,12 +617,15 @@ export class RepDetectionService {
     // timestamp
     currentRepRef.current.extremeTimestamp = timeToFirstExtreme;
 
-    currentRepRef.current.timeToExtremeMs = commonService.number.roundToStep(
-      TimeUtil.getMsDiff(
-        currentRepRef.current.startTimestamp,
-        timeToFirstExtreme
-      ),
-      200
+    currentRepRef.current.timeToExtremeMs = Math.max(
+      EXERCISE_TIMES_ROUNDING_STEP_S * 1000,
+      commonService.number.roundToStep(
+        TimeUtil.getMsDiff(
+          currentRepRef.current.startTimestamp,
+          timeToFirstExtreme
+        ),
+        EXERCISE_TIMES_ROUNDING_STEP_S * 1000 // 200ms
+      )
     );
   }
 
@@ -894,7 +903,7 @@ export class RepDetectionService {
     };
   }
 
-  private static postProcessRep(state: {
+  private static async postProcessRep(state: {
     currentRepRef: RefObject<Rep | null>;
     recordedRepsRef: RefObject<Rep[]>;
     keypointId: KeypointId;
@@ -1049,7 +1058,7 @@ export class RepDetectionService {
           currentRepRef.current.startTimestamp,
           currentRepRef.current.endValueTimestamp
         ),
-        200
+        EXERCISE_TIMES_ROUNDING_STEP_S * 1000
       );
     }
 
@@ -1062,19 +1071,25 @@ export class RepDetectionService {
             prevRep.endValueTimestamp,
             currentRepRef.current.startTimestamp
           ),
-          200
+          EXERCISE_TIMES_ROUNDING_STEP_S * 1000
         );
       }
     }
 
     if (timeAtExtremumStartKeypoint) {
-      currentRepRef.current.timeToExtremeMs = commonService.number.roundToStep(
-        TimeUtil.getMsDiff(
-          currentRepRef.current.startTimestamp,
-          timeAtExtremumStartKeypoint.capturedAt
-        ),
-        200
+      currentRepRef.current.timeToExtremeMs = Math.max(
+        EXERCISE_TIMES_ROUNDING_STEP_S * 1000,
+        commonService.number.roundToStep(
+          TimeUtil.getMsDiff(
+            currentRepRef.current.startTimestamp,
+            timeAtExtremumStartKeypoint.capturedAt
+          ),
+          EXERCISE_TIMES_ROUNDING_STEP_S * 1000
+        )
       );
+    } else {
+      currentRepRef.current.timeToExtremeMs =
+        EXERCISE_TIMES_ROUNDING_STEP_S * 1000;
     }
 
     if (
@@ -1082,15 +1097,22 @@ export class RepDetectionService {
         currentRepRef.current.extremeKeypoint !== undefined) &&
       currentRepRef.current.endValueTimestamp
     ) {
-      currentRepRef.current.timeFromExtremeToEndMs =
+      currentRepRef.current.timeFromExtremeToEndMs = Math.max(
+        EXERCISE_TIMES_ROUNDING_STEP_S * 1000,
         commonService.number.roundToStep(
           TimeUtil.getMsDiff(
             (timeAtExtremumEndKeypoint ||
               currentRepRef.current.extremeKeypoint)!.capturedAt,
             currentRepRef.current.endValueTimestamp
           ),
-          200
-        );
+          EXERCISE_TIMES_ROUNDING_STEP_S * 1000
+        )
+      );
+    }
+
+    if (currentRepRef.current.timeFromExtremeToEndMs === undefined) {
+      currentRepRef.current.timeFromExtremeToEndMs =
+        EXERCISE_TIMES_ROUNDING_STEP_S * 1000;
     }
 
     if (timeAtExtremumStartKeypoint && timeAtExtremumEndKeypoint) {
@@ -1099,7 +1121,7 @@ export class RepDetectionService {
           timeAtExtremumStartKeypoint.capturedAt,
           timeAtExtremumEndKeypoint.capturedAt
         ),
-        200
+        EXERCISE_TIMES_ROUNDING_STEP_S * 1000
       );
     }
   }
