@@ -1,16 +1,16 @@
 'use client';
 
-import { HERO_NAVBAR_HEIGHT } from '@/app/state';
-import { theme } from '@/app/style';
+import emailjs from '@emailjs/browser';
 import { Box, Button, TextField, Typography } from '@mui/material';
-import IndexPageTitleText from '../hero/index-page-title-text';
-import { BLACK_TEXT_FIELD_STYLE } from '@/common/util/styles.util';
-import { useScreenSize } from '@/store/screen-size.provider';
 import { useRef } from 'react';
 import toast from 'react-hot-toast';
-import emailjs from '@emailjs/browser';
+
+import IndexPageTitleText from '../hero/index-page-title-text';
 import Logo from '../logo/logo';
-import Image from 'next/image';
+import { HERO_NAVBAR_HEIGHT } from '@/app/state';
+import { theme } from '@/app/style';
+import { BLACK_TEXT_FIELD_STYLE } from '@/common/util/styles.util';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 export default function ContactUs() {
   const screenSize = useScreenSize();
