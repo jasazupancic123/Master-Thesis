@@ -9,14 +9,12 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import NextLink from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import {
   DASHBOARD_LINK_ID,
-  LINKS_ABOUT_US_HERO_NAVBAR,
   LINKS_AUTH,
   LINKS_AUTHENTICATED_HERO_NAVBAR,
-  LINKS_CONTACT_US_HERO_NAVBAR,
   LINKS_HERO_NAVBAR,
   SIGN_IN_LINK_ID,
   SIGN_OUT_LINK_ID,
@@ -27,6 +25,7 @@ import { useScreenSize } from '@/store/screen-size.provider';
 
 interface HeroNavbarProps {
   height: string;
+  activeSection: string | null;
   dissableLogo?: boolean;
   position?: 'absolute' | 'fixed' | 'relative' | 'static' | 'sticky';
   currentView?: 'contact-us' | 'about-us' | 'home';
@@ -39,7 +38,7 @@ export default function HeroNavbar(props: HeroNavbarProps) {
   const pathname = usePathname();
   const screenSize = useScreenSize();
 
-  const { height, dissableLogo, position, currentView } = props;
+  const { height, dissableLogo, position, currentView, activeSection } = props;
 
   const [open, setOpen] = useState(false);
 
@@ -50,15 +49,8 @@ export default function HeroNavbar(props: HeroNavbarProps) {
     else window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const currentLinks =
-    currentView === 'contact-us'
-      ? LINKS_CONTACT_US_HERO_NAVBAR
-      : currentView === 'about-us'
-        ? LINKS_ABOUT_US_HERO_NAVBAR
-        : LINKS_HERO_NAVBAR;
-
   const [links, setLinks] = useState(
-    Object.values(currentLinks).concat(
+    Object.values(LINKS_HERO_NAVBAR).concat(
       auth.status === 'authenticated'
         ? Object.values(LINKS_AUTHENTICATED_HERO_NAVBAR[auth.role])
         : Object.values(LINKS_AUTH)
@@ -67,13 +59,33 @@ export default function HeroNavbar(props: HeroNavbarProps) {
 
   useEffect(() => {
     setLinks(
-      Object.values(currentLinks).concat(
+      Object.values(LINKS_HERO_NAVBAR).concat(
         auth.status === 'authenticated'
           ? Object.values(LINKS_AUTHENTICATED_HERO_NAVBAR[auth.role])
           : Object.values(LINKS_AUTH)
       )
     );
   }, [auth.status]);
+
+  // helpers
+  const getIdFromHref = (href: string) =>
+    href?.startsWith('#') ? href.slice(1) : null;
+
+  const navOnly = useMemo(
+    () =>
+      links.filter(
+        (l) =>
+          // only keep hash links for the dot nav row
+          l.href?.startsWith('#') &&
+          ![SIGN_IN_LINK_ID, SIGN_OUT_LINK_ID, DASHBOARD_LINK_ID].includes(l.id)
+      ),
+    [links]
+  );
+
+  const activeIndex = useMemo(() => {
+    if (!activeSection) return -1;
+    return navOnly.findIndex((l) => getIdFromHref(l.href) === activeSection);
+  }, [navOnly, activeSection]);
 
   return (
     <div>
@@ -125,43 +137,80 @@ export default function HeroNavbar(props: HeroNavbarProps) {
 
             {!screenSize.isTablet && !screenSize.isMobile ? (
               <Box height={height} display="flex" alignItems="center" gap={3}>
-                <Circle sx={{ color: 'text.secondary', fontSize: 12 }} />
+                {links.map((item) => {
+                  const isActive =
+                    activeSection !== null && item.id === activeSection;
 
-                {links.map((item) => (
-                  <NextLink
-                    key={item.id}
-                    href={item.href}
-                    passHref
-                    onClick={
-                      item.id === SIGN_OUT_LINK_ID &&
-                      auth.status === 'authenticated'
-                        ? () => auth.logout()
-                        : undefined
-                    }
-                  >
-                    <Typography
-                      component="span"
+                  return (
+                    <Box
+                      key={item.id}
                       sx={{
-                        display: 'inline-flex',
+                        position: 'relative',
+                        display: 'flex',
                         alignItems: 'center',
-                        lineHeight: 1,
-                        fontSize: 14,
-                        fontWeight: 600,
-                        textTransform: [
-                          SIGN_IN_LINK_ID,
-                          SIGN_OUT_LINK_ID,
-                          DASHBOARD_LINK_ID,
-                        ].includes(item.id)
-                          ? undefined
-                          : 'uppercase',
-                        color: 'text.secondary',
-                        textDecoration: 'none',
+                        justifyContent: isActive ? 'center' : undefined,
+                        minHeight: 20,
                       }}
                     >
-                      {item.id === SIGN_IN_LINK_ID ? 'Sign In' : item.label}
-                    </Typography>
-                  </NextLink>
-                ))}
+                      {/* Dot */}
+                      <Circle
+                        sx={{
+                          position: 'absolute',
+                          top: '50%',
+                          transform: `translateY(-50%) ${isActive ? 'scale(1)' : 'scale(0.9)'}`,
+                          opacity: isActive ? 1 : 0,
+                          transition:
+                            'opacity 250ms ease, transform 250ms ease',
+                          color: 'text.secondary',
+                          mx: 'auto',
+                          fontSize: 12,
+                          pointerEvents: 'none',
+                        }}
+                      />
+
+                      {/* Link */}
+                      <NextLink
+                        href={item.href}
+                        passHref
+                        onClick={
+                          item.id === SIGN_OUT_LINK_ID &&
+                          auth.status === 'authenticated'
+                            ? () => auth.logout()
+                            : undefined
+                        }
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          textDecoration: 'none',
+                          opacity: isActive ? 0 : 1,
+                          transform: isActive ? 'scale(0.98)' : 'scale(1)',
+                          transition:
+                            'opacity 250ms ease, transform 250ms ease',
+                          pointerEvents: isActive ? 'none' : 'auto',
+                        }}
+                      >
+                        <Typography
+                          component="span"
+                          sx={{
+                            lineHeight: 1,
+                            fontSize: 14,
+                            fontWeight: 600,
+                            textTransform: [
+                              SIGN_IN_LINK_ID,
+                              SIGN_OUT_LINK_ID,
+                              DASHBOARD_LINK_ID,
+                            ].includes(item.id)
+                              ? undefined
+                              : 'uppercase',
+                            color: 'text.secondary',
+                          }}
+                        >
+                          {item.id === SIGN_IN_LINK_ID ? 'Sign In' : item.label}
+                        </Typography>
+                      </NextLink>
+                    </Box>
+                  );
+                })}
               </Box>
             ) : (
               <>
@@ -201,6 +250,7 @@ export default function HeroNavbar(props: HeroNavbarProps) {
                             )
                               auth.logout();
                             router.push(item.href);
+                            setOpen(false);
                           }}
                         >
                           <Typography

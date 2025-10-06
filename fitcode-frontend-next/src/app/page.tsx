@@ -1,17 +1,27 @@
 'use client';
 
 import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import { motion, type Variants } from 'framer-motion';
-import Image from 'next/image';
-import React from 'react';
+import React, { Fragment } from 'react';
 
 import { HERO_NAVBAR_HEIGHT } from './state';
 import { theme } from '@/app/style';
+import { LINKS_HERO_NAVBAR } from '@/common/constant/navigation.constant';
+import { useActiveSection } from '@/common/hooks/use-active-section.hook';
 import type { ChildrenProps } from '@/common/type/props.type';
+import AboutUs from '@/components/about-us/about-us';
+import ContactUs from '@/components/contact-us/contact-us';
+import Hero from '@/components/hero/hero';
 import HeroNavbar from '@/components/hero-navbar/hero-navbar';
-import Logo from '@/components/logo/logo';
-import { useScreenSize } from '@/store/screen-size.provider';
+import Technology from '@/components/technology/technology';
+
+// Convert "64px" -> 64
+const toPx = (v: string | number) =>
+  typeof v === 'number' ? v : parseInt(String(v).replace('px', ''), 10);
+
+const SECTION_IDS: string[] = Object.values(LINKS_HERO_NAVBAR).map(
+  (link) => link.id
+);
+export type SectionId = (typeof SECTION_IDS)[number];
 
 export type AppPageProps = ChildrenProps & {
   title: string;
@@ -20,133 +30,31 @@ export type AppPageProps = ChildrenProps & {
 };
 
 export default function Home() {
-  const screenSize = useScreenSize();
-  const ease = [0.22, 0.3, 0.3, 1] as const;
-  const prefersReducedMotion = false; // if you use useReducedMotion(), keep the ternaries below
-
-  const logoVariants: Variants = {
-    initial: {
-      opacity: 0,
-      y: 0,
-      // only scale if motion is allowed
-      scale: prefersReducedMotion ? 1 : 0.98,
-    },
-    animate: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: {
-        duration: 3,
-        // ease,
-      },
-    },
-  };
-
-  const taglineVariants: Variants = {
-    initial: {
-      opacity: 0,
-      scale: 0,
-      y: -20,
-    },
-    animate: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: {
-        delay: 2,
-        duration: 2,
-        ease,
-      },
-    },
-  };
-
-  const comingSoonVariants: Variants = {
-    initial: { opacity: 0 },
-    animate: {
-      opacity: 1,
-      transition: {
-        delay: 5,
-        duration: 2,
-        ease,
-      },
-    },
-  };
-
-  const initialWidth = screenSize.isMobile || screenSize.isTablet ? 250 : 600;
+  const active = useActiveSection(SECTION_IDS, toPx(HERO_NAVBAR_HEIGHT));
 
   return (
     <>
-      <HeroNavbar height={HERO_NAVBAR_HEIGHT} dissableLogo />
+      <HeroNavbar
+        height={HERO_NAVBAR_HEIGHT}
+        dissableLogo
+        activeSection={active}
+      />
 
-      {/* Hero */}
       <Box
+        width={'100%'}
         display="flex"
         flexDirection="column"
-        width="100%"
-        height="100vh"
-        justifyContent="center"
         alignItems="center"
         sx={{
           backgroundColor: theme.palette.primary.main,
-          my: 'auto',
-          position: 'relative',
-          overflow: 'hidden',
+          overflowX: 'hidden',
+          overflowY: 'auto',
         }}
       >
-        <motion.div
-          style={{
-            position: 'relative',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            flexDirection: 'column',
-          }}
-          initial="initial"
-          animate="animate"
-        >
-          {/* Logo */}
-          <motion.div
-            variants={logoVariants}
-            style={{ willChange: 'transform, opacity' }}
-          >
-            <Logo width={initialWidth} version="dark" />
-          </motion.div>
-
-          {/* Tagline */}
-          <motion.div
-            variants={taglineVariants}
-            style={{
-              willChange: 'transform, opacity',
-              pointerEvents: 'none',
-            }}
-          >
-            <Image
-              src="/do-it-right.png"
-              alt="Do it right"
-              width={initialWidth / 2}
-              height={0} // not 0
-              style={{ height: 'auto' }} // keeps aspect ratio while preventing stretch
-              className="block" // removes baseline gap
-            />
-          </motion.div>
-          <motion.div
-            variants={comingSoonVariants}
-            style={{ willChange: 'opacity', marginTop: 40 }}
-          >
-            <Typography
-              textAlign="center"
-              fontSize={screenSize.isMobile ? 15 : 30}
-              fontWeight={600}
-              lineHeight={1}
-              sx={{
-                color: theme.palette.text.secondary,
-                textTransform: 'uppercase',
-              }}
-            >
-              COMING SOON
-            </Typography>
-          </motion.div>
-        </motion.div>
+        <Hero />
+        <AboutUs />
+        <ContactUs />
+        <Technology />
       </Box>
     </>
   );
