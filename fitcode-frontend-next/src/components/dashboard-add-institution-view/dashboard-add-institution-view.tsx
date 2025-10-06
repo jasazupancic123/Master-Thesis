@@ -12,7 +12,6 @@ import { handleApiRequest } from '@/common/type/state.type';
 import { InstitutionController } from '@/controller/institution/institution.controller';
 import { InstitutionService } from '@/controller/institution/institution.service';
 import { UserRole } from '@/controller/profile/enum/user-role.enum';
-import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
@@ -26,9 +25,7 @@ export default function AddInstitutionDashboard() {
   const screenSize = useScreenSize();
   const { setInstitutions, refetchUsers } = useDashboard();
 
-  const auth = useAuthenticatedAuth();
-  const controller = InstitutionController.getInstance(auth.token);
-
+  const controller = InstitutionController.getInstance();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

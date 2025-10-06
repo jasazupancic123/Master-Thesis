@@ -40,14 +40,13 @@ import { useScreenSize } from '@/store/screen-size.provider';
 export default function DashboardInstitutionPage() {
   const screenSize = useScreenSize();
   const router = useRouter();
-  const { token, role } = useAuthenticatedAuth();
+  const { role } = useAuthenticatedAuth();
   const { users } = useMain();
 
   const { selectedInstitution, setSelectedInstitution, setMembers, setUsers } =
     useDashboard();
 
-  const controller = InstitutionController.getInstance(token);
-
+  const controller = InstitutionController.getInstance();
   const [selectedView, setSelectedView] = useState<AthletesTrainers>(
     AthletesTrainers.ATHLETES
   );
@@ -244,7 +243,7 @@ export default function DashboardInstitutionPage() {
           birthDate: r.birthDate ? new Date(r.birthDate) : undefined,
         }));
 
-        const controller = ProfileController.getInstance(token);
+        const controller = ProfileController.getInstance();
         await handleApiRequest(
           router,
           () => controller.importProfiles({ profiles: data }),

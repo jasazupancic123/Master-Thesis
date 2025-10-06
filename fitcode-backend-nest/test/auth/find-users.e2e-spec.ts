@@ -1,16 +1,11 @@
-import type { INestApplication } from '@nestjs/common';
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
-import * as request from 'supertest';
+import { TestApp } from '@test/common/utils/app.util';
 
-import { AppModule } from '@src/app.module';
 import type { TestInstitution, TestUser } from '@src/common/type/entity.type';
 import { createAthleteUserAndToken } from '@src/common/utils/auth.util';
-import { FirebaseService } from '@src/firebase/firebase.service';
 import { TestDbService } from '@src/test-db/test-db.service';
 
 describe('Update Institution (e2e)', () => {
-  let app: INestApplication;
+  let testApp: TestApp;
   let db: TestDbService;
 
   let newAthlete1: TestUser;
@@ -20,18 +15,11 @@ describe('Update Institution (e2e)', () => {
   let institution2: TestInstitution;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
+    testApp = await TestApp.init();
+    db = testApp.module.get(TestDbService);
 
-    app = moduleFixture.createNestApplication();
-    await app.init();
-
-    db = moduleFixture.get(TestDbService);
-    const firebase = moduleFixture.get(FirebaseService);
-
-    newAthlete1 = await createAthleteUserAndToken(firebase);
-    newAthlete2 = await createAthleteUserAndToken(firebase);
+    newAthlete1 = await createAthleteUserAndToken(testApp.firebase);
+    newAthlete2 = await createAthleteUserAndToken(testApp.firebase);
 
     // first institution has 3 global users (manager & trainer & athlete) + 1 additional athlete
     institution1 = await db.institutions.createTest({
@@ -49,8 +37,12 @@ describe('Update Institution (e2e)', () => {
     await db.institutions.remove(institution1.id);
     await db.institutions.remove(institution2.id);
     await db.cleanup();
-    await app.close();
+    await testApp.close();
   });
+
+  async function req(token: string) {
+    return await testApp.http.get('/auth', token);
+  }
 
   it.each([
     ['admin', 9, global.admin.token], // all users + admin
@@ -58,10 +50,7 @@ describe('Update Institution (e2e)', () => {
     ['trainer', 4, global.trainer.token],
     ['athlete', 4, global.athlete.token],
   ])('should get all users for %s', async (role, expectedLength, token) => {
-    const response = await request(app.getHttpServer())
-      .get(`/auth`)
-      .set('Authorization', `Bearer ${token}`);
-
+    const response = await req(token);
     expect(response.status).toBe(200);
 
     if (role === 'admin')
@@ -72,46 +61,31 @@ describe('Update Institution (e2e)', () => {
 
   // for institution 2, manual tests must be written since jest's it.each doesn't work
   it('should get all users for manager of institution 2', async () => {
-    const response = await request(app.getHttpServer())
-      .get(`/auth`)
-      .set('Authorization', `Bearer ${institution2.manager.token}`);
-
+    const response = await req(institution2.manager.token);
     expect(response.status).toBe(200);
     expect(response.body.length).toEqual(5); // only institution2
   });
 
   it('should get all users for trainer of institution 2', async () => {
-    const response = await request(app.getHttpServer())
-      .get(`/auth`)
-      .set('Authorization', `Bearer ${institution2.trainers[0].token}`);
-
+    const response = await req(institution2.trainers[0].token);
     expect(response.status).toBe(200);
     expect(response.body.length).toEqual(5);
   });
 
   it('should get all users for athlete of institution 2', async () => {
-    const response = await request(app.getHttpServer())
-      .get(`/auth`)
-      .set('Authorization', `Bearer ${newAthlete1.token}`);
-
+    const response = await req(newAthlete1.token);
     expect(response.status).toBe(200);
     expect(response.body.length).toEqual(5);
   });
 
   it('should get all users for new athlete 1 (only 1st institution)', async () => {
-    const response = await request(app.getHttpServer())
-      .get(`/auth`)
-      .set('Authorization', `Bearer ${newAthlete1.token}`);
-
+    const response = await req(newAthlete1.token);
     expect(response.status).toBe(200);
     expect(response.body.length).toEqual(5);
   });
 
   it('should get all users for new athlete 2 (both institutions)', async () => {
-    const response = await request(app.getHttpServer())
-      .get(`/auth`)
-      .set('Authorization', `Bearer ${newAthlete2.token}`);
-
+    const response = await req(newAthlete2.token);
     expect(response.status).toBe(200);
     expect(response.body.length).toEqual(8); // 4 - 1 (himself) in first + 5 - 1 (himself) in second + himself
   });

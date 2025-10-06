@@ -1,15 +1,18 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { Request } from 'express';
 
+import { SESSION_COOKIE_NAME } from '@src/auth/constant/cookie.constant';
 import { FirebaseService } from '@src/firebase/firebase.service';
 
+import { User } from '../type/firebase-auth.type';
 import { AUTH_ROLES_KEY } from './role.guard';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
-    private readonly firebaseService: FirebaseService,
+    private readonly firebase: FirebaseService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -20,15 +23,14 @@ export class AuthGuard implements CanActivate {
 
     if (!required) return true;
 
-    const { authorization } = context.switchToHttp().getRequest().headers;
-    if (!authorization) return false;
+    const req = context.switchToHttp().getRequest<Request & { user: User }>();
+    if (!req.cookies) return false;
 
-    const token = authorization.slice(7);
-    const verified = await this.firebaseService.auth.verifyIdToken(token);
+    const session = req.cookies[SESSION_COOKIE_NAME];
+    if (!session) return false;
 
-    context.switchToHttp().getRequest().user =
-      await this.firebaseService.findUserById(verified.uid);
-
+    const decoded = await this.firebase.auth.verifySessionCookie(session, true);
+    req.user = await this.firebase.findUserById(decoded.uid);
     return true;
   }
 }

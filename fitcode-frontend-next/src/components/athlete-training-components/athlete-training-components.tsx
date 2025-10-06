@@ -51,8 +51,8 @@ export default function AthleteTrainingComponents(
 
   const { reports, setTrainingInProgress, setView } = useTraining();
   const { exercises } = useMain();
-  const { token, user } = useAuthenticatedAuth();
-  const controller = TrainingController.getInstance(token);
+  const { user } = useAuthenticatedAuth();
+  const controller = TrainingController.getInstance();
 
   const theme = useTheme();
   const router = useRouter();

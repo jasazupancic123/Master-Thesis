@@ -27,6 +27,7 @@ export interface Props {
   dialogueContentSx?: SxProps;
   componentCalendarView?: boolean;
   PaperProps?: Partial<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     PaperProps<React.ElementType<any, keyof React.JSX.IntrinsicElements>>
   >;
 }

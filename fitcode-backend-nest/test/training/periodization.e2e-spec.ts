@@ -1,11 +1,7 @@
-import type { INestApplication } from '@nestjs/common';
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { TestApp } from '@test/common/utils/app.util';
 import { TestPeriodizationUtil } from '@test/common/utils/periodization.util';
 import { addDays } from 'date-fns';
-import * as req from 'supertest';
 
-import { AppModule } from '@src/app.module';
 import { deleteCollection } from '@src/common/utils/data.util';
 import type { Component } from '@src/component/entity/component.entity';
 import { generateComponentStub } from '@src/component/mock/component.stub';
@@ -30,7 +26,7 @@ import {
 } from '@src/training/mock/training.stub';
 
 describe('Periodization functions (e2e)', () => {
-  let app: INestApplication;
+  let testApp: TestApp;
   let db: TestDbService;
   let firebase: FirebaseService;
 
@@ -41,15 +37,9 @@ describe('Periodization functions (e2e)', () => {
   let baseTrainingId: string;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
-
-    db = moduleFixture.get(TestDbService);
-    firebase = moduleFixture.get(FirebaseService);
+    testApp = await TestApp.init();
+    db = testApp.module.get(TestDbService);
+    firebase = testApp.module.get(FirebaseService);
 
     target = generateTargetStub({
       id: 'strength',
@@ -83,7 +73,7 @@ describe('Periodization functions (e2e)', () => {
       db.components.delete(component.id),
     ]);
 
-    await app.close();
+    await testApp.close();
   });
 
   async function request(
@@ -94,10 +84,11 @@ describe('Periodization functions (e2e)', () => {
       periodizationType: PeriodizationType.REPLICATE,
     },
   ) {
-    return await req(app.getHttpServer())
-      .patch(`/training/${trainingId}/periodize/component/${componentId}`)
-      .set('Authorization', `Bearer ${global.trainer.token}`)
-      .send(body);
+    return await testApp.http.patch(
+      `/training/${trainingId}/periodize/component/${componentId}`,
+      global.trainer.token,
+      body,
+    );
   }
 
   it('should throw error if warmup / cooldown are passed as components', async () => {
