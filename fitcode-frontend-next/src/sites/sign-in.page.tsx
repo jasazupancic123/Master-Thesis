@@ -54,7 +54,7 @@ export default function SignInPage() {
 
   return (
     <>
-      <HeroNavbar height={HERO_NAVBAR_HEIGHT} />
+      <HeroNavbar height={HERO_NAVBAR_HEIGHT} activeSection={null} />
 
       <Box
         sx={{
