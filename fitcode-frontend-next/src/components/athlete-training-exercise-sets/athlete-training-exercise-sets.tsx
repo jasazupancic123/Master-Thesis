@@ -28,6 +28,7 @@ interface AthleteTrainingExerciseSetsProps {
   exerciseSetTrackingState?: ExerciseSetTracking[];
   dissableBottomPadding?: boolean;
   colorSetsToPrimary?: boolean;
+  aiDetectionView?: boolean;
 }
 
 export default function AthleteTrainingExerciseSets(
