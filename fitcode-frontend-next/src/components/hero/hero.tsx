@@ -1,10 +1,11 @@
+import { Box, Typography } from '@mui/material';
+import type { Variants } from 'framer-motion';
+import { motion } from 'framer-motion';
+import Image from 'next/image';
+
+import Logo from '../logo/logo';
 import { theme } from '@/app/style';
 import { useScreenSize } from '@/store/screen-size.provider';
-import { Box, Typography } from '@mui/material';
-import { motion, Variants } from 'framer-motion';
-import Image from 'next/image';
-import Logo from '../logo/logo';
-import { HERO_NAVBAR_HEIGHT } from '@/app/state';
 
 export default function Hero() {
   const screenSize = useScreenSize();

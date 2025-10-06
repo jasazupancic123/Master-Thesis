@@ -42,8 +42,18 @@ export function link(
 // hero navbar
 export const LINK_PRODUCT = link('Product', '#product');
 export const LINK_SERVICES = link('Services', '#services');
-export const LINK_TECHNOLOGY = link('Technology', '/#technology', null, 'technology');
-export const LINK_CONTACT_US = link('Contact Us', '/#contact-us', null, 'contact-us');
+export const LINK_TECHNOLOGY = link(
+  'Technology',
+  '/#technology',
+  null,
+  'technology'
+);
+export const LINK_CONTACT_US = link(
+  'Contact Us',
+  '/#contact-us',
+  null,
+  'contact-us'
+);
 export const LINK_ABOUT_US = link('About Us', '/#about-us', null, 'about-us');
 
 // all standalone app links

@@ -22,7 +22,6 @@ import {
 import Logo from '@/components/logo/logo';
 import { useAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import { m, AnimatePresence } from 'framer-motion';
 
 interface HeroNavbarProps {
   height: string;

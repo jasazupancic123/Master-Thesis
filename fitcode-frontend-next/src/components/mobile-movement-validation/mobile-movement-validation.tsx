@@ -6,6 +6,7 @@ import { useTheme } from '@mui/material';
 import dayjs from 'dayjs';
 import { useEffect, useRef, useState } from 'react';
 
+import AthleteTrainingExerciseSets from '../athlete-training-exercise-sets/athlete-training-exercise-sets';
 import LoadingOverlay from '../loading-overlay/loading-overlay';
 import { finishSet } from '../training-in-progress-exercise-card/state';
 import TrainingInProgressTempoChart from '../training-in-progress-exercise-card/training-in-progress-tempo-chart';
@@ -202,6 +203,7 @@ export default function MobileMovementValidation(
   const recordingTimestampRef = useRef<Date | null>(null);
   const isCurrentlySavingImageRef = useRef(false);
   const canExitWhenImageIsDoneSavingRef = useRef(false);
+  const [startedExitTimeout, setStartedExitTimeout] = useState(false);
 
   useEffect(() => {
     let raf: number | null = null;
@@ -403,6 +405,7 @@ export default function MobileMovementValidation(
           setFps,
           finishAiDetection,
           setRepCount,
+          setStartedExitTimeout,
         }),
     });
   }, [poseLandmarker]);
@@ -509,8 +512,6 @@ export default function MobileMovementValidation(
                 },
               ],
         } as TrainingExerciseRecording;
-
-        console.log('setIndex', setIndex, 'updatedExercise', updatedExercise);
 
         // setSelectedExercise(updatedExercise);
       }
@@ -622,6 +623,17 @@ export default function MobileMovementValidation(
 
     checkExit();
   }, [isCurrentlySavingImageRef.current]);
+
+  useEffect(() => {
+    let timeout: NodeJS.Timeout | null = null;
+    if (startedExitTimeout) {
+      timeout = setTimeout(async () => {
+        await finishAiDetection();
+        canExitWhenImageIsDoneSavingRef.current = false;
+        setStartedExitTimeout(false);
+      }, 5000);
+    }
+  }, [startedExitTimeout]);
 
   if (!exerciseDetectionData) {
     return <div>No pose detection logic for this exercise yet</div>;
@@ -741,6 +753,7 @@ export default function MobileMovementValidation(
           style={{ position: 'absolute', left: 0, top: 0 }}
         />
 
+        {/* Reps and tempo chart */}
         <Box
           width={'100%'}
           height={140}
@@ -752,135 +765,164 @@ export default function MobileMovementValidation(
             zIndex: 1000,
           }}
         >
-          {statusRef.current !== DetectionStatus.RECORDING &&
-            selectedExercise &&
-            selectedExercise.exercise && (
-              <Typography
-                textAlign="center"
-                fontSize={30}
+          {[
+            DetectionStatus.READY,
+            DetectionStatus.RECORDING,
+            DetectionStatus.STOPPED,
+          ].includes(statusRef.current) ? (
+            <>
+              <Box
+                width={160}
+                height="100%"
+                display="flex"
+                flexDirection="column"
+                justifyContent="flex-end"
                 sx={{
-                  color: theme.palette.primary.main,
-                  textShadow: `0 0 4px ${theme.palette.background.default}, 0 0 8px ${theme.palette.background.default}`,
-                  position: 'absolute',
-                  textTransform: 'uppercase',
-                  bottom: 0,
-                  left: '50%',
-                  transform: 'translate(-50%, 100%)',
-                  zIndex: 10000,
-                  fontSize: 12,
-                  backgroundColor: theme.palette.background.default,
+                  position: 'relative',
+                  zIndex: 0,
                 }}
               >
-                {selectedExercise.exercise.name}
-              </Typography>
-            )}
+                <Box
+                  width="100%"
+                  height="50%"
+                  display="flex"
+                  flexDirection="column"
+                  justifyContent="center"
+                  alignItems="center"
+                  sx={{
+                    backgroundColor: theme.palette.background.dark,
+                  }}
+                >
+                  <Typography
+                    fontSize={8}
+                    lineHeight={1.2}
+                    textAlign="center"
+                    sx={{
+                      color: theme.palette.background.lightBorder,
+                    }}
+                  >
+                    Rep
+                  </Typography>
+                  <Typography
+                    fontSize={32}
+                    lineHeight={1.2}
+                    fontWeight="bold"
+                    textAlign="center"
+                  >
+                    {recordedRepsRef.current.length}
+                  </Typography>
+                </Box>
+                <Divider
+                  sx={{ backgroundColor: theme.palette.background.lightBorder }}
+                />
+                <Box
+                  width="100%"
+                  height="50%"
+                  display="flex"
+                  flexDirection="column"
+                  justifyContent="center"
+                  alignItems="center"
+                  sx={{
+                    backgroundColor: theme.palette.background.dark,
+                  }}
+                >
+                  <Typography
+                    fontSize={8}
+                    lineHeight={1.2}
+                    textAlign="center"
+                    sx={{
+                      color: theme.palette.background.lightBorder,
+                    }}
+                  >
+                    Tempo
+                  </Typography>
+                  <Typography
+                    fontSize={32}
+                    lineHeight={1.2}
+                    fontWeight="bold"
+                    textAlign="center"
+                  >
+                    {recordedRepsRef.current.length
+                      ? `${recordedRepsRef.current[recordedRepsRef.current.length - 1]?.timeToExtremeMs !== undefined ? recordedRepsRef.current[recordedRepsRef.current.length - 1].timeToExtremeMs! / 1000 : '-'} - ${recordedRepsRef.current[recordedRepsRef.current.length - 1]?.timeFromExtremeToEndMs !== undefined ? recordedRepsRef.current[recordedRepsRef.current.length - 1].timeFromExtremeToEndMs! / 1000 : '-'}`
+                      : '- : -'}
+                  </Typography>
+                </Box>
+              </Box>
 
-          <Box
-            width={160}
-            height="100%"
-            display="flex"
-            flexDirection="column"
-            justifyContent="flex-end"
-            sx={{
-              position: 'relative',
-              zIndex: 0,
-            }}
-          >
-            <Box
-              width="100%"
-              height="50%"
-              display="flex"
-              flexDirection="column"
-              justifyContent="center"
-              alignItems="center"
-              sx={{
-                backgroundColor: theme.palette.background.dark,
-              }}
-            >
-              <Typography
-                fontSize={8}
-                lineHeight={1.2}
-                textAlign="center"
-                sx={{
-                  color: theme.palette.background.lightBorder,
-                }}
-              >
-                Rep
-              </Typography>
-              <Typography
-                fontSize={32}
-                lineHeight={1.2}
-                fontWeight="bold"
-                textAlign="center"
-              >
-                {recordedRepsRef.current.length}
-              </Typography>
-            </Box>
-            <Divider
-              sx={{ backgroundColor: theme.palette.background.lightBorder }}
-            />
-            <Box
-              width="100%"
-              height="50%"
-              display="flex"
-              flexDirection="column"
-              justifyContent="center"
-              alignItems="center"
-              sx={{
-                backgroundColor: theme.palette.background.dark,
-              }}
-            >
-              <Typography
-                fontSize={8}
-                lineHeight={1.2}
-                textAlign="center"
-                sx={{
-                  color: theme.palette.background.lightBorder,
-                }}
-              >
-                Tempo
-              </Typography>
-              <Typography
-                fontSize={32}
-                lineHeight={1.2}
-                fontWeight="bold"
-                textAlign="center"
-              >
-                {recordedRepsRef.current.length
-                  ? `${recordedRepsRef.current[recordedRepsRef.current.length - 1]?.timeToExtremeMs !== undefined ? recordedRepsRef.current[recordedRepsRef.current.length - 1].timeToExtremeMs! / 1000 : '-'} - ${recordedRepsRef.current[recordedRepsRef.current.length - 1]?.timeFromExtremeToEndMs !== undefined ? recordedRepsRef.current[recordedRepsRef.current.length - 1].timeFromExtremeToEndMs! / 1000 : '-'}`
-                  : '- : -'}
-              </Typography>
-            </Box>
-          </Box>
-
-          {recordedRepsRef.current.length ? (
-            <TrainingInProgressTempoChart
-              selectedExercise={selectedExercise}
-              setIndex={-1}
-              width={
-                typeof window !== 'undefined' ? window.innerWidth - 160 : 300
-              }
-              height={140}
-              passedReps={recordedRepsRef.current}
-              hideLabels={true}
-              aiRecordingView
-              sx={{
-                width: '100% !important',
-                backgroundColor: theme.palette.background.default,
-                opacity: 0.8,
-              }}
-            />
+              {recordedRepsRef.current.length ? (
+                <TrainingInProgressTempoChart
+                  selectedExercise={selectedExercise}
+                  setIndex={-1}
+                  width={
+                    typeof window !== 'undefined'
+                      ? window.innerWidth - 160
+                      : 300
+                  }
+                  height={140}
+                  passedReps={recordedRepsRef.current}
+                  hideLabels={true}
+                  aiRecordingView
+                  sx={{
+                    width: '100% !important',
+                    backgroundColor: theme.palette.background.default,
+                    opacity: 0.8,
+                  }}
+                />
+              ) : (
+                <Box
+                  width={
+                    typeof window !== 'undefined'
+                      ? window.innerWidth - 160
+                      : '100%'
+                  }
+                  height={140}
+                  sx={{
+                    backgroundColor: theme.palette.background.default,
+                    opacity: 0.8,
+                  }}
+                />
+              )}
+            </>
           ) : (
-            <Box
-              width={
-                typeof window !== 'undefined' ? window.innerWidth - 160 : '100%'
-              }
-              height={140}
-              sx={{
-                backgroundColor: theme.palette.background.default,
-                opacity: 0.8,
-              }}
-            />
+            <>
+              {trainingInProgress?.training &&
+                selectedExercise &&
+                selectedExercise.sets[setIndex] && (
+                  <Box
+                    width="100%"
+                    display="flex"
+                    flexDirection="column"
+                    alignItems="center"
+                  >
+                    <Typography
+                      width="100%"
+                      textAlign="center"
+                      fontWeight="bold"
+                      fontSize={20}
+                      sx={{
+                        backgroundColor: theme.palette.primary.main,
+                        py: 1,
+                        textTransform: 'uppercase',
+                        color: theme.palette.text.secondary,
+                      }}
+                    >
+                      {selectedExercise.exercise?.name}
+                    </Typography>
+                    <AthleteTrainingExerciseSets
+                      training={trainingInProgress?.training}
+                      exercise={selectedExercise}
+                      borderBottomRadius={false}
+                      expanded={false}
+                      trainingInProgressView
+                      passedSet={selectedExercise.sets[setIndex]}
+                      supersetIndex={supersetIndex}
+                      setIndex={setIndex}
+                      colorSetsToPrimary
+                      aiDetectionView
+                    />
+                  </Box>
+                )}
+            </>
           )}
         </Box>
 

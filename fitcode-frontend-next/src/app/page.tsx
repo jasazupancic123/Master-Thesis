@@ -5,14 +5,14 @@ import React, { Fragment } from 'react';
 
 import { HERO_NAVBAR_HEIGHT } from './state';
 import { theme } from '@/app/style';
-import type { ChildrenProps } from '@/common/type/props.type';
-import HeroNavbar from '@/components/hero-navbar/hero-navbar';
-import Hero from '@/components/hero/hero';
-import AboutUs from '@/components/about-us/about-us';
-import ContactUs from '@/components/contact-us/contact-us';
-import Technology from '@/components/technology/technology';
 import { LINKS_HERO_NAVBAR } from '@/common/constant/navigation.constant';
 import { useActiveSection } from '@/common/hooks/use-active-section.hook';
+import type { ChildrenProps } from '@/common/type/props.type';
+import AboutUs from '@/components/about-us/about-us';
+import ContactUs from '@/components/contact-us/contact-us';
+import Hero from '@/components/hero/hero';
+import HeroNavbar from '@/components/hero-navbar/hero-navbar';
+import Technology from '@/components/technology/technology';
 
 // Convert "64px" -> 64
 const toPx = (v: string | number) =>

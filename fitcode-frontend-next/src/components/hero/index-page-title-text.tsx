@@ -1,6 +1,8 @@
+import type { SxProps } from '@mui/material';
+import { Typography } from '@mui/material';
+
 import { theme } from '@/app/style';
-import { ChildrenProps } from '@/common/type/props.type';
-import { SxProps, Typography } from '@mui/material';
+import type { ChildrenProps } from '@/common/type/props.type';
 
 interface IndexPageTitleTextProps {
   sx: SxProps;
