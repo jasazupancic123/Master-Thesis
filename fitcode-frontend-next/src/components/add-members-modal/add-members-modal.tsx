@@ -17,7 +17,6 @@ import type { AuthUser } from '@/controller/auth/type/user.type';
 import { GroupController } from '@/controller/group/group.controller';
 import type { Group } from '@/controller/group/type/group.type';
 import type { Institution } from '@/controller/institution/type/institution.type';
-import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 
 export type AddMembersModalProps = {
@@ -57,8 +56,7 @@ export function AddMembersModal(props: AddMembersModalProps) {
     enableScroll,
   } = props;
   const { setDetectedChanges } = useDashboard();
-  const { token } = useAuthenticatedAuth();
-  const controller = GroupController.getInstance(token);
+  const controller = GroupController.getInstance();
 
   const [searchQueryAddPlayer, setSearchQueryAddPlayer] = useState('');
   const [filteredUsers, setFilteredUsers] = useState<AuthUser[] | null>(null);

@@ -2,7 +2,6 @@ import { useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
-import { useAuthenticatedAuth } from './auth.provider';
 import { useTraining } from './training.provider';
 import type { ChildrenProps } from '@/common/type/props.type';
 import { handleApiRequest, type SetState } from '@/common/type/state.type';
@@ -33,11 +32,9 @@ const TrainingInProgressContext = createContext<
 >(undefined);
 
 export const TrainingInProgressProvider = (props: ChildrenProps) => {
-  const { token } = useAuthenticatedAuth();
   const { trainingInProgress, refetchTraining } = useTraining();
   const router = useRouter();
-  const controller = TrainingController.getInstance(token);
-
+  const controller = TrainingController.getInstance();
   const { children } = props;
 
   const [selectedSuperset, setSelectedSuperset] = useState<

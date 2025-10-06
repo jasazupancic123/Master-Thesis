@@ -17,7 +17,6 @@ import { MainSet } from '@/controller/training/enum/main-set.enum';
 import { TrainingController } from '@/controller/training/training.controller';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 
@@ -55,8 +54,7 @@ interface TrainingWeekDatesProps {
 export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
   const router = useRouter();
   const theme = useTheme();
-  const auth = useAuthenticatedAuth();
-  const controller = TrainingController.getInstance(auth.token);
+  const controller = TrainingController.getInstance();
 
   const { components, exercises: allExercises, methods } = useMain();
   const { group, cycle, trainings, setCycle, setTrainings } = useGroup();

@@ -68,7 +68,7 @@ export const DEFAULT_EXERCISE: Partial<Exercise> = {
 export const EXERCISES_PAGE_SIZE = 20;
 
 export default function ExercisesPage() {
-  const { token, role } = useAuthenticatedAuth();
+  const { role } = useAuthenticatedAuth();
   const {
     components,
     exercises: allExercises,
@@ -309,7 +309,7 @@ export default function ExercisesPage() {
           setIsOpen={(isOpen) => setModal({ ...modal, add: isOpen })}
           title={'Add Exercise'}
           onConfirm={async () => {
-            handleAddExercise(token, exercise, {
+            handleAddExercise(exercise, {
               router,
               components,
               component: selectedComponent!,
@@ -338,7 +338,7 @@ export default function ExercisesPage() {
           }
           {...((exercise.ownerId !== 'global' || role === UserRole.ADMIN) && {
             onConfirm: async () => {
-              handleUpdateExercise(token, exercise!.id!, exercise, {
+              handleUpdateExercise(exercise!.id!, exercise, {
                 router,
                 components,
                 setFilteredExercises,
@@ -363,7 +363,7 @@ export default function ExercisesPage() {
         cancelText="Cancel"
         onCancel={() => setModal((prev) => ({ ...prev, confirmDelete: false }))}
         onConfirm={async () => {
-          await handleDeleteExercise(token, exercise!.id!, {
+          await handleDeleteExercise(exercise!.id!, {
             router,
             setFilteredExercises,
             setExercises: setAllExercises,
@@ -382,7 +382,6 @@ export default function ExercisesPage() {
         width={screenSize.isMobile ? undefined : 500}
         onConfirm={() => {
           handleUpsertManyExercises(
-            token,
             { exercises: importedExercises },
             { router, setAllExercises, setExercises, setFilteredExercises }
           );
@@ -407,7 +406,6 @@ export default function ExercisesPage() {
         width={screenSize.isMobile ? undefined : 500}
         onConfirm={() => {
           handleUpsertMuscleValues(
-            token,
             {
               exercises: importedMuscleValueExercises.map(
                 (muscleValuesExercise) => ({

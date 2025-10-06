@@ -71,7 +71,6 @@ export function handlePaginateExercises(
 }
 
 export async function handleAddExercise(
-  token: string,
   input: Partial<Exercise>,
   state: {
     router: AppRouterInstance;
@@ -101,8 +100,7 @@ export async function handleAddExercise(
     setModal,
   } = state;
 
-  const controller = ExerciseController.getInstance(token);
-
+  const controller = ExerciseController.getInstance();
   if (!input.name) return toast.error('Name is required');
   if (!input.componentIds?.length)
     return toast.error('Select at least one component to add');
@@ -156,7 +154,6 @@ export async function handleAddExercise(
 }
 
 export async function handleUpdateExercise(
-  token: string,
   exerciseId: string,
   input: Partial<Exercise>,
   state: {
@@ -183,7 +180,7 @@ export async function handleUpdateExercise(
     setModal,
   } = state;
 
-  const controller = ExerciseController.getInstance(token);
+  const controller = ExerciseController.getInstance();
 
   if (!input.name) return toast.error('Name is required');
   if (!input.componentIds?.length)
@@ -230,7 +227,6 @@ export async function handleUpdateExercise(
 }
 
 export async function handleDeleteExercise(
-  token: string,
   exerciseId: string,
   state: {
     router: AppRouterInstance;
@@ -239,7 +235,7 @@ export async function handleDeleteExercise(
   }
 ) {
   const { router, setFilteredExercises, setExercises } = state;
-  const controller = ExerciseController.getInstance(token);
+  const controller = ExerciseController.getInstance();
 
   handleApiRequest(
     router,
@@ -359,7 +355,6 @@ export async function handleMuscleValuesCsvFileUpload(
 }
 
 export async function handleUpsertManyExercises(
-  token: string,
   input: UpsertManyExercises,
   state: {
     router: AppRouterInstance;
@@ -369,7 +364,7 @@ export async function handleUpsertManyExercises(
   }
 ) {
   const { router, setExercises, setFilteredExercises, setAllExercises } = state;
-  const controller = ExerciseController.getInstance(token);
+  const controller = ExerciseController.getInstance();
 
   handleApiRequest(
     router,
@@ -394,7 +389,6 @@ export async function handleUpsertManyExercises(
 }
 
 export async function handleUpsertMuscleValues(
-  token: string,
   input: UpsertManyMuscleValues,
   state: {
     router: AppRouterInstance;
@@ -402,7 +396,7 @@ export async function handleUpsertMuscleValues(
   }
 ) {
   const { router, setExercises } = state;
-  const controller = ExerciseController.getInstance(token);
+  const controller = ExerciseController.getInstance();
 
   handleApiRequest(
     router,

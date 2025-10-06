@@ -31,8 +31,8 @@ interface FaceCapturePreviewsModalProps {
 export default function FaceCapturePreviewsModal(
   props: FaceCapturePreviewsModalProps
 ) {
-  const { user, customClaims, setCustomClaims, token } = useAuthenticatedAuth();
-  const authController = AuthController.getInstance(token);
+  const { user, customClaims, setCustomClaims } = useAuthenticatedAuth();
+  const authController = AuthController.getInstance();
   const router = useRouter();
 
   const { previews, captures, setIsCapturingFace, heightWidthRatio } = props;

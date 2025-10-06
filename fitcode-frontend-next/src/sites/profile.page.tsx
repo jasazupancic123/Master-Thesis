@@ -44,7 +44,7 @@ import { useScreenSize } from '@/store/screen-size.provider';
 const DEFAULT_MARGIN = 1;
 
 export default function ProfilePage() {
-  const { user, setUser, customClaims, token } = useAuthenticatedAuth();
+  const { user, setUser, customClaims } = useAuthenticatedAuth();
 
   const theme = useTheme();
   const router = useRouter();
@@ -104,7 +104,7 @@ export default function ProfilePage() {
       handleApiRequest(
         router,
         () =>
-          ProfileController.getInstance(token).update({
+          ProfileController.getInstance().update({
             sport,
             level,
             gender,
@@ -134,7 +134,7 @@ export default function ProfilePage() {
       handleApiRequest(
         router,
         () =>
-          AuthController.getInstance(token).updateUser(user.uid, {
+          AuthController.getInstance().updateUser(user.uid, {
             displayName,
             photoURL,
           }),

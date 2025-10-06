@@ -1,9 +1,6 @@
-import type { INestApplication } from '@nestjs/common';
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
-import * as request from 'supertest';
+import { TestApp } from '@test/common/utils/app.util';
+import type * as request from 'supertest';
 
-import { AppModule } from '@src/app.module';
 import type { ValidateRows } from '@src/common/type/validate.type';
 import type { Component } from '@src/component/entity/component.entity';
 import { GLOBAL_EXERCISE_OWNER } from '@src/exercise/constant/global-exercise-owner.constant';
@@ -13,22 +10,15 @@ import { generateInstitutionStub } from '@src/institution/mock/institution.mock'
 import { TestDbService } from '@src/test-db/test-db.service';
 
 describe('Upsert Many Exercises (e2e)', () => {
-  let app: INestApplication;
+  let testApp: TestApp;
   let db: TestDbService;
 
   let institutionId: string;
   let component: Component;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
-
-    db = app.get(TestDbService);
-
+    testApp = await TestApp.init();
+    db = testApp.module.get(TestDbService);
     institutionId = await db.institutions.save(generateInstitutionStub());
     component = await db.components.create();
   });
@@ -37,8 +27,15 @@ describe('Upsert Many Exercises (e2e)', () => {
 
   afterAll(async () => {
     await db.cleanup();
-    await app.close();
+    await testApp.close();
   });
+
+  async function req(
+    exercises: Exercise[],
+    token: string,
+  ): Promise<request.Response> {
+    return await testApp.http.post(`/exercise/many`, token, { exercises });
+  }
 
   describe('General Tests', () => {
     it('should fail if exercise does not have any components', async () => {
@@ -46,11 +43,7 @@ describe('Upsert Many Exercises (e2e)', () => {
         generateExerciseStub({ name: 'deadlift', componentIds: [] }),
       ];
 
-      const response = await request(app.getHttpServer())
-        .post('/exercise/many')
-        .set('Authorization', `Bearer ${global.admin.token}`)
-        .send({ exercises });
-
+      const response = await req(exercises, global.admin.token);
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
         JSON.stringify([
@@ -74,11 +67,7 @@ describe('Upsert Many Exercises (e2e)', () => {
         generateExerciseStub({ componentIds: ['non-existing-component-2'] }),
       ];
 
-      const response = await request(app.getHttpServer())
-        .post('/exercise/many')
-        .set('Authorization', `Bearer ${global.admin.token}`)
-        .send({ exercises });
-
+      const response = await req(exercises, global.admin.token);
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
         JSON.stringify([
@@ -112,11 +101,7 @@ describe('Upsert Many Exercises (e2e)', () => {
         generateExerciseStub({ name: 'deadlift', componentIds: [root.id] }),
       ];
 
-      const response = await request(app.getHttpServer())
-        .post('/exercise/many')
-        .set('Authorization', `Bearer ${global.admin.token}`)
-        .send({ exercises });
-
+      const response = await req(exercises, global.admin.token);
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
         JSON.stringify([
@@ -142,11 +127,7 @@ describe('Upsert Many Exercises (e2e)', () => {
         }),
       ];
 
-      const response = await request(app.getHttpServer())
-        .post('/exercise/many')
-        .set('Authorization', `Bearer ${global.admin.token}`)
-        .send({ exercises });
-
+      const response = await req(exercises, global.admin.token);
       expect(response.status).toBe(400);
       expect(JSON.parse(response.body.message)).toEqual(
         expect.arrayContaining([
@@ -183,11 +164,7 @@ describe('Upsert Many Exercises (e2e)', () => {
         }),
       ];
 
-      const response = await request(app.getHttpServer())
-        .post('/exercise/many')
-        .set('Authorization', `Bearer ${global.admin.token}`)
-        .send({ exercises });
-
+      const response = await req(exercises, global.admin.token);
       expect(response.status).toBe(400);
       expect(JSON.parse(response.body.message)).toEqual(
         expect.arrayContaining([
@@ -234,11 +211,7 @@ describe('Upsert Many Exercises (e2e)', () => {
         }),
       ];
 
-      const response = await request(app.getHttpServer())
-        .post(`/exercise/many`)
-        .set('Authorization', `Bearer ${global.admin.token}`)
-        .send({ exercises });
-
+      const response = await req(exercises, global.admin.token);
       expect(response.status).toBe(201);
       expect(response.body.length).toBe(4);
 
@@ -288,11 +261,7 @@ describe('Upsert Many Exercises (e2e)', () => {
         }),
       ];
 
-      const response = await request(app.getHttpServer())
-        .post(`/exercise/many`)
-        .set('Authorization', `Bearer ${global.admin.token}`)
-        .send({ exercises });
-
+      const response = await req(exercises, global.admin.token);
       expect(response.status).toBe(201);
       expect(response.body.length).toBe(2);
 
@@ -324,11 +293,7 @@ describe('Upsert Many Exercises (e2e)', () => {
         }),
       ];
 
-      const response = await request(app.getHttpServer())
-        .post(`/exercise/many`)
-        .set('Authorization', `Bearer ${global.manager.token}`)
-        .send({ exercises });
-
+      const response = await req(exercises, global.manager.token);
       expect(response.status).toBe(401);
       expect(response.body.message).toBe(
         'You cannot create disabled exercises',
@@ -344,11 +309,7 @@ describe('Upsert Many Exercises (e2e)', () => {
         }),
       ];
 
-      const response = await request(app.getHttpServer())
-        .post(`/exercise/many`)
-        .set('Authorization', `Bearer ${global.manager.token}`)
-        .send({ exercises });
-
+      const response = await req(exercises, global.manager.token);
       expect(response.status).toBe(201);
       expect(response.body.length).toBe(1);
 
@@ -376,11 +337,7 @@ describe('Upsert Many Exercises (e2e)', () => {
         }),
       ];
 
-      const response = await request(app.getHttpServer())
-        .post(`/exercise/many`)
-        .set('Authorization', `Bearer ${global.manager.token}`)
-        .send({ exercises });
-
+      const response = await req(exercises, global.manager.token);
       expect(response.status).toBe(201);
       expect(response.body.length).toBe(1);
 

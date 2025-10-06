@@ -1,10 +1,7 @@
-import type { INestApplication } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
 import { COMPONENT_PARAMS_OPT1 } from '@test/common/constant/component-params.constant';
+import { TestApp } from '@test/common/utils/app.util';
 import { subDays } from 'date-fns';
-import * as request from 'supertest';
 
-import { AppModule } from '@src/app.module';
 import type { TestInstitution, TestUser } from '@src/common/type/entity.type';
 import { createAthleteUserAndToken } from '@src/common/utils/auth.util';
 import {
@@ -46,7 +43,7 @@ import { WorkloadRepository } from '@src/training/repository/workload.repository
 import { WorkloadService } from '@src/training/service/workload.service';
 
 describe('Get prescribed training (e2e)', () => {
-  let app: INestApplication;
+  let testApp: TestApp;
   let db: TestDbService;
 
   let firebase: FirebaseService;
@@ -64,22 +61,16 @@ describe('Get prescribed training (e2e)', () => {
   let b: TestUser;
 
   beforeAll(async () => {
-    const moduleFixture = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
+    testApp = await TestApp.init();
+    db = testApp.module.get(TestDbService);
+    firebase = testApp.module.get(FirebaseService);
+    componentService = testApp.module.get(ComponentService);
+    exerciseService = testApp.module.get(ExerciseService);
+    workloadService = testApp.module.get(WorkloadService);
+    wellnessService = testApp.module.get(WellnessService);
 
-    app = moduleFixture.createNestApplication();
-    await app.init();
-
-    db = app.get(TestDbService);
-    firebase = app.get(FirebaseService);
-    componentService = app.get(ComponentService);
-    exerciseService = app.get(ExerciseService);
-    workloadService = app.get(WorkloadService);
-    wellnessService = app.get(WellnessService);
-
-    const institutionService = app.get(InstitutionService);
-    const groupService = app.get(GroupService);
+    const institutionService = testApp.module.get(InstitutionService);
+    const groupService = testApp.module.get(GroupService);
 
     component = await componentService.create(
       generateComponentStub({
@@ -197,7 +188,7 @@ describe('Get prescribed training (e2e)', () => {
       deleteUsers(firebase, [a, b]),
     ]);
 
-    await app.close();
+    await testApp.close();
   });
 
   function generateSet(n: number, type: IntType, value: number) {
@@ -223,9 +214,10 @@ describe('Get prescribed training (e2e)', () => {
   }
 
   async function req(user: TestUser, trainingId: string) {
-    return await request(app.getHttpServer())
-      .get(`/training/${trainingId}/athlete/${global.athlete.uid}/prescribed`)
-      .set('Authorization', `Bearer ${user.token}`);
+    return await testApp.http.get(
+      `/training/${trainingId}/athlete/${global.athlete.uid}/prescribed`,
+      user.token,
+    );
   }
 
   it('should get prescribed training for athlete for main group', async () => {
@@ -896,7 +888,7 @@ describe('Get prescribed training (e2e)', () => {
       expect(+rm.value).toBe(40);
     });
 
-    const workloadRepository = app.get(WorkloadRepository);
+    const workloadRepository = testApp.module.get(WorkloadRepository);
     const spy = jest.spyOn(workloadRepository, 'findExerciseMax');
     const response = await req(global.athlete, trainingId);
     expect(response.status).toBe(200);

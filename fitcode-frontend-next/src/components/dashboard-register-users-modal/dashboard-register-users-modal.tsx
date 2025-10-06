@@ -19,7 +19,6 @@ import { handleApiRequest } from '@/common/type/state.type';
 import type { AuthUser } from '@/controller/auth/type/user.type';
 import { InstitutionController } from '@/controller/institution/institution.controller';
 import { UserRole } from '@/controller/profile/enum/user-role.enum';
-import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 
@@ -35,9 +34,7 @@ export default function RegisterUsersDashboard(
   const { registerRole } = props;
   const router = useRouter();
 
-  const { token } = useAuthenticatedAuth();
-  const controller = InstitutionController.getInstance(token);
-
+  const controller = InstitutionController.getInstance();
   const { users } = useMain();
   const {
     selectedInstitution,

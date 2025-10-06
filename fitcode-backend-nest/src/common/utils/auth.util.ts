@@ -7,6 +7,14 @@ import type { Profile } from '@src/profile/entity/profile.entity';
 import { FirestoreCollection } from '../enum/firestore-collection.enum';
 import type { TestUser } from '../type/entity.type';
 
+export async function createSessionCookie(
+  firebase: FirebaseService,
+  idToken: string,
+) {
+  const expiresIn = 60 * 60 * 24 * 7 * 1000; // 7 days
+  return await firebase.auth.createSessionCookie(idToken, { expiresIn });
+}
+
 export async function createTestUserAndToken(
   firebaseService: FirebaseService,
   role: UserRole,

@@ -13,7 +13,6 @@ import { setTrainingOnDayView } from './state';
 import { CommonService } from '@/common/service/common.service';
 import { handleApiRequest } from '@/common/type/state.type';
 import { TrainingController } from '@/controller/training/training.controller';
-import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
@@ -27,8 +26,7 @@ export default function TrainerDayView() {
   const screenSize = useScreenSize();
   const router = useRouter();
 
-  const auth = useAuthenticatedAuth();
-  const controller = TrainingController.getInstance(auth.token);
+  const controller = TrainingController.getInstance();
   const { components, exercises, methods } = useMain();
   const { group, trainings, cycle, setCycle, setDateFrom, setDateTo } =
     useGroup();

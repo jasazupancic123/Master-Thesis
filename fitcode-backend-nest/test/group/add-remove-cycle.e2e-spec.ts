@@ -1,10 +1,6 @@
-import type { INestApplication } from '@nestjs/common';
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { TestApp } from '@test/common/utils/app.util';
 import { addMonths } from 'date-fns';
-import * as request from 'supertest';
 
-import { AppModule } from '@src/app.module';
 import { createTrainerUserAndToken } from '@src/common/utils/auth.util';
 import { deleteUsers } from '@src/common/utils/data.util';
 import { FirebaseService } from '@src/firebase/firebase.service';
@@ -15,22 +11,15 @@ import { TestDbService } from '@src/test-db/test-db.service';
 import { generateTrainingStub } from '@src/training/mock/training.stub';
 
 describe('Add / Remove Group Cycle (e2e)', () => {
-  let app: INestApplication;
+  let testApp: TestApp;
   let db: TestDbService;
   let firebase: FirebaseService;
-
   let groupId: string;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
-
-    db = moduleFixture.get(TestDbService);
-    firebase = moduleFixture.get(FirebaseService);
+    testApp = await TestApp.init();
+    db = testApp.module.get(TestDbService);
+    firebase = testApp.module.get(FirebaseService);
 
     const institutionId = await db.institutions.save(generateInstitutionStub());
 
@@ -44,7 +33,7 @@ describe('Add / Remove Group Cycle (e2e)', () => {
 
   afterAll(async () => {
     await db.cleanup();
-    await app.close();
+    await testApp.close();
   });
 
   describe('Add Cycle', () => {
@@ -52,19 +41,20 @@ describe('Add / Remove Group Cycle (e2e)', () => {
       ['admin', global.admin.token],
       ['athlete', global.athlete.token],
     ])('should fail if user is %s', async (_, token) => {
-      const response = await request(app.getHttpServer())
-        .post(`/group/${groupId}/cycle`)
-        .set('Authorization', `Bearer ${token}`);
-
+      const response = await testApp.http.post(
+        `/group/${groupId}/cycle`,
+        token,
+      );
       expect(response.status).toBe(403);
       expect(response.body.message).toBe('Forbidden resource');
     });
 
     it('should fail if user cannot edit group', async () => {
       const otherTrainer = await createTrainerUserAndToken(firebase);
-      const response = await request(app.getHttpServer())
-        .post(`/group/${groupId}/cycle`)
-        .set('Authorization', `Bearer ${otherTrainer.token}`);
+      const response = await testApp.http.post(
+        `/group/${groupId}/cycle`,
+        otherTrainer.token,
+      );
 
       expect(response.status).toBe(401);
       expect(response.body.message).toBe(
@@ -76,10 +66,11 @@ describe('Add / Remove Group Cycle (e2e)', () => {
 
     it('should fail if cycle already exists in group', async () => {
       const cycleId = 'existing-cycle-id';
-      const response = await request(app.getHttpServer())
-        .post(`/group/${groupId}/cycle`)
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send(generateCycleStub({ id: cycleId }));
+      const response = await testApp.http.post(
+        `/group/${groupId}/cycle`,
+        global.trainer.token,
+        generateCycleStub({ id: cycleId }),
+      );
 
       expect(response.status).toBe(400);
       expect(response.body.message).toBe('Cycle already exists in the group');
@@ -91,10 +82,11 @@ describe('Add / Remove Group Cycle (e2e)', () => {
         to: new Date(),
       });
 
-      const response = await request(app.getHttpServer())
-        .post(`/group/${groupId}/cycle`)
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send(overlappingCycle);
+      const response = await testApp.http.post(
+        `/group/${groupId}/cycle`,
+        global.trainer.token,
+        overlappingCycle,
+      );
 
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
@@ -111,10 +103,11 @@ describe('Add / Remove Group Cycle (e2e)', () => {
         to: addMonths(new Date(), 2),
       });
 
-      const response = await request(app.getHttpServer())
-        .post(`/group/${groupId}/cycle`)
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send(newCycle);
+      const response = await testApp.http.post(
+        `/group/${groupId}/cycle`,
+        global.trainer.token,
+        newCycle,
+      );
 
       expect(response.status).toBe(201);
 
@@ -131,9 +124,10 @@ describe('Add / Remove Group Cycle (e2e)', () => {
       ['admin', global.admin.token],
       ['athlete', global.athlete.token],
     ])('should fail if user is %s', async (_, token) => {
-      const response = await request(app.getHttpServer())
-        .delete(`/group/${groupId}/cycle/existing-cycle-id`)
-        .set('Authorization', `Bearer ${token}`);
+      const response = await testApp.http.delete(
+        `/group/${groupId}/cycle/existing-cycle-id`,
+        token,
+      );
 
       expect(response.status).toBe(403);
       expect(response.body.message).toBe('Forbidden resource');
@@ -141,9 +135,10 @@ describe('Add / Remove Group Cycle (e2e)', () => {
 
     it('should fail if user cannot edit group', async () => {
       const otherTrainer = await createTrainerUserAndToken(firebase);
-      const response = await request(app.getHttpServer())
-        .delete(`/group/${groupId}/cycle/existing-cycle-id`)
-        .set('Authorization', `Bearer ${otherTrainer.token}`);
+      const response = await testApp.http.delete(
+        `/group/${groupId}/cycle/existing-cycle-id`,
+        otherTrainer.token,
+      );
 
       expect(response.status).toBe(401);
       expect(response.body.message).toBe(
@@ -154,9 +149,10 @@ describe('Add / Remove Group Cycle (e2e)', () => {
     });
 
     it('should successfully remove cycle from group', async () => {
-      const response = await request(app.getHttpServer())
-        .delete(`/group/${groupId}/cycle/existing-cycle-id`)
-        .set('Authorization', `Bearer ${global.trainer.token}`);
+      const response = await testApp.http.delete(
+        `/group/${groupId}/cycle/existing-cycle-id`,
+        global.trainer.token,
+      );
 
       expect(response.status).toBe(200);
 
@@ -199,9 +195,10 @@ describe('Add / Remove Group Cycle (e2e)', () => {
       );
       expect(otherGroupTrainingsBefore.length).toBe(5);
 
-      const response = await request(app.getHttpServer())
-        .delete(`/group/${groupId}/cycle/${cycleId}`)
-        .set('Authorization', `Bearer ${global.trainer.token}`);
+      const response = await testApp.http.delete(
+        `/group/${groupId}/cycle/${cycleId}`,
+        global.trainer.token,
+      );
 
       expect(response.status).toBe(200);
 
