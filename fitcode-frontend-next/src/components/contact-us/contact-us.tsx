@@ -176,11 +176,12 @@ export default function ContactUs() {
       id="contact-us"
       width="100%"
       height={`calc(100vh - ${HERO_NAVBAR_HEIGHT})`}
+      // height="100vh"
       display="flex"
       alignItems="center"
       sx={{
         overflow: 'hidden',
-        scrollMarginTop: HERO_NAVBAR_HEIGHT,
+        // scrollMarginTop: HERO_NAVBAR_HEIGHT,
       }}
     >
       <Box
