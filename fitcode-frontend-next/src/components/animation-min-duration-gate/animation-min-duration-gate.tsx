@@ -1,4 +1,3 @@
-// app/(coach)/MinDurationGate.tsx
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';

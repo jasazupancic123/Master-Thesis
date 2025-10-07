@@ -22,6 +22,7 @@ export default async function InitAthleteProvider({ children }: ChildrenProps) {
     const controller = Controller.getInstance();
     const profile = await controller.auth.findMe({ session });
     if (!profile) throw new Error('No profile found');
+    console.log('[AthleteProvider] profile', profile);
 
     if (!isAthlete(profile.customClaims.role[0]))
       throw new Error('Not an athlete');

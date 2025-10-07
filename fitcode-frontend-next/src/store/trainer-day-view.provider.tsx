@@ -1,6 +1,7 @@
 import { isSameDay } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import toast from 'react-hot-toast';
 
 import { useMain } from './main.provider';
 import { useScreenSize } from './screen-size.provider';
@@ -15,12 +16,14 @@ import type { Pagination } from '@/common/type/paginate.type';
 import type { ChildrenProps } from '@/common/type/props.type';
 import { handleApiRequest } from '@/common/type/state.type';
 import { firestoreSerialize } from '@/common/util/firebase.util';
+import { optimisticUpdate } from '@/common/util/optimistic-update';
 import type { AuthUser } from '@/controller/auth/type/user.type';
 import { Controller } from '@/controller/controller';
 import { ExerciseService } from '@/controller/exercise/exercise.service';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
 import type { Profile } from '@/controller/profile/type/user.type';
 import type { WellnessZScore } from '@/controller/profile/type/wellness.type';
+import { TrainingController } from '@/controller/training/training.controller';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
 import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
@@ -44,7 +47,8 @@ export const useTrainerDayViewContext = () =>
 export function TrainerDayViewProvider(
   props: GroupContextProps & ChildrenProps
 ) {
-  const { children, cycle, dateFrom, dateTo, group } = props;
+  const { children, cycle, dateFrom, dateTo, group, trainings, setTrainings } =
+    props;
 
   const router = useRouter();
   const screenSize = useScreenSize();
@@ -192,6 +196,106 @@ export function TrainerDayViewProvider(
     if (!isSameDay(day.date.toDate(), new Date())) setProgress([]);
   }, [day]);
 
+  async function handleAddMember(user: AuthUser) {
+    if (!training) return;
+
+    const member: Profile = {
+      uid: user.uid,
+      email: user.email!,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const prevState = {
+      training: structuredClone(training),
+      trainings: structuredClone(trainings),
+      members: [...members],
+    };
+
+    await optimisticUpdate(
+      () => {
+        // first update member locally
+        setMembers((prev) =>
+          prev.find((m) => m.uid === member.uid) ? prev : [...prev, member]
+        );
+
+        setTraining((prev) => ({
+          ...prev!,
+          membersIds: [...prev!.membersIds, member.uid],
+        }));
+
+        setTrainings((prev) =>
+          prev.map((t) =>
+            t.id === training.id
+              ? { ...t, membersIds: [...t.membersIds, member.uid] }
+              : t
+          )
+        );
+      },
+      (snapshot) => {
+        toast.error('Failed to add member');
+        setMembers(snapshot.members);
+        setTraining(snapshot.training);
+        setTrainings(snapshot.trainings);
+      },
+      async () =>
+        TrainingController.getInstance().addMember(training.id, {
+          userId: member.uid,
+        }),
+      prevState
+    );
+  }
+
+  async function handleRemoveMember(user: AuthUser) {
+    if (!training) return;
+
+    const prevState = {
+      training: structuredClone(training),
+      trainings: structuredClone(trainings),
+      members: [...members],
+    };
+
+    await optimisticUpdate(
+      () => {
+        // first update member locally
+        setMembers((prev) => prev.filter((m) => m.uid !== user.uid));
+
+        setTraining((prev) => ({
+          ...prev!,
+          membersIds: prev!.membersIds.filter((id) => id !== user.uid),
+        }));
+
+        setTrainings((prev) =>
+          prev.map((t) =>
+            t.id === training.id
+              ? {
+                  ...t,
+                  membersIds: t.membersIds.filter((id) => id !== user.uid),
+                }
+              : t
+          )
+        );
+
+        // if the removed member is the selected athlete, clear the selection
+        if (selectedAthlete?.uid === user.uid) {
+          setSelectedAthlete(undefined);
+          setSelectedExercises([]);
+        }
+      },
+      (snapshot) => {
+        toast.error('Failed to remove member');
+        setMembers(snapshot.members);
+        setTraining(snapshot.training);
+        setTrainings(snapshot.trainings);
+      },
+      async () =>
+        TrainingController.getInstance().removeMember(training.id, {
+          userId: user.uid,
+        }),
+      prevState
+    );
+  }
+
   const value: TrainerDayViewContextProps = {
     day,
     setDay,
@@ -225,6 +329,8 @@ export function TrainerDayViewProvider(
     previousSelectedAthlete,
     loading,
     setLoading,
+    handleAddMember,
+    handleRemoveMember,
   };
 
   return (

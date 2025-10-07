@@ -21,7 +21,7 @@ export type CreateInstitution = Pick<
   'name' | 'ownerId' | 'imageUrl'
 >;
 
-export type UpdateInstitution = Pick<Institution, 'name' | 'imageUrl'>;
+export type UpdateInstitution = Partial<Pick<Institution, 'name' | 'imageUrl'>>;
 
 export type UserId = { userId: string };
 

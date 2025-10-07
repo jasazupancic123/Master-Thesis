@@ -28,6 +28,7 @@ import { UpdateCustomClaimsDto } from '../dto/custom-claims.dto';
 import { FilterUserQueryDto } from '../dto/filter-user-query.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { AuthUser } from '../entities/user.entity';
+import { UserRole } from '../enum/user-role.enum';
 
 @Injectable()
 export class AuthService {
@@ -148,6 +149,13 @@ export class AuthService {
     uid: string,
     claims: UpdateCustomClaimsDto,
   ): Promise<void> {
+    // if user is manager, he can only assign trainer or athlete role
+    if (this.firebase.isManager(user)) {
+      const newRole = claims.role?.[0];
+      if (![UserRole.TRAINER, UserRole.ATHLETE].includes(newRole))
+        throw new ForbiddenException('Cannot assign this role');
+    }
+
     const userToUpdate = await this.getUserToUpdate(user, uid);
     await this.firebase.auth.setCustomUserClaims(userToUpdate.uid, {
       ...userToUpdate.customClaims,

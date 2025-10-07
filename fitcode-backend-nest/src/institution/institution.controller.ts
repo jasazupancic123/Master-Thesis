@@ -17,6 +17,7 @@ import { Auth } from '../common/decorator/auth.decorator';
 import { RequestUser } from '../common/decorator/request-user.decorator';
 import { User } from '../common/type/firebase-auth.type';
 import { CreateInstitutionDto } from './dto/create-institution.dto';
+import { UpdateInstitutionDto } from './dto/update-institution.dto';
 import { GetMembersType } from './enum/institution-get-members.enum';
 import { InstitutionService } from './service/institution.service';
 
@@ -57,6 +58,16 @@ export class InstitutionController {
   @Auth([UserRole.ADMIN])
   async create(@RequestUser() user: User, @Body() body: CreateInstitutionDto) {
     return this.institutionService.create(user, body);
+  }
+
+  @Patch(':institutionId')
+  @Auth([UserRole.MANAGER])
+  async update(
+    @RequestUser() user: User,
+    @Param('institutionId') institutionId: string,
+    @Body() body: UpdateInstitutionDto,
+  ) {
+    return this.institutionService.update(user, { institutionId }, body);
   }
 
   @Patch(':institutionId/athlete')

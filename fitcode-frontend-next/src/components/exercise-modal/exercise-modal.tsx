@@ -12,7 +12,6 @@ import { isAdmin } from '@/common/firebase/firebase-auth.util';
 import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
 import { CommonService } from '@/common/service/common.service';
 import type { SetState } from '@/common/type/state.type';
-import FileUpload from '@/components/file-upload/file-upload';
 import MyModal from '@/components/modal/modal';
 import { AttributeType } from '@/controller/attribute/enum/attribute-value.enum';
 import type { Attribute } from '@/controller/attribute/type/attribute.type';
@@ -27,6 +26,7 @@ import type {
 } from '@/controller/exercise/type/exercise.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
+import FileUpload from '@/util/file-upload';
 
 const firebaseStorage = FirebaseStorageUtil.Instance;
 

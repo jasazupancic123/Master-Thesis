@@ -94,4 +94,6 @@ export type TrainerDayViewContextProps = {
   previousSelectedAthlete: React.RefObject<AuthUser | undefined>;
   loading: boolean;
   setLoading: SetState<boolean>;
+  handleAddMember: (user: AuthUser) => Promise<void>;
+  handleRemoveMember: (user: AuthUser) => Promise<void>;
 };

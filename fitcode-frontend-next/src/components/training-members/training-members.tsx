@@ -42,7 +42,9 @@ export default function TrainingMembers(props: TrainingMembersProps) {
 
   const [changedSubgroupIds, setChangedSubgroupIds] = useState<string[]>([]);
 
-  const members = users.filter((user) => group.membersIds.includes(user.uid));
+  const item = training || group;
+  const members = users.filter((user) => item.membersIds.includes(user.uid));
+
   const [subgroups, setSubgroups] = useState<Subgroup[]>([]);
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -96,8 +98,8 @@ export default function TrainingMembers(props: TrainingMembersProps) {
 
     // sort available members by group.membersIds
     availableMembers.sort((a, b) => {
-      const indexA = group.membersIds.indexOf(a.uid);
-      const indexB = group.membersIds.indexOf(b.uid);
+      const indexA = item.membersIds.indexOf(a.uid);
+      const indexB = item.membersIds.indexOf(b.uid);
       return indexA - indexB;
     });
 
@@ -238,7 +240,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                   height: '100%',
                 }}
               >
-                {group.membersIds.map((memberId) => {
+                {item.membersIds.map((memberId) => {
                   const member = members.find((user) => user.uid === memberId);
 
                   if (!member) return null;
@@ -283,6 +285,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                   );
                 })}
               </Card>
+
               <Typography
                 fontSize={12}
                 fontWeight={600}
@@ -291,7 +294,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                   color: theme.palette.primary.main,
                 }}
               >
-                {`G#${group.membersIds.length}`}
+                {`G#${item.membersIds.length}`}
               </Typography>
             </Box>
           )}
