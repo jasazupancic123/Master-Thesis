@@ -114,7 +114,7 @@ export default function AboutUs() {
       }}
     >
       <Box
-        width="34%"
+        width="36%"
         height={`calc(100vh - ${HERO_NAVBAR_HEIGHT})`}
         display="flex"
         flexDirection="column"
@@ -146,7 +146,7 @@ export default function AboutUs() {
         </Typography>
       </Box>
       <Box
-        width="66%"
+        width="64%"
         height={`calc(100vh - ${HERO_NAVBAR_HEIGHT})`}
         display="flex"
         flexDirection="column"

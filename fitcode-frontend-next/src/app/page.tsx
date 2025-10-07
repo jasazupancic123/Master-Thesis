@@ -53,8 +53,8 @@ export default function Home() {
       >
         <Hero />
         <AboutUs />
+        <Technology activeSection={active} />
         <ContactUs />
-        <Technology />
       </Box>
     </>
   );

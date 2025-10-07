@@ -13,13 +13,13 @@ const onest = Onest({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'Blind/off',
-  description: 'Track workouts more efficiently.',
+  description: 'Do it right.',
   openGraph: {
     type: 'website',
     url: '/',
     siteName: 'Blind/off',
     title: 'Blind/off',
-    description: 'Track workouts more efficiently.',
+    description: 'Do it right.',
     images: [
       {
         url: '/url-logo.jpg',

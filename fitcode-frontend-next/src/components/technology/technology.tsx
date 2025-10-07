@@ -7,11 +7,18 @@ import Logo from '../logo/logo';
 import { HERO_NAVBAR_HEIGHT } from '@/app/state';
 import { theme } from '@/app/style';
 import { useScreenSize } from '@/store/screen-size.provider';
+import { LINK_TECHNOLOGY } from '@/common/constant/navigation.constant';
 
 type Item = { imageUrl: string; title: string; description: string };
 
-export default function Technology() {
+interface TechnologyProps {
+  activeSection: string | null;
+}
+
+export default function Technology(props: TechnologyProps) {
   const screenSize = useScreenSize();
+
+  const { activeSection } = props;
 
   const imageRef = useRef<HTMLImageElement | null>(null);
 
@@ -205,7 +212,7 @@ export default function Technology() {
         sx={{
           backgroundColor: theme.palette.background.default,
           pt: HERO_NAVBAR_HEIGHT,
-          zIndex: 10000,
+          zIndex: activeSection === LINK_TECHNOLOGY.id ? 10000 : undefined,
           px: HERO_NAVBAR_HEIGHT,
         }}
         gap={4}
