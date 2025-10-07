@@ -42,12 +42,22 @@ export function link(
 // hero navbar
 export const LINK_PRODUCT = link('Product', '#product');
 export const LINK_SERVICES = link('Services', '#services');
-export const LINK_TECHNOLOGY = link('Technology', '#technology');
-export const LINK_CONTACT_US = link('Contact Us', '/contact-us');
-export const LINK_ABOUT_US = link('About Us', '/about-us');
+export const LINK_TECHNOLOGY = link(
+  'Technology',
+  '/#technology',
+  null,
+  'technology'
+);
+export const LINK_CONTACT_US = link(
+  'Contact Us',
+  '/#contact-us',
+  null,
+  'contact-us'
+);
+export const LINK_ABOUT_US = link('About Us', '/#about-us', null, 'about-us');
 
 // all standalone app links
-export const LINK_INDEX = link('Home', '/', null, '');
+export const LINK_INDEX = link('Home', '/#home', null, 'home');
 export const LINK_SOLUTIONS = link('Solutions', '#solutions');
 export const LINK_PRODUCTS = link('Products', '#products');
 export const LINK_FEATURES = link('Features', '#features');
@@ -157,17 +167,9 @@ export const LINKS_AUTH = {
 };
 
 export const LINKS_HERO_NAVBAR = {
-  aboutUs: LINK_ABOUT_US,
-  contactUs: LINK_CONTACT_US,
-};
-
-export const LINKS_CONTACT_US_HERO_NAVBAR = {
   home: LINK_INDEX,
   aboutUs: LINK_ABOUT_US,
-};
-
-export const LINKS_ABOUT_US_HERO_NAVBAR = {
-  home: LINK_INDEX,
+  technology: LINK_TECHNOLOGY,
   contactUs: LINK_CONTACT_US,
 };
 
