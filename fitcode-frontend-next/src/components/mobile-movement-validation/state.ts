@@ -161,6 +161,7 @@ export const predictWebcam = async (state: {
   setFps: SetState<number | null>;
   finishAiDetection: () => Promise<void>;
   setRepCount: SetState<number>;
+  setStartedExitTimeout: SetState<boolean>;
 }) => {
   const {
     statusRef,
@@ -194,11 +195,13 @@ export const predictWebcam = async (state: {
     setFps,
     finishAiDetection,
     setRepCount,
+    setStartedExitTimeout,
   } = state;
 
   if (statusRef.current === DetectionStatus.STOPPED) {
     if (isCurrentlySavingImageRef.current === true) {
       canExitWhenImageIsDoneSavingRef.current = true;
+      setStartedExitTimeout(true);
     } else {
       await finishAiDetection();
     }

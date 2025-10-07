@@ -47,6 +47,7 @@ export default function ImageGallery(props: ImageGalleryProps) {
       {enableImagePickerSlider && (
         <ImagePickerSlider
           images={isRepImageArray(images) ? images.map((i) => i.url) : images}
+          currentIndex={currentIndex}
           onClick={setCurrentIndex}
         />
       )}
