@@ -8,7 +8,7 @@
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "node dist/main",
-    "firebase:dev": "firebase emulators:start --only firestore,auth,storage,functions",
+    "firebase:dev": "firebase emulators:start --project demo --only firestore,auth,storage,functions",
     "start:dev": "nest start -b swc --watch",
     "start:debug": "nest start --debug --watch",
     "deploy:staging": "cross-env NODE_ENV=staging    && gcloud app deploy --project=blindoff-staging app-staging.yaml",

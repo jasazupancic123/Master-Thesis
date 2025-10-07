@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  CopyAll,
   CopyAllOutlined,
   KeyboardArrowDownTwoTone,
   KeyboardArrowUpTwoTone,
@@ -9,6 +8,7 @@ import {
   SaveOutlined,
   Settings,
 } from '@mui/icons-material';
+import AddIcon from '@mui/icons-material/Add';
 import {
   Avatar,
   Box,
@@ -28,9 +28,11 @@ import toast from 'react-hot-toast';
 
 import LoadingOverlay from '../loading-overlay/loading-overlay';
 import Logo from '../logo/logo';
+import MyModal from '../modal/modal';
 import ProfileHeaderMenu from '../profile-header-menu/profile-header-menu';
 import { MAX_WIDTH } from '../trainer-day-view/constant';
 import { handleUpdateMultipleTrainings } from '../trainer-group-day-view/state';
+import UsersDataGrid from '../users-data-grid/users-data-grid';
 import { handleSaveGroup } from '@/app/(trainer)/groups/[group_id]/state';
 import {
   LINK_DASHBOARD,
@@ -42,6 +44,7 @@ import type { GroupDateFilter } from '@/common/type/filter.type';
 import type { SetState } from '@/common/type/state.type';
 import FilterButton from '@/components/filter-button/filter-button';
 import { GroupController } from '@/controller/group/group.controller';
+import { UserRole } from '@/controller/profile/enum/user-role.enum';
 import { TrainingController } from '@/controller/training/training.controller';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useGroup } from '@/store/group.provider';
@@ -58,6 +61,8 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
   const theme = useTheme();
   const router = useRouter();
   const screenSize = useScreenSize();
+  const { users } = useMain();
+  const [addMemberModal, setAddMemberModal] = useState(false);
 
   const { filter, setFilter } = props;
 
@@ -82,8 +87,14 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
 
   const trainerDayViewContext = useTrainerDayViewContext();
 
-  const { training, setTraining, selectedAthlete, isSettingAthleteWorkloads } =
-    trainerDayViewContext || {};
+  const {
+    training,
+    setTraining,
+    selectedAthlete,
+    isSettingAthleteWorkloads,
+    handleAddMember,
+    handleRemoveMember,
+  } = trainerDayViewContext || {};
 
   const [isUpdatingTraining, setIsUpdatingTraining] = useState(false);
   const [open, setOpen] = useState(false);
@@ -253,20 +264,16 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
                           })
                         }
                       >
-                        <SaveOutlined
-                          sx={{
-                            fontSize: 22,
-                          }}
-                        />
+                        <SaveOutlined sx={{ fontSize: 22 }} />
                       </IconButton>
                     </Tooltip>
 
                     <IconButton>
-                      <CopyAllOutlined
-                        sx={{
-                          fontSize: 22,
-                        }}
-                      />
+                      <CopyAllOutlined sx={{ fontSize: 22 }} />
+                    </IconButton>
+
+                    <IconButton onClick={() => setAddMemberModal(true)}>
+                      <AddIcon fontSize="medium" />
                     </IconButton>
                   </Box>
                 )}
@@ -395,11 +402,14 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
                   zIndex: 1000,
                 }}
               >
+                <Tooltip title="Add member">
+                  <IconButton onClick={() => setAddMemberModal(true)}>
+                    <AddIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+
                 <IconButton
-                  sx={{
-                    p: 0,
-                    m: 0,
-                  }}
+                  sx={{ p: 0, m: 0 }}
                   onClick={() => {
                     handleUpdateMultipleTrainings(trainingController, {
                       setTrainings,
@@ -430,17 +440,6 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
                   />
                 </IconButton>
               </Box>
-
-              <IconButton
-                sx={{
-                  mx: 0,
-                  m: screenSize.isSmallerThanLaptop ? 0 : undefined,
-                  p: screenSize.isSmallerThanLaptop ? 0 : undefined,
-                  cursor: 'pointer',
-                }}
-              >
-                <CopyAll fontSize="small" />
-              </IconButton>
             </Box>
           )}
 
@@ -524,6 +523,7 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
           )}
         </ToggleButtonGroup>
       </Box>
+
       {/* Profile dropdown menu*/}
       <ProfileHeaderMenu
         anchorEl={anchorProfileEl}
@@ -531,9 +531,27 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
         setOpen={setOpenProfileMenu}
         setAnchorEl={setAnchorProfileEl}
       />
+
       {isUpdatingTraining && (
         <LoadingOverlay title="Updating training plan..." showLogos />
       )}
+
+      <MyModal
+        isOpen={addMemberModal}
+        setIsOpen={setAddMemberModal}
+        title="Add member"
+      >
+        <UsersDataGrid
+          selectMode
+          users={users}
+          filter={(user) => user.customClaims.role[0] === UserRole.ATHLETE}
+          displayColumns={['actions', 'photoURL', 'displayName', 'email']}
+          initialSelection={(training || group)?.membersIds || []}
+          onSelectToggle={async (user, selected) =>
+            selected ? handleAddMember(user) : handleRemoveMember(user)
+          }
+        />
+      </MyModal>
     </Box>
   );
 }

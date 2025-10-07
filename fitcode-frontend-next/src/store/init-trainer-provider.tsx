@@ -19,6 +19,7 @@ export default async function InitTrainerProvider({ children }: ChildrenProps) {
     const controller = Controller.getInstance();
     const profile = await controller.auth.findMe({ session });
     if (!profile) throw new Error('No profile found');
+    console.log('[TrainerProvider] profile', profile);
 
     if (isAthlete(profile.customClaims.role[0]))
       throw new Error('Not a trainer or manager');

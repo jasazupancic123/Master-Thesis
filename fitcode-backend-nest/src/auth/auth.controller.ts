@@ -64,7 +64,7 @@ export class AuthController {
   }
 
   @Patch(':id/claims')
-  @Auth()
+  @Auth([UserRole.ADMIN, UserRole.MANAGER])
   async updateCustomClaims(
     @RequestUser() user: User,
     @Param('id') id: string,

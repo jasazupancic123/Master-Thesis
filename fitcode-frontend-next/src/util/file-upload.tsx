@@ -3,18 +3,20 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Image from 'next/image';
 import type { ReactNode } from 'react';
-import { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import type { Accept } from 'react-dropzone';
 import { useDropzone } from 'react-dropzone';
 
-interface Props {
+import type { ChildrenProps } from '@/common/type/props.type';
+
+interface Props extends Partial<ChildrenProps> {
   label: string;
   onFileUpload: (file: File) => Promise<void>;
   input: 'image' | 'video' | 'csv';
   initialFileUrl?: string;
   sx?: SxProps;
   makeRound?: boolean;
-  dissableBorder?: boolean;
+  disableBorder?: boolean;
   width?: number;
   height?: number;
 }
@@ -24,7 +26,7 @@ const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
 const MAX_CSV_SIZE = 10 * 1024 * 1024; // 10 MB
 
 export default function FileUpload(props: Props) {
-  const { label, onFileUpload, input, initialFileUrl, sx } = props;
+  const { label, onFileUpload, input, initialFileUrl, sx, children } = props;
   const [preview, setPreview] = useState(() => ({
     url: initialFileUrl || '',
     error: '',
@@ -110,7 +112,7 @@ export default function FileUpload(props: Props) {
           width: '100%',
           height: !preview.error && preview.url ? undefined : '100%',
         }}
-        dissableBorder={props.dissableBorder}
+        dissableBorder={props.disableBorder}
       >
         <Box
           width="100%"
@@ -141,7 +143,9 @@ export default function FileUpload(props: Props) {
             justifyContent="center"
             alignItems="center"
           >
-            {input === 'video' ? (
+            {children ? (
+              children
+            ) : input === 'video' ? (
               <video
                 src={preview.url}
                 muted

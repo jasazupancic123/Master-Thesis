@@ -107,23 +107,15 @@ export class InstitutionService implements Permission<Institution> {
     });
 
     const id = await this.repository.save(query);
-    return {
-      ...data,
-      id,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    return { ...data, id, createdAt: new Date(), updatedAt: new Date() };
   }
 
+  @LogMethod()
   async update(
     user: User,
     ref: InstitutionRef,
     input: UpdateInstitutionDto,
   ): Promise<Institution> {
-    this.logger.log(
-      `User ${user.uid} is updating institution ${ref.institutionId}: ${JSON.stringify(input)}`,
-    );
-
     const institution = await this.findByIdOrFail(ref);
     if (!this.canEdit(user, institution))
       throw new UnauthorizedException('You cannot edit this institution');

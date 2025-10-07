@@ -3,8 +3,10 @@ import type { Profile } from '../profile/type/user.type';
 import type {
   CreateInstitution,
   Institution,
+  UpdateInstitution,
   UserId,
 } from './type/institution.type';
+import type { FetchOptions } from '@/common/type/api.type';
 
 export class InstitutionController extends BaseController {
   private static instance: InstitutionController;
@@ -18,8 +20,8 @@ export class InstitutionController extends BaseController {
     return this.instance;
   }
 
-  async findAll() {
-    return this.api.get<Institution[]>('/');
+  async findAll(options?: FetchOptions) {
+    return this.api.get<Institution[]>('/', options);
   }
 
   async findById(id: string) {
@@ -36,6 +38,10 @@ export class InstitutionController extends BaseController {
 
   async create(body: CreateInstitution) {
     return this.api.post<Institution>('/', body);
+  }
+
+  async update(institutionId: string, body: UpdateInstitution) {
+    return this.api.patch<Institution>(`/${institutionId}`, body);
   }
 
   async addAthlete(institutionId: string, body: UserId) {
