@@ -169,8 +169,8 @@ export const LINKS_AUTH = {
 export const LINKS_HERO_NAVBAR = {
   home: LINK_INDEX,
   aboutUs: LINK_ABOUT_US,
-  contactUs: LINK_CONTACT_US,
   technology: LINK_TECHNOLOGY,
+  contactUs: LINK_CONTACT_US,
 };
 
 export const LINKS_AUTHENTICATED_HERO_NAVBAR: Record<
