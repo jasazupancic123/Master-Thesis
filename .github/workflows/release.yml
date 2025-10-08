@@ -3,13 +3,13 @@ name: Release Merge, Build & Deploy
 on:
   push:
     tags:
-      - 'v*'             # triggers on tag pushes like v1.0.0
+      - 'v*' # triggers on tag pushes like v1.0.0
   release:
-    types: [published]   # triggers when you publish a release in UI
-  workflow_dispatch:      # allows manual testing
+    types: [published] # triggers when you publish a release in UI
+  workflow_dispatch: # allows manual testing
 
 permissions:
-  contents: write         # needed for branch merge and push
+  contents: write
 
 jobs:
   merge-to-release:
