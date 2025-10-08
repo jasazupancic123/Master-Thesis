@@ -4,73 +4,58 @@ import dayjs from 'dayjs';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
 
-import { handleCreateTraining } from '../trainer-cycle-view/state';
 import { COLOR } from '@/common/constant/color.constant';
 import { CommonService } from '@/common/service/common.service';
-import type { Day } from '@/common/service/util/date.util';
 import type { SetState, SetStateNullable } from '@/common/type/state.type';
 import type { Component } from '@/controller/component/type/component.type';
-import type { Exercise } from '@/controller/exercise/type/exercise.type';
-import type { Cycle } from '@/controller/group/type/cycle.type';
-import type { Group } from '@/controller/group/type/group.type';
-import type { Method } from '@/controller/method/type/method.type';
 import type { Target } from '@/controller/target/type/target.type';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
 import type { TrainingController } from '@/controller/training/training.controller';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
+import { handleCreateTraining } from '@/components/trainer-cycle-view/state';
+import { GroupProviderReturnType } from '@/store/group.provider';
+import { MainProviderReturnType } from '@/store/main.provider';
 
 export async function handleClickDateCell(
   controller: TrainingController,
   input: {
+    router: AppRouterInstance;
     date: Dayjs;
     period: string;
-  },
-  state: {
-    router: AppRouterInstance;
-    group: Group;
-    cycle?: Cycle;
     componentCalendarView?: boolean;
     periodizationView?: boolean;
     copyComponent?: boolean;
     trainingComponent?: TrainingComponent;
-    training?: Training;
-    trainings: Training[];
-    components: Component[];
-    allExercises: Exercise[];
-    methods: Method[];
     selected?: Component[];
     selectedTargets?: {
       componentId: string;
       target: Target;
     }[];
-    day?: Day;
-    setTrainings: SetState<Training[]>;
-    setCycle: SetStateNullable<Cycle>;
     setOpenOverwriteModal?: SetState<boolean>;
     setTrainingInPeriodForModal?: SetState<Training | null>;
+  },
+  context: {
+    useMain: MainProviderReturnType;
+    useGroup: GroupProviderReturnType;
   }
 ) {
-  const { date, period } = input;
   const {
     router,
-    group,
-    cycle,
+    date,
+    period,
     componentCalendarView,
     periodizationView,
-    trainingComponent,
-    training,
-    trainings,
-    components,
-    allExercises,
-    methods,
     selected,
     selectedTargets,
-    setTrainings,
-    setCycle,
+    trainingComponent,
     setOpenOverwriteModal,
     setTrainingInPeriodForModal,
-  } = state;
+  } = input;
+
+  const { useGroup } = context;
+
+  const { cycle, trainings } = useGroup;
 
   if (componentCalendarView) {
     const trainingInPeriod = trainings.find((t) => {
@@ -106,20 +91,14 @@ export async function handleClickDateCell(
 
     handleAddTraining(
       controller,
-      { date, period: period as 'AM' | 'PM' },
       {
-        group,
-        cycle,
+        date,
+        period: period as 'AM' | 'PM',
         selected,
         selectedTargets,
         router,
-        setCycle,
-        trainings,
-        setTrainings,
-        components,
-        allExercises: allExercises,
-        methods,
-      }
+      },
+      context
     );
   }
 }
@@ -221,40 +200,21 @@ export function getFilteredTrainings(
 function handleAddTraining(
   controller: TrainingController,
   input: {
+    router: AppRouterInstance;
     date: Dayjs;
     period: 'AM' | 'PM';
-  },
-  state: {
-    group: Group;
-    cycle?: Cycle;
     selected?: Component[];
     selectedTargets?: {
       componentId: string;
       target: Target;
     }[];
-    router: AppRouterInstance;
-    setCycle: SetStateNullable<Cycle>;
-    trainings: Training[];
-    setTrainings: SetState<Training[]>;
-    components: Component[];
-    allExercises: Exercise[];
-    methods: Method[];
+  },
+  context: {
+    useGroup: GroupProviderReturnType;
+    useMain: MainProviderReturnType;
   }
 ) {
-  const { date, period } = input;
-  const {
-    group,
-    cycle,
-    selected,
-    selectedTargets,
-    router,
-    setCycle,
-    trainings,
-    setTrainings,
-    components,
-    allExercises,
-    methods,
-  } = state;
+  const { date, period, selected, selectedTargets, router } = input;
 
   if (!selected) {
     toast.error('Please select at least one component to add');
@@ -266,8 +226,7 @@ function handleAddTraining(
   handleCreateTraining(
     controller,
     {
-      group,
-      cycle: cycle!,
+      router,
       date,
       period,
       from,
@@ -281,14 +240,6 @@ function handleAddTraining(
         target: selectedTargets?.find((m) => m.componentId === c.id)?.target,
       })),
     },
-    {
-      router,
-      setCycle,
-      trainings,
-      setTrainings,
-      components,
-      exercises: allExercises,
-      methods,
-    }
+    context
   );
 }

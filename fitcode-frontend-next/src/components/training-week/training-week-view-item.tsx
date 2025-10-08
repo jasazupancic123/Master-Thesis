@@ -7,16 +7,14 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import toast from 'react-hot-toast';
 
 import MyModal from '../modal/modal';
-import TrainerWeekViewItem from '../training-week-component-item/training-week-component-item';
-import { handleApiRequest } from '@/common/type/state.type';
+import TrainerWeekViewItem from './training-week-component-item';
 import type { GroupEvent } from '@/controller/group/type/group-event.type';
-import { TrainingController } from '@/controller/training/training.controller';
 import type { TrainingComponentWithTrainingId } from '@/controller/training/type/training-component.type';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
+import { handleUpdateTrainingTimes } from './actions/actions-week-item';
 
 export type WeekViewItemProps = {
   item: TrainingComponentWithTrainingId | GroupEvent;
@@ -37,76 +35,12 @@ export default function WeekViewItem(props: WeekViewItemProps) {
   };
 
   const isTrainingComponent = checkIsTrainingComponent(item);
+
   const [openModal, setOpenModal] = useState(false);
+
   const [selectedItem, setSelectedItem] = useState<
     (TrainingComponentWithTrainingId | GroupEvent) | null
   >(null);
-
-  async function handleUpdateTrainingTimes(
-    newItem: TrainingComponentWithTrainingId | GroupEvent
-  ) {
-    if (!isTrainingComponent || !selectedItem) return;
-
-    await handleApiRequest(
-      router,
-      () =>
-        TrainingController.getInstance().updateComponentTime(
-          item.trainingId,
-          selectedItem.id,
-          { from: newItem.from, to: newItem.to }
-        ),
-      (result) => {
-        setSelectedItem((prev) => (prev ? newItem : null));
-
-        if (checkIsTrainingComponent(newItem))
-          setTrainings((prev) =>
-            prev.map((t) =>
-              t.id === item.trainingId
-                ? {
-                    ...t,
-                    components: result.components
-                      ? result.components.map((c) => {
-                          const found = t.components.find(
-                            (tc) => tc.id === c.id
-                          )!;
-
-                          return { ...found, from: c.from, to: c.to };
-                        })
-                      : t.components,
-                    warmup: result.warmup
-                      ? {
-                          ...t.warmup,
-                          from: result.warmup.from,
-                          to: result.warmup.to,
-                        }
-                      : t.warmup,
-                    cooldown: result.cooldown
-                      ? {
-                          ...t.cooldown,
-                          from: result.cooldown.from,
-                          to: result.cooldown.to,
-                        }
-                      : t.cooldown,
-                    from: result.from || t.from,
-                    to: result.to || t.to,
-                  }
-                : t
-            )
-          );
-        else
-          setGroup((prev) => ({
-            ...prev,
-            events: prev.events?.map((ev) =>
-              ev.id === newItem.id ? newItem : ev
-            ),
-          }));
-      },
-      (e) =>
-        toast.error(
-          (e as Error).message || 'Failed to update training component time'
-        )
-    );
-  }
 
   return (
     <Box>
@@ -240,10 +174,22 @@ export default function WeekViewItem(props: WeekViewItemProps) {
                   value={dayjs(selectedItem?.from)}
                   onChange={async (newValue) => {
                     if (!newValue) return;
-                    await handleUpdateTrainingTimes({
-                      ...selectedItem,
-                      from: newValue.toDate(),
-                    });
+                    await handleUpdateTrainingTimes(
+                      {
+                        item,
+                        newItem: {
+                          ...selectedItem,
+                          from: newValue.toDate(),
+                        },
+                        selectedItem,
+                        setSelectedItem,
+                        checkIsTrainingComponent,
+                        router,
+                      },
+                      {
+                        useGroup: useGroup(),
+                      }
+                    );
                   }}
                   sx={{
                     width:
@@ -258,10 +204,22 @@ export default function WeekViewItem(props: WeekViewItemProps) {
                   value={dayjs(selectedItem?.to)}
                   onChange={async (newValue) => {
                     if (!newValue) return;
-                    await handleUpdateTrainingTimes({
-                      ...selectedItem,
-                      to: newValue.toDate(),
-                    });
+                    await handleUpdateTrainingTimes(
+                      {
+                        item,
+                        newItem: {
+                          ...selectedItem,
+                          to: newValue.toDate(),
+                        },
+                        selectedItem,
+                        setSelectedItem,
+                        checkIsTrainingComponent,
+                        router,
+                      },
+                      {
+                        useGroup: useGroup(),
+                      }
+                    );
                   }}
                   sx={{
                     width:

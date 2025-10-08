@@ -6,9 +6,7 @@ import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 import React from 'react';
 
-import { getFilteredTrainings, handleClickDateCell } from './state';
 import { CommonService } from '@/common/service/common.service';
-import type { Day } from '@/common/service/util/date.util';
 import type { SetState } from '@/common/type/state.type';
 import { TrainingGridItem } from '@/components/training-cycle-view-grid-item/training-cycle-view-grid-item';
 import type { Component } from '@/controller/component/type/component.type';
@@ -19,6 +17,10 @@ import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
+import {
+  getFilteredTrainings,
+  handleClickDateCell,
+} from './actions/actions-week-date';
 
 interface TrainingWeekDatesProps {
   week: dayjs.Dayjs[];
@@ -36,7 +38,6 @@ interface TrainingWeekDatesProps {
     componentId: string;
     target: Target;
   }[];
-  day?: Day;
   setOpenAreYouSureModal: SetState<boolean>;
   setSelectedTraining: SetState<Training | null>;
   setOpenOverwriteModal?: SetState<boolean>;
@@ -56,8 +57,8 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
   const theme = useTheme();
   const controller = TrainingController.getInstance();
 
-  const { components, exercises: allExercises, methods } = useMain();
-  const { group, cycle, trainings, setCycle, setTrainings } = useGroup();
+  const { components } = useMain();
+  const { cycle, trainings } = useGroup();
 
   const {
     week,
@@ -72,7 +73,6 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
     selected,
     selectedTarget,
     selectedTargets,
-    day,
     setOpenAreYouSureModal,
     setSelectedTraining,
     setOpenOverwriteModal,
@@ -141,27 +141,22 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
                 onClick={() => {
                   handleClickDateCell(
                     controller,
-                    { date, period },
                     {
+                      date,
+                      period,
                       router,
-                      group,
-                      cycle,
                       componentCalendarView,
                       periodizationView,
                       copyComponent,
                       trainingComponent,
-                      training,
-                      trainings,
-                      components,
-                      allExercises,
-                      methods,
                       selected,
                       selectedTargets,
-                      day,
-                      setTrainings,
-                      setCycle,
                       setOpenOverwriteModal,
                       setTrainingInPeriodForModal,
+                    },
+                    {
+                      useGroup: useGroup(),
+                      useMain: useMain(),
                     }
                   );
                 }}

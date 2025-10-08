@@ -6,9 +6,9 @@ import React, { useState } from 'react';
 
 import MyModal from '../modal/modal';
 import type { TrainingCycleViewWeekProps } from '../training-cycle-view-week/type';
-import TrainingWeekDates from '../training-week-date/training-week-date';
 import type { Training } from '@/controller/training/type/training.type';
 import { useMain } from '@/store/main.provider';
+import TrainingWeekDates from './training-week-date';
 
 export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
   const { components } = useMain();
@@ -79,7 +79,6 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                 setTrainingInPeriodForModal={setTrainingInPeriodForModal}
                 addTrainingComponent={addTrainingComponent}
                 deleteTrainingComponent={deleteTrainingComponent}
-                day={day}
               />
             </Box>
           </Box>

@@ -16,38 +16,38 @@ import type { TrainingController } from '@/controller/training/training.controll
 import { TrainingService } from '@/controller/training/training.service';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
+import { GroupProviderReturnType } from '@/store/group.provider';
+import { MainProviderReturnType } from '@/store/main.provider';
 
 export async function handleCreateTraining(
   controller: TrainingController,
   input: {
-    group: Group;
-    cycle: Cycle;
+    router: AppRouterInstance;
     date: Dayjs;
     from: Date;
     period: 'AM' | 'PM';
     selectedComponents: TrainingComponent[];
   },
-  state: {
-    router: AppRouterInstance;
-    trainings: Training[];
-    setTrainings: SetState<Training[]>;
-    setCycle: SetStateNullable<Cycle>;
-    components: Component[];
-    exercises: Exercise[];
-    methods: Method[];
+  context: {
+    useGroup: GroupProviderReturnType;
+    useMain: MainProviderReturnType;
   }
 ) {
-  const { group, cycle, from, date, period, selectedComponents } = input;
-  const { router, trainings, setTrainings, components, exercises, methods } =
-    state;
+  const { router, date, from, period, selectedComponents } = input;
+
+  const { useGroup, useMain } = context;
+
+  const { components, exercises, methods } = useMain;
+
+  const { group, cycle, trainings, setTrainings, setCycle } = useGroup;
 
   if (!selectedComponents.length) return; // toast.error('Select at least one component to add');
 
   if (
     !CommonService.instance.date.isBetween(
       date,
-      dayjs(cycle.from),
-      dayjs(cycle.to)
+      dayjs(cycle!.from),
+      dayjs(cycle!.to)
     )
   )
     return toast.error('Selected date is not within the cycle');
@@ -77,7 +77,7 @@ export async function handleCreateTraining(
     () =>
       controller.create({
         groupId: group.id,
-        cycleId: cycle.id,
+        cycleId: cycle!.id,
         components: selectedComponents,
         membersIds: [],
         from,
