@@ -19,9 +19,14 @@ import type {
 } from './config/environment-validation-schema';
 
 const nodeEnv = (process.env.NODE_ENV || 'dev') as NodeEnv;
-if (!['production', 'staging'].includes(nodeEnv))
+if (!['production', 'staging'].includes(nodeEnv)) {
   // in production and staging, the environment variables are set in other ways
   config({ quiet: true, path: `.env.${nodeEnv}` });
+} else {
+  console.log(
+    `Running in ${nodeEnv} mode, assuming environment variables are set externally.`,
+  );
+}
 
 async function createApp(): Promise<INestApplication> {
   const app = await NestFactory.create(AppModule);
