@@ -28,7 +28,7 @@ import DraggableSelect from './draggable-select';
 import DroppableSlot from './droppable-slot';
 import { customScrollBarStyle, getAmPmItems, onDragEndAddEvent } from './state';
 import { CommonService } from '@/common/service/common.service';
-import WeekViewItem from '@/components/training-week-view-item/training-week-view-item';
+import WeekViewItem from '@/components/training-week/training-week-view-item';
 import { EventType } from '@/controller/group/enum/event-type.enum';
 import type { Week } from '@/controller/group/type/cycle.type';
 import { useGroup } from '@/store/group.provider';
