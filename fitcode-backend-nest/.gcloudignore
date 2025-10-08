@@ -22,14 +22,16 @@
 
 # below:
 
-.git
+.git/
 .gitignore
+.husky/
 
 # Node.js dependencies:
 
 node_modules/
 dist/
 functions/
+test/
 
 # Logs
 
