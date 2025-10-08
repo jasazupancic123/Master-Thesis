@@ -1,0 +1,105 @@
+name: Release Merge, Build & Deploy
+
+on:
+  release:
+    types: [published] # trigger when a new GitHub release/tag is published
+
+permissions:
+  contents: write # needed for merging branches
+
+jobs:
+  # merge main → release
+  merge-to-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Merge main into release
+        run: |
+          git checkout release
+          git pull origin release
+          git merge origin/main --no-edit
+          git push origin release
+
+  # build frontend (staging or production build)
+  build-frontend:
+    needs: merge-to-release
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: fitcode-frontend-next
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: fitcode-frontend-next/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+  # build backend & deploy to GAE
+  build-and-deploy-backend:
+    needs: [merge-to-release, build-frontend] # waits until merge & frontend build succeed
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: fitcode-backend-nest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: fitcode-backend-nest/package-lock.json
+
+      - name: Install backend dependencies
+        run: npm ci
+
+      - name: Build backend
+        run: npm run build
+
+      # authenticate to Google Cloud
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: blindoff-web-app
+
+      - name: Verify gcloud authentication
+        run: gcloud auth list
+
+      - name: Deploy to App Engine (with retry)
+        run: |
+          for i in {1..3}; do
+            gcloud app deploy --project=blindoff-web-app app.yaml --quiet && break || \
+            echo "Retrying deploy ($i/3)..." && sleep 10
+          done
