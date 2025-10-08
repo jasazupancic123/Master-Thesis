@@ -1,8 +1,11 @@
 name: Release Merge, Build & Deploy
 
 on:
+  push:
+    tags:
+      - 'v*' # triggers on git tag push
   release:
-    types: [published] # trigger when a new GitHub release/tag is published
+    types: [published] # triggers on publishing release in UI
 
 permissions:
   contents: write # needed for merging branches
