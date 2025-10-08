@@ -22,8 +22,8 @@ import {
   updateSelectedExercisesVolWorkSets,
   updateSingleExerciseVolWorkSets as updateSingleExerciseVolWorkSetsTrainingExerciseCard,
 } from '@/components/training-exercise-card/state';
-import { updateSelectedExercisesCollapsedSets } from '@/components/training-exercise-card-sets-collapsed/state';
-import { updateSelectedExercisesExpandedSets } from '@/components/training-exercise-card-sets-expanded/state';
+import { updateSelectedExercisesCollapsedSets } from '@/components/training-exercise-card/training-exercise-card-sets/training-exercise-card-sets-collapsed/state';
+import { updateSelectedExercisesExpandedSets } from '@/components/training-exercise-card/training-exercise-card-sets/training-exercise-card-sets-expanded/state';
 
 export class CustomWorkloadsSubgroupsService {
   // when exercise is dropped on 'Add/drop exercise' area

@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 import AthleteTrainingExerciseSets from '../athlete-training-exercise-sets/athlete-training-exercise-sets';
 import MobileMovementValidation from '../mobile-movement-validation/mobile-movement-validation';
 import SwipeableBox from '../swipeable-box/swipeable-box';
-import { updateExerciseAttributeValues } from '../training-exercise-card-sets-expanded/state';
+import { updateExerciseAttributeValues } from '../training-exercise-card/training-exercise-card-sets/training-exercise-card-sets-expanded/state';
 import ImageGallery from './image-gallery';
 import TrainingExerciseSetDoneCheckbox from './training-exercise-set-done-checkbox';
 import TrainingInProgressTempoChart from './training-in-progress-tempo-chart';

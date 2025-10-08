@@ -3,10 +3,9 @@ import { Box, Grid2, IconButton } from '@mui/material';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
-import { ExerciseParam } from '../exercise-param/exercise-param';
-import LeftRightExerciseText from '../left-right-exercise-text/left-right-exercise-text';
-import { getLAndRValues } from '../training-exercise-card/state';
-import { getCorrectValuesForExerciseParam } from '../training-exercise-card-container/state';
+import { ExerciseParam } from '../../../exercise-param/exercise-param';
+import LeftRightExerciseText from '../../../left-right-exercise-text/left-right-exercise-text';
+import { getLAndRValues } from '../../state';
 import {
   combineMinMax,
   getMethodMinMax,
@@ -25,6 +24,8 @@ import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
+import useTrainingExerciseCardContainerSubgroups from '../../training-exercise-card-container/hooks/use-subgroups.hook';
+import useTrainingExerciseSetsExerciseParam from '../hooks/use-exercise-param';
 
 export interface TrainingExerciseCardCollapsedSetsProps {
   component: TrainingComponent;
@@ -45,6 +46,9 @@ export default function TrainingExerciseCardCollapsedSets(
   const { setsNumbers, setSetsNumbers } = useSupersets();
 
   const { exercises, methods } = useMain();
+
+  const { actions: exerciseParamActions } =
+    useTrainingExerciseSetsExerciseParam();
 
   const {
     training,
@@ -273,29 +277,23 @@ export default function TrainingExerciseCardCollapsedSets(
                           onSubOptionChange={(newValue) => {
                             if (+newValue < 0) return;
 
+                            const correctValues =
+                              exerciseParamActions.getCorrectValuesForExerciseParam(
+                                {
+                                  exercise,
+                                  param,
+                                }
+                              );
+
+                            if (!correctValues) return;
+
                             const {
                               correctSelectedSubgroup,
                               correctSupersets,
                               correctSelectedExercises,
                               correctSetsNumbers,
                               correctExercise,
-                            } = getCorrectValuesForExerciseParam(
-                              selectedAthlete,
-                              { exercise },
-                              {
-                                component,
-                                supersets,
-                                selectedExercises,
-                                setsNumbers,
-                                selectedSubgroup,
-                                setComponent,
-                                setSelectedSubgroup,
-                                setTraining,
-                                setSupersets,
-                                setSelectedExercises,
-                                setSetsNumbers,
-                              }
-                            );
+                            } = correctValues;
 
                             if (param.field === ParamType.VolWorkSets) {
                               updateVolWorkSets(

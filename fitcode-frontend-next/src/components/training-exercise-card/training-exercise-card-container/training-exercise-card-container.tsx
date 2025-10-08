@@ -6,10 +6,10 @@ import { useEffect, useState } from 'react';
 import {
   prepareGroupAvgWorkloadsForChart,
   prepareSelectedAthleteAvgWorkloadsForChart,
-} from '../trainer-day-view/state';
-import TrainingExerciseCard from '../training-exercise-card/training-exercise-card';
-import { isNumber } from '../training-exercise-selected/state';
-import TrainingExerciseSelected from '../training-exercise-selected/training-exercise-selected';
+} from '../../trainer-day-view/state';
+import TrainingExerciseCard from '../training-exercise-card';
+import { isNumber } from '../../training-exercise-selected/state';
+import TrainingExerciseSelected from '../../training-exercise-selected/training-exercise-selected';
 import type { Dimensions } from '@/common/type/dimensions.type';
 import type { ParamType } from '@/controller/component/enum/param.enum';
 import type { ChartWorkloadData } from '@/controller/training/type/chart-workload-data.type';

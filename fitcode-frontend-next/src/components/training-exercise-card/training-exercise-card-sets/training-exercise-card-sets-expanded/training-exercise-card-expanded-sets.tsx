@@ -2,10 +2,9 @@ import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import { Box, Grid2, IconButton } from '@mui/material';
 import toast from 'react-hot-toast';
 
-import { ExerciseParam } from '../exercise-param/exercise-param';
-import LeftRightExerciseText from '../left-right-exercise-text/left-right-exercise-text';
-import { getLAndRValues } from '../training-exercise-card/state';
-import { getCorrectValuesForExerciseParam } from '../training-exercise-card-container/state';
+import { ExerciseParam } from '../../../exercise-param/exercise-param';
+import LeftRightExerciseText from '../../../left-right-exercise-text/left-right-exercise-text';
+import { getLAndRValues } from '../../state';
 import {
   combineMinMax,
   getMethodMinMax,
@@ -22,6 +21,7 @@ import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
+import useTrainingExerciseSetsExerciseParam from '../hooks/use-exercise-param';
 
 interface TrainingExerciseCarExpandedSetsProps {
   component: TrainingComponent;
@@ -44,18 +44,16 @@ export default function TrainingExerciseCardExpandedSets(
     training,
     setTraining,
     component,
-    setComponent,
-    supersets,
-    setSupersets,
-    selectedSubgroup,
     setSelectedSubgroup,
     selectedExercises,
-    setSelectedExercises,
     selectedAthlete,
     selectedAthleteCompletedWorkloads: selectedAthleteWorkloads,
   } = useTrainerDayViewContext();
 
   const { setDetectedChanges } = useGroup();
+
+  const { actions: exerciseParamActions } =
+    useTrainingExerciseSetsExerciseParam();
 
   const { exercise, expandedSetsView, setExpandedSetsView } = props;
 
@@ -222,6 +220,13 @@ export default function TrainingExerciseCardExpandedSets(
                             onSubOptionChange={(newValue) => {
                               if (+newValue < 0) return;
 
+                              const correctValues =
+                                exerciseParamActions.getCorrectValuesForExerciseParam(
+                                  { exercise }
+                                );
+
+                              if (!correctValues) return;
+
                               const {
                                 correctSelectedSubgroup,
                                 correctSupersets,
@@ -229,23 +234,7 @@ export default function TrainingExerciseCardExpandedSets(
                                 correctExercise,
                                 correctSet,
                                 correctParam,
-                              } = getCorrectValuesForExerciseParam(
-                                selectedAthlete,
-                                { exercise },
-                                {
-                                  component,
-                                  supersets,
-                                  selectedExercises,
-                                  setsNumbers,
-                                  selectedSubgroup,
-                                  setComponent,
-                                  setSelectedSubgroup,
-                                  setTraining,
-                                  setSupersets,
-                                  setSelectedExercises,
-                                  setSetsNumbers,
-                                }
-                              );
+                              } = correctValues;
 
                               // update only the changed exercise
                               updateExerciseAttributeValues(

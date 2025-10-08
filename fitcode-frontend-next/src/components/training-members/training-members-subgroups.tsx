@@ -16,21 +16,19 @@ import { Draggable, Droppable } from 'react-beautiful-dnd';
 
 import { DEFAULT_SUBGROUP_ID } from '../trainer-day-view/constant';
 import { handleDeleteSubgroup } from '../trainer-day-view/state';
-import { updateSelectedAthlete } from '../training-members/state';
 import type { SetState } from '@/common/type/state.type';
-import type { AuthUser } from '@/controller/auth/type/user.type';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
+import useTrainingMembers from './hooks/use-members.hook';
+import { updateSelectedAthlete } from './actions/actions-subgroups';
 
 interface TrainingMembersSubgroupProps {
   subgroup: Subgroup;
   subgroupIndex: number;
-  subgroupsLength: number;
   anchorEl: HTMLElement | null;
   setAnchorEl: SetState<HTMLElement | null>;
-  members: AuthUser[];
 }
 
 export default function TrainingMembersSubgroup(
@@ -38,11 +36,12 @@ export default function TrainingMembersSubgroup(
 ) {
   const theme = useTheme();
 
+  const { users } = useMain();
   const { setTrainings, setDetectedChanges } = useGroup();
   const { selectedExercises, setSelectedExercises } =
     useTrainerDayViewContext();
 
-  const { users } = useMain();
+  const { members } = useTrainingMembers();
 
   const {
     component,
@@ -55,7 +54,7 @@ export default function TrainingMembersSubgroup(
     setSelectedAthlete,
   } = useTrainerDayViewContext();
 
-  const { subgroup, subgroupIndex, anchorEl, setAnchorEl, members } = props;
+  const { subgroup, subgroupIndex, anchorEl, setAnchorEl } = props;
 
   const handleMenuClose = () => {
     setAnchorEl(null);
@@ -217,15 +216,19 @@ export default function TrainingMembersSubgroup(
                         onClick={() => {
                           if (!component) return;
 
-                          updateSelectedAthlete({
-                            member,
-                            selectedAthlete,
-                            setSelectedAthlete,
-                            component,
-                            selectedSubgroup,
-                            setSelectedSubgroup,
-                            subgroupId: subgroup.id,
-                          });
+                          updateSelectedAthlete(
+                            {
+                              member,
+                              subgroupId: subgroup.id,
+                            },
+                            {
+                              component,
+                              selectedSubgroup,
+                              setSelectedSubgroup,
+                              selectedAthlete,
+                              setSelectedAthlete,
+                            }
+                          );
                         }}
                         borderRadius={selectedAthlete === member ? '50%' : 0}
                         border={
