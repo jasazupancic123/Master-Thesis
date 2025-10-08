@@ -401,5 +401,6 @@ dist
 .serverless/**/*.zip
 
 # Firebase
-serviceAccount.json
+serviceAccount*.json
+firebase-auth-hash-config.json
 *debug.log
