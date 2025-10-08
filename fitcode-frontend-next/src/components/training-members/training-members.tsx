@@ -2,7 +2,7 @@
 
 import { Avatar, Box, Card, Stack, Tooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { DragDropContext } from 'react-beautiful-dnd';
 
 import { DEFAULT_SUBGROUP_ID } from '../trainer-day-view/constant';
@@ -13,7 +13,7 @@ import useTrainingMembersSubgroups from './hooks/use-subgroups.hook';
 import useTrainingMembers from './hooks/use-members.hook';
 import { useGroup } from '@/store/group.provider';
 import { handleOnDragEnd } from './actions/actions-dnd';
-import { updateSelectedAthlete } from './actions/actions-subgroups';
+import { updateSelectedAthleteSubgroup } from './actions/actions-subgroups';
 
 interface TrainingMembersProps {
   isSticky: boolean;
@@ -79,21 +79,15 @@ export default function TrainingMembers(props: TrainingMembersProps) {
             handleOnDragEnd(
               { result },
               {
-                users,
-                training,
-                setTraining,
-                component,
-                setComponent,
-                subgroups,
-                setSubgroups,
-                changedSubgroupIds,
-                setChangedSubgroupIds,
-                selectedSubgroup,
-                setSelectedSubgroup,
-                members,
-                setDetectedChanges,
-                selectedAthlete,
-                setSelectedAthlete,
+                useMain: useMain(),
+                useGroup: useGroup(),
+                useTrainerDayViewContext: {
+                  ...useTrainerDayViewContext(),
+                  training,
+                  component,
+                },
+                useTrainingMembersSubgroups: useTrainingMembersSubgroups(),
+                useTrainingMembers: useTrainingMembers(),
               }
             )
           }
@@ -133,17 +127,17 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                       <Box
                         sx={{ p: 0, m: 0 }}
                         onClick={() => {
-                          updateSelectedAthlete(
+                          updateSelectedAthleteSubgroup(
                             {
                               member,
                               subgroupId: DEFAULT_SUBGROUP_ID,
                             },
                             {
-                              component,
-                              selectedSubgroup,
-                              setSelectedSubgroup,
-                              selectedAthlete,
-                              setSelectedAthlete,
+                              useTrainerDayViewContext: {
+                                ...useTrainerDayViewContext(),
+                                training,
+                                component,
+                              },
                             }
                           );
                         }}

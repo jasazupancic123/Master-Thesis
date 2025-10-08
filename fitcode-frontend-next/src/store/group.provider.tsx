@@ -21,6 +21,8 @@ const GroupContext = createContext<GroupContextProps | null>(null);
 
 export const useGroup = () => useContext(GroupContext)!;
 
+export type GroupProviderReturnType = ReturnType<typeof useGroup>;
+
 export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
   const {
     children,
