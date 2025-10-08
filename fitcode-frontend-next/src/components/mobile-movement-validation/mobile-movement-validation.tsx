@@ -44,6 +44,7 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
+import EnvUtil from '@/common/util/env.util';
 
 const DEBUG = false;
 
@@ -317,10 +318,7 @@ export default function MobileMovementValidation(
 
     if (typeof window === 'undefined') return;
 
-    const wantDebug =
-      /(\?|&)debug(=1)?(&|$)/.test(window.location.search) ||
-      /(\?|&)eruda(=1)?(&|$)/.test(window.location.search) ||
-      process.env.NEXT_PUBLIC_ENABLE_ERUDA === '1';
+    const wantDebug = !EnvUtil.AI.disableEruda();
 
     if (!wantDebug) return;
 
@@ -711,23 +709,29 @@ export default function MobileMovementValidation(
         </>
       )}
 
-      <Box
-        width="100%"
-        display="flex"
-        flexDirection="column"
-        sx={{
-          position: 'absolute',
-          bottom: 0,
-          transform: ' translateY(-50%)',
-          zIndex: 1000,
-        }}
-        gap={1}
-      >
-        <Box width="100%" display="flex" justifyContent="space-between" px={1}>
-          <FpsText fps={fps} avgFps={avgFps.current} />
-          {/* <RepsCounter reps={recordedRepsRef.current.length} /> */}
+      {!EnvUtil.AI.disableAIFPS() && (
+        <Box
+          width="100%"
+          display="flex"
+          flexDirection="column"
+          sx={{
+            position: 'absolute',
+            bottom: 0,
+            transform: ' translateY(-50%)',
+            zIndex: 1000,
+          }}
+          gap={1}
+        >
+          <Box
+            width="100%"
+            display="flex"
+            justifyContent="space-between"
+            px={1}
+          >
+            <FpsText fps={fps} avgFps={avgFps.current} />
+          </Box>
         </Box>
-      </Box>
+      )}
 
       <Box
         width="100%"
@@ -995,12 +999,7 @@ export default function MobileMovementValidation(
               background: '#fff',
               fontWeight: 600,
               cursor: 'pointer',
-              opacity:
-                typeof window !== 'undefined' &&
-                (/\bdebug\b|\beruda\b/.test(window.location.search) ||
-                  process.env.NEXT_PUBLIC_ENABLE_ERUDA === '1')
-                  ? 0.7
-                  : 0.9,
+              opacity: !EnvUtil.AI.disableEruda() ? 0.7 : 0.9,
             }}
           >
             Debug
