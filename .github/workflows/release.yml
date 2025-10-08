@@ -3,15 +3,15 @@ name: Release Merge, Build & Deploy
 on:
   push:
     tags:
-      - 'v*' # triggers on git tag push
+      - 'v*'             # triggers on tag pushes like v1.0.0
   release:
-    types: [published] # triggers on publishing release in UI
+    types: [published]   # triggers when you publish a release in UI
+  workflow_dispatch:      # allows manual testing
 
 permissions:
-  contents: write # needed for merging branches
+  contents: write         # needed for branch merge and push
 
 jobs:
-  # merge main → release
   merge-to-release:
     runs-on: ubuntu-latest
     steps:
@@ -32,7 +32,6 @@ jobs:
           git merge origin/main --no-edit
           git push origin release
 
-  # build frontend (staging or production build)
   build-frontend:
     needs: merge-to-release
     runs-on: ubuntu-latest
@@ -45,7 +44,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Use Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -60,9 +59,8 @@ jobs:
         env:
           NODE_ENV: production
 
-  # build backend & deploy to GAE
   build-and-deploy-backend:
-    needs: [merge-to-release, build-frontend] # waits until merge & frontend build succeed
+    needs: [merge-to-release, build-frontend]
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -73,7 +71,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Use Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -86,7 +84,6 @@ jobs:
       - name: Build backend
         run: npm run build
 
-      # authenticate to Google Cloud
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
@@ -96,9 +93,6 @@ jobs:
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: blindoff-web-app
-
-      - name: Verify gcloud authentication
-        run: gcloud auth list
 
       - name: Deploy to App Engine (with retry)
         run: |
