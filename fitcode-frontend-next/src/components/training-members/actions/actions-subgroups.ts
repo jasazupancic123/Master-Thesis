@@ -8,36 +8,24 @@ import {
 } from '@/common/constant/warmup-cooldown-ids-constants';
 import { updateGlobalStates } from '@/components/trainer-day-view/state';
 import toast from 'react-hot-toast';
-import { Training } from '@/controller/training/type/training.type';
-import { TrainingComponent } from '@/controller/training/type/training-component.type';
+import { useGroup } from '@/store/group.provider';
+import { TrainerDayViewProviderReturnTypeDefined } from '@/store/trainer-day-view.provider';
 
 export const handleAddMembersSubgroup = (
   input: { member: AuthUser },
-  state: {
-    training: Training;
-    setTraining: SetState<Training | undefined>;
-    component: TrainingComponent;
-    setComponent: SetState<TrainingComponent | undefined>;
-    setDetectedChanges: SetState<boolean>;
-    selectedSubgroup: Subgroup | null;
-    setSelectedSubgroup: SetState<Subgroup | null>;
-    selectedAthlete: AuthUser | undefined;
-    setSelectedAthlete: SetState<AuthUser | undefined>;
+  context: {
+    useGroup: ReturnType<typeof useGroup>;
+    useTrainerDayViewContext: TrainerDayViewProviderReturnTypeDefined;
   }
 ) => {
   const { member } = input;
 
-  const {
-    training,
-    setTraining,
-    component,
-    setComponent,
-    setDetectedChanges,
-    selectedSubgroup,
-    setSelectedSubgroup,
-    selectedAthlete,
-    setSelectedAthlete,
-  } = state;
+  const { useGroup, useTrainerDayViewContext } = context;
+
+  const { setDetectedChanges } = useGroup;
+
+  const { training, setTraining, component, setComponent } =
+    useTrainerDayViewContext;
 
   const createSubgroup = {
     name: `Subgroup ${component.subgroups.filter((s) => !s.parentId && s.id !== DEFAULT_SUBGROUP_ID).length + 1}`,
@@ -124,17 +112,7 @@ export const handleAddMembersSubgroup = (
         createSubgroup,
         setCreateSubgroup: undefined,
       },
-      {
-        training,
-        setTraining,
-        component,
-        setComponent,
-        setDetectedChanges,
-        selectedSubgroup,
-        setSelectedSubgroup,
-        selectedAthlete,
-        setSelectedAthlete,
-      }
+      context
     );
 
     return;
@@ -145,17 +123,7 @@ export const handleAddMembersSubgroup = (
       createSubgroup,
       setCreateSubgroup: undefined,
     },
-    {
-      training,
-      setTraining,
-      component,
-      setComponent,
-      setDetectedChanges,
-      selectedSubgroup,
-      setSelectedSubgroup,
-      selectedAthlete,
-      setSelectedAthlete,
-    }
+    context
   );
 };
 
@@ -166,31 +134,25 @@ const handleAddSubgroup = (
       | SetState<{ name: string; membersIds: string[] }>
       | undefined;
   },
-  state: {
-    training: Training;
-    setTraining: SetState<Training | undefined>;
-    component: TrainingComponent;
-    setComponent: SetState<TrainingComponent | undefined>;
-    setDetectedChanges: SetState<boolean>;
-    selectedSubgroup: Subgroup | null;
-    setSelectedSubgroup: SetState<Subgroup | null>;
-    selectedAthlete: AuthUser | undefined;
-    setSelectedAthlete: SetState<AuthUser | undefined>;
+  context: {
+    useGroup: ReturnType<typeof useGroup>;
+    useTrainerDayViewContext: TrainerDayViewProviderReturnTypeDefined;
   }
 ) => {
   const { createSubgroup, setCreateSubgroup } = input;
+
+  const { useGroup, useTrainerDayViewContext } = context;
+
+  const { setDetectedChanges } = useGroup;
 
   const {
     training,
     setTraining,
     component,
     setComponent,
-    setDetectedChanges,
-    selectedSubgroup,
     setSelectedSubgroup,
-    selectedAthlete,
     setSelectedAthlete,
-  } = state;
+  } = useTrainerDayViewContext;
 
   const newSubgroup: Subgroup = {
     id: `subgroup-${String(Date.now())}`,
@@ -242,20 +204,18 @@ const handleAddSubgroup = (
   setDetectedChanges(true);
 };
 
-export const updateSelectedAthlete = (
+export const updateSelectedAthleteSubgroup = (
   input: {
     member: AuthUser;
     subgroupId: string;
   },
-  state: {
-    component: TrainingComponent | undefined;
-    selectedSubgroup: Subgroup | null;
-    setSelectedSubgroup: SetState<Subgroup | null>;
-    selectedAthlete: AuthUser | undefined;
-    setSelectedAthlete: SetState<AuthUser | undefined>;
+  context: {
+    useTrainerDayViewContext: TrainerDayViewProviderReturnTypeDefined;
   }
 ) => {
   const { member, subgroupId } = input;
+
+  const { useTrainerDayViewContext } = context;
 
   const {
     component,
@@ -263,7 +223,7 @@ export const updateSelectedAthlete = (
     setSelectedSubgroup,
     selectedAthlete,
     setSelectedAthlete,
-  } = state;
+  } = useTrainerDayViewContext;
 
   if (subgroupId !== (selectedSubgroup?.id || DEFAULT_SUBGROUP_ID)) return;
 

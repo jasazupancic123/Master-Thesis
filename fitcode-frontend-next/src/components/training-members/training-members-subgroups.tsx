@@ -22,7 +22,7 @@ import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 import useTrainingMembers from './hooks/use-members.hook';
-import { updateSelectedAthlete } from './actions/actions-subgroups';
+import { updateSelectedAthleteSubgroup } from './actions/actions-subgroups';
 
 interface TrainingMembersSubgroupProps {
   subgroup: Subgroup;
@@ -216,7 +216,7 @@ export default function TrainingMembersSubgroup(
                         onClick={() => {
                           if (!component) return;
 
-                          updateSelectedAthlete(
+                          updateSelectedAthleteSubgroup(
                             {
                               member,
                               subgroupId: subgroup.id,

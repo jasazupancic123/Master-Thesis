@@ -6,37 +6,24 @@ import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 import { useEffect, useState } from 'react';
 import useTrainingMembers from './use-members.hook';
-import {
-  COOLDOWN_ID,
-  WARMUP_ID,
-} from '@/common/constant/warmup-cooldown-ids-constants';
-import { AuthUser } from '@/controller/auth/type/user.type';
-import toast from 'react-hot-toast';
-import { useGroup } from '@/store/group.provider';
 import { SetState } from '@/common/type/state.type';
-import { updateGlobalStates } from '@/components/trainer-day-view/state';
+
+export type UseTrainingMembersSubgroupsReturnType = {
+  subgroups: Subgroup[];
+  setSubgroups: SetState<Subgroup[]>;
+  changedSubgroupIds: string[];
+  setChangedSubgroupIds: SetState<string[]>;
+};
 
 export default function useTrainingMembersSubgroups() {
   const [subgroups, setSubgroups] = useState<Subgroup[]>([]);
   const [changedSubgroupIds, setChangedSubgroupIds] = useState<string[]>([]);
 
-  const { setDetectedChanges } = useGroup();
-  const {
-    training,
-    setTraining,
-    component,
-    setComponent,
-    selectedSubgroup,
-    setSelectedSubgroup,
-    selectedAthlete,
-    setSelectedAthlete,
-  } = useTrainerDayViewContext();
+  const { training, component, selectedSubgroup } = useTrainerDayViewContext();
 
   const { members, item } = useTrainingMembers();
 
-  {
-    /* Inits subgroups */
-  }
+  /* Inits subgroups */
   useEffect(() => {
     if (!training) return;
 
