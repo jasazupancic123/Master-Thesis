@@ -19,12 +19,14 @@ import { ProfileRepository } from '@src/profile/repository/profile.repository';
 import { WellnessService } from '@src/profile/service/wellness.service';
 
 import { FirestoreCollection } from '../enum/firestore-collection.enum';
+import { CommonService } from '../service/common.service';
 import type { Update } from '../type/entity.type';
 import type { User } from '../type/firebase-auth.type';
 import { BaseSetup } from './base.setup';
 
 export class DataSetup extends BaseSetup {
-  private readonly firebaseService: FirebaseService;
+  private readonly firebase: FirebaseService;
+  private readonly common: CommonService;
   private readonly authService: AuthService;
   private readonly wellnessService: WellnessService;
 
@@ -34,7 +36,8 @@ export class DataSetup extends BaseSetup {
 
   constructor(app: INestApplication) {
     super(app);
-    this.firebaseService = app.get(FirebaseService);
+    this.firebase = app.get(FirebaseService);
+    this.common = app.get(CommonService);
     this.authService = app.get(AuthService);
     this.wellnessService = app.get(WellnessService);
   }
@@ -46,7 +49,7 @@ export class DataSetup extends BaseSetup {
    */
   async setup() {
     const time = performance.now();
-    if (await this.isInit()) return;
+    if ((await this.isInit()) || !this.common.env.isDev()) return;
 
     // create / update admin user
     this.admin = await this.authService.upsert({
@@ -90,15 +93,13 @@ export class DataSetup extends BaseSetup {
   }
 
   private async clearData() {
-    await this.firebaseService.deleteCollection(FirestoreCollection.GROUP);
-    await this.firebaseService.deleteCollection(FirestoreCollection.EXERCISE);
-    await this.firebaseService.deleteCollection(FirestoreCollection.COMPONENT);
-    await this.firebaseService.deleteCollection(FirestoreCollection.PROFILE);
-    await this.firebaseService.deleteCollection(FirestoreCollection.METHOD);
-    await this.firebaseService.deleteCollection(FirestoreCollection.TRAINING);
-    await this.firebaseService.deleteCollection(
-      FirestoreCollection.INSTITUTION,
-    );
+    await this.firebase.deleteCollection(FirestoreCollection.GROUP);
+    await this.firebase.deleteCollection(FirestoreCollection.EXERCISE);
+    await this.firebase.deleteCollection(FirestoreCollection.COMPONENT);
+    await this.firebase.deleteCollection(FirestoreCollection.PROFILE);
+    await this.firebase.deleteCollection(FirestoreCollection.METHOD);
+    await this.firebase.deleteCollection(FirestoreCollection.TRAINING);
+    await this.firebase.deleteCollection(FirestoreCollection.INSTITUTION);
   }
 
   private async importComponents(filename: string) {
@@ -257,7 +258,7 @@ export class DataSetup extends BaseSetup {
   }
 
   private async isInit() {
-    const localDevCollection = this.firebaseService.firestore.collection(
+    const localDevCollection = this.firebase.firestore.collection(
       FirestoreCollection.LOCAL_DEV,
     );
 
@@ -267,7 +268,7 @@ export class DataSetup extends BaseSetup {
   }
 
   private async setInit() {
-    const localDevCollection = this.firebaseService.firestore.collection(
+    const localDevCollection = this.firebase.firestore.collection(
       FirestoreCollection.LOCAL_DEV,
     );
 
