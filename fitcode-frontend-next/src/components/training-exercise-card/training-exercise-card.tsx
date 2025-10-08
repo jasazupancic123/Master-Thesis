@@ -6,8 +6,8 @@ import { useState } from 'react';
 
 import MyModal from '../modal/modal';
 import type { TrainingExerciseCardProps } from '../trainer-day-view/props';
-import TrainingExerciseCardCollapsedSets from '../training-exercise-card-sets-collapsed/training-exercise-card-collapsed-sets';
-import TrainingExerciseCardExpandedSets from '../training-exercise-card-sets-expanded/training-exercise-card-expanded-sets';
+import TrainingExerciseCardCollapsedSets from './training-exercise-card-sets/training-exercise-card-sets-collapsed/training-exercise-card-collapsed-sets';
+import TrainingExerciseCardExpandedSets from './training-exercise-card-sets/training-exercise-card-sets-expanded/training-exercise-card-expanded-sets';
 import type { Attribute } from '@/controller/attribute/type/attribute.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useSupersets } from '@/store/supersets.provider';

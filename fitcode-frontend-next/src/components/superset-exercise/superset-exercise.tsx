@@ -15,7 +15,7 @@ import { useTheme } from '@mui/material';
 import { useState } from 'react';
 
 import ExerciseMembersInProgress from '../training-exercise-card/exercise-members-in-progress';
-import TrainingExerciseCardContainer from '../training-exercise-card-container/training-exercise-card-container';
+import TrainingExerciseCardContainer from '../training-exercise-card/training-exercise-card-container/training-exercise-card-container';
 import { deleteSupersetExercise } from './state';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
 import type { Superset } from '@/controller/training/type/superset.type';

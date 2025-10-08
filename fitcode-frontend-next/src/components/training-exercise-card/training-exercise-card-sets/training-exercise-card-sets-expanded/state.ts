@@ -1,7 +1,7 @@
 import type { SetStateAction } from 'react';
 
-import { DEFAULT_SUBGROUP_ID } from '../trainer-day-view/constant';
-import { updateTraining } from '../training-exercise-card/state';
+import { DEFAULT_SUBGROUP_ID } from '../../../trainer-day-view/constant';
+import { updateTraining } from '../../state';
 import type { SetState, SetStateNullable } from '@/common/type/state.type';
 import type { Attribute } from '@/controller/attribute/type/attribute.type';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';

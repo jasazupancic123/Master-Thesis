@@ -2,9 +2,9 @@ import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import { Box, Grid2, IconButton } from '@mui/material';
 import toast from 'react-hot-toast';
 
-import { ExerciseParam } from '../exercise-param/exercise-param';
-import LeftRightExerciseText from '../left-right-exercise-text/left-right-exercise-text';
-import { getLAndRValues } from '../training-exercise-card/state';
+import { ExerciseParam } from '../../../exercise-param/exercise-param';
+import LeftRightExerciseText from '../../../left-right-exercise-text/left-right-exercise-text';
+import { getLAndRValues } from '../../state';
 import type { TrainingExerciseCardCollapsedSetsProps } from './training-exercise-card-collapsed-sets';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import { ParamType } from '@/controller/component/enum/param.enum';

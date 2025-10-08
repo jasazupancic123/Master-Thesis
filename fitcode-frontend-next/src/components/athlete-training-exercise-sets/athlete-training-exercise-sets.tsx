@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import { ExerciseParam } from '../exercise-param/exercise-param';
 import LeftRightExerciseText from '../left-right-exercise-text/left-right-exercise-text';
 import { getLAndRValues } from '../training-exercise-card/state';
-import { updateExerciseAttributeValues } from '../training-exercise-card-sets-expanded/state';
+import { updateExerciseAttributeValues } from '../training-exercise-card/training-exercise-card-sets/training-exercise-card-sets-expanded/state';
 import type { ExerciseSetTracking } from '@/common/type/exercise-set-tracking-state.type';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import { ParamType } from '@/controller/component/enum/param.enum';
