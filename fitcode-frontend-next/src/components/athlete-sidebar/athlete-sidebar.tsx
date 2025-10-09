@@ -22,7 +22,7 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 
 const commonService = CommonService.instance;
 
-export default function Sidebar() {
+export default function AthleteSidebar() {
   const athleteContext = useAthlete();
 
   const { filter, setFilter } = athleteContext || {};

@@ -8,13 +8,13 @@ import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-import MyModal from '../modal/modal';
+import MyModal from '../../modal/modal';
 import TrainerWeekViewItem from './training-week-component-item';
 import type { GroupEvent } from '@/controller/group/type/group-event.type';
 import type { TrainingComponentWithTrainingId } from '@/controller/training/type/training-component.type';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import { handleUpdateTrainingTimes } from './actions/actions-week-item';
+import { handleUpdateTrainingTimes } from '../actions/actions-week-item';
 
 export type WeekViewItemProps = {
   item: TrainingComponentWithTrainingId | GroupEvent;

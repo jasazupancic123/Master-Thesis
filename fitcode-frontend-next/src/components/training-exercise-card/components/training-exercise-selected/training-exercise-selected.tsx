@@ -27,8 +27,7 @@ import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
-import useTrainingExerciseCardChart from '../training-exercise-card-container/hooks/use-chart.hook';
-import useTrainingExerciseCardSelectedParams from '../training-exercise-card-container/hooks/use-selected-params';
+import useTrainingExerciseCardChart from './hooks/use-chart.hook';
 import { TodayDot } from './custom-chart/today-dot';
 import CustomTooltip, {
   getParamTypeColor,
@@ -63,16 +62,15 @@ export default function TrainingExerciseSelected(
   const { supersetIndex, exercise, superior } = props;
 
   const {
+    chartData,
+    selectedParams,
+    setSelectedParams,
     range,
     setRange,
     max,
     paddingForChartBackground,
     percentageForChartBackground,
-    chartData,
   } = useTrainingExerciseCardChart({ exercise });
-
-  const { selectedParams, setSelectedParams } =
-    useTrainingExerciseCardSelectedParams({ exercise });
 
   const handleChange = (_event: Event, newValue: number | number[]) => {
     setRange(newValue as number[]);

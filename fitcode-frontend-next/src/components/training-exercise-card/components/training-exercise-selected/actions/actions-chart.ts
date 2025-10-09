@@ -1,10 +1,8 @@
-import type { SetState } from '@/common/type/state.type';
 import type { VolType } from '@/controller/component/enum/param.enum';
 import { IntType } from '@/controller/component/enum/param.enum';
 import { ParamType } from '@/controller/component/enum/param.enum';
 import { SetStatus } from '@/controller/training/enum/set-status.enum';
 import type { ChartWorkloadData } from '@/controller/training/type/chart-workload-data.type';
-import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import type { Workload } from '@/controller/training/type/workload.type';
 import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
@@ -13,7 +11,6 @@ import { AttributeType } from '@/controller/attribute/enum/attribute-value.enum'
 import { Attribute } from '@/controller/attribute/type/attribute.type';
 import { TrainerDayViewProviderReturnTypeDefined } from '@/store/trainer-day-view.provider';
 import { GroupProviderReturnType } from '@/store/group.provider';
-import { UseTrainingExerciseCardSelectedParamsReturnType } from '../hooks/use-selected-params';
 import { UseTrainingExerciseCardChartReturnType } from '../hooks/use-chart.hook';
 
 export function prepareSelectedAthleteAvgWorkloadsForChart(
@@ -23,18 +20,14 @@ export function prepareSelectedAthleteAvgWorkloadsForChart(
   context: {
     useGroup: GroupProviderReturnType;
     useTrainerDayViewContext: TrainerDayViewProviderReturnTypeDefined;
-    useSelectedParams: UseTrainingExerciseCardSelectedParamsReturnType;
     useChart: UseTrainingExerciseCardChartReturnType;
   }
 ) {
-  const { useGroup, useTrainerDayViewContext, useSelectedParams, useChart } =
-    context;
+  const { useGroup, useTrainerDayViewContext, useChart } = context;
 
   const { exercise } = input;
 
   const { trainings } = useGroup;
-
-  const { selectedParams } = useSelectedParams;
 
   const {
     selectedAthleteCompletedWorkloads,
@@ -44,7 +37,7 @@ export function prepareSelectedAthleteAvgWorkloadsForChart(
     selectedSubgroup,
   } = useTrainerDayViewContext;
 
-  const { setChartData, setMax, setRange } = useChart;
+  const { selectedParams, setChartData, setMax, setRange } = useChart;
 
   if (!selectedAthlete) return;
 
@@ -246,26 +239,23 @@ export function prepareSelectedAthleteAvgWorkloadsForChart(
 export function prepareGroupAvgWorkloadsForChart(
   input: {
     exercise: TrainingExercise;
+    componentId: string;
   },
   context: {
     useGroup: GroupProviderReturnType;
     useTrainerDayViewContext: TrainerDayViewProviderReturnTypeDefined;
-    useSelectedParams: UseTrainingExerciseCardSelectedParamsReturnType;
     useChart: UseTrainingExerciseCardChartReturnType;
   }
 ) {
-  const { exercise } = input;
+  const { exercise, componentId } = input;
 
-  const { useGroup, useTrainerDayViewContext, useSelectedParams, useChart } =
-    context;
+  const { useGroup, useTrainerDayViewContext, useChart } = context;
 
   const { trainings } = useGroup;
 
-  const { training, component } = useTrainerDayViewContext;
+  const { training } = useTrainerDayViewContext;
 
-  const { selectedParams } = useSelectedParams;
-
-  const { setChartData, setMax, setRange } = useChart;
+  const { selectedParams, setChartData, setMax, setRange } = useChart;
 
   const newData: ChartWorkloadData[] = [];
 
@@ -276,7 +266,7 @@ export function prepareGroupAvgWorkloadsForChart(
 
     const chartWorkloadData: ChartWorkloadData = {
       trainingId: t.id,
-      componentId: component.id,
+      componentId,
       exerciseId: exercise.id,
       name,
       plannedAt: t.from,
@@ -288,6 +278,10 @@ export function prepareGroupAvgWorkloadsForChart(
       exercise: TrainingExercise;
       membersIds: string[];
     }[] = [];
+
+    const component = t.components.find((c) => c.id === componentId);
+
+    if (!component) return;
 
     // prioritize selected subgroup supersets, if its the custom workload subgroup (with parentId)
     const supersets = component.supersets;

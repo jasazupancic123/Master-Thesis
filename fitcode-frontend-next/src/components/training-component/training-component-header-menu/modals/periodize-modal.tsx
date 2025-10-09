@@ -1,6 +1,5 @@
 import MyModal from '@/components/modal/modal';
-import useComponentHeaderUtils from '../hooks/use-utils';
-import { handleApiRequest } from '@/common/type/state.type';
+import { handleApiRequest, SetState } from '@/common/type/state.type';
 import { TrainingController } from '@/controller/training/training.controller';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 import { PeriodizationType } from '@/controller/training/enum/periodization-type.enum';
@@ -12,14 +11,21 @@ import { TrainingComponent } from '@/controller/training/type/training-component
 import { stateUpdate } from '../actions/actions-training-component';
 import toast from 'react-hot-toast';
 import { Typography } from '@mui/material';
+import { ModalProps } from '@/common/type/modal-props.type';
 
-export default function PeriodizeModal() {
+export default function PeriodizeModal(
+  props: ModalProps & {
+    selectedPeriodizationType: PeriodizationType | null;
+    setSelectedPeriodizationType: SetState<PeriodizationType | null>;
+    numTrainingsWithSameTarget: number;
+    setNumTrainingsWithSameTarget: SetState<number>;
+  }
+) {
   const router = useRouter();
 
   const mainContext = useMain();
   const groupContext = useGroup();
   const trainerDayViewContext = useTrainerDayViewContext();
-  const componentHandlerUtilsContext = useComponentHeaderUtils();
 
   const {
     components: allComponents,
@@ -39,13 +45,13 @@ export default function PeriodizeModal() {
   } = trainerDayViewContext;
 
   const {
+    open,
+    setOpen,
     selectedPeriodizationType,
     setSelectedPeriodizationType,
     numTrainingsWithSameTarget,
     setNumTrainingsWithSameTarget,
-    openModal,
-    setOpenModal,
-  } = componentHandlerUtilsContext;
+  } = props;
 
   const controller = TrainingController.getInstance();
 
@@ -53,12 +59,12 @@ export default function PeriodizeModal() {
 
   return (
     <MyModal
-      isOpen={openModal}
-      setIsOpen={(open) => setOpenModal(open)}
+      isOpen={open}
+      setIsOpen={(open) => setOpen(open)}
       onCancel={() => {
         setNumTrainingsWithSameTarget(0);
         setSelectedPeriodizationType(null);
-        setOpenModal(false);
+        setOpen(false);
       }}
       onConfirm={() => {
         if (!training) return;
@@ -143,7 +149,7 @@ export default function PeriodizeModal() {
 
             setNumTrainingsWithSameTarget(0);
             setSelectedPeriodizationType(null);
-            setOpenModal(false);
+            setOpen(false);
 
             toast.success(
               `${selectedSubgroup ? 'Subgroups' : 'Trainings'} periodized successfully`

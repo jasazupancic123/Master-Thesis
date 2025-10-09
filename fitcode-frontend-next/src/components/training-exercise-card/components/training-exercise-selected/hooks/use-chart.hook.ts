@@ -3,13 +3,14 @@ import { ChartWorkloadData } from '@/controller/training/type/chart-workload-dat
 import { useGroup } from '@/store/group.provider';
 import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
-import { useEffect, useState } from 'react';
-import useTrainingExerciseCardSelectedParams from './use-selected-params';
+import { useEffect, useMemo, useState } from 'react';
 import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import {
   prepareGroupAvgWorkloadsForChart,
   prepareSelectedAthleteAvgWorkloadsForChart,
 } from '../actions/actions-chart';
+import { isNumber } from '../actions/actions-number';
+import { ParamType } from '@/controller/component/enum/param.enum';
 
 interface UseTrainingExerciseCardChartProps {
   exercise: TrainingExercise;
@@ -25,8 +26,6 @@ export default function useTrainingExerciseCardChart(
   const groupContext = useGroup();
   const trainerDayViewContext = useTrainerDayViewContext();
   const supersetsContext = useSupersets();
-  const selectedParamsContext = useTrainingExerciseCardSelectedParams(props);
-  const chartContext = useTrainingExerciseCardChart(props);
 
   const { trainings } = groupContext;
 
@@ -39,8 +38,6 @@ export default function useTrainingExerciseCardChart(
 
   const { selectedExercise } = supersetsContext;
 
-  const { selectedParams } = useTrainingExerciseCardSelectedParams(props);
-
   const { exercise } = props;
 
   const [chartData, setChartData] = useState<ChartWorkloadData[]>([]);
@@ -50,6 +47,40 @@ export default function useTrainingExerciseCardChart(
     useState<Dimensions>({ width: 0, height: 0 });
   const [max, setMax] = useState<number>(10);
   const [range, setRange] = useState<number[]>([1, 6]); // Example range
+  const [selectedParams, setSelectedParams] = useState<ParamType[]>([]);
+
+  // build the object you previously tried to get via recursive hook call
+  const chartContext = useMemo(() => {
+    return {
+      chartData,
+      setChartData,
+      max,
+      setMax,
+      range,
+      setRange,
+      selectedParams,
+      setSelectedParams,
+      percentageForChartBackground,
+      setPercentageForChartBackground,
+      paddingForChartBackground,
+      setPaddingForChartBackground,
+      // add anything else your prepare* helpers expect on useChart
+    };
+  }, [chartData, max, range, selectedParams]);
+
+  useEffect(() => {
+    if (!selectedExercise) return;
+
+    const numberParams = selectedExercise.params.filter((p) =>
+      isNumber(
+        selectedExercise,
+        p.field as ParamType,
+        exercise.sets[0].paramValuesL
+      )
+    );
+
+    setSelectedParams(numberParams.map((p) => p.field as ParamType) || []);
+  }, [selectedExercise]);
 
   // useEffect to init avg workloads for chart
   useEffect(() => {
@@ -66,14 +97,13 @@ export default function useTrainingExerciseCardChart(
             training,
             component,
           },
-          useSelectedParams: selectedParamsContext,
           useChart: chartContext,
         }
       );
     } else {
       // group avg is already on training
       prepareGroupAvgWorkloadsForChart(
-        { exercise },
+        { exercise, componentId: component.id },
         {
           useGroup: groupContext,
           useTrainerDayViewContext: {
@@ -81,7 +111,6 @@ export default function useTrainingExerciseCardChart(
             training,
             component,
           },
-          useSelectedParams: selectedParamsContext,
           useChart: chartContext,
         }
       );
@@ -146,6 +175,8 @@ export default function useTrainingExerciseCardChart(
   return {
     chartData,
     setChartData,
+    selectedParams,
+    setSelectedParams,
     percentageForChartBackground,
     setPercentageForChartBackground,
     paddingForChartBackground,

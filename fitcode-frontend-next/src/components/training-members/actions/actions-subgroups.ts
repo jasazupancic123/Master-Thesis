@@ -213,6 +213,8 @@ export const updateSelectedAthleteSubgroup = (
     useTrainerDayViewContext: TrainerDayViewProviderReturnTypeDefined;
   }
 ) => {
+  console.log('updateSelectedAthleteSubgroup');
+
   const { member, subgroupId } = input;
 
   const { useTrainerDayViewContext } = context;

@@ -36,12 +36,12 @@ export default function TrainingMembersSubgroup(
 ) {
   const theme = useTheme();
 
-  const { users } = useMain();
-  const { setTrainings, setDetectedChanges } = useGroup();
-  const { selectedExercises, setSelectedExercises } =
-    useTrainerDayViewContext();
+  const mainConext = useMain();
+  const groupContext = useGroup();
+  const trainerDayViewContext = useTrainerDayViewContext();
 
-  const { members } = useTrainingMembers();
+  const { users } = mainConext;
+  const { setTrainings, setDetectedChanges } = groupContext;
 
   const {
     component,
@@ -52,7 +52,11 @@ export default function TrainingMembersSubgroup(
     selectedSubgroup,
     selectedAthlete,
     setSelectedAthlete,
-  } = useTrainerDayViewContext();
+    selectedExercises,
+    setSelectedExercises,
+  } = trainerDayViewContext;
+
+  const { members } = useTrainingMembers();
 
   const { subgroup, subgroupIndex, anchorEl, setAnchorEl } = props;
 
@@ -214,8 +218,12 @@ export default function TrainingMembersSubgroup(
                         key={`${subgroup.id}-${member.uid}-tooltip`}
                         sx={{ p: 0, m: 0 }}
                         onClick={() => {
-                          if (!component) return;
+                          if (!component) {
+                            console.log('returning');
+                            return;
+                          }
 
+                          console.log('before updateSelectedAthleteSubgroup');
                           updateSelectedAthleteSubgroup(
                             {
                               member,
@@ -223,7 +231,7 @@ export default function TrainingMembersSubgroup(
                             },
                             {
                               useTrainerDayViewContext: {
-                                ...useTrainerDayViewContext(),
+                                ...trainerDayViewContext,
                                 training,
                                 component,
                               },
