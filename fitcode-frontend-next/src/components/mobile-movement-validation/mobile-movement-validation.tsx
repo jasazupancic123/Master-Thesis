@@ -8,8 +8,8 @@ import { useEffect, useRef, useState } from 'react';
 
 import AthleteTrainingExerciseSets from '../athlete-training-exercise-sets/athlete-training-exercise-sets';
 import LoadingOverlay from '../loading-overlay/loading-overlay';
-import { finishSet } from '../training-in-progress-exercise-card/state';
-import TrainingInProgressTempoChart from '../training-in-progress-exercise-card/training-in-progress-tempo-chart';
+import { finishSet } from '../training-in-progress/components/training-in-progress-exercise-card/actions/actions-exercise-set';
+import TrainingInProgressTempoChart from '../../common/util/tempo-chart';
 import FpsText from './components/fps-text';
 import MovementValidationHeader from './components/movement-validation-header';
 import {
@@ -45,6 +45,7 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import EnvUtil from '@/common/util/env.util';
+import { updateExerciseValues } from '../training-in-progress/components/training-in-progress-exercise-card/actions/actions-exercise';
 
 const DEBUG = false;
 
@@ -60,14 +61,6 @@ interface MobileMovementValidationProps {
     | undefined;
   selectedTrackingMethod: TrackingMethod | undefined;
   setSelectedTrackingMethod: SetState<TrackingMethod> | undefined;
-  updateExerciseValues:
-    | ((
-        repsCount: number,
-        tempo: string,
-        updatedExercise?: TrainingExerciseRecording,
-        updateSelectedExercise?: boolean
-      ) => void)
-    | undefined;
   trainingId: string;
   componentId: string;
   supersetIndex: number;
@@ -94,7 +87,6 @@ export default function MobileMovementValidation(
     setSelectedExercise,
     selectedTrackingMethod,
     setSelectedTrackingMethod,
-    updateExerciseValues,
     trainingId,
     componentId,
     supersetIndex,
@@ -443,7 +435,6 @@ export default function MobileMovementValidation(
     }
 
     if (
-      updateExerciseValues &&
       selectedTrackingMethod === TrackingMethod.CAMERA &&
       setSelectedTrackingMethod &&
       trainingInProgress &&
@@ -520,10 +511,16 @@ export default function MobileMovementValidation(
       });
 
       updateExerciseValues(
-        recordedRepsRef.current.length,
-        tempo,
-        updatedExercise,
-        true
+        {
+          repsCount: recordedRepsRef.current.length,
+          tempo,
+          passedExercise: updatedExercise,
+          updateSelectedExercise: true,
+        },
+        {
+          useTraining: { ...trainingContext, trainingInProgress },
+          useTrainingInProgress: trainingInProgressContext,
+        }
       );
 
       await finishSet({

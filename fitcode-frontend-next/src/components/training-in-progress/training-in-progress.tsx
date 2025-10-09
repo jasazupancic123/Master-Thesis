@@ -3,198 +3,66 @@ import CloseIcon from '@mui/icons-material/Close';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { Box, Fab, Menu, MenuItem, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
-import dayjs from 'dayjs';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 
 import AthleteOptionsContainer from '../athlete-options-container/athlete-options-container';
-import MyModal from '../modal/modal';
-import TrainingInProgressSuperset from '../training-in-progress-superset/training-in-progress-superset';
-import { getUndoneExercises } from './state';
-import UndoneExercisesList from './training-in-progress-undone-exercises-list';
+import TrainingInProgressSuperset from './components/training-in-progress-superset/training-in-progress-superset';
 import { TrackingMethod } from '@/common/enum/tracking-method.enum';
-import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
 import { useHorizontalOverflow } from '@/common/util/horizontal-overflow.util';
 import { preloadPoseLandmarker } from '@/controller/pose-detection/util/pose-landmarker-loader.util';
-import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
+import useTrainingInProgressUtils from './hooks/use-utils';
+import useTrainingInProgressUndoneExercises from './hooks/use-undone-exercises';
+import { handleChangeSuperset } from './actions/actions-superset';
+import CancelTrainingModal from './modals/cancel-training-modal';
+import UndoneSetsWarningModal from './modals/undone-sets-warning-modal';
+import UndoneSetsErrorModal from './modals/undone-sets-error-modal';
+import { handleInitTrainingInProgressComponent } from './actions/actions-training-in-progress';
 
 export default function TrainingInProgress() {
   const theme = useTheme();
 
-  const {
-    trainingInProgress,
-    setTrainingInProgress,
-    setView,
-    clearTrainingState,
-  } = useTraining();
+  const { trainingInProgress } = useTraining();
+
+  const { selectedSuperset } = useTrainingInProgress();
 
   const {
-    selectedExercise,
-    setSelectedExercise,
-    selectedSuperset,
-    setSelectedSuperset,
-    setSetIndex,
-  } = useTrainingInProgress();
+    elapsedTime,
+    anchorEl,
+    open,
+    handleOpenMenu,
+    handleCloseMenu,
+    handleCancel,
+    formatTime,
+  } = useTrainingInProgressUtils();
 
   const { selectedTrackingMethod } = useAthleteHeader();
 
   const { outerRef, innerRef, isOverflowing } = useHorizontalOverflow();
 
-  const [elapsedTime, setElapsedTime] = useState(0);
-  const [openCancelTrainingModal, setOpenCancelTrainingModal] = useState(false);
-  const [undoneExercises, setUndoneExercises] = useState<TrainingExercise[]>(
-    []
-  );
-  const [showUndoneSetsWarning, setShowUndoneSetsWarning] = useState(false);
-  const [showUndoneSetsError, setShowUndoneSetsError] = useState(false);
-
-  {
-    /* Preload pose landmarker */
-  }
+  /* Preload pose landmarker */
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    // preload ASAP (or during idle below)
+
     preloadPoseLandmarker();
   }, []);
 
+  /* Init training in progress for selected component */
   useEffect(() => {
     if (!trainingInProgress) return;
 
-    const newTrainingInProgress = { ...trainingInProgress };
-    if (!newTrainingInProgress.supersets) {
-      newTrainingInProgress.supersets =
-        newTrainingInProgress.selectedComponent.supersets;
-    }
-
-    if (!newTrainingInProgress.startOfTraining) {
-      newTrainingInProgress.startOfTraining = dayjs();
-    }
-
-    let selectedSuperset = undefined;
-    if (!newTrainingInProgress.supersetIndex) {
-      newTrainingInProgress.supersetIndex = 0;
-      selectedSuperset = newTrainingInProgress.supersets[0];
-    } else {
-      selectedSuperset =
-        newTrainingInProgress.supersets[
-          newTrainingInProgress.supersetIndex || 0
-        ];
-    }
-
-    setSelectedSuperset(selectedSuperset);
-
-    if (!selectedExercise) {
-      setSelectedExercise(selectedSuperset?.exercises[0] || null);
-      setSetIndex(0);
-    }
-
-    const component = [
-      newTrainingInProgress.training.warmup,
-      ...newTrainingInProgress.training.components,
-      newTrainingInProgress.training.cooldown,
-    ].find((c) => c.id === newTrainingInProgress.selectedComponent?.id);
-
-    if (!component) return;
-
-    setTrainingInProgress(
-      (prev) =>
-        ({
-          ...prev,
-          selectedComponent: component,
-          supersets: component.supersets,
-          startOfTraining: newTrainingInProgress.startOfTraining,
-          supersetIndex: newTrainingInProgress.supersetIndex,
-        }) as TrainingInProgress
-    );
+    handleInitTrainingInProgressComponent({
+      useTraining: { ...useTraining(), trainingInProgress },
+      useTrainingInProgress: useTrainingInProgress(),
+    });
   }, [trainingInProgress?.selectedComponent]);
 
-  useEffect(() => {
-    if (!trainingInProgress) return;
-    if (!trainingInProgress.startOfTraining) {
-      setTrainingInProgress(
-        (prev) =>
-          ({
-            ...prev,
-            startOfTraining: dayjs(),
-          }) as TrainingInProgress
-      );
-    }
+  if (!trainingInProgress) return null;
 
-    const startTime = dayjs(trainingInProgress.startOfTraining).valueOf();
-    const interval = setInterval(() => {
-      const now = dayjs().valueOf();
-      setElapsedTime(Math.floor((now - startTime) / 1000));
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [trainingInProgress?.startOfTraining]);
-
-  useEffect(() => {
-    if (!undoneExercises.length) {
-      setShowUndoneSetsWarning(false);
-      setShowUndoneSetsError(false);
-      return;
-    }
-
-    if (!trainingInProgress) return;
-
-    undoneExercises.forEach((undoneExercise) => {
-      const setTrackingState = trainingInProgress.exerciseSetTrackingState.find(
-        (state) => state.exerciseId === undoneExercise.id
-      );
-
-      if (!setTrackingState) return;
-
-      const hasUndoneSets =
-        setTrackingState.completedSetNumbers.length <
-        undoneExercise.sets.length;
-
-      if (!hasUndoneSets) {
-        setUndoneExercises((prev) => {
-          return prev.filter((e) => e.id !== undoneExercise.id);
-        });
-      }
-    });
-  }, [undoneExercises, trainingInProgress]);
-
-  const handleCancelTraining = () => {
-    clearTrainingState();
-    setView(ExerciseTrainingView.ExerciseView);
-    setElapsedTime(0);
-    setSelectedSuperset(undefined);
-  };
-
-  const [anchorEl, setAnchorEl] = useState(null);
-  const open = Boolean(anchorEl);
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleOpenMenu = (event: any) => {
-    if (selectedTrackingMethod === TrackingMethod.CAMERA) return;
-
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleCloseMenu = () => {
-    setAnchorEl(null);
-  };
-
-  const handleCancel = () => {
-    handleCloseMenu();
-    setOpenCancelTrainingModal(true);
-  };
-
-  const formatTime = (seconds: number) => {
-    if (isNaN(seconds)) return '00:00:00'; // Default to zero time if invalid
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = seconds % 60;
-    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-  };
-
-  return trainingInProgress ? (
+  return (
     <Box
       id="training-in-progress-main"
       width="100%"
@@ -251,25 +119,16 @@ export default function TrainingInProgress() {
                       fontWeight: isSelected ? 'bold' : 'normal',
                     }}
                     onClick={() => {
-                      const undoneExercises = getUndoneExercises(
-                        trainingInProgress.supersets[
-                          trainingInProgress.supersetIndex ?? 0
-                        ],
-                        trainingInProgress.supersetIndex ?? 0,
-                        trainingInProgress.exerciseSetTrackingState
-                      );
-                      if (undoneExercises.length > 0) {
-                        setUndoneExercises(undoneExercises);
-                        setShowUndoneSetsWarning(true);
-                      }
-
-                      setSelectedSuperset(superset);
-                      setSelectedExercise(superset.exercises[0] || null);
-                      setSetIndex(0);
-                      setTrainingInProgress((prev) =>
-                        prev && prev.supersetIndex !== i
-                          ? { ...prev, supersetIndex: i }
-                          : prev
+                      handleChangeSuperset(
+                        { superset, i },
+                        {
+                          useTraining: { ...useTraining(), trainingInProgress },
+                          useTrainingInProgress: useTrainingInProgress(),
+                          useUndoneExercises:
+                            useTrainingInProgressUndoneExercises(),
+                          useTrainingInProgressUtils:
+                            useTrainingInProgressUtils(),
+                        }
                       );
                     }}
                   >
@@ -295,16 +154,7 @@ export default function TrainingInProgress() {
       {trainingInProgress &&
       trainingInProgress.supersets &&
       selectedSuperset ? (
-        <TrainingInProgressSuperset
-          anchorEl={anchorEl}
-          open={open}
-          handleCancel={handleCancel}
-          handleCancelTraining={handleCancelTraining}
-          handleOpenMenu={handleOpenMenu}
-          handleCloseMenu={handleCloseMenu}
-          setUndoneExercises={setUndoneExercises}
-          setShowUndoneSetsError={setShowUndoneSetsError}
-        />
+        <TrainingInProgressSuperset />
       ) : (
         <Box
           display="flex"
@@ -349,43 +199,11 @@ export default function TrainingInProgress() {
         </Box>
       )}
 
-      <MyModal
-        isOpen={openCancelTrainingModal}
-        setIsOpen={(open) => setOpenCancelTrainingModal(open)}
-        cancelText="Cancel"
-        onCancel={() => setOpenCancelTrainingModal(false)}
-        onConfirm={() => {
-          handleCancelTraining();
-          setOpenCancelTrainingModal(false);
-        }}
-      >
-        <Typography variant="h6" sx={{ width: '100%', textAlign: 'center' }}>
-          Cancel Training?
-        </Typography>
-      </MyModal>
-      <MyModal
-        isOpen={showUndoneSetsWarning}
-        setIsOpen={(open) => {
-          if (!undoneExercises.length) setShowUndoneSetsWarning(false);
-          else setShowUndoneSetsWarning(open);
-        }}
-        onConfirm={() => {
-          setShowUndoneSetsWarning(false);
-          setUndoneExercises([]);
-        }}
-      >
-        <UndoneExercisesList undoneExercises={undoneExercises} />
-      </MyModal>
-      <MyModal
-        isOpen={showUndoneSetsError}
-        setIsOpen={(open) => setShowUndoneSetsError(open)}
-        onConfirm={() => {
-          setShowUndoneSetsError(false);
-          setUndoneExercises([]);
-        }}
-      >
-        <UndoneExercisesList undoneExercises={undoneExercises} />
-      </MyModal>
+      <CancelTrainingModal />
+
+      <UndoneSetsWarningModal />
+
+      <UndoneSetsErrorModal />
     </Box>
-  ) : null;
+  );
 }

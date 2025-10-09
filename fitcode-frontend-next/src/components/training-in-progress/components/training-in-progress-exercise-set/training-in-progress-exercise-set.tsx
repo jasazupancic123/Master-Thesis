@@ -1,8 +1,8 @@
 import { Box } from '@mui/material';
 
-import { ExerciseParam } from '../exercise-param/exercise-param';
-import LeftRightExerciseText from '../left-right-exercise-text/left-right-exercise-text';
-import TrainingExerciseSetDoneCheckbox from '../training-in-progress-exercise-card/training-exercise-set-done-checkbox';
+import { ExerciseParam } from '../../../exercise-param/exercise-param';
+import LeftRightExerciseText from '../../../left-right-exercise-text/left-right-exercise-text';
+import TrainingExerciseSetDoneCheckbox from '../training-in-progress-exercise-card/components/training-exercise-set-done-checkbox';
 import type { SetState } from '@/common/type/state.type';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import { ParamType } from '@/controller/component/enum/param.enum';
