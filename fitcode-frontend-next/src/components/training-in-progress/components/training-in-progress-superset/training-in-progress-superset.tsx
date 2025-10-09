@@ -18,14 +18,21 @@ import NextSupersetModal from './modals/next-superset-modal';
 export default function TrainingInProgressSuperset() {
   const theme = useTheme();
 
-  const { trainingInProgress } = useTraining();
+  const traininContext = useTraining();
+  const trainingInProgressContext = useTrainingInProgress();
+  const trainingInProgressUtilsContext = useTrainingInProgressUtils();
+  const athleteHeaderContext = useAthleteHeader();
+  const trainingInProgressUndoneExercisesContext =
+    useTrainingInProgressUndoneExercises();
 
-  const { selectedTrackingMethod } = useAthleteHeader();
+  const { trainingInProgress } = traininContext;
+
+  const { selectedTrackingMethod } = athleteHeaderContext;
 
   const { anchorEl, open, handleCancel, handleOpenMenu, handleCloseMenu } =
-    useTrainingInProgressUtils();
+    trainingInProgressUtilsContext;
 
-  const { selectedSuperset, selectedExercise } = useTrainingInProgress();
+  const { selectedSuperset, selectedExercise } = trainingInProgressContext;
 
   const [openNextSupersetModal, setOpenNextSupersetModal] = useState(false);
 
@@ -81,11 +88,11 @@ export default function TrainingInProgressSuperset() {
         <MenuItem
           onClick={() =>
             handleFinishSuperset({
-              useTraining: { ...useTraining(), trainingInProgress },
-              useTrainingInProgress: useTrainingInProgress(),
+              useTraining: { ...traininContext, trainingInProgress },
+              useTrainingInProgress: trainingInProgressContext,
               useTrainingInProgressUndoneExercises:
-                useTrainingInProgressUndoneExercises(),
-              useTrainingInProgressUtils: useTrainingInProgressUtils(),
+                trainingInProgressUndoneExercisesContext,
+              useTrainingInProgressUtils: trainingInProgressUtilsContext,
             })
           }
         >

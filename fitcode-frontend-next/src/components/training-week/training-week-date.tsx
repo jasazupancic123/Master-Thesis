@@ -57,8 +57,11 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
   const theme = useTheme();
   const controller = TrainingController.getInstance();
 
-  const { components } = useMain();
-  const { cycle, trainings } = useGroup();
+  const mainContext = useMain();
+  const groupContext = useGroup();
+
+  const { components } = mainContext;
+  const { cycle, trainings } = groupContext;
 
   const {
     week,
@@ -155,8 +158,8 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
                       setTrainingInPeriodForModal,
                     },
                     {
-                      useGroup: useGroup(),
-                      useMain: useMain(),
+                      useGroup: groupContext,
+                      useMain: mainContext,
                     }
                   );
                 }}

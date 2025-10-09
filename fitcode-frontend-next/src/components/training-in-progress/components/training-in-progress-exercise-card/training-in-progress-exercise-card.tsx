@@ -26,7 +26,10 @@ export default function TrainingInProgressExerciseCard() {
   const theme = useTheme();
   const screenSize = useScreenSize();
 
-  const { trainingInProgress } = useTraining();
+  const trainingContext = useTraining();
+  const trainingInProgressContext = useTrainingInProgress();
+
+  const { trainingInProgress } = trainingContext;
 
   const {
     selectedExercise,
@@ -36,7 +39,7 @@ export default function TrainingInProgressExerciseCard() {
     supersetIndex,
     setIndex,
     setSetIndex,
-  } = useTrainingInProgress();
+  } = trainingInProgressContext;
 
   const { selectedTrackingMethod, setSelectedTrackingMethod } =
     useAthleteHeader();
@@ -60,10 +63,12 @@ export default function TrainingInProgressExerciseCard() {
   ) : (
     <SwipeableBox
       onSwipeLeft={() =>
-        goToNextExercise({ useTrainingInProgress: useTrainingInProgress() })
+        goToNextExercise({ useTrainingInProgress: trainingInProgressContext })
       }
       onSwipeRight={() =>
-        goToPreviousExercise({ useTrainingInProgress: useTrainingInProgress() })
+        goToPreviousExercise({
+          useTrainingInProgress: trainingInProgressContext,
+        })
       }
     >
       <Box

@@ -60,26 +60,20 @@ export function handleSetMainSet(
       s.id === updatedSubgroup.id ? updatedSubgroup : s
     );
 
-    updatedComponent.subgroups = CustomWorkloadsSubgroupsService.updateMainSet(
-      {
-        component: updatedComponent,
-        selectedSubgroup: updatedSubgroup,
-        mainSet,
-      },
-      context
-    );
+    updatedComponent.subgroups = CustomWorkloadsSubgroupsService.updateMainSet({
+      component: updatedComponent,
+      selectedSubgroup: updatedSubgroup,
+      mainSet,
+    });
   } else {
     updatedComponent.supersets = updatedSupersets;
     updatedComponent.mainSet = mainSet;
 
-    updatedComponent.subgroups = CustomWorkloadsSubgroupsService.updateMainSet(
-      {
-        component,
-        selectedSubgroup: null,
-        mainSet,
-      },
-      context
-    );
+    updatedComponent.subgroups = CustomWorkloadsSubgroupsService.updateMainSet({
+      component,
+      selectedSubgroup: null,
+      mainSet,
+    });
   }
 
   setComponent(updatedComponent);

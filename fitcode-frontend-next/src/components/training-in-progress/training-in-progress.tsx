@@ -25,9 +25,16 @@ import { handleInitTrainingInProgressComponent } from './actions/actions-trainin
 export default function TrainingInProgress() {
   const theme = useTheme();
 
-  const { trainingInProgress } = useTraining();
+  const trainingContext = useTraining();
+  const trainingInProgressContext = useTrainingInProgress();
+  const trainingInProgressUndoneExercisesContext =
+    useTrainingInProgressUndoneExercises();
+  const trainingInProgressUtilsContext = useTrainingInProgressUtils();
+  const athleteHeaderContext = useAthleteHeader();
 
-  const { selectedSuperset } = useTrainingInProgress();
+  const { trainingInProgress } = trainingContext;
+
+  const { selectedSuperset } = trainingInProgressContext;
 
   const {
     elapsedTime,
@@ -37,9 +44,9 @@ export default function TrainingInProgress() {
     handleCloseMenu,
     handleCancel,
     formatTime,
-  } = useTrainingInProgressUtils();
+  } = trainingInProgressUtilsContext;
 
-  const { selectedTrackingMethod } = useAthleteHeader();
+  const { selectedTrackingMethod } = athleteHeaderContext;
 
   const { outerRef, innerRef, isOverflowing } = useHorizontalOverflow();
 
@@ -56,7 +63,7 @@ export default function TrainingInProgress() {
 
     handleInitTrainingInProgressComponent({
       useTraining: { ...useTraining(), trainingInProgress },
-      useTrainingInProgress: useTrainingInProgress(),
+      useTrainingInProgressContext: trainingInProgressContext,
     });
   }, [trainingInProgress?.selectedComponent]);
 
@@ -122,12 +129,15 @@ export default function TrainingInProgress() {
                       handleChangeSuperset(
                         { superset, i },
                         {
-                          useTraining: { ...useTraining(), trainingInProgress },
-                          useTrainingInProgress: useTrainingInProgress(),
+                          useTraining: {
+                            ...trainingContext,
+                            trainingInProgress,
+                          },
+                          useTrainingInProgress: trainingInProgressContext,
                           useUndoneExercises:
-                            useTrainingInProgressUndoneExercises(),
+                            trainingInProgressUndoneExercisesContext,
                           useTrainingInProgressUtils:
-                            useTrainingInProgressUtils(),
+                            trainingInProgressUtilsContext,
                         }
                       );
                     }}

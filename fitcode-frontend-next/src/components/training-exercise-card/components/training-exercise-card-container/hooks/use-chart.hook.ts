@@ -22,18 +22,24 @@ export type UseTrainingExerciseCardChartReturnType = ReturnType<
 export default function useTrainingExerciseCardChart(
   props: UseTrainingExerciseCardChartProps
 ) {
-  const { selectedExercise } = useSupersets();
+  const groupContext = useGroup();
+  const trainerDayViewContext = useTrainerDayViewContext();
+  const supersetsContext = useSupersets();
+  const selectedParamsContext = useTrainingExerciseCardSelectedParams(props);
+  const chartContext = useTrainingExerciseCardChart(props);
+
+  const { trainings } = groupContext;
 
   const {
     training,
     selectedAthlete,
     selectedAthleteCompletedWorkloads: selectedAthleteWorkloads,
     component,
-  } = useTrainerDayViewContext();
+  } = trainerDayViewContext;
+
+  const { selectedExercise } = supersetsContext;
 
   const { selectedParams } = useTrainingExerciseCardSelectedParams(props);
-
-  const { trainings } = useGroup();
 
   const { exercise } = props;
 
@@ -54,16 +60,14 @@ export default function useTrainingExerciseCardChart(
       prepareSelectedAthleteAvgWorkloadsForChart(
         { exercise },
         {
-          useGroup: useGroup(),
+          useGroup: groupContext,
           useTrainerDayViewContext: {
-            ...useTrainerDayViewContext(),
+            ...trainerDayViewContext,
             training,
             component,
           },
-          useSelectedParams: useTrainingExerciseCardSelectedParams({
-            exercise,
-          }),
-          useChart: useTrainingExerciseCardChart({ exercise }),
+          useSelectedParams: selectedParamsContext,
+          useChart: chartContext,
         }
       );
     } else {
@@ -71,16 +75,14 @@ export default function useTrainingExerciseCardChart(
       prepareGroupAvgWorkloadsForChart(
         { exercise },
         {
-          useGroup: useGroup(),
+          useGroup: groupContext,
           useTrainerDayViewContext: {
-            ...useTrainerDayViewContext(),
+            ...trainerDayViewContext,
             training,
             component,
           },
-          useSelectedParams: useTrainingExerciseCardSelectedParams({
-            exercise,
-          }),
-          useChart: useTrainingExerciseCardChart({ exercise }),
+          useSelectedParams: selectedParamsContext,
+          useChart: chartContext,
         }
       );
     }

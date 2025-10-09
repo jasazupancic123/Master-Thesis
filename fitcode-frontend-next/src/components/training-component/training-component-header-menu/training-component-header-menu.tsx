@@ -25,10 +25,15 @@ export default function TrainingComponentHeaderMenu() {
 
   const { methods: allMethods } = useMain();
 
-  const { setDetectedChanges } = useGroup();
+  const mainContext = useMain();
+  const groupContext = useGroup();
+  const trainerDayViewContext = useTrainerDayViewContext();
+  const componentHandlerUtilsContext = useComponentHeaderUtils();
+
+  const { setDetectedChanges } = groupContext;
 
   const { training, component, selectedSubgroup, selectedAthlete } =
-    useTrainerDayViewContext();
+    trainerDayViewContext;
 
   const { afterSet, setAfterSet } = useComponentHeaderUtils();
 
@@ -75,9 +80,9 @@ export default function TrainingComponentHeaderMenu() {
             handleSetMainSet(
               { newMainSet },
               {
-                useGroup: useGroup(),
+                useGroup: groupContext,
                 useTrainerDayViewContext: {
-                  ...useTrainerDayViewContext(),
+                  ...trainerDayViewContext,
                   training,
                   component,
                 },
@@ -151,12 +156,12 @@ export default function TrainingComponentHeaderMenu() {
               { periodizationType: periodizationType as PeriodizationType },
               {
                 useTrainerDayViewContext: {
-                  ...useTrainerDayViewContext(),
+                  ...trainerDayViewContext,
                   training,
                   component,
                 },
-                useGroup: useGroup(),
-                useComponentHeaderUtils: useComponentHeaderUtils(),
+                useGroup: groupContext,
+                useComponentHeaderUtils: componentHandlerUtilsContext,
               }
             );
           }}
@@ -192,10 +197,10 @@ export default function TrainingComponentHeaderMenu() {
                 methodId,
               },
               {
-                useMain: useMain(),
-                useGroup: useGroup(),
+                useMain: mainContext,
+                useGroup: groupContext,
                 useTrainerDayViewContext: {
-                  ...useTrainerDayViewContext(),
+                  ...trainerDayViewContext,
                   training,
                   component,
                 },
