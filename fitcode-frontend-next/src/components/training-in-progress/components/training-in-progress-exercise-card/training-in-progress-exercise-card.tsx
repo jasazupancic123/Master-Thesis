@@ -2,32 +2,31 @@ import { Circle } from '@mui/icons-material';
 import { Box, Stack, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Image from 'next/image';
-import { useMemo, useRef } from 'react';
 import toast from 'react-hot-toast';
 
-import AthleteTrainingExerciseSets from '../athlete-training-exercise-sets/athlete-training-exercise-sets';
-import MobileMovementValidation from '../mobile-movement-validation/mobile-movement-validation';
-import SwipeableBox from '../swipeable-box/swipeable-box';
-import ImageGallery from './image-gallery';
-import TrainingExerciseSetDoneCheckbox from './training-exercise-set-done-checkbox';
-import TrainingInProgressTempoChart from './training-in-progress-tempo-chart';
+import AthleteTrainingExerciseSets from '../../../athlete-training-exercise-sets/athlete-training-exercise-sets';
+import MobileMovementValidation from '../../../mobile-movement-validation/mobile-movement-validation';
+import SwipeableBox from '../../../swipeable-box/swipeable-box';
+import ImageGallery from '../../../../common/util/image-gallery';
+import TrainingExerciseSetDoneCheckbox from './components/training-exercise-set-done-checkbox';
+import TrainingInProgressTempoChart from '../../../../common/util/tempo-chart';
 import { TrackingMethod } from '@/common/enum/tracking-method.enum';
-import type { ParamType } from '@/controller/component/enum/param.enum';
-import { IntType, VolType } from '@/controller/component/enum/param.enum';
 import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
-import { MainSet } from '@/controller/training/enum/main-set.enum';
-import type { TrainingExerciseRecording } from '@/controller/training/type/training-exercise.type';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
-import { updateExerciseAttributeValues } from '../training-exercise-card/components/training-exercise-card-sets/components/training-exercise-card-sets-expanded/actions/actions-attribute-values';
+import {
+  goToNextExercise,
+  goToPreviousExercise,
+} from './actions/actions-exercise';
+import useExerciseIndexLabel from './hooks/use-exercise-index-label';
 
 export default function TrainingInProgressExerciseCard() {
   const theme = useTheme();
   const screenSize = useScreenSize();
 
-  const { trainingInProgress, updateTrainingInProgress } = useTraining();
+  const { trainingInProgress } = useTraining();
 
   const {
     selectedExercise,
@@ -42,136 +41,10 @@ export default function TrainingInProgressExerciseCard() {
   const { selectedTrackingMethod, setSelectedTrackingMethod } =
     useAthleteHeader();
 
-  const isCircuit =
-    trainingInProgress?.selectedComponent.mainSet === MainSet.CIRCUIT;
-
-  const labelRef = useRef<string>('');
-
-  const computedLabel = useMemo(() => {
-    if (typeof exerciseIndex !== 'number' || typeof supersetIndex !== 'number')
-      return labelRef.current;
-
-    if (isCircuit) return String(exerciseIndex + 1);
-
-    const letter = String.fromCharCode(65 + exerciseIndex);
-    labelRef.current = `${supersetIndex + 1}${letter}`;
-    return `${supersetIndex + 1}${letter}`;
-  }, [exerciseIndex]);
-
-  if (computedLabel) labelRef.current = computedLabel;
+  const { label } = useExerciseIndexLabel();
 
   if (!trainingInProgress || !selectedSuperset || !selectedExercise)
-    return labelRef.current;
-
-  const updateExerciseValues = (
-    repsCount: number,
-    tempo: string,
-    passedExercise?: TrainingExerciseRecording,
-    updateSelectedExercise?: boolean
-  ) => {
-    if (supersetIndex === undefined) return;
-
-    if (setIndex === undefined) return;
-
-    const updatableExercise = passedExercise || selectedExercise;
-
-    const selectedSet = updatableExercise.sets[setIndex];
-    if (!selectedSet) return;
-
-    let repParamField: ParamType | undefined;
-    let tempoParamField: ParamType | undefined;
-
-    const repParamFieldSet = selectedSet.paramValuesL.find(
-      (p) => p.selected === VolType.Rep
-    );
-    if (repParamFieldSet) repParamField = repParamFieldSet.field as ParamType;
-
-    const tempoParamFieldSet = selectedSet.paramValuesL.find(
-      (p) => p.selected === IntType.Tempo
-    );
-    if (tempoParamFieldSet)
-      tempoParamField = tempoParamFieldSet.field as ParamType;
-
-    const repParam = updatableExercise.params.find(
-      (p) => p.field === repParamField
-    );
-
-    if (repParam) {
-      ['L'].concat(selectedSet.paramValuesR ? ['R'] : []).forEach((lOrR) => {
-        updateExerciseAttributeValues(
-          {
-            newValue: repsCount.toString(),
-            i: setIndex,
-            set: selectedSet,
-            lOrR: lOrR as 'L' | 'R',
-            correctSelectedExercises: [updatableExercise],
-            correctExercise: updatableExercise,
-            correctParam: repParam,
-            correctSupersets: trainingInProgress.supersets,
-            correctSelectedSubgroup: null,
-          },
-          {
-            training: trainingInProgress.training,
-            component: trainingInProgress.selectedComponent,
-            setTraining: () => {},
-            setDetectedChanges: () => {},
-            setSelectedSubgroup: () => {},
-          }
-        );
-      });
-    }
-
-    const tempoParam = updatableExercise.params.find(
-      (p) => p.field === tempoParamField
-    );
-
-    if (tempoParam) {
-      ['L'].concat(selectedSet.paramValuesR ? ['R'] : []).forEach((lOrR) => {
-        updateExerciseAttributeValues(
-          {
-            newValue: tempo.toString(),
-            i: setIndex,
-            set: selectedSet,
-            lOrR: lOrR as 'L' | 'R',
-            correctSelectedExercises: [updatableExercise],
-            correctExercise: updatableExercise,
-            correctParam: tempoParam,
-            correctSupersets: trainingInProgress.supersets,
-            correctSelectedSubgroup: null,
-          },
-          {
-            training: trainingInProgress.training,
-            component: trainingInProgress.selectedComponent,
-            setTraining: () => {},
-            setDetectedChanges: () => {},
-            setSelectedSubgroup: () => {},
-          }
-        );
-      });
-    }
-
-    if (updateSelectedExercise) setSelectedExercise(updatableExercise);
-
-    updateTrainingInProgress(updatableExercise, supersetIndex);
-  };
-
-  const goToNextExercise = () => {
-    const currentIndex = selectedSuperset.exercises.indexOf(selectedExercise);
-    const nextExercise = selectedSuperset.exercises[currentIndex + 1];
-    if (nextExercise) {
-      setSelectedExercise(nextExercise);
-      setSetIndex(0);
-    }
-  };
-
-  const goToPreviousExercise = () => {
-    const currentIndex = selectedSuperset.exercises.indexOf(selectedExercise);
-    const previousExercise = selectedSuperset.exercises[currentIndex - 1];
-    if (previousExercise) {
-      setSelectedExercise(previousExercise);
-      setSetIndex(0);
-    }
-  };
+    return null;
 
   return selectedTrackingMethod === TrackingMethod.CAMERA ? (
     <MobileMovementValidation
@@ -179,7 +52,6 @@ export default function TrainingInProgressExerciseCard() {
       setSelectedExercise={setSelectedExercise}
       selectedTrackingMethod={selectedTrackingMethod}
       setSelectedTrackingMethod={setSelectedTrackingMethod}
-      updateExerciseValues={updateExerciseValues}
       trainingId={trainingInProgress.training.id}
       componentId={trainingInProgress.selectedComponent.id}
       supersetIndex={supersetIndex!}
@@ -187,8 +59,12 @@ export default function TrainingInProgressExerciseCard() {
     />
   ) : (
     <SwipeableBox
-      onSwipeLeft={goToNextExercise}
-      onSwipeRight={goToPreviousExercise}
+      onSwipeLeft={() =>
+        goToNextExercise({ useTrainingInProgress: useTrainingInProgress() })
+      }
+      onSwipeRight={() =>
+        goToPreviousExercise({ useTrainingInProgress: useTrainingInProgress() })
+      }
     >
       <Box
         width="100%"
@@ -252,7 +128,7 @@ export default function TrainingInProgressExerciseCard() {
                 color={theme.palette.primary.main}
                 sx={{ zIndex: 1 }}
               >
-                {labelRef.current}
+                {label}
               </Typography>
             </Box>
             <Box

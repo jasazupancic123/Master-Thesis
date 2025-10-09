@@ -17,6 +17,7 @@ export const AthleteHeaderProvider = (props: ChildrenProps) => {
   const { children } = props;
   const [selectedTrackingMethod, setSelectedTrackingMethod] =
     useState<TrackingMethod>(TrackingMethod.MANUAL);
+
   return (
     <AthleteHeaderContext.Provider
       value={{ selectedTrackingMethod, setSelectedTrackingMethod }}

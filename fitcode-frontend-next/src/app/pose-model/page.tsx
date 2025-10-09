@@ -6,7 +6,6 @@ export default function Page() {
       selectedExercise={undefined}
       selectedTrackingMethod={undefined}
       setSelectedTrackingMethod={undefined}
-      updateExerciseValues={undefined}
       trainingId="trainingId"
       componentId="componentId"
       supersetIndex={0}

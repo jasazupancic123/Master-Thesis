@@ -1,16 +1,12 @@
 import { Box, Typography } from '@mui/material';
 
-import TrainingInProgressExerciseSet from '../training-in-progress-exercise-set/training-in-progress-exercise-set';
-import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
+import TrainingInProgressExerciseSet from '@/components/training-in-progress/components/training-in-progress-exercise-set/training-in-progress-exercise-set';
+import useTrainingInProgressUndoneExercises from '../../hooks/use-undone-exercises';
 
-interface UndoneExercisesListProps {
-  undoneExercises: TrainingExercise[];
-}
-
-export default function UndoneExercisesList(props: UndoneExercisesListProps) {
-  const { undoneExercises } = props;
+export default function UndoneExercisesList() {
+  const { undoneExercises } = useTrainingInProgressUndoneExercises();
 
   const { trainingInProgress } = useTraining();
 

@@ -38,6 +38,15 @@ const TrainingContext = createContext<TrainingContextType | undefined>(
   undefined
 );
 
+export type TrainingProviderReturnType = ReturnType<typeof useTraining>;
+
+export type TrainingProviderReturnTypeDefined = Omit<
+  ReturnType<typeof useTraining>,
+  'trainingInProgress'
+> & {
+  trainingInProgress: TrainingInProgress;
+};
+
 export const TrainingProvider = (
   props: TrainingProviderProps & ChildrenProps
 ) => {
