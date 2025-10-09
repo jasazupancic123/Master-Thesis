@@ -44,6 +44,10 @@ export const TrainerDayViewContext =
 export const useTrainerDayViewContext = () =>
   useContext(TrainerDayViewContext)!;
 
+export type TrainerDayViewProviderReturnType = ReturnType<
+  typeof useTrainerDayViewContext
+>;
+
 export type TrainerDayViewProviderReturnTypeDefined = Omit<
   ReturnType<typeof useTrainerDayViewContext>,
   'training' | 'component'

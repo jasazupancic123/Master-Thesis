@@ -5,13 +5,8 @@ import type { AttributeValue } from '@/controller/attribute/type/attribute-value
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 
-export interface TrainingCardProps {
-  day: Day;
-}
-
 export interface TrainingComponentProps {
   trainingComponent: TrainingComponent;
-  day: Day;
 }
 
 export interface AddExerciseFormProps {

@@ -55,9 +55,7 @@ export default function GroupTrainerDayViewTrainings() {
           </Typography>
         </Box>
       ) : (
-        <Box width="100%">
-          {training && <TrainingCard key={training.id} day={day} />}
-        </Box>
+        <Box width="100%">{training && <TrainingCard key={training.id} />}</Box>
       )}
     </Box>
   );
