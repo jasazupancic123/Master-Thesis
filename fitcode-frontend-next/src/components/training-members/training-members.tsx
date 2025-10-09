@@ -23,22 +23,19 @@ export default function TrainingMembers(props: TrainingMembersProps) {
   const { isSticky } = props;
   const theme = useTheme();
 
-  const { users } = useMain();
-  const { setDetectedChanges } = useGroup();
-  const {
-    training,
-    setTraining,
-    component,
-    setComponent,
-    selectedSubgroup,
-    setSelectedSubgroup,
-    selectedAthlete,
-    setSelectedAthlete,
-  } = useTrainerDayViewContext();
+  const mainContext = useMain();
+  const groupContext = useGroup();
+  const trainerDayViewContext = useTrainerDayViewContext();
+  const trainingMembersContext = useTrainingMembers();
+  const trainingMembersSubgroupsContext = useTrainingMembersSubgroups();
 
-  const { members, sortedMembers, item } = useTrainingMembers();
-  const { subgroups, setSubgroups, changedSubgroupIds, setChangedSubgroupIds } =
-    useTrainingMembersSubgroups();
+  const { users } = mainContext;
+
+  const { training, component, selectedAthlete } = trainerDayViewContext;
+
+  const { members, sortedMembers, item } = trainingMembersContext;
+
+  const { subgroups } = trainingMembersSubgroupsContext;
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
@@ -79,15 +76,15 @@ export default function TrainingMembers(props: TrainingMembersProps) {
             handleOnDragEnd(
               { result },
               {
-                useMain: useMain(),
-                useGroup: useGroup(),
+                useMain: mainContext,
+                useGroup: groupContext,
                 useTrainerDayViewContext: {
-                  ...useTrainerDayViewContext(),
+                  ...trainerDayViewContext,
                   training,
                   component,
                 },
-                useTrainingMembersSubgroups: useTrainingMembersSubgroups(),
-                useTrainingMembers: useTrainingMembers(),
+                useTrainingMembersSubgroups: trainingMembersSubgroupsContext,
+                useTrainingMembers: trainingMembersContext,
               }
             )
           }
@@ -134,7 +131,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                             },
                             {
                               useTrainerDayViewContext: {
-                                ...useTrainerDayViewContext(),
+                                ...trainerDayViewContext,
                                 training,
                                 component,
                               },

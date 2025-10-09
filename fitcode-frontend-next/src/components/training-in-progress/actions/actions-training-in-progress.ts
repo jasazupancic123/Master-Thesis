@@ -5,9 +5,9 @@ import dayjs from 'dayjs';
 
 export function handleInitTrainingInProgressComponent(context: {
   useTraining: TrainingProviderReturnTypeDefined;
-  useTrainingInProgress: TrainingInProgressProviderReturnType;
+  useTrainingInProgressContext: TrainingInProgressProviderReturnType;
 }) {
-  const { useTraining, useTrainingInProgress } = context;
+  const { useTraining, useTrainingInProgressContext } = context;
 
   const { trainingInProgress, setTrainingInProgress } = useTraining;
 
@@ -16,7 +16,7 @@ export function handleInitTrainingInProgressComponent(context: {
     selectedExercise,
     setSelectedExercise,
     setSetIndex,
-  } = useTrainingInProgress;
+  } = useTrainingInProgressContext;
 
   const newTrainingInProgress = { ...trainingInProgress };
 
@@ -30,7 +30,7 @@ export function handleInitTrainingInProgressComponent(context: {
   }
 
   let selectedSuperset = undefined;
-  
+
   if (!newTrainingInProgress.supersetIndex) {
     newTrainingInProgress.supersetIndex = 0;
     selectedSuperset = newTrainingInProgress.supersets[0];

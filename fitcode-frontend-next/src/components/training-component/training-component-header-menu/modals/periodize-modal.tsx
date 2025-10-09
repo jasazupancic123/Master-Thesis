@@ -16,13 +16,18 @@ import { Typography } from '@mui/material';
 export default function PeriodizeModal() {
   const router = useRouter();
 
+  const mainContext = useMain();
+  const groupContext = useGroup();
+  const trainerDayViewContext = useTrainerDayViewContext();
+  const componentHandlerUtilsContext = useComponentHeaderUtils();
+
   const {
     components: allComponents,
     exercises: allExercises,
     methods: allMethods,
-  } = useMain();
+  } = mainContext;
 
-  const { setTrainings } = useGroup();
+  const { setTrainings } = groupContext;
 
   const {
     training,
@@ -31,7 +36,7 @@ export default function PeriodizeModal() {
     selectedSubgroup,
     setSelectedSubgroup,
     selectedExercises,
-  } = useTrainerDayViewContext();
+  } = trainerDayViewContext;
 
   const {
     selectedPeriodizationType,
@@ -40,7 +45,7 @@ export default function PeriodizeModal() {
     setNumTrainingsWithSameTarget,
     openModal,
     setOpenModal,
-  } = useComponentHeaderUtils();
+  } = componentHandlerUtilsContext;
 
   const controller = TrainingController.getInstance();
 
@@ -120,7 +125,7 @@ export default function PeriodizeModal() {
 
               stateUpdate(
                 { updatedComponent },
-                { useTrainerDayViewContext: useTrainerDayViewContext() }
+                { useTrainerDayViewContext: trainerDayViewContext }
               );
             } else {
               const updatedComponent = {
@@ -132,7 +137,7 @@ export default function PeriodizeModal() {
 
               stateUpdate(
                 { updatedComponent },
-                { useTrainerDayViewContext: useTrainerDayViewContext() }
+                { useTrainerDayViewContext: trainerDayViewContext }
               );
             }
 

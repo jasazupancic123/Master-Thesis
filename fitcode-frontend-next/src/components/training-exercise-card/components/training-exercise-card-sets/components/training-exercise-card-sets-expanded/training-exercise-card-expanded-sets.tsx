@@ -34,12 +34,17 @@ export default function TrainingExerciseCardExpandedSets(
 ) {
   const screenSize = useScreenSize();
 
-  const { methods } = useMain();
+  const mainContext = useMain();
+  const groupContext = useGroup();
+  const trainerDayViewContext = useTrainerDayViewContext();
+  const supersetsContext = useSupersets();
 
-  const { setDetectedChanges } = useGroup();
+  const { methods } = mainContext;
+
+  const { setDetectedChanges } = groupContext;
 
   const { training, setTraining, component, setSelectedSubgroup } =
-    useTrainerDayViewContext();
+    trainerDayViewContext;
 
   const { exercise, expandedSetsView, setExpandedSetsView } = props;
 
@@ -153,8 +158,8 @@ export default function TrainingExerciseCardExpandedSets(
                       setNumber: set.setNumber,
                     },
                     {
-                      useTrainerDayViewContext: useTrainerDayViewContext(),
-                      useSupersets: useSupersets(),
+                      useTrainerDayViewContext: trainerDayViewContext,
+                      useSupersets: supersetsContext,
                     }
                   );
 
@@ -207,11 +212,11 @@ export default function TrainingExerciseCardExpandedSets(
                                   { exercise },
                                   {
                                     useTrainerDayView: {
-                                      ...useTrainerDayViewContext(),
+                                      ...trainerDayViewContext,
                                       training,
                                       component,
                                     },
-                                    useSupersets: useSupersets(),
+                                    useSupersets: supersetsContext,
                                   }
                                 );
 

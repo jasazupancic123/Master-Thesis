@@ -25,8 +25,11 @@ export default function WeekViewItem(props: WeekViewItemProps) {
   const screenSize = useScreenSize();
   const router = useRouter();
 
+  const groupContext = useGroup();
+
+  const { setGroup, setTrainings } = groupContext;
+
   const { item } = props;
-  const { setGroup, setTrainings } = useGroup();
 
   const checkIsTrainingComponent = (
     item: TrainingComponentWithTrainingId | GroupEvent
@@ -187,7 +190,7 @@ export default function WeekViewItem(props: WeekViewItemProps) {
                         router,
                       },
                       {
-                        useGroup: useGroup(),
+                        useGroup: groupContext,
                       }
                     );
                   }}
@@ -217,7 +220,7 @@ export default function WeekViewItem(props: WeekViewItemProps) {
                         router,
                       },
                       {
-                        useGroup: useGroup(),
+                        useGroup: groupContext,
                       }
                     );
                   }}

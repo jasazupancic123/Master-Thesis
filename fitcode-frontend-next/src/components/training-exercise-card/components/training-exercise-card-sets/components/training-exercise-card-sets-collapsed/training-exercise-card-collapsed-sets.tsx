@@ -38,19 +38,25 @@ export default function TrainingExerciseCardCollapsedSets(
 ) {
   const screenSize = useScreenSize();
 
+  const mainContext = useMain();
+  const groupContext = useGroup();
+  const trainerDayViewContext = useTrainerDayViewContext();
+  const supersetsContext = useSupersets();
+  const collapsedSetsContext = useExerciseCollapsedSetsSetNumber({
+    exercise: props.exercise,
+  });
+
   const { exercise, expandedSetsView, setExpandedSetsView, componentIndex } =
     props;
 
-  const { setsNumbers, setSetsNumbers } = useSupersets();
-
-  const { methods } = useMain();
+  const { methods } = mainContext;
 
   const { training, component, selectedSubgroup, selectedAthlete } =
-    useTrainerDayViewContext();
+    trainerDayViewContext;
 
-  const { setNumber } = useExerciseCollapsedSetsSetNumber({
-    exercise,
-  });
+  const { setsNumbers, setSetsNumbers } = supersetsContext;
+
+  const { setNumber } = collapsedSetsContext;
 
   if (!training || !component) return null;
 
@@ -151,8 +157,8 @@ export default function TrainingExerciseCardCollapsedSets(
               const methodMinMax = getMethodMinMax(
                 { exercise, attributeRange, valueL, setNumber },
                 {
-                  useTrainerDayViewContext: useTrainerDayViewContext(),
-                  useSupersets: useSupersets(),
+                  useTrainerDayViewContext: trainerDayViewContext,
+                  useSupersets: supersetsContext,
                 }
               );
 
@@ -220,8 +226,8 @@ export default function TrainingExerciseCardCollapsedSets(
                                 },
                                 {
                                   useTrainerDayViewContext:
-                                    useTrainerDayViewContext(),
-                                  useSupersets: useSupersets(),
+                                    trainerDayViewContext,
+                                  useSupersets: supersetsContext,
                                 }
                               );
 
@@ -236,7 +242,7 @@ export default function TrainingExerciseCardCollapsedSets(
                               },
                               {
                                 useTrainerDayViewContext: {
-                                  ...useTrainerDayViewContext(),
+                                  ...trainerDayViewContext,
                                   training,
                                   component,
                                 },
@@ -254,11 +260,11 @@ export default function TrainingExerciseCardCollapsedSets(
                                 },
                                 {
                                   useTrainerDayView: {
-                                    ...useTrainerDayViewContext(),
+                                    ...trainerDayViewContext,
                                     training,
                                     component,
                                   },
-                                  useSupersets: useSupersets(),
+                                  useSupersets: supersetsContext,
                                 }
                               );
 
@@ -283,14 +289,14 @@ export default function TrainingExerciseCardCollapsedSets(
                                   correctSetsNumbers,
                                 },
                                 {
-                                  useMain: useMain(),
-                                  useGroup: useGroup(),
+                                  useMain: mainContext,
+                                  useGroup: groupContext,
                                   useTrainerDayView: {
-                                    ...useTrainerDayViewContext(),
+                                    ...trainerDayViewContext,
                                     training,
                                     component,
                                   },
-                                  useSupersets: useSupersets(),
+                                  useSupersets: supersetsContext,
                                 }
                               );
                               return;
@@ -307,9 +313,9 @@ export default function TrainingExerciseCardCollapsedSets(
                                 correctSelectedSubgroup,
                               },
                               {
-                                useGroup: useGroup(),
+                                useGroup: groupContext,
                                 useTrainerDayView: {
-                                  ...useTrainerDayViewContext(),
+                                  ...trainerDayViewContext,
                                   training,
                                   component,
                                 },

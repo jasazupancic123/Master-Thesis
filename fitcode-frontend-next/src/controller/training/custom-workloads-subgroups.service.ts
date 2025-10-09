@@ -101,16 +101,11 @@ export class CustomWorkloadsSubgroupsService {
     return component.subgroups;
   };
 
-  static updateMainSet = (
-    input: {
-      component: TrainingComponent;
-      selectedSubgroup: Subgroup | null;
-      mainSet: MainSet;
-    },
-    context: {
-      useTrainerDayViewContext: TrainerDayViewProviderReturnTypeDefined;
-    }
-  ): Subgroup[] => {
+  static updateMainSet = (input: {
+    component: TrainingComponent;
+    selectedSubgroup: Subgroup | null;
+    mainSet: MainSet;
+  }): Subgroup[] => {
     const { component, selectedSubgroup, mainSet } = input;
 
     const parentId = selectedSubgroup?.id || DEFAULT_SUBGROUP_ID;

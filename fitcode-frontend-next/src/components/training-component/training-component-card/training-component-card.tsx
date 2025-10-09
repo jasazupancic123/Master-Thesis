@@ -36,8 +36,11 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
 
   const theme = useTheme();
 
+  const groupContext = useGroup();
+  const trainerDayViewContext = useTrainerDayViewContext();
+
   const { training, component, selectedExercises, selectedAthlete, supersets } =
-    useTrainerDayViewContext();
+    trainerDayViewContext;
 
   return (
     <Box display="flex" p={0}>
@@ -72,7 +75,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
               onClick={() => {
                 handleSelectTrainingComponent(
                   { trainingComponent },
-                  { useTrainerDayViewContext: useTrainerDayViewContext() }
+                  { useTrainerDayViewContext: trainerDayViewContext }
                 );
               }}
             >
@@ -80,7 +83,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                 ? `${trainingComponent.component.name} - ${trainingComponent.target.name}`
                 : trainingComponent.component.name}
             </Typography>
-
+            ;
             {component?.id === trainingComponent.id && (
               <Box display="flex" justifyContent="flex-start" gap={0.5}>
                 <IconButton
@@ -144,9 +147,8 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                               selectedExercises,
                             },
                             {
-                              useTrainerDayViewContext:
-                                useTrainerDayViewContext(),
-                              useGroup: useGroup(),
+                              useGroup: groupContext,
+                              useTrainerDayViewContext: trainerDayViewContext,
                             }
                           );
                         }}
@@ -158,7 +160,6 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                 </>
               </Box>
             )}
-
             {training && (
               <Box ml={2}>
                 <CompletedMembersGroup componentId={trainingComponent.id} />
