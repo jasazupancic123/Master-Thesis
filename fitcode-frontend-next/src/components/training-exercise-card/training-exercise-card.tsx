@@ -6,12 +6,12 @@ import { useState } from 'react';
 
 import MyModal from '../modal/modal';
 import type { TrainingExerciseCardProps } from '../trainer-day-view/props';
-import TrainingExerciseCardCollapsedSets from './training-exercise-card-sets/training-exercise-card-sets-collapsed/training-exercise-card-collapsed-sets';
-import TrainingExerciseCardExpandedSets from './training-exercise-card-sets/training-exercise-card-sets-expanded/training-exercise-card-expanded-sets';
-import type { Attribute } from '@/controller/attribute/type/attribute.type';
+import TrainingExerciseCardCollapsedSets from './components/training-exercise-card-sets/components/training-exercise-card-sets-collapsed/training-exercise-card-collapsed-sets';
+import TrainingExerciseCardExpandedSets from './components/training-exercise-card-sets/components/training-exercise-card-sets-expanded/training-exercise-card-expanded-sets';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
+import useTrainingExerciseCardParams from './hooks/use-params';
 
 export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   const screenSize = useScreenSize();
@@ -25,38 +25,16 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
     expandedExercisesView,
   } = useSupersets();
 
-  const { training, component, selectedSubgroup } = useTrainerDayViewContext();
+  const { training, component } = useTrainerDayViewContext();
 
   const { selectedExercises, setSelectedExercises } =
     useTrainerDayViewContext();
 
+  const { params, componentIndex } = useTrainingExerciseCardParams(props);
+
   const { supersetIndex, chartView, exercise } = props;
 
-  // const [exercise, setExercise] = useState(propsExercise);
   const [expandedSetsView, setExpandedSetsView] = useState(false);
-
-  const componentIndex = training?.components.findIndex(
-    (c) => c.id === component?.id
-  );
-  const selectedTrainingOrSubgroup =
-    selectedSubgroup || training?.components?.[componentIndex!];
-  const k = selectedTrainingOrSubgroup?.supersets?.[
-    supersetIndex!
-  ]?.exercises?.findIndex((e) => e.id === exercise.id);
-
-  const currentExercise =
-    selectedTrainingOrSubgroup?.supersets?.[supersetIndex!]?.exercises?.[k!];
-
-  const params =
-    currentExercise?.sets?.[0]?.paramValuesL?.map((pv) =>
-      Array.isArray(exercise.params)
-        ? exercise?.params?.find((p) => p.field === pv.field)
-        : Object.values(exercise.params).find(
-            (p) => (p as Attribute).field === pv.field
-          )
-    ) ||
-    []?.filter((p) => p) ||
-    [];
 
   if (!training || !component || !params) return null;
 

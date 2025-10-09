@@ -222,11 +222,11 @@ export default function TrainingMembersSubgroup(
                               subgroupId: subgroup.id,
                             },
                             {
-                              component,
-                              selectedSubgroup,
-                              setSelectedSubgroup,
-                              selectedAthlete,
-                              setSelectedAthlete,
+                              useTrainerDayViewContext: {
+                                ...useTrainerDayViewContext(),
+                                training,
+                                component,
+                              },
                             }
                           );
                         }}

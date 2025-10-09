@@ -20,7 +20,7 @@ import MyModal from '../modal/modal';
 import Superset from '../superset/superset';
 import { NUM_MAX_SUPERSETS } from '../trainer-day-view/constant';
 import { onDragEndExercise as onRBDDragEnd } from '../trainer-day-view/state';
-import StubTrainingExerciseCard from '../training-exercise-card/stub-training-exercise-card';
+import StubTrainingExerciseCard from '../training-exercise-card/stub/training-exercise-card-stub';
 import { handleAddExerciseToSupersetComponent } from './state';
 import { ADD_SUPERSET_DROPPABLE_ID } from '@/common/constant/add-superset-droppable-id.constant';
 import type { SetState } from '@/common/type/state.type';

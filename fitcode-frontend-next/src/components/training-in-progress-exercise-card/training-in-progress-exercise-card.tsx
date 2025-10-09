@@ -8,7 +8,6 @@ import toast from 'react-hot-toast';
 import AthleteTrainingExerciseSets from '../athlete-training-exercise-sets/athlete-training-exercise-sets';
 import MobileMovementValidation from '../mobile-movement-validation/mobile-movement-validation';
 import SwipeableBox from '../swipeable-box/swipeable-box';
-import { updateExerciseAttributeValues } from '../training-exercise-card/training-exercise-card-sets/training-exercise-card-sets-expanded/state';
 import ImageGallery from './image-gallery';
 import TrainingExerciseSetDoneCheckbox from './training-exercise-set-done-checkbox';
 import TrainingInProgressTempoChart from './training-in-progress-tempo-chart';
@@ -22,6 +21,7 @@ import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
+import { updateExerciseAttributeValues } from '../training-exercise-card/components/training-exercise-card-sets/components/training-exercise-card-sets-expanded/actions/actions-attribute-values';
 
 export default function TrainingInProgressExerciseCard() {
   const theme = useTheme();
@@ -104,17 +104,17 @@ export default function TrainingInProgressExerciseCard() {
             i: setIndex,
             set: selectedSet,
             lOrR: lOrR as 'L' | 'R',
+            correctSelectedExercises: [updatableExercise],
+            correctExercise: updatableExercise,
+            correctParam: repParam,
+            correctSupersets: trainingInProgress.supersets,
+            correctSelectedSubgroup: null,
           },
           {
-            selectedExercises: [updatableExercise],
-            exercise: updatableExercise,
-            param: repParam,
             training: trainingInProgress.training,
             component: trainingInProgress.selectedComponent,
             setTraining: () => {},
-            supersets: trainingInProgress.supersets,
             setDetectedChanges: () => {},
-            selectedSubgroup: null,
             setSelectedSubgroup: () => {},
           }
         );
@@ -133,17 +133,17 @@ export default function TrainingInProgressExerciseCard() {
             i: setIndex,
             set: selectedSet,
             lOrR: lOrR as 'L' | 'R',
+            correctSelectedExercises: [updatableExercise],
+            correctExercise: updatableExercise,
+            correctParam: tempoParam,
+            correctSupersets: trainingInProgress.supersets,
+            correctSelectedSubgroup: null,
           },
           {
-            selectedExercises: [updatableExercise],
-            exercise: updatableExercise,
-            param: tempoParam,
             training: trainingInProgress.training,
             component: trainingInProgress.selectedComponent,
             setTraining: () => {},
-            supersets: trainingInProgress.supersets,
             setDetectedChanges: () => {},
-            selectedSubgroup: null,
             setSelectedSubgroup: () => {},
           }
         );

@@ -5,8 +5,6 @@ import toast from 'react-hot-toast';
 
 import { ExerciseParam } from '../exercise-param/exercise-param';
 import LeftRightExerciseText from '../left-right-exercise-text/left-right-exercise-text';
-import { getLAndRValues } from '../training-exercise-card/state';
-import { updateExerciseAttributeValues } from '../training-exercise-card/training-exercise-card-sets/training-exercise-card-sets-expanded/state';
 import type { ExerciseSetTracking } from '@/common/type/exercise-set-tracking-state.type';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import { ParamType } from '@/controller/component/enum/param.enum';
@@ -15,6 +13,8 @@ import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
+import { getLAndRValues } from '../training-exercise-card/actions/actions-attribute-value';
+import { updateExerciseAttributeValues } from '../training-exercise-card/components/training-exercise-card-sets/components/training-exercise-card-sets-expanded/actions/actions-attribute-values';
 
 interface AthleteTrainingExerciseSetsProps {
   training: Training;
@@ -127,23 +127,16 @@ export default function AthleteTrainingExerciseSets(
                   .map((param, j) => {
                     /* find the custom workload for the selected athlete if selected, otherwise
                       get the value from the exercise sets */
-                    const { valueL, valueR } = getLAndRValues(
-                      {
-                        set,
-                        param,
-                        setIndex:
-                          setIndex !== undefined && setIndex !== null
-                            ? setIndex
-                            : i,
-                        paramIndex: j - 1,
-                      },
-                      {
-                        training,
-                        exercise,
-                        selectedAthleteWorkloads: [],
-                        selectedAthlete: undefined,
-                      }
-                    );
+                    const { valueL, valueR } = getLAndRValues({
+                      set,
+                      param,
+                      setIndex:
+                        setIndex !== undefined && setIndex !== null
+                          ? setIndex
+                          : i,
+                      paramIndex: j - 1,
+                      exercise,
+                    });
 
                     if (!valueL || (exercise.exercise?.isUnilateral && !valueR))
                       return toast.error(
@@ -232,18 +225,19 @@ export default function AthleteTrainingExerciseSets(
                                     i,
                                     set,
                                     lOrR: lOrR as 'L' | 'R',
+                                    correctSelectedExercises: [exercise],
+                                    correctExercise: exercise,
+                                    correctParam: param,
+                                    correctSupersets:
+                                      trainingInProgress.supersets,
+                                    correctSelectedSubgroup: null,
                                   },
                                   {
-                                    selectedExercises: [exercise],
-                                    exercise: exercise,
-                                    param,
                                     training,
                                     component:
                                       trainingInProgress.selectedComponent,
                                     setTraining: () => {},
-                                    supersets: trainingInProgress.supersets,
                                     setDetectedChanges: () => {},
-                                    selectedSubgroup: null,
                                     setSelectedSubgroup: () => {},
                                   }
                                 );

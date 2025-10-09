@@ -12,6 +12,7 @@ import type { Superset as SupersetClass } from '@/controller/training/type/super
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
+import { useEffect } from 'react';
 
 interface SupersetComponentProps {
   superset: SupersetClass;
@@ -22,7 +23,12 @@ export default function Superset(props: SupersetComponentProps) {
   const theme = useTheme();
   const screenSize = useScreenSize();
 
-  const { selectedExercise, setOpenAddExerciseModal } = useSupersets();
+  const {
+    selectedExercise,
+    setOpenAddExerciseModal,
+    setsNumbers,
+    setSetsNumbers,
+  } = useSupersets();
   const { training, component, supersets, selectedSubgroup } =
     useTrainerDayViewContext();
 
@@ -37,6 +43,45 @@ export default function Superset(props: SupersetComponentProps) {
   const numExercises = (selectedSubgroup || component).supersets.flatMap(
     (s) => s.exercises
   ).length;
+
+  useEffect(() => {
+    const newSetsNumbers = [] as { exerciseId: string; setsNumber: number }[];
+
+    if (selectedSubgroup) {
+      selectedSubgroup.supersets.forEach((superset) => {
+        superset.exercises.forEach((exercise) => {
+          const setsNumber = exercise.sets.length;
+          newSetsNumbers.push({
+            exerciseId: exercise.id,
+            setsNumber: setsNumber,
+          });
+        });
+      });
+    } else {
+      component?.supersets?.forEach((superset) => {
+        superset.exercises?.forEach((exercise) => {
+          const setsNumber = exercise.sets.length;
+          newSetsNumbers.push({
+            exerciseId: exercise.id,
+            setsNumber: setsNumber,
+          });
+        });
+      });
+    }
+
+    if (
+      newSetsNumbers.every((s) =>
+        setsNumbers.some(
+          (sn) =>
+            sn.exerciseId === s.exerciseId && sn.setsNumber === s.setsNumber
+        )
+      )
+    )
+      return;
+
+    // update sets numbers if method and ranges do not exist
+    setSetsNumbers(newSetsNumbers);
+  }, [selectedSubgroup]);
 
   return (
     <Grid2
