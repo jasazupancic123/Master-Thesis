@@ -11,7 +11,7 @@ import {
   Tooltip,
 } from '@mui/material';
 
-import useTrainingComponentMembers from './hooks/use-members';
+import useTrainingComponentMembers from '../hooks/use-members';
 
 type Props = {
   componentId: string;

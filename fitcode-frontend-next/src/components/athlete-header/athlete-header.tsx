@@ -6,7 +6,7 @@ import * as React from 'react';
 
 import BottomNavigation from '../bottom-navigation/bottom-navigation';
 import Logo from '../logo/logo';
-import Sidebar from '../sidebar/sidebar';
+import AthleteSidebar from '../athlete-sidebar/athlete-sidebar';
 import { MAX_WIDTH } from '../trainer-day-view/constant';
 import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
@@ -36,7 +36,9 @@ export default function AthleteHeader() {
           alignItems: 'center',
         }}
       >
-        {!screenSize.isLandscapeMobile && !screenSize.isMobile && <Sidebar />}
+        {!screenSize.isLandscapeMobile && !screenSize.isMobile && (
+          <AthleteSidebar />
+        )}
 
         <Box
           sx={{
@@ -55,7 +57,7 @@ export default function AthleteHeader() {
           zIndex={1000}
         >
           {!screenSize.isLandscapeMobile && !screenSize.isMobile ? (
-            <Sidebar />
+            <AthleteSidebar />
           ) : (
             <BottomNavigation />
           )}

@@ -8,7 +8,7 @@ import MyModal from '../modal/modal';
 import type { TrainingCycleViewWeekProps } from '../training-cycle-view-week/type';
 import type { Training } from '@/controller/training/type/training.type';
 import { useMain } from '@/store/main.provider';
-import TrainingWeekDates from './training-week-date';
+import TrainingWeekDates from './components/training-week-date';
 
 export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
   const { components } = useMain();

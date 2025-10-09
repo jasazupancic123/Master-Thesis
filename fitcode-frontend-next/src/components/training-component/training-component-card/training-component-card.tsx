@@ -9,7 +9,7 @@ import {
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 
-import CompletedMembersGroup from './completed-members-group';
+import CompletedMembersGroup from './components/completed-members-group';
 import { CommonService } from '@/common/service/common.service';
 import type { SetState } from '@/common/type/state.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
@@ -83,7 +83,6 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                 ? `${trainingComponent.component.name} - ${trainingComponent.target.name}`
                 : trainingComponent.component.name}
             </Typography>
-            ;
             {component?.id === trainingComponent.id && (
               <Box display="flex" justifyContent="flex-start" gap={0.5}>
                 <IconButton
@@ -114,8 +113,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                         sx={{ p: 0, m: 0 }}
                         onClick={() => {
                           handleSelectedExercisesSelection({
-                            useTrainerDayViewContext:
-                              useTrainerDayViewContext(),
+                            useTrainerDayViewContext: trainerDayViewContext,
                           });
                         }}
                       >

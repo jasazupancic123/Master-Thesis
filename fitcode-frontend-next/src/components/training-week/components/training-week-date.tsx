@@ -20,7 +20,7 @@ import { useMain } from '@/store/main.provider';
 import {
   getFilteredTrainings,
   handleClickDateCell,
-} from './actions/actions-week-date';
+} from '../actions/actions-week-date';
 
 interface TrainingWeekDatesProps {
   week: dayjs.Dayjs[];

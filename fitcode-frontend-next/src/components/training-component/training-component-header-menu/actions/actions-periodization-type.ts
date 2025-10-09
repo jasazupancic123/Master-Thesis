@@ -3,27 +3,29 @@ import { GroupProviderReturnType } from '@/store/group.provider';
 import { TrainerDayViewProviderReturnTypeDefined } from '@/store/trainer-day-view.provider';
 import { isBefore } from 'date-fns';
 import toast from 'react-hot-toast';
-import { UseComponentHeaderUtilsReturnType } from '../hooks/use-utils';
+import { SetState } from '@/common/type/state.type';
 
 export function handleSetPeriodizationType(
-  input: { periodizationType: PeriodizationType },
+  input: {
+    periodizationType: string | number;
+    setOpenModal: SetState<boolean>;
+    setSelectedPeriodizationType: SetState<PeriodizationType | null>;
+    setNumTrainingsWithSameTarget: SetState<number>;
+  },
   context: {
     useGroup: GroupProviderReturnType;
     useTrainerDayViewContext: TrainerDayViewProviderReturnTypeDefined;
-    useComponentHeaderUtils: UseComponentHeaderUtilsReturnType;
   }
 ) {
-  const { periodizationType } = input;
-  const { useGroup, useTrainerDayViewContext, useComponentHeaderUtils } =
-    context;
-
-  const { trainings, detectedChanges } = useGroup;
-
   const {
+    periodizationType,
+    setOpenModal,
     setSelectedPeriodizationType,
     setNumTrainingsWithSameTarget,
-    setOpenModal,
-  } = useComponentHeaderUtils;
+  } = input;
+  const { useGroup, useTrainerDayViewContext } = context;
+
+  const { trainings, detectedChanges } = useGroup;
 
   const {
     training,
@@ -60,8 +62,6 @@ export function handleSetPeriodizationType(
     return;
   }
 
-  if (!training) return;
-
   if (
     periodizationType !== PeriodizationType.REPLICATE &&
     !selectedExercises.length
@@ -90,4 +90,5 @@ export function handleSetPeriodizationType(
   setSelectedPeriodizationType(periodizationType as PeriodizationType | null);
   setNumTrainingsWithSameTarget(numTrainingsWithSameTarget);
   setOpenModal(true);
+  setOpenModal;
 }

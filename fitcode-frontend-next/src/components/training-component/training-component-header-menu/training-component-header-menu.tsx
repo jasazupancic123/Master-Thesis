@@ -14,11 +14,11 @@ import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
-import useComponentHeaderUtils from './hooks/use-utils';
 import { handleSetMainSet } from './actions/actions-main-set';
 import { handleSetPeriodizationType } from './actions/actions-periodization-type';
 import { onMethodChange } from './actions/actions-method';
 import PeriodizeModal from './modals/periodize-modal';
+import { useState } from 'react';
 
 export default function TrainingComponentHeaderMenu() {
   const screenSize = useScreenSize();
@@ -28,14 +28,18 @@ export default function TrainingComponentHeaderMenu() {
   const mainContext = useMain();
   const groupContext = useGroup();
   const trainerDayViewContext = useTrainerDayViewContext();
-  const componentHandlerUtilsContext = useComponentHeaderUtils();
 
   const { setDetectedChanges } = groupContext;
 
   const { training, component, selectedSubgroup, selectedAthlete } =
     trainerDayViewContext;
 
-  const { afterSet, setAfterSet } = useComponentHeaderUtils();
+  const [afterSet, setAfterSet] = useState<AfterSet | null>();
+  const [selectedPeriodizationType, setSelectedPeriodizationType] =
+    useState<PeriodizationType | null>(null);
+  const [numTrainingsWithSameTarget, setNumTrainingsWithSameTarget] =
+    useState(0);
+  const [openModal, setOpenModal] = useState(false);
 
   if (!training || !component) return null;
 
@@ -153,7 +157,12 @@ export default function TrainingComponentHeaderMenu() {
           selectSize="small"
           setValue={(periodizationType) => {
             handleSetPeriodizationType(
-              { periodizationType: periodizationType as PeriodizationType },
+              {
+                periodizationType,
+                setOpenModal,
+                setSelectedPeriodizationType,
+                setNumTrainingsWithSameTarget,
+              },
               {
                 useTrainerDayViewContext: {
                   ...trainerDayViewContext,
@@ -161,7 +170,6 @@ export default function TrainingComponentHeaderMenu() {
                   component,
                 },
                 useGroup: groupContext,
-                useComponentHeaderUtils: componentHandlerUtilsContext,
               }
             );
           }}
@@ -210,7 +218,14 @@ export default function TrainingComponentHeaderMenu() {
         />
       </Tooltip>
 
-      <PeriodizeModal />
+      <PeriodizeModal
+        open={openModal}
+        setOpen={setOpenModal}
+        selectedPeriodizationType={selectedPeriodizationType}
+        setSelectedPeriodizationType={setSelectedPeriodizationType}
+        numTrainingsWithSameTarget={numTrainingsWithSameTarget}
+        setNumTrainingsWithSameTarget={setNumTrainingsWithSameTarget}
+      />
     </Box>
   );
 }
