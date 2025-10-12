@@ -17,6 +17,16 @@ export const BLACK_TEXT_FIELD_STYLE: SxProps<Theme> = (theme) => ({
     color: theme.palette.text.secondary,
   },
 
+  '& .MuiOutlinedInput-notchedOutline': {
+    borderColor: `${theme.palette.text.secondary} !important`,
+  },
+  '&:hover .MuiOutlinedInput-notchedOutline': {
+    borderColor: `${theme.palette.text.secondary} !important`,
+  },
+  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+    borderColor: `${theme.palette.text.secondary} !important`,
+  },
+
   // underline (standard)
   '&& .MuiInput-underline:before': {
     borderBottomColor: theme.palette.text.secondary,

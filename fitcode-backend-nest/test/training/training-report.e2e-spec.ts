@@ -1,20 +1,16 @@
-import type { INestApplication } from '@nestjs/common';
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { TestApp } from '@test/common/utils/app.util';
 
-import { AppModule } from '@src/app.module';
 import type { TestInstitution } from '@src/common/type/entity.type';
 import type { TrainingReportRef } from '@src/common/type/firestore.type';
 import type { Component } from '@src/component/entity/component.entity';
-import { generateComponentParamsStub } from '@src/component/mock/component-param.stub';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import type { Group } from '@src/group/entity/group.entity';
 import { TestDbService } from '@src/test-db/test-db.service';
+import type { ExerciseSet } from '@src/training/entity/exercise-set.entity';
 import type { Training } from '@src/training/entity/training.entity';
 import type { TrainingReport } from '@src/training/entity/training-report.entity';
 import type { TrainingStats } from '@src/training/entity/training-stats.entity';
-import { ParamType } from '@src/training/enum/load-type.enum';
 import { SetStatus } from '@src/training/enum/set-status.enum';
 import {
   generateExerciseSet,
@@ -27,30 +23,23 @@ import { TrainingReportService } from '@src/training/service/training-report.ser
 import { WorkloadService } from '@src/training/service/workload.service';
 
 describe('Training Report (e2e)', () => {
-  let app: INestApplication;
+  let testApp: TestApp;
   let db: TestDbService;
   let workloadService: WorkloadService;
   let trainingReportService: TrainingReportService;
 
   let component: Component;
-  let component2: Component;
-
   let institution: TestInstitution;
   let group: Group;
   let training: Training;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
+    testApp = await TestApp.init();
+    workloadService = testApp.module.get(WorkloadService);
+    trainingReportService = testApp.module.get(TrainingReportService);
+    const exerciseService = testApp.module.get(ExerciseService);
 
-    app = moduleFixture.createNestApplication();
-    workloadService = moduleFixture.get(WorkloadService);
-    trainingReportService = moduleFixture.get(TrainingReportService);
-    const exerciseService = moduleFixture.get(ExerciseService);
-    await app.init();
-
-    db = moduleFixture.get(TestDbService);
+    db = testApp.module.get(TestDbService);
     institution = await db.institutions.createTest({
       createRandomAthlete: true,
       athletes: [global.athlete],
@@ -58,7 +47,7 @@ describe('Training Report (e2e)', () => {
 
     group = await db.groups.createTest(institution);
 
-    [component, component2] = await Promise.all([
+    [component] = await Promise.all([
       db.components.create({ id: 'c1' }),
       db.components.create({ id: 'c2' }),
     ]);
@@ -69,19 +58,8 @@ describe('Training Report (e2e)', () => {
       generateExerciseStub({ name: 'deadlift', componentIds: ['c1'] }),
     ]);
 
-    const opt1 = generateComponentParamsStub([
-      ParamType.VolWorkSets, // sets
-      ParamType.VolWork1, // reps, defaults to 10 reps
-      ParamType.IntWork1, // kg, defaults to 50 kg
-      ParamType.VolRec1, // rec, defaults to 60 sec
-    ]);
-
-    const opt2 = generateComponentParamsStub([
-      ParamType.VolWorkSets, // sets
-      ParamType.VolWork2, // dist, defaults to 30 m
-      ParamType.IntWork2, // tempo, defaults to 2010
-      ParamType.IntRec1, // eff, defaults to 1 (easy)
-    ]);
+    const opt1: (keyof ExerciseSet)[] = ['reps', 'loadKg', 'recTime'];
+    const opt2: (keyof ExerciseSet)[] = ['dist', 'tempo', 'eff'];
 
     const trainingId = await db.trainings.save(
       generateTrainingStub({
@@ -165,7 +143,7 @@ describe('Training Report (e2e)', () => {
       db.components.clear(),
     ]);
 
-    await app.close();
+    await testApp.close();
   });
 
   it('should return default stats for training without any components', () => {
@@ -355,6 +333,35 @@ describe('Training Report (e2e)', () => {
 
     expect(report).toBeDefined();
     expect(report.sets).toBe(2);
+
+    await db.workloads.deleteAll(training.id);
+    await db.trainingReports.delete(ref);
+  });
+
+  it('should add photos to report', async () => {
+    const photoURLs = ['photo1', 'photo2'];
+    await trainingReportService.updateReport(global.athlete.uid, training, {
+      photoURLs,
+    });
+
+    const ref: TrainingReportRef = {
+      trainingId: training.id,
+      userId: global.athlete.uid,
+    };
+
+    const report = await db.trainingReports.findById(ref);
+    expect(report).toBeDefined();
+    expect(report.photoURLs).toEqual(photoURLs);
+
+    // add more photos
+    const newPhotoURLs = ['photo3', 'photo4'];
+    await trainingReportService.updateReport(global.athlete.uid, training, {
+      photoURLs: newPhotoURLs,
+    });
+
+    const updatedReport = await db.trainingReports.findById(ref);
+    expect(updatedReport).toBeDefined();
+    expect(updatedReport.photoURLs).toEqual(newPhotoURLs);
 
     await db.workloads.deleteAll(training.id);
     await db.trainingReports.delete(ref);

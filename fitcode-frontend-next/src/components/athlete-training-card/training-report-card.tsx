@@ -24,7 +24,7 @@ export default function TrainingReportCard(props: TrainingReportCardProps) {
 
   const [realizationScore] = useState(Math.round(report.realization * 100));
   const [tonnageScore] = useState(
-    Math.round((report.tonnage / report.totalTonnage) * 100)
+    Math.round((report.tonnage / report.totalTonnage) * 100) || 0
   );
   const [densityScore] = useState(
     Math.round((report.activeTime / report.recTime) * 100)
@@ -102,7 +102,7 @@ export default function TrainingReportCard(props: TrainingReportCardProps) {
                       { label: '', value: tonnageScore },
                       { label: '', value: 100 - tonnageScore },
                     ],
-                    innerRadius: 30,
+                    innerRadius: 35,
                     outerRadius: 45,
                     cy: 55,
                   },
@@ -113,8 +113,9 @@ export default function TrainingReportCard(props: TrainingReportCardProps) {
                 ]}
               >
                 <PieCenterLabel
-                  label={`${tonnageScore}kg`}
+                  label={`${report.tonnage}kg`}
                   position={{ top: 12 }}
+                  fontSize={12}
                 />
                 <ChartsTooltip trigger="none" />
               </PieChart>

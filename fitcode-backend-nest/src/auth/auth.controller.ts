@@ -6,22 +6,39 @@ import {
   Patch,
   Post,
   Query,
+  Res,
 } from '@nestjs/common';
+import { Response } from 'express';
 
 import { Auth } from '@src/common/decorator/auth.decorator';
 import { RequestUser } from '@src/common/decorator/request-user.decorator';
 import { User } from '@src/common/type/firebase-auth.type';
 
-import { AuthService } from './auth.service';
 import { UpdateCustomClaimsDto } from './dto/custom-claims.dto';
 import { FilterUserQueryDto } from './dto/filter-user-query.dto';
+import { IdTokenDto } from './dto/login.dto';
 import { RegisterAthleteDto } from './dto/register-athlete.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { AuthUser } from './entities/user.entity';
 import { UserRole } from './enum/user-role.enum';
+import { AuthService } from './service/auth.service';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  @Post('session-login')
+  async sessionLogin(
+    @Body() { idToken }: IdTokenDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<AuthUser | null> {
+    return await this.authService.sessionLogin(idToken, res);
+  }
+
+  @Post('logout')
+  async logout(@Res({ passthrough: true }) res: Response) {
+    await this.authService.logout(res);
+  }
 
   @Get()
   @Auth()
@@ -47,7 +64,7 @@ export class AuthController {
   }
 
   @Patch(':id/claims')
-  @Auth()
+  @Auth([UserRole.ADMIN, UserRole.MANAGER])
   async updateCustomClaims(
     @RequestUser() user: User,
     @Param('id') id: string,

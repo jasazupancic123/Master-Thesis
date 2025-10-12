@@ -1,9 +1,5 @@
-import type { INestApplication } from '@nestjs/common';
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
-import * as request from 'supertest';
+import { TestApp } from '@test/common/utils/app.util';
 
-import { AppModule } from '@src/app.module';
 import type { TestInstitution } from '@src/common/type/entity.type';
 import {
   createInstitution,
@@ -23,7 +19,7 @@ import { FirebaseService } from '@src/firebase/firebase.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 
 describe('Get Exercises (e2e)', () => {
-  let app: INestApplication;
+  let testApp: TestApp;
   let firebase: FirebaseService;
   let exerciseService: ExerciseService;
   let componentService: ComponentService;
@@ -42,17 +38,11 @@ describe('Get Exercises (e2e)', () => {
   let institution2Exercises: Exercise[];
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
-
-    firebase = moduleFixture.get(FirebaseService);
-    exerciseService = moduleFixture.get(ExerciseService);
-    componentService = moduleFixture.get(ComponentService);
-    institutionService = moduleFixture.get(InstitutionService);
+    testApp = await TestApp.init();
+    firebase = testApp.module.get(FirebaseService);
+    exerciseService = testApp.module.get(ExerciseService);
+    componentService = testApp.module.get(ComponentService);
+    institutionService = testApp.module.get(InstitutionService);
 
     component = await componentService.create(generateComponentStub());
     globalExercises = await exerciseService.upsertMany(global.admin, [
@@ -86,7 +76,7 @@ describe('Get Exercises (e2e)', () => {
       deleteDoc(firebase, 'COMPONENT', component.id),
     ]);
 
-    await app.close();
+    await testApp.close();
   });
 
   describe('Get Exercises', () => {
@@ -96,18 +86,16 @@ describe('Get Exercises (e2e)', () => {
       ['institution', global.manager.token],
       ['admin', global.admin.token],
     ])('should return all global exercises for $s', async (_, token) => {
-      const response = await request(app.getHttpServer())
-        .get('/exercise/global')
-        .set('Authorization', `Bearer ${token}`);
-
+      const response = await testApp.http.get('/exercise/global', token);
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(globalExercises.length);
     });
 
     it('should return exercises from institution1 for athlete in the institution', async () => {
-      const response = await request(app.getHttpServer())
-        .get(`/exercise/institution/${institution1.id}`)
-        .set('Authorization', `Bearer ${institution1.athletes[0].token}`);
+      const response = await testApp.http.get(
+        `/exercise/institution/${institution1.id}`,
+        institution1.athletes[0].token,
+      );
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(institution1Exercises.length);
@@ -123,9 +111,10 @@ describe('Get Exercises (e2e)', () => {
     });
 
     it('should return exercises from institution1 for trainer in the institution', async () => {
-      const response = await request(app.getHttpServer())
-        .get(`/exercise/institution/${institution1.id}`)
-        .set('Authorization', `Bearer ${institution1.trainers[0].token}`);
+      const response = await testApp.http.get(
+        `/exercise/institution/${institution1.id}`,
+        institution1.trainers[0].token,
+      );
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(institution1Exercises.length);
@@ -141,9 +130,10 @@ describe('Get Exercises (e2e)', () => {
     });
 
     it('should return exercises from institution1 for manager in the institution', async () => {
-      const response = await request(app.getHttpServer())
-        .get(`/exercise/institution/${institution1.id}`)
-        .set('Authorization', `Bearer ${institution1.manager.token}`);
+      const response = await testApp.http.get(
+        `/exercise/institution/${institution1.id}`,
+        institution1.manager.token,
+      );
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(institution1Exercises.length);
@@ -156,6 +146,46 @@ describe('Get Exercises (e2e)', () => {
       // ensure trainer2's exercises are not in the response
       for (const exercise of institution2Exercises)
         expect(responseExerciseIds).not.toContain(exercise.id);
+    });
+
+    it('should return all exercises for admin, even disabled', async () => {
+      const disabledExercise = await exerciseService.create(global.admin, {
+        ...generateExerciseStub({ componentIds: [component.id] }),
+        disabled: true,
+      });
+
+      const response = await testApp.http.get(
+        '/exercise/global',
+        global.admin.token,
+      );
+
+      expect(response.status).toBe(200);
+      expect(response.body.length).toBeGreaterThan(0);
+      expect(
+        response.body.find((e: Exercise) => e.id === disabledExercise.id),
+      ).toBeDefined();
+
+      await deleteDoc(firebase, 'EXERCISE', disabledExercise.id);
+    });
+
+    it.each([
+      ['athlete', global.athlete.token],
+      ['trainer', global.trainer.token],
+      ['manager', global.manager.token],
+    ])('should return only enabled exercises for %s', async (_role, token) => {
+      const disabledExercise = await exerciseService.create(global.admin, {
+        ...generateExerciseStub({ componentIds: [component.id] }),
+        disabled: true,
+      });
+
+      const response = await testApp.http.get(`/exercise/global`, token);
+      expect(response.status).toBe(200);
+      expect(response.body.length).toBeGreaterThan(0);
+      expect(
+        response.body.find((e: Exercise) => e.id === disabledExercise.id),
+      ).toBeUndefined();
+
+      await deleteDoc(firebase, 'EXERCISE', disabledExercise.id);
     });
   });
 
@@ -185,9 +215,10 @@ describe('Get Exercises (e2e)', () => {
 
       const responses = await Promise.all(
         filters.map((f) =>
-          request(app.getHttpServer())
-            .get(`/exercise/global?componentIds=${f[0]}`)
-            .set('Authorization', `Bearer ${institution1.athletes[0].token}`),
+          testApp.http.get(
+            `/exercise/global?componentIds=${f[0]}`,
+            institution1.athletes[0].token,
+          ),
         ),
       );
 
@@ -228,11 +259,10 @@ describe('Get Exercises (e2e)', () => {
 
       const responses = await Promise.all(
         filters.map((f) =>
-          request(app.getHttpServer())
-            .get(
-              `/exercise/institution/${institution1.id}?componentIds=${f[0]}`,
-            )
-            .set('Authorization', `Bearer ${institution1.athletes[0].token}`),
+          testApp.http.get(
+            `/exercise/institution/${institution1.id}?componentIds=${f[0]}`,
+            institution1.athletes[0].token,
+          ),
         ),
       );
 
@@ -286,9 +316,10 @@ describe('Get Exercises (e2e)', () => {
 
       const responses = await Promise.all(
         filters.map((f) =>
-          request(app.getHttpServer())
-            .get(`/exercise/global?category=${f[0]}`)
-            .set('Authorization', `Bearer ${institution1.athletes[0].token}`),
+          testApp.http.get(
+            `/exercise/global?category=${f[0]}`,
+            institution1.athletes[0].token,
+          ),
         ),
       );
 
@@ -348,9 +379,10 @@ describe('Get Exercises (e2e)', () => {
 
       const responses = await Promise.all(
         filters.map((f) =>
-          request(app.getHttpServer())
-            .get(`/exercise/global?category=${f[0]}&equipment=${f[1]}`)
-            .set('Authorization', `Bearer ${institution1.athletes[0].token}`),
+          testApp.http.get(
+            `/exercise/global?category=${f[0]}&equipment=${f[1]}`,
+            institution1.athletes[0].token,
+          ),
         ),
       );
 

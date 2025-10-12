@@ -4,7 +4,7 @@ import InitAthleteProvider from '@/store/init-athlete-provider';
 
 export default async function Layout({ children }: ChildrenProps) {
   return (
-    <AnimationMinDurationGate minMs={3000}>
+    <AnimationMinDurationGate>
       <InitAthleteProvider>{children}</InitAthleteProvider>
     </AnimationMinDurationGate>
   );

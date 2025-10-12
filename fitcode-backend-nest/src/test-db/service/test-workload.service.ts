@@ -10,8 +10,12 @@ import { WorkloadRef } from '@src/common/type/firestore.type';
 import { BatchWriteOperation } from '@src/common/type/orm.type';
 import { Component } from '@src/component/entity/component.entity';
 import { FirebaseService } from '@src/firebase/firebase.service';
-import { Workload, WorkloadMeta } from '@src/training/entity/workload.entity';
-import { WorkloadValue } from '@src/training/entity/workload-value.entity';
+import { ExerciseSet } from '@src/training/entity/exercise-set.entity';
+import {
+  Workload,
+  WorkloadMeta,
+  WorkloadPrimarySide,
+} from '@src/training/entity/workload.entity';
 import { generateWorkloadStub } from '@src/training/mock/workload.stub';
 
 import { AbstractChangeLogService } from './abstract-test-change-log.service';
@@ -45,21 +49,22 @@ export class TestWorkloadService extends AbstractChangeLogService<Workload> {
   }
 
   async createMany(
-    input: (Create<Omit<WorkloadMeta, 'id' | 'plannedAt' | 'componentId'>> &
-      Partial<Pick<Workload, 'createdAt'>> &
-      WorkloadValue & {
+    input: (Create<Omit<WorkloadMeta, 'id' | 'componentId'>> &
+      Partial<Workload> & {
         component: Component;
         randomValues?: boolean;
-        defaultParamsKey?: string;
       })[],
   ): Promise<void> {
     const operations: BatchWriteOperation<Workload>[] = input.map((item) => {
-      const timestamp = item.createdAt ?? new Date();
-      const workload: Create<Workload> = {
+      const workload: Create<Omit<Workload, 'prescribed'>> = {
         ...item,
         id: null,
-        plannedAt: timestamp,
+        reps: item.reps || 1,
+        recTime: item.recTime || 0,
+        from: item.from ?? new Date(),
+        to: item.to ?? new Date(),
         componentId: item.component.id,
+        photoURLs: item.photoURLs || [],
       };
 
       const id = this.getKey(workload);
@@ -69,9 +74,8 @@ export class TestWorkloadService extends AbstractChangeLogService<Workload> {
       const query = this.firebase.buildCreateQuery<Workload>(
         generateWorkloadStub(item.component, {
           ...workload,
+          params: (item.component.params ?? []) as (keyof ExerciseSet)[],
           randomValues: item.randomValues,
-          defaultParamsKey: item.defaultParamsKey,
-          createdAt: timestamp,
         }),
       );
 
@@ -82,7 +86,9 @@ export class TestWorkloadService extends AbstractChangeLogService<Workload> {
     await this.firebase.paginateBatches(operations);
   }
 
-  async update(input: WorkloadMeta & Update<WorkloadValue>): Promise<Workload> {
+  async update(
+    input: WorkloadMeta & Update<WorkloadPrimarySide & WorkloadPrimarySide>,
+  ): Promise<Workload> {
     const collection = this.collection(input.trainingId);
     const docRef = collection.doc(this.getKey(input));
 

@@ -98,31 +98,13 @@ export class TrainingReport extends IntersectionType(
   @Min(0)
   @ApiProperty()
   @Expose()
-  activeTime: number; // total time under tension
+  tit: number; // total time under tension
 
   @IsNumber()
   @Min(0)
   @ApiProperty()
   @Expose()
   tonnage: number;
-
-  @IsNumber()
-  @Min(0)
-  @ApiProperty()
-  @Expose()
-  timeWork: number;
-
-  @IsNumber()
-  @Min(0)
-  @ApiProperty()
-  @Expose()
-  distWork: number;
-
-  @IsNumber()
-  @Min(0)
-  @ApiProperty()
-  @Expose()
-  power: number;
 
   @IsNumber()
   @Min(0)
@@ -143,12 +125,12 @@ export class TrainingReport extends IntersectionType(
   @Expose()
   componentStatuses: TrainingReportComponentStatus[];
 
-  @IsString()
-  @IsNotEmpty()
-  @ApiPropertyOptional()
+  @IsString({ each: true })
+  @IsNotEmpty({ each: true })
+  @ApiPropertyOptional({ type: String, isArray: true })
   @IsOptional()
   @Expose()
-  photoURL?: string; // "best" photo of the training session
+  photoURLs?: string[]; // "best" photo(s) of the training session
 
   @IsNumber()
   @Min(0)

@@ -1,9 +1,5 @@
-import type { INestApplication } from '@nestjs/common';
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
-import * as request from 'supertest';
+import { TestApp } from '@test/common/utils/app.util';
 
-import { AppModule } from '@src/app.module';
 import type { Attribute } from '@src/attribute/entity/attribute.entity';
 import { generateAttributeStub } from '@src/attribute/mock/attribute.stub';
 import { generateAttributeValueStub } from '@src/attribute/mock/attribute-value.stub';
@@ -19,38 +15,36 @@ import { ComponentService } from '@src/component/component.service';
 import type { Component } from '@src/component/entity/component.entity';
 import { generateComponentStub } from '@src/component/mock/component.stub';
 import { GLOBAL_EXERCISE_OWNER } from '@src/exercise/constant/global-exercise-owner.constant';
+import type { CreateExerciseDto } from '@src/exercise/dto/create-exercise.dto';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseAttributeService } from '@src/exercise/service/exercise-attribute.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
+import { TestDbService } from '@src/test-db/test-db.service';
 
 describe('Create Exercise (e2e)', () => {
-  let app: INestApplication;
+  let testApp: TestApp;
   let firebase: FirebaseService;
   let componentService: ComponentService;
   let institutionService: InstitutionService;
   let exerciseAttributeService: ExerciseAttributeService;
+  let db: TestDbService;
 
   let root: Component;
   let leaf: Component;
   let institution: TestInstitution;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
-
-    firebase = moduleFixture.get(FirebaseService);
-    componentService = moduleFixture.get(ComponentService);
-    institutionService = moduleFixture.get(InstitutionService);
-    exerciseAttributeService = moduleFixture.get(ExerciseAttributeService);
+    testApp = await TestApp.init();
+    db = testApp.module.get(TestDbService);
+    firebase = testApp.module.get(FirebaseService);
+    componentService = testApp.module.get(ComponentService);
+    institutionService = testApp.module.get(InstitutionService);
+    exerciseAttributeService = testApp.module.get(ExerciseAttributeService);
 
     const attribute = generateAttributeStub();
     root = await componentService.create(
-      generateComponentStub({ attributes: [attribute.field] }),
+      generateComponentStub({ attributes: [attribute.field as string] }),
     );
 
     leaf = await componentService.create(
@@ -66,8 +60,12 @@ describe('Create Exercise (e2e)', () => {
       deleteInstitution(firebase, institution),
     ]);
 
-    await app.close();
+    await testApp.close();
   });
+
+  async function req(input: CreateExerciseDto, token: string) {
+    return await testApp.http.post('/exercise', token, input);
+  }
 
   it('should create a new exercise for a valid institution', async () => {
     const exercise = generateExerciseStub({
@@ -78,11 +76,7 @@ describe('Create Exercise (e2e)', () => {
       instruction: 'This is an exercise.',
     });
 
-    const response = await request(app.getHttpServer())
-      .post('/exercise')
-      .set('Authorization', `Bearer ${global.manager.token}`)
-      .send(exercise);
-
+    const response = await req(exercise, global.manager.token);
     expect(response.status).toBe(201);
     expect(response.body.id).toBe(
       `new-exercise-${institution.id.toLowerCase()}`,
@@ -103,11 +97,7 @@ describe('Create Exercise (e2e)', () => {
       instruction: 'This is an exercise.',
     });
 
-    const response = await request(app.getHttpServer())
-      .post('/exercise')
-      .set('Authorization', `Bearer ${global.manager.token}`)
-      .send(exercise);
-
+    const response = await req(exercise, global.manager.token);
     expect(response.status).toBe(404); // Should return 404 if component doesn't exist
     expect(response.body.message).toBe(
       'Component non-existent-component-id does not exist',
@@ -124,11 +114,7 @@ describe('Create Exercise (e2e)', () => {
       instruction: 'This is an exercise.',
     });
 
-    const response = await request(app.getHttpServer())
-      .post('/exercise')
-      .set('Authorization', `Bearer ${global.manager.token}`)
-      .send(exercise);
-
+    const response = await req(exercise, global.manager.token);
     expect(response.status).toBe(400); // Should return 400 if the component is not a leaf
     expect(response.body.message).toBe(
       `Main component ${root.name.toLowerCase()} is not valid for an exercise`,
@@ -144,11 +130,7 @@ describe('Create Exercise (e2e)', () => {
       instruction: 'This is a global exercise.',
     });
 
-    const response = await request(app.getHttpServer())
-      .post('/exercise')
-      .set('Authorization', `Bearer ${global.admin.token}`)
-      .send(exercise);
-
+    const response = await req(exercise, global.admin.token);
     expect(response.status).toBe(201);
     expect(response.body.id).toBe(`global-exercise`);
     expect(response.body.name).toBe(exercise.name);
@@ -194,11 +176,7 @@ describe('Create Exercise (e2e)', () => {
       .fn()
       .mockReturnValue(invalidAttributes);
 
-    const response = await request(app.getHttpServer())
-      .post('/exercise')
-      .set('Authorization', `Bearer ${global.manager.token}`)
-      .send(exercise);
-
+    const response = await req(exercise, global.manager.token);
     expect(response.status).toBe(400);
     expect(response.body.message).toBe(
       'Value for attribute "Attribute B" must be a number',
@@ -270,7 +248,7 @@ describe('Create Exercise (e2e)', () => {
 
     const component = await componentService.create(
       generateComponentStub({
-        attributes: attributes.map((attr) => attr.field),
+        attributes: attributes.map((attr) => attr.field) as string[],
       }),
     );
 
@@ -319,11 +297,7 @@ describe('Create Exercise (e2e)', () => {
       }),
     ]);
 
-    const response = await request(app.getHttpServer())
-      .post('/exercise')
-      .set('Authorization', `Bearer ${global.manager.token}`)
-      .send(exercise);
-
+    const response = await req(exercise, global.manager.token);
     expect(response.status).toBe(201);
 
     await Promise.all([
@@ -340,20 +314,16 @@ describe('Create Exercise (e2e)', () => {
     });
 
     const component = await componentService.create(
-      generateComponentStub({ attributes: [attribute.field] }),
+      generateComponentStub({ attributes: [attribute.field as string] }),
     );
 
     const exercise = generateExerciseStub({ componentIds: [component.id] });
-    exerciseAttributeService.getValues = jest.fn().mockReturnValue([]);
+    exerciseAttributeService.getValues = jest.fn().mockReturnValueOnce([]);
     exerciseAttributeService.getAttributes = jest
       .fn()
-      .mockReturnValue([attribute]);
+      .mockReturnValueOnce([attribute]);
 
-    const response = await request(app.getHttpServer())
-      .post('/exercise')
-      .set('Authorization', `Bearer ${global.manager.token}`)
-      .send(exercise);
-
+    const response = await req(exercise, global.manager.token);
     expect(response.status).toBe(400);
     expect(response.body.message).toContain(
       `Attribute "${attribute.name}" is required`,
@@ -361,6 +331,52 @@ describe('Create Exercise (e2e)', () => {
 
     await Promise.all([deleteDoc(firebase, 'COMPONENT', component.id)]);
   });
+
+  it('should create disabled exercise for an admin user', async () => {
+    const exercise = generateExerciseStub({
+      name: 'Disabled Exercise',
+      componentIds: [leaf.id],
+      videoUrl: 'http://example.com/video',
+      imageUrl: 'http://example.com/image',
+      instruction: 'This is a disabled exercise.',
+      disabled: true,
+    });
+
+    exerciseAttributeService.getValues = jest.fn().mockReturnValueOnce([]);
+    exerciseAttributeService.getAttributes = jest.fn().mockReturnValueOnce([]);
+
+    const response = await req(exercise, global.admin.token);
+    expect(response.status).toBe(201);
+    expect(response.body.id).toBe(`disabled-exercise`);
+    expect(response.body.name).toBe(exercise.name);
+    expect(response.body.ownerId).toBe(GLOBAL_EXERCISE_OWNER); // Should be global owner
+    expect(response.body.disabled).toBe(true);
+
+    const fetched = await db.exercises.get(response.body.id);
+    expect(fetched?.disabled).toBe(true);
+
+    await db.exercises.delete(response.body.id);
+  });
+
+  it.each([['manager', global.manager.token]])(
+    'should not allow %s to create disabled exercise',
+    async (_role, token) => {
+      const exercise = generateExerciseStub({
+        name: 'Disabled Exercise',
+        componentIds: [leaf.id],
+        videoUrl: 'http://example.com/video',
+        imageUrl: 'http://example.com/image',
+        instruction: 'This is a disabled exercise.',
+        disabled: true,
+      });
+
+      const response = await req(exercise, token);
+      expect(response.status).toBe(401);
+      expect(response.body.message).toBe(
+        'You cannot create disabled exercises',
+      );
+    },
+  );
 
   /* it('should not create more exercises than the limit for user', async () => {
     await firebaseService.deleteCollection(FirestoreCollection.EXERCISE);

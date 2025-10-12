@@ -31,9 +31,6 @@ interface TrainingMembersSubgroupProps {
   anchorEl: HTMLElement | null;
   setAnchorEl: SetState<HTMLElement | null>;
   members: AuthUser[];
-  setEditSubgroupName: SetState<string>;
-  setEditedSubgroup: SetState<Subgroup | null>;
-  setModal: SetState<{ editSubgroup: boolean }>;
 }
 
 export default function TrainingMembersSubgroup(
@@ -58,16 +55,7 @@ export default function TrainingMembersSubgroup(
     setSelectedAthlete,
   } = useTrainerDayViewContext();
 
-  const {
-    subgroup,
-    subgroupIndex,
-    anchorEl,
-    setAnchorEl,
-    members,
-    setEditSubgroupName,
-    setEditedSubgroup,
-    setModal,
-  } = props;
+  const { subgroup, subgroupIndex, anchorEl, setAnchorEl, members } = props;
 
   const handleMenuClose = () => {
     setAnchorEl(null);
@@ -179,17 +167,6 @@ export default function TrainingMembersSubgroup(
                   >
                     Remove
                   </MenuItem>
-                  <MenuItem
-                    onClick={() => {
-                      if (!selectedSubgroup) return;
-                      setModal({ editSubgroup: true });
-                      setEditSubgroupName(selectedSubgroup.name);
-                      setEditedSubgroup(subgroup);
-                      handleMenuClose();
-                    }}
-                  >
-                    Edit Name
-                  </MenuItem>
                 </Menu>
               </Box>
             )}
@@ -294,7 +271,7 @@ export default function TrainingMembersSubgroup(
                   : undefined,
               }}
             >
-              {`G${subgroupIndex + 1}-${subgroup.membersIds.length}`}
+              {`G${subgroupIndex + 1}#${subgroup.membersIds.length}`}
             </Typography>
           </Box>
         </div>

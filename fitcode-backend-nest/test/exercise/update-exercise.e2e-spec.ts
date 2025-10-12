@@ -1,9 +1,6 @@
-import type { INestApplication } from '@nestjs/common';
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
-import * as request from 'supertest';
+import { TestApp } from '@test/common/utils/app.util';
+import type * as request from 'supertest';
 
-import { AppModule } from '@src/app.module';
 import type { Update } from '@src/common/type/entity.type';
 import {
   createAthleteUserAndToken,
@@ -27,7 +24,7 @@ import type { Institution } from '@src/institution/entity/institution.entity';
 import { InstitutionService } from '@src/institution/service/institution.service';
 
 describe('Update Exercise (e2e)', () => {
-  let app: INestApplication;
+  let testApp: TestApp;
   let firebase: FirebaseService;
   let componentService: ComponentService;
   let exerciseService: ExerciseService;
@@ -38,17 +35,11 @@ describe('Update Exercise (e2e)', () => {
   let institution: Institution;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
-
-    firebase = moduleFixture.get(FirebaseService);
-    componentService = moduleFixture.get(ComponentService);
-    exerciseService = moduleFixture.get(ExerciseService);
-    institutionService = moduleFixture.get(InstitutionService);
+    testApp = await TestApp.init();
+    firebase = testApp.module.get(FirebaseService);
+    componentService = testApp.module.get(ComponentService);
+    exerciseService = testApp.module.get(ExerciseService);
+    institutionService = testApp.module.get(InstitutionService);
 
     institution = await createInstitution(institutionService);
     component = await componentService.create(generateComponentStub());
@@ -65,15 +56,24 @@ describe('Update Exercise (e2e)', () => {
       deleteDoc(firebase, 'COMPONENT', component.id),
     ]);
 
-    await app.close();
+    await testApp.close();
   });
+
+  async function req(
+    id: string,
+    exerciseData: Partial<Exercise>,
+    token: string,
+  ): Promise<request.Response> {
+    return await testApp.http.patch(`/exercise/${id}`, token, exerciseData);
+  }
 
   describe('Update Exercise', () => {
     it('should fail if exercise does not exist', async () => {
-      const response = await request(app.getHttpServer())
-        .patch('/exercise/non-existent-id')
-        .set('Authorization', `Bearer ${global.manager.token}`)
-        .send({ name: 'Non-existent Exercise' });
+      const response = await req(
+        'non-existent-id',
+        { name: 'Non-existent Exercise' },
+        global.manager.token,
+      );
 
       expect(response.status).toBe(404);
     });
@@ -81,10 +81,11 @@ describe('Update Exercise (e2e)', () => {
     it('should fail if exercise is institutional and institution does not exist anymore', async () => {
       await deleteDoc(firebase, 'INSTITUTION', institution.id);
 
-      const response = await request(app.getHttpServer())
-        .patch(`/exercise/${exercise.id}`)
-        .set('Authorization', `Bearer ${global.manager.token}`)
-        .send({ name: 'Unauthorized Update' });
+      const response = await req(
+        exercise.id,
+        { name: 'Unauthorized Update' },
+        global.manager.token,
+      );
 
       expect(response.status).toBe(401);
       expect(response.body.message).toBe(
@@ -107,10 +108,7 @@ describe('Update Exercise (e2e)', () => {
       ]);
 
       async function updateExercise(token: string) {
-        return await request(app.getHttpServer())
-          .patch(`/exercise/${exercise.id}`)
-          .set('Authorization', `Bearer ${token}`)
-          .send({ name: 'test' });
+        return await req(exercise.id, { name: 'test' }, token);
       }
 
       const responses = await Promise.all([
@@ -131,10 +129,7 @@ describe('Update Exercise (e2e)', () => {
 
     it('should fail if the user is in the same institution but without permissions', async () => {
       async function updateExercise(token: string) {
-        return await request(app.getHttpServer())
-          .patch(`/exercise/${exercise.id}`)
-          .set('Authorization', `Bearer ${token}`)
-          .send({ name: 'test' });
+        return await req(exercise.id, { name: 'test' }, token);
       }
 
       const responses = await Promise.all([
@@ -151,10 +146,7 @@ describe('Update Exercise (e2e)', () => {
 
     it('should not allow updating componentId', async () => {
       const updateData = { componentIds: ['new-component-id'] };
-      const response = await request(app.getHttpServer())
-        .patch(`/exercise/${exercise.id}`)
-        .set('Authorization', `Bearer ${global.manager.token}`)
-        .send(updateData);
+      const response = await req(exercise.id, updateData, global.manager.token);
 
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
@@ -163,10 +155,11 @@ describe('Update Exercise (e2e)', () => {
     });
 
     it('should validate attribute values before updating', async () => {
-      const response = await request(app.getHttpServer())
-        .patch(`/exercise/${exercise.id}`)
-        .set('Authorization', `Bearer ${global.manager.token}`)
-        .send({ equipment: ['cardio'] });
+      const response = await req(
+        exercise.id,
+        { equipment: ['cardio'] },
+        global.manager.token,
+      );
 
       expect(response.status).toBe(400);
       expect(response.body.message).toEqual(
@@ -177,18 +170,20 @@ describe('Update Exercise (e2e)', () => {
     });
 
     it('should allow updating exercise unilateral attribute', async () => {
-      const res1 = await request(app.getHttpServer())
-        .patch(`/exercise/${exercise.id}`)
-        .set('Authorization', `Bearer ${global.manager.token}`)
-        .send({ isUnilateral: true });
+      const res1 = await req(
+        exercise.id,
+        { isUnilateral: true },
+        global.manager.token,
+      );
 
       expect(res1.status).toBe(200);
       expect(res1.body.isUnilateral).toBe(true);
 
-      const res2 = await request(app.getHttpServer())
-        .patch(`/exercise/${exercise.id}`)
-        .set('Authorization', `Bearer ${global.manager.token}`)
-        .send({ isUnilateral: false });
+      const res2 = await req(
+        exercise.id,
+        { isUnilateral: false },
+        global.manager.token,
+      );
 
       expect(res2.status).toBe(200);
       expect(res2.body.isUnilateral).toBe(false);
@@ -202,10 +197,7 @@ describe('Update Exercise (e2e)', () => {
       };
 
       async function updateExercise(token: string) {
-        return await request(app.getHttpServer())
-          .patch(`/exercise/${exercise.id}`)
-          .set('Authorization', `Bearer ${token}`)
-          .send(updateData);
+        return await req(exercise.id, updateData, token);
       }
 
       const responses = await Promise.all([
@@ -220,6 +212,23 @@ describe('Update Exercise (e2e)', () => {
         expect(response.body.loadingSides).toEqual(updateData.loadingSides);
       }
     });
+
+    it('should disable an exercise successfully', async () => {
+      const response = await req(
+        exercise.id,
+        { disabled: true },
+        global.manager.token,
+      );
+
+      expect(response.status).toBe(200);
+      expect(response.body.disabled).toBe(true);
+
+      const fetched = await exerciseService.findOneByIdOrFail(global.manager, {
+        exerciseId: exercise.id,
+      });
+
+      expect(fetched.disabled).toBe(true);
+    });
   });
 
   describe('Delete Exercise', () => {
@@ -233,9 +242,10 @@ describe('Update Exercise (e2e)', () => {
 
     it('should fail if the user is not the owner', async () => {
       const otherUser = await createTrainerUserAndToken(firebase);
-      const response = await request(app.getHttpServer())
-        .delete(`/exercise/${exercise.id}`)
-        .set('Authorization', `Bearer ${otherUser.token}`);
+      const response = await testApp.http.delete(
+        `/exercise/${exercise.id}`,
+        otherUser.token,
+      );
 
       expect(response.status).toBe(401);
       expect(response.body.message).toBe(
@@ -246,17 +256,19 @@ describe('Update Exercise (e2e)', () => {
     });
 
     it('should fail if exercise does not exist', async () => {
-      const response = await request(app.getHttpServer())
-        .delete('/exercise/non-existent-id')
-        .set('Authorization', `Bearer ${global.manager.token}`);
+      const response = await testApp.http.delete(
+        '/exercise/non-existent-id',
+        global.manager.token,
+      );
 
       expect(response.status).toBe(404);
     });
 
     it('should delete an exercise successfully', async () => {
-      const response = await request(app.getHttpServer())
-        .delete(`/exercise/${exercise.id}`)
-        .set('Authorization', `Bearer ${global.manager.token}`);
+      const response = await testApp.http.delete(
+        `/exercise/${exercise.id}`,
+        global.manager.token,
+      );
 
       expect(response.status).toBe(200);
     });

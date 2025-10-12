@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 
-import { AuthService } from '@src/auth/auth.service';
+import { AuthService } from '@src/auth/service/auth.service';
 import { UpdateMembersDto } from '@src/common/dto/user-id.dto';
 import {
   BatchDeleteOperation,
@@ -126,13 +126,17 @@ export class GroupService implements Permission<Group, Institution> {
       throw new UnauthorizedException('You are not allowed to edit this group');
 
     // validate cycles
-    if (!input.cycles?.every((c) => group.cycles.some((ec) => ec.id === c.id)))
-      throw new BadRequestException(
-        `Cycles in group ${group.name} do not match. If you are trying to add or remove cycles, use separate route`,
-      );
+    if (input.cycles) {
+      if (
+        !input.cycles?.every((c) => group.cycles.some((ec) => ec.id === c.id))
+      )
+        throw new BadRequestException(
+          `Cycles in group ${group.name} do not match. If you are trying to add or remove cycles, use separate route`,
+        );
 
-    if (this.isCycleOverlap(input.cycles))
-      throw new BadRequestException('Cycles overlap');
+      if (this.isCycleOverlap(input.cycles))
+        throw new BadRequestException('Cycles overlap');
+    }
 
     // validate owner
     if (input.ownerId)

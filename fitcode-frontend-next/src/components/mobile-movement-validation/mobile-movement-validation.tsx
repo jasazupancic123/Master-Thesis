@@ -1,19 +1,32 @@
 'use client';
 
 import type { DrawingUtils, PoseLandmarker } from '@mediapipe/tasks-vision';
-import { Box } from '@mui/material';
+import { Box, Button, Divider, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
+import dayjs from 'dayjs';
 import { useEffect, useRef, useState } from 'react';
 
+import AthleteTrainingExerciseSets from '../athlete-training-exercise-sets/athlete-training-exercise-sets';
 import LoadingOverlay from '../loading-overlay/loading-overlay';
+import { finishSet } from '../training-in-progress-exercise-card/state';
+import TrainingInProgressTempoChart from '../training-in-progress-exercise-card/training-in-progress-tempo-chart';
 import FpsText from './components/fps-text';
 import MovementValidationHeader from './components/movement-validation-header';
-import RepsCounter from './components/reps-counter';
-import { enableCam, getStatusMessage, loadModel, predictWebcam } from './state';
+import {
+  enableCam,
+  getStatusMessage,
+  getTempoString,
+  predictWebcam,
+  setupVideoAndContex,
+} from './state';
 import { TrackingMethod } from '@/common/enum/tracking-method.enum';
+import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
+import { CommonService } from '@/common/service/common.service';
 import type { SetState } from '@/common/type/state.type';
+import { FrameBitmapBuffer } from '@/controller/pose-detection/class/frame-bitmap-buffer';
 import { KeypointHistory } from '@/controller/pose-detection/class/keypoint-history';
 import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
+import { POSE_DETECTION_CONSTRAINTS } from '@/controller/pose-detection/const/pose-detection-constrains.const';
 import { STATUS_MESSAGES } from '@/controller/pose-detection/const/status-messages';
 import { ConditionDirection } from '@/controller/pose-detection/enum/condition-detection.enum';
 import { DetectionStatus } from '@/controller/pose-detection/enum/detection-status';
@@ -23,20 +36,42 @@ import { PoseModel } from '@/controller/pose-detection/enum/pose-model.enum';
 import { RepStatus } from '@/controller/pose-detection/enum/rep-state';
 import { RepDetectionService } from '@/controller/pose-detection/rep-detection.service';
 import type { ExerciseDetectionData } from '@/controller/pose-detection/type/exercise-start-condition.type';
-import type { Rep } from '@/controller/pose-detection/type/rep.type';
+import type { Rep, RepInfo } from '@/controller/pose-detection/type/rep.type';
 import type { RepState } from '@/controller/pose-detection/type/rep-state.type';
-import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import { getPoseLandmarker } from '@/controller/pose-detection/util/pose-landmarker-loader.util';
+import type { TrainingExerciseRecording } from '@/controller/training/type/training-exercise.type';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
+import { useTraining } from '@/store/training.provider';
+import { useTrainingInProgress } from '@/store/training-in-progress.provider';
+import EnvUtil from '@/common/util/env.util';
 
 const DEBUG = false;
 
+const commonService = CommonService.instance;
+const firebaseStorage = FirebaseStorageUtil.Instance;
+
+export const EXERCISE_TIMES_ROUNDING_STEP_S = 0.2; // round to 0.2
+
 interface MobileMovementValidationProps {
-  selectedExercise: TrainingExercise | undefined;
+  selectedExercise: TrainingExerciseRecording | undefined;
+  setSelectedExercise:
+    | SetState<TrainingExerciseRecording | undefined>
+    | undefined;
   selectedTrackingMethod: TrackingMethod | undefined;
   setSelectedTrackingMethod: SetState<TrackingMethod> | undefined;
   updateExerciseValues:
-    | ((repsCount: number, tempo: number) => void)
+    | ((
+        repsCount: number,
+        tempo: string,
+        updatedExercise?: TrainingExerciseRecording,
+        updateSelectedExercise?: boolean
+      ) => void)
     | undefined;
+  trainingId: string;
+  componentId: string;
+  supersetIndex: number;
+  setIndex: number;
 }
 
 export default function MobileMovementValidation(
@@ -45,11 +80,25 @@ export default function MobileMovementValidation(
   const theme = useTheme();
   const screenSize = useScreenSize();
 
+  const trainingContext = useTraining();
+  const { trainingInProgress, setTrainingInProgress } = trainingContext || {};
+
+  const trainingInProgressContext = useTrainingInProgress();
+  const { handleUpsertSet } = trainingInProgressContext || {};
+
+  const authenticatedAuthContext = useAuthenticatedAuth();
+  const { user } = authenticatedAuthContext || { user: null };
+
   const {
     selectedExercise,
+    setSelectedExercise,
     selectedTrackingMethod,
     setSelectedTrackingMethod,
     updateExerciseValues,
+    trainingId,
+    componentId,
+    supersetIndex,
+    setIndex,
   } = props;
 
   // Buffers
@@ -60,6 +109,9 @@ export default function MobileMovementValidation(
   const constantKeypointHistoryRef = useRef<KeypointHistory>(
     new KeypointHistory([], undefined)
   ); // never cut, always all history
+  const frameBitmapBufferRef = useRef<FrameBitmapBuffer>(
+    new FrameBitmapBuffer(60)
+  ); // buffer of image blobs
 
   const exerciseDetectionData: ExerciseDetectionData | undefined =
     selectedExercise
@@ -113,6 +165,13 @@ export default function MobileMovementValidation(
   const statusRef = useRef<DetectionStatus>(DetectionStatus.NOT_FULLY_IN_FRAME);
   const statusMessage = useRef<string>(STATUS_MESSAGES[statusRef.current]);
   const canProceedIntoReadyStateRef = useRef(false); // used for clearing buffer before detecting stillness
+  const stillnessCountdownRef = useRef<Date | null>(null); // countdown to recording start when stillness is detected
+
+  // Model and PoseLandmarker
+  const [model, setModel] = useState<PoseModel>(PoseModel.MEDIAPIPE);
+  const [poseLandmarker, setPoseLandmarker] = useState<PoseLandmarker | null>(
+    null
+  );
 
   // Rep State
   const repStateRef = useRef<RepState>({
@@ -122,12 +181,7 @@ export default function MobileMovementValidation(
   });
   const currentRepRef = useRef<Rep | null>(null);
   const recordedRepsRef = useRef<Rep[]>([]);
-
-  // Model and PoseLandmarker
-  const [model, setModel] = useState<PoseModel>(PoseModel.MEDIAPIPE);
-  const [poseLandmarker, setPoseLandmarker] = useState<PoseLandmarker | null>(
-    null
-  );
+  const [repCount, setRepCount] = useState(0);
 
   // FPS and Error
   const [fps, setFps] = useState<number | null>(null);
@@ -139,18 +193,18 @@ export default function MobileMovementValidation(
   // Helper Refs
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const romCanvasRef = useRef<HTMLCanvasElement>(null);
-  const tempoCanvasRef = useRef<HTMLCanvasElement>(null);
   const drawingUtilsRef = useRef<DrawingUtils>(null);
   const canvasCtxRef = useRef<CanvasRenderingContext2D | null>(null);
   const prevFrameTimeRef = useRef<number | null>(null);
   const lastVideoTimeRef = useRef(-1);
   const frameCountRef = useRef(0);
   const initedFirstFrameInRecordingMode = useRef(false);
-  const normDomainRef = useRef<{ min: number; max: number } | null>(null); // for graphs
   const dotRef = useRef<HTMLDivElement | null>(null);
   const dotBackgroundRef = useRef<HTMLDivElement | null>(null);
   const recordingTimestampRef = useRef<Date | null>(null);
+  const isCurrentlySavingImageRef = useRef(false);
+  const canExitWhenImageIsDoneSavingRef = useRef(false);
+  const [startedExitTimeout, setStartedExitTimeout] = useState(false);
 
   useEffect(() => {
     let raf: number | null = null;
@@ -264,10 +318,7 @@ export default function MobileMovementValidation(
 
     if (typeof window === 'undefined') return;
 
-    const wantDebug =
-      /(\?|&)debug(=1)?(&|$)/.test(window.location.search) ||
-      /(\?|&)eruda(=1)?(&|$)/.test(window.location.search) ||
-      process.env.NEXT_PUBLIC_ENABLE_ERUDA === '1';
+    const wantDebug = !EnvUtil.AI.disableEruda();
 
     if (!wantDebug) return;
 
@@ -310,6 +361,53 @@ export default function MobileMovementValidation(
     document.body.appendChild(script);
   };
 
+  useEffect(() => {
+    if (!exerciseDetectionData) return;
+
+    if (statusRef.current === DetectionStatus.STOPPED) return;
+
+    enableCam({
+      poseLandmarker,
+      videoRef,
+      setError,
+      predictWebcam: async () =>
+        await predictWebcam({
+          statusRef,
+          statusMessage,
+          stillnessCountdownRef,
+          canProceedIntoReadyStateRef,
+          repStateRef,
+          model,
+          poseLandmarker,
+          keypointHistory: keypointHistoryRef.current,
+          keypointBuffer,
+          constantKeypointHistory: constantKeypointHistoryRef.current,
+          frameBitmapBufferRef,
+          currentRepRef,
+          recordedRepsRef,
+          videoRef,
+          canvasRef,
+          drawingUtilsRef,
+          canvasCtxRef,
+          prevFrameTimeRef,
+          lastVideoTimeRef,
+          frameCountRef,
+          isMobile: screenSize.isMobile,
+          avgFps,
+          exerciseDetectionData: exerciseDetectionData!,
+          initedFirstFrameInRecordingMode,
+          centerPosRef,
+          recordingTimestampRef,
+          isCurrentlySavingImageRef,
+          canExitWhenImageIsDoneSavingRef,
+          setFps,
+          finishAiDetection,
+          setRepCount,
+          setStartedExitTimeout,
+        }),
+    });
+  }, [poseLandmarker]);
+
   const finishAiDetection = async () => {
     statusMessage.current = getStatusMessage(DetectionStatus.STOPPED);
 
@@ -337,55 +435,113 @@ export default function MobileMovementValidation(
     // });
 
     if (
+      !recordedRepsRef.current.length &&
+      setSelectedTrackingMethod !== undefined
+    ) {
+      setSelectedTrackingMethod(TrackingMethod.MANUAL);
+      return;
+    }
+
+    if (
       updateExerciseValues &&
       selectedTrackingMethod === TrackingMethod.CAMERA &&
-      setSelectedTrackingMethod
+      setSelectedTrackingMethod &&
+      trainingInProgress &&
+      setTrainingInProgress !== undefined &&
+      handleUpsertSet !== undefined &&
+      selectedExercise !== undefined &&
+      setIndex !== undefined &&
+      user !== null &&
+      user !== undefined
     ) {
-      let avgTimeToExtremeMs = 0,
-        avgTimeAtExtremeMs = 0,
-        avgTimeFromExtremeToEndMs = 0,
-        avgIdleTimeMs = 0;
+      const images: ({ repNumber: number; url: string } | null)[] =
+        recordedRepsRef.current
+          .map((rep) => {
+            if (!rep.extremumImageUrl) return null;
 
-      for (const rep of recordedRepsRef.current) {
-        avgTimeToExtremeMs += rep.timeToExtremeMs || 0;
-        avgTimeAtExtremeMs += rep.timeAtExtremeMs || 0;
-        avgTimeFromExtremeToEndMs += rep.timeFromExtremeToEndMs || 0;
-        avgIdleTimeMs += rep.idleTimeMs || 0;
+            return {
+              repNumber: rep.repNumber,
+              url: rep.extremumImageUrl || '',
+            };
+          })
+          .filter((i) => i !== null) as { repNumber: number; url: string }[];
+
+      let updatedExercise = {
+        ...selectedExercise,
+      } as TrainingExerciseRecording;
+
+      if (selectedExercise) {
+        updatedExercise = {
+          ...selectedExercise,
+          recordedSets: !selectedExercise.recordedSets
+            ? [
+                {
+                  setIndex,
+                  images,
+                  reps: recordedRepsRef.current.map((rep) => {
+                    return {
+                      repNumber: rep.repNumber,
+                      idleTimeMs: rep.idleTimeMs,
+                      timeToExtremeMs: rep.timeToExtremeMs,
+                      timeAtExtremeMs: rep.timeAtExtremeMs,
+                      timeFromExtremeToEndMs: rep.timeFromExtremeToEndMs,
+                      durationMs: rep.durationMs,
+                    } as RepInfo;
+                  }),
+                },
+              ]
+            : [
+                ...selectedExercise.recordedSets.filter(
+                  (si) => si.setIndex !== setIndex
+                ),
+                {
+                  setIndex,
+                  images,
+                  reps: recordedRepsRef.current.map((rep) => {
+                    return {
+                      repNumber: rep.repNumber,
+                      idleTimeMs: rep.idleTimeMs,
+                      timeToExtremeMs: rep.timeToExtremeMs,
+                      timeAtExtremeMs: rep.timeAtExtremeMs,
+                      timeFromExtremeToEndMs: rep.timeFromExtremeToEndMs,
+                      durationMs: rep.durationMs,
+                    } as RepInfo;
+                  }),
+                },
+              ],
+        } as TrainingExerciseRecording;
+
+        // setSelectedExercise(updatedExercise);
       }
 
-      avgTimeAtExtremeMs = Math.max(
-        Math.round(avgTimeAtExtremeMs / 1000 / recordedRepsRef.current.length),
-        0
-      );
-      avgTimeToExtremeMs = Math.max(
-        Math.round(avgTimeToExtremeMs / 1000 / recordedRepsRef.current.length),
-        0
-      );
-      avgTimeFromExtremeToEndMs = Math.max(
-        Math.round(
-          avgTimeFromExtremeToEndMs / 1000 / recordedRepsRef.current.length
-        ),
-        0
-      );
-      avgIdleTimeMs = Math.max(
-        Math.round(avgIdleTimeMs / 1000 / recordedRepsRef.current.length),
-        0
+      const tempo = getTempoString({
+        recordedRepsRef,
+        commonService,
+      });
+
+      updateExerciseValues(
+        recordedRepsRef.current.length,
+        tempo,
+        updatedExercise,
+        true
       );
 
-      const tempoString = `${avgTimeToExtremeMs}${avgTimeAtExtremeMs}${avgTimeFromExtremeToEndMs}${avgIdleTimeMs}`;
-
-      let tempo = 2010;
-
-      //check if tempo string can be converted to a number
-      if (
-        tempoString.trim() !== '' &&
-        !isNaN(Number(tempoString)) &&
-        Number(tempoString) > 999
-      )
-        tempo = parseInt(tempoString);
+      await finishSet({
+        exercise: updatedExercise,
+        setIndex,
+        trainingInProgress,
+        setTrainingInProgress,
+        handleUpsertSet,
+      });
 
       setSelectedTrackingMethod(TrackingMethod.MANUAL);
-      updateExerciseValues(recordedRepsRef.current.length, tempo);
+    }
+
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      const tracks = stream.getTracks();
+      tracks.forEach((track) => track.stop());
+      videoRef.current.srcObject = null;
     }
   };
 
@@ -394,62 +550,88 @@ export default function MobileMovementValidation(
   }, [statusRef.current]);
 
   useEffect(() => {
-    if (canvasRef.current) {
+    if (canvasRef.current)
       canvasCtxRef.current = canvasRef.current.getContext('2d');
-    }
 
-    loadModel({
+    const loadModel = async () => {
+      const lm = await getPoseLandmarker();
+      setPoseLandmarker(lm);
+    };
+
+    loadModel();
+
+    setupVideoAndContex({
       videoRef,
       canvasRef,
       drawingUtilsRef,
-      setPoseLandmarker,
     });
-  }, []);
+  }, [canvasRef]);
 
   useEffect(() => {
-    if (!exerciseDetectionData) return;
+    // Post save images to firestore
+    if (!recordedRepsRef.current.length) return;
 
-    if (statusRef.current === DetectionStatus.STOPPED) return;
+    const postImages = async () => {
+      isCurrentlySavingImageRef.current = true;
 
-    enableCam({
-      poseLandmarker,
-      videoRef,
-      predictWebcam: async () =>
-        await predictWebcam({
-          statusRef,
-          statusMessage,
-          canProceedIntoReadyStateRef,
-          repStateRef,
-          model,
-          poseLandmarker,
-          keypointHistory: keypointHistoryRef.current,
-          keypointBuffer,
-          constantKeypointHistory: constantKeypointHistoryRef.current,
-          currentRepRef,
-          recordedRepsRef,
-          videoRef,
-          canvasRef,
-          drawingUtilsRef,
-          canvasCtxRef,
-          prevFrameTimeRef,
-          lastVideoTimeRef,
-          frameCountRef,
-          isMobile: screenSize.isMobile,
-          avgFps,
-          exerciseDetectionData: exerciseDetectionData,
-          initedFirstFrameInRecordingMode,
-          normDomainRef,
-          romCanvasRef,
-          tempoCanvasRef,
-          theme,
-          centerPosRef,
-          recordingTimestampRef,
-          setFps,
-          finishAiDetection,
-        }),
-      setError,
-    });
-  }, [poseLandmarker]);
+      const lastRep =
+        recordedRepsRef.current[recordedRepsRef.current.length - 1];
+
+      if (!lastRep || lastRep.extremumImageUrl || !lastRep.extremeKeypoint)
+        return;
+
+      const blob = await frameBitmapBufferRef.current.toBlobByFrameNum(
+        lastRep.extremeKeypoint.frameNum,
+        undefined,
+        undefined,
+        document
+      );
+
+      if (!blob) return;
+
+      // training/trainingId-userId-componentId-supersetIndex-exerciseId-setIndex-repNumber
+      const fileName = `${user.uid}:${componentId}:${supersetIndex}:${selectedExercise?.id}:${setIndex}:${lastRep.repNumber}`;
+
+      const file = new File([blob], `${fileName}.jpg`, {
+        type: blob.type || 'image/jpeg',
+      });
+
+      const path = `training/${trainingId}/${file.name}`;
+
+      const url = await firebaseStorage.uploadFile(file, path);
+
+      lastRep.extremumImageUrl = url;
+
+      isCurrentlySavingImageRef.current = false;
+    };
+
+    postImages();
+  }, [repCount]);
+
+  useEffect(() => {
+    const checkExit = async () => {
+      if (
+        isCurrentlySavingImageRef.current === false &&
+        canExitWhenImageIsDoneSavingRef.current === true
+      ) {
+        await finishAiDetection();
+        canExitWhenImageIsDoneSavingRef.current = false;
+      }
+    };
+
+    checkExit();
+  }, [isCurrentlySavingImageRef.current]);
+
+  useEffect(() => {
+    let timeout: NodeJS.Timeout | null = null;
+    if (startedExitTimeout) {
+      timeout = setTimeout(async () => {
+        await finishAiDetection();
+        canExitWhenImageIsDoneSavingRef.current = false;
+        setStartedExitTimeout(false);
+      }, 5000);
+    }
+  }, [startedExitTimeout]);
 
   if (!exerciseDetectionData) {
     return <div>No pose detection logic for this exercise yet</div>;
@@ -464,32 +646,92 @@ export default function MobileMovementValidation(
         position: 'relative',
       }}
     >
-      {!poseLandmarker && <LoadingOverlay title="Loading model..." />}
-
-      {poseLandmarker && (
-        <MovementValidationHeader
-          statusMessage={error ? `${error}` : statusMessage.current}
-        />
+      {canExitWhenImageIsDoneSavingRef.current === true && (
+        <LoadingOverlay title="Saving images..." topDownCircularProgress />
       )}
 
-      <Box
-        width="100%"
-        display="flex"
-        flexDirection="column"
-        sx={{
-          position: 'absolute',
-          top: 0,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 1000,
-        }}
-        gap={1}
-      >
-        <Box width="100%" display="flex" justifyContent="space-between" px={1}>
-          <FpsText fps={fps} avgFps={avgFps.current} />
-          <RepsCounter reps={recordedRepsRef.current.length} />
+      {!poseLandmarker && (
+        <Box
+          width="100%"
+          display="flex"
+          flexDirection="column"
+          sx={{
+            position: 'relative',
+          }}
+        >
+          <LoadingOverlay title="Loading model...">
+            <Button
+              variant="contained"
+              sx={{
+                position: 'fixed',
+                bottom: 16,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                mx: 'auto',
+                zIndex: 100000,
+              }}
+              onClick={() => {
+                setSelectedTrackingMethod?.(TrackingMethod.MANUAL);
+              }}
+            >
+              Cancel
+            </Button>
+          </LoadingOverlay>
         </Box>
-      </Box>
+      )}
+
+      {poseLandmarker && (
+        <>
+          {statusRef.current === DetectionStatus.RECORDING &&
+          recordedRepsRef.current.length ? (
+            <></>
+          ) : (
+            <MovementValidationHeader
+              statusRef={statusRef}
+              statusMessage={error ? `${error}` : statusMessage.current}
+              countdownValue={
+                statusRef.current === DetectionStatus.NOT_STILL &&
+                stillnessCountdownRef.current !== null
+                  ? Math.max(
+                      dayjs(stillnessCountdownRef.current)
+                        .add(
+                          POSE_DETECTION_CONSTRAINTS.STILLNESS_COUNTDOWN_DURATION_S +
+                            1,
+                          'seconds'
+                        )
+                        .diff(dayjs(), 'second'),
+                      0
+                    )
+                  : null
+              }
+            />
+          )}
+        </>
+      )}
+
+      {!EnvUtil.AI.disableAIFPS() && (
+        <Box
+          width="100%"
+          display="flex"
+          flexDirection="column"
+          sx={{
+            position: 'absolute',
+            bottom: 0,
+            transform: ' translateY(-50%)',
+            zIndex: 1000,
+          }}
+          gap={1}
+        >
+          <Box
+            width="100%"
+            display="flex"
+            justifyContent="space-between"
+            px={1}
+          >
+            <FpsText fps={fps} avgFps={avgFps.current} />
+          </Box>
+        </Box>
+      )}
 
       <Box
         width="100%"
@@ -515,17 +757,178 @@ export default function MobileMovementValidation(
           style={{ position: 'absolute', left: 0, top: 0 }}
         />
 
-        <canvas
-          ref={tempoCanvasRef}
-          style={{
-            width: '100%',
-            height: '50%',
+        {/* Reps and tempo chart */}
+        <Box
+          width={'100%'}
+          height={140}
+          display="flex"
+          sx={{
             position: 'absolute',
+            top: 0,
             left: 0,
-            top: 0, // top half
             zIndex: 1000,
           }}
-        />
+        >
+          {[
+            DetectionStatus.READY,
+            DetectionStatus.RECORDING,
+            DetectionStatus.STOPPED,
+          ].includes(statusRef.current) ? (
+            <>
+              <Box
+                width={160}
+                height="100%"
+                display="flex"
+                flexDirection="column"
+                justifyContent="flex-end"
+                sx={{
+                  position: 'relative',
+                  zIndex: 0,
+                }}
+              >
+                <Box
+                  width="100%"
+                  height="50%"
+                  display="flex"
+                  flexDirection="column"
+                  justifyContent="center"
+                  alignItems="center"
+                  sx={{
+                    backgroundColor: theme.palette.background.dark,
+                  }}
+                >
+                  <Typography
+                    fontSize={8}
+                    lineHeight={1.2}
+                    textAlign="center"
+                    sx={{
+                      color: theme.palette.background.lightBorder,
+                    }}
+                  >
+                    Rep
+                  </Typography>
+                  <Typography
+                    fontSize={32}
+                    lineHeight={1.2}
+                    fontWeight="bold"
+                    textAlign="center"
+                  >
+                    {recordedRepsRef.current.length}
+                  </Typography>
+                </Box>
+                <Divider
+                  sx={{ backgroundColor: theme.palette.background.lightBorder }}
+                />
+                <Box
+                  width="100%"
+                  height="50%"
+                  display="flex"
+                  flexDirection="column"
+                  justifyContent="center"
+                  alignItems="center"
+                  sx={{
+                    backgroundColor: theme.palette.background.dark,
+                  }}
+                >
+                  <Typography
+                    fontSize={8}
+                    lineHeight={1.2}
+                    textAlign="center"
+                    sx={{
+                      color: theme.palette.background.lightBorder,
+                    }}
+                  >
+                    Tempo
+                  </Typography>
+                  <Typography
+                    fontSize={32}
+                    lineHeight={1.2}
+                    fontWeight="bold"
+                    textAlign="center"
+                  >
+                    {recordedRepsRef.current.length
+                      ? `${recordedRepsRef.current[recordedRepsRef.current.length - 1]?.timeToExtremeMs !== undefined ? recordedRepsRef.current[recordedRepsRef.current.length - 1].timeToExtremeMs! / 1000 : '-'} - ${recordedRepsRef.current[recordedRepsRef.current.length - 1]?.timeFromExtremeToEndMs !== undefined ? recordedRepsRef.current[recordedRepsRef.current.length - 1].timeFromExtremeToEndMs! / 1000 : '-'}`
+                      : '- : -'}
+                  </Typography>
+                </Box>
+              </Box>
+
+              {recordedRepsRef.current.length ? (
+                <TrainingInProgressTempoChart
+                  selectedExercise={selectedExercise}
+                  setIndex={-1}
+                  width={
+                    typeof window !== 'undefined'
+                      ? window.innerWidth - 160
+                      : 300
+                  }
+                  height={140}
+                  passedReps={recordedRepsRef.current}
+                  hideLabels={true}
+                  aiRecordingView
+                  sx={{
+                    width: '100% !important',
+                    backgroundColor: theme.palette.background.default,
+                    opacity: 0.8,
+                  }}
+                />
+              ) : (
+                <Box
+                  width={
+                    typeof window !== 'undefined'
+                      ? window.innerWidth - 160
+                      : '100%'
+                  }
+                  height={140}
+                  sx={{
+                    backgroundColor: theme.palette.background.default,
+                    opacity: 0.8,
+                  }}
+                />
+              )}
+            </>
+          ) : (
+            <>
+              {trainingInProgress?.training &&
+                selectedExercise &&
+                selectedExercise.sets[setIndex] && (
+                  <Box
+                    width="100%"
+                    display="flex"
+                    flexDirection="column"
+                    alignItems="center"
+                  >
+                    <Typography
+                      width="100%"
+                      textAlign="center"
+                      fontWeight="bold"
+                      fontSize={20}
+                      sx={{
+                        backgroundColor: theme.palette.primary.main,
+                        py: 1,
+                        textTransform: 'uppercase',
+                        color: theme.palette.text.secondary,
+                      }}
+                    >
+                      {selectedExercise.exercise?.name}
+                    </Typography>
+                    <AthleteTrainingExerciseSets
+                      training={trainingInProgress?.training}
+                      exercise={selectedExercise}
+                      borderBottomRadius={false}
+                      expanded={false}
+                      trainingInProgressView
+                      passedSet={selectedExercise.sets[setIndex]}
+                      supersetIndex={supersetIndex}
+                      setIndex={setIndex}
+                      colorSetsToPrimary
+                      aiDetectionView
+                    />
+                  </Box>
+                )}
+            </>
+          )}
+        </Box>
 
         {statusRef.current !== DetectionStatus.STOPPED && (
           <>
@@ -564,17 +967,22 @@ export default function MobileMovementValidation(
           </>
         )}
 
-        <canvas
-          ref={romCanvasRef}
-          style={{
-            width: '100%',
-            height: '50%',
-            position: 'absolute',
-            left: 0,
-            bottom: 0, // bottom half
-            zIndex: 1000,
+        <Button
+          variant="contained"
+          sx={{
+            position: 'fixed',
+            bottom: 16,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            mx: 'auto',
+            zIndex: 100000,
           }}
-        />
+          onClick={async () => {
+            await finishAiDetection();
+          }}
+        >
+          Finish
+        </Button>
 
         {/* 🔧 Optional floating debug button (only shows if you want) */}
         {DEBUG && (
@@ -591,12 +999,7 @@ export default function MobileMovementValidation(
               background: '#fff',
               fontWeight: 600,
               cursor: 'pointer',
-              opacity:
-                typeof window !== 'undefined' &&
-                (/\bdebug\b|\beruda\b/.test(window.location.search) ||
-                  process.env.NEXT_PUBLIC_ENABLE_ERUDA === '1')
-                  ? 0.7
-                  : 0.9,
+              opacity: !EnvUtil.AI.disableEruda() ? 0.7 : 0.9,
             }}
           >
             Debug

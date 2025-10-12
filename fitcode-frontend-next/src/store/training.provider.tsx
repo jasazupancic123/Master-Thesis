@@ -8,7 +8,10 @@ import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
 import type { ChildrenProps } from '@/common/type/props.type';
 import { type SetState } from '@/common/type/state.type';
 import type { Training } from '@/controller/training/type/training.type';
-import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import type {
+  TrainingExercise,
+  TrainingExerciseRecording,
+} from '@/controller/training/type/training-exercise.type';
 import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
 import type { TrainingReport } from '@/controller/training/type/training-report.type';
 
@@ -90,7 +93,7 @@ export const TrainingProvider = (
   };
 
   const updateTrainingInProgress = (
-    exercise: TrainingExercise,
+    exercise: TrainingExerciseRecording,
     supersetIndex: number
   ) => {
     if (!trainingInProgress) return;

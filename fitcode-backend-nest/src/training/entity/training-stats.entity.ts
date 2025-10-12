@@ -87,24 +87,6 @@ export class TrainingStats {
 
   @IsNumber()
   @Min(0)
-  @ApiProperty()
-  @Expose()
-  totalTimeWork: number; // total time under load
-
-  @IsNumber()
-  @Min(0)
-  @ApiProperty()
-  @Expose()
-  totalDistWork: number; // total distance under load
-
-  @IsNumber()
-  @Min(0)
-  @ApiProperty()
-  @Expose()
-  totalPower: number; // total power output (in watts)
-
-  @IsNumber()
-  @Min(0)
   @ApiPropertyOptional()
   @IsOptional()
   @Expose()

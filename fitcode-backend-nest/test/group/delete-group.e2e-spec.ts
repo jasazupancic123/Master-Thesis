@@ -1,57 +1,45 @@
-import type { INestApplication } from '@nestjs/common';
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
-import * as request from 'supertest';
+import { TestApp } from '@test/common/utils/app.util';
 
-import { AppModule } from '@src/app.module';
 import { generateGroupStub } from '@src/group/mock/group.stub';
 import { generateInstitutionStub } from '@src/institution/mock/institution.mock';
 import { TestDbService } from '@src/test-db/test-db.service';
 import { generateTrainingStub } from '@src/training/mock/training.stub';
 
 describe('Delete Group (e2e)', () => {
-  let app: INestApplication;
+  let testApp: TestApp;
   let db: TestDbService;
 
   let institutionId: string;
   let groupId: string;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
-
-    db = moduleFixture.get(TestDbService);
+    testApp = await TestApp.init();
+    db = testApp.module.get(TestDbService);
     institutionId = await db.institutions.save(generateInstitutionStub());
     groupId = await db.groups.save(generateGroupStub({ institutionId }));
   });
 
   afterAll(async () => {
     await db.cleanup();
-    await app.close();
+    await testApp.close();
   });
+
+  async function req(groupId: string, token: string) {
+    return await testApp.http.delete(`/group/${groupId}`, token);
+  }
 
   it.each([
     ['admin', global.admin.token],
     ['trainer', global.trainer.token],
     ['athlete', global.athlete.token],
   ])('should fail if user is %s', async (_, token) => {
-    const response = await request(app.getHttpServer())
-      .delete(`/group/${groupId}`)
-      .set('Authorization', `Bearer ${token}`);
-
+    const response = await req(groupId, token);
     expect(response.status).toBe(403);
     expect(response.body.message).toBe('Forbidden resource');
   });
 
   it('should successfully delete group', async () => {
-    const response = await request(app.getHttpServer())
-      .delete(`/group/${groupId}`)
-      .set('Authorization', `Bearer ${global.manager.token}`);
-
+    const response = await req(groupId, global.manager.token);
     expect(response.status).toBe(200);
 
     const groups = await db.groups.findAll();
@@ -88,10 +76,7 @@ describe('Delete Group (e2e)', () => {
     );
     expect(otherGroupTrainingsBefore.length).toBe(5);
 
-    const response = await request(app.getHttpServer())
-      .delete(`/group/${groupId}`)
-      .set('Authorization', `Bearer ${global.manager.token}`);
-
+    const response = await req(groupId, global.manager.token);
     expect(response.status).toBe(200);
 
     const groups = await db.groups.findAll();

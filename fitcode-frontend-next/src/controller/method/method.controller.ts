@@ -8,21 +8,20 @@ export class MethodController extends BaseController {
     super('/method');
   }
 
-  static getInstance(token: string) {
+  static getInstance() {
     if (!this.instance) this.instance = new MethodController();
-    this.instance.setToken(token);
     return this.instance;
   }
 
   async findAll(): Promise<Method[]> {
-    return this.api.get('/', { token: this.getToken() });
+    return this.api.get('/');
   }
 
   async findById(id: string): Promise<Method> {
-    return this.api.get(`/${id}`, { token: this.getToken() });
+    return this.api.get(`/${id}`);
   }
 
   async create(body: Method): Promise<Method> {
-    return this.api.post<Method>('/', body, { token: this.getToken() });
+    return this.api.post<Method>('/', body);
   }
 }

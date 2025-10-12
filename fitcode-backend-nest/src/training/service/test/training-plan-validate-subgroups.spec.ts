@@ -23,6 +23,7 @@ import {
 } from '@src/training/mock/training.stub';
 import { WorkloadRepository } from '@src/training/repository/workload.repository';
 
+import { ExerciseParamService } from '../exercise-param.service';
 import { TrainingPlanService } from '../training-plan.service';
 import { WorkloadService } from '../workload.service';
 
@@ -47,6 +48,10 @@ describe('copySubgroup', () => {
         {
           provide: AttributeService,
           useValue: createMock<AttributeService>(),
+        },
+        {
+          provide: ExerciseParamService,
+          useValue: createMock<ExerciseParamService>(),
         },
         {
           provide: ComponentRepository,

@@ -1,8 +1,8 @@
-// app/(coach)/MinDurationGate.tsx
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
 
+import { LOADING_ANIMATION_MIN_DURATION_MS } from '@/common/constant/loading.constant';
 import Animation from '@/components/animation/animation';
 
 // Fires once its children actually mount (i.e., when Suspense reveals)
@@ -19,7 +19,7 @@ function RevealSensor({
 
 export default function AnimationMinDurationGate({
   children,
-  minMs = 3000,
+  minMs = LOADING_ANIMATION_MIN_DURATION_MS,
 }: {
   children: React.ReactNode;
   minMs?: number;

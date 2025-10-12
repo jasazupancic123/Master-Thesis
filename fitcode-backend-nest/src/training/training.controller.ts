@@ -33,12 +33,12 @@ import { RequestUser } from '../common/decorator/request-user.decorator';
 import { CommonService } from '../common/service/common.service';
 import { User } from '../common/type/firebase-auth.type';
 import { AddTrainingComponentsDto } from './dto/add-training-components.dto';
-import { CompleteSetDto } from './dto/complete-set.dto';
 import { CreateTrainingDto } from './dto/create-training.dto';
 import { FilterTrainingQueryDto } from './dto/filter-training-query.dto';
 import { PeriodizeTrainingsDto } from './dto/periodize-training.dto';
 import { UpdateTrainingDto } from './dto/update-training.dto';
 import { Training } from './entity/training.entity';
+import { Workload } from './entity/workload.entity';
 import { TrainingService } from './service/training.service';
 import { TrainingReportService } from './service/training-report.service';
 
@@ -84,7 +84,7 @@ export class TrainingController {
       skipInstitution: true,
     });
 
-    const report = await this.trainingReportService.findOneById(ref);
+    const report = await this.trainingReportService.findById(ref);
     return { training, report };
   }
 
@@ -227,7 +227,7 @@ export class TrainingController {
   @Post(':trainingId/exercise/:exerciseId/complete-next-set')
   @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
   @ApiBearerAuth()
-  @ApiBody({ type: CompleteSetDto })
+  @ApiBody({ type: Workload })
   @ApiParam({
     name: 'exerciseId',
     required: true,
@@ -259,7 +259,7 @@ export class TrainingController {
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
     @Param('exerciseId') exerciseId: string,
-    @Body() body: CompleteSetDto,
+    @Body() body: Workload,
   ) {
     const ref = { trainingId, exerciseId, userId: body.userId };
     return await this.trainingService.completeNextSet(user, ref, body);
@@ -274,7 +274,7 @@ export class TrainingController {
     @Param('eId') exerciseId: string,
     @Param('i', ParseIntPipe) supersetIndex: number,
     @Param('s', ParseIntPipe) setNumber: number,
-    @Body() body: CompleteSetDto,
+    @Body() body: Workload,
   ) {
     if (supersetIndex < 0)
       throw new BadRequestException('Superset index must be 0 or greater');

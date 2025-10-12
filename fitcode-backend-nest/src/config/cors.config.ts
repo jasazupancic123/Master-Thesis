@@ -10,26 +10,23 @@ export function getCorsConfig(app: INestApplication): CorsOptions {
   const configService = app.get(ConfigService<Environment>);
   const commonService = app.get(CommonService);
 
-  let origin: CorsOptions['origin'] = '*';
-  if (commonService.env.isProduction()) {
-    const whitelist =
-      configService
-        .get('FRONTEND_WHITELIST')
-        ?.split(',')
-        ?.map((url: string) => url.trim()) || [];
+  const whitelist =
+    configService
+      .get('FRONTEND_WHITELIST')
+      ?.split(',')
+      ?.map((url: string) => url.trim()) || [];
 
-    if (whitelist.length > 0)
-      origin = (requestOrigin, callback) => {
-        if (!requestOrigin) return callback(null, true); // allow REST tools or curl or SSR Next JS
-        if (requestOrigin && whitelist.indexOf(requestOrigin) !== -1)
-          callback(null, true);
-        else callback(new Error('Not allowed by CORS'));
-      };
-  }
+  if (commonService.env.isDev())
+    whitelist.push('http://localhost:3000', 'http://localhost:8080');
 
   return {
-    origin,
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    origin: (requestOrigin, callback) => {
+      if (!requestOrigin) return callback(null, true); // allow SSR or curl
+      if (whitelist.includes(requestOrigin)) callback(null, true);
+      else callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     allowedHeaders: ['Content-Type', 'Authorization'],
   };
 }

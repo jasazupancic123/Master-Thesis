@@ -13,7 +13,6 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { updateUserProfile } from '../dashboard-groups-members/state';
-import FileUpload from '../file-upload/file-upload';
 import MyModal from '../modal/modal';
 import { SPORTS } from '@/common/constant/sport.constant';
 import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
@@ -25,6 +24,7 @@ import type { Profile } from '@/controller/profile/type/user.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
+import FileUpload from '@/util/file-upload';
 
 const firebaseStorage = FirebaseStorageUtil.Instance;
 
@@ -58,7 +58,7 @@ export default function DashboardEditAthleteModal(
 
   const screenSize = useScreenSize();
   const router = useRouter();
-  const { token, user } = useAuthenticatedAuth();
+  const { user } = useAuthenticatedAuth();
   const { selectedInstitution, members, refetchMembers, refetchUsers } =
     useDashboard();
 
@@ -110,7 +110,7 @@ export default function DashboardEditAthleteModal(
       cancelText="Close"
       onConfirm={() => {
         if ((isEditedProfile && profileToEdit) || (userToEdit && isEditedUser))
-          updateUserProfile(token, {
+          updateUserProfile({
             router,
             userToEdit,
             isEditedUser,
@@ -130,7 +130,7 @@ export default function DashboardEditAthleteModal(
           input="image"
           label="Image"
           initialFileUrl={userToEdit?.photoURL || undefined}
-          dissableBorder={
+          disableBorder={
             userToEdit?.photoURL !== undefined && userToEdit?.photoURL !== null
           }
           makeRound

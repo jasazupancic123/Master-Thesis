@@ -1,18 +1,22 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 
-import { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
 import { CommonService } from '@src/common/service/common.service';
 import type {
   SubgroupRef,
   TrainingComponentRef,
 } from '@src/common/type/firestore.type';
 import { MAIN_GROUP_PARENT_ID } from '@src/training/constant/main-group-parent-id.constant';
+import {
+  MAX_NUM_EXERCISES_IN_BLOCK_SUPERSET,
+  MAX_NUM_EXERCISES_IN_CIRCUIT_SUPERSET,
+  MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT,
+} from '@src/training/constant/training-limits.constant';
 import { ExerciseSet } from '@src/training/entity/exercise-set.entity';
 import { Subgroup } from '@src/training/entity/subgroup.entity';
 import { Training } from '@src/training/entity/training.entity';
 import { TrainingComponent } from '@src/training/entity/training-component.entity';
 import { TrainingExercise } from '@src/training/entity/training-exercise.entity';
-import { ParamType } from '@src/training/enum/load-type.enum';
+import { LoadType } from '@src/training/enum/load-type.enum';
 import { MainSet } from '@src/training/enum/main-set.enum';
 import { PeriodizationType } from '@src/training/enum/periodization-type.enum';
 
@@ -141,7 +145,7 @@ export class PeriodizationService {
             const readinessFactor = Math.random() * 0.2 + 0.9; // simulate readiness factor between 0.9 and 1.1
 
             for (const baseSet of baseExercise.sets) {
-              const exerciseSet = exercise.sets[baseSet.setNumber - 1];
+              const set = exercise.sets[baseSet.setNumber - 1];
 
               const { setIndex, baseIntL, baseVolL, baseIntR, baseVolR } =
                 baseSetValues.find(
@@ -167,16 +171,16 @@ export class PeriodizationService {
                     ?.value,
                 });
 
-                const foundInt = this.getIntParamValue(lr, exerciseSet);
-                const foundVol = this.getVolParamValue(lr, exerciseSet);
+                const foundInt = this.getIntParamValue(lr, set);
+                const foundVol = this.getVolParamValue(lr, set);
 
                 if (foundInt) {
-                  foundInt.value = intensity.toString();
+                  set[foundInt.field] = intensity as never;
                   updatePreviousValue(prevInt, intensity);
                 }
 
                 if (foundVol) {
-                  foundVol.value = volume.toString();
+                  set[foundVol.field] = volume as never;
                   updatePreviousValue(prevVol, volume);
                 }
 
@@ -207,7 +211,11 @@ export class PeriodizationService {
   getAvailableSuperset(item: TrainingComponent | Subgroup): number {
     // circuit can have max 1 superset and max 32 exercises in it
     if (item.mainSet === MainSet.CIRCUIT) {
-      if (item.supersets.length && item.supersets[0].exercises.length < 32)
+      if (
+        item.supersets.length &&
+        item.supersets[0].exercises.length <
+          MAX_NUM_EXERCISES_IN_CIRCUIT_SUPERSET
+      )
         return 0;
 
       return -1;
@@ -215,10 +223,13 @@ export class PeriodizationService {
 
     // each superset can have max 4 exercises, so find first superset with less than 4 exercises
     for (let i = 0; i < item.supersets.length; i++)
-      if (item.supersets[i].exercises.length < 4) return i;
+      if (
+        item.supersets[i].exercises.length < MAX_NUM_EXERCISES_IN_BLOCK_SUPERSET
+      )
+        return i;
 
     // if all supersets are full, check if we can create a new one (max 8 supersets) and create it
-    if (item.supersets.length < 8) {
+    if (item.supersets.length < MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT) {
       item.supersets = [...item.supersets, { exercises: [] }];
       return item.supersets.length - 1; // return index of the newly created superset
     }
@@ -319,51 +330,68 @@ export class PeriodizationService {
    */
   private getBaseSetValues(baseExercise: TrainingExercise) {
     return baseExercise.sets.map((s, setIndex) => {
-      const baseIntL = s.paramValuesL.find(
-        (pv) => pv.field === ParamType.IntWork1,
-      );
+      const loadType = s.loadType;
+      const loadField =
+        loadType === LoadType.Rm
+          ? 'loadRm'
+          : loadType === LoadType.Bw
+            ? 'loadBw'
+            : 'loadKg';
 
-      const baseVolL = s.paramValuesL.find(
-        (pv) => pv.field === ParamType.VolWork1,
-      );
+      const loadFieldR =
+        loadType === LoadType.Rm
+          ? 'loadRmR'
+          : loadType === LoadType.Bw
+            ? 'loadBwR'
+            : 'loadKgR';
 
-      const baseIntR = s.paramValuesR?.find(
-        (pv) => pv.field === ParamType.IntWork1,
-      );
-
-      const baseVolR = s.paramValuesR?.find(
-        (pv) => pv.field === ParamType.VolWork1,
-      );
+      const baseIntL = s[loadField];
+      const baseVolL = s.reps;
+      const baseIntR = s[loadFieldR];
+      const baseVolR = s.repsR;
 
       return {
         setIndex,
-        baseIntL: baseIntL ? +baseIntL.value : undefined,
-        baseVolL: baseVolL ? +baseVolL.value : undefined,
-        baseIntR: baseIntR ? +baseIntR.value : undefined,
-        baseVolR: baseVolR ? +baseVolR.value : undefined,
+        baseIntL: baseIntL ? +baseIntL : undefined,
+        baseVolL: baseVolL ? +baseVolL : undefined,
+        baseIntR: baseIntR ? +baseIntR : undefined,
+        baseVolR: baseVolR ? +baseVolR : undefined,
       };
     });
   }
 
-  private getParamValuesBySide(
+  private getIntParamValue(
     lr: 'L' | 'R',
     set: ExerciseSet,
-  ): AttributeValue[] {
-    return lr === 'L'
-      ? [...set.paramValuesL]
-      : set.paramValuesR
-        ? [...set.paramValuesR]
-        : [];
+  ): { field: keyof ExerciseSet; value: number } | undefined {
+    const loadFieldL: keyof ExerciseSet =
+      set.loadType === LoadType.Rm
+        ? 'loadRm'
+        : set.loadType === LoadType.Bw
+          ? 'loadBw'
+          : 'loadKg';
+
+    const loadFieldR: keyof ExerciseSet =
+      set.loadType === LoadType.Rm
+        ? 'loadRmR'
+        : set.loadType === LoadType.Bw
+          ? 'loadBwR'
+          : 'loadKgR';
+
+    return {
+      field: lr === 'L' ? loadFieldL : loadFieldR,
+      value: +(set[lr === 'L' ? loadFieldL : loadFieldR] || 0),
+    };
   }
 
-  private getIntParamValue(lr: 'L' | 'R', set: ExerciseSet): AttributeValue {
-    const paramValues = this.getParamValuesBySide(lr, set);
-    return paramValues.find((pv) => pv.field === ParamType.IntWork1);
-  }
-
-  private getVolParamValue(lr: 'L' | 'R', set: ExerciseSet): AttributeValue {
-    const paramValues = this.getParamValuesBySide(lr, set);
-    return paramValues.find((pv) => pv.field === ParamType.VolWork1);
+  private getVolParamValue(
+    lr: 'L' | 'R',
+    set: ExerciseSet,
+  ): { field: keyof ExerciseSet; value: number } | undefined {
+    return {
+      field: lr === 'L' ? 'reps' : 'repsR',
+      value: +(set[lr === 'L' ? 'reps' : 'repsR'] || 0),
+    };
   }
 
   private isSubgroup(item: TrainingComponent | Subgroup): item is Subgroup {

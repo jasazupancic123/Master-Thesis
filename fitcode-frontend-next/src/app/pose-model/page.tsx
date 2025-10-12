@@ -7,6 +7,11 @@ export default function Page() {
       selectedTrackingMethod={undefined}
       setSelectedTrackingMethod={undefined}
       updateExerciseValues={undefined}
+      trainingId="trainingId"
+      componentId="componentId"
+      supersetIndex={0}
+      setIndex={0}
+      setSelectedExercise={undefined}
     />
   );
 }

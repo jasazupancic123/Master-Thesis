@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import DashboardGroupsMembers from '../dashboard-groups-members/dashboard-groups-members';
 import HorizontalItemsList from '../horizontal-items-list/horizontal-items-list';
+import SimpleCircle from '../simple-circle/simple-circle';
 import { MAX_WIDTH } from '../trainer-day-view/constant';
 import { ADD_GROUP } from '@/common/constant/add-group.constant';
 import { isManager } from '@/common/firebase/firebase-auth.util';
@@ -17,6 +18,7 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
+import EditableTextField from '@/util/editable-text-field';
 
 interface DashboardGroupsProps {
   modal: {
@@ -42,7 +44,7 @@ export default function DashboardGroups(props: DashboardGroupsProps) {
   const theme = useTheme();
   const { users, groups } = useMain();
   const { role } = useAuthenticatedAuth();
-  const { selectedInstitution, selectedGroup, setSelectedGroup } =
+  const { selectedInstitution, selectedGroup, setSelectedGroup, updateGroup } =
     useDashboard();
 
   const [_selectedCycle, setSelectedCycle] = useState<Cycle | null>(
@@ -180,33 +182,24 @@ export default function DashboardGroups(props: DashboardGroupsProps) {
             justifyContent="flex-start"
             alignItems="center"
             gap={1}
-            sx={{
-              mt: 1,
-            }}
+            sx={{ mt: 1 }}
           >
-            <Box
-              sx={{
-                height: 16,
-                width: 4,
-                borderRadius: 5,
-                backgroundColor: theme.palette.primary.main,
-                ml: !screenSize.isDesktop ? 1 : 0,
-              }}
-            />
+            <SimpleCircle />
 
-            <Typography
-              fontWeight={600}
-              fontSize={16}
-              sx={{
-                textTransform: 'uppercase',
-              }}
-            >
-              {selectedGroup?.name || 'Select A Group'}
-            </Typography>
+            {selectedGroup && (
+              <EditableTextField
+                value={selectedGroup.name}
+                onChange={async (name) =>
+                  await updateGroup(selectedGroup.id, { name })
+                }
+              />
+            )}
           </Box>
+
           <Box width="50%">
             <HorizontalInput />
           </Box>
+
           <Box width="25%" display="flex" justifyContent="flex-end" mt={1}>
             <IconButton sx={{ m: 0, p: 0 }}>
               <MoreVert fontSize="large" />

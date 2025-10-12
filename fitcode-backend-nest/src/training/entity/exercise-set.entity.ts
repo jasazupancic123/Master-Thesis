@@ -21,7 +21,21 @@ export class ExerciseSetPrimarySide {
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
-  load?: number; // e.g. weight in kg or percentage of 1RM or bodyweight
+  loadKg?: number;
+
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  loadRm?: number;
+
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  loadBw?: number;
 
   @IsTempo()
   @IsOptional()
@@ -34,14 +48,7 @@ export class ExerciseSetPrimarySide {
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
-  time?: number; // for isometric holds, in seconds
-
-  @IsInt()
-  @Min(0)
-  @IsOptional()
-  @ApiPropertyOptional()
-  @Expose()
-  dist?: number; // for distance-based sets, in meters
+  vel?: number; // in m/s
 }
 
 export class ExerciseSetSecondarySide {
@@ -57,7 +64,21 @@ export class ExerciseSetSecondarySide {
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
-  loadR?: number;
+  loadKgR?: number;
+
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  loadRmR?: number;
+
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  loadBwR?: number;
 
   @IsTempo()
   @IsOptional()
@@ -70,14 +91,7 @@ export class ExerciseSetSecondarySide {
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
-  timeR?: number;
-
-  @IsInt()
-  @Min(0)
-  @IsOptional()
-  @ApiPropertyOptional()
-  @Expose()
-  distR?: number;
+  velR?: number;
 }
 
 export class ExerciseSet extends IntersectionType(
@@ -91,6 +105,20 @@ export class ExerciseSet extends IntersectionType(
   @Expose()
   setNumber: number;
 
+  @IsEnum(() => LoadType)
+  @IsOptional()
+  @ApiPropertyOptional({ enum: LoadType })
+  @Expose()
+  loadType?: LoadType;
+
+  @IsInt()
+  @Min(1)
+  @Max(4)
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Expose()
+  eff?: number; // rpe (rate of perceived exertion)
+
   @IsInt()
   @Min(0)
   @ApiProperty()
@@ -98,15 +126,23 @@ export class ExerciseSet extends IntersectionType(
   recTime: number; // in seconds
 
   @IsInt()
+  @Min(0)
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  time?: number; // for isometric holds, in seconds
+
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  dist?: number; // for distance-based sets, in meters
+
+  @IsInt()
   @IsOptional()
   @Min(0)
   @ApiPropertyOptional()
   @Expose()
   recDist?: number; // in meters, for distance-based recovery
-
-  @IsEnum(() => LoadType)
-  @IsOptional()
-  @ApiPropertyOptional({ enum: LoadType })
-  @Expose()
-  loadType?: LoadType;
 }

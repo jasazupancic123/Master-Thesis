@@ -16,7 +16,7 @@ import type {
   UpsertManyExercises,
   UpsertManyMuscleValues,
 } from '@/controller/exercise/type/exercise.type';
-import { DEFAULT_EXERCISE } from '@/sites/exercises.page';
+import { DEFAULT_EXERCISE, EXERCISES_PAGE_SIZE } from '@/sites/exercises.page';
 
 const commonService = CommonService.instance;
 
@@ -29,22 +29,26 @@ export function handlePaginateExercises(
     pagination: Pagination;
     setFilteredExercises: SetState<Exercise[]>;
     setPagination: SetState<Pagination>;
+    search?: string;
   }
 ) {
   const {
     components,
     exercises,
     pagination,
+    search,
     setFilteredExercises,
     setPagination,
   } = state;
 
   let filtered = ExerciseService.filter(exercises, filter, components);
+
   const total = filtered.length;
 
   // paginate
-  const pages = Math.ceil(total / pagination.pageSize);
-  const page = pages < pagination.pages ? 1 : pagination.page;
+  const pages = Math.max(1, Math.ceil(total / pagination.pageSize));
+  const page = Math.min(Math.max(1, pagination.page), pages);
+
   filtered = commonService.generic.paginate(filtered, {
     page,
     pageSize: pagination.pageSize,
@@ -57,11 +61,16 @@ export function handlePaginateExercises(
   );
 
   setFilteredExercises(filtered);
-  setPagination((prev) => ({ ...prev, page, total, pages }));
+  setPagination((prev) => ({
+    ...prev,
+    page,
+    total,
+    pages,
+    pageSize: search && search.length ? Infinity : EXERCISES_PAGE_SIZE,
+  }));
 }
 
 export async function handleAddExercise(
-  token: string,
   input: Partial<Exercise>,
   state: {
     router: AppRouterInstance;
@@ -91,8 +100,7 @@ export async function handleAddExercise(
     setModal,
   } = state;
 
-  const controller = ExerciseController.getInstance(token);
-
+  const controller = ExerciseController.getInstance();
   if (!input.name) return toast.error('Name is required');
   if (!input.componentIds?.length)
     return toast.error('Select at least one component to add');
@@ -104,6 +112,7 @@ export async function handleAddExercise(
         name: input.name!,
         componentIds: input.componentIds!,
         isUnilateral: input.isUnilateral || false,
+        disabled: input.disabled || false,
         imageUrl: input.imageUrl,
         videoUrl: input.videoUrl,
         instruction: input.instruction,
@@ -145,7 +154,6 @@ export async function handleAddExercise(
 }
 
 export async function handleUpdateExercise(
-  token: string,
   exerciseId: string,
   input: Partial<Exercise>,
   state: {
@@ -172,7 +180,7 @@ export async function handleUpdateExercise(
     setModal,
   } = state;
 
-  const controller = ExerciseController.getInstance(token);
+  const controller = ExerciseController.getInstance();
 
   if (!input.name) return toast.error('Name is required');
   if (!input.componentIds?.length)
@@ -187,6 +195,7 @@ export async function handleUpdateExercise(
         imageUrl: input.imageUrl,
         videoUrl: input.videoUrl,
         instruction: input.instruction,
+        disabled: input.disabled || false,
         categories: input.categories || [],
         equipment: input.equipment || [],
         prescriptions: input.prescriptions || [],
@@ -218,7 +227,6 @@ export async function handleUpdateExercise(
 }
 
 export async function handleDeleteExercise(
-  token: string,
   exerciseId: string,
   state: {
     router: AppRouterInstance;
@@ -227,7 +235,7 @@ export async function handleDeleteExercise(
   }
 ) {
   const { router, setFilteredExercises, setExercises } = state;
-  const controller = ExerciseController.getInstance(token);
+  const controller = ExerciseController.getInstance();
 
   handleApiRequest(
     router,
@@ -255,6 +263,9 @@ export async function handleExerciseCsvFileUpload(
     error: (e: Error) => toast.error(`Failed to parse CSV file: ${e.message}`),
     transform: (value, column) => {
       switch (column) {
+        case 'disabled':
+          return value.toLowerCase() === 'true';
+        case 'name':
         case 'imageUrl':
         case 'videoUrl':
         case 'instruction':
@@ -293,6 +304,7 @@ export async function handleExerciseCsvFileUpload(
           )
             ? true
             : false,
+          disabled: e.disabled || false,
           imageUrl: e.imageUrl,
           videoUrl: e.videoUrl,
           instruction: e.instruction,
@@ -343,7 +355,6 @@ export async function handleMuscleValuesCsvFileUpload(
 }
 
 export async function handleUpsertManyExercises(
-  token: string,
   input: UpsertManyExercises,
   state: {
     router: AppRouterInstance;
@@ -353,7 +364,7 @@ export async function handleUpsertManyExercises(
   }
 ) {
   const { router, setExercises, setFilteredExercises, setAllExercises } = state;
-  const controller = ExerciseController.getInstance(token);
+  const controller = ExerciseController.getInstance();
 
   handleApiRequest(
     router,
@@ -378,7 +389,6 @@ export async function handleUpsertManyExercises(
 }
 
 export async function handleUpsertMuscleValues(
-  token: string,
   input: UpsertManyMuscleValues,
   state: {
     router: AppRouterInstance;
@@ -386,7 +396,7 @@ export async function handleUpsertMuscleValues(
   }
 ) {
   const { router, setExercises } = state;
-  const controller = ExerciseController.getInstance(token);
+  const controller = ExerciseController.getInstance();
 
   handleApiRequest(
     router,

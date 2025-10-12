@@ -9,6 +9,7 @@ import {
 
 import { Attribute } from '@src/attribute/entity/attribute.entity';
 import { IdEntity } from '@src/common/entity/id.entity';
+import { ExerciseSet } from '@src/training/entity/exercise-set.entity';
 
 export class Method extends IdEntity {
   @IsString()
@@ -27,7 +28,7 @@ export class Method extends IdEntity {
   @Type(() => Attribute)
   @ApiProperty({ type: () => Attribute, isArray: true })
   @Expose()
-  attributes: Attribute[];
+  attributes: Attribute<ExerciseSet>[];
 
   @IsString()
   @IsNotEmpty()

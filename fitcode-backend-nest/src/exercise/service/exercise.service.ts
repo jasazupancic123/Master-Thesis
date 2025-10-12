@@ -26,7 +26,7 @@ import { Component } from '@src/component/entity/component.entity';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { Institution } from '@src/institution/entity/institution.entity';
 import { InstitutionService } from '@src/institution/service/institution.service';
-import { DEFAULT_PARAMS_KEY } from '@src/training/constant/param.constant';
+import { ExerciseSet } from '@src/training/entity/exercise-set.entity';
 
 import { CACHE_KEY_EXERCISES } from '../constant/get-exercises-cache-key.constant';
 import { GLOBAL_EXERCISE_OWNER } from '../constant/global-exercise-owner.constant';
@@ -50,15 +50,16 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     private readonly componentService: Wrapper<ComponentService>,
   ) {}
 
-  async findAllGlobal(filter?: Record<string, string>) {
-    return await this.findAllBy('ownerId', GLOBAL_EXERCISE_OWNER, filter);
+  async findAllGlobal(user: User, filter?: Record<string, string>) {
+    return await this.findAllBy('ownerId', GLOBAL_EXERCISE_OWNER, user, filter);
   }
 
   async findAllByInstitution(
+    user: User,
     institutionId: string,
     filter?: Record<string, string>,
   ) {
-    return await this.findAllBy('institutionId', institutionId, filter);
+    return await this.findAllBy('institutionId', institutionId, user, filter);
   }
 
   async getAll(ids?: string[]): Promise<Exercise[]> {
@@ -87,15 +88,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
       )!;
 
       const root = this.componentService.getRoot(component, components);
-      const componentParams = root.params || { [DEFAULT_PARAMS_KEY]: [] };
-
-      const params = this.componentService.getComponentParamAttributes(
-        componentParams,
-        this.exerciseAttributeService.getValues(exercise),
-        this.exerciseAttributeService.getAttributes(),
-      );
-
-      exercise.defaultParams = this.componentService.getParamAttributes(params);
+      exercise.defaultParams = root.params as (keyof ExerciseSet)[];
       return exercise;
     });
   }
@@ -103,6 +96,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
   async findAllBy(
     key: 'ownerId' | 'institutionId',
     userOrInstitutionId: string, // either global or institution id
+    user: User,
     filter?: Record<string, string>,
   ): Promise<Exercise[]> {
     const components = await this.componentService.findAllFlat();
@@ -111,6 +105,10 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     let query = this.repository
       .collection()
       .where(key, '==', userOrInstitutionId);
+
+    // if admin, return all exercises, else only non-disabled
+    if (!this.firebaseService.isAdmin(user))
+      query = query.where('disabled', '==', false);
 
     if (filter && !this.commonService.object.isEmpty(filter)) {
       if (filter.componentIds)
@@ -175,6 +173,9 @@ export class ExerciseService implements Permission<Exercise, Institution> {
         'You are not allowed to create exercises',
       );
 
+    if (data.disabled && !isAdmin)
+      throw new UnauthorizedException('You cannot create disabled exercises');
+
     const isUnilateral = data.isUnilateral || false;
     this.exerciseAttributeService.validate(data, { components });
 
@@ -212,6 +213,9 @@ export class ExerciseService implements Permission<Exercise, Institution> {
       throw new UnauthorizedException(
         'You are not allowed to create exercises',
       );
+
+    if (isManager && exercises.some((e) => e.disabled))
+      throw new UnauthorizedException('You cannot create disabled exercises');
 
     const errors: ValidateRowError<Exercise>[] = [];
     const exercisesToCreate: CreateExerciseDto[] = [];
@@ -251,6 +255,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
         institutionId: institution?.id,
         componentIds: e.componentIds,
         isUnilateral: e.isUnilateral,
+        disabled: e.disabled || false,
         videoUrl: e.videoUrl,
         imageUrl: e.imageUrl,
         instruction: e.instruction || '',

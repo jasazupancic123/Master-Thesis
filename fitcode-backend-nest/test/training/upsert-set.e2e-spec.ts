@@ -1,17 +1,15 @@
-import type { INestApplication } from '@nestjs/common';
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
-import * as request from 'supertest';
+import { TestApp } from '@test/common/utils/app.util';
 
-import { AppModule } from '@src/app.module';
 import type { TestInstitution } from '@src/common/type/entity.type';
 import type { Component } from '@src/component/entity/component.entity';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import type { Group } from '@src/group/entity/group.entity';
 import { TestDbService } from '@src/test-db/test-db.service';
-import type { CompleteSetDto } from '@src/training/dto/complete-set.dto';
-import type { Workload } from '@src/training/entity/workload.entity';
+import type {
+  CreateWorkload,
+  Workload,
+} from '@src/training/entity/workload.entity';
 import { SetStatus } from '@src/training/enum/set-status.enum';
 import {
   generateExerciseSet,
@@ -22,7 +20,7 @@ import {
 } from '@src/training/mock/training.stub';
 
 describe('Complete Next Set (e2e)', () => {
-  let app: INestApplication;
+  let testApp: TestApp;
   let db: TestDbService;
 
   let institution: TestInstitution;
@@ -31,15 +29,10 @@ describe('Complete Next Set (e2e)', () => {
   let trainingId: string;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
+    testApp = await TestApp.init();
+    const exerciseService = testApp.module.get(ExerciseService);
 
-    app = moduleFixture.createNestApplication();
-    const exerciseService = moduleFixture.get(ExerciseService);
-    await app.init();
-
-    db = moduleFixture.get(TestDbService);
+    db = testApp.module.get(TestDbService);
     institution = await db.institutions.createTest({
       createRandomAthlete: true,
       athletes: [global.athlete],
@@ -128,7 +121,7 @@ describe('Complete Next Set (e2e)', () => {
       db.components.clear(),
     ]);
 
-    await app.close();
+    await testApp.close();
   });
 
   async function req(
@@ -138,14 +131,13 @@ describe('Complete Next Set (e2e)', () => {
     exerciseId: string,
     supersetIndex: number,
     setNumber: number,
-    body: CompleteSetDto,
+    body: CreateWorkload,
   ) {
-    return await request(app.getHttpServer())
-      .post(
-        `/training/${trainingId}/component/${componentId}/exercise/${exerciseId}/superset/${supersetIndex}/set/${setNumber}`,
-      )
-      .set('Authorization', `Bearer ${token}`)
-      .send(body);
+    return await testApp.http.post(
+      `/training/${trainingId}/component/${componentId}/exercise/${exerciseId}/superset/${supersetIndex}/set/${setNumber}`,
+      token,
+      body,
+    );
   }
 
   it('should fail if component does not exist', async () => {

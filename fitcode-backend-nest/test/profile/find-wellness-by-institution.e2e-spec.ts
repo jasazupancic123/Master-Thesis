@@ -1,36 +1,25 @@
-import type { INestApplication } from '@nestjs/common';
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { TestApp } from '@test/common/utils/app.util';
 import { subDays } from 'date-fns';
-import * as request from 'supertest';
 
-import { AppModule } from '@src/app.module';
 import type { TestInstitution } from '@src/common/type/entity.type';
 import {
   createAthleteUserAndToken,
   createTrainerUserAndToken,
 } from '@src/common/utils/auth.util';
 import { deleteUsersByIds } from '@src/common/utils/data.util';
-import { FirebaseService } from '@src/firebase/firebase.service';
+import type { FirebaseService } from '@src/firebase/firebase.service';
 import { TestDbService } from '@src/test-db/test-db.service';
 
 describe('Find Wellness By Institution (e2e)', () => {
-  let app: INestApplication;
+  let testApp: TestApp;
+  let testDb: TestDbService;
   let firebase: FirebaseService;
-  let db: TestDbService;
-
   let institution: TestInstitution;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
-
-    db = moduleFixture.get(TestDbService);
-    firebase = moduleFixture.get(FirebaseService);
+    testApp = await TestApp.init();
+    firebase = testApp.firebase;
+    testDb = testApp.app.get(TestDbService);
 
     const testAthletes = await Promise.all(
       Array.from({ length: 50 }).map((_, i) =>
@@ -38,19 +27,22 @@ describe('Find Wellness By Institution (e2e)', () => {
       ),
     );
 
-    institution = await db.institutions.createTest({ athletes: testAthletes });
+    institution = await testDb.institutions.createTest({
+      athletes: testAthletes,
+    });
   });
 
   afterAll(async () => {
-    await db.institutions.remove(institution.id);
-    await db.clear();
-    await app.close();
+    await testDb.institutions.remove(institution.id);
+    await testDb.clear();
+    await testApp.close();
   });
 
   async function req(token: string) {
-    return await request(app.getHttpServer())
-      .get(`/profile/wellness/institution/${institution.id}`)
-      .set('Authorization', `Bearer ${token}`);
+    return await testApp.http.get(
+      `/profile/wellness/institution/${institution.id}`,
+      token,
+    );
   }
 
   it('institution should have 50 athletes', () => {
@@ -77,7 +69,7 @@ describe('Find Wellness By Institution (e2e)', () => {
     for (let i = 0; i < 50; i++)
       for (let j = 0; j < 20; j++)
         wellnessesIds.push(
-          await db.wellness.save(
+          await testDb.wellness.save(
             { soreness: Math.random() * 10, sleep: 8, fatigue: 3 },
             {
               date: subDays(new Date(), j + 1),
@@ -92,6 +84,6 @@ describe('Find Wellness By Institution (e2e)', () => {
     expect(res.status).toBe(200);
     expect(res.body).toHaveLength(500); // should return 10 wellness (the latest) for each athlete
 
-    await db.wellness.clear();
+    await testDb.wellness.clear();
   });
 });

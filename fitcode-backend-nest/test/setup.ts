@@ -20,7 +20,9 @@ import {
 } from '@src/common/utils/auth.util';
 
 const nodeEnv = (process.env.NODE_ENV || 'dev') as NodeEnv;
-config({ quiet: true, path: `.env.${nodeEnv}` });
+if (!['production', 'staging'].includes(nodeEnv))
+  // in production and staging, the environment variables are set in other ways
+  config({ quiet: true, path: `.env.${nodeEnv}` });
 
 export default async function () {
   const commonService = new CommonService();

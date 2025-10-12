@@ -10,13 +10,11 @@ import {
 import type { ChildrenProps } from '@/common/type/props.type';
 import { ProfileController } from '@/controller/profile/profile.controller';
 import type { Wellness } from '@/controller/profile/type/wellness.type';
-import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { WellnessProvider } from '@/store/wellness-provider';
 
 export default function WellnessInitializer(props: ChildrenProps) {
   const { children } = props;
-  const { token } = useAuthenticatedAuth();
-  const controller = ProfileController.getInstance(token);
+  const controller = ProfileController.getInstance();
 
   const [wellness, setWellness] = useState<Wellness | null>(
     getCachedWellness()
