@@ -14,15 +14,17 @@ import {
 import { useTheme } from '@mui/material';
 import { Draggable, Droppable } from 'react-beautiful-dnd';
 
-import { DEFAULT_SUBGROUP_ID } from '../trainer-day-view/constant';
-import { handleDeleteSubgroup } from '../trainer-day-view/state';
 import type { SetState } from '@/common/type/state.type';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 import { UseTrainingMembersReturnType } from './hooks/use-members.hook';
-import { updateSelectedAthleteSubgroup } from './actions/actions-subgroups';
+import {
+  handleDeleteSubgroup,
+  updateSelectedAthleteSubgroup,
+} from './actions/actions-subgroups';
+import { DEFAULT_SUBGROUP_ID } from '../trainer-group-day-view/constant/subgroups.constant';
 
 interface TrainingMembersSubgroupProps {
   subgroup: Subgroup;
@@ -160,15 +162,12 @@ export default function TrainingMembersSubgroup(
                           subgroupId: selectedSubgroup.id,
                         },
                         {
-                          training,
-                          setTraining,
-                          component,
-                          setComponent,
-                          selectedExercises,
-                          setSelectedExercises,
-                          setTrainings,
-                          setSelectedSubgroup,
-                          setDetectedChanges,
+                          useGroup: groupContext,
+                          useTrainerDayViewContext: {
+                            ...trainerDayViewContext,
+                            training,
+                            component,
+                          },
                         }
                       );
                       handleMenuClose();

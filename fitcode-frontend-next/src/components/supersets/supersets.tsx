@@ -18,8 +18,6 @@ import { useEffect, useMemo, useState } from 'react';
 import AddExerciseForm from '../add-exercise-form/add-exercise-form';
 import MyModal from '../../util/modal/modal';
 import Superset from '../superset/superset';
-import { NUM_MAX_SUPERSETS } from '../trainer-day-view/constant';
-import { onDragEndExercise as onRBDDragEnd } from '../trainer-day-view/state';
 import StubTrainingExerciseCard from '../training-exercise-card/stub/training-exercise-card-stub';
 import { handleAddExerciseToSupersetComponent } from './state';
 import { ADD_SUPERSET_DROPPABLE_ID } from '@/common/constant/add-superset-droppable-id.constant';
@@ -32,6 +30,8 @@ import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { SupersetsProvider } from '@/store/supersets.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
+import { onDragEndExercise } from './actions/actions-drag-exercise';
+import { NUM_MAX_SUPERSETS } from '../trainer-group-day-view/constant/supersets.constant';
 
 interface SupersetsProps {
   openAddExerciseModal: boolean;
@@ -73,8 +73,11 @@ export default function Supersets(props: SupersetsProps) {
     setExpandedExercisesView,
   } = props;
 
+  const groupContext = useGroup();
+  const trainerDayViewContext = useTrainerDayViewContext();
+
   const { exercises: allExercises } = useMain();
-  const { setDetectedChanges } = useGroup();
+  const { setDetectedChanges } = groupContext;
 
   const {
     training,
@@ -88,7 +91,7 @@ export default function Supersets(props: SupersetsProps) {
     setSearch,
     setSupersets,
     setPagination,
-  } = useTrainerDayViewContext();
+  } = trainerDayViewContext;
 
   const { setTrainings } = useGroup();
 
@@ -236,16 +239,13 @@ export default function Supersets(props: SupersetsProps) {
         },
       };
 
-      onRBDDragEnd(input, {
-        training,
-        setTraining,
-        component,
-        setComponent,
-        selectedSubgroup,
-        setSelectedSubgroup,
-        supersets,
-        setSupersets,
-        setDetectedChanges,
+      onDragEndExercise(input, {
+        useGroup: groupContext,
+        useTrainerDayViewContext: {
+          ...trainerDayViewContext,
+          training,
+          component,
+        },
       });
       return;
     }
@@ -266,16 +266,13 @@ export default function Supersets(props: SupersetsProps) {
       },
     };
 
-    onRBDDragEnd(input, {
-      training,
-      setTraining,
-      component,
-      setComponent,
-      selectedSubgroup,
-      setSelectedSubgroup,
-      supersets,
-      setSupersets,
-      setDetectedChanges,
+    onDragEndExercise(input, {
+      useGroup: groupContext,
+      useTrainerDayViewContext: {
+        ...trainerDayViewContext,
+        training,
+        component,
+      },
     });
   }
 

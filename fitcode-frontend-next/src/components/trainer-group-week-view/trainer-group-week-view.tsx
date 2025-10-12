@@ -15,7 +15,10 @@ import React, { Fragment, useRef } from 'react';
 
 import CustomDivider from '../../util/custom-divider/custom-divider';
 import HorizontalItemsList from '../../util/horizontal-items-list/horizontal-items-list';
-import { DIVIDER_HEIGHT, MAX_WIDTH } from '../trainer-day-view/constant';
+import {
+  DIVIDER_HEIGHT,
+  MAX_WIDTH,
+} from '../trainer-group-day-view/constant/dimensions.constant';
 import VerticalLinesBorders from '../../util/vertical-lines-borders/vertical-lines-borders';
 import DraggableSelect from './components/draggable-select';
 import DroppableSlot from './components/droppable-slot';

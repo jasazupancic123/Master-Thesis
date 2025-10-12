@@ -1,4 +1,4 @@
-import { TrainingExerciseCardProps } from '@/components/trainer-day-view/props';
+import { TrainingExerciseCardProps } from '@/components/trainer-group-day-view/props/props';
 import { Attribute } from '@/controller/attribute/type/attribute.type';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 

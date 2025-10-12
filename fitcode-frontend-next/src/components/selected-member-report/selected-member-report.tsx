@@ -1,10 +1,10 @@
 import { Avatar, Box, Tooltip as MuiTooltip, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 
-import { DEFAULT_SUBGROUP_ID } from '../trainer-day-view/constant';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
+import { DEFAULT_SUBGROUP_ID } from '../trainer-group-day-view/constant/subgroups.constant';
 
 export default function SelectedMemberReport() {
   const screenSize = useScreenSize();

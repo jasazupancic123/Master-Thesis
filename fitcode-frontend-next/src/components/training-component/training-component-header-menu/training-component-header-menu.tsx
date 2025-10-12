@@ -1,7 +1,6 @@
 import { Box, Tooltip } from '@mui/material';
 
 import SelectInput from '../../../util/select-input/select-input';
-import { AFTER_SETS } from '../../trainer-day-view/constant';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
@@ -19,6 +18,7 @@ import { handleSetPeriodizationType } from './actions/actions-periodization-type
 import { onMethodChange } from './actions/actions-method';
 import PeriodizeModal from './modals/periodize-modal';
 import { useState } from 'react';
+import { AFTER_SETS } from '@/components/trainer-group-day-view/constant/after-sets.constant';
 
 export default function TrainingComponentHeaderMenu() {
   const screenSize = useScreenSize();

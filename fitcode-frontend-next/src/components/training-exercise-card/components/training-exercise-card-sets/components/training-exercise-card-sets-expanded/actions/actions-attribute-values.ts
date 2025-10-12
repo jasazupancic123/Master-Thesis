@@ -10,10 +10,10 @@ import { TrainerDayViewProviderReturnTypeDefined } from '@/store/trainer-day-vie
 import { GroupProviderReturnType } from '@/store/group.provider';
 import { updateSelectedExercisesExpandedSets } from './actions-expanded-sets';
 import { updateTraining } from '@/components/training-exercise-card/actions/actions-training';
-import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-day-view/constant';
 import { Training } from '@/controller/training/type/training.type';
 import { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { SetState } from '@/common/type/state.type';
+import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-group-day-view/constant/subgroups.constant';
 
 export function updateExerciseAttributeValues(
   input: {

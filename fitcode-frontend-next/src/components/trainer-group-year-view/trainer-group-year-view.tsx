@@ -3,7 +3,7 @@
 import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles';
 
-import { MAX_WIDTH } from '../trainer-day-view/constant';
+import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
 import VerticalLinesBorders from '../../util/vertical-lines-borders/vertical-lines-borders';
 import MultiCycleSliderLayout from '@/components/trainer-group-year-view/components/multi-cycle-slider/components/multi-cycle-slider-layout/multi-cycle-slider.layout';
 import CycleComponents from '@/components/trainer-group-year-view/components/training-year-cycle-components/training-year-cycle-components';

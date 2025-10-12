@@ -2,7 +2,7 @@ import { Box, Collapse, Stack, Typography } from '@mui/material';
 
 import MuscleHeatmapView from '../../muscle-heatmap-view/muscle-heatmap-view';
 import Supersets from '../../supersets/supersets';
-import type { TrainingComponentProps } from '../../trainer-day-view/props';
+import type { TrainingComponentProps } from '../../trainer-group-day-view/props/props';
 import TrainingComponentCard from '../training-component-card/training-component-card';
 import TrainingComponentHeaderMenu from '../training-component-header-menu/training-component-header-menu';
 import TrainingComponentMenu from '../training-component-menu/training-component-menu';

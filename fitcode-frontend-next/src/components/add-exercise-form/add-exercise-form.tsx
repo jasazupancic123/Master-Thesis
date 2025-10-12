@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import ExerciseFilter from '../exercises-list/exercise-filter';
 import ExercisesList from '../exercises-list/exercises-list';
 import { SearchBar } from '../../util/search-bar/search-bar';
-import type { AddExerciseFormProps } from '../trainer-day-view/props';
+import type { AddExerciseFormProps } from '../trainer-group-day-view/props/props';
 import { handlePaginateExercises } from '@/app/(trainer)/dashboard/exercises/state';
 import {
   COOLDOWN_ID,

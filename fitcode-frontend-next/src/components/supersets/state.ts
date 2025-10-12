@@ -1,9 +1,5 @@
 import toast from 'react-hot-toast';
 
-import {
-  NUM_MAX_EXERCISES_PER_SUPERSET,
-  NUM_MAX_SUPERSETS,
-} from '../trainer-day-view/constant';
 import { COLOR } from '@/common/constant/color.constant';
 import {
   COOLDOWN_ID,
@@ -22,6 +18,10 @@ import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import {
+  NUM_MAX_EXERCISES_PER_SUPERSET,
+  NUM_MAX_SUPERSETS,
+} from '../trainer-group-day-view/constant/supersets.constant';
 
 export const updateSupersets = (
   supersets: Superset[],
@@ -36,16 +36,19 @@ export const updateSupersets = (
     mainSet === MainSet.CIRCUIT ? 32 : NUM_MAX_EXERCISES_PER_SUPERSET;
   const maxSupersets = mainSet === MainSet.CIRCUIT ? 1 : NUM_MAX_SUPERSETS;
 
+  let i = 0;
   for (const superset of supersets) {
     while (
       superset.exercises.length < maxExercisesPerSuperset &&
-      exercisesToAdd.length > 0
+      i < exercisesToAdd.length
     ) {
-      const exerciseToAdd = exercisesToAdd.shift(); // remove from the front
+      const exerciseToAdd = exercisesToAdd[i]; // get the current exercise
       if (exerciseToAdd) superset.exercises.push({ ...exerciseToAdd });
+
+      i++;
     }
 
-    if (exercisesToAdd.length === 0)
+    if (i === exercisesToAdd.length)
       break; // stop if no exercises left
     else if (supersets.indexOf(superset) === supersets.length - 1) {
       // if this is the last superset, add a new one if there are still exercises to add

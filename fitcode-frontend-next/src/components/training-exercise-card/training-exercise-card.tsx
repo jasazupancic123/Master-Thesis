@@ -5,7 +5,7 @@ import Typography from '@mui/material/Typography';
 import { useState } from 'react';
 
 import MyModal from '../../util/modal/modal';
-import type { TrainingExerciseCardProps } from '../trainer-day-view/props';
+import type { TrainingExerciseCardProps } from '../trainer-group-day-view/props/props';
 import TrainingExerciseCardCollapsedSets from './components/training-exercise-card-sets/components/training-exercise-card-sets-collapsed/training-exercise-card-collapsed-sets';
 import TrainingExerciseCardExpandedSets from './components/training-exercise-card-sets/components/training-exercise-card-sets-expanded/training-exercise-card-expanded-sets';
 import { useScreenSize } from '@/store/screen-size.provider';

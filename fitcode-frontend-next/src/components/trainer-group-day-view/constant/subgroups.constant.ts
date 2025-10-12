@@ -1,24 +1,6 @@
 import type { AuthUser } from '@/controller/auth/type/user.type';
-import type { AfterSet } from '@/controller/component/type/after-set.type';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
-
-export const MAX_WIDTH = '1340px';
-
-export const DIVIDER_HEIGHT = '180px';
-
-export const NUM_MAX_SUPERSETS = 8;
-
-export const NUM_MAX_EXERCISES_PER_SUPERSET = 4;
-
-export const AFTER_SETS: AfterSet[] = [
-  { id: '1', name: 'Plus Sets' },
-  { id: '2', name: 'Joker Sets' },
-  { id: '3', name: 'Back-Off Sets' },
-  { id: '4', name: 'Myo Reps' },
-  { id: '5', name: 'Dynamic Effort' },
-  { id: '6', name: 'Issometric' },
-];
 
 export const DEFAULT_SUBGROUP_ID = 'default';
 export const ABSENT_SUBGRUP_ID = 'absent';

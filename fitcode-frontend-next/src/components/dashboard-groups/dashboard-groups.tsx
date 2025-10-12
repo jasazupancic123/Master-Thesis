@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from 'react';
 import DashboardGroupsMembers from '../dashboard-groups-members/dashboard-groups-members';
 import HorizontalItemsList from '../../util/horizontal-items-list/horizontal-items-list';
 import SimpleCircle from '../../util/simple-circle/simple-circle';
-import { MAX_WIDTH } from '../trainer-day-view/constant';
+import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
 import { ADD_GROUP } from '@/common/constant/add-group.constant';
 import { isManager } from '@/common/firebase/firebase-auth.util';
 import type { SetState } from '@/common/type/state.type';

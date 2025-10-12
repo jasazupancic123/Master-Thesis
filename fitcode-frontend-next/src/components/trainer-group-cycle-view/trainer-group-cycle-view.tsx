@@ -8,7 +8,10 @@ import React, { Fragment, useState } from 'react';
 import CustomDivider from '../../util/custom-divider/custom-divider';
 import ExerciseChips from '../exercise-chips/exercise-chips';
 import HorizontalItemsList from '../../util/horizontal-items-list/horizontal-items-list';
-import { DIVIDER_HEIGHT, MAX_WIDTH } from '../trainer-day-view/constant';
+import {
+  DIVIDER_HEIGHT,
+  MAX_WIDTH,
+} from '../trainer-group-day-view/constant/dimensions.constant';
 import VerticalLinesBorders from '../../util/vertical-lines-borders/vertical-lines-borders';
 import { CommonService } from '@/common/service/common.service';
 import TrainingWeek from '@/components/training-week/training-week';
@@ -54,11 +57,6 @@ export default function TrainerCycleView() {
         setValue={(value) => {
           setCycle(group.cycles.find((c) => c.id === value) || undefined);
         }}
-        sx={
-          {
-            // py: '0px !important',
-          }
-        }
         onArrowClick={() => {}}
         cycleView
         checkIsSameValue={(value: string) => {

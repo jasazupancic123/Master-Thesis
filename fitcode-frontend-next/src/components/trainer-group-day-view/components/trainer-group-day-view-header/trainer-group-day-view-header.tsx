@@ -3,18 +3,19 @@ import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import dayjs from 'dayjs';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import toast from 'react-hot-toast';
 
-import HorizontalItemsList from '../../util/horizontal-items-list/horizontal-items-list';
-import SelectedMemberReport from '../selected-member-report/selected-member-report';
-import SelectedMemberWelness from '../selected-member-welness/selected-member-welness';
-import { DIVIDER_HEIGHT, MAX_WIDTH } from '../trainer-day-view/constant';
-import TrainingMembers from '../training-members/training-members';
 import { CommonService } from '@/common/service/common.service';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
+import HorizontalItemsList from '@/util/horizontal-items-list/horizontal-items-list';
+import { DIVIDER_HEIGHT, MAX_WIDTH } from '../../constant/dimensions.constant';
+import SelectedMemberReport from '@/components/selected-member-report/selected-member-report';
+import SelectedMemberWelness from '@/components/selected-member-welness/selected-member-welness';
+import TrainingMembers from '@/components/training-members/training-members';
+import { useTrainerDayViewHeaderSticky } from './hooks/use-sticky';
 
 dayjs.extend(weekOfYear);
 
@@ -51,42 +52,7 @@ export default function GroupTrainerDayViewHeader(
     setSelectedExercises,
   } = useTrainerDayViewContext();
 
-  const [isSticky, setIsSticky] = useState(false);
-
-  useEffect(() => {
-    // if there's only one training on day, always first show the period with the training
-    const todaysTrainings = trainings.filter((t) =>
-      dayjs(t.from).isSame(day.date, 'day')
-    );
-
-    let period: 'AM' | 'PM' = new Date().getHours() >= 12 ? 'PM' : 'AM';
-    if (todaysTrainings.length === 1) {
-      period = new Date(todaysTrainings[0].from).getHours() >= 12 ? 'PM' : 'AM';
-    }
-
-    const newPeriod = { key: new Date(), value: period };
-
-    setSelectedPeriod(newPeriod);
-  }, [day]);
-
-  useEffect(() => {
-    if (screenSize.isMobile || screenSize.isLandscapeMobile) return;
-
-    const handleScroll = () => {
-      if (screenSize.isMobile || screenSize.isLandscapeMobile) return;
-      if (screenSize.isSmallerThanLaptop) {
-        setIsSticky(false);
-        return;
-      }
-
-      const scrollY = window.scrollY;
-      const screenHeight = window.innerHeight;
-      setIsSticky(scrollY > screenHeight * 0.5);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [screenSize]);
+  const { isSticky } = useTrainerDayViewHeaderSticky();
 
   interface PeriodSelectProps {
     smallDisplay?: boolean;

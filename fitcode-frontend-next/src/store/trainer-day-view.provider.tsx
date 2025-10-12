@@ -14,7 +14,11 @@ import { CommonService } from '@/common/service/common.service';
 import type { Day } from '@/common/service/util/date.util';
 import type { Pagination } from '@/common/type/paginate.type';
 import type { ChildrenProps } from '@/common/type/props.type';
-import { handleApiRequest } from '@/common/type/state.type';
+import {
+  handleApiRequest,
+  SetState,
+  SetStateNullable,
+} from '@/common/type/state.type';
 import { firestoreSerialize } from '@/common/util/firebase.util';
 import { optimisticUpdate } from '@/common/util/optimistic-update';
 import type { AuthUser } from '@/controller/auth/type/user.type';
@@ -34,6 +38,11 @@ import {
   type UserProgress,
   WorkloadService,
 } from '@/controller/training/workload.service';
+import { useGroup } from './group.provider';
+import { Component } from '@/controller/component/type/component.type';
+import { Method } from '@/controller/method/type/method.type';
+import dayjs from 'dayjs';
+import { TrainingService } from '@/controller/training/training.service';
 
 const commonService = CommonService.instance;
 const firestore = FirebaseFirestoreUtil.Instance;
@@ -64,7 +73,10 @@ export function TrainerDayViewProvider(
 
   const router = useRouter();
   const screenSize = useScreenSize();
-  const { components, exercises } = useMain();
+  const { components, exercises, methods } = useMain();
+
+  const { setCycle } = useGroup();
+
   const controller = Controller.getInstance();
 
   // filtering selected component exercises
@@ -111,6 +123,13 @@ export function TrainerDayViewProvider(
   const previousSelectedAthlete = useRef<AuthUser | undefined>(undefined);
 
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const cycleInDate = group.cycles.find((c) =>
+      commonService.date.isBetween(day.date, c.from, c.to)
+    );
+    if (cycleInDate) setCycle(cycleInDate);
+  }, [day]);
 
   useEffect(() => {
     if (selectedSubgroup) setSupersets(selectedSubgroup.supersets);
@@ -257,6 +276,171 @@ export function TrainerDayViewProvider(
       prevState
     );
   }
+
+  useEffect(() => {
+    // fetch only for selectedAthlete, group avg is already on training itself
+    const fetchWorkloads = async () => {
+      if (!selectedAthlete) return;
+
+      const combinedComponents = training?.components;
+
+      if (!combinedComponents || !combinedComponents.length) {
+        setSelectedAthleteCompletedWorkloads([]);
+        return;
+      }
+
+      const uniqueExerciseIds = [] as string[];
+      combinedComponents.forEach((c) => {
+        c.supersets.forEach((s) => {
+          s.exercises.forEach((e) => {
+            if (!uniqueExerciseIds.includes(e.id)) uniqueExerciseIds.push(e.id);
+          });
+        });
+      });
+
+      if (!uniqueExerciseIds.length) {
+        setSelectedAthleteCompletedWorkloads([]);
+        return;
+      }
+
+      isSettingAthleteWorkloads.current = true;
+      handleApiRequest(
+        router,
+        () =>
+          controller.training.findCompletedAthleteWorkloads(
+            training.id,
+            selectedAthlete.uid
+          ),
+        (workloads) => {
+          setSelectedAthleteCompletedWorkloads(workloads);
+          isSettingAthleteWorkloads.current = false;
+        },
+        undefined,
+        'Failed to fetch workloads'
+      );
+      isSettingAthleteWorkloads.current = false;
+    };
+
+    // fetch only for selectedAthlete, group avg is already on training itself
+    if (selectedAthlete) fetchWorkloads();
+    else setSelectedAthleteCompletedWorkloads([]);
+  }, [selectedAthlete]);
+
+  {
+    /* Sets new training when new period or day is clicked */
+  }
+  useEffect(() => {
+    if (!selectedPeriod) return;
+
+    setTrainingOnDayView(selectedPeriod, {
+      day,
+      trainings,
+      component,
+      setTraining,
+      setComponent,
+      setLoading,
+      components,
+      exercises,
+      methods,
+      selectedSubgroup,
+      setSelectedSubgroup,
+    });
+  }, [selectedPeriod]);
+
+  useEffect(() => {
+    // if there's only one training on day, always first show the period with the training
+    const todaysTrainings = trainings.filter((t) =>
+      dayjs(t.from).isSame(day.date, 'day')
+    );
+
+    let period: 'AM' | 'PM' = new Date().getHours() >= 12 ? 'PM' : 'AM';
+    if (todaysTrainings.length === 1) {
+      period = new Date(todaysTrainings[0].from).getHours() >= 12 ? 'PM' : 'AM';
+    }
+
+    const newPeriod = { key: new Date(), value: period };
+
+    setSelectedPeriod(newPeriod);
+  }, [day]);
+
+  useEffect(() => {
+    if (!component) setSelectedSubgroup(null);
+  }, [component]);
+
+  const setTrainingOnDayView = (
+    selectedPeriod: {
+      key: Date;
+      value: string;
+    },
+    state: {
+      day: Day;
+      trainings: Training[];
+      component?: TrainingComponent;
+      selectedSubgroup: Subgroup | null;
+      setSelectedSubgroup: SetState<Subgroup | null>;
+      setTraining: SetStateNullable<Training>;
+      setComponent: SetStateNullable<TrainingComponent>;
+      setLoading: SetState<boolean>;
+      components: Component[];
+      exercises: Exercise[];
+      methods: Method[];
+    }
+  ) => {
+    const {
+      day,
+      trainings,
+      component,
+      selectedSubgroup,
+      setSelectedSubgroup,
+      setComponent,
+      setTraining,
+      setLoading,
+      components,
+      exercises,
+      methods,
+    } = state;
+
+    let from: Date, to: Date;
+    if (selectedPeriod.value === 'AM') {
+      from = day.date.startOf('day').toDate();
+      to = day.date.startOf('day').add(12, 'hours').toDate();
+    } else {
+      from = day.date.startOf('day').add(11, 'hours').toDate();
+      to = day.date.endOf('day').toDate();
+    }
+
+    const currentComponentId = component?.id;
+    const currentSubgroupId = selectedSubgroup?.id;
+
+    const foundTraining = trainings.find(
+      (t) => dayjs(t.from).isAfter(from) && dayjs(t.to).isBefore(to)
+    );
+
+    if (!foundTraining) {
+      setTraining(undefined);
+      setLoading(false);
+      setComponent(undefined);
+      return;
+    }
+
+    TrainingService.mapData(foundTraining, {
+      components,
+      exercises,
+      methods,
+    });
+
+    const foundComponent = currentComponentId
+      ? foundTraining.components.find((c) => c.id === currentComponentId)
+      : undefined;
+    const foundSubgroup =
+      foundComponent?.subgroups.find((sg) => sg.id === currentSubgroupId) ||
+      null;
+
+    setComponent(foundComponent);
+    setSelectedSubgroup(foundSubgroup);
+    setTraining(foundTraining);
+    setLoading(false);
+  };
 
   async function handleRemoveMember(user: AuthUser) {
     if (!training) return;

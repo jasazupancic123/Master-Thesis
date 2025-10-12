@@ -11,11 +11,7 @@ import type { TrainingComponent } from './type/training-component.type';
 import type { TrainingExercise } from './type/training-exercise.type';
 import { removeExerciseFromSuperset } from '@/components/superset-exercise/state';
 import { updateSupersets } from '@/components/supersets/state';
-import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-day-view/constant';
-import {
-  onAddExerciseDrop,
-  onDragEndExerciseToExistingSuperset,
-} from '@/components/trainer-day-view/state';
+
 import { removeSelectedExercisesFromSupersets } from '@/components/training-component/training-component-card/actions/actions-selected-exercises';
 import { onMainSetChange } from '@/components/training-component/training-component-header-menu/actions/actions-main-set';
 import {
@@ -24,7 +20,11 @@ import {
   updateSingleExerciseVolWorkSets,
 } from '@/components/training-exercise-card/components/training-exercise-card-sets/components/training-exercise-card-sets-collapsed/actions/actions-attribute';
 import { updateSelectedExercisesExpandedSets } from '@/components/training-exercise-card/components/training-exercise-card-sets/components/training-exercise-card-sets-expanded/actions/actions-expanded-sets';
-import { TrainerDayViewProviderReturnTypeDefined } from '@/store/trainer-day-view.provider';
+import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-group-day-view/constant/subgroups.constant';
+import {
+  onAddExerciseDrop,
+  onDragEndExerciseToExistingSuperset,
+} from '@/components/supersets/actions/actions-drag-exercise';
 
 export class CustomWorkloadsSubgroupsService {
   // when exercise is dropped on 'Add/drop exercise' area
@@ -46,6 +46,9 @@ export class CustomWorkloadsSubgroupsService {
 
       return sg;
     });
+
+    console.log('updated subgroups', component.subgroups);
+
     return component.subgroups;
   };
 
@@ -56,6 +59,7 @@ export class CustomWorkloadsSubgroupsService {
     selectedSubgroup: Subgroup | null,
     exercisesToAdd: TrainingExercise[]
   ): Subgroup[] => {
+    console.log('custom athlete tvoja mama addExercises');
     const parentId = selectedSubgroup?.id || DEFAULT_SUBGROUP_ID;
 
     component.subgroups = component.subgroups.map((sg) => {
@@ -70,6 +74,9 @@ export class CustomWorkloadsSubgroupsService {
       }
       return sg;
     });
+
+    console.log('component.subgroups', component.subgroups);
+    console.log('component', component);
 
     return component.subgroups;
   };

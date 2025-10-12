@@ -5,7 +5,6 @@ import { useTheme } from '@mui/material';
 import { useState } from 'react';
 import { DragDropContext } from 'react-beautiful-dnd';
 
-import { DEFAULT_SUBGROUP_ID } from '../trainer-day-view/constant';
 import TrainingMembersSubgroup from './training-members-subgroups';
 import { useMain } from '@/store/main.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
@@ -14,6 +13,7 @@ import useTrainingMembers from './hooks/use-members.hook';
 import { useGroup } from '@/store/group.provider';
 import { handleOnDragEnd } from './actions/actions-dnd';
 import { updateSelectedAthleteSubgroup } from './actions/actions-subgroups';
+import { DEFAULT_SUBGROUP_ID } from '../trainer-group-day-view/constant/subgroups.constant';
 
 interface TrainingMembersProps {
   isSticky: boolean;

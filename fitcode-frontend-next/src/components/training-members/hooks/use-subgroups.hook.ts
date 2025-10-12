@@ -1,12 +1,12 @@
-import {
-  DEFAULT_SUBGROUP,
-  DEFAULT_SUBGROUP_ID,
-} from '@/components/trainer-day-view/constant';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 import { useEffect, useState } from 'react';
 import { UseTrainingMembersReturnType } from './use-members.hook';
 import { SetState } from '@/common/type/state.type';
+import {
+  DEFAULT_SUBGROUP,
+  DEFAULT_SUBGROUP_ID,
+} from '@/components/trainer-group-day-view/constant/subgroups.constant';
 
 export type UseTrainingMembersSubgroupsReturnType = {
   subgroups: Subgroup[];
