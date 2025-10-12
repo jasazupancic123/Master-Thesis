@@ -8,7 +8,7 @@ import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 
 export default function GroupTrainerDayViewTrainings() {
   const { cycle } = useGroup();
-  const { loading, day, training } = useTrainerDayViewContext();
+  const { loading, training } = useTrainerDayViewContext();
 
   return !cycle ? (
     <Box

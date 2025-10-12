@@ -27,7 +27,7 @@ import FilterButton from '../../util/filter-button/filter-button';
 import Logo from '../../util/logo/logo';
 import MyModal from '../../util/modal/modal';
 import ProfileHeaderMenu from '../profile-header-menu/profile-header-menu';
-import { MAX_WIDTH } from '../trainer-day-view/constant';
+import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
 import { BACKEND_API_BASE_URL } from '@/common/constant/api.constant';
 import { LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS } from '@/common/constant/navigation.constant';
 import { isAdmin } from '@/common/firebase/firebase-auth.util';

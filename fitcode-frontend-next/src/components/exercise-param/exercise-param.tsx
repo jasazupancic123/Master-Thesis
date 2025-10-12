@@ -5,7 +5,7 @@ import NumericExerciseParam from '../numeric-exercise-param/numeric-exercise-par
 import {
   disableBorder,
   exerciseCardSetAttributeSx,
-} from '../trainer-day-view/style';
+} from '../trainer-group-day-view/style/exercise-card-set-attribute.style';
 import type { SetState } from '@/common/type/state.type';
 import type { Attribute } from '@/controller/attribute/type/attribute.type';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';

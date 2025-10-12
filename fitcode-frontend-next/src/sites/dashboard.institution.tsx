@@ -23,7 +23,7 @@ import HorizontalItemsList from '@/util/horizontal-items-list/horizontal-items-l
 import MyModal from '@/util/modal/modal';
 import { SearchBar } from '@/util/search-bar/search-bar';
 import SimpleCircle from '@/util/simple-circle/simple-circle';
-import { MAX_WIDTH } from '@/components/trainer-day-view/constant';
+import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
 import type { AuthUser } from '@/controller/auth/type/user.type';
 import { InstitutionController } from '@/controller/institution/institution.controller';
 import { Gender } from '@/controller/profile/enum/gender.enum';

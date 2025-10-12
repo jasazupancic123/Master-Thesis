@@ -2,7 +2,7 @@ import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
-import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-day-view/constant';
+import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-group-day-view/constant/subgroups.constant';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { TrainingComponent } from '@/controller/training/type/training-component.type';

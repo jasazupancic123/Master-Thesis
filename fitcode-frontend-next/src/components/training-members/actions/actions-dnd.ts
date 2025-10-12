@@ -1,5 +1,4 @@
 import { DropResult } from 'react-beautiful-dnd';
-import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-day-view/constant';
 import { TrainingComponent } from '@/controller/training/type/training-component.type';
 import {
   COOLDOWN_ID,
@@ -14,6 +13,7 @@ import useTrainingMembersSubgroups from '../hooks/use-subgroups.hook';
 import useTrainingMembers from '../hooks/use-members.hook';
 import { MainProviderReturnType, useMain } from '@/store/main.provider';
 import { GroupProviderReturnType, useGroup } from '@/store/group.provider';
+import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-group-day-view/constant/subgroups.constant';
 
 export const handleOnDragEnd = async (
   input: { result: DropResult },
