@@ -6,170 +6,48 @@ import { useTheme } from '@mui/material';
 import dayjs from 'dayjs';
 import dayOfYear from 'dayjs/plugin/dayOfYear';
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useRef } from 'react';
 
-import HorizontalItemsList from '../../util/horizontal-items-list/horizontal-items-list';
-import MobileDoubleTextItems from '../mobile-double-text-items/mobile-double-text-items';
-import MultiCycleSlider from '../multi-cycle-slider/multi-cycle-slider';
-import { handleAddCycle } from './state';
-import type { SetState } from '@/common/type/state.type';
+import MultiCycleSlider from '../../multi-cycle-slider';
 import { GroupController } from '@/controller/group/group.controller';
-import type { Cycle } from '@/controller/group/type/cycle.type';
-import type { Group } from '@/controller/group/type/group.type';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
+import HorizontalItemsList from '@/util/horizontal-items-list/horizontal-items-list';
+import MobileDoubleTextItems from '@/components/mobile-double-text-items/mobile-double-text-items';
+import { handleAddCycle } from './actions/actions-cycle';
+import { useMultiCycleSliderCyclesProvider } from '@/components/trainer-group-year-view/context/cycles.provider';
+import { UseSliderPropertiesReturnType } from '../../hooks/use-slider-properties';
+import { useMultiCycleSliderYearProvider } from '@/components/trainer-group-year-view/context/years.provider';
 
 dayjs.extend(dayOfYear);
 
-interface MultiCycleSliderProps {
-  selectedGroup: Group;
-  setSelectedGroup: SetState<Group>;
-  sliderProperties: { width: string; centerPosition: string }[];
-  setSliderProperties: SetState<{ width: string; centerPosition: string }[]>;
-  sortedCycles: Cycle[];
-  setSortedCycles: SetState<Cycle[]>;
+interface MultiCycleSliderLayoutProps {
+  useSliderProperties: UseSliderPropertiesReturnType;
 }
 
-export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
-  const {
-    selectedGroup,
-    setSelectedGroup,
-    sliderProperties,
-    setSliderProperties,
-    sortedCycles,
-    setSortedCycles,
-  } = props;
-
+export default function MultiCycleSliderLayout(
+  props: MultiCycleSliderLayoutProps
+) {
+  const theme = useTheme();
   const router = useRouter();
   const screenSize = useScreenSize();
-  const theme = useTheme();
+
+  const groupContext = useGroup();
+
+  const { selectedGroup, group } = groupContext;
+
+  const sliderCyclesContext = useMultiCycleSliderCyclesProvider();
+
+  const { activeCycle } = sliderCyclesContext;
+
+  const { useSliderProperties } = props;
+
+  const { yearsForSelect, selectedYear, setSelectedYear } =
+    useMultiCycleSliderYearProvider();
 
   const controller = GroupController.getInstance();
-  const { group, setGroup, setCycle } = useGroup();
 
-  const [selectedYear, setSelectedYear] = useState(dayjs().year());
-  const [yearsForSelect] = useState<
-    { label: string; sublabel: string; value: string }[]
-  >(() => {
-    const currentYear = dayjs().year();
-    const yearsBefore = Array.from(
-      { length: 2 },
-      (_, i) => currentYear - 1 - i
-    );
-    const yearsAfter = Array.from({ length: 3 }, (_, i) => currentYear + i);
-    return [...yearsBefore.toReversed(), ...yearsAfter].map((year) => ({
-      label: 'Year',
-      sublabel: year.toString(),
-      value: year.toString(),
-    }));
-  });
-
-  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
-
-  const yearStart = dayjs(`${selectedYear}-01-01`).dayOfYear();
-  const yearEnd = dayjs(`${selectedYear}-12-31`).dayOfYear();
-
-  const [valuesReal, setValuesReal] = useState<number[]>(() =>
-    sortedCycles.flatMap((cycle) => {
-      let start = dayjs(cycle.from).year(selectedYear).dayOfYear();
-      let end = dayjs(cycle.to).year(selectedYear).dayOfYear();
-
-      if (dayjs(cycle.from).year() < selectedYear) start = yearStart;
-      if (dayjs(cycle.to).year() > selectedYear) end = yearEnd;
-
-      return start < end ? [start, end] : [end, start];
-    })
-  );
-
-  useEffect(() => {
-    const newSliderProperties = sortedCycles.map((cycle, index) => {
-      const start = valuesReal[index * 2];
-      const end = valuesReal[index * 2 + 1];
-
-      const centerPosition = `${
-        (((start + end) / 2 - yearStart) / (yearEnd - yearStart)) * 100
-      }%`;
-
-      const width = `${((end - start) / (yearEnd - yearStart)) * 100}%`;
-      return { width, centerPosition };
-    });
-
-    setSliderProperties(newSliderProperties);
-  }, [sortedCycles, valuesReal]);
-
-  const [cycles, setCycles] = useState<Cycle[]>([]);
-  const [activeCycle, setActiveCycle] = useState<Cycle | undefined>(undefined);
   const sliderRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const newFilteredCycles = cycles.filter(
-      (cycle) =>
-        dayjs(cycle.from).year() === selectedYear ||
-        dayjs(cycle.to).year() === selectedYear
-    );
-
-    const newSortedCycles = [...newFilteredCycles].sort(
-      (a, b) => dayjs(a.from).dayOfYear() - dayjs(b.from).dayOfYear()
-    );
-
-    setSortedCycles(newSortedCycles);
-    setValuesReal(() =>
-      newSortedCycles.flatMap((cycle) => {
-        let start = dayjs(cycle.from).year(selectedYear).dayOfYear();
-        let end = dayjs(cycle.to).year(selectedYear).dayOfYear();
-
-        if (dayjs(cycle.from).year() < selectedYear) start = yearStart;
-        if (dayjs(cycle.to).year() > selectedYear) end = yearEnd;
-
-        return start < end ? [start, end] : [end, start];
-      })
-    );
-  }, [cycles, selectedYear]);
-
-  useEffect(() => {
-    if (!selectedGroup) return;
-    setCycles([...selectedGroup.cycles]);
-  }, [selectedGroup]);
-
-  useEffect(() => {
-    const currentCycle = cycles.find(
-      (cycle) =>
-        dayjs(cycle.from).isBefore(dayjs()) && dayjs(cycle.to).isAfter(dayjs())
-    );
-
-    setActiveCycle(currentCycle);
-  }, [cycles]);
-
-  useEffect(() => {
-    const selectedGroup_ = {
-      ...group,
-      cycles: [...group.cycles].map((cycle) => {
-        return {
-          ...cycle,
-        };
-      }),
-    };
-    setCycles([...selectedGroup_.cycles]);
-    setSelectedGroup(selectedGroup_);
-  }, [group]);
-
-  useEffect(() => {
-    if (draggingIndex !== null) return; // prevent overriding dragged values
-
-    setValuesReal((prev) => {
-      if (prev.length === sortedCycles.length * 2) return prev;
-
-      return sortedCycles.flatMap((cycle) => {
-        let start = dayjs(cycle.from).dayOfYear();
-        let end = dayjs(cycle.to).dayOfYear();
-
-        if (dayjs(cycle.from).year() < selectedYear) start = yearStart;
-        if (dayjs(cycle.to).year() > selectedYear) end = yearEnd;
-
-        return [start, end];
-      });
-    });
-  }, [selectedYear, sortedCycles]);
 
   const HorizontalItems = () => {
     return (
@@ -320,21 +198,19 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
                 : dayjs(lastCycle.to).add(1, 'w').endOf('w').add(1, 'day');
 
             handleAddCycle(
-              controller,
-              router,
               {
-                name: `Cycle ${selectedGroup.cycles.length + 1}`,
-                description: '',
-                from: from.toDate()!,
-                to: to.toDate()!,
+                controller,
+                router,
+                addCycleInput: {
+                  name: `Cycle ${selectedGroup.cycles.length + 1}`,
+                  description: '',
+                  from: from.toDate()!,
+                  to: to.toDate()!,
+                },
               },
               {
-                selectedGroup,
-                setSelectedGroup,
-                setGroup,
-                setSortedCycles,
-                setCycles,
-                setCycle,
+                useGroup: groupContext,
+                useSliderCycles: sliderCyclesContext,
               }
             );
           }}
@@ -361,20 +237,8 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
         >
           {/* Slider */}
           <MultiCycleSlider
-            selectedGroup={selectedGroup}
-            setSelectedGroup={setSelectedGroup}
-            valuesReal={valuesReal}
-            setValuesReal={setValuesReal}
-            draggingIndex={draggingIndex}
-            setDraggingIndex={setDraggingIndex}
             sliderRef={sliderRef}
-            selectedYear={selectedYear}
-            sortedCycles={sortedCycles}
-            yearStart={yearStart}
-            yearEnd={yearEnd}
-            sliderProperties={sliderProperties}
-            setSortedCycles={setSortedCycles}
-            setCycles={setCycles}
+            useSliderProperties={useSliderProperties}
           />
 
           {/* Month Labels */}

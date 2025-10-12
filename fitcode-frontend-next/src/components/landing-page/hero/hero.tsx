@@ -3,9 +3,9 @@ import type { Variants } from 'framer-motion';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 
-import Logo from '../logo/logo';
 import { theme } from '@/app/style';
 import { useScreenSize } from '@/store/screen-size.provider';
+import Logo from '@/util/logo/logo';
 
 export default function Hero() {
   const screenSize = useScreenSize();

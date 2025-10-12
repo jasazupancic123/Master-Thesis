@@ -1,7 +1,7 @@
 'use client';
 
 import Box from '@mui/material/Box';
-import React, { Fragment } from 'react';
+import React from 'react';
 
 import { HERO_NAVBAR_HEIGHT } from './state';
 import { theme } from '@/app/style';

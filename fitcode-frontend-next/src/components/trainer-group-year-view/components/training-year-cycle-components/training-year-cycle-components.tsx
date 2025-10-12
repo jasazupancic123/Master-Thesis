@@ -1,64 +1,47 @@
 import { Box, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
-import { Fragment } from 'react';
+import { Fragment, useEffect } from 'react';
 
-import SelectInput from '../../util/select-input/select-input';
-import TrainingYearCycleComponentSelectItem from './training-year-cycle-component-select-item';
+import SelectInput from '../../../../util/select-input/select-input';
+import TrainingYearCycleComponentSelectItem from './components/training-year-cycle-component-select-item.tsx/training-year-cycle-component-select-item';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
-import type { SetState } from '@/common/type/state.type';
 import { ComponentLevel } from '@/controller/group/enum/component-level.enum';
 import type { Cycle } from '@/controller/group/type/cycle.type';
 import type { Target } from '@/controller/target/type/target.type';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
+import useMultiCycleSliderProperties, {
+  UseSliderPropertiesReturnType,
+} from '../multi-cycle-slider/hooks/use-slider-properties';
+import { updateCycleState } from './actions/actions-cycle';
+import { useMultiCycleSliderCyclesProvider } from '../../context/cycles.provider';
 
 interface CycleComponentsProps {
-  sortedCycles: Cycle[];
-  setSortedCycles: SetState<Cycle[]>;
-  sliderProperties: { width: string; centerPosition: string }[];
+  useSliderProperties: UseSliderPropertiesReturnType;
 }
 
 export default function CycleComponents(props: CycleComponentsProps) {
-  const { sortedCycles, setSortedCycles, sliderProperties } = props;
-
   const theme = useTheme();
   const screenSize = useScreenSize();
 
+  const groupContext = useGroup();
+
   const { components } = useMain();
-  const { setGroup, setDetectedChanges } = useGroup();
+  const { setDetectedChanges } = groupContext;
+
+  const sortedCyclesContext = useMultiCycleSliderCyclesProvider();
+
+  const { sortedCycles } = sortedCyclesContext;
+
+  const { sliderProperties } = props.useSliderProperties;
 
   const parentComponents = components
     .filter((component) => component.parentId === null)
     .filter((component) => ![WARMUP_ID, COOLDOWN_ID].includes(component.id));
-
-  const updateCycleState = (newCycle: Cycle) => {
-    const newCycles = sortedCycles.map((c) =>
-      c.id === newCycle.id ? newCycle : c
-    );
-
-    setSortedCycles(newCycles);
-
-    setGroup((prevGroup) => {
-      const newStateCycles = prevGroup.cycles.map(
-        (c) => newCycles.find((nc) => nc.id === c.id) || c
-      );
-
-      newCycles.forEach((nc) => {
-        if (!newStateCycles.some((c) => c.id === nc.id)) {
-          newStateCycles.push(nc);
-        }
-      });
-
-      return {
-        ...prevGroup,
-        cycles: newStateCycles,
-      };
-    });
-  };
 
   return (
     <Box width="100%" display="flex" flexDirection="column" position="relative">
@@ -115,23 +98,25 @@ export default function CycleComponents(props: CycleComponentsProps) {
                 }}
               >
                 {sortedCycles.map((cycle, i) => {
-                  const sliderPropety = sliderProperties[i];
-                  if (!sliderPropety) return null;
+                  const sliderProperty = sliderProperties[i];
+
+                  if (!sliderProperty) return null;
 
                   // parse number from string
-                  let widthNumber = parseFloat(sliderPropety.width);
+                  let widthNumber = parseFloat(sliderProperty.width);
+
                   if (isNaN(widthNumber)) return null;
 
                   widthNumber += 0.5; // Add 0.5% for border radius
                   const width = `${widthNumber}%`;
 
-                  const centerPosition = sliderPropety.centerPosition;
+                  const centerPosition = sliderProperty.centerPosition;
 
                   const selectedTarget = cycle.selectedTargets.find(
                     (st) => st.componentId === component.id
                   );
 
-                  const center = parseFloat(sliderPropety.centerPosition); // e.g. "37.5%" -> 37.5
+                  const center = parseFloat(sliderProperty.centerPosition); // e.g. "37.5%" -> 37.5
                   const rightEdge = center + widthNumber / 2;
 
                   const cycleZIndex = i + 2; // later items paint above earlier ones
@@ -227,7 +212,13 @@ export default function CycleComponents(props: CycleComponentsProps) {
                                       ),
                                   };
 
-                                  updateCycleState(newCycle);
+                                  updateCycleState(
+                                    { newCycle },
+                                    {
+                                      useGroup: groupContext,
+                                      useSliderCycles: sortedCyclesContext,
+                                    }
+                                  );
 
                                   return;
                                 }
@@ -263,7 +254,13 @@ export default function CycleComponents(props: CycleComponentsProps) {
                                   selectedTargets: newSelectedTargets,
                                 };
 
-                                updateCycleState(newCycle);
+                                updateCycleState(
+                                  { newCycle },
+                                  {
+                                    useGroup: groupContext,
+                                    useSliderCycles: sortedCyclesContext,
+                                  }
+                                );
                               }}
                             />
                           </TrainingYearCycleComponentSelectItem>
@@ -309,7 +306,13 @@ export default function CycleComponents(props: CycleComponentsProps) {
                                         ),
                                     };
 
-                                    updateCycleState(newCycle);
+                                    updateCycleState(
+                                      { newCycle },
+                                      {
+                                        useGroup: groupContext,
+                                        useSliderCycles: sortedCyclesContext,
+                                      }
+                                    );
 
                                     return;
                                   }
@@ -342,7 +345,13 @@ export default function CycleComponents(props: CycleComponentsProps) {
                                     selectedTargets: newSelectedTargets,
                                   };
 
-                                  updateCycleState(newCycle);
+                                  updateCycleState(
+                                    { newCycle },
+                                    {
+                                      useGroup: groupContext,
+                                      useSliderCycles: sortedCyclesContext,
+                                    }
+                                  );
                                 }}
                               />
                             </TrainingYearCycleComponentSelectItem>

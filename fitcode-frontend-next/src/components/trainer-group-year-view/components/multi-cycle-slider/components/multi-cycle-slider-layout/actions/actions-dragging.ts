@@ -1,88 +1,12 @@
 import dayjs from 'dayjs';
-import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import type { RefObject } from 'react';
-import toast from 'react-hot-toast';
-import { v4 } from 'uuid';
 
-import type { SetStateNullable } from '@/common/type/state.type';
-import { handleApiRequest, type SetState } from '@/common/type/state.type';
-import type { GroupController } from '@/controller/group/group.controller';
+import { type SetState } from '@/common/type/state.type';
 import type { Cycle, Week } from '@/controller/group/type/cycle.type';
-import type { Group } from '@/controller/group/type/group.type';
-
-type AddCycleInput = Pick<Cycle, 'name' | 'from' | 'to' | 'description'>;
-
-export async function handleAddCycle(
-  controller: GroupController,
-  router: AppRouterInstance,
-  input: AddCycleInput,
-  state: {
-    selectedGroup: Group;
-    setSelectedGroup: SetState<Group>;
-    setGroup: SetState<Group>;
-    setSortedCycles: SetState<Cycle[]>;
-    setCycles: SetState<Cycle[]>;
-    setCycle: SetStateNullable<Cycle>;
-  }
-) {
-  const {
-    selectedGroup,
-    setSelectedGroup,
-    setGroup,
-    setSortedCycles,
-    setCycles,
-    setCycle,
-  } = state;
-  const { name, description, from, to } = input;
-
-  if (!name || !from || !to) {
-    toast.error('Please fill in all required fields.');
-    return;
-  }
-
-  if (from > to) {
-    toast.error('Start date must be before end date.');
-    return;
-  }
-
-  const newCycle: Cycle = {
-    id: v4(),
-    name,
-    from,
-    to,
-    description,
-    selectedTargets: [],
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-
-  handleApiRequest(
-    router,
-    () => controller.addCycle(selectedGroup.id, newCycle),
-    () => {
-      const newCycles = [...selectedGroup.cycles, newCycle];
-
-      if (newCycles.length === 1) setCycle(newCycle);
-
-      setSortedCycles(newCycles);
-      setCycles(newCycles);
-
-      const newGroup = { ...selectedGroup, cycles: newCycles };
-      setGroup(newGroup);
-      setSelectedGroup(newGroup);
-      toast.success('Cycle added successfully.');
-    },
-    undefined,
-    'An error occurred while adding the cycle'
-  );
-}
-
-export function changeYear(
-  direction: 'prev' | 'next',
-  setSelectedYear: SetState<number>
-) {
-  setSelectedYear((prev) => (direction === 'prev' ? prev - 1 : prev + 1));
-}
+import { GroupProviderReturnType } from '@/store/group.provider';
+import { UseSliderPropertiesReturnType } from '../../../hooks/use-slider-properties';
+import { SliderYearProviderReturnType } from '@/components/trainer-group-year-view/context/years.provider';
+import { SliderCyclesProviderReturnType } from '@/components/trainer-group-year-view/context/cycles.provider';
 
 export function handleDrag(
   input: {
@@ -102,6 +26,7 @@ export function handleDrag(
   const { setDraggedDay, setValuesReal, sortedCycles } = state;
 
   setDraggedDay(value);
+
   setValuesReal((prev) => {
     const updated = [...prev];
 
@@ -169,28 +94,38 @@ export function handleChange(
 
 export function handleDragEnd(
   input: {
-    draggingIndex: number | null;
-    selectedYear: number;
-    sortedCycles: Cycle[];
-    valuesReal: number[];
-  },
-  state: {
-    selectedGroup: Group | null;
-    setSelectedGroup: SetState<Group>;
     setDraggingIndex: SetState<number | null>;
     setDraggedDay: SetState<number | null>;
+  },
+  context: {
+    useGroup: GroupProviderReturnType;
+    useYear: SliderYearProviderReturnType;
+    useSliderProperties: UseSliderPropertiesReturnType;
+    useSliderCycles: SliderCyclesProviderReturnType;
   }
 ) {
-  const { draggingIndex, selectedYear, sortedCycles, valuesReal } = input;
-  const { selectedGroup, setSelectedGroup, setDraggingIndex, setDraggedDay } =
-    state;
+  const { setDraggingIndex, setDraggedDay } = input;
+
+  const { useGroup, useSliderProperties, useSliderCycles, useYear } = context;
+
+  const { selectedGroup, setSelectedGroup } = useGroup;
+
+  const { sortedCycles, setSortedCycles } = useSliderCycles;
+
+  const { selectedYear } = useYear;
+
+  const { draggingIndex, valuesReal } = useSliderProperties;
+
   if (!selectedGroup) return;
 
   if (draggingIndex === undefined || draggingIndex === null) return;
+
   const cycleIndex = Math.floor(draggingIndex / 2);
+
   if (!sortedCycles[cycleIndex]) return;
 
   const cycle = { ...[...sortedCycles][cycleIndex] };
+
   const isStartDot = draggingIndex % 2 === 0; // Even index = start, Odd index = end
 
   // Ensure correct year boundaries
@@ -238,6 +173,7 @@ export function handleDragEnd(
   ];
 
   const newGroup = { ...selectedGroup, cycles: newCycles };
+
   setSelectedGroup(newGroup);
 
   setDraggingIndex(null);

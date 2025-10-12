@@ -2,24 +2,17 @@
 
 import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles';
-import React, { useState } from 'react';
 
 import { MAX_WIDTH } from '../trainer-day-view/constant';
 import VerticalLinesBorders from '../../util/vertical-lines-borders/vertical-lines-borders';
-import MultiCycleSliderLayout from '@/components/multi-cycle-slider-layout/multi-cycle-slider.layout';
-import CycleComponents from '@/components/training-year-cycle-components/training-year-cycle-components';
-import type { Cycle } from '@/controller/group/type/cycle.type';
-import { useGroup } from '@/store/group.provider';
+import MultiCycleSliderLayout from '@/components/trainer-group-year-view/components/multi-cycle-slider/components/multi-cycle-slider-layout/multi-cycle-slider.layout';
+import CycleComponents from '@/components/trainer-group-year-view/components/training-year-cycle-components/training-year-cycle-components';
+import useMultiCycleSliderProperties from './components/multi-cycle-slider/hooks/use-slider-properties';
 
 export default function TrainerYearView() {
-  const { selectedGroup, setSelectedGroup } = useGroup();
-
   const theme = useTheme();
 
-  const [sortedCycles, setSortedCycles] = useState<Cycle[]>([]);
-  const [sliderProperties, setSliderProperties] = useState<
-    { width: string; centerPosition: string }[]
-  >([]);
+  const useSliderProperties = useMultiCycleSliderProperties();
 
   return (
     <Box
@@ -52,22 +45,11 @@ export default function TrainerYearView() {
           flexDirection="column"
           alignItems="center"
         >
-          <MultiCycleSliderLayout
-            selectedGroup={selectedGroup}
-            setSelectedGroup={setSelectedGroup}
-            sortedCycles={sortedCycles}
-            setSortedCycles={setSortedCycles}
-            sliderProperties={sliderProperties}
-            setSliderProperties={setSliderProperties}
-          />
+          <MultiCycleSliderLayout useSliderProperties={useSliderProperties} />
         </Box>
 
         <Box width="100%" maxWidth="100%">
-          <CycleComponents
-            sortedCycles={sortedCycles}
-            setSortedCycles={setSortedCycles}
-            sliderProperties={sliderProperties}
-          />
+          <CycleComponents useSliderProperties={useSliderProperties} />
         </Box>
       </Box>
     </Box>

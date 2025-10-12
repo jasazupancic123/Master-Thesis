@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 
 import AthleteTrainingExerciseSets from '../../../athlete-training-exercise-sets/athlete-training-exercise-sets';
 import MobileMovementValidation from '../../../mobile-movement-validation/mobile-movement-validation';
-import SwipeableBox from '../../../swipeable-box/swipeable-box';
+import SwipeableBox from '../../../../util/swipeable-box/swipeable-box';
 import ImageGallery from '../../../../common/util/image-gallery';
 import TrainingExerciseSetDoneCheckbox from './components/training-exercise-set-done-checkbox';
 import TrainingInProgressTempoChart from '../../../../common/util/tempo-chart';

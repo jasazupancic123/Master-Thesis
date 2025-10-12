@@ -11,6 +11,8 @@ import TrainerWeekView from '@/components/trainer-group-week-view/trainer-group-
 import TrainerYearView from '@/components/trainer-group-year-view/trainer-group-year-view';
 import { useGroup } from '@/store/group.provider';
 import { TrainerDayViewProvider } from '@/store/trainer-day-view.provider';
+import { YearsSliderProvider } from '@/components/trainer-group-year-view/context/years.provider';
+import { SliderCycleProvider } from '@/components/trainer-group-year-view/context/cycles.provider';
 
 export default function TrainerGroupPage() {
   const context = useGroup();
@@ -20,7 +22,13 @@ export default function TrainerGroupPage() {
     day: <TrainerDayView />,
     week: <TrainerWeekView />,
     month: <TrainerCycleView />,
-    year: <TrainerYearView />,
+    year: (
+      <YearsSliderProvider>
+        <SliderCycleProvider>
+          <TrainerYearView />
+        </SliderCycleProvider>
+      </YearsSliderProvider>
+    ),
   };
 
   return (
