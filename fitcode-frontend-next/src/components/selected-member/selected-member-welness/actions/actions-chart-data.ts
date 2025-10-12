@@ -60,11 +60,3 @@ export default function setupChartData(
     })
   );
 }
-
-export const colorForZ = (metric: WellnessChartData) => {
-  let zValue = metric.zScore;
-  if (zValue === null) return COLOR[0]; // Default color if no z-score
-
-  zValue = Math.abs(zValue);
-  return zValue < 1 ? COLOR[0] : zValue < 2 ? COLOR[1] : COLOR[2];
-};

@@ -1,45 +1,21 @@
 import { Avatar, Box, Tooltip as MuiTooltip, Typography } from '@mui/material';
-import { useEffect, useState } from 'react';
 
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
-import { DEFAULT_SUBGROUP_ID } from '../trainer-group-day-view/constant/subgroups.constant';
+import useSelectedMemberWeight from './hooks/use-weight';
+import { deselectAthlete } from './actions/actions-selected-athlete';
 
 export default function SelectedMemberReport() {
   const screenSize = useScreenSize();
 
-  const {
-    wellness,
-    component,
-    selectedAthlete,
-    setSelectedAthlete,
-    selectedSubgroup,
-    setSelectedSubgroup,
-  } = useTrainerDayViewContext();
+  const trainerDayViewContext = useTrainerDayViewContext();
 
-  const [weight, setWeight] = useState<number | undefined>(
-    wellness.find((w) => w.userId === selectedAthlete?.uid)?.weight
-  );
+  const { selectedAthlete } = trainerDayViewContext;
 
   const { users } = useMain();
 
-  const deselectAthlete = () => {
-    setSelectedAthlete(undefined);
-
-    if (selectedSubgroup && selectedSubgroup.parentId && component) {
-      const parentSubgroup = component.subgroups.find(
-        (sg) => sg.id === selectedSubgroup.parentId
-      );
-      if (parentSubgroup && parentSubgroup.id !== DEFAULT_SUBGROUP_ID)
-        setSelectedSubgroup(parentSubgroup);
-      else setSelectedSubgroup(null);
-    }
-  };
-
-  useEffect(() => {
-    setWeight(wellness.find((w) => w.userId === selectedAthlete?.uid)?.weight);
-  }, [selectedAthlete, wellness]);
+  const { weight } = useSelectedMemberWeight();
 
   if (!selectedAthlete) return null;
 
@@ -86,7 +62,11 @@ export default function SelectedMemberReport() {
                 filter: 'grayscale(100%)',
                 zIndex: 10,
               }}
-              onClick={deselectAthlete}
+              onClick={() =>
+                deselectAthlete({
+                  useTrainerDayViewContext: trainerDayViewContext,
+                })
+              }
             />
           </Box>
         </MuiTooltip>

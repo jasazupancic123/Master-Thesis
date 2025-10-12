@@ -1,36 +1,15 @@
 import { Box, Tooltip, Typography } from '@mui/material';
-import { useEffect, useState } from 'react';
 
-import setupChartData from '../selected-member-report/state';
 import { theme } from '@/app/style';
-import { WellnessChartDataType } from '@/controller/profile/enum/wellness-chart-data-type.enum';
-import type { WellnessChartData } from '@/controller/profile/type/wellness.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
+import useSelectedMemberWellnessChartData from './hooks/use-chart-data';
 
 export default function SelectedMemberWelness() {
   const screenSize = useScreenSize();
-  const { selectedAthlete, wellness } = useTrainerDayViewContext();
+  const { selectedAthlete } = useTrainerDayViewContext();
 
-  const [wellnessChartData, setWellnessChartData] = useState<
-    WellnessChartData[]
-  >(
-    [
-      WellnessChartDataType.SLEEP,
-      WellnessChartDataType.SORENESS,
-      WellnessChartDataType.FATIGUE,
-    ].map((metric) => ({
-      metric,
-      today: null,
-      zScore: null,
-    }))
-  );
-
-  useEffect(() => {
-    if (!selectedAthlete) return;
-
-    setupChartData(wellness, selectedAthlete, setWellnessChartData);
-  }, [selectedAthlete]);
+  const { wellnessChartData } = useSelectedMemberWellnessChartData();
 
   if (!selectedAthlete) return null;
 

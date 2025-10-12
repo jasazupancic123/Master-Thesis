@@ -161,7 +161,9 @@ export function TrainerDayViewProvider(
       handleApiRequest(
         router,
         () => controller.profile.getWellnessByInstitution(group.institutionId),
-        (wellness) => setWellness(wellness),
+        (wellness) => {
+          setWellness(wellness);
+        },
         undefined
       );
     }
