@@ -5,7 +5,7 @@ import { Box, Button, TextField, Typography } from '@mui/material';
 import { useRef } from 'react';
 import toast from 'react-hot-toast';
 
-import IndexPageTitleText from '../hero/index-page-title-text';
+import IndexPageTitleText from '../../../util/index-page-title-text/index-page-title-text';
 import Logo from '../../../util/logo/logo';
 import { HERO_NAVBAR_HEIGHT } from '@/app/state';
 import { theme } from '@/app/style';

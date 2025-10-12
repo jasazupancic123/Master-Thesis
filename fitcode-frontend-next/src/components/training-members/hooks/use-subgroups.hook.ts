@@ -5,7 +5,7 @@ import {
 import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 import { useEffect, useState } from 'react';
-import useTrainingMembers from './use-members.hook';
+import { UseTrainingMembersReturnType } from './use-members.hook';
 import { SetState } from '@/common/type/state.type';
 
 export type UseTrainingMembersSubgroupsReturnType = {
@@ -15,13 +15,15 @@ export type UseTrainingMembersSubgroupsReturnType = {
   setChangedSubgroupIds: SetState<string[]>;
 };
 
-export default function useTrainingMembersSubgroups() {
+export default function useTrainingMembersSubgroups(
+  trainingMembersContext: UseTrainingMembersReturnType
+) {
   const [subgroups, setSubgroups] = useState<Subgroup[]>([]);
   const [changedSubgroupIds, setChangedSubgroupIds] = useState<string[]>([]);
 
   const { training, component, selectedSubgroup } = useTrainerDayViewContext();
 
-  const { members, item } = useTrainingMembers();
+  const { members, item } = trainingMembersContext;
 
   /* Inits subgroups */
   useEffect(() => {

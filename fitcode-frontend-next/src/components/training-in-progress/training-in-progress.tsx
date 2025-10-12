@@ -14,21 +14,20 @@ import type { TrainingInProgress } from '@/controller/training/type/training-in-
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
-import useTrainingInProgressUtils from './hooks/use-utils';
-import useTrainingInProgressUndoneExercises from './hooks/use-undone-exercises';
 import { handleChangeSuperset } from './actions/actions-superset';
 import CancelTrainingModal from './modals/cancel-training-modal';
 import UndoneSetsWarningModal from './modals/undone-sets-warning-modal';
 import UndoneSetsErrorModal from './modals/undone-sets-error-modal';
 import { handleInitTrainingInProgressComponent } from './actions/actions-training-in-progress';
+import { useUndoneExercises } from './context/undone-exercises.provider';
+import { useTrainingInProgressUtils } from './context/training-in.progress-utils.provider';
 
 export default function TrainingInProgress() {
   const theme = useTheme();
 
   const trainingContext = useTraining();
   const trainingInProgressContext = useTrainingInProgress();
-  const trainingInProgressUndoneExercisesContext =
-    useTrainingInProgressUndoneExercises();
+  const trainingInProgressUndoneExercisesContext = useUndoneExercises();
   const trainingInProgressUtilsContext = useTrainingInProgressUtils();
   const athleteHeaderContext = useAthleteHeader();
 
@@ -44,6 +43,12 @@ export default function TrainingInProgress() {
     handleCloseMenu,
     handleCancel,
     formatTime,
+    openCancelTrainingModal,
+    setOpenCancelTrainingModal,
+    showUndoneSetsError,
+    setShowUndoneSetsError,
+    showUndoneSetsWarning,
+    setShowUndoneSetsWarning,
   } = trainingInProgressUtilsContext;
 
   const { selectedTrackingMethod } = athleteHeaderContext;
@@ -62,7 +67,7 @@ export default function TrainingInProgress() {
     if (!trainingInProgress) return;
 
     handleInitTrainingInProgressComponent({
-      useTraining: { ...useTraining(), trainingInProgress },
+      useTraining: { ...trainingContext, trainingInProgress },
       useTrainingInProgressContext: trainingInProgressContext,
     });
   }, [trainingInProgress?.selectedComponent]);
@@ -209,11 +214,20 @@ export default function TrainingInProgress() {
         </Box>
       )}
 
-      <CancelTrainingModal />
+      <CancelTrainingModal
+        open={openCancelTrainingModal}
+        setOpen={setOpenCancelTrainingModal}
+      />
 
-      <UndoneSetsWarningModal />
+      <UndoneSetsWarningModal
+        open={showUndoneSetsWarning}
+        setOpen={setShowUndoneSetsWarning}
+      />
 
-      <UndoneSetsErrorModal />
+      <UndoneSetsErrorModal
+        open={showUndoneSetsError}
+        setOpen={setShowUndoneSetsError}
+      />
     </Box>
   );
 }

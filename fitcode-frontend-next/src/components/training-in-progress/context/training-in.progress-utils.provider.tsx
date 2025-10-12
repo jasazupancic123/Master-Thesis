@@ -1,17 +1,46 @@
 import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
+import { ChildrenProps } from '@/common/type/props.type';
+import { SetState } from '@/common/type/state.type';
 import { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import { useTraining } from '@/store/training.provider';
 import dayjs from 'dayjs';
-import { useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
+
+interface TrainingInProgressUtilsProps {
+  elapsedTime: number;
+  setElapsedTime: SetState<number>;
+  showUndoneSetsWarning: boolean;
+  setShowUndoneSetsWarning: SetState<boolean>;
+  showUndoneSetsError: boolean;
+  setShowUndoneSetsError: SetState<boolean>;
+  openCancelTrainingModal: boolean;
+  setOpenCancelTrainingModal: SetState<boolean>;
+  anchorEl: HTMLElement | null;
+  setAnchorEl: SetState<HTMLElement | null>;
+  open: boolean;
+  handleOpenMenu: (event: React.MouseEvent<HTMLElement>) => void;
+  handleCloseMenu: () => void;
+  handleCancel: () => void;
+  handleCancelTraining: () => void;
+  formatTime: (seconds: number) => string;
+}
+
+const TrainingInProgressUtilsContext =
+  createContext<TrainingInProgressUtilsProps | null>(null);
+
+export const useTrainingInProgressUtils = () =>
+  useContext(TrainingInProgressUtilsContext)!;
 
 export type UseTrainingInProgressUtilsReturnType = ReturnType<
   typeof useTrainingInProgressUtils
 >;
 
-export default function useTrainingInProgressUtils() {
+export function TrainingInProgressUtilsProvider(props: ChildrenProps) {
+  const { children } = props;
+
   const {
     trainingInProgress,
     setTrainingInProgress,
@@ -27,7 +56,7 @@ export default function useTrainingInProgressUtils() {
   const [showUndoneSetsWarning, setShowUndoneSetsWarning] = useState(false);
   const [showUndoneSetsError, setShowUndoneSetsError] = useState(false);
   const [openCancelTrainingModal, setOpenCancelTrainingModal] = useState(false);
-  const [anchorEl, setAnchorEl] = useState(null);
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const open = Boolean(anchorEl);
 
   useEffect(() => {
@@ -82,7 +111,7 @@ export default function useTrainingInProgressUtils() {
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 
-  return {
+  const value: TrainingInProgressUtilsProps = {
     elapsedTime,
     setElapsedTime,
     showUndoneSetsWarning,
@@ -100,4 +129,10 @@ export default function useTrainingInProgressUtils() {
     handleCancelTraining,
     formatTime,
   };
+
+  return (
+    <TrainingInProgressUtilsContext.Provider value={value}>
+      {children}
+    </TrainingInProgressUtilsContext.Provider>
+  );
 }

@@ -6,7 +6,10 @@ import {
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
 import { handleAddMembersSubgroup } from './actions-subgroups';
-import { TrainerDayViewProviderReturnTypeDefined } from '@/store/trainer-day-view.provider';
+import {
+  TrainerDayViewProviderReturnType,
+  TrainerDayViewProviderReturnTypeDefined,
+} from '@/store/trainer-day-view.provider';
 import useTrainingMembersSubgroups from '../hooks/use-subgroups.hook';
 import useTrainingMembers from '../hooks/use-members.hook';
 import { MainProviderReturnType, useMain } from '@/store/main.provider';
@@ -17,7 +20,7 @@ export const handleOnDragEnd = async (
   context: {
     useMain: MainProviderReturnType;
     useGroup: GroupProviderReturnType;
-    useTrainerDayViewContext: TrainerDayViewProviderReturnTypeDefined;
+    useTrainerDayViewContext: TrainerDayViewProviderReturnType;
     useTrainingMembersSubgroups: ReturnType<typeof useTrainingMembersSubgroups>;
     useTrainingMembers: ReturnType<typeof useTrainingMembers>;
   }
@@ -32,6 +35,11 @@ export const handleOnDragEnd = async (
     useTrainingMembers,
   } = context;
 
+  const training = useTrainerDayViewContext.training;
+  const component = useTrainerDayViewContext.component;
+
+  if (!training || !component) return;
+
   const { members } = useTrainingMembers;
 
   const { draggableId, destination } = result;
@@ -42,14 +50,22 @@ export const handleOnDragEnd = async (
     handleAddMembersSubgroup(
       { member: user },
       {
-        useTrainerDayViewContext,
+        useTrainerDayViewContext: {
+          ...useTrainerDayViewContext,
+          training,
+          component,
+        },
         useGroup,
       }
     );
   } else {
     onDragEndSubgroup(result, {
       useMain,
-      useTrainerDayViewContext,
+      useTrainerDayViewContext: {
+        ...useTrainerDayViewContext,
+        training,
+        component,
+      },
       useTrainingMembersSubgroups,
     });
   }

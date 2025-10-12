@@ -1,24 +1,22 @@
 import MyModal from '@/util/modal/modal';
-import useTrainingInProgressUtils from '../hooks/use-utils';
-import useTrainingInProgressUndoneExercises from '../hooks/use-undone-exercises';
 import UndoneExercisesList from '../components/undone-exercises-list/training-in-progress-undone-exercises-list';
+import { ModalProps } from '@/common/type/modal-props.type';
+import { useUndoneExercises } from '../context/undone-exercises.provider';
 
-export default function UndoneSetsWarningModal() {
-  const { showUndoneSetsWarning, setShowUndoneSetsWarning } =
-    useTrainingInProgressUtils();
+export default function UndoneSetsWarningModal(props: ModalProps) {
+  const { open, setOpen } = props;
 
-  const { undoneExercises, setUndoneExercises } =
-    useTrainingInProgressUndoneExercises();
+  const { undoneExercises, setUndoneExercises } = useUndoneExercises();
 
   return (
     <MyModal
-      isOpen={showUndoneSetsWarning}
+      isOpen={open}
       setIsOpen={(open) => {
-        if (!undoneExercises.length) setShowUndoneSetsWarning(false);
-        else setShowUndoneSetsWarning(open);
+        if (!undoneExercises.length) setOpen(false);
+        else setOpen(open);
       }}
       onConfirm={() => {
-        setShowUndoneSetsWarning(false);
+        setOpen(false);
         setUndoneExercises([]);
       }}
     >

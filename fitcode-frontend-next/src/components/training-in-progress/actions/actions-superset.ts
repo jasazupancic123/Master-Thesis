@@ -1,12 +1,9 @@
-import {
-  TrainingProviderReturnType,
-  TrainingProviderReturnTypeDefined,
-} from '@/store/training.provider';
+import { TrainingProviderReturnTypeDefined } from '@/store/training.provider';
 import { getUndoneExercises } from './actions-undone-exercises';
 import { TrainingInProgressProviderReturnType } from '@/store/training-in-progress.provider';
-import { UseUndoneExercisesReturnType } from '../hooks/use-undone-exercises';
+import { UseUndoneExercisesReturnType } from '../context/undone-exercises.provider';
 import { Superset } from '@/controller/training/type/superset.type';
-import { UseTrainingInProgressUtilsReturnType } from '../hooks/use-utils';
+import { UseTrainingInProgressUtilsReturnType } from '../context/training-in.progress-utils.provider';
 
 export function handleChangeSuperset(
   input: { superset: Superset; i: number },
