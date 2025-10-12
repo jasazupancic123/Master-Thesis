@@ -1,20 +1,20 @@
 import { SetState } from '@/common/type/state.type';
 import MyModal from '@/util/modal/modal';
-import useTrainingInProgressUtils from '@/components/training-in-progress/hooks/use-utils';
 import { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import { useTraining } from '@/store/training.provider';
 import { Typography } from '@mui/material';
 import { RefObject } from 'react';
+import { ModalProps } from '@/common/type/modal-props.type';
 
 interface NextSupersetModalProps {
   boxRef: RefObject<HTMLDivElement | null>;
-  openNextSupersetModal: boolean;
-  setOpenNextSupersetModal: SetState<boolean>;
 }
 
-export default function NextSupersetModal(props: NextSupersetModalProps) {
-  const { boxRef, openNextSupersetModal, setOpenNextSupersetModal } = props;
+export default function NextSupersetModal(
+  props: NextSupersetModalProps & ModalProps
+) {
+  const { boxRef, open, setOpen } = props;
 
   const { trainingInProgress, setTrainingInProgress } = useTraining();
 
@@ -24,10 +24,10 @@ export default function NextSupersetModal(props: NextSupersetModalProps) {
 
   return (
     <MyModal
-      isOpen={openNextSupersetModal}
-      setIsOpen={(open) => setOpenNextSupersetModal(open)}
+      isOpen={open}
+      setIsOpen={(open) => setOpen(open)}
       cancelText="Cancel"
-      onCancel={() => setOpenNextSupersetModal(false)}
+      onCancel={() => setOpen(false)}
       onConfirm={() => {
         setSelectedSuperset(
           trainingInProgress.supersets[
@@ -51,7 +51,8 @@ export default function NextSupersetModal(props: NextSupersetModalProps) {
             } as TrainingInProgress;
           });
         }
-        setOpenNextSupersetModal(false);
+
+        setOpen(false);
         if (boxRef.current) {
           boxRef.current.scrollTop = 0;
         }

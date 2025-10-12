@@ -1,13 +1,27 @@
 import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { useEffect, useState } from 'react';
-import useTrainingInProgressUtils from './use-utils';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { useTraining } from '@/store/training.provider';
+import { SetState } from '@/common/type/state.type';
+import { ChildrenProps } from '@/common/type/props.type';
+import { useTrainingInProgressUtils } from './training-in.progress-utils.provider';
+
+interface UndoneExercisesContextProps {
+  undoneExercises: TrainingExercise[];
+  setUndoneExercises: SetState<TrainingExercise[]>;
+}
+
+const UndoneExercisesContext =
+  createContext<UndoneExercisesContextProps | null>(null);
+
+export const useUndoneExercises = () => useContext(UndoneExercisesContext)!;
 
 export type UseUndoneExercisesReturnType = ReturnType<
-  typeof useTrainingInProgressUndoneExercises
+  typeof useUndoneExercises
 >;
 
-export default function useTrainingInProgressUndoneExercises() {
+export function UndoneExercisesProvider(props: ChildrenProps) {
+  const { children } = props;
+
   const [undoneExercises, setUndoneExercises] = useState<TrainingExercise[]>(
     []
   );
@@ -45,5 +59,14 @@ export default function useTrainingInProgressUndoneExercises() {
     });
   }, [undoneExercises, trainingInProgress]);
 
-  return { undoneExercises, setUndoneExercises };
+  const value: UndoneExercisesContextProps = {
+    undoneExercises,
+    setUndoneExercises,
+  };
+
+  return (
+    <UndoneExercisesContext.Provider value={value}>
+      {children}
+    </UndoneExercisesContext.Provider>
+  );
 }

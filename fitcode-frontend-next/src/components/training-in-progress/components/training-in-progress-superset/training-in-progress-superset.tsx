@@ -10,10 +10,10 @@ import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
-import useTrainingInProgressUtils from '../../hooks/use-utils';
-import useTrainingInProgressUndoneExercises from '../../hooks/use-undone-exercises';
 import { handleFinishSuperset } from './actions/actions-superset';
 import NextSupersetModal from './modals/next-superset-modal';
+import { useUndoneExercises } from '../../context/undone-exercises.provider';
+import { useTrainingInProgressUtils } from '../../context/training-in.progress-utils.provider';
 
 export default function TrainingInProgressSuperset() {
   const theme = useTheme();
@@ -22,8 +22,7 @@ export default function TrainingInProgressSuperset() {
   const trainingInProgressContext = useTrainingInProgress();
   const trainingInProgressUtilsContext = useTrainingInProgressUtils();
   const athleteHeaderContext = useAthleteHeader();
-  const trainingInProgressUndoneExercisesContext =
-    useTrainingInProgressUndoneExercises();
+  const trainingInProgressUndoneExercisesContext = useUndoneExercises();
 
   const { trainingInProgress } = traininContext;
 
@@ -109,8 +108,8 @@ export default function TrainingInProgressSuperset() {
 
       <NextSupersetModal
         boxRef={boxRef}
-        openNextSupersetModal={openNextSupersetModal}
-        setOpenNextSupersetModal={setOpenNextSupersetModal}
+        open={openNextSupersetModal}
+        setOpen={setOpenNextSupersetModal}
       />
     </Box>
   );

@@ -1,23 +1,22 @@
 import MyModal from '@/util/modal/modal';
-import useTrainingInProgressUtils from '../hooks/use-utils';
 import { Typography } from '@mui/material';
+import { useTrainingInProgressUtils } from '../context/training-in.progress-utils.provider';
+import { ModalProps } from '@/common/type/modal-props.type';
 
-export default function CancelTrainingModal() {
-  const {
-    openCancelTrainingModal,
-    setOpenCancelTrainingModal,
-    handleCancelTraining,
-  } = useTrainingInProgressUtils();
+export default function CancelTrainingModal(props: ModalProps) {
+  const { open, setOpen } = props;
+
+  const { handleCancelTraining } = useTrainingInProgressUtils();
 
   return (
     <MyModal
-      isOpen={openCancelTrainingModal}
-      setIsOpen={(open) => setOpenCancelTrainingModal(open)}
+      isOpen={open}
+      setIsOpen={setOpen}
       cancelText="Cancel"
-      onCancel={() => setOpenCancelTrainingModal(false)}
+      onCancel={() => setOpen(false)}
       onConfirm={() => {
         handleCancelTraining();
-        setOpenCancelTrainingModal(false);
+        setOpen(false);
       }}
     >
       <Typography variant="h6" sx={{ width: '100%', textAlign: 'center' }}>

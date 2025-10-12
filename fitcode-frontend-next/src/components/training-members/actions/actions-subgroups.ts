@@ -9,7 +9,10 @@ import {
 import { updateGlobalStates } from '@/components/trainer-day-view/state';
 import toast from 'react-hot-toast';
 import { useGroup } from '@/store/group.provider';
-import { TrainerDayViewProviderReturnTypeDefined } from '@/store/trainer-day-view.provider';
+import {
+  TrainerDayViewProviderReturnType,
+  TrainerDayViewProviderReturnTypeDefined,
+} from '@/store/trainer-day-view.provider';
 
 export const handleAddMembersSubgroup = (
   input: { member: AuthUser },
@@ -210,17 +213,17 @@ export const updateSelectedAthleteSubgroup = (
     subgroupId: string;
   },
   context: {
-    useTrainerDayViewContext: TrainerDayViewProviderReturnTypeDefined;
+    useTrainerDayViewContext: TrainerDayViewProviderReturnType;
   }
 ) => {
-  console.log('updateSelectedAthleteSubgroup');
-
   const { member, subgroupId } = input;
 
   const { useTrainerDayViewContext } = context;
 
+  const training = useTrainerDayViewContext.training;
+  const component = useTrainerDayViewContext.component;
+
   const {
-    component,
     selectedSubgroup,
     setSelectedSubgroup,
     selectedAthlete,

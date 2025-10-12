@@ -37,8 +37,11 @@ export type TrainingInProgressProviderReturnType = ReturnType<
 
 export const TrainingInProgressProvider = (props: ChildrenProps) => {
   const { trainingInProgress, refetchTraining } = useTraining();
+
   const router = useRouter();
+
   const controller = TrainingController.getInstance();
+  
   const { children } = props;
 
   const [selectedSuperset, setSelectedSuperset] = useState<

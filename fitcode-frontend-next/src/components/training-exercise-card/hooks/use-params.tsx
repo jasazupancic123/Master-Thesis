@@ -7,7 +7,7 @@ export default function useTrainingExerciseCardParams(
 ) {
   const { training, component, selectedSubgroup } = useTrainerDayViewContext();
 
-  const { supersetIndex, chartView, exercise } = props;
+  const { supersetIndex, exercise } = props;
 
   const componentIndex = training?.components.findIndex(
     (c) => c.id === component?.id

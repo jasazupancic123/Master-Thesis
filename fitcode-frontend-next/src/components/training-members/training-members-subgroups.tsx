@@ -21,7 +21,7 @@ import type { Subgroup } from '@/controller/training/type/subgroup.type';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
-import useTrainingMembers from './hooks/use-members.hook';
+import { UseTrainingMembersReturnType } from './hooks/use-members.hook';
 import { updateSelectedAthleteSubgroup } from './actions/actions-subgroups';
 
 interface TrainingMembersSubgroupProps {
@@ -29,6 +29,7 @@ interface TrainingMembersSubgroupProps {
   subgroupIndex: number;
   anchorEl: HTMLElement | null;
   setAnchorEl: SetState<HTMLElement | null>;
+  trainingMembersContext: UseTrainingMembersReturnType;
 }
 
 export default function TrainingMembersSubgroup(
@@ -56,9 +57,15 @@ export default function TrainingMembersSubgroup(
     setSelectedExercises,
   } = trainerDayViewContext;
 
-  const { members } = useTrainingMembers();
+  const {
+    subgroup,
+    subgroupIndex,
+    anchorEl,
+    setAnchorEl,
+    trainingMembersContext,
+  } = props;
 
-  const { subgroup, subgroupIndex, anchorEl, setAnchorEl } = props;
+  const { members } = trainingMembersContext;
 
   const handleMenuClose = () => {
     setAnchorEl(null);

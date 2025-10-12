@@ -27,7 +27,9 @@ export default function TrainingMembers(props: TrainingMembersProps) {
   const groupContext = useGroup();
   const trainerDayViewContext = useTrainerDayViewContext();
   const trainingMembersContext = useTrainingMembers();
-  const trainingMembersSubgroupsContext = useTrainingMembersSubgroups();
+  const trainingMembersSubgroupsContext = useTrainingMembersSubgroups(
+    trainingMembersContext
+  );
 
   const { users } = mainContext;
 
@@ -35,11 +37,13 @@ export default function TrainingMembers(props: TrainingMembersProps) {
 
   const { members, sortedMembers, item } = trainingMembersContext;
 
+  console.log('item', item);
+
   const { subgroups } = trainingMembersSubgroupsContext;
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
-  if (selectedAthlete || !training || !component) return null;
+  if (selectedAthlete) return null;
 
   return (
     <Stack
@@ -78,11 +82,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
               {
                 useMain: mainContext,
                 useGroup: groupContext,
-                useTrainerDayViewContext: {
-                  ...trainerDayViewContext,
-                  training,
-                  component,
-                },
+                useTrainerDayViewContext: trainerDayViewContext,
                 useTrainingMembersSubgroups: trainingMembersSubgroupsContext,
                 useTrainingMembers: trainingMembersContext,
               }
@@ -113,6 +113,8 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                 {item.membersIds.map((memberId) => {
                   const member = members.find((user) => user.uid === memberId);
 
+                  console.log('member', member);
+
                   if (!member) return null;
 
                   return (
@@ -125,18 +127,14 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                         sx={{ p: 0, m: 0 }}
                         onClick={() => {
                           console.log('ON CLICK123');
-                          
+
                           updateSelectedAthleteSubgroup(
                             {
                               member,
                               subgroupId: DEFAULT_SUBGROUP_ID,
                             },
                             {
-                              useTrainerDayViewContext: {
-                                ...trainerDayViewContext,
-                                training,
-                                component,
-                              },
+                              useTrainerDayViewContext: trainerDayViewContext,
                             }
                           );
                         }}
@@ -187,6 +185,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                       subgroupIndex={subgroupIndex}
                       anchorEl={anchorEl}
                       setAnchorEl={setAnchorEl}
+                      trainingMembersContext={trainingMembersContext}
                     />
                   );
                 })}

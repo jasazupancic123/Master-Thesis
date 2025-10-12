@@ -14,6 +14,8 @@ import TrainingInProgress from '@/components/training-in-progress/training-in-pr
 import type { Training } from '@/controller/training/type/training.type';
 import { useTraining } from '@/store/training.provider';
 import { TrainingInProgressProvider } from '@/store/training-in-progress.provider';
+import { TrainingInProgressUtilsProvider } from '@/components/training-in-progress/context/training-in.progress-utils.provider';
+import { UndoneExercisesProvider } from '@/components/training-in-progress/context/undone-exercises.provider';
 
 const PAGE_SIZE = 3;
 const commonService = CommonService.instance;
@@ -138,7 +140,11 @@ export default function TrainingPage() {
     </Box>
   ) : (
     <TrainingInProgressProvider>
-      <TrainingInProgress />
+      <TrainingInProgressUtilsProvider>
+        <UndoneExercisesProvider>
+          <TrainingInProgress />
+        </UndoneExercisesProvider>
+      </TrainingInProgressUtilsProvider>
     </TrainingInProgressProvider>
   );
 }

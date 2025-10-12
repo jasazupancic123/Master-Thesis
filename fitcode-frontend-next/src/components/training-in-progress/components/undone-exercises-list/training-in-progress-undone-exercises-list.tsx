@@ -3,10 +3,10 @@ import { Box, Typography } from '@mui/material';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import TrainingInProgressExerciseSet from '@/components/training-in-progress/components/training-in-progress-exercise-set/training-in-progress-exercise-set';
-import useTrainingInProgressUndoneExercises from '../../hooks/use-undone-exercises';
+import { useUndoneExercises } from '../../context/undone-exercises.provider';
 
 export default function UndoneExercisesList() {
-  const { undoneExercises } = useTrainingInProgressUndoneExercises();
+  const { undoneExercises } = useUndoneExercises();
 
   const { trainingInProgress } = useTraining();
 
