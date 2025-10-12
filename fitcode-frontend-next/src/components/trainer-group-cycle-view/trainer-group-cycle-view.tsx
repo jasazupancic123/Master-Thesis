@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, useState } from 'react';
 
 import CustomDivider from '../../util/custom-divider/custom-divider';
 import ExerciseChips from '../exercise-chips/exercise-chips';
@@ -11,98 +11,39 @@ import HorizontalItemsList from '../../util/horizontal-items-list/horizontal-ite
 import { DIVIDER_HEIGHT, MAX_WIDTH } from '../trainer-day-view/constant';
 import VerticalLinesBorders from '../../util/vertical-lines-borders/vertical-lines-borders';
 import { CommonService } from '@/common/service/common.service';
-import {
-  handleAddTrainingComponents,
-  handleDeleteTrainingComponent,
-} from '@/components/trainer-cycle-view/state';
 import TrainingWeek from '@/components/training-week/training-week';
 import { ComponentService } from '@/controller/component/component.service';
 import type { Component } from '@/controller/component/type/component.type';
-import { GroupService } from '@/controller/group/group.service';
-import type { Target } from '@/controller/target/type/target.type';
 import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
+import {
+  handleAddTrainingComponents,
+  handleDeleteTrainingComponent,
+} from './actions/actions-training';
+import useTrainingCycleViewTargets from './hooks/use-targets';
+import useTrainerCycleViewCycles from './hooks/use-cycles';
+import useTrainerCycleViewSticky from './hooks/use-sticky';
 
 const commonService = CommonService.instance;
 
 export default function TrainerCycleView() {
   const { components, exercises: allExercises, methods } = useMain();
-  const { group, cycle, setCycle, setTrainings, setDateFrom, setDateTo } =
-    useGroup();
+
+  const { group, cycle, setCycle, setTrainings } = useGroup();
 
   const theme = useTheme();
   const screenSize = useScreenSize();
   const router = useRouter();
   const controller = TrainingController.getInstance();
 
+  const { selectedTargets, setSelectedTargets } = useTrainingCycleViewTargets();
+  const { cyclesForSelect } = useTrainerCycleViewCycles();
+  const { isSticky } = useTrainerCycleViewSticky();
+
   const [selectedComponents, setSelectedComponents] = useState<Component[]>([]);
-  const [selectedTargets, setSelectedTargets] = useState<
-    { componentId: string; target: Target }[]
-  >([]);
-  const [isSticky, setIsSticky] = useState(false);
-
-  const [cyclesForSelect, setCyclesForSelect] = useState<
-    { label: string; value: string }[]
-  >([]);
-
-  useEffect(() => {
-    setCyclesForSelect(GroupService.getCyclesForSelect(group.cycles));
-  }, [group.cycles]);
-
-  useEffect(() => {
-    if (!cycle) return;
-
-    setSelectedTargets(
-      cycle.selectedTargets.map((st) => ({
-        componentId: st.componentId,
-        target: components
-          .find((c) => c.id === st.componentId)
-          ?.targets?.find((t) => t.id === st.targetId) as Target,
-      })) || []
-    );
-  }, [cycle]);
-
-  // effect to track scroll position and set sticky mode
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollY = window.scrollY;
-      setIsSticky(scrollY > 200);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  useEffect(() => {
-    if (!cycle) return;
-
-    const newSelectedTargets = [] as { componentId: string; target: Target }[];
-
-    cycle.selectedTargets.map((st) => {
-      const component = components.find((c) => c.id === st.componentId);
-      if (component) {
-        const target = component.targets?.find((t) => t.id === st.targetId);
-        if (target) {
-          newSelectedTargets.push({
-            componentId: st.componentId,
-            target,
-          });
-        }
-      }
-    });
-
-    setSelectedTargets(newSelectedTargets);
-  }, []);
-
-  // filter trainings by cycle
-  useEffect(() => {
-    if (!cycle) return;
-    setDateFrom(dayjs(cycle.from));
-    setDateTo(dayjs(cycle.to));
-  }, [cycle]);
 
   const HorizontalItems = () => {
     return (

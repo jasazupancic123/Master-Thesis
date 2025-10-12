@@ -8,7 +8,7 @@ import React from 'react';
 
 import { CommonService } from '@/common/service/common.service';
 import type { SetState } from '@/common/type/state.type';
-import { TrainingGridItem } from '@/components/training-cycle-view-grid-item/training-cycle-view-grid-item';
+import { TrainingGridItem } from '@/components/trainer-group-cycle-view/components/training-cycle-view-grid-item/training-cycle-view-grid-item';
 import type { Component } from '@/controller/component/type/component.type';
 import type { Target } from '@/controller/target/type/target.type';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
