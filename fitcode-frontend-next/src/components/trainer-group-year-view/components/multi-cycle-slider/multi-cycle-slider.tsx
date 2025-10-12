@@ -4,74 +4,53 @@ import { Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import dayjs from 'dayjs';
 import dayOfYear from 'dayjs/plugin/dayOfYear';
-import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
-import toast from 'react-hot-toast';
 import { Range } from 'react-range';
 
-import EditCycleForm from '../edit-cycle-form/edit-cycle-form';
-import MyModal from '../../util/modal/modal';
 import {
   handleChange,
   handleDrag,
   handleDragEnd,
-} from '../multi-cycle-slider-layout/state';
-import { handleApiRequest, type SetState } from '@/common/type/state.type';
-import { GroupController } from '@/controller/group/group.controller';
-import type { Cycle } from '@/controller/group/type/cycle.type';
-import type { Group } from '@/controller/group/type/group.type';
+} from './components/multi-cycle-slider-layout/actions/actions-dragging';
 import { useGroup } from '@/store/group.provider';
+import { UseSliderPropertiesReturnType } from './hooks/use-slider-properties';
+import EditCycleModal from './modals/edit-cycle-modal';
+import { useMultiCycleSliderCyclesProvider } from '../../context/cycles.provider';
+import { useMultiCycleSliderYearProvider } from '../../context/years.provider';
 
 dayjs.extend(dayOfYear);
 
 interface MultiCycleSliderProps {
-  selectedGroup: Group;
-  setSelectedGroup: SetState<Group>;
-  valuesReal: number[];
-  setValuesReal: SetState<number[]>;
-  draggingIndex: number | null;
-  setDraggingIndex: SetState<number | null>;
   sliderRef: React.RefObject<HTMLDivElement | null>;
-  selectedYear: number;
-  sortedCycles: Cycle[];
-  yearStart: number;
-  yearEnd: number;
-  sliderProperties: {
-    width: string;
-    centerPosition: string;
-  }[];
-  setSortedCycles: SetState<Cycle[]>;
-  setCycles: SetState<Cycle[]>;
+  useSliderProperties: UseSliderPropertiesReturnType;
 }
 
 export default function MultiCycleSlider(props: MultiCycleSliderProps) {
+  const theme = useTheme();
+
+  const groupContext = useGroup();
+  const cyclesContext = useMultiCycleSliderCyclesProvider();
+  const yearContext = useMultiCycleSliderYearProvider();
+
+  const { sliderRef, useSliderProperties } = props;
+
   const {
-    selectedGroup,
-    setSelectedGroup,
     valuesReal,
     setValuesReal,
     draggingIndex,
     setDraggingIndex,
-    selectedYear,
-    sortedCycles,
-    sliderRef,
-    yearStart,
-    yearEnd,
     sliderProperties,
-    setSortedCycles,
-    setCycles,
-  } = props;
+  } = useSliderProperties;
 
-  const controller = GroupController.getInstance();
-  const router = useRouter();
-  const theme = useTheme();
+  const { selectedYear, yearStart, yearEnd } = yearContext;
 
-  const { cycle, setCycle, setDetectedChanges, setGroup } = useGroup();
+  const { sortedCycles, setEditCycle } = cyclesContext;
+
+  const { setDetectedChanges } = groupContext;
 
   const [draggedDay, setDraggedDay] = useState<number | null>(null);
   const [mouseX, setMouseX] = useState<number | null>(null);
   const [openEditCycleModal, setOpenEditCycleModal] = useState(false);
-  const [editCycle, setEditCycle] = useState<Cycle | null>(null);
 
   const handleDragStart = (index: number) => {
     setDraggingIndex(index);
@@ -79,37 +58,6 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
 
   const onMouseMove = (e: React.MouseEvent<HTMLDivElement>) =>
     setMouseX(e.clientX);
-
-  async function handleDeleteCycle() {
-    if (!editCycle || !selectedGroup) return;
-
-    handleApiRequest(
-      router,
-      () => controller.removeCycle(selectedGroup.id, editCycle.id),
-      () => {
-        if (cycle && editCycle.id === cycle?.id) setCycle(undefined);
-
-        setSortedCycles((prev) => prev.filter((c) => c.id !== editCycle.id));
-        setCycles((prev) => prev.filter((c) => c.id !== editCycle.id));
-
-        setSelectedGroup((prev) => ({
-          ...prev,
-          cycles: prev.cycles.filter((c) => c.id !== editCycle.id),
-        }));
-        setGroup((prev) => ({
-          ...prev,
-          cycles: prev.cycles.filter((c) => c.id !== editCycle.id),
-        }));
-
-        setEditCycle(null);
-
-        toast.success('Cycle deleted successfully');
-      },
-      (_e) => {
-        toast.error('An error occurred while deleting the cycle.');
-      }
-    );
-  }
 
   return (
     <div
@@ -137,16 +85,14 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
         onFinalChange={() =>
           handleDragEnd(
             {
-              draggingIndex,
-              selectedYear,
-              sortedCycles,
-              valuesReal,
-            },
-            {
-              selectedGroup,
-              setSelectedGroup,
               setDraggingIndex,
               setDraggedDay,
+            },
+            {
+              useGroup: groupContext,
+              useYear: yearContext,
+              useSliderProperties: useSliderProperties,
+              useSliderCycles: cyclesContext,
             }
           )
         }
@@ -331,28 +277,10 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
         }}
       />
 
-      {editCycle && (
-        <MyModal
-          isOpen={openEditCycleModal}
-          setIsOpen={(open) => setOpenEditCycleModal(open)}
-          onCancel={() => setOpenEditCycleModal(false)}
-          cancelText="Close"
-          onConfirm={() => {
-            const newCycles = selectedGroup.cycles.map((c) =>
-              c.id === editCycle.id ? { ...editCycle } : c
-            );
-            setSelectedGroup({ ...selectedGroup, cycles: newCycles });
-            setDetectedChanges(true);
-            setOpenEditCycleModal(false);
-          }}
-        >
-          <EditCycleForm
-            selectedCycle={editCycle}
-            setSelectedCycle={setEditCycle}
-            handleDeleteCycle={handleDeleteCycle}
-          />
-        </MyModal>
-      )}
+      <EditCycleModal
+        open={openEditCycleModal}
+        setOpen={setOpenEditCycleModal}
+      />
     </div>
   );
 }
