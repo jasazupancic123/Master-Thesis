@@ -1,13 +1,6 @@
 'use client';
 
-import {
-  closestCenter,
-  DndContext,
-  PointerSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core';
+import { closestCenter, DndContext } from '@dnd-kit/core';
 import {
   FormControl,
   InputLabel,
@@ -18,21 +11,24 @@ import {
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import dayjs from 'dayjs';
-import React, { Fragment, useEffect, useRef, useState } from 'react';
+import React, { Fragment, useRef } from 'react';
 
 import CustomDivider from '../../util/custom-divider/custom-divider';
 import HorizontalItemsList from '../../util/horizontal-items-list/horizontal-items-list';
 import { DIVIDER_HEIGHT, MAX_WIDTH } from '../trainer-day-view/constant';
 import VerticalLinesBorders from '../../util/vertical-lines-borders/vertical-lines-borders';
-import DraggableSelect from './draggable-select';
-import DroppableSlot from './droppable-slot';
-import { customScrollBarStyle, getAmPmItems, onDragEndAddEvent } from './state';
+import DraggableSelect from './components/draggable-select';
+import DroppableSlot from './components/droppable-slot';
+import { onDragEndAddEvent } from './actions/actions-drag';
 import { CommonService } from '@/common/service/common.service';
 import WeekViewItem from '@/components/training-week/components/training-week-view-item';
 import { EventType } from '@/controller/group/enum/event-type.enum';
 import type { Week } from '@/controller/group/type/cycle.type';
-import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
+import { customScrollBarStyle } from './styles/custom-toolbar.style';
+import { getAmPmItems } from './actions/actions-items';
+import useWeekViewUtils from './hooks/use-utils';
+import { useGroup } from '@/store/group.provider';
 
 const commonService = CommonService.instance;
 
@@ -40,47 +36,24 @@ export default function TrainerWeekView() {
   const theme = useTheme();
   const screenSize = useScreenSize();
 
-  const { group, setGroup, cycle, trainings, setDateFrom, setDateTo } =
-    useGroup();
+  const groupContext = useGroup();
+  const weekViewUtils = useWeekViewUtils(commonService);
 
-  const [index, setIndex] = useState(0); // week index
+  const { group, setGroup, trainings } = groupContext;
 
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [selectedEventType, setSelectedEventType] = useState<EventType | null>(
-    null
-  );
-
-  const weeks = cycle
-    ? commonService.date.weeks(cycle.from, cycle.to)
-    : commonService.date.weeks(new Date(), dayjs().add(6, 'day').toDate());
+  const {
+    weeks,
+    index,
+    setIndex,
+    menuOpen,
+    setMenuOpen,
+    selectedEventType,
+    setSelectedEventType,
+    sensors,
+    disabledSensors,
+  } = weekViewUtils;
 
   const selectRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!cycle) return;
-    setIndex(0);
-  }, [cycle]);
-
-  useEffect(() => {
-    if (weeks.length < 7) return;
-
-    setDateFrom(dayjs(weeks[index][0].date));
-    setDateTo(dayjs(weeks[index][6].date));
-  }, [cycle, index]);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(TouchSensor, {
-      activationConstraint: { delay: 0, tolerance: 5 },
-    })
-  );
-
-  const disabledSensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 999999 } }),
-    useSensor(TouchSensor, {
-      activationConstraint: { delay: 999999, tolerance: 999999 },
-    })
-  );
 
   return (
     <DndContext
@@ -91,17 +64,13 @@ export default function TrainerWeekView() {
       }}
       onDragEnd={(e) =>
         selectedEventType
-          ? onDragEndAddEvent(e, {
-              selectedEventType,
-              setSelectedEventType,
-              setGroup,
-              weeks,
-              index,
-              selectRef,
-              trainings,
-              commonService,
-              group,
-            })
+          ? onDragEndAddEvent(
+              { e, selectRef, commonService },
+              {
+                useGroup: groupContext,
+                useWeekUtils: weekViewUtils,
+              }
+            )
           : undefined
       }
     >
