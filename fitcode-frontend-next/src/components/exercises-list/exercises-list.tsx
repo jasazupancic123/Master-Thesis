@@ -37,6 +37,7 @@ export default function ExercisesList(props: ExercisesListProps) {
 
   return (
     <Box
+      id="exercises container"
       display="flex"
       flexWrap="wrap"
       justifyContent="center"
@@ -53,6 +54,9 @@ export default function ExercisesList(props: ExercisesListProps) {
                 ? '100%'
                 : undefined
       }
+      sx={{
+        mx: 'auto',
+      }}
     >
       {exercises.map((exercise) => (
         <Box
@@ -63,7 +67,7 @@ export default function ExercisesList(props: ExercisesListProps) {
               : screenSize.isUltraSmall && addExerciseForm
                 ? '100%'
                 : screenSize.isSmallMobile && addExerciseForm
-                  ? '40%'
+                  ? '45%'
                   : '40%'
           }
           sx={{

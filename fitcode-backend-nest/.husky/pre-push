@@ -49,7 +49,7 @@ print_box "🚀 Starting server..."
 npx wait-on http://localhost:3001 &
 
 # Run `start:prod` for just long enough to ensure it starts
-npm run start &
+cross-env NODE_ENV=test && node dist/main &
 DEV_PID=$!
 sleep 1
 kill $DEV_PID

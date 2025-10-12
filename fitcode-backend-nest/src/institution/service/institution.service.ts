@@ -9,8 +9,8 @@ import {
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
-import { AuthService } from '@src/auth/auth.service';
 import { UserRole } from '@src/auth/enum/user-role.enum';
+import { AuthService } from '@src/auth/service/auth.service';
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
 import { Permission } from '@src/common/interface/permission.interface';
 import { CommonService } from '@src/common/service/common.service';
@@ -106,23 +106,15 @@ export class InstitutionService implements Permission<Institution> {
     });
 
     const id = await this.repository.save(query);
-    return {
-      ...data,
-      id,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    return { ...data, id, createdAt: new Date(), updatedAt: new Date() };
   }
 
+  @LogMethod()
   async update(
     user: User,
     ref: InstitutionRef,
     input: UpdateInstitutionDto,
   ): Promise<Institution> {
-    this.logger.log(
-      `User ${user.uid} is updating institution ${ref.institutionId}: ${JSON.stringify(input)}`,
-    );
-
     const institution = await this.findByIdOrFail(ref);
     if (!this.canEdit(user, institution))
       throw new UnauthorizedException('You cannot edit this institution');

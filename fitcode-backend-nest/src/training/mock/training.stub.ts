@@ -1,16 +1,16 @@
 import { addDays, addHours } from 'date-fns';
 import { v4 } from 'uuid';
 
-import type { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
 import { getTime } from '@src/common/service/util/date.util';
-import { generateRandomName } from '@src/common/utils/random.util';
+import {
+  generateRandomName,
+  generateRandomNumber,
+} from '@src/common/utils/random.util';
 import {
   COOLDOWN_COMPONENT_ID,
   WARMUP_COMPONENT_ID,
 } from '@src/component/constant/warmup-cooldown.constant';
-import type { ComponentParam } from '@src/component/entity/component-param.entity';
-import { PARAMS } from '@src/training/constant/param.constant';
-import { LoadType } from '@src/training/enum/load-type.enum';
+import { ExerciseParam } from '@src/training/constant/exercise-param.constant';
 
 import type { ExerciseSet } from '../entity/exercise-set.entity';
 import type { Subgroup } from '../entity/subgroup.entity';
@@ -18,8 +18,8 @@ import type { Superset } from '../entity/superset.entity';
 import type { Training } from '../entity/training.entity';
 import type { TrainingComponent } from '../entity/training-component.entity';
 import type { TrainingExercise } from '../entity/training-exercise.entity';
+import { LoadType } from '../enum/load-type.enum';
 import { MainSet } from '../enum/main-set.enum';
-import { generateParamAttributeValuesFromComponentParams } from './param-values.stub';
 
 /**
  * Generates a training stub with default values or overrides from the provided data.
@@ -137,51 +137,61 @@ type ExerciseSetOptions = {
  * @param random - if true, generates random values for the set
  */
 
-export function generateExerciseSet(
+export function generateExerciseSet<T extends keyof ExerciseSet>(
   setNumber: number,
-  paramValuesOrComponentParams:
-    | AttributeValue[]
-    | ComponentParam[]
-    | null = null,
+  params?: T[],
   options?: ExerciseSetOptions,
 ): ExerciseSet {
-  const isRandom = options?.random || false;
-  const isUnilateral = options?.isUnilateral || false;
-
-  let paramValues: AttributeValue[] =
-    generateParamAttributeValuesFromComponentParams(PARAMS, isRandom);
-
-  if (Array.isArray(paramValuesOrComponentParams))
-    if (isAttributeValueArray(paramValuesOrComponentParams))
-      paramValues = paramValuesOrComponentParams;
-    else
-      paramValues = generateParamAttributeValuesFromComponentParams(
-        paramValuesOrComponentParams,
-        isRandom,
-      );
-
-  return {
+  const set: ExerciseSet = {
     setNumber,
-    recTime: 0,
-    recDist: 0,
+    reps: ExerciseParam.REPS.defaultValue as number,
+    recTime: ExerciseParam.REC_TIME.defaultValue as number,
     loadType: LoadType.Kg,
-    reps: 1,
-    repsR: 1,
-    load: 0,
-    loadR: 0,
-    tempo: '1:0:1:0',
-    tempoR: '1:0:1:0',
-    time: 0,
-    timeR: 0,
-    dist: 0,
-    distR: 0,
-    paramValuesL: paramValues,
-    ...(isUnilateral && { paramValuesR: paramValues }),
   };
+
+  const _params = params || ExerciseParam.fields;
+  for (const param of _params) {
+    set[param as T] = generateParamValue(
+      param,
+      options?.random,
+    ) as ExerciseSet[T];
+  }
+
+  return set;
 }
 
-function isAttributeValueArray(
-  arr: AttributeValue[] | ComponentParam[],
-): arr is AttributeValue[] {
-  return (arr[0] as AttributeValue)?.value !== undefined;
+function generateParamValue<T extends keyof ExerciseSet>(
+  param: T,
+  random?: boolean,
+): ExerciseSet[T] {
+  if (!random) return ExerciseParam.get(param).defaultValue as ExerciseSet[T];
+
+  switch (param) {
+    case 'reps':
+    case 'repsR':
+      return generateRandomNumber(3, 20) as ExerciseSet[T];
+    case 'loadKg':
+    case 'loadKgR':
+      return generateRandomNumber(20, 120) as ExerciseSet[T];
+    case 'loadRm':
+    case 'loadRmR':
+    case 'loadBw':
+    case 'loadBwR':
+      return generateRandomNumber(50, 100) as ExerciseSet[T];
+    case 'tempo':
+    case 'tempoR':
+      const t = () => generateRandomNumber(0, 4);
+      return `${t()}:${t()}:${t()}:${t()}` as ExerciseSet[T];
+    case 'vel':
+    case 'velR':
+      return generateRandomNumber(1, 5) as ExerciseSet[T]; // in m/s
+    case 'eff':
+      return generateRandomNumber(1, 4) as ExerciseSet[T];
+    case 'recTime':
+    case 'time':
+      return generateRandomNumber(30, 180) as ExerciseSet[T]; // in seconds
+    case 'dist':
+    case 'recDist':
+      return generateRandomNumber(100, 1000) as ExerciseSet[T]; // in meters
+  }
 }

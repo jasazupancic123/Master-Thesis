@@ -1,6 +1,7 @@
 import { Inject } from '@nestjs/common';
 import type { ConfigService } from '@nestjs/config';
 import admin from 'firebase-admin';
+import type { AppOptions } from 'firebase-admin/app';
 import { getApps, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore, Query } from 'firebase-admin/firestore';
@@ -26,24 +27,23 @@ export function getFirebaseClient(
   configService: ConfigService<Environment>,
   commonService: CommonService,
 ): FirebaseClient {
-  let credential: admin.credential.Credential;
-  let databaseId: string | undefined;
+  const options: AppOptions = {};
 
   const envCredentials = configService.get('FIREBASE_CREDENTIALS');
-  if (commonService.env.isProduction() || commonService.env.isStaging()) {
-    credential = admin.credential.applicationDefault();
-    databaseId = configService.get('FIREBASE_DATABASE_ID');
-  } else if (envCredentials)
-    credential = admin.credential.cert(JSON.parse(envCredentials));
-  else credential = admin.credential.cert(require('../../serviceAccount.json'));
+  if (commonService.env.isProduction() || commonService.env.isStaging())
+    options.credential = admin.credential.applicationDefault();
+  else if (envCredentials)
+    options.credential = admin.credential.cert(JSON.parse(envCredentials));
+  else if (commonService.env.isDev() || commonService.env.isTest())
+    options.projectId = 'demo';
 
   const apps = getApps();
   const app = (
-    !apps.length ? initializeApp({ credential }) : apps[0]
+    !apps.length ? initializeApp(options) : apps[0]
   ) as admin.app.App;
 
   const auth = getAuth(app);
-  const firestore = getFirestore(app, databaseId);
+  const firestore = getFirestore(app);
   const storage = getStorage(app);
 
   if (!apps.length) {

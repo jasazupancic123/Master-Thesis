@@ -8,10 +8,10 @@ import React, { useEffect, useState } from 'react';
 
 import FlatSelectAttribute from '../select-attribute/flat-select-attribute';
 import SelectComponent from '../select-component/select-component';
+import { isAdmin } from '@/common/firebase/firebase-auth.util';
 import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
 import { CommonService } from '@/common/service/common.service';
 import type { SetState } from '@/common/type/state.type';
-import FileUpload from '@/components/file-upload/file-upload';
 import MyModal from '@/components/modal/modal';
 import { AttributeType } from '@/controller/attribute/enum/attribute-value.enum';
 import type { Attribute } from '@/controller/attribute/type/attribute.type';
@@ -24,7 +24,9 @@ import type {
   Exercise,
   ExerciseAttributes,
 } from '@/controller/exercise/type/exercise.type';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
+import FileUpload from '@/util/file-upload';
 
 const firebaseStorage = FirebaseStorageUtil.Instance;
 
@@ -41,6 +43,7 @@ interface Props {
 }
 
 export default function ExerciseModal(props: Props) {
+  const { role } = useAuthenticatedAuth();
   const screenSize = useScreenSize();
   const {
     data,
@@ -246,6 +249,25 @@ export default function ExerciseModal(props: Props) {
               }
             />
           </Grid>
+
+          {isAdmin(role) && (
+            <Grid size={{ xs: 6 }}>
+              <FormControlLabel
+                label={'Disabled'}
+                control={
+                  <Checkbox
+                    checked={data.disabled || false}
+                    onChange={(e) =>
+                      setData((prev) => ({
+                        ...prev,
+                        disabled: e.target.checked,
+                      }))
+                    }
+                  />
+                }
+              />
+            </Grid>
+          )}
 
           <Grid size={{ xs: 12 }}>
             <Divider>Other</Divider>

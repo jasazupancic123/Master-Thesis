@@ -28,6 +28,7 @@ interface AthleteTrainingExerciseSetsProps {
   exerciseSetTrackingState?: ExerciseSetTracking[];
   dissableBottomPadding?: boolean;
   colorSetsToPrimary?: boolean;
+  aiDetectionView?: boolean;
 }
 
 export default function AthleteTrainingExerciseSets(
@@ -78,7 +79,13 @@ export default function AthleteTrainingExerciseSets(
             container
             spacing={0.5}
             columns={11}
-            px={screenSize.isSmallerThanLaptop ? 1 : 0}
+            px={
+              trainingInProgressView
+                ? 0
+                : screenSize.isSmallerThanLaptop
+                  ? 1
+                  : 0
+            }
           >
             <Grid2 size={0.5}>
               <Box
@@ -86,21 +93,13 @@ export default function AthleteTrainingExerciseSets(
                 flexDirection="column"
                 alignItems="center"
                 gap={0.9}
-                mt={
-                  i === 0
-                    ? trainingInProgressView
-                      ? 4.25
-                      : 3.7
-                    : trainingInProgressView
-                      ? 3.75
-                      : 3.7
-                }
+                mt={3.7}
               >
                 <Box
                   key="exercise-title"
                   display="flex"
                   flexDirection="column"
-                  gap={trainingInProgressView ? 1.35 : 0.9}
+                  gap={trainingInProgressView ? 0.9 : 0.9}
                 >
                   {exercise.exercise?.isUnilateral ? (
                     <>
@@ -122,7 +121,6 @@ export default function AthleteTrainingExerciseSets(
                 width="100%"
                 justifyContent="center"
                 alignItems="center"
-                gap={1}
               >
                 {exercise.params
                   .filter((p) => p.field !== ParamType.VolWorkSets)
@@ -155,8 +153,13 @@ export default function AthleteTrainingExerciseSets(
                     return (
                       <Box
                         key={param.field}
-                        flexBasis={
-                          (100 / exercise.params.length).toString() + '%'
+                        width={
+                          (
+                            100 /
+                            (trainingInProgress
+                              ? exercise.params.length - 1
+                              : exercise.params.length)
+                          ).toString() + '%'
                         }
                       >
                         {['L']
@@ -261,7 +264,6 @@ export default function AthleteTrainingExerciseSets(
               {exerciseSetTrackingState &&
                 exerciseSetTrackingState.find(
                   (estState) =>
-                    estState.supersetIndex === supersetIndex &&
                     estState.exerciseId === exercise.id &&
                     estState.completedSetNumbers.includes(set.setNumber)
                 ) && (

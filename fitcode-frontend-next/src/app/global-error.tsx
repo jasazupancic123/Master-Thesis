@@ -5,9 +5,8 @@ import { Onest } from 'next/font/google';
 import { redirect } from 'next/navigation';
 import { useEffect } from 'react';
 
-import { FIREBASE_AUTH_ID_TOKEN } from '@/common/config/firebase.config';
+import {} from '@/common/config/firebase.config';
 import { LINK_SIGN_IN } from '@/common/constant/navigation.constant';
-import { CommonService } from '@/common/service/common.service';
 
 interface GlobalErrorProps {
   error: Error & { digest?: string };
@@ -54,10 +53,6 @@ export default function GlobalError({ error }: GlobalErrorProps) {
               color: '#000000',
             }}
             onClick={() => {
-              CommonService.instance.browser.removeClientCookie(
-                FIREBASE_AUTH_ID_TOKEN
-              );
-
               redirect(LINK_SIGN_IN.href);
             }}
           >

@@ -19,10 +19,10 @@ import { isManager } from '@/common/firebase/firebase-auth.util';
 import { handleApiRequest } from '@/common/type/state.type';
 import DashboardEditAthleteModal from '@/components/dashboard-edit-athlete-modal/dashboard-edit-athlete-modal';
 import RegisterUsersDashboard from '@/components/dashboard-register-users-modal/dashboard-register-users-modal';
-import FileUpload from '@/components/file-upload/file-upload';
 import HorizontalItemsList from '@/components/horizontal-items-list/horizontal-items-list';
 import MyModal from '@/components/modal/modal';
 import { SearchBar } from '@/components/search-bar/search-bar';
+import SimpleCircle from '@/components/simple-circle/simple-circle';
 import { MAX_WIDTH } from '@/components/trainer-day-view/constant';
 import type { AuthUser } from '@/controller/auth/type/user.type';
 import { InstitutionController } from '@/controller/institution/institution.controller';
@@ -35,18 +35,18 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
+import FileUpload from '@/util/file-upload';
 
 export default function DashboardInstitutionPage() {
   const screenSize = useScreenSize();
   const router = useRouter();
-  const { token, role } = useAuthenticatedAuth();
+  const { role } = useAuthenticatedAuth();
   const { users } = useMain();
 
   const { selectedInstitution, setSelectedInstitution, setMembers, setUsers } =
     useDashboard();
 
-  const controller = InstitutionController.getInstance(token);
-
+  const controller = InstitutionController.getInstance();
   const [selectedView, setSelectedView] = useState<AthletesTrainers>(
     AthletesTrainers.ATHLETES
   );
@@ -243,7 +243,7 @@ export default function DashboardInstitutionPage() {
           birthDate: r.birthDate ? new Date(r.birthDate) : undefined,
         }));
 
-        const controller = ProfileController.getInstance(token);
+        const controller = ProfileController.getInstance();
         await handleApiRequest(
           router,
           () => controller.importProfiles({ profiles: data }),
@@ -319,14 +319,8 @@ export default function DashboardInstitutionPage() {
               gap={0.75}
               sx={{ mx: 'auto' }}
             >
-              <Box
-                sx={{
-                  height: 16,
-                  width: 4,
-                  borderRadius: 5,
-                  backgroundColor: theme.palette.primary.main,
-                }}
-              />
+              <SimpleCircle />
+
               <Typography
                 fontWeight={600}
                 fontSize={16}
@@ -367,15 +361,7 @@ export default function DashboardInstitutionPage() {
               mt: 1,
             }}
           >
-            <Box
-              sx={{
-                height: 16,
-                width: 4,
-                borderRadius: 5,
-                backgroundColor: theme.palette.primary.main,
-                ml: 1,
-              }}
-            />
+            <SimpleCircle />
 
             <Typography
               fontWeight={600}

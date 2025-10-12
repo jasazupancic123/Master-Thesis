@@ -1,21 +1,11 @@
 'use client';
 
-import {
-  Avatar,
-  Box,
-  Card,
-  Stack,
-  TextField,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Avatar, Box, Card, Stack, Tooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import { useEffect, useState } from 'react';
 import type { DropResult } from 'react-beautiful-dnd';
 import { DragDropContext } from 'react-beautiful-dnd';
-import toast from 'react-hot-toast';
 
-import MyModal from '../modal/modal';
 import {
   DEFAULT_SUBGROUP,
   DEFAULT_SUBGROUP_ID,
@@ -52,13 +42,12 @@ export default function TrainingMembers(props: TrainingMembersProps) {
 
   const [changedSubgroupIds, setChangedSubgroupIds] = useState<string[]>([]);
 
-  const members = users.filter((user) => group.membersIds.includes(user.uid));
+  const item = training || group;
+  const members = users.filter((user) => item.membersIds.includes(user.uid));
+
   const [subgroups, setSubgroups] = useState<Subgroup[]>([]);
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [modal, setModal] = useState({ editSubgroup: false });
-  const [editSubgroupName, setEditSubgroupName] = useState<string>('');
-  const [editedSubgroup, setEditedSubgroup] = useState<Subgroup | null>(null);
 
   const sortedMembers = [...members].sort((a, b) => {
     if (!training) return 0;
@@ -109,8 +98,8 @@ export default function TrainingMembers(props: TrainingMembersProps) {
 
     // sort available members by group.membersIds
     availableMembers.sort((a, b) => {
-      const indexA = group.membersIds.indexOf(a.uid);
-      const indexB = group.membersIds.indexOf(b.uid);
+      const indexA = item.membersIds.indexOf(a.uid);
+      const indexB = item.membersIds.indexOf(b.uid);
       return indexA - indexB;
     });
 
@@ -251,7 +240,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                   height: '100%',
                 }}
               >
-                {group.membersIds.map((memberId) => {
+                {item.membersIds.map((memberId) => {
                   const member = members.find((user) => user.uid === memberId);
 
                   if (!member) return null;
@@ -296,6 +285,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                   );
                 })}
               </Card>
+
               <Typography
                 fontSize={12}
                 fontWeight={600}
@@ -304,7 +294,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                   color: theme.palette.primary.main,
                 }}
               >
-                {`G-${group.membersIds.length}`}
+                {`G#${item.membersIds.length}`}
               </Typography>
             </Box>
           )}
@@ -325,80 +315,12 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                       anchorEl={anchorEl}
                       setAnchorEl={setAnchorEl}
                       members={sortedMembers}
-                      setEditSubgroupName={setEditSubgroupName}
-                      setEditedSubgroup={setEditedSubgroup}
-                      setModal={setModal}
                     />
                   );
                 })}
           </Box>
         </DragDropContext>
       </Stack>
-      <MyModal
-        isOpen={modal.editSubgroup}
-        setIsOpen={(editSubgroup) =>
-          setModal((prev) => ({ ...prev, editSubgroup }))
-        }
-        title="Edit Subgroup"
-        onCancel={() => {
-          setEditedSubgroup(null);
-          setModal((prev) => ({ ...prev, editSubgroup: false }));
-          setEditSubgroupName('');
-        }}
-        onConfirm={() => {
-          if (!editSubgroupName.length)
-            return toast.error('Name cannot be empty');
-          if (!editedSubgroup || !component || !training) return;
-
-          const updatedSubgroup = {
-            ...editedSubgroup,
-            name: editSubgroupName,
-          };
-
-          const updatedSubgroups = subgroups
-            .map((subgroup) =>
-              subgroup.id === updatedSubgroup.id ? updatedSubgroup : subgroup
-            )
-            .filter((sg) => sg.id !== DEFAULT_SUBGROUP_ID);
-
-          const newComponent = { ...component!, subgroups: updatedSubgroups };
-          const newTraining = {
-            ...training,
-            components: training.components.map((c) =>
-              c.id === newComponent.id ? newComponent : c
-            ),
-          };
-
-          if (selectedSubgroup && updatedSubgroup.id === selectedSubgroup.id)
-            setSelectedSubgroup((prev) => {
-              if (!prev) return prev;
-
-              return {
-                ...prev,
-                subgroup: updatedSubgroup,
-              };
-            });
-          setSubgroups(updatedSubgroups);
-          setComponent(newComponent);
-          setTraining(newTraining);
-
-          setModal((prev) => ({ ...prev, editSubgroup: false }));
-          setEditSubgroupName('');
-          setDetectedChanges(true);
-        }}
-      >
-        <Stack spacing={4} p={1}>
-          {/* Name */}
-          <TextField
-            label="Name"
-            fullWidth
-            value={editSubgroupName}
-            variant="outlined"
-            size="small"
-            onChange={(e) => setEditSubgroupName(e.target.value)}
-          />
-        </Stack>
-      </MyModal>
     </Stack>
   );
 }

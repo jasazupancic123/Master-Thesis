@@ -16,9 +16,6 @@ import {
 
 import { GLOBAL_EXERCISE_OWNER } from '@src//exercise/constant/global-exercise-owner.constant';
 import { Institution } from '@src//institution/entity/institution.entity';
-import { Attribute } from '@src/attribute/entity/attribute.entity';
-import { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
-import { AttributeService } from '@src/attribute/service/attribute.service';
 import { DeepPick } from '@src/common/interface/deep-pick.interface';
 import { CommonService } from '@src/common/service/common.service';
 import { User } from '@src/common/type/firebase-auth.type';
@@ -32,16 +29,8 @@ import {
 import { Component } from '@src/component/entity/component.entity';
 import { Exercise } from '@src/exercise/entity/exercise.entity';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
-import { ExerciseAttributeService } from '@src/exercise/service/exercise-attribute.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { Method } from '@src/method/entity/method.entity';
-import { DEFAULT_PARAMS_KEY } from '@src/training/constant/param.constant';
-import {
-  IntType,
-  ParamType,
-  VolType,
-  VolWorkSetType,
-} from '@src/training/enum/load-type.enum';
 
 import { MAIN_GROUP_PARENT_ID } from '../constant/main-group-parent-id.constant';
 import {
@@ -68,17 +57,17 @@ import {
   UpdateSuperset,
   UpdateTrainingComponentWithoutTime,
 } from '../interface/update-training.interface';
+import { ExerciseParamService } from './exercise-param.service';
 
 @Injectable()
 export class TrainingPlanService {
   constructor(
-    private readonly commonService: CommonService,
-    private readonly attributeService: AttributeService,
+    private readonly common: CommonService,
+    private readonly exerciseParamService: ExerciseParamService,
     private readonly institutionService: InstitutionService,
     private readonly componentService: ComponentService,
     @Inject(forwardRef(() => ExerciseService))
     private readonly exerciseService: Wrapper<ExerciseService>,
-    private readonly exerciseAttributeService: ExerciseAttributeService,
   ) {}
 
   async getInstitution(exercise: Exercise): Promise<Institution | null> {
@@ -179,40 +168,32 @@ export class TrainingPlanService {
     };
   }
 
-  hasParamType(
-    training: Training,
-    filter: { field: ParamType; selected: IntType | VolType },
-  ): boolean {
+  hasParam(training: Training, param: keyof ExerciseSet): boolean {
     for (const component of training.components)
       for (const superset of component.supersets)
         for (const exercise of superset.exercises)
           for (const set of exercise.sets)
-            if (
-              set.paramValuesL.find((pv) => this.matchesParamType(pv, filter))
-            )
-              return true;
-
-    return false;
+            if (this.exerciseParamService.has(set, param)) return false;
   }
 
   modifyPrescribedParamValuesByType(
     training: Training,
-    filter: { field: ParamType; selected: IntType | VolType },
+    param: keyof ExerciseSet,
     modify: (value: number, exerciseId?: string) => number,
   ) {
     for (const component of training.components) {
       for (const superset of component.supersets)
-        this.modifySupersetValuesByParamType(superset, filter, modify);
+        this.modifySupersetValuesByParam(superset, param, modify);
 
       for (const subgroup of component.subgroups)
         for (const superset of subgroup.supersets)
-          this.modifySupersetValuesByParamType(superset, filter, modify);
+          this.modifySupersetValuesByParam(superset, param, modify);
     }
   }
 
-  findExercisesByParamType(
+  findExercisesByParam(
     training: Training,
-    filter: { field: ParamType; selected: IntType | VolType },
+    param: keyof ExerciseSet,
   ): TrainingExercise[] {
     const exercises: TrainingExercise[] = [];
 
@@ -220,11 +201,8 @@ export class TrainingPlanService {
       for (const superset of component.supersets)
         for (const exercise of superset.exercises) {
           if (exercises.find((e) => e.id === exercise.id)) continue;
-
           for (const set of exercise.sets)
-            if (
-              set.paramValuesL.find((pv) => this.matchesParamType(pv, filter))
-            ) {
+            if (this.exerciseParamService.has(set, param)) {
               exercises.push(exercise);
               break;
             }
@@ -319,75 +297,14 @@ export class TrainingPlanService {
     return validTrainingComponents;
   }
 
-  populateTrainingExerciseParams(
-    trainingComponents: DeepPick<
-      TrainingComponent,
-      'id' | 'supersets.exercises' | 'subgroups.supersets.exercises'
-    >[],
-    components: Component[],
-    exercises: Exercise[], // populate exercise attributes
-  ) {
-    for (const tComponent of trainingComponents) {
-      if ([WARMUP_COMPONENT_ID, COOLDOWN_COMPONENT_ID].includes(tComponent.id))
-        continue;
-
-      const component = components.find((c) => c.id === tComponent.id)!;
-      const root = this.componentService.getRoot(component, components);
-      const componentParams = root.params || { [DEFAULT_PARAMS_KEY]: [] };
-
-      for (const s of tComponent.supersets)
-        for (const tExercise of s.exercises) {
-          const exercise = exercises.find((e) => e.id === tExercise.id)!;
-          if (!exercise) continue;
-
-          const params = this.componentService.getComponentParamAttributes(
-            componentParams,
-            this.exerciseAttributeService.getValues(exercise),
-            this.exerciseAttributeService.getAttributes(),
-          );
-
-          tExercise.params = this.componentService.getParamAttributes(params);
-          tExercise.sets = this.getSets(
-            exercise.isUnilateral,
-            tExercise.params,
-            tExercise.sets,
-          );
-        }
-
-      for (const subgroup of tComponent.subgroups)
-        for (const s of subgroup.supersets)
-          for (const tExercise of s.exercises) {
-            const exercise = exercises.find((e) => e.id === tExercise.id)!;
-            if (!exercise) continue;
-
-            const params = this.componentService.getComponentParamAttributes(
-              componentParams,
-              this.exerciseAttributeService.getValues(exercise),
-              this.exerciseAttributeService.getAttributes(),
-            );
-
-            tExercise.params = this.componentService.getParamAttributes(params);
-            tExercise.sets = this.getSets(
-              exercise.isUnilateral,
-              tExercise.params,
-              tExercise.sets,
-            );
-          }
-    }
-  }
-
   validateSupersets(
     trainingComponent: UpdateTrainingComponentWithoutTime,
     item: { supersets: UpdateSuperset[]; mainSet: MainSet },
-    data: {
-      components: Component[];
-      exercises: Exercise[];
-      methods: Method[];
-    },
+    data: { components: Component[]; exercises: Exercise[]; methods: Method[] },
   ): Superset[] {
     const newSupersets = item.supersets || [];
     const mainSet = item.mainSet || trainingComponent.mainSet;
-    const { components, exercises, methods } = data;
+    const { components, exercises } = data;
 
     switch (mainSet) {
       case MainSet.BLOCK:
@@ -405,7 +322,6 @@ export class TrainingPlanService {
 
     const component = components.find((c) => c.id === trainingComponent.id)!;
     const root = this.componentService.getRoot(component, components);
-    const componentParams = root.params || { [DEFAULT_PARAMS_KEY]: [] };
 
     const validSupersets: Superset[] = [];
     for (const superset of newSupersets) {
@@ -431,67 +347,28 @@ export class TrainingPlanService {
         if (!exercise)
           throw new NotFoundException('Training exercise not found');
 
-        if (
-          exercise.isUnilateral &&
-          !trainingExercise.sets.every((s) => s.paramValuesR)
-        )
-          throw new BadRequestException(
-            `Bilateral exercise ${exercise.name} must have both left and right side sets`,
-          );
+        for (const set of trainingExercise.sets) {
+          const errors = [
+            ...this.exerciseParamService.validateSetValues(exercise, set),
+            ...this.exerciseParamService.validateMethods(
+              set,
+              data.methods,
+              trainingComponent.methodId,
+            ),
+          ];
 
-        // populate training exercise params and sets
-        const params = this.componentService.getComponentParamAttributes(
-          componentParams,
-          this.exerciseAttributeService.getValues(exercise),
-          this.exerciseAttributeService.getAttributes(),
-        );
-
-        const paramAttributes =
-          this.componentService.getParamAttributes(params);
-
-        const sets = this.getSets(
-          exercise.isUnilateral,
-          paramAttributes,
-          trainingExercise.sets,
-        );
-
-        const method = methods.find(
-          (m) => m.id === trainingComponent.methodId,
-        )!;
-
-        if (trainingComponent.methodId && !method)
-          throw new NotFoundException(
-            'Method not found for training component',
-          );
-
-        if (method?.attributes?.length > 0)
-          for (const set of sets) {
-            this.validateMethodParamValues(method, set.paramValuesL);
-
-            if (exercise.isUnilateral && set.paramValuesR)
-              this.validateMethodParamValues(method, set.paramValuesR);
+          if (errors.length > 0) {
+            throw new BadRequestException(
+              errors.map((e) => e.message).join(', '),
+            );
           }
+        }
 
         validTrainingExercises.push({
           id: trainingExercise.id,
-          params: paramAttributes,
-          sets,
+          sets: trainingExercise.sets,
+          params: root.params || [],
         });
-
-        // NOTE - currently disabled, as we can add exercises to any component
-        /* const exerciseComponentLeaf = allComponents.find(
-          (c) => c.id === exercise.componentIds[0],
-        );
-
-        const exerciseComponentRoot = this.componentService.getRoot(
-          exerciseComponentLeaf,
-          allComponents,
-        );
-
-        if (exerciseComponentRoot.id !== component.id)
-          throw new BadRequestException(
-            `Exercise ${exercise.name} cannot be part of selected component`,
-          ); */
       }
 
       validSupersets.push({ exercises: validTrainingExercises });
@@ -602,71 +479,6 @@ export class TrainingPlanService {
     }
 
     return validSubgroups;
-  }
-
-  getSets(
-    isUnilateral: boolean,
-    params: Attribute[],
-    existingSets?: ExerciseSet[],
-  ): ExerciseSet[] {
-    const sets = +(
-      params
-        .find((p) => p.field === ParamType.VolWorkSets)
-        ?.options?.find((o) => o.field === VolWorkSetType.Set)?.defaultValue ??
-      1
-    );
-
-    params = params.filter((p) => p.field !== ParamType.VolWorkSets);
-
-    if (!existingSets || !existingSets.length) {
-      // generate sets with default values
-      const generatedParamValues = this.attributeService.getParamValues(params);
-
-      return Array.from({ length: sets }).map((_, i) => ({
-        setNumber: i + 1,
-        reps: 1,
-        recTime: 0,
-        paramValuesL: generatedParamValues,
-        ...(isUnilateral && { paramValuesR: generatedParamValues }),
-      }));
-    }
-
-    // validate existing sets
-    const validSets: ExerciseSet[] = [];
-    for (const existingSet of existingSets) {
-      const validParamValuesL = this.attributeService.validate(
-        existingSet.paramValuesL,
-        params,
-      );
-
-      if (isUnilateral) {
-        if (!existingSet.paramValuesR)
-          existingSet.paramValuesR = existingSet.paramValuesL;
-
-        const validParamValuesR = this.attributeService.validate(
-          existingSet.paramValuesR,
-          params,
-        );
-
-        validSets.push({
-          ...existingSet,
-          paramValuesL: validParamValuesL,
-          paramValuesR: validParamValuesR,
-        });
-      } else
-        validSets.push({ ...existingSet, paramValuesL: validParamValuesL });
-    }
-
-    return validSets;
-  }
-
-  tempoToSeconds(tempo: number | undefined): number {
-    if (!tempo || isNaN(tempo)) return 0;
-    return tempo
-      .toString()
-      .split('')
-      .map((v) => +v)
-      .reduce((a, b) => a + b, 0);
   }
 
   /**
@@ -940,65 +752,18 @@ export class TrainingPlanService {
       ) {
         const e1 = s1.exercises[exerciseIndex];
         const e2 = s2.exercises[exerciseIndex];
-
         if (!e2 || e1.id !== e2.id) throw error;
       }
     }
   }
 
-  private modifySupersetValuesByParamType(
+  private modifySupersetValuesByParam(
     superset: Superset,
-    filter: { field: ParamType; selected: IntType | VolType },
-    modify: (value: number, exerciseId?: string) => number,
+    param: keyof ExerciseSet,
+    modify: (value: number) => number,
   ) {
     for (const exercise of superset.exercises)
-      for (const set of exercise.sets) {
-        for (const pv of set.paramValuesL)
-          if (this.matchesParamType(pv, filter))
-            pv.value = modify(parseFloat(pv.value), exercise.id).toString();
-
-        if (set.paramValuesR)
-          for (const pv of set.paramValuesR)
-            if (this.matchesParamType(pv, filter))
-              pv.value = modify(parseFloat(pv.value), exercise.id).toString();
-      }
-  }
-
-  private validateMethodParamValues(
-    method: Method,
-    paramValues: AttributeValue[],
-  ) {
-    for (const { field, value, selected } of paramValues) {
-      let attribute = method.attributes.find((a) => a.field === field);
-      if (!attribute) continue;
-
-      const foundInOptions = attribute.options.find(
-        (o) => o.field === selected,
-      );
-
-      if (foundInOptions) attribute = foundInOptions;
-
-      if (!this.commonService.object.isEmpty(attribute.min))
-        if (parseFloat(value) < attribute.min)
-          throw new BadRequestException(
-            `Value for ${field} cannot be less than ${attribute.min}`,
-          );
-
-      if (!this.commonService.object.isEmpty(attribute.max))
-        if (parseFloat(value) > attribute.max)
-          throw new BadRequestException(
-            `Value for ${field} cannot be greater than ${attribute.max}`,
-          );
-    }
-  }
-
-  private matchesParamType(
-    paramValue: AttributeValue,
-    filter: { field: ParamType; selected: IntType | VolType },
-  ): boolean {
-    return (
-      paramValue.field === filter.field &&
-      paramValue.selected === filter.selected
-    );
+      for (const set of exercise.sets)
+        this.exerciseParamService.modifyParamValue(set, param, modify);
   }
 }

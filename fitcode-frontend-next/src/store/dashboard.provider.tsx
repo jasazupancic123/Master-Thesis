@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import { createContext, useContext, useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 
 import { useAuthenticatedAuth } from './auth.provider';
 import { useMain } from './main.provider';
@@ -13,10 +14,26 @@ import { useNestBackendFetch } from '@/common/hooks/use-fetch.hook';
 import type { ILink } from '@/common/type/link.type';
 import type { ChildrenProps } from '@/common/type/props.type';
 import type { SetState } from '@/common/type/state.type';
-import type { AuthUser } from '@/controller/auth/type/user.type';
-import type { Group } from '@/controller/group/type/group.type';
-import type { Institution } from '@/controller/institution/type/institution.type';
+import { optimisticUpdate } from '@/common/util/optimistic-update';
+import { AuthController } from '@/controller/auth/auth.controller';
+import type { AuthUser, UpdateUser } from '@/controller/auth/type/user.type';
+import { GroupController } from '@/controller/group/group.controller';
+import type { Group, UpdateGroup } from '@/controller/group/type/group.type';
+import { InstitutionController } from '@/controller/institution/institution.controller';
+import type {
+  Institution,
+  UpdateInstitution,
+} from '@/controller/institution/type/institution.type';
+import type { UserRole } from '@/controller/profile/enum/user-role.enum';
 import type { Profile } from '@/controller/profile/type/user.type';
+
+export interface DashboardPageProps {
+  institutions: Institution[];
+  selectedInstitution: Institution | null;
+  members: Profile[];
+  refetchMembers: (providedUrl?: string) => void;
+  setMembers: SetState<Profile[]>;
+}
 
 interface DashboardContextProps {
   filter: ILink;
@@ -34,14 +51,17 @@ interface DashboardContextProps {
   refetchMembers: (providedUrl?: string) => void;
   setMembers: SetState<Profile[]>;
   setUsers: SetState<AuthUser[]>;
-}
-
-export interface DashboardPageProps {
-  institutions: Institution[];
-  selectedInstitution: Institution | null;
-  members: Profile[];
-  refetchMembers: (providedUrl?: string) => void;
-  setMembers: SetState<Profile[]>;
+  updateInstitution: (
+    institutionId: string,
+    input: UpdateInstitution
+  ) => Promise<void>;
+  updateGroup: (groupId: string, input: UpdateGroup) => Promise<void>;
+  deleteGroup: (groupId: string) => Promise<void>;
+  addGroup: (data: Group) => Promise<Group | undefined>;
+  updateUser: (
+    userId: string,
+    input: UpdateUser & { role?: UserRole }
+  ) => Promise<void>;
 }
 
 const DashboardContext = createContext<DashboardContextProps | null>(null);
@@ -58,7 +78,7 @@ export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
     setMembers,
   } = props;
 
-  const { role } = useAuthenticatedAuth();
+  const { role, user } = useAuthenticatedAuth();
   const pathname = usePathname();
 
   useEffect(() => {
@@ -84,7 +104,7 @@ export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
       : null
   );
 
-  const { setUsers } = useMain();
+  const { users, setUsers } = useMain();
 
   const { data: fetchedUsers, refetch: refetchUsers } =
     useNestBackendFetch<AuthUser[]>(`/auth`);
@@ -109,6 +129,211 @@ export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
     refetchMembers,
     setMembers,
     setUsers,
+    updateInstitution: async (institutionId, input) => {
+      const prevState = {
+        institution: structuredClone(selectedInstitution),
+        institutions: structuredClone(institutions),
+      };
+
+      function mapper(inst: Institution): Institution {
+        if (inst.id !== institutionId) return inst;
+        return {
+          ...inst,
+          name: input.name ?? inst.name,
+          imageUrl: input.imageUrl ?? inst.imageUrl,
+        };
+      }
+
+      await optimisticUpdate(
+        () => {
+          setInstitutions((prev) => prev.map(mapper));
+          if (institutionId === selectedInstitution?.id)
+            setSelectedInstitution((prev) => (prev ? mapper(prev) : prev));
+        },
+        (snapshot) => {
+          setSelectedInstitution(snapshot.institution);
+          setInstitutions(snapshot.institutions);
+          toast.error('Failed to update institution name');
+        },
+        () => InstitutionController.getInstance().update(institutionId, input),
+        prevState
+      );
+    },
+    updateGroup: async (groupId: string, input: UpdateGroup) => {
+      if (!selectedInstitution) return;
+
+      const prevState = {
+        institution: structuredClone(selectedInstitution),
+        group: selectedGroup ? { ...selectedGroup } : null,
+      };
+
+      function mapper(group: Group): Group {
+        if (group.id !== groupId) return group;
+        return {
+          ...group,
+          name: input.name ?? group.name,
+          ownerId: input.ownerId ?? group.ownerId,
+        };
+      }
+
+      await optimisticUpdate(
+        () => {
+          // apply optimistic update
+          setSelectedInstitution((prev) =>
+            prev ? { ...prev, groups: prev.groups.map(mapper) } : prev
+          );
+
+          if (groupId === selectedGroup?.id)
+            setSelectedGroup((prev) => (prev ? mapper(prev) : prev));
+        },
+        (snapshot) => {
+          // rollback
+          setSelectedInstitution(snapshot.institution);
+          setSelectedGroup(snapshot.group);
+          toast.error('Failed to update group name');
+        },
+        // perform the actual update
+        () => GroupController.getInstance().update(groupId, input),
+        prevState // snapshot for rollback
+      );
+    },
+    updateUser: async (userId, input) => {
+      if (!selectedInstitution || !users) return;
+      if (userId === user?.uid) {
+        toast.error('To update your profile, please use the profile page');
+        return;
+      }
+
+      const prevState = {
+        users: structuredClone(users),
+        institution: structuredClone(selectedInstitution),
+        selectedGroup: selectedGroup ? { ...selectedGroup } : null,
+      };
+
+      function mapper(user: AuthUser): AuthUser {
+        if (user.uid !== userId) return user;
+        return {
+          ...user,
+          displayName: input.displayName ?? user.displayName,
+          photoURL: input.photoURL ?? user.photoURL,
+          ...(input.role
+            ? { customClaims: { ...user.customClaims, role: [input.role] } }
+            : {}),
+        };
+      }
+
+      await optimisticUpdate(
+        () => {
+          setUsers((prev) => prev.map(mapper));
+          setSelectedInstitution((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  athletes: prev.athletes.map(mapper),
+                  trainers: prev.trainers.map(mapper),
+                  owner: mapper(prev.owner),
+                }
+              : prev
+          );
+
+          if (selectedGroup?.members?.find((m) => m.uid === userId))
+            setSelectedGroup((prev) =>
+              prev
+                ? { ...prev, members: prev?.members?.map(mapper) ?? [] }
+                : prev
+            );
+        },
+        (snapshot) => {
+          setUsers(snapshot.users);
+          setSelectedInstitution(snapshot.institution);
+          setSelectedGroup(snapshot.selectedGroup);
+          toast.error('Failed to update user');
+        },
+        async () => {
+          const controller = AuthController.getInstance();
+
+          if (input.displayName || input.photoURL)
+            await controller.updateUser(userId, {
+              displayName: input.displayName,
+              photoURL: input.photoURL,
+            });
+
+          if (input.role)
+            await controller.updateCustomClaims(userId, { role: [input.role] });
+        },
+        prevState
+      );
+    },
+    deleteGroup: async (groupId: string) => {
+      if (!selectedInstitution) return;
+
+      const prevState = {
+        institution: structuredClone(selectedInstitution),
+        group: selectedGroup ? { ...selectedGroup } : null,
+      };
+
+      await optimisticUpdate(
+        () => {
+          setSelectedInstitution((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  groups: prev.groups.filter((group) => group.id !== groupId),
+                }
+              : prev
+          );
+
+          if (groupId === selectedGroup?.id) setSelectedGroup(null);
+        },
+        (snapshot) => {
+          setSelectedInstitution(snapshot.institution);
+          setSelectedGroup(snapshot.group);
+          toast.error('Failed to delete group');
+        },
+        () => GroupController.getInstance().delete(groupId),
+        prevState
+      );
+    },
+    addGroup: async (data: Group) => {
+      if (!selectedInstitution) return;
+
+      const prevState = {
+        institution: structuredClone(selectedInstitution),
+        group: selectedGroup ? { ...selectedGroup } : null,
+      };
+
+      return await optimisticUpdate(
+        () => {
+          setSelectedGroup(data);
+          setSelectedInstitution((prev) =>
+            prev ? { ...prev, groups: [...prev.groups, data] } : prev
+          );
+        },
+        (snapshot) => {
+          setSelectedInstitution(snapshot.institution);
+          setSelectedGroup(snapshot.group);
+          toast.error('Failed to add group');
+        },
+        () => GroupController.getInstance().create(data),
+        prevState,
+        (created) => {
+          // post action on success - set the new id from backend
+          if (!created) return;
+          setSelectedInstitution((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  groups: prev.groups.map((r) =>
+                    r.id === data.id ? created : r
+                  ),
+                }
+              : prev
+          );
+
+          setSelectedGroup(created);
+        }
+      );
+    },
   };
 
   return (

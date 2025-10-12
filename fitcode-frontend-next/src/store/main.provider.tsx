@@ -30,6 +30,7 @@ interface MainContextProps extends MainProviderProps {
   setComponents: SetState<Component[]>;
   setExercises: SetState<Exercise[]>;
   setMethods: SetState<Method[]>;
+  setGroups: SetState<Group[]>;
 }
 
 const MainContext = createContext<MainContextProps | null>(null);
@@ -51,6 +52,7 @@ export default function MainProvider(props: ChildrenProps & MainProviderProps) {
   const [exercises, setExercises] = useState<Exercise[]>(props.exercises);
   const [components, setComponents] = useState<Component[]>(props.components);
   const [methods, setMethods] = useState<Method[]>(props.methods);
+  const [groups, setGroups] = useState<Group[]>(props.groups);
 
   const value: MainContextProps = {
     profile: profile!,
@@ -64,7 +66,8 @@ export default function MainProvider(props: ChildrenProps & MainProviderProps) {
     methods,
     setMethods,
     institutions: props.institutions,
-    groups: props.groups,
+    groups,
+    setGroups,
   };
 
   return <MainContext.Provider value={value}>{children}</MainContext.Provider>;

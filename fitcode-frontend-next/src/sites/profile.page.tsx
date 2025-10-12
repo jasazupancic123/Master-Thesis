@@ -29,7 +29,6 @@ import { SPORTS } from '@/common/constant/sport.constant';
 import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
 import { handleApiRequest } from '@/common/type/state.type';
 import FaceCapture from '@/components/face-capture/face-capture';
-import FileUpload from '@/components/file-upload/file-upload';
 import { AuthController } from '@/controller/auth/auth.controller';
 import type { AuthUser } from '@/controller/auth/type/user.type';
 import { Gender } from '@/controller/profile/enum/gender.enum';
@@ -40,11 +39,12 @@ import type { Profile } from '@/controller/profile/type/user.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useProfile } from '@/store/profile.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
+import FileUpload from '@/util/file-upload';
 
 const DEFAULT_MARGIN = 1;
 
 export default function ProfilePage() {
-  const { user, setUser, customClaims, token } = useAuthenticatedAuth();
+  const { user, setUser, customClaims } = useAuthenticatedAuth();
 
   const theme = useTheme();
   const router = useRouter();
@@ -104,7 +104,7 @@ export default function ProfilePage() {
       handleApiRequest(
         router,
         () =>
-          ProfileController.getInstance(token).update({
+          ProfileController.getInstance().update({
             sport,
             level,
             gender,
@@ -134,7 +134,7 @@ export default function ProfilePage() {
       handleApiRequest(
         router,
         () =>
-          AuthController.getInstance(token).updateUser(user.uid, {
+          AuthController.getInstance().updateUser(user.uid, {
             displayName,
             photoURL,
           }),
@@ -204,7 +204,7 @@ export default function ProfilePage() {
           label="Upload Profile Image"
           initialFileUrl={user.photoURL || undefined}
           sx={{ width: 200, margin: 'auto', height: 150 }}
-          dissableBorder={user?.photoURL ? true : false}
+          disableBorder={user?.photoURL ? true : false}
           makeRound
           onFileUpload={async (file) => {
             const path = `user/${user.uid}/${file.name}`;

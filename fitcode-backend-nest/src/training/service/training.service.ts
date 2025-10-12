@@ -19,7 +19,7 @@ import {
 } from 'date-fns';
 import { Timestamp } from 'firebase-admin/firestore';
 
-import { AuthService } from '@src/auth/auth.service';
+import { AuthService } from '@src/auth/service/auth.service';
 import {
   DEFAULT_WEIGHT_KG,
   MIN_BODYWEIGHT_KG,
@@ -65,14 +65,13 @@ import { InstitutionService } from '@src/institution/service/institution.service
 import { MethodService } from '@src/method/service/method.service';
 import { PeriodizationService } from '@src/periodization/periodization.service';
 import { WellnessService } from '@src/profile/service/wellness.service';
-import { IntType, ParamType } from '@src/training/enum/load-type.enum';
 
+import { ExerciseParam } from '../constant/exercise-param.constant';
 import {
   DURATION_TRAINING_COMPONENT_IN_MIN,
   DURATION_TRAINING_COMPONENT_WARMUP_COOLDOWN_IN_MIN,
   MAX_NUM_TRAININGS_PER_DAY,
 } from '../constant/training-limits.constant';
-import { CompleteSetDto } from '../dto/complete-set.dto';
 import {
   CreateTrainingComponentDto,
   CreateTrainingDto,
@@ -89,6 +88,7 @@ import { MainSet } from '../enum/main-set.enum';
 import { UpdateTraining } from '../interface/update-training.interface';
 import { TrainingRepository } from '../repository/training.repository';
 import { WorkloadRepository } from '../repository/workload.repository';
+import { ExerciseParamService } from './exercise-param.service';
 import { TrainingPlanService } from './training-plan.service';
 import { TrainingReportService } from './training-report.service';
 import { WorkloadService } from './workload.service';
@@ -114,6 +114,7 @@ export class TrainingService implements Permission<Training, Institution> {
     private readonly groupService: GroupService,
     private readonly institutionService: InstitutionService,
     private readonly exerciseService: ExerciseService,
+    private readonly exerciseParamService: ExerciseParamService,
   ) {}
 
   async findOneById(
@@ -393,7 +394,6 @@ export class TrainingService implements Permission<Training, Institution> {
     // validate custom workloads
     if (input.workloads) {
       const inputWorkloads = await this.workloadService.validateWorkloads(
-        training.id,
         input.workloads,
         trainingComponents,
       );
@@ -705,14 +705,14 @@ export class TrainingService implements Permission<Training, Institution> {
   async completeNextSet(
     user: User,
     ref: Pick<WorkloadRef, 'trainingId' | 'exerciseId' | 'userId'>,
-    input: CompleteSetDto,
+    input: Workload,
   ) {
     const { userId } = ref;
     const training = await this.findOneByIdOrFail(user, ref);
     const athlete = await this.getAthlete(user, userId, training.institution);
 
-    const exercise = await this.exerciseService.findOneByIdOrFail(athlete, ref);
-    this.workloadService.checkUnilateralInput(exercise.isUnilateral, input);
+    const errors = this.exerciseParamService.validateSetValues(input);
+    if (errors.length) throw new BadRequestException(JSON.stringify(errors));
 
     if (
       !this.commonService.date.isBetween(
@@ -738,18 +738,21 @@ export class TrainingService implements Permission<Training, Institution> {
     );
 
     // update report
-    await this.trainingReportService.updateReport(userId, training);
+    await this.trainingReportService.updateReport(userId, training, {
+      photoURLs: input.photoURLs,
+    });
+
     return workload;
   }
 
   @LogMethod()
-  async upsertSet(user: User, ref: WorkloadRef, input: CompleteSetDto) {
+  async upsertSet(user: User, ref: WorkloadRef, input: Workload) {
     const { userId } = ref;
     const training = await this.findOneByIdOrFail(user, ref);
     const athlete = await this.getAthlete(user, userId, training.institution);
-    const exercise = await this.exerciseService.findOneByIdOrFail(athlete, ref);
 
-    this.workloadService.checkUnilateralInput(exercise.isUnilateral, input);
+    const errors = this.exerciseParamService.validateSetValues(input);
+    if (errors.length) throw new BadRequestException(JSON.stringify(errors));
 
     const prescribedTraining = this.trainingPlanService.getTrainingByAthlete(
       athlete.uid,
@@ -765,7 +768,10 @@ export class TrainingService implements Permission<Training, Institution> {
       input,
     );
 
-    await this.trainingReportService.updateReport(userId, training);
+    await this.trainingReportService.updateReport(userId, training, {
+      photoURLs: input.photoURLs,
+    });
+
     return workload;
   }
 
@@ -811,11 +817,7 @@ export class TrainingService implements Permission<Training, Institution> {
                   w.userId === athlete.uid,
               );
 
-              const newPrescribedSet = customPrescribedWorkload
-                ? this.workloadService.getExerciseSet(customPrescribedWorkload)
-                : prescribedSet;
-
-              newPrescribedSets.push(newPrescribedSet);
+              newPrescribedSets.push(customPrescribedWorkload || prescribedSet);
             });
 
             // sort sets by setNumber
@@ -854,10 +856,9 @@ export class TrainingService implements Permission<Training, Institution> {
   }
 
   async updateBodyweightSets(athleteId: string, training: Training) {
-    const bwParam = { field: ParamType.IntWork1, selected: IntType.Bw };
-    const hasBwParamType = this.trainingPlanService.hasParamType(
+    const hasBwParamType = this.trainingPlanService.hasParam(
       training,
-      bwParam,
+      ExerciseParam.BW.field,
     );
 
     if (!hasBwParamType) return;
@@ -868,17 +869,16 @@ export class TrainingService implements Permission<Training, Institution> {
 
     this.trainingPlanService.modifyPrescribedParamValuesByType(
       training,
-      bwParam,
+      ExerciseParam.BW.field,
       (value) =>
         this.commonService.number.roundIntensity((value * bw) / 100, bw), // convert % value to kg and round to 2 decimals
     );
   }
 
   async updateRepMaxSets(athleteId: string, training: Training) {
-    const rmParam = { field: ParamType.IntWork1, selected: IntType.Rm };
-    const exercises = this.trainingPlanService.findExercisesByParamType(
+    const exercises = this.trainingPlanService.findExercisesByParam(
       training,
-      rmParam,
+      ExerciseParam.RM.field,
     );
 
     if (!exercises.length) return;
@@ -893,17 +893,13 @@ export class TrainingService implements Permission<Training, Institution> {
 
     this.trainingPlanService.modifyPrescribedParamValuesByType(
       training,
-      rmParam,
+      ExerciseParam.RM.field,
       (value, exerciseId) => {
         // prescribed value is in % of 1RM (between 1 and 100)
         const best = maxes.find((max) => max.exerciseId === exerciseId);
-        if (!best || !best.intWork1ValueL || !best.volWork1ValueL)
-          return DEFAULT_WEIGHT_KG;
+        if (!best || !best.loadKg || !best.reps) return DEFAULT_WEIGHT_KG;
 
-        const reps = best.volWork1ValueL;
-        const weight = best.intWork1ValueL;
-        const oneRM = this.commonService.number.rm(weight, reps);
-
+        const oneRM = this.commonService.number.rm(best.loadKg, best.reps);
         return this.commonService.number.roundIntensity(
           (value * oneRM) / 100,
           oneRM,

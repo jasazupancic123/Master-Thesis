@@ -1,18 +1,23 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 
-import { Attribute } from '@src/attribute/entity/attribute.entity';
 import { IdEntity } from '@src/common/entity/id.entity';
 
 import { ExerciseSet } from './exercise-set.entity';
 
 export class TrainingExercise extends IdEntity {
-  @ValidateNested({ each: true })
-  @Type(() => Attribute)
-  @ApiProperty({ type: () => Attribute, isArray: true })
+  @IsString({ each: true })
+  @IsNotEmpty({ each: true })
+  @ApiPropertyOptional()
+  @IsOptional()
   @Expose()
-  params: Attribute[]; // inferred from root component
+  params: string[]; // inferred from root component
 
   @ValidateNested({ each: true })
   @Type(() => ExerciseSet)

@@ -3,8 +3,10 @@ import type { Profile } from '../profile/type/user.type';
 import type {
   CreateInstitution,
   Institution,
+  UpdateInstitution,
   UserId,
 } from './type/institution.type';
+import type { FetchOptions } from '@/common/type/api.type';
 
 export class InstitutionController extends BaseController {
   private static instance: InstitutionController;
@@ -13,57 +15,55 @@ export class InstitutionController extends BaseController {
     super('/institution');
   }
 
-  static getInstance(token: string) {
+  static getInstance() {
     if (!this.instance) this.instance = new InstitutionController();
-    this.instance.setToken(token);
     return this.instance;
   }
 
-  async findAll() {
-    return this.api.get<Institution[]>('/', {
-      token: this.getToken(),
-    });
+  async findAll(options?: FetchOptions) {
+    return this.api.get<Institution[]>('/', options);
   }
 
   async findById(id: string) {
-    return this.api.get<Institution>(`/${id}`, {
-      token: this.getToken(),
-    });
+    return this.api.get<Institution>(`/${id}`);
   }
 
+<<<<<<< HEAD
   async findMembers(id: string) {
     return this.api.get<Profile[]>(`/${id}/members`, {
       token: this.getToken(),
     });
+=======
+  async findAthletes(id: string) {
+    return this.api.get<Profile[]>(`/${id}/find/athletes`);
+  }
+
+  async findTrainers(id: string) {
+    return this.api.get<Profile[]>(`/${id}/find/trainers`);
+>>>>>>> main
   }
 
   async create(body: CreateInstitution) {
-    return this.api.post<Institution>('/', body, { token: this.getToken() });
+    return this.api.post<Institution>('/', body);
+  }
+
+  async update(institutionId: string, body: UpdateInstitution) {
+    return this.api.patch<Institution>(`/${institutionId}`, body);
   }
 
   async addAthlete(institutionId: string, body: UserId) {
-    return this.api.patch<void>(`/${institutionId}/athlete`, body, {
-      token: this.getToken(),
-    });
+    return this.api.patch<void>(`/${institutionId}/athlete`, body);
   }
 
   async removeAthlete(institutionId: string, body: UserId) {
-    return this.api.delete<void>(`/${institutionId}/athlete`, {
-      body,
-      token: this.getToken(),
-    });
+    return this.api.delete<void>(`/${institutionId}/athlete`, { body });
   }
 
   async addTrainer(institutionId: string, body: UserId) {
-    return this.api.patch<void>(`/${institutionId}/trainer`, body, {
-      token: this.getToken(),
-    });
+    return this.api.patch<void>(`/${institutionId}/trainer`, body);
   }
 
   async removeTrainer(institutionId: string, body: UserId) {
-    return this.api.delete<void>(`/${institutionId}/trainer`, {
-      body,
-      token: this.getToken(),
-    });
+    return this.api.delete<void>(`/${institutionId}/trainer`, { body });
   }
 }

@@ -16,7 +16,6 @@ export const validationSchema = Joi.object({
 
   // Firebase Emulator
   FIREBASE_CREDENTIALS: Joi.string().optional(),
-  FIREBASE_DATABASE_ID: Joi.string().optional(),
   FIRESTORE_EMULATOR_HOST: Joi.string().optional(),
   FIREBASE_AUTH_EMULATOR_HOST: Joi.string().optional(),
   FIREBASE_STORAGE_EMULATOR_HOST: Joi.string().optional(),
@@ -26,7 +25,7 @@ export const validationSchema = Joi.object({
   DEBUG_FIRESTORE_QUERY_TIME_LOGGING: Joi.number().default(0),
 });
 
-export type NodeEnv = 'dev' | 'test' | 'stg' | 'production';
+export type NodeEnv = 'dev' | 'test' | 'staging' | 'production';
 
 export type Environment = {
   NODE_ENV: NodeEnv;
@@ -35,7 +34,6 @@ export type Environment = {
   ADMIN_EMAIL: string;
   ADMIN_PASSWORD: string;
   FIREBASE_CREDENTIALS: string;
-  FIREBASE_DATABASE_ID: string | undefined;
   FIRESTORE_EMULATOR_HOST: string | undefined;
   FIREBASE_AUTH_EMULATOR_HOST: string | undefined;
   FIREBASE_STORAGE_EMULATOR_HOST: string | undefined;

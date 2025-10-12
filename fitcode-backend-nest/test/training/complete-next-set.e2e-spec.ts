@@ -1,22 +1,15 @@
-import type { INestApplication } from '@nestjs/common';
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
 import { COMPONENT_PARAMS_OPT1 } from '@test/common/constant/component-params.constant';
+import { TestApp } from '@test/common/utils/app.util';
 import { addHours, subDays } from 'date-fns';
-import * as request from 'supertest';
 
-import { AppModule } from '@src/app.module';
 import type { TestInstitution } from '@src/common/type/entity.type';
 import type { Component } from '@src/component/entity/component.entity';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import type { Group } from '@src/group/entity/group.entity';
 import { TestDbService } from '@src/test-db/test-db.service';
-import type { CompleteSetDto } from '@src/training/dto/complete-set.dto';
 import type { Workload } from '@src/training/entity/workload.entity';
-import { IntType, ParamType, VolType } from '@src/training/enum/load-type.enum';
 import { SetStatus } from '@src/training/enum/set-status.enum';
-import { generateParamAttributeValue } from '@src/training/mock/param-values.stub';
 import {
   generateExerciseSet,
   generateSubgroup,
@@ -29,7 +22,7 @@ import { TrainingService } from '@src/training/service/training.service';
 import { WorkloadService } from '@src/training/service/workload.service';
 
 describe('Complete Next Set (e2e)', () => {
-  let app: INestApplication;
+  let testApp: TestApp;
   let db: TestDbService;
   let workloadService: WorkloadService;
 
@@ -38,23 +31,12 @@ describe('Complete Next Set (e2e)', () => {
   let component1: Component;
   let trainingId: string;
 
-  function generateSet(setNumber: number, isUnilateral = true) {
-    const set = generateExerciseSet(setNumber, COMPONENT_PARAMS_OPT1);
-    if (isUnilateral) set.paramValuesR = undefined;
-    return set;
-  }
-
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
+    testApp = await TestApp.init();
+    workloadService = testApp.module.get(WorkloadService);
+    const exerciseService = testApp.module.get(ExerciseService);
 
-    app = moduleFixture.createNestApplication();
-    workloadService = moduleFixture.get(WorkloadService);
-    const exerciseService = moduleFixture.get(ExerciseService);
-    await app.init();
-
-    db = moduleFixture.get(TestDbService);
+    db = testApp.module.get(TestDbService);
     institution = await db.institutions.createTest({
       createRandomAthlete: true,
       athletes: [global.athlete],
@@ -89,11 +71,14 @@ describe('Complete Next Set (e2e)', () => {
                 exercises: [
                   generateTrainingExercise({
                     id: 'squat',
-                    sets: [generateSet(1)],
+                    sets: [generateExerciseSet(1, ['reps', 'loadKg'])],
                   }),
                   generateTrainingExercise({
                     id: 'bench',
-                    sets: [generateSet(1), generateSet(2)],
+                    sets: [
+                      generateExerciseSet(1, ['reps', 'loadKg']),
+                      generateExerciseSet(2, ['reps', 'loadKg']),
+                    ],
                   }),
                 ],
               }),
@@ -101,11 +86,18 @@ describe('Complete Next Set (e2e)', () => {
                 exercises: [
                   generateTrainingExercise({
                     id: 'deadlift',
-                    sets: [generateSet(1), generateSet(2), generateSet(3)],
+                    sets: [
+                      generateExerciseSet(1, ['reps', 'loadKg']),
+                      generateExerciseSet(2, ['reps', 'loadKg']),
+                      generateExerciseSet(3, ['reps', 'loadKg']),
+                    ],
                   }),
                   generateTrainingExercise({
                     id: 'squat',
-                    sets: [generateSet(1), generateSet(2)],
+                    sets: [
+                      generateExerciseSet(1, ['reps', 'loadKg']),
+                      generateExerciseSet(2, ['reps', 'loadKg']),
+                    ],
                   }),
                 ],
               }),
@@ -118,7 +110,11 @@ describe('Complete Next Set (e2e)', () => {
                 exercises: [
                   generateTrainingExercise({
                     id: 'squat',
-                    sets: [generateSet(1), generateSet(2), generateSet(3)],
+                    sets: [
+                      generateExerciseSet(1, ['reps', 'loadKg']),
+                      generateExerciseSet(2, ['reps', 'loadKg']),
+                      generateExerciseSet(3, ['reps', 'loadKg']),
+                    ],
                   }),
                 ],
               }),
@@ -139,19 +135,20 @@ describe('Complete Next Set (e2e)', () => {
       db.components.clear(),
     ]);
 
-    await app.close();
+    await testApp.close();
   });
 
   async function req(
     token: string,
     trainingId: string,
     exerciseId: string,
-    body: CompleteSetDto,
+    body: Workload,
   ) {
-    return await request(app.getHttpServer())
-      .post(`/training/${trainingId}/exercise/${exerciseId}/complete-next-set`)
-      .set('Authorization', `Bearer ${token}`)
-      .send(body);
+    return await testApp.http.post(
+      `/training/${trainingId}/exercise/${exerciseId}/complete-next-set`,
+      token,
+      body,
+    );
   }
 
   it('should throw error if training not found', async () => {
@@ -165,6 +162,7 @@ describe('Complete Next Set (e2e)', () => {
         to: new Date(),
         reps: 1,
         recTime: 0,
+        photoURLs: [],
       },
     );
 
@@ -179,7 +177,7 @@ describe('Complete Next Set (e2e)', () => {
   ])(
     'should fetch athlete from request by %s for completing next set',
     async (_, token) => {
-      const trainingService = app.get(TrainingService);
+      const trainingService = testApp.module.get(TrainingService);
       const spy = jest.spyOn(trainingService as any, 'getAthlete');
 
       await req(token, trainingId, 'invalid-exercise-id', {
@@ -272,7 +270,7 @@ describe('Complete Next Set (e2e)', () => {
       to: addHours(from, 1),
       notes: 'left hip too low',
       reps: 12,
-      load: 100,
+      loadKg: 100,
       recTime: 60,
       tempo: '2:0:2:0',
     });
@@ -357,7 +355,7 @@ describe('Complete Next Set (e2e)', () => {
       from,
       to: addHours(from, 1),
       reps: 10,
-      load: 80,
+      loadKg: 80,
       recTime: 90,
       tempo: '2:0:2:0',
     });
@@ -433,7 +431,7 @@ describe('Complete Next Set (e2e)', () => {
       from,
       to: addHours(from, 1),
       reps: 8,
-      load: 60,
+      loadKg: 60,
       recTime: 120,
       tempo: '2:0:2:0',
     });
@@ -538,7 +536,7 @@ describe('Complete Next Set (e2e)', () => {
       from,
       to: addHours(from, 1),
       reps: 6,
-      load: 90,
+      loadKg: 90,
       recTime: 0,
     });
 
@@ -560,7 +558,7 @@ describe('Complete Next Set (e2e)', () => {
       from,
       to: addHours(from, 1),
       reps: 4,
-      load: 70,
+      loadKg: 70,
       recTime: 0,
     });
 
@@ -625,7 +623,7 @@ describe('Complete Next Set (e2e)', () => {
       to: addHours(from, 1),
       reps: 12,
       repsR: 11,
-      load: 60,
+      loadKg: 60,
       recTime: 0,
       // loadR should be provided
     });

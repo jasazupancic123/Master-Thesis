@@ -1,7 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { CollectionGroup, Query } from 'firebase-admin/firestore';
 
-import { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { CommonService } from '@src/common/service/common.service';
 import { Create, FirestoreEntity } from '@src/common/type/entity.type';
@@ -14,30 +13,25 @@ import {
 } from '@src/common/type/firestore.type';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
-import { PARAMS } from '@src/training/constant/param.constant';
-import { IntType, ParamType, VolType } from '@src/training/enum/load-type.enum';
 
-import { CompleteSetDto } from '../dto/complete-set.dto';
 import { CreatePrescribedWorkloadDto } from '../dto/create-workload.dto';
 import { ExerciseSet } from '../entity/exercise-set.entity';
 import { Training } from '../entity/training.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
 import { Workload, WorkloadMeta } from '../entity/workload.entity';
-import {
-  PrescribedWorkload,
-  WorkloadValue,
-} from '../entity/workload-value.entity';
 import { SetStatus } from '../enum/set-status.enum';
 import { WorkloadRepository } from '../repository/workload.repository';
+import { ExerciseParamService } from './exercise-param.service';
 import { TrainingPlanService } from './training-plan.service';
 
 @Injectable()
 export class WorkloadService {
   constructor(
-    private readonly commonService: CommonService,
+    private readonly common: CommonService,
     private readonly firebaseService: FirebaseService,
     private readonly repository: WorkloadRepository,
+    private readonly exerciseParamService: ExerciseParamService,
     private readonly trainingPlanService: TrainingPlanService,
     private readonly exerciseService: ExerciseService,
   ) {}
@@ -137,31 +131,22 @@ export class WorkloadService {
 
   async upsert(
     ref: WorkloadRef & CycleRef & InstitutionRef,
-    prescribedSet: ExerciseSet,
-    completedSet: CompleteSetDto,
+    prescribed: ExerciseSet,
+    completed: Workload,
   ) {
-    const prescribedWorkload = this.getPrescribedWorkload(prescribedSet);
-    const completedWorkload =
-      this.getCompletedWorkloadFromCompletedSet(completedSet);
-
-    const workloadValue: WorkloadValue = {
-      pReps: 1,
-      reps: 1,
-      pRecTime: 0,
-      recTime: 0,
-      ...prescribedWorkload,
-      ...completedWorkload,
-    };
-
     const workloadMeta: WorkloadMeta = {
       ...ref,
       id: this.repository.getKey(ref),
-      plannedAt: completedSet.from,
-      status: this.getStatus(workloadValue),
-      notes: completedSet.notes,
+      status: this.getStatus(prescribed, completed),
+      notes: completed.notes,
     };
 
-    const workload: Create<Workload> = { ...workloadValue, ...workloadMeta };
+    const workload: Create<Workload> = {
+      ...workloadMeta,
+      ...completed,
+      prescribed: prescribed,
+    };
+
     await this.repository.save(ref, workload);
     return { ...workload, createdAt: new Date(), updatedAt: new Date() };
   }
@@ -173,7 +158,7 @@ export class WorkloadService {
   async completeNextSet(
     ref: Pick<WorkloadRef, 'trainingId' | 'exerciseId' | 'userId'>,
     training: Training, // prescribed training for user
-    input: CompleteSetDto,
+    input: Workload,
   ): Promise<Workload> {
     // find exercise in training
     const existingExerciseWorkloads = await this.findAllByUserTraining(
@@ -216,8 +201,6 @@ export class WorkloadService {
         setNumber,
         reps: 1,
         recTime: 0,
-        paramValuesL: [],
-        paramValuesR: [],
       };
     }
 
@@ -242,7 +225,7 @@ export class WorkloadService {
   async upsertSet(
     ref: WorkloadRef,
     training: Training,
-    input: CompleteSetDto,
+    input: Workload,
   ): Promise<Workload> {
     // find prescribed set
     const component = this.trainingPlanService
@@ -282,7 +265,7 @@ export class WorkloadService {
     );
   }
 
-  async deleteWorkloads(workloads: Workload[]): Promise<void> {
+  async deleteWorkloads(workloads: WorkloadMeta[]): Promise<void> {
     const refs = workloads.map((w) => ({
       trainingId: w.trainingId,
       componentId: w.componentId,
@@ -296,7 +279,6 @@ export class WorkloadService {
   }
 
   async validateWorkloads(
-    trainingId: string,
     customWorkloads: CreatePrescribedWorkloadDto[],
     trainingComponents: Pick<
       TrainingComponent,
@@ -362,85 +344,69 @@ export class WorkloadService {
         throw new BadRequestException(
           `Set number ${customWorkload.setNumber} is invalid for exercise ${exercise.name}`,
         );
-
-      // ensure that all custom workload values are present in prescribed set
-      const prescribedFields = prescribedSet.paramValuesL.map((p) => p.field);
-      const customFields = this.getFieldsFromWorkload(customWorkload);
-      const { added, removed } = this.commonService.array.diff(
-        prescribedFields,
-        customFields,
-      );
-
-      if (added.length)
-        this.checkParamDifference(added, 'complete', {
-          prescribedSet,
-          exerciseName: exercise.name,
-          supersetIndex: customWorkload.supersetIndex,
-        });
-
-      if (removed.length)
-        this.checkParamDifference(removed, 'remove', {
-          prescribedSet,
-          exerciseName: exercise.name,
-          supersetIndex: customWorkload.supersetIndex,
-        });
-
-      // ensure that all prescribed value types have correct values
-      for (const field of prescribedFields)
-        this.validateFieldValue(field as ParamType, customWorkload);
-
-      workloads.push({
-        id: null,
-        ...customWorkload,
-        status: SetStatus.NOT_STARTED, // meaning custom for user
-        plannedAt: trainingComponent.from,
-        trainingId,
-        reps: 1,
-        recTime: 0,
-      });
     }
 
     return workloads;
   }
 
-  getStatus(workloadValue: WorkloadValue): SetStatus {
-    const volWork1Status = this.getStatusByField(
-      workloadValue.prescribedVolWork1ValueL,
-      workloadValue.volWork1ValueL,
+  getStatus(prescribed: ExerciseSet, completed: ExerciseSet): SetStatus {
+    const repsStatus = this.getStatusByField(prescribed.reps, completed.reps);
+    const repsRStatus = this.getStatusByField(
+      prescribed.repsR,
+      completed.repsR,
     );
 
-    const volWork2Status = this.getStatusByField(
-      workloadValue.prescribedVolWork2ValueL,
-      workloadValue.volWork2ValueL,
+    const loadKgStatus = this.getStatusByField(
+      prescribed.loadKg,
+      completed.loadKg,
     );
 
-    const volRecStatus = this.getStatusByField(
-      workloadValue.prescribedVolRecValueL,
-      workloadValue.volRecValueL,
+    const loadKgRStatus = this.getStatusByField(
+      prescribed.loadKgR,
+      completed.loadKgR,
     );
 
-    const intWork1Status = this.getStatusByField(
-      workloadValue.prescribedIntWork1ValueL,
-      workloadValue.intWork1ValueL,
+    const tempoStatus = this.getStatusByField(
+      this.exerciseParamService.tempoToSeconds(prescribed.tempo),
+      this.exerciseParamService.tempoToSeconds(completed.tempo),
     );
 
-    const intWork2Status = this.getStatusByField(
-      workloadValue.prescribedIntWork2ValueL,
-      workloadValue.intWork2ValueL,
+    const tempoRStatus = this.getStatusByField(
+      this.exerciseParamService.tempoToSeconds(prescribed.tempoR),
+      this.exerciseParamService.tempoToSeconds(completed.tempoR),
     );
 
-    const intRecStatus = this.getStatusByField(
-      workloadValue.prescribedIntRecValueL,
-      workloadValue.intRecValueL,
+    const velStatus = this.getStatusByField(prescribed.vel, completed.vel);
+    const velRStatus = this.getStatusByField(prescribed.velR, completed.velR);
+    const effStatus = this.getStatusByField(prescribed.eff, completed.eff);
+
+    const recTimeStatus = this.getStatusByField(
+      prescribed.recTime,
+      completed.recTime,
     );
+
+    const recDistStatus = this.getStatusByField(
+      prescribed.recDist,
+      completed.recDist,
+    );
+
+    const timeStatus = this.getStatusByField(prescribed.time, completed.time);
+    const distStatus = this.getStatusByField(prescribed.dist, completed.dist);
 
     let fieldStatus = [
-      volWork1Status,
-      volWork2Status,
-      volRecStatus,
-      intWork1Status,
-      intWork2Status,
-      intRecStatus,
+      repsStatus,
+      repsRStatus,
+      loadKgStatus,
+      loadKgRStatus,
+      tempoStatus,
+      tempoRStatus,
+      velStatus,
+      velRStatus,
+      effStatus,
+      recTimeStatus,
+      recDistStatus,
+      timeStatus,
+      distStatus,
     ];
 
     // edge case - no value is prescribed
@@ -471,455 +437,13 @@ export class WorkloadService {
     prescribedValue?: number,
     completedValue?: number,
   ): SetStatus {
-    if (prescribedValue === undefined || prescribedValue === null)
-      return SetStatus.IGNORED; // field not prescribed, ignore
-
-    if (completedValue === undefined || completedValue === null)
+    if (this.common.object.isEmpty(prescribedValue)) return SetStatus.IGNORED; // field not prescribed, ignore
+    if (this.common.object.isEmpty(completedValue))
       return SetStatus.NOT_STARTED; // field prescribed, but not performed
 
     // TODO - currently, this is comparing STRING values, not numbers, so it will be wrong
     if (completedValue < prescribedValue) return SetStatus.PARTIAL; // partial set
     if (completedValue === prescribedValue) return SetStatus.COMPLETED; // completed set
     if (completedValue > prescribedValue) return SetStatus.OVER; // over-completed set
-  }
-
-  getWorkloadValue(
-    prescribedSet: ExerciseSet,
-    completedSet: ExerciseSet,
-  ): WorkloadValue {
-    return {
-      ...this.getPrescribedWorkload(prescribedSet),
-      ...this.getCompletedWorkloadFromExerciseSet(completedSet),
-    };
-  }
-
-  /**
-   * Parses values that athlete completed, so it's assumed that `paramValues`
-   * are populated with correct values
-   */
-  getCompletedWorkloadFromExerciseSet(completedSet: ExerciseSet) {
-    const { paramValuesL, paramValuesR } = completedSet;
-
-    const volWork1ValueL = paramValuesL.find(
-      (p) => p.field === ParamType.VolWork1,
-    );
-
-    const volWork2ValueL = paramValuesL.find(
-      (p) => p.field === ParamType.VolWork2,
-    );
-
-    const volRecValueL = paramValuesL.find(
-      (p) => p.field === ParamType.VolRec1,
-    );
-
-    const intWork1ValueL = paramValuesL.find(
-      (p) => p.field === ParamType.IntWork1,
-    );
-
-    const intWork2ValueL = paramValuesL.find(
-      (p) => p.field === ParamType.IntWork2,
-    );
-
-    const intRecValueL = paramValuesL.find(
-      (p) => p.field === ParamType.IntRec1,
-    );
-
-    const workloadValue: WorkloadValue = {
-      reps: 1,
-      pReps: 1,
-      recTime: 0,
-      pRecTime: 0,
-      volWork1ValueL: this.parseValue(volWork1ValueL),
-      volWork2ValueL: this.parseValue(volWork2ValueL),
-      volRecValueL: this.parseValue(volRecValueL),
-      intWork1ValueL: this.parseValue(intWork1ValueL),
-      intWork2ValueL: this.parseValue(intWork2ValueL),
-      intRecValueL: this.parseValue(intRecValueL),
-    };
-
-    if (paramValuesR) {
-      const volWork1ValueR = paramValuesR.find(
-        (p) => p.field === ParamType.VolWork1,
-      );
-
-      const volWork2ValueR = paramValuesR.find(
-        (p) => p.field === ParamType.VolWork2,
-      );
-
-      const volRecValueR = paramValuesR.find(
-        (p) => p.field === ParamType.VolRec1,
-      );
-
-      const intWork1ValueR = paramValuesR.find(
-        (p) => p.field === ParamType.IntWork1,
-      );
-
-      const intWork2ValueR = paramValuesR.find(
-        (p) => p.field === ParamType.IntWork2,
-      );
-
-      const intRecValueR = paramValuesR.find(
-        (p) => p.field === ParamType.IntRec1,
-      );
-
-      workloadValue.volWork1ValueR = this.parseValue(volWork1ValueR);
-      workloadValue.volWork2ValueR = this.parseValue(volWork2ValueR);
-      workloadValue.volRecValueR = this.parseValue(volRecValueR);
-      workloadValue.intWork1ValueR = this.parseValue(intWork1ValueR);
-      workloadValue.intWork2ValueR = this.parseValue(intWork2ValueR);
-      workloadValue.intRecValueR = this.parseValue(intRecValueR);
-    }
-
-    return workloadValue;
-  }
-
-  getCompletedWorkloadFromCompletedSet(input: CompleteSetDto) {
-    return {
-      volWork1ValueL: input.reps || input.time || input.dist,
-      volWork1ValueR: input.repsR || input.timeR || input.distR,
-      volWork2ValueL: /* input.tempo || */ input.velocity || input.eff,
-      volWork2ValueR: /* input.tempoR || */ input.velocityR || input.eff,
-      volRecValueL: input.recTime,
-      volRecValueR: input.recTime,
-      intWork1ValueL: input.load,
-      intWork1ValueR: input.loadR,
-      intWork2ValueL: input.rom,
-      intWork2ValueR: input.romR,
-      intRecValueL: input.recDist,
-      intRecValueR: input.recDist,
-    };
-  }
-
-  getPrescribedWorkload(prescribedSet: ExerciseSet): PrescribedWorkload {
-    const { paramValuesL, paramValuesR } = prescribedSet;
-
-    const volWork1L = paramValuesL.find((p) => p.field === ParamType.VolWork1);
-    const volWork2L = paramValuesL.find((p) => p.field === ParamType.VolWork2);
-    const volRecL = paramValuesL.find((p) => p.field === ParamType.VolRec1);
-    const intWork1L = paramValuesL.find((p) => p.field === ParamType.IntWork1);
-    const intWork2L = paramValuesL.find((p) => p.field === ParamType.IntWork2);
-    const intRecL = paramValuesL.find((p) => p.field === ParamType.IntRec1);
-
-    const prescribedWorkload: PrescribedWorkload = {
-      pReps: 1,
-      pRecTime: 0,
-      volWork1Type: this.parseSelected<VolType>(volWork1L),
-      prescribedVolWork1ValueL: this.parseValue(volWork1L) as number,
-      volWork2Type: this.parseSelected<VolType>(volWork2L),
-      prescribedVolWork2ValueL: this.parseValue(volWork2L) as number,
-      volRecType: this.parseSelected<VolType>(volRecL),
-      prescribedVolRecValueL: this.parseValue(volRecL) as number,
-      intWork1Type: this.parseSelected<IntType>(intWork1L),
-      prescribedIntWork1ValueL: this.parseValue(intWork1L),
-      intWork2Type: this.parseSelected<IntType>(intWork2L),
-      prescribedIntWork2ValueL: this.parseValue(intWork2L),
-      intRecType: this.parseSelected<IntType>(intRecL),
-      prescribedIntRecValueL: this.parseValue(intRecL),
-    };
-
-    if (prescribedSet.paramValuesR) {
-      const volWork1R = paramValuesR.find(
-        (p) => p.field === ParamType.VolWork1,
-      );
-
-      const volWork2R = paramValuesR.find(
-        (p) => p.field === ParamType.VolWork2,
-      );
-
-      const volRecR = paramValuesR.find((p) => p.field === ParamType.VolRec1);
-
-      const intWork1R = paramValuesR.find(
-        (p) => p.field === ParamType.IntWork1,
-      );
-
-      const intWork2R = paramValuesR.find(
-        (p) => p.field === ParamType.IntWork2,
-      );
-
-      const intRecR = paramValuesR.find((p) => p.field === ParamType.IntRec1);
-
-      prescribedWorkload.volWork1Type = this.parseSelected<VolType>(volWork1R);
-      prescribedWorkload.prescribedVolWork1ValueR = this.parseValue(
-        volWork1R,
-      ) as number;
-      prescribedWorkload.volWork2Type = this.parseSelected<VolType>(volWork2R);
-      prescribedWorkload.prescribedVolWork2ValueR = this.parseValue(
-        volWork2R,
-      ) as number;
-      prescribedWorkload.volRecType = this.parseSelected<VolType>(volRecR);
-      prescribedWorkload.prescribedVolRecValueR = this.parseValue(
-        volRecR,
-      ) as number;
-      prescribedWorkload.intWork1Type = this.parseSelected<IntType>(intWork1R);
-      prescribedWorkload.prescribedIntWork1ValueR = this.parseValue(intWork1R);
-      prescribedWorkload.intWork2Type = this.parseSelected<IntType>(intWork2R);
-      prescribedWorkload.prescribedIntWork2ValueR = this.parseValue(intWork2R);
-      prescribedWorkload.intRecType = this.parseSelected<IntType>(intRecR);
-      prescribedWorkload.prescribedIntRecValueR = this.parseValue(intRecR);
-    }
-
-    return prescribedWorkload;
-  }
-
-  getExerciseSet(workload: Workload): ExerciseSet {
-    const set: ExerciseSet = {
-      setNumber: workload.setNumber,
-      reps: 1,
-      recTime: 0,
-      paramValuesL: [],
-      paramValuesR: [],
-    };
-
-    if (workload.volWork1Type) {
-      if (workload.prescribedVolWork1ValueL)
-        set.paramValuesL.push({
-          field: ParamType.VolWork1,
-          value: workload.prescribedVolWork1ValueL.toString(),
-          selected: workload.volWork1Type,
-        });
-
-      if (workload.prescribedVolWork1ValueR)
-        set.paramValuesR.push({
-          field: ParamType.VolWork1,
-          value: workload.prescribedVolWork1ValueR.toString(),
-          selected: workload.volWork1Type,
-        });
-    }
-
-    if (workload.volWork2Type) {
-      if (workload.prescribedVolWork2ValueL)
-        set.paramValuesL.push({
-          field: ParamType.VolWork2,
-          value: workload.prescribedVolWork2ValueL.toString(),
-          selected: workload.volWork2Type,
-        });
-
-      if (workload.prescribedVolWork2ValueR)
-        set.paramValuesR.push({
-          field: ParamType.VolWork2,
-          value: workload.prescribedVolWork2ValueR.toString(),
-          selected: workload.volWork2Type,
-        });
-    }
-
-    if (workload.volRecType) {
-      if (workload.prescribedVolRecValueL)
-        set.paramValuesL.push({
-          field: ParamType.VolRec1,
-          value: workload.prescribedVolRecValueL.toString(),
-          selected: workload.volRecType,
-        });
-
-      if (workload.prescribedVolRecValueR)
-        set.paramValuesR.push({
-          field: ParamType.VolRec1,
-          value: workload.prescribedVolRecValueR.toString(),
-          selected: workload.volRecType,
-        });
-    }
-
-    if (workload.intWork1Type) {
-      if (workload.prescribedIntWork1ValueL)
-        set.paramValuesL.push({
-          field: ParamType.IntWork1,
-          value: workload.prescribedIntWork1ValueL.toString(),
-          selected: workload.intWork1Type,
-        });
-
-      if (workload.prescribedIntWork1ValueR)
-        set.paramValuesR.push({
-          field: ParamType.IntWork1,
-          value: workload.prescribedIntWork1ValueR.toString(),
-          selected: workload.intWork1Type,
-        });
-    }
-
-    if (workload.intWork2Type) {
-      if (workload.prescribedIntWork2ValueL)
-        set.paramValuesL.push({
-          field: ParamType.IntWork2,
-          value: workload.prescribedIntWork2ValueL.toString(),
-          selected: workload.intWork2Type,
-        });
-
-      if (workload.prescribedIntWork2ValueR)
-        set.paramValuesR.push({
-          field: ParamType.IntWork2,
-          value: workload.prescribedIntWork2ValueR.toString(),
-          selected: workload.intWork2Type,
-        });
-    }
-
-    if (workload.intRecType) {
-      if (workload.prescribedIntRecValueL)
-        set.paramValuesL.push({
-          field: ParamType.IntRec1,
-          value: workload.prescribedIntRecValueL.toString(),
-          selected: workload.intRecType,
-        });
-
-      if (workload.prescribedIntRecValueR)
-        set.paramValuesR.push({
-          field: ParamType.IntRec1,
-          value: workload.prescribedIntRecValueR.toString(),
-          selected: workload.intRecType,
-        });
-    }
-
-    return set;
-  }
-
-  checkUnilateralInput(isUnilateral: boolean, input: CompleteSetDto) {
-    if (!isUnilateral) return;
-
-    const pairs = {
-      reps: [input.reps, input.repsR],
-      time: [input.time, input.timeR],
-      dist: [input.dist, input.distR],
-      load: [input.load, input.loadR],
-      rom: [input.rom, input.romR],
-      velocity: [input.velocity, input.velocityR],
-      tempo: [input.tempo, input.tempoR],
-      photoUrl: [input.photoUrl, input.photoUrlR],
-      tempos: [input.tempos, input.temposR],
-      roms: [input.roms, input.romsR],
-      velocities: [input.velocities, input.velocitiesR],
-      feedback: [input.feedback, input.feedbackR],
-    };
-
-    // check that both sides are filled or none
-    for (const [key, [left, right]] of Object.entries(pairs))
-      if ((left && !right) || (!left && right))
-        throw new BadRequestException(
-          `Both sides must be filled for ${key} or none`,
-        );
-  }
-
-  private parseSelected<T = string>(
-    attributeValue: AttributeValue,
-  ): T | undefined {
-    if (!attributeValue?.selected) return undefined;
-    return attributeValue.selected.split(':')[0] as T;
-  }
-
-  private parseValue(attributeValue: AttributeValue): number | undefined {
-    if (!attributeValue?.value) return undefined;
-    if (attributeValue?.value)
-      if (!isNaN(+attributeValue.value)) return +attributeValue.value;
-
-    return NaN;
-  }
-
-  private checkParamDifference(
-    fields: string[],
-    action: 'complete' | 'remove',
-    input: {
-      prescribedSet: ExerciseSet;
-      exerciseName: string;
-      supersetIndex: number;
-    },
-  ) {
-    const { prescribedSet, exerciseName, supersetIndex } = input;
-
-    for (const field of fields) {
-      const param = PARAMS.find((p) => p.field === field);
-      const selectedField = prescribedSet.paramValuesL.find(
-        (p) => p.field === field,
-      )?.selected;
-
-      if (!param) continue;
-      const paramName = (param.description || param.name).toLowerCase();
-
-      if (!selectedField)
-        throw new BadRequestException(
-          `Parameter ${paramName} is not prescribed in exercise ${exerciseName} in superset ${supersetIndex + 1}`,
-        );
-
-      const selected = param.options?.find(
-        (o) => o.field === selectedField.split(':')[0],
-      );
-
-      if (!selected) continue;
-
-      const selectedName = (
-        selected.description || selected.name
-      ).toLowerCase();
-
-      throw new BadRequestException(
-        `You have to ${action} parameter ${paramName} (${selectedName}) in exercise ${exerciseName} in superset ${supersetIndex + 1}`,
-      );
-    }
-  }
-
-  private getFieldsFromWorkload(workload: PrescribedWorkload): ParamType[] {
-    const fields: ParamType[] = [];
-
-    if (workload.volWork1Type) fields.push(ParamType.VolWork1);
-    if (workload.volWork2Type) fields.push(ParamType.VolWork2);
-    if (workload.volRecType) fields.push(ParamType.VolRec1);
-    if (workload.intWork1Type) fields.push(ParamType.IntWork1);
-    if (workload.intWork2Type) fields.push(ParamType.IntWork2);
-    if (workload.intRecType) fields.push(ParamType.IntRec1);
-
-    return fields;
-  }
-
-  private validateFieldValue(
-    paramType: ParamType,
-    prescribedWorkload: PrescribedWorkload,
-  ) {
-    let field: ParamType;
-
-    switch (paramType) {
-      case ParamType.VolWork1:
-        if (
-          prescribedWorkload.prescribedVolWork1ValueL === undefined ||
-          prescribedWorkload.prescribedVolWork1ValueL < 0
-        )
-          field = paramType;
-        break;
-      case ParamType.VolWork2:
-        if (
-          prescribedWorkload.prescribedVolWork2ValueL === undefined ||
-          prescribedWorkload.prescribedVolWork2ValueL < 0
-        )
-          field = paramType;
-        break;
-      case ParamType.VolRec1:
-        if (
-          prescribedWorkload.prescribedVolRecValueL === undefined ||
-          prescribedWorkload.prescribedVolRecValueL < 0
-        )
-          field = paramType;
-        break;
-      case ParamType.IntWork1:
-        if (
-          prescribedWorkload.prescribedIntWork1ValueL === undefined ||
-          prescribedWorkload.prescribedIntWork1ValueL < 0
-        )
-          field = paramType;
-        break;
-      case ParamType.IntWork2:
-        if (
-          prescribedWorkload.prescribedIntWork2ValueL === undefined ||
-          prescribedWorkload.prescribedIntWork2ValueL < 0
-        )
-          field = paramType;
-        break;
-      case ParamType.IntRec1:
-        if (
-          prescribedWorkload.prescribedIntRecValueL === undefined ||
-          prescribedWorkload.prescribedIntRecValueL < 0
-        )
-          field = paramType;
-        break;
-    }
-
-    if (field) {
-      const name = PARAMS.find((p) => p.field === field)?.description;
-      throw new BadRequestException(
-        `Prescribed ${name} value must not be empty`,
-      );
-    }
   }
 }

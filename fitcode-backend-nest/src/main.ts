@@ -2,6 +2,7 @@ import type { INestApplication } from '@nestjs/common';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpAdapterHost, NestFactory } from '@nestjs/core';
+import cookieParser from 'cookie-parser';
 import { config } from 'dotenv';
 import { json, urlencoded } from 'express';
 
@@ -18,7 +19,9 @@ import type {
 } from './config/environment-validation-schema';
 
 const nodeEnv = (process.env.NODE_ENV || 'dev') as NodeEnv;
-config({ quiet: true, path: `.env.${nodeEnv}` });
+if (!['production', 'staging'].includes(nodeEnv))
+  // in production and staging, the environment variables are set in other ways
+  config({ quiet: true, path: `.env.${nodeEnv}` });
 
 async function createApp(): Promise<INestApplication> {
   const app = await NestFactory.create(AppModule);
@@ -28,6 +31,7 @@ async function createApp(): Promise<INestApplication> {
   app.use(json({ limit: '10mb' }));
   app.use(urlencoded({ extended: true, limit: '10mb' }));
   app.enableCors(getCorsConfig(app));
+  app.use(cookieParser());
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -54,15 +58,13 @@ async function initApp(app: INestApplication): Promise<void> {
 
   // setups
   new SwaggerSetup(app).setup();
-  if (commonService.env.isDev()) await new DataSetup(app).setup();
+  await new DataSetup(app).setup();
 
   // start server
   const port = configService.get('PORT');
-  await app.listen(
-    port,
-    commonService.env.isProduction() ? '0.0.0.0' : undefined,
-  );
-  logger.log(`Application started on http://localhost:${port}`);
+  const hostname = commonService.env.isProduction() ? '0.0.0.0' : 'localhost';
+  await app.listen(port, hostname);
+  logger.log(`Application started on http://${hostname}:${port}`);
 }
 
 async function bootstrap(): Promise<void> {

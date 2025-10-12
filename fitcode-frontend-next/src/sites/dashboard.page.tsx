@@ -30,14 +30,13 @@ export default function DashboardPage() {
   const router = useRouter();
 
   const { users, profile, groups: allGroups } = useMain();
-  const { role, token } = useAuthenticatedAuth();
-  const controller = GroupController.getInstance(token);
+  const { role } = useAuthenticatedAuth();
+  const controller = GroupController.getInstance();
 
   const {
     institutions,
     selectedInstitution,
     setSelectedInstitution,
-    detectedChanges,
     setDetectedChanges,
     selectedGroup,
     setSelectedGroup,
@@ -50,6 +49,7 @@ export default function DashboardPage() {
     add_member_via_csv: false,
     edit_athlete: false,
   });
+
   const [groupName, setGroupName] = useState('');
   const [owner, setOwner] = useState<AuthUser | null>(null);
 
@@ -135,19 +135,11 @@ export default function DashboardPage() {
                 color="primary"
                 aria-label="go"
                 onClick={() => {
-                  if (selectedGroup) {
-                    if (detectedChanges) {
-                      toast.error('Unsaved changes will be lost', {
-                        icon: '⚠️',
-                        duration: 3000,
-                      });
-                      setDetectedChanges(false);
-                    } else
-                      redirect(
-                        LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS(selectedGroup.id)
-                          .home.href
-                      );
-                  }
+                  if (selectedGroup)
+                    redirect(
+                      LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS(selectedGroup.id)
+                        .home.href
+                    );
                 }}
               >
                 <ArrowForward />

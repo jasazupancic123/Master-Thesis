@@ -22,16 +22,14 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 
 import DashboardMenuMobile from '../dashboard-menu-mobile/dashboard-menu-mobile';
+import EditInstitutionModal from '../edit-institution-modal/edit-institution-modal';
 import FilterButton from '../filter-button/filter-button';
 import Logo from '../logo/logo';
 import MyModal from '../modal/modal';
 import ProfileHeaderMenu from '../profile-header-menu/profile-header-menu';
 import { MAX_WIDTH } from '../trainer-day-view/constant';
 import { BACKEND_API_BASE_URL } from '@/common/constant/api.constant';
-import {
-  LINK_DASHBOARD,
-  LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS,
-} from '@/common/constant/navigation.constant';
+import { LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS } from '@/common/constant/navigation.constant';
 import { isAdmin } from '@/common/firebase/firebase-auth.util';
 import type { ILink } from '@/common/type/link.type';
 import { handleApiRequest } from '@/common/type/state.type';
@@ -51,9 +49,8 @@ export default function DashboardHeader() {
     setSelectedInstitution,
     selectedGroup,
     setSelectedGroup,
-    detectedChanges,
-    setDetectedChanges,
     refetchMembers,
+    updateUser,
   } = useDashboard();
 
   const { users } = useMain();
@@ -61,10 +58,9 @@ export default function DashboardHeader() {
   const theme = useTheme();
   const router = useRouter();
   const auth = useAuthenticatedAuth();
-  const { token, role } = auth;
+  const { role } = auth;
 
-  const controller = GroupController.getInstance(token);
-
+  const controller = GroupController.getInstance();
   const [openProfileMenu, setOpenProfileMenu] = useState(false);
   const [openInstitutionsMenu, setOpenInstitutionsMenu] = useState(false);
   const [anchorProfileEl, setAnchorProfileEl] = useState<HTMLElement | null>(
@@ -73,6 +69,7 @@ export default function DashboardHeader() {
   const [anchorInstitutionsEl, setAnchorInstitutionsEl] =
     useState<HTMLElement | null>(null);
   const [modal, setModal] = useState({
+    edit_institution: false,
     remove_group: false,
   });
 
@@ -127,13 +124,13 @@ export default function DashboardHeader() {
           gap={3}
         >
           <Logo width={101.25} />
+
           <Box
             display="flex"
             alignItems="center"
             justifyContent="flex-end"
             gap={4}
           >
-            {' '}
             <Box
               display="flex"
               alignItems="center"
@@ -155,6 +152,7 @@ export default function DashboardHeader() {
                     cursor: 'pointer',
                   }}
                 />
+
                 <IconButton
                   sx={{
                     p: 0,
@@ -167,20 +165,13 @@ export default function DashboardHeader() {
                   }}
                 >
                   {!openProfileMenu ? (
-                    <KeyboardArrowDownTwoTone
-                      sx={{
-                        fontSize: 15,
-                      }}
-                    />
+                    <KeyboardArrowDownTwoTone sx={{ fontSize: 15 }} />
                   ) : (
-                    <KeyboardArrowUpTwoTone
-                      sx={{
-                        fontSize: 15,
-                      }}
-                    />
+                    <KeyboardArrowUpTwoTone sx={{ fontSize: 15 }} />
                   )}
                 </IconButton>
               </Box>
+
               {isAdmin(role!) ? (
                 <Box
                   position="relative"
@@ -209,33 +200,25 @@ export default function DashboardHeader() {
                     }}
                   >
                     {!openInstitutionsMenu ? (
-                      <KeyboardArrowDownTwoTone
-                        sx={{
-                          fontSize: 15,
-                        }}
-                      />
+                      <KeyboardArrowDownTwoTone sx={{ fontSize: 15 }} />
                     ) : (
-                      <KeyboardArrowUpTwoTone
-                        sx={{
-                          fontSize: 15,
-                        }}
-                      />
+                      <KeyboardArrowUpTwoTone sx={{ fontSize: 15 }} />
                     )}
                   </IconButton>
                 </Box>
               ) : (
-                <Link href={LINK_DASHBOARD.href} passHref>
+                <Box
+                  onClick={() =>
+                    setModal((prev) => ({ ...prev, edit_institution: true }))
+                  }
+                >
                   <Tooltip title="Dashboard">
                     <Avatar
                       src={selectedInstitution?.imageUrl || ''}
-                      sx={{
-                        width: 34,
-                        height: 34,
-                        cursor: 'pointer',
-                      }}
+                      sx={{ width: 34, height: 34, cursor: 'pointer' }}
                     />
                   </Tooltip>
-                </Link>
+                </Box>
               )}
               <Tooltip title="Settings">
                 <Settings sx={{ fontSize: 20, cursor: 'pointer' }} />
@@ -245,26 +228,11 @@ export default function DashboardHeader() {
         </Box>
       )}
 
-      <Box
-        sx={{
-          width: '100%',
-          mx: 'auto',
-        }}
-      >
+      <Box sx={{ width: '100%', mx: 'auto' }}>
         <ToggleButtonGroup
           value={filter}
           exclusive
           onChange={(_, val: ILink) => {
-            if (detectedChanges) {
-              toast.error('Unsaved changes will be lost', {
-                icon: '⚠️',
-                duration: 2000,
-              });
-
-              setDetectedChanges(false);
-              return;
-            }
-
             setFilter((prev) => (!val ? prev : val));
             router.push(val.href);
           }}
@@ -342,12 +310,10 @@ export default function DashboardHeader() {
                   users
                 );
                 setSelectedGroup(mapped);
-              } else {
-                setSelectedGroup(null);
-              }
+              } else setSelectedGroup(null);
+
               setOpenInstitutionsMenu(false);
               setAnchorInstitutionsEl(null);
-
               refetchMembers(
                 `${BACKEND_API_BASE_URL}/institution/${institution.id}/find/all`
               );
@@ -362,10 +328,7 @@ export default function DashboardHeader() {
             >
               <Avatar
                 src={institution.imageUrl || ''}
-                sx={{
-                  width: 25,
-                  height: 25,
-                }}
+                sx={{ width: 25, height: 25 }}
               />
               <Typography>{institution.name}</Typography>
             </Box>
@@ -387,6 +350,14 @@ export default function DashboardHeader() {
       >
         Remove group <strong>{selectedGroup?.name}</strong>?
       </MyModal>
+
+      <EditInstitutionModal
+        open={modal.edit_institution && !!selectedInstitution}
+        institution={selectedInstitution!}
+        onClose={() =>
+          setModal((prev) => ({ ...prev, edit_institution: false }))
+        }
+      />
     </Box>
   );
 }

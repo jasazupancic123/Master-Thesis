@@ -12,12 +12,14 @@ import {
 
 import { AttributeType } from '@src/common/enum/attribute-type.enum';
 
-export class BaseAttribute {
+import { IsValidDefaultValue } from '../decorator/is-valid-default-value.decorator';
+
+export class BaseAttribute<T> {
   @IsString()
   @ApiProperty()
   @IsNotEmpty()
   @Expose()
-  field: string; // name of the field in the database
+  field: keyof T;
 
   @IsString()
   @ApiProperty()
@@ -50,15 +52,14 @@ export class BaseAttribute {
   @Expose()
   unit?: string; // kg, lbs, ...
 
-  @IsString()
+  @IsValidDefaultValue()
   @ApiPropertyOptional()
-  @IsNotEmpty()
   @IsOptional()
   @Expose()
-  defaultValue?: string;
+  defaultValue?: string | number | boolean;
 }
 
-export class Attribute extends BaseAttribute {
+export class Attribute<T = any> extends BaseAttribute<T> {
   @IsNumber()
   @IsOptional()
   @ApiProperty()
@@ -72,8 +73,8 @@ export class Attribute extends BaseAttribute {
   max?: number;
 
   @IsString()
-  @ApiPropertyOptional()
   @IsNotEmpty()
+  @ApiPropertyOptional()
   @IsOptional()
   @Expose()
   pattern?: string; // regex pattern for validation

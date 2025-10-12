@@ -1,5 +1,6 @@
 import { BrowserUtil } from './util/browser.util';
 import { GenericUtil } from './util/generic.util';
+import { NumberUtil } from './util/number.util';
 import { DateUtil } from '@/common/service/util/date.util';
 import { NavigationUtil } from '@/common/service/util/navigation.util';
 import { ObjectUtil } from '@/common/service/util/object.util';
@@ -12,6 +13,7 @@ export class CommonService {
   readonly tree: TreeUtil;
   readonly navigation: NavigationUtil;
   readonly generic: GenericUtil;
+  readonly number: NumberUtil;
 
   constructor() {
     this.browser = new BrowserUtil();
@@ -20,6 +22,7 @@ export class CommonService {
     this.tree = new TreeUtil();
     this.navigation = new NavigationUtil();
     this.generic = new GenericUtil();
+    this.number = new NumberUtil();
   }
 
   private static _instance: CommonService;

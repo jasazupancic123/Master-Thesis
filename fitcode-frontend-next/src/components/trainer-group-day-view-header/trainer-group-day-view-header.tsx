@@ -58,6 +58,7 @@ export default function GroupTrainerDayViewHeader(
     const todaysTrainings = trainings.filter((t) =>
       dayjs(t.from).isSame(day.date, 'day')
     );
+
     let period: 'AM' | 'PM' = new Date().getHours() >= 12 ? 'PM' : 'AM';
     if (todaysTrainings.length === 1) {
       period = new Date(todaysTrainings[0].from).getHours() >= 12 ? 'PM' : 'AM';

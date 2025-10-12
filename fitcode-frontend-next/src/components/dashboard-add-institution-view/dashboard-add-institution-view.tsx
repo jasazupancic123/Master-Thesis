@@ -5,17 +5,16 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
-import FileUpload from '../file-upload/file-upload';
 import { FirebaseFunctionsUtil } from '@/common/firebase/firebase-functions.util';
 import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
 import { handleApiRequest } from '@/common/type/state.type';
 import { InstitutionController } from '@/controller/institution/institution.controller';
 import { InstitutionService } from '@/controller/institution/institution.service';
 import { UserRole } from '@/controller/profile/enum/user-role.enum';
-import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
+import FileUpload from '@/util/file-upload';
 
 const firebaseStorage = FirebaseStorageUtil.Instance;
 const firebaseFunctions = FirebaseFunctionsUtil.Instance;
@@ -26,9 +25,7 @@ export default function AddInstitutionDashboard() {
   const screenSize = useScreenSize();
   const { setInstitutions, refetchUsers } = useDashboard();
 
-  const auth = useAuthenticatedAuth();
-  const controller = InstitutionController.getInstance(auth.token);
-
+  const controller = InstitutionController.getInstance();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

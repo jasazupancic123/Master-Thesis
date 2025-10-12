@@ -15,7 +15,6 @@ import { handleApiRequest } from '@/common/type/state.type';
 import type { GroupEvent } from '@/controller/group/type/group-event.type';
 import { TrainingController } from '@/controller/training/training.controller';
 import type { TrainingComponentWithTrainingId } from '@/controller/training/type/training-component.type';
-import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 
@@ -27,7 +26,6 @@ export default function WeekViewItem(props: WeekViewItemProps) {
   const theme = useTheme();
   const screenSize = useScreenSize();
   const router = useRouter();
-  const { token } = useAuthenticatedAuth();
 
   const { item } = props;
   const { setGroup, setTrainings } = useGroup();
@@ -52,7 +50,7 @@ export default function WeekViewItem(props: WeekViewItemProps) {
     await handleApiRequest(
       router,
       () =>
-        TrainingController.getInstance(token).updateComponentTime(
+        TrainingController.getInstance().updateComponentTime(
           item.trainingId,
           selectedItem.id,
           { from: newItem.from, to: newItem.to }

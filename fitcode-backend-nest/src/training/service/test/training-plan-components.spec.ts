@@ -21,7 +21,6 @@ import { ExerciseAttributeService } from '@src/exercise/service/exercise-attribu
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { MAIN_GROUP_PARENT_ID } from '@src/training/constant/main-group-parent-id.constant';
-import { PARAMS } from '@src/training/constant/param.constant';
 import {
   generateSubgroup,
   generateSuperset,
@@ -30,6 +29,7 @@ import {
 } from '@src/training/mock/training.stub';
 import { WorkloadRepository } from '@src/training/repository/workload.repository';
 
+import { ExerciseParamService } from '../exercise-param.service';
 import { TrainingPlanService } from '../training-plan.service';
 import { WorkloadService } from '../workload.service';
 
@@ -53,6 +53,7 @@ describe('validateTrainingComponents', () => {
           useValue: createMock<CacheManagerService>(),
         },
         AttributeService,
+        ExerciseParamService,
         {
           provide: ComponentService,
           useValue: createMock<ComponentService>(),
@@ -166,48 +167,6 @@ describe('validateTrainingComponents', () => {
       service.validateTrainingComponents(trainingComponents, [], data),
     ).toThrow(`Duplicate component Component 1`);
   });
-
-  // NOTE - disabled functionality (for now)
-  /* it('should throw error if wrong exercises is provided', () => {
-    const now = new Date();
-    const trainingComponents = [
-      generateTrainingComponent({
-        id: WARMUP_COMPONENT_ID,
-        from: subMinutes(now, 5),
-      }),
-      generateTrainingComponent({
-        id: 'c1',
-        from: now,
-        supersets: [
-          generateSuperset({
-            exercises: [
-              generateTrainingExercise({ id: 'e1' }), // leaf1 -> c1
-              generateTrainingExercise({ id: 'e2' }), // leaf1 -> c1
-              generateTrainingExercise({ id: 'e4' }), // leaf3 -> c2, NOT ALLOWED
-            ],
-          }),
-        ],
-      }),
-      generateTrainingComponent({
-        id: COOLDOWN_COMPONENT_ID,
-        from: addMinutes(now, 5),
-      }),
-    ];
-
-    const exercise = exercises.find((e) => e.id === 'e4');
-
-    expect(() =>
-      service.validateTrainingComponents(
-        exercises.filter((e) => ['e1', 'e2', 'e4'].includes(e.id)),
-        [],
-        trainingComponents,
-        components,
-        [],
-      ),
-    ).toThrow(
-      `Exercise ${exercise?.name} cannot be part of selected component`,
-    );
-  }); */
 
   it('should throw error if there is an invalid member in subgroup', () => {
     const memberIds = ['m1', 'm2', 'm3'];
@@ -330,7 +289,7 @@ describe('validateTrainingComponents', () => {
       attributes: [],
     };
 
-    jest.spyOn(componentService, 'getParamAttributes').mockReturnValue(PARAMS);
+    // jest.spyOn(componentService, 'getParamAttributes').mockReturnValue(PARAMS);
 
     expect(() =>
       service.validateTrainingComponents(trainingComponents, ['m1'], data),

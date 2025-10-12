@@ -1,30 +1,20 @@
-import type { INestApplication } from '@nestjs/common';
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { TestApp } from '@test/common/utils/app.util';
 import { addDays, subDays } from 'date-fns';
-import * as request from 'supertest';
 
-import { AppModule } from '@src/app.module';
 import { getTime } from '@src/common/service/util';
 import type { TestInstitution } from '@src/common/type/entity.type';
 import { TestDbService } from '@src/test-db/test-db.service';
 import { generateTrainingStub } from '@src/training/mock/training.stub';
 
 describe('Get Trainings (e2e)', () => {
-  let app: INestApplication;
+  let testApp: TestApp;
   let db: TestDbService;
 
   let institution: TestInstitution;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
-
-    db = moduleFixture.get(TestDbService);
+    testApp = await TestApp.init();
+    db = testApp.module.get(TestDbService);
 
     // institution with 2 trainers (one is global.trainer)
     institution = await db.institutions.createTest({
@@ -111,18 +101,19 @@ describe('Get Trainings (e2e)', () => {
       db.institutions.remove(institution.id),
     ]);
 
-    await app.close();
+    await testApp.close();
   });
 
   function req() {
-    return request(app.getHttpServer())
-      .get('/training/institution/today')
-      .set('Authorization', `Bearer ${global.manager.token}`)
-      .send();
+    return testApp.http.get(
+      '/training/institution/today',
+      global.manager.token,
+    );
   }
 
   it('should return populated trainings for today', async () => {
-    const res = await req().expect(200);
+    const res = await req();
+    expect(res.status).toBe(200);
     expect(res.body).toHaveLength(4); // 2 from each trainer
   });
 });

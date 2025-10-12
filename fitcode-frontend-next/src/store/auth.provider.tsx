@@ -1,17 +1,13 @@
 'use client';
 
-import type { User } from '@firebase/auth';
 import { useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useState } from 'react';
 
-import {
-  FIREBASE_AUTH_ID_TOKEN,
-  getFirebaseAuth,
-} from '@/common/config/firebase.config';
+import { getFirebaseAuth } from '@/common/config/firebase.config';
 import { LINK_SIGN_IN } from '@/common/constant/navigation.constant';
-import { CommonService } from '@/common/service/common.service';
 import type { AuthContextType, AuthStatus } from '@/common/type/context.type';
 import type { ChildrenProps } from '@/common/type/props.type';
+import { AuthController } from '@/controller/auth/auth.controller';
 import type { CustomClaims } from '@/controller/auth/type/custom-claims.type';
 import type { AuthUser } from '@/controller/auth/type/user.type';
 import type { UserRole } from '@/controller/profile/enum/user-role.enum';
@@ -22,24 +18,19 @@ export const useAuth = () => useContext(AuthContext)!;
 
 export type AuthState = {
   status: AuthStatus;
-  token?: string;
-  user?: User;
+  user?: AuthUser;
   role?: UserRole;
   customClaims?: CustomClaims;
 };
 
-const browser = CommonService.instance.browser;
-
-export const AuthProvider = (
-  props: ChildrenProps & { initialToken?: string }
-) => {
-  const { children } = props;
+export const AuthProvider = (props: ChildrenProps) => {
   const auth = getFirebaseAuth();
+  const { children } = props;
   const router = useRouter();
+  const controller = AuthController.getInstance();
 
   const [state, setState] = useState<AuthState>({
     status: 'loading',
-    token: undefined,
     user: undefined,
     role: undefined,
     customClaims: undefined,
@@ -47,10 +38,7 @@ export const AuthProvider = (
 
   function setCustomClaims(claims: CustomClaims) {
     if (state.status === 'authenticated')
-      setState((prevState) => ({
-        ...prevState,
-        customClaims: claims,
-      }));
+      setState((prevState) => ({ ...prevState, customClaims: claims }));
   }
 
   function setUser(data: Partial<Pick<AuthUser, 'displayName' | 'photoURL'>>) {
@@ -61,50 +49,28 @@ export const AuthProvider = (
     }));
   }
 
-  // first time init get token from cookies and refresh if needed
-  useEffect(() => {
-    async function init() {
-      await auth.authStateReady();
-      await handleUserChange(auth.currentUser);
-    }
-
-    init().then();
-  }, []);
-
-  useEffect(() => {
-    const unsubscribe = auth.onIdTokenChanged(handleUserChange);
-    return () => unsubscribe();
-  }, [auth]);
-
-  async function handleUserChange(user: User | null): Promise<AuthState> {
+  function handleUserChange(user: AuthUser | null): AuthState {
     let newState: AuthState = { ...state, status: 'loading' };
 
     if (!user) {
       // user is logged out
       newState = {
         status: 'unauthenticated',
-        token: undefined,
         user: undefined,
         role: undefined,
         customClaims: undefined,
       };
-
-      browser.removeClientCookie(FIREBASE_AUTH_ID_TOKEN);
     } else {
       // user is logged in
-      const { token, claims } = await user.getIdTokenResult();
-      const customClaims = claims as unknown as CustomClaims;
+      const customClaims = user.customClaims;
       const role = customClaims.role?.[0];
 
       newState = {
         status: 'authenticated',
-        token,
         user,
         role,
         customClaims,
       };
-
-      browser.setClientCookie(FIREBASE_AUTH_ID_TOKEN, token, 1800);
     }
 
     setState(newState);
@@ -112,15 +78,34 @@ export const AuthProvider = (
   }
 
   async function logout(redirect = true): Promise<void> {
+    handleUserChange(null);
     await auth.signOut();
-    await handleUserChange(null);
+    await controller.logout();
     if (redirect) router.push(LINK_SIGN_IN.href);
   }
 
+  useEffect(() => {
+    auth.authStateReady().then();
+  }, [auth]);
+
+  useEffect(() => {
+    const unsubscribe = auth.onIdTokenChanged(async (firebaseUser) => {
+      if (firebaseUser) {
+        const idToken = await firebaseUser.getIdToken();
+        const user = await controller.sessionLogin(idToken);
+        handleUserChange(user);
+      } else {
+        await AuthController.getInstance().logout();
+        handleUserChange(null);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [auth]);
+
   if (
-    auth?.currentUser &&
+    auth.currentUser &&
     state.status === 'authenticated' &&
-    state.token &&
     state.user &&
     state.role &&
     state.customClaims
@@ -129,7 +114,6 @@ export const AuthProvider = (
       <AuthContext.Provider
         value={{
           status: 'authenticated',
-          token: state.token!,
           user: state.user!,
           role: state.role!,
           customClaims: state.customClaims!,
@@ -145,16 +129,14 @@ export const AuthProvider = (
 
   if (state.status === 'loading')
     return (
-      <AuthContext.Provider
-        value={{ status: 'loading', token: undefined, handleUserChange }}
-      >
+      <AuthContext.Provider value={{ status: 'loading', handleUserChange }}>
         {children}
       </AuthContext.Provider>
     );
 
   return (
     <AuthContext.Provider
-      value={{ status: 'unauthenticated', token: undefined, handleUserChange }}
+      value={{ status: 'unauthenticated', handleUserChange }}
     >
       {children}
     </AuthContext.Provider>

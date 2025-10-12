@@ -10,29 +10,26 @@ import type { Institution } from '@/controller/institution/type/institution.type
 import { ProfileController } from '@/controller/profile/profile.controller';
 import type { Profile } from '@/controller/profile/type/user.type';
 
-export const updateUserProfile = async (
-  token: string,
-  input: {
-    router: AppRouterInstance;
-    userToEdit: AuthUser | null;
-    isEditedUser?: boolean;
-    isEditedProfile?: boolean;
-    selectedInstitution: Institution | null;
-    profileToEdit: Profile | undefined;
-    setIsEditedProfile: SetState<boolean>;
-    setUserToEdit: SetState<AuthUser | null>;
-    setIsEditedUser: SetState<boolean>;
-    refetchMembers: (url?: string) => void;
-    refetchUsers: () => void;
-    setModal: SetState<{
-      add_member: boolean;
-      add_trainer: boolean;
-      add_group: boolean;
-      add_member_via_csv: boolean;
-      edit_athlete: boolean;
-    }>;
-  }
-) => {
+export const updateUserProfile = async (input: {
+  router: AppRouterInstance;
+  userToEdit: AuthUser | null;
+  isEditedUser?: boolean;
+  isEditedProfile?: boolean;
+  selectedInstitution: Institution | null;
+  profileToEdit: Profile | undefined;
+  setIsEditedProfile: SetState<boolean>;
+  setUserToEdit: SetState<AuthUser | null>;
+  setIsEditedUser: SetState<boolean>;
+  refetchMembers: (url?: string) => void;
+  refetchUsers: () => void;
+  setModal: SetState<{
+    add_member: boolean;
+    add_trainer: boolean;
+    add_group: boolean;
+    add_member_via_csv: boolean;
+    edit_athlete: boolean;
+  }>;
+}) => {
   const {
     userToEdit,
     router,
@@ -46,8 +43,8 @@ export const updateUserProfile = async (
     refetchUsers,
   } = input;
 
-  const authController = AuthController.getInstance(token);
-  const profileController = ProfileController.getInstance(token);
+  const authController = AuthController.getInstance();
+  const profileController = ProfileController.getInstance();
 
   handleApiRequest(
     router,

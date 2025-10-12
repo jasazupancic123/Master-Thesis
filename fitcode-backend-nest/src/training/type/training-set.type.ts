@@ -1,28 +1,19 @@
-export interface TrainingSet {
-  repsL: number;
-  repsR: number;
-  loadL: number;
-  loadR: number;
-  recTime: number;
-  tempoL: number;
-  tempoR: number;
-  timeL: number;
-  timeR: number;
-  distL: number;
-  distR: number;
-  recDist: number;
-}
+import type { ExerciseSet } from '../entity/exercise-set.entity';
+
+export type DefinedExerciseSet = Required<
+  Omit<ExerciseSet, 'setNumber' | 'loadType' | 'tempo' | 'tempoR'>
+> & {
+  tempo: number; // in seconds
+  tempoR: number; // in seconds
+};
 
 export interface SetReport {
   reps: number;
   load: number;
-  recTime: number;
+  tonnage: number;
+  tit: number; // time under tension
   time: number;
   dist: number;
+  recTime: number;
   recDist: number;
-  activeTime: number;
-  tonnage: number;
-  timeWork: number;
-  distWork: number;
-  power: number;
 }

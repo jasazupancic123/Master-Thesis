@@ -1,10 +1,6 @@
-import type { INestApplication } from '@nestjs/common';
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { TestApp } from '@test/common/utils/app.util';
 import { addDays } from 'date-fns';
-import * as request from 'supertest';
 
-import { AppModule } from '@src/app.module';
 import type { TestInstitution, TestUser } from '@src/common/type/entity.type';
 import {
   createGroupWithCycles,
@@ -25,7 +21,7 @@ import { generateGroupStub } from '@src/group/mock/group.stub';
 import { InstitutionService } from '@src/institution/service/institution.service';
 
 describe('Update Group (e2e)', () => {
-  let app: INestApplication;
+  let testApp: TestApp;
   let firebase: FirebaseService;
   let groupService: GroupService;
   let institutionService: InstitutionService;
@@ -36,17 +32,11 @@ describe('Update Group (e2e)', () => {
   let group: Group;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
-
-    firebase = moduleFixture.get(FirebaseService);
-    groupService = moduleFixture.get(GroupService);
-    institutionService = moduleFixture.get(InstitutionService);
-    componentService = moduleFixture.get(ComponentService);
+    testApp = await TestApp.init();
+    firebase = testApp.module.get(FirebaseService);
+    groupService = testApp.module.get(GroupService);
+    institutionService = testApp.module.get(InstitutionService);
+    componentService = testApp.module.get(ComponentService);
 
     component = await componentService.create(generateComponentStub());
     institution = await createInstitution(institutionService);
@@ -60,7 +50,7 @@ describe('Update Group (e2e)', () => {
       deleteDoc(firebase, 'COMPONENT', component.id),
     ]);
 
-    await app.close();
+    await testApp.close();
   });
 
   describe('batchUpdate', () => {
@@ -68,10 +58,9 @@ describe('Update Group (e2e)', () => {
       user: TestUser,
       input: BatchUpdateOneGroupDto[],
     ) {
-      return await request(app.getHttpServer())
-        .patch(`/group/update/batch`)
-        .set('Authorization', `Bearer ${user.token}`)
-        .send({ groups: input });
+      return await testApp.http.patch(`/group/update/batch`, user.token, {
+        groups: input,
+      });
     }
 
     it('should fail if empty array is passed in', async () => {

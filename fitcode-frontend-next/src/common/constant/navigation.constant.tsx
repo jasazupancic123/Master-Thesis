@@ -42,10 +42,22 @@ export function link(
 // hero navbar
 export const LINK_PRODUCT = link('Product', '#product');
 export const LINK_SERVICES = link('Services', '#services');
-export const LINK_TECHNOLOGY = link('Technology', '#technology');
+export const LINK_TECHNOLOGY = link(
+  'Technology',
+  '/#technology',
+  null,
+  'technology'
+);
+export const LINK_CONTACT_US = link(
+  'Contact Us',
+  '/#contact-us',
+  null,
+  'contact-us'
+);
+export const LINK_ABOUT_US = link('About Us', '/#about-us', null, 'about-us');
 
 // all standalone app links
-export const LINK_INDEX = link('Home', '/', null, '');
+export const LINK_INDEX = link('Home', '/#home', null, 'home');
 export const LINK_SOLUTIONS = link('Solutions', '#solutions');
 export const LINK_PRODUCTS = link('Products', '#products');
 export const LINK_FEATURES = link('Features', '#features');
@@ -69,7 +81,13 @@ export const LINK_EXERCISES_DASHBOARD = link(
 );
 export const LINK_COMPONENTS = link('Components', '/components');
 export const LINK_GROUPS = link('Trainings', '/groups', <FitnessCenterIcon />);
-export const LINK_DASHBOARD = link('Dashboard', '/dashboard', <HomeIcon />);
+export const DASHBOARD_LINK_ID = 'dashboard';
+export const LINK_DASHBOARD = link(
+  'Dashboard',
+  '/dashboard',
+  <HomeIcon />,
+  DASHBOARD_LINK_ID
+);
 export const LINK_TRAININGS = link(
   'Trainings',
   '/trainings',
@@ -149,14 +167,20 @@ export const LINKS_AUTH = {
 };
 
 export const LINKS_HERO_NAVBAR = {
-  product: LINK_PRODUCT,
-  services: LINK_SERVICES,
+  home: LINK_INDEX,
+  aboutUs: LINK_ABOUT_US,
   technology: LINK_TECHNOLOGY,
+  contactUs: LINK_CONTACT_US,
 };
 
-export const LINKS_AUTHENTICATED_HERO_NAVBAR = {
-  dashboard: LINK_DASHBOARD,
-  signout: LINK_SIGN_OUT,
+export const LINKS_AUTHENTICATED_HERO_NAVBAR: Record<
+  UserRole,
+  Record<string, ILink>
+> = {
+  [UserRole.ATHLETE]: { trainings: LINK_TRAININGS, signout: LINK_SIGN_OUT },
+  [UserRole.TRAINER]: { dashboard: LINK_DASHBOARD, signout: LINK_SIGN_OUT },
+  [UserRole.MANAGER]: { dashboard: LINK_DASHBOARD, signout: LINK_SIGN_OUT },
+  [UserRole.ADMIN]: { dashboard: LINK_DASHBOARD, signout: LINK_SIGN_OUT },
 };
 
 export const LINKS_NAVBAR = {
