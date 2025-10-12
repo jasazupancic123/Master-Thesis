@@ -1,7 +1,5 @@
 'use client';
 
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 import { MoreVert } from '@mui/icons-material';
 import {
   Box,
@@ -12,10 +10,9 @@ import {
   Typography,
 } from '@mui/material';
 import { useTheme } from '@mui/material';
-import { useState } from 'react';
 
-import ExerciseMembersInProgress from '../training-exercise-card/components/exercise-members-in-progress/exercise-members-in-progress';
-import TrainingExerciseCardContainer from '../training-exercise-card/components/training-exercise-card-container/training-exercise-card-container';
+import ExerciseMembersInProgress from '../../../training-exercise-card/components/exercise-members-in-progress/exercise-members-in-progress';
+import TrainingExerciseCardContainer from '../../../training-exercise-card/components/training-exercise-card-container/training-exercise-card-container';
 import { deleteSupersetExercise } from './state';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
 import type { Superset } from '@/controller/training/type/superset.type';
@@ -24,6 +21,8 @@ import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
+import useSupersetExerciseSortable from './hooks/use-sortable';
+import useSupersetExerciseMenu from './hooks/use-menu';
 
 interface SupersetExerciseProps {
   exercise: TrainingExercise;
@@ -60,42 +59,11 @@ export default function SupersetExercise(props: SupersetExerciseProps) {
 
   const { setTrainings } = useGroup();
 
-  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const { attributes, listeners, setNodeRef, disabledDrag, style } =
+    useSupersetExerciseSortable(exercise);
 
-  const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const open = Boolean(anchorEl);
-
-  const disabledDrag = !!(selectedExercise?.id === exercise.id);
-
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
-    id: exercise.id,
-    disabled: disabledDrag,
-  });
-
-  const style: React.CSSProperties = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    position: 'relative',
-    borderRadius: 4,
-    boxShadow: isDragging && !open ? '0 2px 8px rgba(0,0,0,0.2)' : undefined,
-    background: isDragging ? '#f0f0f0' : 'transparent',
-    zIndex: isDragging ? 1000 : 'auto',
-    // Hide the original while dragging so the overlay represents the item
-    opacity: isDragging ? 0 : 1,
-    touchAction: 'none' /* critical for mobile dragging */,
-    userSelect: 'none',
-    willChange: 'transform',
-  };
+  const { anchorEl, setAnchorEl, handleMenuClick, open } =
+    useSupersetExerciseMenu();
 
   if (!component || !training) return null;
 

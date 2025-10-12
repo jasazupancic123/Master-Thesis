@@ -14,8 +14,14 @@ import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { GroupProviderReturnType } from '@/store/group.provider';
-import { TrainerDayViewProviderReturnTypeDefined } from '@/store/trainer-day-view.provider';
+import {
+  TrainerDayViewProviderReturnType,
+  TrainerDayViewProviderReturnTypeDefined,
+} from '@/store/trainer-day-view.provider';
 import { NUM_MAX_SUPERSETS } from '@/components/trainer-group-day-view/constant/supersets.constant';
+import { DragEndEvent } from '@dnd-kit/core';
+import { UseSupersetExercisesReturnType } from '../hooks/use-exercises';
+import { UseSupersetsUtilsReturnType } from '../hooks/use-utils';
 
 export async function onDragEndExercise(
   input: {
