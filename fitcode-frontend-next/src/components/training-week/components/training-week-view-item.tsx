@@ -8,7 +8,7 @@ import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-import MyModal from '../../modal/modal';
+import MyModal from '../../../util/modal/modal';
 import TrainerWeekViewItem from './training-week-component-item';
 import type { GroupEvent } from '@/controller/group/type/group-event.type';
 import type { TrainingComponentWithTrainingId } from '@/controller/training/type/training-component.type';

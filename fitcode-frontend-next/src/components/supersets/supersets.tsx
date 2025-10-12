@@ -16,7 +16,7 @@ import { useTheme } from '@mui/material';
 import { useEffect, useMemo, useState } from 'react';
 
 import AddExerciseForm from '../add-exercise-form/add-exercise-form';
-import MyModal from '../modal/modal';
+import MyModal from '../../util/modal/modal';
 import Superset from '../superset/superset';
 import { NUM_MAX_SUPERSETS } from '../trainer-day-view/constant';
 import { onDragEndExercise as onRBDDragEnd } from '../trainer-day-view/state';

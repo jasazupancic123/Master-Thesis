@@ -1,4 +1,4 @@
-import MyModal from '@/components/modal/modal';
+import MyModal from '@/util/modal/modal';
 import useTrainingInProgressUtils from '../hooks/use-utils';
 import useTrainingInProgressUndoneExercises from '../hooks/use-undone-exercises';
 import UndoneExercisesList from '../components/undone-exercises-list/training-in-progress-undone-exercises-list';

@@ -5,11 +5,11 @@ import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 import React, { Fragment, useEffect, useState } from 'react';
 
-import CustomDivider from '../custom-divider/custom-divider';
+import CustomDivider from '../../util/custom-divider/custom-divider';
 import ExerciseChips from '../exercise-chips/exercise-chips';
-import HorizontalItemsList from '../horizontal-items-list/horizontal-items-list';
+import HorizontalItemsList from '../../util/horizontal-items-list/horizontal-items-list';
 import { DIVIDER_HEIGHT, MAX_WIDTH } from '../trainer-day-view/constant';
-import VerticalLinesBorders from '../vertical-lines-borders/vertical-lines-borders';
+import VerticalLinesBorders from '../../util/vertical-lines-borders/vertical-lines-borders';
 import { CommonService } from '@/common/service/common.service';
 import {
   handleAddTrainingComponents,

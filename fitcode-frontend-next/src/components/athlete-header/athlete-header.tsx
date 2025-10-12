@@ -5,7 +5,7 @@ import Box from '@mui/material/Box';
 import * as React from 'react';
 
 import BottomNavigation from '../bottom-navigation/bottom-navigation';
-import Logo from '../logo/logo';
+import Logo from '../../util/logo/logo';
 import AthleteSidebar from '../athlete-sidebar/athlete-sidebar';
 import { MAX_WIDTH } from '../trainer-day-view/constant';
 import { TrackingMethod } from '@/common/enum/tracking-method.enum';

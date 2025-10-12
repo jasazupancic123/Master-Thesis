@@ -11,7 +11,7 @@ import {
 import { useState } from 'react';
 
 import AttributeFilter from '../attribute-filter/attribute-filter';
-import { SearchBar } from '../search-bar/search-bar';
+import { SearchBar } from '../../util/search-bar/search-bar';
 import type { Pagination } from '@/common/type/paginate.type';
 import type { SetState } from '@/common/type/state.type';
 import type { Attribute } from '@/controller/attribute/type/attribute.type';

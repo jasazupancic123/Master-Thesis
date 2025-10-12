@@ -4,7 +4,7 @@ import dayjs from 'dayjs';
 import { Fragment, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
-import SelectInput from '../select-input/select-input';
+import SelectInput from '../../util/select-input/select-input';
 import TrainingWeek from '../training-week/training-week';
 import { CommonService } from '@/common/service/common.service';
 import type { Target } from '@/controller/target/type/target.type';

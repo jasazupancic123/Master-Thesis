@@ -52,7 +52,7 @@ export const TrainingProvider = (
 ) => {
   const { children, trainings, reports, refetchTraining } = props;
 
-  const STORED_TRAINING_IN_PROGRESS = 'fitcodeTrainingInProgress';
+  const STORED_TRAINING_IN_PROGRESS = 'blindoffTrainingInProgress';
   const [trainingInProgress, setTrainingInProgress] =
     useState<TrainingInProgress | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);

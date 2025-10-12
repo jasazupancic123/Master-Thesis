@@ -4,11 +4,11 @@ import weekOfYear from 'dayjs/plugin/weekOfYear';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 
-import CustomDivider from '../custom-divider/custom-divider';
+import CustomDivider from '../../util/custom-divider/custom-divider';
 import { MAX_WIDTH } from '../trainer-day-view/constant';
 import GroupTrainerDayViewHeader from '../trainer-group-day-view-header/trainer-group-day-view-header';
 import GroupTrainerDayViewTrainings from '../trainer-group-day-view-trainings/group-trainer-day-view-trainings';
-import VerticalLinesBorders from '../vertical-lines-borders/vertical-lines-borders';
+import VerticalLinesBorders from '../../util/vertical-lines-borders/vertical-lines-borders';
 import { setTrainingOnDayView } from './state';
 import { CommonService } from '@/common/service/common.service';
 import { handleApiRequest } from '@/common/type/state.type';

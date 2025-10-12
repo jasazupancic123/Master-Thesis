@@ -20,10 +20,10 @@ import Typography from '@mui/material/Typography';
 import dayjs from 'dayjs';
 import React, { Fragment, useEffect, useRef, useState } from 'react';
 
-import CustomDivider from '../custom-divider/custom-divider';
-import HorizontalItemsList from '../horizontal-items-list/horizontal-items-list';
+import CustomDivider from '../../util/custom-divider/custom-divider';
+import HorizontalItemsList from '../../util/horizontal-items-list/horizontal-items-list';
 import { DIVIDER_HEIGHT, MAX_WIDTH } from '../trainer-day-view/constant';
-import VerticalLinesBorders from '../vertical-lines-borders/vertical-lines-borders';
+import VerticalLinesBorders from '../../util/vertical-lines-borders/vertical-lines-borders';
 import DraggableSelect from './draggable-select';
 import DroppableSlot from './droppable-slot';
 import { customScrollBarStyle, getAmPmItems, onDragEndAddEvent } from './state';

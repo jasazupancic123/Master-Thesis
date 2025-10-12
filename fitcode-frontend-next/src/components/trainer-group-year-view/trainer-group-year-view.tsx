@@ -5,7 +5,7 @@ import { useTheme } from '@mui/material/styles';
 import React, { useState } from 'react';
 
 import { MAX_WIDTH } from '../trainer-day-view/constant';
-import VerticalLinesBorders from '../vertical-lines-borders/vertical-lines-borders';
+import VerticalLinesBorders from '../../util/vertical-lines-borders/vertical-lines-borders';
 import MultiCycleSliderLayout from '@/components/multi-cycle-slider-layout/multi-cycle-slider.layout';
 import CycleComponents from '@/components/training-year-cycle-components/training-year-cycle-components';
 import type { Cycle } from '@/controller/group/type/cycle.type';

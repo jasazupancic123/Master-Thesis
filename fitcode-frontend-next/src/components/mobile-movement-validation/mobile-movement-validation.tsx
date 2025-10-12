@@ -7,7 +7,7 @@ import dayjs from 'dayjs';
 import { useEffect, useRef, useState } from 'react';
 
 import AthleteTrainingExerciseSets from '../athlete-training-exercise-sets/athlete-training-exercise-sets';
-import LoadingOverlay from '../loading-overlay/loading-overlay';
+import LoadingOverlay from '../../util/loading-overlay/loading-overlay';
 import { finishSet } from '../training-in-progress/components/training-in-progress-exercise-card/actions/actions-exercise-set';
 import TrainingInProgressTempoChart from '../../common/util/tempo-chart';
 import FpsText from './components/fps-text';

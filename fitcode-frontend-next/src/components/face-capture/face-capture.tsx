@@ -17,7 +17,7 @@ import React, {
 import toast from 'react-hot-toast';
 
 import FaceCapturePreviewsModal from '../face-capture-previews-modal/face-capture-previews-modal';
-import MyModal from '../modal/modal';
+import MyModal from '../../util/modal/modal';
 import {
   computeBBoxFromLandmarks,
   createDetector,

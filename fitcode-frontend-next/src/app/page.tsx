@@ -8,11 +8,11 @@ import { theme } from '@/app/style';
 import { LINKS_HERO_NAVBAR } from '@/common/constant/navigation.constant';
 import { useActiveSection } from '@/common/hooks/use-active-section.hook';
 import type { ChildrenProps } from '@/common/type/props.type';
-import AboutUs from '@/components/about-us/about-us';
-import ContactUs from '@/components/contact-us/contact-us';
-import Hero from '@/components/hero/hero';
+import AboutUs from '@/components/landing-page/about-us/about-us';
+import ContactUs from '@/components/landing-page/contact-us/contact-us';
 import HeroNavbar from '@/components/hero-navbar/hero-navbar';
-import Technology from '@/components/technology/technology';
+import Technology from '@/components/landing-page/technology/technology';
+import Hero from '@/components/landing-page/hero/hero';
 
 // Convert "64px" -> 64
 const toPx = (v: string | number) =>

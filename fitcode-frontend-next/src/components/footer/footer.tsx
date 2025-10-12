@@ -7,7 +7,7 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import Link from 'next/link';
 
-import Logo from '../logo/logo';
+import Logo from '../../util/logo/logo';
 import { SITE_MAIL } from '@/common/constant/browser.constant';
 import Copyright from '@/components/copyright/copyright';
 

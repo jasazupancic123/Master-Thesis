@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-import Alert from '../components/alert/alert';
+import Alert from '../util/alert/alert';
 import {
   getCachedWellness,
   setCachedWellness,

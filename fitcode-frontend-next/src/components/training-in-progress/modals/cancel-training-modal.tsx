@@ -1,4 +1,4 @@
-import MyModal from '@/components/modal/modal';
+import MyModal from '@/util/modal/modal';
 import useTrainingInProgressUtils from '../hooks/use-utils';
 import { Typography } from '@mui/material';
 

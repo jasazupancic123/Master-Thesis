@@ -26,9 +26,9 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
-import LoadingOverlay from '../loading-overlay/loading-overlay';
-import Logo from '../logo/logo';
-import MyModal from '../modal/modal';
+import LoadingOverlay from '../../util/loading-overlay/loading-overlay';
+import Logo from '../../util/logo/logo';
+import MyModal from '../../util/modal/modal';
 import ProfileHeaderMenu from '../profile-header-menu/profile-header-menu';
 import { MAX_WIDTH } from '../trainer-day-view/constant';
 import { handleUpdateMultipleTrainings } from '../trainer-group-day-view/state';
@@ -42,7 +42,7 @@ import {
 } from '@/common/constant/navigation.constant';
 import type { GroupDateFilter } from '@/common/type/filter.type';
 import type { SetState } from '@/common/type/state.type';
-import FilterButton from '@/components/filter-button/filter-button';
+import FilterButton from '@/util/filter-button/filter-button';
 import { GroupController } from '@/controller/group/group.controller';
 import { UserRole } from '@/controller/profile/enum/user-role.enum';
 import { TrainingController } from '@/controller/training/training.controller';

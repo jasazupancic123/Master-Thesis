@@ -14,7 +14,7 @@ import { handleApiRequest } from '@/common/type/state.type';
 import AddGroupModal from '@/components/dashboard-add-group-modal/dashboard-add-group-modal';
 import DashboardGroups from '@/components/dashboard-groups/dashboard-groups';
 import RegisterUsersDashboard from '@/components/dashboard-register-users-modal/dashboard-register-users-modal';
-import MyModal from '@/components/modal/modal';
+import MyModal from '@/util/modal/modal';
 import type { AuthUser } from '@/controller/auth/type/user.type';
 import { GroupController } from '@/controller/group/group.controller';
 import { GroupService } from '@/controller/group/group.service';

@@ -2,7 +2,7 @@ import { Box, Button, TextField, Typography } from '@mui/material';
 import { useState } from 'react';
 
 import { AddMembersModal } from '../add-members-modal/add-members-modal';
-import MyModal from '../modal/modal';
+import MyModal from '../../util/modal/modal';
 import type { SetState } from '@/common/type/state.type';
 import type { AuthUser } from '@/controller/auth/type/user.type';
 import { useDashboard } from '@/store/dashboard.provider';

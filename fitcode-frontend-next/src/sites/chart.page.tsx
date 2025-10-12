@@ -5,7 +5,7 @@ import { useTheme } from '@mui/material';
 import { useState } from 'react';
 import { Line, LineChart, ResponsiveContainer, Tooltip } from 'recharts';
 
-import SelectInput from '@/components/select-input/select-input';
+import SelectInput from '@/util/select-input/select-input';
 import type { Component } from '@/controller/component/type/component.type';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
 import { useMain } from '@/store/main.provider';

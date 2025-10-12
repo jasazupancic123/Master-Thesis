@@ -20,8 +20,8 @@ import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
 import type { Institution } from '@/controller/institution/type/institution.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
-import EditableTextField from '@/util/editable-text-field';
-import ImageUpload from '@/util/image-upload';
+import EditableTextField from '@/util/editable-text-field/editable-text-field';
+import ImageUpload from '@/util/image-upload/image-upload';
 
 interface InstitutionModalProps {
   open: boolean;

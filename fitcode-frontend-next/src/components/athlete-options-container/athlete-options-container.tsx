@@ -2,7 +2,7 @@
 
 import { Box, Typography, useTheme } from '@mui/material';
 
-import SimpleCircle from '../simple-circle/simple-circle';
+import SimpleCircle from '../../util/simple-circle/simple-circle';
 import TrapezoidTitle from './trapezoid-title';
 
 interface AthleteOptionsContainerProps {

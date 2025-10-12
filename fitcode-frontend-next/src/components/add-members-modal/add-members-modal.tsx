@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
-import { SearchBar } from '../search-bar/search-bar';
+import { SearchBar } from '../../util/search-bar/search-bar';
 import { theme } from '@/app/style';
 import { handleApiRequest, type SetState } from '@/common/type/state.type';
 import type { AuthUser } from '@/controller/auth/type/user.type';
