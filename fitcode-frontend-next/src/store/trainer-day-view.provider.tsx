@@ -367,6 +367,13 @@ export function TrainerDayViewProvider(
     if (!component) setSelectedSubgroup(null);
   }, [component]);
 
+  useEffect(() => {
+    setPagination((prev) => ({
+      ...prev,
+      pageSize: screenSize.isUltraSmall ? 3 : screenSize.isMobile ? 6 : 10,
+    }));
+  }, [window.innerWidth]);
+
   const setTrainingOnDayView = (
     selectedPeriod: {
       key: Date;

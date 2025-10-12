@@ -9,8 +9,7 @@ import type { Subgroup } from './type/subgroup.type';
 import type { Superset } from './type/superset.type';
 import type { TrainingComponent } from './type/training-component.type';
 import type { TrainingExercise } from './type/training-exercise.type';
-import { removeExerciseFromSuperset } from '@/components/superset-exercise/state';
-import { updateSupersets } from '@/components/supersets/state';
+import { removeExerciseFromSuperset } from '@/components/supersets/components/superset-exercise/state';
 
 import { removeSelectedExercisesFromSupersets } from '@/components/training-component/training-component-card/actions/actions-selected-exercises';
 import { onMainSetChange } from '@/components/training-component/training-component-header-menu/actions/actions-main-set';
@@ -25,6 +24,7 @@ import {
   onAddExerciseDrop,
   onDragEndExerciseToExistingSuperset,
 } from '@/components/supersets/actions/actions-drag-exercise';
+import { updateSupersets } from '@/components/supersets/actions/actions-supersets';
 
 export class CustomWorkloadsSubgroupsService {
   // when exercise is dropped on 'Add/drop exercise' area
