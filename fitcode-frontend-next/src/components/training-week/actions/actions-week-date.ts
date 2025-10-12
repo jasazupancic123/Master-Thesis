@@ -6,16 +6,16 @@ import toast from 'react-hot-toast';
 
 import { COLOR } from '@/common/constant/color.constant';
 import { CommonService } from '@/common/service/common.service';
-import type { SetState, SetStateNullable } from '@/common/type/state.type';
+import { handleApiRequest, type SetState } from '@/common/type/state.type';
 import type { Component } from '@/controller/component/type/component.type';
 import type { Target } from '@/controller/target/type/target.type';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
 import type { TrainingController } from '@/controller/training/training.controller';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { handleCreateTraining } from '@/components/trainer-cycle-view/state';
 import { GroupProviderReturnType } from '@/store/group.provider';
 import { MainProviderReturnType } from '@/store/main.provider';
+import { TrainingService } from '@/controller/training/training.service';
 
 export async function handleClickDateCell(
   controller: TrainingController,
@@ -241,5 +241,83 @@ function handleAddTraining(
       })),
     },
     context
+  );
+}
+
+async function handleCreateTraining(
+  controller: TrainingController,
+  input: {
+    router: AppRouterInstance;
+    date: Dayjs;
+    from: Date;
+    period: 'AM' | 'PM';
+    selectedComponents: TrainingComponent[];
+  },
+  context: {
+    useGroup: GroupProviderReturnType;
+    useMain: MainProviderReturnType;
+  }
+) {
+  const { router, date, from, period, selectedComponents } = input;
+
+  const { useGroup, useMain } = context;
+
+  const { components, exercises, methods } = useMain;
+
+  const { group, cycle, trainings, setTrainings, setCycle } = useGroup;
+
+  if (!selectedComponents.length) return; // toast.error('Select at least one component to add');
+
+  if (
+    !CommonService.instance.date.isBetween(
+      date,
+      dayjs(cycle!.from),
+      dayjs(cycle!.to)
+    )
+  )
+    return toast.error('Selected date is not within the cycle');
+
+  // get number of trainings in the selected period
+  const periodTrainings = trainings.filter((training) => {
+    const trainingDate = dayjs(training.from);
+    const start = trainingDate.startOf('day');
+    const end = dayjs(training.to).endOf('day');
+
+    // check if training falls within the given day
+    const isBetween = CommonService.instance.date.isBetween(date, start, end);
+    if (!isBetween) return false;
+
+    // apply AM/PM filtering
+    if (period === 'AM') return trainingDate.hour() < 12; // before noon
+    if (period === 'PM') return trainingDate.hour() >= 12; // noon or later
+
+    return false;
+  });
+
+  if (periodTrainings.length >= 1)
+    return toast.error('You can only create 1 trainings per period');
+
+  handleApiRequest(
+    router,
+    () =>
+      controller.create({
+        groupId: group.id,
+        cycleId: cycle!.id,
+        components: selectedComponents,
+        membersIds: [],
+        from,
+      }),
+    (training) => {
+      TrainingService.mapData(training, {
+        components,
+        exercises,
+        methods,
+      });
+
+      setTrainings((prev) => [...prev, training]);
+      toast.success('Training created successfully');
+    },
+    undefined,
+    'Failed to create training'
   );
 }

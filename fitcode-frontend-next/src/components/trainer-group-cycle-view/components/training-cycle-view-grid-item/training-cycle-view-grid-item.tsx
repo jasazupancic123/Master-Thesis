@@ -1,16 +1,16 @@
 import type { SvgIconComponent } from '@mui/icons-material';
 import { Tooltip, Typography } from '@mui/material';
 import Box from '@mui/material/Box';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import toast from 'react-hot-toast';
 
-import type { SvgC } from '../muscle-map-with-tooltip/muscle-map-with-tooltip';
-import type { TrainingCycleViewGridItemProps } from '../training-cycle-view-week/type';
+import type { SvgC } from '../../../muscle-map-with-tooltip/muscle-map-with-tooltip';
+import type { TrainingCycleViewGridItemProps } from '../../type/type';
 import { CommonService } from '@/common/service/common.service';
 import { getComponentIcon } from '@/common/service/util/icons.util';
-import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
+import useTrainingCycleComponents from './hooks/use-components';
 
 const commonService = CommonService.instance;
 
@@ -33,84 +33,14 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
   const { cycle } = useGroup();
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isWrapped, setIsWrapped] = useState(false);
-  const [components, setComponents] = useState<TrainingComponent[]>(
-    (componentCalendarView || periodizationView) &&
-      trainingComponent &&
-      trainingComponent.component
-      ? (training.components
-          .map((c) => {
-            if (
-              c.component &&
-              c.component.id === trainingComponent.component!.id
-            )
-              return c;
-            else return null;
-          })
-          .filter((c) => c !== null) as TrainingComponent[])
-      : training.components
-  );
 
-  useEffect(() => {
-    if (
-      (componentCalendarView || periodizationView) &&
-      trainingComponent &&
-      trainingComponent.component
-    ) {
-      const newComponents = training.components
-        .map((c) => {
-          if (c.component && c.component.id === trainingComponent.component!.id)
-            return c;
-          else return null;
-        })
-        .filter((c) => c !== null) as TrainingComponent[];
-      setComponents(newComponents);
-    } else {
-      setComponents(training.components);
-    }
-  }, []);
-
-  useEffect(() => {
-    const checkWrapping = () => {
-      if (!containerRef.current) return;
-
-      const children = Array.from(containerRef.current.children);
-      if (children.length < 2) {
-        setIsWrapped(false);
-        return;
-      }
-
-      // Check if any element is positioned below the first one
-      const firstRowTop = (children[0] as HTMLElement).offsetTop;
-      const isMultiRow = children.some(
-        (child) => (child as HTMLElement).offsetTop > firstRowTop
-      );
-
-      setIsWrapped(isMultiRow);
-    };
-
-    // Initial check & event listener for resizes
-
-    setComponents(
-      (componentCalendarView || periodizationView) &&
-        trainingComponent &&
-        trainingComponent.component
-        ? (training.components
-            .map((c) => {
-              if (
-                c.component &&
-                c.component.id === trainingComponent.component!.id
-              )
-                return c;
-              else return null;
-            })
-            .filter((c) => c !== null) as TrainingComponent[])
-        : training.components
-    );
-    checkWrapping();
-    window.addEventListener('resize', checkWrapping);
-    return () => window.removeEventListener('resize', checkWrapping);
-  }, [training.components, components.length]);
+  const { isWrapped, components } = useTrainingCycleComponents({
+    training,
+    trainingComponent,
+    componentCalendarView,
+    periodizationView,
+    containerRef,
+  });
 
   return (
     <Box>
