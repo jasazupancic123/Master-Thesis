@@ -2,7 +2,7 @@ import { Box, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import { Fragment } from 'react';
 
-import SelectInput from '../select-input/select-input';
+import SelectInput from '../../util/select-input/select-input';
 import TrainingYearCycleComponentSelectItem from './training-year-cycle-component-select-item';
 import {
   COOLDOWN_ID,

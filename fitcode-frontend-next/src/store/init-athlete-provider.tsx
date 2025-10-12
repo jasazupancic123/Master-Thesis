@@ -7,7 +7,7 @@ import { SESSION_COOKIE_NAME } from '@/common/constant/auth.constant';
 import { LOADING_ANIMATION_MIN_DURATION_MS } from '@/common/constant/loading.constant';
 import { isAthlete } from '@/common/firebase/firebase-auth.util';
 import type { ChildrenProps } from '@/common/type/props.type';
-import Alert from '@/components/alert/alert';
+import Alert from '@/util/alert/alert';
 import { Controller } from '@/controller/controller';
 import { TrainingService } from '@/controller/training/training.service';
 

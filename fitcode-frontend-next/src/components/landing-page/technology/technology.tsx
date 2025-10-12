@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { useRef } from 'react';
 
 import IndexPageTitleText from '../hero/index-page-title-text';
-import Logo from '../logo/logo';
+import Logo from '../../../util/logo/logo';
 import { HERO_NAVBAR_HEIGHT } from '@/app/state';
 import { theme } from '@/app/style';
 import { useScreenSize } from '@/store/screen-size.provider';

@@ -1,5 +1,5 @@
 import { SetState } from '@/common/type/state.type';
-import MyModal from '@/components/modal/modal';
+import MyModal from '@/util/modal/modal';
 import useTrainingInProgressUtils from '@/components/training-in-progress/hooks/use-utils';
 import { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';

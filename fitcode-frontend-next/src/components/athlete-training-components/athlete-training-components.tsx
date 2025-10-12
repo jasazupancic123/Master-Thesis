@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
 import AthleteSuperset from '../athlete-superset/athlete-superset';
-import MyModal from '../modal/modal';
+import MyModal from '../../util/modal/modal';
 import { getComponentIcon } from '@/common/service/util/icons.util';
 import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
 import type { ExerciseSetTracking } from '@/common/type/exercise-set-tracking-state.type';

@@ -14,7 +14,7 @@ import { UserRole } from '@/controller/profile/enum/user-role.enum';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import FileUpload from '@/util/file-upload';
+import FileUpload from '@/util/file-upload/file-upload';
 
 const firebaseStorage = FirebaseStorageUtil.Instance;
 const firebaseFunctions = FirebaseFunctionsUtil.Instance;

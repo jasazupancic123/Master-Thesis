@@ -21,7 +21,7 @@ import toast from 'react-hot-toast';
 import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
 import type { AuthUser, UpdateUser } from '@/controller/auth/type/user.type';
 import { UserRole } from '@/controller/profile/enum/user-role.enum';
-import ImageUpload from '@/util/image-upload';
+import ImageUpload from '@/util/image-upload/image-upload';
 
 interface UsersDataGridProps {
   users: AuthUser[];

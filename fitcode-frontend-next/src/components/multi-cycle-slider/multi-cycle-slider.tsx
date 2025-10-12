@@ -10,7 +10,7 @@ import toast from 'react-hot-toast';
 import { Range } from 'react-range';
 
 import EditCycleForm from '../edit-cycle-form/edit-cycle-form';
-import MyModal from '../modal/modal';
+import MyModal from '../../util/modal/modal';
 import {
   handleChange,
   handleDrag,

@@ -4,7 +4,7 @@ import { useTheme } from '@mui/material';
 import toast from 'react-hot-toast';
 
 import { ExerciseParam } from '../exercise-param/exercise-param';
-import LeftRightExerciseText from '../left-right-exercise-text/left-right-exercise-text';
+import LeftRightExerciseText from '../../util/left-right-exercise-text/left-right-exercise-text';
 import type { ExerciseSetTracking } from '@/common/type/exercise-set-tracking-state.type';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import { ParamType } from '@/controller/component/enum/param.enum';

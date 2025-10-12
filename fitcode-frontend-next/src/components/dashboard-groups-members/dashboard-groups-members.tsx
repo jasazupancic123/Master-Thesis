@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { AddMembersModal } from '../add-members-modal/add-members-modal';
-import CustomDivider from '../custom-divider/custom-divider';
+import CustomDivider from '../../util/custom-divider/custom-divider';
 import DashboardEditAthleteModal from '../dashboard-edit-athlete-modal/dashboard-edit-athlete-modal';
 import MyModal from '../modal/modal';
 import { SearchBar } from '../search-bar/search-bar';

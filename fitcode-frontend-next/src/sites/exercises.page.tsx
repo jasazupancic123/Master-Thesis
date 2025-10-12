@@ -35,9 +35,9 @@ import ExerciseChips from '@/components/exercise-chips/exercise-chips';
 import ExerciseModal from '@/components/exercise-modal/exercise-modal';
 import ExerciseFilter from '@/components/exercises-list/exercise-filter';
 import ExercisesList from '@/components/exercises-list/exercises-list';
-import FileUpload from '@/util/file-upload';
-import MyModal from '@/components/modal/modal';
-import { SearchBar } from '@/components/search-bar/search-bar';
+import FileUpload from '@/util/file-upload/file-upload';
+import MyModal from '@/util/modal/modal';
+import { SearchBar } from '@/util/search-bar/search-bar';
 import { ComponentService } from '@/controller/component/component.service';
 import type { Component } from '@/controller/component/type/component.type';
 import type {

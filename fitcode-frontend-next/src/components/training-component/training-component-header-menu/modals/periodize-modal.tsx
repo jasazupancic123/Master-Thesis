@@ -1,4 +1,4 @@
-import MyModal from '@/components/modal/modal';
+import MyModal from '@/util/modal/modal';
 import { handleApiRequest, SetState } from '@/common/type/state.type';
 import { TrainingController } from '@/controller/training/training.controller';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';

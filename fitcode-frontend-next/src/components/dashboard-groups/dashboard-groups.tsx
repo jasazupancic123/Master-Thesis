@@ -6,8 +6,8 @@ import { Box } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 
 import DashboardGroupsMembers from '../dashboard-groups-members/dashboard-groups-members';
-import HorizontalItemsList from '../horizontal-items-list/horizontal-items-list';
-import SimpleCircle from '../simple-circle/simple-circle';
+import HorizontalItemsList from '../../util/horizontal-items-list/horizontal-items-list';
+import SimpleCircle from '../../util/simple-circle/simple-circle';
 import { MAX_WIDTH } from '../trainer-day-view/constant';
 import { ADD_GROUP } from '@/common/constant/add-group.constant';
 import { isManager } from '@/common/firebase/firebase-auth.util';
@@ -18,7 +18,7 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import EditableTextField from '@/util/editable-text-field';
+import EditableTextField from '@/util/editable-text-field/editable-text-field';
 
 interface DashboardGroupsProps {
   modal: {

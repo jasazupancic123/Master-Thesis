@@ -12,7 +12,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
-import MyModal from '../modal/modal';
+import MyModal from '../../util/modal/modal';
 import { BACKEND_API_BASE_URL } from '@/common/constant/api.constant';
 import { FirebaseFunctionsUtil } from '@/common/firebase/firebase-functions.util';
 import { handleApiRequest } from '@/common/type/state.type';

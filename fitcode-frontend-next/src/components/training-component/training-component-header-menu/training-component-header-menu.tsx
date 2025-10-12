@@ -1,6 +1,6 @@
 import { Box, Tooltip } from '@mui/material';
 
-import SelectInput from '../../select-input/select-input';
+import SelectInput from '../../../util/select-input/select-input';
 import { AFTER_SETS } from '../../trainer-day-view/constant';
 import {
   COOLDOWN_ID,

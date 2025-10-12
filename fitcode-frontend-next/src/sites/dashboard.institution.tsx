@@ -19,10 +19,10 @@ import { isManager } from '@/common/firebase/firebase-auth.util';
 import { handleApiRequest } from '@/common/type/state.type';
 import DashboardEditAthleteModal from '@/components/dashboard-edit-athlete-modal/dashboard-edit-athlete-modal';
 import RegisterUsersDashboard from '@/components/dashboard-register-users-modal/dashboard-register-users-modal';
-import HorizontalItemsList from '@/components/horizontal-items-list/horizontal-items-list';
-import MyModal from '@/components/modal/modal';
-import { SearchBar } from '@/components/search-bar/search-bar';
-import SimpleCircle from '@/components/simple-circle/simple-circle';
+import HorizontalItemsList from '@/util/horizontal-items-list/horizontal-items-list';
+import MyModal from '@/util/modal/modal';
+import { SearchBar } from '@/util/search-bar/search-bar';
+import SimpleCircle from '@/util/simple-circle/simple-circle';
 import { MAX_WIDTH } from '@/components/trainer-day-view/constant';
 import type { AuthUser } from '@/controller/auth/type/user.type';
 import { InstitutionController } from '@/controller/institution/institution.controller';
@@ -35,7 +35,7 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import FileUpload from '@/util/file-upload';
+import FileUpload from '@/util/file-upload/file-upload';
 
 export default function DashboardInstitutionPage() {
   const screenSize = useScreenSize();

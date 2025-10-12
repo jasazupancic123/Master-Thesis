@@ -13,7 +13,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { updateUserProfile } from '../dashboard-groups-members/state';
-import MyModal from '../modal/modal';
+import MyModal from '../../util/modal/modal';
 import { SPORTS } from '@/common/constant/sport.constant';
 import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
 import { type SetState } from '@/common/type/state.type';
@@ -24,7 +24,7 @@ import type { Profile } from '@/controller/profile/type/user.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import FileUpload from '@/util/file-upload';
+import FileUpload from '@/util/file-upload/file-upload';
 
 const firebaseStorage = FirebaseStorageUtil.Instance;
 

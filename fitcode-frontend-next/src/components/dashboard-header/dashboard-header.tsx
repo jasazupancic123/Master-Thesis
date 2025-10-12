@@ -23,9 +23,9 @@ import toast from 'react-hot-toast';
 
 import DashboardMenuMobile from '../dashboard-menu-mobile/dashboard-menu-mobile';
 import EditInstitutionModal from '../edit-institution-modal/edit-institution-modal';
-import FilterButton from '../filter-button/filter-button';
-import Logo from '../logo/logo';
-import MyModal from '../modal/modal';
+import FilterButton from '../../util/filter-button/filter-button';
+import Logo from '../../util/logo/logo';
+import MyModal from '../../util/modal/modal';
 import ProfileHeaderMenu from '../profile-header-menu/profile-header-menu';
 import { MAX_WIDTH } from '../trainer-day-view/constant';
 import { BACKEND_API_BASE_URL } from '@/common/constant/api.constant';

@@ -6,7 +6,7 @@ import weekOfYear from 'dayjs/plugin/weekOfYear';
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
-import HorizontalItemsList from '../horizontal-items-list/horizontal-items-list';
+import HorizontalItemsList from '../../util/horizontal-items-list/horizontal-items-list';
 import SelectedMemberReport from '../selected-member-report/selected-member-report';
 import SelectedMemberWelness from '../selected-member-welness/selected-member-welness';
 import { DIVIDER_HEIGHT, MAX_WIDTH } from '../trainer-day-view/constant';

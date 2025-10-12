@@ -8,7 +8,7 @@ import dayOfYear from 'dayjs/plugin/dayOfYear';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
-import HorizontalItemsList from '../horizontal-items-list/horizontal-items-list';
+import HorizontalItemsList from '../../util/horizontal-items-list/horizontal-items-list';
 import MobileDoubleTextItems from '../mobile-double-text-items/mobile-double-text-items';
 import MultiCycleSlider from '../multi-cycle-slider/multi-cycle-slider';
 import { handleAddCycle } from './state';
