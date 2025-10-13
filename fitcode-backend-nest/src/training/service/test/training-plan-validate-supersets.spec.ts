@@ -202,7 +202,7 @@ describe('validateSupersets', () => {
           exercises: [
             generateTrainingExercise({
               id: 'e1',
-              sets: [generateExerciseSet(1, ['reps', 'loadKg'])],
+              sets: [generateExerciseSet(1, { reps: 10, loadKg: 50 })],
             }),
           ],
         }),

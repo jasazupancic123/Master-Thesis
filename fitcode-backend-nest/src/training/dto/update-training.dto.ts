@@ -7,7 +7,6 @@ import { Subgroup } from '../entity/subgroup.entity';
 import { Training } from '../entity/training.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
-import { Workload } from '../entity/workload.entity';
 import {
   UpdateSubgroup,
   UpdateSuperset,
@@ -76,10 +75,4 @@ export class UpdateTrainingDto
   @ApiProperty({ type: () => UpdateTrainingComponentDto, isArray: true })
   @Expose()
   components: UpdateTrainingComponentDto[];
-
-  @ValidateNested({ each: true })
-  @Type(() => Workload)
-  @ApiProperty({ type: () => Workload, isArray: true })
-  @Expose()
-  workloads: Workload[]; // custom workloads
 }

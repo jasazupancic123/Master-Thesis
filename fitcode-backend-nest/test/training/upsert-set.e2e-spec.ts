@@ -19,7 +19,7 @@ import {
   generateTrainingStub,
 } from '@src/training/mock/training.stub';
 
-describe('Complete Next Set (e2e)', () => {
+describe('Upsert Set (e2e)', () => {
   let testApp: TestApp;
   let db: TestDbService;
 
@@ -150,8 +150,7 @@ describe('Complete Next Set (e2e)', () => {
       1,
       {
         userId: global.athlete.uid,
-        from: new Date(),
-        to: new Date(),
+        timestamp: new Date(),
         reps: 1,
         recTime: 0,
       },
@@ -171,8 +170,7 @@ describe('Complete Next Set (e2e)', () => {
       1,
       {
         userId: global.athlete.uid,
-        from: new Date(),
-        to: new Date(),
+        timestamp: new Date(),
         reps: 1,
         recTime: 0,
       },
@@ -192,8 +190,7 @@ describe('Complete Next Set (e2e)', () => {
       1,
       {
         userId: global.athlete.uid,
-        from: new Date(),
-        to: new Date(),
+        timestamp: new Date(),
         reps: 1,
         recTime: 0,
       },
@@ -213,8 +210,7 @@ describe('Complete Next Set (e2e)', () => {
       10,
       {
         userId: global.athlete.uid,
-        from: new Date(),
-        to: new Date(),
+        timestamp: new Date(),
         recTime: 0,
         reps: 1,
       },
@@ -234,8 +230,7 @@ describe('Complete Next Set (e2e)', () => {
       1,
       {
         userId: global.athlete.uid,
-        from: new Date(),
-        to: new Date(),
+        timestamp: new Date(),
         reps: 6,
         recTime: 0,
       },
@@ -249,7 +244,9 @@ describe('Complete Next Set (e2e)', () => {
     expect(result.exerciseId).toBe('squat');
     expect(result.supersetIndex).toBe(0);
     expect(result.setNumber).toBe(1);
-    expect(result.volWork1ValueL).toBe(6);
+    expect(result.reps).toBe(6);
+
+    await db.workloads.deleteAll(trainingId);
   });
 
   it('should successfully update a set', async () => {
@@ -262,11 +259,9 @@ describe('Complete Next Set (e2e)', () => {
         setNumber: 1,
         userId: global.athlete.uid,
         status: SetStatus.COMPLETED,
-        volWork1ValueL: 6,
-        reps: 1,
-        pReps: 1,
-        recTime: 0,
-        pRecTime: 0,
+        reps: 6,
+        recTime: 60,
+        prescribed: { reps: 1, recTime: 60 },
       },
     ]);
 
@@ -282,8 +277,7 @@ describe('Complete Next Set (e2e)', () => {
       1,
       {
         userId: global.athlete.uid,
-        from: new Date(),
-        to: new Date(),
+        timestamp: new Date(),
         reps: 6,
         recTime: 0,
       },
@@ -291,7 +285,7 @@ describe('Complete Next Set (e2e)', () => {
 
     expect(res.status).toBe(201);
     const result = res.body as Workload;
-    expect(result.id).toBe(workloadsBefore[0].id);
+    expect(result.id).toContain(workloadsBefore[0].id);
 
     const workloadsAfter = await db.workloads.getAll(trainingId);
     expect(workloadsAfter).toHaveLength(1);

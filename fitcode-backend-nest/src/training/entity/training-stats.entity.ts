@@ -77,7 +77,7 @@ export class TrainingStats {
   @Min(0)
   @ApiProperty()
   @Expose()
-  totalActiveTime: number; // time when executing the training (in seconds) - sets * reps/dist/time * tempo (sum), for example 3 * 12 * 1:0:1 tempo (2s) = 72s @IsNumber()
+  totalTit: number; // time when executing the training (in seconds) - sets * reps/dist/time * tempo (sum), for example 3 * 12 * 1:0:1 tempo (2s) = 72s @IsNumber()
 
   @IsNumber()
   @Min(0)

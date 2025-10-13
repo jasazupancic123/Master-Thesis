@@ -58,9 +58,6 @@ describe('Training Report (e2e)', () => {
       generateExerciseStub({ name: 'deadlift', componentIds: ['c1'] }),
     ]);
 
-    const opt1: (keyof ExerciseSet)[] = ['reps', 'loadKg', 'recTime'];
-    const opt2: (keyof ExerciseSet)[] = ['dist', 'tempo', 'eff'];
-
     const trainingId = await db.trainings.save(
       generateTrainingStub({
         institutionId: institution.id,
@@ -77,13 +74,31 @@ describe('Training Report (e2e)', () => {
                 exercises: [
                   generateTrainingExercise({
                     id: 'squat',
-                    sets: [generateExerciseSet(1, opt1)], // 12 reps, 20 kg, 60 second recovery
+                    sets: [
+                      generateExerciseSet(1, {
+                        reps: 10,
+                        loadKg: 50,
+                        recTime: 60,
+                      }),
+                    ],
                   }),
                   generateTrainingExercise({
                     id: 'bench',
                     sets: [
-                      generateExerciseSet(1, opt1, { isUnilateral: true }), // 12 reps, 20 kg, 60 second recovery
-                      generateExerciseSet(2, opt1, { isUnilateral: true }), // 12 reps, 20 kg, 60 second recovery
+                      generateExerciseSet(1, {
+                        reps: 10,
+                        repsR: 10,
+                        loadKg: 50,
+                        loadKgR: 50,
+                        recTime: 60,
+                      }),
+                      generateExerciseSet(2, {
+                        reps: 10,
+                        repsR: 10,
+                        loadKg: 50,
+                        loadKgR: 50,
+                        recTime: 60,
+                      }),
                     ],
                   }),
                 ],
@@ -93,16 +108,39 @@ describe('Training Report (e2e)', () => {
                   generateTrainingExercise({
                     id: 'deadlift',
                     sets: [
-                      generateExerciseSet(1, opt2), // 1 rep, 30 m dist, 2010 tempo, 0 second recovery
-                      generateExerciseSet(2, opt2), // 1 rep, 30 m dist, 2010 tempo, 0 second recovery
-                      generateExerciseSet(3, opt2), // 1 rep, 30 m dist, 2010 tempo, 0 second recovery
+                      generateExerciseSet(1, {
+                        reps: 1,
+                        dist: 30,
+                        tempo: '2:0:1:0',
+                        recTime: 0,
+                      }),
+                      generateExerciseSet(2, {
+                        reps: 1,
+                        dist: 30,
+                        tempo: '2:0:1:0',
+                        recTime: 0,
+                      }),
+                      generateExerciseSet(3, {
+                        reps: 1,
+                        dist: 30,
+                        tempo: '2:0:1:0',
+                        recTime: 0,
+                      }),
                     ],
                   }),
                   generateTrainingExercise({
                     id: 'squat',
                     sets: [
-                      generateExerciseSet(1, opt1), // 10 reps, 50 kg, 60 second recovery
-                      generateExerciseSet(2, opt1), // 10 reps, 50 kg, 60 second recovery
+                      generateExerciseSet(1, {
+                        reps: 10,
+                        loadKg: 50,
+                        recTime: 60,
+                      }),
+                      generateExerciseSet(2, {
+                        reps: 10,
+                        loadKg: 50,
+                        recTime: 60,
+                      }),
                     ],
                   }),
                 ],
@@ -117,9 +155,21 @@ describe('Training Report (e2e)', () => {
                   generateTrainingExercise({
                     id: 'squat',
                     sets: [
-                      generateExerciseSet(1, opt1), // 10 reps, 50 kg, 60 second recovery
-                      generateExerciseSet(2, opt1), // 10 reps, 50 kg, 60 second recovery
-                      generateExerciseSet(3, opt1), // 10 reps, 50 kg, 60 second recovery
+                      generateExerciseSet(1, {
+                        reps: 10,
+                        loadKg: 50,
+                        recTime: 60,
+                      }),
+                      generateExerciseSet(2, {
+                        reps: 10,
+                        loadKg: 50,
+                        recTime: 60,
+                      }),
+                      generateExerciseSet(3, {
+                        reps: 10,
+                        loadKg: 50,
+                        recTime: 60,
+                      }),
                     ],
                   }),
                 ],
@@ -162,15 +212,14 @@ describe('Training Report (e2e)', () => {
       totalSets: 0,
       totalReps: 0,
       totalRecTime: 0,
-      totalActiveTime: 0,
+      totalTit: 0,
       totalTonnage: 0,
-      totalTimeWork: 0,
-      totalDistWork: 0,
-      totalPower: 0,
     } as TrainingReport);
   });
 
   it('should return correct training stats for training with empty exercises', () => {
+    const set: Partial<ExerciseSet> = { reps: 1, recTime: 0 };
+
     const dummy = generateTrainingStub({
       ownerId: global.trainer.uid,
       membersIds: [global.athlete.uid],
@@ -182,15 +231,13 @@ describe('Training Report (e2e)', () => {
               exercises: [
                 generateTrainingExercise({
                   id: 'squat',
-                  sets: [
-                    { setNumber: 1, paramValuesL: [], reps: 10, recTime: 60 },
-                  ],
+                  sets: [generateExerciseSet(1, set)],
                 }),
                 generateTrainingExercise({
                   id: 'bench',
                   sets: [
-                    { setNumber: 1, paramValuesL: [], reps: 10, recTime: 60 },
-                    { setNumber: 2, paramValuesL: [], reps: 10, recTime: 60 },
+                    generateExerciseSet(1, set),
+                    generateExerciseSet(2, set),
                   ],
                 }),
               ],
@@ -205,9 +252,9 @@ describe('Training Report (e2e)', () => {
                 generateTrainingExercise({
                   id: 'deadlift',
                   sets: [
-                    { setNumber: 1, paramValuesL: [], reps: 10, recTime: 60 },
-                    { setNumber: 2, paramValuesL: [], reps: 10, recTime: 60 },
-                    { setNumber: 3, paramValuesL: [], reps: 10, recTime: 60 },
+                    generateExerciseSet(1, set),
+                    generateExerciseSet(2, set),
+                    generateExerciseSet(3, set),
                   ],
                 }),
               ],
@@ -230,11 +277,8 @@ describe('Training Report (e2e)', () => {
       totalSets: 6,
       totalReps: 6,
       totalRecTime: 0,
-      totalActiveTime: 18, // 6 sets with default 3 seconds per rep tempo
+      totalTit: 18, // 6 sets with default 3 seconds per rep tempo
       totalTonnage: 0,
-      totalTimeWork: 0,
-      totalDistWork: 0,
-      totalPower: 0,
     } as TrainingStats);
   });
 
@@ -255,11 +299,8 @@ describe('Training Report (e2e)', () => {
       totalSets: 11,
       totalReps: 10 * 10 + 3 * 1, // 99 -> (8 + 2 unilateral) sets of 10 reps, 3 sets of 1 rep (defaults to 1 rep if no `reps` specified)
       totalRecTime: 8 * 60, // 480 -> 8 sets with 60 sec recovery, 3 sets with 0 sec recovery (only effort based recovery)
-      totalActiveTime,
+      totalTit: totalActiveTime,
       totalTonnage,
-      totalTimeWork: 10 * 50 * 3 * 10, // 15000 -> 10 sets of 10 reps with 50 kg and 2010 (3 second) tempo
-      totalDistWork: 0,
-      totalPower: totalTonnage / totalActiveTime,
       totalDistVol: 3 * 30, // 90 -> 3 sets of 30 m distance
     } as TrainingStats);
   });
@@ -297,9 +338,8 @@ describe('Training Report (e2e)', () => {
         setNumber: 1,
         status: SetStatus.COMPLETED,
         reps: 1,
-        pReps: 1,
         recTime: 0,
-        pRecTime: 0,
+        prescribed: { reps: 1, recTime: 0 },
       },
       {
         userId: global.athlete.uid,
@@ -310,9 +350,8 @@ describe('Training Report (e2e)', () => {
         setNumber: 2,
         status: SetStatus.COMPLETED,
         reps: 1,
-        pReps: 1,
         recTime: 0,
-        pRecTime: 0,
+        prescribed: { reps: 1, recTime: 0 },
       },
     ]);
 

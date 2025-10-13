@@ -1,40 +1,71 @@
 import { v4 } from 'uuid';
 
+import type { Create } from '@src/common/type/entity.type';
 import type { Component } from '@src/component/entity/component.entity';
 
 import type { ExerciseSet } from '../entity/exercise-set.entity';
-import type { Workload, WorkloadMeta } from '../entity/workload.entity';
+import type {
+  Workload,
+  WorkloadMeta,
+  WorkloadValue,
+} from '../entity/workload.entity';
 import { SetStatus } from '../enum/set-status.enum';
-import { generateExerciseSet } from './training.stub';
 
 export function generateWorkloadStub(
-  component: Component,
-  data?: Partial<Omit<Workload, 'componentId'>> & {
-    randomValues?: boolean;
-    params?: (keyof ExerciseSet)[];
-  },
+  data: Create<Omit<WorkloadMeta, 'id' | 'componentId'>> &
+    Omit<WorkloadValue, 'reps' | 'recTime' | 'timestamp' | 'photoURLs'> & {
+      component: Component;
+      prescribed: Partial<ExerciseSet>;
+      reps?: number;
+      recTime?: number;
+      timestamp?: Date;
+      photoURLs?: string[];
+      random?: boolean;
+    },
 ): Workload {
-  const random = data?.randomValues || false;
-  const params = (data?.params ||
-    component.params ||
-    []) as (keyof ExerciseSet)[];
+  const setNumber = data?.setNumber || 1;
 
-  const meta = generateWorkloadMetaStub({ ...data, componentId: component.id });
-  const prescribed = generateExerciseSet(data?.setNumber || 1, params, {
-    random,
+  const workloadMeta = generateWorkloadMetaStub({
+    ...data,
+    componentId: data.component.id,
   });
 
-  const completed = generateExerciseSet(data?.setNumber || 1, params, {
-    random,
-  });
+  const workloadValue: WorkloadValue = {
+    timestamp: data?.timestamp || new Date(),
+    photoURLs: data?.photoURLs || [],
+    reps: data?.reps || 10,
+    loadKg: data?.loadKg,
+    loadRm: data?.loadRm,
+    loadBw: data?.loadBw,
+    tempo: data?.tempo,
+    vel: data?.vel,
+    rom: data?.rom,
+    tempos: data?.tempos,
+    roms: data?.roms,
+    velocities: data?.velocities,
+    feedback: data?.feedback,
+    repsR: data?.repsR,
+    loadKgR: data?.loadKgR,
+    loadRmR: data?.loadRmR,
+    loadBwR: data?.loadBwR,
+    tempoR: data?.tempoR,
+    velR: data?.velR,
+    romR: data?.romR,
+    temposR: data?.temposR,
+    romsR: data?.romsR,
+    velocitiesR: data?.velocitiesR,
+    feedbackR: data?.feedbackR,
+    eff: data?.eff,
+    recTime: data?.recTime || 60,
+    time: data?.time,
+    dist: data?.dist,
+    recDist: data?.recDist,
+  };
 
   return {
-    ...meta,
-    ...completed,
-    prescribed,
-    from: new Date(),
-    to: new Date(),
-    photoURLs: data?.photoURLs || [],
+    ...workloadMeta,
+    ...workloadValue,
+    prescribed: { setNumber, reps: 10, recTime: 60, ...data.prescribed },
   };
 }
 

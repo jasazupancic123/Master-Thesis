@@ -15,6 +15,7 @@ import {
   Workload,
   WorkloadMeta,
   WorkloadPrimarySide,
+  WorkloadValue,
 } from '@src/training/entity/workload.entity';
 import { generateWorkloadStub } from '@src/training/mock/workload.stub';
 
@@ -50,34 +51,24 @@ export class TestWorkloadService extends AbstractChangeLogService<Workload> {
 
   async createMany(
     input: (Create<Omit<WorkloadMeta, 'id' | 'componentId'>> &
-      Partial<Workload> & {
+      Omit<WorkloadValue, 'reps' | 'recTime' | 'timestamp' | 'photoURLs'> & {
         component: Component;
-        randomValues?: boolean;
+        prescribed: Partial<ExerciseSet>;
+        params?: (keyof ExerciseSet)[];
+        reps?: number;
+        recTime?: number;
+        timestamp?: Date;
+        photoURLs?: string[];
+        random?: boolean;
       })[],
   ): Promise<void> {
     const operations: BatchWriteOperation<Workload>[] = input.map((item) => {
-      const workload: Create<Omit<Workload, 'prescribed'>> = {
-        ...item,
-        id: null,
-        reps: item.reps || 1,
-        recTime: item.recTime || 0,
-        from: item.from ?? new Date(),
-        to: item.to ?? new Date(),
-        componentId: item.component.id,
-        photoURLs: item.photoURLs || [],
-      };
-
+      const workload: Create<Workload> = generateWorkloadStub(item);
       const id = this.getKey(workload);
       workload.id = id;
 
       const ref = this.collection(item.trainingId).doc(id);
-      const query = this.firebase.buildCreateQuery<Workload>(
-        generateWorkloadStub(item.component, {
-          ...workload,
-          params: (item.component.params ?? []) as (keyof ExerciseSet)[],
-          randomValues: item.randomValues,
-        }),
-      );
+      const query = this.firebase.buildCreateQuery<Workload>(workload);
 
       this.trackCreate(ref);
       return { operation: 'set', ref, data: query };

@@ -27,7 +27,7 @@ export class ExerciseParam {
       recDist: this.REC_DIST,
     };
 
-    return mapper[field as keyof typeof mapper];
+    return mapper[field];
   }
 
   static getAll(fields?: (keyof ExerciseSet)[]): Attribute<ExerciseSet>[] {
@@ -56,6 +56,13 @@ export class ExerciseParam {
   ];
 
   static readonly fields: (keyof ExerciseSet)[] = ExerciseParam.pairs.flat();
+
+  static readonly primaryFields: (keyof ExerciseSet)[] =
+    ExerciseParam.pairs.map((pair) => pair[0]);
+
+  static readonly secondaryFields: (keyof ExerciseSet)[] = ExerciseParam.pairs
+    .filter((pair) => pair.length === 2)
+    .map((pair) => pair[1]);
 
   static readonly REPS: Attribute<ExerciseSet> = {
     field: 'reps',
@@ -125,7 +132,7 @@ export class ExerciseParam {
     description: 'time',
     unit: 's',
     type: AttributeType.Number,
-    defaultValue: '60',
+    defaultValue: 60,
   };
 
   static readonly DIST: Attribute<ExerciseSet> = {
@@ -134,7 +141,7 @@ export class ExerciseParam {
     description: 'distance',
     unit: 'm',
     type: AttributeType.Number,
-    defaultValue: '30',
+    defaultValue: 30,
   };
 
   static readonly EFF: Attribute<ExerciseSet> = {
@@ -142,7 +149,7 @@ export class ExerciseParam {
     name: 'Effort',
     description: 'effort',
     type: AttributeType.Number,
-    defaultValue: '2',
+    defaultValue: 2,
     min: 1, // easy
     max: 4, // max
   };
@@ -153,6 +160,6 @@ export class ExerciseParam {
     description: 'velocity based training',
     unit: 'm/s',
     type: AttributeType.Number,
-    defaultValue: '1',
+    defaultValue: 1,
   };
 }

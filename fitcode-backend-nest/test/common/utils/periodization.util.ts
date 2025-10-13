@@ -30,27 +30,25 @@ export class TestPeriodizationUtil {
     addDaysFromToday: number,
     data?: Partial<Training>,
   ): Training {
-    const options = { isUnilateral: true };
-
     // same param values for all sets for both left and right side
     const SETS_ALL_PARAMS = [
-      generateExerciseSet(1, null, options),
-      generateExerciseSet(2, null, options),
-      generateExerciseSet(3, null, options),
+      generateExerciseSet(1),
+      generateExerciseSet(2),
+      generateExerciseSet(3),
     ];
 
     // sets with no intensity (only volume 1)
     const SETS_NO_INT = [
-      generateExerciseSet(1, ['reps'], options),
-      generateExerciseSet(2, ['reps'], options),
-      generateExerciseSet(3, ['reps'], options),
+      generateExerciseSet(1),
+      generateExerciseSet(2),
+      generateExerciseSet(3),
     ];
 
     // different param values for left and right side
     const SETS_LR_DIFFERENT = [
-      generateExerciseSet(1, null, options),
-      generateExerciseSet(2, null, options),
-      generateExerciseSet(3, null, options),
+      generateExerciseSet(1),
+      generateExerciseSet(2),
+      generateExerciseSet(3),
     ];
 
     let i = 0;

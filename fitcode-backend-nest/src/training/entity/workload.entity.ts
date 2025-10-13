@@ -5,7 +5,7 @@ import {
   OmitType,
   PickType,
 } from '@nestjs/swagger';
-import { Expose, Type } from 'class-transformer';
+import { Expose, Transform, Type } from 'class-transformer';
 import {
   IsEnum,
   IsInt,
@@ -18,7 +18,6 @@ import {
 } from 'class-validator';
 
 import { IsTempo } from '@src/common/decorator/is-tempo.decorator';
-import { DateRangeDto } from '@src/common/dto/date-range.dto';
 import { IdEntity } from '@src/common/entity/id.entity';
 
 import { SetStatus } from '../enum/set-status.enum';
@@ -181,27 +180,38 @@ export class WorkloadSecondarySide extends ExerciseSetSecondarySide {
   feedbackR?: string[];
 }
 
-export class Workload extends IntersectionType(
-  DateRangeDto,
-  WorkloadMeta,
+export class WorkloadValue extends IntersectionType(
   WorkloadPrimarySide,
   WorkloadSecondarySide,
   PickType(ExerciseSet, ['eff', 'recTime', 'recDist', 'time', 'dist'] as const),
 ) {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Expose()
+  @Transform(({ value }) => {
+    const date = new Date(value);
+    return isNaN(date.getTime()) ? undefined : date;
+  })
+  timestamp: Date;
+
+  @IsString({ each: true })
+  @ApiPropertyOptional({ type: String, isArray: true })
+  @IsOptional()
+  @Expose()
+  photoURLs?: string[];
+}
+
+export class Workload extends IntersectionType(WorkloadMeta, WorkloadValue) {
   @ValidateNested()
   @Type(() => ExerciseSet)
   @ApiProperty({ type: ExerciseSet })
   @Expose()
   prescribed: ExerciseSet;
-
-  @IsString({ each: true })
-  @ApiProperty({ type: String, isArray: true })
-  @Expose()
-  photoURLs: string[];
 }
 
 export class CreateWorkload extends OmitType(Workload, [
   'id',
+  'setNumber',
   'institutionId',
   'groupId',
   'cycleId',
@@ -210,4 +220,5 @@ export class CreateWorkload extends OmitType(Workload, [
   'exerciseId',
   'supersetIndex',
   'status',
+  'prescribed',
 ] as const) {}

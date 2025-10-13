@@ -95,23 +95,31 @@ export class ExerciseParamService {
     ) as ExerciseSet;
   }
 
-  modifyParamValue<T extends keyof ExerciseSet>(
+  modifyLoad(
     set: ExerciseSet,
-    param: T,
-    value: (current: ExerciseSet[T]) => ExerciseSet[T],
+    loadType: LoadType,
+    value: (current: number) => number,
   ) {
-    if (!this.has(set, param)) return;
+    let prevValue: number | undefined;
+    let prevValueR: number | undefined;
 
-    const pair = ExerciseParam.pairs.find((p) => p.includes(param));
-    if (!pair) return;
+    switch (loadType) {
+      case LoadType.Kg:
+        prevValue = set.loadKg as number;
+        prevValueR = set.loadKgR as number;
+        break;
+      case LoadType.Rm:
+        prevValue = set.loadRm as number;
+        prevValueR = set.loadRmR as number;
+        break;
+      case LoadType.Bw:
+        prevValue = set.loadBw as number;
+        prevValueR = set.loadBwR as number;
+        break;
+    }
 
-    for (const field of pair)
-      if (!this.common.object.isEmpty(set[field]))
-        set[field as T] = value(set[field as T]);
-  }
-
-  has(set: ExerciseSet, param: keyof ExerciseSet): boolean {
-    return !this.common.object.isEmpty(set[param]);
+    set.loadKg = value(prevValue);
+    if (prevValueR) set.loadKgR = value(prevValueR);
   }
 
   validateSetValues(
@@ -198,8 +206,6 @@ export class ExerciseParamService {
       const isMainDefined = !this.common.object.isEmpty(set[pair[0]]);
       const isSecondaryDefined = !this.common.object.isEmpty(set[pair[1]]);
 
-      console.log('validating pair:', pair, isMainDefined, isSecondaryDefined);
-
       if (pair.length === 1) continue; // only one param in the pair, doesn't matter if it's defined or not, so skip
       if (pair.length === 2) {
         if (
@@ -209,7 +215,7 @@ export class ExerciseParamService {
           const primary = ExerciseParam.get(pair[0]);
           errors.push({
             field: primary.field,
-            message: `Both primary and secondary side must be defined for param ${primary.name} in unilateral exercises`,
+            message: `Both primary and secondary side must be defined for param ${primary.name.toLowerCase()} in unilateral exercises`,
           });
         }
       }

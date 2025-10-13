@@ -42,7 +42,6 @@ import {
   MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT,
   MAX_NUM_SUPERSETS_IN_CIRCUIT_COMPONENT,
 } from '../constant/training-limits.constant';
-import { ExerciseSet } from '../entity/exercise-set.entity';
 import { Subgroup } from '../entity/subgroup.entity';
 import { Superset } from '../entity/superset.entity';
 import { Training } from '../entity/training.entity';
@@ -51,6 +50,7 @@ import {
   TrainingComponentWithoutTime,
 } from '../entity/training-component.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
+import { LoadType } from '../enum/load-type.enum';
 import { MainSet } from '../enum/main-set.enum';
 import { TrainingPeriod } from '../enum/training-period.enum';
 import {
@@ -168,32 +168,34 @@ export class TrainingPlanService {
     };
   }
 
-  hasParam(training: Training, param: keyof ExerciseSet): boolean {
+  hasLoadType(training: Training, loadType: LoadType): boolean {
     for (const component of training.components)
       for (const superset of component.supersets)
         for (const exercise of superset.exercises)
           for (const set of exercise.sets)
-            if (this.exerciseParamService.has(set, param)) return false;
+            if (set.loadType === loadType) return true;
+
+    return false;
   }
 
   modifyPrescribedParamValuesByType(
     training: Training,
-    param: keyof ExerciseSet,
-    modify: (value: number, exerciseId?: string) => number,
+    loadType: LoadType,
+    modify: (value: number, exerciseId: string) => number,
   ) {
     for (const component of training.components) {
       for (const superset of component.supersets)
-        this.modifySupersetValuesByParam(superset, param, modify);
+        this.modifySupersetValuesByLoadType(superset, loadType, modify);
 
       for (const subgroup of component.subgroups)
         for (const superset of subgroup.supersets)
-          this.modifySupersetValuesByParam(superset, param, modify);
+          this.modifySupersetValuesByLoadType(superset, loadType, modify);
     }
   }
 
-  findExercisesByParam(
+  findExercisesByLoadType(
     training: Training,
-    param: keyof ExerciseSet,
+    loadType: LoadType,
   ): TrainingExercise[] {
     const exercises: TrainingExercise[] = [];
 
@@ -202,7 +204,7 @@ export class TrainingPlanService {
         for (const exercise of superset.exercises) {
           if (exercises.find((e) => e.id === exercise.id)) continue;
           for (const set of exercise.sets)
-            if (this.exerciseParamService.has(set, param)) {
+            if (set.loadType === loadType) {
               exercises.push(exercise);
               break;
             }
@@ -757,13 +759,16 @@ export class TrainingPlanService {
     }
   }
 
-  private modifySupersetValuesByParam(
+  private modifySupersetValuesByLoadType(
     superset: Superset,
-    param: keyof ExerciseSet,
-    modify: (value: number) => number,
+    loadType: LoadType,
+    modify: (value: number, exerciseId: string) => number,
   ) {
     for (const exercise of superset.exercises)
       for (const set of exercise.sets)
-        this.exerciseParamService.modifyParamValue(set, param, modify);
+        if (set.loadType === loadType)
+          this.exerciseParamService.modifyLoad(set, loadType, (current) =>
+            modify(current, exercise.id),
+          );
   }
 }
