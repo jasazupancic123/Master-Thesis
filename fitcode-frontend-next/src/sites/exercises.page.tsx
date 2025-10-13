@@ -33,7 +33,7 @@ import { isAdmin, isManager } from '@/common/firebase/firebase-auth.util';
 import type { Pagination as PaginationType } from '@/common/type/paginate.type';
 import ExerciseChips from '@/components/exercise-chips/exercise-chips';
 import ExerciseModal from '@/components/exercise-modal/exercise-modal';
-import ExerciseFilter from '@/components/exercises-list/exercise-filter';
+import ExerciseFilter from '@/components/exercises-list/components/exercise-filter/exercise-filter';
 import ExercisesList from '@/components/exercises-list/exercises-list';
 import FileUpload from '@/util/file-upload/file-upload';
 import MyModal from '@/util/modal/modal';
