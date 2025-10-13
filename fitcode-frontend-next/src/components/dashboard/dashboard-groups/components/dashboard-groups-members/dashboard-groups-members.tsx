@@ -2,114 +2,55 @@ import { Add, Remove } from '@mui/icons-material';
 import { Avatar, Box, IconButton, Tooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import toast from 'react-hot-toast';
 
-import { AddMembersModal } from '../add-members-modal/add-members-modal';
-import CustomDivider from '../../util/custom-divider/custom-divider';
-import DashboardEditAthleteModal from '../dashboard-edit-athlete-modal/dashboard-edit-athlete-modal';
-import MyModal from '../../util/modal/modal';
-import { SearchBar } from '../../util/search-bar/search-bar';
+import { AddMembersModal } from '../../../../add-members-modal/add-members-modal';
+import CustomDivider from '../../../../../util/custom-divider/custom-divider';
+import DashboardEditAthleteModal from './modals/dashboard-edit-athlete-modal/dashboard-edit-athlete-modal';
+import { SearchBar } from '../../../../../util/search-bar/search-bar';
 import { isManager, isTrainer } from '@/common/firebase/firebase-auth.util';
-import { handleApiRequest, type SetState } from '@/common/type/state.type';
-import type { AuthUser } from '@/controller/auth/type/user.type';
 import { GroupController } from '@/controller/group/group.controller';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
+import useDashboardGroupsMembersUsers from './hooks/use-users';
+import { handleRemoveAthleteFromGroup } from './actions/actions-users';
+import useDashboardGroupsMembersUtils from './hooks/use-utils';
 
-interface DashboardGroupsMembersProps {
-  modal: {
-    add_member: boolean;
-    add_trainer: boolean;
-    add_group: boolean;
-    add_member_via_csv: boolean;
-    edit_athlete: boolean;
-  };
-  setModal: SetState<{
-    add_member: boolean;
-    add_trainer: boolean;
-    add_group: boolean;
-    add_member_via_csv: boolean;
-    edit_athlete: boolean;
-  }>;
-}
-
-export default function DashboardGroupsMembers(
-  props: DashboardGroupsMembersProps
-) {
+export default function DashboardGroupsMembers() {
+  const theme = useTheme();
   const router = useRouter();
+  const screenSize = useScreenSize();
+
   const { users } = useMain();
 
   const { role } = useAuthenticatedAuth();
-  const controller = GroupController.getInstance();
+
+  const dashboardContext = useDashboard();
+  const usersContext = useDashboardGroupsMembersUsers();
+
+  const { selectedInstitution, setSelectedInstitution, selectedGroup } =
+    dashboardContext;
 
   const {
-    selectedInstitution,
-    setSelectedInstitution,
-    selectedGroup,
-    setDetectedChanges,
-  } = useDashboard();
+    filteredUsers,
+    setFilteredUsers,
+    hoveredUser,
+    setHoveredUser,
+    editUser,
+    setEditUser,
+    search,
+    setSearch,
+  } = usersContext;
 
-  const theme = useTheme();
-  const screenSize = useScreenSize();
+  const {
+    openEditAthleteModal,
+    setOpenEditAthleteModal,
+    openAddMemberModal,
+    setOpenAddMemberModal,
+  } = useDashboardGroupsMembersUtils();
 
-  const { modal, setModal } = props;
-
-  const [filteredUsers, setFilteredUsers] = useState<AuthUser[]>([]);
-  const [hoveredUser, setHoveredUser] = useState<AuthUser | null>(null);
-  const [editUser, setEditUser] = useState<AuthUser | null>(null);
-  const [search, setSearch] = useState('');
-
-  useEffect(() => {
-    if (!selectedGroup) {
-      setFilteredUsers([]);
-      setSearch('');
-      return;
-    }
-
-    setFilteredUsers(selectedGroup.members || []);
-    setSearch('');
-  }, [selectedGroup]);
-
-  const handleRemoveAthleteFromGroup = async (userId: string) => {
-    if (!selectedGroup) return;
-
-    await handleApiRequest(
-      router,
-      () =>
-        controller.removeMember(selectedGroup!.id, {
-          userId: userId,
-        }),
-      () => {
-        toast.success('Member removed successfully');
-      },
-      (e) => {
-        toast.error((e as Error).message);
-      }
-    );
-
-    setFilteredUsers((prev) => prev.filter((m) => m.uid !== userId));
-    setSelectedInstitution((prev) => {
-      if (!prev) return null;
-      const updatedGroups = prev.groups.map((g) => {
-        if (g.id === selectedGroup?.id) {
-          return {
-            ...g,
-            members: g.members?.filter((m) => m.uid !== userId),
-            membersIds: g.membersIds.filter((uid) => uid !== userId),
-          };
-        }
-        return g;
-      });
-      return {
-        ...prev,
-        groups: updatedGroups,
-      };
-    });
-    setDetectedChanges(true);
-  };
+  const controller = GroupController.getInstance();
 
   return (
     <>
@@ -190,7 +131,13 @@ export default function DashboardGroupsMembers(
                           size="small"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleRemoveAthleteFromGroup(user.uid);
+                            handleRemoveAthleteFromGroup(
+                              { userId: user.uid, controller, router },
+                              {
+                                useDashboard: dashboardContext,
+                                useDashboardGroupsMembersUsers: usersContext,
+                              }
+                            );
                           }}
                           sx={{
                             position: 'absolute',
@@ -216,7 +163,7 @@ export default function DashboardGroupsMembers(
                       }}
                       onClick={() => {
                         setEditUser(user);
-                        setModal((prev) => ({ ...prev, edit_athlete: true }));
+                        setOpenEditAthleteModal(true);
                       }}
                     />
                     <Typography
@@ -251,7 +198,7 @@ export default function DashboardGroupsMembers(
                       backgroundColor: theme.palette.background.light,
                     }}
                     onClick={() => {
-                      setModal((prev) => ({ ...prev, add_member: true }));
+                      setOpenAddMemberModal(true);
                     }}
                   >
                     <Add />
@@ -263,31 +210,24 @@ export default function DashboardGroupsMembers(
         </Box>
       </Box>
 
-      <MyModal
-        isOpen={modal.add_member}
-        setIsOpen={(open) =>
-          setModal((prev) => ({ ...prev, add_member: open }))
-        }
-        onCancel={() => setModal((prev) => ({ ...prev, add_member: false }))}
-        cancelText="Close"
-      >
-        <AddMembersModal
-          users={selectedInstitution?.athletes || []}
-          members={filteredUsers}
-          setMembers={setFilteredUsers}
-          setSelectedInstitution={setSelectedInstitution}
-          addUserToEnd={true}
-          dashboardView={true}
-          group={selectedGroup}
-          selectedInstitution={selectedInstitution}
-          enableFirstShowUsers
-          enableScroll
-        />
-      </MyModal>
+      <AddMembersModal
+        users={selectedInstitution?.athletes || []}
+        members={filteredUsers}
+        setMembers={setFilteredUsers}
+        setSelectedInstitution={setSelectedInstitution}
+        addUserToEnd={true}
+        dashboardView={true}
+        group={selectedGroup}
+        selectedInstitution={selectedInstitution}
+        enableFirstShowUsers
+        enableScroll
+        open={openAddMemberModal}
+        setOpen={setOpenAddMemberModal}
+      />
 
       <DashboardEditAthleteModal
-        isOpen={modal.edit_athlete}
-        setModal={setModal}
+        open={openEditAthleteModal}
+        setOpen={setOpenEditAthleteModal}
         editUser={editUser}
         setEditUser={setEditUser}
         setFilteredUsers={setFilteredUsers}

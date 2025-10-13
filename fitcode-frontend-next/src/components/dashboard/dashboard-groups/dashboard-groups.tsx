@@ -3,78 +3,35 @@
 import { MoreVert } from '@mui/icons-material';
 import { IconButton, Typography, useTheme } from '@mui/material';
 import { Box } from '@mui/material';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 
-import DashboardGroupsMembers from '../dashboard-groups-members/dashboard-groups-members';
-import HorizontalItemsList from '../../util/horizontal-items-list/horizontal-items-list';
-import SimpleCircle from '../../util/simple-circle/simple-circle';
-import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
+import DashboardGroupsMembers from './components/dashboard-groups-members/dashboard-groups-members';
+import HorizontalItemsList from '../../../util/horizontal-items-list/horizontal-items-list';
+import SimpleCircle from '../../../util/simple-circle/simple-circle';
+import { MAX_WIDTH } from '../../trainer-group-day-view/constant/dimensions.constant';
 import { ADD_GROUP } from '@/common/constant/add-group.constant';
 import { isManager } from '@/common/firebase/firebase-auth.util';
-import type { SetState } from '@/common/type/state.type';
 import { GroupService } from '@/controller/group/group.service';
-import type { Cycle } from '@/controller/group/type/cycle.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import EditableTextField from '@/util/editable-text-field/editable-text-field';
+import AddGroupModal from './modals/dashboard-add-group-modal';
 
-interface DashboardGroupsProps {
-  modal: {
-    add_member: boolean;
-    add_trainer: boolean;
-    add_group: boolean;
-    add_member_via_csv: boolean;
-    edit_athlete: boolean;
-  };
-  setModal: SetState<{
-    add_member: boolean;
-    add_trainer: boolean;
-    add_group: boolean;
-    add_member_via_csv: boolean;
-    edit_athlete: boolean;
-  }>;
-}
-
-export default function DashboardGroups(props: DashboardGroupsProps) {
-  const { modal, setModal } = props;
-
-  const screenSize = useScreenSize();
+export default function DashboardGroups() {
   const theme = useTheme();
-  const { users, groups } = useMain();
+  const screenSize = useScreenSize();
   const { role } = useAuthenticatedAuth();
+
+  const { users } = useMain();
+
   const { selectedInstitution, selectedGroup, setSelectedGroup, updateGroup } =
     useDashboard();
 
-  const [_selectedCycle, setSelectedCycle] = useState<Cycle | null>(
-    selectedGroup?.cycles[0] || null
-  );
+  const [openAddGroupModal, setOpenAddGroupModal] = useState(false);
 
   const scrollHorizontalListLeftRef = useRef(0);
-
-  useEffect(() => {
-    async function fetchGroups() {
-      if (!selectedInstitution || selectedInstitution.groups) return;
-      selectedInstitution.groups = groups.filter(
-        (g) => g.institutionId === selectedInstitution.id
-      );
-
-      if (
-        !selectedInstitution.groups ||
-        !selectedInstitution.groups.length ||
-        (selectedGroup &&
-          !selectedInstitution.groups
-            .map((g) => g.id)
-            .includes(selectedGroup?.id))
-      ) {
-        setSelectedGroup(null);
-        setSelectedCycle(null);
-      }
-    }
-
-    fetchGroups().then();
-  }, [selectedInstitution]);
 
   if (!selectedInstitution) return null;
 
@@ -84,7 +41,7 @@ export default function DashboardGroups(props: DashboardGroupsProps) {
         dashboardView
         addButtonOnEnd={isManager(role)}
         onButtonClick={() => {
-          setModal((prev) => ({ ...prev, add_group: true }));
+          setOpenAddGroupModal(true);
         }}
         items={
           (selectedInstitution?.groups || []).map((group) => ({
@@ -96,7 +53,7 @@ export default function DashboardGroups(props: DashboardGroupsProps) {
         value={selectedGroup?.id || ''}
         setValue={(value) => {
           if (value === ADD_GROUP.id) {
-            setModal((prev) => ({ ...prev, add_group: true }));
+            setOpenAddGroupModal(true);
             return;
           }
 
@@ -107,10 +64,8 @@ export default function DashboardGroups(props: DashboardGroupsProps) {
           if (group) {
             const mapped = GroupService.mapMembers(group, users);
             setSelectedGroup(mapped);
-            setSelectedCycle(group.cycles[0] || null);
           } else {
             setSelectedGroup(null);
-            setSelectedCycle(null);
           }
         }}
         checkIsSameValue={(value: string) => {
@@ -208,7 +163,9 @@ export default function DashboardGroups(props: DashboardGroupsProps) {
         </Box>
       )}
 
-      <DashboardGroupsMembers modal={modal} setModal={setModal} />
+      <DashboardGroupsMembers />
+
+      <AddGroupModal open={openAddGroupModal} setOpen={setOpenAddGroupModal} />
     </Box>
   );
 }

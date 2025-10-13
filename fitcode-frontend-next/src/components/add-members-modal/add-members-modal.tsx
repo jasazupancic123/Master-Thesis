@@ -18,6 +18,8 @@ import { GroupController } from '@/controller/group/group.controller';
 import type { Group } from '@/controller/group/type/group.type';
 import type { Institution } from '@/controller/institution/type/institution.type';
 import { useDashboard } from '@/store/dashboard.provider';
+import MyModal from '@/util/modal/modal';
+import { ModalProps } from '@/common/type/modal-props.type';
 
 export type AddMembersModalProps = {
   title?: string;
@@ -37,7 +39,7 @@ export type AddMembersModalProps = {
   enableScroll?: boolean; // to enable scroll in the modal
 };
 
-export function AddMembersModal(props: AddMembersModalProps) {
+export function AddMembersModal(props: AddMembersModalProps & ModalProps) {
   const router = useRouter();
   const {
     users,
@@ -54,6 +56,8 @@ export function AddMembersModal(props: AddMembersModalProps) {
     setSingleMember,
     enableFirstShowUsers,
     enableScroll,
+    open,
+    setOpen,
   } = props;
   const { setDetectedChanges } = useDashboard();
   const controller = GroupController.getInstance();
@@ -180,7 +184,12 @@ export function AddMembersModal(props: AddMembersModalProps) {
   }, [searchQueryAddPlayer]);
 
   return (
-    <>
+    <MyModal
+      isOpen={open}
+      setIsOpen={(open) => setOpen(open)}
+      onCancel={() => setOpen(false)}
+      cancelText="Close"
+    >
       <Box display="flex" justifyContent="center" alignItems="center" p={1}>
         <Typography variant="h6">{title || 'Add Members'}</Typography>
       </Box>
@@ -275,6 +284,6 @@ export function AddMembersModal(props: AddMembersModalProps) {
           </List>
         </Box>
       </Box>
-    </>
+    </MyModal>
   );
 }

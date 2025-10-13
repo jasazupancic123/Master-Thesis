@@ -18,81 +18,61 @@ import {
 import { useTheme } from '@mui/material';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import toast from 'react-hot-toast';
 
-import DashboardMenuMobile from '../dashboard-menu-mobile/dashboard-menu-mobile';
-import EditInstitutionModal from '../edit-institution-modal/edit-institution-modal';
-import FilterButton from '../../util/filter-button/filter-button';
-import Logo from '../../util/logo/logo';
-import MyModal from '../../util/modal/modal';
-import ProfileHeaderMenu from '../profile-header-menu/profile-header-menu';
-import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
+import DashboardMenuMobile from './components/dashboard-menu-mobile';
+import EditInstitutionModal from './modals/edit-institution-modal/edit-institution-modal';
+import FilterButton from '../../../util/filter-button/filter-button';
+import Logo from '../../../util/logo/logo';
+import ProfileHeaderMenu from '../../profile-header-menu/profile-header-menu';
+import { MAX_WIDTH } from '../../trainer-group-day-view/constant/dimensions.constant';
 import { BACKEND_API_BASE_URL } from '@/common/constant/api.constant';
 import { LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS } from '@/common/constant/navigation.constant';
 import { isAdmin } from '@/common/firebase/firebase-auth.util';
 import type { ILink } from '@/common/type/link.type';
-import { handleApiRequest } from '@/common/type/state.type';
-import { GroupController } from '@/controller/group/group.controller';
 import { GroupService } from '@/controller/group/group.service';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
+import useDashboardHeaderUtils from './hooks/use-utils';
+import RemoveGroupModal from './modals/remove-group-modal/remove-group-modal';
 
 export default function DashboardHeader() {
+  const auth = useAuthenticatedAuth();
+  const theme = useTheme();
+  const router = useRouter();
+  const screenSize = useScreenSize();
+
+  const { role } = auth;
+
+  const { users } = useMain();
+
+  const dashboardContext = useDashboard();
+
   const {
     filter,
     setFilter,
     institutions,
     selectedInstitution,
     setSelectedInstitution,
-    selectedGroup,
     setSelectedGroup,
     refetchMembers,
-    updateUser,
-  } = useDashboard();
+  } = dashboardContext;
 
-  const { users } = useMain();
-  const screenSize = useScreenSize();
-  const theme = useTheme();
-  const router = useRouter();
-  const auth = useAuthenticatedAuth();
-  const { role } = auth;
-
-  const controller = GroupController.getInstance();
-  const [openProfileMenu, setOpenProfileMenu] = useState(false);
-  const [openInstitutionsMenu, setOpenInstitutionsMenu] = useState(false);
-  const [anchorProfileEl, setAnchorProfileEl] = useState<HTMLElement | null>(
-    null
-  );
-  const [anchorInstitutionsEl, setAnchorInstitutionsEl] =
-    useState<HTMLElement | null>(null);
-  const [modal, setModal] = useState({
-    edit_institution: false,
-    remove_group: false,
-  });
-
-  const handleRemoveSelectedGroup = () => {
-    if (!selectedGroup) return;
-    handleApiRequest(
-      router,
-      () => controller.delete(selectedGroup.id),
-      () => {
-        setSelectedGroup(null);
-        setSelectedInstitution((prev) => {
-          if (!prev) return null;
-          const updatedGroups = prev.groups.filter(
-            (g) => g.id !== selectedGroup.id
-          );
-          return { ...prev, groups: updatedGroups };
-        });
-        toast.success('Successfully deleted group');
-      },
-      undefined,
-      'Failed to delete group'
-    );
-  };
+  const {
+    openProfileMenu,
+    setOpenProfileMenu,
+    openInstitutionsMenu,
+    setOpenInstitutionsMenu,
+    anchorProfileEl,
+    setAnchorProfileEl,
+    anchorInstitutionsEl,
+    setAnchorInstitutionsEl,
+    openRemoveGroupModal,
+    setOpenRemoveGroupModal,
+    openEditInstitutionModal,
+    setOpenEditInstitutionModal,
+  } = useDashboardHeaderUtils();
 
   return (
     <Box
@@ -207,11 +187,7 @@ export default function DashboardHeader() {
                   </IconButton>
                 </Box>
               ) : (
-                <Box
-                  onClick={() =>
-                    setModal((prev) => ({ ...prev, edit_institution: true }))
-                  }
-                >
+                <Box onClick={() => setOpenEditInstitutionModal(true)}>
                   <Tooltip title="Dashboard">
                     <Avatar
                       src={selectedInstitution?.imageUrl || ''}
@@ -336,27 +312,15 @@ export default function DashboardHeader() {
         ))}
       </Menu>
 
-      <MyModal
-        isOpen={modal.remove_group}
-        setIsOpen={(open) =>
-          setModal((prev) => ({ ...prev, remove_group: open }))
-        }
-        onCancel={() => setModal((prev) => ({ ...prev, remove_group: false }))}
-        onConfirm={() => {
-          handleRemoveSelectedGroup();
-          setModal((prev) => ({ ...prev, remove_group: false }));
-        }}
-        cancelText="Close"
-      >
-        Remove group <strong>{selectedGroup?.name}</strong>?
-      </MyModal>
+      <RemoveGroupModal
+        open={openRemoveGroupModal}
+        setOpen={setOpenRemoveGroupModal}
+      />
 
       <EditInstitutionModal
-        open={modal.edit_institution && !!selectedInstitution}
+        open={openEditInstitutionModal && !!selectedInstitution}
         institution={selectedInstitution!}
-        onClose={() =>
-          setModal((prev) => ({ ...prev, edit_institution: false }))
-        }
+        onClose={() => setOpenEditInstitutionModal(false)}
       />
     </Box>
   );

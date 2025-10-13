@@ -10,33 +10,29 @@ import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
 
-import { updateUserProfile } from '../dashboard-groups-members/state';
-import MyModal from '../../util/modal/modal';
+import MyModal from '../../../../../../../util/modal/modal';
 import { SPORTS } from '@/common/constant/sport.constant';
 import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
 import { type SetState } from '@/common/type/state.type';
 import type { AuthUser } from '@/controller/auth/type/user.type';
 import { Gender } from '@/controller/profile/enum/gender.enum';
 import { SportLevel } from '@/controller/profile/enum/sport-level.enum';
-import type { Profile } from '@/controller/profile/type/user.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import FileUpload from '@/util/file-upload/file-upload';
+import { ModalProps } from '@/common/type/modal-props.type';
+import { updateUserProfile } from '../../actions/actions-users';
+import useDashboardEditAthleteModalUseProfile from './hooks/use-profile';
+import {
+  handleChangeProfile,
+  handleChangeUser,
+} from './actions/actions-profile';
 
 const firebaseStorage = FirebaseStorageUtil.Instance;
 
 interface DashboardEditAthleteModalProps {
-  isOpen: boolean;
-  setModal: SetState<{
-    add_member: boolean;
-    add_trainer: boolean;
-    add_group: boolean;
-    add_member_via_csv: boolean;
-    edit_athlete: boolean;
-  }>;
   editUser: AuthUser | null;
   setEditUser: SetState<AuthUser | null>;
   setFilteredUsers: SetState<AuthUser[]>;
@@ -45,63 +41,39 @@ interface DashboardEditAthleteModalProps {
 const DEFAULT_MARGIN = 1;
 
 export default function DashboardEditAthleteModal(
-  props: DashboardEditAthleteModalProps
+  props: DashboardEditAthleteModalProps & ModalProps
 ) {
   const {
-    isOpen,
-    setModal,
+    open,
+    setOpen,
     setFilteredUsers,
     editUser: userToEdit,
     setEditUser: setUserToEdit,
   } = props;
-  const [profileToEdit, setProfileToEdit] = useState<Profile | undefined>();
 
   const screenSize = useScreenSize();
   const router = useRouter();
   const { user } = useAuthenticatedAuth();
-  const { selectedInstitution, members, refetchMembers, refetchUsers } =
-    useDashboard();
 
-  const [isEditedUser, setIsEditedUser] = useState(false);
-  const [isEditedProfile, setIsEditedProfile] = useState(false);
+  const dashboardContext = useDashboard();
 
-  useEffect(() => {
-    if (!userToEdit) return;
-    const profile = members.find((m) => m.uid === userToEdit.uid);
-    setProfileToEdit(profile);
-  }, [userToEdit]);
+  const profileContext = useDashboardEditAthleteModalUseProfile(userToEdit);
 
-  function handleChangeProfile<K extends keyof Profile>(
-    key: K,
-    value: Profile[K]
-  ) {
-    if (!userToEdit) return;
-    const newProfile = { ...profileToEdit, [key]: value };
-    setProfileToEdit(newProfile as Profile);
-    setIsEditedProfile(true);
-  }
-
-  function handleChangeUser<K extends keyof AuthUser>(
-    key: K,
-    value: AuthUser[K]
-  ) {
-    if (!userToEdit) return;
-    const newUser = { ...userToEdit, [key]: value };
-    setUserToEdit(newUser);
-    setIsEditedUser(true);
-    setFilteredUsers((prev) =>
-      prev.map((user) => (user.uid === newUser.uid ? newUser : user))
-    );
-  }
+  const {
+    profileToEdit,
+    setProfileToEdit,
+    isEditedProfile,
+    setIsEditedProfile,
+    isEditedUser,
+    setIsEditedUser,
+  } = profileContext;
 
   return (
     <MyModal
-      isOpen={isOpen && userToEdit?.uid !== user.uid}
-      setIsOpen={(open) =>
-        setModal((prev) => ({ ...prev, edit_athlete: open }))
-      }
+      isOpen={open && userToEdit?.uid !== user.uid}
+      setIsOpen={(open) => setOpen(open)}
       onCancel={() => {
-        setModal((prev) => ({ ...prev, edit_athlete: false }));
+        setOpen(false);
         setIsEditedProfile(false);
         setIsEditedUser(false);
         setUserToEdit(null);
@@ -110,19 +82,20 @@ export default function DashboardEditAthleteModal(
       cancelText="Close"
       onConfirm={() => {
         if ((isEditedProfile && profileToEdit) || (userToEdit && isEditedUser))
-          updateUserProfile({
-            router,
-            userToEdit,
-            isEditedUser,
-            selectedInstitution,
-            profileToEdit,
-            setModal,
-            setIsEditedProfile,
-            setIsEditedUser,
-            setUserToEdit,
-            refetchMembers,
-            refetchUsers,
-          });
+          updateUserProfile(
+            {
+              router,
+              userToEdit,
+              isEditedUser,
+              profileToEdit,
+              setOpenModal: setOpen,
+              setIsEditedProfile,
+              setUserToEdit,
+            },
+            {
+              useDashboard: dashboardContext,
+            }
+          );
       }}
     >
       <Box display="flex" flexDirection="column" gap={2}>
@@ -143,7 +116,18 @@ export default function DashboardEditAthleteModal(
             if (!userToEdit) return;
             const path = `user/${userToEdit.uid}/${file.name}`;
             const url = await firebaseStorage.uploadFile(file, path);
-            handleChangeUser('photoURL', url);
+            handleChangeUser(
+              {
+                key: 'photoURL',
+                value: url,
+                userToEdit,
+                setUserToEdit,
+                setFilteredUsers,
+              },
+              {
+                useProfile: profileContext,
+              }
+            );
           }}
         />
 
@@ -159,7 +143,20 @@ export default function DashboardEditAthleteModal(
             variant="outlined"
             sx={{ flex: 1 }}
             value={userToEdit?.displayName || ''}
-            onChange={(e) => handleChangeUser('displayName', e.target.value)}
+            onChange={(e) =>
+              handleChangeUser(
+                {
+                  key: 'displayName',
+                  value: e.target.value,
+                  userToEdit,
+                  setUserToEdit,
+                  setFilteredUsers,
+                },
+                {
+                  useProfile: profileContext,
+                }
+              )
+            }
           />
         </Box>
 
@@ -171,7 +168,16 @@ export default function DashboardEditAthleteModal(
               value={profileToEdit?.gender ?? ''} // Use nullish coalescing (??) to allow empty value
               label="Gender"
               onChange={(e) =>
-                handleChangeProfile('gender', e.target.value as Gender)
+                handleChangeProfile(
+                  {
+                    key: 'gender',
+                    value: e.target.value as Gender,
+                    userToEdit,
+                  },
+                  {
+                    useProfile: profileContext,
+                  }
+                )
               }
             >
               <MenuItem value="" disabled>
@@ -197,7 +203,16 @@ export default function DashboardEditAthleteModal(
                   : null
               }
               onChange={(newValue) =>
-                handleChangeProfile('birthDate', newValue?.toDate())
+                handleChangeProfile(
+                  {
+                    key: 'birthDate',
+                    value: newValue?.toDate(),
+                    userToEdit,
+                  },
+                  {
+                    useProfile: profileContext,
+                  }
+                )
               }
               format="DD/MM/YYYY"
               slotProps={{ textField: { fullWidth: true } }}
@@ -217,7 +232,18 @@ export default function DashboardEditAthleteModal(
             <Select
               value={profileToEdit?.sport || ''}
               label="Sport"
-              onChange={(e) => handleChangeProfile('sport', e.target.value)}
+              onChange={(e) =>
+                handleChangeProfile(
+                  {
+                    key: 'sport',
+                    value: e.target.value,
+                    userToEdit,
+                  },
+                  {
+                    useProfile: profileContext,
+                  }
+                )
+              }
             >
               {SPORTS.map((s) => (
                 <MenuItem key={s} value={s}>
@@ -232,7 +258,16 @@ export default function DashboardEditAthleteModal(
               value={profileToEdit?.level ?? ''}
               label="Sport Level"
               onChange={(e) =>
-                handleChangeProfile('level', e.target.value as SportLevel)
+                handleChangeProfile(
+                  {
+                    key: 'level',
+                    value: e.target.value as SportLevel,
+                    userToEdit,
+                  },
+                  {
+                    useProfile: profileContext,
+                  }
+                )
               }
             >
               <MenuItem value="" disabled>

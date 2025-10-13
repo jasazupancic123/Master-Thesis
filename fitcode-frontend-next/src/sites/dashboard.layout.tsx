@@ -4,7 +4,7 @@ import { AppBar, Box, Container } from '@mui/material';
 import { useTheme } from '@mui/material';
 
 import type { ChildrenProps } from '@/common/type/props.type';
-import DashboardHeader from '@/components/dashboard-header/dashboard-header';
+import DashboardHeader from '@/components/dashboard/dashboard-header/dashboard-header';
 import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
 
 export default function DashboardLayout({ children }: ChildrenProps) {
