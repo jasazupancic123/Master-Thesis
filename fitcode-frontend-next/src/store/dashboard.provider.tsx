@@ -66,9 +66,13 @@ interface DashboardContextProps {
 
 const DashboardContext = createContext<DashboardContextProps | null>(null);
 
+export type UseDashboardReturnType = ReturnType<typeof useDashboard>;
+
 export const useDashboard = () => useContext(DashboardContext)!;
 
 export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
+  const { groups } = useMain();
+
   const {
     institutions: propsInstitutions,
     selectedInstitution: propsSelectedInstitution,
@@ -112,6 +116,28 @@ export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
   useEffect(() => {
     if (fetchedUsers) setUsers(fetchedUsers);
   }, [fetchedUsers, setUsers]);
+
+  useEffect(() => {
+    async function fetchGroups() {
+      if (!selectedInstitution || selectedInstitution.groups) return;
+      selectedInstitution.groups = groups.filter(
+        (g) => g.institutionId === selectedInstitution.id
+      );
+
+      if (
+        !selectedInstitution.groups ||
+        !selectedInstitution.groups.length ||
+        (selectedGroup &&
+          !selectedInstitution.groups
+            .map((g) => g.id)
+            .includes(selectedGroup?.id))
+      ) {
+        setSelectedGroup(null);
+      }
+    }
+
+    fetchGroups().then();
+  }, [selectedInstitution]);
 
   const value: DashboardContextProps = {
     filter,

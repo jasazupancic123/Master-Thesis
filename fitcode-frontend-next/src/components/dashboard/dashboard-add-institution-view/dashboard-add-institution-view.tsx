@@ -26,6 +26,7 @@ export default function AddInstitutionDashboard() {
   const { setInstitutions, refetchUsers } = useDashboard();
 
   const controller = InstitutionController.getInstance();
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

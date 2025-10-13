@@ -17,7 +17,7 @@ import {
 import Link from 'next/link';
 import { useState } from 'react';
 
-import SelectInputHorizontal from '../../util/select-input-horizontal/select-input-horizontal';
+import SelectInputHorizontal from '../../../../util/select-input-horizontal/select-input-horizontal';
 import {
   LINK_PROFILE,
   LINK_SETTINGS,
