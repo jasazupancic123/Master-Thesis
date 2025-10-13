@@ -1,7 +1,7 @@
 import { FormControl, MenuItem, Select, Stack, TextField } from '@mui/material';
 import { useTheme } from '@mui/material';
 
-import NumericExerciseParam from '../numeric-exercise-param/numeric-exercise-param';
+import NumericExerciseParam from './components/numeric-exercise-param/numeric-exercise-param';
 import {
   disableBorder,
   exerciseCardSetAttributeSx,

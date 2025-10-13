@@ -13,7 +13,7 @@ import { GroupController } from '@/controller/group/group.controller';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import HorizontalItemsList from '@/util/horizontal-items-list/horizontal-items-list';
-import MobileDoubleTextItems from '@/components/mobile-double-text-items/mobile-double-text-items';
+import MobileDoubleTextItems from '@/components/trainer-group-year-view/components/multi-cycle-slider/components/multi-cycle-slider-layout/components/mobile-double-text-items';
 import { handleAddCycle } from './actions/actions-cycle';
 import { useMultiCycleSliderCyclesProvider } from '@/components/trainer-group-year-view/context/cycles.provider';
 import { UseSliderPropertiesReturnType } from '../../hooks/use-slider-properties';

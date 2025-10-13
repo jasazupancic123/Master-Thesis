@@ -1,6 +1,6 @@
 import { Box, Collapse, Stack, Typography } from '@mui/material';
 
-import MuscleHeatmapView from '../../muscle-heatmap-view/muscle-heatmap-view';
+import MuscleHeatmapView from './components/muscle-heatmap-view/muscle-heatmap-view';
 import Supersets from '../../supersets/supersets';
 import type { TrainingComponentProps } from '../../trainer-group-day-view/props/props';
 import TrainingComponentCard from '../training-component-card/training-component-card';

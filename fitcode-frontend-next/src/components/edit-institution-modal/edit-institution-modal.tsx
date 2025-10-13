@@ -14,7 +14,7 @@ import {
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
-import GroupsDataGrid from '../groups-data-grid/groups-data-grid';
+import GroupsDataGrid from './groups-data-grid/groups-data-grid';
 import UsersDataGrid from '../users-data-grid/users-data-grid';
 import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
 import type { Institution } from '@/controller/institution/type/institution.type';

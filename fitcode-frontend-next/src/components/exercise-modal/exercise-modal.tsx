@@ -6,8 +6,7 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import React, { useEffect, useState } from 'react';
 
-import FlatSelectAttribute from '../select-attribute/flat-select-attribute';
-import SelectComponent from '../select-component/select-component';
+import SelectComponent from './components/select-component';
 import { isAdmin } from '@/common/firebase/firebase-auth.util';
 import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
 import { CommonService } from '@/common/service/common.service';
@@ -27,6 +26,7 @@ import type {
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import FileUpload from '@/util/file-upload/file-upload';
+import FlatSelectAttribute from './components/flat-select-attribute';
 
 const firebaseStorage = FirebaseStorageUtil.Instance;
 
