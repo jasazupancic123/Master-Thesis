@@ -13,8 +13,12 @@ export default function AddMemberModal(props: ModalProps) {
 
   const { users } = useMain();
 
+  const trainerDayViewContext = useTrainerDayViewContext();
+
   const { training, handleAddMember, handleRemoveMember } =
-    useTrainerDayViewContext();
+    trainerDayViewContext || {};
+
+  if (!training || !handleAddMember || !handleRemoveMember) return null;
 
   return (
     <MyModal isOpen={open} setIsOpen={setOpen} title="Add member">

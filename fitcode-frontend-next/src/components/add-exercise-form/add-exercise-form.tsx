@@ -1,7 +1,7 @@
 import { Box, Pagination, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 
-import ExerciseFilter from '../exercises-list/exercise-filter';
+import ExerciseFilter from '../exercises-list/components/exercise-filter/exercise-filter';
 import ExercisesList from '../exercises-list/exercises-list';
 import { SearchBar } from '../../util/search-bar/search-bar';
 import type { AddExerciseFormProps } from '../trainer-group-day-view/props/props';
