@@ -3,19 +3,22 @@ import { compareAsc, differenceInMinutes } from 'date-fns';
 
 import { DateFilterDto } from '@src/common/dto/date-filter.dto';
 import { TrainingReportRef } from '@src/common/type/firestore.type';
-
+import { ExerciseParamService } from '@src/exercise/service/exercise-param.service';
 import {
   DIST_TIME_IN_S,
   REP_TEMPO_TIME_IN_S,
-} from '../constant/training-limits.constant';
-import { ExerciseSet } from '../entity/exercise-set.entity';
-import { Training } from '../entity/training.entity';
-import { TrainingReport } from '../entity/training-report.entity';
-import { TrainingStats } from '../entity/training-stats.entity';
+} from '@src/training/constant/training-limits.constant';
+import { ExerciseSet } from '@src/training/entity/exercise-set.entity';
+import { Training } from '@src/training/entity/training.entity';
+import { TrainingReport } from '@src/training/entity/training-report.entity';
+import { TrainingStats } from '@src/training/entity/training-stats.entity';
+import { WorkloadService } from '@src/training/service/workload.service';
+import {
+  DefinedExerciseSet,
+  SetReport,
+} from '@src/training/type/training-set.type';
+
 import { TrainingReportRepository } from '../repository/training-report.repository';
-import { DefinedExerciseSet, SetReport } from '../type/training-set.type';
-import { ExerciseParamService } from './exercise-param.service';
-import { WorkloadService } from './workload.service';
 
 @Injectable()
 export class TrainingReportService {

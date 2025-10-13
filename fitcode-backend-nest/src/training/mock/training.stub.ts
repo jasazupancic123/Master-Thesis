@@ -10,7 +10,7 @@ import {
   COOLDOWN_COMPONENT_ID,
   WARMUP_COMPONENT_ID,
 } from '@src/component/constant/warmup-cooldown.constant';
-import { ExerciseParam } from '@src/training/constant/exercise-param.constant';
+import { ExerciseParam } from '@src/exercise/constant/exercise-param.constant';
 
 import type { ExerciseSet } from '../entity/exercise-set.entity';
 import type { Subgroup } from '../entity/subgroup.entity';

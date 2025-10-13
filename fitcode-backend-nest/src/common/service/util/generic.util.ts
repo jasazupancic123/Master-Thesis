@@ -1,27 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
-import type { ClassConstructor } from 'class-transformer';
-import { plainToInstance } from 'class-transformer';
 import type { WhereFilterOp } from 'firebase-admin/firestore';
 
-import type { PaginateOptions } from '@src/common/type/orm.type';
-
-export class GenericUtil {
-  serializeToDto<T, V extends Array<unknown>>(
-    dtoClass: ClassConstructor<T>,
-    plain: V,
-  ): T[];
-  serializeToDto<T, V>(dtoClass: ClassConstructor<T>, plain: V): T;
-  serializeToDto<T, V>(dtoClass: ClassConstructor<T>, plain: V | V[]): T | T[] {
-    return plainToInstance(dtoClass, plain, { excludeExtraneousValues: true });
-  }
-
-  paginate<T>(data: T[], options: PaginateOptions<T> = {}): T[] {
-    const { page, pageSize } = options;
-    const start = (page - 1) * pageSize;
-    const end = page * pageSize;
-    return data.slice(start, end);
-  }
-}
+export class GenericUtil {}
 
 export function parseQueryArray(value: string): string[] {
   if (!value) return [];

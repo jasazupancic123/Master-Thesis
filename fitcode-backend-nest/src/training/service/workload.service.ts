@@ -12,22 +12,21 @@ import {
   WorkloadRef,
 } from '@src/common/type/firestore.type';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
+import { ExerciseParamService } from '@src/exercise/service/exercise-param.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
-
-import { CreatePrescribedWorkloadDto } from '../dto/create-workload.dto';
-import { ExerciseSet } from '../entity/exercise-set.entity';
-import { Training } from '../entity/training.entity';
-import { TrainingComponent } from '../entity/training-component.entity';
-import { TrainingExercise } from '../entity/training-exercise.entity';
+import { CreatePrescribedWorkloadDto } from '@src/training/dto/create-workload.dto';
+import { ExerciseSet } from '@src/training/entity/exercise-set.entity';
+import { Training } from '@src/training/entity/training.entity';
+import { TrainingComponent } from '@src/training/entity/training-component.entity';
+import { TrainingExercise } from '@src/training/entity/training-exercise.entity';
 import {
   CreateWorkload,
   Workload,
   WorkloadMeta,
-} from '../entity/workload.entity';
-import { SetStatus } from '../enum/set-status.enum';
+} from '@src/training/entity/workload.entity';
+import { SetStatus } from '@src/training/enum/set-status.enum';
+
 import { WorkloadRepository } from '../repository/workload.repository';
-import { ExerciseParamService } from './exercise-param.service';
-import { TrainingPlanService } from './training-plan.service';
 
 @Injectable()
 export class WorkloadService {
@@ -36,12 +35,15 @@ export class WorkloadService {
     private readonly firebaseService: FirebaseService,
     private readonly repository: WorkloadRepository,
     private readonly exerciseParamService: ExerciseParamService,
-    private readonly trainingPlanService: TrainingPlanService,
     private readonly exerciseService: ExerciseService,
   ) {}
 
   getDoc(id: WorkloadRef) {
     return this.repository.doc(id);
+  }
+
+  async findExerciseMax(userId: string, exerciseId: string, range?: number) {
+    return await this.repository.findExerciseMax(userId, exerciseId, range);
   }
 
   async getDocs(
@@ -233,9 +235,11 @@ export class WorkloadService {
     input: CreateWorkload,
   ): Promise<Workload> {
     // find prescribed set
-    const component = this.trainingPlanService
-      .getTrainingComponents(training)
-      .find((c) => c.id === ref.componentId);
+    const component = [
+      training.warmup,
+      ...training.components,
+      training.cooldown,
+    ].find((c) => c.id === ref.componentId);
 
     if (!component)
       throw new BadRequestException('Component not found in training');

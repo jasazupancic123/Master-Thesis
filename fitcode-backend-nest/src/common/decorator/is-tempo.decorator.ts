@@ -13,7 +13,8 @@ export function IsTempo(validationOptions?: ValidationOptions) {
       validator: {
         validate(value: any, _args: ValidationArguments) {
           if (typeof value !== 'string') return false;
-          return TEMPO_REGEX.test(value);
+          const regex = new RegExp(TEMPO_REGEX);
+          return regex.test(value);
         },
         defaultMessage(args: ValidationArguments) {
           return `${args.property} must be a valid tempo string in the format "eccentric:pauseBottom:concentric:pauseTop" (e.g. "2.5:0:3.5:0")`;

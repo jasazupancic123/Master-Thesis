@@ -40,10 +40,7 @@ import {
   UserRef,
   WorkloadRef,
 } from '@src/common/type/firestore.type';
-import {
-  BatchUpdateOperation,
-  BatchWriteOperation,
-} from '@src/common/type/orm.type';
+import { BatchUpdateOperation } from '@src/common/type/orm.type';
 import { Filter } from '@src/common/type/orm.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
 import { ComponentService } from '@src/component/component.service';
@@ -52,6 +49,7 @@ import {
   WARMUP_COMPONENT_ID,
 } from '@src/component/constant/warmup-cooldown.constant';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
+import { ExerciseParamService } from '@src/exercise/service/exercise-param.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { DELETE_GROUP_EVENT } from '@src/group/constant/delete-group-event.constant';
 import { Cycle } from '@src/group/entity/cycle.entity';
@@ -65,6 +63,8 @@ import { InstitutionService } from '@src/institution/service/institution.service
 import { MethodService } from '@src/method/service/method.service';
 import { PeriodizationService } from '@src/periodization/periodization.service';
 import { WellnessService } from '@src/profile/service/wellness.service';
+import { TrainingReportService } from '@src/training/service/training-report.service';
+import { WorkloadService } from '@src/training/service/workload.service';
 
 import {
   DURATION_TRAINING_COMPONENT_IN_MIN,
@@ -86,11 +86,7 @@ import { LoadType } from '../enum/load-type.enum';
 import { MainSet } from '../enum/main-set.enum';
 import { UpdateTraining } from '../interface/update-training.interface';
 import { TrainingRepository } from '../repository/training.repository';
-import { WorkloadRepository } from '../repository/workload.repository';
-import { ExerciseParamService } from './exercise-param.service';
 import { TrainingPlanService } from './training-plan.service';
-import { TrainingReportService } from './training-report.service';
-import { WorkloadService } from './workload.service';
 
 @Injectable()
 export class TrainingService implements Permission<Training, Institution> {
@@ -101,13 +97,12 @@ export class TrainingService implements Permission<Training, Institution> {
     @Inject(forwardRef(() => AuthService))
     private readonly authService: Wrapper<AuthService>,
     private readonly commonService: CommonService,
+    private readonly repository: TrainingRepository,
     private readonly componentService: ComponentService,
     private readonly methodService: MethodService,
     private readonly periodizationService: PeriodizationService,
     private readonly wellnessService: WellnessService,
-    private readonly repository: TrainingRepository,
     private readonly trainingPlanService: TrainingPlanService,
-    private readonly workloadRepository: WorkloadRepository,
     private readonly workloadService: WorkloadService,
     private readonly trainingReportService: TrainingReportService,
     private readonly groupService: GroupService,
@@ -389,30 +384,6 @@ export class TrainingService implements Permission<Training, Institution> {
         const found = training.components.find((tc) => tc.id === c.id)!;
         return { ...c, from: found?.from, to: found?.to };
       });
-
-    // validate custom workloads
-    if (input.workloads) {
-      const inputWorkloads = await this.workloadService.validateWorkloads(
-        input.workloads,
-        trainingComponents,
-      );
-
-      const operations: BatchWriteOperation<Workload>[] = [];
-      for (const w of inputWorkloads) {
-        const ref: WorkloadRef = { ...w, trainingId: training.id };
-        w.id = this.workloadRepository.getKey(ref);
-
-        operations.push({
-          operation: 'set',
-          data: this.firebase.buildCreateQuery<Workload>(w),
-          ref: this.workloadRepository.doc(ref),
-        });
-      }
-
-      const batch = this.firebase.firestore.batch();
-      for (const { ref, data } of operations) batch.set(ref, data);
-      await batch.commit();
-    }
 
     const updateTraining: Update<Training> = {
       warmup: input.warmup,
@@ -868,7 +839,7 @@ export class TrainingService implements Permission<Training, Institution> {
     const maxes: Workload[] = (
       await Promise.all(
         exercises.map((e) =>
-          this.workloadRepository.findExerciseMax(athleteId, e.id),
+          this.workloadService.findExerciseMax(athleteId, e.id),
         ),
       )
     ).filter(Boolean);

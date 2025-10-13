@@ -19,7 +19,7 @@ import { FilterUserQueryDto } from './dto/filter-user-query.dto';
 import { IdTokenDto } from './dto/login.dto';
 import { RegisterAthleteDto } from './dto/register-athlete.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { AuthUser } from './entities/user.entity';
+import { AuthUser } from './entity/user.entity';
 import { UserRole } from './enum/user-role.enum';
 import { AuthService } from './service/auth.service';
 

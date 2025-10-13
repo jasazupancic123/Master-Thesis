@@ -90,9 +90,10 @@ export class AttributeService {
             if (typeof v.value !== 'string')
               message = `Value for attribute "${attribute.name}" must be a string`;
 
+            const regex = new RegExp(attribute.pattern || '');
             if (
               !this.common.object.isEmpty(attribute.pattern) &&
-              !new RegExp(attribute.pattern!).test(v.value as string)
+              !regex.test(v.value as string)
             )
               message = `Value for attribute "${attribute.name}" does not match required pattern`;
 

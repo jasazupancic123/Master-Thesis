@@ -26,6 +26,7 @@ import { DateFilterDto } from '@src/common/dto/date-filter.dto';
 import { DateRangeDto } from '@src/common/dto/date-range.dto';
 import { UserIdDto } from '@src/common/dto/user-id.dto';
 import { InstitutionService } from '@src/institution/service/institution.service';
+import { TrainingReportService } from '@src/training/service/training-report.service';
 
 import { UserRole } from '../auth/enum/user-role.enum';
 import { Auth } from '../common/decorator/auth.decorator';
@@ -40,7 +41,6 @@ import { UpdateTrainingDto } from './dto/update-training.dto';
 import { Training } from './entity/training.entity';
 import { CreateWorkload, Workload } from './entity/workload.entity';
 import { TrainingService } from './service/training.service';
-import { TrainingReportService } from './service/training-report.service';
 
 @ApiTags('Training')
 @Controller('training')

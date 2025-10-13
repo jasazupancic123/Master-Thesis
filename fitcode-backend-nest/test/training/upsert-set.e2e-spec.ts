@@ -292,4 +292,93 @@ describe('Upsert Set (e2e)', () => {
 
     await db.workloads.deleteAll(trainingId);
   });
+
+  it('should be able to insert all possible properties', async () => {
+    const res = await req(
+      global.trainer.token,
+      trainingId,
+      component1.id,
+      'squat',
+      0,
+      1,
+      {
+        userId: global.athlete.uid,
+        timestamp: new Date(),
+        recTime: 60,
+        reps: 6,
+        repsR: 5,
+        loadKg: 60,
+        loadKgR: 50,
+        tempo: '2.1:5.1:3.2:0.1',
+        tempoR: '3.1:0.1:2.2:4.1',
+        tempos: ['2.1:5.1:3.2:0.1', '3.1:0.1:2.2:4.1', '2.1:5.1:3.2:0.1'],
+        temposR: ['3.1:0.1:2.2:4.1', '2.1:5.1:3.2:0.1', '3.1:0.1:2.2:4.1'],
+        vel: 0.5,
+        velR: 0.4,
+        velocities: [0.5, 0.4, 0.45],
+        velocitiesR: [0.4, 0.5, 0.55],
+        rom: 50,
+        romR: 45,
+        roms: [50, 48, 52],
+        romsR: [45, 47, 44],
+        feedback: ['Felt good', 'Could be better'],
+        feedbackR: ['Left side weak'],
+        rir: 2,
+        rirR: 3,
+        notes: 'some notes',
+        dist: 50,
+        eff: 1,
+        photoURLs: ['url1', 'url2', 'url3'],
+        recDist: 500,
+        time: 300,
+      },
+    );
+
+    expect(res.status).toBe(201);
+    const result = res.body as Workload;
+
+    expect(result.trainingId).toBe(trainingId);
+    expect(result.componentId).toBe(component1.id);
+    expect(result.exerciseId).toBe('squat');
+    expect(result.supersetIndex).toBe(0);
+    expect(result.setNumber).toBe(1);
+
+    expect(result.reps).toBe(6);
+    expect(result.repsR).toBe(5);
+    expect(result.loadKg).toBe(60);
+    expect(result.loadKgR).toBe(50);
+    expect(result.recTime).toBe(60);
+    expect(result.tempo).toBe('2.1:5.1:3.2:0.1');
+    expect(result.tempoR).toBe('3.1:0.1:2.2:4.1');
+    expect(result.tempos).toEqual([
+      '2.1:5.1:3.2:0.1',
+      '3.1:0.1:2.2:4.1',
+      '2.1:5.1:3.2:0.1',
+    ]);
+    expect(result.temposR).toEqual([
+      '3.1:0.1:2.2:4.1',
+      '2.1:5.1:3.2:0.1',
+      '3.1:0.1:2.2:4.1',
+    ]);
+    expect(result.vel).toBe(0.5);
+    expect(result.velR).toBe(0.4);
+    expect(result.velocities).toEqual([0.5, 0.4, 0.45]);
+    expect(result.velocitiesR).toEqual([0.4, 0.5, 0.55]);
+    expect(result.rom).toBe(50);
+    expect(result.romR).toBe(45);
+    expect(result.roms).toEqual([50, 48, 52]);
+    expect(result.romsR).toEqual([45, 47, 44]);
+    expect(result.feedback).toEqual(['Felt good', 'Could be better']);
+    expect(result.feedbackR).toEqual(['Left side weak']);
+    expect(result.rir).toBe(2);
+    expect(result.rirR).toBe(3);
+    expect(result.notes).toBe('some notes');
+    expect(result.dist).toBe(50);
+    expect(result.eff).toBe(1);
+    expect(result.photoURLs).toEqual(['url1', 'url2', 'url3']);
+    expect(result.recDist).toBe(500);
+    expect(result.time).toBe(300);
+
+    await db.workloads.deleteAll(trainingId);
+  });
 });

@@ -5,7 +5,7 @@ import { TestPeriodizationUtil } from '@test/common/utils/periodization.util';
 import { CommonModule } from '@src/common/common.module';
 import type { TrainingComponentRef } from '@src/common/type/firestore.type';
 import { validationSchema } from '@src/config/environment-validation-schema';
-import { ExerciseParam } from '@src/training/constant/exercise-param.constant';
+import { ExerciseParam } from '@src/exercise/constant/exercise-param.constant';
 import { MAIN_GROUP_PARENT_ID } from '@src/training/constant/main-group-parent-id.constant';
 import type { TrainingExercise } from '@src/training/entity/training-exercise.entity';
 import { PeriodizationType } from '@src/training/enum/periodization-type.enum';
