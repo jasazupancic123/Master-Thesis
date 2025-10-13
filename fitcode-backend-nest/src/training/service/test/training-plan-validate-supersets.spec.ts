@@ -11,6 +11,7 @@ import { validationSchema } from '@src/config/environment-validation-schema';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { ExerciseAttributeService } from '@src/exercise/service/exercise-attribute.service';
+import { ExerciseParamService } from '@src/exercise/service/exercise-param.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import type { Method } from '@src/method/entity/method.entity';
@@ -28,7 +29,6 @@ import {
 } from '@src/training/mock/training.stub';
 import { WorkloadRepository } from '@src/training/repository/workload.repository';
 
-import { ExerciseParamService } from '../exercise-param.service';
 import { TrainingPlanService } from '../training-plan.service';
 import { WorkloadService } from '../workload.service';
 
@@ -52,7 +52,6 @@ describe('validateSupersets', () => {
           useValue: createMock<CacheManagerService>(),
         },
         AttributeService,
-        ExerciseParamService,
         {
           provide: ComponentService,
           useValue: createMock<ComponentService>(),
@@ -77,6 +76,7 @@ describe('validateSupersets', () => {
           provide: WorkloadService,
           useValue: createMock<WorkloadService>(),
         },
+        ExerciseParamService,
         TrainingPlanService,
       ],
     }).compile();
@@ -88,12 +88,6 @@ describe('validateSupersets', () => {
   const root = generateComponentStub({ id: 'c1' });
   beforeEach(() => {
     jest.spyOn(componentService, 'getRoot').mockImplementation(() => root);
-    /* jest
-      .spyOn(componentService, 'getComponentParamAttributes')
-      .mockReturnValue(
-        generateComponentParamsStub([ParamType.VolWork1, ParamType.IntWork1]),
-      );
-    jest.spyOn(componentService, 'getParamAttributes').mockReturnValue(PARAMS); */
   });
 
   const exercises = [

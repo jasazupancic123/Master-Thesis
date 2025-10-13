@@ -17,7 +17,6 @@ import {
 import { GLOBAL_EXERCISE_OWNER } from '@src//exercise/constant/global-exercise-owner.constant';
 import { Institution } from '@src//institution/entity/institution.entity';
 import { DeepPick } from '@src/common/interface/deep-pick.interface';
-import { CommonService } from '@src/common/service/common.service';
 import { User } from '@src/common/type/firebase-auth.type';
 import { ComponentRef } from '@src/common/type/firestore.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
@@ -29,6 +28,7 @@ import {
 import { Component } from '@src/component/entity/component.entity';
 import { Exercise } from '@src/exercise/entity/exercise.entity';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
+import { ExerciseParamService } from '@src/exercise/service/exercise-param.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { Method } from '@src/method/entity/method.entity';
 
@@ -57,17 +57,15 @@ import {
   UpdateSuperset,
   UpdateTrainingComponentWithoutTime,
 } from '../interface/update-training.interface';
-import { ExerciseParamService } from './exercise-param.service';
 
 @Injectable()
 export class TrainingPlanService {
   constructor(
-    private readonly common: CommonService,
-    private readonly exerciseParamService: ExerciseParamService,
     private readonly institutionService: InstitutionService,
     private readonly componentService: ComponentService,
     @Inject(forwardRef(() => ExerciseService))
     private readonly exerciseService: Wrapper<ExerciseService>,
+    private readonly exerciseParamService: ExerciseParamService,
   ) {}
 
   async getInstitution(exercise: Exercise): Promise<Institution | null> {

@@ -12,6 +12,7 @@ import { validationSchema } from '@src/config/environment-validation-schema';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { ExerciseAttributeService } from '@src/exercise/service/exercise-attribute.service';
+import { ExerciseParamService } from '@src/exercise/service/exercise-param.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { MainSet } from '@src/training/enum/main-set.enum';
@@ -23,7 +24,6 @@ import {
 } from '@src/training/mock/training.stub';
 import { WorkloadRepository } from '@src/training/repository/workload.repository';
 
-import { ExerciseParamService } from '../exercise-param.service';
 import { TrainingPlanService } from '../training-plan.service';
 import { WorkloadService } from '../workload.service';
 
@@ -50,10 +50,6 @@ describe('copySubgroup', () => {
           useValue: createMock<AttributeService>(),
         },
         {
-          provide: ExerciseParamService,
-          useValue: createMock<ExerciseParamService>(),
-        },
-        {
           provide: ComponentRepository,
           useValue: createMock<ComponentRepository>,
         },
@@ -78,6 +74,7 @@ describe('copySubgroup', () => {
           provide: WorkloadService,
           useValue: createMock<WorkloadService>(),
         },
+        ExerciseParamService,
         TrainingPlanService,
       ],
     }).compile();

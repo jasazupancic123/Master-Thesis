@@ -13,7 +13,6 @@ import { Training } from './entity/training.entity';
 import { TrainingRepository } from './repository/training.repository';
 import { TrainingReportRepository } from './repository/training-report.repository';
 import { WorkloadRepository } from './repository/workload.repository';
-import { ExerciseParamService } from './service/exercise-param.service';
 import { TrainingService } from './service/training.service';
 import { TrainingPlanService } from './service/training-plan.service';
 import { TrainingReportService } from './service/training-report.service';
@@ -38,7 +37,6 @@ import { TrainingController } from './training.controller';
     TrainingReportRepository,
     TrainingRepository,
     WorkloadService,
-    ExerciseParamService,
     TrainingReportService,
     TrainingPlanService,
   ],
@@ -48,7 +46,7 @@ import { TrainingController } from './training.controller';
     WorkloadRepository,
     TrainingRepository,
     WorkloadService,
-    ExerciseParamService,
+    TrainingReportService,
     TrainingPlanService,
   ],
 })

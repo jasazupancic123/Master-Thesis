@@ -15,6 +15,7 @@ import {
 } from 'firebase-admin/auth';
 import { v4 } from 'uuid';
 
+import { SESSION_COOKIE_NAME } from '@src/common/constant/cookie.constant';
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
 import { CommonService } from '@src/common/service/common.service';
 import { User } from '@src/common/type/firebase-auth.type';
@@ -22,12 +23,11 @@ import { Wrapper } from '@src/common/type/wrapper.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 
-import { SESSION_COOKIE_NAME } from '../constant/cookie.constant';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateCustomClaimsDto } from '../dto/custom-claims.dto';
 import { FilterUserQueryDto } from '../dto/filter-user-query.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
-import { AuthUser } from '../entities/user.entity';
+import { AuthUser } from '../entity/user.entity';
 import { UserRole } from '../enum/user-role.enum';
 
 @Injectable()

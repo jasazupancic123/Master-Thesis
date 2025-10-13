@@ -18,6 +18,7 @@ import { validationSchema } from '@src/config/environment-validation-schema';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { ExerciseAttributeService } from '@src/exercise/service/exercise-attribute.service';
+import { ExerciseParamService } from '@src/exercise/service/exercise-param.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { MAIN_GROUP_PARENT_ID } from '@src/training/constant/main-group-parent-id.constant';
@@ -29,7 +30,6 @@ import {
 } from '@src/training/mock/training.stub';
 import { WorkloadRepository } from '@src/training/repository/workload.repository';
 
-import { ExerciseParamService } from '../exercise-param.service';
 import { TrainingPlanService } from '../training-plan.service';
 import { WorkloadService } from '../workload.service';
 
@@ -53,7 +53,6 @@ describe('validateTrainingComponents', () => {
           useValue: createMock<CacheManagerService>(),
         },
         AttributeService,
-        ExerciseParamService,
         {
           provide: ComponentService,
           useValue: createMock<ComponentService>(),
@@ -78,6 +77,7 @@ describe('validateTrainingComponents', () => {
           provide: WorkloadService,
           useValue: createMock<WorkloadService>(),
         },
+        ExerciseParamService,
         TrainingPlanService,
       ],
     }).compile();

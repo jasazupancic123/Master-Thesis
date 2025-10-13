@@ -15,9 +15,8 @@ import {
 } from '@src/common/type/firestore.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
-
-import { Workload } from '../entity/workload.entity';
-import { TrainingRepository } from './training.repository';
+import { Workload } from '@src/training/entity/workload.entity';
+import { TrainingRepository } from '@src/training/repository/training.repository';
 
 @Injectable()
 export class WorkloadRepository extends FirestoreRepository<

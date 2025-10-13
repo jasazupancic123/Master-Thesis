@@ -107,6 +107,13 @@ export class WorkloadPrimarySide extends ExerciseSetPrimarySide {
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
+  rir?: number; // reps in reserve
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
   rom?: number; // in cm
 
   // the following fields are AI diagnostics
@@ -143,14 +150,14 @@ export class WorkloadSecondarySide extends ExerciseSetSecondarySide {
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
-  romR?: number;
+  rirR?: number;
 
   @IsNumber()
   @Min(0)
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
-  velocityR?: number;
+  romR?: number;
 
   // the following fields are AI diagnostics
   @IsTempo({ each: true })
@@ -221,4 +228,8 @@ export class CreateWorkload extends OmitType(Workload, [
   'supersetIndex',
   'status',
   'prescribed',
+  'loadBw',
+  'loadBwR',
+  'loadRm',
+  'loadRmR',
 ] as const) {}

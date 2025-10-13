@@ -10,9 +10,8 @@ import {
   ValidateNested,
 } from 'class-validator';
 
+import { IsValidDefaultValue } from '@src/common/decorator/is-valid-default-value.decorator';
 import { AttributeType } from '@src/common/enum/attribute-type.enum';
-
-import { IsValidDefaultValue } from '../decorator/is-valid-default-value.decorator';
 
 export class BaseAttribute<T> {
   @IsString()

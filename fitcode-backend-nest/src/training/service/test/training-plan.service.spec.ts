@@ -6,16 +6,14 @@ import { AttributeService } from '@src/attribute/service/attribute.service';
 import { CacheManagerService } from '@src/cache-manager/cache-manager.service';
 import { CommonModule } from '@src/common/common.module';
 import { ComponentService } from '@src/component/component.service';
-import { generateComponentStub } from '@src/component/mock/component.stub';
 import { ComponentRepository } from '@src/component/repository/component.repository';
 import { validationSchema } from '@src/config/environment-validation-schema';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { ExerciseAttributeService } from '@src/exercise/service/exercise-attribute.service';
+import { ExerciseParamService } from '@src/exercise/service/exercise-param.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
-import { ExerciseParam } from '@src/training/constant/exercise-param.constant';
-import { LoadType } from '@src/training/enum/load-type.enum';
 import {
   generateSuperset,
   generateTrainingComponent,
@@ -23,15 +21,12 @@ import {
 } from '@src/training/mock/training.stub';
 import { WorkloadRepository } from '@src/training/repository/workload.repository';
 
-import { ExerciseParamService } from '../exercise-param.service';
 import { TrainingPlanService } from '../training-plan.service';
 import { WorkloadService } from '../workload.service';
 
 describe('TrainingPlanService (unit)', () => {
   let service: TrainingPlanService;
-  let componentService: ComponentService;
   let exerciseService: ExerciseService;
-  let exerciseParamService: ExerciseParamService;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -63,7 +58,6 @@ describe('TrainingPlanService (unit)', () => {
           useValue: createMock<ExerciseService>(),
         },
         ExerciseAttributeService,
-        ExerciseParamService,
         {
           provide: WorkloadRepository,
           useValue: createMock<WorkloadRepository>(),
@@ -72,14 +66,13 @@ describe('TrainingPlanService (unit)', () => {
           provide: WorkloadService,
           useValue: createMock<WorkloadService>(),
         },
+        ExerciseParamService,
         TrainingPlanService,
       ],
     }).compile();
 
     service = moduleRef.get(TrainingPlanService);
-    componentService = moduleRef.get(ComponentService);
     exerciseService = moduleRef.get(ExerciseService);
-    exerciseParamService = moduleRef.get(ExerciseParamService);
   });
 
   it('should find all training exercises', async () => {
@@ -137,35 +130,5 @@ describe('TrainingPlanService (unit)', () => {
       expect.objectContaining({ id: 'e4' }),
       expect.objectContaining({ id: 'e5' }),
     ]);
-  });
-
-  it('should correctly populate exercise parameters', () => {
-    const isUnilateral = true;
-    const component = generateComponentStub({ params: ['loadKg', 'eff'] });
-
-    componentService.getRoot = jest.fn().mockReturnValue(component);
-    const setParams = exerciseParamService.getSetParams(
-      isUnilateral,
-      component.params,
-    );
-
-    expect(setParams.reps).toBe(ExerciseParam.REPS.defaultValue);
-    expect(setParams.repsR).toBe(ExerciseParam.REPS.defaultValue);
-    expect(setParams.loadKg).toBe(ExerciseParam.KG.defaultValue);
-    expect(setParams.loadKgR).toBe(ExerciseParam.KG.defaultValue);
-    expect(setParams.eff).toBe(ExerciseParam.EFF.defaultValue);
-    expect(setParams.loadType).toBe(LoadType.Kg);
-    expect(setParams.loadRm).toBeUndefined();
-    expect(setParams.loadRmR).toBeUndefined();
-    expect(setParams.loadBw).toBeUndefined();
-    expect(setParams.loadBwR).toBeUndefined();
-    expect(setParams.tempo).toBeUndefined();
-    expect(setParams.tempoR).toBeUndefined();
-    expect(setParams.vel).toBeUndefined();
-    expect(setParams.velR).toBeUndefined();
-    expect(setParams.recTime).toBeUndefined();
-    expect(setParams.time).toBeUndefined();
-    expect(setParams.dist).toBeUndefined();
-    expect(setParams.recDist).toBeUndefined();
   });
 });

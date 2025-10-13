@@ -1,7 +1,7 @@
 import type { Attribute } from '@src/attribute/entity/attribute.entity';
+import { TEMPO_REGEX } from '@src/common/constant/tempo-regex.constant';
 import { AttributeType } from '@src/common/enum/attribute-type.enum';
-
-import type { ExerciseSet } from '../entity/exercise-set.entity';
+import type { ExerciseSet } from '@src/training/entity/exercise-set.entity';
 
 export const DEFAULT_PARAMS_KEY = 'default';
 
@@ -123,7 +123,7 @@ export class ExerciseParam {
     description: 'tempo',
     type: AttributeType.String,
     defaultValue: '2:0:1:0',
-    pattern: '^[0-9]+:[0-9]+:[0-9]+:[0-9]+$', // e.g. "2:0:1:0", meaning "eccentric:isometric:concentric:isometric" in seconds
+    pattern: TEMPO_REGEX, // e.g. "2:0:1:0", meaning "eccentric:isometric:concentric:isometric" in seconds
   };
 
   static readonly TIME: Attribute<ExerciseSet> = {

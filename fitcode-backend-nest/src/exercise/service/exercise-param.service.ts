@@ -6,18 +6,18 @@ import { CommonService } from '@src/common/service/common.service';
 import { ValidateError } from '@src/common/type/validate.type';
 import { Exercise } from '@src/exercise/entity/exercise.entity';
 import { Method } from '@src/method/entity/method.entity';
-
-import { ExerciseParam } from '../constant/exercise-param.constant';
 import {
   DEFAULT_NUM_SETS_IN_EXERCISE,
   MAX_NUM_SETS_IN_EXERCISE,
-} from '../constant/training-limits.constant';
+} from '@src/training/constant/training-limits.constant';
 import {
   ExerciseSet,
   ExerciseSetPrimarySide,
   ExerciseSetSecondarySide,
-} from '../entity/exercise-set.entity';
-import { LoadType } from '../enum/load-type.enum';
+} from '@src/training/entity/exercise-set.entity';
+import { LoadType } from '@src/training/enum/load-type.enum';
+
+import { ExerciseParam } from '../constant/exercise-param.constant';
 
 @Injectable()
 export class ExerciseParamService {
