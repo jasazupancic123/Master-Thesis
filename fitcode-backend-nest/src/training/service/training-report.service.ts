@@ -50,11 +50,11 @@ export class TrainingReportService {
     const ref: TrainingReportRef = { trainingId: training.id, userId };
     const workloads = (
       await this.workloadService.findAllByUserTraining(userId, ref)
-    ).sort((a, b) => compareAsc(new Date(a.from), new Date(b.from)));
+    ).sort((a, b) => compareAsc(new Date(a.timestamp), new Date(b.timestamp)));
 
     const stats = this.getTrainingStats(training);
-    const from = workloads[0]?.from || new Date();
-    const to = workloads[workloads.length - 1]?.to || from;
+    const from = workloads[0]?.timestamp || new Date();
+    const to = workloads[workloads.length - 1]?.timestamp || from;
 
     const components = new Set(workloads.map((w) => w.componentId));
     const exercises = new Set(workloads.map((w) => w.exerciseId));
@@ -192,7 +192,7 @@ export class TrainingReportService {
       totalSets: 0,
       totalReps: 0,
       totalRecTime: 0,
-      totalActiveTime: 0,
+      totalTit: 0,
       totalTonnage: 0,
     };
 
@@ -208,7 +208,7 @@ export class TrainingReportService {
             const setReport = this.getSetReport(set);
             stats.totalReps += setReport.reps;
             stats.totalRecTime += setReport.recTime;
-            stats.totalActiveTime += setReport.tit;
+            stats.totalTit += setReport.tit;
             stats.totalTonnage += setReport.tonnage;
 
             if (setReport.time > 0) {
@@ -264,13 +264,13 @@ export class TrainingReportService {
     const tempo = set.tempo
       ? this.exerciseParamService.tempoToSeconds(set.tempo) ||
         REP_TEMPO_TIME_IN_S
-      : 0;
+      : REP_TEMPO_TIME_IN_S;
 
     const tempoR =
       set.tempo && set.tempoR
         ? this.exerciseParamService.tempoToSeconds(set.tempoR) ||
           REP_TEMPO_TIME_IN_S
-        : 0;
+        : REP_TEMPO_TIME_IN_S;
 
     return {
       reps: set.reps || 1,

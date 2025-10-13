@@ -120,11 +120,6 @@ export function generateTrainingExercise(
   };
 }
 
-type ExerciseSetOptions = {
-  random?: boolean;
-  isUnilateral?: boolean;
-};
-
 /**
  * Generates an ExerciseSet object. If paramValuesOrComponentParams is not provided,
  * it generates random parameter values for the set, else it uses the provided values
@@ -137,30 +132,25 @@ type ExerciseSetOptions = {
  * @param random - if true, generates random values for the set
  */
 
-export function generateExerciseSet<T extends keyof ExerciseSet>(
+export function generateExerciseSet(
   setNumber: number,
-  params?: T[],
-  options?: ExerciseSetOptions,
+  params?: Partial<ExerciseSet>,
 ): ExerciseSet {
+  // defaults
   const set: ExerciseSet = {
     setNumber,
-    reps: ExerciseParam.REPS.defaultValue as number,
-    recTime: ExerciseParam.REC_TIME.defaultValue as number,
+    reps: 10,
+    recTime: 60,
     loadType: LoadType.Kg,
   };
 
-  const _params = params || ExerciseParam.fields;
-  for (const param of _params) {
-    set[param as T] = generateParamValue(
-      param,
-      options?.random,
-    ) as ExerciseSet[T];
-  }
+  if (params && typeof params === 'object' && !Array.isArray(params))
+    Object.assign(set, params);
 
   return set;
 }
 
-function generateParamValue<T extends keyof ExerciseSet>(
+function _generateParamValue<T extends keyof ExerciseSet>(
   param: T,
   random?: boolean,
 ): ExerciseSet[T] {

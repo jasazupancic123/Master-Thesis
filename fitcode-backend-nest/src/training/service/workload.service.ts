@@ -19,7 +19,11 @@ import { ExerciseSet } from '../entity/exercise-set.entity';
 import { Training } from '../entity/training.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
-import { Workload, WorkloadMeta } from '../entity/workload.entity';
+import {
+  CreateWorkload,
+  Workload,
+  WorkloadMeta,
+} from '../entity/workload.entity';
 import { SetStatus } from '../enum/set-status.enum';
 import { WorkloadRepository } from '../repository/workload.repository';
 import { ExerciseParamService } from './exercise-param.service';
@@ -132,19 +136,20 @@ export class WorkloadService {
   async upsert(
     ref: WorkloadRef & CycleRef & InstitutionRef,
     prescribed: ExerciseSet,
-    completed: Workload,
+    completed: CreateWorkload,
   ) {
+    const setNumber = ref.setNumber;
     const workloadMeta: WorkloadMeta = {
       ...ref,
       id: this.repository.getKey(ref),
-      status: this.getStatus(prescribed, completed),
+      status: this.getStatus(prescribed, { ...completed, setNumber }),
       notes: completed.notes,
     };
 
     const workload: Create<Workload> = {
       ...workloadMeta,
       ...completed,
-      prescribed: prescribed,
+      prescribed,
     };
 
     await this.repository.save(ref, workload);
@@ -158,7 +163,7 @@ export class WorkloadService {
   async completeNextSet(
     ref: Pick<WorkloadRef, 'trainingId' | 'exerciseId' | 'userId'>,
     training: Training, // prescribed training for user
-    input: Workload,
+    input: CreateWorkload,
   ): Promise<Workload> {
     // find exercise in training
     const existingExerciseWorkloads = await this.findAllByUserTraining(
@@ -225,7 +230,7 @@ export class WorkloadService {
   async upsertSet(
     ref: WorkloadRef,
     training: Training,
-    input: Workload,
+    input: CreateWorkload,
   ): Promise<Workload> {
     // find prescribed set
     const component = this.trainingPlanService

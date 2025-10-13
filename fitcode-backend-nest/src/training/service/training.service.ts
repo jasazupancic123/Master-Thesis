@@ -66,7 +66,6 @@ import { MethodService } from '@src/method/service/method.service';
 import { PeriodizationService } from '@src/periodization/periodization.service';
 import { WellnessService } from '@src/profile/service/wellness.service';
 
-import { ExerciseParam } from '../constant/exercise-param.constant';
 import {
   DURATION_TRAINING_COMPONENT_IN_MIN,
   DURATION_TRAINING_COMPONENT_WARMUP_COOLDOWN_IN_MIN,
@@ -77,13 +76,13 @@ import {
   CreateTrainingDto,
 } from '../dto/create-training.dto';
 import { PeriodizeTrainingsDto } from '../dto/periodize-training.dto';
-import { ExerciseSet } from '../entity/exercise-set.entity';
 import { Superset } from '../entity/superset.entity';
 import { Training } from '../entity/training.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
 import { TrainingReport } from '../entity/training-report.entity';
-import { Workload } from '../entity/workload.entity';
+import { CreateWorkload, Workload } from '../entity/workload.entity';
+import { LoadType } from '../enum/load-type.enum';
 import { MainSet } from '../enum/main-set.enum';
 import { UpdateTraining } from '../interface/update-training.interface';
 import { TrainingRepository } from '../repository/training.repository';
@@ -705,13 +704,18 @@ export class TrainingService implements Permission<Training, Institution> {
   async completeNextSet(
     user: User,
     ref: Pick<WorkloadRef, 'trainingId' | 'exerciseId' | 'userId'>,
-    input: Workload,
+    input: CreateWorkload,
   ) {
     const { userId } = ref;
     const training = await this.findOneByIdOrFail(user, ref);
     const athlete = await this.getAthlete(user, userId, training.institution);
+    const exercise = await this.exerciseService.findOneByIdOrFail(user, ref);
 
-    const errors = this.exerciseParamService.validateSetValues(input);
+    const errors = this.exerciseParamService.validateSetValues(exercise, {
+      ...input,
+      setNumber: 1,
+    });
+
     if (errors.length) throw new BadRequestException(JSON.stringify(errors));
 
     if (
@@ -746,12 +750,17 @@ export class TrainingService implements Permission<Training, Institution> {
   }
 
   @LogMethod()
-  async upsertSet(user: User, ref: WorkloadRef, input: Workload) {
+  async upsertSet(user: User, ref: WorkloadRef, input: CreateWorkload) {
     const { userId } = ref;
     const training = await this.findOneByIdOrFail(user, ref);
     const athlete = await this.getAthlete(user, userId, training.institution);
+    const exercise = await this.exerciseService.findOneByIdOrFail(user, ref);
 
-    const errors = this.exerciseParamService.validateSetValues(input);
+    const errors = this.exerciseParamService.validateSetValues(exercise, {
+      ...input,
+      setNumber: ref.setNumber,
+    });
+
     if (errors.length) throw new BadRequestException(JSON.stringify(errors));
 
     const prescribedTraining = this.trainingPlanService.getTrainingByAthlete(
@@ -792,49 +801,25 @@ export class TrainingService implements Permission<Training, Institution> {
     await this.updateBodyweightSets(athlete.uid, athleteTraining);
     await this.updateRepMaxSets(athlete.uid, athleteTraining);
 
-    const customPrescribedWorkloads =
-      await this.workloadService.findAllCustomByTraining(training.id);
-
     const newPrescribedTrainingComponents: TrainingComponent[] = [];
     for (const trainingComponent of athleteTraining.components) {
       const newPrescribedSupersets: Superset[] = [];
       const prescribedSupersets = trainingComponent.supersets;
 
-      prescribedSupersets.forEach(
-        ({ exercises: prescribedExercises }, supersetIndex) => {
-          const newPrescribedExercises: TrainingExercise[] = [];
-
-          prescribedExercises.forEach((prescribedExercise) => {
-            let newPrescribedSets: ExerciseSet[] = [];
-
-            prescribedExercise.sets.forEach((prescribedSet) => {
-              const customPrescribedWorkload = customPrescribedWorkloads.find(
-                (w) =>
-                  w.componentId === trainingComponent.id &&
-                  w.exerciseId === prescribedExercise.id &&
-                  w.supersetIndex === supersetIndex &&
-                  w.setNumber === prescribedSet.setNumber &&
-                  w.userId === athlete.uid,
-              );
-
-              newPrescribedSets.push(customPrescribedWorkload || prescribedSet);
-            });
-
-            // sort sets by setNumber
-            newPrescribedSets = newPrescribedSets.sort(
+      prescribedSupersets.forEach(({ exercises: prescribedExercises }) => {
+        const newPrescribedExercises: TrainingExercise[] = [];
+        prescribedExercises.forEach((prescribedExercise) =>
+          newPrescribedExercises.push({
+            id: prescribedExercise.id,
+            params: prescribedExercise.params,
+            sets: prescribedExercise.sets.sort(
               (a, b) => a.setNumber - b.setNumber,
-            );
+            ),
+          }),
+        );
 
-            newPrescribedExercises.push({
-              id: prescribedExercise.id,
-              params: prescribedExercise.params,
-              sets: newPrescribedSets,
-            });
-          });
-
-          newPrescribedSupersets.push({ exercises: newPrescribedExercises });
-        },
-      );
+        newPrescribedSupersets.push({ exercises: newPrescribedExercises });
+      });
 
       newPrescribedTrainingComponents.push({
         id: trainingComponent.id,
@@ -849,16 +834,13 @@ export class TrainingService implements Permission<Training, Institution> {
       });
     }
 
-    return {
-      ...training,
-      components: newPrescribedTrainingComponents,
-    };
+    return { ...training, components: newPrescribedTrainingComponents };
   }
 
   async updateBodyweightSets(athleteId: string, training: Training) {
-    const hasBwParamType = this.trainingPlanService.hasParam(
+    const hasBwParamType = this.trainingPlanService.hasLoadType(
       training,
-      ExerciseParam.BW.field,
+      LoadType.Bw,
     );
 
     if (!hasBwParamType) return;
@@ -869,16 +851,16 @@ export class TrainingService implements Permission<Training, Institution> {
 
     this.trainingPlanService.modifyPrescribedParamValuesByType(
       training,
-      ExerciseParam.BW.field,
+      LoadType.Bw,
       (value) =>
         this.commonService.number.roundIntensity((value * bw) / 100, bw), // convert % value to kg and round to 2 decimals
     );
   }
 
   async updateRepMaxSets(athleteId: string, training: Training) {
-    const exercises = this.trainingPlanService.findExercisesByParam(
+    const exercises = this.trainingPlanService.findExercisesByLoadType(
       training,
-      ExerciseParam.RM.field,
+      LoadType.Rm,
     );
 
     if (!exercises.length) return;
@@ -893,7 +875,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
     this.trainingPlanService.modifyPrescribedParamValuesByType(
       training,
-      ExerciseParam.RM.field,
+      LoadType.Rm,
       (value, exerciseId) => {
         // prescribed value is in % of 1RM (between 1 and 100)
         const best = maxes.find((max) => max.exerciseId === exerciseId);

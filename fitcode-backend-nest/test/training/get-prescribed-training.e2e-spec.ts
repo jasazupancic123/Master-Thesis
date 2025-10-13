@@ -1,4 +1,3 @@
-import { COMPONENT_PARAMS_OPT1 } from '@test/common/constant/component-params.constant';
 import { TestApp } from '@test/common/utils/app.util';
 import { subDays } from 'date-fns';
 
@@ -14,7 +13,6 @@ import {
 import { ComponentService } from '@src/component/component.service';
 import type { Component } from '@src/component/entity/component.entity';
 import { generateComponentStub } from '@src/component/mock/component.stub';
-import type { Exercise } from '@src/exercise/entity/exercise.entity';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
@@ -24,13 +22,12 @@ import { InstitutionService } from '@src/institution/service/institution.service
 import type { Wellness } from '@src/profile/entity/wellness.entity';
 import { WellnessService } from '@src/profile/service/wellness.service';
 import { TestDbService } from '@src/test-db/test-db.service';
-import { DEFAULT_PARAMS_KEY } from '@src/training/constant/exercise-param.constant';
+import type { ExerciseSet } from '@src/training/entity/exercise-set.entity';
 import type { Training } from '@src/training/entity/training.entity';
 import type { TrainingComponent } from '@src/training/entity/training-component.entity';
 import type { Workload } from '@src/training/entity/workload.entity';
-import { IntType, ParamType, VolType } from '@src/training/enum/load-type.enum';
+import { LoadType } from '@src/training/enum/load-type.enum';
 import { SetStatus } from '@src/training/enum/set-status.enum';
-import { generateParamAttributeValuesFromComponentParams } from '@src/training/mock/param-values.stub';
 import {
   generateExerciseSet,
   generateSubgroup,
@@ -39,8 +36,8 @@ import {
   generateTrainingExercise,
   generateTrainingStub,
 } from '@src/training/mock/training.stub';
+import { generateWorkloadStub } from '@src/training/mock/workload.stub';
 import { WorkloadRepository } from '@src/training/repository/workload.repository';
-import { WorkloadService } from '@src/training/service/workload.service';
 
 describe('Get prescribed training (e2e)', () => {
   let testApp: TestApp;
@@ -49,16 +46,22 @@ describe('Get prescribed training (e2e)', () => {
   let firebase: FirebaseService;
   let componentService: ComponentService;
   let exerciseService: ExerciseService;
-  let workloadService: WorkloadService;
   let wellnessService: WellnessService;
+  let workloadRepository: WorkloadRepository;
 
   let component: Component;
-  let exercises: Exercise[];
   let institution: TestInstitution;
   let group: Group;
   let trainingId: string;
   let a: TestUser;
   let b: TestUser;
+
+  const componentParams: (keyof ExerciseSet)[] = [
+    'reps',
+    'loadKg',
+    'loadRm',
+    'loadBw',
+  ];
 
   beforeAll(async () => {
     testApp = await TestApp.init();
@@ -66,19 +69,17 @@ describe('Get prescribed training (e2e)', () => {
     firebase = testApp.module.get(FirebaseService);
     componentService = testApp.module.get(ComponentService);
     exerciseService = testApp.module.get(ExerciseService);
-    workloadService = testApp.module.get(WorkloadService);
     wellnessService = testApp.module.get(WellnessService);
+    workloadRepository = testApp.module.get(WorkloadRepository);
 
     const institutionService = testApp.module.get(InstitutionService);
     const groupService = testApp.module.get(GroupService);
 
     component = await componentService.create(
-      generateComponentStub({
-        params: { [DEFAULT_PARAMS_KEY]: COMPONENT_PARAMS_OPT1 },
-      }),
+      generateComponentStub({ params: componentParams }),
     );
 
-    exercises = await exerciseService.upsertMany(global.admin, [
+    await exerciseService.upsertMany(global.admin, [
       generateExerciseStub({ name: 'Squat', componentIds: [component.id] }),
       generateExerciseStub({ name: 'Bench', componentIds: [component.id] }),
       generateExerciseStub({ name: 'Deadlift', componentIds: [component.id] }),
@@ -110,9 +111,9 @@ describe('Get prescribed training (e2e)', () => {
                   generateTrainingExercise({
                     id: 'squat',
                     sets: [
-                      generateExerciseSet(1),
-                      generateExerciseSet(2),
-                      generateExerciseSet(3),
+                      generateExerciseSet(1, { reps: 10, loadKg: 50 }),
+                      generateExerciseSet(2, { reps: 10, loadKg: 50 }),
+                      generateExerciseSet(3, { reps: 10, loadKg: 50 }),
                     ],
                   }),
                 ],
@@ -128,7 +129,9 @@ describe('Get prescribed training (e2e)', () => {
                     exercises: [
                       generateTrainingExercise({
                         id: 'squat',
-                        sets: [generateExerciseSet(1)],
+                        sets: [
+                          generateExerciseSet(1, { reps: 10, loadKg: 50 }),
+                        ],
                       }),
                     ],
                   }),
@@ -136,14 +139,17 @@ describe('Get prescribed training (e2e)', () => {
                     exercises: [
                       generateTrainingExercise({
                         id: 'bench',
-                        sets: [generateExerciseSet(1), generateExerciseSet(2)],
+                        sets: [
+                          generateExerciseSet(1, { reps: 10, loadKg: 50 }),
+                          generateExerciseSet(2, { reps: 10, loadKg: 50 }),
+                        ],
                       }),
                       generateTrainingExercise({
                         id: 'deadlift',
                         sets: [
-                          generateExerciseSet(1),
-                          generateExerciseSet(2),
-                          generateExerciseSet(3),
+                          generateExerciseSet(1, { reps: 10, loadKg: 50 }),
+                          generateExerciseSet(2, { reps: 10, loadKg: 50 }),
+                          generateExerciseSet(3, { reps: 10, loadKg: 50 }),
                         ],
                       }),
                     ],
@@ -160,11 +166,11 @@ describe('Get prescribed training (e2e)', () => {
                       generateTrainingExercise({
                         id: 'x',
                         sets: [
-                          generateExerciseSet(1),
-                          generateExerciseSet(2),
-                          generateExerciseSet(3),
-                          generateExerciseSet(4),
-                          generateExerciseSet(5),
+                          generateExerciseSet(1, { reps: 10, loadKg: 50 }),
+                          generateExerciseSet(2, { reps: 10, loadKg: 50 }),
+                          generateExerciseSet(3, { reps: 10, loadKg: 50 }),
+                          generateExerciseSet(4, { reps: 10, loadKg: 50 }),
+                          generateExerciseSet(5, { reps: 10, loadKg: 50 }),
                         ],
                       }),
                     ],
@@ -190,22 +196,6 @@ describe('Get prescribed training (e2e)', () => {
 
     await testApp.close();
   });
-
-  function generateSet(n: number, type: IntType, value: number) {
-    if (!type) return generateExerciseSet(n);
-
-    const paramValues = generateParamAttributeValuesFromComponentParams([
-      {
-        field: ParamType.IntWork1,
-        defaultValue: type,
-      },
-    ]);
-
-    for (const paramValue of paramValues)
-      if (paramValue.selected === type) paramValue.value = value.toString();
-
-    return generateExerciseSet(n, paramValues);
-  }
 
   function findExercise(training: Training, id: string) {
     return training.components[0].supersets[0].exercises.find(
@@ -237,16 +227,28 @@ describe('Get prescribed training (e2e)', () => {
     const firstExercise = trainingComponent.supersets[0].exercises[0];
     expect(firstExercise.id).toBe('squat');
     expect(firstExercise.sets).toHaveLength(3);
-    expect(firstExercise.sets[0].paramValuesL).toHaveLength(6); // all params
 
-    const paramValues = firstExercise.sets[0].paramValuesL;
-    const repField = paramValues.find((p) => p.selected === VolType.Rep);
-    expect(repField).toBeDefined();
-    expect(+repField.value).toBe(10); // default value
+    const set = firstExercise.sets[0];
+    expect(set.loadType).toBe(LoadType.Kg);
+    expect(set.reps).toBe(10);
+    expect(set.loadKg).toBe(50);
+    expect(set.recTime).toBe(60);
 
-    const kgField = paramValues.find((p) => p.selected === IntType.Kg);
-    expect(kgField).toBeDefined();
-    expect(+kgField.value).toBe(50);
+    // not defined params
+    expect(set.repsR).toBeUndefined();
+    expect(set.loadKgR).toBeUndefined();
+    // expect(set.loadRm).toBeUndefined(); // not relevant
+    expect(set.loadRmR).toBeUndefined();
+    // expect(set.loadBw).toBeUndefined();
+    expect(set.loadBwR).toBeUndefined();
+    expect(set.tempo).toBeUndefined();
+    expect(set.tempoR).toBeUndefined();
+    expect(set.vel).toBeUndefined();
+    expect(set.velR).toBeUndefined();
+    expect(set.eff).toBeUndefined();
+    expect(set.time).toBeUndefined();
+    expect(set.dist).toBeUndefined();
+    expect(set.recDist).toBeUndefined();
   });
 
   it('should get prescribed training for athlete for subgroup', async () => {
@@ -267,53 +269,74 @@ describe('Get prescribed training (e2e)', () => {
     const firstExercise = trainingComponent.supersets[0].exercises[0];
     expect(firstExercise.id).toBe('squat');
     expect(firstExercise.sets).toHaveLength(1);
-    expect(firstExercise.sets[0].paramValuesL).toHaveLength(6);
 
-    const paramValues = firstExercise.sets[0].paramValuesL;
-    const repField = paramValues.find((p) => p.selected === VolType.Rep);
-    expect(repField).toBeDefined();
-    expect(+repField.value).toBe(10); // default value
-
-    const kgField = paramValues.find((p) => p.selected === IntType.Kg);
-    expect(kgField).toBeDefined();
-    expect(+kgField.value).toBe(50);
+    const e1s1 = firstExercise.sets[0];
+    expect(e1s1.loadType).toBe(LoadType.Kg);
+    expect(e1s1.reps).toBe(10);
+    expect(e1s1.loadKg).toBe(50);
+    expect(e1s1.recTime).toBe(60);
+    expect(e1s1.repsR).toBeUndefined();
+    expect(e1s1.loadKgR).toBeUndefined();
+    // expect(e1s1.loadRm).toBeUndefined();
+    expect(e1s1.loadRmR).toBeUndefined();
+    // expect(e1s1.loadBw).toBeUndefined();
+    expect(e1s1.loadBwR).toBeUndefined();
+    expect(e1s1.tempo).toBeUndefined();
+    expect(e1s1.tempoR).toBeUndefined();
+    expect(e1s1.vel).toBeUndefined();
+    expect(e1s1.velR).toBeUndefined();
+    expect(e1s1.eff).toBeUndefined();
+    expect(e1s1.time).toBeUndefined();
+    expect(e1s1.dist).toBeUndefined();
+    expect(e1s1.recDist).toBeUndefined();
 
     const secondExercise = trainingComponent.supersets[1].exercises[0];
     expect(secondExercise.id).toBe('bench');
     expect(secondExercise.sets).toHaveLength(2);
-    expect(secondExercise.sets[0].paramValuesL).toHaveLength(6);
 
-    const secondParamValues = secondExercise.sets[0].paramValuesL;
-    const secondRepField = secondParamValues.find(
-      (p) => p.selected === VolType.Rep,
-    );
-
-    expect(secondRepField).toBeDefined();
-    expect(+secondRepField.value).toBe(10); // default value
-
-    const secondKgField = secondParamValues.find(
-      (p) => p.selected === IntType.Kg,
-    );
-    expect(secondKgField).toBeDefined();
-    expect(+secondKgField.value).toBe(50);
+    const e2s1 = secondExercise.sets[0];
+    expect(e2s1.loadType).toBe(LoadType.Kg);
+    expect(e2s1.reps).toBe(10);
+    expect(e2s1.loadKg).toBe(50);
+    expect(e2s1.recTime).toBe(60);
+    expect(e2s1.repsR).toBeUndefined();
+    expect(e2s1.loadKgR).toBeUndefined();
+    // expect(e2s1.loadRm).toBeUndefined();
+    expect(e2s1.loadRmR).toBeUndefined();
+    // expect(e2s1.loadBw).toBeUndefined();
+    expect(e2s1.loadBwR).toBeUndefined();
+    expect(e2s1.tempo).toBeUndefined();
+    expect(e2s1.tempoR).toBeUndefined();
+    expect(e2s1.vel).toBeUndefined();
+    expect(e2s1.velR).toBeUndefined();
+    expect(e2s1.eff).toBeUndefined();
+    expect(e2s1.time).toBeUndefined();
+    expect(e2s1.dist).toBeUndefined();
+    expect(e2s1.recDist).toBeUndefined();
 
     const thirdExercise = trainingComponent.supersets[1].exercises[1];
     expect(thirdExercise.id).toBe('deadlift');
     expect(thirdExercise.sets).toHaveLength(3);
-    expect(thirdExercise.sets[0].paramValuesL).toHaveLength(6);
 
-    const thirdParamValues = thirdExercise.sets[0].paramValuesL;
-    const thirdRepField = thirdParamValues.find(
-      (p) => p.selected === VolType.Rep,
-    );
-    expect(thirdRepField).toBeDefined();
-    expect(+thirdRepField.value).toBe(10); // default value
-
-    const thirdKgField = thirdParamValues.find(
-      (p) => p.selected === IntType.Kg,
-    );
-    expect(thirdKgField).toBeDefined();
-    expect(+thirdKgField.value).toBe(50);
+    const e3s1 = thirdExercise.sets[0];
+    expect(e3s1.loadType).toBe(LoadType.Kg);
+    expect(e3s1.reps).toBe(10);
+    expect(e3s1.loadKg).toBe(50);
+    expect(e3s1.recTime).toBe(60);
+    expect(e3s1.repsR).toBeUndefined();
+    expect(e3s1.loadKgR).toBeUndefined();
+    // expect(e3s1.loadRm).toBeUndefined();
+    expect(e3s1.loadRmR).toBeUndefined();
+    // expect(e3s1.loadBw).toBeUndefined();
+    expect(e3s1.loadBwR).toBeUndefined();
+    expect(e3s1.tempo).toBeUndefined();
+    expect(e3s1.tempoR).toBeUndefined();
+    expect(e3s1.vel).toBeUndefined();
+    expect(e3s1.velR).toBeUndefined();
+    expect(e3s1.eff).toBeUndefined();
+    expect(e3s1.time).toBeUndefined();
+    expect(e3s1.dist).toBeUndefined();
+    expect(e3s1.recDist).toBeUndefined();
   });
 
   it('should get prescribed training for athlete for child subgroup', async () => {
@@ -331,305 +354,6 @@ describe('Get prescribed training (e2e)', () => {
     expect(trainingComponent.supersets[0].exercises).toHaveLength(1);
     expect(trainingComponent.supersets[0].exercises[0].id).toBe('x');
     expect(trainingComponent.supersets[0].exercises[0].sets).toHaveLength(5);
-  });
-
-  it('should get prescribed training for athlete in main group with custom workloads', async () => {
-    const sets = [
-      generateExerciseSet(1, COMPONENT_PARAMS_OPT1),
-      generateExerciseSet(2, COMPONENT_PARAMS_OPT1),
-      generateExerciseSet(3, COMPONENT_PARAMS_OPT1),
-    ];
-
-    const trainingId = await db.trainings.save(
-      generateTrainingStub({
-        ownerId: global.trainer.uid,
-        groupId: group.id,
-        cycleId: group.cycles[1].id,
-        membersIds: [global.athlete.uid],
-        date: new Date(),
-        components: [
-          generateTrainingComponent({
-            id: component.id,
-            from: new Date(),
-            supersets: [
-              generateSuperset({
-                exercises: [
-                  generateTrainingExercise({ id: 'squat', sets }),
-                  generateTrainingExercise({ id: 'bench', sets }),
-                ],
-              }),
-            ],
-          }),
-        ],
-      }),
-    );
-
-    const training = await db.trainings.findById(trainingId);
-
-    await db.workloads.createMany([
-      {
-        trainingId,
-        component,
-        exerciseId: exercises[0].id,
-        userId: global.athlete.uid,
-        supersetIndex: 0,
-        setNumber: 1,
-        prescribedIntWork1ValueL: 100,
-        status: SetStatus.NOT_STARTED,
-        reps: 1,
-        pReps: 1,
-        recTime: 0,
-        pRecTime: 0,
-      },
-      {
-        trainingId,
-        component,
-        exerciseId: exercises[0].id,
-        userId: global.athlete.uid,
-        supersetIndex: 0,
-        setNumber: 2,
-        prescribedIntWork1ValueL: 101,
-        status: SetStatus.NOT_STARTED,
-        reps: 1,
-        pReps: 1,
-        recTime: 0,
-        pRecTime: 0,
-      },
-    ]);
-
-    const workloads = await db.workloads.getAll(training.id);
-    expect(workloads).toHaveLength(2);
-
-    const spy = jest.spyOn(workloadService, 'getExerciseSet');
-    const response = await req(global.athlete, trainingId);
-    expect(response.status).toBe(200);
-
-    expect(spy).toHaveBeenCalledTimes(2); // 2 custom workloads
-    spy.mockRestore();
-
-    const trainingComponents = response.body.components;
-    expect(trainingComponents).toHaveLength(1);
-
-    const trainingComponent = trainingComponents[0] as TrainingComponent;
-    expect(trainingComponent.id).toBe(training.components[0].id);
-    expect(trainingComponent.from).toBeDefined();
-    expect(trainingComponent.supersets).toHaveLength(1);
-    expect(trainingComponent.supersets[0].exercises).toHaveLength(2);
-
-    const firstExercise = trainingComponent.supersets[0].exercises.find(
-      (e) => e.id === exercises[0].id,
-    );
-
-    expect(firstExercise).toBeDefined();
-    expect(firstExercise.sets).toHaveLength(3);
-    expect(firstExercise.sets[0].paramValuesL).toHaveLength(2);
-    expect(firstExercise.sets[1].paramValuesL).toHaveLength(2);
-    expect(firstExercise.sets[2].paramValuesL).toHaveLength(2);
-
-    const firstSet = firstExercise.sets[0];
-    const indexOfInt = firstSet.paramValuesL.findIndex(
-      (p) => p.selected === IntType.Kg,
-    );
-
-    expect(firstSet.paramValuesL[indexOfInt].value).toBe('100');
-    expect(firstSet.paramValuesL[indexOfInt].selected).toBe(IntType.Kg);
-    firstSet.paramValuesL.forEach((p, i) => {
-      if (i !== indexOfInt) {
-        if (p.selected === IntType.Kg) expect(p.value).toBe('20');
-        if (p.selected === VolType.Rep) expect(p.value).toBe('10');
-      }
-    });
-
-    const secondSet = firstExercise.sets[1];
-    const secondIndexOfInt = secondSet.paramValuesL.findIndex(
-      (p) => p.selected === IntType.Kg,
-    );
-
-    expect(secondSet.paramValuesL[secondIndexOfInt].value).toBe('101');
-    expect(secondSet.paramValuesL[secondIndexOfInt].selected).toBe(IntType.Kg);
-    secondSet.paramValuesL.forEach((p, i) => {
-      if (i !== secondIndexOfInt) {
-        if (p.selected === IntType.Kg) expect(p.value).toBe('50');
-        if (p.selected === VolType.Rep) expect(p.value).toBe('10');
-      }
-    });
-
-    const thirdSet = firstExercise.sets[2];
-    thirdSet.paramValuesL.forEach((p) => {
-      if (p.selected === IntType.Kg) expect(p.value).toBe('50');
-      if (p.selected === VolType.Rep) expect(p.value).toBe('10');
-    });
-
-    const secondExercise = trainingComponent.supersets[0].exercises.find(
-      (e) => e.id === exercises[1].id,
-    );
-
-    expect(secondExercise).toBeDefined();
-    expect(secondExercise.sets).toHaveLength(3);
-    expect(secondExercise.sets[0].paramValuesL).toHaveLength(2);
-    secondExercise.sets.forEach((set) => {
-      set.paramValuesL.forEach((p) => {
-        if (p.selected === IntType.Kg) expect(p.value).toBe('50');
-        if (p.selected === VolType.Rep) expect(p.value).toBe('10');
-      });
-    });
-
-    await db.trainings.delete(trainingId);
-  });
-
-  it('should get prescribed training for athlete in subgroup with custom workloads', async () => {
-    const sets = [
-      generateExerciseSet(1, COMPONENT_PARAMS_OPT1),
-      generateExerciseSet(2, COMPONENT_PARAMS_OPT1),
-      generateExerciseSet(3, COMPONENT_PARAMS_OPT1),
-    ];
-
-    const trainingId = await db.trainings.save(
-      generateTrainingStub({
-        ownerId: global.trainer.uid,
-        groupId: group.id,
-        cycleId: group.cycles[1].id,
-        membersIds: [global.athlete.uid],
-        date: new Date(),
-        components: [
-          generateTrainingComponent({
-            id: component.id,
-            from: new Date(),
-            supersets: [
-              generateSuperset({
-                exercises: [generateTrainingExercise({ id: 'deadlift', sets })],
-              }),
-            ],
-            subgroups: [
-              generateSubgroup({
-                id: component.id,
-                membersIds: [global.athlete.uid],
-                supersets: [
-                  generateSuperset({
-                    exercises: [
-                      generateTrainingExercise({ id: 'squat', sets }),
-                      generateTrainingExercise({ id: 'bench', sets }),
-                    ],
-                  }),
-                ],
-              }),
-            ],
-          }),
-        ],
-      }),
-    );
-
-    const training = await db.trainings.findById(trainingId);
-    await db.workloads.createMany([
-      {
-        trainingId: training.id,
-        component,
-        exerciseId: 'bench',
-        userId: global.athlete.uid,
-        supersetIndex: 0,
-        setNumber: 1,
-        prescribedIntWork1ValueL: 100,
-        status: SetStatus.NOT_STARTED,
-        reps: 1,
-        pReps: 1,
-        recTime: 0,
-        pRecTime: 0,
-      },
-      {
-        trainingId: training.id,
-        component,
-        exerciseId: 'bench',
-        userId: global.athlete.uid,
-        supersetIndex: 0,
-        setNumber: 2,
-        prescribedIntWork1ValueL: 101,
-        status: SetStatus.NOT_STARTED,
-        reps: 1,
-        pReps: 1,
-        recTime: 0,
-        pRecTime: 0,
-      },
-    ]);
-
-    const workloads = await db.workloads.getAll(training.id);
-    expect(workloads).toHaveLength(2);
-
-    const spy = jest.spyOn(workloadService, 'getExerciseSet');
-    const response = await req(global.athlete, trainingId);
-    expect(response.status).toBe(200);
-
-    expect(spy).toHaveBeenCalledTimes(2); // 2 custom workloads
-    spy.mockRestore();
-
-    const trainingComponents = response.body.components;
-    expect(trainingComponents).toHaveLength(1);
-
-    const trainingComponent = trainingComponents[0] as TrainingComponent;
-    expect(trainingComponent.id).toBe(training.components[0].id);
-    expect(trainingComponent.from).toBeDefined();
-    expect(trainingComponent.supersets).toHaveLength(1);
-    expect(trainingComponent.supersets).toHaveLength(1); // even though its subgroup, for user it's populated as main group
-    expect(trainingComponent.supersets[0].exercises).toHaveLength(2);
-
-    const superset = trainingComponent.supersets[0];
-    const firstExercise = superset.exercises.find((e) => e.id === 'squat');
-
-    expect(firstExercise).toBeDefined();
-    expect(firstExercise.sets).toHaveLength(3);
-    expect(firstExercise.sets[0].paramValuesL).toHaveLength(2);
-    expect(firstExercise.sets[1].paramValuesL).toHaveLength(2);
-    expect(firstExercise.sets[2].paramValuesL).toHaveLength(2);
-
-    // first exercise should have default values
-    for (const set of firstExercise.sets) {
-      set.paramValuesL.forEach((p) => {
-        if (p.selected === IntType.Kg) expect(p.value).toBe('50');
-        if (p.selected === VolType.Rep) expect(p.value).toBe('10');
-      });
-    }
-
-    const secondExercise = superset.exercises.find((e) => e.id === 'bench');
-    expect(secondExercise).toBeDefined();
-    expect(secondExercise.sets).toHaveLength(3);
-    expect(secondExercise.sets[0].paramValuesL).toHaveLength(2);
-    expect(secondExercise.sets[1].paramValuesL).toHaveLength(2);
-    expect(secondExercise.sets[2].paramValuesL).toHaveLength(2);
-
-    const firstSet = secondExercise.sets[0];
-    const indexOfInt = firstSet.paramValuesL.findIndex(
-      (p) => p.selected === IntType.Kg,
-    );
-
-    expect(firstSet.paramValuesL[indexOfInt].value).toBe('100');
-    expect(firstSet.paramValuesL[indexOfInt].selected).toBe(IntType.Kg);
-    firstSet.paramValuesL.forEach((p, i) => {
-      if (i !== indexOfInt) {
-        if (p.selected === IntType.Kg) expect(p.value).toBe('50');
-        if (p.selected === VolType.Rep) expect(p.value).toBe('10');
-      }
-    });
-
-    const secondSet = secondExercise.sets[1];
-    const secondIndexOfInt = secondSet.paramValuesL.findIndex(
-      (p) => p.selected === IntType.Kg,
-    );
-
-    expect(secondSet.paramValuesL[secondIndexOfInt].value).toBe('101');
-    expect(secondSet.paramValuesL[secondIndexOfInt].selected).toBe(IntType.Kg);
-    secondSet.paramValuesL.forEach((p, i) => {
-      if (i !== secondIndexOfInt) {
-        if (p.selected === IntType.Kg) expect(p.value).toBe('50');
-        if (p.selected === VolType.Rep) expect(p.value).toBe('10');
-      }
-    });
-
-    const thirdSet = secondExercise.sets[2];
-    thirdSet.paramValuesL.forEach((p) => {
-      if (p.selected === IntType.Kg) expect(p.value).toBe('50');
-      if (p.selected === VolType.Rep) expect(p.value).toBe('10');
-    });
-
-    await db.trainings.delete(trainingId);
   });
 
   it('should populate weight for exercises with bodyweight param', async () => {
@@ -677,9 +401,18 @@ describe('Get prescribed training (e2e)', () => {
                   generateTrainingExercise({
                     id: 'deadlift', // deadlift has bodyweight param
                     sets: [
-                      generateSet(1, IntType.Bw, 75),
-                      generateSet(2, IntType.Bw, 75),
-                      generateSet(3, IntType.Bw, 75),
+                      generateExerciseSet(1, {
+                        loadType: LoadType.Bw,
+                        loadBw: 75,
+                      }),
+                      generateExerciseSet(2, {
+                        loadType: LoadType.Bw,
+                        loadBw: 75,
+                      }),
+                      generateExerciseSet(3, {
+                        loadType: LoadType.Bw,
+                        loadBw: 75,
+                      }),
                     ],
                   }),
                   generateTrainingExercise({
@@ -693,9 +426,18 @@ describe('Get prescribed training (e2e)', () => {
                   generateTrainingExercise({
                     id: 'bench', // bench has bodyweight param
                     sets: [
-                      generateSet(1, IntType.Bw, 65),
-                      generateSet(2, IntType.Bw, 65),
-                      generateSet(3, IntType.Bw, 65),
+                      generateExerciseSet(1, {
+                        loadType: LoadType.Bw,
+                        loadBw: 65,
+                      }),
+                      generateExerciseSet(2, {
+                        loadType: LoadType.Bw,
+                        loadBw: 65,
+                      }),
+                      generateExerciseSet(3, {
+                        loadType: LoadType.Bw,
+                        loadBw: 65,
+                      }),
                     ],
                   }),
                 ],
@@ -712,16 +454,14 @@ describe('Get prescribed training (e2e)', () => {
 
     // all sets must have bw param of value 75 (% of bodyweight) for deadlift
     deadlift.sets.forEach((set) => {
-      const bw = set.paramValuesL.find((p) => p.selected === IntType.Bw);
-      expect(bw).toBeDefined();
-      expect(+bw.value).toBe(75);
+      expect(set.loadBw).toBeDefined();
+      expect(+set.loadBw).toBe(75);
     });
 
     // all sets must have bw param of value 65 for bench
     bench.sets.forEach((set) => {
-      const bw = set.paramValuesL.find((p) => p.selected === IntType.Bw);
-      expect(bw).toBeDefined();
-      expect(+bw.value).toBe(65);
+      expect(set.loadBw).toBeDefined();
+      expect(+set.loadBw).toBe(65);
     });
 
     const spy = jest.spyOn(wellnessService, 'getLastBodyweight');
@@ -740,16 +480,14 @@ describe('Get prescribed training (e2e)', () => {
 
     // new deadlift param value should be 63.75 (85 * 0.75)
     deadlift.sets.forEach((set) => {
-      const bw = set.paramValuesL.find((p) => p.selected === IntType.Bw);
-      expect(bw).toBeDefined();
-      expect(+bw.value).toBe(64);
+      expect(set.loadBw).toBe(75);
+      expect(set.loadKg).toBe(64);
     });
 
     // new bench param value should be 55.25 (85 * 0.65)
     bench.sets.forEach((set) => {
-      const bw = set.paramValuesL.find((p) => p.selected === IntType.Bw);
-      expect(bw).toBeDefined();
-      expect(+bw.value).toBe(55.5);
+      expect(set.loadBw).toBe(65);
+      expect(set.loadKg).toBe(55.5);
     });
 
     await db.checkpointRestore();
@@ -795,7 +533,7 @@ describe('Get prescribed training (e2e)', () => {
     db.checkpoint();
 
     // create another (different) training before with workloads completed
-    const otherTrainingId = await db.trainings.save(
+    await db.trainings.save(
       generateTrainingStub({
         ownerId: global.trainer.uid,
         membersIds: [global.athlete.uid],
@@ -808,26 +546,19 @@ describe('Get prescribed training (e2e)', () => {
       reps: number,
       weight: number,
     ) {
-      const workloadMeta = {
+      return generateWorkloadStub({
         component,
-        trainingId: otherTrainingId,
+        trainingId: date.toISOString(),
         userId: global.athlete.uid,
         supersetIndex: 0,
         setNumber: 1,
         status: SetStatus.NOT_STARTED,
-      };
-
-      return {
-        ...workloadMeta,
         exerciseId,
-        createdAt: date,
-        intWork1ValueL: weight,
-        volWork1ValueL: reps,
-        reps: 1,
-        pReps: 1,
-        recTime: 0,
-        pRecTime: 0,
-      };
+        timestamp: date,
+        reps,
+        loadKg: weight,
+        prescribed: { reps, loadKg: weight },
+      });
     }
 
     const trainingId = await db.trainings.save(
@@ -847,24 +578,48 @@ describe('Get prescribed training (e2e)', () => {
                   generateTrainingExercise({
                     id: 'deadlift',
                     sets: [
-                      generateSet(1, IntType.Rm, 80), // rep max 80%
-                      generateSet(2, IntType.Rm, 80),
-                      generateSet(3, IntType.Rm, 80),
+                      generateExerciseSet(1, {
+                        loadType: LoadType.Rm,
+                        loadRm: 80,
+                      }),
+                      generateExerciseSet(2, {
+                        loadType: LoadType.Rm,
+                        loadRm: 80,
+                      }),
+                      generateExerciseSet(3, {
+                        loadType: LoadType.Rm,
+                        loadRm: 80,
+                      }),
                     ],
                   }),
                   generateTrainingExercise({
                     id: 'bench',
                     sets: [
-                      generateSet(2, IntType.Rm, 65),
-                      generateSet(3, IntType.Rm, 65),
+                      generateExerciseSet(2, {
+                        loadType: LoadType.Rm,
+                        loadRm: 65,
+                      }),
+                      generateExerciseSet(3, {
+                        loadType: LoadType.Rm,
+                        loadRm: 65,
+                      }),
                     ],
                   }),
                   generateTrainingExercise({
                     id: 'squat',
                     sets: [
-                      generateSet(1, IntType.Rm, 40),
-                      generateSet(2, IntType.Rm, 40),
-                      generateSet(3, IntType.Rm, 40),
+                      generateExerciseSet(1, {
+                        loadType: LoadType.Rm,
+                        loadRm: 40,
+                      }),
+                      generateExerciseSet(2, {
+                        loadType: LoadType.Rm,
+                        loadRm: 40,
+                      }),
+                      generateExerciseSet(3, {
+                        loadType: LoadType.Rm,
+                        loadRm: 40,
+                      }),
                     ],
                   }),
                 ],
@@ -875,12 +630,19 @@ describe('Get prescribed training (e2e)', () => {
       }),
     );
 
-    await db.workloads.createMany([
+    const workloads = [
       generateWorkload('deadlift', subDays(new Date(), 7), 10, 130),
       generateWorkload('deadlift', subDays(new Date(), 3), 10, 140), // most recent
       generateWorkload('deadlift', subDays(new Date(), 5), 8, 150), // it should take this one since it has most weight
       generateWorkload('bench', subDays(new Date(), 10), 6, 70),
-    ]);
+    ];
+
+    await db.workloads.createMany(workloads.map((w) => ({ ...w, component })));
+    const allWorkloads = (await db.workloads.collectionGroup.get()).docs.map(
+      (doc) => doc.data(),
+    );
+
+    expect(allWorkloads).toHaveLength(4);
 
     const trainingBefore = await db.trainings.findById(trainingId);
     let deadlift = findExercise(trainingBefore, 'deadlift');
@@ -889,26 +651,22 @@ describe('Get prescribed training (e2e)', () => {
 
     // all sets must have rm param of value 80 for deadlift
     deadlift.sets.forEach((set) => {
-      const rm = set.paramValuesL.find((p) => p.selected === IntType.Rm);
-      expect(rm).toBeDefined();
-      expect(+rm.value).toBe(80);
+      expect(set.loadRm).toBeDefined();
+      expect(+set.loadRm).toBe(80);
     });
 
     // all sets must have rm param of value 65 for bench
     bench.sets.forEach((set) => {
-      const rm = set.paramValuesL.find((p) => p.selected === IntType.Rm);
-      expect(rm).toBeDefined();
-      expect(+rm.value).toBe(65);
+      expect(set.loadRm).toBeDefined();
+      expect(+set.loadRm).toBe(65);
     });
 
     // all sets must have rm param of value 40 for squat
     squat.sets.forEach((set) => {
-      const rm = set.paramValuesL.find((p) => p.selected === IntType.Rm);
-      expect(rm).toBeDefined();
-      expect(+rm.value).toBe(40);
+      expect(set.loadRm).toBeDefined();
+      expect(+set.loadRm).toBe(40);
     });
 
-    const workloadRepository = testApp.module.get(WorkloadRepository);
     const spy = jest.spyOn(workloadRepository, 'findExerciseMax');
     const response = await req(global.athlete, trainingId);
     expect(response.status).toBe(200);
@@ -918,12 +676,10 @@ describe('Get prescribed training (e2e)', () => {
       spy.mock.results.map((r) => r.value as Workload),
     );
 
-    expect(
-      spyResults.find((r) => r.exerciseId === 'deadlift').intWork1ValueL,
-    ).toBe(150);
-    expect(
-      spyResults.find((r) => r.exerciseId === 'bench').intWork1ValueL,
-    ).toBe(70);
+    expect(spyResults.find((r) => r.exerciseId === 'deadlift').loadKg).toBe(
+      150,
+    );
+    expect(spyResults.find((r) => r.exerciseId === 'bench').loadKg).toBe(70);
     spy.mockRestore();
 
     // 150 * 0.8 = 120 for deadlift
@@ -934,22 +690,19 @@ describe('Get prescribed training (e2e)', () => {
     squat = findExercise(trainingAfter, 'squat');
 
     deadlift.sets.forEach((set) => {
-      const rm = set.paramValuesL.find((p) => p.selected === IntType.Rm);
-      expect(rm).toBeDefined();
-      expect(+rm.value).toBe(152);
+      expect(set.loadRm).toBe(80); // prescribed value remains the same
+      expect(set.loadKg).toBe(152);
     });
 
     bench.sets.forEach((set) => {
-      const rm = set.paramValuesL.find((p) => p.selected === IntType.Rm);
-      expect(rm).toBeDefined();
-      expect(+rm.value).toBe(54.5);
+      expect(set.loadRm).toBe(65);
+      expect(set.loadKg).toBe(54.5);
     });
 
     // squat should remain with default value since there is no previous workload
     squat.sets.forEach((set) => {
-      const rm = set.paramValuesL.find((p) => p.selected === IntType.Rm);
-      expect(rm).toBeDefined();
-      expect(+rm.value).toBe(20); // no data, so default value of 20 kg is used
+      expect(set.loadRm).toBe(40);
+      expect(set.loadKg).toBe(20); // no data, so default value of 20 kg is used
     });
 
     await db.checkpointRestore();

@@ -211,9 +211,9 @@ describe('periodize', () => {
                   generateTrainingExercise({
                     id: 'e1',
                     sets: [
-                      generateExerciseSet(1, [], { isUnilateral: true }),
-                      generateExerciseSet(2, [], { isUnilateral: true }),
-                      generateExerciseSet(3, [], { isUnilateral: true }),
+                      generateExerciseSet(1, { reps: 10 }),
+                      generateExerciseSet(2, { reps: 10 }),
+                      generateExerciseSet(3, { reps: 10 }),
                     ],
                   }),
                 ],
@@ -256,7 +256,7 @@ describe('periodize', () => {
 
       expect(exercise).toBeDefined();
       for (const set of exercise.sets) {
-        expect(set.reps).toEqual(ExerciseParam.REPS.defaultValue); // default value
+        expect(set.reps).toEqual(10); // default value
         expect(set.loadKg).toBeUndefined();
         expect(set.loadKgR).toBeUndefined();
         expect(set.loadBw).toBeUndefined();
@@ -393,29 +393,17 @@ describe('periodize', () => {
                     id: 'e1',
                     sets: [
                       // default values for L and R params
-                      generateExerciseSet(1, ['recDist'], {
-                        isUnilateral: true,
-                      }),
-                      generateExerciseSet(2, ['recDist'], {
-                        isUnilateral: true,
-                      }),
-                      generateExerciseSet(3, ['recDist'], {
-                        isUnilateral: true,
-                      }),
+                      generateExerciseSet(1, { recDist: 50 }),
+                      generateExerciseSet(2, { recDist: 50 }),
+                      generateExerciseSet(3, { recDist: 50 }),
                     ],
                   }),
                   generateTrainingExercise({
                     id: 'e3',
                     sets: [
-                      generateExerciseSet(1, ['recDist'], {
-                        isUnilateral: true,
-                      }),
-                      generateExerciseSet(2, ['recDist'], {
-                        isUnilateral: true,
-                      }),
-                      generateExerciseSet(3, ['recDist'], {
-                        isUnilateral: true,
-                      }),
+                      generateExerciseSet(1, { recDist: 50 }),
+                      generateExerciseSet(2, { recDist: 50 }),
+                      generateExerciseSet(3, { recDist: 50 }),
                     ],
                   }),
                 ],
@@ -431,34 +419,46 @@ describe('periodize', () => {
                         id: 'e1',
                         sets: [
                           // random values for L and R params
-                          generateExerciseSet(1, null, {
-                            random: true,
-                            isUnilateral: true,
+                          generateExerciseSet(1, {
+                            reps: 10,
+                            repsR: 9,
+                            loadKg: 24,
+                            loadKgR: 27,
                           }),
-                          generateExerciseSet(2, null, {
-                            random: true,
-                            isUnilateral: true,
+                          generateExerciseSet(2, {
+                            reps: 10,
+                            repsR: 9,
+                            loadKg: 24,
+                            loadKgR: 27,
                           }),
-                          generateExerciseSet(3, null, {
-                            random: true,
-                            isUnilateral: true,
+                          generateExerciseSet(3, {
+                            reps: 10,
+                            repsR: 9,
+                            loadKg: 24,
+                            loadKgR: 27,
                           }),
                         ],
                       }),
                       generateTrainingExercise({
                         id: 'e2',
                         sets: [
-                          generateExerciseSet(1, null, {
-                            random: true,
-                            isUnilateral: true,
+                          generateExerciseSet(1, {
+                            reps: 10,
+                            repsR: 9,
+                            loadKg: 24,
+                            loadKgR: 27,
                           }),
-                          generateExerciseSet(2, null, {
-                            random: true,
-                            isUnilateral: true,
+                          generateExerciseSet(2, {
+                            reps: 10,
+                            repsR: 9,
+                            loadKg: 24,
+                            loadKgR: 27,
                           }),
-                          generateExerciseSet(3, null, {
-                            random: true,
-                            isUnilateral: true,
+                          generateExerciseSet(3, {
+                            reps: 10,
+                            repsR: 9,
+                            loadKg: 24,
+                            loadKgR: 27,
                           }),
                         ],
                       }),
@@ -477,17 +477,47 @@ describe('periodize', () => {
                           id: 'e1',
                           sets: [
                             // random values for L and R params
-                            generateExerciseSet(1, null, { random: true }),
-                            generateExerciseSet(2, null, { random: true }),
-                            generateExerciseSet(3, null, { random: true }),
+                            generateExerciseSet(1, {
+                              reps: 10,
+                              repsR: 9,
+                              loadKg: 24,
+                              loadKgR: 27,
+                            }),
+                            generateExerciseSet(2, {
+                              reps: 10,
+                              repsR: 9,
+                              loadKg: 24,
+                              loadKgR: 27,
+                            }),
+                            generateExerciseSet(3, {
+                              reps: 10,
+                              repsR: 9,
+                              loadKg: 24,
+                              loadKgR: 27,
+                            }),
                           ],
                         }),
                         generateTrainingExercise({
                           id: 'e2',
                           sets: [
-                            generateExerciseSet(1, null, { random: true }),
-                            generateExerciseSet(2, null, { random: true }),
-                            generateExerciseSet(3, null, { random: true }),
+                            generateExerciseSet(1, {
+                              reps: 10,
+                              repsR: 9,
+                              loadKg: 24,
+                              loadKgR: 27,
+                            }),
+                            generateExerciseSet(2, {
+                              reps: 10,
+                              repsR: 9,
+                              loadKg: 24,
+                              loadKgR: 27,
+                            }),
+                            generateExerciseSet(3, {
+                              reps: 10,
+                              repsR: 9,
+                              loadKg: 24,
+                              loadKgR: 27,
+                            }),
                           ],
                         }),
                       ],
@@ -568,8 +598,10 @@ describe('periodize', () => {
 
           for (const set of exercise.sets) {
             // subgroup e1 has all params
-            for (const param of ExerciseParam.fields)
-              expect(set[param]).toBeDefined();
+            expect(set.reps).toBeDefined();
+            expect(set.repsR).toBeDefined();
+            expect(set.loadKg).toBeDefined();
+            expect(set.loadKgR).toBeDefined();
           }
         } else {
           // should not have periodized exercises (should be the same as in original training)
@@ -588,11 +620,13 @@ describe('periodize', () => {
           expect(exercise.sets).toHaveLength(3);
 
           for (const set of exercise.sets) {
-            // main group e1 has default values for L and R params
-            for (const param of ExerciseParam.fields) {
-              if (param === 'reps') expect(set[param]).toBeDefined();
-              if (param === 'recDist') expect(set[param]).toBeDefined();
-            }
+            expect(set.reps).toBeDefined();
+            expect(set.recDist).toBeDefined();
+
+            // all else undefined
+            expect(set.repsR).toBeUndefined();
+            expect(set.loadKg).toBeUndefined();
+            expect(set.loadKgR).toBeUndefined();
           }
         }
       }
@@ -674,13 +708,17 @@ describe('periodize', () => {
                 id: 'e1',
                 sets: [
                   // random values for L and R params
-                  generateExerciseSet(1, null, {
-                    random: true,
-                    isUnilateral: true,
+                  generateExerciseSet(1, {
+                    reps: 10,
+                    repsR: 9,
+                    loadKg: 24,
+                    loadKgR: 27,
                   }),
-                  generateExerciseSet(2, null, {
-                    random: true,
-                    isUnilateral: true,
+                  generateExerciseSet(2, {
+                    reps: 10,
+                    repsR: 9,
+                    loadKg: 24,
+                    loadKgR: 27,
                   }),
                 ],
               }),
@@ -698,17 +736,23 @@ describe('periodize', () => {
                 id: 'e1',
                 sets: [
                   // random values for L and R params
-                  generateExerciseSet(1, null, {
-                    random: true,
-                    isUnilateral: true,
+                  generateExerciseSet(1, {
+                    reps: 10,
+                    repsR: 9,
+                    loadKg: 24,
+                    loadKgR: 27,
                   }),
-                  generateExerciseSet(2, null, {
-                    random: true,
-                    isUnilateral: true,
+                  generateExerciseSet(2, {
+                    reps: 10,
+                    repsR: 9,
+                    loadKg: 24,
+                    loadKgR: 27,
                   }),
-                  generateExerciseSet(3, null, {
-                    random: true,
-                    isUnilateral: true,
+                  generateExerciseSet(3, {
+                    reps: 10,
+                    repsR: 9,
+                    loadKg: 24,
+                    loadKgR: 27,
                   }),
                 ],
               }),
@@ -732,15 +776,9 @@ describe('periodize', () => {
                       id: 'e1',
                       sets: [
                         // default values for L and R params
-                        generateExerciseSet(1, ['loadKg'], {
-                          isUnilateral: true,
-                        }),
-                        generateExerciseSet(2, ['loadKg'], {
-                          isUnilateral: true,
-                        }),
-                        generateExerciseSet(3, ['loadKg'], {
-                          isUnilateral: true,
-                        }),
+                        generateExerciseSet(1, { loadKg: 50 }),
+                        generateExerciseSet(2, { loadKg: 50 }),
+                        generateExerciseSet(3, { loadKg: 50 }),
                       ],
                     }),
                   ],
@@ -823,13 +861,17 @@ describe('periodize', () => {
                 id: 'e1',
                 sets: [
                   // random values for L and R params
-                  generateExerciseSet(1, null, {
-                    random: true,
-                    isUnilateral: true,
+                  generateExerciseSet(1, {
+                    reps: 10,
+                    repsR: 9,
+                    loadKg: 24,
+                    loadKgR: 27,
                   }),
-                  generateExerciseSet(2, null, {
-                    random: true,
-                    isUnilateral: true,
+                  generateExerciseSet(2, {
+                    reps: 10,
+                    repsR: 9,
+                    loadKg: 24,
+                    loadKgR: 27,
                   }),
                 ],
               }),
@@ -848,17 +890,23 @@ describe('periodize', () => {
                 id: 'e1',
                 sets: [
                   // random values for L and R params
-                  generateExerciseSet(1, null, {
-                    random: true,
-                    isUnilateral: true,
+                  generateExerciseSet(1, {
+                    reps: 10,
+                    repsR: 9,
+                    loadKg: 24,
+                    loadKgR: 27,
                   }),
-                  generateExerciseSet(2, null, {
-                    random: true,
-                    isUnilateral: true,
+                  generateExerciseSet(2, {
+                    reps: 10,
+                    repsR: 9,
+                    loadKg: 24,
+                    loadKgR: 27,
                   }),
-                  generateExerciseSet(3, null, {
-                    random: true,
-                    isUnilateral: true,
+                  generateExerciseSet(3, {
+                    reps: 10,
+                    repsR: 9,
+                    loadKg: 24,
+                    loadKgR: 27,
                   }),
                 ],
               }),
@@ -882,9 +930,9 @@ describe('periodize', () => {
                       id: 'e1',
                       sets: [
                         // default values for L and R params
-                        generateExerciseSet(1, null, { isUnilateral: true }),
-                        generateExerciseSet(2, null, { isUnilateral: true }),
-                        generateExerciseSet(3, null, { isUnilateral: true }),
+                        generateExerciseSet(1),
+                        generateExerciseSet(2),
+                        generateExerciseSet(3),
                       ],
                     }),
                   ],

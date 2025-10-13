@@ -38,7 +38,7 @@ import { FilterTrainingQueryDto } from './dto/filter-training-query.dto';
 import { PeriodizeTrainingsDto } from './dto/periodize-training.dto';
 import { UpdateTrainingDto } from './dto/update-training.dto';
 import { Training } from './entity/training.entity';
-import { Workload } from './entity/workload.entity';
+import { CreateWorkload, Workload } from './entity/workload.entity';
 import { TrainingService } from './service/training.service';
 import { TrainingReportService } from './service/training-report.service';
 
@@ -259,7 +259,7 @@ export class TrainingController {
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
     @Param('exerciseId') exerciseId: string,
-    @Body() body: Workload,
+    @Body() body: CreateWorkload,
   ) {
     const ref = { trainingId, exerciseId, userId: body.userId };
     return await this.trainingService.completeNextSet(user, ref, body);
@@ -274,7 +274,7 @@ export class TrainingController {
     @Param('eId') exerciseId: string,
     @Param('i', ParseIntPipe) supersetIndex: number,
     @Param('s', ParseIntPipe) setNumber: number,
-    @Body() body: Workload,
+    @Body() body: CreateWorkload,
   ) {
     if (supersetIndex < 0)
       throw new BadRequestException('Superset index must be 0 or greater');

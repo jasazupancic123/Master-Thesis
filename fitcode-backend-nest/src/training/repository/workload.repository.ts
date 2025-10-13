@@ -80,8 +80,8 @@ export class WorkloadRepository extends FirestoreRepository<
     const snapshot = await this.collectionGroup()
       .where('userId', '==', userId)
       .where('exerciseId', '==', exerciseId)
-      .where('createdAt', '>=', subDays(new Date(), range))
-      .orderBy('intWork1ValueL', 'desc')
+      .where('timestamp', '>=', subDays(new Date(), range))
+      .orderBy('loadKg', 'desc')
       .limit(1)
       .get();
 
