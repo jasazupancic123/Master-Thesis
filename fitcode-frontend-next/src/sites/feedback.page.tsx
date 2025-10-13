@@ -12,7 +12,7 @@ import { handleApiRequest } from '@/common/type/state.type';
 import AthleteAnthropometryForm from '@/components/athlete-anthropometry-form/athlete-anthropometry-form';
 import AthleteOptionsContainer from '@/components/athlete-options-container/athlete-options-container';
 import AthleteWellnessForm from '@/components/athlete-wellness-form/athlete-wellness-form';
-import { paintHeatmaps } from '@/components/muscle-heatmap-view/state';
+import { paintHeatmaps } from '@/components/training-component/training-component-layout/components/muscle-heatmap-view/actions/actions-color-heatmap';
 import { ProfileController } from '@/controller/profile/profile.controller';
 import type {
   CreateWellness,

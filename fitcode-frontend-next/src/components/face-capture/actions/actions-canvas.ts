@@ -1,31 +1,5 @@
 import { Step } from '@/common/enum/step.enum';
 
-type Landmark = { x: number; y: number };
-type Scored = Landmark & { _score: number };
-
-export const playSuccessSound = () => {
-  const audio = new Audio('/sounds/face-recognition-success.wav');
-  audio.play().catch(() => {});
-};
-
-// Load Mediapipe Tasks Vision dynamically in the browser
-export async function createDetector(baseAssetUrl: string, modelUrl: string) {
-  const vision = await import('@mediapipe/tasks-vision');
-  const { FaceLandmarker, FilesetResolver } = vision;
-  const filesetResolver = await FilesetResolver.forVisionTasks(baseAssetUrl);
-  const detector = await FaceLandmarker.createFromOptions(filesetResolver, {
-    baseOptions: {
-      modelAssetPath: modelUrl,
-      delegate: 'GPU',
-    },
-    runningMode: 'VIDEO',
-    numFaces: 1,
-    outputFaceBlendshapes: false,
-    outputFacialTransformationMatrixes: false,
-  });
-  return detector;
-}
-
 export function resizeCanvasToDisplaySize(canvas: HTMLCanvasElement) {
   const { clientWidth, clientHeight } = canvas;
   const dpr = Math.max(1, window.devicePixelRatio || 1);
@@ -35,53 +9,6 @@ export function resizeCanvasToDisplaySize(canvas: HTMLCanvasElement) {
     canvas.width = displayWidth;
     canvas.height = displayHeight;
   }
-}
-
-// ====== Helper math for pose checks ======
-export function computeBBoxFromLandmarks(
-  landmarks: { x: number; y: number }[]
-) {
-  let minX = Infinity,
-    minY = Infinity,
-    maxX = -Infinity,
-    maxY = -Infinity;
-  for (const lm of landmarks) {
-    if (lm.x < minX) minX = lm.x;
-    if (lm.y < minY) minY = lm.y;
-    if (lm.x > maxX) maxX = lm.x;
-    if (lm.y > maxY) maxY = lm.y;
-  }
-  return {
-    minX,
-    minY,
-    maxX,
-    maxY,
-    w: maxX - minX,
-    h: maxY - minY,
-    cx: (minX + maxX) / 2,
-    cy: (minY + maxY) / 2,
-  };
-}
-
-export function estimateYawFromNose(landmarks: Landmark[]): number {
-  const bbox = computeBBoxFromLandmarks(landmarks);
-
-  const noseFromIndex: Landmark | undefined = landmarks[1];
-
-  const scoredBest: Scored | null = noseFromIndex
-    ? null
-    : landmarks.reduce<Scored | null>((best, p) => {
-        const score = Math.abs(p.x - bbox.cx) + Math.abs(p.y - bbox.cy);
-        if (best === null || score < best._score) {
-          return { ...p, _score: score };
-        }
-        return best;
-      }, null);
-
-  const nose: Landmark = noseFromIndex ?? scoredBest ?? landmarks[0];
-
-  const offset = (nose.x - bbox.cx) / Math.max(0.0001, bbox.w);
-  return offset * 90; // heuristic degrees
 }
 
 // ====== Guide skeletons ======

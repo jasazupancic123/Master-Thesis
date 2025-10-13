@@ -5,7 +5,7 @@ import React, { useRef } from 'react';
 import toast from 'react-hot-toast';
 
 import type { SvgC } from '../../../muscle-map-with-tooltip/muscle-map-with-tooltip';
-import type { TrainingCycleViewGridItemProps } from '../../type/type';
+import type { TrainingCycleViewGridItemProps } from '../../types/type';
 import { CommonService } from '@/common/service/common.service';
 import { getComponentIcon } from '@/common/service/util/icons.util';
 import { useGroup } from '@/store/group.provider';

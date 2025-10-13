@@ -12,8 +12,8 @@ import {
   YAxis,
 } from 'recharts';
 
-import MuscleMapWithTooltip from '../muscle-map-with-tooltip/muscle-map-with-tooltip';
-import { paintHeatmaps } from './state';
+import MuscleMapWithTooltip from '../../../../muscle-map-with-tooltip/muscle-map-with-tooltip';
+import { paintHeatmaps } from './actions/actions-color-heatmap';
 import { theme } from '@/app/style';
 import HeatmapBack from '@/assets/svg/heatmap-back.svg';
 import HeatmapFront from '@/assets/svg/heatmap-front.svg';
