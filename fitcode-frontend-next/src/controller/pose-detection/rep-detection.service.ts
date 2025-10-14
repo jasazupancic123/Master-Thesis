@@ -19,6 +19,7 @@ import { TimeUtil } from './util/time.util';
 import { CommonService } from '@/common/service/common.service';
 import type { SetState } from '@/common/type/state.type';
 import { EXERCISE_TIMES_ROUNDING_STEP_S } from '@/components/mobile-movement-validation/mobile-movement-validation';
+import { RepSideDetectionData } from './type/rep-side-detection-data';
 
 const commonService = CommonService.instance;
 
@@ -45,128 +46,135 @@ export class RepDetectionService {
   */
 
   static checkRepStatus(state: {
-    repStateRef: React.RefObject<RepState>;
-    currentRepRef: RefObject<Rep | null>;
-    recordedReps: Rep[];
     currentFrameKeypoints: Keypoint[];
     keypointHistory: KeypointHistory;
-    keypointId: KeypointId;
     valueType: KeypointValueType;
     direction: ConditionDirection;
-    exerciseStartConditions: ExerciseRepStartCondition[];
     avgFps: { value: number; count: number } | null;
     initedFirstFrameInRecordingMode: RefObject<boolean>;
-    side: 'L' | 'R';
+    leftData: RepSideDetectionData;
+    rightData?: RepSideDetectionData | undefined;
     setRepCount: SetState<RepsCount>;
   }) {
     const {
-      repStateRef,
-      currentRepRef,
-      recordedReps,
       currentFrameKeypoints,
       keypointHistory,
-      keypointId,
       valueType,
       direction,
-      exerciseStartConditions,
       avgFps,
       initedFirstFrameInRecordingMode,
-      side,
+      leftData,
+      rightData,
       setRepCount,
     } = state;
 
-    switch (repStateRef.current.status) {
-      case RepStatus.IN_REP: {
-        // Updates rep's extremeToEndTimestamp if the value falls out of a certain range from the extremeValue
-        // this.checkOutOfExtremeRange({
-        //   currentRepRef,
-        //   currentFrameKeypoints,
-        //   keypointId,
-        //   valueType,
-        //   direction,
-        // });
+    const lAndR = [leftData, rightData].filter((side) => side !== undefined);
 
-        // Check for rep end
-        const { isRepDone, endKeypoint } = this.checkHasRepEnded({
-          currentRepRef,
-          recordedReps,
-          keypointHistory,
-          direction,
-          keypointId,
-          valueType,
-          avgFps,
-        });
+    for (const lOrR of lAndR) {
+      const {
+        repStateRef,
+        currentRepRef,
+        recordedReps,
+        keypointId,
+        exerciseStartConditions,
+        side,
+      } = lOrR;
 
-        if (isRepDone && endKeypoint !== undefined && currentRepRef.current) {
-          // Save rep
-          currentRepRef.current.endValueTimestamp = endKeypoint.capturedAt;
+      if (repStateRef.current.status === RepStatus.NONE) continue;
 
-          // Set all the times
-          this.postProcessRep({
+      switch (repStateRef.current.status) {
+        case RepStatus.IN_REP: {
+          // Updates rep's extremeToEndTimestamp if the value falls out of a certain range from the extremeValue
+          // this.checkOutOfExtremeRange({
+          //   currentRepRef,
+          //   currentFrameKeypoints,
+          //   keypointId,
+          //   valueType,
+          //   direction,
+          // });
+
+          // Check for rep end
+          const { isRepDone, endKeypoint } = this.checkHasRepEnded({
             currentRepRef,
             recordedReps,
+            keypointHistory,
+            direction,
             keypointId,
             valueType,
-            direction,
             avgFps,
           });
 
-          recordedReps.push(currentRepRef.current);
+          if (isRepDone && endKeypoint !== undefined && currentRepRef.current) {
+            // Save rep
+            currentRepRef.current.endValueTimestamp = endKeypoint.capturedAt;
 
-          setRepCount((prev) =>
-            side === 'L'
-              ? { ...prev, left: recordedReps.length }
-              : { ...prev, right: recordedReps.length }
-          );
+            // Set all the times
+            this.postProcessRep({
+              currentRepRef,
+              recordedReps,
+              keypointId,
+              valueType,
+              direction,
+              avgFps,
+            });
 
-          console.log('RECORDED ', recordedReps.length, ' REPS');
+            recordedReps.push(currentRepRef.current);
 
-          repStateRef.current.status = RepStatus.IDLE; // we are now out of the rep
+            setRepCount((prev) =>
+              side === 'L'
+                ? { ...prev, left: recordedReps.length }
+                : { ...prev, right: recordedReps.length }
+            );
+
+            console.log('RECORDED ', recordedReps.length, ' REPS');
+
+            repStateRef.current.status = RepStatus.IDLE; // we are now out of the rep
+          }
+
+          break;
         }
-
-        break;
-      }
-      case RepStatus.IDLE: {
-        // Check for rep start
-        const {
-          hasRepStarted,
-          startValue,
-          startValueFrameNum,
-          startValueCapturedAt,
-        } = this.checkHasRepStarted({
-          currentFrameKeypoints,
-          keypointHistory,
-          keypointId,
-          valueType,
-          direction,
-          exerciseStartConditions,
-          avgFps,
-          initedFirstFrameInRecordingMode,
-          recordedReps,
-        });
-
-        if (
-          hasRepStarted &&
-          startValue !== undefined &&
-          startValueFrameNum !== undefined &&
-          startValueCapturedAt !== undefined
-        ) {
-          // New rep
-          // console.log('NEW REP DETECTED with startValue', startValue);
-          repStateRef.current.status = RepStatus.IN_REP; // we are now in the rep
-
-          currentRepRef.current = this.initNewRep(
-            recordedReps.length + 1,
+        case RepStatus.IDLE: {
+          // Check for rep start
+          const {
+            hasRepStarted,
             startValue,
             startValueFrameNum,
             startValueCapturedAt,
-            keypointHistory.history.map((h) => [...h])
-          );
+          } = this.checkHasRepStarted({
+            currentFrameKeypoints,
+            keypointHistory,
+            keypointId,
+            valueType,
+            direction,
+            exerciseStartConditions,
+            avgFps,
+            initedFirstFrameInRecordingMode,
+            recordedReps,
+          });
+
+          if (
+            hasRepStarted &&
+            startValue !== undefined &&
+            startValueFrameNum !== undefined &&
+            startValueCapturedAt !== undefined
+          ) {
+            // New rep
+            // console.log('NEW REP DETECTED with startValue', startValue);
+            repStateRef.current.status = RepStatus.IN_REP; // we are now in the rep
+
+            currentRepRef.current = this.initNewRep(
+              recordedReps.length + 1,
+              startValue,
+              startValueFrameNum,
+              startValueCapturedAt,
+              keypointHistory.history.map((h) => [...h])
+            );
+          }
+          break;
         }
-        break;
+        default:
+          break;
       }
-      default:
-        break;
     }
   }
 
