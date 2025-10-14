@@ -9,10 +9,11 @@ import toast from 'react-hot-toast';
 
 import { WellnessAnthropometry } from '@/common/enum/wellnes-anthropometry.enum';
 import { handleApiRequest } from '@/common/type/state.type';
+import AthleteOptionsContainer from '@/components/athlete/athlete-options-container/athlete-options-container';
+import AthleteWellnessForm from '@/components/athlete/athlete-wellness-form/athlete-wellness-form';
 import AthleteAnthropometryForm from '@/components/athlete-anthropometry-form/athlete-anthropometry-form';
-import AthleteOptionsContainer from '@/components/athlete-options-container/athlete-options-container';
-import AthleteWellnessForm from '@/components/athlete-wellness-form/athlete-wellness-form';
-import { paintHeatmaps } from '@/components/muscle-heatmap-view/state';
+import { paintHeatmaps } from '@/components/training-component/training-component-layout/components/muscle-heatmap-view/actions/actions-color-heatmap';
+import { MuscleService } from '@/controller/exercise/muscle.service';
 import { ProfileController } from '@/controller/profile/profile.controller';
 import type {
   CreateWellness,
@@ -50,6 +51,13 @@ export default function FeedbackPage() {
     WellnessAnthropometry.WELLNESS
   );
   const [muscleLoads, setMuscleLoads] = useState<[string, number][]>([]);
+
+  useEffect(() => {
+    if (muscleLoads.length) return; // Already set
+
+    const loads = MuscleService.generateEmptyMuscleLoadsForAllMuscles(1);
+    setMuscleLoads(loads);
+  }, []);
 
   const { wellness } = useWellness();
 

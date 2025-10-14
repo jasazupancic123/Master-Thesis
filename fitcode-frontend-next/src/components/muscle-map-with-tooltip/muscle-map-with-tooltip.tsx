@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 import {
   getTrainingExercisesFromExercises,
   handleAddExerciseToSupersetComponent,
-} from '../supersets/state';
+} from '../supersets/actions/actions-training-exercise';
 import {
   clearHideTimer,
   findFilledGroup,
@@ -50,18 +50,7 @@ export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
   const groupContext = useGroup();
   const trainerDayViewContext = useTrainerDayViewContext();
 
-  const { setTrainings } = groupContext || {};
-
-  const {
-    training,
-    setTraining,
-    component,
-    setComponent,
-    supersets,
-    setSupersets,
-    selectedSubgroup,
-    setSelectedSubgroup,
-  } = trainerDayViewContext || {};
+  const { training, component } = trainerDayViewContext || {};
 
   const {
     front,
@@ -497,21 +486,16 @@ export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
                                 allExercises,
                                 minSets: setsRange?.min,
                                 maxSets: setsRange?.max,
+                                setSearch: () => {},
+                                setOpenAddExerciseModal: () => {},
                               },
                               {
-                                training,
-                                setTraining,
-                                setTrainings,
-                                component,
-                                setComponent,
-                                supersets,
-                                setSupersets,
-                                setOpenAddExerciseModal: () => {},
-                                setDetectedChanges: () => {},
-                                setSearch: () => {},
-                                selectedSubgroup,
-                                setSelectedSubgroup,
-                                setPagination: () => {},
+                                useGroup: groupContext,
+                                useTrainerDayViewContext: {
+                                  ...trainerDayViewContext,
+                                  training,
+                                  component,
+                                },
                               }
                             );
 

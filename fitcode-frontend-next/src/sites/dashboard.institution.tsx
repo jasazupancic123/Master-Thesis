@@ -17,13 +17,9 @@ import { theme } from '@/app/style';
 import { AthletesTrainers } from '@/common/enum/athletes-trainer.enum';
 import { isManager } from '@/common/firebase/firebase-auth.util';
 import { handleApiRequest } from '@/common/type/state.type';
-import DashboardEditAthleteModal from '@/components/dashboard-edit-athlete-modal/dashboard-edit-athlete-modal';
-import RegisterUsersDashboard from '@/components/dashboard-register-users-modal/dashboard-register-users-modal';
-import HorizontalItemsList from '@/components/horizontal-items-list/horizontal-items-list';
-import MyModal from '@/components/modal/modal';
-import { SearchBar } from '@/components/search-bar/search-bar';
-import SimpleCircle from '@/components/simple-circle/simple-circle';
-import { MAX_WIDTH } from '@/components/trainer-day-view/constant';
+import DashboardEditAthleteModal from '@/components/dashboard/components/dashboard-groups/components/dashboard-groups-members/modals/dashboard-edit-athlete-modal/dashboard-edit-athlete-modal';
+import RegisterUsersDashboard from '@/components/dashboard/components/dashboard-register-users-modal/dashboard-register-users-modal';
+import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
 import type { AuthUser } from '@/controller/auth/type/user.type';
 import { InstitutionController } from '@/controller/institution/institution.controller';
 import { Gender } from '@/controller/profile/enum/gender.enum';
@@ -35,7 +31,11 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import FileUpload from '@/util/file-upload';
+import FileUpload from '@/util/file-upload/file-upload';
+import HorizontalItemsList from '@/util/horizontal-items-list/horizontal-items-list';
+import MyModal from '@/util/modal/modal';
+import { SearchBar } from '@/util/search-bar/search-bar';
+import SimpleCircle from '@/util/simple-circle/simple-circle';
 
 export default function DashboardInstitutionPage() {
   const screenSize = useScreenSize();
@@ -54,13 +54,12 @@ export default function DashboardInstitutionPage() {
   const [currentUsers, setCurrentUsers] = useState<AuthUser[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<AuthUser[]>([]);
   const [search, setSearch] = useState('');
-  const [modal, setModal] = useState({
-    add_member: false,
-    add_trainer: false,
-    add_group: false,
-    add_member_via_csv: false,
-    edit_athlete: false,
-  });
+
+  const [openAddMemberModal, setOpenAddMemberModal] = useState(false);
+  const [openAddMemberViaCsvModal, setOpenAddMemberViaCsvModal] =
+    useState(false);
+  const [openEditAthleteModal, setOpenEditAthleteModal] = useState(false);
+
   const [hoveredUser, setHoveredUser] = useState<AuthUser | null>(null);
   const [editUser, setEditUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -248,7 +247,7 @@ export default function DashboardInstitutionPage() {
           router,
           () => controller.importProfiles({ profiles: data }),
           (res) => {
-            setModal((prev) => ({ ...prev, add_member_via_csv: false }));
+            setOpenAddMemberViaCsvModal(false);
             setCsvUserEmails(data.map((d) => d.email));
             setMembers((prev) => [...prev, ...(res.successful || [])]);
 
@@ -432,12 +431,7 @@ export default function DashboardInstitutionPage() {
                   backgroundColor: theme.palette.background.light,
                   borderRadius: 1,
                 }}
-                onClick={() =>
-                  setModal({
-                    ...modal,
-                    add_member: true,
-                  })
-                }
+                onClick={() => setOpenAddMemberModal(true)}
               >
                 <Add fontSize="small" />
               </IconButton>
@@ -448,12 +442,7 @@ export default function DashboardInstitutionPage() {
                   backgroundColor: theme.palette.background.light,
                   borderRadius: 1,
                 }}
-                onClick={() =>
-                  setModal({
-                    ...modal,
-                    add_member_via_csv: true,
-                  })
-                }
+                onClick={() => setOpenAddMemberViaCsvModal(true)}
               >
                 <FileUploadOutlined fontSize="small" />
               </IconButton>
@@ -535,7 +524,7 @@ export default function DashboardInstitutionPage() {
                     }}
                     onClick={() => {
                       setEditUser(user);
-                      setModal((prev) => ({ ...prev, edit_athlete: true }));
+                      setOpenEditAthleteModal(true);
                     }}
                   />
                   <Typography
@@ -564,10 +553,10 @@ export default function DashboardInstitutionPage() {
       </Box>
 
       <MyModal
-        isOpen={modal.add_member}
-        setIsOpen={(open) => setModal({ ...modal, add_member: open })}
+        isOpen={openAddMemberModal}
+        setIsOpen={(open) => setOpenAddMemberModal(open)}
         onConfirm={undefined}
-        onCancel={() => setModal({ ...modal, add_member: false })}
+        onCancel={() => setOpenAddMemberModal(false)}
         cancelText="Close"
       >
         <RegisterUsersDashboard
@@ -580,10 +569,10 @@ export default function DashboardInstitutionPage() {
       </MyModal>
 
       <MyModal
-        isOpen={modal.add_member_via_csv}
-        setIsOpen={(open) => setModal({ ...modal, add_member_via_csv: open })}
+        isOpen={openAddMemberViaCsvModal}
+        setIsOpen={(open) => setOpenAddMemberViaCsvModal(open)}
         onConfirm={undefined}
-        onCancel={() => setModal({ ...modal, add_member_via_csv: false })}
+        onCancel={() => setOpenAddMemberViaCsvModal(false)}
         cancelText="Close"
       >
         <FileUpload
@@ -596,8 +585,8 @@ export default function DashboardInstitutionPage() {
       </MyModal>
 
       <DashboardEditAthleteModal
-        isOpen={modal.edit_athlete}
-        setModal={setModal}
+        open={openEditAthleteModal}
+        setOpen={setOpenEditAthleteModal}
         editUser={editUser}
         setEditUser={setEditUser}
         setFilteredUsers={setFilteredUsers}

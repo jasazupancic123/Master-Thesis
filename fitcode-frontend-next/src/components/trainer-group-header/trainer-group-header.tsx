@@ -23,16 +23,15 @@ import {
 import { useTheme } from '@mui/material';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
 import toast from 'react-hot-toast';
 
-import LoadingOverlay from '../loading-overlay/loading-overlay';
-import Logo from '../logo/logo';
-import MyModal from '../modal/modal';
+import LoadingOverlay from '../../util/loading-overlay/loading-overlay';
+import Logo from '../../util/logo/logo';
 import ProfileHeaderMenu from '../profile-header-menu/profile-header-menu';
-import { MAX_WIDTH } from '../trainer-day-view/constant';
-import { handleUpdateMultipleTrainings } from '../trainer-group-day-view/state';
-import UsersDataGrid from '../users-data-grid/users-data-grid';
+import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
+import { handleUpdateMultipleTrainings } from './actions/actions-training';
+import useTrainerGroupHeaderUtils from './hooks/use-utils';
+import AddMemberModal from './modals/add-member-modal';
 import { handleSaveGroup } from '@/app/(trainer)/groups/[group_id]/state';
 import {
   LINK_DASHBOARD,
@@ -42,15 +41,14 @@ import {
 } from '@/common/constant/navigation.constant';
 import type { GroupDateFilter } from '@/common/type/filter.type';
 import type { SetState } from '@/common/type/state.type';
-import FilterButton from '@/components/filter-button/filter-button';
 import { GroupController } from '@/controller/group/group.controller';
-import { UserRole } from '@/controller/profile/enum/user-role.enum';
 import { TrainingController } from '@/controller/training/training.controller';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
+import FilterButton from '@/util/filter-button/filter-button';
 
 export interface TrainerGroupHeaderProps {
   filter: GroupDateFilter;
@@ -61,47 +59,41 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
   const theme = useTheme();
   const router = useRouter();
   const screenSize = useScreenSize();
-  const { users } = useMain();
-  const [addMemberModal, setAddMemberModal] = useState(false);
 
   const { filter, setFilter } = props;
 
   const auth = useAuthenticatedAuth();
-  const trainingController = TrainingController.getInstance();
-  const groupController = GroupController.getInstance();
+
+  const mainContext = useMain();
+  const groupContext = useGroup();
+  const trainerDayViewContext = useTrainerDayViewContext();
 
   const {
     institution,
-    group,
     setGroup,
     selectedGroup,
     setSelectedGroup,
     cycle,
     setCycle,
-    setTrainings,
     detectedChanges,
     setDetectedChanges,
-  } = useGroup();
-
-  const { components, exercises, methods } = useMain();
-
-  const trainerDayViewContext = useTrainerDayViewContext();
+  } = groupContext;
 
   const {
-    training,
-    setTraining,
-    selectedAthlete,
-    isSettingAthleteWorkloads,
-    handleAddMember,
-    handleRemoveMember,
-  } = trainerDayViewContext || {};
+    isUpdatingTraining,
+    setIsUpdatingTraining,
+    openDrawer,
+    setOpenDrawer,
+    openProfileMenu,
+    setOpenProfileMenu,
+    addMemberModal,
+    setAddMemberModal,
+    anchorProfileEl,
+    setAnchorProfileEl,
+  } = useTrainerGroupHeaderUtils();
 
-  const [isUpdatingTraining, setIsUpdatingTraining] = useState(false);
-  const [open, setOpen] = useState(false);
-  const [openProfileMenu, setOpenProfileMenu] = useState(false);
-  const [anchorProfileEl, setAnchorProfileEl] = useState<HTMLElement | null>(
-    null
-  );
+  const trainingController = TrainingController.getInstance();
+  const groupController = GroupController.getInstance();
 
   return (
     <Box
@@ -123,7 +115,7 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
             }}
           >
             <IconButton
-              onClick={() => setOpen(!open)}
+              onClick={() => setOpenDrawer(!openDrawer)}
               edge="end"
               color="inherit"
               aria-label="menu"
@@ -133,7 +125,11 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
           </div>
 
           {/* Mobile side drawer from the left */}
-          <Drawer anchor="left" open={open} onClose={() => setOpen(false)}>
+          <Drawer
+            anchor="left"
+            open={openDrawer}
+            onClose={() => setOpenDrawer(false)}
+          >
             <List sx={{ mt: 5 }}>
               {auth.role &&
                 Object.values(LINKS_SIDEBAR_GROUP_VIEW[auth.role]).map(
@@ -247,21 +243,18 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
                       <IconButton
                         sx={{ mx: 0, cursor: 'pointer' }}
                         onClick={() =>
-                          handleUpdateMultipleTrainings(trainingController, {
-                            setTrainings,
-                            training,
-                            setTraining,
-                            group,
-                            cycle,
-                            router,
-                            components,
-                            exercises,
-                            methods,
-                            setDetectedChanges,
-                            selectedAthlete,
-                            isSettingAthleteWorkloads,
-                            setIsUpdatingTraining,
-                          })
+                          handleUpdateMultipleTrainings(
+                            {
+                              controller: trainingController,
+                              router,
+                              setIsUpdatingTraining,
+                            },
+                            {
+                              useMain: mainContext,
+                              useGroup: groupContext,
+                              useTrainerDayViewContext: trainerDayViewContext,
+                            }
+                          )
                         }
                       >
                         <SaveOutlined sx={{ fontSize: 22 }} />
@@ -411,21 +404,18 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
                 <IconButton
                   sx={{ p: 0, m: 0 }}
                   onClick={() => {
-                    handleUpdateMultipleTrainings(trainingController, {
-                      setTrainings,
-                      training,
-                      setTraining,
-                      group,
-                      cycle,
-                      router,
-                      components,
-                      exercises,
-                      methods,
-                      setDetectedChanges,
-                      selectedAthlete,
-                      isSettingAthleteWorkloads,
-                      setIsUpdatingTraining,
-                    });
+                    handleUpdateMultipleTrainings(
+                      {
+                        controller: trainingController,
+                        router,
+                        setIsUpdatingTraining,
+                      },
+                      {
+                        useMain: mainContext,
+                        useGroup: groupContext,
+                        useTrainerDayViewContext: trainerDayViewContext,
+                      }
+                    );
                   }}
                 >
                   <SaveOutlined
@@ -536,22 +526,7 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
         <LoadingOverlay title="Updating training plan..." showLogos />
       )}
 
-      <MyModal
-        isOpen={addMemberModal}
-        setIsOpen={setAddMemberModal}
-        title="Add member"
-      >
-        <UsersDataGrid
-          selectMode
-          users={users}
-          filter={(user) => user.customClaims.role[0] === UserRole.ATHLETE}
-          displayColumns={['actions', 'photoURL', 'displayName', 'email']}
-          initialSelection={(training || group)?.membersIds || []}
-          onSelectToggle={async (user, selected) =>
-            selected ? handleAddMember(user) : handleRemoveMember(user)
-          }
-        />
-      </MyModal>
+      <AddMemberModal open={addMemberModal} setOpen={setAddMemberModal} />
     </Box>
   );
 }

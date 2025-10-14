@@ -31,10 +31,17 @@ const TrainingInProgressContext = createContext<
   TrainingInProgressContextType | undefined
 >(undefined);
 
+export type TrainingInProgressProviderReturnType = ReturnType<
+  typeof useTrainingInProgress
+>;
+
 export const TrainingInProgressProvider = (props: ChildrenProps) => {
   const { trainingInProgress, refetchTraining } = useTraining();
+
   const router = useRouter();
+
   const controller = TrainingController.getInstance();
+
   const { children } = props;
 
   const [selectedSuperset, setSelectedSuperset] = useState<

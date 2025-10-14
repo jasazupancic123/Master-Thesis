@@ -3,20 +3,13 @@
 import { ArrowForward } from '@mui/icons-material';
 import { Fab, Tooltip, Typography } from '@mui/material';
 import { Box } from '@mui/material';
-import { useRouter } from 'next/navigation';
 import { redirect } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import toast from 'react-hot-toast';
 
 import { LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS } from '@/common/constant/navigation.constant';
 import { isTrainer } from '@/common/firebase/firebase-auth.util';
-import { handleApiRequest } from '@/common/type/state.type';
-import AddGroupModal from '@/components/dashboard-add-group-modal/dashboard-add-group-modal';
-import DashboardGroups from '@/components/dashboard-groups/dashboard-groups';
-import RegisterUsersDashboard from '@/components/dashboard-register-users-modal/dashboard-register-users-modal';
-import MyModal from '@/components/modal/modal';
-import type { AuthUser } from '@/controller/auth/type/user.type';
-import { GroupController } from '@/controller/group/group.controller';
+import DashboardGroups from '@/components/dashboard/components/dashboard-groups/dashboard-groups';
+import RegisterUsersDashboard from '@/components/dashboard/components/dashboard-register-users-modal/dashboard-register-users-modal';
 import { GroupService } from '@/controller/group/group.service';
 import type { Institution } from '@/controller/institution/type/institution.type';
 import { UserRole } from '@/controller/profile/enum/user-role.enum';
@@ -24,34 +17,24 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
+import MyModal from '@/util/modal/modal';
 
 export default function DashboardPage() {
   const screenSize = useScreenSize();
-  const router = useRouter();
 
   const { users, profile, groups: allGroups } = useMain();
   const { role } = useAuthenticatedAuth();
-  const controller = GroupController.getInstance();
 
   const {
     institutions,
     selectedInstitution,
     setSelectedInstitution,
-    setDetectedChanges,
     selectedGroup,
     setSelectedGroup,
   } = useDashboard();
 
-  const [modal, setModal] = useState({
-    add_member: false,
-    add_trainer: false,
-    add_group: false,
-    add_member_via_csv: false,
-    edit_athlete: false,
-  });
-
-  const [groupName, setGroupName] = useState('');
-  const [owner, setOwner] = useState<AuthUser | null>(null);
+  const [openEditAthleteModal, setOpenEditAthleteModal] = useState(false);
+  const [openAddTrainerModal, setOpenAddTrainerModal] = useState(false);
 
   useEffect(() => {
     // fetch groups when selected institution changes
@@ -148,103 +131,18 @@ export default function DashboardPage() {
           )}
         </Box>
 
-        <DashboardGroups setModal={setModal} modal={modal} />
+        <DashboardGroups />
       </Box>
 
       {/* Add Trainer Modal */}
       <MyModal
-        isOpen={modal.add_trainer}
-        setIsOpen={(open) =>
-          setModal({
-            add_trainer: open,
-            add_member: false,
-            add_group: false,
-            add_member_via_csv: false,
-            edit_athlete: false,
-          })
-        }
+        isOpen={openAddTrainerModal}
+        setIsOpen={(open) => setOpenAddTrainerModal(open)}
         onConfirm={undefined}
-        onCancel={() =>
-          setModal({
-            add_member: false,
-            add_trainer: false,
-            add_group: false,
-            add_member_via_csv: false,
-            edit_athlete: false,
-          })
-        }
+        onCancel={() => setOpenEditAthleteModal(false)}
         cancelText="Close"
       >
         <RegisterUsersDashboard registerRole={UserRole.TRAINER} />
-      </MyModal>
-
-      {/* Add Group Modal */}
-      <MyModal
-        isOpen={modal.add_group}
-        setIsOpen={(open) =>
-          setModal({
-            add_member: false,
-            add_trainer: false,
-            add_group: open,
-            add_member_via_csv: false,
-            edit_athlete: false,
-          })
-        }
-        onCancel={() => {
-          setModal({
-            add_member: false,
-            add_trainer: false,
-            add_group: false,
-            add_member_via_csv: false,
-            edit_athlete: false,
-          });
-          setGroupName('');
-        }}
-        cancelText="Close"
-        onConfirm={async () => {
-          if (!owner) {
-            toast.error('Please select an owner for the group.');
-            return;
-          }
-
-          const input = {
-            name: groupName,
-            membersIds: [],
-            ownerId: owner.uid,
-            institutionId: selectedInstitution.id,
-          };
-
-          handleApiRequest(
-            router,
-            () => controller.create(input),
-            (group) => {
-              setSelectedInstitution({
-                ...selectedInstitution,
-                groups: [...selectedInstitution.groups, group],
-              });
-              setSelectedGroup(group);
-              setModal({
-                add_member: false,
-                add_trainer: false,
-                add_group: false,
-                add_member_via_csv: false,
-                edit_athlete: false,
-              });
-              setGroupName('');
-              setDetectedChanges(false);
-              toast.success('Group created successfully.');
-            },
-            undefined,
-            'Failed to create group.'
-          );
-        }}
-      >
-        <AddGroupModal
-          groupName={groupName}
-          setGroupName={setGroupName}
-          owner={owner}
-          setOwner={setOwner}
-        />
       </MyModal>
     </>
   );

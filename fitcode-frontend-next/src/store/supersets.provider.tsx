@@ -33,6 +33,8 @@ type SupersetsContextProps = SupersetsContextInputProps & {
 
 const SupersetsContext = createContext<SupersetsContextProps | null>(null);
 
+export type SupersetsProviderReturnType = ReturnType<typeof useSupersets>;
+
 export const useSupersets = () => useContext(SupersetsContext)!;
 
 export function SupersetsProvider(

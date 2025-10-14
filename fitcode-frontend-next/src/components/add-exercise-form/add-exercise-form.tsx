@@ -1,83 +1,37 @@
 import { Box, Pagination, Typography } from '@mui/material';
-import { useEffect, useState } from 'react';
 
-import ExerciseFilter from '../exercises-list/exercise-filter';
+import ExerciseFilter from '../exercises-list/components/exercise-filter/exercise-filter';
 import ExercisesList from '../exercises-list/exercises-list';
-import { SearchBar } from '../search-bar/search-bar';
-import type { AddExerciseFormProps } from '../trainer-day-view/props';
-import { handlePaginateExercises } from '@/app/(trainer)/dashboard/exercises/state';
-import {
-  COOLDOWN_ID,
-  WARMUP_ID,
-} from '@/common/constant/warmup-cooldown-ids-constants';
-import type { Exercise } from '@/controller/exercise/type/exercise.type';
-import type { AttributeFilters } from '@/sites/exercises.page';
-import { useMain } from '@/store/main.provider';
+import type { AddExerciseFormProps } from '../trainer-group-day-view/props/props';
+import useExerciseFormComponentExercises from './hooks/use-component-exercises';
+import useExerciseFormFilters from './hooks/use-filters';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
+import { SearchBar } from '@/util/search-bar/search-bar';
 
 export default function AddExerciseForm(props: AddExerciseFormProps) {
-  const { selectedExercisesIds, setSelectedExercisesIds, component } = props;
-  const { exercises: allExercises, components } = useMain();
-  const {
-    filteredExercises: exercises,
-    pagination,
-    setPagination,
-  } = useTrainerDayViewContext();
+  const { pagination, setPagination } = useTrainerDayViewContext();
+
   const screenSize = useScreenSize();
 
-  const [filters, setFilters] = useState<AttributeFilters>({});
-  const [openFilters, setOpenFilters] = useState(false);
-  const [filteredExercises, setFilteredExercises] =
-    useState<Exercise[]>(exercises);
+  const { selectedExercisesIds, setSelectedExercisesIds, component } = props;
 
-  const [componentExercises, setComponentExercises] = useState<Exercise[]>([]);
-  const [search, setSearch] = useState('');
-
-  useEffect(() => {
-    if (!component) return;
-
-    if (component.id === WARMUP_ID || component.id === COOLDOWN_ID) {
-      setComponentExercises(allExercises);
-      return;
-    }
-
-    setComponentExercises(
-      allExercises.filter((exercise) =>
-        exercise.components?.some((c) => c.parents.includes(component.id))
-      )
-    );
-  }, [component]);
-
-  /**
-   * Filter exercises
-   */
-  useEffect(() => {
-    const filter: Partial<Exercise> = {
-      ...(component?.id && { componentIds: [component.id] }),
-      ...(search && { name: search }),
-      ...filters,
-    };
-
-    handlePaginateExercises(filter, {
-      components,
-      exercises: componentExercises,
-      pagination,
-      search,
-      setPagination,
-      setFilteredExercises,
-    });
-  }, [
-    components,
-    componentExercises,
-    exercises,
+  const componentExercisesContext = useExerciseFormComponentExercises({
     component,
+  });
+
+  const {
     filters,
+    setFilters,
+    openFilters,
+    setOpenFilters,
     search,
-    pagination.page,
-    pagination.pageSize,
-    pagination.pages,
-  ]);
+    setSearch,
+    filteredExercises,
+  } = useExerciseFormFilters({
+    component,
+    useExerciseFormComponentExercises: componentExercisesContext,
+  });
 
   return (
     <Box width="100%" display="flex" flexDirection="column" alignItems="center">
