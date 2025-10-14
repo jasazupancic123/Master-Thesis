@@ -10,7 +10,6 @@ import { LoadType } from '@src/training/enum/load-type.enum';
 import { TrainingPlanService } from '@src/training/service/training-plan.service';
 
 import { ExerciseParam } from '../constant/exercise-param.constant';
-import { generateExerciseStub } from '../mock/exercise.stub';
 import type { ExerciseParamService } from './exercise-param.service';
 
 describe('ExerciseParamService', () => {
@@ -34,25 +33,6 @@ describe('ExerciseParamService', () => {
   beforeEach(() => {
     jest.spyOn(componentService, 'getRoot').mockImplementation(() => root);
   });
-
-  const exercises = [
-    generateExerciseStub({ id: 'e1', componentIds: ['leaf1'] }),
-    generateExerciseStub({ id: 'e2', componentIds: ['leaf1'] }),
-    generateExerciseStub({ id: 'e3', componentIds: ['leaf2'] }),
-    generateExerciseStub({ id: 'e4', componentIds: ['leaf3'] }),
-    generateExerciseStub({ id: 'e5', componentIds: ['leaf3'] }),
-    generateExerciseStub({ id: 'e6', componentIds: ['leaf3'] }),
-    generateExerciseStub({ id: 'e7', componentIds: ['leaf3'] }),
-    generateExerciseStub({ id: 'e8', componentIds: ['leaf3'] }),
-    generateExerciseStub({ id: 'e9', componentIds: ['leaf3'] }),
-  ];
-
-  const data = {
-    exercises,
-    components: [root],
-    methods: [],
-    attributes: [],
-  };
 
   it('should correctly populate exercise parameters', () => {
     const isUnilateral = true;

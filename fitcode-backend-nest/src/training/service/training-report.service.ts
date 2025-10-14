@@ -78,7 +78,7 @@ export class TrainingReportService {
       sets: workloads.length,
       reps: 0,
       recTime: 0,
-      tit: 0,
+      tut: 0,
       tonnage: 0,
       realization: 0,
       muscleValues: [], // to be calculated
@@ -107,7 +107,7 @@ export class TrainingReportService {
 
       report.reps += setReport.reps;
       report.recTime += setReport.recTime;
-      report.tit += setReport.tit;
+      report.tut += setReport.tit;
       report.tonnage += setReport.tonnage;
 
       if (setReport.time > 0) {

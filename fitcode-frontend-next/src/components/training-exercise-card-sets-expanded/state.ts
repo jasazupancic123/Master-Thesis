@@ -157,7 +157,7 @@ export function updateExerciseAttributeValues(
   state: {
     selectedExercises: TrainingExercise[];
     exercise: TrainingExercise;
-    param: Attribute;
+    param: string;
     training: Training;
     component: TrainingComponent;
     setTraining: SetStateNullable<Training>;

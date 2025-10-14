@@ -7,6 +7,9 @@ export type ExerciseSet = ExerciseSetPrimarySide &
     recTime: number; // in seconds
     recDist?: number; // in meters, for distance-based recovery
     loadType?: LoadType;
+    eff?: number; // 1 - 4
+    time?: number; // in seconds, for time-based sets
+    dist?: number; // in meters, for distance-based sets
 
     /* ---------------------- Deprecated ---------------------- */
     paramValuesL: AttributeValue[];
@@ -15,16 +18,18 @@ export type ExerciseSet = ExerciseSetPrimarySide &
 
 export interface ExerciseSetPrimarySide {
   reps: number;
-  load?: number; // e.g. weight in kg or percentage of 1RM or bodyweight
+  loadKg?: number; // e.g. weight in kg or percentage of 1RM or bodyweight
+  loadRm?: number; // e.g. percentage of 1RM
+  loadBw?: number; // e.g. percentage of bodyweight
   tempo?: string; // e.g. "2.5:0:3.5:0", meaning "eccentric:isometric:concentric:isometric" in seconds
-  time?: number; // for isometric holds, in seconds
-  dist?: number; // for distance-based sets, in meters
+  vel?: number; // e.g. in m/s
 }
 
 export interface ExerciseSetSecondarySide {
   repsR?: number;
-  loadR?: number;
+  loadKgR?: number;
+  loadRmR?: number;
+  loadBwR?: number;
   tempoR?: string;
-  timeR?: number;
-  distR?: number;
+  velR?: number;
 }

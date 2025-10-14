@@ -8,14 +8,10 @@ export type Superset = {
   exercises: TrainingExercise[];
 };
 
-<<<<<<< HEAD
 export type UpdateSuperset = {
-=======
-export type SupersetRecording = ColorEntity & {
-  exercises: TrainingExerciseRecording[];
+  exercises: UpdateTrainingExercise[];
 };
 
-export type UpdateSuperset = Pick<Superset, 'color'> & {
->>>>>>> main
-  exercises: UpdateTrainingExercise[];
+export type SupersetRecording = {
+  exercises: TrainingExerciseRecording[];
 };

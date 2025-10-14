@@ -161,6 +161,8 @@ export function updateSelectedExercisesVolWorkSets(input: {
         ...selectedExercise.sets,
         ...Array.from({ length: newSets - prevSets }, (_, i) => ({
           setNumber: prevSets + i + 1,
+          reps: 1,
+          recTime: 60,
           paramValuesL: paramValues,
           ...(foundExercise.isUnilateral && { paramValuesR: paramValues }),
         })),
@@ -205,6 +207,8 @@ export function updateSingleExerciseVolWorkSets(input: {
       ...exercise.sets,
       ...Array.from({ length: newSets - prevSets }, (_, i) => ({
         setNumber: prevSets + i + 1,
+        reps: 1,
+        recTime: 60,
         paramValuesL: paramValues,
         ...(foundExercise.isUnilateral && { paramValuesR: paramValues }),
       })),
@@ -375,7 +379,7 @@ export const getPerscribedFieldName = (
 export const getLAndRValues = (
   input: {
     set: ExerciseSet;
-    param: Attribute;
+    param: string;
     setIndex: number;
     paramIndex: number;
   },
@@ -394,15 +398,15 @@ export const getLAndRValues = (
 
   const valueL: AttributeValue | null = exercise.sets[
     setIndex
-  ].paramValuesL.find((pv) => pv.field === param.field) || {
-    field: param.field,
+  ].paramValuesL.find((pv) => pv.field === param) || {
+    field: param,
     selected: 'set',
     value: exercise.sets.length.toString(),
   };
   const valueR: AttributeValue | null = exercise.sets[
     setIndex
-  ].paramValuesR?.find((pv) => pv.field === param.field) || {
-    field: param.field,
+  ].paramValuesR?.find((pv) => pv.field === param) || {
+    field: param,
     selected: 'set',
     value: exercise.sets.length.toString(),
   };
