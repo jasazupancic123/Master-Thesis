@@ -21,13 +21,14 @@ type TrainingReportCardProps = {
 export default function TrainingReportCard(props: TrainingReportCardProps) {
   const theme = useTheme();
   const { report } = props;
+  const duration = report.duration * 60; // duration in seconds
 
   const [realizationScore] = useState(Math.round(report.realization * 100));
   const [tonnageScore] = useState(
     Math.round((report.tonnage / report.totalTonnage) * 100) || 0
   );
   const [densityScore] = useState(
-    Math.round((report.activeTime / report.recTime) * 100)
+    Math.round((report.tut / (duration - report.tut)) * 100) || 0
   );
 
   return (

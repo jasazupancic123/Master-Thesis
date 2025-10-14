@@ -15,11 +15,11 @@ export class MuscleService {
       if (!exercise.exercise || !exercise.exercise.muscleValues) return;
 
       exercise.exercise.muscleValues.forEach((muscleValue) => {
-        let muscleId = undefined;
+        let muscleId: string | undefined = undefined;
 
-        if (heatmapLevel === 1) muscleId = muscleValue.field;
+        if (heatmapLevel === 1) muscleId = muscleValue.field as string;
         else if (heatmapLevel >= 1 && heatmapLevel <= 3)
-          muscleId = muscleValue.selected.split(':')[heatmapLevel - 2];
+          muscleId = muscleValue.selected?.split(':')?.[heatmapLevel - 2];
 
         if (!muscleId) return;
 

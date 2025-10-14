@@ -11,7 +11,6 @@ import type { AuthUser } from '@/controller/auth/type/user.type';
 import type { Cycle } from '@/controller/group/type/cycle.type';
 import type { Group } from '@/controller/group/type/group.type';
 import type { Institution } from '@/controller/institution/type/institution.type';
-import type { Wellness } from '@/controller/profile/type/wellness.type';
 
 export type Training = BaseEntity &
   Required<DateRange> & {
@@ -24,7 +23,6 @@ export type Training = BaseEntity &
     warmup: TrainingComponent;
     cooldown: TrainingComponent;
     components: TrainingComponent[];
-    wellness: Wellness[];
 
     // mapped properties
     institution?: Institution;
@@ -32,15 +30,6 @@ export type Training = BaseEntity &
     cycle?: Cycle;
     members?: AuthUser[];
   };
-
-export type TrainingRecording = Omit<
-  Training,
-  'components' | 'warmup' | 'cooldown'
-> & {
-  components: TrainingComponentRecording[];
-  warmup: TrainingComponentRecording;
-  cooldown: TrainingComponentRecording;
-};
 
 export type CreateTraining = Pick<
   Training,
@@ -67,3 +56,12 @@ export type PeriodizeTrainings = {
 
 export type CopyTraining = Pick<DateRange, 'from'> &
   Partial<Pick<Training, 'membersIds'>>;
+
+export type TrainingRecording = Omit<
+  Training,
+  'components' | 'warmup' | 'cooldown'
+> & {
+  components: TrainingComponentRecording[];
+  warmup: TrainingComponentRecording;
+  cooldown: TrainingComponentRecording;
+};

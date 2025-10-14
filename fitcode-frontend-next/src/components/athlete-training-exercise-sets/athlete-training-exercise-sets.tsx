@@ -123,7 +123,7 @@ export default function AthleteTrainingExerciseSets(
                 alignItems="center"
               >
                 {exercise.params
-                  .filter((p) => p.field !== ParamType.VolWorkSets)
+                  .filter((p) => p !== (ParamType.VolWorkSets as string))
                   .map((param, j) => {
                     /* find the custom workload for the selected athlete if selected, otherwise
                       get the value from the exercise sets */
@@ -146,13 +146,11 @@ export default function AthleteTrainingExerciseSets(
                     );
 
                     if (!valueL || (exercise.exercise?.isUnilateral && !valueR))
-                      return toast.error(
-                        `Invalid parameter field: ${param.field}`
-                      );
+                      return toast.error(`Invalid parameter field: ${param}`);
 
                     return (
                       <Box
-                        key={param.field}
+                        key={param}
                         width={
                           (
                             100 /
@@ -166,17 +164,17 @@ export default function AthleteTrainingExerciseSets(
                           .concat(exercise.exercise?.isUnilateral ? ['R'] : [])
                           .map((lOrR) => (
                             <ExerciseParam
-                              key={`${param.field}-${lOrR}`}
+                              key={`${param}-${lOrR}`}
                               showOptions={lOrR === 'L'}
                               disableOptions
                               disableSets={!trainingInProgressView}
                               dissableSettingValue={
-                                param.field === ParamType.VolWorkSets ||
+                                param === (ParamType.VolWorkSets as string) ||
                                 (trainingInProgressView && !passedSet)
                               }
                               colorToPrimary={
                                 colorSetsToPrimary &&
-                                param.field === ParamType.VolWorkSets
+                                param === (ParamType.VolWorkSets as string)
                               }
                               exercise={exercise}
                               // trainingInProgressView
@@ -184,7 +182,7 @@ export default function AthleteTrainingExerciseSets(
                               lOrR={lOrR as 'L' | 'R'}
                               value={
                                 lOrR === 'L'
-                                  ? param.field === ParamType.VolWorkSets
+                                  ? param === (ParamType.VolWorkSets as string)
                                     ? ({
                                         ...valueL,
                                         value: passedSet
@@ -194,7 +192,7 @@ export default function AthleteTrainingExerciseSets(
                                             : set.setNumber.toString(),
                                       } as AttributeValue)
                                     : valueL
-                                  : param.field === ParamType.VolWorkSets
+                                  : param === (ParamType.VolWorkSets as string)
                                     ? ({
                                         ...valueR,
                                         value: passedSet
@@ -221,7 +219,7 @@ export default function AthleteTrainingExerciseSets(
                                 )
                                   return null;
 
-                                if (param.field === ParamType.VolWorkSets)
+                                if (param === (ParamType.VolWorkSets as string))
                                   return;
 
                                 if (+newValue < 0) return;

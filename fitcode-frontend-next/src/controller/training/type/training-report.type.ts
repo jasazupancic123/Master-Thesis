@@ -1,20 +1,9 @@
+import type { TrainingStats } from './training-stats.type';
 import type { DateRange } from '@/common/type/date-range.type';
-import type { Component } from '@/controller/component/type/component.type';
 import type { ExerciseMuscleValue } from '@/controller/exercise/type/muscle-tip.type';
 import type { Cycle } from '@/controller/group/type/cycle.type';
 import type { Group } from '@/controller/group/type/group.type';
 import type { Institution } from '@/controller/institution/type/institution.type';
-
-export enum TrainingComponentStatus {
-  NOT_STARTED = 'not_started',
-  IN_PROGRESS = 'in_progress',
-  COMPLETED = 'completed',
-}
-
-export type TrainingReportComponentStatus = {
-  componentId: string;
-  status: TrainingComponentStatus;
-};
 
 export type TrainingReport = TrainingStats &
   Required<DateRange> & {
@@ -25,7 +14,6 @@ export type TrainingReport = TrainingStats &
     cycleId?: string;
     cycle?: Cycle;
 
-    componentStatuses: TrainingReportComponentStatus[]; // list of completed component ids, just for frontend display
     trainingId: string;
     userId: string;
     completed: boolean;
@@ -37,41 +25,25 @@ export type TrainingReport = TrainingStats &
     recTime: number;
 
     // calculated fields
-    activeTime: number; // total time under tension
+    tut: number; // total time under tension
     tonnage: number;
-    timeWork: number;
-    distWork: number;
-    power: number;
     realization: number;
 
     muscleValues: ExerciseMuscleValue[];
+    componentStatuses: TrainingReportComponentStatus[]; // list of completed component ids, just for frontend display
     photoURLs?: string[]; // "best" photo(s) of the training session
     timeVol?: number; // total time prescribed (in seconds)
     distVol?: number; // total distance prescribed (in meters)
     recDist?: number; // total recovery distance prescribed (in meters)
   };
 
-export type TraininComponentStats = {
-  componentId: string;
-  totalSets: number; // for calculating status
-};
+export enum TrainingComponentStatus {
+  NOT_STARTED = 'not_started',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+}
 
-export type TrainingStats = {
-  plannedComponents: TraininComponentStats[];
-  mappedPlannedComponents?: Component[];
-  totalDuration: number; // in minutes
-  totalComponents: number;
-  totalSupersets: number;
-  totalExercises: number; // unique
-  totalSets: number;
-  totalReps: number;
-  totalRecTime: number; // total recovery time (for all sets, in seconds)
-  totalActiveTime: number; // time when executing the training (in seconds) - sets * reps/dist/time * tempo (sum), for example 3 * 12 * 1:0:1 tempo (2s) = 72s
-  totalTonnage: number; // total weight lifted prescribed (in kg: sets * reps * weight)
-  totalTimeWork: number; // total time under load
-  totalDistWork: number; // total distance under load
-  totalPower: number; // total power output (in watts)
-  totalTimeVol?: number; // total time prescribed (in seconds)
-  totalDistVol?: number; // total distance prescribed (in meters)
-  totalRecDist?: number; // total recovery distance prescribed (in meters)
+export type TrainingReportComponentStatus = {
+  componentId: string;
+  status: TrainingComponentStatus;
 };

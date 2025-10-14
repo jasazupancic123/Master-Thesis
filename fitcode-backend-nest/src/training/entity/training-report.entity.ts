@@ -98,7 +98,7 @@ export class TrainingReport extends IntersectionType(
   @Min(0)
   @ApiProperty()
   @Expose()
-  tit: number; // total time under tension
+  tut: number; // total time under tension
 
   @IsNumber()
   @Min(0)

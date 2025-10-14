@@ -28,19 +28,8 @@ export class InstitutionController extends BaseController {
     return this.api.get<Institution>(`/${id}`);
   }
 
-<<<<<<< HEAD
   async findMembers(id: string) {
-    return this.api.get<Profile[]>(`/${id}/members`, {
-      token: this.getToken(),
-    });
-=======
-  async findAthletes(id: string) {
-    return this.api.get<Profile[]>(`/${id}/find/athletes`);
-  }
-
-  async findTrainers(id: string) {
-    return this.api.get<Profile[]>(`/${id}/find/trainers`);
->>>>>>> main
+    return this.api.get<Profile[]>(`/${id}/members`);
   }
 
   async create(body: CreateInstitution) {

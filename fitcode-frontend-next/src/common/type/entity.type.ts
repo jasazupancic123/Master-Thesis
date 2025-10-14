@@ -7,5 +7,3 @@ export type TimestampEntity = {
   updatedAt: Date;
   deletedAt?: Date;
 };
-
-export type ColorEntity = { color?: string };

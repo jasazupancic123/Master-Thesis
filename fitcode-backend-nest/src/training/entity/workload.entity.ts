@@ -27,10 +27,6 @@ import {
   ExerciseSetSecondarySide,
 } from './exercise-set.entity';
 
-export class CompletedWorkload extends OmitType(ExerciseSet, [
-  'setNumber',
-] as const) {}
-
 export class WorkloadMeta extends IdEntity {
   @IsString()
   @IsNotEmpty()
@@ -202,6 +198,7 @@ export class WorkloadValue extends IntersectionType(
   timestamp: Date;
 
   @IsString({ each: true })
+  @IsNotEmpty({ each: true })
   @ApiPropertyOptional({ type: String, isArray: true })
   @IsOptional()
   @Expose()

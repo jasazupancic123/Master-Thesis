@@ -100,10 +100,15 @@ export class ExerciseAttributeService {
     const map: Record<string, string[]> = {};
 
     for (const attr of attributes) {
-      const key = parentKey ? `${parentKey}:${attr.field}` : attr.field;
+      const key = (
+        parentKey ? `${parentKey}:${attr.field.toString()}` : attr.field
+      ).toString();
 
       if (attr.options && attr.options.length > 0) {
-        const childrenKeys = attr.options.map((o) => `${key}:${o.field}`);
+        const childrenKeys = attr.options.map(
+          (o) => `${key}:${o.field.toString()}`
+        );
+
         map[key] = childrenKeys;
 
         // recurse into children

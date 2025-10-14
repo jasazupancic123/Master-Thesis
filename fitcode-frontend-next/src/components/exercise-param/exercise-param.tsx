@@ -7,14 +7,13 @@ import {
   exerciseCardSetAttributeSx,
 } from '../trainer-day-view/style';
 import type { SetState } from '@/common/type/state.type';
-import type { Attribute } from '@/controller/attribute/type/attribute.type';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import { IntType } from '@/controller/component/enum/param.enum';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useGroup } from '@/store/group.provider';
 
 interface Props {
-  param: Attribute;
+  param: string;
   value?: AttributeValue;
   onOptionChange: SetState<string>;
   onSubOptionChange: SetState<string>;

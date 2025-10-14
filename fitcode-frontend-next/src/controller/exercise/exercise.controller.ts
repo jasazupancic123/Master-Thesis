@@ -20,16 +20,12 @@ export class ExerciseController extends BaseController {
     return this.instance;
   }
 
-  async findAllGlobal(query?: FilterExercises) {
-    return this.api.get<Exercise[]>('/global', {
-      query,
-    });
+  async findAllGlobal(_query?: FilterExercises) {
+    return this.api.get<Exercise[]>('/global');
   }
 
-  async findAllByInstitution(institutionId: string, query?: FilterExercises) {
-    return this.api.get<Exercise[]>(`/institution/${institutionId}`, {
-      query,
-    });
+  async findAllByInstitution(institutionId: string, _query?: FilterExercises) {
+    return this.api.get<Exercise[]>(`/institution/${institutionId}`);
   }
 
   async create(body: CreateExercise) {

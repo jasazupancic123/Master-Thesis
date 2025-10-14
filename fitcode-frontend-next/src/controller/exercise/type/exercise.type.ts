@@ -1,7 +1,7 @@
 import type { BaseEntity } from '@/common/type/entity.type';
-import type { Attribute } from '@/controller/attribute/type/attribute.type';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import type { Component } from '@/controller/component/type/component.type';
+import type { ExerciseSet } from '@/controller/training/type/exercise-set.type';
 
 export type Exercise = BaseEntity &
   ExerciseAttributes & {
@@ -14,7 +14,7 @@ export type Exercise = BaseEntity &
     imageUrl?: string;
     videoUrl?: string;
     instruction?: string;
-    defaultParams?: Attribute[];
+    defaultParams?: (keyof ExerciseSet)[];
 
     // mapped properties
     components?: Component[];
