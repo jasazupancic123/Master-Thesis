@@ -2,13 +2,12 @@ import { Box, TextField, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import { useEffect } from 'react';
 
-import type { TrainingCardProps } from '../trainer-day-view/props';
-import TrainingComponentLayout from '../training-component-layout/training-component-layout';
+import TrainingComponentLayout from '../training-component/training-component-layout/training-component-layout';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 
-export default function TrainingCard(props: TrainingCardProps) {
+export default function TrainingCard() {
   const { cycle } = useGroup();
 
   const {
@@ -22,8 +21,6 @@ export default function TrainingCard(props: TrainingCardProps) {
   } = useTrainerDayViewContext();
 
   const theme = useTheme();
-
-  const { day } = props;
 
   const screenSize = useScreenSize();
 
@@ -206,19 +203,16 @@ export default function TrainingCard(props: TrainingCardProps) {
             <TrainingComponentLayout
               key={0}
               trainingComponent={training.warmup}
-              day={day}
             />
             {training.components.map((trainingComponent, i) => (
               <TrainingComponentLayout
                 key={i + 1}
                 trainingComponent={trainingComponent}
-                day={day}
               />
             ))}
             <TrainingComponentLayout
               key={training.components.length + 1}
               trainingComponent={training.cooldown}
-              day={day}
             />
           </Box>
         )}

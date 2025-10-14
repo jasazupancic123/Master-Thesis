@@ -7,9 +7,11 @@ import { CompletedPlanned } from '@/common/enum/completed-planned.enum';
 import { CommonService } from '@/common/service/common.service';
 import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
 import type { Pagination } from '@/common/type/paginate.type';
-import AthleteOptionsContainer from '@/components/athlete-options-container/athlete-options-container';
-import AthleteTrainingCard from '@/components/athlete-training-card/athlete-training-card';
-import TrainingReportCard from '@/components/athlete-training-card/training-report-card';
+import AthleteOptionsContainer from '@/components/athlete/athlete-options-container/athlete-options-container';
+import AthleteTrainingCard from '@/components/athlete/athlete-training-card/athlete-training-card';
+import TrainingReportCard from '@/components/athlete/athlete-training-card/components/training-report-card';
+import { TrainingInProgressUtilsProvider } from '@/components/training-in-progress/context/training-in.progress-utils.provider';
+import { UndoneExercisesProvider } from '@/components/training-in-progress/context/undone-exercises.provider';
 import TrainingInProgress from '@/components/training-in-progress/training-in-progress';
 import type { Training } from '@/controller/training/type/training.type';
 import { useTraining } from '@/store/training.provider';
@@ -138,7 +140,11 @@ export default function TrainingPage() {
     </Box>
   ) : (
     <TrainingInProgressProvider>
-      <TrainingInProgress />
+      <TrainingInProgressUtilsProvider>
+        <UndoneExercisesProvider>
+          <TrainingInProgress />
+        </UndoneExercisesProvider>
+      </TrainingInProgressUtilsProvider>
     </TrainingInProgressProvider>
   );
 }

@@ -37,6 +37,8 @@ const MainContext = createContext<MainContextProps | null>(null);
 
 export const useMain = () => useContext(MainContext)!;
 
+export type MainProviderReturnType = ReturnType<typeof useMain>;
+
 export const AthleteMainProvider = withAuth(MainProvider, [UserRole.ATHLETE]);
 export const CoachMainProvider = withAuth(MainProvider, [
   UserRole.TRAINER,

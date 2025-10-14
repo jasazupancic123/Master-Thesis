@@ -6,10 +6,9 @@ import { useTheme } from '@mui/material';
 import dayjs from 'dayjs';
 import { useEffect, useRef, useState } from 'react';
 
-import AthleteTrainingExerciseSets from '../athlete-training-exercise-sets/athlete-training-exercise-sets';
-import LoadingOverlay from '../loading-overlay/loading-overlay';
-import { finishSet } from '../training-in-progress-exercise-card/state';
-import TrainingInProgressTempoChart from '../training-in-progress-exercise-card/training-in-progress-tempo-chart';
+import AthleteTrainingExerciseSets from '../athlete/athlete-training-exercise-sets/athlete-training-exercise-sets';
+import { updateExerciseValues } from '../training-in-progress/components/training-in-progress-exercise-card/actions/actions-exercise';
+import { finishSet } from '../training-in-progress/components/training-in-progress-exercise-card/actions/actions-exercise-set';
 import FpsText from './components/fps-text';
 import MovementValidationHeader from './components/movement-validation-header';
 import {
@@ -23,6 +22,8 @@ import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
 import { CommonService } from '@/common/service/common.service';
 import type { SetState } from '@/common/type/state.type';
+import EnvUtil from '@/common/util/env.util';
+import TrainingInProgressTempoChart from '@/common/util/tempo-chart';
 import { FrameBitmapBuffer } from '@/controller/pose-detection/class/frame-bitmap-buffer';
 import { KeypointHistory } from '@/controller/pose-detection/class/keypoint-history';
 import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
@@ -44,7 +45,7 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
-import EnvUtil from '@/common/util/env.util';
+import LoadingOverlay from '@/util/loading-overlay/loading-overlay';
 
 const DEBUG = false;
 
@@ -60,14 +61,6 @@ interface MobileMovementValidationProps {
     | undefined;
   selectedTrackingMethod: TrackingMethod | undefined;
   setSelectedTrackingMethod: SetState<TrackingMethod> | undefined;
-  updateExerciseValues:
-    | ((
-        repsCount: number,
-        tempo: string,
-        updatedExercise?: TrainingExerciseRecording,
-        updateSelectedExercise?: boolean
-      ) => void)
-    | undefined;
   trainingId: string;
   componentId: string;
   supersetIndex: number;
@@ -94,7 +87,6 @@ export default function MobileMovementValidation(
     setSelectedExercise,
     selectedTrackingMethod,
     setSelectedTrackingMethod,
-    updateExerciseValues,
     trainingId,
     componentId,
     supersetIndex,
@@ -443,7 +435,6 @@ export default function MobileMovementValidation(
     }
 
     if (
-      updateExerciseValues &&
       selectedTrackingMethod === TrackingMethod.CAMERA &&
       setSelectedTrackingMethod &&
       trainingInProgress &&
@@ -520,10 +511,16 @@ export default function MobileMovementValidation(
       });
 
       updateExerciseValues(
-        recordedRepsRef.current.length,
-        tempo,
-        updatedExercise,
-        true
+        {
+          repsCount: recordedRepsRef.current.length,
+          tempo,
+          passedExercise: updatedExercise,
+          updateSelectedExercise: true,
+        },
+        {
+          useTraining: { ...trainingContext, trainingInProgress },
+          useTrainingInProgress: trainingInProgressContext,
+        }
       );
 
       await finishSet({
