@@ -8,7 +8,10 @@ import { useEffect, useRef, useState } from 'react';
 
 import AthleteTrainingExerciseSets from '../athlete/athlete-training-exercise-sets/athlete-training-exercise-sets';
 import { updateExerciseValues } from '../training-in-progress/components/training-in-progress-exercise-card/actions/actions-exercise';
-import { finishSet } from '../training-in-progress/components/training-in-progress-exercise-card/actions/actions-exercise-set';
+import {
+  demoReps,
+  finishSet,
+} from '../training-in-progress/components/training-in-progress-exercise-card/actions/actions-exercise-set';
 import FpsText from './components/fps-text';
 import MovementValidationHeader from './components/movement-validation-header';
 import {
@@ -37,10 +40,19 @@ import { PoseModel } from '@/controller/pose-detection/enum/pose-model.enum';
 import { RepStatus } from '@/controller/pose-detection/enum/rep-state';
 import { RepDetectionService } from '@/controller/pose-detection/rep-detection.service';
 import type { ExerciseDetectionData } from '@/controller/pose-detection/type/exercise-start-condition.type';
-import type { Rep, RepInfo } from '@/controller/pose-detection/type/rep.type';
+import type {
+  RecordedReps,
+  Rep,
+  RepInfo,
+  RepsCount,
+} from '@/controller/pose-detection/type/rep.type';
 import type { RepState } from '@/controller/pose-detection/type/rep-state.type';
 import { getPoseLandmarker } from '@/controller/pose-detection/util/pose-landmarker-loader.util';
-import type { TrainingExerciseRecording } from '@/controller/training/type/training-exercise.type';
+import type {
+  RepImage,
+  TrainingExerciseRecordedSet,
+  TrainingExerciseRecording,
+} from '@/controller/training/type/training-exercise.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
@@ -110,18 +122,32 @@ export default function MobileMovementValidation(
       ? EXERCISE_POSES.find((e) => e.exerciseIds.includes(selectedExercise.id))
           ?.data
       : {
-          romKeypointId: KeypointId.LEFT_HIP,
           romValueType: KeypointValueType.POSITION_Y,
-          romStartDirection: ConditionDirection.NEGATIVE,
-          conditions: [
-            {
-              keypointId: KeypointId.LEFT_HIP,
-              type: KeypointValueType.POSITION_Y,
-              direction: ConditionDirection.NEGATIVE,
-              duration: 1000, // ms
-              distance: 0.04, // meters}
-            },
-          ],
+          romStartDirection: ConditionDirection.POSITIVE,
+          leftSide: {
+            romKeypointId: KeypointId.LEFT_WRIST,
+            conditions: [
+              {
+                keypointId: KeypointId.LEFT_WRIST,
+                type: KeypointValueType.POSITION_Y,
+                direction: ConditionDirection.POSITIVE,
+                duration: 750, // ms
+                distance: 0.1, // meters
+              },
+            ],
+          },
+          rightSide: {
+            romKeypointId: KeypointId.RIGHT_WRIST,
+            conditions: [
+              {
+                keypointId: KeypointId.RIGHT_WRIST,
+                type: KeypointValueType.POSITION_Y,
+                direction: ConditionDirection.POSITIVE,
+                duration: 750, // ms
+                distance: 0.1, // meters
+              },
+            ],
+          },
         };
 
   // {
@@ -166,14 +192,38 @@ export default function MobileMovementValidation(
   );
 
   // Rep State
-  const repStateRef = useRef<RepState>({
+  const repStateRefL = useRef<RepState>({
     status: RepStatus.NONE,
     avgStartValue: null,
     avgExtremeValue: null,
   });
-  const currentRepRef = useRef<Rep | null>(null);
-  const recordedRepsRef = useRef<Rep[]>([]);
-  const [repCount, setRepCount] = useState(0);
+  const repStateRefR = useRef<RepState>({
+    status: RepStatus.NONE,
+    avgStartValue: null,
+    avgExtremeValue: null,
+  });
+
+  const currentRepRefL = useRef<Rep | null>(null);
+  const currentRepRefR = useRef<Rep | null>(null);
+
+  const recordedRepsRef = useRef<RecordedReps>({
+    left: [],
+    right: exerciseDetectionData?.rightSide ? [] : undefined,
+  });
+
+  // const recordedRepsRef = useRef<RecordedReps>({
+  //   left: demoReps,
+  //   right: demoReps,
+  // });
+
+  const [repCount, setRepCount] = useState<RepsCount>({
+    left: 0,
+    right: exerciseDetectionData?.rightSide ? 0 : undefined,
+  });
+  const repCountPrev = useRef<RepsCount>({
+    left: 0,
+    right: exerciseDetectionData?.rightSide ? 0 : undefined,
+  });
 
   // FPS and Error
   const [fps, setFps] = useState<number | null>(null);
@@ -368,14 +418,16 @@ export default function MobileMovementValidation(
           statusMessage,
           stillnessCountdownRef,
           canProceedIntoReadyStateRef,
-          repStateRef,
+          repStateRefL,
+          repStateRefR,
           model,
           poseLandmarker,
           keypointHistory: keypointHistoryRef.current,
           keypointBuffer,
           constantKeypointHistory: constantKeypointHistoryRef.current,
           frameBitmapBufferRef,
-          currentRepRef,
+          currentRepRefL,
+          currentRepRefR,
           recordedRepsRef,
           videoRef,
           canvasRef,
@@ -427,14 +479,6 @@ export default function MobileMovementValidation(
     // });
 
     if (
-      !recordedRepsRef.current.length &&
-      setSelectedTrackingMethod !== undefined
-    ) {
-      setSelectedTrackingMethod(TrackingMethod.MANUAL);
-      return;
-    }
-
-    if (
       selectedTrackingMethod === TrackingMethod.CAMERA &&
       setSelectedTrackingMethod &&
       trainingInProgress &&
@@ -445,8 +489,38 @@ export default function MobileMovementValidation(
       user !== null &&
       user !== undefined
     ) {
-      const images: ({ repNumber: number; url: string } | null)[] =
-        recordedRepsRef.current
+      if (!recordedRepsRef.current.left.length) {
+        if (
+          recordedRepsRef.current.right &&
+          !recordedRepsRef.current.right.length
+        ) {
+          setSelectedTrackingMethod(TrackingMethod.MANUAL);
+          return;
+        } else {
+          setSelectedTrackingMethod(TrackingMethod.MANUAL);
+          return;
+        }
+      }
+
+      const sides = [
+        recordedRepsRef.current.left,
+        recordedRepsRef.current.right,
+      ].filter((r) => r !== undefined) as Rep[][];
+
+      let updatedExercise = {
+        ...selectedExercise,
+      } as TrainingExerciseRecording;
+
+      let recordedSets: TrainingExerciseRecordedSet[] | undefined =
+        updatedExercise.recordedSets;
+
+      let tempoL: string | null = null;
+      let tempoR: string | null = null;
+
+      let i = 0; // 0 for left side, 1 for right
+
+      for (const side of sides) {
+        const images = side
           .map((rep) => {
             if (!rep.extremumImageUrl) return null;
 
@@ -455,65 +529,87 @@ export default function MobileMovementValidation(
               url: rep.extremumImageUrl || '',
             };
           })
-          .filter((i) => i !== null) as { repNumber: number; url: string }[];
+          .filter((i) => i !== null) as RepImage[];
 
-      let updatedExercise = {
-        ...selectedExercise,
-      } as TrainingExerciseRecording;
+        const reps = side.map((rep) => {
+          return {
+            repNumber: rep.repNumber,
+            idleTimeMs: rep.idleTimeMs,
+            timeToExtremeMs: rep.timeToExtremeMs,
+            timeAtExtremeMs: rep.timeAtExtremeMs,
+            timeFromExtremeToEndMs: rep.timeFromExtremeToEndMs,
+            durationMs: rep.durationMs,
+          } as RepInfo;
+        });
 
-      if (selectedExercise) {
-        updatedExercise = {
-          ...selectedExercise,
-          recordedSets: !selectedExercise.recordedSets
-            ? [
-                {
-                  setIndex,
-                  images,
-                  reps: recordedRepsRef.current.map((rep) => {
-                    return {
-                      repNumber: rep.repNumber,
-                      idleTimeMs: rep.idleTimeMs,
-                      timeToExtremeMs: rep.timeToExtremeMs,
-                      timeAtExtremeMs: rep.timeAtExtremeMs,
-                      timeFromExtremeToEndMs: rep.timeFromExtremeToEndMs,
-                      durationMs: rep.durationMs,
-                    } as RepInfo;
-                  }),
-                },
-              ]
-            : [
-                ...selectedExercise.recordedSets.filter(
-                  (si) => si.setIndex !== setIndex
-                ),
-                {
-                  setIndex,
-                  images,
-                  reps: recordedRepsRef.current.map((rep) => {
-                    return {
-                      repNumber: rep.repNumber,
-                      idleTimeMs: rep.idleTimeMs,
-                      timeToExtremeMs: rep.timeToExtremeMs,
-                      timeAtExtremeMs: rep.timeAtExtremeMs,
-                      timeFromExtremeToEndMs: rep.timeFromExtremeToEndMs,
-                      durationMs: rep.durationMs,
-                    } as RepInfo;
-                  }),
-                },
-              ],
-        } as TrainingExerciseRecording;
+        if (!recordedSets) {
+          // can only happen for left side
+          recordedSets = [
+            {
+              setIndex,
+              imagesL: images,
+              repsL: reps,
+            },
+          ];
+        } else {
+          if (recordedSets.find((rs) => rs.setIndex === setIndex)) {
+            // already recorded for this set, update it
+            recordedSets = recordedSets.map((rs) => {
+              if (rs.setIndex !== setIndex) return rs;
 
-        // setSelectedExercise(updatedExercise);
+              if (i === 0) {
+                // left side
+                return {
+                  ...rs,
+                  repsL: reps,
+                  imagesL: images,
+                };
+              } else if (i === 1) {
+                // right side
+                return {
+                  ...rs,
+                  repsR: reps,
+                  imagesR: images,
+                };
+              }
+
+              return rs;
+            });
+          } else {
+            // did not yet record for this set, insert only, can only happen for left side
+            recordedSets = [
+              {
+                setIndex,
+                imagesL: images,
+                repsL: reps,
+              },
+            ];
+          }
+        }
+
+        if (i === 0) {
+          tempoL = getTempoString({
+            recordedReps: side,
+            commonService,
+          });
+        } else if (i === 1) {
+          tempoR = getTempoString({
+            recordedReps: side,
+            commonService,
+          });
+        }
+
+        i++;
       }
 
-      const tempo = getTempoString({
-        recordedRepsRef,
-        commonService,
-      });
+      updatedExercise.recordedSets = recordedSets;
 
       updateExerciseValues(
         {
-          repsCount: recordedRepsRef.current.length,
-          tempo,
+          repsCountL: recordedRepsRef.current.left.length,
+          repsCountR: recordedRepsRef.current.right?.length,
+          tempoL,
+          tempoR,
           passedExercise: updatedExercise,
           updateSelectedExercise: true,
         },
@@ -566,13 +662,32 @@ export default function MobileMovementValidation(
 
   useEffect(() => {
     // Post save images to firestore
-    if (!recordedRepsRef.current.length) return;
+
+    if (
+      !recordedRepsRef.current.left.length &&
+      !recordedRepsRef.current.right?.length
+    )
+      return;
+
+    let correctSideLabel: string | null = null;
+
+    if (repCount.left !== repCountPrev.current.left) correctSideLabel = 'left';
+    else if (repCount.right !== repCountPrev.current.right)
+      correctSideLabel = 'right';
+
+    if (!correctSideLabel) return;
+
+    const side =
+      correctSideLabel === 'left'
+        ? recordedRepsRef.current.left
+        : recordedRepsRef.current.right;
+
+    if (!side) return;
 
     const postImages = async () => {
       isCurrentlySavingImageRef.current = true;
 
-      const lastRep =
-        recordedRepsRef.current[recordedRepsRef.current.length - 1];
+      const lastRep = side[side.length - 1];
 
       if (!lastRep || lastRep.extremumImageUrl || !lastRep.extremeKeypoint)
         return;
@@ -586,8 +701,8 @@ export default function MobileMovementValidation(
 
       if (!blob) return;
 
-      // training/trainingId-userId-componentId-supersetIndex-exerciseId-setIndex-repNumber
-      const fileName = `${user.uid}:${componentId}:${supersetIndex}:${selectedExercise?.id}:${setIndex}:${lastRep.repNumber}`;
+      // training/trainingId:userId:componentId:supersetIndex:exerciseId:setIndex:repNumber:side
+      const fileName = `${user.uid}:${componentId}:${supersetIndex}:${selectedExercise?.id}:${setIndex}:${lastRep.repNumber}:${correctSideLabel}`;
 
       const file = new File([blob], `${fileName}.jpg`, {
         type: blob.type || 'image/jpeg',
@@ -603,6 +718,8 @@ export default function MobileMovementValidation(
     };
 
     postImages();
+
+    repCountPrev.current = { ...repCount };
   }, [repCount]);
 
   useEffect(() => {
@@ -680,7 +797,8 @@ export default function MobileMovementValidation(
       {poseLandmarker && (
         <>
           {statusRef.current === DetectionStatus.RECORDING &&
-          recordedRepsRef.current.length ? (
+          (recordedRepsRef.current.left.length ||
+            recordedRepsRef.current.right?.length) ? (
             <></>
           ) : (
             <MovementValidationHeader
@@ -713,7 +831,7 @@ export default function MobileMovementValidation(
           flexDirection="column"
           sx={{
             position: 'absolute',
-            bottom: 0,
+            bottom: 100,
             transform: ' translateY(-50%)',
             zIndex: 1000,
           }}
@@ -810,7 +928,10 @@ export default function MobileMovementValidation(
                     fontWeight="bold"
                     textAlign="center"
                   >
-                    {recordedRepsRef.current.length}
+                    {recordedRepsRef.current.left.length +
+                      (recordedRepsRef.current.right
+                        ? recordedRepsRef.current.right.length
+                        : 0)}
                   </Typography>
                 </Box>
                 <Divider
@@ -843,14 +964,15 @@ export default function MobileMovementValidation(
                     fontWeight="bold"
                     textAlign="center"
                   >
-                    {recordedRepsRef.current.length
-                      ? `${recordedRepsRef.current[recordedRepsRef.current.length - 1]?.timeToExtremeMs !== undefined ? recordedRepsRef.current[recordedRepsRef.current.length - 1].timeToExtremeMs! / 1000 : '-'} - ${recordedRepsRef.current[recordedRepsRef.current.length - 1]?.timeFromExtremeToEndMs !== undefined ? recordedRepsRef.current[recordedRepsRef.current.length - 1].timeFromExtremeToEndMs! / 1000 : '-'}`
+                    {recordedRepsRef.current.left.length
+                      ? `${recordedRepsRef.current.left[recordedRepsRef.current.left.length - 1]?.timeToExtremeMs !== undefined ? recordedRepsRef.current.left[recordedRepsRef.current.left.length - 1].timeToExtremeMs! / 1000 : '-'} - ${recordedRepsRef.current.left[recordedRepsRef.current.left.length - 1]?.timeFromExtremeToEndMs !== undefined ? recordedRepsRef.current.left[recordedRepsRef.current.left.length - 1].timeFromExtremeToEndMs! / 1000 : '-'}`
                       : '- : -'}
                   </Typography>
                 </Box>
               </Box>
 
-              {recordedRepsRef.current.length ? (
+              {recordedRepsRef.current.left.length ||
+              recordedRepsRef.current.right?.length ? (
                 <TrainingInProgressTempoChart
                   selectedExercise={selectedExercise}
                   setIndex={-1}

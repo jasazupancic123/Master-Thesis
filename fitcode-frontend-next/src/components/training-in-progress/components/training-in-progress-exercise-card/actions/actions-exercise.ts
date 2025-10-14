@@ -7,8 +7,10 @@ import type { TrainingInProgressProviderReturnType } from '@/store/training-in-p
 
 export const updateExerciseValues = (
   input: {
-    repsCount: number;
-    tempo: string;
+    repsCountL: number;
+    repsCountR?: number;
+    tempoL: string | null;
+    tempoR?: string | null;
     passedExercise?: TrainingExerciseRecording;
     updateSelectedExercise?: boolean;
   },
@@ -17,7 +19,14 @@ export const updateExerciseValues = (
     useTrainingInProgress: TrainingInProgressProviderReturnType;
   }
 ) => {
-  const { repsCount, tempo, passedExercise, updateSelectedExercise } = input;
+  const {
+    repsCountL,
+    repsCountR,
+    tempoL,
+    tempoR,
+    passedExercise,
+    updateSelectedExercise,
+  } = input;
 
   const { useTraining, useTrainingInProgress } = context;
 
@@ -57,6 +66,10 @@ export const updateExerciseValues = (
 
   if (repParam) {
     ['L'].concat(selectedSet.paramValuesR ? ['R'] : []).forEach((lOrR) => {
+      const repsCount = lOrR === 'L' ? repsCountL : repsCountR;
+
+      if (repsCount === undefined) return;
+
       updateExerciseAttributeValues(
         {
           newValue: repsCount.toString(),
@@ -86,6 +99,10 @@ export const updateExerciseValues = (
 
   if (tempoParam) {
     ['L'].concat(selectedSet.paramValuesR ? ['R'] : []).forEach((lOrR) => {
+      const tempo = lOrR === 'L' ? tempoL : tempoR;
+
+      if (tempo === undefined || tempo === null) return;
+
       updateExerciseAttributeValues(
         {
           newValue: tempo.toString(),

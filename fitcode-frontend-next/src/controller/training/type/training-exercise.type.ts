@@ -20,11 +20,15 @@ export type RepImage = {
 };
 
 export type TrainingExerciseRecording = TrainingExercise & {
-  recordedSets?: {
-    setIndex: number;
-    reps: RepInfo[];
-    images: RepImage[];
-  }[];
+  recordedSets?: TrainingExerciseRecordedSet[];
 };
 
 export type UpdateTrainingExercise = Pick<TrainingExercise, 'id' | 'sets'>;
+
+export type TrainingExerciseRecordedSet = {
+  setIndex: number;
+  repsL: RepInfo[];
+  imagesL: RepImage[];
+  repsR?: RepInfo[];
+  imagesR?: RepImage[];
+};

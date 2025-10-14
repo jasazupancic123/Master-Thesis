@@ -53,3 +53,18 @@ export type RepInfo = {
   timeFromExtremeToEndMs?: number; // timeAtExtreme - extremeTimestamp
   durationMs?: number; // endTime - startTime
 };
+
+export type RecordedReps = {
+  left: Rep[];
+  right?: Rep[];
+};
+
+export type RecordedRepsInfo = {
+  left: RepInfo[];
+  right?: RepInfo[];
+};
+
+export type RepsCount = {
+  left: number;
+  right?: number;
+};

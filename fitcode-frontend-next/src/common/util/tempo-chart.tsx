@@ -11,46 +11,80 @@ import { useRef } from 'react';
 import { theme } from '@/app/style';
 import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
 import { ConditionDirection } from '@/controller/pose-detection/enum/condition-detection.enum';
-import type { Rep, RepInfo } from '@/controller/pose-detection/type/rep.type';
+import type {
+  RecordedReps,
+  RecordedRepsInfo,
+  Rep,
+  RepInfo,
+} from '@/controller/pose-detection/type/rep.type';
 import type { TrainingExerciseRecording } from '@/controller/training/type/training-exercise.type';
+import { routeModule } from 'next/dist/build/templates/app-page';
+import { demoReps } from '@/components/training-in-progress/components/training-in-progress-exercise-card/actions/actions-exercise-set';
+import { KeypointValueType } from '@/controller/pose-detection/enum/keypoint-value-type';
+import { KeypointId } from '@/controller/pose-detection/enum/keypoint-id';
 
-function IsoOverlay({ reps }: { reps: RepInfo[] }) {
+function IsoOverlayDual({
+  rows,
+}: {
+  rows: { label: string; isometricL?: number; isometricR?: number }[];
+}) {
   const xScale = useXScale(); // band scale
   const yScale = useYScale(); // linear scale [-1, 1]
 
   const y0 = yScale(0);
   const hasBandwidth = typeof (xScale as any).bandwidth === 'function';
 
+  if (!hasBandwidth) return null;
+
+  const bw = (xScale as any).bandwidth();
+
+  const groupCount = 2; // L and R
+  const groupWidth = bw / groupCount;
+
   return (
     <g pointerEvents="none">
-      {reps.map((r) => {
-        const xBase = (xScale as any)(r.repNumber.toString());
-        if (xBase === null) return null;
-        const xCenter = hasBandwidth
-          ? xBase + (xScale as any).bandwidth() / 2
-          : xBase;
-        const yIso = yScale(r.timeAtExtremeMs / 1000); // pixel position for +isometric up from 0
+      {rows.map((r) => {
+        const xBase = (xScale as any)(r.label);
+        if (xBase == null) return null;
+
+        // Centers for L then R:
+        const centers = [xBase + groupWidth * 0.5, xBase + groupWidth * 1.5];
+        const isoVals = [r.isometricL ?? 0, r.isometricR ?? 0];
+
         return (
-          <g key={r.repNumber}>
-            {/* border layer (thicker, darker) */}
-            <line
-              x1={xCenter}
-              x2={xCenter}
-              y1={y0}
-              y2={yIso}
-              stroke={theme.palette.background.lightBorder}
-              strokeWidth={4} // outer width
-              strokeLinecap="round"
-            />
-            <line
-              x1={xCenter}
-              x2={xCenter}
-              y1={y0}
-              y2={yIso}
-              stroke={theme.palette.background.default}
-              strokeWidth={2}
-              strokeLinecap="round"
-            />
+          <g key={r.label}>
+            {isoVals.map((val, idx) => {
+              if (!val) return null;
+              const xCenter = centers[idx];
+              const yIso = yScale(val);
+
+              // keep your two-layer line; you can tweak stroke for R if you want
+              const outerColor = theme.palette.background.lightBorder;
+              const innerColor = theme.palette.background.default;
+
+              return (
+                <g key={`${r.label}-${idx}`}>
+                  <line
+                    x1={xCenter}
+                    x2={xCenter}
+                    y1={y0}
+                    y2={yIso}
+                    stroke={outerColor}
+                    strokeWidth={rows.length > 6 ? 2 : 4}
+                    strokeLinecap="round"
+                  />
+                  <line
+                    x1={xCenter}
+                    x2={xCenter}
+                    y1={y0}
+                    y2={yIso}
+                    stroke={innerColor}
+                    strokeWidth={rows.length > 6 ? 1 : 2}
+                    strokeLinecap="round"
+                  />
+                </g>
+              );
+            })}
           </g>
         );
       })}
@@ -63,7 +97,7 @@ interface TrainingInProgressTempoChartProps {
   setIndex: number;
   width: number;
   height?: number;
-  passedReps?: Rep[];
+  passedReps?: RecordedReps;
   hideLabels?: boolean;
   sx?: SxProps;
   aiRecordingView?: boolean;
@@ -84,69 +118,212 @@ export default function TrainingInProgressTempoChart(
   } = props;
 
   const maxValueRef = useRef(0);
-  const currentRepsRef = useRef<RepInfo[] | null>(passedReps || null);
 
-  if (!selectedExercise || (!selectedExercise.recordedSets && !passedReps))
-    return null;
+  const currentRepsRef = useRef<RecordedRepsInfo | null>(passedReps || null);
 
-  const exercisePose = EXERCISE_POSES.find((e) =>
-    e.exerciseIds.includes(selectedExercise.id)
-  );
+  if (!selectedExercise?.recordedSets && !passedReps) return null;
 
-  if (!exercisePose) return;
+  // const exercisePose = EXERCISE_POSES.find((e) =>
+  //   e.exerciseIds.includes(selectedExercise.id)
+  // );
 
-  const direction: ConditionDirection = exercisePose.data.romStartDirection;
+  const exercisePose = {
+    romValueType: KeypointValueType.POSITION_Y,
+    romStartDirection: ConditionDirection.POSITIVE,
+    leftSide: {
+      romKeypointId: KeypointId.LEFT_WRIST,
+      conditions: [
+        {
+          keypointId: KeypointId.LEFT_WRIST,
+          type: KeypointValueType.POSITION_Y,
+          direction: ConditionDirection.POSITIVE,
+          duration: 750, // ms
+          distance: 0.1, // meters
+        },
+      ],
+    },
+    rightSide: {
+      romKeypointId: KeypointId.RIGHT_WRIST,
+      conditions: [
+        {
+          keypointId: KeypointId.RIGHT_WRIST,
+          type: KeypointValueType.POSITION_Y,
+          direction: ConditionDirection.POSITIVE,
+          duration: 750, // ms
+          distance: 0.1, // meters
+        },
+      ],
+    },
+  };
 
-  if (!passedReps) {
-    if (selectedExercise.recordedSets) {
-      const set = selectedExercise.recordedSets.find(
-        (s) => s.setIndex === setIndex
-      );
-
-      if (set) {
-        currentRepsRef.current = set.reps;
-      } else currentRepsRef.current = null;
-    }
+  if (!exercisePose) {
+    console.log('returningn ull 2');
+    return;
   }
+
+  const direction: ConditionDirection = exercisePose.romStartDirection;
+
+  // if (!passedReps) {
+  //   if (selectedExercise.recordedSets) {
+  //     const set = selectedExercise.recordedSets.find(
+  //       (s) => s.setIndex === setIndex
+  //     );
+
+  //     if (set) {
+  //       currentRepsRef.current = { left: set.repsL, right: set.repsR };
+  //     } else currentRepsRef.current = null;
+  //   }
+  // }
 
   if (!currentRepsRef.current) {
+    console.log('returningn ull 3');
     return null;
   }
 
+  const sides = [
+    currentRepsRef.current.left,
+    currentRepsRef.current.right,
+  ].filter((s) => s !== undefined);
+
   // demoReps -> from state, use for testing
-  currentRepsRef.current.forEach((rep) => {
-    const biggest = Math.max(
-      rep.timeToExtremeMs ?? 0,
-      rep.timeAtExtremeMs ?? 0,
-      rep.timeFromExtremeToEndMs ?? 0
-    );
-    if (biggest > maxValueRef.current) maxValueRef.current = biggest;
+  sides.forEach((side) => {
+    side.forEach((rep) => {
+      const biggest = Math.max(
+        rep.timeToExtremeMs ?? 0,
+        rep.timeAtExtremeMs ?? 0,
+        rep.timeFromExtremeToEndMs ?? 0
+      );
+      if (biggest > maxValueRef.current) maxValueRef.current = biggest;
+    });
   });
 
-  const rows = currentRepsRef.current.map((r) => {
-    return direction === ConditionDirection.POSITIVE
-      ? {
-          id: r.repNumber,
-          label: `${r.repNumber}`,
-          concentric: (r.timeToExtremeMs || 0) / 1000,
-          eccentric:
+  let sideWithMoreReps: 'L' | 'R' = 'L';
+
+  if (
+    currentRepsRef.current.right !== undefined &&
+    currentRepsRef.current.right.length > currentRepsRef.current.left.length
+  )
+    sideWithMoreReps = 'R';
+
+  const mainSide =
+    sideWithMoreReps === 'L'
+      ? currentRepsRef.current.left
+      : currentRepsRef.current.right;
+
+  if (!mainSide) {
+    console.log('returningn ull 4');
+    return;
+  }
+
+  const rows = mainSide.map((r, repIndex) => {
+    const row: {
+      id?: number;
+      label?: string;
+      concentricL?: number;
+      eccentricL?: number;
+      isometricL?: number;
+      isometricFakeL?: number;
+      concentricR?: number;
+      eccentricR?: number;
+      isometricR?: number;
+      isometricFakeR?: number;
+    } = {};
+
+    if (!row.id) row.id = r.repNumber;
+    if (!row.label) row.label = `${r.repNumber}`;
+
+    const secondarySide =
+      sideWithMoreReps === 'L'
+        ? currentRepsRef.current?.right
+        : currentRepsRef.current?.left;
+
+    const secondarySideRep = secondarySide ? secondarySide[repIndex] : null;
+
+    if (sideWithMoreReps === 'L') {
+      // left
+      if (direction === ConditionDirection.POSITIVE) {
+        ((row.concentricL = (r.timeToExtremeMs || 0) / 1000),
+          (row.eccentricL =
             r.timeFromExtremeToEndMs !== undefined
               ? (-1 * r.timeFromExtremeToEndMs) / 1000
-              : 0,
-          isometric: (r.timeAtExtremeMs || 0) / 1000,
-          isometricFake: 0,
+              : 0));
+        row.isometricL = (r.timeAtExtremeMs || 0) / 1000;
+        row.isometricFakeL = 0;
+      } else {
+        row.concentricL =
+          r.timeFromExtremeToEndMs !== undefined
+            ? r.timeFromExtremeToEndMs / 1000
+            : 0;
+        row.eccentricL = (-1 * (r.timeToExtremeMs || 0)) / 1000;
+        row.isometricL = (r.timeAtExtremeMs || 0) / 1000;
+        row.isometricFakeL = 0;
+      }
+
+      if (secondarySideRep) {
+        // update right side
+        if (direction === ConditionDirection.POSITIVE) {
+          ((row.concentricR = (secondarySideRep.timeToExtremeMs || 0) / 1000),
+            (row.eccentricR =
+              secondarySideRep.timeFromExtremeToEndMs !== undefined
+                ? (-1 * secondarySideRep.timeFromExtremeToEndMs) / 1000
+                : 0));
+          row.isometricR = (secondarySideRep.timeAtExtremeMs || 0) / 1000;
+          row.isometricFakeR = 0;
+        } else {
+          row.concentricR =
+            secondarySideRep.timeFromExtremeToEndMs !== undefined
+              ? secondarySideRep.timeFromExtremeToEndMs / 1000
+              : 0;
+          row.eccentricR =
+            (-1 * (secondarySideRep.timeToExtremeMs || 0)) / 1000;
+          row.isometricR = (secondarySideRep.timeAtExtremeMs || 0) / 1000;
+          row.isometricFakeR = 0;
         }
-      : {
-          id: r.repNumber,
-          label: `${r.repNumber}`,
-          concentric:
+      }
+    } else {
+      // right
+      if (direction === ConditionDirection.POSITIVE) {
+        ((row.concentricR = (r.timeToExtremeMs || 0) / 1000),
+          (row.eccentricR =
             r.timeFromExtremeToEndMs !== undefined
-              ? r.timeFromExtremeToEndMs / 1000
-              : 0,
-          eccentric: (-1 * (r.timeToExtremeMs || 0)) / 1000,
-          isometric: (r.timeAtExtremeMs || 0) / 1000,
-          isometricFake: 0,
-        };
+              ? (-1 * r.timeFromExtremeToEndMs) / 1000
+              : 0));
+        row.isometricR = (r.timeAtExtremeMs || 0) / 1000;
+        row.isometricFakeR = 0;
+      } else {
+        row.concentricR =
+          r.timeFromExtremeToEndMs !== undefined
+            ? r.timeFromExtremeToEndMs / 1000
+            : 0;
+        row.eccentricR = (-1 * (r.timeToExtremeMs || 0)) / 1000;
+        row.isometricR = (r.timeAtExtremeMs || 0) / 1000;
+        row.isometricFakeR = 0;
+      }
+
+      if (secondarySideRep) {
+        // update left side
+        if (direction === ConditionDirection.POSITIVE) {
+          ((row.concentricL = (secondarySideRep.timeToExtremeMs || 0) / 1000),
+            (row.eccentricL =
+              secondarySideRep.timeFromExtremeToEndMs !== undefined
+                ? (-1 * secondarySideRep.timeFromExtremeToEndMs) / 1000
+                : 0));
+          row.isometricL = (secondarySideRep.timeAtExtremeMs || 0) / 1000;
+          row.isometricFakeL = 0;
+        } else {
+          row.concentricL =
+            secondarySideRep.timeFromExtremeToEndMs !== undefined
+              ? secondarySideRep.timeFromExtremeToEndMs / 1000
+              : 0;
+          row.eccentricL =
+            (-1 * (secondarySideRep.timeToExtremeMs || 0)) / 1000;
+          row.isometricL = (secondarySideRep.timeAtExtremeMs || 0) / 1000;
+          row.isometricFakeL = 0;
+        }
+      }
+    }
+
+    return row;
   });
 
   return (
@@ -160,6 +337,7 @@ export default function TrainingInProgressTempoChart(
           disableLine: hideLabels,
           disableTicks: hideLabels,
           tickLabelStyle: { display: hideLabels ? 'none' : 'block' },
+          barGapRatio: 0,
         },
       ]}
       yAxis={[
@@ -180,34 +358,65 @@ export default function TrainingInProgressTempoChart(
         top: aiRecordingView ? 10 : 16,
       }}
       series={[
+        // LEFT stack (keeps your current color scheme)
         {
-          dataKey: 'concentric',
-          label: 'Concentric',
-          stack: 'time',
-          valueFormatter: (v) => {
-            if (!v) return '–';
-            return `Concentric phase: ${Math.abs(v).toFixed(1)}s`;
-          },
+          dataKey: 'concentricL',
+          label: 'Concentric (L)',
+          stack: 'timeL',
+          valueFormatter: (v) =>
+            !v ? '–' : `Concentric (L): ${Math.abs(v).toFixed(1)}s`,
           color: theme.palette.primary.main,
         },
         {
-          dataKey: 'eccentric',
-          label: 'Eccentric',
-          stack: 'time',
-          valueFormatter: (v) => {
-            if (!v) return '–';
-            return `Eccentric phase: ${Math.abs(v).toFixed(1)}s`;
-          },
+          dataKey: 'eccentricL',
+          label: 'Eccentric (L)',
+          stack: 'timeL',
+          valueFormatter: (v) =>
+            !v ? '–' : `Eccentric (L): ${Math.abs(v).toFixed(1)}s`,
           color: theme.palette.secondary.main,
         },
         {
-          dataKey: 'isometricFake',
-          label: 'Isometric',
-          stack: 'time',
+          // zero-height (transparent) segment so the tooltip can show the isometric value
+          dataKey: 'isometricFakeL',
+          label: 'Isometric (L)',
+          stack: 'timeL',
           valueFormatter: (v, ctx) => {
-            const row = rows.find((r) => r.id === ctx.dataIndex + 1);
-            if (!row || !row.isometric) return 'Isometric phase: –';
-            return `Isometric phase: ${Math.abs(row.isometric).toFixed(1)}s`;
+            const row = rows[ctx.dataIndex];
+            const iso = row?.isometricL ?? 0;
+            return iso
+              ? `Isometric (L): ${Math.abs(iso).toFixed(1)}s`
+              : 'Isometric (L): –';
+          },
+          color: 'none',
+        },
+
+        // RIGHT stack (blue-ish combo)
+        {
+          dataKey: 'concentricR',
+          label: 'Concentric (R)',
+          stack: 'timeR',
+          valueFormatter: (v) =>
+            !v ? '–' : `Concentric (R): ${Math.abs(v).toFixed(1)}s`,
+          color: theme.palette.info.main,
+        },
+        {
+          dataKey: 'eccentricR',
+          label: 'Eccentric (R)',
+          stack: 'timeR',
+          valueFormatter: (v) =>
+            !v ? '–' : `Eccentric (R): ${Math.abs(v).toFixed(1)}s`,
+          color: theme.palette.info.light,
+        },
+        {
+          dataKey: 'isometricFakeR',
+          label: 'Isometric (R)',
+          stack: 'timeR',
+          valueFormatter: (v, ctx) => {
+            const row = rows[ctx.dataIndex];
+            const iso = row?.isometricR ?? 0;
+            return iso
+              ? `Isometric (R): ${Math.abs(iso).toFixed(1)}s`
+              : 'Isometric (R): –';
           },
           color: 'none',
         },
@@ -240,7 +449,15 @@ export default function TrainingInProgressTempoChart(
       />
 
       {/* Isometric line in middle of the bar */}
-      <IsoOverlay reps={currentRepsRef.current} />
+
+      {/* <IsoOverlay reps={currentRepsRef.current} /> */}
+      <IsoOverlayDual
+        rows={rows.map((r, index) => ({
+          label: r.label || index.toString(),
+          isometricL: r.isometricL,
+          isometricR: r.isometricR,
+        }))}
+      />
     </BarChart>
   );
 }

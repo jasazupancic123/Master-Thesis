@@ -3,10 +3,16 @@ import type { KeypointId } from '../enum/keypoint-id';
 import type { KeypointValueType } from '../enum/keypoint-value-type';
 
 export type ExerciseDetectionData = {
-  conditions: ExerciseRepStartCondition[];
-  romKeypointId: KeypointId;
   romValueType: KeypointValueType;
   romStartDirection: ConditionDirection; // In which direction the ROM keypoint needs to move to start the rep
+  leftSide: {
+    conditions: ExerciseRepStartCondition[];
+    romKeypointId: KeypointId;
+  };
+  rightSide?: {
+    conditions: ExerciseRepStartCondition[];
+    romKeypointId: KeypointId;
+  };
 };
 
 export type ExerciseRepStartCondition = {
