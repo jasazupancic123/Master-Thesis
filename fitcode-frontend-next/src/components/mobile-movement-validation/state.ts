@@ -23,6 +23,7 @@ import type {
 } from '@/controller/pose-detection/type/rep.type';
 import type { RepState } from '@/controller/pose-detection/type/rep-state.type';
 import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
+import EnvUtil from '@/common/util/env.util';
 
 export async function loadModel(state: {
   setPoseLandmarker: SetState<PoseLandmarker | null>;
@@ -33,8 +34,8 @@ export async function loadModel(state: {
   const { setPoseLandmarker, videoRef, canvasRef, drawingUtilsRef } = state;
 
   // const modelAssetPath = '/models/pose_landmarker/pose_landmarker_lite.task'; // lite
-  const modelAssetPath = '/models/pose_landmarker/pose_landmarker_full.task'; // full
-  // const modelAssetPath = '/models/pose_landmarker/pose_landmarker_heavy.task'; // heavy
+  // const modelAssetPath = '/models/pose_landmarker/pose_landmarker_full.task'; // full
+  const modelAssetPath = '/models/pose_landmarker/pose_landmarker_heavy.task'; // heavy
 
   const vision = await FilesetResolver.forVisionTasks('/wasm');
 
@@ -264,7 +265,26 @@ export const predictWebcam = async (state: {
     const delta = startTimeMs - prevFrameTimeRef.current;
     const instFps = Math.round(1000 / delta);
 
-    setFps(instFps);
+    if (
+      ![DetectionStatus.READY, DetectionStatus.RECORDING].includes(
+        statusRef.current
+      )
+    ) {
+      // to re-render ui every frame when not in ready or recording state
+      setFps(instFps);
+    } else {
+      // only update fps every 0.5 seconds when in ready or recording state to save performance
+      if (!EnvUtil.AI.disableAIFPS() && avgFps.current) {
+        const frameCount = KeypointUtil.getFramesCountFromSeconds(
+          0.5,
+          avgFps.current.value
+        ); // smooth over 0.5s
+        const shouldPublish =
+          !avgFps.current || avgFps.current.count % frameCount === 0; // publish every 0.5 secodns
+
+        if (shouldPublish) setFps(instFps);
+      }
+    }
 
     if (!avgFps.current) avgFps.current = { value: instFps, count: 1 };
     else {
@@ -379,46 +399,59 @@ export const predictWebcam = async (state: {
       });
 
       if (statusRef.current === DetectionStatus.RECORDING) {
-        if (repStateRefL.current.status !== RepStatus.NONE) {
-          RepDetectionService.checkRepStatus({
+        // this upper if must go into the function
+        RepDetectionService.checkRepStatus({
+          currentFrameKeypoints: keypoints,
+          keypointHistory: keypointHistory,
+          valueType: exerciseDetectionData.romValueType,
+          direction: exerciseDetectionData.romStartDirection,
+          avgFps: avgFps.current,
+          initedFirstFrameInRecordingMode, // this is used to track if no rep was detected yet
+          leftData: {
             repStateRef: repStateRefL,
             currentRepRef: currentRepRefL,
             recordedReps: recordedRepsRef.current.left,
-            currentFrameKeypoints: keypoints,
-            keypointHistory: keypointHistory,
             keypointId: exerciseDetectionData.leftSide.romKeypointId,
-            valueType: exerciseDetectionData.romValueType,
-            direction: exerciseDetectionData.romStartDirection,
             exerciseStartConditions: exerciseDetectionData.leftSide.conditions,
-            avgFps: avgFps.current,
-            initedFirstFrameInRecordingMode, // this is used to track if no rep was detected yet
             side: 'L',
-            setRepCount,
-          });
-        }
+          },
+          rightData:
+            recordedRepsRef.current.right && exerciseDetectionData.rightSide
+              ? {
+                  repStateRef: repStateRefR,
+                  currentRepRef: currentRepRefR,
+                  recordedReps: recordedRepsRef.current.right,
+                  keypointId: exerciseDetectionData.rightSide.romKeypointId,
+                  exerciseStartConditions:
+                    exerciseDetectionData.rightSide.conditions,
+                  side: 'R',
+                }
+              : undefined,
+          setRepCount,
+        });
 
-        if (
-          repStateRefR.current &&
-          exerciseDetectionData.rightSide &&
-          recordedRepsRef.current.right &&
-          repStateRefR.current.status !== RepStatus.NONE
-        ) {
-          RepDetectionService.checkRepStatus({
-            repStateRef: repStateRefR,
-            currentRepRef: currentRepRefR,
-            recordedReps: recordedRepsRef.current.right,
-            currentFrameKeypoints: keypoints,
-            keypointHistory: keypointHistory,
-            keypointId: exerciseDetectionData.rightSide.romKeypointId,
-            valueType: exerciseDetectionData.romValueType,
-            direction: exerciseDetectionData.romStartDirection,
-            exerciseStartConditions: exerciseDetectionData.rightSide.conditions,
-            avgFps: avgFps.current,
-            initedFirstFrameInRecordingMode, // this is used to track if no rep was detected yet
-            side: 'R',
-            setRepCount,
-          });
-        }
+        // if (
+        //   repStateRefR.current &&
+        //   exerciseDetectionData.rightSide &&
+        //   recordedRepsRef.current.right &&
+        //   repStateRefR.current.status !== RepStatus.NONE
+        // ) {
+        //   RepDetectionService.checkRepStatus({
+        //     repStateRef: repStateRefR,
+        //     currentRepRef: currentRepRefR,
+        //     recordedReps: recordedRepsRef.current.right,
+        //     currentFrameKeypoints: keypoints,
+        //     keypointHistory: keypointHistory,
+        //     keypointId: exerciseDetectionData.rightSide.romKeypointId,
+        //     valueType: exerciseDetectionData.romValueType,
+        //     direction: exerciseDetectionData.romStartDirection,
+        //     exerciseStartConditions: exerciseDetectionData.rightSide.conditions,
+        //     avgFps: avgFps.current,
+        //     initedFirstFrameInRecordingMode, // this is used to track if no rep was detected yet
+        //     side: 'R',
+        //     setRepCount,
+        //   });
+        // }
       }
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);

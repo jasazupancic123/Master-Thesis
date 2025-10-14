@@ -7,10 +7,14 @@ interface FpsTextProps {
 
 export default function FpsText(props: FpsTextProps) {
   const { fps, avgFps } = props;
+
+  const fontSize = 30;
+
   return (
     <Box display="flex" flexDirection="column" alignItems="flex-start">
       <Typography
         variant="caption"
+        fontSize={fontSize}
         sx={{
           color: 'white',
           textShadow: '1px 1px 2px black',
@@ -20,6 +24,7 @@ export default function FpsText(props: FpsTextProps) {
       </Typography>
       <Typography
         variant="caption"
+        fontSize={fontSize}
         sx={{
           color: 'white',
           textShadow: '1px 1px 2px black',
