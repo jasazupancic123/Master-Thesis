@@ -62,22 +62,17 @@ export class WellnessService {
       range,
     );
 
-    const dayStart = startOfDay(new Date());
-
-    return wellnesses
-      .filter((w) => isSameDay(w.date, dayStart))
-      .map((w) => this.zScore(w, wellnesses, dayStart));
+    return wellnesses.map((_) => this.zScore(wellnesses, new Date()));
   }
 
-  private zScore(
-    doc: Wellness,
-    docs: Wellness[],
-    dayStart: Date,
-  ): WellnessZScore | null {
+  private zScore(docs: Wellness[], date: Date): WellnessZScore | null {
+    const dayStart = startOfDay(date);
+    const found = docs.find((wd) => isSameDay(wd.date, dayStart));
+
+    if (!found) return null;
+    if (docs.length < 2) return found;
+
     const history = docs.filter((wd) => isBefore(wd.date, dayStart));
-
-    if (history.length === 0) return doc;
-
     const hist = {
       sleep: history
         .map((w) => w.sleep)
@@ -108,19 +103,19 @@ export class WellnessService {
     };
 
     return {
-      ...doc,
+      ...found,
       sleepZScore: this.commonService.number.z(
-        doc.sleep,
+        found.sleep,
         means.sleep,
         stds.sleep,
       ),
       fatigueZScore: this.commonService.number.z(
-        doc.fatigue,
+        found.fatigue,
         means.fatigue,
         stds.fatigue,
       ),
       sorenessZScore: this.commonService.number.z(
-        doc.soreness,
+        found.soreness,
         means.soreness,
         stds.soreness,
       ),
