@@ -105,7 +105,7 @@ const eslintConfig = [
       'no-restricted-imports': [
         'error',
         {
-          patterns: ['../../*'],
+          patterns: ['../../../*'],
         },
       ],
     },

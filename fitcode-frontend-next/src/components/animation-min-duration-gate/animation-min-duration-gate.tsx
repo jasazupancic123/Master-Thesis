@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from 'react';
 
 import { LOADING_ANIMATION_MIN_DURATION_MS } from '@/common/constant/loading.constant';
-import Animation from '@/components/animation/animation';
+import Animation from '@/util/animation/animation';
 
 // Fires once its children actually mount (i.e., when Suspense reveals)
 function RevealSensor({

@@ -5,33 +5,30 @@ import {
   closestCenter,
   DndContext,
   DragOverlay,
-  PointerSensor,
-  TouchSensor,
   useDroppable,
-  useSensor,
-  useSensors,
 } from '@dnd-kit/core';
 import { Box, Grid2, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
-import { useEffect, useMemo, useState } from 'react';
 
 import AddExerciseForm from '../add-exercise-form/add-exercise-form';
-import MyModal from '../modal/modal';
-import Superset from '../superset/superset';
-import { NUM_MAX_SUPERSETS } from '../trainer-day-view/constant';
-import { onDragEndExercise as onRBDDragEnd } from '../trainer-day-view/state';
-import StubTrainingExerciseCard from '../training-exercise-card/stub-training-exercise-card';
-import { handleAddExerciseToSupersetComponent } from './state';
+import { NUM_MAX_SUPERSETS } from '../trainer-group-day-view/constant/supersets.constant';
+import StubTrainingExerciseCard from '../training-exercise-card/stub/training-exercise-card-stub';
+import { onDragEndExercise } from './actions/actions-drag-exercise';
+import { handleAddExerciseToSupersetComponent } from './actions/actions-training-exercise';
+import Superset from './components/superset/superset';
+import useSupersetsExercises from './hooks/use-exercises';
+import useSelectedExercisesIds from './hooks/use-selected-exercises-ids';
+import useSupersetsSetsNumbers from './hooks/use-sets-numbers';
+import useSupersetsUtils from './hooks/use-utils';
 import { ADD_SUPERSET_DROPPABLE_ID } from '@/common/constant/add-superset-droppable-id.constant';
 import type { SetState } from '@/common/type/state.type';
 import { VolWorkSetType } from '@/controller/component/enum/param.enum';
-import { MainSet } from '@/controller/training/enum/main-set.enum';
-import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { SupersetsProvider } from '@/store/supersets.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
+import MyModal from '@/util/modal/modal';
 
 interface SupersetsProps {
   openAddExerciseModal: boolean;
@@ -73,126 +70,46 @@ export default function Supersets(props: SupersetsProps) {
     setExpandedExercisesView,
   } = props;
 
+  const groupContext = useGroup();
+  const trainerDayViewContext = useTrainerDayViewContext();
+
   const { exercises: allExercises } = useMain();
-  const { setDetectedChanges } = useGroup();
 
   const {
     training,
-    setTraining,
     component,
-    setComponent,
-    selectedSubgroup,
-    setSelectedSubgroup,
     supersets,
     selectedAthlete,
     setSearch,
-    setSupersets,
     setPagination,
-  } = useTrainerDayViewContext();
+  } = trainerDayViewContext;
 
-  const { setTrainings } = useGroup();
+  const { setsNumbers, setSetsNumbers } = useSupersetsSetsNumbers();
 
-  const [selectedExercisesIds, setSelectedExercisesIds] = useState(
-    supersets && supersets.length
-      ? supersets.flatMap((s) => s.exercises.map((e) => e.id))
-      : []
-  );
-  const [selectedExercise, setSelectedExercise] =
-    useState<TrainingExercise | null>(null);
+  const { selectedExercisesIds, setSelectedExercisesIds } =
+    useSelectedExercisesIds();
 
-  const [setsNumbers, setSetsNumbers] = useState<
-    { exerciseId: string; setsNumber: number }[]
-  >([]);
+  const {
+    menuExercise,
+    setMenuExercise,
+    activeExercise,
+    setActiveExercise,
+    selectedExercise,
+    setSelectedExercise,
+  } = useSupersetsExercises();
 
-  const [openVideoPlayerModal, setOpenVideoPlayerModal] = useState(false);
-
-  const [menuExercise, setMenuExercise] = useState<TrainingExercise | null>(
-    null
-  );
-
-  const [activeExercise, setActiveExercise] = useState<TrainingExercise | null>(
-    null
-  );
-
-  const isCircuit =
-    (selectedSubgroup || component)?.mainSet === MainSet.CIRCUIT;
-
-  useEffect(() => {
-    setSelectedExercisesIds(
-      supersets && supersets.length
-        ? supersets.flatMap((s) => s.exercises.map((e) => e.id))
-        : []
-    );
-  }, [supersets, supersets.length]);
-
-  useEffect(() => {
-    if (!selectedSubgroup && !component) setSelectedExercisesIds([]);
-  }, [component, selectedSubgroup]);
-
-  // update setsNumbers on method change
-  useEffect(() => {
-    if (!component || !component.method) return;
-
-    const setsRange = component.method?.attributes
-      ?.map((a) => a.options?.find((o) => o.field === VolWorkSetType.Set))
-      .find(Boolean);
-
-    if (!setsRange) return;
-
-    const { min, max } = setsRange;
-
-    if (min === undefined && max === undefined) return;
-
-    setSetsNumbers((prev) => {
-      const newSetsNumbers = prev.map((item) => {
-        return {
-          ...item,
-          setsNumber: Math.max(
-            min || 0,
-            Math.min(max || 1000, item.setsNumber)
-          ),
-        };
-      });
-      return newSetsNumbers;
-    });
-  }, [component?.method]);
-
-  // detect window width
-  useEffect(() => {
-    setPagination((prev) => ({
-      ...prev,
-      pageSize: screenSize.isUltraSmall ? 3 : screenSize.isMobile ? 6 : 10,
-    }));
-  }, [window.innerWidth]);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(TouchSensor, {
-      activationConstraint: { delay: 0, tolerance: 5 },
-    })
-  );
-
-  const disabledSensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 999999 } }),
-    useSensor(TouchSensor, {
-      activationConstraint: { delay: 999999, tolerance: 999999 },
-    })
-  );
-
-  const getContainerIdForSupersetIndex = (i: number) => `${component!.id}-${i}`;
-
-  const itemsByContainer = useMemo(() => {
-    if (!component) return {} as Record<string, string[]>;
-    const map: Record<string, string[]> = {};
-    supersets?.forEach((s, i) => {
-      map[getContainerIdForSupersetIndex(i)] = s.exercises.map((e) => e.id);
-    });
-    return map;
-  }, [supersets, component]);
+  const {
+    isCircuit,
+    openVideoPlayerModal,
+    setOpenVideoPlayerModal,
+    sensors,
+    disabledSensors,
+    itemsByContainer,
+  } = useSupersetsUtils();
 
   if (!component || !training) return null;
 
-  // Adapter: convert dnd-kit events to react-beautiful-dnd DropResult shape our existing onDragEnd expects
+  // This function needs to be here
   function adaptAndCallOnDragEnd(e: DragEndEvent) {
     if (!training || !component) return;
 
@@ -236,16 +153,13 @@ export default function Supersets(props: SupersetsProps) {
         },
       };
 
-      onRBDDragEnd(input, {
-        training,
-        setTraining,
-        component,
-        setComponent,
-        selectedSubgroup,
-        setSelectedSubgroup,
-        supersets,
-        setSupersets,
-        setDetectedChanges,
+      onDragEndExercise(input, {
+        useGroup: groupContext,
+        useTrainerDayViewContext: {
+          ...trainerDayViewContext,
+          training,
+          component,
+        },
       });
       return;
     }
@@ -266,16 +180,13 @@ export default function Supersets(props: SupersetsProps) {
       },
     };
 
-    onRBDDragEnd(input, {
-      training,
-      setTraining,
-      component,
-      setComponent,
-      selectedSubgroup,
-      setSelectedSubgroup,
-      supersets,
-      setSupersets,
-      setDetectedChanges,
+    onDragEndExercise(input, {
+      useGroup: groupContext,
+      useTrainerDayViewContext: {
+        ...trainerDayViewContext,
+        training,
+        component,
+      },
     });
   }
 
@@ -449,21 +360,16 @@ export default function Supersets(props: SupersetsProps) {
               allExercises,
               minSets: setsRange?.min,
               maxSets: setsRange?.max,
+              setOpenAddExerciseModal,
+              setSearch,
             },
             {
-              training,
-              setTraining,
-              setTrainings,
-              component,
-              setComponent,
-              supersets,
-              setSupersets,
-              setOpenAddExerciseModal,
-              setDetectedChanges,
-              setSearch,
-              selectedSubgroup,
-              setSelectedSubgroup,
-              setPagination,
+              useGroup: groupContext,
+              useTrainerDayViewContext: {
+                ...trainerDayViewContext,
+                training,
+                component,
+              },
             }
           );
         }}
