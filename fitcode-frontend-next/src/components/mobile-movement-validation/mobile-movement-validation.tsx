@@ -6,7 +6,6 @@ import { useTheme } from '@mui/material';
 import dayjs from 'dayjs';
 import { useEffect, useRef, useState } from 'react';
 
-import AthleteTrainingExerciseSets from '../athlete-training-exercise-sets/athlete-training-exercise-sets';
 import LoadingOverlay from '../../util/loading-overlay/loading-overlay';
 import { finishSet } from '../training-in-progress/components/training-in-progress-exercise-card/actions/actions-exercise-set';
 import TrainingInProgressTempoChart from '../../common/util/tempo-chart';
@@ -46,6 +45,7 @@ import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import EnvUtil from '@/common/util/env.util';
 import { updateExerciseValues } from '../training-in-progress/components/training-in-progress-exercise-card/actions/actions-exercise';
+import AthleteTrainingExerciseSets from '../athlete/athlete-training-exercise-sets/athlete-training-exercise-sets';
 
 const DEBUG = false;
 

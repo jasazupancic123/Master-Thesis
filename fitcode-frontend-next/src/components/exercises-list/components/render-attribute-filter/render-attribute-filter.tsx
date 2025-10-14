@@ -1,5 +1,5 @@
 import { SetState } from '@/common/type/state.type';
-import AttributeFilter from '@/components/attribute-filter/attribute-filter';
+import AttributeFilter from '@/components/athlete/attribute-filter/attribute-filter';
 import { Attribute } from '@/controller/attribute/type/attribute.type';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { SearchBar } from '@/util/search-bar/search-bar';
