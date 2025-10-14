@@ -1,6 +1,7 @@
-import { SetState } from '@/common/type/state.type';
 import { Box, Typography } from '@mui/material';
+
 import AthleteWellnessSlider from './athlete-wellness-slider';
+import type { SetState } from '@/common/type/state.type';
 
 export default function UserWellnessSlider(props: {
   label: string;

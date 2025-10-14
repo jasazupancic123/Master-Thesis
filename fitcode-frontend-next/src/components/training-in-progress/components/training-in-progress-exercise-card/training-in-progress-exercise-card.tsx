@@ -4,23 +4,23 @@ import { useTheme } from '@mui/material';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
 
-import MobileMovementValidation from '../../../mobile-movement-validation/mobile-movement-validation';
-import SwipeableBox from '../../../../util/swipeable-box/swipeable-box';
-import ImageGallery from '../../../../common/util/image-gallery';
+import {
+  goToNextExercise,
+  goToPreviousExercise,
+} from './actions/actions-exercise';
 import TrainingExerciseSetDoneCheckbox from './components/training-exercise-set-done-checkbox';
-import TrainingInProgressTempoChart from '../../../../common/util/tempo-chart';
+import useExerciseIndexLabel from './hooks/use-exercise-index-label';
 import { TrackingMethod } from '@/common/enum/tracking-method.enum';
+import ImageGallery from '@/common/util/image-gallery';
+import TrainingInProgressTempoChart from '@/common/util/tempo-chart';
+import AthleteTrainingExerciseSets from '@/components/athlete/athlete-training-exercise-sets/athlete-training-exercise-sets';
+import MobileMovementValidation from '@/components/mobile-movement-validation/mobile-movement-validation';
 import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
-import {
-  goToNextExercise,
-  goToPreviousExercise,
-} from './actions/actions-exercise';
-import useExerciseIndexLabel from './hooks/use-exercise-index-label';
-import AthleteTrainingExerciseSets from '@/components/athlete/athlete-training-exercise-sets/athlete-training-exercise-sets';
+import SwipeableBox from '@/util/swipeable-box/swipeable-box';
 
 export default function TrainingInProgressExerciseCard() {
   const theme = useTheme();

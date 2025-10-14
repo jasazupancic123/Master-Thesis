@@ -1,11 +1,12 @@
+import { useEffect, useState } from 'react';
+
 import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
-import { Exercise } from '@/controller/exercise/type/exercise.type';
-import { TrainingComponent } from '@/controller/training/type/training-component.type';
+import type { Exercise } from '@/controller/exercise/type/exercise.type';
+import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { useMain } from '@/store/main.provider';
-import { useEffect, useState } from 'react';
 
 export interface UseExerciseFormComponentExercisesProps {
   component: TrainingComponent;

@@ -1,5 +1,3 @@
-import { MainSet } from '@/controller/training/enum/main-set.enum';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 import {
   PointerSensor,
   TouchSensor,
@@ -7,6 +5,9 @@ import {
   useSensors,
 } from '@dnd-kit/core';
 import { useMemo, useState } from 'react';
+
+import { MainSet } from '@/controller/training/enum/main-set.enum';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 
 export type UseSupersetsUtilsReturnType = ReturnType<typeof useSupersetsUtils>;
 

@@ -2,12 +2,12 @@ import { Box, Card, Grid2, Typography } from '@mui/material';
 import Image from 'next/image';
 import { useRef } from 'react';
 
-import IndexPageTitleText from '../../../util/index-page-title-text/index-page-title-text';
-import Logo from '../../../util/logo/logo';
 import { HERO_NAVBAR_HEIGHT } from '@/app/state';
 import { theme } from '@/app/style';
-import { useScreenSize } from '@/store/screen-size.provider';
 import { LINK_TECHNOLOGY } from '@/common/constant/navigation.constant';
+import { useScreenSize } from '@/store/screen-size.provider';
+import IndexPageTitleText from '@/util/index-page-title-text/index-page-title-text';
+import Logo from '@/util/logo/logo';
 
 type Item = { imageUrl: string; title: string; description: string };
 

@@ -5,15 +5,15 @@ import { useTheme } from '@mui/material';
 import { useState } from 'react';
 import { DragDropContext } from 'react-beautiful-dnd';
 
-import TrainingMembersSubgroup from './training-members-subgroups';
-import { useMain } from '@/store/main.provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
-import useTrainingMembersSubgroups from './hooks/use-subgroups.hook';
-import useTrainingMembers from './hooks/use-members.hook';
-import { useGroup } from '@/store/group.provider';
+import { DEFAULT_SUBGROUP_ID } from '../trainer-group-day-view/constant/subgroups.constant';
 import { handleOnDragEnd } from './actions/actions-dnd';
 import { updateSelectedAthleteSubgroup } from './actions/actions-subgroups';
-import { DEFAULT_SUBGROUP_ID } from '../trainer-group-day-view/constant/subgroups.constant';
+import useTrainingMembers from './hooks/use-members.hook';
+import useTrainingMembersSubgroups from './hooks/use-subgroups.hook';
+import TrainingMembersSubgroup from './training-members-subgroups';
+import { useGroup } from '@/store/group.provider';
+import { useMain } from '@/store/main.provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 
 interface TrainingMembersProps {
   isSticky: boolean;
@@ -36,8 +36,6 @@ export default function TrainingMembers(props: TrainingMembersProps) {
   const { training, component, selectedAthlete } = trainerDayViewContext;
 
   const { members, sortedMembers, item } = trainingMembersContext;
-
-  console.log('item', item);
 
   const { subgroups } = trainingMembersSubgroupsContext;
 
@@ -113,8 +111,6 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                 {item.membersIds.map((memberId) => {
                   const member = members.find((user) => user.uid === memberId);
 
-                  console.log('member', member);
-
                   if (!member) return null;
 
                   return (
@@ -126,8 +122,6 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                       <Box
                         sx={{ p: 0, m: 0 }}
                         onClick={() => {
-                          console.log('ON CLICK123');
-
                           updateSelectedAthleteSubgroup(
                             {
                               member,

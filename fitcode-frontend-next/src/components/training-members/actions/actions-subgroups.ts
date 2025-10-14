@@ -1,19 +1,20 @@
-import { AuthUser } from '@/controller/auth/type/user.type';
-import { SetState } from '@/common/type/state.type';
-import { Subgroup } from '@/controller/training/type/subgroup.type';
+import toast from 'react-hot-toast';
+
 import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
-import toast from 'react-hot-toast';
-import { GroupProviderReturnType, useGroup } from '@/store/group.provider';
-import {
+import type { SetState } from '@/common/type/state.type';
+import { updateGlobalStates } from '@/components/supersets/actions/actions-drag-exercise';
+import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-group-day-view/constant/subgroups.constant';
+import type { AuthUser } from '@/controller/auth/type/user.type';
+import type { Subgroup } from '@/controller/training/type/subgroup.type';
+import type { Training } from '@/controller/training/type/training.type';
+import type { GroupProviderReturnType, useGroup } from '@/store/group.provider';
+import type {
   TrainerDayViewProviderReturnType,
   TrainerDayViewProviderReturnTypeDefined,
 } from '@/store/trainer-day-view.provider';
-import { Training } from '@/controller/training/type/training.type';
-import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-group-day-view/constant/subgroups.constant';
-import { updateGlobalStates } from '@/components/supersets/actions/actions-drag-exercise';
 
 export const handleAddMembersSubgroup = (
   input: { member: AuthUser },

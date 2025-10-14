@@ -2,11 +2,11 @@ import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box/Box';
 import { Fragment, useState } from 'react';
 
-import AthleteTrainingExerciseCollapsed from './components/athlete-training-exercise-collapsed';
 import AthleteTrainingExerciseSets from '../athlete-training-exercise-sets/athlete-training-exercise-sets';
+import AthleteTrainingExerciseCollapsed from './components/athlete-training-exercise-collapsed';
+import { getBorderGradient } from '@/common/util/border-gradient';
 import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
-import { getBorderGradient } from '@/common/util/border-gradient';
 
 interface AthleteSupersetProps {
   superset: Superset;

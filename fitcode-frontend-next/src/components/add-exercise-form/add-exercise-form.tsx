@@ -2,12 +2,12 @@ import { Box, Pagination, Typography } from '@mui/material';
 
 import ExerciseFilter from '../exercises-list/components/exercise-filter/exercise-filter';
 import ExercisesList from '../exercises-list/exercises-list';
-import { SearchBar } from '../../util/search-bar/search-bar';
 import type { AddExerciseFormProps } from '../trainer-group-day-view/props/props';
-import { useScreenSize } from '@/store/screen-size.provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 import useExerciseFormComponentExercises from './hooks/use-component-exercises';
 import useExerciseFormFilters from './hooks/use-filters';
+import { useScreenSize } from '@/store/screen-size.provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
+import { SearchBar } from '@/util/search-bar/search-bar';
 
 export default function AddExerciseForm(props: AddExerciseFormProps) {
   const { pagination, setPagination } = useTrainerDayViewContext();

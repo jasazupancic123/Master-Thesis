@@ -1,14 +1,14 @@
-import { Attribute } from '@/controller/attribute/type/attribute.type';
-import { ExerciseSet } from '@/controller/training/type/exercise-set.type';
-import { Subgroup } from '@/controller/training/type/subgroup.type';
-import { Superset } from '@/controller/training/type/superset.type';
-import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { SupersetsProviderReturnType } from '@/store/supersets.provider';
-import { TrainerDayViewProviderReturnTypeDefined } from '@/store/trainer-day-view.provider';
 import {
   getFieldsFromSubgroup,
   getOrCreateCustomWorkloadsSubgroup,
 } from '../../training-exercise-card-container/actions/actions-subgroup';
+import type { Attribute } from '@/controller/attribute/type/attribute.type';
+import type { ExerciseSet } from '@/controller/training/type/exercise-set.type';
+import type { Subgroup } from '@/controller/training/type/subgroup.type';
+import type { Superset } from '@/controller/training/type/superset.type';
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import type { SupersetsProviderReturnType } from '@/store/supersets.provider';
+import type { TrainerDayViewProviderReturnTypeDefined } from '@/store/trainer-day-view.provider';
 
 export function getCorrectValuesForExerciseParam(
   input: {

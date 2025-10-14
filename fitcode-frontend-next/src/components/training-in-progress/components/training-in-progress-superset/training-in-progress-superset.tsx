@@ -5,15 +5,15 @@ import { Box, Fab, Menu, MenuItem } from '@mui/material';
 import { useTheme } from '@mui/material';
 import { useRef, useState } from 'react';
 
+import { useTrainingInProgressUtils } from '../../context/training-in.progress-utils.provider';
+import { useUndoneExercises } from '../../context/undone-exercises.provider';
 import TrainingInProgressExerciseCard from '../training-in-progress-exercise-card/training-in-progress-exercise-card';
+import { handleFinishSuperset } from './actions/actions-superset';
+import NextSupersetModal from './modals/next-superset-modal';
 import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
-import { handleFinishSuperset } from './actions/actions-superset';
-import NextSupersetModal from './modals/next-superset-modal';
-import { useUndoneExercises } from '../../context/undone-exercises.provider';
-import { useTrainingInProgressUtils } from '../../context/training-in.progress-utils.provider';
 
 export default function TrainingInProgressSuperset() {
   const theme = useTheme();

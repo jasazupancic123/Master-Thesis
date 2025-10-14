@@ -1,19 +1,20 @@
-import { DropResult } from 'react-beautiful-dnd';
-import { TrainingComponent } from '@/controller/training/type/training-component.type';
+import type { DropResult } from 'react-beautiful-dnd';
+
+import type useTrainingMembers from '../hooks/use-members.hook';
+import type useTrainingMembersSubgroups from '../hooks/use-subgroups.hook';
+import { handleAddMembersSubgroup } from './actions-subgroups';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
-import { handleAddMembersSubgroup } from './actions-subgroups';
-import {
+import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-group-day-view/constant/subgroups.constant';
+import type { TrainingComponent } from '@/controller/training/type/training-component.type';
+import type { GroupProviderReturnType } from '@/store/group.provider';
+import type { MainProviderReturnType, useMain } from '@/store/main.provider';
+import type {
   TrainerDayViewProviderReturnType,
   TrainerDayViewProviderReturnTypeDefined,
 } from '@/store/trainer-day-view.provider';
-import useTrainingMembersSubgroups from '../hooks/use-subgroups.hook';
-import useTrainingMembers from '../hooks/use-members.hook';
-import { MainProviderReturnType, useMain } from '@/store/main.provider';
-import { GroupProviderReturnType, useGroup } from '@/store/group.provider';
-import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-group-day-view/constant/subgroups.constant';
 
 export const handleOnDragEnd = async (
   input: { result: DropResult },

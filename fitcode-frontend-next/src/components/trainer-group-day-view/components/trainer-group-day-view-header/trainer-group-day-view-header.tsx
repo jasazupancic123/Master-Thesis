@@ -6,16 +6,16 @@ import weekOfYear from 'dayjs/plugin/weekOfYear';
 import React from 'react';
 import toast from 'react-hot-toast';
 
+import { DIVIDER_HEIGHT, MAX_WIDTH } from '../../constant/dimensions.constant';
+import { useTrainerDayViewHeaderSticky } from './hooks/use-sticky';
 import { CommonService } from '@/common/service/common.service';
+import SelectedMemberReport from '@/components/selected-member/selected-member-report/selected-member-report';
+import SelectedMemberWelness from '@/components/selected-member/selected-member-welness/selected-member-welness';
+import TrainingMembers from '@/components/training-members/training-members';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 import HorizontalItemsList from '@/util/horizontal-items-list/horizontal-items-list';
-import { DIVIDER_HEIGHT, MAX_WIDTH } from '../../constant/dimensions.constant';
-import SelectedMemberReport from '@/components/selected-member/selected-member-report/selected-member-report';
-import SelectedMemberWelness from '@/components/selected-member/selected-member-welness/selected-member-welness';
-import TrainingMembers from '@/components/training-members/training-members';
-import { useTrainerDayViewHeaderSticky } from './hooks/use-sticky';
 
 dayjs.extend(weekOfYear);
 

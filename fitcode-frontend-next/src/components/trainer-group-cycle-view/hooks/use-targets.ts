@@ -1,7 +1,8 @@
-import { Target } from '@/controller/target/type/target.type';
+import { useEffect, useState } from 'react';
+
+import type { Target } from '@/controller/target/type/target.type';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
-import { useEffect, useState } from 'react';
 
 export default function useTrainingCycleViewTargets() {
   const { components } = useMain();

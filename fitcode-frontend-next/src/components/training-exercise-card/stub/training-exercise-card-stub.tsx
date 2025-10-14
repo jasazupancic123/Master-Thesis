@@ -4,10 +4,10 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useState } from 'react';
 
-import type { TrainingExerciseCardProps } from '../../trainer-group-day-view/props/props';
+import StubTrainingExerciseCardCollapsedSets from '../components/training-exercise-card-sets/components/training-exercise-card-sets-collapsed/training-exercise-card-collapsed-sets-stub';
+import type { TrainingExerciseCardProps } from '@/components/trainer-group-day-view/props/props';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
-import StubTrainingExerciseCardCollapsedSets from '../components/training-exercise-card-sets/components/training-exercise-card-sets-collapsed/training-exercise-card-collapsed-sets-stub';
 
 export default function StubTrainingExerciseCard(
   props: Pick<TrainingExerciseCardProps, 'exercise'> & {

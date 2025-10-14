@@ -1,6 +1,7 @@
+import { useEffect, useState } from 'react';
+
 import { GroupService } from '@/controller/group/group.service';
 import { useGroup } from '@/store/group.provider';
-import { useEffect, useState } from 'react';
 
 export default function useTrainerCycleViewCycles() {
   const { group } = useGroup();

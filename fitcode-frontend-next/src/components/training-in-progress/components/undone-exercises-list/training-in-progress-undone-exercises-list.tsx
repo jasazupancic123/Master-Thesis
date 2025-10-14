@@ -1,9 +1,9 @@
 import { Box, Typography } from '@mui/material';
 
+import { useUndoneExercises } from '../../context/undone-exercises.provider';
+import TrainingInProgressExerciseSet from '@/components/training-in-progress/components/training-in-progress-exercise-set/training-in-progress-exercise-set';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
-import TrainingInProgressExerciseSet from '@/components/training-in-progress/components/training-in-progress-exercise-set/training-in-progress-exercise-set';
-import { useUndoneExercises } from '../../context/undone-exercises.provider';
 
 export default function UndoneExercisesList() {
   const { undoneExercises } = useUndoneExercises();

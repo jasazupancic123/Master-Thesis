@@ -1,10 +1,15 @@
 import { Box, Tooltip } from '@mui/material';
+import { useState } from 'react';
 
-import SelectInput from '../../../util/select-input/select-input';
+import { handleSetMainSet } from './actions/actions-main-set';
+import { onMethodChange } from './actions/actions-method';
+import { handleSetPeriodizationType } from './actions/actions-periodization-type';
+import PeriodizeModal from './modals/periodize-modal';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
+import { AFTER_SETS } from '@/components/trainer-group-day-view/constant/after-sets.constant';
 import type { AfterSet } from '@/controller/component/type/after-set.type';
 import type { Method } from '@/controller/method/type/method.type';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
@@ -13,12 +18,7 @@ import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
-import { handleSetMainSet } from './actions/actions-main-set';
-import { handleSetPeriodizationType } from './actions/actions-periodization-type';
-import { onMethodChange } from './actions/actions-method';
-import PeriodizeModal from './modals/periodize-modal';
-import { useState } from 'react';
-import { AFTER_SETS } from '@/components/trainer-group-day-view/constant/after-sets.constant';
+import SelectInput from '@/util/select-input/select-input';
 
 export default function TrainingComponentHeaderMenu() {
   const screenSize = useScreenSize();

@@ -1,13 +1,14 @@
-import { TrackingMethod } from '@/common/enum/tracking-method.enum';
-import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
-import { ChildrenProps } from '@/common/type/props.type';
-import { SetState } from '@/common/type/state.type';
-import { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
-import { useAthleteHeader } from '@/store/athlete-header.provider';
-import { useTrainingInProgress } from '@/store/training-in-progress.provider';
-import { useTraining } from '@/store/training.provider';
 import dayjs from 'dayjs';
 import { createContext, useContext, useEffect, useState } from 'react';
+
+import { TrackingMethod } from '@/common/enum/tracking-method.enum';
+import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
+import type { ChildrenProps } from '@/common/type/props.type';
+import type { SetState } from '@/common/type/state.type';
+import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
+import { useAthleteHeader } from '@/store/athlete-header.provider';
+import { useTraining } from '@/store/training.provider';
+import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 
 interface TrainingInProgressUtilsProps {
   elapsedTime: number;

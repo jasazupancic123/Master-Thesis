@@ -8,18 +8,18 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-
-import MyModal from '../../../../util/modal/modal';
-import { UserRole } from '@/controller/profile/enum/user-role.enum';
-import useInstitutionRegisterMemberForm from './hooks/use-form';
-import { handleChange, handleSubmit } from './actions/actions-form';
-import { useMain } from '@/store/main.provider';
-import { useDashboard } from '@/store/dashboard.provider';
-import useInstitutionMembers from './hooks/use-institution-members';
 import { useRouter } from 'next/navigation';
-import { FirebaseFunctionsUtil } from '@/common/firebase/firebase-functions.util';
+
+import { handleChange, handleSubmit } from './actions/actions-form';
 import { handleAddExistingUser } from './actions/actions-register-users';
+import useInstitutionRegisterMemberForm from './hooks/use-form';
+import useInstitutionMembers from './hooks/use-institution-members';
+import { FirebaseFunctionsUtil } from '@/common/firebase/firebase-functions.util';
 import { InstitutionController } from '@/controller/institution/institution.controller';
+import type { UserRole } from '@/controller/profile/enum/user-role.enum';
+import { useDashboard } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
+import MyModal from '@/util/modal/modal';
 
 interface RegisterUsersDashboardProps {
   registerRole: UserRole;

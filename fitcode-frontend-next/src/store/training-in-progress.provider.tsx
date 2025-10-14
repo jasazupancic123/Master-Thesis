@@ -41,7 +41,7 @@ export const TrainingInProgressProvider = (props: ChildrenProps) => {
   const router = useRouter();
 
   const controller = TrainingController.getInstance();
-  
+
   const { children } = props;
 
   const [selectedSuperset, setSelectedSuperset] = useState<

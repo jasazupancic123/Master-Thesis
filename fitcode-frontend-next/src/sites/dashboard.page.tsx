@@ -3,20 +3,13 @@
 import { ArrowForward } from '@mui/icons-material';
 import { Fab, Tooltip, Typography } from '@mui/material';
 import { Box } from '@mui/material';
-import { useRouter } from 'next/navigation';
 import { redirect } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import toast from 'react-hot-toast';
 
 import { LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS } from '@/common/constant/navigation.constant';
 import { isTrainer } from '@/common/firebase/firebase-auth.util';
-import { handleApiRequest } from '@/common/type/state.type';
-import AddGroupModal from '@/components/dashboard/components/dashboard-groups/modals/dashboard-add-group-modal';
 import DashboardGroups from '@/components/dashboard/components/dashboard-groups/dashboard-groups';
 import RegisterUsersDashboard from '@/components/dashboard/components/dashboard-register-users-modal/dashboard-register-users-modal';
-import MyModal from '@/util/modal/modal';
-import type { AuthUser } from '@/controller/auth/type/user.type';
-import { GroupController } from '@/controller/group/group.controller';
 import { GroupService } from '@/controller/group/group.service';
 import type { Institution } from '@/controller/institution/type/institution.type';
 import { UserRole } from '@/controller/profile/enum/user-role.enum';
@@ -24,6 +17,7 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
+import MyModal from '@/util/modal/modal';
 
 export default function DashboardPage() {
   const screenSize = useScreenSize();
@@ -35,7 +29,6 @@ export default function DashboardPage() {
     institutions,
     selectedInstitution,
     setSelectedInstitution,
-    setDetectedChanges,
     selectedGroup,
     setSelectedGroup,
   } = useDashboard();

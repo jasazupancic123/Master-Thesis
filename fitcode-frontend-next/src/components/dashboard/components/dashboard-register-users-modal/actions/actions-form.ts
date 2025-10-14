@@ -1,13 +1,14 @@
-import { UseDashboardReturnType } from '@/store/dashboard.provider';
-import { UseInstitutionRegisterMemberFormReturnType } from '../hooks/use-form';
-import { UseInstitutionMembersReturnType } from '../hooks/use-institution-members';
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
-import { UserRole } from '@/controller/profile/enum/user-role.enum';
-import { MainProviderReturnType } from '@/store/main.provider';
-import { handleApiRequest } from '@/common/type/state.type';
+
+import type { UseInstitutionRegisterMemberFormReturnType } from '../hooks/use-form';
+import type { UseInstitutionMembersReturnType } from '../hooks/use-institution-members';
 import { BACKEND_API_BASE_URL } from '@/common/constant/api.constant';
-import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
-import { FirebaseFunctionsUtil } from '@/common/firebase/firebase-functions.util';
+import type { FirebaseFunctionsUtil } from '@/common/firebase/firebase-functions.util';
+import { handleApiRequest } from '@/common/type/state.type';
+import { UserRole } from '@/controller/profile/enum/user-role.enum';
+import type { UseDashboardReturnType } from '@/store/dashboard.provider';
+import type { MainProviderReturnType } from '@/store/main.provider';
 
 export const handleChange = (
   input: { e: React.ChangeEvent<HTMLInputElement> },

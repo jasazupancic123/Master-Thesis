@@ -1,8 +1,10 @@
 import { Box, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
-import { Fragment, useEffect } from 'react';
+import { Fragment } from 'react';
 
-import SelectInput from '../../../../util/select-input/select-input';
+import { useMultiCycleSliderCyclesProvider } from '../../context/cycles.provider';
+import type { UseSliderPropertiesReturnType } from '../multi-cycle-slider/hooks/use-slider-properties';
+import { updateCycleState } from './actions/actions-cycle';
 import TrainingYearCycleComponentSelectItem from './components/training-year-cycle-component-select-item.tsx/training-year-cycle-component-select-item';
 import {
   COOLDOWN_ID,
@@ -14,11 +16,7 @@ import type { Target } from '@/controller/target/type/target.type';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import useMultiCycleSliderProperties, {
-  UseSliderPropertiesReturnType,
-} from '../multi-cycle-slider/hooks/use-slider-properties';
-import { updateCycleState } from './actions/actions-cycle';
-import { useMultiCycleSliderCyclesProvider } from '../../context/cycles.provider';
+import SelectInput from '@/util/select-input/select-input';
 
 interface CycleComponentsProps {
   useSliderProperties: UseSliderPropertiesReturnType;

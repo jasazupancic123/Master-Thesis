@@ -1,6 +1,5 @@
 import dayjs from 'dayjs';
 
-import { COLOR } from '@/common/constant/color.constant';
 import type { SetState } from '@/common/type/state.type';
 import type { AuthUser } from '@/controller/auth/type/user.type';
 import { WellnessChartDataType } from '@/controller/profile/enum/wellness-chart-data-type.enum';

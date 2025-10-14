@@ -1,11 +1,12 @@
-import { handleApiRequest } from '@/common/type/state.type';
-import { SliderCyclesProviderReturnType } from '@/components/trainer-group-year-view/context/cycles.provider';
-import { GroupController } from '@/controller/group/group.controller';
-import { Cycle } from '@/controller/group/type/cycle.type';
-import { GroupProviderReturnType } from '@/store/group.provider';
-import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
 import { v4 } from 'uuid';
+
+import { handleApiRequest } from '@/common/type/state.type';
+import type { SliderCyclesProviderReturnType } from '@/components/trainer-group-year-view/context/cycles.provider';
+import type { GroupController } from '@/controller/group/group.controller';
+import type { Cycle } from '@/controller/group/type/cycle.type';
+import type { GroupProviderReturnType } from '@/store/group.provider';
 
 type AddCycleInput = Pick<Cycle, 'name' | 'from' | 'to' | 'description'>;
 

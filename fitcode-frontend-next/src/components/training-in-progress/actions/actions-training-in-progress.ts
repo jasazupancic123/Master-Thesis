@@ -1,7 +1,8 @@
-import { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
-import { TrainingInProgressProviderReturnType } from '@/store/training-in-progress.provider';
-import { TrainingProviderReturnTypeDefined } from '@/store/training.provider';
 import dayjs from 'dayjs';
+
+import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
+import type { TrainingProviderReturnTypeDefined } from '@/store/training.provider';
+import type { TrainingInProgressProviderReturnType } from '@/store/training-in-progress.provider';
 
 export function handleInitTrainingInProgressComponent(context: {
   useTraining: TrainingProviderReturnTypeDefined;

@@ -1,19 +1,19 @@
-import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
-import { ParamType } from '@/controller/component/enum/param.enum';
-import type { Exercise } from '@/controller/exercise/type/exercise.type';
-import type { Method } from '@/controller/method/type/method.type';
-import { CustomWorkloadsSubgroupsService } from '@/controller/training/custom-workloads-subgroups.service';
-import type { TrainingComponent } from '@/controller/training/type/training-component.type';
-import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { Training } from '@/controller/training/type/training.type';
 import { updateSupersets } from './actions-supersets';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
-import { GroupProviderReturnType } from '@/store/group.provider';
-import { TrainerDayViewProviderReturnTypeDefined } from '@/store/trainer-day-view.provider';
-import { SetState } from '@/common/type/state.type';
+import type { SetState } from '@/common/type/state.type';
+import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
+import { ParamType } from '@/controller/component/enum/param.enum';
+import type { Exercise } from '@/controller/exercise/type/exercise.type';
+import type { Method } from '@/controller/method/type/method.type';
+import { CustomWorkloadsSubgroupsService } from '@/controller/training/custom-workloads-subgroups.service';
+import type { Training } from '@/controller/training/type/training.type';
+import type { TrainingComponent } from '@/controller/training/type/training-component.type';
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import type { GroupProviderReturnType } from '@/store/group.provider';
+import type { TrainerDayViewProviderReturnTypeDefined } from '@/store/trainer-day-view.provider';
 
 export function getTrainingExercisesFromExercises(
   exercisesIdsToAdd: string[],

@@ -1,12 +1,11 @@
-import { Step } from '@/common/enum/step.enum';
+import type {
+  FaceLandmarker,
+  FaceLandmarkerResult,
+} from '@mediapipe/tasks-vision';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import toast from 'react-hot-toast';
-import {
-  BASE_ASSET_URL,
-  FACE_LANDMARKER_MODEL_URL,
-  FaceCaptureProps,
-} from '../face-capture';
-import { FaceLandmarker, FaceLandmarkerResult } from '@mediapipe/tasks-vision';
+
+import { drawGuide, drawProgress } from '../actions/actions-canvas';
 import {
   captureFrame,
   computeBBoxFromLandmarks,
@@ -17,10 +16,12 @@ import {
   startLoop,
   stopLoop,
 } from '../actions/actions-processing';
-import { drawGuide, drawProgress } from '../actions/actions-canvas';
 import { playSuccessSound } from '../actions/actions-utils';
-import { UseFaceCaptureUtilsReturnType } from './use-utils';
-import { UseFaceCaptureDisplayReturnType } from './use-display';
+import type { FaceCaptureProps } from '../face-capture';
+import { BASE_ASSET_URL, FACE_LANDMARKER_MODEL_URL } from '../face-capture';
+import type { UseFaceCaptureDisplayReturnType } from './use-display';
+import type { UseFaceCaptureUtilsReturnType } from './use-utils';
+import { Step } from '@/common/enum/step.enum';
 
 export type UseFaceCaptureProcessingReturnType = ReturnType<
   typeof useFaceCaptureProcessing

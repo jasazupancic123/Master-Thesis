@@ -4,12 +4,12 @@ import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import * as React from 'react';
 
-import BottomNavigation from './components/bottom-navigation';
 import AthleteSidebar from './components/athlete-sidebar';
+import BottomNavigation from './components/bottom-navigation';
 import { TrackingMethod } from '@/common/enum/tracking-method.enum';
+import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
 import Logo from '@/util/logo/logo';
 
 export default function AthleteHeader() {

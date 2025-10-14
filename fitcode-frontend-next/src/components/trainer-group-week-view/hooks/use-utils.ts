@@ -1,6 +1,3 @@
-import { CommonService } from '@/common/service/common.service';
-import { EventType } from '@/controller/group/enum/event-type.enum';
-import { useGroup } from '@/store/group.provider';
 import {
   PointerSensor,
   TouchSensor,
@@ -9,6 +6,10 @@ import {
 } from '@dnd-kit/core';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
+
+import type { CommonService } from '@/common/service/common.service';
+import type { EventType } from '@/controller/group/enum/event-type.enum';
+import { useGroup } from '@/store/group.provider';
 
 export type UseWeekViewUtilsReturnType = ReturnType<typeof useWeekViewUtils>;
 

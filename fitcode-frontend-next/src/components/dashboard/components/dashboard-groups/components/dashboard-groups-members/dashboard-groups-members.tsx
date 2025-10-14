@@ -3,19 +3,19 @@ import { Avatar, Box, IconButton, Tooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import { useRouter } from 'next/navigation';
 
-import { AddMembersModal } from '../../../../modals/add-members-modal';
-import CustomDivider from '../../../../../../util/custom-divider/custom-divider';
+import { handleRemoveAthleteFromGroup } from './actions/actions-users';
+import useDashboardGroupsMembersUsers from './hooks/use-users';
+import useDashboardGroupsMembersUtils from './hooks/use-utils';
 import DashboardEditAthleteModal from './modals/dashboard-edit-athlete-modal/dashboard-edit-athlete-modal';
-import { SearchBar } from '../../../../../../util/search-bar/search-bar';
 import { isManager, isTrainer } from '@/common/firebase/firebase-auth.util';
+import { AddMembersModal } from '@/components/dashboard/modals/add-members-modal';
 import { GroupController } from '@/controller/group/group.controller';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import useDashboardGroupsMembersUsers from './hooks/use-users';
-import { handleRemoveAthleteFromGroup } from './actions/actions-users';
-import useDashboardGroupsMembersUtils from './hooks/use-utils';
+import CustomDivider from '@/util/custom-divider/custom-divider';
+import { SearchBar } from '@/util/search-bar/search-bar';
 
 export default function DashboardGroupsMembers() {
   const theme = useTheme();

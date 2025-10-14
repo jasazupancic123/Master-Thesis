@@ -9,8 +9,11 @@ import toast from 'react-hot-toast';
 
 import { WellnessAnthropometry } from '@/common/enum/wellnes-anthropometry.enum';
 import { handleApiRequest } from '@/common/type/state.type';
+import AthleteOptionsContainer from '@/components/athlete/athlete-options-container/athlete-options-container';
+import AthleteWellnessForm from '@/components/athlete/athlete-wellness-form/athlete-wellness-form';
 import AthleteAnthropometryForm from '@/components/athlete-anthropometry-form/athlete-anthropometry-form';
 import { paintHeatmaps } from '@/components/training-component/training-component-layout/components/muscle-heatmap-view/actions/actions-color-heatmap';
+import { MuscleService } from '@/controller/exercise/muscle.service';
 import { ProfileController } from '@/controller/profile/profile.controller';
 import type {
   CreateWellness,
@@ -18,9 +21,6 @@ import type {
 } from '@/controller/profile/type/wellness.type';
 import { setCachedWellness } from '@/session-cache/wellness.session-cache';
 import { useWellness } from '@/store/wellness-provider';
-import { MuscleService } from '@/controller/exercise/muscle.service';
-import AthleteOptionsContainer from '@/components/athlete/athlete-options-container/athlete-options-container';
-import AthleteWellnessForm from '@/components/athlete/athlete-wellness-form/athlete-wellness-form';
 
 export async function submitWellness(
   input: CreateWellness,

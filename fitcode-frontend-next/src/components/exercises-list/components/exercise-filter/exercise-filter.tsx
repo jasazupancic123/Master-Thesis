@@ -9,13 +9,13 @@ import {
 } from '@mui/material';
 import { useState } from 'react';
 
+import renderAttributeFilter from '../render-attribute-filter/render-attribute-filter';
 import type { Pagination } from '@/common/type/paginate.type';
 import type { SetState } from '@/common/type/state.type';
 import type { Attribute } from '@/controller/attribute/type/attribute.type';
 import { ExerciseAttributeService } from '@/controller/exercise/exercise-attribute.service';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
 import type { AttributeFilters } from '@/sites/exercises.page';
-import renderAttributeFilter from '../render-attribute-filter/render-attribute-filter';
 
 type AttributeValue =
   | string

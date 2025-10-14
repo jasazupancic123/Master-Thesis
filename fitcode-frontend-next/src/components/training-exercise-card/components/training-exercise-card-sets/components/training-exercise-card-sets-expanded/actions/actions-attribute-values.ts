@@ -1,19 +1,17 @@
 import type { SetStateAction } from 'react';
 
+import { updateSelectedExercisesExpandedSets } from './actions-expanded-sets';
+import type { SetState } from '@/common/type/state.type';
+import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-group-day-view/constant/subgroups.constant';
+import { updateTraining } from '@/components/training-exercise-card/actions/actions-training';
 import type { Attribute } from '@/controller/attribute/type/attribute.type';
 import { CustomWorkloadsSubgroupsService } from '@/controller/training/custom-workloads-subgroups.service';
 import type { ExerciseSet } from '@/controller/training/type/exercise-set.type';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
 import type { Superset } from '@/controller/training/type/superset.type';
+import type { Training } from '@/controller/training/type/training.type';
+import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { TrainerDayViewProviderReturnTypeDefined } from '@/store/trainer-day-view.provider';
-import { GroupProviderReturnType } from '@/store/group.provider';
-import { updateSelectedExercisesExpandedSets } from './actions-expanded-sets';
-import { updateTraining } from '@/components/training-exercise-card/actions/actions-training';
-import { Training } from '@/controller/training/type/training.type';
-import { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { SetState } from '@/common/type/state.type';
-import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-group-day-view/constant/subgroups.constant';
 
 export function updateExerciseAttributeValues(
   input: {

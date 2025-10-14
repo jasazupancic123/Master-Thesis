@@ -11,9 +11,11 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material';
 
-import ExerciseMembersInProgress from '../../../training-exercise-card/components/exercise-members-in-progress/exercise-members-in-progress';
-import TrainingExerciseCardContainer from '../../../training-exercise-card/components/training-exercise-card-container/training-exercise-card-container';
+import useSupersetExerciseMenu from './hooks/use-menu';
+import useSupersetExerciseSortable from './hooks/use-sortable';
 import { deleteSupersetExercise } from './state';
+import ExerciseMembersInProgress from '@/components/training-exercise-card/components/exercise-members-in-progress/exercise-members-in-progress';
+import TrainingExerciseCardContainer from '@/components/training-exercise-card/components/training-exercise-card-container/training-exercise-card-container';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
 import type { Superset } from '@/controller/training/type/superset.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
@@ -21,8 +23,6 @@ import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
-import useSupersetExerciseSortable from './hooks/use-sortable';
-import useSupersetExerciseMenu from './hooks/use-menu';
 
 interface SupersetExerciseProps {
   exercise: TrainingExercise;

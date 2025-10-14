@@ -12,12 +12,12 @@ import {
   YAxis,
 } from 'recharts';
 
-import MuscleMapWithTooltip from '../../../../muscle-map-with-tooltip/muscle-map-with-tooltip';
 import { paintHeatmaps } from './actions/actions-color-heatmap';
 import { theme } from '@/app/style';
 import HeatmapBack from '@/assets/svg/heatmap-back.svg';
 import HeatmapFront from '@/assets/svg/heatmap-front.svg';
 import { HEATMAP_COLORS } from '@/common/constant/color.constant';
+import MuscleMapWithTooltip from '@/components/muscle-map-with-tooltip/muscle-map-with-tooltip';
 import { MuscleService } from '@/controller/exercise/muscle.service';
 import type { MuscleTip } from '@/controller/exercise/type/muscle-tip.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';

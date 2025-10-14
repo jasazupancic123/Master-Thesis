@@ -17,7 +17,6 @@ import {
 import Link from 'next/link';
 import { useState } from 'react';
 
-import SelectInputHorizontal from '../../../../../util/select-input-horizontal/select-input-horizontal';
 import {
   LINK_PROFILE,
   LINK_SETTINGS,
@@ -29,6 +28,7 @@ import type { Institution } from '@/controller/institution/type/institution.type
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
+import SelectInputHorizontal from '@/util/select-input-horizontal/select-input-horizontal';
 
 export default function DashboardMenuMobile() {
   const { institutions, selectedInstitution, setSelectedInstitution } =

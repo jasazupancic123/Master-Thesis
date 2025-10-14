@@ -2,9 +2,18 @@ import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import { Box, Grid2, IconButton } from '@mui/material';
 import toast from 'react-hot-toast';
 
-import { ExerciseParam } from '../../../../../exercise-param/exercise-param';
-import LeftRightExerciseText from '../../../../../../util/left-right-exercise-text/left-right-exercise-text';
+import { getCorrectValuesForExerciseParam } from '../../actions/actions-exercise-param';
+import { combineMinMax, getParamMinMax } from '../../actions/actions-method';
+import {
+  updateAttributeType,
+  updateAttributeValue,
+  updateSetNumbers,
+} from './actions/actions-attribute';
+import { getMethodMinMax } from './actions/actions-method';
+import useExerciseCollapsedSetsSetNumber from './hooks/use-set-number';
 import type { SetState } from '@/common/type/state.type';
+import { ExerciseParam } from '@/components/exercise-param/exercise-param';
+import { getLAndRValues } from '@/components/training-exercise-card/actions/actions-attribute-value';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import { ParamType } from '@/controller/component/enum/param.enum';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
@@ -14,16 +23,7 @@ import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
-import useExerciseCollapsedSetsSetNumber from './hooks/use-set-number';
-import { getMethodMinMax } from './actions/actions-method';
-import { combineMinMax, getParamMinMax } from '../../actions/actions-method';
-import {
-  updateAttributeType,
-  updateAttributeValue,
-  updateSetNumbers,
-} from './actions/actions-attribute';
-import { getCorrectValuesForExerciseParam } from '../../actions/actions-exercise-param';
-import { getLAndRValues } from '../../../../actions/actions-attribute-value';
+import LeftRightExerciseText from '@/util/left-right-exercise-text/left-right-exercise-text';
 
 export interface TrainingExerciseCardCollapsedSetsProps {
   component: TrainingComponent;

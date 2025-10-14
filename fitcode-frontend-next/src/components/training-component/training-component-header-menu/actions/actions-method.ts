@@ -1,12 +1,12 @@
-import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
+import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import { VolWorkSetType } from '@/controller/component/enum/param.enum';
-import { Method } from '@/controller/method/type/method.type';
-import { ExerciseSet } from '@/controller/training/type/exercise-set.type';
-import { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { GroupProviderReturnType } from '@/store/group.provider';
-import { MainProviderReturnType } from '@/store/main.provider';
-import { TrainerDayViewProviderReturnTypeDefined } from '@/store/trainer-day-view.provider';
+import type { Method } from '@/controller/method/type/method.type';
+import type { ExerciseSet } from '@/controller/training/type/exercise-set.type';
+import type { TrainingComponent } from '@/controller/training/type/training-component.type';
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import type { GroupProviderReturnType } from '@/store/group.provider';
+import type { MainProviderReturnType } from '@/store/main.provider';
+import type { TrainerDayViewProviderReturnTypeDefined } from '@/store/trainer-day-view.provider';
 
 export function onMethodChange(
   input: {

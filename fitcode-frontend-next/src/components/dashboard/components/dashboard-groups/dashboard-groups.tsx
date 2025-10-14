@@ -6,18 +6,18 @@ import { Box } from '@mui/material';
 import { useRef, useState } from 'react';
 
 import DashboardGroupsMembers from './components/dashboard-groups-members/dashboard-groups-members';
-import HorizontalItemsList from '../../../../util/horizontal-items-list/horizontal-items-list';
-import SimpleCircle from '../../../../util/simple-circle/simple-circle';
-import { MAX_WIDTH } from '../../../trainer-group-day-view/constant/dimensions.constant';
+import AddGroupModal from './modals/dashboard-add-group-modal';
 import { ADD_GROUP } from '@/common/constant/add-group.constant';
 import { isManager } from '@/common/firebase/firebase-auth.util';
+import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
 import { GroupService } from '@/controller/group/group.service';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import EditableTextField from '@/util/editable-text-field/editable-text-field';
-import AddGroupModal from './modals/dashboard-add-group-modal';
+import HorizontalItemsList from '@/util/horizontal-items-list/horizontal-items-list';
+import SimpleCircle from '@/util/simple-circle/simple-circle';
 
 export default function DashboardGroups() {
   const theme = useTheme();

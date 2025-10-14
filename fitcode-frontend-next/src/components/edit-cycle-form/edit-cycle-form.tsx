@@ -5,13 +5,13 @@ import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { handleDeleteCycle } from '../trainer-group-year-view/components/multi-cycle-slider/actions/actions-cycle';
-import { useRouter } from 'next/navigation';
+import { useMultiCycleSliderCyclesProvider } from '../trainer-group-year-view/context/cycles.provider';
 import { GroupController } from '@/controller/group/group.controller';
 import { useGroup } from '@/store/group.provider';
-import { useMultiCycleSliderCyclesProvider } from '../trainer-group-year-view/context/cycles.provider';
 
 export default function EditCycleForm() {
   const router = useRouter();

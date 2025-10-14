@@ -3,16 +3,16 @@
 import { Box, Button, Typography } from '@mui/material';
 import { useRouter } from 'next/navigation';
 
+import { reset } from '../actions/actions-processing';
+import { uploadFaceCaptures } from '../actions/actions-upload';
+import type { FaceCaptureProps } from '../face-capture';
+import type { UseFaceCaptureProcessingReturnType } from '../hooks/use-processing';
+import type { UseFaceCaptureUtilsReturnType } from '../hooks/use-utils';
 import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
+import type { ModalProps } from '@/common/type/modal-props.type';
 import { AuthController } from '@/controller/auth/auth.controller';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
-import { ModalProps } from '@/common/type/modal-props.type';
 import MyModal from '@/util/modal/modal';
-import { reset } from '../actions/actions-processing';
-import { FaceCaptureProps } from '../face-capture';
-import { UseFaceCaptureUtilsReturnType } from '../hooks/use-utils';
-import { UseFaceCaptureProcessingReturnType } from '../hooks/use-processing';
-import { uploadFaceCaptures } from '../actions/actions-upload';
 
 const firebaseStorage = FirebaseStorageUtil.Instance;
 

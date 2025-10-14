@@ -1,8 +1,9 @@
-import { SetState } from '@/common/type/state.type';
-import { RefObject } from 'react';
+import type { RefObject } from 'react';
+
+import type { FaceCaptures, FacePreviews } from '../types/face.type';
+import type { Landmark, Scored } from '../types/landmark.type';
 import { Step } from '@/common/enum/step.enum';
-import { Landmark, Scored } from '../types/landmark.type';
-import { FaceCaptures, FacePreviews } from '../types/face.type';
+import type { SetState } from '@/common/type/state.type';
 
 // Load Mediapipe Tasks Vision dynamically in the browser
 export async function createDetector(baseAssetUrl: string, modelUrl: string) {

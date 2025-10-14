@@ -1,5 +1,7 @@
 import { Box, Divider } from '@mui/material';
 
+import UserWellnessSlider from './components/user-wellness-slider';
+import useTip from './hooks/use-tip';
 import FatigueIcon from '@/assets/icons/Fatigue.svg';
 import SleepIcon from '@/assets/icons/Sleep.svg';
 import SorenessIcon from '@/assets/icons/Soreness.svg';
@@ -7,11 +9,9 @@ import HeatmapBack from '@/assets/svg/heatmap-back.svg';
 import HeatmapFront from '@/assets/svg/heatmap-front.svg';
 import { HEATMAP_COLORS } from '@/common/constant/color.constant';
 import type { SetState } from '@/common/type/state.type';
+import MuscleMapWithTooltip from '@/components/muscle-map-with-tooltip/muscle-map-with-tooltip';
 import type { Wellness } from '@/controller/profile/type/wellness.type';
 import { useScreenSize } from '@/store/screen-size.provider';
-import UserWellnessSlider from './components/user-wellness-slider';
-import useTip from './hooks/use-tip';
-import MuscleMapWithTooltip from '@/components/muscle-map-with-tooltip/muscle-map-with-tooltip';
 
 interface Props {
   onSubmit: (_data: Partial<Wellness>) => void | Promise<void>;

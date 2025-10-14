@@ -5,13 +5,13 @@ import { Box, IconButton, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import React from 'react';
 
-import FaceCapturePreviewsModal from './modals/face-capture-previews-modal';
-import { Step } from '@/common/enum/step.enum';
-import type { SetState } from '@/common/type/state.type';
-import useFaceCaptureUtils from './hooks/use-utils';
 import useFaceCaptureDisplay from './hooks/use-display';
 import useFaceCaptureProcessing from './hooks/use-processing';
-import { FaceCaptures, FacePreviews } from './types/face.type';
+import useFaceCaptureUtils from './hooks/use-utils';
+import FaceCapturePreviewsModal from './modals/face-capture-previews-modal';
+import type { FaceCaptures, FacePreviews } from './types/face.type';
+import { Step } from '@/common/enum/step.enum';
+import type { SetState } from '@/common/type/state.type';
 
 export const BASE_ASSET_URL =
   'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.5/wasm';

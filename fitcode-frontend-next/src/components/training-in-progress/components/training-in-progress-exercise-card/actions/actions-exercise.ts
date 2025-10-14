@@ -1,12 +1,9 @@
 import { updateExerciseAttributeValues } from '@/components/training-exercise-card/components/training-exercise-card-sets/components/training-exercise-card-sets-expanded/actions/actions-attribute-values';
-import {
-  IntType,
-  ParamType,
-  VolType,
-} from '@/controller/component/enum/param.enum';
-import { TrainingExerciseRecording } from '@/controller/training/type/training-exercise.type';
-import { TrainingInProgressProviderReturnType } from '@/store/training-in-progress.provider';
-import { TrainingProviderReturnTypeDefined } from '@/store/training.provider';
+import type { ParamType } from '@/controller/component/enum/param.enum';
+import { IntType, VolType } from '@/controller/component/enum/param.enum';
+import type { TrainingExerciseRecording } from '@/controller/training/type/training-exercise.type';
+import type { TrainingProviderReturnTypeDefined } from '@/store/training.provider';
+import type { TrainingInProgressProviderReturnType } from '@/store/training-in-progress.provider';
 
 export const updateExerciseValues = (
   input: {

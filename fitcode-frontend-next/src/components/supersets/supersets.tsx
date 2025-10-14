@@ -11,9 +11,15 @@ import { Box, Grid2, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 
 import AddExerciseForm from '../add-exercise-form/add-exercise-form';
-import MyModal from '../../util/modal/modal';
-import Superset from './components/superset/superset';
+import { NUM_MAX_SUPERSETS } from '../trainer-group-day-view/constant/supersets.constant';
 import StubTrainingExerciseCard from '../training-exercise-card/stub/training-exercise-card-stub';
+import { onDragEndExercise } from './actions/actions-drag-exercise';
+import { handleAddExerciseToSupersetComponent } from './actions/actions-training-exercise';
+import Superset from './components/superset/superset';
+import useSupersetsExercises from './hooks/use-exercises';
+import useSelectedExercisesIds from './hooks/use-selected-exercises-ids';
+import useSupersetsSetsNumbers from './hooks/use-sets-numbers';
+import useSupersetsUtils from './hooks/use-utils';
 import { ADD_SUPERSET_DROPPABLE_ID } from '@/common/constant/add-superset-droppable-id.constant';
 import type { SetState } from '@/common/type/state.type';
 import { VolWorkSetType } from '@/controller/component/enum/param.enum';
@@ -22,13 +28,7 @@ import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { SupersetsProvider } from '@/store/supersets.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
-import { onDragEndExercise } from './actions/actions-drag-exercise';
-import { NUM_MAX_SUPERSETS } from '../trainer-group-day-view/constant/supersets.constant';
-import useSupersetsSetsNumbers from './hooks/use-sets-numbers';
-import useSelectedExercisesIds from './hooks/use-selected-exercises-ids';
-import useSupersetsExercises from './hooks/use-exercises';
-import useSupersetsUtils from './hooks/use-utils';
-import { handleAddExerciseToSupersetComponent } from './actions/actions-training-exercise';
+import MyModal from '@/util/modal/modal';
 
 interface SupersetsProps {
   openAddExerciseModal: boolean;

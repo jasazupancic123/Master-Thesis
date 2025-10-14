@@ -1,5 +1,6 @@
-import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 import { useEffect, useState } from 'react';
+
+import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 
 export default function useSelectedExercisesIds() {
   const { component, selectedSubgroup, supersets } = useTrainerDayViewContext();

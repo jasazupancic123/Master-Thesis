@@ -4,11 +4,11 @@ import Typography from '@mui/material/Typography';
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
 
-import MyModal from '../../util/modal/modal';
 import type { TrainingCycleViewWeekProps } from '../trainer-group-cycle-view/types/type';
+import TrainingWeekDates from './components/training-week-date';
 import type { Training } from '@/controller/training/type/training.type';
 import { useMain } from '@/store/main.provider';
-import TrainingWeekDates from './components/training-week-date';
+import MyModal from '@/util/modal/modal';
 
 export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
   const { components } = useMain();

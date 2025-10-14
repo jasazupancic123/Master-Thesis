@@ -11,11 +11,11 @@ import type { Component } from '@/controller/component/type/component.type';
 import type { Target } from '@/controller/target/type/target.type';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
 import type { TrainingController } from '@/controller/training/training.controller';
+import { TrainingService } from '@/controller/training/training.service';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { GroupProviderReturnType } from '@/store/group.provider';
-import { MainProviderReturnType } from '@/store/main.provider';
-import { TrainingService } from '@/controller/training/training.service';
+import type { GroupProviderReturnType } from '@/store/group.provider';
+import type { MainProviderReturnType } from '@/store/main.provider';
 
 export async function handleClickDateCell(
   controller: TrainingController,
@@ -264,7 +264,7 @@ async function handleCreateTraining(
 
   const { components, exercises, methods } = useMain;
 
-  const { group, cycle, trainings, setTrainings, setCycle } = useGroup;
+  const { group, cycle, trainings, setTrainings } = useGroup;
 
   if (!selectedComponents.length) return; // toast.error('Select at least one component to add');
 

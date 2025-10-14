@@ -1,7 +1,6 @@
 import type { Attribute } from '@/controller/attribute/type/attribute.type';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import type { ExerciseSet } from '@/controller/training/type/exercise-set.type';
-
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 
 export const getLAndRValues = (input: {

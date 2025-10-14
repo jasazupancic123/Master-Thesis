@@ -1,4 +1,4 @@
-import { SetState } from './state.type';
+import type { SetState } from './state.type';
 
 export interface ModalProps {
   open: boolean;

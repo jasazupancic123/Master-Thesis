@@ -1,5 +1,5 @@
-import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
-import { Attribute } from '@/controller/attribute/type/attribute.type';
+import type { Attribute } from '@/controller/attribute/type/attribute.type';
+import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 
 export function getParamMinMax(
   param: Attribute,

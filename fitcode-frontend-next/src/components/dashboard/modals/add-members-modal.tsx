@@ -10,8 +10,8 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
-import { SearchBar } from '../../../util/search-bar/search-bar';
 import { theme } from '@/app/style';
+import type { ModalProps } from '@/common/type/modal-props.type';
 import { handleApiRequest, type SetState } from '@/common/type/state.type';
 import type { AuthUser } from '@/controller/auth/type/user.type';
 import { GroupController } from '@/controller/group/group.controller';
@@ -19,7 +19,7 @@ import type { Group } from '@/controller/group/type/group.type';
 import type { Institution } from '@/controller/institution/type/institution.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import MyModal from '@/util/modal/modal';
-import { ModalProps } from '@/common/type/modal-props.type';
+import { SearchBar } from '@/util/search-bar/search-bar';
 
 export type AddMembersModalProps = {
   title?: string;

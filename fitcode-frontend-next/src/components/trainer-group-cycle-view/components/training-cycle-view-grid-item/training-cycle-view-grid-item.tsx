@@ -4,13 +4,13 @@ import Box from '@mui/material/Box';
 import React, { useRef } from 'react';
 import toast from 'react-hot-toast';
 
-import type { SvgC } from '../../../muscle-map-with-tooltip/muscle-map-with-tooltip';
 import type { TrainingCycleViewGridItemProps } from '../../types/type';
+import useTrainingCycleComponents from './hooks/use-components';
 import { CommonService } from '@/common/service/common.service';
 import { getComponentIcon } from '@/common/service/util/icons.util';
+import type { SvgC } from '@/components/muscle-map-with-tooltip/muscle-map-with-tooltip';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import useTrainingCycleComponents from './hooks/use-components';
 
 const commonService = CommonService.instance;
 

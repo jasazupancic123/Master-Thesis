@@ -1,16 +1,16 @@
 import { Box, Button, TextField, Typography } from '@mui/material';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 
-import { AddMembersModal } from '../../../modals/add-members-modal';
-import MyModal from '../../../../../util/modal/modal';
+import type { ModalProps } from '@/common/type/modal-props.type';
 import { handleApiRequest } from '@/common/type/state.type';
+import { AddMembersModal } from '@/components/dashboard/modals/add-members-modal';
 import type { AuthUser } from '@/controller/auth/type/user.type';
+import { GroupController } from '@/controller/group/group.controller';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
-import { ModalProps } from '@/common/type/modal-props.type';
-import toast from 'react-hot-toast';
-import { useRouter } from 'next/navigation';
-import { GroupController } from '@/controller/group/group.controller';
+import MyModal from '@/util/modal/modal';
 
 export default function AddGroupModal(props: ModalProps) {
   const router = useRouter();

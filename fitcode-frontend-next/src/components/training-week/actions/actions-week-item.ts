@@ -1,10 +1,11 @@
-import { handleApiRequest } from '@/common/type/state.type';
-import { GroupEvent } from '@/controller/group/type/group-event.type';
-import { TrainingController } from '@/controller/training/training.controller';
-import { TrainingComponentWithTrainingId } from '@/controller/training/type/training-component.type';
-import { GroupProviderReturnType } from '@/store/group.provider';
-import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
+
+import { handleApiRequest } from '@/common/type/state.type';
+import type { GroupEvent } from '@/controller/group/type/group-event.type';
+import { TrainingController } from '@/controller/training/training.controller';
+import type { TrainingComponentWithTrainingId } from '@/controller/training/type/training-component.type';
+import type { GroupProviderReturnType } from '@/store/group.provider';
 
 export const handleUpdateTrainingTimes = async (
   input: {

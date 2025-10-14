@@ -9,17 +9,17 @@ import {
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 
+import {
+  deleteSelectedExercises,
+  handleSelectedExercisesSelection,
+} from './actions/actions-selected-exercises';
+import { handleSelectTrainingComponent } from './actions/actions-training-component';
 import CompletedMembersGroup from './components/completed-members-group';
 import { CommonService } from '@/common/service/common.service';
 import type { SetState } from '@/common/type/state.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { useGroup } from '@/store/group.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
-import {
-  deleteSelectedExercises,
-  handleSelectedExercisesSelection,
-} from './actions/actions-selected-exercises';
-import { handleSelectTrainingComponent } from './actions/actions-training-component';
 
 const commonService = CommonService.instance;
 

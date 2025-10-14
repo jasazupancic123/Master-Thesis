@@ -6,6 +6,10 @@ import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 import React from 'react';
 
+import {
+  getFilteredTrainings,
+  handleClickDateCell,
+} from '../actions/actions-week-date';
 import { CommonService } from '@/common/service/common.service';
 import type { SetState } from '@/common/type/state.type';
 import { TrainingGridItem } from '@/components/trainer-group-cycle-view/components/training-cycle-view-grid-item/training-cycle-view-grid-item';
@@ -17,10 +21,6 @@ import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
-import {
-  getFilteredTrainings,
-  handleClickDateCell,
-} from '../actions/actions-week-date';
 
 interface TrainingWeekDatesProps {
   week: dayjs.Dayjs[];

@@ -11,9 +11,15 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 
-import MyModal from '../../../../../../../../util/modal/modal';
+import { updateUserProfile } from '../../actions/actions-users';
+import {
+  handleChangeProfile,
+  handleChangeUser,
+} from './actions/actions-profile';
+import useDashboardEditAthleteModalUseProfile from './hooks/use-profile';
 import { SPORTS } from '@/common/constant/sport.constant';
 import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
+import type { ModalProps } from '@/common/type/modal-props.type';
 import { type SetState } from '@/common/type/state.type';
 import type { AuthUser } from '@/controller/auth/type/user.type';
 import { Gender } from '@/controller/profile/enum/gender.enum';
@@ -22,13 +28,7 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import FileUpload from '@/util/file-upload/file-upload';
-import { ModalProps } from '@/common/type/modal-props.type';
-import { updateUserProfile } from '../../actions/actions-users';
-import useDashboardEditAthleteModalUseProfile from './hooks/use-profile';
-import {
-  handleChangeProfile,
-  handleChangeUser,
-} from './actions/actions-profile';
+import MyModal from '@/util/modal/modal';
 
 const firebaseStorage = FirebaseStorageUtil.Instance;
 

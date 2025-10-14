@@ -3,10 +3,10 @@ import {
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
 import { CustomWorkloadsSubgroupsService } from '@/controller/training/custom-workloads-subgroups.service';
-import { Superset } from '@/controller/training/type/superset.type';
-import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { GroupProviderReturnType } from '@/store/group.provider';
-import { TrainerDayViewProviderReturnType } from '@/store/trainer-day-view.provider';
+import type { Superset } from '@/controller/training/type/superset.type';
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import type { GroupProviderReturnType } from '@/store/group.provider';
+import type { TrainerDayViewProviderReturnType } from '@/store/trainer-day-view.provider';
 
 export function handleSelectedExercisesSelection(context: {
   useTrainerDayViewContext: TrainerDayViewProviderReturnType;

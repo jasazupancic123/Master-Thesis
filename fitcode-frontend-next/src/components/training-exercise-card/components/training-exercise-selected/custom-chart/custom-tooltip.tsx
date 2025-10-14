@@ -1,10 +1,11 @@
+import { Check } from '@mui/icons-material';
+import { Box, Typography } from '@mui/material';
+import type { TooltipContentProps } from 'recharts';
+
 import { theme } from '@/app/style';
 import { GRAPH_COLORS } from '@/common/constant/color.constant';
 import { ParamType } from '@/controller/component/enum/param.enum';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
-import { Check } from '@mui/icons-material';
-import { Box, Typography } from '@mui/material';
-import { TooltipContentProps } from 'recharts';
 
 export const getParamTypeColor = (type: ParamType) => {
   switch (type) {

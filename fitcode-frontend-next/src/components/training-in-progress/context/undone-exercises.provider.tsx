@@ -1,9 +1,10 @@
-import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { createContext, useContext, useEffect, useState } from 'react';
-import { useTraining } from '@/store/training.provider';
-import { SetState } from '@/common/type/state.type';
-import { ChildrenProps } from '@/common/type/props.type';
+
 import { useTrainingInProgressUtils } from './training-in.progress-utils.provider';
+import type { ChildrenProps } from '@/common/type/props.type';
+import type { SetState } from '@/common/type/state.type';
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import { useTraining } from '@/store/training.provider';
 
 interface UndoneExercisesContextProps {
   undoneExercises: TrainingExercise[];

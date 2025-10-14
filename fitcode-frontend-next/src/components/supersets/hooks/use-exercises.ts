@@ -1,5 +1,6 @@
-import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useState } from 'react';
+
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 
 export type UseSupersetExercisesReturnType = ReturnType<
   typeof useSupersetsExercises

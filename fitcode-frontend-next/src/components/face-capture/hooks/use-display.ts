@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+
 import { resizeCanvasToDisplaySize } from '../actions/actions-canvas';
 
 export type UseFaceCaptureDisplayReturnType = ReturnType<

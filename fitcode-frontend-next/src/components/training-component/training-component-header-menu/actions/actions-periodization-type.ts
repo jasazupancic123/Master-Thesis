@@ -1,9 +1,10 @@
-import { PeriodizationType } from '@/controller/training/enum/periodization-type.enum';
-import { GroupProviderReturnType } from '@/store/group.provider';
-import { TrainerDayViewProviderReturnTypeDefined } from '@/store/trainer-day-view.provider';
 import { isBefore } from 'date-fns';
 import toast from 'react-hot-toast';
-import { SetState } from '@/common/type/state.type';
+
+import type { SetState } from '@/common/type/state.type';
+import { PeriodizationType } from '@/controller/training/enum/periodization-type.enum';
+import type { GroupProviderReturnType } from '@/store/group.provider';
+import type { TrainerDayViewProviderReturnTypeDefined } from '@/store/trainer-day-view.provider';
 
 export function handleSetPeriodizationType(
   input: {
@@ -90,5 +91,4 @@ export function handleSetPeriodizationType(
   setSelectedPeriodizationType(periodizationType as PeriodizationType | null);
   setNumTrainingsWithSameTarget(numTrainingsWithSameTarget);
   setOpenModal(true);
-  setOpenModal;
 }

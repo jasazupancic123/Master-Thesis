@@ -1,6 +1,7 @@
-import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { useSupersets } from '@/store/supersets.provider';
 import { useEffect, useState } from 'react';
+
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import { useSupersets } from '@/store/supersets.provider';
 
 interface UseExerciseCollapsedSetsSetNumberProps {
   exercise: TrainingExercise;
