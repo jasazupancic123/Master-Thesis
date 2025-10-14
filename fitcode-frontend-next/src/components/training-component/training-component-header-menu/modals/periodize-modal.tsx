@@ -1,17 +1,19 @@
-import MyModal from '@/util/modal/modal';
-import { handleApiRequest, SetState } from '@/common/type/state.type';
-import { TrainingController } from '@/controller/training/training.controller';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
-import { PeriodizationType } from '@/controller/training/enum/periodization-type.enum';
-import { useRouter } from 'next/navigation';
-import { TrainingService } from '@/controller/training/training.service';
-import { useMain } from '@/store/main.provider';
-import { useGroup } from '@/store/group.provider';
-import { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { stateUpdate } from '../actions/actions-training-component';
-import toast from 'react-hot-toast';
 import { Typography } from '@mui/material';
-import { ModalProps } from '@/common/type/modal-props.type';
+import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
+
+import { stateUpdate } from '../actions/actions-training-component';
+import type { ModalProps } from '@/common/type/modal-props.type';
+import type { SetState } from '@/common/type/state.type';
+import { handleApiRequest } from '@/common/type/state.type';
+import type { PeriodizationType } from '@/controller/training/enum/periodization-type.enum';
+import { TrainingController } from '@/controller/training/training.controller';
+import { TrainingService } from '@/controller/training/training.service';
+import type { TrainingComponent } from '@/controller/training/type/training-component.type';
+import { useGroup } from '@/store/group.provider';
+import { useMain } from '@/store/main.provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
+import MyModal from '@/util/modal/modal';
 
 export default function PeriodizeModal(
   props: ModalProps & {

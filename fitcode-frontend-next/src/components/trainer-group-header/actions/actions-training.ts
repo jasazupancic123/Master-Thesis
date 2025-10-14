@@ -5,9 +5,9 @@ import type { SetState } from '@/common/type/state.type';
 import { handleApiRequest } from '@/common/type/state.type';
 import type { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
-import { TrainerDayViewProviderReturnType } from '@/store/trainer-day-view.provider';
-import { GroupProviderReturnType } from '@/store/group.provider';
-import { MainProviderReturnType } from '@/store/main.provider';
+import type { GroupProviderReturnType } from '@/store/group.provider';
+import type { MainProviderReturnType } from '@/store/main.provider';
+import type { TrainerDayViewProviderReturnType } from '@/store/trainer-day-view.provider';
 
 export async function handleUpdateMultipleTrainings(
   input: {

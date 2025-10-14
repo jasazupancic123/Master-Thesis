@@ -1,7 +1,7 @@
-import { Profile } from '@/controller/profile/type/user.type';
-import { UseDashboardEditAthleteModalUseProfileReturnType } from '../hooks/use-profile';
-import { AuthUser } from '@/controller/auth/type/user.type';
-import { SetState } from '@/common/type/state.type';
+import type { UseDashboardEditAthleteModalUseProfileReturnType } from '../hooks/use-profile';
+import type { SetState } from '@/common/type/state.type';
+import type { AuthUser } from '@/controller/auth/type/user.type';
+import type { Profile } from '@/controller/profile/type/user.type';
 
 export function handleChangeProfile<K extends keyof Profile>(
   input: {

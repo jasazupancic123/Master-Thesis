@@ -4,11 +4,11 @@ import {
 } from '@/common/constant/warmup-cooldown-ids-constants';
 import { CustomWorkloadsSubgroupsService } from '@/controller/training/custom-workloads-subgroups.service';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
-import { Subgroup } from '@/controller/training/type/subgroup.type';
-import { Superset } from '@/controller/training/type/superset.type';
-import { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { GroupProviderReturnType } from '@/store/group.provider';
-import { TrainerDayViewProviderReturnTypeDefined } from '@/store/trainer-day-view.provider';
+import type { Subgroup } from '@/controller/training/type/subgroup.type';
+import type { Superset } from '@/controller/training/type/superset.type';
+import type { TrainingComponent } from '@/controller/training/type/training-component.type';
+import type { GroupProviderReturnType } from '@/store/group.provider';
+import type { TrainerDayViewProviderReturnTypeDefined } from '@/store/trainer-day-view.provider';
 
 export function handleSetMainSet(
   input: { newMainSet: string | number },

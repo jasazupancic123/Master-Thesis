@@ -1,12 +1,13 @@
-import { CustomClaims } from '@/controller/auth/type/custom-claims.type';
-import { FaceCaptures } from '../types/face.type';
-import { User } from '@firebase/auth';
-import { handleApiRequest, SetState } from '@/common/type/state.type';
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
-import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
-import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
-import { AuthController } from '@/controller/auth/auth.controller';
-import { AuthUser } from '@/controller/auth/type/user.type';
+
+import type { FaceCaptures } from '../types/face.type';
+import type { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
+import type { SetState } from '@/common/type/state.type';
+import { handleApiRequest } from '@/common/type/state.type';
+import type { AuthController } from '@/controller/auth/auth.controller';
+import type { CustomClaims } from '@/controller/auth/type/custom-claims.type';
+import type { AuthUser } from '@/controller/auth/type/user.type';
 
 export async function uploadFaceCaptures(state: {
   customClaims: CustomClaims;

@@ -21,17 +21,17 @@ import {
 
 import TrainingExerciseCard from '../../training-exercise-card';
 import { isNumber } from './actions/actions-number';
+import CustomTooltip, {
+  getParamTypeColor,
+} from './custom-chart/custom-tooltip';
+import { TodayDot } from './custom-chart/today-dot';
+import useTrainingExerciseCardChart from './hooks/use-chart.hook';
 import { ParamType } from '@/controller/component/enum/param.enum';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
-import useTrainingExerciseCardChart from './hooks/use-chart.hook';
-import { TodayDot } from './custom-chart/today-dot';
-import CustomTooltip, {
-  getParamTypeColor,
-} from './custom-chart/custom-tooltip';
 
 interface TrainingExerciseSelectedProps {
   supersetIndex: number;

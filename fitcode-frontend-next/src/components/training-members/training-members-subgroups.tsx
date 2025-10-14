@@ -14,17 +14,17 @@ import {
 import { useTheme } from '@mui/material';
 import { Draggable, Droppable } from 'react-beautiful-dnd';
 
+import { DEFAULT_SUBGROUP_ID } from '../trainer-group-day-view/constant/subgroups.constant';
+import {
+  handleDeleteSubgroup,
+  updateSelectedAthleteSubgroup,
+} from './actions/actions-subgroups';
+import type { UseTrainingMembersReturnType } from './hooks/use-members.hook';
 import type { SetState } from '@/common/type/state.type';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
-import { UseTrainingMembersReturnType } from './hooks/use-members.hook';
-import {
-  handleDeleteSubgroup,
-  updateSelectedAthleteSubgroup,
-} from './actions/actions-subgroups';
-import { DEFAULT_SUBGROUP_ID } from '../trainer-group-day-view/constant/subgroups.constant';
 
 interface TrainingMembersSubgroupProps {
   subgroup: Subgroup;
@@ -44,13 +44,10 @@ export default function TrainingMembersSubgroup(
   const trainerDayViewContext = useTrainerDayViewContext();
 
   const { users } = mainConext;
-  const { setTrainings, setDetectedChanges } = groupContext;
 
   const {
     component,
-    setComponent,
     training,
-    setTraining,
     setSelectedSubgroup,
     selectedSubgroup,
     selectedAthlete,
@@ -224,12 +221,8 @@ export default function TrainingMembersSubgroup(
                         key={`${subgroup.id}-${member.uid}-tooltip`}
                         sx={{ p: 0, m: 0 }}
                         onClick={() => {
-                          if (!component) {
-                            console.log('returning');
-                            return;
-                          }
+                          if (!component) return;
 
-                          console.log('before updateSelectedAthleteSubgroup');
                           updateSelectedAthleteSubgroup(
                             {
                               member,

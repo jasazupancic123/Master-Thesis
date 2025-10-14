@@ -1,16 +1,17 @@
-import { Dimensions } from '@/common/type/dimensions.type';
-import { ChartWorkloadData } from '@/controller/training/type/chart-workload-data.type';
-import { useGroup } from '@/store/group.provider';
-import { useSupersets } from '@/store/supersets.provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 import { useEffect, useMemo, useState } from 'react';
-import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+
 import {
   prepareGroupAvgWorkloadsForChart,
   prepareSelectedAthleteAvgWorkloadsForChart,
 } from '../actions/actions-chart';
 import { isNumber } from '../actions/actions-number';
-import { ParamType } from '@/controller/component/enum/param.enum';
+import type { Dimensions } from '@/common/type/dimensions.type';
+import type { ParamType } from '@/controller/component/enum/param.enum';
+import type { ChartWorkloadData } from '@/controller/training/type/chart-workload-data.type';
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import { useGroup } from '@/store/group.provider';
+import { useSupersets } from '@/store/supersets.provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
 
 interface UseTrainingExerciseCardChartProps {
   exercise: TrainingExercise;

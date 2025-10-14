@@ -1,6 +1,7 @@
 'use client';
 
 import { Box } from '@mui/material';
+
 import TrainingExerciseCard from '../../training-exercise-card';
 import TrainingExerciseSelected from '../training-exercise-selected/training-exercise-selected';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';

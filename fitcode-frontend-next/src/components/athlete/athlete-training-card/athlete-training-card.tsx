@@ -9,17 +9,17 @@ import Typography from '@mui/material/Typography';
 import dayjs from 'dayjs';
 import React from 'react';
 
-import AthleteTrainingComponents from './components/athlete-training-components';
-import AthleteTrainingCardHeader from './components/athlete-training-card-header';
-import type { Training } from '@/controller/training/type/training.type';
-import { useAuthenticatedAuth } from '@/store/auth.provider';
-import useAthleteTrainingCardUtils from './hooks/use-utils';
-import useAthleteTrainingCardComponents from './hooks/use-components';
 import {
   checkIsActiveTraining,
   getDurationText,
   getNumExercises,
 } from './actions/actions-utils';
+import AthleteTrainingCardHeader from './components/athlete-training-card-header';
+import AthleteTrainingComponents from './components/athlete-training-components';
+import useAthleteTrainingCardComponents from './hooks/use-components';
+import useAthleteTrainingCardUtils from './hooks/use-utils';
+import type { Training } from '@/controller/training/type/training.type';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 
 export type AthleteTrainingCardProps = {
   training: Training;

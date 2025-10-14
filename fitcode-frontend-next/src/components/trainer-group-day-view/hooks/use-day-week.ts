@@ -1,8 +1,9 @@
+import dayjs from 'dayjs';
+import { useEffect, useState } from 'react';
+
 import { CommonService } from '@/common/service/common.service';
 import { useGroup } from '@/store/group.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
-import dayjs from 'dayjs';
-import { useEffect, useState } from 'react';
 
 const commonService = CommonService.instance;
 

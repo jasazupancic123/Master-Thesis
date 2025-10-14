@@ -6,9 +6,9 @@ import { useTheme } from '@mui/material';
 import dayjs from 'dayjs';
 import { useEffect, useRef, useState } from 'react';
 
-import LoadingOverlay from '../../util/loading-overlay/loading-overlay';
+import AthleteTrainingExerciseSets from '../athlete/athlete-training-exercise-sets/athlete-training-exercise-sets';
+import { updateExerciseValues } from '../training-in-progress/components/training-in-progress-exercise-card/actions/actions-exercise';
 import { finishSet } from '../training-in-progress/components/training-in-progress-exercise-card/actions/actions-exercise-set';
-import TrainingInProgressTempoChart from '../../common/util/tempo-chart';
 import FpsText from './components/fps-text';
 import MovementValidationHeader from './components/movement-validation-header';
 import {
@@ -22,6 +22,8 @@ import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
 import { CommonService } from '@/common/service/common.service';
 import type { SetState } from '@/common/type/state.type';
+import EnvUtil from '@/common/util/env.util';
+import TrainingInProgressTempoChart from '@/common/util/tempo-chart';
 import { FrameBitmapBuffer } from '@/controller/pose-detection/class/frame-bitmap-buffer';
 import { KeypointHistory } from '@/controller/pose-detection/class/keypoint-history';
 import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
@@ -43,9 +45,7 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
-import EnvUtil from '@/common/util/env.util';
-import { updateExerciseValues } from '../training-in-progress/components/training-in-progress-exercise-card/actions/actions-exercise';
-import AthleteTrainingExerciseSets from '../athlete/athlete-training-exercise-sets/athlete-training-exercise-sets';
+import LoadingOverlay from '@/util/loading-overlay/loading-overlay';
 
 const DEBUG = false;
 

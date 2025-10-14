@@ -1,5 +1,6 @@
-import { MuscleTip } from '@/controller/exercise/type/muscle-tip.type';
 import { useState } from 'react';
+
+import type { MuscleTip } from '@/controller/exercise/type/muscle-tip.type';
 
 export default function useTip() {
   const [tipHeatmapFront, setTipHeatmapFront] = useState<MuscleTip>({

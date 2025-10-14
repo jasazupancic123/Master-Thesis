@@ -30,6 +30,8 @@ import Logo from '../../util/logo/logo';
 import ProfileHeaderMenu from '../profile-header-menu/profile-header-menu';
 import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
 import { handleUpdateMultipleTrainings } from './actions/actions-training';
+import useTrainerGroupHeaderUtils from './hooks/use-utils';
+import AddMemberModal from './modals/add-member-modal';
 import { handleSaveGroup } from '@/app/(trainer)/groups/[group_id]/state';
 import {
   LINK_DASHBOARD,
@@ -39,7 +41,6 @@ import {
 } from '@/common/constant/navigation.constant';
 import type { GroupDateFilter } from '@/common/type/filter.type';
 import type { SetState } from '@/common/type/state.type';
-import FilterButton from '@/util/filter-button/filter-button';
 import { GroupController } from '@/controller/group/group.controller';
 import { TrainingController } from '@/controller/training/training.controller';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
@@ -47,8 +48,7 @@ import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
-import AddMemberModal from './modals/add-member-modal';
-import useTrainerGroupHeaderUtils from './hooks/use-utils';
+import FilterButton from '@/util/filter-button/filter-button';
 
 export interface TrainerGroupHeaderProps {
   filter: GroupDateFilter;

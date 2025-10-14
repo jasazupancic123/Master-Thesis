@@ -1,5 +1,5 @@
 import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-group-day-view/constant/subgroups.constant';
-import { TrainerDayViewProviderReturnType } from '@/store/trainer-day-view.provider';
+import type { TrainerDayViewProviderReturnType } from '@/store/trainer-day-view.provider';
 
 export const deselectAthlete = (context: {
   useTrainerDayViewContext: TrainerDayViewProviderReturnType;

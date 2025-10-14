@@ -1,10 +1,10 @@
 import { Avatar, Box, Tooltip as MuiTooltip, Typography } from '@mui/material';
 
+import { deselectAthlete } from './actions/actions-selected-athlete';
+import useSelectedMemberWeight from './hooks/use-weight';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
-import useSelectedMemberWeight from './hooks/use-weight';
-import { deselectAthlete } from './actions/actions-selected-athlete';
 
 export default function SelectedMemberReport() {
   const screenSize = useScreenSize();

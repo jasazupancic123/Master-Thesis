@@ -6,22 +6,16 @@ import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
-import type { SetState, SetStateNullable } from '@/common/type/state.type';
+import type { SetState } from '@/common/type/state.type';
+import { NUM_MAX_SUPERSETS } from '@/components/trainer-group-day-view/constant/supersets.constant';
 import { CustomWorkloadsSubgroupsService } from '@/controller/training/custom-workloads-subgroups.service';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
 import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { GroupProviderReturnType } from '@/store/group.provider';
-import {
-  TrainerDayViewProviderReturnType,
-  TrainerDayViewProviderReturnTypeDefined,
-} from '@/store/trainer-day-view.provider';
-import { NUM_MAX_SUPERSETS } from '@/components/trainer-group-day-view/constant/supersets.constant';
-import { DragEndEvent } from '@dnd-kit/core';
-import { UseSupersetExercisesReturnType } from '../hooks/use-exercises';
-import { UseSupersetsUtilsReturnType } from '../hooks/use-utils';
+import type { GroupProviderReturnType } from '@/store/group.provider';
+import type { TrainerDayViewProviderReturnTypeDefined } from '@/store/trainer-day-view.provider';
 
 export async function onDragEndExercise(
   input: {

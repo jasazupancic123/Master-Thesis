@@ -1,6 +1,7 @@
+import { useEffect, useState } from 'react';
+
 import { VolWorkSetType } from '@/controller/component/enum/param.enum';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
-import { useEffect, useState } from 'react';
 
 export default function useSupersetsSetsNumbers() {
   const { component, selectedSubgroup } = useTrainerDayViewContext();

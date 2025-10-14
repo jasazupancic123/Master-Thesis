@@ -1,8 +1,10 @@
 import { isSameDay } from 'date-fns';
+import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 
+import { useGroup } from './group.provider';
 import { useMain } from './main.provider';
 import { useScreenSize } from './screen-size.provider';
 import type {
@@ -14,20 +16,20 @@ import { CommonService } from '@/common/service/common.service';
 import type { Day } from '@/common/service/util/date.util';
 import type { Pagination } from '@/common/type/paginate.type';
 import type { ChildrenProps } from '@/common/type/props.type';
-import {
-  handleApiRequest,
-  SetState,
-  SetStateNullable,
-} from '@/common/type/state.type';
+import type { SetState, SetStateNullable } from '@/common/type/state.type';
+import { handleApiRequest } from '@/common/type/state.type';
 import { firestoreSerialize } from '@/common/util/firebase.util';
 import { optimisticUpdate } from '@/common/util/optimistic-update';
 import type { AuthUser } from '@/controller/auth/type/user.type';
+import type { Component } from '@/controller/component/type/component.type';
 import { Controller } from '@/controller/controller';
 import { ExerciseService } from '@/controller/exercise/exercise.service';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
+import type { Method } from '@/controller/method/type/method.type';
 import type { Profile } from '@/controller/profile/type/user.type';
 import type { WellnessZScore } from '@/controller/profile/type/wellness.type';
 import { TrainingController } from '@/controller/training/training.controller';
+import { TrainingService } from '@/controller/training/training.service';
 import type { Subgroup } from '@/controller/training/type/subgroup.type';
 import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
@@ -38,11 +40,6 @@ import {
   type UserProgress,
   WorkloadService,
 } from '@/controller/training/workload.service';
-import { useGroup } from './group.provider';
-import { Component } from '@/controller/component/type/component.type';
-import { Method } from '@/controller/method/type/method.type';
-import dayjs from 'dayjs';
-import { TrainingService } from '@/controller/training/training.service';
 
 const commonService = CommonService.instance;
 const firestore = FirebaseFirestoreUtil.Instance;

@@ -1,15 +1,16 @@
+import { v4 } from 'uuid';
+
 import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
 import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-group-day-view/constant/subgroups.constant';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
-import { Subgroup } from '@/controller/training/type/subgroup.type';
-import { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { SupersetsProviderReturnType } from '@/store/supersets.provider';
-import { TrainerDayViewProviderReturnTypeDefined } from '@/store/trainer-day-view.provider';
-import { v4 } from 'uuid';
+import type { Subgroup } from '@/controller/training/type/subgroup.type';
+import type { TrainingComponent } from '@/controller/training/type/training-component.type';
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import type { SupersetsProviderReturnType } from '@/store/supersets.provider';
+import type { TrainerDayViewProviderReturnTypeDefined } from '@/store/trainer-day-view.provider';
 
 export function getFieldsFromSubgroup(
   input: {

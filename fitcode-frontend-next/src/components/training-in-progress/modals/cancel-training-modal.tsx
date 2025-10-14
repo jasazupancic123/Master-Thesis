@@ -1,7 +1,8 @@
-import MyModal from '@/util/modal/modal';
 import { Typography } from '@mui/material';
+
 import { useTrainingInProgressUtils } from '../context/training-in.progress-utils.provider';
-import { ModalProps } from '@/common/type/modal-props.type';
+import type { ModalProps } from '@/common/type/modal-props.type';
+import MyModal from '@/util/modal/modal';
 
 export default function CancelTrainingModal(props: ModalProps) {
   const { open, setOpen } = props;

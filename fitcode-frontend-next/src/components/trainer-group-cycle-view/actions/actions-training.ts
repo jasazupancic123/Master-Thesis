@@ -1,14 +1,16 @@
-import { handleApiRequest, SetState } from '@/common/type/state.type';
-import { Component } from '@/controller/component/type/component.type';
-import { Exercise } from '@/controller/exercise/type/exercise.type';
-import { Method } from '@/controller/method/type/method.type';
-import { Target } from '@/controller/target/type/target.type';
-import { TrainingController } from '@/controller/training/training.controller';
-import { TrainingService } from '@/controller/training/training.service';
-import { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { Training } from '@/controller/training/type/training.type';
-import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
+
+import type { SetState } from '@/common/type/state.type';
+import { handleApiRequest } from '@/common/type/state.type';
+import type { Component } from '@/controller/component/type/component.type';
+import type { Exercise } from '@/controller/exercise/type/exercise.type';
+import type { Method } from '@/controller/method/type/method.type';
+import type { Target } from '@/controller/target/type/target.type';
+import type { TrainingController } from '@/controller/training/training.controller';
+import { TrainingService } from '@/controller/training/training.service';
+import type { Training } from '@/controller/training/type/training.type';
+import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 
 export async function handleAddTrainingComponents(
   controller: TrainingController,

@@ -5,6 +5,10 @@ import { useCallback, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 
 import {
+  getTrainingExercisesFromExercises,
+  handleAddExerciseToSupersetComponent,
+} from '../supersets/actions/actions-training-exercise';
+import {
   clearHideTimer,
   findFilledGroup,
   formatName,
@@ -20,10 +24,6 @@ import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
-import {
-  getTrainingExercisesFromExercises,
-  handleAddExerciseToSupersetComponent,
-} from '../supersets/actions/actions-training-exercise';
 
 export type SvgC = React.ForwardRefExoticComponent<
   React.SVGProps<SVGSVGElement> & React.RefAttributes<SVGSVGElement>
@@ -50,18 +50,7 @@ export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
   const groupContext = useGroup();
   const trainerDayViewContext = useTrainerDayViewContext();
 
-  const { setTrainings } = groupContext || {};
-
-  const {
-    training,
-    setTraining,
-    component,
-    setComponent,
-    supersets,
-    setSupersets,
-    selectedSubgroup,
-    setSelectedSubgroup,
-  } = trainerDayViewContext || {};
+  const { training, component } = trainerDayViewContext || {};
 
   const {
     front,

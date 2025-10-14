@@ -1,5 +1,5 @@
-import { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { TrainerDayViewProviderReturnType } from '@/store/trainer-day-view.provider';
+import type { TrainingComponent } from '@/controller/training/type/training-component.type';
+import type { TrainerDayViewProviderReturnType } from '@/store/trainer-day-view.provider';
 
 export const stateUpdate = (
   input: { updatedComponent: TrainingComponent },

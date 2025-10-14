@@ -6,12 +6,12 @@ import { Box, Grid2, Stack, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 
 import SupersetExercise from '../superset-exercise/superset-exercise';
+import { getBorderGradient } from '@/common/util/border-gradient';
 import { MainSet } from '@/controller/training/enum/main-set.enum';
 import type { Superset as SupersetClass } from '@/controller/training/type/superset.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
-import { getBorderGradient } from '@/common/util/border-gradient';
 
 interface SupersetComponentProps {
   superset: SupersetClass;

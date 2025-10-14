@@ -1,7 +1,8 @@
-import { MainSet } from '@/controller/training/enum/main-set.enum';
-import { useTrainingInProgress } from '@/store/training-in-progress.provider';
-import { useTraining } from '@/store/training.provider';
 import { useMemo, useRef } from 'react';
+
+import { MainSet } from '@/controller/training/enum/main-set.enum';
+import { useTraining } from '@/store/training.provider';
+import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 
 export default function useExerciseIndexLabel() {
   const labelRef = useRef<string>('');

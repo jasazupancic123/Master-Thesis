@@ -1,9 +1,10 @@
-import { SetState } from '@/common/type/state.type';
+import { Box, Divider, Typography } from '@mui/material';
+
+import type { SetState } from '@/common/type/state.type';
 import AttributeFilter from '@/components/athlete/attribute-filter/attribute-filter';
-import { Attribute } from '@/controller/attribute/type/attribute.type';
-import { Exercise } from '@/controller/exercise/type/exercise.type';
+import type { Attribute } from '@/controller/attribute/type/attribute.type';
+import type { Exercise } from '@/controller/exercise/type/exercise.type';
 import { SearchBar } from '@/util/search-bar/search-bar';
-import { Box, Typography, Divider } from '@mui/material';
 
 interface RenderAttributeFilterProps {
   attribute: Attribute<Exercise>;

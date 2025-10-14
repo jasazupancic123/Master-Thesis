@@ -1,9 +1,9 @@
 import { Box, Tooltip, Typography } from '@mui/material';
 
+import useSelectedMemberWellnessChartData from './hooks/use-chart-data';
 import { theme } from '@/app/style';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
-import useSelectedMemberWellnessChartData from './hooks/use-chart-data';
 
 export default function SelectedMemberWelness() {
   const screenSize = useScreenSize();

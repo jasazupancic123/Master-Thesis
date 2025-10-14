@@ -1,6 +1,7 @@
-import { AuthUser } from '@/controller/auth/type/user.type';
-import { useDashboard } from '@/store/dashboard.provider';
 import { useEffect, useState } from 'react';
+
+import type { AuthUser } from '@/controller/auth/type/user.type';
+import { useDashboard } from '@/store/dashboard.provider';
 
 export type UseDashboardGroupsMembersUsersReturnType = ReturnType<
   typeof useDashboardGroupsMembersUsers

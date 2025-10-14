@@ -1,10 +1,11 @@
-import { ChildrenProps } from '@/common/type/props.type';
-import { SetState } from '@/common/type/state.type';
-import { Cycle } from '@/controller/group/type/cycle.type';
-import { useGroup } from '@/store/group.provider';
 import dayjs from 'dayjs';
 import { createContext, useContext, useEffect, useState } from 'react';
+
 import { useMultiCycleSliderYearProvider } from './years.provider';
+import type { ChildrenProps } from '@/common/type/props.type';
+import type { SetState } from '@/common/type/state.type';
+import type { Cycle } from '@/controller/group/type/cycle.type';
+import { useGroup } from '@/store/group.provider';
 
 interface SliderCyclesContextProps {
   sortedCycles: Cycle[];

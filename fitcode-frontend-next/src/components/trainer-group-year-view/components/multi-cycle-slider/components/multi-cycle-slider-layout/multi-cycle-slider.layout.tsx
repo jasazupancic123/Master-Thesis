@@ -8,16 +8,16 @@ import dayOfYear from 'dayjs/plugin/dayOfYear';
 import { useRouter } from 'next/navigation';
 import { useRef } from 'react';
 
+import type { UseSliderPropertiesReturnType } from '../../hooks/use-slider-properties';
 import MultiCycleSlider from '../../multi-cycle-slider';
+import { handleAddCycle } from './actions/actions-cycle';
+import MobileDoubleTextItems from '@/components/trainer-group-year-view/components/multi-cycle-slider/components/multi-cycle-slider-layout/components/mobile-double-text-items';
+import { useMultiCycleSliderCyclesProvider } from '@/components/trainer-group-year-view/context/cycles.provider';
+import { useMultiCycleSliderYearProvider } from '@/components/trainer-group-year-view/context/years.provider';
 import { GroupController } from '@/controller/group/group.controller';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import HorizontalItemsList from '@/util/horizontal-items-list/horizontal-items-list';
-import MobileDoubleTextItems from '@/components/trainer-group-year-view/components/multi-cycle-slider/components/multi-cycle-slider-layout/components/mobile-double-text-items';
-import { handleAddCycle } from './actions/actions-cycle';
-import { useMultiCycleSliderCyclesProvider } from '@/components/trainer-group-year-view/context/cycles.provider';
-import { UseSliderPropertiesReturnType } from '../../hooks/use-slider-properties';
-import { useMultiCycleSliderYearProvider } from '@/components/trainer-group-year-view/context/years.provider';
 
 dayjs.extend(dayOfYear);
 

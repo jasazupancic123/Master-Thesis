@@ -1,4 +1,4 @@
-import { ModalProps } from '@/common/type/modal-props.type';
+import type { ModalProps } from '@/common/type/modal-props.type';
 import EditCycleForm from '@/components/edit-cycle-form/edit-cycle-form';
 import { useMultiCycleSliderCyclesProvider } from '@/components/trainer-group-year-view/context/cycles.provider';
 import { useGroup } from '@/store/group.provider';

@@ -1,11 +1,12 @@
-import { UserRole } from '@/controller/profile/enum/user-role.enum';
-import { UseInstitutionMembersReturnType } from '../hooks/use-institution-members';
-import { UseDashboardReturnType } from '@/store/dashboard.provider';
-import { handleApiRequest } from '@/common/type/state.type';
-import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
-import { InstitutionController } from '@/controller/institution/institution.controller';
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
-import { UseInstitutionRegisterMemberFormReturnType } from '../hooks/use-form';
+
+import type { UseInstitutionRegisterMemberFormReturnType } from '../hooks/use-form';
+import type { UseInstitutionMembersReturnType } from '../hooks/use-institution-members';
+import { handleApiRequest } from '@/common/type/state.type';
+import type { InstitutionController } from '@/controller/institution/institution.controller';
+import { UserRole } from '@/controller/profile/enum/user-role.enum';
+import type { UseDashboardReturnType } from '@/store/dashboard.provider';
 
 export const handleAddExistingUser = (
   input: {

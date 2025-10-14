@@ -1,8 +1,9 @@
-import { handleApiRequest } from '@/common/type/state.type';
-import { GroupController } from '@/controller/group/group.controller';
-import { UseDashboardReturnType } from '@/store/dashboard.provider';
-import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
+
+import { handleApiRequest } from '@/common/type/state.type';
+import type { GroupController } from '@/controller/group/group.controller';
+import type { UseDashboardReturnType } from '@/store/dashboard.provider';
 
 export const handleRemoveSelectedGroup = (
   input: {
@@ -17,12 +18,8 @@ export const handleRemoveSelectedGroup = (
 
   const { useDashboard } = context;
 
-  const {
-    selectedGroup,
-    setSelectedGroup,
-    selectedInstitution,
-    setSelectedInstitution,
-  } = useDashboard;
+  const { selectedGroup, setSelectedGroup, setSelectedInstitution } =
+    useDashboard;
 
   if (!selectedGroup) return;
 

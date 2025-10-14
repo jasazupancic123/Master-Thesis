@@ -1,9 +1,9 @@
 import type { SetStateAction } from 'react';
 
 import type { SetState, SetStateNullable } from '@/common/type/state.type';
+import { updateTraining } from '@/components/training-exercise-card/actions/actions-training';
 import type { Attribute } from '@/controller/attribute/type/attribute.type';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
-import { VolWorkSetType } from '@/controller/component/enum/param.enum';
 import type { Exercise } from '@/controller/exercise/type/exercise.type';
 import { CustomWorkloadsSubgroupsService } from '@/controller/training/custom-workloads-subgroups.service';
 import type { ExerciseSet } from '@/controller/training/type/exercise-set.type';
@@ -12,11 +12,10 @@ import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { updateTraining } from '@/components/training-exercise-card/actions/actions-training';
-import { TrainerDayViewProviderReturnTypeDefined } from '@/store/trainer-day-view.provider';
-import { SupersetsProviderReturnType } from '@/store/supersets.provider';
-import { MainProviderReturnType } from '@/store/main.provider';
-import { GroupProviderReturnType } from '@/store/group.provider';
+import type { GroupProviderReturnType } from '@/store/group.provider';
+import type { MainProviderReturnType } from '@/store/main.provider';
+import type { SupersetsProviderReturnType } from '@/store/supersets.provider';
+import type { TrainerDayViewProviderReturnTypeDefined } from '@/store/trainer-day-view.provider';
 
 export function updateAttributeType(
   input: {

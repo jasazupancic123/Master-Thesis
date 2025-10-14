@@ -1,6 +1,6 @@
+import type { ExerciseMembersInProgressProps } from '../exercise-members-in-progress';
 import { useMain } from '@/store/main.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
-import { ExerciseMembersInProgressProps } from '../exercise-members-in-progress';
 
 export default function useExerciseMembersInProgress(
   props: ExerciseMembersInProgressProps

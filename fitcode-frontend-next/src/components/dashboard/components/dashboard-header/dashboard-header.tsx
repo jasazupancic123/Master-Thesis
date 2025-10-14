@@ -20,22 +20,22 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import DashboardMenuMobile from './components/dashboard-menu-mobile';
+import useDashboardHeaderUtils from './hooks/use-utils';
 import EditInstitutionModal from './modals/edit-institution-modal/edit-institution-modal';
-import FilterButton from '../../../../util/filter-button/filter-button';
-import Logo from '../../../../util/logo/logo';
-import ProfileHeaderMenu from '../../../profile-header-menu/profile-header-menu';
-import { MAX_WIDTH } from '../../../trainer-group-day-view/constant/dimensions.constant';
+import RemoveGroupModal from './modals/remove-group-modal/remove-group-modal';
 import { BACKEND_API_BASE_URL } from '@/common/constant/api.constant';
 import { LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS } from '@/common/constant/navigation.constant';
 import { isAdmin } from '@/common/firebase/firebase-auth.util';
 import type { ILink } from '@/common/type/link.type';
+import ProfileHeaderMenu from '@/components/profile-header-menu/profile-header-menu';
+import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
 import { GroupService } from '@/controller/group/group.service';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import useDashboardHeaderUtils from './hooks/use-utils';
-import RemoveGroupModal from './modals/remove-group-modal/remove-group-modal';
+import FilterButton from '@/util/filter-button/filter-button';
+import Logo from '@/util/logo/logo';
 
 export default function DashboardHeader() {
   const auth = useAuthenticatedAuth();

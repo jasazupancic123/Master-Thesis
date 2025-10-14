@@ -1,11 +1,11 @@
-import { SetState } from '@/common/type/state.type';
-import MyModal from '@/util/modal/modal';
-import { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
-import { useTrainingInProgress } from '@/store/training-in-progress.provider';
-import { useTraining } from '@/store/training.provider';
 import { Typography } from '@mui/material';
-import { RefObject } from 'react';
-import { ModalProps } from '@/common/type/modal-props.type';
+import type { RefObject } from 'react';
+
+import type { ModalProps } from '@/common/type/modal-props.type';
+import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
+import { useTraining } from '@/store/training.provider';
+import { useTrainingInProgress } from '@/store/training-in-progress.provider';
+import MyModal from '@/util/modal/modal';
 
 interface NextSupersetModalProps {
   boxRef: RefObject<HTMLDivElement | null>;

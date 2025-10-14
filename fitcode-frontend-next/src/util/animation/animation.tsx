@@ -5,8 +5,8 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { useEffect } from 'react';
 
-import Logo from '@/util/logo/logo';
 import { useScreenSize } from '@/store/screen-size.provider';
+import Logo from '@/util/logo/logo';
 
 interface AnimationProps {
   duration?: number; // in milliseconds

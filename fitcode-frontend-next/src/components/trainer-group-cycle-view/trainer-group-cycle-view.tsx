@@ -6,13 +6,20 @@ import { useRouter } from 'next/navigation';
 import React, { Fragment, useState } from 'react';
 
 import CustomDivider from '../../util/custom-divider/custom-divider';
-import ExerciseChips from '../exercise-chips/exercise-chips';
 import HorizontalItemsList from '../../util/horizontal-items-list/horizontal-items-list';
+import VerticalLinesBorders from '../../util/vertical-lines-borders/vertical-lines-borders';
+import ExerciseChips from '../exercise-chips/exercise-chips';
 import {
   DIVIDER_HEIGHT,
   MAX_WIDTH,
 } from '../trainer-group-day-view/constant/dimensions.constant';
-import VerticalLinesBorders from '../../util/vertical-lines-borders/vertical-lines-borders';
+import {
+  handleAddTrainingComponents,
+  handleDeleteTrainingComponent,
+} from './actions/actions-training';
+import useTrainerCycleViewCycles from './hooks/use-cycles';
+import useTrainerCycleViewSticky from './hooks/use-sticky';
+import useTrainingCycleViewTargets from './hooks/use-targets';
 import { CommonService } from '@/common/service/common.service';
 import TrainingWeek from '@/components/training-week/training-week';
 import { ComponentService } from '@/controller/component/component.service';
@@ -22,13 +29,6 @@ import { TrainingService } from '@/controller/training/training.service';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import {
-  handleAddTrainingComponents,
-  handleDeleteTrainingComponent,
-} from './actions/actions-training';
-import useTrainingCycleViewTargets from './hooks/use-targets';
-import useTrainerCycleViewCycles from './hooks/use-cycles';
-import useTrainerCycleViewSticky from './hooks/use-sticky';
 
 const commonService = CommonService.instance;
 

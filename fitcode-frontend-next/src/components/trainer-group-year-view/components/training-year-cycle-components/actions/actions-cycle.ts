@@ -1,6 +1,6 @@
-import { SliderCyclesProviderReturnType } from '@/components/trainer-group-year-view/context/cycles.provider';
-import { Cycle } from '@/controller/group/type/cycle.type';
-import { GroupProviderReturnType } from '@/store/group.provider';
+import type { SliderCyclesProviderReturnType } from '@/components/trainer-group-year-view/context/cycles.provider';
+import type { Cycle } from '@/controller/group/type/cycle.type';
+import type { GroupProviderReturnType } from '@/store/group.provider';
 
 export const updateCycleState = (
   input: {

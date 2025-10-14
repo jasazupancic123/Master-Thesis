@@ -1,9 +1,10 @@
-import { ModalProps } from '@/common/type/modal-props.type';
+import { useRouter } from 'next/navigation';
+
+import { handleRemoveSelectedGroup } from '../../actions/actions-group';
+import type { ModalProps } from '@/common/type/modal-props.type';
+import { GroupController } from '@/controller/group/group.controller';
 import { useDashboard } from '@/store/dashboard.provider';
 import MyModal from '@/util/modal/modal';
-import { handleRemoveSelectedGroup } from '../../actions/actions-group';
-import { useRouter } from 'next/navigation';
-import { GroupController } from '@/controller/group/group.controller';
 
 export default function RemoveGroupModal(props: ModalProps) {
   const router = useRouter();

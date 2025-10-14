@@ -1,13 +1,14 @@
-import { handleApiRequest } from '@/common/type/state.type';
-import { AuthUser } from '@/controller/auth/type/user.type';
-import { InstitutionController } from '@/controller/institution/institution.controller';
-import { useDashboard } from '@/store/dashboard.provider';
-import { useMain } from '@/store/main.provider';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { UseInstitutionRegisterMemberFormReturnType } from './use-form';
+
+import type { UseInstitutionRegisterMemberFormReturnType } from './use-form';
+import { handleApiRequest } from '@/common/type/state.type';
+import type { AuthUser } from '@/controller/auth/type/user.type';
+import { InstitutionController } from '@/controller/institution/institution.controller';
 import { UserRole } from '@/controller/profile/enum/user-role.enum';
+import { useDashboard } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
 
 export type UseInstitutionMembersReturnType = ReturnType<
   typeof useInstitutionMembers

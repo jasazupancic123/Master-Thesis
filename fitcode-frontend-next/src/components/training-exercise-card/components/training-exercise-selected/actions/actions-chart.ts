@@ -1,3 +1,7 @@
+import type { UseTrainingExerciseCardChartReturnType } from '../hooks/use-chart.hook';
+import { AttributeType } from '@/controller/attribute/enum/attribute-value.enum';
+import type { Attribute } from '@/controller/attribute/type/attribute.type';
+import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import type { VolType } from '@/controller/component/enum/param.enum';
 import { IntType } from '@/controller/component/enum/param.enum';
 import { ParamType } from '@/controller/component/enum/param.enum';
@@ -5,13 +9,9 @@ import { SetStatus } from '@/controller/training/enum/set-status.enum';
 import type { ChartWorkloadData } from '@/controller/training/type/chart-workload-data.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import type { Workload } from '@/controller/training/type/workload.type';
-import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
-import { WorkloadValue } from '@/controller/training/type/workload-value.type';
-import { AttributeType } from '@/controller/attribute/enum/attribute-value.enum';
-import { Attribute } from '@/controller/attribute/type/attribute.type';
-import { TrainerDayViewProviderReturnTypeDefined } from '@/store/trainer-day-view.provider';
-import { GroupProviderReturnType } from '@/store/group.provider';
-import { UseTrainingExerciseCardChartReturnType } from '../hooks/use-chart.hook';
+import type { WorkloadValue } from '@/controller/training/type/workload-value.type';
+import type { GroupProviderReturnType } from '@/store/group.provider';
+import type { TrainerDayViewProviderReturnTypeDefined } from '@/store/trainer-day-view.provider';
 
 export function prepareSelectedAthleteAvgWorkloadsForChart(
   input: {

@@ -2,14 +2,14 @@ import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import { Box, Grid2, IconButton } from '@mui/material';
 import toast from 'react-hot-toast';
 
-import { ExerciseParam } from '../../../../../exercise-param/exercise-param';
-import LeftRightExerciseText from '../../../../../../util/left-right-exercise-text/left-right-exercise-text';
 import type { TrainingExerciseCardCollapsedSetsProps } from './training-exercise-card-collapsed-sets';
+import { ExerciseParam } from '@/components/exercise-param/exercise-param';
+import { getLAndRValues } from '@/components/training-exercise-card/actions/actions-attribute-value';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import { ParamType } from '@/controller/component/enum/param.enum';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
-import { getLAndRValues } from '../../../../actions/actions-attribute-value';
+import LeftRightExerciseText from '@/util/left-right-exercise-text/left-right-exercise-text';
 
 export default function StubTrainingExerciseCardCollapsedSets(
   props: TrainingExerciseCardCollapsedSetsProps

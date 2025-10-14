@@ -4,6 +4,9 @@ import { useTheme } from '@mui/material';
 import toast from 'react-hot-toast';
 
 import type { ExerciseSetTracking } from '@/common/type/exercise-set-tracking-state.type';
+import { ExerciseParam } from '@/components/exercise-param/exercise-param';
+import { getLAndRValues } from '@/components/training-exercise-card/actions/actions-attribute-value';
+import { updateExerciseAttributeValues } from '@/components/training-exercise-card/components/training-exercise-card-sets/components/training-exercise-card-sets-expanded/actions/actions-attribute-values';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import { ParamType } from '@/controller/component/enum/param.enum';
 import type { ExerciseSet } from '@/controller/training/type/exercise-set.type';
@@ -12,9 +15,6 @@ import type { TrainingExercise } from '@/controller/training/type/training-exerc
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import LeftRightExerciseText from '@/util/left-right-exercise-text/left-right-exercise-text';
-import { getLAndRValues } from '@/components/training-exercise-card/actions/actions-attribute-value';
-import { ExerciseParam } from '@/components/exercise-param/exercise-param';
-import { updateExerciseAttributeValues } from '@/components/training-exercise-card/components/training-exercise-card-sets/components/training-exercise-card-sets-expanded/actions/actions-attribute-values';
 
 interface AthleteTrainingExerciseSetsProps {
   training: Training;

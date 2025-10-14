@@ -1,4 +1,3 @@
-import type { Day } from '@/common/service/util/date.util';
 import type { SetState } from '@/common/type/state.type';
 import type { Attribute } from '@/controller/attribute/type/attribute.type';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';

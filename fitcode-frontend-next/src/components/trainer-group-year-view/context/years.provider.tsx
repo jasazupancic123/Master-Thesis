@@ -1,7 +1,8 @@
-import { ChildrenProps } from '@/common/type/props.type';
-import { SetState } from '@/common/type/state.type';
 import dayjs from 'dayjs';
 import { createContext, useContext, useState } from 'react';
+
+import type { ChildrenProps } from '@/common/type/props.type';
+import type { SetState } from '@/common/type/state.type';
 
 export type SliderYearProviderReturnType = ReturnType<
   typeof useMultiCycleSliderYearProvider

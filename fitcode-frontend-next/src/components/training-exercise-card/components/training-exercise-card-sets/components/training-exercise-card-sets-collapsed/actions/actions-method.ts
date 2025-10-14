@@ -2,8 +2,8 @@ import type { Attribute } from '@/controller/attribute/type/attribute.type';
 import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import { VolWorkSetType } from '@/controller/component/enum/param.enum';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { TrainerDayViewProviderReturnType } from '@/store/trainer-day-view.provider';
-import { SupersetsProviderReturnType } from '@/store/supersets.provider';
+import type { SupersetsProviderReturnType } from '@/store/supersets.provider';
+import type { TrainerDayViewProviderReturnType } from '@/store/trainer-day-view.provider';
 
 export function getMethodMinMax(
   input: {

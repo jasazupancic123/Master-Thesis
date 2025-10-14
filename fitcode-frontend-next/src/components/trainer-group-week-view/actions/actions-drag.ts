@@ -4,10 +4,10 @@ import type { RefObject } from 'react';
 import toast from 'react-hot-toast';
 import { v4 } from 'uuid';
 
-import type { CommonService } from '@/common/service/common.service';
+import type { UseWeekViewUtilsReturnType } from '../hooks/use-utils';
 import { getAmPmItems } from './actions-items';
-import { UseWeekViewUtilsReturnType } from '../hooks/use-utils';
-import { GroupProviderReturnType } from '@/store/group.provider';
+import type { CommonService } from '@/common/service/common.service';
+import type { GroupProviderReturnType } from '@/store/group.provider';
 
 export const onDragEndAddEvent = (
   input: {

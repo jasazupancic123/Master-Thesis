@@ -19,10 +19,6 @@ import { isManager } from '@/common/firebase/firebase-auth.util';
 import { handleApiRequest } from '@/common/type/state.type';
 import DashboardEditAthleteModal from '@/components/dashboard/components/dashboard-groups/components/dashboard-groups-members/modals/dashboard-edit-athlete-modal/dashboard-edit-athlete-modal';
 import RegisterUsersDashboard from '@/components/dashboard/components/dashboard-register-users-modal/dashboard-register-users-modal';
-import HorizontalItemsList from '@/util/horizontal-items-list/horizontal-items-list';
-import MyModal from '@/util/modal/modal';
-import { SearchBar } from '@/util/search-bar/search-bar';
-import SimpleCircle from '@/util/simple-circle/simple-circle';
 import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
 import type { AuthUser } from '@/controller/auth/type/user.type';
 import { InstitutionController } from '@/controller/institution/institution.controller';
@@ -36,6 +32,10 @@ import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import FileUpload from '@/util/file-upload/file-upload';
+import HorizontalItemsList from '@/util/horizontal-items-list/horizontal-items-list';
+import MyModal from '@/util/modal/modal';
+import { SearchBar } from '@/util/search-bar/search-bar';
+import SimpleCircle from '@/util/simple-circle/simple-circle';
 
 export default function DashboardInstitutionPage() {
   const screenSize = useScreenSize();
@@ -56,8 +56,6 @@ export default function DashboardInstitutionPage() {
   const [search, setSearch] = useState('');
 
   const [openAddMemberModal, setOpenAddMemberModal] = useState(false);
-  const [openAddTrainerModal, setOpenAddTrainerModal] = useState(false);
-  const [openAddGroupModal, setOpenAddGroupModal] = useState(false);
   const [openAddMemberViaCsvModal, setOpenAddMemberViaCsvModal] =
     useState(false);
   const [openEditAthleteModal, setOpenEditAthleteModal] = useState(false);

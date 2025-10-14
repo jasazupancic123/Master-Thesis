@@ -7,16 +7,16 @@ import dayOfYear from 'dayjs/plugin/dayOfYear';
 import React, { useState } from 'react';
 import { Range } from 'react-range';
 
+import { useMultiCycleSliderCyclesProvider } from '../../context/cycles.provider';
+import { useMultiCycleSliderYearProvider } from '../../context/years.provider';
 import {
   handleChange,
   handleDrag,
   handleDragEnd,
 } from './components/multi-cycle-slider-layout/actions/actions-dragging';
-import { useGroup } from '@/store/group.provider';
-import { UseSliderPropertiesReturnType } from './hooks/use-slider-properties';
+import type { UseSliderPropertiesReturnType } from './hooks/use-slider-properties';
 import EditCycleModal from './modals/edit-cycle-modal';
-import { useMultiCycleSliderCyclesProvider } from '../../context/cycles.provider';
-import { useMultiCycleSliderYearProvider } from '../../context/years.provider';
+import { useGroup } from '@/store/group.provider';
 
 dayjs.extend(dayOfYear);
 

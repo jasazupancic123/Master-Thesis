@@ -1,4 +1,4 @@
-import { ModalProps } from '@/common/type/modal-props.type';
+import type { ModalProps } from '@/common/type/modal-props.type';
 import UsersDataGrid from '@/components/users-data-grid/users-data-grid';
 import { UserRole } from '@/controller/profile/enum/user-role.enum';
 import { useGroup } from '@/store/group.provider';

@@ -1,9 +1,10 @@
-import { CommonService } from '@/common/service/common.service';
-import { GroupEvent } from '@/controller/group/type/group-event.type';
-import { Group } from '@/controller/group/type/group.type';
-import { TrainingComponentWithTrainingId } from '@/controller/training/type/training-component.type';
-import { Training } from '@/controller/training/type/training.type';
 import dayjs from 'dayjs';
+
+import type { CommonService } from '@/common/service/common.service';
+import type { Group } from '@/controller/group/type/group.type';
+import type { GroupEvent } from '@/controller/group/type/group-event.type';
+import type { Training } from '@/controller/training/type/training.type';
+import type { TrainingComponentWithTrainingId } from '@/controller/training/type/training-component.type';
 
 export const getAmPmItems = (
   date: Date,

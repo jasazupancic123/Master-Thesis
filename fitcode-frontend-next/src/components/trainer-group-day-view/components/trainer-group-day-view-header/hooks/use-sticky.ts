@@ -1,5 +1,6 @@
-import { useScreenSize } from '@/store/screen-size.provider';
 import { useEffect, useState } from 'react';
+
+import { useScreenSize } from '@/store/screen-size.provider';
 
 export const useTrainerDayViewHeaderSticky = () => {
   const screenSize = useScreenSize();

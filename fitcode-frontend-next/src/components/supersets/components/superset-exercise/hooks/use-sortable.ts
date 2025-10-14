@@ -1,7 +1,8 @@
-import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { useSupersets } from '@/store/supersets.provider';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import { useSupersets } from '@/store/supersets.provider';
 
 export default function useSupersetExerciseSortable(
   exercise: TrainingExercise
