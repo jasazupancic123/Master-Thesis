@@ -433,7 +433,7 @@ export default function TrainingInProgressExerciseCard() {
             images={
               (selectedExercise.recordedSets || []).find(
                 (set) => set.setIndex === setIndex
-              )?.images || []
+              )?.imagesL || []
             }
             enableImagePickerSlider
           />

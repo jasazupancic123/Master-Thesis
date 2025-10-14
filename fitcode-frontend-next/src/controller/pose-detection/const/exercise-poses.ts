@@ -111,69 +111,89 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
       'toe-squat-landmine',
     ],
     data: {
-      romKeypointId: KeypointId.LEFT_HIP,
       romValueType: KeypointValueType.POSITION_Y,
       romStartDirection: ConditionDirection.NEGATIVE,
-      conditions: [
-        {
-          keypointId: KeypointId.LEFT_HIP,
-          type: KeypointValueType.POSITION_Y,
-          direction: ConditionDirection.NEGATIVE,
-          duration: 1000, // ms
-          distance: 0.04, // meters}
-        },
-      ],
+      leftSide: {
+        romKeypointId: KeypointId.LEFT_HIP,
+        conditions: [
+          {
+            keypointId: KeypointId.LEFT_HIP,
+            type: KeypointValueType.POSITION_Y,
+            direction: ConditionDirection.NEGATIVE,
+            duration: 1000, // ms
+            distance: 0.04, // meters
+          },
+        ],
+      },
     },
   },
   {
     exerciseIds: ['arm-curl', 'arm-curl-db', 'biceps-curl-db'],
     data: {
-      romKeypointId: KeypointId.RIGHT_WRIST,
       romValueType: KeypointValueType.POSITION_Y,
       romStartDirection: ConditionDirection.POSITIVE,
-      conditions: [
-        {
-          keypointId: KeypointId.RIGHT_WRIST,
-          type: KeypointValueType.POSITION_Y,
-          direction: ConditionDirection.POSITIVE,
-          duration: 750, // ms
-          distance: 0.1, // meters
-        },
-      ],
+      leftSide: {
+        romKeypointId: KeypointId.LEFT_WRIST,
+        conditions: [
+          {
+            keypointId: KeypointId.LEFT_WRIST,
+            type: KeypointValueType.POSITION_Y,
+            direction: ConditionDirection.POSITIVE,
+            duration: 750, // ms
+            distance: 0.1, // meters
+          },
+        ],
+      },
+      rightSide: {
+        romKeypointId: KeypointId.RIGHT_WRIST,
+        conditions: [
+          {
+            keypointId: KeypointId.RIGHT_WRIST,
+            type: KeypointValueType.POSITION_Y,
+            direction: ConditionDirection.POSITIVE,
+            duration: 750, // ms
+            distance: 0.1, // meters
+          },
+        ],
+      },
     },
   },
   {
     exerciseIds: ['skull-crusher-db'],
     data: {
-      romKeypointId: KeypointId.LEFT_WRIST,
       romValueType: KeypointValueType.POSITION_Y,
       romStartDirection: ConditionDirection.NEGATIVE,
-      conditions: [
-        {
-          keypointId: KeypointId.LEFT_WRIST,
-          type: KeypointValueType.POSITION_Y,
-          direction: ConditionDirection.NEGATIVE,
-          duration: 750, // ms
-          distance: 0.05, // meters
-        },
-      ],
+      leftSide: {
+        romKeypointId: KeypointId.LEFT_WRIST,
+        conditions: [
+          {
+            keypointId: KeypointId.LEFT_WRIST,
+            type: KeypointValueType.POSITION_Y,
+            direction: ConditionDirection.NEGATIVE,
+            duration: 750, // ms
+            distance: 0.05, // meters
+          },
+        ],
+      },
     },
   },
   {
     exerciseIds: ['bench-press-bb'],
     data: {
-      romKeypointId: KeypointId.LEFT_WRIST,
       romValueType: KeypointValueType.POSITION_Y,
       romStartDirection: ConditionDirection.POSITIVE,
-      conditions: [
-        {
-          keypointId: KeypointId.LEFT_WRIST,
-          type: KeypointValueType.POSITION_Y,
-          direction: ConditionDirection.POSITIVE,
-          duration: 750, // ms
-          distance: 0.15, // meters
-        },
-      ],
+      leftSide: {
+        romKeypointId: KeypointId.LEFT_WRIST,
+        conditions: [
+          {
+            keypointId: KeypointId.LEFT_WRIST,
+            type: KeypointValueType.POSITION_Y,
+            direction: ConditionDirection.POSITIVE,
+            duration: 750, // ms
+            distance: 0.15, // meters
+          },
+        ],
+      },
     },
   },
   {
@@ -188,18 +208,20 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
       'rdl-tb',
     ],
     data: {
-      romKeypointId: KeypointId.LEFT_SHOULDER,
       romValueType: KeypointValueType.POSITION_Y,
       romStartDirection: ConditionDirection.NEGATIVE,
-      conditions: [
-        {
-          keypointId: KeypointId.LEFT_SHOULDER,
-          type: KeypointValueType.POSITION_Y,
-          direction: ConditionDirection.NEGATIVE,
-          duration: 750, // ms
-          distance: 0.04, // meters
-        },
-      ],
+      leftSide: {
+        romKeypointId: KeypointId.LEFT_SHOULDER,
+        conditions: [
+          {
+            keypointId: KeypointId.LEFT_SHOULDER,
+            type: KeypointValueType.POSITION_Y,
+            direction: ConditionDirection.NEGATIVE,
+            duration: 750, // ms
+            distance: 0.04, // meters
+          },
+        ],
+      },
     },
   },
 ];

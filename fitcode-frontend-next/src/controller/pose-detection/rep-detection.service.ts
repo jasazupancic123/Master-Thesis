@@ -12,7 +12,7 @@ import { StatusDetectionService } from './status-detection.service';
 import type { ExerciseRepStartCondition } from './type/exercise-start-condition.type';
 import type { Keypoint } from './type/keypoint.type';
 import type { NumericValueFrameNum } from './type/numeric-value-frame-num';
-import type { Rep } from './type/rep.type';
+import type { RecordedReps, Rep, RepsCount } from './type/rep.type';
 import type { RepState } from './type/rep-state.type';
 import { KeypointUtil } from './util/keypoint.util';
 import { TimeUtil } from './util/time.util';
@@ -47,7 +47,7 @@ export class RepDetectionService {
   static checkRepStatus(state: {
     repStateRef: React.RefObject<RepState>;
     currentRepRef: RefObject<Rep | null>;
-    recordedRepsRef: RefObject<Rep[]>;
+    recordedReps: Rep[];
     currentFrameKeypoints: Keypoint[];
     keypointHistory: KeypointHistory;
     keypointId: KeypointId;
@@ -56,12 +56,13 @@ export class RepDetectionService {
     exerciseStartConditions: ExerciseRepStartCondition[];
     avgFps: { value: number; count: number } | null;
     initedFirstFrameInRecordingMode: RefObject<boolean>;
-    setRepCount: SetState<number>;
+    side: 'L' | 'R';
+    setRepCount: SetState<RepsCount>;
   }) {
     const {
       repStateRef,
       currentRepRef,
-      recordedRepsRef,
+      recordedReps,
       currentFrameKeypoints,
       keypointHistory,
       keypointId,
@@ -70,6 +71,7 @@ export class RepDetectionService {
       exerciseStartConditions,
       avgFps,
       initedFirstFrameInRecordingMode,
+      side,
       setRepCount,
     } = state;
 
@@ -87,7 +89,7 @@ export class RepDetectionService {
         // Check for rep end
         const { isRepDone, endKeypoint } = this.checkHasRepEnded({
           currentRepRef,
-          recordedRepsRef,
+          recordedReps,
           keypointHistory,
           direction,
           keypointId,
@@ -102,18 +104,22 @@ export class RepDetectionService {
           // Set all the times
           this.postProcessRep({
             currentRepRef,
-            recordedRepsRef,
+            recordedReps,
             keypointId,
             valueType,
             direction,
             avgFps,
           });
 
-          recordedRepsRef.current.push(currentRepRef.current);
+          recordedReps.push(currentRepRef.current);
 
-          setRepCount(recordedRepsRef.current.length);
+          setRepCount((prev) =>
+            side === 'L'
+              ? { ...prev, left: recordedReps.length }
+              : { ...prev, right: recordedReps.length }
+          );
 
-          console.log('RECORDED ', recordedRepsRef.current.length, ' REPS');
+          console.log('RECORDED ', recordedReps.length, ' REPS');
 
           repStateRef.current.status = RepStatus.IDLE; // we are now out of the rep
         }
@@ -136,7 +142,7 @@ export class RepDetectionService {
           exerciseStartConditions,
           avgFps,
           initedFirstFrameInRecordingMode,
-          recordedRepsRef,
+          recordedReps,
         });
 
         if (
@@ -150,7 +156,7 @@ export class RepDetectionService {
           repStateRef.current.status = RepStatus.IN_REP; // we are now in the rep
 
           currentRepRef.current = this.initNewRep(
-            recordedRepsRef.current.length + 1,
+            recordedReps.length + 1,
             startValue,
             startValueFrameNum,
             startValueCapturedAt,
@@ -223,7 +229,7 @@ export class RepDetectionService {
 
   private static checkHasRepEnded(state: {
     currentRepRef: RefObject<Rep | null>;
-    recordedRepsRef: RefObject<Rep[]>;
+    recordedReps: Rep[];
     keypointHistory: KeypointHistory;
     direction: ConditionDirection;
     keypointId: KeypointId;
@@ -232,7 +238,7 @@ export class RepDetectionService {
   }): { isRepDone: boolean; endKeypoint?: Keypoint } {
     const {
       currentRepRef,
-      recordedRepsRef,
+      recordedReps,
       keypointHistory,
       direction,
       keypointId,
@@ -282,7 +288,7 @@ export class RepDetectionService {
     if (
       !this.checkValueCloseEnoughToStartValue(
         currentValue,
-        recordedRepsRef,
+        recordedReps,
         currentRepRef
       )
     ) {
@@ -334,7 +340,7 @@ export class RepDetectionService {
     exerciseStartConditions: ExerciseRepStartCondition[];
     avgFps: { value: number; count: number } | null;
     initedFirstFrameInRecordingMode: RefObject<boolean>;
-    recordedRepsRef: RefObject<Rep[]>;
+    recordedReps: Rep[];
   }): {
     hasRepStarted: boolean;
     startValue?: number;
@@ -350,7 +356,7 @@ export class RepDetectionService {
       exerciseStartConditions,
       avgFps,
       initedFirstFrameInRecordingMode, // if the very first rep has been inited
-      recordedRepsRef,
+      recordedReps,
     } = state;
 
     // const isFirstRep = !initedFirstFrameInRecordingMode.current;
@@ -395,7 +401,7 @@ export class RepDetectionService {
 
     // Clamp start to be after previous rep's end
     let startValueCapturedAt = startKeypoint.capturedAt;
-    const prev = recordedRepsRef.current.at(-1);
+    const prev = recordedReps.at(-1);
     if (
       prev?.endValueTimestamp &&
       startValueCapturedAt < prev.endValueTimestamp
@@ -548,20 +554,18 @@ export class RepDetectionService {
 
   private static checkValueCloseEnoughToStartValue(
     currentValue: number,
-    recordedRepsRef: RefObject<Rep[]>,
+    recordedReps: Rep[],
     currentRepRef: RefObject<Rep | null>
   ) {
     // repStateRef.current.avgStartValue is null only on the very first rep
     const startingValue =
-      recordedRepsRef.current.length &&
-      recordedRepsRef.current[0].startValue !== undefined
-        ? recordedRepsRef.current[0].startValue
+      recordedReps.length && recordedReps[0].startValue !== undefined
+        ? recordedReps[0].startValue
         : currentRepRef.current?.startValue;
 
     const extremeValue =
-      recordedRepsRef.current.length &&
-      recordedRepsRef.current[0].extremeValue !== undefined
-        ? recordedRepsRef.current[0].extremeValue
+      recordedReps.length && recordedReps[0].extremeValue !== undefined
+        ? recordedReps[0].extremeValue
         : currentRepRef.current?.extremeValue;
 
     if (startingValue === undefined || extremeValue === undefined) return false;
@@ -905,7 +909,7 @@ export class RepDetectionService {
 
   private static async postProcessRep(state: {
     currentRepRef: RefObject<Rep | null>;
-    recordedRepsRef: RefObject<Rep[]>;
+    recordedReps: Rep[];
     keypointId: KeypointId;
     valueType: KeypointValueType;
     direction: ConditionDirection;
@@ -913,7 +917,7 @@ export class RepDetectionService {
   }) {
     const {
       currentRepRef,
-      recordedRepsRef,
+      recordedReps,
       keypointId,
       valueType,
       direction,
@@ -1062,9 +1066,8 @@ export class RepDetectionService {
       );
     }
 
-    if (recordedRepsRef.current.length > 0) {
-      const prevRep =
-        recordedRepsRef.current[recordedRepsRef.current.length - 1];
+    if (recordedReps.length > 0) {
+      const prevRep = recordedReps[recordedReps.length - 1];
       if (prevRep.endValueTimestamp) {
         currentRepRef.current.idleTimeMs = commonService.number.roundToStep(
           TimeUtil.getMsDiff(
@@ -1127,31 +1130,41 @@ export class RepDetectionService {
   }
 
   static saveRepTimesToJsonFiles = (state: {
-    recordedRepsRef: RefObject<Rep[]>;
+    recordedRepsRef: RefObject<RecordedReps>;
     selectedExercise: TrainingExercise | undefined;
   }) => {
     const { recordedRepsRef, selectedExercise } = state;
 
-    const repsData = recordedRepsRef.current.map((rep) => ({
-      repNumber: rep.repNumber,
-      idleTime: rep.idleTimeMs,
-      timeToExtremeMs: rep.timeToExtremeMs,
-      timeAtExtremeMs: rep.timeAtExtremeMs,
-      timeFromExtremeToEndMs: rep.timeFromExtremeToEndMs,
-      durationMs: rep.durationMs,
-    }));
+    const sides = [
+      recordedRepsRef.current.left,
+      recordedRepsRef.current.right,
+    ].filter((r) => r !== undefined);
 
-    const dataStr =
-      'data:text/json;charset=utf-8,' +
-      encodeURIComponent(JSON.stringify(repsData, null, 2));
-    const downloadAnchorNode = document.createElement('a');
-    downloadAnchorNode.setAttribute('href', dataStr);
-    downloadAnchorNode.setAttribute(
-      'download',
-      `${selectedExercise?.id || 'exercise'}_reps_times.json`
-    );
-    document.body.appendChild(downloadAnchorNode);
-    downloadAnchorNode.click();
-    downloadAnchorNode.remove();
+    for (const side of sides) {
+      const sideLabel =
+        side === recordedRepsRef.current.left ? 'left' : 'right';
+
+      const repsData = side.map((rep) => ({
+        repNumber: rep.repNumber,
+        idleTime: rep.idleTimeMs,
+        timeToExtremeMs: rep.timeToExtremeMs,
+        timeAtExtremeMs: rep.timeAtExtremeMs,
+        timeFromExtremeToEndMs: rep.timeFromExtremeToEndMs,
+        durationMs: rep.durationMs,
+      }));
+
+      const dataStr =
+        'data:text/json;charset=utf-8,' +
+        encodeURIComponent(JSON.stringify(repsData, null, 2));
+      const downloadAnchorNode = document.createElement('a');
+      downloadAnchorNode.setAttribute('href', dataStr);
+      downloadAnchorNode.setAttribute(
+        'download',
+        `${selectedExercise?.id || 'exercise'}_${sideLabel}reps_times.json`
+      );
+      document.body.appendChild(downloadAnchorNode);
+      downloadAnchorNode.click();
+      downloadAnchorNode.remove();
+    }
   };
 }
