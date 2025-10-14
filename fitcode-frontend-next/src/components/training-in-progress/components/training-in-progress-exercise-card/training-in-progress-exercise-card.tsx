@@ -4,7 +4,6 @@ import { useTheme } from '@mui/material';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
 
-import AthleteTrainingExerciseSets from '../../../athlete-training-exercise-sets/athlete-training-exercise-sets';
 import MobileMovementValidation from '../../../mobile-movement-validation/mobile-movement-validation';
 import SwipeableBox from '../../../../util/swipeable-box/swipeable-box';
 import ImageGallery from '../../../../common/util/image-gallery';
@@ -21,6 +20,7 @@ import {
   goToPreviousExercise,
 } from './actions/actions-exercise';
 import useExerciseIndexLabel from './hooks/use-exercise-index-label';
+import AthleteTrainingExerciseSets from '@/components/athlete/athlete-training-exercise-sets/athlete-training-exercise-sets';
 
 export default function TrainingInProgressExerciseCard() {
   const theme = useTheme();

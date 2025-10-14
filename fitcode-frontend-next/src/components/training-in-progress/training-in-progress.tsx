@@ -5,7 +5,6 @@ import { Box, Fab, Menu, MenuItem, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import React, { useEffect } from 'react';
 
-import AthleteOptionsContainer from '../athlete-options-container/athlete-options-container';
 import TrainingInProgressSuperset from './components/training-in-progress-superset/training-in-progress-superset';
 import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 import { useHorizontalOverflow } from '@/common/util/horizontal-overflow.util';
@@ -21,6 +20,7 @@ import UndoneSetsErrorModal from './modals/undone-sets-error-modal';
 import { handleInitTrainingInProgressComponent } from './actions/actions-training-in-progress';
 import { useUndoneExercises } from './context/undone-exercises.provider';
 import { useTrainingInProgressUtils } from './context/training-in.progress-utils.provider';
+import AthleteOptionsContainer from '../athlete/athlete-options-container/athlete-options-container';
 
 export default function TrainingInProgress() {
   const theme = useTheme();
