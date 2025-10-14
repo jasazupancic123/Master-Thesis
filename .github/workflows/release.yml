@@ -3,13 +3,13 @@ name: Release Merge, Build & Deploy
 on:
   push:
     tags:
-      - 'v*'             # triggers on tag pushes like v1.0.0
+      - 'v*'
   release:
-    types: [published]   # triggers when you publish a release in UI
-  workflow_dispatch:      # allows manual testing
+    types: [published]
+  workflow_dispatch:
 
 permissions:
-  contents: write         # needed for branch merge and push
+  contents: write
 
 jobs:
   merge-to-release:
@@ -35,9 +35,11 @@ jobs:
   build-and-deploy-backend:
     needs: [merge-to-release]
     runs-on: ubuntu-latest
+    environment: Production
     defaults:
       run:
         working-directory: fitcode-backend-nest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -57,6 +59,7 @@ jobs:
       - name: Build backend
         run: npm run build
 
+      # authenticate and deploy
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
@@ -67,9 +70,19 @@ jobs:
         with:
           project_id: blindoff-web-app
 
+      - name: Generate secure app.yaml with secrets
+        working-directory: fitcode-backend-nest
+        run: |
+          echo "" >> app.yaml
+          echo "env_variables:" >> app.yaml
+          echo "  NODE_ENV: 'production'" >> app.yaml
+          echo "  ADMIN_EMAIL: '${{ vars.ADMIN_EMAIL }}'" >> app.yaml
+          echo "  ADMIN_PASSWORD: '${{ vars.ADMIN_PASSWORD }}'" >> app.yaml
+          echo "  FRONTEND_WHITELIST: '${{ vars.FRONTEND_WHITELIST }}'" >> app.yaml
+
       - name: Deploy to App Engine (with retry)
         run: |
           for i in {1..3}; do
-            gcloud app deploy --project=blindoff-web-app app.yaml --quiet && break || \
+            gcloud app deploy --quiet && break || \
             echo "Retrying deploy ($i/3)..." && sleep 10
           done

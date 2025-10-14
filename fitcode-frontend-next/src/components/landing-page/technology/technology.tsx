@@ -111,6 +111,7 @@ export default function Technology(props: TechnologyProps) {
             backgroundRepeat: 'no-repeat',
             backgroundPosition: 'center',
             position: 'relative',
+            mt: 'auto',
           }}
         />
       </Box>
