@@ -38,12 +38,21 @@ const TrainingContext = createContext<TrainingContextType | undefined>(
   undefined
 );
 
+export type TrainingProviderReturnType = ReturnType<typeof useTraining>;
+
+export type TrainingProviderReturnTypeDefined = Omit<
+  ReturnType<typeof useTraining>,
+  'trainingInProgress'
+> & {
+  trainingInProgress: TrainingInProgress;
+};
+
 export const TrainingProvider = (
   props: TrainingProviderProps & ChildrenProps
 ) => {
   const { children, trainings, reports, refetchTraining } = props;
 
-  const STORED_TRAINING_IN_PROGRESS = 'fitcodeTrainingInProgress';
+  const STORED_TRAINING_IN_PROGRESS = 'blindoffTrainingInProgress';
   const [trainingInProgress, setTrainingInProgress] =
     useState<TrainingInProgress | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);

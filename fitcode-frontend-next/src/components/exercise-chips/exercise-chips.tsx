@@ -39,6 +39,7 @@ export interface ExerciseChipsProps {
 
 export default function ExerciseChips(props: ExerciseChipsProps) {
   const screenSize = useScreenSize();
+
   const {
     selected,
     components,

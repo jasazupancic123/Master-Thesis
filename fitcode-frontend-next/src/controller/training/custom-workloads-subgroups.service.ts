@@ -9,21 +9,21 @@ import type { Subgroup } from './type/subgroup.type';
 import type { Superset } from './type/superset.type';
 import type { TrainingComponent } from './type/training-component.type';
 import type { TrainingExercise } from './type/training-exercise.type';
-import { removeExerciseFromSuperset } from '@/components/superset-exercise/state';
-import { updateSupersets } from '@/components/supersets/state';
-import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-day-view/constant';
 import {
   onAddExerciseDrop,
   onDragEndExerciseToExistingSuperset,
-} from '@/components/trainer-day-view/state';
-import { removeSelectedExercisesFromSupersets } from '@/components/trainer-group-day-view/state';
-import { onMainSetChange } from '@/components/training-component-header-menu/state';
+} from '@/components/supersets/actions/actions-drag-exercise';
+import { updateSupersets } from '@/components/supersets/actions/actions-supersets';
+import { removeExerciseFromSuperset } from '@/components/supersets/components/superset-exercise/state';
+import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-group-day-view/constant/subgroups.constant';
+import { removeSelectedExercisesFromSupersets } from '@/components/training-component/training-component-card/actions/actions-selected-exercises';
+import { onMainSetChange } from '@/components/training-component/training-component-header-menu/actions/actions-main-set';
 import {
+  updateSelectedExercisesCollapsedSets,
   updateSelectedExercisesVolWorkSets,
-  updateSingleExerciseVolWorkSets as updateSingleExerciseVolWorkSetsTrainingExerciseCard,
-} from '@/components/training-exercise-card/state';
-import { updateSelectedExercisesCollapsedSets } from '@/components/training-exercise-card-sets-collapsed/state';
-import { updateSelectedExercisesExpandedSets } from '@/components/training-exercise-card-sets-expanded/state';
+  updateSingleExerciseVolWorkSets,
+} from '@/components/training-exercise-card/components/training-exercise-card-sets/components/training-exercise-card-sets-collapsed/actions/actions-attribute';
+import { updateSelectedExercisesExpandedSets } from '@/components/training-exercise-card/components/training-exercise-card-sets/components/training-exercise-card-sets-expanded/actions/actions-expanded-sets';
 
 export class CustomWorkloadsSubgroupsService {
   // when exercise is dropped on 'Add/drop exercise' area
@@ -45,6 +45,7 @@ export class CustomWorkloadsSubgroupsService {
 
       return sg;
     });
+
     return component.subgroups;
   };
 
@@ -100,16 +101,22 @@ export class CustomWorkloadsSubgroupsService {
     return component.subgroups;
   };
 
-  static updateMainSet = (
-    component: TrainingComponent,
-    selectedSubgroup: Subgroup | null,
-    mainSet: MainSet
-  ): Subgroup[] => {
+  static updateMainSet = (input: {
+    component: TrainingComponent;
+    selectedSubgroup: Subgroup | null;
+    mainSet: MainSet;
+  }): Subgroup[] => {
+    const { component, selectedSubgroup, mainSet } = input;
+
     const parentId = selectedSubgroup?.id || DEFAULT_SUBGROUP_ID;
 
     component.subgroups = component.subgroups.map((sg) => {
       if (sg.parentId && sg.parentId === parentId) {
-        const newSupersets = onMainSetChange(component, sg, mainSet);
+        const newSupersets = onMainSetChange({
+          mainSet,
+          updatedComponent: component,
+          updatedSubgroup: selectedSubgroup,
+        });
 
         return { ...sg, supersets: newSupersets, mainSet };
       }
@@ -214,7 +221,7 @@ export class CustomWorkloadsSubgroupsService {
 
       if (!subgroupExercise) continue;
 
-      updateSingleExerciseVolWorkSetsTrainingExerciseCard({
+      updateSingleExerciseVolWorkSets({
         exercise: subgroupExercise,
         setsNumbers,
         foundExercise,
@@ -265,20 +272,16 @@ export class CustomWorkloadsSubgroupsService {
 
       if (!subgroupExercise) continue;
 
-      updateSelectedExercisesCollapsedSets(
-        {
-          exercisesToUpdate: subgroupExercisesToUpdate,
-          exercise: subgroupExercise,
-          param,
-        },
-        {
-          lOrR,
-          baseParamField,
-          baseParamDefaultValue,
-          baseSelected,
-          newValue,
-        }
-      );
+      updateSelectedExercisesCollapsedSets({
+        exercisesToUpdate: subgroupExercisesToUpdate,
+        exercise: subgroupExercise,
+        param,
+        lOrR,
+        baseParamField,
+        baseParamDefaultValue,
+        baseSelected,
+        newValue,
+      });
     }
   };
 
@@ -339,22 +342,18 @@ export class CustomWorkloadsSubgroupsService {
 
       if (!subgroupExercise || !subgroupSet) continue;
 
-      updateSelectedExercisesExpandedSets(
-        {
-          exercisesToUpdate: subgroupExercisesToUpdate,
-          exercise: subgroupExercise,
-          param,
-          set: subgroupSet,
-        },
-        {
-          i,
-          lOrR,
-          baseParamField,
-          baseParamDefaultValue,
-          baseSelected,
-          newValue,
-        }
-      );
+      updateSelectedExercisesExpandedSets({
+        exercisesToUpdate: subgroupExercisesToUpdate,
+        exercise: subgroupExercise,
+        param,
+        set: subgroupSet,
+        i,
+        lOrR,
+        baseParamField,
+        baseParamDefaultValue,
+        baseSelected,
+        newValue,
+      });
     }
   };
 

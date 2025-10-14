@@ -39,7 +39,7 @@ import type { Profile } from '@/controller/profile/type/user.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useProfile } from '@/store/profile.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import FileUpload from '@/util/file-upload';
+import FileUpload from '@/util/file-upload/file-upload';
 
 const DEFAULT_MARGIN = 1;
 

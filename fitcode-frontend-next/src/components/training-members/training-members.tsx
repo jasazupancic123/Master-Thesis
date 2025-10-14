@@ -2,18 +2,15 @@
 
 import { Avatar, Box, Card, Stack, Tooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
-import { useEffect, useState } from 'react';
-import type { DropResult } from 'react-beautiful-dnd';
+import { useState } from 'react';
 import { DragDropContext } from 'react-beautiful-dnd';
 
-import {
-  DEFAULT_SUBGROUP,
-  DEFAULT_SUBGROUP_ID,
-} from '../trainer-day-view/constant';
-import { onDragEndSubgroup } from '../trainer-day-view/state';
-import TrainingMembersSubgroup from '../training-members-subgroups/training-members-subgroups';
-import { handleAddMembersSubgroup, updateSelectedAthlete } from './state';
-import type { Subgroup } from '@/controller/training/type/subgroup.type';
+import { DEFAULT_SUBGROUP_ID } from '../trainer-group-day-view/constant/subgroups.constant';
+import { handleOnDragEnd } from './actions/actions-dnd';
+import { updateSelectedAthleteSubgroup } from './actions/actions-subgroups';
+import useTrainingMembers from './hooks/use-members.hook';
+import useTrainingMembersSubgroups from './hooks/use-subgroups.hook';
+import TrainingMembersSubgroup from './training-members-subgroups';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
@@ -26,165 +23,23 @@ export default function TrainingMembers(props: TrainingMembersProps) {
   const { isSticky } = props;
   const theme = useTheme();
 
-  const { users } = useMain();
-  const { group, setDetectedChanges } = useGroup();
+  const mainContext = useMain();
+  const groupContext = useGroup();
+  const trainerDayViewContext = useTrainerDayViewContext();
+  const trainingMembersContext = useTrainingMembers();
+  const trainingMembersSubgroupsContext = useTrainingMembersSubgroups(
+    trainingMembersContext
+  );
 
-  const {
-    component,
-    setComponent,
-    training,
-    setTraining,
-    setSelectedSubgroup,
-    selectedSubgroup,
-    selectedAthlete,
-    setSelectedAthlete,
-  } = useTrainerDayViewContext();
+  const { users } = mainContext;
 
-  const [changedSubgroupIds, setChangedSubgroupIds] = useState<string[]>([]);
+  const { training, component, selectedAthlete } = trainerDayViewContext;
 
-  const item = training || group;
-  const members = users.filter((user) => item.membersIds.includes(user.uid));
+  const { members, sortedMembers, item } = trainingMembersContext;
 
-  const [subgroups, setSubgroups] = useState<Subgroup[]>([]);
+  const { subgroups } = trainingMembersSubgroupsContext;
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-
-  const sortedMembers = [...members].sort((a, b) => {
-    if (!training) return 0;
-
-    const getSubgroupIndex = (uid: string) =>
-      training.components
-        .flatMap((c) => c.subgroups)
-        .findIndex((s) => s.membersIds.includes(uid));
-
-    const subgroupIndexA = getSubgroupIndex(a.uid);
-    const subgroupIndexB = getSubgroupIndex(b.uid);
-
-    // Place users without a subgroup first
-    if (subgroupIndexA === -1 && subgroupIndexB !== -1) return -1;
-    if (subgroupIndexA !== -1 && subgroupIndexB === -1) return 1;
-
-    // If both have a subgroup, sort by subgroup index
-    return subgroupIndexA - subgroupIndexB;
-  });
-
-  useEffect(() => {
-    if (!training) return;
-
-    if (!component) {
-      setSubgroups([]);
-      return;
-    }
-
-    let subgroups = component.subgroups || [];
-    const availableMembers = members.filter(
-      (member) =>
-        !subgroups.some(
-          (subgroup: Subgroup) =>
-            subgroup.membersIds.includes(member.uid) && !subgroup.parentId
-        )
-    );
-
-    const defaultSubgroup = subgroups.find(
-      (sg) => sg.id === DEFAULT_SUBGROUP_ID
-    );
-
-    if (defaultSubgroup) {
-      const defaultSubgroupMembers = members.filter((member) =>
-        defaultSubgroup.membersIds.includes(member.uid)
-      );
-      availableMembers.push(...defaultSubgroupMembers);
-    }
-
-    // sort available members by group.membersIds
-    availableMembers.sort((a, b) => {
-      const indexA = item.membersIds.indexOf(a.uid);
-      const indexB = item.membersIds.indexOf(b.uid);
-      return indexA - indexB;
-    });
-
-    subgroups = subgroups.map((sg) => {
-      const leafSubgroup = component.subgroups.find(
-        (s) => s.parentId === sg.id
-      );
-      if (leafSubgroup) {
-        const mergedMembers = [
-          ...(sg.members || []),
-          ...(leafSubgroup.members || []),
-        ];
-        const uniqueMembers = mergedMembers.filter(
-          (m, index, self) => index === self.findIndex((t) => t.uid === m.uid)
-        );
-
-        return {
-          ...sg,
-          membersIds: [...sg.membersIds, ...leafSubgroup.membersIds].filter(
-            (id, index, self) => self.indexOf(id) === index
-          ),
-          members: uniqueMembers,
-        } as Subgroup;
-      }
-
-      if (sg.parentId === DEFAULT_SUBGROUP_ID) {
-        const newMembers = (sg.members || []).filter(
-          (m) =>
-            !subgroups.some(
-              (s) => s.id !== sg.id && s.membersIds.includes(m.uid)
-            ) && !availableMembers.some((am) => am.uid === m.uid)
-        );
-        availableMembers.push(...newMembers);
-      }
-
-      return sg;
-    });
-
-    const newSubgroups = !subgroups.some((sg) => sg.id === DEFAULT_SUBGROUP_ID)
-      ? [DEFAULT_SUBGROUP(availableMembers), ...subgroups]
-      : subgroups.map((sg) => {
-          if (sg.id === DEFAULT_SUBGROUP_ID) {
-            return {
-              ...sg,
-              membersIds: availableMembers.map((m) => m.uid),
-              members: availableMembers,
-            };
-          }
-          return sg;
-        });
-
-    setSubgroups(newSubgroups);
-  }, [training, component, selectedSubgroup]);
-
-  const handleOnDragEnd = async (result: DropResult) => {
-    const { draggableId, destination } = result;
-    if (!destination) {
-      const user = members.find((m) => m.uid === draggableId);
-      if (!user) return;
-      await handleAddMembersSubgroup(
-        { member: user },
-        {
-          training,
-          setTraining,
-          component,
-          setComponent,
-          setSelectedSubgroup,
-          setSelectedAthlete,
-          setDetectedChanges,
-        }
-      );
-    } else {
-      onDragEndSubgroup(result, {
-        subgroups,
-        setSubgroups,
-        changedSubgroupIds,
-        setChangedSubgroupIds,
-        users,
-        component,
-        setComponent,
-        training,
-        setTraining,
-      });
-    }
-  };
 
   if (selectedAthlete) return null;
 
@@ -218,7 +73,20 @@ export default function TrainingMembers(props: TrainingMembersProps) {
           border: isSticky ? '1px solid grey' : undefined,
         }}
       >
-        <DragDropContext onDragEnd={(result) => handleOnDragEnd(result)}>
+        <DragDropContext
+          onDragEnd={(result) =>
+            handleOnDragEnd(
+              { result },
+              {
+                useMain: mainContext,
+                useGroup: groupContext,
+                useTrainerDayViewContext: trainerDayViewContext,
+                useTrainingMembersSubgroups: trainingMembersSubgroupsContext,
+                useTrainingMembers: trainingMembersContext,
+              }
+            )
+          }
+        >
           {/* No members to display*/}
           {!training && sortedMembers.length === 0 && (
             <Typography variant="caption" color="textSecondary">
@@ -254,15 +122,15 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                       <Box
                         sx={{ p: 0, m: 0 }}
                         onClick={() => {
-                          updateSelectedAthlete({
-                            member,
-                            selectedAthlete,
-                            setSelectedAthlete,
-                            component,
-                            selectedSubgroup,
-                            setSelectedSubgroup,
-                            subgroupId: DEFAULT_SUBGROUP_ID,
-                          });
+                          updateSelectedAthleteSubgroup(
+                            {
+                              member,
+                              subgroupId: DEFAULT_SUBGROUP_ID,
+                            },
+                            {
+                              useTrainerDayViewContext: trainerDayViewContext,
+                            }
+                          );
                         }}
                         zIndex={1000}
                       >
@@ -309,12 +177,9 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                       key={subgroup.id}
                       subgroup={subgroup}
                       subgroupIndex={subgroupIndex}
-                      subgroupsLength={
-                        subgroups.filter((sg) => !sg.parentId).length
-                      }
                       anchorEl={anchorEl}
                       setAnchorEl={setAnchorEl}
-                      members={sortedMembers}
+                      trainingMembersContext={trainingMembersContext}
                     />
                   );
                 })}

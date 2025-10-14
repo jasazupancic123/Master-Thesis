@@ -1,7 +1,7 @@
 'use client';
 
 import dayjs from 'dayjs';
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 
 import { useMain } from './main.provider';
 import type {
@@ -20,6 +20,8 @@ const dateService = CommonService.instance.date;
 const GroupContext = createContext<GroupContextProps | null>(null);
 
 export const useGroup = () => useContext(GroupContext)!;
+
+export type GroupProviderReturnType = ReturnType<typeof useGroup>;
 
 export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
   const {
@@ -50,6 +52,13 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
   // state for arrays
   const [trainings, setTrainings] = useState(allTrainings);
   const [filteredUsers, setFilteredUsers] = useState(allUsers);
+
+  // filter trainings by cycle
+  useEffect(() => {
+    if (!cycle) return;
+    setDateFrom(dayjs(cycle.from));
+    setDateTo(dayjs(cycle.to));
+  }, [cycle]);
 
   const value: GroupContextProps = {
     filter,

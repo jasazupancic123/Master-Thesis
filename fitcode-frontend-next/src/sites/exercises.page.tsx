@@ -33,11 +33,8 @@ import { isAdmin, isManager } from '@/common/firebase/firebase-auth.util';
 import type { Pagination as PaginationType } from '@/common/type/paginate.type';
 import ExerciseChips from '@/components/exercise-chips/exercise-chips';
 import ExerciseModal from '@/components/exercise-modal/exercise-modal';
-import ExerciseFilter from '@/components/exercises-list/exercise-filter';
+import ExerciseFilter from '@/components/exercises-list/components/exercise-filter/exercise-filter';
 import ExercisesList from '@/components/exercises-list/exercises-list';
-import FileUpload from '@/util/file-upload';
-import MyModal from '@/components/modal/modal';
-import { SearchBar } from '@/components/search-bar/search-bar';
 import { ComponentService } from '@/controller/component/component.service';
 import type { Component } from '@/controller/component/type/component.type';
 import type {
@@ -48,6 +45,9 @@ import { UserRole } from '@/controller/profile/enum/user-role.enum';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
+import FileUpload from '@/util/file-upload/file-upload';
+import MyModal from '@/util/modal/modal';
+import { SearchBar } from '@/util/search-bar/search-bar';
 
 type AttributeValue =
   | string

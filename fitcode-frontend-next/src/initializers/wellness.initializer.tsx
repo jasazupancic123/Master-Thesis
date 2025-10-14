@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from 'react';
 
-import Alert from '../components/alert/alert';
 import {
   getCachedWellness,
   setCachedWellness,
 } from '../session-cache/wellness.session-cache';
+import Alert from '../util/alert/alert';
 import type { ChildrenProps } from '@/common/type/props.type';
 import { ProfileController } from '@/controller/profile/profile.controller';
 import type { Wellness } from '@/controller/profile/type/wellness.type';

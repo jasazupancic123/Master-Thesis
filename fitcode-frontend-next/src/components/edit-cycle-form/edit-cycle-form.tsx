@@ -5,25 +5,31 @@ import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-import type { SetState } from '@/common/type/state.type';
-import type { Cycle } from '@/controller/group/type/cycle.type';
+import { handleDeleteCycle } from '../trainer-group-year-view/components/multi-cycle-slider/actions/actions-cycle';
+import { useMultiCycleSliderCyclesProvider } from '../trainer-group-year-view/context/cycles.provider';
+import { GroupController } from '@/controller/group/group.controller';
+import { useGroup } from '@/store/group.provider';
 
-export interface EditCycleModalProps {
-  selectedCycle: Cycle;
-  setSelectedCycle: SetState<Cycle | null>;
-  handleDeleteCycle: () => Promise<void>;
-}
+export default function EditCycleForm() {
+  const router = useRouter();
 
-export default function EditCycleForm(props: EditCycleModalProps) {
-  const { selectedCycle, setSelectedCycle, handleDeleteCycle } = props;
+  const groupContext = useGroup();
+  const sliderCyclesContext = useMultiCycleSliderCyclesProvider();
 
-  const [cycleName, setCycleName] = useState(selectedCycle.name);
+  const { editCycle, setEditCycle } = sliderCyclesContext;
+
+  const [cycleName, setCycleName] = useState(editCycle?.name);
   const [startDate, setStartDate] = useState<Dayjs | null>(
-    dayjs(selectedCycle.from)
+    dayjs(editCycle?.from)
   );
-  const [endDate, setEndDate] = useState<Dayjs | null>(dayjs(selectedCycle.to));
+  const [endDate, setEndDate] = useState<Dayjs | null>(dayjs(editCycle?.to));
+
+  const controller = GroupController.getInstance();
+
+  if (!editCycle) return null;
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -41,7 +47,9 @@ export default function EditCycleForm(props: EditCycleModalProps) {
           value={cycleName}
           onChange={(e) => {
             setCycleName(e.target.value);
-            setSelectedCycle({ ...selectedCycle, name: e.target.value });
+            setEditCycle((prev) =>
+              !prev ? prev : { ...prev, name: e.target.value }
+            );
           }}
         />
         <DatePicker
@@ -51,10 +59,9 @@ export default function EditCycleForm(props: EditCycleModalProps) {
           onChange={(newValue) => {
             if (!newValue) return;
             setStartDate(newValue);
-            setSelectedCycle({
-              ...selectedCycle,
-              from: newValue?.toDate(),
-            });
+            setEditCycle((prev) =>
+              !prev ? prev : { ...prev, from: newValue?.toDate() }
+            );
           }}
         />
         <DatePicker
@@ -64,10 +71,9 @@ export default function EditCycleForm(props: EditCycleModalProps) {
           onChange={(newValue) => {
             if (!newValue) return;
             setEndDate(newValue);
-            setSelectedCycle({
-              ...selectedCycle,
-              to: newValue?.toDate(),
-            });
+            setEditCycle((prev) =>
+              !prev ? prev : { ...prev, to: newValue?.toDate() }
+            );
           }}
         />
 
@@ -75,7 +81,16 @@ export default function EditCycleForm(props: EditCycleModalProps) {
           variant="contained"
           color="error"
           onClick={async () => {
-            await handleDeleteCycle();
+            await handleDeleteCycle(
+              {
+                router,
+                controller,
+              },
+              {
+                useGroup: groupContext,
+                useSliderCycles: sliderCyclesContext,
+              }
+            );
           }}
         >
           Delete Cycle

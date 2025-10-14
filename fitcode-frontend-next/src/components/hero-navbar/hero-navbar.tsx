@@ -19,9 +19,9 @@ import {
   SIGN_IN_LINK_ID,
   SIGN_OUT_LINK_ID,
 } from '@/common/constant/navigation.constant';
-import Logo from '@/components/logo/logo';
 import { useAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
+import Logo from '@/util/logo/logo';
 
 interface HeroNavbarProps {
   height: string;
