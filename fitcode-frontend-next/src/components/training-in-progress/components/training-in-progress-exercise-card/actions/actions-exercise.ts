@@ -44,86 +44,94 @@ export const updateExerciseValues = (
   if (!updatableExercise) return;
 
   const selectedSet = updatableExercise.sets[setIndex];
+
   if (!selectedSet) return;
 
   let repParamField: ParamType | undefined;
   let tempoParamField: ParamType | undefined;
 
-  const repParamFieldSet = selectedSet.paramValuesL.find(
-    (p) => p.selected === VolType.Rep
-  );
-  if (repParamFieldSet) repParamField = repParamFieldSet.field as ParamType;
+  const paramValues = [
+    selectedSet.paramValuesL,
+    selectedSet.paramValuesR,
+  ].filter((p) => p !== undefined);
 
-  const tempoParamFieldSet = selectedSet.paramValuesL.find(
-    (p) => p.selected === IntType.Tempo
-  );
-  if (tempoParamFieldSet)
-    tempoParamField = tempoParamFieldSet.field as ParamType;
+  let i = -1;
+  for (const paramValue of paramValues) {
+    i++;
 
-  const repParam = updatableExercise.params.find(
-    (p) => p.field === repParamField
-  );
+    const repParamFieldSet = paramValue.find((p) => p.selected === VolType.Rep);
 
-  if (repParam) {
-    ['L'].concat(selectedSet.paramValuesR ? ['R'] : []).forEach((lOrR) => {
-      const repsCount = lOrR === 'L' ? repsCountL : repsCountR;
+    if (repParamFieldSet) repParamField = repParamFieldSet.field as ParamType;
 
-      if (repsCount === undefined) return;
+    const tempoParamFieldSet = paramValue.find(
+      (p) => p.selected === IntType.Tempo
+    );
 
-      updateExerciseAttributeValues(
-        {
-          newValue: repsCount.toString(),
-          i: setIndex,
-          set: selectedSet,
-          lOrR: lOrR as 'L' | 'R',
-          correctSelectedExercises: [updatableExercise],
-          correctExercise: updatableExercise,
-          correctParam: repParam,
-          correctSupersets: trainingInProgress.supersets,
-          correctSelectedSubgroup: null,
-        },
-        {
-          training: trainingInProgress.training,
-          component: trainingInProgress.selectedComponent,
-          setTraining: () => {},
-          setDetectedChanges: () => {},
-          setSelectedSubgroup: () => {},
-        }
-      );
-    });
-  }
+    if (tempoParamFieldSet)
+      tempoParamField = tempoParamFieldSet.field as ParamType;
 
-  const tempoParam = updatableExercise.params.find(
-    (p) => p.field === tempoParamField
-  );
+    const repParam = updatableExercise.params.find(
+      (p) => p.field === repParamField
+    );
 
-  if (tempoParam) {
-    ['L'].concat(selectedSet.paramValuesR ? ['R'] : []).forEach((lOrR) => {
-      const tempo = lOrR === 'L' ? tempoL : tempoR;
+    const tempoParam = updatableExercise.params.find(
+      (p) => p.field === tempoParamField
+    );
 
-      if (tempo === undefined || tempo === null) return;
+    if (repParam) {
+      if (i === 0 || (i === 1 && repsCountR !== undefined)) {
+        updateExerciseAttributeValues(
+          {
+            newValue:
+              i === 0 ? repsCountL.toString() : repsCountR?.toString() || '',
+            i: setIndex,
+            set: selectedSet,
+            lOrR: i === 0 ? 'L' : 'R',
+            correctSelectedExercises: [updatableExercise],
+            correctExercise: updatableExercise,
+            correctParam: repParam,
+            correctSupersets: trainingInProgress.supersets,
+            correctSelectedSubgroup: null,
+          },
+          {
+            training: trainingInProgress.training,
+            component: trainingInProgress.selectedComponent,
+            setTraining: () => {},
+            setDetectedChanges: () => {},
+            setSelectedSubgroup: () => {},
+          }
+        );
+      }
+    }
 
-      updateExerciseAttributeValues(
-        {
-          newValue: tempo.toString(),
-          i: setIndex,
-          set: selectedSet,
-          lOrR: lOrR as 'L' | 'R',
-          correctSelectedExercises: [updatableExercise],
-          correctExercise: updatableExercise,
-          correctParam: tempoParam,
-          correctSupersets: trainingInProgress.supersets,
-          correctSelectedSubgroup: null,
-        },
-        {
-          training: trainingInProgress.training,
-          component: trainingInProgress.selectedComponent,
-          setTraining: () => {},
-          setDetectedChanges: () => {},
-          setSelectedSubgroup: () => {},
-        }
-      );
-    });
+    if (tempoParam) {
+      if (
+        (i === 0 && tempoL !== undefined && tempoL !== null) ||
+        (i === 1 && tempoR !== undefined && tempoR !== null)
+      ) {
+        updateExerciseAttributeValues(
+          {
+            newValue:
+              i === 0 && tempoL ? tempoL.toString() : tempoR?.toString() || '',
+            i: setIndex,
+            set: selectedSet,
+            lOrR: i === 0 ? 'L' : 'R',
+            correctSelectedExercises: [updatableExercise],
+            correctExercise: updatableExercise,
+            correctParam: tempoParam,
+            correctSupersets: trainingInProgress.supersets,
+            correctSelectedSubgroup: null,
+          },
+          {
+            training: trainingInProgress.training,
+            component: trainingInProgress.selectedComponent,
+            setTraining: () => {},
+            setDetectedChanges: () => {},
+            setSelectedSubgroup: () => {},
+          }
+        );
+      }
+    }
   }
 
   if (updateSelectedExercise) setSelectedExercise(updatableExercise);

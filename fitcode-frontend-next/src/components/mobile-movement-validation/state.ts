@@ -25,57 +25,6 @@ import type { RepState } from '@/controller/pose-detection/type/rep-state.type';
 import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
 import EnvUtil from '@/common/util/env.util';
 
-export async function loadModel(state: {
-  setPoseLandmarker: SetState<PoseLandmarker | null>;
-  videoRef: RefObject<HTMLVideoElement | null>;
-  canvasRef: RefObject<HTMLCanvasElement | null>;
-  drawingUtilsRef: RefObject<DrawingUtils | null>;
-}) {
-  const { setPoseLandmarker, videoRef, canvasRef, drawingUtilsRef } = state;
-
-  // const modelAssetPath = '/models/pose_landmarker/pose_landmarker_lite.task'; // lite
-  // const modelAssetPath = '/models/pose_landmarker/pose_landmarker_full.task'; // full
-  const modelAssetPath = '/models/pose_landmarker/pose_landmarker_heavy.task'; // heavy
-
-  const vision = await FilesetResolver.forVisionTasks('/wasm');
-
-  const landmarker = await PoseLandmarker.createFromOptions(vision, {
-    baseOptions: {
-      modelAssetPath,
-      delegate: 'GPU',
-    },
-    runningMode: 'VIDEO',
-    numPoses: 1,
-    minPoseDetectionConfidence: 0.5,
-    minPosePresenceConfidence: 0.5,
-    minTrackingConfidence: 0.5,
-    outputSegmentationMasks: true,
-  });
-
-  setPoseLandmarker(landmarker);
-
-  if (!videoRef?.current || !canvasRef?.current) return;
-
-  const video = videoRef.current!;
-  const canvas = canvasRef.current!;
-
-  // Get native resolution from video feed
-  const w = video.videoWidth;
-  const h = video.videoHeight;
-
-  // Match canvas drawing resolution to video
-  canvas.width = w;
-  canvas.height = h;
-
-  // Match CSS display size (this ensures it visually fits)
-  canvas.style.width = '100%';
-  canvas.style.height = '100%';
-  video.style.width = '100%';
-  video.style.height = '100%';
-
-  drawingUtilsRef.current = new DrawingUtils(canvas.getContext('2d')!);
-}
-
 export async function setupVideoAndContex(state: {
   videoRef: RefObject<HTMLVideoElement | null>;
   canvasRef: RefObject<HTMLCanvasElement | null>;
@@ -268,7 +217,14 @@ export const predictWebcam = async (state: {
     if (
       ![DetectionStatus.READY, DetectionStatus.RECORDING].includes(
         statusRef.current
-      )
+      ) &&
+      [recordedRepsRef.current.left, recordedRepsRef.current.right]
+        .filter((r) => r !== undefined)
+        .flat().length === 0 &&
+      [repStateRefL.current.status, repStateRefR.current?.status]
+        .filter((s) => s !== undefined)
+        .flat()
+        .includes(RepStatus.NONE)
     ) {
       // to re-render ui every frame when not in ready or recording state
       setFps(instFps);
@@ -352,14 +308,6 @@ export const predictWebcam = async (state: {
       if (!hasPose) {
         return;
       }
-
-      // console.log(
-      //   frameCountRef.current,
-      //   frameBitmapBufferRef.current.history[0]?.frameNum,
-      //   frameBitmapBufferRef.current.history[
-      //     frameBitmapBufferRef.current.history.length - 1
-      //   ]?.frameNum
-      // );
 
       const keypoints = KeypointUtil.getDesiredKeypointsByModel(
         result.worldLandmarks[0], // unit: m, origin: center of hips

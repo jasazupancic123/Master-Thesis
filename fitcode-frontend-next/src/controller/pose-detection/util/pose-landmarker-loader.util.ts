@@ -1,6 +1,7 @@
 // lib/pose-landmarker.singleton.ts
 'use client';
 
+import EnvUtil from '@/common/util/env.util';
 import { FilesetResolver, PoseLandmarker } from '@mediapipe/tasks-vision';
 
 let poseLandmarkerPromise: Promise<PoseLandmarker> | null = null;
@@ -8,9 +9,7 @@ let poseLandmarkerPromise: Promise<PoseLandmarker> | null = null;
 export async function preloadPoseLandmarker() {
   if (!poseLandmarkerPromise) {
     poseLandmarkerPromise = (async () => {
-      const modelAssetPath =
-        '/models/pose_landmarker/pose_landmarker_full.task'; // full
-      // const modelAssetPath = '/models/pose_landmarker/pose_landmarker_heavy.task'; // heavy
+      const modelAssetPath = EnvUtil.AI.getPoseLandmarkerModelPath();
 
       const vision = await FilesetResolver.forVisionTasks('/wasm');
 
@@ -24,7 +23,7 @@ export async function preloadPoseLandmarker() {
         minPoseDetectionConfidence: 0.5,
         minPosePresenceConfidence: 0.5,
         minTrackingConfidence: 0.5,
-        outputSegmentationMasks: true,
+        outputSegmentationMasks: false,
       });
 
       return landmarker;

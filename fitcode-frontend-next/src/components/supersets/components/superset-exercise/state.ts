@@ -9,6 +9,7 @@ import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import { SetsNumbers } from '../../hooks/use-sets-numbers';
 
 export const removeExerciseFromSuperset = (
   supersets: Superset[],

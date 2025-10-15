@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react';
 
 import { VolWorkSetType } from '@/controller/component/enum/param.enum';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
+import { useSupersets } from '@/store/supersets.provider';
+
+export type SetsNumbers = { exerciseId: string; setsNumber: number }[];
 
 export default function useSupersetsSetsNumbers() {
   const { component, selectedSubgroup } = useTrainerDayViewContext();
 
-  const [setsNumbers, setSetsNumbers] = useState<
-    { exerciseId: string; setsNumber: number }[]
-  >([]);
+  const [setsNumbers, setSetsNumbers] = useState<SetsNumbers>([]);
 
   // update setsNumbers on method change
   useEffect(() => {
@@ -63,19 +64,9 @@ export default function useSupersetsSetsNumbers() {
       });
     }
 
-    if (
-      newSetsNumbers.every((s) =>
-        setsNumbers.some(
-          (sn) =>
-            sn.exerciseId === s.exerciseId && sn.setsNumber === s.setsNumber
-        )
-      )
-    )
-      return;
-
     // update sets numbers if method and ranges do not exist
     setSetsNumbers(newSetsNumbers);
-  }, [selectedSubgroup]);
+  }, [component, selectedSubgroup]);
 
   return {
     setsNumbers,

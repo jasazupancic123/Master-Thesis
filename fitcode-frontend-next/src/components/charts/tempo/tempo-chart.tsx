@@ -14,14 +14,13 @@ import { ConditionDirection } from '@/controller/pose-detection/enum/condition-d
 import type {
   RecordedReps,
   RecordedRepsInfo,
-  Rep,
-  RepInfo,
 } from '@/controller/pose-detection/type/rep.type';
 import type { TrainingExerciseRecording } from '@/controller/training/type/training-exercise.type';
-import { routeModule } from 'next/dist/build/templates/app-page';
 import { demoReps } from '@/components/training-in-progress/components/training-in-progress-exercise-card/actions/actions-exercise-set';
-import { KeypointValueType } from '@/controller/pose-detection/enum/keypoint-value-type';
-import { KeypointId } from '@/controller/pose-detection/enum/keypoint-id';
+import {
+  ExerciseDetectionData,
+  ExerciseDetectionDataWithExerciseIds,
+} from '@/controller/pose-detection/type/exercise-start-condition.type';
 
 function IsoOverlayDual({
   rows,
@@ -98,6 +97,8 @@ interface TrainingInProgressTempoChartProps {
   width: number;
   height?: number;
   passedReps?: RecordedReps;
+  passedExercisePose?: ExerciseDetectionData;
+  isUnilateral: boolean;
   hideLabels?: boolean;
   sx?: SxProps;
   aiRecordingView?: boolean;
@@ -112,6 +113,8 @@ export default function TrainingInProgressTempoChart(
     width,
     height = 300,
     passedReps,
+    passedExercisePose,
+    isUnilateral,
     hideLabels = false,
     sx,
     aiRecordingView,
@@ -123,62 +126,32 @@ export default function TrainingInProgressTempoChart(
 
   if (!selectedExercise?.recordedSets && !passedReps) return null;
 
-  // const exercisePose = EXERCISE_POSES.find((e) =>
-  //   e.exerciseIds.includes(selectedExercise.id)
-  // );
+  const exercisePose: ExerciseDetectionDataWithExerciseIds | undefined =
+    selectedExercise
+      ? EXERCISE_POSES.find((e) => e.exerciseIds.includes(selectedExercise.id))
+      : undefined;
 
-  const exercisePose = {
-    romValueType: KeypointValueType.POSITION_Y,
-    romStartDirection: ConditionDirection.POSITIVE,
-    leftSide: {
-      romKeypointId: KeypointId.LEFT_WRIST,
-      conditions: [
-        {
-          keypointId: KeypointId.LEFT_WRIST,
-          type: KeypointValueType.POSITION_Y,
-          direction: ConditionDirection.POSITIVE,
-          duration: 750, // ms
-          distance: 0.1, // meters
-        },
-      ],
-    },
-    rightSide: {
-      romKeypointId: KeypointId.RIGHT_WRIST,
-      conditions: [
-        {
-          keypointId: KeypointId.RIGHT_WRIST,
-          type: KeypointValueType.POSITION_Y,
-          direction: ConditionDirection.POSITIVE,
-          duration: 750, // ms
-          distance: 0.1, // meters
-        },
-      ],
-    },
-  };
+  const direction: ConditionDirection | undefined = exercisePose
+    ? exercisePose.data.romStartDirection
+    : passedExercisePose
+      ? passedExercisePose.romStartDirection
+      : undefined;
 
-  if (!exercisePose) {
-    console.log('returningn ull 2');
-    return;
+  if (!direction) return null;
+
+  if (!passedReps) {
+    if (selectedExercise && selectedExercise.recordedSets) {
+      const set = selectedExercise.recordedSets.find(
+        (s) => s.setIndex === setIndex
+      );
+
+      if (set) {
+        currentRepsRef.current = { left: set.repsL, right: set.repsR };
+      } else currentRepsRef.current = null;
+    }
   }
 
-  const direction: ConditionDirection = exercisePose.romStartDirection;
-
-  // if (!passedReps) {
-  //   if (selectedExercise.recordedSets) {
-  //     const set = selectedExercise.recordedSets.find(
-  //       (s) => s.setIndex === setIndex
-  //     );
-
-  //     if (set) {
-  //       currentRepsRef.current = { left: set.repsL, right: set.repsR };
-  //     } else currentRepsRef.current = null;
-  //   }
-  // }
-
-  if (!currentRepsRef.current) {
-    console.log('returningn ull 3');
-    return null;
-  }
+  if (!currentRepsRef.current) return null;
 
   const sides = [
     currentRepsRef.current.left,
@@ -210,10 +183,7 @@ export default function TrainingInProgressTempoChart(
       ? currentRepsRef.current.left
       : currentRepsRef.current.right;
 
-  if (!mainSide) {
-    console.log('returningn ull 4');
-    return;
-  }
+  if (!mainSide) return null;
 
   const rows = mainSide.map((r, repIndex) => {
     const row: {
@@ -328,6 +298,8 @@ export default function TrainingInProgressTempoChart(
 
   return (
     <BarChart
+      width={width}
+      height={height}
       dataset={rows}
       hideLegend={hideLabels}
       xAxis={[
@@ -357,72 +329,105 @@ export default function TrainingInProgressTempoChart(
         left: aiRecordingView ? -16 : 0,
         top: aiRecordingView ? 10 : 16,
       }}
-      series={[
-        // LEFT stack (keeps your current color scheme)
-        {
-          dataKey: 'concentricL',
-          label: 'Concentric (L)',
-          stack: 'timeL',
-          valueFormatter: (v) =>
-            !v ? '–' : `Concentric (L): ${Math.abs(v).toFixed(1)}s`,
-          color: theme.palette.primary.main,
-        },
-        {
-          dataKey: 'eccentricL',
-          label: 'Eccentric (L)',
-          stack: 'timeL',
-          valueFormatter: (v) =>
-            !v ? '–' : `Eccentric (L): ${Math.abs(v).toFixed(1)}s`,
-          color: theme.palette.secondary.main,
-        },
-        {
-          // zero-height (transparent) segment so the tooltip can show the isometric value
-          dataKey: 'isometricFakeL',
-          label: 'Isometric (L)',
-          stack: 'timeL',
-          valueFormatter: (v, ctx) => {
-            const row = rows[ctx.dataIndex];
-            const iso = row?.isometricL ?? 0;
-            return iso
-              ? `Isometric (L): ${Math.abs(iso).toFixed(1)}s`
-              : 'Isometric (L): –';
-          },
-          color: 'none',
-        },
+      series={
+        isUnilateral
+          ? [
+              // LEFT stack (keeps your current color scheme)
+              {
+                dataKey: 'concentricL',
+                label: 'Concentric (L)',
+                stack: 'timeL',
+                valueFormatter: (v) =>
+                  !v ? '–' : `Concentric (L): ${Math.abs(v).toFixed(1)}s`,
+                color: theme.palette.primary.main,
+              },
+              {
+                dataKey: 'eccentricL',
+                label: 'Eccentric (L)',
+                stack: 'timeL',
+                valueFormatter: (v) =>
+                  !v ? '–' : `Eccentric (L): ${Math.abs(v).toFixed(1)}s`,
+                color: theme.palette.secondary.main,
+              },
+              {
+                // zero-height (transparent) segment so the tooltip can show the isometric value
+                dataKey: 'isometricFakeL',
+                label: 'Isometric (L)',
+                stack: 'timeL',
+                valueFormatter: (v, ctx) => {
+                  const row = rows[ctx.dataIndex];
+                  const iso = row?.isometricL ?? 0;
+                  return iso
+                    ? `Isometric (L): ${Math.abs(iso).toFixed(1)}s`
+                    : 'Isometric (L): –';
+                },
+                color: 'none',
+              },
 
-        // RIGHT stack (blue-ish combo)
-        {
-          dataKey: 'concentricR',
-          label: 'Concentric (R)',
-          stack: 'timeR',
-          valueFormatter: (v) =>
-            !v ? '–' : `Concentric (R): ${Math.abs(v).toFixed(1)}s`,
-          color: theme.palette.info.main,
-        },
-        {
-          dataKey: 'eccentricR',
-          label: 'Eccentric (R)',
-          stack: 'timeR',
-          valueFormatter: (v) =>
-            !v ? '–' : `Eccentric (R): ${Math.abs(v).toFixed(1)}s`,
-          color: theme.palette.info.light,
-        },
-        {
-          dataKey: 'isometricFakeR',
-          label: 'Isometric (R)',
-          stack: 'timeR',
-          valueFormatter: (v, ctx) => {
-            const row = rows[ctx.dataIndex];
-            const iso = row?.isometricR ?? 0;
-            return iso
-              ? `Isometric (R): ${Math.abs(iso).toFixed(1)}s`
-              : 'Isometric (R): –';
-          },
-          color: 'none',
-        },
-      ]}
-      width={width}
-      height={height}
+              // RIGHT stack (blue-ish combo)
+              {
+                dataKey: 'concentricR',
+                label: 'Concentric (R)',
+                stack: 'timeR',
+                valueFormatter: (v) =>
+                  !v ? '–' : `Concentric (R): ${Math.abs(v).toFixed(1)}s`,
+                color: theme.palette.info.main,
+              },
+              {
+                dataKey: 'eccentricR',
+                label: 'Eccentric (R)',
+                stack: 'timeR',
+                valueFormatter: (v) =>
+                  !v ? '–' : `Eccentric (R): ${Math.abs(v).toFixed(1)}s`,
+                color: theme.palette.info.light,
+              },
+              {
+                dataKey: 'isometricFakeR',
+                label: 'Isometric (R)',
+                stack: 'timeR',
+                valueFormatter: (v, ctx) => {
+                  const row = rows[ctx.dataIndex];
+                  const iso = row?.isometricR ?? 0;
+                  return iso
+                    ? `Isometric (R): ${Math.abs(iso).toFixed(1)}s`
+                    : 'Isometric (R): –';
+                },
+                color: 'none',
+              },
+            ]
+          : [
+              {
+                dataKey: 'concentricL',
+                label: 'Concentric',
+                stack: 'timeL',
+                valueFormatter: (v) =>
+                  !v ? '–' : `Concentric: ${Math.abs(v).toFixed(1)}s`,
+                color: theme.palette.primary.main,
+              },
+              {
+                dataKey: 'eccentricL',
+                label: 'Eccentric',
+                stack: 'timeL',
+                valueFormatter: (v) =>
+                  !v ? '–' : `Eccentric: ${Math.abs(v).toFixed(1)}s`,
+                color: theme.palette.secondary.main,
+              },
+              {
+                // zero-height (transparent) segment so the tooltip can show the isometric value
+                dataKey: 'isometricFakeL',
+                label: 'Isometric',
+                stack: 'timeL',
+                valueFormatter: (v, ctx) => {
+                  const row = rows[ctx.dataIndex];
+                  const iso = row?.isometricL ?? 0;
+                  return iso
+                    ? `Isometric: ${Math.abs(iso).toFixed(1)}s`
+                    : 'Isometric: –';
+                },
+                color: 'none',
+              },
+            ]
+      }
       sx={{
         transform: !aiRecordingView ? 'translateX(-15px)' : undefined,
         [`& .${axisClasses.bottom} .${axisClasses.line}`]: {
