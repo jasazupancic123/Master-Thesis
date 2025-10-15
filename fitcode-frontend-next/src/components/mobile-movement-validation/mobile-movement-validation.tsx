@@ -26,7 +26,7 @@ import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
 import { CommonService } from '@/common/service/common.service';
 import type { SetState } from '@/common/type/state.type';
 import EnvUtil from '@/common/util/env.util';
-import TrainingInProgressTempoChart from '@/common/util/tempo-chart';
+import TrainingInProgressTempoChart from '@/components/charts/tempo/tempo-chart';
 import { FrameBitmapBuffer } from '@/controller/pose-detection/class/frame-bitmap-buffer';
 import { KeypointHistory } from '@/controller/pose-detection/class/keypoint-history';
 import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
@@ -50,6 +50,7 @@ import type { RepState } from '@/controller/pose-detection/type/rep-state.type';
 import { getPoseLandmarker } from '@/controller/pose-detection/util/pose-landmarker-loader.util';
 import type {
   RepImage,
+  RepRomTimestamp,
   TrainingExerciseRecordedSet,
   TrainingExerciseRecording,
 } from '@/controller/training/type/training-exercise.type';
@@ -58,6 +59,9 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import LoadingOverlay from '@/util/loading-overlay/loading-overlay';
+import { usePathname } from 'next/navigation';
+import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
+import { Keypoint } from '@/controller/pose-detection/type/keypoint.type';
 
 const DEBUG = false;
 
@@ -84,6 +88,7 @@ export default function MobileMovementValidation(
 ) {
   const theme = useTheme();
   const screenSize = useScreenSize();
+  const pathname = usePathname();
 
   const trainingContext = useTraining();
   const { trainingInProgress, setTrainingInProgress } = trainingContext || {};
@@ -117,38 +122,41 @@ export default function MobileMovementValidation(
     new FrameBitmapBuffer(60)
   ); // buffer of image blobs
 
+  const defaultExerciseName = 'Biceps Curl';
+  const exercisePose = {
+    romValueType: KeypointValueType.POSITION_Y,
+    romStartDirection: ConditionDirection.POSITIVE,
+    leftSide: {
+      romKeypointId: KeypointId.LEFT_WRIST,
+      conditions: [
+        {
+          keypointId: KeypointId.LEFT_WRIST,
+          type: KeypointValueType.POSITION_Y,
+          direction: ConditionDirection.POSITIVE,
+          duration: 750, // ms
+          distance: 0.1, // meters
+        },
+      ],
+    },
+    rightSide: {
+      romKeypointId: KeypointId.RIGHT_WRIST,
+      conditions: [
+        {
+          keypointId: KeypointId.RIGHT_WRIST,
+          type: KeypointValueType.POSITION_Y,
+          direction: ConditionDirection.POSITIVE,
+          duration: 750, // ms
+          distance: 0.1, // meters
+        },
+      ],
+    },
+  };
+
   const exerciseDetectionData: ExerciseDetectionData | undefined =
     selectedExercise
       ? EXERCISE_POSES.find((e) => e.exerciseIds.includes(selectedExercise.id))
           ?.data
-      : {
-          romValueType: KeypointValueType.POSITION_Y,
-          romStartDirection: ConditionDirection.POSITIVE,
-          leftSide: {
-            romKeypointId: KeypointId.LEFT_WRIST,
-            conditions: [
-              {
-                keypointId: KeypointId.LEFT_WRIST,
-                type: KeypointValueType.POSITION_Y,
-                direction: ConditionDirection.POSITIVE,
-                duration: 750, // ms
-                distance: 0.1, // meters
-              },
-            ],
-          },
-          rightSide: {
-            romKeypointId: KeypointId.RIGHT_WRIST,
-            conditions: [
-              {
-                keypointId: KeypointId.RIGHT_WRIST,
-                type: KeypointValueType.POSITION_Y,
-                direction: ConditionDirection.POSITIVE,
-                duration: 750, // ms
-                distance: 0.1, // meters
-              },
-            ],
-          },
-        };
+      : exercisePose;
 
   // {
   // romKeypointId: KeypointId.RIGHT_WRIST,
@@ -602,6 +610,48 @@ export default function MobileMovementValidation(
         i++;
       }
 
+      const romLKeypoints = constantKeypointHistoryRef.current.getHistoryById(
+        exercisePose.leftSide.romKeypointId
+      );
+      const romL = romLKeypoints
+        .map((r) => ({
+          value: KeypointUtil.getKeypointValueByType(
+            r,
+            exercisePose.romValueType
+          ),
+          timestamp: r.capturedAt,
+        }))
+        .filter((v) => v !== undefined) as RepRomTimestamp[];
+
+      const romRKeypoints: Keypoint[] | undefined = exercisePose.rightSide
+        ? constantKeypointHistoryRef.current.getHistoryById(
+            exercisePose.rightSide.romKeypointId
+          )
+        : undefined;
+      const romR = romRKeypoints
+        ? (romRKeypoints
+            .map((r) => ({
+              value: KeypointUtil.getKeypointValueByType(
+                r,
+                exercisePose.romValueType
+              ),
+              timestamp: r.capturedAt,
+            }))
+            .filter((v) => v !== undefined) as RepRomTimestamp[])
+        : undefined;
+
+      recordedSets = recordedSets
+        ? recordedSets.map((rs) => {
+            if (rs.setIndex !== setIndex) return rs;
+
+            return {
+              ...rs,
+              romL: romL.length ? romL : undefined,
+              romR: romR && romR.length ? romR : undefined,
+            };
+          })
+        : undefined;
+
       updatedExercise.recordedSets = recordedSets;
 
       updateExerciseValues(
@@ -760,9 +810,10 @@ export default function MobileMovementValidation(
         position: 'relative',
       }}
     >
-      {canExitWhenImageIsDoneSavingRef.current === true && (
-        <LoadingOverlay title="Saving images..." topDownCircularProgress />
-      )}
+      {!pathname.endsWith('pose-model') &&
+        canExitWhenImageIsDoneSavingRef.current === true && (
+          <LoadingOverlay title="Saving images..." topDownCircularProgress />
+        )}
 
       {!poseLandmarker && (
         <Box
@@ -804,6 +855,7 @@ export default function MobileMovementValidation(
             <MovementValidationHeader
               statusRef={statusRef}
               statusMessage={error ? `${error}` : statusMessage.current}
+              defaultExerciseName={defaultExerciseName}
               countdownValue={
                 statusRef.current === DetectionStatus.NOT_STILL &&
                 stillnessCountdownRef.current !== null
@@ -983,6 +1035,11 @@ export default function MobileMovementValidation(
                   }
                   height={140}
                   passedReps={recordedRepsRef.current}
+                  passedExercisePose={exercisePose}
+                  isUnilateral={
+                    selectedExercise?.exercise?.isUnilateral ||
+                    exerciseDetectionData.rightSide !== undefined
+                  }
                   hideLabels={true}
                   aiRecordingView
                   sx={{
@@ -1008,29 +1065,29 @@ export default function MobileMovementValidation(
             </>
           ) : (
             <>
-              {trainingInProgress?.training &&
-                selectedExercise &&
-                selectedExercise.sets[setIndex] && (
-                  <Box
-                    width="100%"
-                    display="flex"
-                    flexDirection="column"
-                    alignItems="center"
-                  >
-                    <Typography
-                      width="100%"
-                      textAlign="center"
-                      fontWeight="bold"
-                      fontSize={20}
-                      sx={{
-                        backgroundColor: theme.palette.primary.main,
-                        py: 1,
-                        textTransform: 'uppercase',
-                        color: theme.palette.text.secondary,
-                      }}
-                    >
-                      {selectedExercise.exercise?.name}
-                    </Typography>
+              <Box
+                width="100%"
+                display="flex"
+                flexDirection="column"
+                alignItems="center"
+              >
+                <Typography
+                  width="100%"
+                  textAlign="center"
+                  fontWeight="bold"
+                  fontSize={20}
+                  sx={{
+                    backgroundColor: theme.palette.primary.main,
+                    py: 1,
+                    textTransform: 'uppercase',
+                    color: theme.palette.text.secondary,
+                  }}
+                >
+                  {selectedExercise?.exercise?.name || defaultExerciseName}
+                </Typography>
+                {trainingInProgress?.training &&
+                  selectedExercise &&
+                  selectedExercise.sets[setIndex] && (
                     <AthleteTrainingExerciseSets
                       training={trainingInProgress?.training}
                       exercise={selectedExercise}
@@ -1043,8 +1100,8 @@ export default function MobileMovementValidation(
                       colorSetsToPrimary
                       aiDetectionView
                     />
-                  </Box>
-                )}
+                  )}
+              </Box>
             </>
           )}
         </Box>

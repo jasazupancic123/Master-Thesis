@@ -23,6 +23,10 @@ export const theme = createTheme({
     secondary: {
       main: '#FFD734',
     },
+    info: {
+      main: '#7ee470',
+      light: '#6ac15fff',
+    },
     background: {
       light: '#171717',
       default: '#111111',

@@ -36,13 +36,13 @@ export const finishSet = async (state: {
       (s) => s.setIndex === setIndex
     );
 
-    const allImages = [currentSet?.imagesL, currentSet?.imagesR].flatMap(
-      (imgs) => imgs || []
-    );
-
-    if (currentSet && allImages.length) {
-      const lastRepImage = allImages[allImages.length - 1];
-      set.photoUrl = lastRepImage.url;
+    if (currentSet) {
+      set.photoUrl = currentSet.imagesL
+        ? currentSet.imagesL.at(-1)?.url
+        : undefined;
+      set.photoUrlR = currentSet.imagesR
+        ? currentSet.imagesR.at(-1)?.url
+        : undefined;
     }
   }
 
