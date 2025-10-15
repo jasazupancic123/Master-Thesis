@@ -12,7 +12,7 @@ import TrainingExerciseSetDoneCheckbox from './components/training-exercise-set-
 import useExerciseIndexLabel from './hooks/use-exercise-index-label';
 import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 import ImageGallery from '@/common/util/image-gallery';
-import TrainingInProgressTempoChart from '@/common/util/tempo-chart';
+import TrainingInProgressTempoChart from '@/components/charts/tempo/tempo-chart';
 import AthleteTrainingExerciseSets from '@/components/athlete/athlete-training-exercise-sets/athlete-training-exercise-sets';
 import MobileMovementValidation from '@/components/mobile-movement-validation/mobile-movement-validation';
 import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
@@ -21,6 +21,7 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import SwipeableBox from '@/util/swipeable-box/swipeable-box';
+import TrainingInProgressRomChart from '@/components/charts/rom/rom-chart';
 
 export default function TrainingInProgressExerciseCard() {
   const theme = useTheme();
@@ -423,17 +424,25 @@ export default function TrainingInProgressExerciseCard() {
         </Box>
         <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
           {setIndex !== undefined && (
-            <TrainingInProgressTempoChart
-              selectedExercise={selectedExercise}
-              setIndex={setIndex}
-              width={Math.min(window.innerWidth * 0.95, 620)} // max 620px
-            />
+            <>
+              <TrainingInProgressTempoChart
+                selectedExercise={selectedExercise}
+                setIndex={setIndex}
+                width={Math.min(window.innerWidth * 0.95, 620)} // max 620px
+                isUnilateral={selectedExercise.exercise?.isUnilateral || false}
+              />
+              <TrainingInProgressRomChart
+                selectedExercise={selectedExercise}
+                setIndex={setIndex}
+                width={Math.min(window.innerWidth * 0.95, 620)} // max 620px
+              />
+            </>
           )}
           <ImageGallery
             images={
               (selectedExercise.recordedSets || []).find(
                 (set) => set.setIndex === setIndex
-              )?.images || []
+              )?.imagesL || []
             }
             enableImagePickerSlider
           />

@@ -285,26 +285,4 @@ export class KeypointUtil {
   ): arr is NumericValueFrameNum[] => {
     return arr.every((item) => this.checkIsNumericValueFrameNum(item));
   };
-
-  static saveKeypointValueGraph = (state: {
-    exerciseDetectionData: ExerciseDetectionData | undefined;
-    keypointHistoryRef: RefObject<KeypointHistory>;
-  }) => {
-    const { exerciseDetectionData, keypointHistoryRef } = state;
-
-    if (!exerciseDetectionData) return;
-
-    const keypointIds = exerciseDetectionData.conditions.map(
-      (condition) => condition.keypointId
-    );
-
-    keypointIds.forEach((id) => {
-      KeypointUtil.drawKeypointValuesGraph(
-        keypointHistoryRef.current.history,
-        id,
-        KeypointValueType.POSITION_Y,
-        'whole_exercise'
-      );
-    });
-  };
 }

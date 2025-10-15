@@ -16,60 +16,14 @@ import { PoseDetectionService } from '@/controller/pose-detection/pose-detection
 import { RepDetectionService } from '@/controller/pose-detection/rep-detection.service';
 import type { ExerciseDetectionData } from '@/controller/pose-detection/type/exercise-start-condition.type';
 import type { Keypoint } from '@/controller/pose-detection/type/keypoint.type';
-import type { Rep } from '@/controller/pose-detection/type/rep.type';
+import type {
+  RecordedReps,
+  Rep,
+  RepsCount,
+} from '@/controller/pose-detection/type/rep.type';
 import type { RepState } from '@/controller/pose-detection/type/rep-state.type';
 import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
-
-export async function loadModel(state: {
-  setPoseLandmarker: SetState<PoseLandmarker | null>;
-  videoRef: RefObject<HTMLVideoElement | null>;
-  canvasRef: RefObject<HTMLCanvasElement | null>;
-  drawingUtilsRef: RefObject<DrawingUtils | null>;
-}) {
-  const { setPoseLandmarker, videoRef, canvasRef, drawingUtilsRef } = state;
-
-  // const modelAssetPath = '/models/pose_landmarker/pose_landmarker_lite.task'; // lite
-  const modelAssetPath = '/models/pose_landmarker/pose_landmarker_full.task'; // full
-  // const modelAssetPath = '/models/pose_landmarker/pose_landmarker_heavy.task'; // heavy
-
-  const vision = await FilesetResolver.forVisionTasks('/wasm');
-
-  const landmarker = await PoseLandmarker.createFromOptions(vision, {
-    baseOptions: {
-      modelAssetPath,
-      delegate: 'GPU',
-    },
-    runningMode: 'VIDEO',
-    numPoses: 1,
-    minPoseDetectionConfidence: 0.5,
-    minPosePresenceConfidence: 0.5,
-    minTrackingConfidence: 0.5,
-    outputSegmentationMasks: true,
-  });
-
-  setPoseLandmarker(landmarker);
-
-  if (!videoRef?.current || !canvasRef?.current) return;
-
-  const video = videoRef.current!;
-  const canvas = canvasRef.current!;
-
-  // Get native resolution from video feed
-  const w = video.videoWidth;
-  const h = video.videoHeight;
-
-  // Match canvas drawing resolution to video
-  canvas.width = w;
-  canvas.height = h;
-
-  // Match CSS display size (this ensures it visually fits)
-  canvas.style.width = '100%';
-  canvas.style.height = '100%';
-  video.style.width = '100%';
-  video.style.height = '100%';
-
-  drawingUtilsRef.current = new DrawingUtils(canvas.getContext('2d')!);
-}
+import EnvUtil from '@/common/util/env.util';
 
 export async function setupVideoAndContex(state: {
   videoRef: RefObject<HTMLVideoElement | null>;
@@ -134,15 +88,17 @@ export const predictWebcam = async (state: {
   statusMessage: RefObject<string>;
   stillnessCountdownRef: RefObject<Date | null>;
   canProceedIntoReadyStateRef: RefObject<boolean>;
-  repStateRef: RefObject<RepState>;
+  repStateRefL: RefObject<RepState>;
+  repStateRefR: RefObject<RepState>;
   model: PoseModel;
   poseLandmarker: PoseLandmarker | null;
   keypointHistory: KeypointHistory;
   keypointBuffer: KeypointHistory;
   constantKeypointHistory: KeypointHistory;
   frameBitmapBufferRef: RefObject<FrameBitmapBuffer>;
-  currentRepRef: RefObject<Rep | null>;
-  recordedRepsRef: RefObject<Rep[]>;
+  currentRepRefL: RefObject<Rep | null>;
+  currentRepRefR: RefObject<Rep | null>;
+  recordedRepsRef: RefObject<RecordedReps>;
   exerciseDetectionData: ExerciseDetectionData;
   videoRef: RefObject<HTMLVideoElement | null>;
   canvasRef: RefObject<HTMLCanvasElement | null>;
@@ -160,7 +116,7 @@ export const predictWebcam = async (state: {
   canExitWhenImageIsDoneSavingRef: RefObject<boolean>;
   setFps: SetState<number | null>;
   finishAiDetection: () => Promise<void>;
-  setRepCount: SetState<number>;
+  setRepCount: SetState<RepsCount>;
   setStartedExitTimeout: SetState<boolean>;
 }) => {
   const {
@@ -168,14 +124,16 @@ export const predictWebcam = async (state: {
     statusMessage,
     stillnessCountdownRef,
     canProceedIntoReadyStateRef,
-    repStateRef,
+    repStateRefL,
+    repStateRefR,
     model,
     poseLandmarker,
     keypointHistory,
     keypointBuffer,
     constantKeypointHistory,
     frameBitmapBufferRef,
-    currentRepRef,
+    currentRepRefL,
+    currentRepRefR,
     recordedRepsRef,
     exerciseDetectionData,
     videoRef,
@@ -256,7 +214,33 @@ export const predictWebcam = async (state: {
     const delta = startTimeMs - prevFrameTimeRef.current;
     const instFps = Math.round(1000 / delta);
 
-    setFps(instFps);
+    if (
+      ![DetectionStatus.READY, DetectionStatus.RECORDING].includes(
+        statusRef.current
+      ) &&
+      [recordedRepsRef.current.left, recordedRepsRef.current.right]
+        .filter((r) => r !== undefined)
+        .flat().length === 0 &&
+      [repStateRefL.current.status, repStateRefR.current?.status]
+        .filter((s) => s !== undefined)
+        .flat()
+        .includes(RepStatus.NONE)
+    ) {
+      // to re-render ui every frame when not in ready or recording state
+      setFps(instFps);
+    } else {
+      // only update fps every 0.5 seconds when in ready or recording state to save performance
+      if (!EnvUtil.AI.disableAIFPS() && avgFps.current) {
+        const frameCount = KeypointUtil.getFramesCountFromSeconds(
+          0.5,
+          avgFps.current.value
+        ); // smooth over 0.5s
+        const shouldPublish =
+          !avgFps.current || avgFps.current.count % frameCount === 0; // publish every 0.5 secodns
+
+        if (shouldPublish) setFps(instFps);
+      }
+    }
 
     if (!avgFps.current) avgFps.current = { value: instFps, count: 1 };
     else {
@@ -325,14 +309,6 @@ export const predictWebcam = async (state: {
         return;
       }
 
-      // console.log(
-      //   frameCountRef.current,
-      //   frameBitmapBufferRef.current.history[0]?.frameNum,
-      //   frameBitmapBufferRef.current.history[
-      //     frameBitmapBufferRef.current.history.length - 1
-      //   ]?.frameNum
-      // );
-
       const keypoints = KeypointUtil.getDesiredKeypointsByModel(
         result.worldLandmarks[0], // unit: m, origin: center of hips
         result.landmarks[0],
@@ -346,8 +322,10 @@ export const predictWebcam = async (state: {
         keypointHistory,
         keypointBuffer,
         constantKeypointHistory: constantKeypointHistory,
-        repStateRef,
-        currentRepBuffer: currentRepRef.current?.buffer,
+        repStateRefL,
+        repStateRefR,
+        currentRepBufferL: currentRepRefL.current?.buffer,
+        currentRepBufferR: currentRepRefR.current?.buffer,
         keypoints,
         isMobile,
         avgFps,
@@ -356,10 +334,10 @@ export const predictWebcam = async (state: {
       PoseDetectionService.checkStatus({
         statusRef,
         canProceedIntoReadyStateRef,
-        repStateRef,
+        repStateRefL,
+        repStateRefR,
         keypoints,
         keypointBuffer,
-        exerciseStartConditions: exerciseDetectionData.conditions,
         avgFps: avgFps.current,
         keypointHistory,
         recordingTimestampRef,
@@ -368,27 +346,62 @@ export const predictWebcam = async (state: {
         videoHeight: video.videoHeight,
       });
 
-      if (
-        statusRef.current === DetectionStatus.RECORDING &&
-        repStateRef.current.status !== RepStatus.NONE
-      ) {
+      if (statusRef.current === DetectionStatus.RECORDING) {
+        // this upper if must go into the function
         RepDetectionService.checkRepStatus({
-          repStateRef,
-          currentRepRef,
-          recordedRepsRef,
           currentFrameKeypoints: keypoints,
           keypointHistory: keypointHistory,
-          keypointId: exerciseDetectionData.romKeypointId,
           valueType: exerciseDetectionData.romValueType,
           direction: exerciseDetectionData.romStartDirection,
-          exerciseStartConditions: exerciseDetectionData.conditions,
           avgFps: avgFps.current,
           initedFirstFrameInRecordingMode, // this is used to track if no rep was detected yet
+          leftData: {
+            repStateRef: repStateRefL,
+            currentRepRef: currentRepRefL,
+            recordedReps: recordedRepsRef.current.left,
+            keypointId: exerciseDetectionData.leftSide.romKeypointId,
+            exerciseStartConditions: exerciseDetectionData.leftSide.conditions,
+            side: 'L',
+          },
+          rightData:
+            recordedRepsRef.current.right && exerciseDetectionData.rightSide
+              ? {
+                  repStateRef: repStateRefR,
+                  currentRepRef: currentRepRefR,
+                  recordedReps: recordedRepsRef.current.right,
+                  keypointId: exerciseDetectionData.rightSide.romKeypointId,
+                  exerciseStartConditions:
+                    exerciseDetectionData.rightSide.conditions,
+                  side: 'R',
+                }
+              : undefined,
           setRepCount,
         });
+
+        // if (
+        //   repStateRefR.current &&
+        //   exerciseDetectionData.rightSide &&
+        //   recordedRepsRef.current.right &&
+        //   repStateRefR.current.status !== RepStatus.NONE
+        // ) {
+        //   RepDetectionService.checkRepStatus({
+        //     repStateRef: repStateRefR,
+        //     currentRepRef: currentRepRefR,
+        //     recordedReps: recordedRepsRef.current.right,
+        //     currentFrameKeypoints: keypoints,
+        //     keypointHistory: keypointHistory,
+        //     keypointId: exerciseDetectionData.rightSide.romKeypointId,
+        //     valueType: exerciseDetectionData.romValueType,
+        //     direction: exerciseDetectionData.romStartDirection,
+        //     exerciseStartConditions: exerciseDetectionData.rightSide.conditions,
+        //     avgFps: avgFps.current,
+        //     initedFirstFrameInRecordingMode, // this is used to track if no rep was detected yet
+        //     side: 'R',
+        //     setRepCount,
+        //   });
+        // }
       }
 
-      ctx.save();
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       // Flip horizontally to mirror webcam
@@ -453,8 +466,10 @@ function insertKeypointsIntoBuffers(state: {
   keypointHistory: KeypointHistory;
   keypointBuffer: KeypointHistory;
   constantKeypointHistory: KeypointHistory;
-  repStateRef: RefObject<RepState>;
-  currentRepBuffer?: KeypointHistory;
+  repStateRefL: RefObject<RepState>;
+  repStateRefR: RefObject<RepState>;
+  currentRepBufferL?: KeypointHistory;
+  currentRepBufferR?: KeypointHistory;
   keypoints: Keypoint[];
   isMobile: boolean;
   avgFps: RefObject<{ value: number; count: number } | null>;
@@ -464,8 +479,10 @@ function insertKeypointsIntoBuffers(state: {
     keypointHistory,
     keypointBuffer,
     constantKeypointHistory,
-    repStateRef,
-    currentRepBuffer,
+    repStateRefL,
+    repStateRefR,
+    currentRepBufferL,
+    currentRepBufferR,
     keypoints,
     isMobile,
     avgFps,
@@ -491,8 +508,12 @@ function insertKeypointsIntoBuffers(state: {
   }
 
   // If rep has started, then add frames to current rep buffer
-  if (repStateRef.current.status === RepStatus.IN_REP && currentRepBuffer) {
-    currentRepBuffer.insertFrame(keypoints);
+  if (repStateRefL.current.status === RepStatus.IN_REP && currentRepBufferL) {
+    currentRepBufferL.insertFrame(keypoints);
+  }
+
+  if (repStateRefR.current.status === RepStatus.IN_REP && currentRepBufferR) {
+    currentRepBufferR.insertFrame(keypoints);
   }
 
   const hasWeakFps = avgFps.current ? avgFps.current.value <= 15 : isMobile;
@@ -505,17 +526,17 @@ export function getStatusMessage(status: DetectionStatus) {
 }
 
 export function getTempoString(state: {
-  recordedRepsRef: RefObject<Rep[]>;
+  recordedReps: Rep[];
   commonService: CommonService;
 }): string {
-  const { recordedRepsRef, commonService } = state;
+  const { recordedReps, commonService } = state;
 
   let avgTimeToExtremeMs = 0,
     avgTimeAtExtremeMs = 0,
     avgTimeFromExtremeToEndMs = 0,
     avgIdleTimeMs = 0;
 
-  for (const rep of recordedRepsRef.current) {
+  for (const rep of recordedReps) {
     avgTimeToExtremeMs += rep.timeToExtremeMs || 0;
     avgTimeAtExtremeMs += rep.timeAtExtremeMs || 0;
     avgTimeFromExtremeToEndMs += rep.timeFromExtremeToEndMs || 0;
@@ -525,28 +546,25 @@ export function getTempoString(state: {
   const avgTimeToExtremeS = Math.max(
     EXERCISE_TIMES_ROUNDING_STEP_S,
     commonService.number.roundToStep(
-      Math.max(avgTimeToExtremeMs / 1000 / recordedRepsRef.current.length, 0),
+      Math.max(avgTimeToExtremeMs / 1000 / recordedReps.length, 0),
       EXERCISE_TIMES_ROUNDING_STEP_S
     )
   );
 
   const avgTimeAtExtremeS = commonService.number.roundToStep(
-    Math.max(avgTimeAtExtremeMs / 1000 / recordedRepsRef.current.length, 0),
+    Math.max(avgTimeAtExtremeMs / 1000 / recordedReps.length, 0),
     EXERCISE_TIMES_ROUNDING_STEP_S
   );
 
   const avgTimeFromExtremeToEndS = Math.max(
     commonService.number.roundToStep(
-      Math.max(
-        avgTimeFromExtremeToEndMs / 1000 / recordedRepsRef.current.length,
-        0
-      ),
+      Math.max(avgTimeFromExtremeToEndMs / 1000 / recordedReps.length, 0),
       EXERCISE_TIMES_ROUNDING_STEP_S
     )
   );
 
   const avgIdleTimeS = commonService.number.roundToStep(
-    Math.max(avgIdleTimeMs / 1000 / recordedRepsRef.current.length, 0),
+    Math.max(avgIdleTimeMs / 1000 / recordedReps.length, 0),
     EXERCISE_TIMES_ROUNDING_STEP_S
   );
 

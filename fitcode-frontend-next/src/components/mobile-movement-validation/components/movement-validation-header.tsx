@@ -7,6 +7,7 @@ import { DetectionStatus } from '@/controller/pose-detection/enum/detection-stat
 interface MovementValidationHeaderProps {
   statusRef: RefObject<DetectionStatus>;
   statusMessage: string;
+  defaultExerciseName: string;
   countdownValue: number | null;
 }
 
@@ -14,6 +15,7 @@ export default function MovementValidationHeader(
   props: MovementValidationHeaderProps
 ) {
   const theme = useTheme();
+
   const { statusRef, statusMessage, countdownValue } = props;
 
   return (

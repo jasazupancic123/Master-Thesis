@@ -72,7 +72,7 @@ export function SupersetsProvider(
     openAddExerciseModal,
     setOpenAddExerciseModal,
     setsNumbers: setsNumbers,
-    setSetsNumbers: setSetsNumbers,
+    setSetsNumbers,
     handleMenuClose,
   };
 
