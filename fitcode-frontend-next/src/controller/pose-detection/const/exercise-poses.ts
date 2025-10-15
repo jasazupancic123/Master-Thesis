@@ -128,7 +128,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     },
   },
   {
-    exerciseIds: ['arm-curl', 'arm-curl-db', 'biceps-curl-db'],
+    exerciseIds: ['biceps-curl-sa-db'],
     data: {
       romValueType: KeypointValueType.POSITION_Y,
       romStartDirection: ConditionDirection.POSITIVE,
@@ -149,6 +149,25 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
         conditions: [
           {
             keypointId: KeypointId.RIGHT_WRIST,
+            type: KeypointValueType.POSITION_Y,
+            direction: ConditionDirection.POSITIVE,
+            duration: 750, // ms
+            distance: 0.1, // meters
+          },
+        ],
+      },
+    },
+  },
+  {
+    exerciseIds: ['arm-curl', 'arm-curl-db', 'biceps-curl-db'],
+    data: {
+      romValueType: KeypointValueType.POSITION_Y,
+      romStartDirection: ConditionDirection.POSITIVE,
+      leftSide: {
+        romKeypointId: KeypointId.LEFT_WRIST,
+        conditions: [
+          {
+            keypointId: KeypointId.LEFT_WRIST,
             type: KeypointValueType.POSITION_Y,
             direction: ConditionDirection.POSITIVE,
             duration: 750, // ms
