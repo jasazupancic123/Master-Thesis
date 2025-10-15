@@ -440,9 +440,13 @@ export default function TrainingInProgressExerciseCard() {
           )}
           <ImageGallery
             images={
-              (selectedExercise.recordedSets || []).find(
-                (set) => set.setIndex === setIndex
-              )?.imagesL || []
+              (selectedExercise.recordedSets || [])
+                .find((set) => set.setIndex === setIndex)
+                ?.imagesL.concat(
+                  (selectedExercise.recordedSets || []).find(
+                    (set) => set.setIndex === setIndex
+                  )?.imagesR || []
+                ) || []
             }
             enableImagePickerSlider
           />
