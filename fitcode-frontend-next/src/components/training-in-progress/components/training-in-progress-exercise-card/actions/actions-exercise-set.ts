@@ -35,9 +35,14 @@ export const finishSet = async (state: {
     const currentSet = exercise.recordedSets.find(
       (s) => s.setIndex === setIndex
     );
-    if (currentSet && currentSet.images.length) {
-      const lastRepImage = currentSet.images[currentSet.images.length - 1];
-      set.photoUrl = lastRepImage.url;
+
+    if (currentSet) {
+      set.photoUrl = currentSet.imagesL
+        ? currentSet.imagesL.at(-1)?.url
+        : undefined;
+      set.photoUrlR = currentSet.imagesR
+        ? currentSet.imagesR.at(-1)?.url
+        : undefined;
     }
   }
 

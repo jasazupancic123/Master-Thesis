@@ -18,8 +18,9 @@ export class StatusDetectionService {
   // if it returns false, it means we need to return in main loop
   static checkAndValidateStatus(
     detectionStatus: DetectionStatus,
-    repStateRef: RefObject<RepState>,
     state: {
+      repStateRefL: RefObject<RepState>;
+      repStateRefR: RefObject<RepState>;
       keypoints: Keypoint[];
       statusRef: RefObject<DetectionStatus>;
       canProceedIntoReadyStateRef: RefObject<boolean>;
@@ -32,6 +33,8 @@ export class StatusDetectionService {
     }
   ): boolean {
     const {
+      repStateRefL,
+      repStateRefR,
       keypoints,
       statusRef,
       canProceedIntoReadyStateRef,
@@ -135,8 +138,14 @@ export class StatusDetectionService {
         if (canStartRecording) {
           recordingTimestampRef.current = new Date();
 
-          if (repStateRef.current.status === RepStatus.NONE)
-            repStateRef.current = {
+          if (repStateRefL.current.status === RepStatus.NONE)
+            repStateRefL.current = {
+              status: RepStatus.IDLE,
+              avgStartValue: null,
+              avgExtremeValue: null,
+            };
+          if (repStateRefR.current.status === RepStatus.NONE)
+            repStateRefR.current = {
               status: RepStatus.IDLE,
               avgStartValue: null,
               avgExtremeValue: null,
