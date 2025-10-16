@@ -1,7 +1,7 @@
 import { ConditionDirection } from '../enum/condition-detection.enum';
 import { KeypointId } from '../enum/keypoint-id';
 import { KeypointValueType } from '../enum/keypoint-value-type';
-import type { ExerciseDetectionDataWithExerciseIds } from '../type/exercise-start-condition.type';
+import type { ExerciseDetectionDataWithExerciseIds } from '../types/exercise-start-condition.type';
 
 // Smaller the duration, more accurate will the rep cuting be
 export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
@@ -63,7 +63,6 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
       'iso-squat-push-135°-fd',
       'iso-squat-w-calf-raises-landmine',
       'lateral-deceleration-squat-fw[v12]',
-      'lateral-squat-bw',
       'mobility-squat',
       'oh-split-squat-mb',
       'oscillation-goblet-squat',
@@ -122,6 +121,38 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
             direction: ConditionDirection.NEGATIVE,
             duration: 1000, // ms
             distance: 0.04, // meters
+          },
+        ],
+      },
+    },
+  },
+  {
+    exerciseIds: ['lateral-squat-bw'],
+    data: {
+      romValueType: KeypointValueType.POSITION_X,
+      romStartDirection: ConditionDirection.POSITIVE,
+      cannotDoBothSidesSimultaneously: true,
+      leftSide: {
+        romKeypointId: KeypointId.LEFT_KNEE,
+        conditions: [
+          {
+            keypointId: KeypointId.LEFT_KNEE,
+            type: KeypointValueType.POSITION_X,
+            direction: ConditionDirection.POSITIVE,
+            duration: 750, // ms
+            distance: 0.05, // meters
+          },
+        ],
+      },
+      rightSide: {
+        romKeypointId: KeypointId.RIGHT_KNEE,
+        conditions: [
+          {
+            keypointId: KeypointId.RIGHT_KNEE,
+            type: KeypointValueType.POSITION_X,
+            direction: ConditionDirection.NEGATIVE,
+            duration: 750, // ms
+            distance: 0.05, // meters
           },
         ],
       },

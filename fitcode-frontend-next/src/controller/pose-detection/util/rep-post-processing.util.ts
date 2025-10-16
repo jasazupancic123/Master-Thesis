@@ -2,8 +2,8 @@ import { POSE_DETECTION_CONSTRAINTS } from '../const/pose-detection-constrains.c
 import { ConditionDirection } from '../enum/condition-detection.enum';
 import { KeypointUtil } from './keypoint.util';
 import { RefObject } from 'react';
-import { Rep } from '../type/rep.type';
-import { Keypoint } from '../type/keypoint.type';
+import { Rep } from '../types/rep.type';
+import { Keypoint } from '../types/keypoint.type';
 import { KeypointId } from '../enum/keypoint-id';
 import { EXERCISE_TIMES_ROUNDING_STEP_S } from '@/components/mobile-movement-validation/mobile-movement-validation';
 import { TimeUtil } from './time.util';

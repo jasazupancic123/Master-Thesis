@@ -14,13 +14,13 @@ import { ConditionDirection } from '@/controller/pose-detection/enum/condition-d
 import type {
   RecordedReps,
   RecordedRepsInfo,
-} from '@/controller/pose-detection/type/rep.type';
+} from '@/controller/pose-detection/types/rep.type';
 import type { TrainingExerciseRecording } from '@/controller/training/type/training-exercise.type';
 import { demoReps } from '@/components/training-in-progress/components/training-in-progress-exercise-card/actions/actions-exercise-set';
 import {
   ExerciseDetectionData,
   ExerciseDetectionDataWithExerciseIds,
-} from '@/controller/pose-detection/type/exercise-start-condition.type';
+} from '@/controller/pose-detection/types/exercise-start-condition.type';
 
 function IsoOverlayDual({
   rows,

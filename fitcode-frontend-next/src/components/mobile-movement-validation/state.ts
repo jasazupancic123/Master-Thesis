@@ -14,16 +14,17 @@ import type { PoseModel } from '@/controller/pose-detection/enum/pose-model.enum
 import { RepStatus } from '@/controller/pose-detection/enum/rep-state';
 import { PoseDetectionService } from '@/controller/pose-detection/pose-detection.service';
 import { RepDetectionService } from '@/controller/pose-detection/rep-detection.service';
-import type { ExerciseDetectionData } from '@/controller/pose-detection/type/exercise-start-condition.type';
-import type { Keypoint } from '@/controller/pose-detection/type/keypoint.type';
+import type { ExerciseDetectionData } from '@/controller/pose-detection/types/exercise-start-condition.type';
+import type { Keypoint } from '@/controller/pose-detection/types/keypoint.type';
 import type {
   RecordedReps,
   Rep,
   RepsCount,
-} from '@/controller/pose-detection/type/rep.type';
-import type { RepState } from '@/controller/pose-detection/type/rep-state.type';
+} from '@/controller/pose-detection/types/rep.type';
+import type { RepState } from '@/controller/pose-detection/types/rep-state.type';
 import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
 import EnvUtil from '@/common/util/env.util';
+import { CurrentSideMutex } from '../../controller/pose-detection/types/current-side-mutex.type';
 
 export async function setupVideoAndContex(state: {
   videoRef: RefObject<HTMLVideoElement | null>;
@@ -100,6 +101,7 @@ export const predictWebcam = async (state: {
   currentRepRefR: RefObject<Rep | null>;
   recordedRepsRef: RefObject<RecordedReps>;
   exerciseDetectionData: ExerciseDetectionData;
+  currentSideMutexRef: RefObject<CurrentSideMutex>;
   videoRef: RefObject<HTMLVideoElement | null>;
   canvasRef: RefObject<HTMLCanvasElement | null>;
   drawingUtilsRef: RefObject<DrawingUtils | null>;
@@ -136,6 +138,7 @@ export const predictWebcam = async (state: {
     currentRepRefR,
     recordedRepsRef,
     exerciseDetectionData,
+    currentSideMutexRef,
     videoRef,
     canvasRef,
     drawingUtilsRef,
@@ -352,14 +355,17 @@ export const predictWebcam = async (state: {
           currentFrameKeypoints: keypoints,
           keypointHistory: keypointHistory,
           valueType: exerciseDetectionData.romValueType,
-          direction: exerciseDetectionData.romStartDirection,
+          // direction: exerciseDetectionData.romStartDirection,
           avgFps: avgFps.current,
           initedFirstFrameInRecordingMode, // this is used to track if no rep was detected yet
+          exerciseDetectionData,
+          currentSideMutexRef,
           leftData: {
             repStateRef: repStateRefL,
             currentRepRef: currentRepRefL,
             recordedReps: recordedRepsRef.current.left,
             keypointId: exerciseDetectionData.leftSide.romKeypointId,
+            direction: exerciseDetectionData.leftSide.conditions[0].direction,
             exerciseStartConditions: exerciseDetectionData.leftSide.conditions,
             side: 'L',
           },
@@ -370,6 +376,8 @@ export const predictWebcam = async (state: {
                   currentRepRef: currentRepRefR,
                   recordedReps: recordedRepsRef.current.right,
                   keypointId: exerciseDetectionData.rightSide.romKeypointId,
+                  direction:
+                    exerciseDetectionData.rightSide.conditions[0].direction,
                   exerciseStartConditions:
                     exerciseDetectionData.rightSide.conditions,
                   side: 'R',
@@ -377,29 +385,6 @@ export const predictWebcam = async (state: {
               : undefined,
           setRepCount,
         });
-
-        // if (
-        //   repStateRefR.current &&
-        //   exerciseDetectionData.rightSide &&
-        //   recordedRepsRef.current.right &&
-        //   repStateRefR.current.status !== RepStatus.NONE
-        // ) {
-        //   RepDetectionService.checkRepStatus({
-        //     repStateRef: repStateRefR,
-        //     currentRepRef: currentRepRefR,
-        //     recordedReps: recordedRepsRef.current.right,
-        //     currentFrameKeypoints: keypoints,
-        //     keypointHistory: keypointHistory,
-        //     keypointId: exerciseDetectionData.rightSide.romKeypointId,
-        //     valueType: exerciseDetectionData.romValueType,
-        //     direction: exerciseDetectionData.romStartDirection,
-        //     exerciseStartConditions: exerciseDetectionData.rightSide.conditions,
-        //     avgFps: avgFps.current,
-        //     initedFirstFrameInRecordingMode, // this is used to track if no rep was detected yet
-        //     side: 'R',
-        //     setRepCount,
-        //   });
-        // }
       }
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
