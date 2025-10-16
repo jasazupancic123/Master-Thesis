@@ -91,7 +91,7 @@ function IsoOverlayDual({
   );
 }
 
-interface TrainingInProgressTempoChartProps {
+interface TempoChartProps {
   selectedExercise: TrainingExerciseRecording | undefined;
   setIndex: number;
   width: number;
@@ -104,9 +104,7 @@ interface TrainingInProgressTempoChartProps {
   aiRecordingView?: boolean;
 }
 
-export default function TrainingInProgressTempoChart(
-  props: TrainingInProgressTempoChartProps
-) {
+export default function TempoChart(props: TempoChartProps) {
   const {
     selectedExercise,
     setIndex,

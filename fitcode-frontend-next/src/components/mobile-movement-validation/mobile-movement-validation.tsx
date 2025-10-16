@@ -26,7 +26,7 @@ import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
 import { CommonService } from '@/common/service/common.service';
 import type { SetState } from '@/common/type/state.type';
 import EnvUtil from '@/common/util/env.util';
-import TrainingInProgressTempoChart from '@/components/charts/tempo/tempo-chart';
+import TempoChart from '@/components/charts/tempo/tempo-chart';
 import { FrameBitmapBuffer } from '@/controller/pose-detection/class/frame-bitmap-buffer';
 import { KeypointHistory } from '@/controller/pose-detection/class/keypoint-history';
 import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
@@ -542,11 +542,15 @@ export default function MobileMovementValidation(
         const reps = side.map((rep) => {
           return {
             repNumber: rep.repNumber,
+            startTimestamp: rep.startTimestamp,
+            endTimestamp: rep.endValueTimestamp,
             idleTimeMs: rep.idleTimeMs,
             timeToExtremeMs: rep.timeToExtremeMs,
             timeAtExtremeMs: rep.timeAtExtremeMs,
             timeFromExtremeToEndMs: rep.timeFromExtremeToEndMs,
             durationMs: rep.durationMs,
+            minRomValue: rep.minRomValue,
+            maxRomValue: rep.maxRomValue,
           } as RepInfo;
         });
 
@@ -1025,7 +1029,7 @@ export default function MobileMovementValidation(
 
               {recordedRepsRef.current.left.length ||
               recordedRepsRef.current.right?.length ? (
-                <TrainingInProgressTempoChart
+                <TempoChart
                   selectedExercise={selectedExercise}
                   setIndex={-1}
                   width={

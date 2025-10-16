@@ -2,17 +2,16 @@ import { theme } from '@/app/style';
 import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
 import { TrainingExerciseRecording } from '@/controller/training/type/training-exercise.type';
 import { LineChart } from '@mui/x-charts';
+import dayjs from 'dayjs';
 
-interface TrainingInProgressRomChartProps {
+interface RomChartProps {
   selectedExercise: TrainingExerciseRecording;
   setIndex: number;
   width: number;
   height?: number;
 }
 
-export default function TrainingInProgressRomChart(
-  props: TrainingInProgressRomChartProps
-) {
+export default function RomChart(props: RomChartProps) {
   const { selectedExercise, setIndex, width, height = 300 } = props;
 
   if (!selectedExercise.recordedSets) return null;
@@ -23,11 +22,33 @@ export default function TrainingInProgressRomChart(
 
   if (!currentSet) return null;
 
+  const earliestRepStart = Math.min(
+    ...(currentSet.repsL?.map(
+      (r) => new Date(r.startTimestamp).getTime() || 0
+    ) || []),
+    ...(currentSet.repsR?.map(
+      (r) => new Date(r.startTimestamp).getTime() || 0
+    ) || [])
+  );
+
   const romL = KeypointUtil.smoothKeypointValues(
-    currentSet.romL?.map((r) => r.value) || []
+    currentSet.romL
+      ?.filter(
+        (r) =>
+          new Date(r.timestamp).getTime() >=
+          dayjs(earliestRepStart).subtract(1, 'second').toDate().getTime()
+      )
+      .map((r) => r.value) || []
   ) as number[];
+
   const romR = KeypointUtil.smoothKeypointValues(
-    currentSet.romR?.map((r) => r.value) || []
+    currentSet.romR
+      ?.filter(
+        (r) =>
+          new Date(r.timestamp).getTime() >=
+          dayjs(earliestRepStart).subtract(1, 'second').toDate().getTime()
+      )
+      .map((r) => r.value) || []
   ) as number[];
 
   if (!currentSet.romL && !currentSet.romR) return null;
@@ -73,14 +94,15 @@ export default function TrainingInProgressRomChart(
                 firstRomTimestamp.getTime()
               : 0;
 
-            const seconds = Math.floor(diff / 1000) + 1;
+            const seconds = Math.floor(diff / 1000);
 
-            const secondsLargestDiff = Math.floor(largestDiff / 1000) + 1;
+            const secondsLargestDiff = Math.floor(largestDiff / 1000);
 
             if (seconds === secondsLargestDiff) return '';
 
             return `${seconds}`;
           },
+          min: firstRomTimestamp,
           disableTicks: true,
           scaleType: 'time',
         },
