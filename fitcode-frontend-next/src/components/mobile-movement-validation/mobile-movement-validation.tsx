@@ -127,7 +127,6 @@ export default function MobileMovementValidation(
   const defaultExerciseName = 'Biceps Curl';
   const exercisePose = {
     romValueType: KeypointValueType.POSITION_Y,
-    romStartDirection: ConditionDirection.POSITIVE,
     leftSide: {
       romKeypointId: KeypointId.LEFT_WRIST,
       conditions: [
@@ -159,35 +158,6 @@ export default function MobileMovementValidation(
       ? EXERCISE_POSES.find((e) => e.exerciseIds.includes(selectedExercise.id))
           ?.data
       : exercisePose;
-
-  // {
-  // romKeypointId: KeypointId.RIGHT_WRIST,
-  // romValueType: KeypointValueType.POSITION_Y,
-  // romStartDirection: ConditionDirection.POSITIVE,
-  // conditions: [
-  //   {
-  //     keypointId: KeypointId.RIGHT_WRIST,
-  //     type: KeypointValueType.POSITION_Y,
-  //     direction: ConditionDirection.POSITIVE,
-  //     duration: 750, // ms
-  //     distance: 0.1, // meters
-  //   },
-  // ],
-  // };
-  // : {
-  //     romKeypointId: KeypointId.LEFT_HIP,
-  //     romValueType: KeypointValueType.POSITION_Y,
-  //     romStartDirection: ConditionDirection.NEGATIVE,
-  //     conditions: [
-  //       {
-  //         keypointId: KeypointId.LEFT_HIP,
-  //         type: KeypointValueType.POSITION_Y,
-  //         direction: ConditionDirection.NEGATIVE,
-  //         duration: 750, // ms
-  //         distance: 0.05, // meters}
-  //       },
-  //     ],
-  //   };
 
   // Main Status
   const statusRef = useRef<DetectionStatus>(DetectionStatus.NOT_FULLY_IN_FRAME);
@@ -598,13 +568,11 @@ export default function MobileMovementValidation(
             });
           } else {
             // did not yet record for this set, insert only, can only happen for left side
-            recordedSets = [
-              {
-                setIndex,
-                imagesL: images,
-                repsL: reps,
-              },
-            ];
+            recordedSets.push({
+              setIndex,
+              imagesL: images,
+              repsL: reps,
+            });
           }
         }
 

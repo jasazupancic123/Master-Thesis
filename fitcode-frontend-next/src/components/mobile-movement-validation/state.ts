@@ -355,7 +355,6 @@ export const predictWebcam = async (state: {
           currentFrameKeypoints: keypoints,
           keypointHistory: keypointHistory,
           valueType: exerciseDetectionData.romValueType,
-          // direction: exerciseDetectionData.romStartDirection,
           avgFps: avgFps.current,
           initedFirstFrameInRecordingMode, // this is used to track if no rep was detected yet
           exerciseDetectionData,
