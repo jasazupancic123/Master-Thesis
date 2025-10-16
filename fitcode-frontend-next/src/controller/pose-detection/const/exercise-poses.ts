@@ -111,7 +111,6 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     ],
     data: {
       romValueType: KeypointValueType.POSITION_Y,
-      romStartDirection: ConditionDirection.NEGATIVE,
       leftSide: {
         romKeypointId: KeypointId.LEFT_HIP,
         conditions: [
@@ -130,7 +129,6 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     exerciseIds: ['lateral-squat-bw'],
     data: {
       romValueType: KeypointValueType.POSITION_X,
-      romStartDirection: ConditionDirection.POSITIVE,
       cannotDoBothSidesSimultaneously: true,
       leftSide: {
         romKeypointId: KeypointId.LEFT_KNEE,
@@ -162,7 +160,6 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     exerciseIds: ['biceps-curl-sa-db'],
     data: {
       romValueType: KeypointValueType.POSITION_Y,
-      romStartDirection: ConditionDirection.POSITIVE,
       leftSide: {
         romKeypointId: KeypointId.LEFT_WRIST,
         conditions: [
@@ -193,7 +190,6 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     exerciseIds: ['arm-curl', 'arm-curl-db', 'biceps-curl-db'],
     data: {
       romValueType: KeypointValueType.POSITION_Y,
-      romStartDirection: ConditionDirection.POSITIVE,
       leftSide: {
         romKeypointId: KeypointId.LEFT_WRIST,
         conditions: [
@@ -212,7 +208,6 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     exerciseIds: ['skull-crusher-db'],
     data: {
       romValueType: KeypointValueType.POSITION_Y,
-      romStartDirection: ConditionDirection.NEGATIVE,
       leftSide: {
         romKeypointId: KeypointId.LEFT_WRIST,
         conditions: [
@@ -231,7 +226,6 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     exerciseIds: ['bench-press-bb'],
     data: {
       romValueType: KeypointValueType.POSITION_Y,
-      romStartDirection: ConditionDirection.POSITIVE,
       leftSide: {
         romKeypointId: KeypointId.LEFT_WRIST,
         conditions: [
@@ -259,7 +253,6 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     ],
     data: {
       romValueType: KeypointValueType.POSITION_Y,
-      romStartDirection: ConditionDirection.NEGATIVE,
       leftSide: {
         romKeypointId: KeypointId.LEFT_SHOULDER,
         conditions: [
