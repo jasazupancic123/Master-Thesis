@@ -100,6 +100,7 @@ export const predictWebcam = async (state: {
   currentRepRefL: RefObject<Rep | null>;
   currentRepRefR: RefObject<Rep | null>;
   recordedRepsRef: RefObject<RecordedReps>;
+  lastRecordedRepRef: RefObject<Rep | null>;
   exerciseDetectionData: ExerciseDetectionData;
   currentSideMutexRef: RefObject<CurrentSideMutex>;
   videoRef: RefObject<HTMLVideoElement | null>;
@@ -137,6 +138,7 @@ export const predictWebcam = async (state: {
     currentRepRefL,
     currentRepRefR,
     recordedRepsRef,
+    lastRecordedRepRef,
     exerciseDetectionData,
     currentSideMutexRef,
     videoRef,
@@ -354,6 +356,7 @@ export const predictWebcam = async (state: {
         RepDetectionService.checkRepStatus({
           currentFrameKeypoints: keypoints,
           keypointHistory: keypointHistory,
+          lastRecordedRepRef,
           valueType: exerciseDetectionData.romValueType,
           avgFps: avgFps.current,
           initedFirstFrameInRecordingMode, // this is used to track if no rep was detected yet
