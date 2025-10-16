@@ -191,6 +191,8 @@ export default function MobileMovementValidation(
     right: exerciseDetectionData?.rightSide ? [] : undefined,
   });
 
+  const lastRecordedRepRef = useRef<Rep | null>(null);
+
   const currentSideMutexRef = useRef<CurrentSideMutex>(
     exerciseDetectionData?.cannotDoBothSidesSimultaneously
       ? CurrentSideMutexValues.NoneAtm
@@ -415,6 +417,7 @@ export default function MobileMovementValidation(
           currentRepRefL,
           currentRepRefR,
           recordedRepsRef,
+          lastRecordedRepRef,
           videoRef,
           canvasRef,
           drawingUtilsRef,
@@ -997,8 +1000,8 @@ export default function MobileMovementValidation(
                     fontWeight="bold"
                     textAlign="center"
                   >
-                    {recordedRepsRef.current.left.length
-                      ? `${recordedRepsRef.current.left[recordedRepsRef.current.left.length - 1]?.timeToExtremeMs !== undefined ? recordedRepsRef.current.left[recordedRepsRef.current.left.length - 1].timeToExtremeMs! / 1000 : '-'} - ${recordedRepsRef.current.left[recordedRepsRef.current.left.length - 1]?.timeFromExtremeToEndMs !== undefined ? recordedRepsRef.current.left[recordedRepsRef.current.left.length - 1].timeFromExtremeToEndMs! / 1000 : '-'}`
+                    {lastRecordedRepRef.current
+                      ? `${lastRecordedRepRef.current.timeToExtremeMs !== undefined ? lastRecordedRepRef.current.timeToExtremeMs! / 1000 : '-'} - ${lastRecordedRepRef.current.timeFromExtremeToEndMs !== undefined ? lastRecordedRepRef.current.timeFromExtremeToEndMs! / 1000 : '-'}`
                       : '- : -'}
                   </Typography>
                 </Box>

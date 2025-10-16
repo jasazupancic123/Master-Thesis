@@ -54,6 +54,7 @@ export class RepDetectionService {
   static checkRepStatus(state: {
     currentFrameKeypoints: Keypoint[];
     keypointHistory: KeypointHistory;
+    lastRecordedRepRef: RefObject<Rep | null>;
     exerciseDetectionData: ExerciseDetectionData;
     currentSideMutexRef: RefObject<CurrentSideMutex>;
     valueType: KeypointValueType;
@@ -66,6 +67,7 @@ export class RepDetectionService {
     const {
       currentFrameKeypoints,
       keypointHistory,
+      lastRecordedRepRef,
       exerciseDetectionData,
       currentSideMutexRef,
       valueType,
@@ -104,10 +106,6 @@ export class RepDetectionService {
           currentSideMutexRef.current ===
             (otherSideLabel as CurrentSideMutexValues)
         ) {
-          // console.log(
-          //   `SKIPPING ${side} CUZ OF OTHER SIDE REP`,
-          //   new Date().getTime().toString().at(-1)
-          // );
           continue;
         }
       }
@@ -147,6 +145,8 @@ export class RepDetectionService {
               direction,
               avgFps,
             });
+
+            lastRecordedRepRef.current = currentRepRef.current;
 
             recordedReps.push(currentRepRef.current);
 

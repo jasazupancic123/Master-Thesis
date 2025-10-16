@@ -359,7 +359,8 @@ export default function TrainingInProgressExerciseCard() {
                   borderRadius: '25%',
                 }}
                 onClick={() => {
-                  if (!selectedExercise.exercise) return;
+                  if (!selectedExercise.exercise || setIndex === undefined)
+                    return;
 
                   const hasPoseLogic =
                     selectedExercise.exercise !== undefined &&
@@ -371,6 +372,21 @@ export default function TrainingInProgressExerciseCard() {
                     toast.error(
                       'Pose detection is not supported for this exercise yet'
                     );
+                    return;
+                  }
+
+                  const setTrackingState =
+                    trainingInProgress.exerciseSetTrackingState.find(
+                      (state) => state.exerciseId === selectedExercise.id
+                    );
+
+                  if (!setTrackingState) return;
+
+                  const isCurrentSetDone =
+                    setTrackingState.completedSetNumbers.includes(setIndex + 1);
+
+                  if (isCurrentSetDone) {
+                    toast.error('This set is already marked as done');
                     return;
                   }
 
