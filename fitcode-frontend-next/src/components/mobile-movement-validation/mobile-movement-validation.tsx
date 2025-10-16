@@ -39,14 +39,14 @@ import { KeypointValueType } from '@/controller/pose-detection/enum/keypoint-val
 import { PoseModel } from '@/controller/pose-detection/enum/pose-model.enum';
 import { RepStatus } from '@/controller/pose-detection/enum/rep-state';
 import { RepDetectionService } from '@/controller/pose-detection/rep-detection.service';
-import type { ExerciseDetectionData } from '@/controller/pose-detection/type/exercise-start-condition.type';
+import type { ExerciseDetectionData } from '@/controller/pose-detection/types/exercise-start-condition.type';
 import type {
   RecordedReps,
   Rep,
   RepInfo,
   RepsCount,
-} from '@/controller/pose-detection/type/rep.type';
-import type { RepState } from '@/controller/pose-detection/type/rep-state.type';
+} from '@/controller/pose-detection/types/rep.type';
+import type { RepState } from '@/controller/pose-detection/types/rep-state.type';
 import { getPoseLandmarker } from '@/controller/pose-detection/util/pose-landmarker-loader.util';
 import type {
   RepImage,
@@ -61,7 +61,9 @@ import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import LoadingOverlay from '@/util/loading-overlay/loading-overlay';
 import { usePathname } from 'next/navigation';
 import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
-import { Keypoint } from '@/controller/pose-detection/type/keypoint.type';
+import { Keypoint } from '@/controller/pose-detection/types/keypoint.type';
+import { CurrentSideMutex } from '../../controller/pose-detection/types/current-side-mutex.type';
+import { CurrentSideMutexValues } from '@/controller/pose-detection/enum/current-side-mutex-values.enum';
 
 const DEBUG = false;
 
@@ -218,6 +220,12 @@ export default function MobileMovementValidation(
     left: [],
     right: exerciseDetectionData?.rightSide ? [] : undefined,
   });
+
+  const currentSideMutexRef = useRef<CurrentSideMutex>(
+    exerciseDetectionData?.cannotDoBothSidesSimultaneously
+      ? CurrentSideMutexValues.NoneAtm
+      : undefined
+  );
 
   // const recordedRepsRef = useRef<RecordedReps>({
   //   left: demoReps,
@@ -447,6 +455,7 @@ export default function MobileMovementValidation(
           isMobile: screenSize.isMobile,
           avgFps,
           exerciseDetectionData: exerciseDetectionData!,
+          currentSideMutexRef,
           initedFirstFrameInRecordingMode,
           centerPosRef,
           recordingTimestampRef,

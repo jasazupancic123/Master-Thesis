@@ -5,6 +5,7 @@ import type { KeypointValueType } from '../enum/keypoint-value-type';
 export type ExerciseDetectionData = {
   romValueType: KeypointValueType;
   romStartDirection: ConditionDirection; // In which direction the ROM keypoint needs to move to start the rep
+  cannotDoBothSidesSimultaneously?: boolean; // If true, only one side can be active at a time (e.g. lateral lunges)
   leftSide: {
     conditions: ExerciseRepStartCondition[];
     romKeypointId: KeypointId;

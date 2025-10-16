@@ -8,9 +8,9 @@ import { DetectionStatus } from './enum/detection-status';
 import { KeypointId } from './enum/keypoint-id';
 import { RepStatus } from './enum/rep-state';
 import { PoseDetectionService } from './pose-detection.service';
-import type { ExerciseRepStartCondition } from './type/exercise-start-condition.type';
-import type { Keypoint } from './type/keypoint.type';
-import type { RepState } from './type/rep-state.type';
+import type { ExerciseRepStartCondition } from './types/exercise-start-condition.type';
+import type { Keypoint } from './types/keypoint.type';
+import type { RepState } from './types/rep-state.type';
 import { KeypointUtil } from './util/keypoint.util';
 import { getStatusMessage } from '@/components/mobile-movement-validation/state';
 

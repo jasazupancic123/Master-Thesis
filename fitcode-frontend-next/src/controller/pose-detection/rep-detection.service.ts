@@ -9,18 +9,23 @@ import type { KeypointId } from './enum/keypoint-id';
 import type { KeypointValueType } from './enum/keypoint-value-type';
 import { RepStatus } from './enum/rep-state';
 import { StatusDetectionService } from './status-detection.service';
-import type { ExerciseRepStartCondition } from './type/exercise-start-condition.type';
-import type { Keypoint } from './type/keypoint.type';
-import type { NumericValueFrameNum } from './type/numeric-value-frame-num';
-import type { RecordedReps, Rep, RepsCount } from './type/rep.type';
-import type { RepState } from './type/rep-state.type';
+import type {
+  ExerciseDetectionData,
+  ExerciseRepStartCondition,
+} from './types/exercise-start-condition.type';
+import type { Keypoint } from './types/keypoint.type';
+import type { NumericValueFrameNum } from './types/numeric-value-frame-num';
+import type { RecordedReps, Rep, RepsCount } from './types/rep.type';
+import type { RepState } from './types/rep-state.type';
 import { KeypointUtil } from './util/keypoint.util';
 import { TimeUtil } from './util/time.util';
 import { CommonService } from '@/common/service/common.service';
 import type { SetState } from '@/common/type/state.type';
 import { EXERCISE_TIMES_ROUNDING_STEP_S } from '@/components/mobile-movement-validation/mobile-movement-validation';
-import { RepSideDetectionData } from './type/rep-side-detection-data';
+import { RepSideDetectionData } from './types/rep-side-detection-data';
 import { RepPostProcessingUtil } from './util/rep-post-processing.util';
+import { CurrentSideMutex } from '@/controller/pose-detection/types/current-side-mutex.type';
+import { CurrentSideMutexValues } from './enum/current-side-mutex-values.enum';
 
 const commonService = CommonService.instance;
 
@@ -49,8 +54,9 @@ export class RepDetectionService {
   static checkRepStatus(state: {
     currentFrameKeypoints: Keypoint[];
     keypointHistory: KeypointHistory;
+    exerciseDetectionData: ExerciseDetectionData;
+    currentSideMutexRef: RefObject<CurrentSideMutex>;
     valueType: KeypointValueType;
-    direction: ConditionDirection;
     avgFps: { value: number; count: number } | null;
     initedFirstFrameInRecordingMode: RefObject<boolean>;
     leftData: RepSideDetectionData;
@@ -60,8 +66,9 @@ export class RepDetectionService {
     const {
       currentFrameKeypoints,
       keypointHistory,
+      exerciseDetectionData,
+      currentSideMutexRef,
       valueType,
-      direction,
       avgFps,
       initedFirstFrameInRecordingMode,
       leftData,
@@ -71,17 +78,39 @@ export class RepDetectionService {
 
     const lAndR = [leftData, rightData].filter((side) => side !== undefined);
 
+    let i = -1;
     for (const lOrR of lAndR) {
+      i++;
+
       const {
         repStateRef,
         currentRepRef,
         recordedReps,
         keypointId,
+        direction,
         exerciseStartConditions,
         side,
       } = lOrR;
 
       if (repStateRef.current.status === RepStatus.NONE) continue;
+
+      const otherSide = lAndR[i === 0 ? 1 : 0];
+
+      // If the other side is in rep, and the exercise cannot do both sides simultaneously, skip this side
+      if (otherSide) {
+        const { side: otherSideLabel } = otherSide;
+        if (
+          exerciseDetectionData.cannotDoBothSidesSimultaneously &&
+          currentSideMutexRef.current ===
+            (otherSideLabel as CurrentSideMutexValues)
+        ) {
+          // console.log(
+          //   `SKIPPING ${side} CUZ OF OTHER SIDE REP`,
+          //   new Date().getTime().toString().at(-1)
+          // );
+          continue;
+        }
+      }
 
       switch (repStateRef.current.status) {
         case RepStatus.IN_REP: {
@@ -130,6 +159,12 @@ export class RepDetectionService {
             console.log('RECORDED ', recordedReps.length, ' REPS');
 
             repStateRef.current.status = RepStatus.IDLE; // we are now out of the rep
+
+            // Reset MUTEX after rep is done, also clear keypoint history, so that the other side does not detect a rep start
+            if (currentSideMutexRef.current) {
+              currentSideMutexRef.current = CurrentSideMutexValues.NoneAtm;
+              keypointHistory.clear();
+            }
           }
 
           break;
@@ -161,6 +196,10 @@ export class RepDetectionService {
           ) {
             // New rep
             // console.log('NEW REP DETECTED with startValue', startValue);
+            if (currentSideMutexRef.current !== undefined) {
+              console.log('setting MUTEX to', side);
+              currentSideMutexRef.current = side as CurrentSideMutexValues; // lock to this side
+            }
             repStateRef.current.status = RepStatus.IN_REP; // we are now in the rep
 
             currentRepRef.current = this.initNewRep(
