@@ -1,7 +1,7 @@
 import { theme } from '@/app/style';
 import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
 import { TrainingExerciseRecording } from '@/controller/training/type/training-exercise.type';
-import { LineChart } from '@mui/x-charts';
+import { axisClasses, LineChart } from '@mui/x-charts';
 import dayjs from 'dayjs';
 
 interface RomChartProps {
@@ -41,7 +41,7 @@ export default function RomChart(props: RomChartProps) {
       .map((r) => r.value) || []
   ) as number[];
 
-  const romR = KeypointUtil.smoothKeypointValues(
+  let romR = KeypointUtil.smoothKeypointValues(
     currentSet.romR
       ?.filter(
         (r) =>
@@ -50,6 +50,20 @@ export default function RomChart(props: RomChartProps) {
       )
       .map((r) => r.value) || []
   ) as number[];
+
+  const firstRomL = romL[0];
+  const firstRomR = romR[0];
+
+  if (
+    firstRomL !== undefined &&
+    firstRomR !== undefined &&
+    Math.abs(firstRomL - firstRomR) < 0.05
+  ) {
+    // if L and R starts are less than 0.05 radian difference, align it to the same value, priorizite left
+    const offset = firstRomL - firstRomR;
+
+    romR = romR.map((r) => r + offset);
+  }
 
   if (!currentSet.romL && !currentSet.romR) return null;
 
@@ -80,6 +94,7 @@ export default function RomChart(props: RomChartProps) {
       xAxis={[
         {
           dataKey: 'timestamp',
+          label: 'Time (s)',
           valueFormatter: (value: Date) => {
             if (!(value instanceof Date)) return '';
 
@@ -103,15 +118,28 @@ export default function RomChart(props: RomChartProps) {
             return `${seconds}`;
           },
           min: firstRomTimestamp,
-          disableTicks: true,
           scaleType: 'time',
         },
       ]}
       yAxis={[
         {
-          disableTicks: true,
+          label: 'ROM (m)',
         },
       ]}
+      sx={{
+        [`& .${axisClasses.bottom} .${axisClasses.line}`]: {
+          display: 'none',
+        },
+        [`& .${axisClasses.left} .${axisClasses.label}`]: {
+          transform: 'translateX(10px)',
+        },
+        '& .MuiChartsLegend-root': {
+          transform: 'translateX(15px)',
+        },
+        '& [class*="MuiChartsSurface-root"]': {
+          transform: 'translateX(-10px) !important',
+        },
+      }}
       margin={{
         right: 0,
         bottom: 0,
