@@ -17,6 +17,7 @@ export type TrainingExercise = IdEntity &
 export type RepImage = {
   repNumber: number;
   url: string;
+  side?: 'L' | 'R';
 };
 
 export type TrainingExerciseRecording = TrainingExercise & {

@@ -7,12 +7,13 @@ import { theme } from '@/app/style';
 import type { RepImage } from '@/controller/training/type/training-exercise.type';
 
 interface ImageGalleryProps {
-  images: string[] | RepImage[];
+  imagesL: string[] | RepImage[];
+  imagesR: string[] | RepImage[];
   enableImagePickerSlider?: boolean;
 }
 
 export default function ImageGallery(props: ImageGalleryProps) {
-  const { images, enableImagePickerSlider = false } = props;
+  const { imagesL, imagesR, enableImagePickerSlider = false } = props;
 
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -20,7 +21,7 @@ export default function ImageGallery(props: ImageGalleryProps) {
 
   // check if it's array of strings or array of objects
   function isRepImageArray(
-    images: string[] | RepImage[]
+    images: (string | RepImage)[]
   ): images is RepImage[] {
     return (
       Array.isArray(images) &&
@@ -31,7 +32,24 @@ export default function ImageGallery(props: ImageGalleryProps) {
     );
   }
 
-  if (!images || images.length === 0) return null;
+  function isRepImage(image: string | RepImage): image is RepImage {
+    return typeof image === 'object' && 'repNumber' in image && 'url' in image;
+  }
+
+  if (!imagesL || imagesL.length === 0 || !imagesR || imagesR.length === 0)
+    return null;
+
+  const maxIndex = Math.max(imagesL.length, imagesR.length) - 1;
+
+  let images = [] as (string | RepImage)[];
+
+  for (let i = 0; i <= maxIndex; i++) {
+    const imgL = imagesL[i];
+    const imgR = imagesR[i];
+
+    if (imgL) images.push(isRepImage(imgL) ? { ...imgL, side: 'L' } : imgL);
+    if (imgR) images.push(isRepImage(imgR) ? { ...imgR, side: 'R' } : imgR);
+  }
 
   return (
     <Box
@@ -46,7 +64,11 @@ export default function ImageGallery(props: ImageGalleryProps) {
       </Typography>
       {enableImagePickerSlider && (
         <ImagePickerSlider
-          images={isRepImageArray(images) ? images.map((i) => i.url) : images}
+          images={
+            isRepImageArray(images)
+              ? images.map((img) => img.url)
+              : (images as string[])
+          }
           currentIndex={currentIndex}
           onClick={setCurrentIndex}
         />
@@ -61,12 +83,12 @@ export default function ImageGallery(props: ImageGalleryProps) {
           position: 'relative',
         }}
       >
-        {isRepImageArray(images) && !images[currentIndex]?.url ? null : (
+        {!images[currentIndex] !== null && (
           <Image
             src={
-              isRepImageArray(images)
-                ? images[currentIndex]?.url
-                : images[currentIndex]
+              isRepImage(images[currentIndex])
+                ? images[currentIndex].url
+                : (images[currentIndex] as string)
             }
             alt="Exercise Image"
             width={width}
@@ -88,7 +110,7 @@ export default function ImageGallery(props: ImageGalleryProps) {
         >
           {isRepImageArray(images) &&
           images[currentIndex]?.repNumber !== undefined
-            ? `Rep ${images[currentIndex]?.repNumber}`
+            ? `Rep ${images[currentIndex]?.repNumber} - ${images[currentIndex]?.side || ''}`
             : `${currentIndex + 1} / ${images.length}`}
         </Typography>
       </Box>
