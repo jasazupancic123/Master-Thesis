@@ -2,7 +2,11 @@ import { RefObject } from 'react';
 import { RepState } from './rep-state.type';
 import { Rep } from './rep.type';
 import { KeypointId } from '../enum/keypoint-id';
-import { ExerciseRepStartCondition } from './exercise-start-condition.type';
+import {
+  ExerciseRepStartCondition,
+  RequiredPoseCondition,
+} from './exercise-start-condition.type';
+import { ConditionDirection } from '../enum/condition-detection.enum';
 
 export type RepSideDetectionData = {
   repStateRef: RefObject<RepState>;
@@ -10,5 +14,7 @@ export type RepSideDetectionData = {
   recordedReps: Rep[];
   keypointId: KeypointId;
   exerciseStartConditions: ExerciseRepStartCondition[];
+  requiredPoseConditions?: RequiredPoseCondition[];
+  direction: ConditionDirection;
   side: 'L' | 'R';
 };

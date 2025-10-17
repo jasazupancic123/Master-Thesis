@@ -1,18 +1,17 @@
 import { theme } from '@/app/style';
 import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
 import { TrainingExerciseRecording } from '@/controller/training/type/training-exercise.type';
-import { LineChart } from '@mui/x-charts';
+import { axisClasses, LineChart } from '@mui/x-charts';
+import dayjs from 'dayjs';
 
-interface TrainingInProgressRomChartProps {
+interface RomChartProps {
   selectedExercise: TrainingExerciseRecording;
   setIndex: number;
   width: number;
   height?: number;
 }
 
-export default function TrainingInProgressRomChart(
-  props: TrainingInProgressRomChartProps
-) {
+export default function RomChart(props: RomChartProps) {
   const { selectedExercise, setIndex, width, height = 300 } = props;
 
   if (!selectedExercise.recordedSets) return null;
@@ -23,12 +22,48 @@ export default function TrainingInProgressRomChart(
 
   if (!currentSet) return null;
 
+  const earliestRepStart = Math.min(
+    ...(currentSet.repsL?.map(
+      (r) => new Date(r.startTimestamp).getTime() || 0
+    ) || []),
+    ...(currentSet.repsR?.map(
+      (r) => new Date(r.startTimestamp).getTime() || 0
+    ) || [])
+  );
+
   const romL = KeypointUtil.smoothKeypointValues(
-    currentSet.romL?.map((r) => r.value) || []
+    currentSet.romL
+      ?.filter(
+        (r) =>
+          new Date(r.timestamp).getTime() >=
+          dayjs(earliestRepStart).subtract(1, 'second').toDate().getTime()
+      )
+      .map((r) => r.value) || []
   ) as number[];
-  const romR = KeypointUtil.smoothKeypointValues(
-    currentSet.romR?.map((r) => r.value) || []
+
+  let romR = KeypointUtil.smoothKeypointValues(
+    currentSet.romR
+      ?.filter(
+        (r) =>
+          new Date(r.timestamp).getTime() >=
+          dayjs(earliestRepStart).subtract(1, 'second').toDate().getTime()
+      )
+      .map((r) => r.value) || []
   ) as number[];
+
+  const firstRomL = romL[0];
+  const firstRomR = romR[0];
+
+  if (
+    firstRomL !== undefined &&
+    firstRomR !== undefined &&
+    Math.abs(firstRomL - firstRomR) < 0.05
+  ) {
+    // if L and R starts are less than 0.05 radian difference, align it to the same value, priorizite left
+    const offset = firstRomL - firstRomR;
+
+    romR = romR.map((r) => r + offset);
+  }
 
   if (!currentSet.romL && !currentSet.romR) return null;
 
@@ -59,6 +94,7 @@ export default function TrainingInProgressRomChart(
       xAxis={[
         {
           dataKey: 'timestamp',
+          label: 'Time (s)',
           valueFormatter: (value: Date) => {
             if (!(value instanceof Date)) return '';
 
@@ -73,23 +109,37 @@ export default function TrainingInProgressRomChart(
                 firstRomTimestamp.getTime()
               : 0;
 
-            const seconds = Math.floor(diff / 1000) + 1;
+            const seconds = Math.floor(diff / 1000);
 
-            const secondsLargestDiff = Math.floor(largestDiff / 1000) + 1;
+            const secondsLargestDiff = Math.floor(largestDiff / 1000);
 
             if (seconds === secondsLargestDiff) return '';
 
             return `${seconds}`;
           },
-          disableTicks: true,
+          min: firstRomTimestamp,
           scaleType: 'time',
         },
       ]}
       yAxis={[
         {
-          disableTicks: true,
+          label: 'ROM (m)',
         },
       ]}
+      sx={{
+        [`& .${axisClasses.bottom} .${axisClasses.line}`]: {
+          display: 'none',
+        },
+        [`& .${axisClasses.left} .${axisClasses.label}`]: {
+          transform: 'translateX(10px)',
+        },
+        '& .MuiChartsLegend-root': {
+          transform: 'translateX(15px)',
+        },
+        '& [class*="MuiChartsSurface-root"]': {
+          transform: 'translateX(-10px) !important',
+        },
+      }}
       margin={{
         right: 0,
         bottom: 0,

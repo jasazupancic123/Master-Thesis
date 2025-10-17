@@ -1,15 +1,12 @@
 import type { Landmark, NormalizedLandmark } from '@mediapipe/tasks-vision';
 import savitzkyGolay from 'ml-savitzky-golay';
-import type { RefObject } from 'react';
 import toast from 'react-hot-toast';
 
-import type { KeypointHistory } from '../class/keypoint-history';
 import { KeypointId } from '../enum/keypoint-id';
 import { KeypointValueType } from '../enum/keypoint-value-type';
 import { PoseModel } from '../enum/pose-model.enum';
-import type { ExerciseDetectionData } from '../type/exercise-start-condition.type';
-import type { Keypoint } from '../type/keypoint.type';
-import type { NumericValueFrameNum } from '../type/numeric-value-frame-num';
+import type { Keypoint } from '../types/keypoint.type';
+import type { NumericValueFrameNum } from '../types/numeric-value-frame-num';
 
 export class KeypointUtil {
   static getDesiredKeypointsByModel(
@@ -19,7 +16,8 @@ export class KeypointUtil {
     model: PoseModel,
     capturedAt: Date,
     frameNum: number,
-    centerHipsYToMiddleAnkleOrigin = true
+    centerHipsYToMiddleAnkleOrigin = true,
+    centerKneesXToMiddleAnklesOrigin = true // we need this for lateral squat
   ): Keypoint[] {
     if (!currentFrameKeypoints) return [];
 
@@ -68,6 +66,29 @@ export class KeypointUtil {
           const y = (leftAnkle.position.y + rightAnkle.position.y) / 2;
 
           leftHip.position.y -= y;
+          rightHip.position.y -= y;
+        }
+
+        if (centerKneesXToMiddleAnklesOrigin) {
+          // Center LEFT_KNEE and RIGHT_KNEE to the origin of (LEFT_ANKLE + RIGHT_ANKLE)/2
+          const leftKnee = keypoints.find((k) => k.id === KeypointId.LEFT_KNEE);
+          const rightKnee = keypoints.find(
+            (k) => k.id === KeypointId.RIGHT_KNEE
+          );
+
+          const leftAnkle = keypoints.find(
+            (k) => k.id === KeypointId.LEFT_ANKLE
+          );
+          const rightAnkle = keypoints.find(
+            (k) => k.id === KeypointId.RIGHT_ANKLE
+          );
+
+          if (!leftKnee || !rightKnee || !leftAnkle || !rightAnkle) break;
+
+          const x = (leftAnkle.position.x + rightAnkle.position.x) / 2;
+
+          leftKnee.position.x -= x;
+          rightKnee.position.x -= x;
         }
 
         break;

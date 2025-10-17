@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 import type { ExerciseSetTracking } from '@/common/type/exercise-set-tracking-state.type';
 import type { SetState } from '@/common/type/state.type';
 import { KeypointHistory } from '@/controller/pose-detection/class/keypoint-history';
-import type { Rep } from '@/controller/pose-detection/type/rep.type';
+import type { Rep } from '@/controller/pose-detection/types/rep.type';
 import { TrainingService } from '@/controller/training/training.service';
 import type { CompleteSet } from '@/controller/training/type/complete-set.type';
 import type { TrainingExerciseRecording } from '@/controller/training/type/training-exercise.type';

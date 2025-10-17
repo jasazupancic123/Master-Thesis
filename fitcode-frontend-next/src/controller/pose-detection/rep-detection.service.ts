@@ -6,20 +6,30 @@ import { KeypointHistory } from './class/keypoint-history';
 import { POSE_DETECTION_CONSTRAINTS } from './const/pose-detection-constrains.const';
 import { ConditionDirection } from './enum/condition-detection.enum';
 import type { KeypointId } from './enum/keypoint-id';
-import type { KeypointValueType } from './enum/keypoint-value-type';
+import { KeypointValueType } from './enum/keypoint-value-type';
 import { RepStatus } from './enum/rep-state';
 import { StatusDetectionService } from './status-detection.service';
-import type { ExerciseRepStartCondition } from './type/exercise-start-condition.type';
-import type { Keypoint } from './type/keypoint.type';
-import type { NumericValueFrameNum } from './type/numeric-value-frame-num';
-import type { RecordedReps, Rep, RepsCount } from './type/rep.type';
-import type { RepState } from './type/rep-state.type';
+import type {
+  ExerciseDetectionData,
+  ExerciseRepStartCondition,
+  RequiredPoseCondition,
+  StillnessCondition,
+} from './types/exercise-start-condition.type';
+import type { Keypoint } from './types/keypoint.type';
+import type { NumericValueFrameNum } from './types/numeric-value-frame-num';
+import type { RecordedReps, Rep, RepsCount } from './types/rep.type';
+import type { RepState } from './types/rep-state.type';
 import { KeypointUtil } from './util/keypoint.util';
 import { TimeUtil } from './util/time.util';
 import { CommonService } from '@/common/service/common.service';
 import type { SetState } from '@/common/type/state.type';
 import { EXERCISE_TIMES_ROUNDING_STEP_S } from '@/components/mobile-movement-validation/mobile-movement-validation';
-import { RepSideDetectionData } from './type/rep-side-detection-data';
+import { RepSideDetectionData } from './types/rep-side-detection-data';
+import { RepPostProcessingUtil } from './util/rep-post-processing.util';
+import { CurrentSideMutex } from '@/controller/pose-detection/types/current-side-mutex.type';
+import { CurrentSideMutexValues } from './enum/current-side-mutex-values.enum';
+import { AvgFps } from './types/avg-fps.type';
+import { DetectionStatus } from './enum/detection-status';
 
 const commonService = CommonService.instance;
 
@@ -48,9 +58,11 @@ export class RepDetectionService {
   static checkRepStatus(state: {
     currentFrameKeypoints: Keypoint[];
     keypointHistory: KeypointHistory;
+    lastRecordedRepRef: RefObject<Rep | null>;
+    exerciseDetectionData: ExerciseDetectionData;
+    currentSideMutexRef: RefObject<CurrentSideMutex>;
     valueType: KeypointValueType;
-    direction: ConditionDirection;
-    avgFps: { value: number; count: number } | null;
+    avgFps: AvgFps;
     initedFirstFrameInRecordingMode: RefObject<boolean>;
     leftData: RepSideDetectionData;
     rightData?: RepSideDetectionData | undefined;
@@ -59,8 +71,10 @@ export class RepDetectionService {
     const {
       currentFrameKeypoints,
       keypointHistory,
+      lastRecordedRepRef,
+      exerciseDetectionData,
+      currentSideMutexRef,
       valueType,
-      direction,
       avgFps,
       initedFirstFrameInRecordingMode,
       leftData,
@@ -70,17 +84,36 @@ export class RepDetectionService {
 
     const lAndR = [leftData, rightData].filter((side) => side !== undefined);
 
+    let i = -1;
     for (const lOrR of lAndR) {
+      i++;
+
       const {
         repStateRef,
         currentRepRef,
         recordedReps,
         keypointId,
+        direction,
         exerciseStartConditions,
+        requiredPoseConditions,
         side,
       } = lOrR;
 
       if (repStateRef.current.status === RepStatus.NONE) continue;
+
+      const otherSide = lAndR[i === 0 ? 1 : 0];
+
+      // If the other side is in rep, and the exercise cannot do both sides simultaneously, skip this side
+      if (otherSide) {
+        const { side: otherSideLabel } = otherSide;
+        if (
+          exerciseDetectionData.cannotDoBothSidesSimultaneously &&
+          currentSideMutexRef.current ===
+            (otherSideLabel as CurrentSideMutexValues)
+        ) {
+          continue;
+        }
+      }
 
       switch (repStateRef.current.status) {
         case RepStatus.IN_REP: {
@@ -118,6 +151,8 @@ export class RepDetectionService {
               avgFps,
             });
 
+            lastRecordedRepRef.current = currentRepRef.current;
+
             recordedReps.push(currentRepRef.current);
 
             setRepCount((prev) =>
@@ -129,6 +164,12 @@ export class RepDetectionService {
             console.log('RECORDED ', recordedReps.length, ' REPS');
 
             repStateRef.current.status = RepStatus.IDLE; // we are now out of the rep
+
+            // Reset MUTEX after rep is done, also clear keypoint history, so that the other side does not detect a rep start
+            if (currentSideMutexRef.current) {
+              currentSideMutexRef.current = CurrentSideMutexValues.NoneAtm;
+              keypointHistory.clear();
+            }
           }
 
           break;
@@ -147,9 +188,12 @@ export class RepDetectionService {
             valueType,
             direction,
             exerciseStartConditions,
+            requiredPoseConditions,
+            recordingStillnesses: exerciseDetectionData.recordingStillnesses,
             avgFps,
             initedFirstFrameInRecordingMode,
             recordedReps,
+            side,
           });
 
           if (
@@ -160,6 +204,10 @@ export class RepDetectionService {
           ) {
             // New rep
             // console.log('NEW REP DETECTED with startValue', startValue);
+            if (currentSideMutexRef.current !== undefined) {
+              console.log('setting MUTEX to', side);
+              currentSideMutexRef.current = side as CurrentSideMutexValues; // lock to this side
+            }
             repStateRef.current.status = RepStatus.IN_REP; // we are now in the rep
 
             currentRepRef.current = this.initNewRep(
@@ -185,7 +233,7 @@ export class RepDetectionService {
     direction: ConditionDirection;
     keypointId: KeypointId;
     valueType: KeypointValueType;
-    avgFps: { value: number; count: number } | null;
+    avgFps: AvgFps;
   }) {
     const { currentRepRef, direction, keypointId, valueType, avgFps } = state;
 
@@ -242,7 +290,7 @@ export class RepDetectionService {
     direction: ConditionDirection;
     keypointId: KeypointId;
     valueType: KeypointValueType;
-    avgFps: { value: number; count: number } | null;
+    avgFps: AvgFps;
   }): { isRepDone: boolean; endKeypoint?: Keypoint } {
     const {
       currentRepRef,
@@ -346,9 +394,12 @@ export class RepDetectionService {
     valueType: KeypointValueType;
     direction: ConditionDirection;
     exerciseStartConditions: ExerciseRepStartCondition[];
-    avgFps: { value: number; count: number } | null;
+    requiredPoseConditions?: RequiredPoseCondition[];
+    recordingStillnesses?: StillnessCondition[];
+    avgFps: AvgFps;
     initedFirstFrameInRecordingMode: RefObject<boolean>;
     recordedReps: Rep[];
+    side: 'L' | 'R';
   }): {
     hasRepStarted: boolean;
     startValue?: number;
@@ -362,9 +413,12 @@ export class RepDetectionService {
       valueType,
       direction,
       exerciseStartConditions,
+      requiredPoseConditions,
+      recordingStillnesses,
       avgFps,
       initedFirstFrameInRecordingMode, // if the very first rep has been inited
       recordedReps,
+      side,
     } = state;
 
     // const isFirstRep = !initedFirstFrameInRecordingMode.current;
@@ -379,7 +433,24 @@ export class RepDetectionService {
         avgFps
       );
 
-    if (!checkStartedRep) return { hasRepStarted: false };
+    const checkRequiredPoseConditions = this.checkRequiredPoseConditions(
+      currentFrameKeypoints,
+      requiredPoseConditions
+    );
+
+    const checkStillnessConditions = this.checkStillnessConditions(
+      keypointHistory,
+      currentFrameKeypoints,
+      avgFps,
+      recordingStillnesses
+    );
+
+    if (
+      !checkStartedRep ||
+      !checkRequiredPoseConditions ||
+      !checkStillnessConditions
+    )
+      return { hasRepStarted: false };
 
     if (keypointHistory.history.length < 2) return { hasRepStarted: false };
 
@@ -427,12 +498,132 @@ export class RepDetectionService {
     };
   }
 
+  private static checkRequiredPoseConditions(
+    currentFrameKeypoints: Keypoint[],
+    requiredPoseConditions?: RequiredPoseCondition[]
+  ): boolean {
+    if (!requiredPoseConditions) return true;
+
+    for (const poseCondition of requiredPoseConditions) {
+      const { keypointId1, keypointId2, valueType, minDiffM } = poseCondition;
+
+      const keypoint1 = KeypointUtil.getDesiredKeypointFromArray(
+        currentFrameKeypoints,
+        keypointId1
+      );
+
+      const keypoint2 = KeypointUtil.getDesiredKeypointFromArray(
+        currentFrameKeypoints,
+        keypointId2
+      );
+
+      if (!keypoint1 || !keypoint2) return false;
+
+      const value1 = KeypointUtil.getKeypointValueByType(keypoint1, valueType);
+      const value2 = KeypointUtil.getKeypointValueByType(keypoint2, valueType);
+
+      if (value1 === undefined || value2 === undefined) return false;
+
+      const diff = value1 - value2;
+
+      // if (avgFps !== null && avgFps.count % avgFps.value < 1) {
+      //   console.log({ keypoint1: keypoint1.id, keypoint2: keypoint2.id, diff });
+      // }
+
+      if (diff < minDiffM) return false;
+    }
+
+    return true;
+  }
+
+  private static checkStillnessConditions(
+    keypointHistory: KeypointHistory,
+    currentFrameKeypoints: Keypoint[],
+    avgFps: AvgFps,
+    recordingStillnesses?: StillnessCondition[]
+  ): boolean {
+    if (!recordingStillnesses || recordingStillnesses.length === 0) return true;
+
+    for (const stillness of recordingStillnesses) {
+      const { keypointId, maxMovementM, durationS } = stillness;
+
+      const isStill = this.detectStillnessViaVelocity(
+        keypointHistory,
+        keypointId,
+        maxMovementM,
+        avgFps,
+        durationS
+      );
+
+      if (!isStill) {
+        console.log('NOT STILL', new Date().getTime().toString().at(-1));
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  // Calculates diffs and checks if it's under a certain threshold
+  private static detectStillnessViaVelocity(
+    buffer: KeypointHistory,
+    keypointId: KeypointId,
+    maxMovementM: number,
+    avgFps: AvgFps,
+    seconds = 1
+  ): boolean {
+    if (!avgFps) return false;
+
+    const numFrames = KeypointUtil.getFramesCountFromSeconds(
+      seconds,
+      avgFps.value
+    );
+
+    if (numFrames > buffer.history.length) return false;
+
+    const cutIndex = buffer.history.length - 1 - numFrames;
+
+    const cutBuffer = buffer.history.slice(cutIndex);
+
+    const keypoints = cutBuffer
+      .map((frame) =>
+        KeypointUtil.getDesiredKeypointFromArray(frame, keypointId)
+      )
+      .filter((k) => k !== undefined);
+
+    const valuesX = keypoints
+      .map((k) =>
+        KeypointUtil.getKeypointValueByType(k, KeypointValueType.POSITION_X)
+      )
+      .filter((v) => v !== undefined);
+
+    const valuesY = keypoints
+      .map((k) =>
+        KeypointUtil.getKeypointValueByType(k, KeypointValueType.POSITION_Y)
+      )
+      .filter((v) => v !== undefined);
+
+    const minX = Math.min(...valuesX);
+    const maxX = Math.max(...valuesX);
+
+    const minY = Math.min(...valuesY);
+    const maxY = Math.max(...valuesY);
+
+    if (
+      Math.abs(minX - maxX) > maxMovementM
+      // || Math.abs(minY - maxY) > maxMovementM
+    )
+      return false;
+
+    return true;
+  }
+
   private static findStartOfRep(state: {
     buffer: KeypointHistory;
     keypointId: KeypointId;
     valueType: KeypointValueType;
     direction: ConditionDirection;
-    avgFps: { value: number; count: number } | null;
+    avgFps: AvgFps;
   }): { startIndex: number; startValue: number; startValueFrameNum: number } {
     const { buffer, keypointId, valueType, direction, avgFps } = state;
 
@@ -686,7 +877,7 @@ export class RepDetectionService {
     velocity: number[];
     direction: ConditionDirection;
     detectingRepStart: boolean;
-    avgFps: { value: number; count: number } | null;
+    avgFps: AvgFps;
   }): number | undefined {
     const { velocity, direction, detectingRepStart, avgFps } = state;
 
@@ -921,7 +1112,7 @@ export class RepDetectionService {
     keypointId: KeypointId;
     valueType: KeypointValueType;
     direction: ConditionDirection;
-    avgFps: { value: number; count: number } | null;
+    avgFps: AvgFps;
   }) {
     const {
       currentRepRef,
@@ -939,202 +1130,33 @@ export class RepDetectionService {
     if (!extremeKeypoint) return;
 
     const keypoints = currentRepRef.current.buffer.getHistoryById(keypointId);
+
     const initialValues: number[] = keypoints
       .map((k) => KeypointUtil.getKeypointValueByType(k, valueType))
       .filter((v) => v !== undefined);
 
-    const initialVelocity = KeypointUtil.getVelocityFromValues(
-      initialValues
-    ) as number[];
-
-    const velocity = KeypointUtil.smoothKeypointValues(
-      initialVelocity,
-      undefined,
-      13,
-      2
-    ) as number[];
-
-    const indexOfExtreme = currentRepRef.current.buffer.history.findIndex(
-      (keypoints) =>
-        keypoints.some((k) => k.frameNum === extremeKeypoint.frameNum)
-    );
-
-    if (indexOfExtreme === -1) return;
-
-    const kTreshold =
-      POSE_DETECTION_CONSTRAINTS.TIME_AT_EXTREMUM_VELOCITY_THRESHOLD_M_PER_S /
-      (avgFps?.value || 30);
-
-    let timeAtExtremumStartKeypoint: Keypoint | undefined;
-    let timeAtExtremumEndKeypoint: Keypoint | undefined;
-
-    const numConsecutiveFrames = KeypointUtil.getFramesCountFromSeconds(
-      POSE_DETECTION_CONSTRAINTS.TIME_AT_EXTREMUM_VELOCITY_SUSTAIN_S,
-      avgFps?.value || 30
-    );
-
-    // time at extremum start meassurement
-    let startHit = 0;
-    for (let i = indexOfExtreme; i >= 0; i--) {
-      const currentKeypoint = KeypointUtil.getDesiredKeypointFromArray(
-        currentRepRef.current.buffer.history[i],
-        keypointId
-      );
-
-      if (!currentKeypoint) continue;
-
-      if (currentKeypoint.frameNum >= extremeKeypoint.frameNum) continue;
-
-      const K = velocity[i];
-
-      if (
-        (direction === ConditionDirection.POSITIVE && K > kTreshold && K > 0) ||
-        (direction === ConditionDirection.NEGATIVE && K < -kTreshold && K < 0)
-      ) {
-        startHit++;
-      } else {
-        startHit = 0;
-      }
-
-      if (startHit >= numConsecutiveFrames) {
-        const keypointIndex = i + numConsecutiveFrames - 1;
-
-        timeAtExtremumStartKeypoint = KeypointUtil.getDesiredKeypointFromArray(
-          currentRepRef.current.buffer.history[keypointIndex],
-          keypointId
-        );
-
-        currentRepRef.current.timeAtExtremumStartKeypoint =
-          timeAtExtremumStartKeypoint;
-
-        currentRepRef.current.timeAtExtremumStartTimestamp =
-          timeAtExtremumStartKeypoint?.capturedAt;
-
-        break;
-      }
-    }
-
-    // time at extremum end meassurement
-    let endHit = 0;
-    for (
-      let i = indexOfExtreme;
-      i < currentRepRef.current.buffer.history.length;
-      i++
-    ) {
-      const currentKeypoint = KeypointUtil.getDesiredKeypointFromArray(
-        currentRepRef.current.buffer.history[i],
-        keypointId
-      );
-
-      if (!currentKeypoint) continue;
-
-      if (currentKeypoint.frameNum <= extremeKeypoint.frameNum) continue;
-
-      const K = velocity[i];
-
-      if (
-        (direction === ConditionDirection.POSITIVE &&
-          K < -kTreshold &&
-          K < 0) ||
-        (direction === ConditionDirection.NEGATIVE && K > kTreshold && K > 0)
-      ) {
-        endHit++;
-      } else {
-        endHit = 0;
-      }
-
-      if (endHit >= numConsecutiveFrames) {
-        const keypointIndex = i - numConsecutiveFrames;
-
-        timeAtExtremumEndKeypoint = KeypointUtil.getDesiredKeypointFromArray(
-          currentRepRef.current.buffer.history[keypointIndex],
-          keypointId
-        );
-
-        currentRepRef.current.timeAtExtremumEndKeypoint =
-          timeAtExtremumEndKeypoint;
-
-        currentRepRef.current.timeAtExtremumEndTimestamp =
-          timeAtExtremumEndKeypoint?.capturedAt;
-
-        break;
-      }
-    }
+    const { timeAtExtremumStartKeypoint, timeAtExtremumEndKeypoint } =
+      RepPostProcessingUtil.getAtExtremumStartAndEndTimes({
+        currentRepRef,
+        initialValues,
+        avgFps,
+        extremeKeypoint,
+        keypointId,
+        direction,
+      });
 
     // UPDATE ALL NECESARY TIMES HERE!
     // durationMs, idleTimeMs, timeToExtremeMs, timeAtExtremeMs, timeFromExtremeToEndMs
 
-    if (currentRepRef.current.endValueTimestamp) {
-      currentRepRef.current.durationMs = commonService.number.roundToStep(
-        TimeUtil.getMsDiff(
-          currentRepRef.current.startTimestamp,
-          currentRepRef.current.endValueTimestamp
-        ),
-        EXERCISE_TIMES_ROUNDING_STEP_S * 1000
-      );
-    }
+    RepPostProcessingUtil.setRepTimes({
+      currentRepRef,
+      recordedReps,
+      timeAtExtremumStartKeypoint,
+      timeAtExtremumEndKeypoint,
+      commonService,
+    });
 
-    if (recordedReps.length > 0) {
-      const prevRep = recordedReps[recordedReps.length - 1];
-      if (prevRep.endValueTimestamp) {
-        currentRepRef.current.idleTimeMs = commonService.number.roundToStep(
-          TimeUtil.getMsDiff(
-            prevRep.endValueTimestamp,
-            currentRepRef.current.startTimestamp
-          ),
-          EXERCISE_TIMES_ROUNDING_STEP_S * 1000
-        );
-      }
-    }
-
-    if (timeAtExtremumStartKeypoint) {
-      currentRepRef.current.timeToExtremeMs = Math.max(
-        EXERCISE_TIMES_ROUNDING_STEP_S * 1000,
-        commonService.number.roundToStep(
-          TimeUtil.getMsDiff(
-            currentRepRef.current.startTimestamp,
-            timeAtExtremumStartKeypoint.capturedAt
-          ),
-          EXERCISE_TIMES_ROUNDING_STEP_S * 1000
-        )
-      );
-    } else {
-      currentRepRef.current.timeToExtremeMs =
-        EXERCISE_TIMES_ROUNDING_STEP_S * 1000;
-    }
-
-    if (
-      (timeAtExtremumEndKeypoint !== undefined ||
-        currentRepRef.current.extremeKeypoint !== undefined) &&
-      currentRepRef.current.endValueTimestamp
-    ) {
-      currentRepRef.current.timeFromExtremeToEndMs = Math.max(
-        EXERCISE_TIMES_ROUNDING_STEP_S * 1000,
-        commonService.number.roundToStep(
-          TimeUtil.getMsDiff(
-            (timeAtExtremumEndKeypoint ||
-              currentRepRef.current.extremeKeypoint)!.capturedAt,
-            currentRepRef.current.endValueTimestamp
-          ),
-          EXERCISE_TIMES_ROUNDING_STEP_S * 1000
-        )
-      );
-    }
-
-    if (currentRepRef.current.timeFromExtremeToEndMs === undefined) {
-      currentRepRef.current.timeFromExtremeToEndMs =
-        EXERCISE_TIMES_ROUNDING_STEP_S * 1000;
-    }
-
-    if (timeAtExtremumStartKeypoint && timeAtExtremumEndKeypoint) {
-      currentRepRef.current.timeAtExtremeMs = commonService.number.roundToStep(
-        TimeUtil.getMsDiff(
-          timeAtExtremumStartKeypoint.capturedAt,
-          timeAtExtremumEndKeypoint.capturedAt
-        ),
-        EXERCISE_TIMES_ROUNDING_STEP_S * 1000
-      );
-    }
+    RepPostProcessingUtil.setRepRom({ currentRepRef, initialValues });
   }
 
   static saveRepTimesToJsonFiles = (state: {
