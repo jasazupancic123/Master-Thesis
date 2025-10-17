@@ -64,6 +64,7 @@ import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
 import { Keypoint } from '@/controller/pose-detection/types/keypoint.type';
 import { CurrentSideMutex } from '../../controller/pose-detection/types/current-side-mutex.type';
 import { CurrentSideMutexValues } from '@/controller/pose-detection/enum/current-side-mutex-values.enum';
+import { AvgFps } from '@/controller/pose-detection/types/avg-fps.type';
 
 const DEBUG = false;
 
@@ -215,7 +216,7 @@ export default function MobileMovementValidation(
 
   // FPS and Error
   const [fps, setFps] = useState<number | null>(null);
-  const avgFps = useRef<{ value: number; count: number } | null>(null);
+  const avgFps = useRef<AvgFps>(null);
   const [error, setError] = useState<string | null>(null);
 
   const centerPosRef = useRef<{ x: number; y: number } | null>(null);
