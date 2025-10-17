@@ -25,6 +25,7 @@ import type { RepState } from '@/controller/pose-detection/types/rep-state.type'
 import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
 import EnvUtil from '@/common/util/env.util';
 import { CurrentSideMutex } from '../../controller/pose-detection/types/current-side-mutex.type';
+import { AvgFps } from '@/controller/pose-detection/types/avg-fps.type';
 
 export async function setupVideoAndContex(state: {
   videoRef: RefObject<HTMLVideoElement | null>;
@@ -112,7 +113,7 @@ export const predictWebcam = async (state: {
   isMobile: boolean;
   frameCountRef: RefObject<number>;
   initedFirstFrameInRecordingMode: RefObject<boolean>;
-  avgFps: RefObject<{ value: number; count: number } | null>;
+  avgFps: RefObject<AvgFps>;
   centerPosRef: RefObject<{ x: number; y: number } | null>;
   recordingTimestampRef: RefObject<Date | null>;
   isCurrentlySavingImageRef: RefObject<boolean>;
@@ -369,6 +370,8 @@ export const predictWebcam = async (state: {
             keypointId: exerciseDetectionData.leftSide.romKeypointId,
             direction: exerciseDetectionData.leftSide.conditions[0].direction,
             exerciseStartConditions: exerciseDetectionData.leftSide.conditions,
+            requiredPoseConditions:
+              exerciseDetectionData.leftSide.requiredPoseConditions,
             side: 'L',
           },
           rightData:
@@ -382,6 +385,8 @@ export const predictWebcam = async (state: {
                     exerciseDetectionData.rightSide.conditions[0].direction,
                   exerciseStartConditions:
                     exerciseDetectionData.rightSide.conditions,
+                  requiredPoseConditions:
+                    exerciseDetectionData.rightSide.requiredPoseConditions,
                   side: 'R',
                 }
               : undefined,
@@ -459,7 +464,7 @@ function insertKeypointsIntoBuffers(state: {
   currentRepBufferR?: KeypointHistory;
   keypoints: Keypoint[];
   isMobile: boolean;
-  avgFps: RefObject<{ value: number; count: number } | null>;
+  avgFps: RefObject<AvgFps>;
 }) {
   const {
     statusRef,

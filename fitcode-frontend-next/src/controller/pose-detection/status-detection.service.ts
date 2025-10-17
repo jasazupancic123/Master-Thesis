@@ -96,7 +96,6 @@ export class StatusDetectionService {
         );
 
         const isStill = this.checkIsStill({
-          currentStatus: statusRef.current,
           keypoints,
           buffer: keypointBuffer,
           avgFps,
@@ -125,7 +124,6 @@ export class StatusDetectionService {
         //   keypointBuffer.cutAtIndex(keypointBuffer.history.length - 1);
 
         const isStill = this.checkIsStill({
-          currentStatus: statusRef.current,
           keypoints,
           buffer: keypointBuffer,
           avgFps,
@@ -176,7 +174,6 @@ export class StatusDetectionService {
         );
 
         const isStill = this.checkIsStill({
-          currentStatus: statusRef.current,
           keypoints,
           buffer: keypointBuffer,
           avgFps,
@@ -276,8 +273,7 @@ export class StatusDetectionService {
     );
   }
 
-  private static checkIsStill(state: {
-    currentStatus: DetectionStatus;
+  static checkIsStill(state: {
     keypoints: Keypoint[];
     buffer: KeypointHistory;
     avgFps: { value: number; count: number } | null;
@@ -286,7 +282,6 @@ export class StatusDetectionService {
     stillnessCountdownRef?: RefObject<Date | null>;
   }): boolean {
     const {
-      currentStatus,
       keypoints,
       buffer,
       avgFps,

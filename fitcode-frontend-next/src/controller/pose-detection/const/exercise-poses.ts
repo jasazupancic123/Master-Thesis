@@ -29,7 +29,6 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
       'back-squat-w-ohp-bb',
       'bulgarian-split-squat',
       'bulgarian-split-squat-db',
-      'carioca-squat-bw',
       'cossack-squat-bw',
       'deep-back-squat-bb',
       'deep-squat-backward-walk',
@@ -156,6 +155,65 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
       },
     },
   },
+  // {
+  //   exerciseIds: ['carioca-squat-bw'],
+  //   data: {
+  //     romValueType: KeypointValueType.POSITION_Y,
+  //     cannotDoBothSidesSimultaneously: true,
+  //     recordingStillnesses: [
+  //       {
+  //         keypointId: KeypointId.LEFT_ANKLE,
+  //         maxMovementM: 0.02,
+  //         durationS: 0.4,
+  //       },
+  //       {
+  //         keypointId: KeypointId.RIGHT_ANKLE,
+  //         maxMovementM: 0.02,
+  //         durationS: 0.4,
+  //       },
+  //     ],
+  //     leftSide: {
+  //       romKeypointId: KeypointId.LEFT_HIP,
+  //       conditions: [
+  //         {
+  //           keypointId: KeypointId.LEFT_HIP,
+  //           type: KeypointValueType.POSITION_Y,
+  //           direction: ConditionDirection.NEGATIVE,
+  //           duration: 1000,
+  //           distance: 0.04,
+  //         },
+  //       ],
+  //       requiredPoseConditions: [
+  //         {
+  //           keypointId1: KeypointId.RIGHT_ANKLE,
+  //           keypointId2: KeypointId.LEFT_SHOULDER,
+  //           valueType: KeypointValueType.POSITION_X,
+  //           minDiffM: 0,
+  //         },
+  //       ],
+  //     },
+  //     rightSide: {
+  //       romKeypointId: KeypointId.RIGHT_HIP,
+  //       conditions: [
+  //         {
+  //           keypointId: KeypointId.RIGHT_HIP,
+  //           type: KeypointValueType.POSITION_Y,
+  //           direction: ConditionDirection.NEGATIVE,
+  //           duration: 1000, // ms
+  //           distance: 0.04, // meters
+  //         },
+  //       ],
+  //       requiredPoseConditions: [
+  //         {
+  //           keypointId1: KeypointId.LEFT_SHOULDER,
+  //           keypointId2: KeypointId.RIGHT_ANKLE,
+  //           valueType: KeypointValueType.POSITION_X,
+  //           minDiffM: 0,
+  //         },
+  //       ],
+  //     },
+  //   },
+  // },
   {
     exerciseIds: ['biceps-curl-sa-db'],
     data: {

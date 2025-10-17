@@ -2,17 +2,23 @@ import type { ConditionDirection } from '../enum/condition-detection.enum';
 import type { KeypointId } from '../enum/keypoint-id';
 import type { KeypointValueType } from '../enum/keypoint-value-type';
 
+export type ExerciseDetectionDataWithExerciseIds = {
+  exerciseIds: string[];
+  data: ExerciseDetectionData;
+};
+
 export type ExerciseDetectionData = {
   romValueType: KeypointValueType;
   cannotDoBothSidesSimultaneously?: boolean; // If true, only one side can be active at a time (e.g. lateral lunges)
-  leftSide: {
-    conditions: ExerciseRepStartCondition[];
-    romKeypointId: KeypointId;
-  };
-  rightSide?: {
-    conditions: ExerciseRepStartCondition[];
-    romKeypointId: KeypointId;
-  };
+  recordingStillnesses?: StillnessCondition[]; // Which keypoints need to be still for the rep to start
+  leftSide: ExerciseDetectionSideData;
+  rightSide?: ExerciseDetectionSideData;
+};
+
+type ExerciseDetectionSideData = {
+  conditions: ExerciseRepStartCondition[];
+  requiredPoseConditions?: RequiredPoseCondition[];
+  romKeypointId: KeypointId;
 };
 
 export type ExerciseRepStartCondition = {
@@ -27,7 +33,15 @@ export type ExerciseRepStartCondition = {
   distance: number;
 };
 
-export type ExerciseDetectionDataWithExerciseIds = {
-  exerciseIds: string[];
-  data: ExerciseDetectionData;
+export type RequiredPoseCondition = {
+  keypointId1: KeypointId; // this one must have higher value!
+  keypointId2: KeypointId;
+  valueType: KeypointValueType;
+  minDiffM: number; // if diff is more than this value, then condition is passed
+};
+
+export type StillnessCondition = {
+  keypointId: KeypointId;
+  maxMovementM: number; // if movement is less than this value, then condition is passed
+  durationS: number; // how many seconds the condition needs to be held
 };
