@@ -4,7 +4,7 @@
 import type { KeypointHistory } from './class/keypoint-history';
 import type { KeypointId } from './enum/keypoint-id';
 import type { KeypointValueType } from './enum/keypoint-value-type';
-import type { Rep } from './type/rep.type';
+import type { Rep } from './types/rep.type';
 import { KeypointUtil } from './util/keypoint.util';
 
 export class RepsGraphService {

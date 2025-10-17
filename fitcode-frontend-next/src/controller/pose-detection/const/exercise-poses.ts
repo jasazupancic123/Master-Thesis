@@ -1,7 +1,7 @@
 import { ConditionDirection } from '../enum/condition-detection.enum';
 import { KeypointId } from '../enum/keypoint-id';
 import { KeypointValueType } from '../enum/keypoint-value-type';
-import type { ExerciseDetectionDataWithExerciseIds } from '../type/exercise-start-condition.type';
+import type { ExerciseDetectionDataWithExerciseIds } from '../types/exercise-start-condition.type';
 
 // Smaller the duration, more accurate will the rep cuting be
 export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
@@ -29,7 +29,6 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
       'back-squat-w-ohp-bb',
       'bulgarian-split-squat',
       'bulgarian-split-squat-db',
-      'carioca-squat-bw',
       'cossack-squat-bw',
       'deep-back-squat-bb',
       'deep-squat-backward-walk',
@@ -63,7 +62,6 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
       'iso-squat-push-135°-fd',
       'iso-squat-w-calf-raises-landmine',
       'lateral-deceleration-squat-fw[v12]',
-      'lateral-squat-bw',
       'mobility-squat',
       'oh-split-squat-mb',
       'oscillation-goblet-squat',
@@ -112,7 +110,6 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     ],
     data: {
       romValueType: KeypointValueType.POSITION_Y,
-      romStartDirection: ConditionDirection.NEGATIVE,
       leftSide: {
         romKeypointId: KeypointId.LEFT_HIP,
         conditions: [
@@ -128,10 +125,99 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     },
   },
   {
+    exerciseIds: ['lateral-squat-bw'],
+    data: {
+      romValueType: KeypointValueType.POSITION_X,
+      cannotDoBothSidesSimultaneously: true,
+      leftSide: {
+        romKeypointId: KeypointId.LEFT_KNEE,
+        conditions: [
+          {
+            keypointId: KeypointId.LEFT_KNEE,
+            type: KeypointValueType.POSITION_X,
+            direction: ConditionDirection.POSITIVE,
+            duration: 750, // ms
+            distance: 0.05, // meters
+          },
+        ],
+      },
+      rightSide: {
+        romKeypointId: KeypointId.RIGHT_KNEE,
+        conditions: [
+          {
+            keypointId: KeypointId.RIGHT_KNEE,
+            type: KeypointValueType.POSITION_X,
+            direction: ConditionDirection.NEGATIVE,
+            duration: 750, // ms
+            distance: 0.05, // meters
+          },
+        ],
+      },
+    },
+  },
+  // {
+  //   exerciseIds: ['carioca-squat-bw'],
+  //   data: {
+  //     romValueType: KeypointValueType.POSITION_Y,
+  //     cannotDoBothSidesSimultaneously: true,
+  //     recordingStillnesses: [
+  //       {
+  //         keypointId: KeypointId.LEFT_ANKLE,
+  //         maxMovementM: 0.02,
+  //         durationS: 0.4,
+  //       },
+  //       {
+  //         keypointId: KeypointId.RIGHT_ANKLE,
+  //         maxMovementM: 0.02,
+  //         durationS: 0.4,
+  //       },
+  //     ],
+  //     leftSide: {
+  //       romKeypointId: KeypointId.LEFT_HIP,
+  //       conditions: [
+  //         {
+  //           keypointId: KeypointId.LEFT_HIP,
+  //           type: KeypointValueType.POSITION_Y,
+  //           direction: ConditionDirection.NEGATIVE,
+  //           duration: 1000,
+  //           distance: 0.04,
+  //         },
+  //       ],
+  //       requiredPoseConditions: [
+  //         {
+  //           keypointId1: KeypointId.RIGHT_ANKLE,
+  //           keypointId2: KeypointId.LEFT_SHOULDER,
+  //           valueType: KeypointValueType.POSITION_X,
+  //           minDiffM: 0,
+  //         },
+  //       ],
+  //     },
+  //     rightSide: {
+  //       romKeypointId: KeypointId.RIGHT_HIP,
+  //       conditions: [
+  //         {
+  //           keypointId: KeypointId.RIGHT_HIP,
+  //           type: KeypointValueType.POSITION_Y,
+  //           direction: ConditionDirection.NEGATIVE,
+  //           duration: 1000, // ms
+  //           distance: 0.04, // meters
+  //         },
+  //       ],
+  //       requiredPoseConditions: [
+  //         {
+  //           keypointId1: KeypointId.LEFT_SHOULDER,
+  //           keypointId2: KeypointId.RIGHT_ANKLE,
+  //           valueType: KeypointValueType.POSITION_X,
+  //           minDiffM: 0,
+  //         },
+  //       ],
+  //     },
+  //   },
+  // },
+  {
     exerciseIds: ['biceps-curl-sa-db'],
     data: {
       romValueType: KeypointValueType.POSITION_Y,
-      romStartDirection: ConditionDirection.POSITIVE,
       leftSide: {
         romKeypointId: KeypointId.LEFT_WRIST,
         conditions: [
@@ -162,7 +248,6 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     exerciseIds: ['arm-curl', 'arm-curl-db', 'biceps-curl-db'],
     data: {
       romValueType: KeypointValueType.POSITION_Y,
-      romStartDirection: ConditionDirection.POSITIVE,
       leftSide: {
         romKeypointId: KeypointId.LEFT_WRIST,
         conditions: [
@@ -181,7 +266,6 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     exerciseIds: ['skull-crusher-db'],
     data: {
       romValueType: KeypointValueType.POSITION_Y,
-      romStartDirection: ConditionDirection.NEGATIVE,
       leftSide: {
         romKeypointId: KeypointId.LEFT_WRIST,
         conditions: [
@@ -200,7 +284,6 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     exerciseIds: ['bench-press-bb'],
     data: {
       romValueType: KeypointValueType.POSITION_Y,
-      romStartDirection: ConditionDirection.POSITIVE,
       leftSide: {
         romKeypointId: KeypointId.LEFT_WRIST,
         conditions: [
@@ -228,7 +311,6 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     ],
     data: {
       romValueType: KeypointValueType.POSITION_Y,
-      romStartDirection: ConditionDirection.NEGATIVE,
       leftSide: {
         romKeypointId: KeypointId.LEFT_SHOULDER,
         conditions: [

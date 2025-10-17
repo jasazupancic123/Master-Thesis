@@ -26,7 +26,7 @@ import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
 import { CommonService } from '@/common/service/common.service';
 import type { SetState } from '@/common/type/state.type';
 import EnvUtil from '@/common/util/env.util';
-import TrainingInProgressTempoChart from '@/components/charts/tempo/tempo-chart';
+import TempoChart from '@/components/charts/tempo/tempo-chart';
 import { FrameBitmapBuffer } from '@/controller/pose-detection/class/frame-bitmap-buffer';
 import { KeypointHistory } from '@/controller/pose-detection/class/keypoint-history';
 import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
@@ -39,14 +39,14 @@ import { KeypointValueType } from '@/controller/pose-detection/enum/keypoint-val
 import { PoseModel } from '@/controller/pose-detection/enum/pose-model.enum';
 import { RepStatus } from '@/controller/pose-detection/enum/rep-state';
 import { RepDetectionService } from '@/controller/pose-detection/rep-detection.service';
-import type { ExerciseDetectionData } from '@/controller/pose-detection/type/exercise-start-condition.type';
+import type { ExerciseDetectionData } from '@/controller/pose-detection/types/exercise-start-condition.type';
 import type {
   RecordedReps,
   Rep,
   RepInfo,
   RepsCount,
-} from '@/controller/pose-detection/type/rep.type';
-import type { RepState } from '@/controller/pose-detection/type/rep-state.type';
+} from '@/controller/pose-detection/types/rep.type';
+import type { RepState } from '@/controller/pose-detection/types/rep-state.type';
 import { getPoseLandmarker } from '@/controller/pose-detection/util/pose-landmarker-loader.util';
 import type {
   RepImage,
@@ -61,7 +61,10 @@ import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import LoadingOverlay from '@/util/loading-overlay/loading-overlay';
 import { usePathname } from 'next/navigation';
 import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
-import { Keypoint } from '@/controller/pose-detection/type/keypoint.type';
+import { Keypoint } from '@/controller/pose-detection/types/keypoint.type';
+import { CurrentSideMutex } from '../../controller/pose-detection/types/current-side-mutex.type';
+import { CurrentSideMutexValues } from '@/controller/pose-detection/enum/current-side-mutex-values.enum';
+import { AvgFps } from '@/controller/pose-detection/types/avg-fps.type';
 
 const DEBUG = false;
 
@@ -125,7 +128,6 @@ export default function MobileMovementValidation(
   const defaultExerciseName = 'Biceps Curl';
   const exercisePose = {
     romValueType: KeypointValueType.POSITION_Y,
-    romStartDirection: ConditionDirection.POSITIVE,
     leftSide: {
       romKeypointId: KeypointId.LEFT_WRIST,
       conditions: [
@@ -157,35 +159,6 @@ export default function MobileMovementValidation(
       ? EXERCISE_POSES.find((e) => e.exerciseIds.includes(selectedExercise.id))
           ?.data
       : exercisePose;
-
-  // {
-  // romKeypointId: KeypointId.RIGHT_WRIST,
-  // romValueType: KeypointValueType.POSITION_Y,
-  // romStartDirection: ConditionDirection.POSITIVE,
-  // conditions: [
-  //   {
-  //     keypointId: KeypointId.RIGHT_WRIST,
-  //     type: KeypointValueType.POSITION_Y,
-  //     direction: ConditionDirection.POSITIVE,
-  //     duration: 750, // ms
-  //     distance: 0.1, // meters
-  //   },
-  // ],
-  // };
-  // : {
-  //     romKeypointId: KeypointId.LEFT_HIP,
-  //     romValueType: KeypointValueType.POSITION_Y,
-  //     romStartDirection: ConditionDirection.NEGATIVE,
-  //     conditions: [
-  //       {
-  //         keypointId: KeypointId.LEFT_HIP,
-  //         type: KeypointValueType.POSITION_Y,
-  //         direction: ConditionDirection.NEGATIVE,
-  //         duration: 750, // ms
-  //         distance: 0.05, // meters}
-  //       },
-  //     ],
-  //   };
 
   // Main Status
   const statusRef = useRef<DetectionStatus>(DetectionStatus.NOT_FULLY_IN_FRAME);
@@ -219,6 +192,14 @@ export default function MobileMovementValidation(
     right: exerciseDetectionData?.rightSide ? [] : undefined,
   });
 
+  const lastRecordedRepRef = useRef<Rep | null>(null);
+
+  const currentSideMutexRef = useRef<CurrentSideMutex>(
+    exerciseDetectionData?.cannotDoBothSidesSimultaneously
+      ? CurrentSideMutexValues.NoneAtm
+      : undefined
+  );
+
   // const recordedRepsRef = useRef<RecordedReps>({
   //   left: demoReps,
   //   right: demoReps,
@@ -235,7 +216,7 @@ export default function MobileMovementValidation(
 
   // FPS and Error
   const [fps, setFps] = useState<number | null>(null);
-  const avgFps = useRef<{ value: number; count: number } | null>(null);
+  const avgFps = useRef<AvgFps>(null);
   const [error, setError] = useState<string | null>(null);
 
   const centerPosRef = useRef<{ x: number; y: number } | null>(null);
@@ -437,6 +418,7 @@ export default function MobileMovementValidation(
           currentRepRefL,
           currentRepRefR,
           recordedRepsRef,
+          lastRecordedRepRef,
           videoRef,
           canvasRef,
           drawingUtilsRef,
@@ -447,6 +429,7 @@ export default function MobileMovementValidation(
           isMobile: screenSize.isMobile,
           avgFps,
           exerciseDetectionData: exerciseDetectionData!,
+          currentSideMutexRef,
           initedFirstFrameInRecordingMode,
           centerPosRef,
           recordingTimestampRef,
@@ -542,11 +525,15 @@ export default function MobileMovementValidation(
         const reps = side.map((rep) => {
           return {
             repNumber: rep.repNumber,
+            startTimestamp: rep.startTimestamp,
+            endTimestamp: rep.endValueTimestamp,
             idleTimeMs: rep.idleTimeMs,
             timeToExtremeMs: rep.timeToExtremeMs,
             timeAtExtremeMs: rep.timeAtExtremeMs,
             timeFromExtremeToEndMs: rep.timeFromExtremeToEndMs,
             durationMs: rep.durationMs,
+            minRomValue: rep.minRomValue,
+            maxRomValue: rep.maxRomValue,
           } as RepInfo;
         });
 
@@ -585,13 +572,11 @@ export default function MobileMovementValidation(
             });
           } else {
             // did not yet record for this set, insert only, can only happen for left side
-            recordedSets = [
-              {
-                setIndex,
-                imagesL: images,
-                repsL: reps,
-              },
-            ];
+            recordedSets.push({
+              setIndex,
+              imagesL: images,
+              repsL: reps,
+            });
           }
         }
 
@@ -1016,8 +1001,8 @@ export default function MobileMovementValidation(
                     fontWeight="bold"
                     textAlign="center"
                   >
-                    {recordedRepsRef.current.left.length
-                      ? `${recordedRepsRef.current.left[recordedRepsRef.current.left.length - 1]?.timeToExtremeMs !== undefined ? recordedRepsRef.current.left[recordedRepsRef.current.left.length - 1].timeToExtremeMs! / 1000 : '-'} - ${recordedRepsRef.current.left[recordedRepsRef.current.left.length - 1]?.timeFromExtremeToEndMs !== undefined ? recordedRepsRef.current.left[recordedRepsRef.current.left.length - 1].timeFromExtremeToEndMs! / 1000 : '-'}`
+                    {lastRecordedRepRef.current
+                      ? `${lastRecordedRepRef.current.timeToExtremeMs !== undefined ? lastRecordedRepRef.current.timeToExtremeMs! / 1000 : '-'} - ${lastRecordedRepRef.current.timeFromExtremeToEndMs !== undefined ? lastRecordedRepRef.current.timeFromExtremeToEndMs! / 1000 : '-'}`
                       : '- : -'}
                   </Typography>
                 </Box>
@@ -1025,7 +1010,7 @@ export default function MobileMovementValidation(
 
               {recordedRepsRef.current.left.length ||
               recordedRepsRef.current.right?.length ? (
-                <TrainingInProgressTempoChart
+                <TempoChart
                   selectedExercise={selectedExercise}
                   setIndex={-1}
                   width={

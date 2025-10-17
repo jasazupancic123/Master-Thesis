@@ -14,13 +14,13 @@ import { ConditionDirection } from '@/controller/pose-detection/enum/condition-d
 import type {
   RecordedReps,
   RecordedRepsInfo,
-} from '@/controller/pose-detection/type/rep.type';
+} from '@/controller/pose-detection/types/rep.type';
 import type { TrainingExerciseRecording } from '@/controller/training/type/training-exercise.type';
 import { demoReps } from '@/components/training-in-progress/components/training-in-progress-exercise-card/actions/actions-exercise-set';
 import {
   ExerciseDetectionData,
   ExerciseDetectionDataWithExerciseIds,
-} from '@/controller/pose-detection/type/exercise-start-condition.type';
+} from '@/controller/pose-detection/types/exercise-start-condition.type';
 
 function IsoOverlayDual({
   rows,
@@ -91,7 +91,7 @@ function IsoOverlayDual({
   );
 }
 
-interface TrainingInProgressTempoChartProps {
+interface TempoChartProps {
   selectedExercise: TrainingExerciseRecording | undefined;
   setIndex: number;
   width: number;
@@ -104,9 +104,7 @@ interface TrainingInProgressTempoChartProps {
   aiRecordingView?: boolean;
 }
 
-export default function TrainingInProgressTempoChart(
-  props: TrainingInProgressTempoChartProps
-) {
+export default function TempoChart(props: TempoChartProps) {
   const {
     selectedExercise,
     setIndex,
@@ -131,19 +129,17 @@ export default function TrainingInProgressTempoChart(
       ? EXERCISE_POSES.find((e) => e.exerciseIds.includes(selectedExercise.id))
       : undefined;
 
-  const direction: ConditionDirection | undefined = exercisePose
-    ? exercisePose.data.romStartDirection
-    : passedExercisePose
-      ? passedExercisePose.romStartDirection
-      : undefined;
-
-  if (!direction) return null;
-
   if (!passedReps) {
     if (selectedExercise && selectedExercise.recordedSets) {
+      console.log(
+        'selectedExercise.recordedSets',
+        selectedExercise.recordedSets
+      );
       const set = selectedExercise.recordedSets.find(
         (s) => s.setIndex === setIndex
       );
+
+      console.log('SET', set);
 
       if (set) {
         currentRepsRef.current = { left: set.repsL, right: set.repsR };
@@ -209,9 +205,22 @@ export default function TrainingInProgressTempoChart(
 
     const secondarySideRep = secondarySide ? secondarySide[repIndex] : null;
 
+    const directionLeft = exercisePose
+      ? exercisePose.data.leftSide.conditions[0].direction
+      : passedExercisePose
+        ? passedExercisePose.leftSide.conditions[0].direction
+        : null;
+
+    const directionRight = exercisePose
+      ? exercisePose.data.rightSide?.conditions[0].direction
+      : passedExercisePose
+        ? passedExercisePose.rightSide?.conditions[0].direction
+        : null;
+
     if (sideWithMoreReps === 'L') {
       // left
-      if (direction === ConditionDirection.POSITIVE) {
+
+      if (directionLeft === ConditionDirection.POSITIVE) {
         ((row.concentricL = (r.timeToExtremeMs || 0) / 1000),
           (row.eccentricL =
             r.timeFromExtremeToEndMs !== undefined
@@ -231,7 +240,7 @@ export default function TrainingInProgressTempoChart(
 
       if (secondarySideRep) {
         // update right side
-        if (direction === ConditionDirection.POSITIVE) {
+        if (directionRight === ConditionDirection.POSITIVE) {
           ((row.concentricR = (secondarySideRep.timeToExtremeMs || 0) / 1000),
             (row.eccentricR =
               secondarySideRep.timeFromExtremeToEndMs !== undefined
@@ -252,7 +261,7 @@ export default function TrainingInProgressTempoChart(
       }
     } else {
       // right
-      if (direction === ConditionDirection.POSITIVE) {
+      if (directionRight === ConditionDirection.POSITIVE) {
         ((row.concentricR = (r.timeToExtremeMs || 0) / 1000),
           (row.eccentricR =
             r.timeFromExtremeToEndMs !== undefined
@@ -272,7 +281,7 @@ export default function TrainingInProgressTempoChart(
 
       if (secondarySideRep) {
         // update left side
-        if (direction === ConditionDirection.POSITIVE) {
+        if (directionLeft === ConditionDirection.POSITIVE) {
           ((row.concentricL = (secondarySideRep.timeToExtremeMs || 0) / 1000),
             (row.eccentricL =
               secondarySideRep.timeFromExtremeToEndMs !== undefined
