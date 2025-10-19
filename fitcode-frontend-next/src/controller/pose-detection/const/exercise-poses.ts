@@ -155,65 +155,77 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
       },
     },
   },
-  // {
-  //   exerciseIds: ['carioca-squat-bw'],
-  //   data: {
-  //     romValueType: KeypointValueType.POSITION_Y,
-  //     cannotDoBothSidesSimultaneously: true,
-  //     recordingStillnesses: [
-  //       {
-  //         keypointId: KeypointId.LEFT_ANKLE,
-  //         maxMovementM: 0.02,
-  //         durationS: 0.4,
-  //       },
-  //       {
-  //         keypointId: KeypointId.RIGHT_ANKLE,
-  //         maxMovementM: 0.02,
-  //         durationS: 0.4,
-  //       },
-  //     ],
-  //     leftSide: {
-  //       romKeypointId: KeypointId.LEFT_HIP,
-  //       conditions: [
-  //         {
-  //           keypointId: KeypointId.LEFT_HIP,
-  //           type: KeypointValueType.POSITION_Y,
-  //           direction: ConditionDirection.NEGATIVE,
-  //           duration: 1000,
-  //           distance: 0.04,
-  //         },
-  //       ],
-  //       requiredPoseConditions: [
-  //         {
-  //           keypointId1: KeypointId.RIGHT_ANKLE,
-  //           keypointId2: KeypointId.LEFT_SHOULDER,
-  //           valueType: KeypointValueType.POSITION_X,
-  //           minDiffM: 0,
-  //         },
-  //       ],
-  //     },
-  //     rightSide: {
-  //       romKeypointId: KeypointId.RIGHT_HIP,
-  //       conditions: [
-  //         {
-  //           keypointId: KeypointId.RIGHT_HIP,
-  //           type: KeypointValueType.POSITION_Y,
-  //           direction: ConditionDirection.NEGATIVE,
-  //           duration: 1000, // ms
-  //           distance: 0.04, // meters
-  //         },
-  //       ],
-  //       requiredPoseConditions: [
-  //         {
-  //           keypointId1: KeypointId.LEFT_SHOULDER,
-  //           keypointId2: KeypointId.RIGHT_ANKLE,
-  //           valueType: KeypointValueType.POSITION_X,
-  //           minDiffM: 0,
-  //         },
-  //       ],
-  //     },
-  //   },
-  // },
+  {
+    exerciseIds: ['carioca-squat-bw'],
+    data: {
+      romValueType: KeypointValueType.POSITION_Y,
+      cannotDoBothSidesSimultaneously: true,
+      leftSide: {
+        romKeypointId: KeypointId.LEFT_HIP,
+        conditions: [
+          {
+            keypointId: KeypointId.LEFT_HIP,
+            type: KeypointValueType.POSITION_Y,
+            direction: ConditionDirection.NEGATIVE,
+            duration: 1100,
+            distance: 0.08,
+          },
+        ],
+        recordingStillnesses: [
+          {
+            keypointId: KeypointId.RIGHT_ANKLE,
+            maxMovementM: 0.06,
+            durationS: 0.3,
+          },
+          {
+            keypointId: KeypointId.LEFT_ANKLE,
+            maxMovementM: 0.06,
+            durationS: 0.3,
+          },
+        ],
+        requiredPoseConditions: [
+          {
+            keypointId1: KeypointId.RIGHT_ANKLE,
+            keypointId2: KeypointId.LEFT_SHOULDER,
+            valueType: KeypointValueType.POSITION_X,
+            minDiffM: 0,
+          },
+        ],
+      },
+      rightSide: {
+        romKeypointId: KeypointId.RIGHT_HIP,
+        conditions: [
+          {
+            keypointId: KeypointId.RIGHT_HIP,
+            type: KeypointValueType.POSITION_Y,
+            direction: ConditionDirection.NEGATIVE,
+            duration: 1100, // ms
+            distance: 0.08, // meters
+          },
+        ],
+        recordingStillnesses: [
+          {
+            keypointId: KeypointId.LEFT_ANKLE,
+            maxMovementM: 0.06,
+            durationS: 0.3,
+          },
+          {
+            keypointId: KeypointId.RIGHT_ANKLE,
+            maxMovementM: 0.06,
+            durationS: 0.3,
+          },
+        ],
+        requiredPoseConditions: [
+          {
+            keypointId1: KeypointId.LEFT_SHOULDER,
+            keypointId2: KeypointId.RIGHT_ANKLE,
+            valueType: KeypointValueType.POSITION_X,
+            minDiffM: 0,
+          },
+        ],
+      },
+    },
+  },
   {
     exerciseIds: ['biceps-curl-sa-db'],
     data: {

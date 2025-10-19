@@ -96,6 +96,7 @@ export class RepDetectionService {
         direction,
         exerciseStartConditions,
         requiredPoseConditions,
+        recordingStillnesses,
         side,
       } = lOrR;
 
@@ -189,7 +190,7 @@ export class RepDetectionService {
             direction,
             exerciseStartConditions,
             requiredPoseConditions,
-            recordingStillnesses: exerciseDetectionData.recordingStillnesses,
+            recordingStillnesses,
             avgFps,
             initedFirstFrameInRecordingMode,
             recordedReps,

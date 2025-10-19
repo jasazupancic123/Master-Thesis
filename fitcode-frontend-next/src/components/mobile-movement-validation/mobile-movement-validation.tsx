@@ -595,9 +595,16 @@ export default function MobileMovementValidation(
         i++;
       }
 
-      const romLKeypoints = constantKeypointHistoryRef.current.getHistoryById(
-        exercisePose.leftSide.romKeypointId
-      );
+      // const romLKeypoints = constantKeypointHistoryRef.current.getHistoryById(
+      //   exercisePose.leftSide.romKeypointId
+      // );
+
+      const romLKeypoints = recordedRepsRef.current.left
+        .map((r) =>
+          r.buffer.getHistoryById(exercisePose.leftSide.romKeypointId)
+        )
+        .flat();
+
       const romL = romLKeypoints
         .map((r) => ({
           value: KeypointUtil.getKeypointValueByType(
@@ -608,11 +615,20 @@ export default function MobileMovementValidation(
         }))
         .filter((v) => v !== undefined) as RepRomTimestamp[];
 
-      const romRKeypoints: Keypoint[] | undefined = exercisePose.rightSide
-        ? constantKeypointHistoryRef.current.getHistoryById(
-            exercisePose.rightSide.romKeypointId
-          )
+      // const romRKeypoints: Keypoint[] | undefined = exercisePose.rightSide
+      //   ? constantKeypointHistoryRef.current.getHistoryById(
+      //       exercisePose.rightSide.romKeypointId
+      //     )
+      //   : undefined;
+
+      const romRKeypoints = recordedRepsRef.current.right
+        ? recordedRepsRef.current.right
+            .map((r) =>
+              r.buffer.getHistoryById(exercisePose.rightSide!.romKeypointId)
+            )
+            .flat()
         : undefined;
+
       const romR = romRKeypoints
         ? (romRKeypoints
             .map((r) => ({
