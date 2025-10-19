@@ -370,6 +370,8 @@ export const predictWebcam = async (state: {
             keypointId: exerciseDetectionData.leftSide.romKeypointId,
             direction: exerciseDetectionData.leftSide.conditions[0].direction,
             exerciseStartConditions: exerciseDetectionData.leftSide.conditions,
+            recordingStillnesses:
+              exerciseDetectionData.leftSide.recordingStillnesses,
             requiredPoseConditions:
               exerciseDetectionData.leftSide.requiredPoseConditions,
             side: 'L',
@@ -385,6 +387,8 @@ export const predictWebcam = async (state: {
                     exerciseDetectionData.rightSide.conditions[0].direction,
                   exerciseStartConditions:
                     exerciseDetectionData.rightSide.conditions,
+                  recordingStillnesses:
+                    exerciseDetectionData.rightSide.recordingStillnesses,
                   requiredPoseConditions:
                     exerciseDetectionData.rightSide.requiredPoseConditions,
                   side: 'R',
@@ -559,6 +563,15 @@ export function getTempoString(state: {
     Math.max(avgIdleTimeMs / 1000 / recordedReps.length, 0),
     EXERCISE_TIMES_ROUNDING_STEP_S
   );
+
+  if (
+    isNaN(avgTimeToExtremeS) ||
+    isNaN(avgTimeAtExtremeS) ||
+    isNaN(avgTimeFromExtremeToEndS) ||
+    isNaN(avgIdleTimeS)
+  ) {
+    return '0:0:0:0';
+  }
 
   const avgTimesSStrings = [
     avgTimeToExtremeS.toString(),

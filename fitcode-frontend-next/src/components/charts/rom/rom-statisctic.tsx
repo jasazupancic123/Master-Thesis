@@ -50,6 +50,8 @@ export default function RomStatistic(props: RomStatisticProps) {
 
     const percentDiff = Math.abs(((smallerRom - biggerRom) / biggerRom) * 100);
 
+    if (isNaN(percentDiff) || !isFinite(percentDiff)) return null;
+
     return (
       <Typography
         textAlign="center"
@@ -84,6 +86,8 @@ export default function RomStatistic(props: RomStatisticProps) {
   const minDiff = Math.min(...(diffs as number[]));
 
   const percentDiff = Math.abs(((minDiff - maxDiff) / maxDiff) * 100);
+
+  if (isNaN(percentDiff) || !isFinite(percentDiff)) return null;
 
   return (
     <Typography
