@@ -78,7 +78,7 @@ export default function RomChart(props: RomChartProps) {
     }))
     .filter((d) => d.valueL !== undefined || d.valueR !== undefined);
 
-  const SMOOTH = true;
+  const SMOOTH = false;
 
   if (SMOOTH) {
     const valuesL = dataset.map((d) => d.valueL);

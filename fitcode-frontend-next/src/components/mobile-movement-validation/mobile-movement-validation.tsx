@@ -447,16 +447,16 @@ export default function MobileMovementValidation(
   const finishAiDetection = async () => {
     statusMessage.current = getStatusMessage(DetectionStatus.STOPPED);
 
-    await RepsGraphService.downloadReps(
-      {
-        recordedRepsRef,
-        keypointId: exerciseDetectionData!.leftSide.romKeypointId,
-        valueType: exerciseDetectionData!.romValueType,
-        constantKeypointHistory: constantKeypointHistoryRef.current,
-        smooth: true,
-      },
-      { filenameBase: 'session', combine: true }
-    );
+    // await RepsGraphService.downloadReps(
+    //   {
+    //     recordedRepsRef,
+    //     keypointId: exerciseDetectionData!.leftSide.romKeypointId,
+    //     valueType: exerciseDetectionData!.romValueType,
+    //     constantKeypointHistory: constantKeypointHistoryRef.current,
+    //     smooth: true,
+    //   },
+    //   { filenameBase: 'session', combine: true }
+    // );
 
     // KeypointUtil.drawKeypointValuesGraph(
     //   constantKeypointHistoryRef.current.history,
@@ -624,13 +624,14 @@ export default function MobileMovementValidation(
       //     )
       //   : undefined;
 
-      const romRKeypoints = recordedRepsRef.current.right
-        ? recordedRepsRef.current.right
-            .map((r) =>
-              r.buffer.getHistoryById(exercisePose.rightSide!.romKeypointId)
-            )
-            .flat()
-        : undefined;
+      const romRKeypoints =
+        recordedRepsRef.current.right && exercisePose.rightSide
+          ? recordedRepsRef.current.right
+              .map((r) =>
+                r.buffer.getHistoryById(exercisePose.rightSide.romKeypointId)
+              )
+              .flat()
+          : undefined;
 
       const romR = romRKeypoints
         ? (romRKeypoints
