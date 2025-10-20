@@ -30,10 +30,10 @@ export const POSE_DETECTION_CONSTRAINTS = {
 
   // Rep start
   PRE_WINDOW_FRAMES_REP_START: 4, // stevilo tock pred zaznano končno, v katerih iščemo ekstremum
-  MAX_LOOKBACK_REP_START_S: 3, // maksimalno število sekund, ki jih lahko gledamo nazaj, da najdemo začetek ponovitve
+  MAX_LOOKBACK_REP_START_S: 1, // maksimalno število sekund, ki jih lahko gledamo nazaj, da najdemo začetek ponovitve
   KEEP_KEYPOINT_HISTORY_DURING_RECORDING_MS: 8000, // koliko sekund hranimo zgodovino keypointov, da lahko gledamo nazaj
-  REP_START_VELOCITY_HIGH_FPS_M_PER_S: 0.04, // when speed goes under (this_value)m/s, then we started the rep!
-  REP_START_VELOCITY_LOW_FPS_M_PER_S: 0.02, // when speed goes under (this_value)m/s, then we started the rep!
+  REP_START_END_VELOCITY_HIGH_FPS_M_PER_S: 0.04, // when speed goes under (this_value)m/s, then we started the rep!
+  REP_START_END_VELOCITY_LOW_FPS_M_PER_S: 0.02, // when speed goes under (this_value)m/s, then we started the rep!
   REP_START_VELOCITY_SUSTAIN_S: 0.3, // if this many frames go under the velocity threshold, then rep started
   REP_START_CONSECUTIVE_FRAMES_UNDER_VELOCITY_THRESHOLD_S: 0.2, // if this many frames go under the velocity threshold, then rep started
   REP_START_JOINT_STILLNESS_VELOCITY_THRESHOLD_M_PER_S: 0.01, // tracking stillness of a joint for rep start
