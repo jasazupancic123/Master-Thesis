@@ -268,5 +268,6 @@ export class RepPostProcessingUtil {
 
     currentRepRef.current.minRomValue = min;
     currentRepRef.current.maxRomValue = max;
+    currentRepRef.current.startRomValue = initialValues[0];
   }
 }

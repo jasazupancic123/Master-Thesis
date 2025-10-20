@@ -1,4 +1,4 @@
-import { PoseLandmarker } from '@mediapipe/tasks-vision';
+import { PoseLandmarker, RGBAColor } from '@mediapipe/tasks-vision';
 import { DrawingUtils, FilesetResolver } from '@mediapipe/tasks-vision';
 import type { RefObject } from 'react';
 
@@ -317,10 +317,12 @@ export const predictWebcam = async (state: {
 
       const keypoints = KeypointUtil.getDesiredKeypointsByModel(
         result.worldLandmarks[0], // unit: m, origin: center of hips
-        result.landmarks[0],
+        result.landmarks[0], // unit: normalized to [0,1], origin: top-left of image
         model,
         new Date(),
-        frameCountRef.current
+        frameCountRef.current,
+        videoWidth,
+        videoHeight
       );
 
       insertKeypointsIntoBuffers({
@@ -344,8 +346,9 @@ export const predictWebcam = async (state: {
         repStateRefR,
         keypoints,
         keypointBuffer,
-        avgFps: avgFps.current,
         keypointHistory,
+        exerciseDetectionData,
+        avgFps: avgFps.current,
         recordingTimestampRef,
         statusMessage,
         stillnessCountdownRef,
@@ -357,6 +360,7 @@ export const predictWebcam = async (state: {
         RepDetectionService.checkRepStatus({
           currentFrameKeypoints: keypoints,
           keypointHistory: keypointHistory,
+          constantKeypointHistory,
           lastRecordedRepRef,
           valueType: exerciseDetectionData.romValueType,
           avgFps: avgFps.current,
@@ -447,10 +451,89 @@ export const predictWebcam = async (state: {
 
           // drawingUtils.drawLandmarks([smoothedCenter]);
         }
+
+        // try {
+        //   const mask = result?.segmentationMasks?.[0];
+        //   const utils = drawingUtilsRef.current;
+        //   const segCanvas = canvasSegmentationMaskRef.current;
+        //   const vid = videoRef.current;
+
+        //   if (!mask || !utils || !segCanvas || !vid) {
+        //     console.log(
+        //       'Missing mask or utils or segCanvas or video',
+        //       mask,
+        //       utils,
+        //       segCanvas,
+        //       vid
+        //     );
+        //     return;
+        //   }
+
+        //   const segCtx = segCanvas.getContext('2d');
+        //   if (!segCtx) {
+        //     console.log('Missing segCtx');
+        //     return;
+        //   }
+
+        //   const W = vid.videoWidth,
+        //     H = vid.videoHeight;
+        //   if (!W || !H) {
+        //     console.log('Invalid video width or height', W, H);
+        //     return;
+        //   }
+
+        //   if (segCanvas.width !== W || segCanvas.height !== H) {
+        //     segCanvas.width = W;
+        //     segCanvas.height = H;
+        //   }
+
+        //   // 1) Draw the video frame
+        //   segCtx.clearRect(0, 0, W, H);
+        //   segCtx.drawImage(vid, 0, 0, W, H);
+
+        //   // 2) Convert MPMask -> Uint8 categories (0=bg, 1=person)
+        //   //    This returns an array of length mask.width*mask.height
+        //   const cats = mask.getAsUint8Array(); // CPU-side view
+        //   const mw = mask.width,
+        //     mh = mask.height;
+
+        //   // 3) Build an RGBA ImageData (tinted green @ ~50% opacity for person)
+        //   const rgba = new Uint8ClampedArray(mw * mh * 4);
+        //   for (let i = 0; i < mw * mh; i++) {
+        //     const c = cats[i];
+        //     const j = i * 4;
+        //     if (c === 0) {
+        //       // person
+        //       rgba[j + 0] = 0; // R
+        //       rgba[j + 1] = 255; // G
+        //       rgba[j + 2] = 0; // B
+        //       rgba[j + 3] = 128; // A (0..255)
+        //     } else {
+        //       rgba[j + 3] = 0; // fully transparent bg
+        //     }
+        //   }
+        //   const imgData = new ImageData(rgba, mw, mh);
+
+        //   // 4) Paint the mask over the video (scale if mask size != video size)
+        //   if (mw === W && mh === H) {
+        //     segCtx.putImageData(imgData, 0, 0);
+        //   } else {
+        //     // putImageData can't scale; use a temp canvas then drawImage it
+        //     const tmp = document.createElement('canvas');
+        //     tmp.width = mw;
+        //     tmp.height = mh;
+        //     tmp.getContext('2d')!.putImageData(imgData, 0, 0);
+        //     segCtx.drawImage(tmp, 0, 0, W, H);
+        //   }
+        // } catch (e) {
+        //   console.error('Error drawing segmentation mask:', e);
+        // }
+
+        // drawingUtils.drawLandmarks(landmark);
         // drawingUtils.drawConnectors(landmark, PoseLandmarker.POSE_CONNECTIONS);
       }
 
-      ctx.restore();
+      ctx?.restore();
     });
   }
 

@@ -117,8 +117,8 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
             keypointId: KeypointId.LEFT_HIP,
             type: KeypointValueType.POSITION_Y,
             direction: ConditionDirection.NEGATIVE,
-            duration: 1000, // ms
-            distance: 0.04, // meters
+            duration: 1500, // ms
+            distance: 0.08, // meters
           },
         ],
       },
@@ -296,6 +296,16 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     exerciseIds: ['bench-press-bb'],
     data: {
       romValueType: KeypointValueType.POSITION_Y,
+      stillnessEvaluationKeypoints: [
+        KeypointId.LEFT_WRIST,
+        KeypointId.RIGHT_WRIST,
+        KeypointId.LEFT_ELBOW,
+        KeypointId.RIGHT_ELBOW,
+        KeypointId.LEFT_KNEE,
+        KeypointId.RIGHT_KNEE,
+        KeypointId.LEFT_ANKLE,
+        KeypointId.RIGHT_ANKLE,
+      ],
       leftSide: {
         romKeypointId: KeypointId.LEFT_WRIST,
         conditions: [
@@ -305,6 +315,20 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
             direction: ConditionDirection.POSITIVE,
             duration: 750, // ms
             distance: 0.15, // meters
+          },
+        ],
+        requiredPoseConditions: [
+          {
+            keypointId1: KeypointId.LEFT_WRIST,
+            keypointId2: KeypointId.LEFT_ELBOW,
+            valueType: KeypointValueType.POSITION_Y,
+            minDiffM: 0.07,
+          },
+          {
+            keypointId1: KeypointId.RIGHT_WRIST,
+            keypointId2: KeypointId.RIGHT_ELBOW,
+            valueType: KeypointValueType.POSITION_Y,
+            minDiffM: 0.07,
           },
         ],
       },

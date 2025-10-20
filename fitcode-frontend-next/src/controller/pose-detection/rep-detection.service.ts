@@ -58,6 +58,7 @@ export class RepDetectionService {
   static checkRepStatus(state: {
     currentFrameKeypoints: Keypoint[];
     keypointHistory: KeypointHistory;
+    constantKeypointHistory: KeypointHistory;
     lastRecordedRepRef: RefObject<Rep | null>;
     exerciseDetectionData: ExerciseDetectionData;
     currentSideMutexRef: RefObject<CurrentSideMutex>;
@@ -71,6 +72,7 @@ export class RepDetectionService {
     const {
       currentFrameKeypoints,
       keypointHistory,
+      constantKeypointHistory,
       lastRecordedRepRef,
       exerciseDetectionData,
       currentSideMutexRef,
@@ -135,6 +137,7 @@ export class RepDetectionService {
             direction,
             keypointId,
             valueType,
+            conditionDirection: direction,
             avgFps,
           });
 
@@ -203,6 +206,7 @@ export class RepDetectionService {
             startValueFrameNum !== undefined &&
             startValueCapturedAt !== undefined
           ) {
+            console.log('REP START DETECTED');
             // New rep
             // console.log('NEW REP DETECTED with startValue', startValue);
             if (currentSideMutexRef.current !== undefined) {
@@ -216,7 +220,8 @@ export class RepDetectionService {
               startValue,
               startValueFrameNum,
               startValueCapturedAt,
-              keypointHistory.history.map((h) => [...h])
+              keypointHistory.history.map((h) => [...h]),
+              constantKeypointHistory
             );
           }
           break;
@@ -291,6 +296,7 @@ export class RepDetectionService {
     direction: ConditionDirection;
     keypointId: KeypointId;
     valueType: KeypointValueType;
+    conditionDirection: ConditionDirection;
     avgFps: AvgFps;
   }): { isRepDone: boolean; endKeypoint?: Keypoint } {
     const {
@@ -300,6 +306,7 @@ export class RepDetectionService {
       direction,
       keypointId,
       valueType,
+      conditionDirection,
       avgFps,
     } = state;
 
@@ -341,17 +348,6 @@ export class RepDetectionService {
     if (currentRepRef.current?.buffer.history.length < 2)
       return { isRepDone: false };
 
-    // Check if current value is close enough to starting value
-    if (
-      !this.checkValueCloseEnoughToStartValue(
-        currentValue,
-        recordedReps,
-        currentRepRef
-      )
-    ) {
-      return { isRepDone: false };
-    }
-
     // slope = naklon
 
     /*
@@ -368,7 +364,23 @@ export class RepDetectionService {
       avgFps,
     });
 
-    if (slope === undefined) return { isRepDone: false };
+    if (slope === undefined) {
+      console.log('SLOPE UNDEFINED');
+      return { isRepDone: false };
+    }
+
+    // Check if current value is close enough to starting value
+    if (
+      !this.checkValueCloseEnoughToStartValue(
+        currentValue,
+        recordedReps,
+        currentRepRef,
+        conditionDirection
+      )
+    ) {
+      console.log('NOT CLOSE ENOUGH TO START VALUE');
+      return { isRepDone: false };
+    }
 
     const endKeypoint = KeypointUtil.getDesiredKeypointFromArray(
       currentRepRef.current?.buffer.history[slope],
@@ -431,7 +443,8 @@ export class RepDetectionService {
         currentFrameKeypoints,
         keypointHistory,
         exerciseStartConditions,
-        avgFps
+        avgFps,
+        recordedReps
       );
 
     const checkRequiredPoseConditions = this.checkRequiredPoseConditions(
@@ -745,6 +758,8 @@ export class RepDetectionService {
       }
     }
 
+    console.log('FOUND START INDEX AT', extremumIdx, 'SLOPE:', slope);
+
     return {
       startIndex: extremumIdx,
       startValue: extremumVal.value,
@@ -755,7 +770,8 @@ export class RepDetectionService {
   private static checkValueCloseEnoughToStartValue(
     currentValue: number,
     recordedReps: Rep[],
-    currentRepRef: RefObject<Rep | null>
+    currentRepRef: RefObject<Rep | null>,
+    conditionDirection: ConditionDirection
   ) {
     // repStateRef.current.avgStartValue is null only on the very first rep
     const startingValue =
@@ -772,9 +788,16 @@ export class RepDetectionService {
 
     const diff = Math.abs(extremeValue - startingValue);
 
-    const isValueCloseEnough =
+    const closeByMagnitude =
       Math.abs(currentValue - startingValue) <=
       diff * POSE_DETECTION_CONSTRAINTS.CLOSE_ENOUGH_TO_START_VALUE_RATIO;
+
+    const consistentWithDirection =
+      conditionDirection === ConditionDirection.POSITIVE
+        ? startingValue > currentValue
+        : currentValue > startingValue;
+
+    const isValueCloseEnough = closeByMagnitude || consistentWithDirection;
 
     return isValueCloseEnough;
   }
@@ -890,8 +913,8 @@ export class RepDetectionService {
     const minVelocityPerFrame =
       (detectingRepStart
         ? isHighFps
-          ? POSE_DETECTION_CONSTRAINTS.REP_START_VELOCITY_HIGH_FPS_M_PER_S
-          : POSE_DETECTION_CONSTRAINTS.REP_START_VELOCITY_LOW_FPS_M_PER_S
+          ? POSE_DETECTION_CONSTRAINTS.REP_START_END_VELOCITY_HIGH_FPS_M_PER_S
+          : POSE_DETECTION_CONSTRAINTS.REP_START_END_VELOCITY_LOW_FPS_M_PER_S
         : POSE_DETECTION_CONSTRAINTS.REP_END_VELOCITY_M_PER_S) /
       (avgFps?.value || 30); // when we go under this velocity, then we started/ended the rep!
 
@@ -1093,14 +1116,26 @@ export class RepDetectionService {
     startValue: number,
     startValueFrameNum: number,
     startValueCapturedAt: Date,
-    history: Keypoint[][]
+    history: Keypoint[][],
+    constantKeypointHistory: KeypointHistory
   ): Rep {
+    const cutAtIndex = constantKeypointHistory.history.findIndex((frame) => {
+      const keypoint = frame[0];
+
+      return keypoint.frameNum === startValueFrameNum;
+    });
+
+    const bufferHistory =
+      cutAtIndex !== -1
+        ? new KeypointHistory(constantKeypointHistory.history.slice(cutAtIndex))
+        : new KeypointHistory(history);
+
     return {
       repNumber,
       startTimestamp: startValueCapturedAt,
       startValue,
       startValueFrameNum,
-      buffer: new KeypointHistory(history),
+      buffer: bufferHistory,
       detectedExtremum: false,
       currentlyInExtremumRange: false,
       timeAtExtremeMs: 0,

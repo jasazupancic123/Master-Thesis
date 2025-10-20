@@ -18,19 +18,24 @@ export default function RomStatistic(props: RomStatisticProps) {
   if (!currentSet.romL && !currentSet.romR) return null;
 
   // Make comparison statisctic between L and R
-  if (currentSet.repsL && currentSet.repsR) {
+  if (
+    currentSet.repsL &&
+    currentSet.repsR &&
+    currentSet.repsL.length &&
+    currentSet.repsR.length
+  ) {
     const maxDiffsRomL = currentSet.repsL
       .map((rep) =>
-        rep.maxRomValue !== undefined && rep.minRomValue !== undefined
-          ? Math.abs(rep.maxRomValue - rep.minRomValue)
+        rep.startRomValue !== undefined && rep.extremumRomValue !== undefined
+          ? Math.abs(rep.startRomValue - rep.extremumRomValue)
           : undefined
       )
       .filter((val) => val !== undefined);
 
     const maxDiffsRomR = currentSet.repsR
       .map((rep) =>
-        rep.maxRomValue !== undefined && rep.minRomValue !== undefined
-          ? Math.abs(rep.maxRomValue - rep.minRomValue)
+        rep.startRomValue !== undefined && rep.extremumRomValue !== undefined
+          ? Math.abs(rep.startRomValue - rep.extremumRomValue)
           : undefined
       )
       .filter((val) => val !== undefined);
@@ -70,12 +75,13 @@ export default function RomStatistic(props: RomStatisticProps) {
   // Make statistic for the only present side
   const currentReps = currentSet.repsL || currentSet.repsR;
 
-  if (!currentReps || currentReps.length < 2) return null;
+  if (!currentReps || currentReps.length < 3) return null;
 
   const diffs = currentReps
+    .slice(1, currentReps.length - 1) // skip first rep as it might be inaccurate
     .map((rep) =>
-      rep.maxRomValue !== undefined && rep.minRomValue !== undefined
-        ? Math.abs(rep.maxRomValue - rep.minRomValue)
+      rep.startRomValue !== undefined && rep.extremumRomValue !== undefined
+        ? Math.abs(rep.startRomValue - rep.extremumRomValue)
         : undefined
     )
     .filter((val) => val !== undefined);
