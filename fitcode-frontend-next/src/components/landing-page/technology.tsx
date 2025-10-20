@@ -3,6 +3,14 @@ import Image from 'next/image';
 import { useRef } from 'react';
 
 import { theme } from '@/app/style';
+import {
+  ASPIRE_LOGO_WHITE_IMG_URL,
+  TECHNOLOGY_2_IMG_URL,
+  TECHNOLOGY_DRILL_RECOGNITION_IMG_URL,
+  TECHNOLOGY_IMG_URL,
+  TECHNOLOGY_MOBILE_FEEDBACK_IMG_URL,
+  TECHNOLOGY_MOVEMENT_TRACKING_IMG_URL,
+} from '@/lib/common/const/image.const';
 import { LINK_TECHNOLOGY } from '@/lib/common/const/nav.const';
 import { HERO_NAVBAR_HEIGHT } from '@/lib/common/const/state';
 import { useScreenSize } from '@/store/screen-size.provider';
@@ -26,23 +34,23 @@ export default function Technology(props: TechnologyProps) {
 
   const items: Item[] = [
     {
-      imageUrl: '/technology-athletes-registry.png',
+      imageUrl: TECHNOLOGY_IMG_URL,
       title: 'Athletes registry',
       description:
         'Automated player identification and data capture for consistent monitoring.​',
     },
     {
-      imageUrl: '/technology-athletes-registry-2.png',
+      imageUrl: TECHNOLOGY_2_IMG_URL,
       title: 'External load detection',
       description: 'Automatic tracking of equipment usage.​​',
     },
     {
-      imageUrl: '/technology-drill-recognition.png',
+      imageUrl: TECHNOLOGY_DRILL_RECOGNITION_IMG_URL,
       title: 'Drill recognition',
       description: 'Real-time recognition of training activities.​',
     },
     {
-      imageUrl: '/technology-movement-tracking.png',
+      imageUrl: TECHNOLOGY_MOVEMENT_TRACKING_IMG_URL,
       title: 'Movement tracking',
       description:
         'Key body joint tracking in team environments for biomechanical analysis and performance​.​',
@@ -106,7 +114,7 @@ export default function Technology(props: TechnologyProps) {
           width={'100%'}
           height="50vh"
           sx={{
-            backgroundImage: 'url(/technology-mobile-feedback.png)',
+            backgroundImage: `url(${TECHNOLOGY_MOBILE_FEEDBACK_IMG_URL})`,
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             backgroundPosition: 'center',
@@ -291,7 +299,7 @@ export default function Technology(props: TechnologyProps) {
             maxWidth={210}
             height="50vh"
             sx={{
-              backgroundImage: 'url(/technology-mobile-feedback.png)',
+              backgroundImage: `url(${TECHNOLOGY_MOBILE_FEEDBACK_IMG_URL})`,
               backgroundSize: 'contain',
               backgroundRepeat: 'no-repeat',
               backgroundPosition: 'left',
@@ -299,7 +307,7 @@ export default function Technology(props: TechnologyProps) {
             }}
           />
           <Image
-            src="/aspire-logo-white.png"
+            src={ASPIRE_LOGO_WHITE_IMG_URL}
             alt="Aspire"
             width={initialAspireLogoWidth}
             height={0}

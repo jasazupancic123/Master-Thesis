@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { useEffect } from 'react';
 
+import { POWERED_BY_ASPIRE_IMG_URL } from '@/lib/common/const/image.const';
 import { useScreenSize } from '@/store/screen-size.provider';
 import Logo from '@/util/logo/logo';
 
@@ -50,7 +51,7 @@ export default function Animation({ duration = 6000 }: Props) {
         className="flex justify-center items-center h-screen bg-black"
       >
         <Image
-          src="/powered_by_aspire.png"
+          src={POWERED_BY_ASPIRE_IMG_URL}
           alt="Powered by Aspire"
           width={screenSize.isMobile ? 200 : 400}
           height={0}

@@ -4,6 +4,7 @@ import { Box, CircularProgress, Typography } from '@mui/material';
 import Image from 'next/image';
 
 import Logo from '../logo/logo';
+import { POWERED_BY_ASPIRE_IMG_URL } from '@/lib/common/const/image.const';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 interface LoadingOverlayProps {
@@ -48,7 +49,7 @@ export default function LoadingOverlay(props: LoadingOverlayProps) {
       {children}
       {showLogos && (
         <Image
-          src="/powered_by_aspire.png"
+          src={POWERED_BY_ASPIRE_IMG_URL}
           alt="Powered by Aspire"
           width={screenSize.isMobile ? 200 : 300}
           height={0}

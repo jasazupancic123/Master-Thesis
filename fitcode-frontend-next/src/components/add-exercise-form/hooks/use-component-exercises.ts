@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 
+import type { Exercise } from '@/core/exercise/type/exercise.type';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/core/training/const/warmup-cooldown.const';
-import type { Exercise } from '@/core/exercise/type/exercise.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import { useMain } from '@/store/main.provider';
 

@@ -1,8 +1,12 @@
 import { Box, Typography } from '@mui/material';
 import Image from 'next/image';
 
-import { HERO_NAVBAR_HEIGHT } from '@/lib/common/const/state';
 import { theme } from '@/app/style';
+import {
+  ABOUT_US_IMG_URL,
+  ASPIRE_LOGO_IMG_URL,
+} from '@/lib/common/const/image.const';
+import { HERO_NAVBAR_HEIGHT } from '@/lib/common/const/state';
 import { useScreenSize } from '@/store/screen-size.provider';
 import IndexPageTitleText from '@/util/index-page-title-text/index-page-title-text';
 
@@ -40,7 +44,7 @@ export default function AboutUs() {
         }}
       >
         <Image
-          src="/about-us.png"
+          src={ABOUT_US_IMG_URL}
           alt="About us"
           fill
           priority
@@ -153,14 +157,14 @@ export default function AboutUs() {
         justifyContent="center"
         alignItems="flex-start"
         sx={{
-          backgroundImage: 'url(/about-us.png)',
+          backgroundImage: `url(${ABOUT_US_IMG_URL})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           position: 'relative',
         }}
       >
         <Image
-          src="/aspire-logo.png"
+          src={ASPIRE_LOGO_IMG_URL}
           alt="Aspire"
           width={initialAspireLogoWidth}
           height={0}

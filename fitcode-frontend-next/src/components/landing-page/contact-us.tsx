@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 
 import { theme } from '@/app/style';
 import { lib } from '@/lib';
+import { CONTACT_US_IMG_URL } from '@/lib/common/const/image.const';
 import { HERO_NAVBAR_HEIGHT } from '@/lib/common/const/state';
 import { useScreenSize } from '@/store/screen-size.provider';
 import IndexPageTitleText from '@/util/index-page-title-text/index-page-title-text';
@@ -164,7 +165,7 @@ export default function ContactUs() {
         width="100vw"
         height="40%"
         sx={{
-          backgroundImage: 'url(/contact-us.png)',
+          backgroundImage: `url(${CONTACT_US_IMG_URL})`,
           backgroundSize: 'cover',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'top',
@@ -193,7 +194,7 @@ export default function ContactUs() {
         justifyContent="center"
         alignItems="flex-start"
         sx={{
-          backgroundImage: 'url(/contact-us.png)',
+          backgroundImage: `url(${CONTACT_US_IMG_URL})`,
           backgroundSize: 'cover',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'top',

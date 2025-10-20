@@ -7,8 +7,8 @@ import { useTheme } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import * as React from 'react';
 
-import { LINKS_SIDEBAR_GROUP_VIEW } from '@/lib/common/const/nav.const';
 import { UserRole } from '@/core/profile/enum/user-role.enum';
+import { LINKS_SIDEBAR_GROUP_VIEW } from '@/lib/common/const/nav.const';
 import { useAthlete } from '@/store/athlete.provider';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';

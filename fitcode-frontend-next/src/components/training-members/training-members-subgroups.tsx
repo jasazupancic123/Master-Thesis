@@ -20,8 +20,9 @@ import {
   updateSelectedAthleteSubgroup,
 } from './actions/actions-subgroups';
 import type { UseTrainingMembersReturnType } from './hooks/use-members.hook';
-import type { SetState } from '@/lib/common/type/state.type';
 import type { Subgroup } from '@/core/training/type/subgroup.type';
+import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
+import type { SetState } from '@/lib/common/type/state.type';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
@@ -241,7 +242,7 @@ export default function TrainingMembersSubgroup(
                             className="avatar-border"
                             src={
                               users.find((m) => m.uid === member.uid)
-                                ?.photoURL || '/user_avatar.png'
+                                ?.photoURL || USER_AVATAR_IMG_URL
                             }
                             sx={{
                               width: 50,

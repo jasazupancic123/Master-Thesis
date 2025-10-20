@@ -16,6 +16,7 @@ import toast from 'react-hot-toast';
 
 import type { Group, UpdateGroup } from '@/core/group/type/group.type';
 import type { Institution } from '@/core/institution/type/institution.type';
+import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 
 interface GroupsDataGridProps {
   institution: Institution;
@@ -220,7 +221,7 @@ export default function GroupsDataGrid({
                 <Avatar
                   key={id}
                   alt={member.displayName || ''}
-                  src={member.photoURL || '/user_avatar.png'}
+                  src={member.photoURL || USER_AVATAR_IMG_URL}
                 />
               ) : null;
             })}

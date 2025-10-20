@@ -28,6 +28,7 @@ import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensio
 import { app } from '@/core/app.service';
 import { BACKEND_API_BASE_URL } from '@/core/const/api.const';
 import { lib } from '@/lib';
+import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS } from '@/lib/common/const/nav.const';
 import type { ILink } from '@/lib/common/type/link.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
@@ -125,7 +126,7 @@ export default function DashboardHeader() {
                 }}
               >
                 <Avatar
-                  src={auth.user?.photoURL || '/user_avatar.png'}
+                  src={auth.user?.photoURL || USER_AVATAR_IMG_URL}
                   sx={{
                     width: 30,
                     height: 30,
