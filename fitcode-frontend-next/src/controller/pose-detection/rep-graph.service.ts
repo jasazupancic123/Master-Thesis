@@ -4,7 +4,7 @@
 import type { KeypointHistory } from './class/keypoint-history';
 import type { KeypointId } from './enum/keypoint-id';
 import type { KeypointValueType } from './enum/keypoint-value-type';
-import type { Rep } from './types/rep.type';
+import type { RecordedReps, Rep } from './types/rep.type';
 import { KeypointUtil } from './util/keypoint.util';
 
 export class RepsGraphService {
@@ -31,7 +31,7 @@ export class RepsGraphService {
    */
   static async downloadReps(
     state: {
-      recordedRepsRef: React.RefObject<Rep[]>;
+      recordedRepsRef: React.RefObject<RecordedReps>;
       keypointId: KeypointId;
       valueType: KeypointValueType;
       constantKeypointHistory: KeypointHistory;
@@ -116,7 +116,7 @@ export class RepsGraphService {
    */
   static async downloadEachRepPNG(
     state: {
-      recordedRepsRef: React.RefObject<Rep[]>;
+      recordedRepsRef: React.RefObject<RecordedReps>;
       keypointId: KeypointId;
       valueType: KeypointValueType;
       constantKeypointHistory: KeypointHistory;
@@ -160,7 +160,7 @@ export class RepsGraphService {
    */
   static async downloadCombinedPNG(
     state: {
-      recordedRepsRef: React.RefObject<Rep[]>;
+      recordedRepsRef: React.RefObject<RecordedReps>;
       keypointId: KeypointId;
       valueType: KeypointValueType;
       constantKeypointHistory: KeypointHistory;
@@ -219,7 +219,7 @@ export class RepsGraphService {
    * Returns a Chart.js config per rep (one dataset each).
    */
   static buildConfigsPerRep(state: {
-    recordedRepsRef: React.RefObject<Rep[]>;
+    recordedRepsRef: React.RefObject<RecordedReps>;
     keypointId: KeypointId;
     valueType: KeypointValueType;
     constantKeypointHistory: KeypointHistory;
@@ -235,7 +235,7 @@ export class RepsGraphService {
     const reps = recordedRepsRef.current ?? [];
     const configs: any[] = [];
 
-    reps.forEach((rep, idx) => {
+    reps.left.forEach((rep, idx) => {
       const points = rep.buffer
         .getHistoryById(keypointId)
         .map((k) => {
@@ -341,20 +341,26 @@ export class RepsGraphService {
           const v = KeypointUtil.getKeypointValueByType(k, valueType);
           if (v === null) return undefined;
 
-          const color = reps.some((rep) => k.capturedAt === rep.startTimestamp)
+          const color = reps.left.some(
+            (rep) => k.capturedAt === rep.startTimestamp
+          )
             ? this.palette.start
-            : reps.some((rep) => k.capturedAt === rep.extremeTimestamp)
+            : reps.left.some((rep) => k.capturedAt === rep.extremeTimestamp)
               ? this.palette.extreme
-              : reps.some((rep) => k.capturedAt === rep.extremeToEndTimestamp)
+              : reps.left.some(
+                    (rep) => k.capturedAt === rep.extremeToEndTimestamp
+                  )
                 ? this.palette.extremeToEnd
-                : reps.some((rep) => k.capturedAt === rep.endValueTimestamp)
+                : reps.left.some(
+                      (rep) => k.capturedAt === rep.endValueTimestamp
+                    )
                   ? this.palette.end
-                  : reps.some(
+                  : reps.left.some(
                         (rep) =>
                           k.capturedAt === rep.timeAtExtremumStartTimestamp
                       )
                     ? this.palette.atExtremumStart
-                    : reps.some(
+                    : reps.left.some(
                           (rep) =>
                             k.capturedAt === rep.timeAtExtremumEndTimestamp
                         )

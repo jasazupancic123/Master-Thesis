@@ -131,15 +131,9 @@ export default function TempoChart(props: TempoChartProps) {
 
   if (!passedReps) {
     if (selectedExercise && selectedExercise.recordedSets) {
-      console.log(
-        'selectedExercise.recordedSets',
-        selectedExercise.recordedSets
-      );
       const set = selectedExercise.recordedSets.find(
         (s) => s.setIndex === setIndex
       );
-
-      console.log('SET', set);
 
       if (set) {
         currentRepsRef.current = { left: set.repsL, right: set.repsR };

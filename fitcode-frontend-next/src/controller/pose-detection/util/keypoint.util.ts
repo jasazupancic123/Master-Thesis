@@ -7,6 +7,8 @@ import { KeypointValueType } from '../enum/keypoint-value-type';
 import { PoseModel } from '../enum/pose-model.enum';
 import type { Keypoint } from '../types/keypoint.type';
 import type { NumericValueFrameNum } from '../types/numeric-value-frame-num';
+import { MetricConversionType } from '../enum/metric-conversion-type.enum';
+import EnvUtil from '@/common/util/env.util';
 
 export class KeypointUtil {
   static getDesiredKeypointsByModel(
@@ -16,23 +18,27 @@ export class KeypointUtil {
     model: PoseModel,
     capturedAt: Date,
     frameNum: number,
-    centerHipsYToMiddleAnkleOrigin = true,
-    centerKneesXToMiddleAnklesOrigin = true // we need this for lateral squat
+    videoWidth: number,
+    videoHeight: number,
+    centerHipsYToMiddleAnkleOrigin = false,
+    centerKneesXToMiddleAnklesOrigin = false // we need this for lateral squat
   ): Keypoint[] {
     if (!currentFrameKeypoints) return [];
 
-    const keypoints: Keypoint[] = [];
+    let keypoints: Keypoint[] = [];
+
     switch (model) {
       case PoseModel.MEDIAPIPE: {
         const keypointIds = Object.values(KeypointId);
+
         currentFrameKeypoints.forEach((kp, i) => {
           const kp2D = currentFrameKeypointsPixel2D?.[i];
 
           keypoints.push({
             id: keypointIds[i] as unknown as KeypointId,
             position: {
-              x: kp.x,
-              y: kp.y,
+              x: kp2D!.x,
+              y: kp2D!.y,
               z: kp.z,
             },
             pixelPosition: kp2D
@@ -48,6 +54,15 @@ export class KeypointUtil {
             visibility: kp.visibility,
           });
         });
+
+        if (EnvUtil.AI.convertToMetricScale()) {
+          keypoints = this.convertToMetricScale(
+            keypoints,
+            MetricConversionType.SHOULDER_WIDTH,
+            videoWidth,
+            videoHeight
+          );
+        }
 
         if (centerHipsYToMiddleAnkleOrigin) {
           // Center LEFT_HIP and RIGHT_HIP to the origin of (LEFT_ANKLE + RIGHT_ANKLE)/2
@@ -293,6 +308,60 @@ export class KeypointUtil {
     for (let i = 1; i < n; i++) velocity[i] = values[i] - values[i - 1];
 
     return velocity;
+  }
+
+  static convertToMetricScale(
+    keypoints: Keypoint[],
+    conversionType: MetricConversionType,
+    videoWidth: number,
+    videoHeight: number
+  ): Keypoint[] {
+    const shoulderL = this.getDesiredKeypointFromArray(
+      keypoints,
+      KeypointId.LEFT_SHOULDER
+    );
+
+    const shoulderR = this.getDesiredKeypointFromArray(
+      keypoints,
+      KeypointId.RIGHT_SHOULDER
+    );
+
+    if (!shoulderL || !shoulderR) return keypoints;
+
+    let pxToMeterRatio: number | null = null;
+
+    switch (conversionType) {
+      case MetricConversionType.SHOULDER_WIDTH: {
+        const shoulderWidth = Math.abs(
+          shoulderL.position.x - shoulderR.position.x
+        );
+
+        const shoulderWidthPx = shoulderWidth * videoWidth;
+
+        const shoulderWidthM = 0.42; // average shoulder width in meters
+
+        pxToMeterRatio = shoulderWidthM / shoulderWidthPx;
+
+        break;
+      }
+      default:
+        break;
+    }
+
+    if (pxToMeterRatio === null) return keypoints;
+
+    return keypoints.map((kp) => {
+      const { position, ...rest } = kp;
+
+      return {
+        position: {
+          x: position.x * videoWidth * pxToMeterRatio,
+          y: position.y * videoHeight * pxToMeterRatio,
+          z: position.z * pxToMeterRatio,
+        },
+        ...rest,
+      };
+    });
   }
 
   private static checkIsNumericValueFrameNum = (

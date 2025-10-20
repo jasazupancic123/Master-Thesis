@@ -10,7 +10,7 @@ import type { Keypoint } from './types/keypoint.type';
 import type { PoseValidationCondition } from './types/pose-validation-condition.type';
 import type { RepState } from './types/rep-state.type';
 import { KeypointUtil } from './util/keypoint.util';
-import { start } from 'repl';
+import { ExerciseDetectionData } from './types/exercise-start-condition.type';
 
 export class PoseDetectionService {
   static checkStatus(state: {
@@ -21,6 +21,7 @@ export class PoseDetectionService {
     keypoints: Keypoint[];
     keypointBuffer: KeypointHistory;
     keypointHistory: KeypointHistory;
+    exerciseDetectionData: ExerciseDetectionData;
     avgFps: { value: number; count: number } | null;
     recordingTimestampRef: RefObject<Date | null>;
     statusMessage: RefObject<string>;
@@ -34,6 +35,7 @@ export class PoseDetectionService {
       repStateRefR,
       keypoints,
       keypointBuffer,
+      exerciseDetectionData,
       avgFps,
       recordingTimestampRef,
       statusMessage,
@@ -61,6 +63,7 @@ export class PoseDetectionService {
           statusRef,
           canProceedIntoReadyStateRef,
           keypointBuffer: keypointBuffer,
+          exerciseDetectionData,
           avgFps,
           recordingTimestampRef,
           statusMessage,

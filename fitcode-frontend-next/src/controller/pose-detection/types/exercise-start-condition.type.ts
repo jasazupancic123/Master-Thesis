@@ -10,14 +10,15 @@ export type ExerciseDetectionDataWithExerciseIds = {
 export type ExerciseDetectionData = {
   romValueType: KeypointValueType;
   cannotDoBothSidesSimultaneously?: boolean; // If true, only one side can be active at a time (e.g. lateral lunges)
-  recordingStillnesses?: StillnessCondition[]; // Which keypoints need to be still for the rep to start
+  stillnessEvaluationKeypoints?: KeypointId[]; // Which keypoints are evaluated for stillness at start only
   leftSide: ExerciseDetectionSideData;
   rightSide?: ExerciseDetectionSideData;
 };
 
 type ExerciseDetectionSideData = {
   conditions: ExerciseRepStartCondition[];
-  requiredPoseConditions?: RequiredPoseCondition[];
+  requiredPoseConditions?: RequiredPoseCondition[]; // Which relations between keypoints need to be satisfied for the rep to start
+  recordingStillnesses?: StillnessCondition[]; // Which keypoints need to be still for the rep to start
   romKeypointId: KeypointId;
 };
 

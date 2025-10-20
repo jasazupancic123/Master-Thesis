@@ -67,17 +67,38 @@ export default function RomChart(props: RomChartProps) {
 
   if (!currentSet.romL && !currentSet.romR) return null;
 
-  const dataset = romL
+  const dataset = (romR && romR.length > romL.length ? romR : romL)
     .map((v, i) => ({
-      valueL: v,
-      valueR: romR[i],
+      index: i,
+      valueL: romL[i],
+      valueR: romR ? romR[i] : undefined,
       timestamp: currentSet.romL
         ? new Date(currentSet.romL[i]?.timestamp)
         : undefined,
     }))
-    .filter((d) => d.valueL !== undefined);
+    .filter((d) => d.valueL !== undefined || d.valueR !== undefined);
 
-  const firstRomTimestamp = dataset[0].timestamp;
+  const SMOOTH = false;
+
+  if (SMOOTH) {
+    const valuesL = dataset.map((d) => d.valueL);
+    const valuesR = dataset.map((d) => d.valueR).filter((v) => v !== undefined);
+
+    const smoothedL = KeypointUtil.smoothKeypointValues(valuesL) as number[];
+
+    const smoothedR = valuesR
+      ? (KeypointUtil.smoothKeypointValues(valuesR) as number[])
+      : [];
+
+    dataset.forEach((d, i) => {
+      d.valueL = smoothedL[i];
+      d.valueR = smoothedR[i];
+    });
+  }
+
+  if (!dataset.length) return null;
+
+  const firstRomTimestamp = dataset[0]?.timestamp;
 
   const isUnilateral = selectedExercise.exercise?.isUnilateral;
 
@@ -93,28 +114,21 @@ export default function RomChart(props: RomChartProps) {
       }}
       xAxis={[
         {
+          // dataKey: 'index',
           dataKey: 'timestamp',
           label: 'Time (s)',
           valueFormatter: (value: Date) => {
             if (!(value instanceof Date)) return '';
-
             const date = new Date(value);
-
             if (!firstRomTimestamp) return '';
-
             const diff = date.getTime() - firstRomTimestamp.getTime();
-
             const largestDiff = dataset[dataset.length - 1].timestamp
               ? dataset[dataset.length - 1].timestamp!.getTime() -
                 firstRomTimestamp.getTime()
               : 0;
-
             const seconds = Math.floor(diff / 1000);
-
             const secondsLargestDiff = Math.floor(largestDiff / 1000);
-
             if (seconds === secondsLargestDiff) return '';
-
             return `${seconds}`;
           },
           min: firstRomTimestamp,
