@@ -65,13 +65,14 @@ import { Keypoint } from '@/controller/pose-detection/types/keypoint.type';
 import { CurrentSideMutex } from '../../controller/pose-detection/types/current-side-mutex.type';
 import { CurrentSideMutexValues } from '@/controller/pose-detection/enum/current-side-mutex-values.enum';
 import { AvgFps } from '@/controller/pose-detection/types/avg-fps.type';
+import { RepsGraphService } from '@/controller/pose-detection/rep-graph.service';
 
 const DEBUG = false;
 
 const commonService = CommonService.instance;
 const firebaseStorage = FirebaseStorageUtil.Instance;
 
-export const EXERCISE_TIMES_ROUNDING_STEP_S = 0.2; // round to 0.2
+export const EXERCISE_TIMES_ROUNDING_STEP_S = 0.1; // round to 0.1
 
 interface MobileMovementValidationProps {
   selectedExercise: TrainingExerciseRecording | undefined;
@@ -446,16 +447,16 @@ export default function MobileMovementValidation(
   const finishAiDetection = async () => {
     statusMessage.current = getStatusMessage(DetectionStatus.STOPPED);
 
-    // await RepsGraphService.downloadReps(
-    //   {
-    //     recordedRepsRef,
-    //     keypointId: exerciseDetectionData!.romKeypointId,
-    //     valueType: exerciseDetectionData!.romValueType,
-    //     constantKeypointHistory: constantKeypointHistoryRef.current,
-    //     smooth: true,
-    //   },
-    //   { filenameBase: 'session', combine: true }
-    // );
+    await RepsGraphService.downloadReps(
+      {
+        recordedRepsRef,
+        keypointId: exerciseDetectionData!.leftSide.romKeypointId,
+        valueType: exerciseDetectionData!.romValueType,
+        constantKeypointHistory: constantKeypointHistoryRef.current,
+        smooth: true,
+      },
+      { filenameBase: 'session', combine: true }
+    );
 
     // KeypointUtil.drawKeypointValuesGraph(
     //   constantKeypointHistoryRef.current.history,
@@ -534,6 +535,8 @@ export default function MobileMovementValidation(
             durationMs: rep.durationMs,
             minRomValue: rep.minRomValue,
             maxRomValue: rep.maxRomValue,
+            startRomValue: rep.startRomValue,
+            extremumRomValue: rep.extremeValue,
           } as RepInfo;
         });
 
@@ -922,7 +925,11 @@ export default function MobileMovementValidation(
 
         <canvas
           ref={canvasRef}
-          style={{ position: 'absolute', left: 0, top: 0 }}
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+          }}
         />
 
         {/* Reps and tempo chart */}

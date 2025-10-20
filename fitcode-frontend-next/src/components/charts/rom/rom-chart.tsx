@@ -84,22 +84,10 @@ export default function RomChart(props: RomChartProps) {
     const valuesL = dataset.map((d) => d.valueL);
     const valuesR = dataset.map((d) => d.valueR).filter((v) => v !== undefined);
 
-    const windowSizeProps = 21;
-    const polynomalProps = 1;
+    const smoothedL = KeypointUtil.smoothKeypointValues(valuesL) as number[];
 
-    const smoothedL = KeypointUtil.smoothKeypointValues(
-      valuesL,
-      30,
-      windowSizeProps,
-      polynomalProps
-    ) as number[];
     const smoothedR = valuesR
-      ? (KeypointUtil.smoothKeypointValues(
-          valuesR,
-          30,
-          windowSizeProps,
-          polynomalProps
-        ) as number[])
+      ? (KeypointUtil.smoothKeypointValues(valuesR) as number[])
       : [];
 
     dataset.forEach((d, i) => {
@@ -126,25 +114,25 @@ export default function RomChart(props: RomChartProps) {
       }}
       xAxis={[
         {
-          dataKey: 'index',
-          // dataKey: 'timestamp',
-          // label: 'Time (s)',
-          // valueFormatter: (value: Date) => {
-          //   if (!(value instanceof Date)) return '';
-          //   const date = new Date(value);
-          //   if (!firstRomTimestamp) return '';
-          //   const diff = date.getTime() - firstRomTimestamp.getTime();
-          //   const largestDiff = dataset[dataset.length - 1].timestamp
-          //     ? dataset[dataset.length - 1].timestamp!.getTime() -
-          //       firstRomTimestamp.getTime()
-          //     : 0;
-          //   const seconds = Math.floor(diff / 1000);
-          //   const secondsLargestDiff = Math.floor(largestDiff / 1000);
-          //   if (seconds === secondsLargestDiff) return '';
-          //   return `${seconds}`;
-          // },
-          // min: firstRomTimestamp,
-          // scaleType: 'time',
+          // dataKey: 'index',
+          dataKey: 'timestamp',
+          label: 'Time (s)',
+          valueFormatter: (value: Date) => {
+            if (!(value instanceof Date)) return '';
+            const date = new Date(value);
+            if (!firstRomTimestamp) return '';
+            const diff = date.getTime() - firstRomTimestamp.getTime();
+            const largestDiff = dataset[dataset.length - 1].timestamp
+              ? dataset[dataset.length - 1].timestamp!.getTime() -
+                firstRomTimestamp.getTime()
+              : 0;
+            const seconds = Math.floor(diff / 1000);
+            const secondsLargestDiff = Math.floor(largestDiff / 1000);
+            if (seconds === secondsLargestDiff) return '';
+            return `${seconds}`;
+          },
+          min: firstRomTimestamp,
+          scaleType: 'time',
         },
       ]}
       yAxis={[

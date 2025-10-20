@@ -18,7 +18,12 @@ export default function TempoStatistic(props: TempoStatisticProps) {
   if (!currentSet.repsL.length && !currentSet.repsR?.length) return null;
 
   // Make comparison statisctic between L and R
-  if (currentSet.repsL && currentSet.repsR) {
+  if (
+    currentSet.repsL &&
+    currentSet.repsR &&
+    currentSet.repsL.length &&
+    currentSet.repsR.length
+  ) {
     const totalRepTimesL = currentSet.repsL
       .map((rep) =>
         rep.endTimestamp

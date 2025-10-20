@@ -23,7 +23,6 @@ export async function preloadPoseLandmarker() {
         minPoseDetectionConfidence: 0.5,
         minPosePresenceConfidence: 0.5,
         minTrackingConfidence: 0.5,
-        outputSegmentationMasks: false,
       });
 
       return landmarker;
