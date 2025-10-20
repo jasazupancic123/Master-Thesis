@@ -10,7 +10,7 @@ import { useUndoneExercises } from '../../context/undone-exercises.provider';
 import TrainingInProgressExerciseCard from '../training-in-progress-exercise-card/training-in-progress-exercise-card';
 import { handleFinishSuperset } from './actions/actions-superset';
 import NextSupersetModal from './modals/next-superset-modal';
-import { TrackingMethod } from '@/common/enum/tracking-method.enum';
+import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';

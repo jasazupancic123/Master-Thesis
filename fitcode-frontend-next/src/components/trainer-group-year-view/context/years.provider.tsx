@@ -1,8 +1,7 @@
 import dayjs from 'dayjs';
 import { createContext, useContext, useState } from 'react';
 
-import type { ChildrenProps } from '@/common/type/props.type';
-import type { SetState } from '@/common/type/state.type';
+import type { SetState } from '@/lib/common/type/state.type';
 
 export type SliderYearProviderReturnType = ReturnType<
   typeof useMultiCycleSliderYearProvider
@@ -25,7 +24,7 @@ export type YearsSliderProviderReturnType = ReturnType<
   typeof useMultiCycleSliderYearProvider
 >;
 
-export function YearsSliderProvider(props: ChildrenProps) {
+export function YearsSliderProvider(props: React.PropsWithChildren) {
   const { children } = props;
 
   const [selectedYear, setSelectedYear] = useState(dayjs().year());

@@ -10,18 +10,15 @@ import type { FormEvent } from 'react';
 import React from 'react';
 import toast from 'react-hot-toast';
 
-import { HERO_NAVBAR_HEIGHT } from '@/app/state';
+import { HERO_NAVBAR_HEIGHT } from '@/lib/common/const/state';
+import HeroNavbar from '@/components/hero-navbar/hero-navbar';
+import { AuthController } from '@/core/auth/auth.controller';
+import { lib } from '@/lib';
 import {
   LINKS_AUTH,
   SIGN_IN_REDIRECT_MAPPER,
-} from '@/common/constant/navigation.constant';
-import { FirebaseAuthUtil } from '@/common/firebase/firebase-auth.util';
-import { BLACK_TEXT_FIELD_STYLE } from '@/common/util/styles.util';
-import HeroNavbar from '@/components/hero-navbar/hero-navbar';
-import { AuthController } from '@/controller/auth/auth.controller';
+} from '@/lib/common/const/nav.const';
 import { useAuth } from '@/store/auth.provider';
-
-const firebaseAuthUtil = FirebaseAuthUtil.getInstance();
 
 export default function SignInPage() {
   const theme = useTheme();
@@ -35,7 +32,7 @@ export default function SignInPage() {
     e.preventDefault();
 
     try {
-      const result = await firebaseAuthUtil.login(email, password);
+      const result = await lib.firebase.auth.login(email, password);
       const idToken = await result.user.getIdToken();
       const user = await AuthController.getInstance().sessionLogin(idToken);
 
@@ -96,7 +93,7 @@ export default function SignInPage() {
               autoFocus
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              sx={BLACK_TEXT_FIELD_STYLE}
+              sx={lib.mui.getBlackTextFieldStyle(theme)}
             />
 
             <TextField
@@ -111,7 +108,7 @@ export default function SignInPage() {
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              sx={BLACK_TEXT_FIELD_STYLE}
+              sx={lib.mui.getBlackTextFieldStyle(theme)}
             />
 
             <Button

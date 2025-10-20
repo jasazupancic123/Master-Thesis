@@ -3,7 +3,7 @@ import { Box, Card, Typography } from '@mui/material';
 import Image from 'next/image';
 import React from 'react';
 
-import type { Exercise } from '@/controller/exercise/type/exercise.type';
+import type { Exercise } from '@/core/exercise/type/exercise.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 interface ExerciseCardProps {
@@ -17,7 +17,6 @@ export function ExerciseCard(props: ExerciseCardProps) {
 
   const { exercise, addExerciseForm } = props;
   const isVideo = false;
-  // const isVideo = exercise.videoUrl !== undefined;
   const imgSrc = exercise.imageUrl || '/exercise-image-default.png';
 
   // Fixed media height similar to your previous maxHeight: 140

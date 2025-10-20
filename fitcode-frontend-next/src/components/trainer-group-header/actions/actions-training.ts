@@ -1,49 +1,42 @@
-import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
 
-import type { SetState } from '@/common/type/state.type';
-import { handleApiRequest } from '@/common/type/state.type';
-import type { TrainingController } from '@/controller/training/training.controller';
-import { TrainingService } from '@/controller/training/training.service';
-import type { GroupProviderReturnType } from '@/store/group.provider';
-import type { MainProviderReturnType } from '@/store/main.provider';
-import type { TrainerDayViewProviderReturnType } from '@/store/trainer-day-view.provider';
+import type { SetState } from '@/lib/common/type/state.type';
+import { TrainingController } from '@/core/training/training.controller';
+import { TrainingService } from '@/core/training/training.service';
+import { lib } from '@/lib';
+import type { IGroupCtx } from '@/store/group.provider';
+import type { IMainCtx } from '@/store/main.provider';
+import type { TrainerDayViewCtx } from '@/store/trainer-day-view.provider';
 
-export async function handleUpdateMultipleTrainings(
-  input: {
-    controller: TrainingController;
-    router: AppRouterInstance;
-    setIsUpdatingTraining: SetState<boolean>;
-  },
-  context: {
-    useMain: MainProviderReturnType;
-    useGroup: GroupProviderReturnType;
-    useTrainerDayViewContext: TrainerDayViewProviderReturnType;
-  }
+export async function handleUpdateTraining(
+  setIsUpdatingTraining: SetState<boolean>,
+  mainCtx: IMainCtx,
+  groupCtx: IGroupCtx,
+  trainerDayViewCtx: TrainerDayViewCtx
 ) {
-  const { router, controller, setIsUpdatingTraining } = input;
+  const { components, exercises, methods } = mainCtx;
+  const { setTrainings, setDetectedChanges } = groupCtx;
+  const { training, setTraining } = trainerDayViewCtx;
 
-  const { useMain, useGroup, useTrainerDayViewContext } = context;
-
-  const { components, exercises, methods } = useMain;
-
-  const { setTrainings, setDetectedChanges } = useGroup;
-
-  const { training, setTraining } = useTrainerDayViewContext;
-
-  if (!training) {
-    toast.error('No training to update');
-    return;
-  }
-
+  if (!training) return toast.error('No training to update');
   setIsUpdatingTraining(true);
 
-  await handleApiRequest(
-    router,
-    () =>
-      controller.update(training.id, {
-        ...training,
-      }),
+  const state = { training: structuredClone(training) };
+  await lib.common.generic.optimisticUpdate(
+    () => {
+      setTrainings((prev) =>
+        prev.map((t) => (t.id === training.id ? training : t))
+      );
+    },
+    (snapshot) => {
+      setIsUpdatingTraining(false);
+      setTraining(snapshot.training);
+      setTrainings((prev) =>
+        prev.map((t) => (t.id === snapshot.training.id ? snapshot.training : t))
+      );
+    },
+    async () => TrainingController.getInstance().update(training.id, training),
+    state,
     (newTraining) => {
       TrainingService.mapData(newTraining, {
         components,
@@ -61,11 +54,8 @@ export async function handleUpdateMultipleTrainings(
       );
 
       setDetectedChanges(false);
+      setIsUpdatingTraining(false);
       toast.success('Training updated successfully');
-    },
-    undefined,
-    'Error when updating training'
+    }
   );
-
-  setIsUpdatingTraining(false);
 }

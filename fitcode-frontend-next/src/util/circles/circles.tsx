@@ -9,18 +9,20 @@ import dayjs from 'dayjs';
 import React from 'react';
 import toast from 'react-hot-toast';
 
+import type { CircleDirection, CircleItem } from './type';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 interface Props {
-  items: { label: string; value: string; sublabel?: string }[];
+  items: CircleItem[];
   value: string;
   setValue: (value: string) => void;
+
   arrows?: boolean;
-  onArrowClick?: (direction: 'left' | 'right') => void;
-  getBackgroundColor?: (value: string, itemValue: string) => string;
   sx?: SxProps;
   onlySelectedValueColored?: boolean;
+  onArrowClick?: (direction: CircleDirection) => void;
+  getBackgroundColor?: (value: string, itemValue: string) => string;
 }
 
 export default function Circles(props: Props) {
@@ -106,6 +108,7 @@ export default function Circles(props: Props) {
                       setDetectedChanges(false);
                       return;
                     }
+
                     props.setValue(item.value);
                   }}
                   sx={{

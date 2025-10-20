@@ -2,8 +2,8 @@ import type { RefObject } from 'react';
 
 import type { FaceCaptures, FacePreviews } from '../types/face.type';
 import type { Landmark, Scored } from '../types/landmark.type';
-import { Step } from '@/common/enum/step.enum';
-import type { SetState } from '@/common/type/state.type';
+import { FaceCaptureStep } from '@/core/profile/enum/face-capture-step.enum';
+import type { SetState } from '@/lib/common/type/state.type';
 
 // Load Mediapipe Tasks Vision dynamically in the browser
 export async function createDetector(baseAssetUrl: string, modelUrl: string) {
@@ -100,7 +100,7 @@ export const resumeProcessing = async (state: {
 export const reset = (state: {
   setCaptures: SetState<FaceCaptures>;
   setPreviews: SetState<FacePreviews>;
-  stepRef: RefObject<Step>;
+  stepRef: RefObject<FaceCaptureStep>;
   isDoneRef: RefObject<boolean>;
   setIsActive: SetState<boolean>;
 }) => {
@@ -108,7 +108,7 @@ export const reset = (state: {
 
   setCaptures({});
   setPreviews({});
-  stepRef.current = Step.FRONT;
+  stepRef.current = FaceCaptureStep.FRONT;
   isDoneRef.current = false;
   setIsActive(true);
 };

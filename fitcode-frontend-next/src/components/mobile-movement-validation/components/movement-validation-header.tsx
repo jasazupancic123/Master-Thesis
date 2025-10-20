@@ -2,7 +2,7 @@ import { Box, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import type { RefObject } from 'react';
 
-import { DetectionStatus } from '@/controller/pose-detection/enum/detection-status';
+import { DetectionStatus } from '@/core/pose-detection/enum/detection-status';
 
 interface MovementValidationHeaderProps {
   statusRef: RefObject<DetectionStatus>;

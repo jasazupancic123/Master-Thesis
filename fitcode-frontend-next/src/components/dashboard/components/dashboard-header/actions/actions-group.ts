@@ -1,8 +1,8 @@
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
 
-import { handleApiRequest } from '@/common/type/state.type';
-import type { GroupController } from '@/controller/group/group.controller';
+import { handleApiRequest } from '@/lib/common/type/state.type';
+import type { GroupController } from '@/core/group/group.controller';
 import type { UseDashboardReturnType } from '@/store/dashboard.provider';
 
 export const handleRemoveSelectedGroup = (

@@ -5,17 +5,21 @@ import Typography from '@mui/material/Typography';
 import { useState } from 'react';
 
 import type { TrainingExerciseCardProps } from '../trainer-group-day-view/props/props';
-import TrainingExerciseCardCollapsedSets from './components/training-exercise-card-sets/components/training-exercise-card-sets-collapsed/training-exercise-card-collapsed-sets';
-import TrainingExerciseCardExpandedSets from './components/training-exercise-card-sets/components/training-exercise-card-sets-expanded/training-exercise-card-expanded-sets';
-import useTrainingExerciseCardParams from './hooks/use-params';
+import TrainingExerciseCardCollapsedSets from './components/collapsed-sets';
+import TrainingExerciseCardExpandedSets from './components/expanded-sets';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useSupersets } from '@/store/supersets.provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
+import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 import MyModal from '@/util/modal/modal';
 
 export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
+  const { supersetIndex, chartView, exercise } = props;
   const screenSize = useScreenSize();
   const theme = useTheme();
+  const [expandedSetsView, setExpandedSetsView] = useState(false);
+
+  const { training, component } = useTrainerDayView();
+  const { selectedExerciseIds, setSelectedExerciseIds } = useTrainerDayView();
 
   const {
     menuExercise,
@@ -25,18 +29,13 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
     expandedExercisesView,
   } = useSupersets();
 
-  const { training, component } = useTrainerDayViewContext();
+  if (!training || !component) return null;
 
-  const { selectedExercises, setSelectedExercises } =
-    useTrainerDayViewContext();
-
-  const { params, componentIndex } = useTrainingExerciseCardParams(props);
-
-  const { supersetIndex, chartView, exercise } = props;
-
-  const [expandedSetsView, setExpandedSetsView] = useState(false);
-
-  if (!training || !component || !params) return null;
+  function handleSelect() {
+    if (!selectedExerciseIds.some((ex) => ex === exercise.id))
+      setSelectedExerciseIds((e) => [...e, exercise.id]);
+    else setSelectedExerciseIds((e) => e.filter((ex) => ex !== exercise.id));
+  }
 
   return (
     <Stack
@@ -65,21 +64,14 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: selectedExercises.some((ex) => ex.id === exercise.id)
+          backgroundColor: selectedExerciseIds.some((ex) => ex === exercise.id)
             ? theme.palette.background.darkBorder
             : theme.palette.background.light,
           zIndex: 0,
         }}
         onClick={(e) => {
-          if (e.target !== e.currentTarget) return; // Prevents click on child elements
-
-          if (!selectedExercises.some((ex) => ex.id === exercise.id)) {
-            setSelectedExercises((prev) => [...prev, exercise]);
-          } else {
-            setSelectedExercises((prev) =>
-              prev.filter((ex) => ex.id !== exercise.id)
-            );
-          }
+          if (e.target !== e.currentTarget) return; // prevents click on child elements
+          handleSelect();
         }}
       />
 
@@ -91,6 +83,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
             fontSize={12}
             textTransform="uppercase"
             color={theme.palette.text.primary}
+            onClick={handleSelect}
             sx={{
               textAlign: 'center',
               overflow: 'hidden',
@@ -100,26 +93,10 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
               zIndex: 1,
               textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
             }}
-            onClick={() => {
-              if (!selectedExercises.some((ex) => ex.id === exercise.id)) {
-                setSelectedExercises((prev) => [...prev, exercise]);
-              } else {
-                setSelectedExercises((prev) =>
-                  prev.filter((ex) => ex.id !== exercise.id)
-                );
-              }
-            }}
           >
             {exercise.exercise?.name}
           </Typography>
         </Tooltip>
-
-        {/* <ExerciseMembersInProgress
-          trainingMembersLength={training.membersIds.length}
-          componentId={component.id}
-          supersetIndex={supersetIndex}
-          exerciseId={exercise.id}
-        /> */}
       </Stack>
 
       {expandedExercisesView &&
@@ -131,7 +108,9 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
             exercise={exercise}
             expandedSetsView={expandedSetsView}
             setExpandedSetsView={setExpandedSetsView}
-            componentIndex={componentIndex}
+            componentIndex={training.components.findIndex(
+              (c) => c.id === component.id
+            )}
           />
         ) : (
           <TrainingExerciseCardExpandedSets
@@ -142,6 +121,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
             supersetIndex={supersetIndex}
           />
         ))}
+
       <MyModal
         isOpen={openVideoPlayerModal}
         setIsOpen={(open) => setOpenVideoPlayerModal(open)}
@@ -151,22 +131,13 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           setOpenVideoPlayerModal(false);
         }}
         sx={{
-          p:
-            menuExercise?.exercise?.videoUrl &&
-            menuExercise?.exercise?.videoUrl.length > 0
-              ? 0
-              : undefined,
+          p: menuExercise?.exercise?.videoUrl?.length ? 0 : undefined,
         }}
         dialogueContentSx={{
-          p:
-            menuExercise?.exercise?.videoUrl &&
-            menuExercise?.exercise?.videoUrl.length > 0
-              ? 0
-              : undefined,
+          p: menuExercise?.exercise?.videoUrl?.length ? 0 : undefined,
         }}
       >
-        {menuExercise?.exercise?.videoUrl &&
-        menuExercise?.exercise?.videoUrl.length > 0 ? (
+        {menuExercise?.exercise?.videoUrl?.length ? (
           <Box
             component="video"
             src={menuExercise?.exercise?.videoUrl}

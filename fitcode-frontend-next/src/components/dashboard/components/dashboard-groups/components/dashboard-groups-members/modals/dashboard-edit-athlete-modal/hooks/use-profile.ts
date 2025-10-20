@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
-import type { AuthUser } from '@/controller/auth/type/user.type';
-import type { Profile } from '@/controller/profile/type/user.type';
+import type { AuthUser } from '@/core/auth/type/user.type';
+import type { Profile } from '@/core/profile/type/user.type';
 import { useDashboard } from '@/store/dashboard.provider';
 
 export type UseDashboardEditAthleteModalUseProfileReturnType = ReturnType<

@@ -4,16 +4,15 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { createContext, useContext, useState } from 'react';
 
+import { UserRole } from '@/core/profile/enum/user-role.enum';
+import type { Training } from '@/core/training/type/training.type';
+import type { TrainingReport } from '@/core/training/type/training-report.type';
 import {
   LINK_TRAININGS,
   LINKS_SIDEBAR_GROUP_VIEW,
-} from '@/common/constant/navigation.constant';
-import type { ILink } from '@/common/type/link.type';
-import type { ChildrenProps } from '@/common/type/props.type';
-import type { SetState } from '@/common/type/state.type';
-import { UserRole } from '@/controller/profile/enum/user-role.enum';
-import type { Training } from '@/controller/training/type/training.type';
-import type { TrainingReport } from '@/controller/training/type/training-report.type';
+} from '@/lib/common/const/nav.const';
+import type { ILink } from '@/lib/common/type/link.type';
+import type { SetState } from '@/lib/common/type/state.type';
 
 interface AthleteProviderProps {
   trainings: Training[];
@@ -33,7 +32,9 @@ const AthleteContext = createContext<AthleteContext | null>(null);
 
 export const useAthlete = () => useContext(AthleteContext)!;
 
-export function AthleteProvider(props: AthleteProviderProps & ChildrenProps) {
+export function AthleteProvider(
+  props: AthleteProviderProps & React.PropsWithChildren
+) {
   const { children, trainings, reports } = props;
   const [selectedDate, setSelectedDate] = useState(dayjs(new Date()));
   const [hasJustLoggedIn, setHasJustLoggedIn] = useState(true);

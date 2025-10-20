@@ -1,16 +1,14 @@
 import ReactDOM from 'react-dom';
 
-import type { SetState, SetStateNullable } from '@/common/type/state.type';
-import type { Subgroup } from '@/controller/training/type/subgroup.type';
-import type { Superset } from '@/controller/training/type/superset.type';
-import type { Training } from '@/controller/training/type/training.type';
-import type { TrainingComponent } from '@/controller/training/type/training-component.type';
-import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import type { SetState, SetStateNullable } from '@/lib/common/type/state.type';
+import type { Subgroup } from '@/core/training/type/subgroup.type';
+import type { Superset } from '@/core/training/type/superset.type';
+import type { Training } from '@/core/training/type/training.type';
+import type { TrainingComponent } from '@/core/training/type/training-component.type';
+import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 
 export function updateTraining(
-  input: {
-    exercises: TrainingExercise[];
-  },
+  exercises: TrainingExercise[],
   state: {
     training: Training;
     component: TrainingComponent | null;
@@ -22,8 +20,6 @@ export function updateTraining(
     setSupersets?: SetState<Superset[]>;
   }
 ) {
-  const { exercises } = input;
-
   const {
     training,
     component,
@@ -42,22 +38,19 @@ export function updateTraining(
   let updatedComponent = { ...component };
   let detectedChanges = false;
 
-  for (let i = 0; i < exercises.length; i++) {
-    const exercise = exercises[i];
-
-    const supersetIndex = supersets.findIndex((s) =>
+  for (const exercise of exercises) {
+    const sI = supersets.findIndex((s) =>
       s.exercises.some((e) => e.id === exercise.id)
     );
-    if (supersetIndex === -1) continue;
 
-    const newSuperset = { ...newSupersets[supersetIndex] };
-    const exerciseIndex = newSuperset.exercises.findIndex(
-      (e) => e.id === exercise.id
-    );
-    if (exerciseIndex === -1 || !training || !component) continue;
+    if (sI === -1) continue;
 
-    newSuperset.exercises[exerciseIndex] = { ...exercise };
-    newSupersets[supersetIndex] = newSuperset;
+    const newSuperset = { ...newSupersets[sI] };
+    const eI = newSuperset.exercises.findIndex((e) => e.id === exercise.id);
+    if (eI === -1) continue;
+
+    newSuperset.exercises[eI] = { ...exercise };
+    newSupersets[sI] = newSuperset;
     detectedChanges = true;
   }
 
@@ -67,11 +60,7 @@ export function updateTraining(
     setDetectedChanges(true);
 
     if (selectedSubgroup) {
-      updatedSubgroup = {
-        ...updatedSubgroup!,
-        supersets: newSupersets,
-      };
-
+      updatedSubgroup = { ...updatedSubgroup!, supersets: newSupersets };
       updatedComponent = {
         ...updatedComponent,
         subgroups: updatedComponent.subgroups.map((s) =>
@@ -85,32 +74,18 @@ export function updateTraining(
 
       const newTraining = { ...training, components: updatedComponents };
 
-      if (setSupersets) {
-        setSupersets(newSupersets);
-      }
-
+      if (setSupersets) setSupersets(newSupersets);
       setSelectedSubgroup(updatedSubgroup!);
-
       setTraining(newTraining);
     } else {
-      updatedComponent = {
-        ...updatedComponent,
-        supersets: newSupersets,
-      };
-
+      updatedComponent = { ...updatedComponent, supersets: newSupersets };
       const updatedComponents = training.components.map((c) =>
         c.id === updatedComponent.id ? updatedComponent : c
       );
 
-      const newTraining = {
-        ...training,
-        components: updatedComponents,
-      };
+      const newTraining = { ...training, components: updatedComponents };
 
-      if (setSupersets) {
-        setSupersets(newSupersets);
-      }
-
+      if (setSupersets) setSupersets(newSupersets);
       setTraining(newTraining);
     }
   });

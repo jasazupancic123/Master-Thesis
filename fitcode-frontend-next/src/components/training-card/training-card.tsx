@@ -2,10 +2,10 @@ import { Box, TextField, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import { useEffect } from 'react';
 
-import TrainingComponentLayout from '../training-component/training-component-layout/training-component-layout';
+import TrainingComponentLayout from '../training-component/training-component-layout';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
+import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 
 export default function TrainingCard() {
   const { cycle } = useGroup();
@@ -18,7 +18,7 @@ export default function TrainingCard() {
     component,
     setComponent,
     selectedAthlete,
-  } = useTrainerDayViewContext();
+  } = useTrainerDayView();
 
   const theme = useTheme();
 

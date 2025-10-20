@@ -2,8 +2,8 @@ import { Logout } from '@mui/icons-material';
 import { Avatar, Box, Menu, MenuItem, Typography } from '@mui/material';
 import Link from 'next/link';
 
-import { LINK_PROFILE } from '@/common/constant/navigation.constant';
-import type { SetState } from '@/common/type/state.type';
+import { LINK_PROFILE } from '@/lib/common/const/nav.const';
+import type { SetState } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 
 interface ProfileHeaderMenuProps {

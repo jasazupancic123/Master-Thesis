@@ -10,8 +10,8 @@ import useFaceCaptureProcessing from './hooks/use-processing';
 import useFaceCaptureUtils from './hooks/use-utils';
 import FaceCapturePreviewsModal from './modals/face-capture-previews-modal';
 import type { FaceCaptures, FacePreviews } from './types/face.type';
-import { Step } from '@/common/enum/step.enum';
-import type { SetState } from '@/common/type/state.type';
+import { FaceCaptureStep } from '@/core/profile/enum/face-capture-step.enum';
+import type { SetState } from '@/lib/common/type/state.type';
 
 export const BASE_ASSET_URL =
   'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.5/wasm';
@@ -166,21 +166,22 @@ export default function FaceCapture(props: FaceCaptureProps) {
             }}
           >
             <div className="text-white text-sm">
-              {stepRef.current === Step.FRONT && (
+              {stepRef.current === FaceCaptureStep.FRONT && (
                 <Typography textAlign="center">
                   Step 1/3 – Center your face inside the guide.
                 </Typography>
               )}
-              {stepRef.current === Step.RIGHT && (
+              {stepRef.current === FaceCaptureStep.RIGHT && (
                 <Typography textAlign="center">
                   Step 2/3 – Turn right until we see your right profile.
                 </Typography>
               )}
-              {stepRef.current === Step.LEFT && !isDoneRef.current && (
-                <Typography textAlign="center">
-                  Step 3/3 – Turn left until we see your left profile.
-                </Typography>
-              )}
+              {stepRef.current === FaceCaptureStep.LEFT &&
+                !isDoneRef.current && (
+                  <Typography textAlign="center">
+                    Step 3/3 – Turn left until we see your left profile.
+                  </Typography>
+                )}
               {isDoneRef.current && (
                 <Typography textAlign="center">
                   All set! You can continue.

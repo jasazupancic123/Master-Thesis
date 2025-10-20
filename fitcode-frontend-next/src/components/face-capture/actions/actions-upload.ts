@@ -2,19 +2,18 @@ import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.
 import toast from 'react-hot-toast';
 
 import type { FaceCaptures } from '../types/face.type';
-import type { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
-import type { SetState } from '@/common/type/state.type';
-import { handleApiRequest } from '@/common/type/state.type';
-import type { AuthController } from '@/controller/auth/auth.controller';
-import type { CustomClaims } from '@/controller/auth/type/custom-claims.type';
-import type { AuthUser } from '@/controller/auth/type/user.type';
+import type { AuthController } from '@/core/auth/auth.controller';
+import type { CustomClaims } from '@/core/auth/type/custom-claims.type';
+import type { AuthUser } from '@/core/auth/type/user.type';
+import { lib } from '@/lib';
+import type { SetState } from '@/lib/common/type/state.type';
+import { handleApiRequest } from '@/lib/common/type/state.type';
 
 export async function uploadFaceCaptures(state: {
   customClaims: CustomClaims;
   setCustomClaims: (claims: CustomClaims) => void;
   captures: FaceCaptures;
   user: AuthUser;
-  firebaseStorage: FirebaseStorageUtil;
   router: AppRouterInstance;
   authController: AuthController;
   setIsCapturingFace: SetState<boolean>;
@@ -24,7 +23,6 @@ export async function uploadFaceCaptures(state: {
     setCustomClaims,
     captures,
     user,
-    firebaseStorage,
     router,
     authController,
     setIsCapturingFace,
@@ -49,7 +47,7 @@ export async function uploadFaceCaptures(state: {
         });
 
         const path = `user/${user.uid}/${file.name}`;
-        const url = await firebaseStorage.uploadFile(file, path);
+        const url = await lib.firebase.storage.uploadFile(file, path);
 
         switch (view) {
           case 'front':

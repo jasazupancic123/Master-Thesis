@@ -1,8 +1,8 @@
 import { useRouter } from 'next/navigation';
 
 import { handleRemoveSelectedGroup } from '../../actions/actions-group';
-import type { ModalProps } from '@/common/type/modal-props.type';
-import { GroupController } from '@/controller/group/group.controller';
+import type { ModalProps } from '@/lib/common/type/modal-props.type';
+import { GroupController } from '@/core/group/group.controller';
 import { useDashboard } from '@/store/dashboard.provider';
 import MyModal from '@/util/modal/modal';
 

@@ -29,25 +29,25 @@ import LoadingOverlay from '../../util/loading-overlay/loading-overlay';
 import Logo from '../../util/logo/logo';
 import ProfileHeaderMenu from '../profile-header-menu/profile-header-menu';
 import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
-import { handleUpdateMultipleTrainings } from './actions/actions-training';
+import { handleUpdateTraining } from './actions/actions-training';
+import AddMemberModal from './add-member-modal';
 import useTrainerGroupHeaderUtils from './hooks/use-utils';
-import AddMemberModal from './modals/add-member-modal';
 import { handleSaveGroup } from '@/app/(trainer)/groups/[group_id]/state';
 import {
   LINK_DASHBOARD,
   LINK_PROFILE,
   LINK_SETTINGS,
   LINKS_SIDEBAR_GROUP_VIEW,
-} from '@/common/constant/navigation.constant';
-import type { GroupDateFilter } from '@/common/type/filter.type';
-import type { SetState } from '@/common/type/state.type';
-import { GroupController } from '@/controller/group/group.controller';
-import { TrainingController } from '@/controller/training/training.controller';
+} from '@/lib/common/const/nav.const';
+import type { GroupDateFilter } from '@/lib/common/type/filter.type';
+import type { SetState } from '@/lib/common/type/state.type';
+import { GroupController } from '@/core/group/group.controller';
+import { TrainingController } from '@/core/training/training.controller';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
+import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 import FilterButton from '@/util/filter-button/filter-button';
 
 export interface TrainerGroupHeaderProps {
@@ -66,7 +66,7 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
 
   const mainContext = useMain();
   const groupContext = useGroup();
-  const trainerDayViewContext = useTrainerDayViewContext();
+  const trainerDayViewContext = useTrainerDayView();
 
   const {
     institution,
@@ -242,20 +242,14 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
                     <Tooltip title="Save training" placement="bottom">
                       <IconButton
                         sx={{ mx: 0, cursor: 'pointer' }}
-                        onClick={() =>
-                          handleUpdateMultipleTrainings(
-                            {
-                              controller: trainingController,
-                              router,
-                              setIsUpdatingTraining,
-                            },
-                            {
-                              useMain: mainContext,
-                              useGroup: groupContext,
-                              useTrainerDayViewContext: trainerDayViewContext,
-                            }
-                          )
-                        }
+                        onClick={async () => {
+                          await handleUpdateTraining(
+                            setIsUpdatingTraining,
+                            mainContext,
+                            groupContext,
+                            trainerDayViewContext
+                          );
+                        }}
                       >
                         <SaveOutlined sx={{ fontSize: 22 }} />
                       </IconButton>
@@ -404,17 +398,11 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
                 <IconButton
                   sx={{ p: 0, m: 0 }}
                   onClick={() => {
-                    handleUpdateMultipleTrainings(
-                      {
-                        controller: trainingController,
-                        router,
-                        setIsUpdatingTraining,
-                      },
-                      {
-                        useMain: mainContext,
-                        useGroup: groupContext,
-                        useTrainerDayViewContext: trainerDayViewContext,
-                      }
+                    handleUpdateTraining(
+                      setIsUpdatingTraining,
+                      mainContext,
+                      groupContext,
+                      trainerDayViewContext
                     );
                   }}
                 >

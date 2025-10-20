@@ -1,19 +1,22 @@
-import { updateSupersets } from './actions-supersets';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
-} from '@/common/constant/warmup-cooldown-ids-constants';
-import type { SetState } from '@/common/type/state.type';
-import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
-import { ParamType } from '@/controller/component/enum/param.enum';
-import type { Exercise } from '@/controller/exercise/type/exercise.type';
-import type { Method } from '@/controller/method/type/method.type';
-import { CustomWorkloadsSubgroupsService } from '@/controller/training/custom-workloads-subgroups.service';
-import type { Training } from '@/controller/training/type/training.type';
-import type { TrainingComponent } from '@/controller/training/type/training-component.type';
-import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import type { GroupProviderReturnType } from '@/store/group.provider';
-import type { TrainerDayViewProviderReturnTypeDefined } from '@/store/trainer-day-view.provider';
+} from '@/core/training/const/warmup-cooldown.const';
+import type { SetState } from '@/lib/common/type/state.type';
+import {
+  KG,
+  REC_TIME,
+  REPS,
+  TEMPO,
+} from '@/core/exercise/constant/exercise-param.constant';
+import type { Exercise } from '@/core/exercise/type/exercise.type';
+import type { Method } from '@/core/method/type/method.type';
+import { SubgroupUtil } from '@/core/training/custom-shit-subgroup.util';
+import type { Training } from '@/core/training/type/training.type';
+import type { TrainingComponent } from '@/core/training/type/training-component.type';
+import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import type { IGroupCtx } from '@/store/group.provider';
+import type { TrainerDayViewCtxExtended } from '@/store/trainer-day-view.provider';
 
 export function getTrainingExercisesFromExercises(
   exercisesIdsToAdd: string[],
@@ -25,30 +28,7 @@ export function getTrainingExercisesFromExercises(
 ): TrainingExercise[] {
   return exercisesIdsToAdd.map((id) => {
     const exercise = allExercises.find((e) => e.id === id);
-    const paramValues =
-      (exercise?.defaultParams &&
-        (exercise?.defaultParams
-          .map((p) => {
-            if (p.field === ParamType.VolWorkSets) return undefined;
-
-            const attribute = method?.attributes
-              ?.map((a) => a.options?.find((o) => o.field === p.defaultValue))
-              .find(Boolean);
-
-            return {
-              field: p.field,
-              selected: p.defaultValue,
-              value:
-                attribute &&
-                attribute.min !== undefined &&
-                attribute.max !== undefined
-                  ? Math.ceil((attribute.min + attribute.max) / 2)
-                  : p.options?.find((o) => o.field === p.defaultValue)
-                      ?.defaultValue,
-            } as AttributeValue;
-          })
-          .filter((p) => p !== undefined) as AttributeValue[])) ||
-      [];
+    const uni = exercise?.isUnilateral || false;
 
     const setsNumber =
       minSets !== undefined && maxSets !== undefined
@@ -57,17 +37,20 @@ export function getTrainingExercisesFromExercises(
 
     return {
       id,
-      exercise: exercise,
+      exercise,
       periodized: false,
       attributes: component?.method?.attributes || [],
-      params: exercise?.defaultParams || [],
-      sets: exercise?.defaultParams
-        ? Array.from({ length: setsNumber }, (_, i) => ({
-            setNumber: i + 1,
-            paramValuesL: paramValues,
-            ...(exercise.isUnilateral && { paramValuesR: paramValues }),
-          }))
-        : [],
+      params: [],
+      sets: Array.from({ length: setsNumber }, (_, i) => ({
+        setNumber: i + 1,
+        reps: REPS.defaultValue as number,
+        ...(uni && { repsR: REPS.defaultValue as number }),
+        loadKg: KG.defaultValue as number,
+        ...(uni && { loadKgR: KG.defaultValue as number }),
+        tempo: TEMPO.defaultValue as string,
+        ...(uni && { tempoR: TEMPO.defaultValue as string }),
+        recTime: REC_TIME.defaultValue as number,
+      })),
     };
   });
 }
@@ -82,8 +65,8 @@ export function handleAddExerciseToSupersetComponent(
     setOpenAddExerciseModal: SetState<boolean>;
   },
   context: {
-    useGroup: GroupProviderReturnType;
-    useTrainerDayViewContext: TrainerDayViewProviderReturnTypeDefined;
+    useGroup: IGroupCtx;
+    useTrainerDayViewContext: TrainerDayViewCtxExtended;
   }
 ) {
   const {
@@ -110,7 +93,6 @@ export function handleAddExerciseToSupersetComponent(
     setPagination,
   } = useTrainerDayViewContext;
 
-  // if it's custom workloads subgroup, then dissable
   if (selectedSubgroup?.parentId) return;
 
   setSearch('');
@@ -179,7 +161,7 @@ export function handleAddExerciseToSupersetComponent(
       updatedWOrC.subgroups = updatedSubgroups;
     }
 
-    updatedWOrC.subgroups = CustomWorkloadsSubgroupsService.addExercises(
+    updatedWOrC.subgroups = SubgroupUtil.addExercises(
       updatedWOrC,
       selectedSubgroup,
       [...exercisesToAdd]
@@ -230,7 +212,7 @@ export function handleAddExerciseToSupersetComponent(
       supersets: [...supersets],
     };
 
-    updatedComponent.subgroups = CustomWorkloadsSubgroupsService.addExercises(
+    updatedComponent.subgroups = SubgroupUtil.addExercises(
       updatedComponent,
       selectedSubgroup,
       [...exercisesToAdd]
@@ -270,7 +252,7 @@ export function handleAddExerciseToSupersetComponent(
       subgroups: updatedSubgroups,
     };
 
-    updatedComponent.subgroups = CustomWorkloadsSubgroupsService.addExercises(
+    updatedComponent.subgroups = SubgroupUtil.addExercises(
       updatedComponent,
       selectedSubgroup,
       [...exercisesToAdd]

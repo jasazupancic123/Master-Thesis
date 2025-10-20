@@ -6,8 +6,8 @@ import { v4 } from 'uuid';
 
 import type { UseWeekViewUtilsReturnType } from '../hooks/use-utils';
 import { getAmPmItems } from './actions-items';
-import type { CommonService } from '@/common/service/common.service';
-import type { GroupProviderReturnType } from '@/store/group.provider';
+import type { CommonService } from '@/lib/common/common.service';
+import type { IGroupCtx } from '@/store/group.provider';
 
 export const onDragEndAddEvent = (
   input: {
@@ -16,7 +16,7 @@ export const onDragEndAddEvent = (
     commonService: CommonService;
   },
   context: {
-    useGroup: GroupProviderReturnType;
+    useGroup: IGroupCtx;
     useWeekUtils: UseWeekViewUtilsReturnType;
   }
 ) => {

@@ -8,15 +8,13 @@ import { useEffect } from 'react';
 import { useScreenSize } from '@/store/screen-size.provider';
 import Logo from '@/util/logo/logo';
 
-interface AnimationProps {
-  duration?: number; // in milliseconds
+interface Props {
+  duration?: number; // ms
 }
 
-export default function Animation(props: AnimationProps) {
+export default function Animation({ duration = 6000 }: Props) {
   const theme = useTheme();
   const screenSize = useScreenSize();
-
-  const { duration = 6000 } = props;
 
   useEffect(() => {
     const timer = setTimeout(() => {}, duration);

@@ -1,5 +1,5 @@
-import type { AuthUser } from '@/controller/auth/type/user.type';
-import type { Profile } from '@/controller/profile/type/user.type';
+import type { AuthUser } from '@/core/auth/type/user.type';
+import type { Profile } from '@/core/profile/type/user.type';
 
 let cachedUser: AuthUser | null = null;
 let cachedProfile: Profile | null = null;

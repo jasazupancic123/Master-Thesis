@@ -18,9 +18,9 @@ import {
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
-import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
-import type { AuthUser, UpdateUser } from '@/controller/auth/type/user.type';
-import { UserRole } from '@/controller/profile/enum/user-role.enum';
+import type { AuthUser, UpdateUser } from '@/core/auth/type/user.type';
+import { UserRole } from '@/core/profile/enum/user-role.enum';
+import { lib } from '@/lib';
 import ImageUpload from '@/util/image-upload/image-upload';
 
 interface UsersDataGridProps {
@@ -46,8 +46,6 @@ const roleColors: Record<
   [UserRole.TRAINER]: 'secondary',
   [UserRole.ATHLETE]: 'default',
 };
-
-const firebaseStorage = FirebaseStorageUtil.Instance;
 
 export default function UsersDataGrid({
   users,
@@ -210,7 +208,7 @@ export default function UsersDataGrid({
             onChange={async (file) => {
               try {
                 const path = `user/${userId}/${file.name}`;
-                const url = await firebaseStorage.uploadFile(file, path);
+                const url = await lib.firebase.storage.uploadFile(file, path);
                 await onRowUpdate?.(userId, { photoURL: url });
 
                 setRows((prev) =>

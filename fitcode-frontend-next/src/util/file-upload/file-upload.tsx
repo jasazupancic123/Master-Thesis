@@ -3,13 +3,11 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Image from 'next/image';
 import type { ReactNode } from 'react';
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { Accept } from 'react-dropzone';
 import { useDropzone } from 'react-dropzone';
 
-import type { ChildrenProps } from '@/common/type/props.type';
-
-interface Props extends Partial<ChildrenProps> {
+interface Props extends Partial<React.PropsWithChildren> {
   label: string;
   onFileUpload: (file: File) => Promise<void>;
   input: 'image' | 'video' | 'csv';

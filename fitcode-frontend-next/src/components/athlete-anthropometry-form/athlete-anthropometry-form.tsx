@@ -1,7 +1,7 @@
 import { Box, TextField } from '@mui/material';
 
-import type { SetState } from '@/common/type/state.type';
-import type { Wellness } from '@/controller/profile/type/wellness.type';
+import type { SetState } from '@/lib/common/type/state.type';
+import type { Wellness } from '@/core/profile/type/wellness.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 interface AthleteAnthropometryFormProps {
@@ -12,9 +12,8 @@ interface AthleteAnthropometryFormProps {
 export default function AthleteAnthropometryForm(
   props: AthleteAnthropometryFormProps
 ) {
-  const screenSize = useScreenSize();
-
   const { state, setState } = props;
+  const screenSize = useScreenSize();
 
   return (
     <Box

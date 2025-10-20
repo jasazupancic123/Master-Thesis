@@ -23,13 +23,13 @@ import DashboardMenuMobile from './components/dashboard-menu-mobile';
 import useDashboardHeaderUtils from './hooks/use-utils';
 import EditInstitutionModal from './modals/edit-institution-modal/edit-institution-modal';
 import RemoveGroupModal from './modals/remove-group-modal/remove-group-modal';
-import { BACKEND_API_BASE_URL } from '@/common/constant/api.constant';
-import { LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS } from '@/common/constant/navigation.constant';
-import { isAdmin } from '@/common/firebase/firebase-auth.util';
-import type { ILink } from '@/common/type/link.type';
 import ProfileHeaderMenu from '@/components/profile-header-menu/profile-header-menu';
 import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
-import { GroupService } from '@/controller/group/group.service';
+import { app } from '@/core/app.service';
+import { BACKEND_API_BASE_URL } from '@/core/const/api.const';
+import { lib } from '@/lib';
+import { LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS } from '@/lib/common/const/nav.const';
+import type { ILink } from '@/lib/common/type/link.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
@@ -152,7 +152,7 @@ export default function DashboardHeader() {
                 </IconButton>
               </Box>
 
-              {isAdmin(role!) ? (
+              {lib.firebase.auth.isAdmin(role!) ? (
                 <Box
                   position="relative"
                   onClick={(event) => {
@@ -281,7 +281,7 @@ export default function DashboardHeader() {
             onClick={() => {
               setSelectedInstitution(institution);
               if (institution.groups && institution.groups.length) {
-                const mapped = GroupService.mapMembers(
+                const mapped = app.group.mapMembers(
                   institution.groups[0],
                   users
                 );

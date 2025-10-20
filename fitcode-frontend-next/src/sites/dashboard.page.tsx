@@ -6,13 +6,13 @@ import { Box } from '@mui/material';
 import { redirect } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-import { LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS } from '@/common/constant/navigation.constant';
-import { isTrainer } from '@/common/firebase/firebase-auth.util';
 import DashboardGroups from '@/components/dashboard/components/dashboard-groups/dashboard-groups';
 import RegisterUsersDashboard from '@/components/dashboard/components/dashboard-register-users-modal/dashboard-register-users-modal';
-import { GroupService } from '@/controller/group/group.service';
-import type { Institution } from '@/controller/institution/type/institution.type';
-import { UserRole } from '@/controller/profile/enum/user-role.enum';
+import { app } from '@/core/app.service';
+import type { Institution } from '@/core/institution/type/institution.type';
+import { UserRole } from '@/core/profile/enum/user-role.enum';
+import { lib } from '@/lib';
+import { LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS } from '@/lib/common/const/nav.const';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
@@ -45,7 +45,7 @@ export default function DashboardPage() {
         (g) => g.institutionId === selectedInstitution.id
       );
 
-      for (const group of groups) GroupService.mapMembers(group, users);
+      for (const group of groups) app.group.mapMembers(group, users);
 
       setSelectedInstitution((prev) => ({ ...prev, groups }) as Institution);
       if (groups.length) setSelectedGroup(groups[0]);
@@ -112,7 +112,7 @@ export default function DashboardPage() {
           }}
           gap={1}
         >
-          {role && isTrainer(role) && (
+          {role && lib.firebase.auth.isTrainer(role) && (
             <Tooltip title="Go to group" placement="top">
               <Fab
                 color="primary"

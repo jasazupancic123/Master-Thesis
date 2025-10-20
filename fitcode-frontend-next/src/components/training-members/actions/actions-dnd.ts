@@ -6,22 +6,22 @@ import { handleAddMembersSubgroup } from './actions-subgroups';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
-} from '@/common/constant/warmup-cooldown-ids-constants';
+} from '@/core/training/const/warmup-cooldown.const';
 import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-group-day-view/constant/subgroups.constant';
-import type { TrainingComponent } from '@/controller/training/type/training-component.type';
-import type { GroupProviderReturnType } from '@/store/group.provider';
-import type { MainProviderReturnType, useMain } from '@/store/main.provider';
+import type { TrainingComponent } from '@/core/training/type/training-component.type';
+import type { IGroupCtx } from '@/store/group.provider';
+import type { IMainCtx, useMain } from '@/store/main.provider';
 import type {
-  TrainerDayViewProviderReturnType,
-  TrainerDayViewProviderReturnTypeDefined,
+  TrainerDayViewCtx,
+  TrainerDayViewCtxExtended,
 } from '@/store/trainer-day-view.provider';
 
 export const handleOnDragEnd = async (
   input: { result: DropResult },
   context: {
-    useMain: MainProviderReturnType;
-    useGroup: GroupProviderReturnType;
-    useTrainerDayViewContext: TrainerDayViewProviderReturnType;
+    useMain: IMainCtx;
+    useGroup: IGroupCtx;
+    useTrainerDayViewContext: TrainerDayViewCtx;
     useTrainingMembersSubgroups: ReturnType<typeof useTrainingMembersSubgroups>;
     useTrainingMembers: ReturnType<typeof useTrainingMembers>;
   }
@@ -76,7 +76,7 @@ const onDragEndSubgroup = (
   { destination, draggableId }: DropResult,
   context: {
     useMain: ReturnType<typeof useMain>;
-    useTrainerDayViewContext: TrainerDayViewProviderReturnTypeDefined;
+    useTrainerDayViewContext: TrainerDayViewCtxExtended;
     useTrainingMembersSubgroups: ReturnType<typeof useTrainingMembersSubgroups>;
   }
 ) => {

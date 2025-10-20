@@ -10,12 +10,12 @@ import {
 } from './actions/actions-exercise';
 import TrainingExerciseSetDoneCheckbox from './components/training-exercise-set-done-checkbox';
 import useExerciseIndexLabel from './hooks/use-exercise-index-label';
-import { TrackingMethod } from '@/common/enum/tracking-method.enum';
-import ImageGallery from '@/common/util/image-gallery';
-import TrainingInProgressTempoChart from '@/common/util/tempo-chart';
-import AthleteTrainingExerciseSets from '@/components/athlete/athlete-training-exercise-sets/athlete-training-exercise-sets';
+import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
+import ImageGallery from '@/util/image-gallery';
+import TrainingInProgressTempoChart from '@/util/tempo-chart';
+import AthleteTrainingExerciseSets from '@/components/athlete/athlete-training-exercise-sets';
 import MobileMovementValidation from '@/components/mobile-movement-validation/mobile-movement-validation';
-import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
+import { EXERCISE_POSES } from '@/core/pose-detection/const/exercise-poses';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';

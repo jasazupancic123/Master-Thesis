@@ -1,38 +1,29 @@
 import type { DraggableLocation } from 'react-beautiful-dnd';
 import toast from 'react-hot-toast';
 
-import { ADD_SUPERSET_DROPPABLE_ID } from '@/common/constant/add-superset-droppable-id.constant';
+import { ADD_SUPERSET_DROPPABLE_ID } from '@/core/training/const/add-superset-droppable-id.const';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
-} from '@/common/constant/warmup-cooldown-ids-constants';
-import type { SetState } from '@/common/type/state.type';
+} from '@/core/training/const/warmup-cooldown.const';
+import type { SetState } from '@/lib/common/type/state.type';
 import { NUM_MAX_SUPERSETS } from '@/components/trainer-group-day-view/constant/supersets.constant';
-import { CustomWorkloadsSubgroupsService } from '@/controller/training/custom-workloads-subgroups.service';
-import { MainSet } from '@/controller/training/enum/main-set.enum';
-import type { Subgroup } from '@/controller/training/type/subgroup.type';
-import type { Superset } from '@/controller/training/type/superset.type';
-import type { Training } from '@/controller/training/type/training.type';
-import type { TrainingComponent } from '@/controller/training/type/training-component.type';
-import type { GroupProviderReturnType } from '@/store/group.provider';
-import type { TrainerDayViewProviderReturnTypeDefined } from '@/store/trainer-day-view.provider';
+import { MainSet } from '@/core/training/enum/main-set.enum';
+import { SubgroupUtil } from '@/core/training/custom-shit-subgroup.util';
+import type { Subgroup } from '@/core/training/type/subgroup.type';
+import type { Superset } from '@/core/training/type/superset.type';
+import type { Training } from '@/core/training/type/training.type';
+import type { TrainingComponent } from '@/core/training/type/training-component.type';
+import type { IGroupCtx } from '@/store/group.provider';
+import type { TrainerDayViewCtxExtended } from '@/store/trainer-day-view.provider';
 
 export async function onDragEndExercise(
-  input: {
-    draggableId: string;
-    destination: DraggableLocation | null | undefined;
-  },
-  context: {
-    useGroup: GroupProviderReturnType;
-    useTrainerDayViewContext: TrainerDayViewProviderReturnTypeDefined;
-  }
+  draggableId: string,
+  destination: DraggableLocation | null,
+  groupCtx: IGroupCtx,
+  trainerDayViewCtx: TrainerDayViewCtxExtended
 ) {
-  const { destination, draggableId } = input;
-
-  const { useGroup, useTrainerDayViewContext } = context;
-
-  const { setDetectedChanges } = useGroup;
-
+  const { setDetectedChanges } = groupCtx;
   const {
     training,
     setTraining,
@@ -42,27 +33,38 @@ export async function onDragEndExercise(
     setSelectedSubgroup,
     supersets,
     setSupersets,
-  } = useTrainerDayViewContext;
+  } = trainerDayViewCtx;
 
-  if (!destination || !training || !component) return;
-
-  // if it's custom workloads subgroup, then dissable
-  if (selectedSubgroup?.parentId) return;
+  if (!destination || !training || !component || selectedSubgroup?.parentId)
+    return; // if virtual subgroup, then disable
 
   if (destination.droppableId === ADD_SUPERSET_DROPPABLE_ID) {
-    const newSupersets = onAddExerciseDrop(supersets, draggableId);
+    if (supersets.length >= NUM_MAX_SUPERSETS)
+      toast.error(
+        `You can only have ${NUM_MAX_SUPERSETS} supersets per component`
+      );
 
-    if (!newSupersets) return;
+    const _supersets = structuredClone(supersets);
+    const superset = _supersets.find((s) =>
+      s.exercises.find((e) => e.id === draggableId)
+    );
+
+    if (!superset) return;
+    const draggedExercise = superset.exercises.find(
+      (e) => e.id === draggableId
+    );
+
+    if (!draggedExercise) return;
+
+    let newSupersets = [..._supersets, { exercises: [draggedExercise] }];
+    superset.exercises = superset.exercises.filter((e) => e.id !== draggableId);
+    newSupersets = newSupersets.filter((s) => s.exercises.length > 0);
 
     setDetectedChanges(true);
-
-    setSupersets([...newSupersets]);
+    setSupersets(newSupersets);
 
     if (selectedSubgroup) {
-      const updatedSubgroup = {
-        ...selectedSubgroup,
-        supersets: newSupersets,
-      };
+      const updatedSubgroup = { ...selectedSubgroup, supersets: newSupersets };
       const updatedComponent = {
         ...component,
         subgroups: component.subgroups.map((s) =>
@@ -70,62 +72,39 @@ export async function onDragEndExercise(
         ),
       };
 
-      updatedComponent.subgroups =
-        CustomWorkloadsSubgroupsService.updateOnAddExerciseDrop(
-          selectedSubgroup,
-          updatedComponent,
-          draggableId
-        );
+      updatedComponent.subgroups = SubgroupUtil.updateOnAddExerciseDrop(
+        selectedSubgroup,
+        updatedComponent,
+        draggableId
+      );
 
       setSelectedSubgroup(updatedSubgroup);
       setComponent(updatedComponent);
-
-      updateGlobalStates(
-        training,
-        component,
-        updatedComponent,
-        setTraining,
-        component.id === WARMUP_ID || component.id === COOLDOWN_ID
-      );
+      updateGlobalStates(training, component, updatedComponent, setTraining);
     } else {
       const updatedComponent = {
         ...component,
         supersets: newSupersets,
       };
 
-      updatedComponent.subgroups =
-        CustomWorkloadsSubgroupsService.updateOnAddExerciseDrop(
-          selectedSubgroup,
-          updatedComponent,
-          draggableId
-        );
+      updatedComponent.subgroups = SubgroupUtil.updateOnAddExerciseDrop(
+        selectedSubgroup,
+        updatedComponent,
+        draggableId
+      );
 
       setDetectedChanges(true);
-
       setComponent(updatedComponent);
-
-      updateGlobalStates(
-        training,
-        component,
-        updatedComponent,
-        setTraining,
-        component.id === WARMUP_ID || component.id === COOLDOWN_ID
-      );
+      updateGlobalStates(training, component, updatedComponent, setTraining);
     }
 
     return;
   }
 
   const updatedSupersets = onDragEndExerciseToExistingSuperset(
-    {
-      draggableId,
-      destination,
-    },
-    {
-      component,
-      selectedSubgroup,
-      supersets,
-    }
+    draggableId,
+    destination,
+    { component, selectedSubgroup, supersets }
   );
 
   if (!updatedSupersets) return;
@@ -146,7 +125,7 @@ export async function onDragEndExercise(
     };
 
     updatedComponent.subgroups =
-      CustomWorkloadsSubgroupsService.updateOnDragEndExerciseToExistingSuperset(
+      SubgroupUtil.updateOnDragEndExerciseToExistingSuperset(
         draggableId,
         destination,
         updatedComponent,
@@ -154,16 +133,8 @@ export async function onDragEndExercise(
       );
 
     setSelectedSubgroup(updatedSubgroup);
-
     setComponent(updatedComponent);
-
-    updateGlobalStates(
-      training,
-      component,
-      updatedComponent,
-      setTraining,
-      component.id === WARMUP_ID || component.id === COOLDOWN_ID
-    );
+    updateGlobalStates(training, component, updatedComponent, setTraining);
   } else {
     const updatedComponent: TrainingComponent = {
       ...component,
@@ -171,7 +142,7 @@ export async function onDragEndExercise(
     };
 
     updatedComponent.subgroups =
-      CustomWorkloadsSubgroupsService.updateOnDragEndExerciseToExistingSuperset(
+      SubgroupUtil.updateOnDragEndExerciseToExistingSuperset(
         draggableId,
         destination,
         updatedComponent,
@@ -179,14 +150,7 @@ export async function onDragEndExercise(
       );
 
     setComponent(updatedComponent);
-
-    updateGlobalStates(
-      training,
-      component,
-      updatedComponent,
-      setTraining,
-      component.id === WARMUP_ID || component.id === COOLDOWN_ID
-    );
+    updateGlobalStates(training, component, updatedComponent, setTraining);
   }
 
   setDetectedChanges(true);
@@ -196,10 +160,9 @@ export function updateGlobalStates(
   training: Training,
   component: TrainingComponent,
   updatedComponent: TrainingComponent,
-  setTraining: SetState<Training | undefined>,
-  warmupOrCooldown: boolean
+  setTraining: SetState<Training | undefined>
 ) {
-  if (warmupOrCooldown) {
+  if (component.id === WARMUP_ID || component.id === COOLDOWN_ID) {
     const newTraining = { ...training };
     if (component.id === WARMUP_ID) newTraining.warmup = updatedComponent;
     else newTraining.cooldown = updatedComponent;
@@ -246,18 +209,15 @@ export const onAddExerciseDrop = (
   return newSupersets.filter((s) => s.exercises.length > 0);
 };
 
-export const onDragEndExerciseToExistingSuperset = (
-  input: {
-    draggableId: string;
-    destination: DraggableLocation;
-  },
+export function onDragEndExerciseToExistingSuperset(
+  draggableId: string,
+  destination: DraggableLocation,
   state: {
     component: TrainingComponent;
     selectedSubgroup: Subgroup | null;
     supersets: Superset[];
   }
-): Superset[] | undefined => {
-  const { destination, draggableId } = input;
+): Superset[] | undefined {
   const { component, selectedSubgroup, supersets } = state;
 
   const supersetIndex = parseInt(destination.droppableId.split('-')[1]);
@@ -304,13 +264,10 @@ export const onDragEndExerciseToExistingSuperset = (
             })
             .map((i) => i.exercise);
 
-    const newSuperset = {
-      ...supersetWithExercise,
-      exercises: sortedExercises,
-    };
-
     return supersetsCopy.map((superset) =>
-      superset === supersetWithExercise ? newSuperset : superset
+      superset === supersetWithExercise
+        ? { ...supersetWithExercise, exercises: sortedExercises }
+        : superset
     );
   }
 
@@ -319,6 +276,7 @@ export const onDragEndExerciseToExistingSuperset = (
     toast.error(
       `You can only have ${NUM_MAX_SUPERSETS} exercises per superset`
     );
+
     return;
   }
 
@@ -361,4 +319,4 @@ export const onDragEndExerciseToExistingSuperset = (
   }
 
   return finalSupersetsCopy;
-};
+}

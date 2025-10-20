@@ -17,14 +17,14 @@ import {
 import Link from 'next/link';
 import { useState } from 'react';
 
+import type { Institution } from '@/core/institution/type/institution.type';
+import { lib } from '@/lib';
 import {
   LINK_PROFILE,
   LINK_SETTINGS,
   LINKS_DASHBOARD_SIDEBAR_SUB_ITEMS,
   LINKS_SIDEBAR_DAHBOARD_VIEW,
-} from '@/common/constant/navigation.constant';
-import { isAdmin } from '@/common/firebase/firebase-auth.util';
-import type { Institution } from '@/controller/institution/type/institution.type';
+} from '@/lib/common/const/nav.const';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
@@ -63,7 +63,7 @@ export default function DashboardMenuMobile() {
       {/* Side drawer from the right */}
       <Drawer anchor="left" open={open} onClose={() => setOpen(false)}>
         <List sx={{ mt: 5 }}>
-          {isAdmin(role!) && (
+          {lib.firebase.auth.isAdmin(role!) && (
             <Box ml={screenSize.isMobile ? 2 : 0}>
               <SelectInputHorizontal<Institution>
                 label={selectedInstitution?.name || 'Select institution'}

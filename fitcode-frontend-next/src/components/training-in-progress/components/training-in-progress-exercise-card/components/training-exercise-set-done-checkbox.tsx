@@ -6,7 +6,7 @@ import {
   isExerciseSetCompleted,
   unmarkExerciseSetAsCompleted,
 } from '../actions/actions-exercise-set';
-import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 

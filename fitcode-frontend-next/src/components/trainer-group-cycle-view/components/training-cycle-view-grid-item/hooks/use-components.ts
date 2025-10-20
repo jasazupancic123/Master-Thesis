@@ -1,8 +1,8 @@
 import type { RefObject } from 'react';
 import { useEffect, useState } from 'react';
 
-import type { Training } from '@/controller/training/type/training.type';
-import type { TrainingComponent } from '@/controller/training/type/training-component.type';
+import type { Training } from '@/core/training/type/training.type';
+import type { TrainingComponent } from '@/core/training/type/training-component.type';
 
 interface UseTrainingCycleComponentsProps {
   training: Training;

@@ -3,14 +3,16 @@
 import { useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useState } from 'react';
 
-import { getFirebaseAuth } from '@/common/config/firebase.config';
-import { LINK_SIGN_IN } from '@/common/constant/navigation.constant';
-import type { AuthContextType, AuthStatus } from '@/common/type/context.type';
-import type { ChildrenProps } from '@/common/type/props.type';
-import { AuthController } from '@/controller/auth/auth.controller';
-import type { CustomClaims } from '@/controller/auth/type/custom-claims.type';
-import type { AuthUser } from '@/controller/auth/type/user.type';
-import type { UserRole } from '@/controller/profile/enum/user-role.enum';
+import { AuthController } from '@/core/auth/auth.controller';
+import type { CustomClaims } from '@/core/auth/type/custom-claims.type';
+import type { AuthUser } from '@/core/auth/type/user.type';
+import type { UserRole } from '@/core/profile/enum/user-role.enum';
+import { LINK_SIGN_IN } from '@/lib/common/const/nav.const';
+import type {
+  AuthContextType,
+  AuthStatus,
+} from '@/lib/common/type/auth-context.type';
+import { getFirebaseAuth } from '@/lib/firebase/config';
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -23,7 +25,7 @@ export type AuthState = {
   customClaims?: CustomClaims;
 };
 
-export const AuthProvider = (props: ChildrenProps) => {
+export const AuthProvider = (props: React.PropsWithChildren) => {
   const auth = getFirebaseAuth();
   const { children } = props;
   const router = useRouter();

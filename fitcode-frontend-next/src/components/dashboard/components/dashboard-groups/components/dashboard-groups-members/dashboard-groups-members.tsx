@@ -7,9 +7,9 @@ import { handleRemoveAthleteFromGroup } from './actions/actions-users';
 import useDashboardGroupsMembersUsers from './hooks/use-users';
 import useDashboardGroupsMembersUtils from './hooks/use-utils';
 import DashboardEditAthleteModal from './modals/dashboard-edit-athlete-modal/dashboard-edit-athlete-modal';
-import { isManager, isTrainer } from '@/common/firebase/firebase-auth.util';
 import { AddMembersModal } from '@/components/dashboard/modals/add-members-modal';
-import { GroupController } from '@/controller/group/group.controller';
+import { GroupController } from '@/core/group/group.controller';
+import { lib } from '@/lib';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
@@ -124,7 +124,8 @@ export default function DashboardGroupsMembers() {
                     onMouseLeave={() => setHoveredUser(null)}
                   >
                     {role &&
-                      (isManager(role) || isTrainer(role)) &&
+                      (lib.firebase.auth.isManager(role) ||
+                        lib.firebase.auth.isTrainer(role)) &&
                       user.uid === hoveredUser?.uid && (
                         <IconButton
                           className="remove-icon"
@@ -187,24 +188,26 @@ export default function DashboardGroupsMembers() {
                   </Box>
                 );
               })}
-              {role && (isTrainer(role) || isManager(role)) && (
-                <Tooltip title="Add member" placement="bottom">
-                  <IconButton
-                    sx={{
-                      width: screenSize.isMobile ? 70 : 80,
-                      height: screenSize.isMobile ? 70 : 80,
-                      //p: 3.5,
-                      m: 0,
-                      backgroundColor: theme.palette.background.light,
-                    }}
-                    onClick={() => {
-                      setOpenAddMemberModal(true);
-                    }}
-                  >
-                    <Add />
-                  </IconButton>
-                </Tooltip>
-              )}
+              {role &&
+                (lib.firebase.auth.isTrainer(role) ||
+                  lib.firebase.auth.isManager(role)) && (
+                  <Tooltip title="Add member" placement="bottom">
+                    <IconButton
+                      sx={{
+                        width: screenSize.isMobile ? 70 : 80,
+                        height: screenSize.isMobile ? 70 : 80,
+                        //p: 3.5,
+                        m: 0,
+                        backgroundColor: theme.palette.background.light,
+                      }}
+                      onClick={() => {
+                        setOpenAddMemberModal(true);
+                      }}
+                    >
+                      <Add />
+                    </IconButton>
+                  </Tooltip>
+                )}
             </>
           )}
         </Box>

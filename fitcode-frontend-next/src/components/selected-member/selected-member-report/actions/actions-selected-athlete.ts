@@ -1,24 +1,40 @@
-import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-group-day-view/constant/subgroups.constant';
-import type { TrainerDayViewProviderReturnType } from '@/store/trainer-day-view.provider';
+import { app } from '@/core/app.service';
+import type { TrainingComponent } from '@/core/training/type/training-component.type';
+import type { TrainerDayViewCtxExtended } from '@/store/trainer-day-view.provider';
 
-export const deselectAthlete = (context: {
-  useTrainerDayViewContext: TrainerDayViewProviderReturnType;
-}) => {
+export function deselectAthlete(ctx: TrainerDayViewCtxExtended) {
   const {
     component,
-    selectedSubgroup,
+    selectedAthlete,
     setSelectedSubgroup,
     setSelectedAthlete,
-  } = context.useTrainerDayViewContext;
+  } = ctx;
+
+  const virtual = app.training.subgroup.getVirtual(
+    selectedAthlete!.uid,
+    component
+  );
+
+  if (virtual) {
+    const parentSubgroup = app.training.subgroup.getParent(virtual, component);
+    setSelectedSubgroup(parentSubgroup);
+
+    // delete virtual subgroup if prescription is the same as parent
+    if (app.training.subgroup.isEqual(virtual, component)) {
+      const updated: TrainingComponent = structuredClone({
+        ...component,
+        subgroups: component.subgroups.filter((s) => s.id !== virtual.id),
+      });
+
+      ctx.setComponent(updated);
+      ctx.setTraining((prev) => ({
+        ...prev!,
+        components: prev!.components.map((c) =>
+          c.id === updated.id ? updated : c
+        ),
+      }));
+    }
+  }
 
   setSelectedAthlete(undefined);
-
-  if (selectedSubgroup && selectedSubgroup.parentId && component) {
-    const parentSubgroup = component.subgroups.find(
-      (sg) => sg.id === selectedSubgroup.parentId
-    );
-    if (parentSubgroup && parentSubgroup.id !== DEFAULT_SUBGROUP_ID)
-      setSelectedSubgroup(parentSubgroup);
-    else setSelectedSubgroup(null);
-  }
-};
+}

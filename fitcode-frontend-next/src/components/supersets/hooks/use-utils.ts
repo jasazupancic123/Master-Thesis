@@ -6,14 +6,13 @@ import {
 } from '@dnd-kit/core';
 import { useMemo, useState } from 'react';
 
-import { MainSet } from '@/controller/training/enum/main-set.enum';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
+import { MainSet } from '@/core/training/enum/main-set.enum';
+import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 
-export type UseSupersetsUtilsReturnType = ReturnType<typeof useSupersetsUtils>;
+export type SupersetUtilsHook = ReturnType<typeof useSupersetUtils>;
 
-export default function useSupersetsUtils() {
-  const { component, selectedSubgroup, supersets } = useTrainerDayViewContext();
-
+export default function useSupersetUtils() {
+  const { component, selectedSubgroup, supersets } = useTrainerDayView();
   const [openVideoPlayerModal, setOpenVideoPlayerModal] = useState(false);
 
   const isCircuit =
@@ -21,9 +20,7 @@ export default function useSupersetsUtils() {
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(TouchSensor, {
-      activationConstraint: { delay: 0, tolerance: 5 },
-    })
+    useSensor(TouchSensor, { activationConstraint: { delay: 0, tolerance: 5 } })
   );
 
   const disabledSensors = useSensors(

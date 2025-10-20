@@ -3,22 +3,21 @@
 import { Box } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 
-import { CompletedPlanned } from '@/common/enum/completed-planned.enum';
-import { CommonService } from '@/common/service/common.service';
-import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
-import type { Pagination } from '@/common/type/paginate.type';
-import AthleteOptionsContainer from '@/components/athlete/athlete-options-container/athlete-options-container';
-import AthleteTrainingCard from '@/components/athlete/athlete-training-card/athlete-training-card';
-import TrainingReportCard from '@/components/athlete/athlete-training-card/components/training-report-card';
+import AthleteOptionsContainer from '@/components/athlete/athlete-options-container';
+import AthleteTrainingCard from '@/components/athlete/athlete-training-card';
+import TrainingReportCard from '@/components/athlete/training-report-card';
 import { TrainingInProgressUtilsProvider } from '@/components/training-in-progress/context/training-in.progress-utils.provider';
 import { UndoneExercisesProvider } from '@/components/training-in-progress/context/undone-exercises.provider';
 import TrainingInProgress from '@/components/training-in-progress/training-in-progress';
-import type { Training } from '@/controller/training/type/training.type';
+import { CompletedPlanned } from '@/core/training/enum/completed-planned.enum';
+import { ExerciseTrainingView } from '@/core/training/enum/exercise-training-view.enum';
+import type { Training } from '@/core/training/type/training.type';
+import { lib } from '@/lib';
+import type { Pagination } from '@/lib/common/type/paginate.type';
 import { useTraining } from '@/store/training.provider';
 import { TrainingInProgressProvider } from '@/store/training-in-progress.provider';
 
 const PAGE_SIZE = 3;
-const commonService = CommonService.instance;
 
 export default function TrainingPage() {
   const {
@@ -86,7 +85,7 @@ export default function TrainingPage() {
       return;
     }
 
-    const newTrainings = commonService.generic.paginate(allTrainings, {
+    const newTrainings = lib.common.generic.paginate(allTrainings, {
       page: nextPage,
       pageSize,
     });

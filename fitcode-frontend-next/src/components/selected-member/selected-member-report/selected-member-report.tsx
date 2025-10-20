@@ -4,20 +4,16 @@ import { deselectAthlete } from './actions/actions-selected-athlete';
 import useSelectedMemberWeight from './hooks/use-weight';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
+import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 
 export default function SelectedMemberReport() {
   const screenSize = useScreenSize();
-
-  const trainerDayViewContext = useTrainerDayViewContext();
-
-  const { selectedAthlete } = trainerDayViewContext;
-
   const { users } = useMain();
-
   const { weight } = useSelectedMemberWeight();
+  const trainerDayViewContext = useTrainerDayView();
+  const { component, training, selectedAthlete } = trainerDayViewContext;
 
-  if (!selectedAthlete) return null;
+  if (!component || !training || !selectedAthlete) return null;
 
   return (
     <Box
@@ -42,12 +38,7 @@ export default function SelectedMemberReport() {
         justifyContent="center"
         gap={0.5}
       >
-        <MuiTooltip
-          title={selectedAthlete.email}
-          sx={{
-            zIndex: 10,
-          }}
-        >
+        <MuiTooltip title={selectedAthlete.email} sx={{ zIndex: 10 }}>
           <Box position="relative" display="inline-block">
             <Avatar
               className="avatar-border"
@@ -64,22 +55,28 @@ export default function SelectedMemberReport() {
               }}
               onClick={() =>
                 deselectAthlete({
-                  useTrainerDayViewContext: trainerDayViewContext,
+                  ...trainerDayViewContext,
+                  component,
+                  training,
                 })
               }
             />
           </Box>
         </MuiTooltip>
+
         <Typography fontSize={16} textAlign="center">
           Attendance: 79%
         </Typography>
+
         <Typography
           fontSize={16}
         >{`Weight: ${weight !== undefined ? weight.toString() + 'kg' : 'N/A'}`}</Typography>
+
         <Typography fontSize={16} textAlign="center">
           Height: 198 cm
         </Typography>
       </Box>
+
       <Box
         width={screenSize.isMobile ? '100%' : `${100 / 3}%`}
         textAlign="center"

@@ -6,8 +6,8 @@ import { useTheme } from '@mui/material';
 import dayjs from 'dayjs';
 import { useEffect, useRef, useState } from 'react';
 
-import AthleteTrainingExerciseSets from '../athlete/athlete-training-exercise-sets/athlete-training-exercise-sets';
-import { updateExerciseValues } from '../training-in-progress/components/training-in-progress-exercise-card/actions/actions-exercise';
+import AthleteTrainingExerciseSets from '../athlete/athlete-training-exercise-sets';
+import { updateTrainingExerciseWithAI } from '../training-in-progress/components/training-in-progress-exercise-card/actions/actions-exercise';
 import { finishSet } from '../training-in-progress/components/training-in-progress-exercise-card/actions/actions-exercise-set';
 import FpsText from './components/fps-text';
 import MovementValidationHeader from './components/movement-validation-header';
@@ -18,39 +18,37 @@ import {
   predictWebcam,
   setupVideoAndContex,
 } from './state';
-import { TrackingMethod } from '@/common/enum/tracking-method.enum';
-import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
-import { CommonService } from '@/common/service/common.service';
-import type { SetState } from '@/common/type/state.type';
-import EnvUtil from '@/common/util/env.util';
-import TrainingInProgressTempoChart from '@/common/util/tempo-chart';
-import { FrameBitmapBuffer } from '@/controller/pose-detection/class/frame-bitmap-buffer';
-import { KeypointHistory } from '@/controller/pose-detection/class/keypoint-history';
-import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
-import { POSE_DETECTION_CONSTRAINTS } from '@/controller/pose-detection/const/pose-detection-constrains.const';
-import { STATUS_MESSAGES } from '@/controller/pose-detection/const/status-messages';
-import { ConditionDirection } from '@/controller/pose-detection/enum/condition-detection.enum';
-import { DetectionStatus } from '@/controller/pose-detection/enum/detection-status';
-import { KeypointId } from '@/controller/pose-detection/enum/keypoint-id';
-import { KeypointValueType } from '@/controller/pose-detection/enum/keypoint-value-type';
-import { PoseModel } from '@/controller/pose-detection/enum/pose-model.enum';
-import { RepStatus } from '@/controller/pose-detection/enum/rep-state';
-import { RepDetectionService } from '@/controller/pose-detection/rep-detection.service';
-import type { ExerciseDetectionData } from '@/controller/pose-detection/type/exercise-start-condition.type';
-import type { Rep, RepInfo } from '@/controller/pose-detection/type/rep.type';
-import type { RepState } from '@/controller/pose-detection/type/rep-state.type';
-import { getPoseLandmarker } from '@/controller/pose-detection/util/pose-landmarker-loader.util';
-import type { TrainingExerciseRecording } from '@/controller/training/type/training-exercise.type';
+import { FrameBitmapBuffer } from '@/core/pose-detection/class/frame-bitmap-buffer';
+import { KeypointHistory } from '@/core/pose-detection/class/keypoint-history';
+import { EXERCISE_POSES } from '@/core/pose-detection/const/exercise-poses';
+import { POSE_DETECTION_CONSTRAINTS } from '@/core/pose-detection/const/pose-detection-constrains.const';
+import { STATUS_MESSAGES } from '@/core/pose-detection/const/status-messages';
+import { ConditionDirection } from '@/core/pose-detection/enum/condition-detection.enum';
+import { DetectionStatus } from '@/core/pose-detection/enum/detection-status';
+import { KeypointId } from '@/core/pose-detection/enum/keypoint-id';
+import { KeypointValueType } from '@/core/pose-detection/enum/keypoint-value-type';
+import { PoseModel } from '@/core/pose-detection/enum/pose-model.enum';
+import { RepStatus } from '@/core/pose-detection/enum/rep-state';
+import { RepDetectionService } from '@/core/pose-detection/rep-detection.service';
+import type { ExerciseDetectionData } from '@/core/pose-detection/type/exercise-start-condition.type';
+import type { Rep, RepInfo } from '@/core/pose-detection/type/rep.type';
+import type { RepState } from '@/core/pose-detection/type/rep-state.type';
+import { getPoseLandmarker } from '@/core/pose-detection/util/pose-landmarker-loader.util';
+import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
+import type { TrainingExerciseRecording } from '@/core/training/type/training-exercise.type';
+import { lib } from '@/lib';
+import type { SetState } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import LoadingOverlay from '@/util/loading-overlay/loading-overlay';
+import TrainingInProgressTempoChart from '@/util/tempo-chart';
 
 const DEBUG = false;
 
-const commonService = CommonService.instance;
-const firebaseStorage = FirebaseStorageUtil.Instance;
+const commonService = lib.common;
+const firebaseStorage = lib.firebase.storage;
 
 export const EXERCISE_TIMES_ROUNDING_STEP_S = 0.2; // round to 0.2
 
@@ -84,7 +82,6 @@ export default function MobileMovementValidation(
 
   const {
     selectedExercise,
-    setSelectedExercise,
     selectedTrackingMethod,
     setSelectedTrackingMethod,
     trainingId,
@@ -160,7 +157,7 @@ export default function MobileMovementValidation(
   const stillnessCountdownRef = useRef<Date | null>(null); // countdown to recording start when stillness is detected
 
   // Model and PoseLandmarker
-  const [model, setModel] = useState<PoseModel>(PoseModel.MEDIAPIPE);
+  const [model] = useState<PoseModel>(PoseModel.MEDIAPIPE);
   const [poseLandmarker, setPoseLandmarker] = useState<PoseLandmarker | null>(
     null
   );
@@ -310,7 +307,7 @@ export default function MobileMovementValidation(
 
     if (typeof window === 'undefined') return;
 
-    const wantDebug = !EnvUtil.AI.disableEruda();
+    const wantDebug = !lib.common.env.disableErudaAI();
 
     if (!wantDebug) return;
 
@@ -510,17 +507,13 @@ export default function MobileMovementValidation(
         commonService,
       });
 
-      updateExerciseValues(
-        {
-          repsCount: recordedRepsRef.current.length,
-          tempo,
-          passedExercise: updatedExercise,
-          updateSelectedExercise: true,
-        },
-        {
-          useTraining: { ...trainingContext, trainingInProgress },
-          useTrainingInProgress: trainingInProgressContext,
-        }
+      updateTrainingExerciseWithAI(
+        recordedRepsRef.current.length,
+        tempo,
+        updatedExercise,
+        true,
+        { ...trainingContext, trainingInProgress },
+        trainingInProgressContext
       );
 
       await finishSet({
@@ -620,9 +613,8 @@ export default function MobileMovementValidation(
   }, [isCurrentlySavingImageRef.current]);
 
   useEffect(() => {
-    let timeout: NodeJS.Timeout | null = null;
     if (startedExitTimeout) {
-      timeout = setTimeout(async () => {
+      setTimeout(async () => {
         await finishAiDetection();
         canExitWhenImageIsDoneSavingRef.current = false;
         setStartedExitTimeout(false);
@@ -706,7 +698,7 @@ export default function MobileMovementValidation(
         </>
       )}
 
-      {!EnvUtil.AI.disableAIFPS() && (
+      {!lib.common.env.disableFpsAI() && (
         <Box
           width="100%"
           display="flex"
@@ -996,7 +988,7 @@ export default function MobileMovementValidation(
               background: '#fff',
               fontWeight: 600,
               cursor: 'pointer',
-              opacity: !EnvUtil.AI.disableEruda() ? 0.7 : 0.9,
+              opacity: !lib.common.env.disableErudaAI() ? 0.7 : 0.9,
             }}
           >
             Debug

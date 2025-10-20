@@ -1,10 +1,8 @@
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v13-appRouter';
 import type { Metadata } from 'next';
 import { Onest } from 'next/font/google';
-import React from 'react';
 import { Toaster } from 'react-hot-toast';
 
-import type { ChildrenProps } from '@/common/type/props.type';
 import { AuthProvider } from '@/store/auth.provider';
 import { ScreenSizeProvider } from '@/store/screen-size.provider';
 import ThemeRegistry from '@/store/theme.registry';
@@ -31,7 +29,9 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({ children }: ChildrenProps) {
+export default async function RootLayout({
+  children,
+}: React.PropsWithChildren) {
   return (
     <html lang="en" style={{ scrollBehavior: 'smooth' }}>
       <body className={onest.className}>

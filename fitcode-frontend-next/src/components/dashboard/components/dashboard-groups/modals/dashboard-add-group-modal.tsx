@@ -3,11 +3,11 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
-import type { ModalProps } from '@/common/type/modal-props.type';
-import { handleApiRequest } from '@/common/type/state.type';
+import type { ModalProps } from '@/lib/common/type/modal-props.type';
+import { handleApiRequest } from '@/lib/common/type/state.type';
 import { AddMembersModal } from '@/components/dashboard/modals/add-members-modal';
-import type { AuthUser } from '@/controller/auth/type/user.type';
-import { GroupController } from '@/controller/group/group.controller';
+import type { AuthUser } from '@/core/auth/type/user.type';
+import { GroupController } from '@/core/group/group.controller';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import MyModal from '@/util/modal/modal';

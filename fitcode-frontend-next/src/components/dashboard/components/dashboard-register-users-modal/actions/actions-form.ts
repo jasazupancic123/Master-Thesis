@@ -3,12 +3,12 @@ import toast from 'react-hot-toast';
 
 import type { UseInstitutionRegisterMemberFormReturnType } from '../hooks/use-form';
 import type { UseInstitutionMembersReturnType } from '../hooks/use-institution-members';
-import { BACKEND_API_BASE_URL } from '@/common/constant/api.constant';
-import type { FirebaseFunctionsUtil } from '@/common/firebase/firebase-functions.util';
-import { handleApiRequest } from '@/common/type/state.type';
-import { UserRole } from '@/controller/profile/enum/user-role.enum';
+import { BACKEND_API_BASE_URL } from '@/core/const/api.const';
+import { UserRole } from '@/core/profile/enum/user-role.enum';
+import { lib } from '@/lib';
+import { handleApiRequest } from '@/lib/common/type/state.type';
 import type { UseDashboardReturnType } from '@/store/dashboard.provider';
-import type { MainProviderReturnType } from '@/store/main.provider';
+import type { IMainCtx } from '@/store/main.provider';
 
 export const handleChange = (
   input: { e: React.ChangeEvent<HTMLInputElement> },
@@ -32,16 +32,15 @@ export const handleSubmit = (
     e: React.FormEvent;
     registerRole: UserRole;
     router: AppRouterInstance;
-    firebaseFunctions: FirebaseFunctionsUtil;
   },
   context: {
-    useMain: MainProviderReturnType;
+    useMain: IMainCtx;
     useDashboard: UseDashboardReturnType;
     useInstitutionMembers: UseInstitutionMembersReturnType;
     useInstitutionRegisterMemberForm: UseInstitutionRegisterMemberFormReturnType;
   }
 ) => {
-  const { e, registerRole, router, firebaseFunctions } = input;
+  const { e, registerRole, router } = input;
 
   const {
     useMain,
@@ -103,7 +102,7 @@ export const handleSubmit = (
 
   handleApiRequest(
     router,
-    () => firebaseFunctions.createUserWithRole(formInput),
+    () => lib.firebase.functions.createUserWithRole(formInput),
     () => {
       refetchMembers(
         `${BACKEND_API_BASE_URL}/institution/${selectedInstitution.id}/find/all`
