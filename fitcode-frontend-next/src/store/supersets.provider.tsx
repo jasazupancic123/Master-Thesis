@@ -1,8 +1,12 @@
 import { createContext, useContext } from 'react';
 
-import type { ChildrenProps } from '@/common/type/props.type';
-import type { SetState } from '@/common/type/state.type';
-import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import { useMain } from './main.provider';
+import { useTrainerDayView } from './trainer-day-view.provider';
+import { app } from '@/core/app.service';
+import type { ExerciseParamField } from '@/core/training/type/exercise-set.type';
+import type { Superset } from '@/core/training/type/superset.type';
+import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import type { SetState } from '@/lib/common/type/state.type';
 
 type SupersetsContextInputProps = {
   expandedExercisesView: boolean;
@@ -15,20 +19,17 @@ type SupersetsContextInputProps = {
   setOpenVideoPlayerModal: SetState<boolean>;
   openAddExerciseModal: boolean;
   setOpenAddExerciseModal: SetState<boolean>;
-  setsNumbers: {
-    exerciseId: string;
-    setsNumber: number;
-  }[];
-  setSetsNumbers: SetState<
-    {
-      exerciseId: string;
-      setsNumber: number;
-    }[]
-  >;
 };
 
 type SupersetsContextProps = SupersetsContextInputProps & {
   handleMenuClose: () => void;
+  updateTrainingExercises: (exercises: TrainingExercise[]) => void;
+  updateTrainingExerciseParam: (
+    exercise: TrainingExercise,
+    field: ExerciseParamField,
+    value: number | string,
+    setIndex?: number
+  ) => void;
 };
 
 const SupersetsContext = createContext<SupersetsContextProps | null>(null);
@@ -38,7 +39,7 @@ export type SupersetsProviderReturnType = ReturnType<typeof useSupersets>;
 export const useSupersets = () => useContext(SupersetsContext)!;
 
 export function SupersetsProvider(
-  props: SupersetsContextInputProps & ChildrenProps
+  props: SupersetsContextInputProps & React.PropsWithChildren
 ) {
   const {
     children,
@@ -52,13 +53,106 @@ export function SupersetsProvider(
     setOpenVideoPlayerModal,
     openAddExerciseModal,
     setOpenAddExerciseModal,
-    setsNumbers,
-    setSetsNumbers,
   } = props;
 
-  const handleMenuClose = () => {
-    setMenuExercise(null);
-  };
+  const {
+    component,
+    setComponent,
+    training,
+    setTraining,
+    selectedSubgroup,
+    setSelectedSubgroup,
+    setSupersets,
+    selectedExerciseIds,
+  } = useTrainerDayView();
+
+  const { exercises: allExercises } = useMain();
+
+  const handleMenuClose = () => setMenuExercise(null);
+
+  function updateTrainingExercises(exercises: TrainingExercise[]) {
+    if (!component || !training) return;
+
+    let updatedSupersets: Superset[] = [];
+    for (const exercise of exercises)
+      updatedSupersets = app.training.superset.updateExercise(exercise, {
+        training,
+        componentId: component.id,
+        subgroupId: selectedSubgroup?.id,
+      });
+
+    const newTraining = structuredClone(training);
+    const updatedComponent = newTraining.components.find(
+      (c) => c.id === component.id
+    );
+
+    const updatedSubgroup =
+      updatedComponent?.subgroups.find(
+        (sg) => sg.id === selectedSubgroup?.id
+      ) || null;
+
+    setSupersets(updatedSupersets);
+    setSelectedSubgroup(updatedSubgroup);
+    setComponent(updatedComponent);
+    setTraining(newTraining);
+  }
+
+  function updateTrainingExerciseParam(
+    exercise: TrainingExercise,
+    field: ExerciseParamField,
+    value: number | string,
+    setIndex?: number
+  ) {
+    if (!component || !training) return;
+
+    const trainingExercises = app.training.getExercises(training, {
+      componentId: component.id,
+      subgroupId: selectedSubgroup?.id,
+    });
+
+    const exercises = trainingExercises
+      .filter((e) => selectedExerciseIds.includes(e.id))
+      .filter((e) => e.id !== exercise.id); // exclude current exercise
+
+    exercises.push(exercise); // add new updated exercise
+
+    // update all selected exercises with the param change
+    for (const e of exercises) {
+      const foundExercise = allExercises.find((ex) => ex.id === e.id);
+      if (!foundExercise) continue;
+
+      switch (field) {
+        case 'sets':
+          // special case for sets, we need to add or remove sets
+          const sets = value as number;
+          const prevSets = e.sets?.length || 0;
+          if (setIndex !== undefined) break; // we only allow updating sets as a whole, not by index separately
+
+          if (prevSets > +sets && +sets > 0)
+            e.sets = [...e.sets].slice(0, +sets); // remove sets
+          else {
+            e.sets = [
+              ...e.sets,
+              ...Array(+sets - prevSets).fill(
+                e.sets[prevSets - 1] ||
+                  app.training.set.stub(prevSets, foundExercise)
+              ),
+            ];
+          }
+
+          break;
+        default:
+          break;
+      }
+
+      if (setIndex === undefined)
+        e.sets = e.sets.map((s) => ({ ...s, [field]: value })); // update all sets
+      else if (e.sets[setIndex])
+        e.sets[setIndex] = { ...e.sets[setIndex], [field]: value }; // update provided set
+    }
+
+    updateTrainingExercises(exercises);
+  }
 
   const value: SupersetsContextProps = {
     expandedExercisesView,
@@ -71,9 +165,9 @@ export function SupersetsProvider(
     setOpenVideoPlayerModal,
     openAddExerciseModal,
     setOpenAddExerciseModal,
-    setsNumbers: setsNumbers,
-    setSetsNumbers: setSetsNumbers,
     handleMenuClose,
+    updateTrainingExercises,
+    updateTrainingExerciseParam,
   };
 
   return (

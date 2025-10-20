@@ -1,6 +1,6 @@
-import type { AuthUser } from '@/controller/auth/type/user.type';
-import { MainSet } from '@/controller/training/enum/main-set.enum';
-import type { Subgroup } from '@/controller/training/type/subgroup.type';
+import type { AuthUser } from '@/core/auth/type/user.type';
+import { MainSet } from '@/core/training/enum/main-set.enum';
+import type { Subgroup } from '@/core/training/type/subgroup.type';
 
 export const DEFAULT_SUBGROUP_ID = 'default';
 export const ABSENT_SUBGRUP_ID = 'absent';

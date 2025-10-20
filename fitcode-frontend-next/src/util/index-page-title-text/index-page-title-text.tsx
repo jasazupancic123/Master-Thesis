@@ -2,14 +2,13 @@ import type { SxProps } from '@mui/material';
 import { Typography } from '@mui/material';
 
 import { theme } from '@/app/style';
-import type { ChildrenProps } from '@/common/type/props.type';
 
 interface IndexPageTitleTextProps {
   sx: SxProps;
 }
 
 export default function IndexPageTitleText(
-  props: IndexPageTitleTextProps & ChildrenProps
+  props: IndexPageTitleTextProps & React.PropsWithChildren
 ) {
   const { sx, children } = props;
 

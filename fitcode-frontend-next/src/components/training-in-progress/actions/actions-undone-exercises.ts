@@ -1,6 +1,6 @@
-import type { ExerciseSetTracking } from '@/common/type/exercise-set-tracking-state.type';
-import type { Superset } from '@/controller/training/type/superset.type';
-import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import type { ExerciseSetTracking } from '@/core/training/type/exercise-set-tracking-state.type';
+import type { Superset } from '@/core/training/type/superset.type';
+import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 
 // returns how many sets are undone in current superset
 export const getUndoneExercises = (

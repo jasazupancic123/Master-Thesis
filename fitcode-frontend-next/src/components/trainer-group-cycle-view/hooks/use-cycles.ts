@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 
-import { GroupService } from '@/controller/group/group.service';
 import { useGroup } from '@/store/group.provider';
 
 export default function useTrainerCycleViewCycles() {
@@ -11,7 +10,9 @@ export default function useTrainerCycleViewCycles() {
   >([]);
 
   useEffect(() => {
-    setCyclesForSelect(GroupService.getCyclesForSelect(group.cycles));
+    setCyclesForSelect(
+      group.cycles.map((cycle) => ({ label: cycle.name, value: cycle.id }))
+    );
   }, [group.cycles]);
 
   return {

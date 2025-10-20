@@ -5,13 +5,13 @@ import React from 'react';
 
 import CustomDivider from '../../util/custom-divider/custom-divider';
 import VerticalLinesBorders from '../../util/vertical-lines-borders/vertical-lines-borders';
-import GroupTrainerDayViewHeader from './components/trainer-group-day-view-header/trainer-group-day-view-header';
-import GroupTrainerDayViewTrainings from './components/trainer-group-day-view-trainings/group-trainer-day-view-trainings';
 import { MAX_WIDTH } from './constant/dimensions.constant';
+import GroupTrainerDayViewTrainings from './group-trainer-day-view-trainings';
 import useTrainerDayWeek from './hooks/use-day-week';
+import GroupTrainerDayViewHeader from './trainer-group-day-view-header';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
+import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 
 dayjs.extend(weekOfYear);
 
@@ -19,9 +19,7 @@ export default function TrainerDayView() {
   const screenSize = useScreenSize();
 
   const { cycle } = useGroup();
-
-  const { training } = useTrainerDayViewContext();
-
+  const { training } = useTrainerDayView();
   const { week, setDays, days } = useTrainerDayWeek();
 
   return (

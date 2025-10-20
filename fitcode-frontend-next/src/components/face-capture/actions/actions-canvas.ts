@@ -1,4 +1,4 @@
-import { Step } from '@/common/enum/step.enum';
+import { FaceCaptureStep } from '@/core/profile/enum/face-capture-step.enum';
 
 export function resizeCanvasToDisplaySize(canvas: HTMLCanvasElement) {
   const { clientWidth, clientHeight } = canvas;
@@ -16,7 +16,7 @@ export function drawGuide(
   ctx: CanvasRenderingContext2D,
   w: number,
   h: number,
-  step: Step,
+  step: FaceCaptureStep,
   faceBigEnough: boolean
 ) {
   ctx.save();
@@ -32,9 +32,9 @@ export function drawGuide(
   const ry = rx * 1.25;
 
   ctx.beginPath();
-  if (step === Step.FRONT) {
+  if (step === FaceCaptureStep.FRONT) {
     ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
-  } else if (step === Step.RIGHT) {
+  } else if (step === FaceCaptureStep.RIGHT) {
     ctx.ellipse(cx + rx * 0.15, cy, rx, ry, 0, -Math.PI / 2, Math.PI / 2);
     ctx.moveTo(cx + rx * 0.9, cy);
     ctx.lineTo(cx + rx * 1.05, cy);
@@ -46,7 +46,7 @@ export function drawGuide(
   }
   ctx.stroke();
 
-  if (step === Step.FRONT) {
+  if (step === FaceCaptureStep.FRONT) {
     ctx.setLineDash([]);
     ctx.globalAlpha = 1;
     ctx.fillStyle = '#ffffff';
@@ -73,9 +73,9 @@ export function drawGuide(
   ctx.globalAlpha = 0.95;
   const label = !faceBigEnough
     ? 'Bring your face closer'
-    : step === Step.FRONT
+    : step === FaceCaptureStep.FRONT
       ? 'Face forward'
-      : step === Step.RIGHT
+      : step === FaceCaptureStep.RIGHT
         ? 'Turn LEFT (show right profile)'
         : 'Turn RIGHT (show left profile)';
 

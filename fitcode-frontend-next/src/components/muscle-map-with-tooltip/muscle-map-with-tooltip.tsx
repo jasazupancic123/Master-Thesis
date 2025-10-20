@@ -1,6 +1,7 @@
 'use client';
 import { Close } from '@mui/icons-material';
 import { Box, IconButton, Slider, Typography, useTheme } from '@mui/material';
+import SorenessIcon from '@/assets/icons/Soreness.svg';
 import { useCallback, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 
@@ -15,15 +16,13 @@ import {
   hasExplicitFill,
   normId,
 } from './state';
-import SorenessIcon from '@/assets/icons/Soreness.svg';
-import type { SetState } from '@/common/type/state.type';
-import { VolWorkSetType } from '@/controller/component/enum/param.enum';
-import type { MuscleTip } from '@/controller/exercise/type/muscle-tip.type';
-import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import type { MuscleTip } from '@/core/exercise/type/muscle-tip.type';
+import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import type { SetState } from '@/lib/common/type/state.type';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
+import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 
 export type SvgC = React.ForwardRefExoticComponent<
   React.SVGProps<SVGSVGElement> & React.RefAttributes<SVGSVGElement>
@@ -48,7 +47,7 @@ export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
   const { exercises: allExercises } = useMain();
 
   const groupContext = useGroup();
-  const trainerDayViewContext = useTrainerDayViewContext();
+  const trainerDayViewContext = useTrainerDayView();
 
   const { training, component } = trainerDayViewContext || {};
 
@@ -138,8 +137,8 @@ export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
         e.exercise?.muscleValues?.some(
           (mv) =>
             muscleIds.includes(mv.field) ||
-            muscleIds.some((mid) => mv.selected.startsWith(`${mid}:`)) ||
-            muscleIds.some((mid) => mv.selected.endsWith(`:${mid}`))
+            muscleIds.some((mid) => mv.selected?.startsWith(`${mid}:`)) ||
+            muscleIds.some((mid) => mv.selected?.endsWith(`:${mid}`))
         )
       );
 
@@ -148,16 +147,16 @@ export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
           heatmapLevel === 1
             ? muscleIds.includes(mv.field)
             : heatmapLevel === 2
-              ? muscleIds.some((mid) => mv.selected.startsWith(`${mid}:`))
-              : muscleIds.some((mid) => mv.selected.endsWith(`:${mid}`))
+              ? muscleIds.some((mid) => mv.selected?.startsWith(`${mid}:`))
+              : muscleIds.some((mid) => mv.selected?.endsWith(`:${mid}`))
         );
 
         const bMuscle = b.exercise?.muscleValues?.find((mv) =>
           heatmapLevel === 1
             ? muscleIds.includes(mv.field)
             : heatmapLevel === 2
-              ? muscleIds.some((mid) => mv.selected.startsWith(`${mid}:`))
-              : muscleIds.some((mid) => mv.selected.endsWith(`:${mid}`))
+              ? muscleIds.some((mid) => mv.selected?.startsWith(`${mid}:`))
+              : muscleIds.some((mid) => mv.selected?.endsWith(`:${mid}`))
         );
 
         if (!aMuscle || !bMuscle) return 0;
@@ -181,8 +180,8 @@ export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
         e.muscleValues?.some(
           (mv) =>
             muscleIds.includes(mv.field) ||
-            muscleIds.some((mid) => mv.selected.startsWith(`${mid}:`)) ||
-            muscleIds.some((mid) => mv.selected.endsWith(`:${mid}`))
+            muscleIds.some((mid) => mv.selected?.startsWith(`${mid}:`)) ||
+            muscleIds.some((mid) => mv.selected?.endsWith(`:${mid}`))
         )
       );
 
@@ -456,9 +455,7 @@ export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
 
                           const setsRange = component.method?.attributes
                             ?.map((a) =>
-                              a.options?.find(
-                                (o) => o.field === VolWorkSetType.Set
-                              )
+                              a.options?.find((o) => o.field === 'sets')
                             )
                             .find(Boolean);
 
@@ -505,7 +502,7 @@ export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
                               );
 
                             tip.componentExercises.push(trainingExercise);
-                          } catch (e) {
+                          } catch {
                             toast.error('Error adding exercise');
                           }
                         }}

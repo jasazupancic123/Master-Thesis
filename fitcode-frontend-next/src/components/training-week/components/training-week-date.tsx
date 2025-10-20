@@ -3,22 +3,21 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { addMinutes } from 'date-fns';
 import dayjs from 'dayjs';
-import { useRouter } from 'next/navigation';
 import React from 'react';
 
 import {
   getFilteredTrainings,
   handleClickDateCell,
 } from '../actions/actions-week-date';
-import { CommonService } from '@/common/service/common.service';
-import type { SetState } from '@/common/type/state.type';
+import type { SetState } from '@/lib/common/type/state.type';
 import { TrainingGridItem } from '@/components/trainer-group-cycle-view/components/training-cycle-view-grid-item/training-cycle-view-grid-item';
-import type { Component } from '@/controller/component/type/component.type';
-import type { Target } from '@/controller/target/type/target.type';
-import { MainSet } from '@/controller/training/enum/main-set.enum';
-import { TrainingController } from '@/controller/training/training.controller';
-import type { Training } from '@/controller/training/type/training.type';
-import type { TrainingComponent } from '@/controller/training/type/training-component.type';
+import type { Component } from '@/core/component/type/component.type';
+import type { Target } from '@/core/target/type/target.type';
+import { MainSet } from '@/core/training/enum/main-set.enum';
+import type { Training } from '@/core/training/type/training.type';
+import type { TrainingComponent } from '@/core/training/type/training-component.type';
+import { lib } from '@/lib';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 
@@ -34,10 +33,7 @@ interface TrainingWeekDatesProps {
   setSelectedTrainings?: SetState<Training[]>;
   selected?: Component[];
   selectedTarget?: Target;
-  selectedTargets?: {
-    componentId: string;
-    target: Target;
-  }[];
+  selectedTargets?: { componentId: string; target: Target }[];
   setOpenAreYouSureModal: SetState<boolean>;
   setSelectedTraining: SetState<Training | null>;
   setOpenOverwriteModal?: SetState<boolean>;
@@ -53,10 +49,9 @@ interface TrainingWeekDatesProps {
 }
 
 export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
-  const router = useRouter();
   const theme = useTheme();
-  const controller = TrainingController.getInstance();
 
+  const { user } = useAuthenticatedAuth();
   const mainContext = useMain();
   const groupContext = useGroup();
 
@@ -98,7 +93,7 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
           cursor:
             components.length &&
             cycle &&
-            CommonService.instance.date.isBetween(date, cycle.from, cycle.to) &&
+            lib.common.date.isBetween(date, cycle.from, cycle.to) &&
             !dayjs(date).isBefore(dayjs(), 'day')
               ? 'pointer'
               : 'default',
@@ -143,11 +138,10 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
                 }}
                 onClick={() => {
                   handleClickDateCell(
-                    controller,
+                    user.uid,
                     {
                       date,
                       period,
-                      router,
                       componentCalendarView,
                       periodizationView,
                       copyComponent,
@@ -157,10 +151,8 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
                       setOpenOverwriteModal,
                       setTrainingInPeriodForModal,
                     },
-                    {
-                      useGroup: groupContext,
-                      useMain: mainContext,
-                    }
+                    groupContext,
+                    mainContext
                   );
                 }}
               >
@@ -181,18 +173,15 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
                 )}
 
                 {/* Trainings */}
-                {getFilteredTrainings(
-                  { date },
-                  {
-                    periodizationView,
-                    trainingComponent,
-                    trainings,
-                    selectedTrainings,
-                    date,
-                    selected,
-                    period,
-                  }
-                ).map((training_, key) => {
+                {getFilteredTrainings(date, {
+                  periodizationView,
+                  trainingComponent,
+                  trainings,
+                  selectedTrainings,
+                  date,
+                  selected,
+                  period,
+                }).map((training_, key) => {
                   return (
                     <Box
                       key={key}
@@ -208,11 +197,7 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
                       onClick={(e) => {
                         if (
                           !cycle ||
-                          !CommonService.instance.date.isBetween(
-                            date,
-                            cycle.from,
-                            cycle.to
-                          )
+                          !lib.common.date.isBetween(date, cycle.from, cycle.to)
                         )
                           return;
 

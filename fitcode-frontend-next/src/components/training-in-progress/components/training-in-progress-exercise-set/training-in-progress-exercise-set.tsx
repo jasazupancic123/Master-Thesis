@@ -1,14 +1,12 @@
 import { Box } from '@mui/material';
 
 import TrainingExerciseSetDoneCheckbox from '../training-in-progress-exercise-card/components/training-exercise-set-done-checkbox';
-import type { SetState } from '@/common/type/state.type';
-import { ExerciseParam } from '@/components/exercise-param/exercise-param';
-import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
-import { ParamType } from '@/controller/component/enum/param.enum';
-import type { ExerciseSet } from '@/controller/training/type/exercise-set.type';
-import type { Superset } from '@/controller/training/type/superset.type';
-import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
+import type { AttributeValue } from '@/core/attribute/type/attribute-value.type';
+import type { ExerciseSet } from '@/core/training/type/exercise-set.type';
+import type { Superset } from '@/core/training/type/superset.type';
+import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
+import type { SetState } from '@/lib/common/type/state.type';
 import { useTraining } from '@/store/training.provider';
 import LeftRightExerciseText from '@/util/left-right-exercise-text/left-right-exercise-text';
 

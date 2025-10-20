@@ -8,13 +8,10 @@ import { uploadFaceCaptures } from '../actions/actions-upload';
 import type { FaceCaptureProps } from '../face-capture';
 import type { UseFaceCaptureProcessingReturnType } from '../hooks/use-processing';
 import type { UseFaceCaptureUtilsReturnType } from '../hooks/use-utils';
-import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
-import type { ModalProps } from '@/common/type/modal-props.type';
-import { AuthController } from '@/controller/auth/auth.controller';
+import { AuthController } from '@/core/auth/auth.controller';
+import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import MyModal from '@/util/modal/modal';
-
-const firebaseStorage = FirebaseStorageUtil.Instance;
 
 interface FaceCapturePreviewsModalProps {
   faceCaptureProps: FaceCaptureProps;
@@ -131,7 +128,6 @@ export default function FaceCapturePreviewsModal(
               setCustomClaims,
               captures,
               user,
-              firebaseStorage,
               router,
               authController,
               setIsCapturingFace,

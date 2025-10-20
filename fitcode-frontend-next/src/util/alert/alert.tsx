@@ -4,15 +4,14 @@ import { Box, Button, Typography } from '@mui/material';
 import { redirect } from 'next/navigation';
 
 import Logo from '../logo/logo';
-import { LINK_SIGN_IN } from '@/common/constant/navigation.constant';
+import { LINK_SIGN_IN } from '@/lib/common/const/nav.const';
 import { useScreenSize } from '@/store/screen-size.provider';
 
-interface AlertProps {
+interface Props {
   type: 'loading' | 'unauthorized';
 }
 
-export default function Alert(props: AlertProps) {
-  const { type } = props;
+export default function Alert({ type }: Props) {
   const screenSize = useScreenSize();
 
   return (

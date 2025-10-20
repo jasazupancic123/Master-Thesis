@@ -1,6 +1,6 @@
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
+import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 
 export type UseTrainingMembersReturnType = ReturnType<
   typeof useTrainingMembers
@@ -9,7 +9,7 @@ export type UseTrainingMembersReturnType = ReturnType<
 export default function useTrainingMembers() {
   const { users } = useMain();
   const { group } = useGroup();
-  const { training } = useTrainerDayViewContext();
+  const { training } = useTrainerDayView();
 
   const item = training || group;
 

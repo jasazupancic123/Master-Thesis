@@ -15,9 +15,9 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 
 import GroupsDataGrid from './groups-data-grid/groups-data-grid';
-import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
 import UsersDataGrid from '@/components/users-data-grid/users-data-grid';
-import type { Institution } from '@/controller/institution/type/institution.type';
+import type { Institution } from '@/core/institution/type/institution.type';
+import { lib } from '@/lib';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import EditableTextField from '@/util/editable-text-field/editable-text-field';
@@ -94,10 +94,7 @@ export default function EditInstitutionModal({
             onChange={async (file) => {
               try {
                 const path = `user/${user.uid}/${file.name}`;
-                const url = await FirebaseStorageUtil.Instance.uploadFile(
-                  file,
-                  path
-                );
+                const url = await lib.firebase.storage.uploadFile(file, path);
 
                 handleChange('imageUrl', url);
                 if (url !== institution.imageUrl)

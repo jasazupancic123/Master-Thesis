@@ -5,8 +5,8 @@ import { Onest } from 'next/font/google';
 import { redirect } from 'next/navigation';
 import { useEffect } from 'react';
 
-import {} from '@/common/config/firebase.config';
-import { LINK_SIGN_IN } from '@/common/constant/navigation.constant';
+import {} from '@/lib/firebase/config';
+import { LINK_SIGN_IN } from '@/lib/common/const/nav.const';
 
 interface GlobalErrorProps {
   error: Error & { digest?: string };

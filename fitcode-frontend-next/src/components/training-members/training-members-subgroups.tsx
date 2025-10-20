@@ -20,11 +20,11 @@ import {
   updateSelectedAthleteSubgroup,
 } from './actions/actions-subgroups';
 import type { UseTrainingMembersReturnType } from './hooks/use-members.hook';
-import type { SetState } from '@/common/type/state.type';
-import type { Subgroup } from '@/controller/training/type/subgroup.type';
+import type { SetState } from '@/lib/common/type/state.type';
+import type { Subgroup } from '@/core/training/type/subgroup.type';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
+import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 
 interface TrainingMembersSubgroupProps {
   subgroup: Subgroup;
@@ -41,7 +41,7 @@ export default function TrainingMembersSubgroup(
 
   const mainConext = useMain();
   const groupContext = useGroup();
-  const trainerDayViewContext = useTrainerDayViewContext();
+  const trainerDayViewContext = useTrainerDayView();
 
   const { users } = mainConext;
 
@@ -52,8 +52,8 @@ export default function TrainingMembersSubgroup(
     selectedSubgroup,
     selectedAthlete,
     setSelectedAthlete,
-    selectedExercises,
-    setSelectedExercises,
+    selectedExerciseIds,
+    setSelectedExerciseIds,
   } = trainerDayViewContext;
 
   const {
@@ -97,17 +97,17 @@ export default function TrainingMembersSubgroup(
                 subgroup.id === DEFAULT_SUBGROUP_ID)
             )
               return;
+
             if (subgroupIndex > 0) {
               // subgroup
               setSelectedSubgroup(subgroup);
               setSelectedAthlete(undefined);
 
-              setSelectedExercises(
+              setSelectedExerciseIds(
                 subgroup.supersets
                   .flatMap((s) => s.exercises)
-                  .filter((e) =>
-                    selectedExercises.some((se) => se.id === e.id)
-                  ) || []
+                  .filter((e) => selectedExerciseIds.some((se) => se === e.id))
+                  .map((e) => e.id) || []
               );
             } else if (subgroupIndex === 0) {
               // main group
@@ -116,12 +116,11 @@ export default function TrainingMembersSubgroup(
 
               if (!component) return;
 
-              setSelectedExercises(
+              setSelectedExerciseIds(
                 component?.supersets
                   .flatMap((s) => s.exercises)
-                  .filter((e) =>
-                    selectedExercises.some((se) => se.id === e.id)
-                  ) || []
+                  .filter((e) => selectedExerciseIds.some((se) => se === e.id))
+                  .map((e) => e.id) || []
               );
             }
           }}
@@ -204,7 +203,6 @@ export default function TrainingMembersSubgroup(
             >
               {subgroup.membersIds.map((memberId, index) => {
                 const member = members.find((user) => user.uid === memberId);
-
                 if (!member) return null;
 
                 return (
@@ -221,21 +219,11 @@ export default function TrainingMembersSubgroup(
                         key={`${subgroup.id}-${member.uid}-tooltip`}
                         sx={{ p: 0, m: 0 }}
                         onClick={() => {
-                          if (!component) return;
-
-                          updateSelectedAthleteSubgroup(
-                            {
-                              member,
-                              subgroupId: subgroup.id,
-                            },
-                            {
-                              useTrainerDayViewContext: {
-                                ...trainerDayViewContext,
-                                training,
-                                component,
-                              },
-                            }
-                          );
+                          updateSelectedAthleteSubgroup(member, subgroup.id, {
+                            ...trainerDayViewContext,
+                            training,
+                            component,
+                          });
                         }}
                         borderRadius={selectedAthlete === member ? '50%' : 0}
                         border={
@@ -271,6 +259,7 @@ export default function TrainingMembersSubgroup(
                 );
               })}
             </Card>
+
             <Typography
               fontSize={12}
               fontWeight={600}

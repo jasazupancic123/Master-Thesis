@@ -21,7 +21,7 @@ import type { FaceCaptureProps } from '../face-capture';
 import { BASE_ASSET_URL, FACE_LANDMARKER_MODEL_URL } from '../face-capture';
 import type { UseFaceCaptureDisplayReturnType } from './use-display';
 import type { UseFaceCaptureUtilsReturnType } from './use-utils';
-import { Step } from '@/common/enum/step.enum';
+import { FaceCaptureStep } from '@/core/profile/enum/face-capture-step.enum';
 
 export type UseFaceCaptureProcessingReturnType = ReturnType<
   typeof useFaceCaptureProcessing
@@ -60,7 +60,7 @@ export default function useFaceCaptureProcessing(
   const { viewport, overlayRef, drawRef } = useFaceCaptureDisplay;
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const stepRef = useRef<Step>(Step.FRONT);
+  const stepRef = useRef<FaceCaptureStep>(FaceCaptureStep.FRONT);
   const isCapturingRef = useRef(false);
   const runningRef = useRef(true); // controls the RAF loop (processing on/off)
   const rafRef = useRef<number | null>(null);
@@ -153,11 +153,11 @@ export default function useFaceCaptureProcessing(
       faceBigEnoughRef.current = faceBigEnough;
 
       let ok = false;
-      if (stepRef.current === Step.FRONT)
+      if (stepRef.current === FaceCaptureStep.FRONT)
         ok = Math.abs(yawDeg) <= thresholds.frontYawDeg && faceBigEnough;
-      else if (stepRef.current === Step.RIGHT)
+      else if (stepRef.current === FaceCaptureStep.RIGHT)
         ok = yawDeg >= thresholds.profileYawDeg && faceBigEnough;
-      else if (stepRef.current === Step.LEFT)
+      else if (stepRef.current === FaceCaptureStep.LEFT)
         ok = yawDeg <= -thresholds.profileYawDeg && faceBigEnough;
 
       // Stability counter
@@ -172,7 +172,7 @@ export default function useFaceCaptureProcessing(
         !isCapturingRef.current
       ) {
         isCapturingRef.current = true; // lock immediately to avoid re-entry on next RAF
-        const stepAtCapture: Step = stepRef.current; // snapshot
+        const stepAtCapture: FaceCaptureStep = stepRef.current; // snapshot
         stabilityRef.current = 0; // reset right away
 
         captureFrame({ videoRef, viewport }).then(({ blob, dataUrl }) => {
@@ -189,11 +189,11 @@ export default function useFaceCaptureProcessing(
           playSuccessSound();
 
           // Advance exactly one step
-          if (stepAtCapture === Step.FRONT) {
-            stepRef.current = Step.RIGHT;
-          } else if (stepAtCapture === Step.RIGHT) {
-            stepRef.current = Step.LEFT;
-          } else if (stepAtCapture === Step.LEFT) {
+          if (stepAtCapture === FaceCaptureStep.FRONT) {
+            stepRef.current = FaceCaptureStep.RIGHT;
+          } else if (stepAtCapture === FaceCaptureStep.RIGHT) {
+            stepRef.current = FaceCaptureStep.LEFT;
+          } else if (stepAtCapture === FaceCaptureStep.LEFT) {
             // Done: stop stream and emit
             isDoneRef.current = true;
             setOpenModal(true);

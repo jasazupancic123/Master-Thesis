@@ -10,8 +10,8 @@ import { useState } from 'react';
 
 import { handleUpdateTrainingTimes } from '../actions/actions-week-item';
 import TrainerWeekViewItem from './training-week-component-item';
-import type { GroupEvent } from '@/controller/group/type/group-event.type';
-import type { TrainingComponentWithTrainingId } from '@/controller/training/type/training-component.type';
+import type { GroupEvent } from '@/core/group/type/group-event.type';
+import type { TrainingComponentWithTrainingId } from '@/core/training/type/training-component.type';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import MyModal from '@/util/modal/modal';
@@ -20,16 +20,18 @@ export type WeekViewItemProps = {
   item: TrainingComponentWithTrainingId | GroupEvent;
 };
 
-export default function WeekViewItem(props: WeekViewItemProps) {
+export default function WeekViewItem({ item }: WeekViewItemProps) {
   const theme = useTheme();
   const screenSize = useScreenSize();
   const router = useRouter();
 
   const groupContext = useGroup();
-
   const { setGroup, setTrainings } = groupContext;
 
-  const { item } = props;
+  const [openModal, setOpenModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<
+    (TrainingComponentWithTrainingId | GroupEvent) | null
+  >(null);
 
   const checkIsTrainingComponent = (
     item: TrainingComponentWithTrainingId | GroupEvent
@@ -38,12 +40,6 @@ export default function WeekViewItem(props: WeekViewItemProps) {
   };
 
   const isTrainingComponent = checkIsTrainingComponent(item);
-
-  const [openModal, setOpenModal] = useState(false);
-
-  const [selectedItem, setSelectedItem] = useState<
-    (TrainingComponentWithTrainingId | GroupEvent) | null
-  >(null);
 
   return (
     <Box>
@@ -180,18 +176,13 @@ export default function WeekViewItem(props: WeekViewItemProps) {
                     await handleUpdateTrainingTimes(
                       {
                         item,
-                        newItem: {
-                          ...selectedItem,
-                          from: newValue.toDate(),
-                        },
+                        newItem: { ...selectedItem, from: newValue.toDate() },
                         selectedItem,
                         setSelectedItem,
                         checkIsTrainingComponent,
                         router,
                       },
-                      {
-                        useGroup: groupContext,
-                      }
+                      groupContext
                     );
                   }}
                   sx={{
@@ -219,9 +210,7 @@ export default function WeekViewItem(props: WeekViewItemProps) {
                         checkIsTrainingComponent,
                         router,
                       },
-                      {
-                        useGroup: groupContext,
-                      }
+                      groupContext
                     );
                   }}
                   sx={{

@@ -3,7 +3,6 @@ import type { SxProps } from '@mui/material';
 import { useTheme } from '@mui/material';
 
 import { Search, SearchIconWrapper, StyledInputBase } from './style';
-import type { ChildrenProps } from '@/common/type/props.type';
 
 export type SearchBarProps = {
   placeholder: string;
@@ -11,7 +10,7 @@ export type SearchBarProps = {
   handleSearchChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   maxWidth?: string;
   sx?: SxProps;
-  children?: ChildrenProps['children'];
+  children?: React.PropsWithChildren['children'];
 };
 
 export function SearchBar({

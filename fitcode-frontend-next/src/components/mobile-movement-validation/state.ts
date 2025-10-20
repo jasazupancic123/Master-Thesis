@@ -3,22 +3,22 @@ import { DrawingUtils, FilesetResolver } from '@mediapipe/tasks-vision';
 import type { RefObject } from 'react';
 
 import { EXERCISE_TIMES_ROUNDING_STEP_S } from './mobile-movement-validation';
-import type { CommonService } from '@/common/service/common.service';
-import type { SetState } from '@/common/type/state.type';
-import type { FrameBitmapBuffer } from '@/controller/pose-detection/class/frame-bitmap-buffer';
-import type { KeypointHistory } from '@/controller/pose-detection/class/keypoint-history';
-import { POSE_DETECTION_CONSTRAINTS } from '@/controller/pose-detection/const/pose-detection-constrains.const';
-import { STATUS_MESSAGES } from '@/controller/pose-detection/const/status-messages';
-import { DetectionStatus } from '@/controller/pose-detection/enum/detection-status';
-import type { PoseModel } from '@/controller/pose-detection/enum/pose-model.enum';
-import { RepStatus } from '@/controller/pose-detection/enum/rep-state';
-import { PoseDetectionService } from '@/controller/pose-detection/pose-detection.service';
-import { RepDetectionService } from '@/controller/pose-detection/rep-detection.service';
-import type { ExerciseDetectionData } from '@/controller/pose-detection/type/exercise-start-condition.type';
-import type { Keypoint } from '@/controller/pose-detection/type/keypoint.type';
-import type { Rep } from '@/controller/pose-detection/type/rep.type';
-import type { RepState } from '@/controller/pose-detection/type/rep-state.type';
-import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
+import type { SetState } from '@/lib/common/type/state.type';
+import type { FrameBitmapBuffer } from '@/core/pose-detection/class/frame-bitmap-buffer';
+import type { KeypointHistory } from '@/core/pose-detection/class/keypoint-history';
+import { POSE_DETECTION_CONSTRAINTS } from '@/core/pose-detection/const/pose-detection-constrains.const';
+import { STATUS_MESSAGES } from '@/core/pose-detection/const/status-messages';
+import { DetectionStatus } from '@/core/pose-detection/enum/detection-status';
+import type { PoseModel } from '@/core/pose-detection/enum/pose-model.enum';
+import { RepStatus } from '@/core/pose-detection/enum/rep-state';
+import { PoseDetectionService } from '@/core/pose-detection/pose-detection.service';
+import { RepDetectionService } from '@/core/pose-detection/rep-detection.service';
+import type { ExerciseDetectionData } from '@/core/pose-detection/type/exercise-start-condition.type';
+import type { Keypoint } from '@/core/pose-detection/type/keypoint.type';
+import type { Rep } from '@/core/pose-detection/type/rep.type';
+import type { RepState } from '@/core/pose-detection/type/rep-state.type';
+import { KeypointUtil } from '@/core/pose-detection/util/keypoint.util';
+import type { CommonService } from '@/lib/common/common.service';
 
 export async function loadModel(state: {
   setPoseLandmarker: SetState<PoseLandmarker | null>;

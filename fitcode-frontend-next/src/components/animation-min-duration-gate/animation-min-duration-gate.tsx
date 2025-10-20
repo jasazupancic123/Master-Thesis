@@ -2,28 +2,18 @@
 
 import { Suspense, useEffect, useState } from 'react';
 
-import { LOADING_ANIMATION_MIN_DURATION_MS } from '@/common/constant/loading.constant';
+import { RevealSensor } from './reveal-sensor';
+import { LOADING_ANIMATION_MIN_DURATION_MS } from '@/lib/common/const/animation.const';
 import Animation from '@/util/animation/animation';
 
-// Fires once its children actually mount (i.e., when Suspense reveals)
-function RevealSensor({
-  onReveal,
-  children,
-}: {
-  onReveal: () => void;
-  children: React.ReactNode;
-}) {
-  useEffect(() => onReveal(), [onReveal]);
-  return <>{children}</>;
+interface Props extends React.PropsWithChildren {
+  minMs?: number;
 }
 
 export default function AnimationMinDurationGate({
   children,
   minMs = LOADING_ANIMATION_MIN_DURATION_MS,
-}: {
-  children: React.ReactNode;
-  minMs?: number;
-}) {
+}: Props) {
   const [timeUp, setTimeUp] = useState(false);
   const [revealed, setRevealed] = useState(false);
 

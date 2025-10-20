@@ -1,8 +1,6 @@
 import { Box } from '@mui/material';
 
-import type { ChildrenProps } from '@/common/type/props.type';
-
-export default function Layout({ children }: ChildrenProps) {
+export default function Layout({ children }: React.PropsWithChildren) {
   return (
     <Box
       width="100%"

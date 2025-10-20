@@ -13,20 +13,20 @@ import Papa from 'papaparse';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
-import { theme } from '@/app/style';
-import { AthletesTrainers } from '@/common/enum/athletes-trainer.enum';
-import { isManager } from '@/common/firebase/firebase-auth.util';
-import { handleApiRequest } from '@/common/type/state.type';
 import DashboardEditAthleteModal from '@/components/dashboard/components/dashboard-groups/components/dashboard-groups-members/modals/dashboard-edit-athlete-modal/dashboard-edit-athlete-modal';
 import RegisterUsersDashboard from '@/components/dashboard/components/dashboard-register-users-modal/dashboard-register-users-modal';
 import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
-import type { AuthUser } from '@/controller/auth/type/user.type';
-import { InstitutionController } from '@/controller/institution/institution.controller';
-import { Gender } from '@/controller/profile/enum/gender.enum';
-import { SportLevel } from '@/controller/profile/enum/sport-level.enum';
-import { UserRole } from '@/controller/profile/enum/user-role.enum';
-import { ProfileController } from '@/controller/profile/profile.controller';
-import type { ImportProfile } from '@/controller/profile/type/user.type';
+import type { AuthUser } from '@/core/auth/type/user.type';
+import { AthletesTrainers } from '@/core/institution/enum/athletes-trainer.enum';
+import { InstitutionController } from '@/core/institution/institution.controller';
+import { Gender } from '@/core/profile/enum/gender.enum';
+import { SportLevel } from '@/core/profile/enum/sport-level.enum';
+import { UserRole } from '@/core/profile/enum/user-role.enum';
+import { ProfileController } from '@/core/profile/profile.controller';
+import type { ImportProfile } from '@/core/profile/type/user.type';
+import { lib } from '@/lib';
+import { handleApiRequest } from '@/lib/common/type/state.type';
+import { theme } from '@/app/style';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
@@ -413,7 +413,7 @@ export default function DashboardInstitutionPage() {
             position: 'relative',
           }}
         >
-          {isManager(role) && (
+          {lib.firebase.auth.isManager(role) && (
             <Box
               display="flex"
               gap={1.5}
@@ -492,25 +492,26 @@ export default function DashboardInstitutionPage() {
                   onMouseEnter={() => setHoveredUser(user)}
                   onMouseLeave={() => setHoveredUser(null)}
                 >
-                  {isManager(role) && user.uid === hoveredUser?.uid && (
-                    <IconButton
-                      className="remove-icon"
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRemoveUser(user.uid, selectedView);
-                      }}
-                      sx={{
-                        position: 'absolute',
-                        top: -8,
-                        right: -8,
-                        backgroundColor: theme.palette.error.main,
-                        zIndex: 1,
-                      }}
-                    >
-                      <Remove sx={{ fontSize: 10 }} />
-                    </IconButton>
-                  )}
+                  {lib.firebase.auth.isManager(role) &&
+                    user.uid === hoveredUser?.uid && (
+                      <IconButton
+                        className="remove-icon"
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveUser(user.uid, selectedView);
+                        }}
+                        sx={{
+                          position: 'absolute',
+                          top: -8,
+                          right: -8,
+                          backgroundColor: theme.palette.error.main,
+                          zIndex: 1,
+                        }}
+                      >
+                        <Remove sx={{ fontSize: 10 }} />
+                      </IconButton>
+                    )}
                   <Avatar
                     className="avatar-border"
                     src={

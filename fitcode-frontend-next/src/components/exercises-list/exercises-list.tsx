@@ -2,14 +2,14 @@ import { Box } from '@mui/material';
 import { useTheme } from '@mui/material';
 
 import { ExerciseCard } from '../exercise-card/exercise-card';
-import type { SetState } from '@/common/type/state.type';
-import type { Exercise } from '@/controller/exercise/type/exercise.type';
+import type { SetState } from '@/lib/common/type/state.type';
+import type { Exercise } from '@/core/exercise/type/exercise.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 interface ExercisesListProps {
   exercises: Exercise[];
-  setSelectedExercisesIds?: SetState<string[]>;
-  selectedExercisesIds?: string[];
+  setSelectedExerciseIds?: SetState<string[]>;
+  selectedExerciseIds?: string[];
   setModal?: SetState<{
     add: boolean;
     edit: boolean;
@@ -30,8 +30,8 @@ export default function ExercisesList(props: ExercisesListProps) {
     setModal,
     setExercise,
     addExerciseForm,
-    selectedExercisesIds,
-    setSelectedExercisesIds,
+    selectedExerciseIds,
+    setSelectedExerciseIds,
     children,
   } = props;
 
@@ -72,25 +72,22 @@ export default function ExercisesList(props: ExercisesListProps) {
           }
           sx={{
             cursor: 'pointer',
-            border: `2px solid ${selectedExercisesIds?.includes(exercise.id) ? theme.palette.primary.main : 'transparent'}`,
+            border: `2px solid ${selectedExerciseIds?.includes(exercise.id) ? theme.palette.primary.main : 'transparent'}`,
             borderRadius: 5.5,
-            boxShadow: selectedExercisesIds?.includes(exercise.id)
+            boxShadow: selectedExerciseIds?.includes(exercise.id)
               ? `0 0 4px ${theme.palette.primary.main}`
               : undefined,
           }}
           onClick={() => {
             setModal?.((prev) => ({ ...prev, edit: true }));
             setExercise?.(exercise);
-            if (selectedExercisesIds !== undefined) {
-              if (selectedExercisesIds.includes(exercise.id))
-                setSelectedExercisesIds?.(
-                  selectedExercisesIds.filter((id) => id !== exercise.id)
+            if (selectedExerciseIds !== undefined) {
+              if (selectedExerciseIds.includes(exercise.id))
+                setSelectedExerciseIds?.(
+                  selectedExerciseIds.filter((id) => id !== exercise.id)
                 );
               else
-                setSelectedExercisesIds?.([
-                  ...selectedExercisesIds,
-                  exercise.id,
-                ]);
+                setSelectedExerciseIds?.([...selectedExerciseIds, exercise.id]);
             }
           }}
         >

@@ -5,7 +5,7 @@ import { Box, Fab, Menu, MenuItem, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import React, { useEffect } from 'react';
 
-import AthleteOptionsContainer from '../athlete/athlete-options-container/athlete-options-container';
+import AthleteOptionsContainer from '../athlete/athlete-options-container';
 import { handleChangeSuperset } from './actions/actions-superset';
 import { handleInitTrainingInProgressComponent } from './actions/actions-training-in-progress';
 import TrainingInProgressSuperset from './components/training-in-progress-superset/training-in-progress-superset';
@@ -14,10 +14,10 @@ import { useUndoneExercises } from './context/undone-exercises.provider';
 import CancelTrainingModal from './modals/cancel-training-modal';
 import UndoneSetsErrorModal from './modals/undone-sets-error-modal';
 import UndoneSetsWarningModal from './modals/undone-sets-warning-modal';
-import { TrackingMethod } from '@/common/enum/tracking-method.enum';
-import { useHorizontalOverflow } from '@/common/util/horizontal-overflow.util';
-import { preloadPoseLandmarker } from '@/controller/pose-detection/util/pose-landmarker-loader.util';
-import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
+import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
+import { preloadPoseLandmarker } from '@/core/pose-detection/util/pose-landmarker-loader.util';
+import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
+import { useHorizontalOverflow } from '@/hooks/use-horizontal-overflow.hook';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
@@ -52,7 +52,6 @@ export default function TrainingInProgress() {
   } = trainingInProgressUtilsContext;
 
   const { selectedTrackingMethod } = athleteHeaderContext;
-
   const { outerRef, innerRef, isOverflowing } = useHorizontalOverflow();
 
   /* Preload pose landmarker */

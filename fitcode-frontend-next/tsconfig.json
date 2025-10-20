@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "typeRoots": [
-      "./types",
+      "./lib/common/type",
       "./node_modules/@types"
     ],
     "lib": [
@@ -33,7 +33,7 @@
     "paths": {
       "@/*": [
         "./src/*"
-      ]
+      ],
     },
     "target": "ES2017"
   },
@@ -45,7 +45,7 @@
     "src/components/mediapipe-react-app/components/CameraSquat/Utils.js",
     "src/components/mediapipe-react-app/components/CameraSquat/CameraSquat.js",
     "src/components/mediapipe-react-app/components/CameraSquat/CameraSquat.js",
-    "src/common/type/svgr.d.ts",
+    "src/lib/common/type/svgr.d.ts",
     "jest.setup.js",
     "jest.config.ts"
 , "src/components/training-exercise-card/components/training-exercise-card-sets/components/training-exercise-card-sets-collapsed/training-exercise-card-collapsed-sets.-stubtsx"  ],

@@ -5,19 +5,18 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
-import { FirebaseFunctionsUtil } from '@/common/firebase/firebase-functions.util';
-import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
-import { handleApiRequest } from '@/common/type/state.type';
-import { InstitutionController } from '@/controller/institution/institution.controller';
-import { InstitutionService } from '@/controller/institution/institution.service';
-import { UserRole } from '@/controller/profile/enum/user-role.enum';
+import { handleApiRequest } from '@/lib/common/type/state.type';
+import { app } from '@/core/app.service';
+import { InstitutionController } from '@/core/institution/institution.controller';
+import { UserRole } from '@/core/profile/enum/user-role.enum';
+import { lib } from '@/lib';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import FileUpload from '@/util/file-upload/file-upload';
 
-const firebaseStorage = FirebaseStorageUtil.Instance;
-const firebaseFunctions = FirebaseFunctionsUtil.Instance;
+const firebaseStorage = lib.firebase.storage;
+const firebaseFunctions = lib.firebase.functions;
 
 export default function AddInstitutionDashboard() {
   const { users } = useMain();
@@ -51,10 +50,7 @@ export default function AddInstitutionDashboard() {
           ownerId: owner.uid,
         }),
       (institution) => {
-        institution = InstitutionService.mapUsers(
-          [institution],
-          users || []
-        )[0];
+        institution = app.institution.mapUsers([institution], users || [])[0];
         setInstitutions((prev) => {
           const newInstitutions = [...prev, institution];
           return newInstitutions;

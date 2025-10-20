@@ -2,14 +2,14 @@ import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.
 import toast from 'react-hot-toast';
 
 import type { UseDashboardGroupsMembersUsersReturnType } from '../hooks/use-users';
-import { BACKEND_API_BASE_URL } from '@/common/constant/api.constant';
-import type { SetState } from '@/common/type/state.type';
-import { handleApiRequest } from '@/common/type/state.type';
-import { AuthController } from '@/controller/auth/auth.controller';
-import type { AuthUser } from '@/controller/auth/type/user.type';
-import type { GroupController } from '@/controller/group/group.controller';
-import { ProfileController } from '@/controller/profile/profile.controller';
-import type { Profile } from '@/controller/profile/type/user.type';
+import { BACKEND_API_BASE_URL } from '@/core/const/api.const';
+import type { SetState } from '@/lib/common/type/state.type';
+import { handleApiRequest } from '@/lib/common/type/state.type';
+import { AuthController } from '@/core/auth/auth.controller';
+import type { AuthUser } from '@/core/auth/type/user.type';
+import type { GroupController } from '@/core/group/group.controller';
+import { ProfileController } from '@/core/profile/profile.controller';
+import type { Profile } from '@/core/profile/type/user.type';
 import type { UseDashboardReturnType } from '@/store/dashboard.provider';
 
 export const handleRemoveAthleteFromGroup = async (

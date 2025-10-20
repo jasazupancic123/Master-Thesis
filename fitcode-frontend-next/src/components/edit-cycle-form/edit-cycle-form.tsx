@@ -8,9 +8,9 @@ import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-import { handleDeleteCycle } from '../trainer-group-year-view/components/multi-cycle-slider/actions/actions-cycle';
+import { handleDeleteCycle } from '../trainer-group-year-view/actions/actions-cycle';
 import { useMultiCycleSliderCyclesProvider } from '../trainer-group-year-view/context/cycles.provider';
-import { GroupController } from '@/controller/group/group.controller';
+import { GroupController } from '@/core/group/group.controller';
 import { useGroup } from '@/store/group.provider';
 
 export default function EditCycleForm() {

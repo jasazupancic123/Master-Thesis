@@ -6,29 +6,27 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import React, { useEffect, useState } from 'react';
 
-import FlatSelectAttribute from './components/flat-select-attribute';
-import SelectComponent from './components/select-component';
-import { isAdmin } from '@/common/firebase/firebase-auth.util';
-import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
-import { CommonService } from '@/common/service/common.service';
-import type { SetState } from '@/common/type/state.type';
-import { AttributeType } from '@/controller/attribute/enum/attribute-value.enum';
-import type { Attribute } from '@/controller/attribute/type/attribute.type';
+import FlatSelectAttribute from './flat-select-attribute';
+import SelectComponent from './select-component';
+import { app } from '@/core/app.service';
+import { AttributeType } from '@/core/attribute/enum/attribute-value.enum';
+import type { Attribute } from '@/core/attribute/type/attribute.type';
 import type {
   Component,
   TreeComponent,
-} from '@/controller/component/type/component.type';
-import { ExerciseAttributeService } from '@/controller/exercise/exercise-attribute.service';
+} from '@/core/component/type/component.type';
 import type {
   Exercise,
   ExerciseAttributes,
-} from '@/controller/exercise/type/exercise.type';
+} from '@/core/exercise/type/exercise.type';
+import { lib } from '@/lib';
+import type { SetState } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import FileUpload from '@/util/file-upload/file-upload';
 import MyModal from '@/util/modal/modal';
 
-const firebaseStorage = FirebaseStorageUtil.Instance;
+const firebaseStorage = lib.firebase.storage;
 
 interface Props {
   data: Partial<Exercise>;
@@ -61,10 +59,9 @@ export default function ExerciseModal(props: Props) {
     [key: number]: string;
   }>({});
 
+  const [filteredAttributes, setFilteredAttributes] = useState<Attribute[]>([]);
   const [hasSelectedLeafComponent, setHasSelectedLeafComponent] =
     useState(false);
-
-  const [filteredAttributes, setFilteredAttributes] = useState<Attribute[]>([]);
 
   function handleSelectChange(
     field: keyof Exercise,
@@ -113,7 +110,7 @@ export default function ExerciseModal(props: Props) {
 
     selected[component.parents.length] = component.id;
     setSelectedComponents(selected);
-    setFilteredAttributes(ExerciseAttributeService.getAttributes(attributes));
+    setFilteredAttributes(app.exercise.attribute.getAll(attributes));
   }, [data?.id]);
 
   useEffect(() => {
@@ -149,7 +146,7 @@ export default function ExerciseModal(props: Props) {
           if (!attributeIds.find((a) => a === attribute))
             attributeIds.push(attribute);
 
-    setFilteredAttributes(ExerciseAttributeService.getAttributes(attributeIds));
+    setFilteredAttributes(app.exercise.attribute.getAll(attributeIds));
     setHasSelectedLeafComponent(hasSelectedLeafComponent);
   }, [data.componentIds]);
 
@@ -193,7 +190,7 @@ export default function ExerciseModal(props: Props) {
               selectedComponents={selectedComponents}
               setSelectedComponents={setSelectedComponents}
               components={
-                CommonService.instance.tree.fromArray(components, {
+                lib.common.tree.fromArray(components, {
                   idPropertyName: 'id',
                   parentIdPropertyName: 'parentId',
                   childrenPropertyName: 'children',
@@ -250,7 +247,7 @@ export default function ExerciseModal(props: Props) {
             />
           </Grid>
 
-          {isAdmin(role) && (
+          {lib.firebase.auth.isAdmin(role) && (
             <Grid size={{ xs: 6 }}>
               <FormControlLabel
                 label={'Disabled'}
@@ -287,7 +284,7 @@ export default function ExerciseModal(props: Props) {
                 attribute.type === AttributeType.Number ? 'number' : 'text';
 
               return (
-                <Grid size={{ xs: 6 }} key={attribute.field}>
+                <Grid size={{ xs: 6 }} key={attribute.field as string}>
                   {attribute.type === 'select' ||
                   attribute.type === 'multiselect' ? (
                     <FlatSelectAttribute

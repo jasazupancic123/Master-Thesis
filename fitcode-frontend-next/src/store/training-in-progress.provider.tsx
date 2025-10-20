@@ -3,12 +3,11 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { useTraining } from './training.provider';
-import type { ChildrenProps } from '@/common/type/props.type';
-import { handleApiRequest, type SetState } from '@/common/type/state.type';
-import { TrainingController } from '@/controller/training/training.controller';
-import type { CompleteSet } from '@/controller/training/type/complete-set.type';
-import type { SupersetRecording } from '@/controller/training/type/superset.type';
-import type { TrainingExerciseRecording } from '@/controller/training/type/training-exercise.type';
+import { TrainingController } from '@/core/training/training.controller';
+import type { SupersetRecording } from '@/core/training/type/superset.type';
+import type { TrainingExerciseRecording } from '@/core/training/type/training-exercise.type';
+import type { CreateWorkload } from '@/core/training/type/workload.type';
+import { handleApiRequest, type SetState } from '@/lib/common/type/state.type';
 
 interface TrainingInProgressContextType {
   selectedSuperset: SupersetRecording | undefined;
@@ -22,7 +21,7 @@ interface TrainingInProgressContextType {
   setIndex: number | undefined;
   setSetIndex: SetState<number | undefined>;
   handleUpsertSet: (
-    body: Omit<CompleteSet, 'userId'>,
+    body: Omit<CreateWorkload, 'userId'>,
     state: { exerciseId: string; supersetIndex: number; setIndex: number }
   ) => Promise<void>;
 }
@@ -35,7 +34,7 @@ export type TrainingInProgressProviderReturnType = ReturnType<
   typeof useTrainingInProgress
 >;
 
-export const TrainingInProgressProvider = (props: ChildrenProps) => {
+export const TrainingInProgressProvider = (props: React.PropsWithChildren) => {
   const { trainingInProgress, refetchTraining } = useTraining();
 
   const router = useRouter();
@@ -88,7 +87,7 @@ export const TrainingInProgressProvider = (props: ChildrenProps) => {
   }, [selectedExercise]);
 
   async function handleUpsertSet(
-    body: Omit<CompleteSet, 'userId'>,
+    body: Omit<CreateWorkload, 'userId'>,
     state: { exerciseId: string; supersetIndex: number; setIndex: number }
   ) {
     const {

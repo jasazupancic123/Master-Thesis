@@ -1,13 +1,12 @@
 import toast from 'react-hot-toast';
 
-import type { ExerciseSetTracking } from '@/common/type/exercise-set-tracking-state.type';
-import type { SetState } from '@/common/type/state.type';
-import { KeypointHistory } from '@/controller/pose-detection/class/keypoint-history';
-import type { Rep } from '@/controller/pose-detection/type/rep.type';
-import { TrainingService } from '@/controller/training/training.service';
-import type { CompleteSet } from '@/controller/training/type/complete-set.type';
-import type { TrainingExerciseRecording } from '@/controller/training/type/training-exercise.type';
-import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
+import type { ExerciseSetTracking } from '@/core/training/type/exercise-set-tracking-state.type';
+import type { SetState } from '@/lib/common/type/state.type';
+import { KeypointHistory } from '@/core/pose-detection/class/keypoint-history';
+import type { Rep } from '@/core/pose-detection/type/rep.type';
+import type { TrainingExerciseRecording } from '@/core/training/type/training-exercise.type';
+import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
+import type { CreateWorkload } from '@/core/training/type/workload.type';
 
 export const finishSet = async (state: {
   exercise: TrainingExerciseRecording;
@@ -15,7 +14,7 @@ export const finishSet = async (state: {
   trainingInProgress: TrainingInProgress;
   setTrainingInProgress: SetState<TrainingInProgress | null>;
   handleUpsertSet: (
-    body: Omit<CompleteSet, 'userId'>,
+    body: CreateWorkload,
     state: { exerciseId: string; supersetIndex: number; setIndex: number }
   ) => Promise<void>;
 }) => {
@@ -27,9 +26,7 @@ export const finishSet = async (state: {
     handleUpsertSet,
   } = state;
 
-  const exerciseSet = exercise.sets[setIndex];
-
-  const set = TrainingService.exerciseSetToCompleteSet(exerciseSet);
+  const set = exercise.sets[setIndex];
 
   if (exercise.recordedSets && exercise.recordedSets.length) {
     const currentSet = exercise.recordedSets.find(

@@ -3,17 +3,18 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 
 import { useAuthenticatedAuth } from './auth.provider';
-import type { ExerciseOrTraining } from '@/common/type/exercise-or-training.type';
-import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
-import type { ChildrenProps } from '@/common/type/props.type';
-import { type SetState } from '@/common/type/state.type';
-import type { Training } from '@/controller/training/type/training.type';
+import { ExerciseTrainingView } from '@/core/training/enum/exercise-training-view.enum';
+import type { Training } from '@/core/training/type/training.type';
 import type {
   TrainingExercise,
   TrainingExerciseRecording,
-} from '@/controller/training/type/training-exercise.type';
-import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
-import type { TrainingReport } from '@/controller/training/type/training-report.type';
+} from '@/core/training/type/training-exercise.type';
+import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
+import type { TrainingReport } from '@/core/training/type/training-report.type';
+import { type SetState } from '@/lib/common/type/state.type';
+
+type ExerciseOrTraining =
+  (typeof ExerciseTrainingView)[keyof typeof ExerciseTrainingView];
 
 interface TrainingContextType extends TrainingProviderProps {
   clearTrainingState: () => void;
@@ -48,7 +49,7 @@ export type TrainingProviderReturnTypeDefined = Omit<
 };
 
 export const TrainingProvider = (
-  props: TrainingProviderProps & ChildrenProps
+  props: TrainingProviderProps & React.PropsWithChildren
 ) => {
   const { children, trainings, reports, refetchTraining } = props;
 

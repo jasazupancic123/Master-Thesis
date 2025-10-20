@@ -2,8 +2,8 @@ import { ToggleButton, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import React from 'react';
 
-import type { GroupDateFilter } from '@/common/type/filter.type';
-import type { ILink } from '@/common/type/link.type';
+import type { GroupDateFilter } from '@/lib/common/type/filter.type';
+import type { ILink } from '@/lib/common/type/link.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';

@@ -8,8 +8,8 @@ import { Fragment, useEffect, useLayoutEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 
 import type { Day } from '@/common/service/util/date.util';
-import type { AuthUser } from '@/controller/auth/type/user.type';
-import type { Training } from '@/controller/training/type/training.type';
+import type { AuthUser } from '@/core/auth/type/user.type';
+import type { Training } from '@/core/training/type/training.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';

@@ -8,22 +8,20 @@ import type {
   GroupContextProps,
   GroupIdPageProps,
 } from '@/app/(trainer)/groups/[group_id]/props';
-import { CommonService } from '@/common/service/common.service';
-import type { GroupDateFilter } from '@/common/type/filter.type';
-import type { ChildrenProps } from '@/common/type/props.type';
-import type { Cycle } from '@/controller/group/type/cycle.type';
-import type { Group } from '@/controller/group/type/group.type';
-import type { Institution } from '@/controller/institution/type/institution.type';
-
-const dateService = CommonService.instance.date;
+import type { Cycle } from '@/core/group/type/cycle.type';
+import type { Group } from '@/core/group/type/group.type';
+import type { Institution } from '@/core/institution/type/institution.type';
+import { lib } from '@/lib';
+import type { GroupDateFilter } from '@/lib/common/type/filter.type';
 
 const GroupContext = createContext<GroupContextProps | null>(null);
-
 export const useGroup = () => useContext(GroupContext)!;
 
-export type GroupProviderReturnType = ReturnType<typeof useGroup>;
+export type IGroupCtx = ReturnType<typeof useGroup>;
 
-export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
+export function GroupProvider(
+  props: GroupIdPageProps & React.PropsWithChildren
+) {
   const {
     children,
     group: providedGroup,
@@ -42,8 +40,9 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
 
   // find the cycle which is in the current date, else undefined:
   const todaysCycle = group.cycles.find((c) =>
-    dateService.isBetween(dayjs(), c.from, c.to)
+    lib.common.date.isBetween(dayjs(), c.from, c.to)
   );
+
   const [cycle, setCycle] = useState<Cycle | undefined>(todaysCycle);
   const [dateFrom, setDateFrom] = useState(dayjs().startOf('day'));
   const [dateTo, setDateTo] = useState(dayjs().endOf('day'));
@@ -51,6 +50,7 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
 
   // state for arrays
   const [trainings, setTrainings] = useState(allTrainings);
+
   const [filteredUsers, setFilteredUsers] = useState(allUsers);
 
   // filter trainings by cycle

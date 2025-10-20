@@ -6,13 +6,10 @@ import toast from 'react-hot-toast';
 
 import type { TrainingCycleViewGridItemProps } from '../../types/type';
 import useTrainingCycleComponents from './hooks/use-components';
-import { CommonService } from '@/common/service/common.service';
-import { getComponentIcon } from '@/common/service/util/icons.util';
 import type { SvgC } from '@/components/muscle-map-with-tooltip/muscle-map-with-tooltip';
+import { lib } from '@/lib';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-
-const commonService = CommonService.instance;
 
 export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
   const screenSize = useScreenSize();
@@ -74,7 +71,7 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
           const component = trainingComponent.component;
           if (!component) return null;
           const IconComponent: SvgIconComponent | SvgC | null =
-            getComponentIcon(component?.name);
+            lib.common.component.getIcon(component?.name);
 
           return (
             <Tooltip
@@ -120,7 +117,7 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
                           trainingComponent.target.id === selectedTarget?.id &&
                           cycle &&
                           basePeriodizationTraining &&
-                          commonService.date.isBetween(
+                          lib.common.date.isBetween(
                             training.to,
                             basePeriodizationTraining.to,
                             cycle?.to
@@ -130,7 +127,7 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
                         } else if (
                           cycle &&
                           basePeriodizationTraining &&
-                          !commonService.date.isBetween(
+                          !lib.common.date.isBetween(
                             training.to,
                             basePeriodizationTraining.to,
                             cycle?.to

@@ -1,11 +1,10 @@
 import dayjs from 'dayjs';
 import { createContext, useContext, useEffect, useState } from 'react';
 
-import { TrackingMethod } from '@/common/enum/tracking-method.enum';
-import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
-import type { ChildrenProps } from '@/common/type/props.type';
-import type { SetState } from '@/common/type/state.type';
-import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
+import { ExerciseTrainingView } from '@/core/training/enum/exercise-training-view.enum';
+import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
+import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
+import type { SetState } from '@/lib/common/type/state.type';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
@@ -39,7 +38,9 @@ export type UseTrainingInProgressUtilsReturnType = ReturnType<
   typeof useTrainingInProgressUtils
 >;
 
-export function TrainingInProgressUtilsProvider(props: ChildrenProps) {
+export function TrainingInProgressUtilsProvider(
+  props: React.PropsWithChildren
+) {
   const { children } = props;
 
   const {

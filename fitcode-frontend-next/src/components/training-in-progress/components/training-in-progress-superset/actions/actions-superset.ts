@@ -1,7 +1,7 @@
 import { getUndoneExercises } from '@/components/training-in-progress/actions/actions-undone-exercises';
 import type { UseTrainingInProgressUtilsReturnType } from '@/components/training-in-progress/context/training-in.progress-utils.provider';
 import type { UseUndoneExercisesReturnType } from '@/components/training-in-progress/context/undone-exercises.provider';
-import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { TrainingProviderReturnTypeDefined } from '@/store/training.provider';
 import type { TrainingInProgressProviderReturnType } from '@/store/training-in-progress.provider';
 

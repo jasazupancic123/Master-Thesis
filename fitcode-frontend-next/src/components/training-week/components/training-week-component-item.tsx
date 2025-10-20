@@ -2,14 +2,11 @@ import { Event } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 
-import { CommonService } from '@/common/service/common.service';
-import { getComponentIcon } from '@/common/service/util/icons.util';
-import type { SetState } from '@/common/type/state.type';
-import type { GroupEvent } from '@/controller/group/type/group-event.type';
-import type { TrainingComponentWithTrainingId } from '@/controller/training/type/training-component.type';
+import type { SetState } from '@/lib/common/type/state.type';
+import type { GroupEvent } from '@/core/group/type/group-event.type';
+import type { TrainingComponentWithTrainingId } from '@/core/training/type/training-component.type';
+import { lib } from '@/lib';
 import { useScreenSize } from '@/store/screen-size.provider';
-
-const commonService = CommonService.instance;
 
 interface TrainerWeekViewItemProps {
   item: TrainingComponentWithTrainingId | GroupEvent;
@@ -36,7 +33,7 @@ export default function TrainerWeekViewItem(props: TrainerWeekViewItemProps) {
   // MOBILE DESIGN
   if (screenSize.isMobile || screenSize.isSmallTablet) {
     const IconComponent = isComponent
-      ? getComponentIcon(item.component?.name || '')
+      ? lib.common.component.getIcon(item.component?.name || '')
       : undefined;
     return (
       <Box
@@ -56,7 +53,7 @@ export default function TrainerWeekViewItem(props: TrainerWeekViewItemProps) {
         }}
       >
         <Typography fontSize={12}>
-          {commonService.date.format(item.from, {}, 'HH:mm')}
+          {lib.common.date.format(item.from, {}, 'HH:mm')}
         </Typography>
         {isComponent ? (
           IconComponent && <IconComponent style={{ height: 16, width: 16 }} />
@@ -86,8 +83,8 @@ export default function TrainerWeekViewItem(props: TrainerWeekViewItemProps) {
       }}
     >
       <Typography fontSize={12}>
-        {commonService.date.format(item.from, {}, 'H:mm')} -{' '}
-        {commonService.date.format(item.to, {}, 'H:mm')}
+        {lib.common.date.format(item.from, {}, 'H:mm')} -{' '}
+        {lib.common.date.format(item.to, {}, 'H:mm')}
       </Typography>
       <Box
         width="100%"

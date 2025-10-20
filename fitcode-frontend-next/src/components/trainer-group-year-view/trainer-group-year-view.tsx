@@ -4,9 +4,9 @@ import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles';
 
 import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
-import useMultiCycleSliderProperties from './components/multi-cycle-slider/hooks/use-slider-properties';
-import MultiCycleSliderLayout from '@/components/trainer-group-year-view/components/multi-cycle-slider/components/multi-cycle-slider-layout/multi-cycle-slider.layout';
-import CycleComponents from '@/components/trainer-group-year-view/components/training-year-cycle-components/training-year-cycle-components';
+import useMultiCycleSliderProperties from './hooks/use-slider-properties';
+import MultiCycleSliderLayout from './multi-cycle-slider.layout';
+import CycleComponents from '@/components/trainer-group-year-view/training-year-cycle-components';
 import VerticalLinesBorders from '@/util/vertical-lines-borders/vertical-lines-borders';
 
 export default function TrainerYearView() {

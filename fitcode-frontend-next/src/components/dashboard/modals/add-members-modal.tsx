@@ -11,12 +11,12 @@ import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { theme } from '@/app/style';
-import type { ModalProps } from '@/common/type/modal-props.type';
-import { handleApiRequest, type SetState } from '@/common/type/state.type';
-import type { AuthUser } from '@/controller/auth/type/user.type';
-import { GroupController } from '@/controller/group/group.controller';
-import type { Group } from '@/controller/group/type/group.type';
-import type { Institution } from '@/controller/institution/type/institution.type';
+import type { ModalProps } from '@/lib/common/type/modal-props.type';
+import { handleApiRequest, type SetState } from '@/lib/common/type/state.type';
+import type { AuthUser } from '@/core/auth/type/user.type';
+import { GroupController } from '@/core/group/group.controller';
+import type { Group } from '@/core/group/type/group.type';
+import type { Institution } from '@/core/institution/type/institution.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import MyModal from '@/util/modal/modal';
 import { SearchBar } from '@/util/search-bar/search-bar';

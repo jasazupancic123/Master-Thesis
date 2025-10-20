@@ -1,16 +1,16 @@
-import type { SetState } from '@/common/type/state.type';
-import type { Attribute } from '@/controller/attribute/type/attribute.type';
-import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
-import type { TrainingComponent } from '@/controller/training/type/training-component.type';
-import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import type { SetState } from '@/lib/common/type/state.type';
+import type { Attribute } from '@/core/attribute/type/attribute.type';
+import type { AttributeValue } from '@/core/attribute/type/attribute-value.type';
+import type { TrainingComponent } from '@/core/training/type/training-component.type';
+import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 
 export interface TrainingComponentProps {
   trainingComponent: TrainingComponent;
 }
 
 export interface AddExerciseFormProps {
-  selectedExercisesIds: string[];
-  setSelectedExercisesIds: SetState<string[]>;
+  selectedExerciseIds: string[];
+  setSelectedExerciseIds: SetState<string[]>;
   component: TrainingComponent;
 }
 
@@ -18,7 +18,6 @@ export interface TrainingExerciseCardProps {
   supersetIndex: number;
   exercise: TrainingExercise;
   chartView?: boolean;
-  superior?: { row: boolean; column: boolean; all: boolean };
 }
 
 export interface SubgroupProps {

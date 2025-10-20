@@ -1,0 +1,67 @@
+import type { PeriodizationType } from '../enum/periodization-type.enum';
+import type {
+  CreateTrainingComponent,
+  TrainingComponent,
+  TrainingComponentRecording,
+  UpdateTrainingComponent,
+} from './training-component.type';
+import type { DateRange } from '@/lib/common/type/date-range.type';
+import type { BaseEntity } from '@/core/entity.type';
+import type { AuthUser } from '@/core/auth/type/user.type';
+import type { Cycle } from '@/core/group/type/cycle.type';
+import type { Group } from '@/core/group/type/group.type';
+import type { Institution } from '@/core/institution/type/institution.type';
+
+export type Training = BaseEntity &
+  Required<DateRange> & {
+    institutionId?: string;
+    groupId?: string;
+    cycleId?: string;
+    ownerId: string;
+    membersIds: string[];
+    copiedFromId?: string;
+    warmup: TrainingComponent;
+    cooldown: TrainingComponent;
+    components: TrainingComponent[];
+
+    // mapped properties
+    institution?: Institution;
+    group?: Group;
+    cycle?: Cycle;
+    members?: AuthUser[];
+  };
+
+export type CreateTraining = Pick<
+  Training,
+  'groupId' | 'cycleId' | 'membersIds' | 'from'
+> & {
+  components: CreateTrainingComponent[];
+};
+
+export type UpdateTraining = Pick<Training, 'warmup' | 'cooldown'> & {
+  components: UpdateTrainingComponent[];
+};
+
+export type FilterTrainings = DateRange &
+  Partial<Pick<Training, 'groupId' | 'cycleId'>> & {
+    populate?: boolean;
+    limit?: number;
+  };
+
+export type PeriodizeTrainings = {
+  periodizationType: PeriodizationType;
+  exerciseIds: string[];
+  subgroupId?: string;
+};
+
+export type CopyTraining = Pick<DateRange, 'from'> &
+  Partial<Pick<Training, 'membersIds'>>;
+
+export type TrainingRecording = Omit<
+  Training,
+  'components' | 'warmup' | 'cooldown'
+> & {
+  components: TrainingComponentRecording[];
+  warmup: TrainingComponentRecording;
+  cooldown: TrainingComponentRecording;
+};

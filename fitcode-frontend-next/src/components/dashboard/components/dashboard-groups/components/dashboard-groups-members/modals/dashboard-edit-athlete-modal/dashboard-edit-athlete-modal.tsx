@@ -17,20 +17,18 @@ import {
   handleChangeUser,
 } from './actions/actions-profile';
 import useDashboardEditAthleteModalUseProfile from './hooks/use-profile';
-import { SPORTS } from '@/common/constant/sport.constant';
-import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
-import type { ModalProps } from '@/common/type/modal-props.type';
-import { type SetState } from '@/common/type/state.type';
-import type { AuthUser } from '@/controller/auth/type/user.type';
-import { Gender } from '@/controller/profile/enum/gender.enum';
-import { SportLevel } from '@/controller/profile/enum/sport-level.enum';
+import { SPORTS } from '@/lib/common/const/sport.const';
+import type { ModalProps } from '@/lib/common/type/modal-props.type';
+import { type SetState } from '@/lib/common/type/state.type';
+import type { AuthUser } from '@/core/auth/type/user.type';
+import { Gender } from '@/core/profile/enum/gender.enum';
+import { SportLevel } from '@/core/profile/enum/sport-level.enum';
+import { lib } from '@/lib';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import FileUpload from '@/util/file-upload/file-upload';
 import MyModal from '@/util/modal/modal';
-
-const firebaseStorage = FirebaseStorageUtil.Instance;
 
 interface DashboardEditAthleteModalProps {
   editUser: AuthUser | null;
@@ -115,7 +113,7 @@ export default function DashboardEditAthleteModal(
           onFileUpload={async (file) => {
             if (!userToEdit) return;
             const path = `user/${userToEdit.uid}/${file.name}`;
-            const url = await firebaseStorage.uploadFile(file, path);
+            const url = await lib.firebase.storage.uploadFile(file, path);
             handleChangeUser(
               {
                 key: 'photoURL',

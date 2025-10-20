@@ -5,13 +5,14 @@ import { useEffect, useState } from 'react';
 
 import Alert from '../util/alert/alert';
 import type { GroupIdPageProps } from '@/app/(trainer)/groups/[group_id]/props';
-import type { ChildrenProps } from '@/common/type/props.type';
-import { Controller } from '@/controller/controller';
-import { TrainingService } from '@/controller/training/training.service';
+import { Controller } from '@/core/controller';
+import { TrainingService } from '@/core/training/training.service';
 import { GroupProvider } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 
-export default function GroupInitializer({ children }: ChildrenProps) {
+export default function GroupInitializer({
+  children,
+}: React.PropsWithChildren) {
   const pathname = usePathname();
   const [state, setState] = useState<GroupIdPageProps | null>(null);
 

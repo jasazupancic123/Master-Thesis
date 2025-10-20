@@ -3,9 +3,9 @@ import toast from 'react-hot-toast';
 
 import type { UseInstitutionRegisterMemberFormReturnType } from '../hooks/use-form';
 import type { UseInstitutionMembersReturnType } from '../hooks/use-institution-members';
-import { handleApiRequest } from '@/common/type/state.type';
-import type { InstitutionController } from '@/controller/institution/institution.controller';
-import { UserRole } from '@/controller/profile/enum/user-role.enum';
+import { handleApiRequest } from '@/lib/common/type/state.type';
+import type { InstitutionController } from '@/core/institution/institution.controller';
+import { UserRole } from '@/core/profile/enum/user-role.enum';
 import type { UseDashboardReturnType } from '@/store/dashboard.provider';
 
 export const handleAddExistingUser = (

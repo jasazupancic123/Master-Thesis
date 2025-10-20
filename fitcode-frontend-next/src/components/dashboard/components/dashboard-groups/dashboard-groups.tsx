@@ -7,10 +7,10 @@ import { useRef, useState } from 'react';
 
 import DashboardGroupsMembers from './components/dashboard-groups-members/dashboard-groups-members';
 import AddGroupModal from './modals/dashboard-add-group-modal';
-import { ADD_GROUP } from '@/common/constant/add-group.constant';
-import { isManager } from '@/common/firebase/firebase-auth.util';
 import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
-import { GroupService } from '@/controller/group/group.service';
+import { app } from '@/core/app.service';
+import { ADD_GROUP } from '@/core/group/const/add-group.const';
+import { lib } from '@/lib';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
@@ -39,7 +39,7 @@ export default function DashboardGroups() {
     return (
       <HorizontalItemsList
         dashboardView
-        addButtonOnEnd={isManager(role)}
+        addButtonOnEnd={lib.firebase.auth.isManager(role)}
         onButtonClick={() => {
           setOpenAddGroupModal(true);
         }}
@@ -62,7 +62,7 @@ export default function DashboardGroups() {
           );
 
           if (group) {
-            const mapped = GroupService.mapMembers(group, users);
+            const mapped = app.group.mapMembers(group, users);
             setSelectedGroup(mapped);
           } else {
             setSelectedGroup(null);

@@ -1,9 +1,8 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 
 import { useTrainingInProgressUtils } from './training-in.progress-utils.provider';
-import type { ChildrenProps } from '@/common/type/props.type';
-import type { SetState } from '@/common/type/state.type';
-import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import type { SetState } from '@/lib/common/type/state.type';
 import { useTraining } from '@/store/training.provider';
 
 interface UndoneExercisesContextProps {
@@ -20,7 +19,7 @@ export type UseUndoneExercisesReturnType = ReturnType<
   typeof useUndoneExercises
 >;
 
-export function UndoneExercisesProvider(props: ChildrenProps) {
+export function UndoneExercisesProvider(props: React.PropsWithChildren) {
   const { children } = props;
 
   const [undoneExercises, setUndoneExercises] = useState<TrainingExercise[]>(

@@ -14,8 +14,8 @@ import { DataGrid, GridActionsCellItem, GridRowModes } from '@mui/x-data-grid';
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 
-import type { Group, UpdateGroup } from '@/controller/group/type/group.type';
-import type { Institution } from '@/controller/institution/type/institution.type';
+import type { Group, UpdateGroup } from '@/core/group/type/group.type';
+import type { Institution } from '@/core/institution/type/institution.type';
 
 interface GroupsDataGridProps {
   institution: Institution;

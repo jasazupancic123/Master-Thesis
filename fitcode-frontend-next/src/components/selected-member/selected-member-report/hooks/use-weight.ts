@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 
-import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
+import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 
 export default function useSelectedMemberWeight() {
-  const { wellness, selectedAthlete } = useTrainerDayViewContext();
+  const { wellness, selectedAthlete } = useTrainerDayView();
 
   const [weight, setWeight] = useState<number | undefined>(
     wellness.find((w) => w.userId === selectedAthlete?.uid)?.weight
