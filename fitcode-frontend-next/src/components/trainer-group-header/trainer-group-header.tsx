@@ -33,6 +33,9 @@ import { handleUpdateTraining } from './actions/actions-training';
 import AddMemberModal from './add-member-modal';
 import useTrainerGroupHeaderUtils from './hooks/use-utils';
 import { handleSaveGroup } from '@/app/(trainer)/groups/[group_id]/state';
+import { GroupController } from '@/core/group/group.controller';
+import { TrainingController } from '@/core/training/training.controller';
+import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import {
   LINK_DASHBOARD,
   LINK_PROFILE,
@@ -41,8 +44,6 @@ import {
 } from '@/lib/common/const/nav.const';
 import type { GroupDateFilter } from '@/lib/common/type/filter.type';
 import type { SetState } from '@/lib/common/type/state.type';
-import { GroupController } from '@/core/group/group.controller';
-import { TrainingController } from '@/core/training/training.controller';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
@@ -153,7 +154,7 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
                       case LINK_PROFILE.href:
                         Icon = (
                           <Avatar
-                            src={auth.user?.photoURL || '/user_avatar.png'}
+                            src={auth.user?.photoURL || USER_AVATAR_IMG_URL}
                             sx={{
                               width: 34,
                               height: 34,
@@ -324,7 +325,7 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
                 }}
               >
                 <Avatar
-                  src={auth.user?.photoURL || '/user_avatar.png'}
+                  src={auth.user?.photoURL || USER_AVATAR_IMG_URL}
                   sx={{
                     width: 30,
                     height: 30,

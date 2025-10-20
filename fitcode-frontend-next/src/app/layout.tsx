@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { Onest } from 'next/font/google';
 import { Toaster } from 'react-hot-toast';
 
+import { LOGO_YELLOW_IMG_URL } from '@/lib/common/const/image.const';
 import { AuthProvider } from '@/store/auth.provider';
 import { ScreenSizeProvider } from '@/store/screen-size.provider';
 import ThemeRegistry from '@/store/theme.registry';
@@ -20,7 +21,7 @@ export const metadata: Metadata = {
     description: 'Do it right.',
     images: [
       {
-        url: '/url-logo.jpg',
+        url: LOGO_YELLOW_IMG_URL,
         width: 3708,
         height: 549,
         alt: 'Blind/off preview',

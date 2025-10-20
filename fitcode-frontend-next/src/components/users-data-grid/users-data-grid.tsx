@@ -21,6 +21,7 @@ import toast from 'react-hot-toast';
 import type { AuthUser, UpdateUser } from '@/core/auth/type/user.type';
 import { UserRole } from '@/core/profile/enum/user-role.enum';
 import { lib } from '@/lib';
+import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import ImageUpload from '@/util/image-upload/image-upload';
 
 interface UsersDataGridProps {
@@ -197,7 +198,7 @@ export default function UsersDataGrid({
       width: 100,
       sortable: false,
       renderCell: (params) => {
-        const currentUrl = params.row.photoURL || '/user_avatar.png';
+        const currentUrl = params.row.photoURL || USER_AVATAR_IMG_URL;
         const prevUrl = rows.find((u) => u.uid === params.row.uid)?.photoURL;
         const userId = params.row.uid;
 

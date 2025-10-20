@@ -10,6 +10,7 @@ import DashboardEditAthleteModal from './modals/dashboard-edit-athlete-modal/das
 import { AddMembersModal } from '@/components/dashboard/modals/add-members-modal';
 import { GroupController } from '@/core/group/group.controller';
 import { lib } from '@/lib';
+import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
@@ -155,7 +156,7 @@ export default function DashboardGroupsMembers() {
                       className="avatar-border"
                       src={
                         users.find((m) => m.uid === user.uid)?.photoURL ||
-                        '/user_avatar.png'
+                        USER_AVATAR_IMG_URL
                       }
                       sx={{
                         width: screenSize.isMobile ? 70 : 80,

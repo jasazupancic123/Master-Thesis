@@ -10,17 +10,18 @@ import {
 } from './actions/actions-exercise';
 import TrainingExerciseSetDoneCheckbox from './components/training-exercise-set-done-checkbox';
 import useExerciseIndexLabel from './hooks/use-exercise-index-label';
-import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
-import ImageGallery from '@/util/image-gallery';
-import TrainingInProgressTempoChart from '@/util/tempo-chart';
 import AthleteTrainingExerciseSets from '@/components/athlete/athlete-training-exercise-sets';
 import MobileMovementValidation from '@/components/mobile-movement-validation/mobile-movement-validation';
 import { EXERCISE_POSES } from '@/core/pose-detection/const/exercise-poses';
+import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
+import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
+import ImageGallery from '@/util/image-gallery';
 import SwipeableBox from '@/util/swipeable-box/swipeable-box';
+import TrainingInProgressTempoChart from '@/util/tempo-chart';
 
 export default function TrainingInProgressExerciseCard() {
   const theme = useTheme();
@@ -191,8 +192,7 @@ export default function TrainingInProgressExerciseCard() {
           ) : (
             <Image
               src={
-                selectedExercise.exercise?.imageUrl ||
-                '/exercise-image-default.png'
+                selectedExercise.exercise?.imageUrl || EXERCISE_DEFAULT_IMG_URL
               }
               alt={selectedExercise.exercise?.name || ''}
               width={0}

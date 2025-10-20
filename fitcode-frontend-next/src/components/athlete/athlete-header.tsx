@@ -6,8 +6,8 @@ import * as React from 'react';
 
 import AthleteSidebar from './athlete-sidebar';
 import BottomNavigation from './bottom-navigation';
-import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
 import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
+import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import Logo from '@/util/logo/logo';

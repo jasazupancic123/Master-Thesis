@@ -48,7 +48,7 @@
     "src/lib/common/type/svgr.d.ts",
     "jest.setup.js",
     "jest.config.ts"
-, "src/components/training-exercise-card/components/training-exercise-card-sets/components/training-exercise-card-sets-collapsed/training-exercise-card-collapsed-sets.-stubtsx"  ],
+  ],
   "exclude": [
     "node_modules"
   ]

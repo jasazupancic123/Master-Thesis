@@ -2,6 +2,7 @@ import { Avatar, Box, Tooltip as MuiTooltip, Typography } from '@mui/material';
 
 import { deselectAthlete } from './actions/actions-selected-athlete';
 import useSelectedMemberWeight from './hooks/use-weight';
+import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
@@ -44,7 +45,7 @@ export default function SelectedMemberReport() {
               className="avatar-border"
               src={
                 users.find((m) => m.uid === selectedAthlete.uid)?.photoURL ||
-                '/user_avatar.png'
+                USER_AVATAR_IMG_URL
               }
               sx={{
                 width: '50px',

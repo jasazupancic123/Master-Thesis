@@ -13,6 +13,7 @@ import Papa from 'papaparse';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
+import { theme } from '@/app/style';
 import DashboardEditAthleteModal from '@/components/dashboard/components/dashboard-groups/components/dashboard-groups-members/modals/dashboard-edit-athlete-modal/dashboard-edit-athlete-modal';
 import RegisterUsersDashboard from '@/components/dashboard/components/dashboard-register-users-modal/dashboard-register-users-modal';
 import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
@@ -25,8 +26,8 @@ import { UserRole } from '@/core/profile/enum/user-role.enum';
 import { ProfileController } from '@/core/profile/profile.controller';
 import type { ImportProfile } from '@/core/profile/type/user.type';
 import { lib } from '@/lib';
+import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { handleApiRequest } from '@/lib/common/type/state.type';
-import { theme } from '@/app/style';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
@@ -516,7 +517,7 @@ export default function DashboardInstitutionPage() {
                     className="avatar-border"
                     src={
                       users.find((m) => m.uid === user.uid)?.photoURL ||
-                      '/user_avatar.png'
+                      USER_AVATAR_IMG_URL
                     }
                     sx={{
                       width: screenSize.isMobile ? 70 : 80,

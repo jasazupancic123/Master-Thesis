@@ -1,5 +1,10 @@
 import Image from 'next/image';
 
+import {
+  LOGO_BLACK_IMG_URL,
+  LOGO_IMG_URL,
+} from '@/lib/common/const/image.const';
+
 interface Props {
   width?: number;
   height?: number;
@@ -9,8 +14,7 @@ interface Props {
 }
 
 export default function Logo({ width = 100, marginLeft, sx, version }: Props) {
-  const src =
-    version === 'dark' ? '/blind-off-logo-black.png' : '/blind-off-logo.png';
+  const src = version === 'dark' ? LOGO_BLACK_IMG_URL : LOGO_IMG_URL;
 
   return (
     <Image

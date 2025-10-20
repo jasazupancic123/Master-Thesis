@@ -4,6 +4,7 @@ import Image from 'next/image';
 import React from 'react';
 
 import type { Exercise } from '@/core/exercise/type/exercise.type';
+import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 interface ExerciseCardProps {
@@ -17,7 +18,7 @@ export function ExerciseCard(props: ExerciseCardProps) {
 
   const { exercise, addExerciseForm } = props;
   const isVideo = false;
-  const imgSrc = exercise.imageUrl || '/exercise-image-default.png';
+  const imgSrc = exercise.imageUrl || EXERCISE_DEFAULT_IMG_URL;
 
   // Fixed media height similar to your previous maxHeight: 140
   const MEDIA_HEIGHT =

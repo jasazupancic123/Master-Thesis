@@ -2,6 +2,7 @@ import { Logout } from '@mui/icons-material';
 import { Avatar, Box, Menu, MenuItem, Typography } from '@mui/material';
 import Link from 'next/link';
 
+import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { LINK_PROFILE } from '@/lib/common/const/nav.const';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
@@ -39,7 +40,7 @@ export default function ProfileHeaderMenu(props: ProfileHeaderMenuProps) {
             gap={1}
           >
             <Avatar
-              src={user?.photoURL || '/user_avatar.png'}
+              src={user?.photoURL || USER_AVATAR_IMG_URL}
               sx={{
                 width: 25,
                 height: 25,

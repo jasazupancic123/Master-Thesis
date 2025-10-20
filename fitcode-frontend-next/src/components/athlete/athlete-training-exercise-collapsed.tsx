@@ -2,8 +2,8 @@ import { KeyboardArrowRight } from '@mui/icons-material';
 import { Box, IconButton, Stack, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 
-import type { SetState } from '@/lib/common/type/state.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import type { SetState } from '@/lib/common/type/state.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 interface AthleteTrainingExerciseCollapsedProps {

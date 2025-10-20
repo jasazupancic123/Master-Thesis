@@ -11,6 +11,7 @@ import { updateSelectedAthleteSubgroup } from './actions/actions-subgroups';
 import useTrainingMembers from './hooks/use-members.hook';
 import useTrainingMembersSubgroups from './hooks/use-subgroups.hook';
 import TrainingMembersSubgroup from './training-members-subgroups';
+import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
@@ -131,7 +132,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                           className="avatar-border"
                           src={
                             users.find((m) => m.uid === member.uid)?.photoURL ||
-                            '/user_avatar.png'
+                            USER_AVATAR_IMG_URL
                           }
                           sx={{
                             width: 50,

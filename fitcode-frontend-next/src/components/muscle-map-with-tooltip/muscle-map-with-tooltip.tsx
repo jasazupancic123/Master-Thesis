@@ -1,7 +1,6 @@
 'use client';
 import { Close } from '@mui/icons-material';
 import { Box, IconButton, Slider, Typography, useTheme } from '@mui/material';
-import SorenessIcon from '@/assets/icons/Soreness.svg';
 import { useCallback, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 
@@ -16,6 +15,7 @@ import {
   hasExplicitFill,
   normId,
 } from './state';
+import SorenessIcon from '@/assets/icons/Soreness.svg';
 import type { MuscleTip } from '@/core/exercise/type/muscle-tip.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { SetState } from '@/lib/common/type/state.type';

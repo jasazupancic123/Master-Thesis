@@ -19,6 +19,7 @@ import { useState } from 'react';
 
 import type { Institution } from '@/core/institution/type/institution.type';
 import { lib } from '@/lib';
+import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import {
   LINK_PROFILE,
   LINK_SETTINGS,
@@ -95,7 +96,7 @@ export default function DashboardMenuMobile() {
                 case LINK_PROFILE.href:
                   Icon = (
                     <Avatar
-                      src={user?.photoURL || '/user_avatar.png'}
+                      src={user?.photoURL || USER_AVATAR_IMG_URL}
                       sx={{
                         width: 25,
                         height: 25,

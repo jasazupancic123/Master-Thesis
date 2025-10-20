@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 
 import useTrainingComponentMembers from './hooks/use-members';
+import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 
 type Props = {
   componentId: string;
@@ -41,7 +42,7 @@ export default function CompletedMembersGroup(props: Props) {
             {membersInProgress.map((user) => (
               <Tooltip title={user.displayName} key={user.uid}>
                 <Avatar
-                  src={user.photoURL || '/user_avatar.png'}
+                  src={user.photoURL || USER_AVATAR_IMG_URL}
                   sx={{ width: AVATAR_SIZE, height: AVATAR_SIZE }}
                 />
               </Tooltip>
@@ -69,7 +70,7 @@ export default function CompletedMembersGroup(props: Props) {
             {completedMembers.map((user) => (
               <Tooltip title={user.displayName} key={user.uid}>
                 <Avatar
-                  src={user.photoURL || '/user_avatar.png'}
+                  src={user.photoURL || USER_AVATAR_IMG_URL}
                   sx={{ width: AVATAR_SIZE, height: AVATAR_SIZE }}
                 />
               </Tooltip>
