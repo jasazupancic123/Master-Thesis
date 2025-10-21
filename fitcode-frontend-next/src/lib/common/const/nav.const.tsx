@@ -13,7 +13,6 @@ import PersonIcon from '@mui/icons-material/Person';
 import type { ReactNode } from 'react';
 import slugify from 'slugify';
 
-import type { ILink } from '@/lib/common/type/link.type';
 import { UserRole } from '@/core/profile/enum/user-role.enum';
 import {
   DASHBOARD_ADD_INSTITUTION,
@@ -21,6 +20,7 @@ import {
   DASHBOARD_INSTITUTION,
   DASHBOARD_MAIN,
 } from '@/lib/common/const/dashboard.const';
+import type { ILink } from '@/lib/common/type/link.type';
 
 export function link(
   label: string,
