@@ -14,6 +14,7 @@ import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 import MyModal from '@/util/modal';
+import LoadingOverlay from '@/util/loading-overlay';
 
 export default function PeriodizeModal(
   props: ModalProps & {
@@ -55,21 +56,24 @@ export default function PeriodizeModal(
     setNumTrainingsWithSameTarget,
   } = props;
 
+  const [isPeriodizing, setIsPeriodizing] = useState(false);
+
   const controller = TrainingController.getInstance();
 
   if (!training || !component) return null;
 
   return (
-    <MyModal
-      isOpen={open}
-      setIsOpen={(open) => setOpen(open)}
-      onCancel={() => {
-        setNumTrainingsWithSameTarget(0);
-        setSelectedPeriodizationType(null);
-        setOpen(false);
-      }}
-      onConfirm={() => {
-        if (!training) return;
+    <>
+      <MyModal
+        isOpen={open}
+        setIsOpen={(open) => setOpen(open)}
+        onCancel={() => {
+          setNumTrainingsWithSameTarget(0);
+          setSelectedPeriodizationType(null);
+          setOpen(false);
+        }}
+        onConfirm={() => {
+          if (!training) return;
 
         handleApiRequest(
           router,
@@ -87,91 +91,92 @@ export default function PeriodizeModal(
                 methods: allMethods,
               });
 
-              return pt;
-            });
+              const currentTraining = periodizedTrainings.find(
+                (t) => t.id === training.id
+              );
+              if (currentTraining) setTraining(currentTraining);
 
-            const currentTraining = periodizedTrainings.find(
-              (t) => t.id === training.id
-            );
-            if (currentTraining) setTraining(currentTraining);
+              setTrainings((prev) =>
+                prev.map((t) => {
+                  const newTraining = periodizedTrainings.find(
+                    (nt) => nt.id === t.id
+                  );
 
-            setTrainings((prev) =>
-              prev.map((t) => {
-                const newTraining = periodizedTrainings.find(
-                  (nt) => nt.id === t.id
+                  return newTraining ? newTraining : t;
+                })
+              );
+
+              if (selectedSubgroup) {
+                setSelectedSubgroup((prev) => {
+                  if (!prev) return prev;
+                  return {
+                    ...prev,
+                    periodizationType: selectedPeriodizationType
+                      ? (selectedPeriodizationType as PeriodizationType)
+                      : undefined,
+                  };
+                });
+
+                const updatedComponent: TrainingComponent = {
+                  ...component,
+                  subgroups: (component.subgroups || []).map((sg) => {
+                    if (sg.id === selectedSubgroup?.id) {
+                      return {
+                        ...sg,
+                        periodizationType: selectedPeriodizationType
+                          ? (selectedPeriodizationType as PeriodizationType)
+                          : undefined,
+                      };
+                    }
+                    return sg;
+                  }),
+                };
+
+                stateUpdate(
+                  { updatedComponent },
+                  { useTrainerDayViewContext: trainerDayViewContext }
                 );
-
-                return newTraining ? newTraining : t;
-              })
-            );
-
-            if (selectedSubgroup) {
-              setSelectedSubgroup((prev) => {
-                if (!prev) return prev;
-                return {
-                  ...prev,
+              } else {
+                const updatedComponent = {
+                  ...component,
                   periodizationType: selectedPeriodizationType
                     ? (selectedPeriodizationType as PeriodizationType)
                     : undefined,
                 };
-              });
 
-              const updatedComponent: TrainingComponent = {
-                ...component,
-                subgroups: (component.subgroups || []).map((sg) => {
-                  if (sg.id === selectedSubgroup?.id) {
-                    return {
-                      ...sg,
-                      periodizationType: selectedPeriodizationType
-                        ? (selectedPeriodizationType as PeriodizationType)
-                        : undefined,
-                    };
-                  }
-                  return sg;
-                }),
-              };
+                stateUpdate(
+                  { updatedComponent },
+                  { useTrainerDayViewContext: trainerDayViewContext }
+                );
+              }
 
-              stateUpdate(
-                { updatedComponent },
-                { useTrainerDayViewContext: trainerDayViewContext }
+              setNumTrainingsWithSameTarget(0);
+              setSelectedPeriodizationType(null);
+              setOpen(false);
+
+              toast.success(
+                `${selectedSubgroup ? 'Subgroups' : 'Trainings'} periodized successfully`
               );
-            } else {
-              const updatedComponent = {
-                ...component,
-                periodizationType: selectedPeriodizationType
-                  ? (selectedPeriodizationType as PeriodizationType)
-                  : undefined,
-              };
+            },
+            undefined,
+            'Failed to periodize trainings'
+          );
 
-              stateUpdate(
-                { updatedComponent },
-                { useTrainerDayViewContext: trainerDayViewContext }
-              );
-            }
-
-            setNumTrainingsWithSameTarget(0);
-            setSelectedPeriodizationType(null);
-            setOpen(false);
-
-            toast.success(
-              `${selectedSubgroup ? 'Subgroups' : 'Trainings'} periodized successfully`
-            );
-          },
-          undefined,
-          'Failed to periodize trainings'
-        );
-      }}
-      cancelText="Close"
-    >
-      {selectedSubgroup && (
-        <Typography variant="body1" textAlign="center" mb={1}>
-          {`Periodizing subgroup ${selectedSubgroup.name}`}
+          setIsPeriodizing(false);
+        }}
+        cancelText="Close"
+      >
+        {selectedSubgroup && (
+          <Typography variant="body1" textAlign="center" mb={1}>
+            {`Periodizing subgroup ${selectedSubgroup.name}`}
+          </Typography>
+        )}
+        <Typography variant="body1" textAlign="center">
+          Periodize {numTrainingsWithSameTarget} other trainings with type{' '}
+          {selectedPeriodizationType}?
         </Typography>
-      )}
-      <Typography variant="body1" textAlign="center">
-        Periodize {numTrainingsWithSameTarget} other trainings with type{' '}
-        {selectedPeriodizationType}?
-      </Typography>
-    </MyModal>
+      </MyModal>
+      {isPeriodizing && <LoadingOverlay title="Periodizing..." showLogos />}
+    </>
   );
 }

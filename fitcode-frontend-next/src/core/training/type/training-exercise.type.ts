@@ -16,12 +16,24 @@ export type UpdateTrainingExercise = Pick<TrainingExercise, 'id' | 'sets'>;
 export type RepImage = {
   repNumber: number;
   url: string;
+  side?: 'L' | 'R';
 };
 
 export type TrainingExerciseRecording = TrainingExercise & {
-  recordedSets?: {
-    setIndex: number;
-    reps: RepInfo[];
-    images: RepImage[];
-  }[];
+  recordedSets?: TrainingExerciseRecordedSet[];
+};
+
+export type RepRomTimestamp = {
+  value: number;
+  timestamp: Date;
+};
+
+export type TrainingExerciseRecordedSet = {
+  setIndex: number;
+  repsL: RepInfo[];
+  imagesL: RepImage[];
+  repsR?: RepInfo[];
+  imagesR?: RepImage[];
+  romL?: RepRomTimestamp[];
+  romR?: RepRomTimestamp[];
 };

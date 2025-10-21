@@ -3,10 +3,12 @@ import type { TrainingProviderReturnTypeDefined } from '@/store/training.provide
 import type { TrainingInProgressProviderReturnType } from '@/store/training-in-progress.provider';
 
 export function updateTrainingExerciseWithAI(
-  repsCount: number,
-  tempo: string,
+  repsCountL: number,
+  repsCountR: number | undefined,
+  tempoL: string | null,
+  tempoR: string | null | undefined,
   passedExercise: TrainingExerciseRecording | undefined,
-  updateSelectedExercise: boolean,
+  updateSelectedExercise: boolean | undefined,
   trainingCtx: TrainingProviderReturnTypeDefined,
   trainingInProgressCtx: TrainingInProgressProviderReturnType
 ) {
@@ -21,6 +23,7 @@ export function updateTrainingExerciseWithAI(
   if (!updatableExercise) return;
 
   const selectedSet = updatableExercise.sets[setIndex];
+
   if (!selectedSet) return;
 
   /* updateExerciseAttributeValues(

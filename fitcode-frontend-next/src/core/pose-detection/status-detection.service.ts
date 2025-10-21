@@ -8,22 +8,29 @@ import { DetectionStatus } from './enum/detection-status';
 import { KeypointId } from './enum/keypoint-id';
 import { RepStatus } from './enum/rep-state';
 import { PoseDetectionService } from './pose-detection.service';
-import type { ExerciseRepStartCondition } from './type/exercise-start-condition.type';
-import type { Keypoint } from './type/keypoint.type';
-import type { RepState } from './type/rep-state.type';
+import type {
+  ExerciseDetectionData,
+  ExerciseRepStartCondition,
+} from './types/exercise-start-condition.type';
+import type { Keypoint } from './types/keypoint.type';
+import type { RepState } from './types/rep-state.type';
 import { KeypointUtil } from './util/keypoint.util';
 import { getStatusMessage } from '@/components/mobile-movement-validation/state';
+import { Rep } from './types/rep.type';
+import { math } from '@tensorflow/tfjs';
 
 export class StatusDetectionService {
   // if it returns false, it means we need to return in main loop
   static checkAndValidateStatus(
     detectionStatus: DetectionStatus,
-    repStateRef: RefObject<RepState>,
     state: {
+      repStateRefL: RefObject<RepState>;
+      repStateRefR: RefObject<RepState>;
       keypoints: Keypoint[];
       statusRef: RefObject<DetectionStatus>;
       canProceedIntoReadyStateRef: RefObject<boolean>;
       keypointBuffer: KeypointHistory;
+      exerciseDetectionData: ExerciseDetectionData;
       avgFps: { value: number; count: number } | null;
       recordingTimestampRef: RefObject<Date | null>;
       statusMessage: RefObject<string>;
@@ -32,10 +39,13 @@ export class StatusDetectionService {
     }
   ): boolean {
     const {
+      repStateRefL,
+      repStateRefR,
       keypoints,
       statusRef,
       canProceedIntoReadyStateRef,
       keypointBuffer,
+      exerciseDetectionData,
       avgFps,
       recordingTimestampRef,
       statusMessage,
@@ -93,13 +103,14 @@ export class StatusDetectionService {
         );
 
         const isStill = this.checkIsStill({
-          currentStatus: statusRef.current,
           keypoints,
           buffer: keypointBuffer,
           avgFps,
           stillnessCountdownRef,
           bufferCutOf,
           videoHeight,
+          stillnessEvaluationKeypoints:
+            exerciseDetectionData.stillnessEvaluationKeypoints,
         });
 
         return this.updateStatus(
@@ -122,7 +133,6 @@ export class StatusDetectionService {
         //   keypointBuffer.cutAtIndex(keypointBuffer.history.length - 1);
 
         const isStill = this.checkIsStill({
-          currentStatus: statusRef.current,
           keypoints,
           buffer: keypointBuffer,
           avgFps,
@@ -135,8 +145,14 @@ export class StatusDetectionService {
         if (canStartRecording) {
           recordingTimestampRef.current = new Date();
 
-          if (repStateRef.current.status === RepStatus.NONE)
-            repStateRef.current = {
+          if (repStateRefL.current.status === RepStatus.NONE)
+            repStateRefL.current = {
+              status: RepStatus.IDLE,
+              avgStartValue: null,
+              avgExtremeValue: null,
+            };
+          if (repStateRefR.current.status === RepStatus.NONE)
+            repStateRefR.current = {
               status: RepStatus.IDLE,
               avgStartValue: null,
               avgExtremeValue: null,
@@ -167,7 +183,6 @@ export class StatusDetectionService {
         );
 
         const isStill = this.checkIsStill({
-          currentStatus: statusRef.current,
           keypoints,
           buffer: keypointBuffer,
           avgFps,
@@ -267,23 +282,23 @@ export class StatusDetectionService {
     );
   }
 
-  private static checkIsStill(state: {
-    currentStatus: DetectionStatus;
+  static checkIsStill(state: {
     keypoints: Keypoint[];
     buffer: KeypointHistory;
     avgFps: { value: number; count: number } | null;
     videoHeight: number;
     bufferCutOf?: number;
     stillnessCountdownRef?: RefObject<Date | null>;
+    stillnessEvaluationKeypoints?: KeypointId[];
   }): boolean {
     const {
-      currentStatus,
       keypoints,
       buffer,
       avgFps,
       videoHeight,
       bufferCutOf: bufferCutOff,
       stillnessCountdownRef,
+      stillnessEvaluationKeypoints,
     } = state;
 
     if (!avgFps) return false;
@@ -294,7 +309,7 @@ export class StatusDetectionService {
         avgFps.value // at least this much second of data
     );
 
-    const stillnessKeypointIds = [
+    const stillnessKeypointIds = stillnessEvaluationKeypoints || [
       KeypointId.LEFT_SHOULDER,
       KeypointId.RIGHT_SHOULDER,
       KeypointId.LEFT_WRIST,
@@ -445,14 +460,36 @@ export class StatusDetectionService {
     keypoints: Keypoint[],
     buffer: KeypointHistory,
     exerciseStartConditions: ExerciseRepStartCondition[],
-    avgFps: { value: number; count: number } | null
+    avgFps: { value: number; count: number } | null,
+    recordedReps: Rep[]
   ): boolean {
     // 5 fps/s, 0.5s -> 3 frames
+
+    let currentBuffer = { ...buffer };
+
+    const lastRep = recordedReps[recordedReps.length - 1];
+    if (lastRep) {
+      const lastRepEndFrameNum = lastRep.extremeKeypoint?.frameNum;
+      if (lastRepEndFrameNum !== undefined) {
+        const indexInBuffer = currentBuffer.history.findIndex((frame) =>
+          frame.some((k) => k.frameNum === lastRepEndFrameNum)
+        );
+        if (indexInBuffer !== -1) {
+          currentBuffer.history = currentBuffer.history.slice(
+            indexInBuffer + 1
+          );
+        }
+      }
+    }
+
     for (const condition of exerciseStartConditions) {
       const fps = avgFps?.value || 30; // default to 30 fps
       const numFrames = Math.ceil((fps * condition.duration) / 1000); // convert ms to seconds
 
-      const historyFrame = buffer.history.slice(-numFrames)[0];
+      const historyFrame = currentBuffer.history.slice(
+        -Math.min(numFrames, currentBuffer.history.length)
+      )[0];
+
       if (!historyFrame) return false;
 
       const historyKeypoint = historyFrame.find(
@@ -498,15 +535,21 @@ export class StatusDetectionService {
 
     if (currentValue === undefined || nextValue === undefined) return false;
 
-    const distance = Math.abs(nextValue - currentValue);
-    const isDistanceOk = distance >= condition.distance;
+    // const distance = Math.abs(nextValue - currentValue);
+    // const isDistanceOk = distance >= condition.distance;
 
     switch (condition.direction) {
       case ConditionDirection.POSITIVE: {
-        return nextValue > currentValue && isDistanceOk;
+        return (
+          nextValue > currentValue &&
+          nextValue - currentValue >= condition.distance
+        );
       }
       case ConditionDirection.NEGATIVE:
-        return nextValue < currentValue && isDistanceOk;
+        return (
+          nextValue < currentValue &&
+          currentValue - nextValue >= condition.distance
+        );
       default:
         return false;
     }

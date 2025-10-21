@@ -94,7 +94,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
               textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
             }}
           >
-            {exercise.exercise?.name}
+            {exercise.exercise?.name || 'Invalid Exercise'}
           </Typography>
         </Tooltip>
       </Stack>

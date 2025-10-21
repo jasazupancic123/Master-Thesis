@@ -1,15 +1,14 @@
 import type { Landmark, NormalizedLandmark } from '@mediapipe/tasks-vision';
 import savitzkyGolay from 'ml-savitzky-golay';
-import type { RefObject } from 'react';
 import toast from 'react-hot-toast';
 
-import type { KeypointHistory } from '../class/keypoint-history';
 import { KeypointId } from '../enum/keypoint-id';
 import { KeypointValueType } from '../enum/keypoint-value-type';
 import { PoseModel } from '../enum/pose-model.enum';
-import type { ExerciseDetectionData } from '../type/exercise-start-condition.type';
-import type { Keypoint } from '../type/keypoint.type';
-import type { NumericValueFrameNum } from '../type/numeric-value-frame-num';
+import type { Keypoint } from '../types/keypoint.type';
+import type { NumericValueFrameNum } from '../types/numeric-value-frame-num';
+import { MetricConversionType } from '../enum/metric-conversion-type.enum';
+import EnvUtil from '@/common/util/env.util';
 
 export class KeypointUtil {
   static getDesiredKeypointsByModel(
@@ -19,22 +18,27 @@ export class KeypointUtil {
     model: PoseModel,
     capturedAt: Date,
     frameNum: number,
-    centerHipsYToMiddleAnkleOrigin = true
+    videoWidth: number,
+    videoHeight: number,
+    centerHipsYToMiddleAnkleOrigin = false,
+    centerKneesXToMiddleAnklesOrigin = false // we need this for lateral squat
   ): Keypoint[] {
     if (!currentFrameKeypoints) return [];
 
-    const keypoints: Keypoint[] = [];
+    let keypoints: Keypoint[] = [];
+
     switch (model) {
       case PoseModel.MEDIAPIPE: {
         const keypointIds = Object.values(KeypointId);
+
         currentFrameKeypoints.forEach((kp, i) => {
           const kp2D = currentFrameKeypointsPixel2D?.[i];
 
           keypoints.push({
             id: keypointIds[i] as unknown as KeypointId,
             position: {
-              x: kp.x,
-              y: kp.y,
+              x: kp2D!.x,
+              y: kp2D!.y,
               z: kp.z,
             },
             pixelPosition: kp2D
@@ -50,6 +54,15 @@ export class KeypointUtil {
             visibility: kp.visibility,
           });
         });
+
+        if (EnvUtil.AI.convertToMetricScale()) {
+          keypoints = this.convertToMetricScale(
+            keypoints,
+            MetricConversionType.SHOULDER_WIDTH,
+            videoWidth,
+            videoHeight
+          );
+        }
 
         if (centerHipsYToMiddleAnkleOrigin) {
           // Center LEFT_HIP and RIGHT_HIP to the origin of (LEFT_ANKLE + RIGHT_ANKLE)/2
@@ -68,6 +81,29 @@ export class KeypointUtil {
           const y = (leftAnkle.position.y + rightAnkle.position.y) / 2;
 
           leftHip.position.y -= y;
+          rightHip.position.y -= y;
+        }
+
+        if (centerKneesXToMiddleAnklesOrigin) {
+          // Center LEFT_KNEE and RIGHT_KNEE to the origin of (LEFT_ANKLE + RIGHT_ANKLE)/2
+          const leftKnee = keypoints.find((k) => k.id === KeypointId.LEFT_KNEE);
+          const rightKnee = keypoints.find(
+            (k) => k.id === KeypointId.RIGHT_KNEE
+          );
+
+          const leftAnkle = keypoints.find(
+            (k) => k.id === KeypointId.LEFT_ANKLE
+          );
+          const rightAnkle = keypoints.find(
+            (k) => k.id === KeypointId.RIGHT_ANKLE
+          );
+
+          if (!leftKnee || !rightKnee || !leftAnkle || !rightAnkle) break;
+
+          const x = (leftAnkle.position.x + rightAnkle.position.x) / 2;
+
+          leftKnee.position.x -= x;
+          rightKnee.position.x -= x;
         }
 
         break;
@@ -274,6 +310,60 @@ export class KeypointUtil {
     return velocity;
   }
 
+  static convertToMetricScale(
+    keypoints: Keypoint[],
+    conversionType: MetricConversionType,
+    videoWidth: number,
+    videoHeight: number
+  ): Keypoint[] {
+    const shoulderL = this.getDesiredKeypointFromArray(
+      keypoints,
+      KeypointId.LEFT_SHOULDER
+    );
+
+    const shoulderR = this.getDesiredKeypointFromArray(
+      keypoints,
+      KeypointId.RIGHT_SHOULDER
+    );
+
+    if (!shoulderL || !shoulderR) return keypoints;
+
+    let pxToMeterRatio: number | null = null;
+
+    switch (conversionType) {
+      case MetricConversionType.SHOULDER_WIDTH: {
+        const shoulderWidth = Math.abs(
+          shoulderL.position.x - shoulderR.position.x
+        );
+
+        const shoulderWidthPx = shoulderWidth * videoWidth;
+
+        const shoulderWidthM = 0.42; // average shoulder width in meters
+
+        pxToMeterRatio = shoulderWidthM / shoulderWidthPx;
+
+        break;
+      }
+      default:
+        break;
+    }
+
+    if (pxToMeterRatio === null) return keypoints;
+
+    return keypoints.map((kp) => {
+      const { position, ...rest } = kp;
+
+      return {
+        position: {
+          x: position.x * videoWidth * pxToMeterRatio,
+          y: position.y * videoHeight * pxToMeterRatio,
+          z: position.z * pxToMeterRatio,
+        },
+        ...rest,
+      };
+    });
+  }
+
   private static checkIsNumericValueFrameNum = (
     item: number | NumericValueFrameNum
   ): item is NumericValueFrameNum => {
@@ -284,27 +374,5 @@ export class KeypointUtil {
     arr: (number | NumericValueFrameNum)[]
   ): arr is NumericValueFrameNum[] => {
     return arr.every((item) => this.checkIsNumericValueFrameNum(item));
-  };
-
-  static saveKeypointValueGraph = (state: {
-    exerciseDetectionData: ExerciseDetectionData | undefined;
-    keypointHistoryRef: RefObject<KeypointHistory>;
-  }) => {
-    const { exerciseDetectionData, keypointHistoryRef } = state;
-
-    if (!exerciseDetectionData) return;
-
-    const keypointIds = exerciseDetectionData.conditions.map(
-      (condition) => condition.keypointId
-    );
-
-    keypointIds.forEach((id) => {
-      KeypointUtil.drawKeypointValuesGraph(
-        keypointHistoryRef.current.history,
-        id,
-        KeypointValueType.POSITION_Y,
-        'whole_exercise'
-      );
-    });
   };
 }
