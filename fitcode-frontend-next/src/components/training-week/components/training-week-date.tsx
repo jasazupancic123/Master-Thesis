@@ -9,7 +9,6 @@ import {
   getFilteredTrainings,
   handleClickDateCell,
 } from '../actions/actions-week-date';
-import type { SetState } from '@/lib/common/type/state.type';
 import { TrainingGridItem } from '@/components/trainer-group-cycle-view/components/training-cycle-view-grid-item/training-cycle-view-grid-item';
 import type { Component } from '@/core/component/type/component.type';
 import type { Target } from '@/core/target/type/target.type';
@@ -17,6 +16,7 @@ import { MainSet } from '@/core/training/enum/main-set.enum';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import { lib } from '@/lib';
+import type { SetState } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';

@@ -2,8 +2,8 @@ import { Box } from '@mui/material';
 import { useTheme } from '@mui/material';
 
 import { ExerciseCard } from '../exercise-card/exercise-card';
-import type { SetState } from '@/lib/common/type/state.type';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
+import type { SetState } from '@/lib/common/type/state.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 interface ExercisesListProps {

@@ -2,9 +2,9 @@ import { Box, Typography } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 
 import NumericParamInputBox from './numeric-param-input-box';
-import type { SetState } from '@/lib/common/type/state.type';
 import { app } from '@/core/app.service';
 import type { ExerciseParamField } from '@/core/training/type/exercise-set.type';
+import type { SetState } from '@/lib/common/type/state.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 interface Props {

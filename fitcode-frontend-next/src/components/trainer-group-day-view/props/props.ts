@@ -1,8 +1,8 @@
-import type { SetState } from '@/lib/common/type/state.type';
 import type { Attribute } from '@/core/attribute/type/attribute.type';
 import type { AttributeValue } from '@/core/attribute/type/attribute-value.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import type { SetState } from '@/lib/common/type/state.type';
 
 export interface TrainingComponentProps {
   trainingComponent: TrainingComponent;

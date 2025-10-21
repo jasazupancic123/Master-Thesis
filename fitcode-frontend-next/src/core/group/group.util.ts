@@ -1,4 +1,4 @@
-import type { Group } from '../type/group.type';
+import type { Group } from './type/group.type';
 import type { AuthUser } from '@/core/auth/type/user.type';
 
 export class GroupUtil {

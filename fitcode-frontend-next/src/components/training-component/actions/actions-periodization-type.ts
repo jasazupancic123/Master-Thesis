@@ -1,8 +1,8 @@
 import { isBefore } from 'date-fns';
 import toast from 'react-hot-toast';
 
-import type { SetState } from '@/lib/common/type/state.type';
 import { PeriodizationType } from '@/core/training/enum/periodization-type.enum';
+import type { SetState } from '@/lib/common/type/state.type';
 import type { IGroupCtx } from '@/store/group.provider';
 import type { TrainerDayViewCtxExtended } from '@/store/trainer-day-view.provider';
 

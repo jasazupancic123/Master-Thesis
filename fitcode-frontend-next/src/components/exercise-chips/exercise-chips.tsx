@@ -4,7 +4,6 @@ import Stack from '@mui/material/Stack';
 import React from 'react';
 
 import { theme } from '@/app/style';
-import type { SetState } from '@/lib/common/type/state.type';
 import type {
   Component,
   TreeComponent,
@@ -12,6 +11,7 @@ import type {
 import type { Target } from '@/core/target/type/target.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import { lib } from '@/lib';
+import type { SetState } from '@/lib/common/type/state.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 export interface ExerciseChipsProps {

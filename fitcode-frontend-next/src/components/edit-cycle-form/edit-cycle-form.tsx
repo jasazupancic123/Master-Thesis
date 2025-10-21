@@ -12,9 +12,6 @@ import { handleDeleteCycle } from '../trainer-group-year-view/actions/actions-cy
 import { useMultiCycleSliderCyclesProvider } from '../trainer-group-year-view/context/cycles.provider';
 import { GroupController } from '@/core/group/group.controller';
 import { useGroup } from '@/store/group.provider';
-import { CommonService } from '@/common/service/common.service';
-
-const commonService = CommonService.instance;
 
 export default function EditCycleForm() {
   const router = useRouter();
@@ -88,7 +85,6 @@ export default function EditCycleForm() {
               {
                 router,
                 controller,
-                commonService,
               },
               {
                 useGroup: groupContext,

@@ -1,6 +1,4 @@
 import { Box, Slider, Typography } from '@mui/material';
-import HeatmapBack from '@/assets/svg/heatmap-back.svg';
-import HeatmapFront from '@/assets/svg/heatmap-front.svg';
 import { useEffect, useState } from 'react';
 import {
   Area,
@@ -16,6 +14,8 @@ import {
 
 import { paintHeatmaps } from './actions/actions-color-heatmap';
 import { theme } from '@/app/style';
+import HeatmapBack from '@/assets/svg/heatmap-back.svg';
+import HeatmapFront from '@/assets/svg/heatmap-front.svg';
 import MuscleMapWithTooltip from '@/components/muscle-map-with-tooltip/muscle-map-with-tooltip';
 import { app } from '@/core/app.service';
 import { HEATMAP_COLORS } from '@/core/const/color.const';

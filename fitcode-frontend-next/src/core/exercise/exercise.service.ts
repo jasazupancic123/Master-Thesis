@@ -4,9 +4,9 @@ import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/core/training/const/warmup-cooldown.const';
+import { lib } from '@/lib';
 import type { Pagination } from '@/lib/common/type/paginate.type';
 import type { SetState } from '@/lib/common/type/state.type';
-import { lib } from '@/lib';
 
 export class ExerciseService {
   /**

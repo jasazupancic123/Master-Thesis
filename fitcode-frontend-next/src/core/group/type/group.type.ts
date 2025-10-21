@@ -1,7 +1,7 @@
 import type { Cycle } from './cycle.type';
 import type { GroupEvent } from './group-event.type';
-import type { BaseEntity, IdEntity } from '@/core/entity.type';
 import type { AuthUser } from '@/core/auth/type/user.type';
+import type { BaseEntity, IdEntity } from '@/core/entity.type';
 
 export type Group = BaseEntity & {
   institutionId: string;

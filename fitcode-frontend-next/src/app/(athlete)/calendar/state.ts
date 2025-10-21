@@ -2,10 +2,10 @@ import { addMonths, subMonths } from 'date-fns';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import type { NavigateAction, View } from 'react-big-calendar';
 
+import { TrainingController } from '@/core/training/training.controller';
 import type { DateRange } from '@/lib/common/type/date-range.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { handleApiRequest } from '@/lib/common/type/state.type';
-import { TrainingController } from '@/core/training/training.controller';
 
 export function handleNavigate(
   newDate: Date,

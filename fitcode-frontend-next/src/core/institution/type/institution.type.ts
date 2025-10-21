@@ -1,5 +1,5 @@
-import type { BaseEntity } from '@/core/entity.type';
 import type { AuthUser } from '@/core/auth/type/user.type';
+import type { BaseEntity } from '@/core/entity.type';
 import type { Group } from '@/core/group/type/group.type';
 
 export interface Institution extends BaseEntity {

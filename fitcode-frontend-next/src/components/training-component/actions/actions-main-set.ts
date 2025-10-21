@@ -2,8 +2,8 @@ import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/core/training/const/warmup-cooldown.const';
-import { MainSet } from '@/core/training/enum/main-set.enum';
 import { SubgroupUtil } from '@/core/training/custom-shit-subgroup.util';
+import { MainSet } from '@/core/training/enum/main-set.enum';
 import type { Subgroup } from '@/core/training/type/subgroup.type';
 import type { Superset } from '@/core/training/type/superset.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';

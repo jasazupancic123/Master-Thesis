@@ -1,6 +1,6 @@
-import type { BaseEntity } from '@/core/entity.type';
 import type { AttributeValue } from '@/core/attribute/type/attribute-value.type';
 import type { Component } from '@/core/component/type/component.type';
+import type { BaseEntity } from '@/core/entity.type';
 
 export type Exercise = BaseEntity &
   ExerciseAttributes & {

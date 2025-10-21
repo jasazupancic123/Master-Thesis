@@ -8,6 +8,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
 import AthleteTrainingExerciseSets from '../athlete/athlete-training-exercise-sets';
+import TempoChart from '../charts/tempo/tempo-chart';
 import { updateTrainingExerciseWithAI } from '../training-in-progress/components/training-in-progress-exercise-card/actions/actions-exercise';
 import { finishSet } from '../training-in-progress/components/training-in-progress-exercise-card/actions/actions-exercise-set';
 import FpsText from './components/fps-text';
@@ -58,7 +59,6 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import LoadingOverlay from '@/util/loading-overlay';
-import TempoChart from '@/util/tempo-chart';
 
 const DEBUG = false;
 

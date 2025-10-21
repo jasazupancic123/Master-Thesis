@@ -16,7 +16,6 @@ import {
 import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-group-day-view/constant/subgroups.constant';
 import { onMainSetChange } from '@/components/training-component/actions/actions-main-set';
 import { removeSelectedExercisesFromSupersets } from '@/components/training-component/actions/actions-selected-exercises';
-import { updateSelectedExercisesExpandedSets } from '@/components/training-exercise-card/actions/actions-expanded-sets';
 
 export class SubgroupUtil {
   // when exercise is dropped on 'Add/drop exercise' area

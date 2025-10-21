@@ -1,6 +1,6 @@
-import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import UsersDataGrid from '@/components/users-data-grid/users-data-grid';
 import { UserRole } from '@/core/profile/enum/user-role.enum';
+import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';

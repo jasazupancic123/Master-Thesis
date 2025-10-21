@@ -2,10 +2,10 @@ import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.
 import toast from 'react-hot-toast';
 import { v4 } from 'uuid';
 
-import { handleApiRequest } from '@/lib/common/type/state.type';
 import type { SliderCyclesProviderReturnType } from '@/components/trainer-group-year-view/context/cycles.provider';
 import type { GroupController } from '@/core/group/group.controller';
 import type { Cycle } from '@/core/group/type/cycle.type';
+import { handleApiRequest } from '@/lib/common/type/state.type';
 import type { IGroupCtx } from '@/store/group.provider';
 
 type AddCycleInput = Pick<Cycle, 'name' | 'from' | 'to' | 'description'>;

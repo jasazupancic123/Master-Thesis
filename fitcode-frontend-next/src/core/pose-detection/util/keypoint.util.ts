@@ -4,11 +4,11 @@ import toast from 'react-hot-toast';
 
 import { KeypointId } from '../enum/keypoint-id';
 import { KeypointValueType } from '../enum/keypoint-value-type';
-import { PoseModel } from '../enum/pose-model.enum';
-import type { Keypoint } from '../types/keypoint.type';
-import type { NumericValueFrameNum } from '../types/numeric-value-frame-num';
 import { MetricConversionType } from '../enum/metric-conversion-type.enum';
-import EnvUtil from '@/common/util/env.util';
+import { PoseModel } from '../enum/pose-model.enum';
+import type { Keypoint } from '../type/keypoint.type';
+import type { NumericValueFrameNum } from '../type/numeric-value-frame-num';
+import { lib } from '@/lib';
 
 export class KeypointUtil {
   static getDesiredKeypointsByModel(
@@ -55,7 +55,7 @@ export class KeypointUtil {
           });
         });
 
-        if (EnvUtil.AI.convertToMetricScale()) {
+        if (lib.common.env.convertToMetricScale()) {
           keypoints = this.convertToMetricScale(
             keypoints,
             MetricConversionType.SHOULDER_WIDTH,

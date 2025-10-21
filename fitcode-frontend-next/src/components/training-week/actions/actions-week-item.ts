@@ -1,10 +1,10 @@
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
 
-import { handleApiRequest } from '@/lib/common/type/state.type';
 import type { GroupEvent } from '@/core/group/type/group-event.type';
 import { TrainingController } from '@/core/training/training.controller';
 import type { TrainingComponentWithTrainingId } from '@/core/training/type/training-component.type';
+import { handleApiRequest } from '@/lib/common/type/state.type';
 import type { IGroupCtx } from '@/store/group.provider';
 
 export async function handleUpdateTrainingTimes(

@@ -1,5 +1,5 @@
-import type { IdEntity } from '@/core/entity.type';
 import type { Attribute } from '@/core/attribute/type/attribute.type';
+import type { IdEntity } from '@/core/entity.type';
 import type { Target } from '@/core/target/type/target.type';
 
 export type Component = IdEntity & {

@@ -7,11 +7,11 @@ import MuscleHeatmapView from './muscle-heatmap-view';
 import TrainingComponentCard from './training-component-card';
 import TrainingComponentHeaderMenu from './training-component-header-menu';
 import TrainingComponentMenu from './training-component-menu';
+import type { Method } from '@/core/method/type/method.type';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/core/training/const/warmup-cooldown.const';
-import type { Method } from '@/core/method/type/method.type';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';

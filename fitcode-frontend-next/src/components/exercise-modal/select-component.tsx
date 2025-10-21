@@ -4,8 +4,8 @@ import MenuItem from '@mui/material/MenuItem';
 import type { SelectChangeEvent } from '@mui/material/Select';
 import Select from '@mui/material/Select';
 
-import type { SetState } from '@/lib/common/type/state.type';
 import type { TreeComponent } from '@/core/component/type/component.type';
+import type { SetState } from '@/lib/common/type/state.type';
 
 interface Props {
   selectedComponents: { [key: number]: string };

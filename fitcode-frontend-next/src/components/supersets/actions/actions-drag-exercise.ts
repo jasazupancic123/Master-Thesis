@@ -1,19 +1,19 @@
 import type { DraggableLocation } from 'react-beautiful-dnd';
 import toast from 'react-hot-toast';
 
+import { NUM_MAX_SUPERSETS } from '@/components/trainer-group-day-view/constant/supersets.constant';
 import { ADD_SUPERSET_DROPPABLE_ID } from '@/core/training/const/add-superset-droppable-id.const';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/core/training/const/warmup-cooldown.const';
-import type { SetState } from '@/lib/common/type/state.type';
-import { NUM_MAX_SUPERSETS } from '@/components/trainer-group-day-view/constant/supersets.constant';
-import { MainSet } from '@/core/training/enum/main-set.enum';
 import { SubgroupUtil } from '@/core/training/custom-shit-subgroup.util';
+import { MainSet } from '@/core/training/enum/main-set.enum';
 import type { Subgroup } from '@/core/training/type/subgroup.type';
 import type { Superset } from '@/core/training/type/superset.type';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
+import type { SetState } from '@/lib/common/type/state.type';
 import type { IGroupCtx } from '@/store/group.provider';
 import type { TrainerDayViewCtxExtended } from '@/store/trainer-day-view.provider';
 

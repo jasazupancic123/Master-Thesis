@@ -1,13 +1,14 @@
+import type { RefObject } from 'react';
+
 import { POSE_DETECTION_CONSTRAINTS } from '../const/pose-detection-constrains.const';
 import { ConditionDirection } from '../enum/condition-detection.enum';
+import type { KeypointId } from '../enum/keypoint-id';
+import type { Keypoint } from '../type/keypoint.type';
+import type { Rep } from '../type/rep.type';
 import { KeypointUtil } from './keypoint.util';
-import { RefObject } from 'react';
-import { Rep } from '../types/rep.type';
-import { Keypoint } from '../types/keypoint.type';
-import { KeypointId } from '../enum/keypoint-id';
-import { EXERCISE_TIMES_ROUNDING_STEP_S } from '@/components/mobile-movement-validation/mobile-movement-validation';
 import { TimeUtil } from './time.util';
-import { CommonService } from '@/common/service/common.service';
+import { EXERCISE_TIMES_ROUNDING_STEP_S } from '@/components/mobile-movement-validation/mobile-movement-validation';
+import { lib } from '@/lib';
 
 export class RepPostProcessingUtil {
   static getAtExtremumStartAndEndTimes(input: {
@@ -170,20 +171,18 @@ export class RepPostProcessingUtil {
     currentRepRef: RefObject<Rep | null>;
     timeAtExtremumStartKeypoint: Keypoint | undefined;
     timeAtExtremumEndKeypoint: Keypoint | undefined;
-    commonService: CommonService;
   }) {
     const {
       recordedReps,
       currentRepRef,
       timeAtExtremumStartKeypoint,
       timeAtExtremumEndKeypoint,
-      commonService,
     } = input;
 
     if (!currentRepRef.current) return;
 
     if (currentRepRef.current.endValueTimestamp) {
-      currentRepRef.current.durationMs = commonService.number.roundToStep(
+      currentRepRef.current.durationMs = lib.common.number.roundToStep(
         TimeUtil.getMsDiff(
           currentRepRef.current.startTimestamp,
           currentRepRef.current.endValueTimestamp
@@ -195,7 +194,7 @@ export class RepPostProcessingUtil {
     if (recordedReps.length > 0) {
       const prevRep = recordedReps[recordedReps.length - 1];
       if (prevRep.endValueTimestamp) {
-        currentRepRef.current.idleTimeMs = commonService.number.roundToStep(
+        currentRepRef.current.idleTimeMs = lib.common.number.roundToStep(
           TimeUtil.getMsDiff(
             prevRep.endValueTimestamp,
             currentRepRef.current.startTimestamp
@@ -208,7 +207,7 @@ export class RepPostProcessingUtil {
     if (timeAtExtremumStartKeypoint) {
       currentRepRef.current.timeToExtremeMs = Math.max(
         EXERCISE_TIMES_ROUNDING_STEP_S * 1000,
-        commonService.number.roundToStep(
+        lib.common.number.roundToStep(
           TimeUtil.getMsDiff(
             currentRepRef.current.startTimestamp,
             timeAtExtremumStartKeypoint.capturedAt
@@ -228,7 +227,7 @@ export class RepPostProcessingUtil {
     ) {
       currentRepRef.current.timeFromExtremeToEndMs = Math.max(
         EXERCISE_TIMES_ROUNDING_STEP_S * 1000,
-        commonService.number.roundToStep(
+        lib.common.number.roundToStep(
           TimeUtil.getMsDiff(
             (timeAtExtremumEndKeypoint ||
               currentRepRef.current.extremeKeypoint)!.capturedAt,
@@ -245,7 +244,7 @@ export class RepPostProcessingUtil {
     }
 
     if (timeAtExtremumStartKeypoint && timeAtExtremumEndKeypoint) {
-      currentRepRef.current.timeAtExtremeMs = commonService.number.roundToStep(
+      currentRepRef.current.timeAtExtremeMs = lib.common.number.roundToStep(
         TimeUtil.getMsDiff(
           timeAtExtremumStartKeypoint.capturedAt,
           timeAtExtremumEndKeypoint.capturedAt
