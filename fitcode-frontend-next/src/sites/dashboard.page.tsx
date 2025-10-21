@@ -6,8 +6,8 @@ import { Box } from '@mui/material';
 import { redirect } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-import DashboardGroups from '@/components/dashboard/components/dashboard-groups/dashboard-groups';
-import RegisterUsersDashboard from '@/components/dashboard/components/dashboard-register-users-modal/dashboard-register-users-modal';
+import DashboardGroups from '@/components/dashboard/dashboard-groups';
+import RegisterUsersDashboard from '@/components/dashboard/dashboard-register-users-modal';
 import { app } from '@/core/app.service';
 import type { Institution } from '@/core/institution/type/institution.type';
 import { UserRole } from '@/core/profile/enum/user-role.enum';
@@ -17,7 +17,7 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import MyModal from '@/util/modal/modal';
+import MyModal from '@/util/modal';
 
 export default function DashboardPage() {
   const screenSize = useScreenSize();
@@ -33,7 +33,6 @@ export default function DashboardPage() {
     setSelectedGroup,
   } = useDashboard();
 
-  const [openEditAthleteModal, setOpenEditAthleteModal] = useState(false);
   const [openAddTrainerModal, setOpenAddTrainerModal] = useState(false);
 
   useEffect(() => {
@@ -56,7 +55,7 @@ export default function DashboardPage() {
 
   if (!profile) return null;
 
-  if (!institutions.length) {
+  if (!institutions.length)
     return (
       <Box
         sx={{
@@ -70,9 +69,8 @@ export default function DashboardPage() {
         <Typography variant="h6">No institutions available</Typography>
       </Box>
     );
-  }
 
-  if (!selectedInstitution) {
+  if (!selectedInstitution)
     return (
       <Box
         sx={{
@@ -86,7 +84,6 @@ export default function DashboardPage() {
         <Typography variant="h6">No institution selected</Typography>
       </Box>
     );
-  }
 
   return (
     <>
@@ -139,7 +136,7 @@ export default function DashboardPage() {
         isOpen={openAddTrainerModal}
         setIsOpen={(open) => setOpenAddTrainerModal(open)}
         onConfirm={undefined}
-        onCancel={() => setOpenEditAthleteModal(false)}
+        onCancel={() => setOpenAddTrainerModal(false)}
         cancelText="Close"
       >
         <RegisterUsersDashboard registerRole={UserRole.TRAINER} />

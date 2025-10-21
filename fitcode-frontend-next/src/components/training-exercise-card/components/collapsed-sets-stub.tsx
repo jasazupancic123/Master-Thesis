@@ -15,7 +15,7 @@ import {
 } from '@/core/exercise/constant/exercise-param.constant';
 import { LoadType } from '@/core/training/enum/load-type.enum';
 import { useScreenSize } from '@/store/screen-size.provider';
-import LeftRightExerciseText from '@/util/left-right-exercise-text/left-right-exercise-text';
+import LeftRightExerciseText from '@/util/left-right-exercise-text';
 
 export default function StubTrainingExerciseCardCollapsedSets(
   props: TrainingExerciseCardCollapsedSetsProps

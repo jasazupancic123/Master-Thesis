@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react';
 
+import { DashboardUserEditProvider } from '@/components/dashboard/context/user-edit.context';
 import { app } from '@/core/app.service';
 import type { Profile } from '@/core/profile/type/user.type';
 import { useFetch } from '@/hooks/use-fetch.hook';
 import DashboardLayout from '@/sites/dashboard.layout';
-import type { DashboardPageProps } from '@/store/dashboard.provider';
+import type { PageProps } from '@/store/dashboard.provider';
 import { DashboardProvider } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 
@@ -30,12 +31,12 @@ function DashboardInitializer({
   children,
   institutionId,
 }: React.PropsWithChildren & WithInstitutionProps) {
-  const [state, setState] = useState<DashboardPageProps | null>(null);
+  const [state, setState] = useState<PageProps | null>(null);
   const { users, institutions: allInstitutions, groups: allGroups } = useMain();
   const [members, setMembers] = useState<Profile[]>([]);
 
   const { data: fetchedMembers, refetch: refetchMembers } = useFetch<Profile[]>(
-    `/institution/${institutionId}/find/all`,
+    `/institution/${institutionId}/members`,
     { enabled: !!institutionId }
   ); // only fetch when id is defined
 
@@ -75,9 +76,12 @@ function DashboardInitializer({
   }, []);
 
   if (!state) return null;
+
   return (
     <DashboardProvider {...state!} setMembers={setMembers}>
-      <DashboardLayout>{children}</DashboardLayout>
+      <DashboardUserEditProvider>
+        <DashboardLayout>{children}</DashboardLayout>
+      </DashboardUserEditProvider>
     </DashboardProvider>
   );
 }

@@ -6,7 +6,7 @@ import {
   getCachedWellness,
   setCachedWellness,
 } from '../session-cache/wellness.session-cache';
-import Alert from '../util/alert/alert';
+import Alert from '../util/alert';
 import { ProfileController } from '@/core/profile/profile.controller';
 import type { Wellness } from '@/core/profile/type/wellness.type';
 import { WellnessProvider } from '@/store/wellness-provider';

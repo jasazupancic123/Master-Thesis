@@ -9,7 +9,7 @@ import Link from 'next/link';
 
 import { SITE_MAIL } from '@/core/const/web.const';
 import Copyright from '@/components/copyright/copyright';
-import Logo from '@/util/logo/logo';
+import Logo from '@/util/logo';
 
 export default function Footer() {
   return (

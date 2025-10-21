@@ -3,21 +3,22 @@
 import { Box, Typography, useTheme } from '@mui/material';
 
 import TrapezoidTitle from './trapezoid-title';
-import SimpleCircle from '@/util/simple-circle/simple-circle';
+import SimpleCircle from '@/util/simple-circle';
 
-interface AthleteOptionsContainerProps {
+interface Props {
   items: string[];
   title: string;
   selectedItem: string;
   onClick: (type: string) => void;
 }
 
-export default function AthleteOptionsContainer(
-  props: AthleteOptionsContainerProps
-) {
+export default function AthleteOptionsContainer({
+  items,
+  title,
+  selectedItem,
+  onClick,
+}: Props) {
   const theme = useTheme();
-
-  const { items, title, selectedItem, onClick } = props;
 
   return (
     <Box

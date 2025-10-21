@@ -21,7 +21,7 @@ import { handleApiRequest } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import { useTraining } from '@/store/training.provider';
-import MyModal from '@/util/modal/modal';
+import MyModal from '@/util/modal';
 
 interface AthleteTrainingComponentsProps {
   training: Training;
@@ -57,8 +57,6 @@ export default function AthleteTrainingComponents(
   const { exercises } = useMain();
   const { user } = useAuthenticatedAuth();
 
-  const controller = TrainingController.getInstance();
-
   return (
     <Box
       width="100%"
@@ -67,29 +65,22 @@ export default function AthleteTrainingComponents(
       justifyContent="center"
       gap={1}
     >
-      <Box
-        width="100%"
-        sx={{
-          overflowX: 'auto',
-        }}
-      >
+      <Box width="100%" sx={{ overflowX: 'auto' }}>
         <Box
           display="inline-flex"
           justifyContent="center"
           alignItems="center"
           gap={4}
-          sx={{
-            minWidth: '100%',
-          }}
+          sx={{ minWidth: '100%' }}
         >
           {components.map((component) => {
             const IconComponent = lib.common.component.getIcon(component.id);
 
             let componentStatus: TrainingComponentStatus | undefined;
-
             const trainingReport = reports.find(
               (r) => r.trainingId === training.id
             );
+
             if (trainingReport) {
               componentStatus = trainingReport.componentStatuses.find(
                 (cs) => cs.componentId === component.id
@@ -111,9 +102,7 @@ export default function AthleteTrainingComponents(
                               : theme.palette.background.dark,
                         }
                       : {},
-                    {
-                      m: 0,
-                    },
+                    { m: 0 },
                   ]}
                   onClick={() => {
                     setShowSupersets(true);
@@ -178,31 +167,24 @@ export default function AthleteTrainingComponents(
           flexDirection="column"
           gap={2}
           maxWidth={600}
-          sx={{
-            mx: 'auto',
-          }}
+          sx={{ mx: 'auto' }}
         >
           {!selectedComponent?.supersets.length ? (
             <Typography textAlign="center" sx={{ fontSize: 12 }}>
               No supersets available
             </Typography>
           ) : (
-            (() => {
-              const supersets = app.training.getAthleteSupersets(
-                user.uid,
-                selectedComponent
-              );
-
-              return supersets.map((superset, i) => (
-                <AthleteSuperset
-                  key={`superset-${i}`}
-                  superset={superset}
-                  supersetIndex={i}
-                  supersets={supersets}
-                  training={training}
-                />
-              ));
-            })()
+            <>
+              {app.training
+                .getAthleteSupersets(user.uid, selectedComponent)
+                .map((superset, i) => (
+                  <AthleteSuperset
+                    key={`superset-${i}`}
+                    superset={superset}
+                    training={training}
+                  />
+                ))}
+            </>
           )}
         </Box>
       </Collapse>
@@ -224,7 +206,11 @@ export default function AthleteTrainingComponents(
 
           handleApiRequest(
             router,
-            () => controller.getPrescribedTraining(training.id, user.uid),
+            () =>
+              TrainingController.getInstance().getPrescribedTraining(
+                training.id,
+                user.uid
+              ),
             (training) => {
               if (!training) {
                 toast.error('Failed to start training. Please try again.');

@@ -22,7 +22,7 @@ import type { TrainingExercise } from '@/core/training/type/training-exercise.ty
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
-import LeftRightExerciseText from '@/util/left-right-exercise-text/left-right-exercise-text';
+import LeftRightExerciseText from '@/util/left-right-exercise-text';
 
 export interface TrainingExerciseCardCollapsedSetsProps {
   component: TrainingComponent;

@@ -3,7 +3,7 @@
 import { notFound, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-import Alert from '../util/alert/alert';
+import Alert from '../util/alert';
 import type { GroupIdPageProps } from '@/app/(trainer)/groups/[group_id]/props';
 import { Controller } from '@/core/controller';
 import { TrainingService } from '@/core/training/training.service';

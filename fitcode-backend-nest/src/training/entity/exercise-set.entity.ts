@@ -105,8 +105,8 @@ export class ExerciseSet extends IntersectionType(
   @Expose()
   setNumber: number;
 
-  @IsEnum(() => LoadType)
   @IsOptional()
+  @IsEnum(LoadType)
   @ApiPropertyOptional({ enum: LoadType })
   @Expose()
   loadType?: LoadType;

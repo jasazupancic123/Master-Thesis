@@ -13,19 +13,19 @@ import { theme } from '@/app/style';
 import type { TrainingReport } from '@/core/training/type/training-report.type';
 import { PieCenterLabel } from '@/util/mui-charts';
 
-type TrainingReportCardProps = {
+interface Props {
   report: TrainingReport;
-};
+}
 
-export default function TrainingReportCard(props: TrainingReportCardProps) {
+export default function TrainingReportCard({ report }: Props) {
   const theme = useTheme();
-  const { report } = props;
-  const duration = report.duration * 60; // duration in seconds
 
+  const duration = report.duration * 60; // duration in seconds
   const [realizationScore] = useState(Math.round(report.realization * 100));
   const [tonnageScore] = useState(
     Math.round((report.tonnage / report.totalTonnage) * 100) || 0
   );
+
   const [densityScore] = useState(
     Math.round((report.tut / (duration - report.tut)) * 100) || 0
   );
@@ -37,11 +37,7 @@ export default function TrainingReportCard(props: TrainingReportCardProps) {
         width="100%"
         display="flex"
         flexDirection="column"
-        sx={{
-          px: 2,
-          py: 2,
-          backgroundColor: theme.palette.background.default,
-        }}
+        sx={{ px: 2, py: 2, backgroundColor: theme.palette.background.default }}
         gap={2}
       >
         {/* Group name, cycle name, date */}
@@ -62,14 +58,8 @@ export default function TrainingReportCard(props: TrainingReportCardProps) {
               series={[
                 {
                   data: [
-                    {
-                      value: realizationScore,
-                      label: '',
-                    },
-                    {
-                      value: 100 - realizationScore,
-                      label: '',
-                    },
+                    { value: realizationScore, label: '' },
+                    { value: 100 - realizationScore, label: '' },
                   ],
                   innerRadius: 35,
                 },
@@ -127,6 +117,7 @@ export default function TrainingReportCard(props: TrainingReportCardProps) {
               >
                 Density
               </Typography>
+
               <ChartContainer
                 height={15}
                 series={[
@@ -145,6 +136,7 @@ export default function TrainingReportCard(props: TrainingReportCardProps) {
               </ChartContainer>
             </Box>
           </CustomChartContainer>
+
           <Box
             width="32.33%"
             height={133}

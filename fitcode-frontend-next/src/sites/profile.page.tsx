@@ -36,7 +36,7 @@ import { handleApiRequest } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useProfile } from '@/store/profile.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import FileUpload from '@/util/file-upload/file-upload';
+import FileUpload from '@/util/file-upload';
 
 const DEFAULT_MARGIN = 1;
 

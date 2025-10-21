@@ -13,6 +13,7 @@ import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
 import Link from 'next/link';
 import * as React from 'react';
+import { useState } from 'react';
 
 import { UserRole } from '@/core/profile/enum/user-role.enum';
 import { lib } from '@/lib';
@@ -21,13 +22,10 @@ import { useAthlete } from '@/store/athlete.provider';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 
 export default function AthleteSidebar() {
-  const athleteContext = useAthlete();
   const { role, logout } = useAuthenticatedAuth();
+  const { filter, setFilter } = useAthlete() || {};
 
-  const { filter, setFilter } = athleteContext || {};
-
-  const [open, setOpen] = React.useState(false);
-
+  const [open, setOpen] = useState(false);
   const toggle = (newOpen: boolean) => () => setOpen(newOpen);
 
   const DrawerList = role && (

@@ -14,19 +14,21 @@ import type { SetState } from '@/lib/common/type/state.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 interface Props {
-  onSubmit: (_data: Partial<Wellness>) => void | Promise<void>;
   disabled: boolean;
-  setDisabled: SetState<boolean>;
   state: Wellness;
   setState: SetState<Wellness>;
   muscleLoads: [string, number][];
   setMuscleLoads: SetState<[string, number][]>;
 }
 
-export default function AthleteWellnessForm(props: Props) {
+export default function AthleteWellnessForm({
+  disabled,
+  state,
+  setState,
+  muscleLoads,
+  setMuscleLoads,
+}: Props) {
   const screenSize = useScreenSize();
-
-  const { state, setState, muscleLoads, setMuscleLoads } = props;
 
   const {
     tipHeatmapFront,
@@ -41,11 +43,11 @@ export default function AthleteWellnessForm(props: Props) {
       <UserWellnessSlider
         label="Sleep"
         value={state.sleep as number}
+        disabled={disabled}
+        icon={<SleepIcon height={16} />}
         setValue={(value) =>
           setState((prev: Wellness) => ({ ...prev, sleep: value as number }))
         }
-        disabled={props.disabled}
-        icon={<SleepIcon height={16} />}
       />
 
       <Divider />
@@ -54,11 +56,11 @@ export default function AthleteWellnessForm(props: Props) {
       <UserWellnessSlider
         label="Fatigue"
         value={state.fatigue as number}
+        disabled={disabled}
+        icon={<FatigueIcon height={16} />}
         setValue={(value) =>
           setState((prev) => ({ ...prev, fatigue: value as number }))
         }
-        disabled={props.disabled}
-        icon={<FatigueIcon height={16} />}
       />
 
       <Divider />
@@ -67,11 +69,11 @@ export default function AthleteWellnessForm(props: Props) {
       <UserWellnessSlider
         label="Soreness"
         value={state.soreness as number}
+        disabled={disabled}
+        icon={<SorenessIcon height={16} />}
         setValue={(value) =>
           setState((prev) => ({ ...prev, soreness: value as number }))
         }
-        disabled={props.disabled}
-        icon={<SorenessIcon height={16} />}
       />
 
       <Box

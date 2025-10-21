@@ -13,7 +13,7 @@ import type { TrainingComponent } from '@/core/training/type/training-component.
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
-import MyModal from '@/util/modal/modal';
+import MyModal from '@/util/modal';
 
 export default function PeriodizeModal(
   props: ModalProps & {

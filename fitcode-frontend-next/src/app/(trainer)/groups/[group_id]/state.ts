@@ -1,11 +1,11 @@
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
 
-import type { SetState } from '@/lib/common/type/state.type';
-import { handleApiRequest } from '@/lib/common/type/state.type';
 import type { GroupController } from '@/core/group/group.controller';
 import type { Cycle } from '@/core/group/type/cycle.type';
 import type { Group } from '@/core/group/type/group.type';
+import type { SetState } from '@/lib/common/type/state.type';
+import { handleApiRequest } from '@/lib/common/type/state.type';
 
 export async function handleSaveGroup(
   controller: GroupController,

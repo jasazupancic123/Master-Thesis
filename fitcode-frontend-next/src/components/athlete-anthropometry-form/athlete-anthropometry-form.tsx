@@ -1,18 +1,15 @@
 import { Box, TextField } from '@mui/material';
 
-import type { SetState } from '@/lib/common/type/state.type';
 import type { Wellness } from '@/core/profile/type/wellness.type';
+import type { SetState } from '@/lib/common/type/state.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 
-interface AthleteAnthropometryFormProps {
+interface Props {
   state: Wellness;
   setState: SetState<Wellness>;
 }
 
-export default function AthleteAnthropometryForm(
-  props: AthleteAnthropometryFormProps
-) {
-  const { state, setState } = props;
+export default function AthleteAnthropometryForm({ state, setState }: Props) {
   const screenSize = useScreenSize();
 
   return (
@@ -41,7 +38,6 @@ export default function AthleteAnthropometryForm(
           value={state.weight}
           onChange={(event) => {
             if (isNaN(Number(event.target.value))) return;
-
             setState((prev) => ({
               ...prev,
               weight: Number(event.target.value),
@@ -62,6 +58,7 @@ export default function AthleteAnthropometryForm(
             },
           }}
         />
+
         {/* Comment */}
         <TextField
           label="Comment"

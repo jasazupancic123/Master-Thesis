@@ -4,7 +4,7 @@ import { UserRole } from '@/core/profile/enum/user-role.enum';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
-import MyModal from '@/util/modal/modal';
+import MyModal from '@/util/modal';
 
 export default function AddMemberModal(props: ModalProps) {
   const { open, setOpen } = props;

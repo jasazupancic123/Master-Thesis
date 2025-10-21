@@ -1,7 +1,7 @@
 import UndoneExercisesList from '../components/undone-exercises-list/training-in-progress-undone-exercises-list';
 import { useUndoneExercises } from '../context/undone-exercises.provider';
 import type { ModalProps } from '@/lib/common/type/modal-props.type';
-import MyModal from '@/util/modal/modal';
+import MyModal from '@/util/modal';
 
 export default function UndoneSetsWarningModal(props: ModalProps) {
   const { open, setOpen } = props;

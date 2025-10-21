@@ -45,8 +45,8 @@ import type { Pagination as PaginationType } from '@/lib/common/type/paginate.ty
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import FileUpload from '@/util/file-upload/file-upload';
-import MyModal from '@/util/modal/modal';
+import FileUpload from '@/util/file-upload';
+import MyModal from '@/util/modal';
 import { SearchBar } from '@/util/search-bar/search-bar';
 
 type AttributeValue =

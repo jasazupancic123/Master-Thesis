@@ -10,7 +10,7 @@ import TrainingExerciseCardExpandedSets from './components/expanded-sets';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
-import MyModal from '@/util/modal/modal';
+import MyModal from '@/util/modal';
 
 export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   const { supersetIndex, chartView, exercise } = props;

@@ -10,7 +10,7 @@ import type { Training } from '@/core/training/type/training.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
-import LeftRightExerciseText from '@/util/left-right-exercise-text/left-right-exercise-text';
+import LeftRightExerciseText from '@/util/left-right-exercise-text';
 
 interface AthleteTrainingExerciseSetsProps {
   training: Training;

@@ -13,9 +13,9 @@ import Typography from '@mui/material/Typography';
 import dayjs from 'dayjs';
 import React, { Fragment, useRef } from 'react';
 
-import CustomDivider from '../../util/custom-divider/custom-divider';
-import HorizontalItemsList from '../../util/horizontal-items-list/horizontal-items-list';
-import VerticalLinesBorders from '../../util/vertical-lines-borders/vertical-lines-borders';
+import CustomDivider from '../../util/custom-divider';
+import HorizontalItemsList from '../../util/horizontal-items-list';
+import VerticalLinesBorders from '../../util/vertical-lines-borders';
 import {
   DIVIDER_HEIGHT,
   MAX_WIDTH,

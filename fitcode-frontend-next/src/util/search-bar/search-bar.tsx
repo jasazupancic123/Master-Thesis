@@ -4,14 +4,13 @@ import { useTheme } from '@mui/material';
 
 import { Search, SearchIconWrapper, StyledInputBase } from './style';
 
-export type SearchBarProps = {
+interface Props extends React.PropsWithChildren {
   placeholder: string;
   value: string;
   handleSearchChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   maxWidth?: string;
   sx?: SxProps;
-  children?: React.PropsWithChildren['children'];
-};
+}
 
 export function SearchBar({
   placeholder,
@@ -20,7 +19,7 @@ export function SearchBar({
   maxWidth,
   sx,
   children,
-}: SearchBarProps) {
+}: Props) {
   const theme = useTheme();
 
   return (

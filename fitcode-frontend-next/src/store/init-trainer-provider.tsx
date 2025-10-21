@@ -5,7 +5,7 @@ import { Controller } from '@/core/controller';
 import { lib } from '@/lib';
 import { LOADING_ANIMATION_MIN_DURATION_MS } from '@/lib/common/const/animation.const';
 import { CoachMainProvider } from '@/store/main.provider';
-import Alert from '@/util/alert/alert';
+import Alert from '@/util/alert';
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 

@@ -8,7 +8,7 @@ import type { Group } from '@/core/group/type/group.type';
 import { MainSet } from '@/core/training/enum/main-set.enum';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 
-interface AthleteTrainingCardHeaderProps {
+interface Props {
   components: TrainingComponent[] | Component[];
   group?: Group;
   cycle?: Cycle;
@@ -16,11 +16,12 @@ interface AthleteTrainingCardHeaderProps {
   to: Date;
 }
 
-export default function AthleteTrainingCardHeader(
-  props: AthleteTrainingCardHeaderProps
-) {
-  const { components, group, cycle, from } = props;
-
+export default function AthleteTrainingCardHeader({
+  components,
+  group,
+  cycle,
+  from,
+}: Props) {
   const isTrainingComponentArray = (
     components: TrainingComponent[] | Component[]
   ): components is TrainingComponent[] => {
@@ -57,19 +58,14 @@ export default function AthleteTrainingCardHeader(
         />
 
         <Box display="flex" flexDirection="column">
-          <Typography
-            sx={{
-              fontWeight: 'bold',
-              fontSize: 15,
-              height: 20,
-            }}
-          >
+          <Typography sx={{ fontWeight: 'bold', fontSize: 15, height: 20 }}>
             {group?.name}
           </Typography>
 
           <Typography sx={{ fontSize: 12, height: 16 }}>
             {cycle?.name}
           </Typography>
+
           <Typography sx={{ fontSize: 12, height: 16 }}>
             {new Date(from).toLocaleDateString('en-US', {
               month: 'long',
@@ -84,9 +80,10 @@ export default function AthleteTrainingCardHeader(
           </Typography>
         </Box>
       </Box>
+
       <IconButton sx={{ p: 0, m: 0 }}>
         <MoreVert />
-      </IconButton>{' '}
+      </IconButton>
     </Box>
   );
 }

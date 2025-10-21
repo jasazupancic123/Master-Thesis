@@ -1,25 +1,28 @@
 import { Slider } from '@mui/material';
 import { useTheme } from '@mui/material';
 
-interface AthleteWellnessSliderProps {
+interface Props {
   value: number;
   setValue: (value: number) => void;
   disabled: boolean;
 }
 
-export default function AthleteWellnessSlider(
-  props: AthleteWellnessSliderProps
-) {
+export default function AthleteWellnessSlider({
+  value,
+  setValue,
+  disabled,
+}: Props) {
   const theme = useTheme();
 
   return (
     <Slider
       orientation="horizontal"
-      value={props.value}
+      value={value}
       min={1}
       max={10}
-      onChange={(_, value) => props.setValue(value as number)}
+      onChange={(_, value) => setValue(value as number)}
       valueLabelDisplay="on"
+      disabled={disabled}
       sx={{
         '& .MuiSlider-track': {
           backgroundColor: theme.palette.primary.main,
@@ -28,7 +31,7 @@ export default function AthleteWellnessSlider(
         '& .MuiSlider-thumb': {
           width: 14,
           height: 14,
-          backgroundColor: props.disabled ? 'gray' : theme.palette.primary.main,
+          backgroundColor: disabled ? 'gray' : theme.palette.primary.main,
         },
         '& .MuiSlider-rail': {
           backgroundColor: '#ffffff',
@@ -42,7 +45,6 @@ export default function AthleteWellnessSlider(
           display: 'none',
         },
       }}
-      disabled={props.disabled}
     />
   );
 }

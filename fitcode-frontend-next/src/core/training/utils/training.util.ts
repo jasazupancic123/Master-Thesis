@@ -1,4 +1,5 @@
 import { addMinutes } from 'date-fns';
+import dayjs from 'dayjs';
 
 import type { Superset } from '../type/superset.type';
 import type { Training } from '../type/training.type';
@@ -9,11 +10,11 @@ import { TrainingExerciseSetUtil } from './set.util';
 import { TrainingSubgroupUtil } from './subgroup.util';
 import { TrainingSupersetUtil } from './superset.util';
 import { WorkloadUtil } from './workload.util';
+import { app } from '@/core/app.service';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/core/training/const/warmup-cooldown.const';
-import { app } from '@/core/app.service';
 
 export class TrainingUtil {
   readonly component: TrainingComponentUtil;
@@ -47,6 +48,16 @@ export class TrainingUtil {
       cooldown: data?.cooldown || app.training.component.stub(COOLDOWN_ID),
       components: data?.components || [],
     };
+  }
+
+  isActive(training: Training): boolean {
+    const now = dayjs();
+    const from = dayjs(training.from);
+
+    const isNowAM = now.hour() < 12;
+    const isTrainingAM = from.hour() < 12;
+
+    return isNowAM === isTrainingAM && now.isSame(from, 'day');
   }
 
   getAthleteTraining(athleteId: string, training: Training): Training {

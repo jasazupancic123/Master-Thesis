@@ -8,7 +8,7 @@ import { Controller } from '@/core/controller';
 import { TrainingService } from '@/core/training/training.service';
 import { lib } from '@/lib';
 import { LOADING_ANIMATION_MIN_DURATION_MS } from '@/lib/common/const/animation.const';
-import Alert from '@/util/alert/alert';
+import Alert from '@/util/alert';
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 

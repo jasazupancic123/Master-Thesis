@@ -28,6 +28,7 @@ export default function BottomNavigation() {
         const newValue = Object.values(
           LINKS_SIDEBAR_GROUP_VIEW[UserRole.ATHLETE]
         )[valueIndex];
+
         if (!newValue) return;
 
         setFilter(newValue);
@@ -60,12 +61,8 @@ export default function BottomNavigation() {
                 filter.href === link.href ? theme.palette.primary.main : '#fff',
               minWidth: '48px', // Reduce the minimum width
               padding: '4px', // Reduce padding
-              '& .MuiBottomNavigationAction-root': {
-                minWidth: '48px', // Override MUI default min-width
-              },
-              '& .MuiSvgIcon-root': {
-                fontSize: '24px !important',
-              },
+              '& .MuiBottomNavigationAction-root': { minWidth: '48px' },
+              '& .MuiSvgIcon-root': { fontSize: '24px !important' },
             }}
           />
         )
@@ -80,17 +77,13 @@ export default function BottomNavigation() {
             }}
           />
         }
-        onClick={() => logout()}
         sx={{
           minWidth: '48px',
           padding: '4px',
-          '& .MuiBottomNavigationAction-root': {
-            minWidth: '48px',
-          },
-          '& .MuiSvgIcon-root': {
-            fontSize: '27.5px !important',
-          },
+          '& .MuiBottomNavigationAction-root': { minWidth: '48px' },
+          '& .MuiSvgIcon-root': { fontSize: '27.5px !important' },
         }}
+        onClick={() => logout()}
       />
     </BN>
   );

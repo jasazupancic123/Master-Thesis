@@ -8,7 +8,7 @@ import type { TrainingExercise } from '@/core/training/type/training-exercise.ty
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useTraining } from '@/store/training.provider';
-import LeftRightExerciseText from '@/util/left-right-exercise-text/left-right-exercise-text';
+import LeftRightExerciseText from '@/util/left-right-exercise-text';
 
 interface TrainingInProgressExerciseSetProps {
   set: ExerciseSet;
