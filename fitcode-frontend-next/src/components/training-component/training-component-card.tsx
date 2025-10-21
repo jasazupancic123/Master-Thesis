@@ -15,9 +15,9 @@ import {
 } from './actions/actions-selected-exercises';
 import { handleSelectTrainingComponent } from './actions/actions-training-component';
 import CompletedMembersGroup from './completed-members-group';
-import type { SetState } from '@/lib/common/type/state.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import { lib } from '@/lib';
+import type { SetState } from '@/lib/common/type/state.type';
 import { useGroup } from '@/store/group.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 

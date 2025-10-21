@@ -20,7 +20,7 @@ import type { Superset } from '@/core/training/type/superset.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useSupersets } from '@/store/supersets.provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
+import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 
 interface SupersetExerciseProps {
   exercise: TrainingExercise;
@@ -49,7 +49,7 @@ export default function SupersetExercise(props: SupersetExerciseProps) {
     selectedExerciseIds,
     selectedAthlete,
     deleteSupersetExercise,
-  } = useTrainerDayViewContext();
+  } = useTrainerDayView();
 
   const { attributes, listeners, setNodeRef, disabledDrag, style } =
     useSupersetExerciseSortable(exercise);

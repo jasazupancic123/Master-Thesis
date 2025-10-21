@@ -5,11 +5,11 @@ import {
   disableBorder,
   exerciseCardSetAttributeSx,
 } from '../trainer-group-day-view/style/exercise-card-set-attribute.style';
-import type { SetState } from '@/lib/common/type/state.type';
 import { app } from '@/core/app.service';
 import type { Attribute } from '@/core/attribute/type/attribute.type';
 import type { ExerciseParamField } from '@/core/training/type/exercise-set.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import type { SetState } from '@/lib/common/type/state.type';
 import { useGroup } from '@/store/group.provider';
 
 interface Props {

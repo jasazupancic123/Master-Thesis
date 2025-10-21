@@ -1,9 +1,9 @@
 import toast from 'react-hot-toast';
 
-import type { SetState } from '@/lib/common/type/state.type';
 import { TrainingController } from '@/core/training/training.controller';
 import { TrainingService } from '@/core/training/training.service';
 import { lib } from '@/lib';
+import type { SetState } from '@/lib/common/type/state.type';
 import type { IGroupCtx } from '@/store/group.provider';
 import type { IMainCtx } from '@/store/main.provider';
 import type { TrainerDayViewCtx } from '@/store/trainer-day-view.provider';

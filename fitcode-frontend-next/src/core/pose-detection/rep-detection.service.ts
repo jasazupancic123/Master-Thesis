@@ -5,36 +5,29 @@ import type { TrainingExercise } from '../training/type/training-exercise.type';
 import { KeypointHistory } from './class/keypoint-history';
 import { POSE_DETECTION_CONSTRAINTS } from './const/pose-detection-constrains.const';
 import { ConditionDirection } from './enum/condition-detection.enum';
+import { CurrentSideMutexValues } from './enum/current-side-mutex-values.enum';
 import type { KeypointId } from './enum/keypoint-id';
 import { KeypointValueType } from './enum/keypoint-value-type';
 import { RepStatus } from './enum/rep-state';
 import { StatusDetectionService } from './status-detection.service';
+import type { AvgFps } from './type/avg-fps.type';
+import type { CurrentSideMutex } from './type/current-side-mutex.type';
 import type {
   ExerciseDetectionData,
   ExerciseRepStartCondition,
   RequiredPoseCondition,
   StillnessCondition,
-} from './types/exercise-start-condition.type';
-import type { Keypoint } from './types/keypoint.type';
-import type { NumericValueFrameNum } from './types/numeric-value-frame-num';
-import type { RecordedReps, Rep, RepsCount } from './types/rep.type';
-import type { RepState } from './types/rep-state.type';
+} from './type/exercise-start-condition.type';
+import type { Keypoint } from './type/keypoint.type';
+import type { NumericValueFrameNum } from './type/numeric-value-frame-num';
+import type { RecordedReps, Rep, RepsCount } from './type/rep.type';
+import type { RepSideDetectionData } from './type/rep-side-detection-data';
 import { KeypointUtil } from './util/keypoint.util';
+import { RepPostProcessingUtil } from './util/rep-post-processing.util';
 import { TimeUtil } from './util/time.util';
 import { EXERCISE_TIMES_ROUNDING_STEP_S } from '@/components/mobile-movement-validation/mobile-movement-validation';
-<<<<<<< HEAD:fitcode-frontend-next/src/core/pose-detection/rep-detection.service.ts
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
-=======
-import { RepSideDetectionData } from './types/rep-side-detection-data';
-import { RepPostProcessingUtil } from './util/rep-post-processing.util';
-import { CurrentSideMutex } from '@/controller/pose-detection/types/current-side-mutex.type';
-import { CurrentSideMutexValues } from './enum/current-side-mutex-values.enum';
-import { AvgFps } from './types/avg-fps.type';
-import { DetectionStatus } from './enum/detection-status';
-
-const commonService = CommonService.instance;
->>>>>>> main:fitcode-frontend-next/src/controller/pose-detection/rep-detection.service.ts
 
 export class RepDetectionService {
   /*
@@ -1187,90 +1180,14 @@ export class RepDetectionService {
     // UPDATE ALL NECESARY TIMES HERE!
     // durationMs, idleTimeMs, timeToExtremeMs, timeAtExtremeMs, timeFromExtremeToEndMs
 
-<<<<<<< HEAD:fitcode-frontend-next/src/core/pose-detection/rep-detection.service.ts
-    if (currentRepRef.current.endValueTimestamp) {
-      currentRepRef.current.durationMs = lib.common.number.roundToStep(
-        TimeUtil.getMsDiff(
-          currentRepRef.current.startTimestamp,
-          currentRepRef.current.endValueTimestamp
-        ),
-        EXERCISE_TIMES_ROUNDING_STEP_S * 1000
-      );
-    }
-
-    if (recordedRepsRef.current.length > 0) {
-      const prevRep =
-        recordedRepsRef.current[recordedRepsRef.current.length - 1];
-      if (prevRep.endValueTimestamp) {
-        currentRepRef.current.idleTimeMs = lib.common.number.roundToStep(
-          TimeUtil.getMsDiff(
-            prevRep.endValueTimestamp,
-            currentRepRef.current.startTimestamp
-          ),
-          EXERCISE_TIMES_ROUNDING_STEP_S * 1000
-        );
-      }
-    }
-
-    if (timeAtExtremumStartKeypoint) {
-      currentRepRef.current.timeToExtremeMs = Math.max(
-        EXERCISE_TIMES_ROUNDING_STEP_S * 1000,
-        lib.common.number.roundToStep(
-          TimeUtil.getMsDiff(
-            currentRepRef.current.startTimestamp,
-            timeAtExtremumStartKeypoint.capturedAt
-          ),
-          EXERCISE_TIMES_ROUNDING_STEP_S * 1000
-        )
-      );
-    } else {
-      currentRepRef.current.timeToExtremeMs =
-        EXERCISE_TIMES_ROUNDING_STEP_S * 1000;
-    }
-
-    if (
-      (timeAtExtremumEndKeypoint !== undefined ||
-        currentRepRef.current.extremeKeypoint !== undefined) &&
-      currentRepRef.current.endValueTimestamp
-    ) {
-      currentRepRef.current.timeFromExtremeToEndMs = Math.max(
-        EXERCISE_TIMES_ROUNDING_STEP_S * 1000,
-        lib.common.number.roundToStep(
-          TimeUtil.getMsDiff(
-            (timeAtExtremumEndKeypoint ||
-              currentRepRef.current.extremeKeypoint)!.capturedAt,
-            currentRepRef.current.endValueTimestamp
-          ),
-          EXERCISE_TIMES_ROUNDING_STEP_S * 1000
-        )
-      );
-    }
-
-    if (currentRepRef.current.timeFromExtremeToEndMs === undefined) {
-      currentRepRef.current.timeFromExtremeToEndMs =
-        EXERCISE_TIMES_ROUNDING_STEP_S * 1000;
-    }
-
-    if (timeAtExtremumStartKeypoint && timeAtExtremumEndKeypoint) {
-      currentRepRef.current.timeAtExtremeMs = lib.common.number.roundToStep(
-        TimeUtil.getMsDiff(
-          timeAtExtremumStartKeypoint.capturedAt,
-          timeAtExtremumEndKeypoint.capturedAt
-        ),
-        EXERCISE_TIMES_ROUNDING_STEP_S * 1000
-      );
-    }
-=======
     RepPostProcessingUtil.setRepTimes({
       currentRepRef,
       recordedReps,
       timeAtExtremumStartKeypoint,
       timeAtExtremumEndKeypoint,
-      commonService,
     });
 
     RepPostProcessingUtil.setRepRom({ currentRepRef, initialValues });
->>>>>>> main:fitcode-frontend-next/src/controller/pose-detection/rep-detection.service.ts
   }
 
   static saveRepTimesToJsonFiles = (state: {

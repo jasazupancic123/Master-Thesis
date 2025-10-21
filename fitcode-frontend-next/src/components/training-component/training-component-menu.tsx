@@ -3,9 +3,9 @@ import { DoNotDisturb } from '@mui/icons-material';
 import { Box } from '@mui/material';
 
 import TrainingComponentHeaderMenu from './training-component-header-menu';
-import type { SetState } from '@/lib/common/type/state.type';
 import { ComponentIds } from '@/core/training/enum/component-ids.enum';
 import type { TrainingComponent as TrainingComponentClass } from '@/core/training/type/training-component.type';
+import type { SetState } from '@/lib/common/type/state.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 

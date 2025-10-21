@@ -2,10 +2,10 @@ import { Event } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 
-import type { SetState } from '@/lib/common/type/state.type';
 import type { GroupEvent } from '@/core/group/type/group-event.type';
 import type { TrainingComponentWithTrainingId } from '@/core/training/type/training-component.type';
 import { lib } from '@/lib';
+import type { SetState } from '@/lib/common/type/state.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 interface TrainerWeekViewItemProps {

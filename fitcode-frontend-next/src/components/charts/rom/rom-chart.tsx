@@ -1,8 +1,9 @@
-import { theme } from '@/app/style';
-import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
-import { TrainingExerciseRecording } from '@/controller/training/type/training-exercise.type';
 import { axisClasses, LineChart } from '@mui/x-charts';
 import dayjs from 'dayjs';
+
+import { theme } from '@/app/style';
+import { KeypointUtil } from '@/core/pose-detection/util/keypoint.util';
+import type { TrainingExerciseRecording } from '@/core/training/type/training-exercise.type';
 
 interface RomChartProps {
   selectedExercise: TrainingExerciseRecording;

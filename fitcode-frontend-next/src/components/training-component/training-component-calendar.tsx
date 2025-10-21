@@ -5,13 +5,13 @@ import Stack from '@mui/material/Stack';
 import dayjs from 'dayjs';
 import React, { Fragment, useEffect, useState } from 'react';
 
-import type { SetState } from '@/lib/common/type/state.type';
 import TrainingWeek from '@/components/training-week/training-week';
 import type { Component } from '@/core/component/type/component.type';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import { lib } from '@/lib';
 import type { Day } from '@/lib/common/service/date.util';
+import type { SetState } from '@/lib/common/type/state.type';
 import { useGroup } from '@/store/group.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 

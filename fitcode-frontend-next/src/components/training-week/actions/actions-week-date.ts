@@ -3,10 +3,9 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import toast from 'react-hot-toast';
 
-import { COLOR } from '@/core/const/color.const';
-import { type SetState } from '@/lib/common/type/state.type';
 import { app } from '@/core/app.service';
 import type { Component } from '@/core/component/type/component.type';
+import { COLOR } from '@/core/const/color.const';
 import type { Target } from '@/core/target/type/target.type';
 import { MainSet } from '@/core/training/enum/main-set.enum';
 import { TrainingController } from '@/core/training/training.controller';
@@ -14,6 +13,7 @@ import { TrainingService } from '@/core/training/training.service';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import { lib } from '@/lib';
+import { type SetState } from '@/lib/common/type/state.type';
 import type { IGroupCtx } from '@/store/group.provider';
 import type { IMainCtx } from '@/store/main.provider';
 

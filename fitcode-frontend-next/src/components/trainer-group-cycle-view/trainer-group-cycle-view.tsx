@@ -20,13 +20,13 @@ import {
 import useTrainerCycleViewCycles from './hooks/use-cycles';
 import useTrainerCycleViewSticky from './hooks/use-sticky';
 import useTrainingCycleViewTargets from './hooks/use-targets';
+import TrainingWeek from '@/components/training-week/training-week';
+import { app } from '@/core/app.service';
+import type { Component } from '@/core/component/type/component.type';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/core/training/const/warmup-cooldown.const';
-import TrainingWeek from '@/components/training-week/training-week';
-import { app } from '@/core/app.service';
-import type { Component } from '@/core/component/type/component.type';
 import { TrainingController } from '@/core/training/training.controller';
 import { lib } from '@/lib';
 import { useGroup } from '@/store/group.provider';

@@ -10,11 +10,11 @@ import {
 import { useState } from 'react';
 
 import renderAttributeFilter from './render-attribute-filter';
-import type { Pagination } from '@/lib/common/type/paginate.type';
-import type { SetState } from '@/lib/common/type/state.type';
 import { app } from '@/core/app.service';
 import type { Attribute } from '@/core/attribute/type/attribute.type';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
+import type { Pagination } from '@/lib/common/type/paginate.type';
+import type { SetState } from '@/lib/common/type/state.type';
 import type { AttributeFilters } from '@/sites/exercises.page';
 
 type AttributeValue =

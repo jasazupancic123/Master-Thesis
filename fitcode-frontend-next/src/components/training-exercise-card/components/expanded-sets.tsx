@@ -1,7 +1,6 @@
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import { Box, Grid2, IconButton } from '@mui/material';
 
-import type { SetState } from '@/lib/common/type/state.type';
 import { NumberExerciseParam } from '@/components/exercise-param/number-exercise-param';
 import { TempoExerciseParam } from '@/components/exercise-param/tempo-exercise-param';
 import {
@@ -16,6 +15,7 @@ import {
 import { LoadType } from '@/core/training/enum/load-type.enum';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import type { SetState } from '@/lib/common/type/state.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';

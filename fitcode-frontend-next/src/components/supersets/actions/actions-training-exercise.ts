@@ -1,9 +1,4 @@
 import {
-  COOLDOWN_ID,
-  WARMUP_ID,
-} from '@/core/training/const/warmup-cooldown.const';
-import type { SetState } from '@/lib/common/type/state.type';
-import {
   KG,
   REC_TIME,
   REPS,
@@ -11,10 +6,15 @@ import {
 } from '@/core/exercise/constant/exercise-param.constant';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
 import type { Method } from '@/core/method/type/method.type';
+import {
+  COOLDOWN_ID,
+  WARMUP_ID,
+} from '@/core/training/const/warmup-cooldown.const';
 import { SubgroupUtil } from '@/core/training/custom-shit-subgroup.util';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import type { SetState } from '@/lib/common/type/state.type';
 import type { IGroupCtx } from '@/store/group.provider';
 import type { TrainerDayViewCtxExtended } from '@/store/trainer-day-view.provider';
 

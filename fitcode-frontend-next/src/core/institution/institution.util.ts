@@ -1,4 +1,4 @@
-import type { Institution } from '../type/institution.type';
+import type { Institution } from './type/institution.type';
 import type { AuthUser } from '@/core/auth/type/user.type';
 
 export class InstitutionUtil {

@@ -1,5 +1,5 @@
-import type { IdEntity } from '@/core/entity.type';
 import type { Attribute } from '@/core/attribute/type/attribute.type';
+import type { IdEntity } from '@/core/entity.type';
 import type { ExerciseSet } from '@/core/training/type/exercise-set.type';
 
 export interface Method extends IdEntity {

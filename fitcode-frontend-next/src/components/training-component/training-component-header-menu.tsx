@@ -5,13 +5,13 @@ import { handleSetMainSet } from './actions/actions-main-set';
 import { onMethodChange } from './actions/actions-method';
 import { handleSetPeriodizationType } from './actions/actions-periodization-type';
 import PeriodizeModal from './periodize-modal';
+import { AFTER_SETS } from '@/components/trainer-group-day-view/constant/after-sets.constant';
+import type { AfterSet } from '@/core/component/type/after-set.type';
+import type { Method } from '@/core/method/type/method.type';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/core/training/const/warmup-cooldown.const';
-import { AFTER_SETS } from '@/components/trainer-group-day-view/constant/after-sets.constant';
-import type { AfterSet } from '@/core/component/type/after-set.type';
-import type { Method } from '@/core/method/type/method.type';
 import { MainSet } from '@/core/training/enum/main-set.enum';
 import { PeriodizationType } from '@/core/training/enum/periodization-type.enum';
 import { useGroup } from '@/store/group.provider';

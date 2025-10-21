@@ -1,15 +1,16 @@
 // lib/pose-landmarker.singleton.ts
 'use client';
 
-import EnvUtil from '@/common/util/env.util';
 import { FilesetResolver, PoseLandmarker } from '@mediapipe/tasks-vision';
+
+import { lib } from '@/lib';
 
 let poseLandmarkerPromise: Promise<PoseLandmarker> | null = null;
 
 export async function preloadPoseLandmarker() {
   if (!poseLandmarkerPromise) {
     poseLandmarkerPromise = (async () => {
-      const modelAssetPath = EnvUtil.AI.getPoseLandmarkerModelPath();
+      const modelAssetPath = lib.common.env.getPoseLandmarkerModelPath();
 
       const vision = await FilesetResolver.forVisionTasks('/wasm');
 

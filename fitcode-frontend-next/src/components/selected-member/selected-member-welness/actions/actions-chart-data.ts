@@ -1,12 +1,12 @@
 import dayjs from 'dayjs';
 
-import type { SetState } from '@/lib/common/type/state.type';
 import type { AuthUser } from '@/core/auth/type/user.type';
 import { WellnessChartDataType } from '@/core/profile/enum/wellness-chart-data-type.enum';
 import type {
   WellnessChartData,
   WellnessZScore,
 } from '@/core/profile/type/wellness.type';
+import type { SetState } from '@/lib/common/type/state.type';
 
 export default function setupChartData(
   wellness: WellnessZScore[],

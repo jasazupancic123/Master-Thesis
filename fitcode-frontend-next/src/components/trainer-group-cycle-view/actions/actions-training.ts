@@ -1,8 +1,6 @@
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
 
-import type { SetState } from '@/lib/common/type/state.type';
-import { handleApiRequest } from '@/lib/common/type/state.type';
 import type { Component } from '@/core/component/type/component.type';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
 import type { Method } from '@/core/method/type/method.type';
@@ -11,6 +9,8 @@ import type { TrainingController } from '@/core/training/training.controller';
 import { TrainingService } from '@/core/training/training.service';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
+import type { SetState } from '@/lib/common/type/state.type';
+import { handleApiRequest } from '@/lib/common/type/state.type';
 
 export async function handleAddTrainingComponents(
   controller: TrainingController,

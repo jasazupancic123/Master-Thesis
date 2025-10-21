@@ -1,11 +1,11 @@
 import dayjs from 'dayjs';
 import type { RefObject } from 'react';
 
-import { type SetState } from '@/lib/common/type/state.type';
 import type { SliderCyclesProviderReturnType } from '@/components/trainer-group-year-view/context/cycles.provider';
 import type { SliderYearProviderReturnType } from '@/components/trainer-group-year-view/context/years.provider';
 import type { UseSliderPropertiesReturnType } from '@/components/trainer-group-year-view/hooks/use-slider-properties';
 import type { Cycle, Week } from '@/core/group/type/cycle.type';
+import { type SetState } from '@/lib/common/type/state.type';
 import type { IGroupCtx } from '@/store/group.provider';
 
 export function handleDrag(

@@ -1,16 +1,16 @@
 import toast from 'react-hot-toast';
 
-import {
-  COOLDOWN_ID,
-  WARMUP_ID,
-} from '@/core/training/const/warmup-cooldown.const';
-import type { SetState } from '@/lib/common/type/state.type';
 import { updateGlobalStates } from '@/components/supersets/actions/actions-drag-exercise';
 import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-group-day-view/constant/subgroups.constant';
 import { app } from '@/core/app.service';
 import type { AuthUser } from '@/core/auth/type/user.type';
+import {
+  COOLDOWN_ID,
+  WARMUP_ID,
+} from '@/core/training/const/warmup-cooldown.const';
 import type { Subgroup } from '@/core/training/type/subgroup.type';
 import type { Training } from '@/core/training/type/training.type';
+import type { SetState } from '@/lib/common/type/state.type';
 import type { IGroupCtx, useGroup } from '@/store/group.provider';
 import type {
   TrainerDayViewCtx,

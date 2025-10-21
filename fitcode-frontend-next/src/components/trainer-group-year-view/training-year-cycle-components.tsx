@@ -6,13 +6,13 @@ import { updateCycleState } from './actions/actions-cycle';
 import { useMultiCycleSliderCyclesProvider } from './context/cycles.provider';
 import type { UseSliderPropertiesReturnType } from './hooks/use-slider-properties';
 import TrainingYearCycleComponentSelectItem from './training-year-cycle-component-select-item';
+import { ComponentLevel } from '@/core/group/enum/component-level.enum';
+import type { Cycle } from '@/core/group/type/cycle.type';
+import type { Target } from '@/core/target/type/target.type';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/core/training/const/warmup-cooldown.const';
-import { ComponentLevel } from '@/core/group/enum/component-level.enum';
-import type { Cycle } from '@/core/group/type/cycle.type';
-import type { Target } from '@/core/target/type/target.type';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';

@@ -1,7 +1,7 @@
 import type { Gender } from '../enum/gender.enum';
 import type { SportLevel } from '../enum/sport-level.enum';
-import type { TimestampEntity } from '@/core/entity.type';
 import type { CreateUser } from '@/core/auth/type/user.type';
+import type { TimestampEntity } from '@/core/entity.type';
 
 // Firestore Database User
 export type Profile = TimestampEntity & {

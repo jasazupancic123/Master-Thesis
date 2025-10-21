@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 
 import type { UseTrainingMembersReturnType } from './use-members.hook';
-import type { SetState } from '@/lib/common/type/state.type';
 import {
   DEFAULT_SUBGROUP,
   DEFAULT_SUBGROUP_ID,
 } from '@/components/trainer-group-day-view/constant/subgroups.constant';
 import type { Subgroup } from '@/core/training/type/subgroup.type';
+import type { SetState } from '@/lib/common/type/state.type';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 
 export type UseTrainingMembersSubgroupsReturnType = {
