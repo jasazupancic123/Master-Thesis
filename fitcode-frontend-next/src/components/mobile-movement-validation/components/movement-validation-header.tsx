@@ -16,7 +16,8 @@ export default function MovementValidationHeader(
 ) {
   const theme = useTheme();
 
-  const { statusRef, statusMessage, countdownValue } = props;
+  const { statusRef, statusMessage, countdownValue, defaultExerciseName } =
+    props;
 
   return (
     <Box
@@ -62,6 +63,9 @@ export default function MovementValidationHeader(
         }}
       >
         {statusMessage}
+        {statusRef.current === DetectionStatus.NOT_STILL && (
+          <> for {defaultExerciseName}</>
+        )}
         {countdownValue && (
           <>
             <br />

@@ -110,7 +110,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
               }
             }}
           >
-            {exercise.exercise?.name}
+            {exercise.exercise?.name || 'Invalid Exercise'}
           </Typography>
         </Tooltip>
 

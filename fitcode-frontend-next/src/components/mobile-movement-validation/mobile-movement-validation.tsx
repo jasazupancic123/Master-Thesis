@@ -860,7 +860,9 @@ export default function MobileMovementValidation(
             <MovementValidationHeader
               statusRef={statusRef}
               statusMessage={error ? `${error}` : statusMessage.current}
-              defaultExerciseName={defaultExerciseName}
+              defaultExerciseName={
+                selectedExercise?.exercise?.name || defaultExerciseName
+              }
               countdownValue={
                 statusRef.current === DetectionStatus.NOT_STILL &&
                 stillnessCountdownRef.current !== null
@@ -912,13 +914,13 @@ export default function MobileMovementValidation(
         alignItems="center"
         sx={{
           position: 'relative',
-          aspectRatio: screenSize.isSmallerThanLaptop ? '9 / 16' : undefined,
+          aspectRatio: screenSize.isMobile ? '9 / 16' : undefined,
         }}
       >
         <video
           ref={videoRef}
-          width="100%"
-          height="100%"
+          width="100vw"
+          height="100vh"
           autoPlay
           playsInline
           style={{ transform: 'scaleX(-1)', objectFit: 'cover' }}
@@ -952,7 +954,7 @@ export default function MobileMovementValidation(
           ].includes(statusRef.current) ? (
             <>
               <Box
-                width={160}
+                width={Math.max(160, window.innerWidth / 5)}
                 height="100%"
                 display="flex"
                 flexDirection="column"
@@ -1052,7 +1054,7 @@ export default function MobileMovementValidation(
                   hideLabels={true}
                   aiRecordingView
                   sx={{
-                    width: '100% !important',
+                    width: `calc(100% - ${window !== undefined ? Math.max(160, window.innerWidth / 5) : 160}px)`,
                     backgroundColor: theme.palette.background.default,
                     opacity: 0.8,
                   }}
