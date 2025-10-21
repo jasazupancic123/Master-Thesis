@@ -14,7 +14,7 @@ import type { GroupEvent } from '@/core/group/type/group-event.type';
 import type { TrainingComponentWithTrainingId } from '@/core/training/type/training-component.type';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import MyModal from '@/util/modal/modal';
+import MyModal from '@/util/modal';
 
 export type WeekViewItemProps = {
   item: TrainingComponentWithTrainingId | GroupEvent;

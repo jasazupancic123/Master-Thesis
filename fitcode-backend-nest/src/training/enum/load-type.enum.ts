@@ -1,5 +1,5 @@
 export enum LoadType {
-  Kg = 'kg',
-  Bw = 'bw',
-  Rm = 'rm',
+  Kg = 'loadKg',
+  Bw = 'loadBw',
+  Rm = 'loadRm',
 }

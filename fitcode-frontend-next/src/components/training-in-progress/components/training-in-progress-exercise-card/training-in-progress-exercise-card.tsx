@@ -20,7 +20,7 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import ImageGallery from '@/util/image-gallery';
-import SwipeableBox from '@/util/swipeable-box/swipeable-box';
+import SwipeableBox from '@/util/swipeable-box';
 import TrainingInProgressTempoChart from '@/util/tempo-chart';
 
 export default function TrainingInProgressExerciseCard() {

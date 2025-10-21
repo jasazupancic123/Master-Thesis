@@ -17,34 +17,22 @@ import { app } from '@/core/app.service';
 import type { Training } from '@/core/training/type/training.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 
-export type AthleteTrainingCardProps = {
+interface Props {
   training: Training;
-};
+}
 
 const TIMEOUT = 400; // ms
 
-function isActiveTraining(training: Training) {
-  const now = dayjs();
-  const from = dayjs(training.from);
-
-  const isNowAM = now.hour() < 12;
-  const isTrainingAM = from.hour() < 12;
-
-  return isNowAM === isTrainingAM && now.isSame(from, 'day');
-}
-
-export default function AthleteTrainingCard({
-  training,
-}: AthleteTrainingCardProps) {
-  const { user } = useAuthenticatedAuth();
+export default function AthleteTrainingCard({ training }: Props) {
   const theme = useTheme();
-  const isActive = isActiveTraining(training);
+  const { user } = useAuthenticatedAuth();
+
   const { modal, setModal, showSupersets, setShowSupersets } =
     useAthleteTrainingCardUtils();
-
   const { components, selectedComponent, setSelectedComponent } =
     useAthleteTrainingCardComponents(training);
 
+  const isActive = app.training.isActive(training);
   return (
     <>
       <Box
@@ -110,20 +98,10 @@ export default function AthleteTrainingCard({
             alignItems="center"
             textAlign="center"
           >
-            <Typography
-              sx={{
-                fontSize: 12,
-                fontWeight: 350,
-              }}
-            >
+            <Typography sx={{ fontSize: 12, fontWeight: 350 }}>
               Duration
             </Typography>
-            <Typography
-              sx={{
-                fontSize: 14,
-                fontWeight: 'bold',
-              }}
-            >
+            <Typography sx={{ fontSize: 14, fontWeight: 'bold' }}>
               {app.training.getDurationText(training)}
             </Typography>
           </Box>
@@ -134,20 +112,11 @@ export default function AthleteTrainingCard({
             alignItems="center"
             textAlign="center"
           >
-            <Typography
-              sx={{
-                fontSize: 12,
-                fontWeight: 350,
-              }}
-            >
+            <Typography sx={{ fontSize: 12, fontWeight: 350 }}>
               Exercises
             </Typography>
-            <Typography
-              sx={{
-                fontSize: 14,
-                fontWeight: 'bold',
-              }}
-            >
+
+            <Typography sx={{ fontSize: 14, fontWeight: 'bold' }}>
               {
                 app.training.getExercises(
                   app.training.getAthleteTraining(user.uid, training)
@@ -178,10 +147,7 @@ export default function AthleteTrainingCard({
             display="flex"
             justifyContent="center"
             alignItems="center"
-            sx={{
-              mx: 'auto',
-              backgroundColor: theme.palette.background.dark,
-            }}
+            sx={{ mx: 'auto', backgroundColor: theme.palette.background.dark }}
           >
             <IconButton
               sx={{ p: 0, m: 0 }}
@@ -226,11 +192,8 @@ export default function AthleteTrainingCard({
             )}
         </Box>
       </Box>
-      <Divider
-        sx={{
-          mx: 2,
-        }}
-      />
+
+      <Divider sx={{ mx: 2 }} />
     </>
   );
 }

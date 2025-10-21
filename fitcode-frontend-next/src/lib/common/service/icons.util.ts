@@ -2,39 +2,32 @@ import type { SvgIconComponent } from '@mui/icons-material';
 import {
   Accessibility,
   AcUnit,
+  BatteryFull,
   LocalFireDepartment,
 } from '@mui/icons-material';
-import CompetitionIcon from '@mui/icons-material/EmojiEvents';
 import type { Theme } from '@mui/material';
 
-import CoordinationIcon from '@/assets/icons/Coordination.svg';
-import EnduranceIcon from '@/assets/icons/Endurance.svg';
-import RomIcon from '@/assets/icons/Rom.svg';
-import SpeedIcon from '@/assets/icons/Speed.svg';
-import StrengthIcon from '@/assets/icons/Strength.svg';
-import type { SvgC } from '@/components/muscle-map-with-tooltip/muscle-map-with-tooltip';
-
 export class ComponentUtil {
-  getIcon(componentName: string): SvgIconComponent | SvgC | null {
+  getIcon(componentName: string): SvgIconComponent | null {
     switch (componentName.toLowerCase()) {
       case 'warmup':
         return LocalFireDepartment;
       case 'cooldown':
         return AcUnit;
       case 'coordination':
-        return CoordinationIcon as SvgC;
+        return BatteryFull;
       case 'endurance':
-        return EnduranceIcon as SvgC;
+        return BatteryFull;
       case 'other':
         return Accessibility;
       case 'rom':
-        return RomIcon as SvgC;
+        return BatteryFull;
       case 'speed':
-        return SpeedIcon as SvgC;
+        return BatteryFull;
       case 'strength':
-        return StrengthIcon as SvgC;
+        return BatteryFull;
       case 'competition':
-        return CompetitionIcon;
+        return BatteryFull;
       default:
         return null;
     }

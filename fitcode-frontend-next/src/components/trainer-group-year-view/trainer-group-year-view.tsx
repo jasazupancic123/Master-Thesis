@@ -7,7 +7,7 @@ import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constan
 import useMultiCycleSliderProperties from './hooks/use-slider-properties';
 import MultiCycleSliderLayout from './multi-cycle-slider.layout';
 import CycleComponents from '@/components/trainer-group-year-view/training-year-cycle-components';
-import VerticalLinesBorders from '@/util/vertical-lines-borders/vertical-lines-borders';
+import VerticalLinesBorders from '@/util/vertical-lines-borders';
 
 export default function TrainerYearView() {
   const theme = useTheme();

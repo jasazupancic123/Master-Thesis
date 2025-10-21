@@ -8,7 +8,7 @@ import {
 } from '@/lib/common/const/image.const';
 import { HERO_NAVBAR_HEIGHT } from '@/lib/common/const/state';
 import { useScreenSize } from '@/store/screen-size.provider';
-import IndexPageTitleText from '@/util/index-page-title-text/index-page-title-text';
+import IndexPageTitleText from '@/util/index-page-title-text';
 
 export default function AboutUs() {
   const screenSize = useScreenSize();

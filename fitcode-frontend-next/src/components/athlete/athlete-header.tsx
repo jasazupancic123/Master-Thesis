@@ -10,15 +10,13 @@ import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensio
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import Logo from '@/util/logo/logo';
+import Logo from '@/util/logo';
 
 export default function AthleteHeader() {
   const theme = useTheme();
   const screenSize = useScreenSize();
 
-  const athleteHeaderContext = useAthleteHeader();
-  const { selectedTrackingMethod } = athleteHeaderContext || {};
-
+  const { selectedTrackingMethod } = useAthleteHeader() || {};
   if (selectedTrackingMethod === TrackingMethod.CAMERA) return null;
 
   return (

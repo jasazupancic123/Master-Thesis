@@ -4,12 +4,12 @@ import React from 'react';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import { lib } from '@/lib';
 
-type Props = {
+interface Props {
   size?: number; // Avatar px size
   components: TrainingComponent[]; // e.g. ['warmup','endurance','strength','cooldown']
   colors?: string[]; // optional per-icon color
   ringScale?: number; // 0..1, radius as fraction of avatar (default 0.75)
-};
+}
 
 export default function ComponentsAvatarCircle({
   size = 50,

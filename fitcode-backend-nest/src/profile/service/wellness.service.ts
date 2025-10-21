@@ -62,7 +62,9 @@ export class WellnessService {
       range,
     );
 
-    return wellnesses.map((_) => this.zScore(wellnesses, new Date()));
+    return wellnesses
+      .map((_) => this.zScore(wellnesses, new Date()))
+      .filter(Boolean);
   }
 
   private zScore(docs: Wellness[], date: Date): WellnessZScore | null {

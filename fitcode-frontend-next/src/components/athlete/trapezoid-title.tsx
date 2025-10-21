@@ -1,14 +1,13 @@
 import { Box, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 
-interface TrapezoidTitleProps {
+interface Props {
   title: string;
 }
 
-export default function TrapezoidTitle(props: TrapezoidTitleProps) {
+export default function TrapezoidTitle({ title }: Props) {
   const theme = useTheme();
 
-  const { title } = props;
   return (
     <Box
       sx={{

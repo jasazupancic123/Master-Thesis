@@ -1,8 +1,5 @@
 import type { Dayjs } from 'dayjs';
 
-import type { GroupDateFilter } from '@/lib/common/type/filter.type';
-import type { Pagination } from '@/lib/common/type/paginate.type';
-import type { SetState, SetStateNullable } from '@/lib/common/type/state.type';
 import type { AuthUser } from '@/core/auth/type/user.type';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
 import type { Cycle } from '@/core/group/type/cycle.type';
@@ -21,6 +18,9 @@ import type {
   Workload,
 } from '@/core/training/type/workload.type';
 import type { Day } from '@/lib/common/service/date.util';
+import type { GroupDateFilter } from '@/lib/common/type/filter.type';
+import type { Pagination } from '@/lib/common/type/paginate.type';
+import type { SetState, SetStateNullable } from '@/lib/common/type/state.type';
 
 export type GroupIdPageParams = { params: Promise<{ group_id: string }> };
 

@@ -6,7 +6,7 @@ import type { TrainingExercise } from '@/core/training/type/training-exercise.ty
 import type { SetState } from '@/lib/common/type/state.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 
-interface AthleteTrainingExerciseCollapsedProps {
+interface Props {
   exercise: TrainingExercise;
   borderTopRadius: boolean;
   borderBottomRadius: boolean;
@@ -15,20 +15,16 @@ interface AthleteTrainingExerciseCollapsedProps {
   setExpandedSetsView: SetState<boolean>;
 }
 
-export default function AthleteTrainingExerciseCollapsed(
-  props: AthleteTrainingExerciseCollapsedProps
-) {
+export default function AthleteTrainingExerciseCollapsed({
+  exercise,
+  borderTopRadius,
+  borderBottomRadius,
+  expandedSetsView,
+  displaySetsArrow,
+  setExpandedSetsView,
+}: Props) {
   const theme = useTheme();
   const screenSize = useScreenSize();
-
-  const {
-    exercise,
-    borderTopRadius,
-    borderBottomRadius,
-    expandedSetsView,
-    displaySetsArrow,
-    setExpandedSetsView,
-  } = props;
 
   return (
     <Stack

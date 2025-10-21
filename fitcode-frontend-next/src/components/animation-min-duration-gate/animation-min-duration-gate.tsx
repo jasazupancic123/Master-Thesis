@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from 'react';
 
 import { RevealSensor } from './reveal-sensor';
 import { LOADING_ANIMATION_MIN_DURATION_MS } from '@/lib/common/const/animation.const';
-import Animation from '@/util/animation/animation';
+import Animation from '@/util/animation';
 
 interface Props extends React.PropsWithChildren {
   minMs?: number;

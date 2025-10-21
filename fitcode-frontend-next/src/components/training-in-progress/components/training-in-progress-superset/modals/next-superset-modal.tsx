@@ -5,7 +5,7 @@ import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
-import MyModal from '@/util/modal/modal';
+import MyModal from '@/util/modal';
 
 interface NextSupersetModalProps {
   boxRef: RefObject<HTMLDivElement | null>;

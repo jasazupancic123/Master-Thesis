@@ -10,8 +10,8 @@ import { lib } from '@/lib';
 import { CONTACT_US_IMG_URL } from '@/lib/common/const/image.const';
 import { HERO_NAVBAR_HEIGHT } from '@/lib/common/const/state';
 import { useScreenSize } from '@/store/screen-size.provider';
-import IndexPageTitleText from '@/util/index-page-title-text/index-page-title-text';
-import Logo from '@/util/logo/logo';
+import IndexPageTitleText from '@/util/index-page-title-text';
+import Logo from '@/util/logo';
 
 export default function ContactUs() {
   const screenSize = useScreenSize();

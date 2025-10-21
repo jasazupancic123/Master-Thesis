@@ -55,12 +55,13 @@ export class ExerciseParam {
     ['recDist'],
   ];
 
-  static readonly fields: (keyof ExerciseSet)[] = ExerciseParam.pairs.flat();
+  static readonly fields: (keyof ExerciseSet)[] = this.pairs.flat();
 
-  static readonly primaryFields: (keyof ExerciseSet)[] =
-    ExerciseParam.pairs.map((pair) => pair[0]);
+  static readonly primaryFields: (keyof ExerciseSet)[] = this.pairs.map(
+    (pair) => pair[0],
+  );
 
-  static readonly secondaryFields: (keyof ExerciseSet)[] = ExerciseParam.pairs
+  static readonly secondaryFields: (keyof ExerciseSet)[] = this.pairs
     .filter((pair) => pair.length === 2)
     .map((pair) => pair[1]);
 

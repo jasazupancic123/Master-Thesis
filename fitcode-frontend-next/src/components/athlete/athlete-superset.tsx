@@ -8,18 +8,13 @@ import type { Superset } from '@/core/training/type/superset.type';
 import type { Training } from '@/core/training/type/training.type';
 import { lib } from '@/lib';
 
-interface AthleteSupersetProps {
+interface Props {
   superset: Superset;
-  supersetIndex: number;
-  supersets: Superset[];
   training: Training;
 }
 
-export default function AthleteSuperset(props: AthleteSupersetProps) {
+export default function AthleteSuperset({ superset, training }: Props) {
   const theme = useTheme();
-
-  const { superset, training } = props;
-
   const [expandedSetsView, setExpandedSetsView] = useState(false);
 
   return (
@@ -43,6 +38,7 @@ export default function AthleteSuperset(props: AthleteSupersetProps) {
               expandedSetsView={expandedSetsView}
               setExpandedSetsView={setExpandedSetsView}
             />
+
             {expandedSetsView && (
               <AthleteTrainingExerciseSets
                 key={exercise.id}

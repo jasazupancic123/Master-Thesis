@@ -14,8 +14,8 @@ import {
 import { LINK_TECHNOLOGY } from '@/lib/common/const/nav.const';
 import { HERO_NAVBAR_HEIGHT } from '@/lib/common/const/state';
 import { useScreenSize } from '@/store/screen-size.provider';
-import IndexPageTitleText from '@/util/index-page-title-text/index-page-title-text';
-import Logo from '@/util/logo/logo';
+import IndexPageTitleText from '@/util/index-page-title-text';
+import Logo from '@/util/logo';
 
 type Item = { imageUrl: string; title: string; description: string };
 

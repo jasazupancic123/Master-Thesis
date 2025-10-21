@@ -25,8 +25,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
-import LoadingOverlay from '../../util/loading-overlay/loading-overlay';
-import Logo from '../../util/logo/logo';
+import LoadingOverlay from '../../util/loading-overlay';
+import Logo from '../../util/logo';
 import ProfileHeaderMenu from '../profile-header-menu/profile-header-menu';
 import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
 import { handleUpdateTraining } from './actions/actions-training';
@@ -34,7 +34,6 @@ import AddMemberModal from './add-member-modal';
 import useTrainerGroupHeaderUtils from './hooks/use-utils';
 import { handleSaveGroup } from '@/app/(trainer)/groups/[group_id]/state';
 import { GroupController } from '@/core/group/group.controller';
-import { TrainingController } from '@/core/training/training.controller';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import {
   LINK_DASHBOARD,
@@ -49,7 +48,7 @@ import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
-import FilterButton from '@/util/filter-button/filter-button';
+import FilterButton from '@/util/filter-button';
 
 export interface TrainerGroupHeaderProps {
   filter: GroupDateFilter;
@@ -92,9 +91,6 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
     anchorProfileEl,
     setAnchorProfileEl,
   } = useTrainerGroupHeaderUtils();
-
-  const trainingController = TrainingController.getInstance();
-  const groupController = GroupController.getInstance();
 
   return (
     <Box
@@ -292,7 +288,7 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
                         sx={{ p: 0, m: 0, mx: 1, cursor: 'pointer' }}
                         onClick={() =>
                           handleSaveGroup(
-                            groupController,
+                            GroupController.getInstance(),
                             selectedGroup,
                             setSelectedGroup,
                             cycle,
@@ -426,7 +422,7 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
             <IconButton
               onClick={() =>
                 handleSaveGroup(
-                  groupController,
+                  GroupController.getInstance(),
                   selectedGroup,
                   setSelectedGroup,
                   cycle,

@@ -5,9 +5,9 @@ import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 import React, { Fragment, useState } from 'react';
 
-import CustomDivider from '../../util/custom-divider/custom-divider';
-import HorizontalItemsList from '../../util/horizontal-items-list/horizontal-items-list';
-import VerticalLinesBorders from '../../util/vertical-lines-borders/vertical-lines-borders';
+import CustomDivider from '../../util/custom-divider';
+import HorizontalItemsList from '../../util/horizontal-items-list';
+import VerticalLinesBorders from '../../util/vertical-lines-borders';
 import ExerciseChips from '../exercise-chips/exercise-chips';
 import {
   DIVIDER_HEIGHT,
