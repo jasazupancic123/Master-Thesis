@@ -1,12 +1,12 @@
 import toast from 'react-hot-toast';
 
-import type { ExerciseSetTracking } from '@/core/training/type/exercise-set-tracking-state.type';
-import type { SetState } from '@/lib/common/type/state.type';
 import { KeypointHistory } from '@/core/pose-detection/class/keypoint-history';
 import type { Rep } from '@/core/pose-detection/type/rep.type';
+import type { ExerciseSetTracking } from '@/core/training/type/exercise-set-tracking-state.type';
 import type { TrainingExerciseRecording } from '@/core/training/type/training-exercise.type';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
 import type { CreateWorkload } from '@/core/training/type/workload.type';
+import type { SetState } from '@/lib/common/type/state.type';
 
 export const finishSet = async (state: {
   exercise: TrainingExerciseRecording;
@@ -32,9 +32,14 @@ export const finishSet = async (state: {
     const currentSet = exercise.recordedSets.find(
       (s) => s.setIndex === setIndex
     );
-    if (currentSet && currentSet.images.length) {
-      const lastRepImage = currentSet.images[currentSet.images.length - 1];
-      set.photoUrl = lastRepImage.url;
+
+    if (currentSet) {
+      set.photoUrl = currentSet.imagesL
+        ? currentSet.imagesL.at(-1)?.url
+        : undefined;
+      set.photoUrlR = currentSet.imagesR
+        ? currentSet.imagesR.at(-1)?.url
+        : undefined;
     }
   }
 

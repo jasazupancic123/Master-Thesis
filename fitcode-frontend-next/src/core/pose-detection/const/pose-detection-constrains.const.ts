@@ -16,6 +16,9 @@ export const POSE_DETECTION_CONSTRAINTS = {
 
   // Head shake
   HEAD_SHAKE_DETECTION_BUFFER_DURATION_S: 1.5, // how many ms to track for head shake detection
+  MOUTH_Z_THRESHOLD_M: 0.03, // min z distance of mouth from starting position to consider head shake
+  START_NOSE_ANKLE_X_ALIGN_THRESHOLD_M: 0.06, // min x distance of nose from starting ankle x position to consider head shake
+  MIN_NOSE_X_MOVEMENT_M: 0.03, // min x distance of nose from starting position to consider head shake
 
   KEYPOINT_BUFFER_DURATION_MS: 1000, // how many ms to track
   CLOSE_ENOUGH_TO_START_VALUE_RATIO: 0.2, // how close to the start value the rep needs to be to be considered finished
@@ -27,10 +30,10 @@ export const POSE_DETECTION_CONSTRAINTS = {
 
   // Rep start
   PRE_WINDOW_FRAMES_REP_START: 4, // stevilo tock pred zaznano končno, v katerih iščemo ekstremum
-  MAX_LOOKBACK_REP_START_S: 3, // maksimalno število sekund, ki jih lahko gledamo nazaj, da najdemo začetek ponovitve
+  MAX_LOOKBACK_REP_START_S: 1, // maksimalno število sekund, ki jih lahko gledamo nazaj, da najdemo začetek ponovitve
   KEEP_KEYPOINT_HISTORY_DURING_RECORDING_MS: 8000, // koliko sekund hranimo zgodovino keypointov, da lahko gledamo nazaj
-  REP_START_VELOCITY_HIGH_FPS_M_PER_S: 0.04, // when speed goes under (this_value)m/s, then we started the rep!
-  REP_START_VELOCITY_LOW_FPS_M_PER_S: 0.02, // when speed goes under (this_value)m/s, then we started the rep!
+  REP_START_END_VELOCITY_HIGH_FPS_M_PER_S: 0.04, // when speed goes under (this_value)m/s, then we started the rep!
+  REP_START_END_VELOCITY_LOW_FPS_M_PER_S: 0.02, // when speed goes under (this_value)m/s, then we started the rep!
   REP_START_VELOCITY_SUSTAIN_S: 0.3, // if this many frames go under the velocity threshold, then rep started
   REP_START_CONSECUTIVE_FRAMES_UNDER_VELOCITY_THRESHOLD_S: 0.2, // if this many frames go under the velocity threshold, then rep started
   REP_START_JOINT_STILLNESS_VELOCITY_THRESHOLD_M_PER_S: 0.01, // tracking stillness of a joint for rep start

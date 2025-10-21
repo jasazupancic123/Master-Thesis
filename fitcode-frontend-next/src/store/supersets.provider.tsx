@@ -165,6 +165,11 @@ export function SupersetsProvider(
     setOpenVideoPlayerModal,
     openAddExerciseModal,
     setOpenAddExerciseModal,
+<<<<<<< HEAD
+=======
+    setsNumbers: setsNumbers,
+    setSetsNumbers,
+>>>>>>> main
     handleMenuClose,
     updateTrainingExercises,
     updateTrainingExerciseParam,

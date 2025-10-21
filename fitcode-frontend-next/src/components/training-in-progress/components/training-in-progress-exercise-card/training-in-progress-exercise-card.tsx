@@ -10,7 +10,14 @@ import {
 } from './actions/actions-exercise';
 import TrainingExerciseSetDoneCheckbox from './components/training-exercise-set-done-checkbox';
 import useExerciseIndexLabel from './hooks/use-exercise-index-label';
+<<<<<<< HEAD
 import AthleteTrainingExerciseSets from '@/components/athlete/athlete-training-exercise-sets';
+=======
+import { TrackingMethod } from '@/common/enum/tracking-method.enum';
+import ImageGallery from '@/common/util/image-gallery';
+import TempoChart from '@/components/charts/tempo/tempo-chart';
+import AthleteTrainingExerciseSets from '@/components/athlete/athlete-training-exercise-sets/athlete-training-exercise-sets';
+>>>>>>> main
 import MobileMovementValidation from '@/components/mobile-movement-validation/mobile-movement-validation';
 import { EXERCISE_POSES } from '@/core/pose-detection/const/exercise-poses';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
@@ -19,9 +26,16 @@ import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
+<<<<<<< HEAD
 import ImageGallery from '@/util/image-gallery';
 import SwipeableBox from '@/util/swipeable-box';
 import TrainingInProgressTempoChart from '@/util/tempo-chart';
+=======
+import SwipeableBox from '@/util/swipeable-box/swipeable-box';
+import RomChart from '@/components/charts/rom/rom-chart';
+import RomStatistic from '@/components/charts/rom/rom-statisctic';
+import TempoStatistic from '@/components/charts/tempo/tempo-statistic';
+>>>>>>> main
 
 export default function TrainingInProgressExerciseCard() {
   const theme = useTheme();
@@ -356,7 +370,8 @@ export default function TrainingInProgressExerciseCard() {
                   borderRadius: '25%',
                 }}
                 onClick={() => {
-                  if (!selectedExercise.exercise) return;
+                  if (!selectedExercise.exercise || setIndex === undefined)
+                    return;
 
                   const hasPoseLogic =
                     selectedExercise.exercise !== undefined &&
@@ -368,6 +383,21 @@ export default function TrainingInProgressExerciseCard() {
                     toast.error(
                       'Pose detection is not supported for this exercise yet'
                     );
+                    return;
+                  }
+
+                  const setTrackingState =
+                    trainingInProgress.exerciseSetTrackingState.find(
+                      (state) => state.exerciseId === selectedExercise.id
+                    );
+
+                  if (!setTrackingState) return;
+
+                  const isCurrentSetDone =
+                    setTrackingState.completedSetNumbers.includes(setIndex + 1);
+
+                  if (isCurrentSetDone) {
+                    toast.error('This set is already marked as done');
                     return;
                   }
 
@@ -423,17 +453,38 @@ export default function TrainingInProgressExerciseCard() {
         </Box>
         <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
           {setIndex !== undefined && (
-            <TrainingInProgressTempoChart
-              selectedExercise={selectedExercise}
-              setIndex={setIndex}
-              width={Math.min(window.innerWidth * 0.95, 620)} // max 620px
-            />
+            <>
+              <TempoChart
+                selectedExercise={selectedExercise}
+                setIndex={setIndex}
+                width={Math.min(window.innerWidth * 0.95, 620)} // max 620px
+                isUnilateral={selectedExercise.exercise?.isUnilateral || false}
+              />
+              <TempoStatistic
+                selectedExercise={selectedExercise}
+                setIndex={setIndex}
+              />
+              <RomChart
+                selectedExercise={selectedExercise}
+                setIndex={setIndex}
+                width={Math.min(window.innerWidth * 0.95, 620)} // max 620px
+              />
+              <RomStatistic
+                selectedExercise={selectedExercise}
+                setIndex={setIndex}
+              />
+            </>
           )}
           <ImageGallery
-            images={
+            imagesL={
               (selectedExercise.recordedSets || []).find(
                 (set) => set.setIndex === setIndex
-              )?.images || []
+              )?.imagesL || []
+            }
+            imagesR={
+              (selectedExercise.recordedSets || []).find(
+                (set) => set.setIndex === setIndex
+              )?.imagesR || []
             }
             enableImagePickerSlider
           />

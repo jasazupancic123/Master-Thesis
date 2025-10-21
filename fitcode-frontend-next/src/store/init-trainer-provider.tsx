@@ -30,7 +30,11 @@ export default async function InitTrainerProvider({
       sleep(LOADING_ANIMATION_MIN_DURATION_MS), // ensures the server doesn’t reveal *too fast*
     ]);
 
-    return <CoachMainProvider {...data}>{children}</CoachMainProvider>;
+    return (
+      <CoachMainProvider key={profile.uid} {...data}>
+        {children}
+      </CoachMainProvider>
+    );
   } catch (e) {
     console.error('[TrainerProvider] error', e);
     return <Alert type="unauthorized" />;
