@@ -81,7 +81,11 @@ export const AuthProvider = (props: ChildrenProps) => {
     handleUserChange(null);
     await auth.signOut();
     await controller.logout();
-    if (redirect) router.push(LINK_SIGN_IN.href);
+    if (redirect) {
+      router.push(LINK_SIGN_IN.href);
+    }
+    router.refresh();
+    router.refresh();
   }
 
   useEffect(() => {
