@@ -52,7 +52,7 @@ export default async function InitAthleteProvider({ children }: ChildrenProps) {
       .sort((a, b) => new Date(b.from).getTime() - new Date(a.from).getTime());
 
     return (
-      <AthleteMainProvider {...data}>
+      <AthleteMainProvider key={profile.uid} {...data}>
         <AthleteProvider trainings={trainings} reports={reports}>
           {children}
         </AthleteProvider>
