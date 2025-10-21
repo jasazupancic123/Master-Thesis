@@ -109,14 +109,18 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
             type: KeypointValueType.POSITION_Y,
             direction: ConditionDirection.NEGATIVE,
             duration: 1500, // ms
-            distance: 0.08, // meters
+            distance: 0.04, // meters
           },
         ],
       },
     },
   },
   {
-    exerciseIds: ['lateral-squat-bw', 'lateral-lunge-w-plate-reach-di'],
+    exerciseIds: [
+      'lateral-squat-bw',
+      'lateral-lunge-w-plate-reach-di',
+      'lateral-lunge',
+    ],
     data: {
       romValueType: KeypointValueType.POSITION_X,
       cannotDoBothSidesSimultaneously: true,
@@ -128,7 +132,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
             type: KeypointValueType.POSITION_X,
             direction: ConditionDirection.POSITIVE,
             duration: 750, // ms
-            distance: 0.05, // meters
+            distance: 0.04, // meters
           },
         ],
       },
@@ -140,7 +144,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
             type: KeypointValueType.POSITION_X,
             direction: ConditionDirection.NEGATIVE,
             duration: 750, // ms
-            distance: 0.05, // meters
+            distance: 0.04, // meters
           },
         ],
       },
@@ -159,7 +163,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
             type: KeypointValueType.POSITION_Y,
             direction: ConditionDirection.NEGATIVE,
             duration: 1100,
-            distance: 0.08,
+            distance: 0.06,
           },
         ],
         recordingStillnesses: [
@@ -191,7 +195,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
             type: KeypointValueType.POSITION_Y,
             direction: ConditionDirection.NEGATIVE,
             duration: 1100, // ms
-            distance: 0.08, // meters
+            distance: 0.06, // meters
           },
         ],
         recordingStillnesses: [
@@ -229,7 +233,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
             type: KeypointValueType.POSITION_Y,
             direction: ConditionDirection.POSITIVE,
             duration: 1000,
-            distance: 0.05,
+            distance: 0.04,
           },
         ],
       },
@@ -280,7 +284,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
             type: KeypointValueType.POSITION_Y,
             direction: ConditionDirection.NEGATIVE,
             duration: 1100,
-            distance: 0.08,
+            distance: 0.05,
           },
         ],
         requiredPoseConditions: [
@@ -312,7 +316,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
             type: KeypointValueType.POSITION_Y,
             direction: ConditionDirection.NEGATIVE,
             duration: 1100,
-            distance: 0.08,
+            distance: 0.05,
           },
         ],
         requiredPoseConditions: [
@@ -350,7 +354,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
             type: KeypointValueType.POSITION_Y,
             direction: ConditionDirection.POSITIVE,
             duration: 750, // ms
-            distance: 0.1, // meters
+            distance: 0.05, // meters
           },
         ],
       },
@@ -362,7 +366,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
             type: KeypointValueType.POSITION_Y,
             direction: ConditionDirection.POSITIVE,
             duration: 750, // ms
-            distance: 0.1, // meters
+            distance: 0.05, // meters
           },
         ],
       },
@@ -380,7 +384,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
             type: KeypointValueType.POSITION_Y,
             direction: ConditionDirection.POSITIVE,
             duration: 750, // ms
-            distance: 0.1, // meters
+            distance: 0.05, // meters
           },
         ],
       },
@@ -426,7 +430,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
             type: KeypointValueType.POSITION_Y,
             direction: ConditionDirection.POSITIVE,
             duration: 750, // ms
-            distance: 0.15, // meters
+            distance: 0.07, // meters
           },
         ],
         requiredPoseConditions: [
