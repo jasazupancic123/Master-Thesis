@@ -5,8 +5,8 @@ import type { Subgroup } from '../type/subgroup.type';
 import type { Superset } from '../type/superset.type';
 import type { TrainingComponent } from '../type/training-component.type';
 import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-group-day-view/constant/subgroups.constant';
-import { core } from '@/core/core.service';
 import type { AuthUser } from '@/core/auth/type/user.type';
+import { core } from '@/core/core.service';
 
 export class TrainingSubgroupUtil {
   stub(data?: Partial<Subgroup>): Subgroup {

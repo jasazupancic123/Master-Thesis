@@ -11,13 +11,12 @@ import { PoseDetectionService } from './pose-detection.service';
 import type {
   ExerciseDetectionData,
   ExerciseRepStartCondition,
-} from './types/exercise-start-condition.type';
-import type { Keypoint } from './types/keypoint.type';
-import type { RepState } from './types/rep-state.type';
+} from './type/exercise-start-condition.type';
+import type { Keypoint } from './type/keypoint.type';
+import type { Rep } from './type/rep.type';
+import type { RepState } from './type/rep-state.type';
 import { KeypointUtil } from './util/keypoint.util';
 import { getStatusMessage } from '@/components/mobile-movement-validation/state';
-import { Rep } from './types/rep.type';
-import { math } from '@tensorflow/tfjs';
 
 export class StatusDetectionService {
   // if it returns false, it means we need to return in main loop
@@ -465,7 +464,7 @@ export class StatusDetectionService {
   ): boolean {
     // 5 fps/s, 0.5s -> 3 frames
 
-    let currentBuffer = { ...buffer };
+    const currentBuffer = { ...buffer };
 
     const lastRep = recordedReps[recordedReps.length - 1];
     if (lastRep) {

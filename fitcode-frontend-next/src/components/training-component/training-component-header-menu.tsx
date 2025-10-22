@@ -2,7 +2,6 @@ import { Box, Tooltip } from '@mui/material';
 import { useState } from 'react';
 
 import { handleSetMainSet } from './actions/actions-main-set';
-import { onMethodChange } from './actions/actions-method';
 import { handleSetPeriodizationType } from './actions/actions-periodization-type';
 import PeriodizeModal from './periodize-modal';
 import { AFTER_SETS } from '@/components/trainer-group-day-view/constant/after-sets.constant';
@@ -25,7 +24,6 @@ export default function TrainingComponentHeaderMenu() {
 
   const { methods: allMethods } = useMain();
 
-  const mainContext = useMain();
   const groupContext = useGroup();
   const trainerDayViewContext = useTrainerDayView();
 
@@ -198,22 +196,7 @@ export default function TrainingComponentHeaderMenu() {
           selectSize="small"
           setValue={(methodId) => {
             if (typeof methodId !== 'string') return;
-
-            // in supersets.tsx, a useEffect gets called to update setsNumbers if method limits them
-            onMethodChange(
-              {
-                methodId,
-              },
-              {
-                useMain: mainContext,
-                useGroup: groupContext,
-                useTrainerDayViewContext: {
-                  ...trainerDayViewContext,
-                  training,
-                  component,
-                },
-              }
-            );
+            alert('Method change is currently disabled.');
           }}
         />
       </Tooltip>

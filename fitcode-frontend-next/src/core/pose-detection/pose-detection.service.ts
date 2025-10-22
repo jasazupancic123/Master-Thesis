@@ -6,11 +6,11 @@ import { DetectionStatus } from './enum/detection-status';
 import { KeypointId } from './enum/keypoint-id';
 import { KeypointValueType } from './enum/keypoint-value-type';
 import { StatusDetectionService } from './status-detection.service';
-import type { Keypoint } from './types/keypoint.type';
-import type { PoseValidationCondition } from './types/pose-validation-condition.type';
-import type { RepState } from './types/rep-state.type';
+import type { ExerciseDetectionData } from './type/exercise-start-condition.type';
+import type { Keypoint } from './type/keypoint.type';
+import type { PoseValidationCondition } from './type/pose-validation-condition.type';
+import type { RepState } from './type/rep-state.type';
 import { KeypointUtil } from './util/keypoint.util';
-import { ExerciseDetectionData } from './types/exercise-start-condition.type';
 
 export class PoseDetectionService {
   static checkStatus(state: {
@@ -155,9 +155,9 @@ export class PoseDetectionService {
     const startNoseLeftShoulderDist = startLeftShoulderX - startNoseX; // left shoulderX is bigger than right shoulderX
     const startNoseRightShoulderDist = startNoseX - startRightShoulderX;
 
-    let hasMovedLeft = false,
-      hasMovedRight = false,
-      hasRotatedLeft = false,
+    const hasMovedLeft = false,
+      hasMovedRight = false;
+    let hasRotatedLeft = false,
       hasRotatedRight = false;
 
     for (const frame of frames) {

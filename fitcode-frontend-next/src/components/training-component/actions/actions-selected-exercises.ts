@@ -1,8 +1,8 @@
+import { removeSelectedExercises } from '@/components/supersets/actions/actions-drag-exercise';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/core/training/const/warmup-cooldown.const';
-import { SubgroupUtil } from '@/core/training/custom-shit-subgroup.util';
 import type { Superset } from '@/core/training/type/superset.type';
 import type { IGroupCtx } from '@/store/group.provider';
 import type { TrainerDayViewCtx } from '@/store/trainer-day-view.provider';
@@ -69,7 +69,7 @@ export function deleteSelectedExercises(
     );
   }
 
-  newComponent.subgroups = SubgroupUtil.removeSelectedExercises(
+  newComponent.subgroups = removeSelectedExercises(
     newComponent,
     selectedSubgroup,
     selectedExerciseIds

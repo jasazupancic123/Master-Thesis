@@ -1,13 +1,16 @@
 import type { DraggableLocation } from 'react-beautiful-dnd';
 import toast from 'react-hot-toast';
 
+import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-group-day-view/constant/subgroups.constant';
 import { NUM_MAX_SUPERSETS } from '@/components/trainer-group-day-view/constant/supersets.constant';
+import { onMainSetChange } from '@/components/training-component/actions/actions-main-set';
+import { removeSelectedExercisesFromSupersets } from '@/components/training-component/actions/actions-selected-exercises';
+import { core } from '@/core/core.service';
 import { ADD_SUPERSET_DROPPABLE_ID } from '@/core/training/const/add-superset-droppable-id.const';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/core/training/const/warmup-cooldown.const';
-import { SubgroupUtil } from '@/core/training/custom-shit-subgroup.util';
 import { MainSet } from '@/core/training/enum/main-set.enum';
 import type { Subgroup } from '@/core/training/type/subgroup.type';
 import type { Superset } from '@/core/training/type/superset.type';
@@ -72,7 +75,7 @@ export async function onDragEndExercise(
         ),
       };
 
-      updatedComponent.subgroups = SubgroupUtil.updateOnAddExerciseDrop(
+      updatedComponent.subgroups = updateOnAddExerciseDrop(
         selectedSubgroup,
         updatedComponent,
         draggableId
@@ -87,7 +90,7 @@ export async function onDragEndExercise(
         supersets: newSupersets,
       };
 
-      updatedComponent.subgroups = SubgroupUtil.updateOnAddExerciseDrop(
+      updatedComponent.subgroups = updateOnAddExerciseDrop(
         selectedSubgroup,
         updatedComponent,
         draggableId
@@ -124,13 +127,12 @@ export async function onDragEndExercise(
       ),
     };
 
-    updatedComponent.subgroups =
-      SubgroupUtil.updateOnDragEndExerciseToExistingSuperset(
-        draggableId,
-        destination,
-        updatedComponent,
-        updatedSubgroup
-      );
+    updatedComponent.subgroups = updateOnDragEndExerciseToExistingSuperset(
+      draggableId,
+      destination,
+      updatedComponent,
+      updatedSubgroup
+    );
 
     setSelectedSubgroup(updatedSubgroup);
     setComponent(updatedComponent);
@@ -141,13 +143,12 @@ export async function onDragEndExercise(
       supersets: updatedSupersets,
     };
 
-    updatedComponent.subgroups =
-      SubgroupUtil.updateOnDragEndExerciseToExistingSuperset(
-        draggableId,
-        destination,
-        updatedComponent,
-        null
-      );
+    updatedComponent.subgroups = updateOnDragEndExerciseToExistingSuperset(
+      draggableId,
+      destination,
+      updatedComponent,
+      null
+    );
 
     setComponent(updatedComponent);
     updateGlobalStates(training, component, updatedComponent, setTraining);
@@ -319,4 +320,125 @@ export function onDragEndExerciseToExistingSuperset(
   }
 
   return finalSupersetsCopy;
+}
+
+// when exercise is dropped on 'Add/drop exercise' area
+function updateOnAddExerciseDrop(
+  selectedSubgroup: Subgroup | null,
+  component: TrainingComponent,
+  draggableId: string
+): Subgroup[] {
+  const parentId = selectedSubgroup?.id || DEFAULT_SUBGROUP_ID;
+
+  component.subgroups = component.subgroups.map((sg) => {
+    if (sg.parentId && sg.parentId === parentId) {
+      return {
+        ...sg,
+        supersets: onAddExerciseDrop(sg.supersets, draggableId) || sg.supersets,
+      };
+    }
+
+    return sg;
+  });
+
+  return component.subgroups;
+}
+
+function updateOnDragEndExerciseToExistingSuperset(
+  draggableId: string,
+  destination: DraggableLocation,
+  component: TrainingComponent,
+  selectedSubgroup: Subgroup | null
+): Subgroup[] {
+  const parentId = selectedSubgroup?.id || DEFAULT_SUBGROUP_ID;
+
+  component.subgroups = component.subgroups.map((sg) => {
+    if (sg.parentId && sg.parentId === parentId) {
+      const newSupersets = onDragEndExerciseToExistingSuperset(
+        draggableId,
+        destination,
+        {
+          component,
+          selectedSubgroup,
+          supersets: sg.supersets,
+        }
+      );
+
+      return { ...sg, supersets: newSupersets || sg.supersets };
+    }
+    return sg;
+  });
+  return component.subgroups;
+}
+
+export function updateMainSet(input: {
+  component: TrainingComponent;
+  selectedSubgroup: Subgroup | null;
+  mainSet: MainSet;
+}): Subgroup[] {
+  const { component, selectedSubgroup, mainSet } = input;
+
+  const parentId = selectedSubgroup?.id || DEFAULT_SUBGROUP_ID;
+
+  component.subgroups = component.subgroups.map((sg) => {
+    if (sg.parentId && sg.parentId === parentId) {
+      const newSupersets = onMainSetChange({
+        mainSet,
+        updatedComponent: component,
+        updatedSubgroup: selectedSubgroup,
+      });
+
+      return { ...sg, supersets: newSupersets, mainSet };
+    }
+
+    return sg;
+  });
+
+  return component.subgroups;
+}
+
+export function removeExerciseFromSuperset(
+  component: TrainingComponent,
+  selectedSubgroup: Subgroup | null,
+  supersetIndex: number,
+  exerciseIndex: number
+): Subgroup[] {
+  const parentId = selectedSubgroup?.id || DEFAULT_SUBGROUP_ID;
+
+  component.subgroups = component.subgroups.map((sg) => {
+    if (sg.parentId && sg.parentId === parentId) {
+      const newSupersets = core.training.superset.removeExercise(
+        sg.supersets,
+        exerciseIndex,
+        supersetIndex
+      );
+
+      return { ...sg, supersets: newSupersets };
+    }
+    return sg;
+  });
+
+  return component.subgroups;
+}
+
+export function removeSelectedExercises(
+  component: TrainingComponent,
+  selectedSubgroup: Subgroup | null,
+  selectedExerciseIds: string[]
+) {
+  const parentId = selectedSubgroup?.id || DEFAULT_SUBGROUP_ID;
+
+  component.subgroups = component.subgroups.map((sg) => {
+    if (sg.parentId && sg.parentId === parentId) {
+      const newSupersets = removeSelectedExercisesFromSupersets(
+        sg.supersets,
+        selectedExerciseIds
+      );
+
+      return { ...sg, supersets: newSupersets };
+    }
+    return sg;
+  });
+
+  return component.subgroups;
 }
