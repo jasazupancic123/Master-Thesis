@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 
 import { NumberExerciseParam } from '@/components/exercise-param/number-exercise-param';
 import { TempoExerciseParam } from '@/components/exercise-param/tempo-exercise-param';
-import { app } from '@/core/app.service';
+import { core } from '@/core/core.service';
 import {
   BW,
   KG,
@@ -162,7 +162,7 @@ export default function TrainingExerciseCardCollapsedSets(
             onSelectChange={(selected) => {
               // update load type
               const field = selected.toString() as LoadType;
-              const value = app.exercise.param.get(field)
+              const value = core.exercise.param.get(field)
                 ?.defaultValue as number;
 
               supersetsContext.updateTrainingExerciseParam(

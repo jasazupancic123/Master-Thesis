@@ -1,17 +1,14 @@
 import { Box, Typography } from '@mui/material';
 
-import { useUndoneExercises } from '../../context/undone-exercises.provider';
-import TrainingInProgressExerciseSet from '@/components/training-in-progress/components/training-in-progress-exercise-set/training-in-progress-exercise-set';
+import { useUndoneExercises } from './context/undone-exercises.provider';
+import TrainingInProgressExerciseSet from '@/components/training-in-progress/training-in-progress-exercise-set';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 
 export default function UndoneExercisesList() {
   const { undoneExercises } = useUndoneExercises();
-
   const { trainingInProgress } = useTraining();
-
   const { selectedSuperset } = useTrainingInProgress();
-
   if (!trainingInProgress) return null;
 
   return (
@@ -21,13 +18,12 @@ export default function UndoneExercisesList() {
       flexDirection="column"
       alignItems="center"
       gap={1}
-      sx={{
-        overflowY: 'auto',
-      }}
+      sx={{ overflowY: 'auto' }}
     >
       <Typography textAlign="center" fontSize={20} fontWeight={500}>
         Undone sets
       </Typography>
+
       {undoneExercises.map((exercise) => {
         let setCounter = 0;
 

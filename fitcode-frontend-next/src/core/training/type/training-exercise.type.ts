@@ -11,6 +11,11 @@ export type TrainingExercise = IdEntity & {
   exercise?: Exercise;
 };
 
+export type TrainingExerciseExtended = TrainingExercise & {
+  componentId: string;
+  supersetIndex: number;
+};
+
 export type UpdateTrainingExercise = Pick<TrainingExercise, 'id' | 'sets'>;
 
 export type RepImage = {

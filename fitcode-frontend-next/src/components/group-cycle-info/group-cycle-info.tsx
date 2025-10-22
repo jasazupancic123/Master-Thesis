@@ -5,7 +5,7 @@ import type { Cycle } from '@/core/group/type/cycle.type';
 import type { Group } from '@/core/group/type/group.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 
-interface GroupInfoProps {
+interface Props {
   group: Group;
   week?: number;
   cycle?: Cycle;
@@ -13,7 +13,7 @@ interface GroupInfoProps {
   disableMoreVert?: boolean;
 }
 
-export default function GroupCycleInfo(props: GroupInfoProps) {
+export default function GroupCycleInfo(props: Props) {
   const screenSize = useScreenSize();
 
   const { group, week, cycle, smallDisplay, disableMoreVert } = props;

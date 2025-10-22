@@ -5,8 +5,8 @@ import {
   disableBorder,
   exerciseCardSetAttributeSx,
 } from '../trainer-group-day-view/style/exercise-card-set-attribute.style';
-import { app } from '@/core/app.service';
 import type { Attribute } from '@/core/attribute/type/attribute.type';
+import { core } from '@/core/core.service';
 import type { ExerciseParamField } from '@/core/training/type/exercise-set.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { SetState } from '@/lib/common/type/state.type';
@@ -51,7 +51,7 @@ export function NumberExerciseParam(props: Props) {
   const { setDetectedChanges } =
     athleteView || !group ? { setDetectedChanges: undefined } : group;
 
-  const exerciseParam = app.exercise.param.get(selected as ExerciseParamField);
+  const exerciseParam = core.exercise.param.get(selected as ExerciseParamField);
 
   if (!exerciseParam) return null;
   const { min, max } = exerciseParam;

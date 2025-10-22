@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { getAthleteChart, getGroupChart } from '../chart.util';
-import { app } from '@/core/app.service';
+import { core } from '@/core/core.service';
 import type { ChartWorkloadData } from '@/core/training/type/chart-workload-data.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { Dimensions } from '@/lib/common/type/dimensions.type';
@@ -51,7 +51,7 @@ export default function useTrainingExerciseCardChart({ exercise }: Props) {
           selectedAthlete.uid,
           exercise,
           component,
-          app.training.getAthleteTraining(selectedAthlete.uid, training),
+          core.training.getAthleteTraining(selectedAthlete.uid, training),
           {
             trainings,
             workloads: selectedAthleteWorkloads,

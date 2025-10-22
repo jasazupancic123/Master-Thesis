@@ -2,7 +2,7 @@ import toast from 'react-hot-toast';
 
 import { updateGlobalStates } from '@/components/supersets/actions/actions-drag-exercise';
 import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-group-day-view/constant/subgroups.constant';
-import { app } from '@/core/app.service';
+import { core } from '@/core/core.service';
 import type { AuthUser } from '@/core/auth/type/user.type';
 import {
   COOLDOWN_ID,
@@ -189,8 +189,8 @@ export function updateSelectedAthleteSubgroup(
   if (subgroupId !== (selectedSubgroup?.id || DEFAULT_SUBGROUP_ID)) return;
 
   const virtual =
-    app.training.subgroup.getVirtual(athlete.uid, component) ||
-    app.training.subgroup.createVirtual(athlete, selectedSubgroup, component);
+    core.training.subgroup.getVirtual(athlete.uid, component) ||
+    core.training.subgroup.createVirtual(athlete, selectedSubgroup, component);
 
   const updatedComponent = structuredClone(component);
   updatedComponent.subgroups = [

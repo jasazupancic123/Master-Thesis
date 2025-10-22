@@ -29,7 +29,7 @@ import ExerciseChips from '@/components/exercise-chips/exercise-chips';
 import ExerciseModal from '@/components/exercise-modal/exercise-modal';
 import ExerciseFilter from '@/components/exercises-list/exercise-filter';
 import ExercisesList from '@/components/exercises-list/exercises-list';
-import { app } from '@/core/app.service';
+import { core } from '@/core/core.service';
 import type { Component } from '@/core/component/type/component.type';
 import type {
   CreateExerciseMuscleValues,
@@ -175,7 +175,7 @@ export default function ExercisesPage() {
       >
         <ExerciseChips
           noSelectionLabel="All"
-          components={app.component.tree(
+          components={core.component.tree(
             components.filter((c) => c.id !== WARMUP_ID && c.id !== COOLDOWN_ID)
           )}
           selected={selectedComponent}

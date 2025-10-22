@@ -1,5 +1,5 @@
-import UndoneExercisesList from '../components/undone-exercises-list/training-in-progress-undone-exercises-list';
 import { useUndoneExercises } from '../context/undone-exercises.provider';
+import UndoneExercisesList from '../training-in-progress-undone-exercises-list';
 import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import MyModal from '@/util/modal';
 

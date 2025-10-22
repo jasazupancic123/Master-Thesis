@@ -8,7 +8,7 @@ import React, { useEffect, useState } from 'react';
 
 import FlatSelectAttribute from './flat-select-attribute';
 import SelectComponent from './select-component';
-import { app } from '@/core/app.service';
+import { core } from '@/core/core.service';
 import { AttributeType } from '@/core/attribute/enum/attribute-value.enum';
 import type { Attribute } from '@/core/attribute/type/attribute.type';
 import type {
@@ -40,20 +40,19 @@ interface Props {
   onConfirm?: (filteredAttributes: Attribute[]) => Promise<void>;
 }
 
-export default function ExerciseModal(props: Props) {
+export default function ExerciseModal({
+  data,
+  setData,
+  components,
+  isOpen,
+  setIsOpen,
+  title,
+  cancelText,
+  onDelete,
+  onConfirm,
+}: Props) {
   const { role } = useAuthenticatedAuth();
   const screenSize = useScreenSize();
-  const {
-    data,
-    setData,
-    components,
-    isOpen,
-    setIsOpen,
-    title,
-    cancelText,
-    onDelete,
-    onConfirm,
-  } = props;
 
   const [selectedComponents, setSelectedComponents] = useState<{
     [key: number]: string;
@@ -110,7 +109,7 @@ export default function ExerciseModal(props: Props) {
 
     selected[component.parents.length] = component.id;
     setSelectedComponents(selected);
-    setFilteredAttributes(app.exercise.attribute.getAll(attributes));
+    setFilteredAttributes(core.exercise.attribute.getAll(attributes));
   }, [data?.id]);
 
   useEffect(() => {
@@ -146,7 +145,7 @@ export default function ExerciseModal(props: Props) {
           if (!attributeIds.find((a) => a === attribute))
             attributeIds.push(attribute);
 
-    setFilteredAttributes(app.exercise.attribute.getAll(attributeIds));
+    setFilteredAttributes(core.exercise.attribute.getAll(attributeIds));
     setHasSelectedLeafComponent(hasSelectedLeafComponent);
   }, [data.componentIds]);
 

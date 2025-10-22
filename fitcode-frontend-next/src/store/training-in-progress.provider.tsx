@@ -9,7 +9,7 @@ import type { TrainingExerciseRecording } from '@/core/training/type/training-ex
 import type { CreateWorkload } from '@/core/training/type/workload.type';
 import { handleApiRequest, type SetState } from '@/lib/common/type/state.type';
 
-interface TrainingInProgressContextType {
+export interface ITrainingInProgressCtx {
   selectedSuperset: SupersetRecording | undefined;
   setSelectedSuperset: SetState<SupersetRecording | undefined>;
   selectedExercise: TrainingExerciseRecording | undefined;
@@ -26,22 +26,19 @@ interface TrainingInProgressContextType {
   ) => Promise<void>;
 }
 
-const TrainingInProgressContext = createContext<
-  TrainingInProgressContextType | undefined
->(undefined);
+const TrainingInProgressContext = createContext<ITrainingInProgressCtx | null>(
+  null
+);
 
-export type TrainingInProgressProviderReturnType = ReturnType<
-  typeof useTrainingInProgress
->;
+export const useTrainingInProgress = () =>
+  useContext(TrainingInProgressContext)!;
 
-export const TrainingInProgressProvider = (props: React.PropsWithChildren) => {
+export const TrainingInProgressProvider = ({
+  children,
+}: React.PropsWithChildren) => {
   const { trainingInProgress, refetchTraining } = useTraining();
 
   const router = useRouter();
-
-  const controller = TrainingController.getInstance();
-
-  const { children } = props;
 
   const [selectedSuperset, setSelectedSuperset] = useState<
     SupersetRecording | undefined
@@ -106,7 +103,7 @@ export const TrainingInProgressProvider = (props: React.PropsWithChildren) => {
     handleApiRequest(
       router,
       () =>
-        controller.upsertSet(
+        TrainingController.getInstance().upsertSet(
           trainingInProgress.training.id,
           trainingInProgress.selectedComponent.id,
           exerciseId,
@@ -141,6 +138,3 @@ export const TrainingInProgressProvider = (props: React.PropsWithChildren) => {
     </TrainingInProgressContext.Provider>
   );
 };
-
-export const useTrainingInProgress = () =>
-  useContext(TrainingInProgressContext)!;

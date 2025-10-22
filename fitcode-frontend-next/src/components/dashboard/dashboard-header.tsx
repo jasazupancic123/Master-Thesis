@@ -24,7 +24,7 @@ import EditInstitutionModal from './edit-institution-modal';
 import useDashboardHeaderUtils from './hooks/use-utils';
 import ProfileHeaderMenu from '@/components/profile-header-menu/profile-header-menu';
 import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
-import { app } from '@/core/app.service';
+import { core } from '@/core/core.service';
 import { BACKEND_API_BASE_URL } from '@/core/const/api.const';
 import { lib } from '@/lib';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
@@ -263,10 +263,11 @@ export default function DashboardHeader() {
             onClick={() => {
               setSelectedInstitution(institution);
               if (institution.groups && institution.groups.length) {
-                const mapped = app.group.mapMembers(
+                const mapped = core.group.mapMembers(
                   institution.groups[0],
                   users
                 );
+
                 setSelectedGroup(mapped);
               } else setSelectedGroup(null);
 

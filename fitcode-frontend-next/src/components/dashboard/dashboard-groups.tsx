@@ -8,7 +8,7 @@ import { useRef, useState } from 'react';
 import AddGroupModal from './dashboard-add-group-modal';
 import DashboardGroupsMembers from './dashboard-groups-members';
 import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
-import { app } from '@/core/app.service';
+import { core } from '@/core/core.service';
 import { ADD_GROUP } from '@/core/group/const/add-group.const';
 import { lib } from '@/lib';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
@@ -59,7 +59,7 @@ export default function DashboardGroups() {
           );
 
           if (group) {
-            const mapped = app.group.mapMembers(group, users);
+            const mapped = core.group.mapMembers(group, users);
             setSelectedGroup(mapped);
           } else {
             setSelectedGroup(null);

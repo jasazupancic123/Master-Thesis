@@ -2,11 +2,11 @@ import dayjs from 'dayjs';
 
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
 import type { TrainingProviderReturnTypeDefined } from '@/store/training.provider';
-import type { TrainingInProgressProviderReturnType } from '@/store/training-in-progress.provider';
+import type { ITrainingInProgressCtx } from '@/store/training-in-progress.provider';
 
 export function handleInitTrainingInProgressComponent(context: {
   useTraining: TrainingProviderReturnTypeDefined;
-  useTrainingInProgressContext: TrainingInProgressProviderReturnType;
+  useTrainingInProgressContext: ITrainingInProgressCtx;
 }) {
   const { useTraining, useTrainingInProgressContext } = context;
 

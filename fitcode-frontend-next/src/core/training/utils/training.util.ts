@@ -1,6 +1,13 @@
 import { addMinutes } from 'date-fns';
 import dayjs from 'dayjs';
 
+import {
+  MAX_NUM_EXERCISES_IN_BLOCK_SUPERSET,
+  MAX_NUM_EXERCISES_IN_CIRCUIT_SUPERSET,
+  MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT,
+} from '../const/training-limits.const';
+import { MainSet } from '../enum/main-set.enum';
+import type { Subgroup } from '../type/subgroup.type';
 import type { Superset } from '../type/superset.type';
 import type { Training } from '../type/training.type';
 import type { TrainingComponent } from '../type/training-component.type';
@@ -10,7 +17,7 @@ import { TrainingExerciseSetUtil } from './set.util';
 import { TrainingSubgroupUtil } from './subgroup.util';
 import { TrainingSupersetUtil } from './superset.util';
 import { WorkloadUtil } from './workload.util';
-import { app } from '@/core/app.service';
+import { core } from '@/core/core.service';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
@@ -44,8 +51,8 @@ export class TrainingUtil {
       ownerId: userId,
       membersIds: data?.membersIds || [],
       copiedFromId: data?.copiedFromId,
-      warmup: data?.warmup || app.training.component.stub(WARMUP_ID),
-      cooldown: data?.cooldown || app.training.component.stub(COOLDOWN_ID),
+      warmup: data?.warmup || core.training.component.stub(WARMUP_ID),
+      cooldown: data?.cooldown || core.training.component.stub(COOLDOWN_ID),
       components: data?.components || [],
     };
   }
@@ -58,6 +65,36 @@ export class TrainingUtil {
     const isTrainingAM = from.hour() < 12;
 
     return isNowAM === isTrainingAM && now.isSame(from, 'day');
+  }
+
+  getAvailableSuperset(item: TrainingComponent | Subgroup): number {
+    // circuit can have max 1 superset and max 32 exercises in it
+    if (item.mainSet === MainSet.CIRCUIT) {
+      if (
+        item.supersets.length &&
+        item.supersets[0].exercises.length <
+          MAX_NUM_EXERCISES_IN_CIRCUIT_SUPERSET
+      )
+        return 0;
+
+      return -1;
+    }
+
+    // each superset can have max 4 exercises, so find first superset with less than 4 exercises
+    for (let i = 0; i < item.supersets.length; i++)
+      if (
+        item.supersets[i].exercises.length < MAX_NUM_EXERCISES_IN_BLOCK_SUPERSET
+      )
+        return i;
+
+    // if all supersets are full, check if we can create a new one (max 4 supersets) and create it
+    if (item.supersets.length < MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT) {
+      item.supersets = [...item.supersets, { exercises: [] }];
+      return item.supersets.length - 1; // return index of the newly created superset
+    }
+
+    // no available superset found, do not create a new one
+    return -1;
   }
 
   getAthleteTraining(athleteId: string, training: Training): Training {

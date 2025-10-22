@@ -24,7 +24,7 @@ import useTrainingExerciseCardChart from '../hooks/use-chart.hook';
 import TrainingExerciseCard from '../training-exercise-card';
 import CustomTooltip from './chart-custom-tooltip';
 import { TodayDot } from './chart-today-dot';
-import { app } from '@/core/app.service';
+import { core } from '@/core/core.service';
 import { GRAPH_COLORS } from '@/core/const/color.const';
 import type { ExerciseParamField } from '@/core/training/type/exercise-set.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
@@ -241,7 +241,7 @@ export default function TrainingExerciseChart(
             }
             sx={{ position: 'absolute', top: -35, left: 10 }}
           >
-            {DEFAULT_CHART_PARAMS.map((p) => app.exercise.param.get(p)!).map(
+            {DEFAULT_CHART_PARAMS.map((p) => core.exercise.param.get(p)!).map(
               (p) => (
                 <Box key={p.field} display="flex" alignItems="center" mr={2}>
                   <Checkbox

@@ -1,9 +1,15 @@
 import { CheckCircle } from '@mui/icons-material';
 import { Box, Grid2 } from '@mui/material';
 import { useTheme } from '@mui/material';
-import toast from 'react-hot-toast';
 
-import type { AttributeValue } from '@/core/attribute/type/attribute-value.type';
+import { NumberExerciseParam } from '../exercise-param/number-exercise-param';
+import { TempoExerciseParam } from '../exercise-param/tempo-exercise-param';
+import {
+  KG,
+  REC_TIME,
+  REPS,
+  TEMPO,
+} from '@/core/exercise/constant/exercise-param.constant';
 import type { ExerciseSet } from '@/core/training/type/exercise-set.type';
 import type { ExerciseSetTracking } from '@/core/training/type/exercise-set-tracking-state.type';
 import type { Training } from '@/core/training/type/training.type';
@@ -12,7 +18,7 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import LeftRightExerciseText from '@/util/left-right-exercise-text';
 
-interface AthleteTrainingExerciseSetsProps {
+interface Props {
   training: Training;
   exercise: TrainingExercise;
   borderBottomRadius: boolean;
@@ -23,31 +29,26 @@ interface AthleteTrainingExerciseSetsProps {
   supersetIndex?: number;
   exerciseSetTrackingState?: ExerciseSetTracking[];
   dissableBottomPadding?: boolean;
-  colorSetsToPrimary?: boolean;
   aiDetectionView?: boolean;
 }
 
-export default function AthleteTrainingExerciseSets(
-  props: AthleteTrainingExerciseSetsProps
-) {
+export default function AthleteTrainingExerciseSets({
+  exercise,
+  borderBottomRadius,
+  expanded,
+  trainingInProgressView,
+  passedSet,
+  setIndex,
+  supersetIndex,
+  exerciseSetTrackingState,
+  dissableBottomPadding,
+}: Props) {
   const theme = useTheme();
   const screenSize = useScreenSize();
+  const { updateTrainingInProgress } = useTraining();
 
-  const { trainingInProgress, updateTrainingInProgress } = useTraining();
-
-  const {
-    training,
-    exercise,
-    borderBottomRadius,
-    expanded,
-    trainingInProgressView,
-    passedSet,
-    setIndex,
-    supersetIndex,
-    exerciseSetTrackingState,
-    dissableBottomPadding,
-    colorSetsToPrimary,
-  } = props;
+  const uni = exercise.exercise?.isUnilateral;
+  const load = passedSet?.loadKg || exercise.sets[0]?.loadKg; // always in kg
 
   return (
     <Box
@@ -68,6 +69,7 @@ export default function AthleteTrainingExerciseSets(
       {/* Expanded sets view */}
       {(passedSet ? [passedSet] : exercise.sets).map((set, i) => {
         if (!expanded && i > 0) return null;
+        const index = setIndex !== undefined ? setIndex : i;
 
         return (
           <Grid2
@@ -118,137 +120,135 @@ export default function AthleteTrainingExerciseSets(
                 justifyContent="center"
                 alignItems="center"
               >
-                {exercise.params.map((param, j) => {
-                  /* find the custom workload for the selected athlete if selected, otherwise
-                      get the value from the exercise sets */
-                  const { valueL, valueR } = getLAndRValues({
-                    set,
-                    param,
-                    setIndex:
-                      setIndex !== undefined && setIndex !== null
-                        ? setIndex
-                        : i,
-                    paramIndex: j - 1,
-                    exercise,
-                  });
+                <NumberExerciseParam
+                  options={[REPS]}
+                  selected={REPS.field}
+                  value={exercise.sets[index]?.reps}
+                  exercise={exercise}
+                  disableOptions
+                  onInputChange={(value) => {
+                    exercise.sets[index].reps = +value;
+                    updateTrainingInProgress(exercise, supersetIndex || 0);
+                  }}
+                />
 
-                  if (!valueL || (exercise.exercise?.isUnilateral && !valueR))
-                    return toast.error(`Invalid parameter field: ${param}`);
+                {load && (
+                  <NumberExerciseParam
+                    options={[KG]}
+                    selected={KG.field} // always in kg
+                    value={exercise.sets[index]?.loadKg || 0}
+                    exercise={exercise}
+                    disableOptions
+                    onInputChange={(value) => {
+                      exercise.sets[index].loadKg = +value;
+                      updateTrainingInProgress(exercise, supersetIndex || 0);
+                    }}
+                  />
+                )}
 
-                  return (
-                    <Box
-                      key={param}
-                      width={
-                        (
-                          100 /
-                          (trainingInProgress
-                            ? exercise.params.length - 1
-                            : exercise.params.length)
-                        ).toString() + '%'
-                      }
-                    >
-                      {['L']
-                        .concat(exercise.exercise?.isUnilateral ? ['R'] : [])
-                        .map((lOrR) => (
-                          <ExerciseParam
-                            key={`${param}-${lOrR}`}
-                            showOptions={lOrR === 'L'}
-                            disableOptions
-                            disableSets={!trainingInProgressView}
-                            disableSettingValue={
-                              param === (ParamType.VolWorkSets as string) ||
-                              (trainingInProgressView && !passedSet)
-                            }
-                            colorToPrimary={
-                              colorSetsToPrimary &&
-                              param === (ParamType.VolWorkSets as string)
-                            }
-                            exercise={exercise}
-                            // trainingInProgressView
-                            param={param}
-                            lOrR={lOrR as 'L' | 'R'}
-                            value={
-                              lOrR === 'L'
-                                ? param === (ParamType.VolWorkSets as string)
-                                  ? ({
-                                      ...valueL,
-                                      value: passedSet
-                                        ? passedSet.setNumber
-                                        : !expanded
-                                          ? exercise.sets.length
-                                          : set.setNumber.toString(),
-                                    } as AttributeValue)
-                                  : valueL
-                                : param === (ParamType.VolWorkSets as string)
-                                  ? ({
-                                      ...valueR,
-                                      value: passedSet
-                                        ? passedSet.setNumber
-                                        : !expanded
-                                          ? exercise.sets.length
-                                          : set.setNumber.toString(),
-                                    } as AttributeValue)
-                                  : valueR || undefined
-                            }
-                            onOptionChange={() => {}}
-                            onSubOptionChange={(newValue) => {
-                              if (
-                                !passedSet ||
-                                !trainingInProgressView ||
-                                supersetIndex === undefined ||
-                                supersetIndex === null
-                              )
-                                return;
+                <TempoExerciseParam
+                  options={[TEMPO]}
+                  selected={TEMPO.field}
+                  value={exercise.sets[index]?.tempo || ''}
+                  exercise={exercise}
+                  disableOptions
+                  onInputChange={(value) => {
+                    exercise.sets[index].tempo = value as string;
+                    updateTrainingInProgress(exercise, supersetIndex || 0);
+                  }}
+                />
 
-                              if (
-                                !trainingInProgress ||
-                                !trainingInProgress.selectedComponent
-                              )
-                                return null;
-
-                              if (param === (ParamType.VolWorkSets as string))
-                                return;
-
-                              if (+newValue < 0) return;
-
-                              updateExerciseAttributeValues(
-                                {
-                                  newValue,
-                                  i,
-                                  set,
-                                  lOrR: lOrR as 'L' | 'R',
-                                  correctSelectedExercises: [exercise],
-                                  correctExercise: exercise,
-                                  correctParam: param,
-                                  correctSupersets:
-                                    trainingInProgress.supersets,
-                                  correctSelectedSubgroup: null,
-                                },
-                                {
-                                  training,
-                                  component:
-                                    trainingInProgress.selectedComponent,
-                                  setTraining: () => {},
-                                  setDetectedChanges: () => {},
-                                  setSelectedSubgroup: () => {},
-                                }
-                              );
-
-                              updateTrainingInProgress(exercise, supersetIndex);
-                            }}
-                          />
-                        ))}
-                    </Box>
-                  );
-                })}
+                <NumberExerciseParam
+                  options={[REC_TIME]}
+                  selected={REC_TIME.field}
+                  value={exercise.sets[index].recTime}
+                  exercise={exercise}
+                  disableOptions
+                  onInputChange={(value) => {
+                    exercise.sets[index].recTime = +value;
+                    updateTrainingInProgress(exercise, supersetIndex || 0);
+                  }}
+                />
               </Box>
+
+              {uni && (
+                <Box
+                  display="flex"
+                  width="100%"
+                  justifyContent="center"
+                  alignItems="center"
+                  gap={1}
+                >
+                  <NumberExerciseParam
+                    options={[REPS]}
+                    selected={REPS.field}
+                    value={
+                      exercise.sets[index]?.repsR || exercise.sets[index]?.reps
+                    }
+                    exercise={exercise}
+                    showOptions={false}
+                    onInputChange={(value) => {
+                      exercise.sets[index].repsR = +value;
+                      updateTrainingInProgress(exercise, supersetIndex || 0);
+                    }}
+                  />
+
+                  <NumberExerciseParam
+                    options={[KG]}
+                    selected={KG.field}
+                    value={
+                      exercise.sets[index]?.loadKgR ||
+                      exercise.sets[index]?.loadKg ||
+                      0
+                    }
+                    exercise={exercise}
+                    showOptions={false}
+                    disableOptions
+                    onInputChange={(value) => {
+                      exercise.sets[index].loadKgR = +value;
+                      updateTrainingInProgress(exercise, supersetIndex || 0);
+                    }}
+                  />
+
+                  <TempoExerciseParam
+                    options={[TEMPO]}
+                    selected={TEMPO.field}
+                    value={
+                      exercise.sets[index]?.tempoR ||
+                      exercise.sets[index]?.tempo ||
+                      ''
+                    }
+                    exercise={exercise}
+                    showOptions={false}
+                    disableOptions
+                    onInputChange={(value) => {
+                      exercise.sets[index].tempoR = value.toString();
+                      updateTrainingInProgress(exercise, supersetIndex || 0);
+                    }}
+                  />
+
+                  <NumberExerciseParam
+                    options={[REC_TIME]}
+                    selected={REC_TIME.field}
+                    value={exercise.sets[index].recTime}
+                    exercise={exercise}
+                    showOptions={false}
+                    disableOptions
+                    onInputChange={(value) => {
+                      exercise.sets[index].recTime = +value;
+                      updateTrainingInProgress(exercise, supersetIndex || 0);
+                    }}
+                  />
+                </Box>
+              )}
             </Grid2>
+
             <Grid2 size={0.5} display="flex" alignItems="flex-end">
               {exerciseSetTrackingState &&
                 exerciseSetTrackingState.find(
-                  (estState) =>
-                    estState.exerciseId === exercise.id &&
-                    estState.completedSetNumbers.includes(set.setNumber)
+                  (setState) =>
+                    setState.exerciseId === exercise.id &&
+                    setState.completedSetNumbers.includes(set.setNumber)
                 ) && (
                   <CheckCircle
                     fontSize="small"

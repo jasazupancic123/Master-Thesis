@@ -13,7 +13,7 @@ import AthleteTrainingCardHeader from './athlete-training-card-header';
 import AthleteTrainingComponents from './athlete-training-components';
 import useAthleteTrainingCardComponents from './hooks/use-components';
 import useAthleteTrainingCardUtils from './hooks/use-utils';
-import { app } from '@/core/app.service';
+import { core } from '@/core/core.service';
 import type { Training } from '@/core/training/type/training.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 
@@ -32,7 +32,7 @@ export default function AthleteTrainingCard({ training }: Props) {
   const { components, selectedComponent, setSelectedComponent } =
     useAthleteTrainingCardComponents(training);
 
-  const isActive = app.training.isActive(training);
+  const isActive = core.training.isActive(training);
   return (
     <>
       <Box
@@ -102,7 +102,7 @@ export default function AthleteTrainingCard({ training }: Props) {
               Duration
             </Typography>
             <Typography sx={{ fontSize: 14, fontWeight: 'bold' }}>
-              {app.training.getDurationText(training)}
+              {core.training.getDurationText(training)}
             </Typography>
           </Box>
 
@@ -118,8 +118,8 @@ export default function AthleteTrainingCard({ training }: Props) {
 
             <Typography sx={{ fontSize: 14, fontWeight: 'bold' }}>
               {
-                app.training.getExercises(
-                  app.training.getAthleteTraining(user.uid, training)
+                core.training.getExercises(
+                  core.training.getAthleteTraining(user.uid, training)
                 ).length
               }
             </Typography>

@@ -1,6 +1,6 @@
 // Default placeholders
 export const USER_AVATAR_IMG_URL = '/hero/user_avatar.png';
-export const EXERCISE_DEFAULT_IMG_URL = '/exercise/exercise-image-default.png';
+export const EXERCISE_DEFAULT_IMG_URL = '/hero/exercise-image-default.png';
 
 // Logos
 export const LOGO_IMG_URL = '/hero/blind-off-logo.png';

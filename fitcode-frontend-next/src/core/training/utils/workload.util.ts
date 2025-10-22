@@ -3,7 +3,7 @@ import { isAfter, startOfDay } from 'date-fns';
 import type { Training } from '../type/training.type';
 import type { UserProgress } from '../type/workload.type';
 import { type Workload, WorkloadStatus } from '../type/workload.type';
-import { app } from '@/core/app.service';
+import { core } from '@/core/core.service';
 
 export class WorkloadUtil {
   getStatus(
@@ -33,7 +33,7 @@ export class WorkloadUtil {
 
     const progress: UserProgress[] = [];
     for (const userId of userIds) {
-      const prescribed = app.training.getAthleteTraining(userId, training);
+      const prescribed = core.training.getAthleteTraining(userId, training);
 
       const userWorkloads = workloads
         .filter((w) => w.userId === userId)

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
 import AthleteSuperset from './athlete-superset';
-import { app } from '@/core/app.service';
+import { core } from '@/core/core.service';
 import { ExerciseTrainingView } from '@/core/training/enum/exercise-training-view.enum';
 import { TrainingController } from '@/core/training/training.controller';
 import { TrainingService } from '@/core/training/training.service';
@@ -23,7 +23,7 @@ import { useMain } from '@/store/main.provider';
 import { useTraining } from '@/store/training.provider';
 import MyModal from '@/util/modal';
 
-interface AthleteTrainingComponentsProps {
+interface Props {
   training: Training;
   components: TrainingComponent[];
   selectedComponent: TrainingComponent | null;
@@ -35,9 +35,7 @@ interface AthleteTrainingComponentsProps {
   timeout: number;
 }
 
-export default function AthleteTrainingComponents(
-  props: AthleteTrainingComponentsProps
-) {
+export default function AthleteTrainingComponents(props: Props) {
   const theme = useTheme();
   const router = useRouter();
 
@@ -175,7 +173,7 @@ export default function AthleteTrainingComponents(
             </Typography>
           ) : (
             <>
-              {app.training
+              {core.training
                 .getAthleteSupersets(user.uid, selectedComponent)
                 .map((superset, i) => (
                   <AthleteSuperset

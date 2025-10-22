@@ -17,7 +17,7 @@ import { theme } from '@/app/style';
 import HeatmapBack from '@/assets/svg/heatmap-back.svg';
 import HeatmapFront from '@/assets/svg/heatmap-front.svg';
 import MuscleMapWithTooltip from '@/components/muscle-map-with-tooltip/muscle-map-with-tooltip';
-import { app } from '@/core/app.service';
+import { core } from '@/core/core.service';
 import { HEATMAP_COLORS } from '@/core/const/color.const';
 import type { MuscleTip } from '@/core/exercise/type/muscle-tip.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
@@ -109,7 +109,7 @@ export default function MuscleHeatmapView() {
     // Generate muscle loads
     if (heatmapLevel < 1 || heatmapLevel > 3) return; // levels 1-3
 
-    const loads = app.exercise.muscle.generateLoads(exercises, heatmapLevel);
+    const loads = core.exercise.muscle.generateLoads(exercises, heatmapLevel);
 
     setMuscleLoads(loads);
   }, [exercises, heatmapLevel]);

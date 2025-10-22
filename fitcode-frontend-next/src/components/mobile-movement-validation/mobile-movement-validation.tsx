@@ -9,10 +9,10 @@ import { useEffect, useRef, useState } from 'react';
 
 import AthleteTrainingExerciseSets from '../athlete/athlete-training-exercise-sets';
 import TempoChart from '../charts/tempo/tempo-chart';
-import { updateTrainingExerciseWithAI } from '../training-in-progress/components/training-in-progress-exercise-card/actions/actions-exercise';
-import { finishSet } from '../training-in-progress/components/training-in-progress-exercise-card/actions/actions-exercise-set';
-import FpsText from './components/fps-text';
-import MovementValidationHeader from './components/movement-validation-header';
+import { updateTrainingExerciseWithAI } from '../training-in-progress/actions/actions-exercise';
+import { finishSet } from '../training-in-progress/actions/actions-exercise-set';
+import FpsText from './fps-text';
+import MovementValidationHeader from './movement-validation-header';
 import {
   enableCam,
   getStatusMessage,
@@ -1083,6 +1083,7 @@ export default function MobileMovementValidation(
                 >
                   {selectedExercise?.exercise?.name || defaultExerciseName}
                 </Typography>
+
                 {trainingInProgress?.training &&
                   selectedExercise &&
                   selectedExercise.sets[setIndex] && (
@@ -1095,7 +1096,6 @@ export default function MobileMovementValidation(
                       passedSet={selectedExercise.sets[setIndex]}
                       supersetIndex={supersetIndex}
                       setIndex={setIndex}
-                      colorSetsToPrimary
                       aiDetectionView
                     />
                   )}

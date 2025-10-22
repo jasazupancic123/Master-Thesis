@@ -92,7 +92,7 @@ function IsoOverlayDual({
   );
 }
 
-interface TempoChartProps {
+interface Props {
   selectedExercise: TrainingExerciseRecording | undefined;
   setIndex: number;
   width: number;
@@ -105,20 +105,18 @@ interface TempoChartProps {
   aiRecordingView?: boolean;
 }
 
-export default function TempoChart(props: TempoChartProps) {
-  const {
-    selectedExercise,
-    setIndex,
-    width,
-    height = 300,
-    passedReps,
-    passedExercisePose,
-    isUnilateral,
-    hideLabels = false,
-    sx,
-    aiRecordingView,
-  } = props;
-
+export default function TempoChart({
+  selectedExercise,
+  setIndex,
+  width,
+  height = 300,
+  passedReps,
+  passedExercisePose,
+  isUnilateral,
+  hideLabels = false,
+  sx,
+  aiRecordingView,
+}: Props) {
   const maxValueRef = useRef(0);
 
   const currentRepsRef = useRef<RecordedRepsInfo | null>(passedReps || null);

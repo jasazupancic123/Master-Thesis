@@ -1,8 +1,8 @@
 import type { SetStateAction } from 'react';
 import type { DraggableLocation } from 'react-beautiful-dnd';
 
-import { app } from '../app.service';
 import type { Attribute } from '../attribute/type/attribute.type';
+import { core } from '../core.service';
 import type { MainSet } from './enum/main-set.enum';
 import type { ExerciseSet } from './type/exercise-set.type';
 import type { Subgroup } from './type/subgroup.type';
@@ -305,7 +305,7 @@ export class SubgroupUtil {
 
     component.subgroups = component.subgroups.map((sg) => {
       if (sg.parentId && sg.parentId === parentId) {
-        const newSupersets = app.training.superset.removeExercise(
+        const newSupersets = core.training.superset.removeExercise(
           sg.supersets,
           exerciseIndex,
           supersetIndex

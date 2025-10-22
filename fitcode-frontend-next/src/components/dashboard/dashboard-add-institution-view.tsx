@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
-import { app } from '@/core/app.service';
+import { core } from '@/core/core.service';
 import { InstitutionController } from '@/core/institution/institution.controller';
 import { UserRole } from '@/core/profile/enum/user-role.enum';
 import { lib } from '@/lib';
@@ -47,7 +47,7 @@ export default function AddInstitutionDashboard() {
           ownerId: owner.uid,
         }),
       (institution) => {
-        institution = app.institution.mapUsers([institution], users || [])[0];
+        institution = core.institution.mapUsers([institution], users || [])[0];
         setInstitutions((prev) => {
           const newInstitutions = [...prev, institution];
           return newInstitutions;

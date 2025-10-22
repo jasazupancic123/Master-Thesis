@@ -31,9 +31,11 @@ interface Props {
  * // ['strength', 'upper body', 'chest']
  * ```
  */
-export default function SelectComponent(props: Props) {
-  const { selectedComponents, setSelectedComponents } = props;
-
+export default function SelectComponent({
+  selectedComponents,
+  setSelectedComponents,
+  components,
+}: Props) {
   function onChange(event: SelectChangeEvent, level: number) {
     const selected = event.target.value as string;
     setSelectedComponents((prev) => ({ ...prev, [level]: selected }));
@@ -79,5 +81,5 @@ export default function SelectComponent(props: Props) {
     );
   }
 
-  return render(props.components);
+  return render(components);
 }

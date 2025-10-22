@@ -14,11 +14,11 @@ import AddExerciseForm from '../add-exercise-form/add-exercise-form';
 import { NUM_MAX_SUPERSETS } from '../trainer-group-day-view/constant/supersets.constant';
 import TrainingExerciseCardStub from '../training-exercise-card/components/card-stub';
 import { onDragEndExercise } from './actions/actions-drag-exercise';
-import Superset from './components/superset';
 import useSupersetExercises from './hooks/use-exercises';
 import useSelectedExerciseIds from './hooks/use-selected-exercises-ids';
 import useSupersetUtils from './hooks/use-utils';
-import { app } from '@/core/app.service';
+import Superset from './superset';
+import { core } from '@/core/core.service';
 import { ADD_SUPERSET_DROPPABLE_ID } from '@/core/training/const/add-superset-droppable-id.const';
 import { MainSet } from '@/core/training/enum/main-set.enum';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
@@ -30,7 +30,7 @@ import { SupersetsProvider } from '@/store/supersets.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 import MyModal from '@/util/modal';
 
-interface SupersetsProps {
+interface Props {
   openAddExerciseModal: boolean;
   setOpenAddExerciseModal: SetState<boolean>;
   expandedExercisesView: boolean;
@@ -59,16 +59,14 @@ function DroppableArea({
   );
 }
 
-export default function Supersets(props: SupersetsProps) {
+export default function Supersets({
+  openAddExerciseModal,
+  setOpenAddExerciseModal,
+  expandedExercisesView,
+  setExpandedExercisesView,
+}: Props) {
   const screenSize = useScreenSize();
   const theme = useTheme();
-
-  const {
-    openAddExerciseModal,
-    setOpenAddExerciseModal,
-    expandedExercisesView,
-    setExpandedExercisesView,
-  } = props;
 
   const groupContext = useGroup();
   const trainerDayViewContext = useTrainerDayView();
@@ -322,9 +320,9 @@ export default function Supersets(props: SupersetsProps) {
                 params: [],
                 exercise,
                 sets: [
-                  app.training.set.stub(1, exercise),
-                  app.training.set.stub(2, exercise),
-                  app.training.set.stub(3, exercise),
+                  core.training.set.stub(1, exercise),
+                  core.training.set.stub(2, exercise),
+                  core.training.set.stub(3, exercise),
                 ],
               };
             });

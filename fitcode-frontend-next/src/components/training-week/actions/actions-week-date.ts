@@ -3,7 +3,7 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import toast from 'react-hot-toast';
 
-import { app } from '@/core/app.service';
+import { core } from '@/core/core.service';
 import type { Component } from '@/core/component/type/component.type';
 import { COLOR } from '@/core/const/color.const';
 import type { Target } from '@/core/target/type/target.type';
@@ -266,14 +266,14 @@ async function handleCreateTraining(
   await lib.common.generic.optimisticUpdate(
     () => {
       // Optimistically add the new training to the state
-      const temp = app.training.stub(userId, {
+      const temp = core.training.stub(userId, {
         id: tempId,
         groupId: group!.id,
         cycleId: cycle!.id,
         from,
         to: addMinutes(from, selectedComponents.length * 30),
         components: selectedComponents.map((c) =>
-          app.training.component.stub(c.id)
+          core.training.component.stub(c.id)
         ),
       });
 

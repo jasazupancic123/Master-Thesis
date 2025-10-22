@@ -8,12 +8,12 @@ import React, { useEffect } from 'react';
 import AthleteOptionsContainer from '../athlete/athlete-options-container';
 import { handleChangeSuperset } from './actions/actions-superset';
 import { handleInitTrainingInProgressComponent } from './actions/actions-training-in-progress';
-import TrainingInProgressSuperset from './components/training-in-progress-superset/training-in-progress-superset';
 import { useTrainingInProgressUtils } from './context/training-in.progress-utils.provider';
 import { useUndoneExercises } from './context/undone-exercises.provider';
 import CancelTrainingModal from './modals/cancel-training-modal';
 import UndoneSetsErrorModal from './modals/undone-sets-error-modal';
 import UndoneSetsWarningModal from './modals/undone-sets-warning-modal';
+import TrainingInProgressSuperset from './training-in-progress-superset';
 import { preloadPoseLandmarker } from '@/core/pose-detection/util/pose-landmarker-loader.util';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
@@ -193,17 +193,9 @@ export default function TrainingInProgress() {
             anchorEl={anchorEl}
             open={open}
             onClose={handleCloseMenu}
-            anchorOrigin={{
-              vertical: 'top',
-              horizontal: 'center',
-            }}
-            transformOrigin={{
-              vertical: 'bottom',
-              horizontal: 'center',
-            }}
-            PaperProps={{
-              sx: { mb: 1 }, // Adds a small margin between the FAB and menu
-            }}
+            anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            transformOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            PaperProps={{ sx: { mb: 1 } }}
           >
             <MenuItem onClick={handleCancel} sx={{ color: 'error.main' }}>
               <CloseIcon sx={{ marginRight: 1 }} />
