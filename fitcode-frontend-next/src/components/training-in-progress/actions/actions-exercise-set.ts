@@ -27,6 +27,37 @@ export const finishSet = async (state: {
   } = state;
 
   const set = exercise.sets[setIndex];
+  const workload: CreateWorkload = {
+    userId: trainingInProgress.userId,
+    timestamp: new Date(),
+    notes: '',
+    reps: set.reps,
+    repsR: set.repsR,
+    loadKg: set.loadKg,
+    loadKgR: set.loadKgR,
+    tempo: set.tempo,
+    tempoR: set.tempoR,
+    vel: set.vel,
+    velR: set.velR,
+    recTime: set.recTime,
+    recDist: set.recDist,
+    eff: set.eff,
+    time: set.time,
+    dist: set.dist,
+    photoURLs: [],
+    rir: undefined,
+    rirR: undefined,
+    rom: undefined,
+    romR: undefined,
+    tempos: undefined,
+    temposR: undefined,
+    roms: undefined,
+    romsR: undefined,
+    velocities: undefined,
+    velocitiesR: undefined,
+    feedback: undefined,
+    feedbackR: undefined,
+  };
 
   if (exercise.recordedSets && exercise.recordedSets.length) {
     const currentSet = exercise.recordedSets.find(
@@ -34,12 +65,11 @@ export const finishSet = async (state: {
     );
 
     if (currentSet) {
-      set.photoUrl = currentSet.imagesL
-        ? currentSet.imagesL.at(-1)?.url
-        : undefined;
-      set.photoUrlR = currentSet.imagesR
-        ? currentSet.imagesR.at(-1)?.url
-        : undefined;
+      if (currentSet.imagesL)
+        workload.photoURLs!.push(...currentSet.imagesL.map((img) => img.url));
+
+      if (currentSet.imagesR)
+        workload.photoURLs!.push(...currentSet.imagesR.map((img) => img.url));
     }
   }
 
@@ -60,7 +90,7 @@ export const finishSet = async (state: {
     return;
   }
 
-  await handleUpsertSet(set, {
+  await handleUpsertSet(workload, {
     exerciseId: exercise.id,
     setIndex,
     supersetIndex,

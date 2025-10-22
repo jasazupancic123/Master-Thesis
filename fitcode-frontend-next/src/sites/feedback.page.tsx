@@ -118,7 +118,6 @@ export default function FeedbackPage() {
               )
             }
             disabled={false}
-            setDisabled={() => {}}
             state={state}
             setState={setState}
             muscleLoads={muscleLoads}

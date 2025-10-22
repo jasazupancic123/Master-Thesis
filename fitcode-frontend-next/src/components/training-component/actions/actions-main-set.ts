@@ -1,8 +1,8 @@
+import { updateMainSet } from '@/components/supersets/actions/actions-drag-exercise';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/core/training/const/warmup-cooldown.const';
-import { SubgroupUtil } from '@/core/training/custom-shit-subgroup.util';
 import { MainSet } from '@/core/training/enum/main-set.enum';
 import type { Subgroup } from '@/core/training/type/subgroup.type';
 import type { Superset } from '@/core/training/type/superset.type';
@@ -60,7 +60,7 @@ export function handleSetMainSet(
       s.id === updatedSubgroup.id ? updatedSubgroup : s
     );
 
-    updatedComponent.subgroups = SubgroupUtil.updateMainSet({
+    updatedComponent.subgroups = updateMainSet({
       component: updatedComponent,
       selectedSubgroup: updatedSubgroup,
       mainSet,
@@ -69,7 +69,7 @@ export function handleSetMainSet(
     updatedComponent.supersets = updatedSupersets;
     updatedComponent.mainSet = mainSet;
 
-    updatedComponent.subgroups = SubgroupUtil.updateMainSet({
+    updatedComponent.subgroups = updateMainSet({
       component,
       selectedSubgroup: null,
       mainSet,

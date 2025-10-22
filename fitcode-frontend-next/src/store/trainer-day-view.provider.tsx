@@ -11,6 +11,7 @@ import type {
   GroupContextProps,
   TrainerDayViewContextProps,
 } from '@/app/(trainer)/groups/[group_id]/props';
+import { removeExerciseFromSuperset } from '@/components/supersets/actions/actions-drag-exercise';
 import type { AuthUser } from '@/core/auth/type/user.type';
 import type { Component } from '@/core/component/type/component.type';
 import { Controller } from '@/core/controller';
@@ -24,7 +25,6 @@ import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/core/training/const/warmup-cooldown.const';
-import { SubgroupUtil } from '@/core/training/custom-shit-subgroup.util';
 import type { MainSet } from '@/core/training/enum/main-set.enum';
 import { TrainingController } from '@/core/training/training.controller';
 import { TrainingService } from '@/core/training/training.service';
@@ -558,7 +558,7 @@ export function TrainerDayViewProvider(
           ),
         };
 
-    updatedComponent.subgroups = SubgroupUtil.removeExerciseFromSuperset(
+    updatedComponent.subgroups = removeExerciseFromSuperset(
       updatedComponent,
       updatedSubgroup,
       supersetIndex,

@@ -1,4 +1,4 @@
-import type { Keypoint } from '../types/keypoint.type';
+import type { Keypoint } from '../type/keypoint.type';
 
 export class KeypointHistory {
   history: Keypoint[][];

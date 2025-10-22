@@ -1,4 +1,4 @@
-import { Box, Divider } from '@mui/material';
+import { Box, Button, Divider } from '@mui/material';
 
 import useTip from './hooks/use-tip';
 import UserWellnessSlider from './user-wellness-slider';
@@ -19,6 +19,7 @@ interface Props {
   setState: SetState<Wellness>;
   muscleLoads: [string, number][];
   setMuscleLoads: SetState<[string, number][]>;
+  onSubmit: (data: Partial<Wellness>) => void;
 }
 
 export default function AthleteWellnessForm({
@@ -27,6 +28,7 @@ export default function AthleteWellnessForm({
   setState,
   muscleLoads,
   setMuscleLoads,
+  onSubmit,
 }: Props) {
   const screenSize = useScreenSize();
 
@@ -138,6 +140,10 @@ export default function AthleteWellnessForm({
           ))}
         </Box>
       </Box>
+
+      <Button variant="contained" onClick={() => onSubmit(state)}>
+        Submit
+      </Button>
     </Box>
   );
 }
