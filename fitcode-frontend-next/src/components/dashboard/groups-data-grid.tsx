@@ -18,7 +18,7 @@ import type { Group, UpdateGroup } from '@/core/group/type/group.type';
 import type { Institution } from '@/core/institution/type/institution.type';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 
-interface GroupsDataGridProps {
+interface Props {
   institution: Institution;
   onRowUpdate?: (groupId: string, data: UpdateGroup) => Promise<void>;
   onRowDelete?: (groupId: string) => Promise<void>;
@@ -30,7 +30,7 @@ export default function GroupsDataGrid({
   onRowUpdate,
   onRowDelete,
   onRowAdd,
-}: GroupsDataGridProps) {
+}: Props) {
   const [rows, setRows] = useState<Group[]>(() => institution.groups);
   const [model, setModel] = React.useState<GridRowModesModel>({});
 

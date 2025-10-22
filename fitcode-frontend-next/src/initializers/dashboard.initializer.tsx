@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import { DashboardUserEditProvider } from '@/components/dashboard/context/user-edit.context';
-import { app } from '@/core/app.service';
+import { core } from '@/core/core.service';
 import type { Profile } from '@/core/profile/type/user.type';
 import { useFetch } from '@/hooks/use-fetch.hook';
 import DashboardLayout from '@/sites/dashboard.layout';
@@ -52,7 +52,7 @@ function DashboardInitializer({
   }, [fetchedMembers]);
 
   useEffect(() => {
-    const institutions = app.institution.mapUsers(allInstitutions, users);
+    const institutions = core.institution.mapUsers(allInstitutions, users);
     const selectedInstitution = institutions.find(
       (inst) => inst.id === institutionId
     );
@@ -63,7 +63,7 @@ function DashboardInitializer({
       (g) => g.institutionId === selectedInstitution.id
     );
 
-    for (const group of groups) app.group.mapMembers(group, users);
+    for (const group of groups) core.group.mapMembers(group, users);
     selectedInstitution.groups = groups;
 
     setState({

@@ -2,12 +2,7 @@
 import { Close } from '@mui/icons-material';
 import { Box, IconButton, Slider, Typography, useTheme } from '@mui/material';
 import { useCallback, useEffect, useRef } from 'react';
-import toast from 'react-hot-toast';
 
-import {
-  getTrainingExercisesFromExercises,
-  handleAddExerciseToSupersetComponent,
-} from '../supersets/actions/actions-training-exercise';
 import {
   clearHideTimer,
   findFilledGroup,
@@ -16,10 +11,10 @@ import {
   normId,
 } from './state';
 import SorenessIcon from '@/assets/icons/Soreness.svg';
+import { core } from '@/core/core.service';
 import type { MuscleTip } from '@/core/exercise/type/muscle-tip.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { SetState } from '@/lib/common/type/state.type';
-import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
@@ -45,11 +40,8 @@ export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
   const screenSize = useScreenSize();
 
   const { exercises: allExercises } = useMain();
-
-  const groupContext = useGroup();
-  const trainerDayViewContext = useTrainerDayView();
-
-  const { training, component } = trainerDayViewContext || {};
+  const { training, component, selectedSubgroup, addTrainingExercises } =
+    useTrainerDayView();
 
   const {
     front,
@@ -453,58 +445,25 @@ export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
                           )
                             return;
 
-                          const setsRange = component.method?.attributes
-                            ?.map((a) =>
-                              a.options?.find((o) => o.field === 'sets')
-                            )
-                            .find(Boolean);
+                          const trainingExercise =
+                            core.training.superset.toTrainingExercise(ex);
 
-                          const trainingExercises =
-                            getTrainingExercisesFromExercises(
-                              [ex.id],
-                              allExercises,
-                              component,
-                              component.method,
-                              setsRange?.min,
-                              setsRange?.max
-                            );
+                          const item = selectedSubgroup || component;
+                          const supersetIndex =
+                            core.training.getAvailableSuperset(item);
 
-                          if (trainingExercises.length !== 1) {
-                            toast.error('Error adding exercise');
-                            return;
-                          }
+                          if (supersetIndex === -1) return;
 
-                          const trainingExercise = trainingExercises[0];
+                          tip.possibleExercises = tip.possibleExercises.filter(
+                            (e) => e.id !== ex.id
+                          );
 
-                          try {
-                            handleAddExerciseToSupersetComponent(
-                              {
-                                selectedExercisesIds: [ex.id],
-                                allExercises,
-                                minSets: setsRange?.min,
-                                maxSets: setsRange?.max,
-                                setSearch: () => {},
-                                setOpenAddExerciseModal: () => {},
-                              },
-                              {
-                                useGroup: groupContext,
-                                useTrainerDayViewContext: {
-                                  ...trainerDayViewContext,
-                                  training,
-                                  component,
-                                },
-                              }
-                            );
+                          tip.componentExercises.push(trainingExercise);
 
-                            tip.possibleExercises =
-                              tip.possibleExercises.filter(
-                                (e) => e.id !== ex.id
-                              );
-
-                            tip.componentExercises.push(trainingExercise);
-                          } catch {
-                            toast.error('Error adding exercise');
-                          }
+                          addTrainingExercises(
+                            [trainingExercise],
+                            component.mainSet
+                          );
                         }}
                       >
                         <Typography fontSize={14} textAlign="start">
@@ -521,9 +480,7 @@ export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
                 display="flex"
                 flexDirection="column"
                 alignItems="center"
-                sx={{
-                  px: 1,
-                }}
+                sx={{ px: 1 }}
               >
                 {muscleLoads &&
                   setMuscleLoads &&

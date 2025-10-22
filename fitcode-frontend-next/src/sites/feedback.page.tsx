@@ -11,7 +11,7 @@ import AthleteOptionsContainer from '@/components/athlete/athlete-options-contai
 import AthleteWellnessForm from '@/components/athlete/athlete-wellness-form';
 import AthleteAnthropometryForm from '@/components/athlete-anthropometry-form/athlete-anthropometry-form';
 import { paintHeatmaps } from '@/components/training-component/actions/actions-color-heatmap';
-import { app } from '@/core/app.service';
+import { core } from '@/core/core.service';
 import { WellnessAnthropometry } from '@/core/profile/enum/wellness-anthropometry.enum';
 import { ProfileController } from '@/core/profile/profile.controller';
 import type {
@@ -54,7 +54,7 @@ export default function FeedbackPage() {
 
   useEffect(() => {
     if (muscleLoads.length) return; // Already set
-    const loads = app.exercise.muscle.generateEmptyLoads(1);
+    const loads = core.exercise.muscle.generateEmptyLoads(1);
     setMuscleLoads(loads);
   }, []);
 

@@ -23,7 +23,7 @@ import { useDashboard } from '@/store/dashboard.provider';
 import EditableTextField from '@/util/editable-text-field';
 import ImageUpload from '@/util/image-upload';
 
-interface InstitutionModalProps {
+interface Props {
   open: boolean;
   institution: Institution;
   onClose: () => void;
@@ -33,7 +33,7 @@ export default function EditInstitutionModal({
   open,
   institution,
   onClose,
-}: InstitutionModalProps) {
+}: Props) {
   const theme = useTheme();
 
   const [localData, setLocalData] = useState(institution);

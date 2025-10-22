@@ -21,7 +21,7 @@ import useTrainerCycleViewCycles from './hooks/use-cycles';
 import useTrainerCycleViewSticky from './hooks/use-sticky';
 import useTrainingCycleViewTargets from './hooks/use-targets';
 import TrainingWeek from '@/components/training-week/training-week';
-import { app } from '@/core/app.service';
+import { core } from '@/core/core.service';
 import type { Component } from '@/core/component/type/component.type';
 import {
   COOLDOWN_ID,
@@ -134,7 +134,7 @@ export default function TrainerCycleView() {
           }}
         >
           <ExerciseChips
-            components={app.component.tree(
+            components={core.component.tree(
               components.filter(
                 (c) => c.id !== WARMUP_ID && c.id !== COOLDOWN_ID
               )

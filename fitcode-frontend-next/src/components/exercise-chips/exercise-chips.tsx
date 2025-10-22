@@ -14,7 +14,7 @@ import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 
-export interface ExerciseChipsProps {
+interface Props {
   components: (Component | TreeComponent)[];
   noSelectionLabel?: string; // for all / no selection
   selected?:
@@ -23,7 +23,7 @@ export interface ExerciseChipsProps {
     | TreeComponent
     | TrainingComponent
     | (Component | TreeComponent | TrainingComponent)[];
-  setSelected?: SetState<ExerciseChipsProps['selected']>;
+  setSelected?: SetState<Props['selected']>;
   small?: boolean;
   direction?: 'row' | 'column';
   itemSx?: SxProps;
@@ -37,20 +37,19 @@ export interface ExerciseChipsProps {
   gap?: number; // gap between chips
 }
 
-export default function ExerciseChips(props: ExerciseChipsProps) {
+export default function ExerciseChips({
+  selected,
+  components,
+  setSelected,
+  direction = 'row',
+  primaryColor,
+  gap,
+  cycleView,
+  selectedTargets,
+  setSelectedTargets,
+  sx,
+}: Props) {
   const screenSize = useScreenSize();
-
-  const {
-    selected,
-    components,
-    setSelected,
-    direction = 'row',
-    primaryColor,
-    gap,
-    cycleView,
-    selectedTargets,
-    setSelectedTargets,
-  } = props;
 
   return (
     <Stack
@@ -60,7 +59,7 @@ export default function ExerciseChips(props: ExerciseChipsProps) {
       sx={{
         justifyContent: 'center',
         alignItems: 'center',
-        ...props.sx,
+        ...sx,
       }}
     >
       {components.reverse().map((c, i) => {

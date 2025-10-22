@@ -1,4 +1,3 @@
-// components/ExerciseCard.tsx
 import { Box, Card, Typography } from '@mui/material';
 import Image from 'next/image';
 import React from 'react';
@@ -7,16 +6,14 @@ import type { Exercise } from '@/core/exercise/type/exercise.type';
 import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
 import { useScreenSize } from '@/store/screen-size.provider';
 
-interface ExerciseCardProps {
+interface Props {
   exercise: Exercise;
   addExerciseForm?: boolean;
-  prioritizeVideo?: boolean;
 }
 
-export function ExerciseCard(props: ExerciseCardProps) {
+export function ExerciseCard({ exercise, addExerciseForm }: Props) {
   const screenSize = useScreenSize();
 
-  const { exercise, addExerciseForm } = props;
   const isVideo = false;
   const imgSrc = exercise.imageUrl || EXERCISE_DEFAULT_IMG_URL;
 

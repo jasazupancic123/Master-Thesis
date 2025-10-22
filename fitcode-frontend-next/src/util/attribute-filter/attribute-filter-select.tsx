@@ -11,7 +11,7 @@ import {
 import React, { useState } from 'react';
 
 import type { AttributeDropdownProps } from './type';
-import { app } from '@/core/app.service';
+import { core } from '@/core/core.service';
 import type { Attribute } from '@/core/attribute/type/attribute.type';
 
 export default function AttributeFilterSelect({
@@ -28,12 +28,14 @@ export default function AttributeFilterSelect({
     setAnchorEl(e.currentTarget);
 
   const handleToggle = (key: string) =>
-    onChange(app.exercise.attribute.toggleSelection(selected, key, attributes));
+    onChange(
+      core.exercise.attribute.toggleSelection(selected, key, attributes)
+    );
 
   const renderAttribute = (attr: Attribute, parentKey?: string, level = 0) => {
     const field = attr.field as string;
     const key = parentKey ? `${parentKey}:${field}` : field;
-    const state = app.exercise.attribute.getSelectionState(
+    const state = core.exercise.attribute.getSelectionState(
       selected,
       key,
       attributes

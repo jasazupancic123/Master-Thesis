@@ -1,23 +1,20 @@
 import { Typography } from '@mui/material';
 import type { RefObject } from 'react';
 
-import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
+import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import MyModal from '@/util/modal';
 
-interface NextSupersetModalProps {
+interface Props extends ModalProps {
   boxRef: RefObject<HTMLDivElement | null>;
 }
 
-export default function NextSupersetModal(
-  props: NextSupersetModalProps & ModalProps
-) {
+export default function NextSupersetModal(props: Props) {
   const { boxRef, open, setOpen } = props;
 
   const { trainingInProgress, setTrainingInProgress } = useTraining();
-
   const { selectedSuperset, setSelectedSuperset } = useTrainingInProgress();
 
   if (!trainingInProgress || !selectedSuperset) return null;

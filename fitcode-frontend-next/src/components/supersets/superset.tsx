@@ -13,14 +13,12 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 
-interface SupersetComponentProps {
+interface Props {
   superset: SupersetClass;
   supersetIndex: number;
 }
 
-export default function Superset(props: SupersetComponentProps) {
-  const { superset, supersetIndex } = props;
-
+export default function Superset({ superset, supersetIndex }: Props) {
   const theme = useTheme();
   const screenSize = useScreenSize();
   const { selectedExercise, setOpenAddExerciseModal } = useSupersets();

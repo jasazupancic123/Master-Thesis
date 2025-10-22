@@ -9,7 +9,7 @@ import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 
-interface TrainingInProgressUtilsProps {
+export interface ITrainingInProgressUtilsCtx {
   elapsedTime: number;
   setElapsedTime: SetState<number>;
   showUndoneSetsWarning: boolean;
@@ -29,20 +29,14 @@ interface TrainingInProgressUtilsProps {
 }
 
 const TrainingInProgressUtilsContext =
-  createContext<TrainingInProgressUtilsProps | null>(null);
+  createContext<ITrainingInProgressUtilsCtx | null>(null);
 
 export const useTrainingInProgressUtils = () =>
   useContext(TrainingInProgressUtilsContext)!;
 
-export type UseTrainingInProgressUtilsReturnType = ReturnType<
-  typeof useTrainingInProgressUtils
->;
-
-export function TrainingInProgressUtilsProvider(
-  props: React.PropsWithChildren
-) {
-  const { children } = props;
-
+export function TrainingInProgressUtilsProvider({
+  children,
+}: React.PropsWithChildren) {
   const {
     trainingInProgress,
     setTrainingInProgress,
@@ -51,7 +45,6 @@ export function TrainingInProgressUtilsProvider(
   } = useTraining();
 
   const { setSelectedSuperset } = useTrainingInProgress();
-
   const { selectedTrackingMethod } = useAthleteHeader();
 
   const [elapsedTime, setElapsedTime] = useState(0);
@@ -65,11 +58,7 @@ export function TrainingInProgressUtilsProvider(
     if (!trainingInProgress) return;
     if (!trainingInProgress.startOfTraining) {
       setTrainingInProgress(
-        (prev) =>
-          ({
-            ...prev,
-            startOfTraining: dayjs(),
-          }) as TrainingInProgress
+        (prev) => ({ ...prev, startOfTraining: dayjs() }) as TrainingInProgress
       );
     }
 
@@ -113,7 +102,7 @@ export function TrainingInProgressUtilsProvider(
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 
-  const value: TrainingInProgressUtilsProps = {
+  const value: ITrainingInProgressUtilsCtx = {
     elapsedTime,
     setElapsedTime,
     showUndoneSetsWarning,

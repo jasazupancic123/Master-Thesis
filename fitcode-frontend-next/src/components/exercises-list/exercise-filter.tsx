@@ -10,8 +10,8 @@ import {
 import { useState } from 'react';
 
 import renderAttributeFilter from './render-attribute-filter';
-import { app } from '@/core/app.service';
 import type { Attribute } from '@/core/attribute/type/attribute.type';
+import { core } from '@/core/core.service';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
 import type { Pagination } from '@/lib/common/type/paginate.type';
 import type { SetState } from '@/lib/common/type/state.type';
@@ -32,11 +32,15 @@ interface Props {
   setPagination?: SetState<Pagination>;
 }
 
-const attributes = app.exercise.attribute.getAll();
+const attributes = core.exercise.attribute.getAll();
 
-export default function ExerciseFilter(props: Props) {
-  const { filters, setFilters, open, setOpen, setPagination } = props;
-
+export default function ExerciseFilter({
+  filters,
+  setFilters,
+  open,
+  setOpen,
+  setPagination,
+}: Props) {
   const [search, setSearch] = useState<string>('');
 
   function handleFilterChange(

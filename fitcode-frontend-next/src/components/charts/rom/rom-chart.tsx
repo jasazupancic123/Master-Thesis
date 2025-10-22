@@ -5,16 +5,19 @@ import { theme } from '@/app/style';
 import { KeypointUtil } from '@/core/pose-detection/util/keypoint.util';
 import type { TrainingExerciseRecording } from '@/core/training/type/training-exercise.type';
 
-interface RomChartProps {
+interface Props {
   selectedExercise: TrainingExerciseRecording;
   setIndex: number;
   width: number;
   height?: number;
 }
 
-export default function RomChart(props: RomChartProps) {
-  const { selectedExercise, setIndex, width, height = 300 } = props;
-
+export default function RomChart({
+  selectedExercise,
+  setIndex,
+  width,
+  height = 300,
+}: Props) {
   if (!selectedExercise.recordedSets) return null;
 
   const currentSet = selectedExercise.recordedSets.find(

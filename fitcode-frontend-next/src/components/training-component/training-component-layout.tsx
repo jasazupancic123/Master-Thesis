@@ -16,13 +16,11 @@ import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 
-export default function TrainingComponentLayout(props: TrainingComponentProps) {
+export default function TrainingComponentLayout({
+  trainingComponent,
+}: TrainingComponentProps) {
   const screenSize = useScreenSize();
-
-  const { trainingComponent } = props;
-
   const { filter } = useGroup();
-
   const { training, component } = useTrainerDayView();
 
   const {

@@ -1,4 +1,4 @@
-import { app } from '@/core/app.service';
+import { core } from '@/core/core.service';
 import { SetStatus } from '@/core/training/enum/set-status.enum';
 import type { ChartWorkloadData } from '@/core/training/type/chart-workload-data.type';
 import type { Subgroup } from '@/core/training/type/subgroup.type';
@@ -112,7 +112,7 @@ export function getGroupChart(
           .filter((e) => e.id === exercise.id)
           .map((e) => ({
             ...e,
-            membersIds: app.training.getMainMembers(training),
+            membersIds: core.training.getMainMembers(training),
           }))
       ),
       // add exercises from subgroups

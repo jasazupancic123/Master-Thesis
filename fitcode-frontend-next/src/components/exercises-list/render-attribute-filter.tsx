@@ -6,7 +6,7 @@ import type { SetState } from '@/lib/common/type/state.type';
 import AttributeFilter from '@/util/attribute-filter/attribute-filter';
 import { SearchBar } from '@/util/search-bar/search-bar';
 
-interface RenderAttributeFilterProps {
+interface Props {
   attribute: Attribute<Exercise>;
   search: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -16,11 +16,13 @@ interface RenderAttributeFilterProps {
   handleFilterChange: (field: string, value: any) => void;
 }
 
-export default function renderAttributeFilter(
-  props: RenderAttributeFilterProps
-) {
-  const { attribute, search, filters, setSearch, handleFilterChange } = props;
-
+export default function renderAttributeFilter({
+  attribute,
+  search,
+  filters,
+  setSearch,
+  handleFilterChange,
+}: Props) {
   if (!attribute) return null;
 
   return (

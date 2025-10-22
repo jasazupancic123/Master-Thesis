@@ -17,7 +17,7 @@ import {
   disableBorder,
   exerciseCardSetAttributeSx,
 } from '../trainer-group-day-view/style/exercise-card-set-attribute.style';
-import { app } from '@/core/app.service';
+import { core } from '@/core/core.service';
 import type { Attribute } from '@/core/attribute/type/attribute.type';
 import type { ExerciseParamField } from '@/core/training/type/exercise-set.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
@@ -41,23 +41,20 @@ interface Props {
   disableSettingValue?: boolean;
 }
 
-export function TempoExerciseParam(props: Props) {
+export function TempoExerciseParam({
+  options,
+  selected,
+  value,
+  onSelectChange,
+  onInputChange,
+  showOptions = true,
+  disableOptions = false,
+  disableSets = false,
+  readOnly = false,
+  athleteView,
+  trainingInProgressView,
+}: Props) {
   const theme = useTheme();
-
-  const {
-    options,
-    selected,
-    value,
-    onSelectChange,
-    onInputChange,
-    showOptions = true,
-    disableOptions = false,
-    disableSets = false,
-    readOnly = false,
-    athleteView,
-    trainingInProgressView,
-  } = props;
-
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const open = Boolean(anchorEl);
 
@@ -65,7 +62,7 @@ export function TempoExerciseParam(props: Props) {
   const { setDetectedChanges } =
     athleteView || !group ? { setDetectedChanges: undefined } : group;
 
-  const exerciseParam = app.exercise.param.get(selected as ExerciseParamField);
+  const exerciseParam = core.exercise.param.get(selected as ExerciseParamField);
 
   if (!value || !exerciseParam) return null;
 

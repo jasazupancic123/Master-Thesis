@@ -8,14 +8,14 @@ import { useEffect } from 'react';
 import { LINK_SIGN_IN } from '@/lib/common/const/nav.const';
 import {} from '@/lib/firebase/config';
 
-interface GlobalErrorProps {
+interface Props {
   error: Error & { digest?: string };
   reset: () => void;
 }
 
 const onest = Onest({ subsets: ['latin'] });
 
-export default function GlobalError({ error }: GlobalErrorProps) {
+export default function GlobalError({ error }: Props) {
   useEffect(() => {
     console.error(error);
   }, [error]);

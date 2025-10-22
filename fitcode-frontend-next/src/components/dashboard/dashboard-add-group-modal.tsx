@@ -12,7 +12,7 @@ import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import MyModal from '@/util/modal';
 
-export default function AddGroupModal(props: ModalProps) {
+export default function AddGroupModal({ open, setOpen }: ModalProps) {
   const router = useRouter();
 
   const { users } = useMain();
@@ -22,8 +22,6 @@ export default function AddGroupModal(props: ModalProps) {
     setSelectedGroup,
     setDetectedChanges,
   } = useDashboard();
-
-  const { open, setOpen } = props;
 
   const [groupName, setGroupName] = useState('');
   const [owner, setOwner] = useState<AuthUser | null>(null);

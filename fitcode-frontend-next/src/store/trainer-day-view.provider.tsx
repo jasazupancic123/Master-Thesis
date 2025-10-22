@@ -11,10 +11,10 @@ import type {
   GroupContextProps,
   TrainerDayViewContextProps,
 } from '@/app/(trainer)/groups/[group_id]/props';
-import { app } from '@/core/app.service';
 import type { AuthUser } from '@/core/auth/type/user.type';
 import type { Component } from '@/core/component/type/component.type';
 import { Controller } from '@/core/controller';
+import { core } from '@/core/core.service';
 import { ExerciseService } from '@/core/exercise/exercise.service';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
 import type { Method } from '@/core/method/type/method.type';
@@ -195,7 +195,7 @@ export function TrainerDayViewProvider(
           lib.firebase.firestore.serialize(doc.data())
         );
 
-        const progress = app.training.workload.getProgress(training, data);
+        const progress = core.training.workload.getProgress(training, data);
         setProgress(progress);
       },
       (error) => {
@@ -493,7 +493,7 @@ export function TrainerDayViewProvider(
       .flat();
 
     exercises = exercises.filter((e) => !existingExerciseIds.includes(e.id));
-    app.training.superset.addExercises(newSupersets, exercises, mainSet);
+    core.training.superset.addExercises(newSupersets, exercises, mainSet);
 
     // update component or subgroup supersets
     if (!selectedSubgroup) newComponent.supersets = newSupersets;
@@ -526,7 +526,7 @@ export function TrainerDayViewProvider(
     const updatedSubgroup: Subgroup | null = selectedSubgroup
       ? {
           ...selectedSubgroup,
-          supersets: app.training.superset.removeExercise(
+          supersets: core.training.superset.removeExercise(
             selectedSubgroup.supersets,
             exerciseIndex,
             supersetIndex
@@ -551,7 +551,7 @@ export function TrainerDayViewProvider(
         }
       : {
           ...component,
-          supersets: app.training.superset.removeExercise(
+          supersets: core.training.superset.removeExercise(
             component.supersets,
             exerciseIndex,
             supersetIndex

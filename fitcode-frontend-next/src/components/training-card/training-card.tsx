@@ -204,12 +204,14 @@ export default function TrainingCard() {
               key={0}
               trainingComponent={training.warmup}
             />
+
             {training.components.map((trainingComponent, i) => (
               <TrainingComponentLayout
                 key={i + 1}
                 trainingComponent={trainingComponent}
               />
             ))}
+
             <TrainingComponentLayout
               key={training.components.length + 1}
               trainingComponent={training.cooldown}

@@ -11,8 +11,8 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material';
 
-import useSupersetExerciseMenu from '../hooks/use-menu';
-import useSupersetExerciseSortable from '../hooks/use-sortable';
+import useSupersetExerciseMenu from './hooks/use-menu';
+import useSupersetExerciseSortable from './hooks/use-sortable';
 import TrainingExerciseCardContainer from '@/components/training-exercise-card/components/container';
 import ExerciseMembersInProgress from '@/components/training-exercise-card/components/exercise-members-in-progress';
 import { MainSet } from '@/core/training/enum/main-set.enum';
@@ -22,15 +22,19 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 
-interface SupersetExerciseProps {
+interface Props {
   exercise: TrainingExercise;
   superset: Superset;
   supersetIndex: number;
   exerciseIndex: number;
 }
 
-export default function SupersetExercise(props: SupersetExerciseProps) {
-  const { exercise, superset, supersetIndex, exerciseIndex } = props;
+export default function SupersetExercise({
+  exercise,
+  superset,
+  supersetIndex,
+  exerciseIndex,
+}: Props) {
   const theme = useTheme();
   const screenSize = useScreenSize();
 
@@ -167,12 +171,14 @@ export default function SupersetExercise(props: SupersetExerciseProps) {
               </IconButton>
             </Box>
           )}
+
           <TrainingExerciseCardContainer
             supersetIndex={supersetIndex}
             exercise={exercise}
           />
         </Box>
       </Box>
+
       <Menu anchorEl={anchorEl} open={open} onClose={() => setAnchorEl(null)}>
         <MenuItem
           onClick={() => {
@@ -191,6 +197,7 @@ export default function SupersetExercise(props: SupersetExerciseProps) {
             Remove
           </Typography>
         </MenuItem>
+
         <MenuItem
           onClick={() => {
             setOpenVideoPlayerModal(true);

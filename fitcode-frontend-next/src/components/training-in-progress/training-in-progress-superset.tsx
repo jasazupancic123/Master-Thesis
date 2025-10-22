@@ -5,11 +5,11 @@ import { Box, Fab, Menu, MenuItem } from '@mui/material';
 import { useTheme } from '@mui/material';
 import { useRef, useState } from 'react';
 
-import { useTrainingInProgressUtils } from '../../context/training-in.progress-utils.provider';
-import { useUndoneExercises } from '../../context/undone-exercises.provider';
-import TrainingInProgressExerciseCard from '../training-in-progress-exercise-card/training-in-progress-exercise-card';
 import { handleFinishSuperset } from './actions/actions-superset';
+import { useTrainingInProgressUtils } from './context/training-in.progress-utils.provider';
+import { useUndoneExercises } from './context/undone-exercises.provider';
 import NextSupersetModal from './modals/next-superset-modal';
+import TrainingInProgressExerciseCard from './training-in-progress-exercise-card';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useTraining } from '@/store/training.provider';
@@ -17,7 +17,6 @@ import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 
 export default function TrainingInProgressSuperset() {
   const theme = useTheme();
-
   const traininContext = useTraining();
   const trainingInProgressContext = useTrainingInProgress();
   const trainingInProgressUtilsContext = useTrainingInProgressUtils();
@@ -25,16 +24,13 @@ export default function TrainingInProgressSuperset() {
   const trainingInProgressUndoneExercisesContext = useUndoneExercises();
 
   const { trainingInProgress } = traininContext;
-
   const { selectedTrackingMethod } = athleteHeaderContext;
-
   const { anchorEl, open, handleCancel, handleOpenMenu, handleCloseMenu } =
     trainingInProgressUtilsContext;
 
   const { selectedSuperset, selectedExercise } = trainingInProgressContext;
 
   const [openNextSupersetModal, setOpenNextSupersetModal] = useState(false);
-
   const boxRef = useRef<HTMLDivElement | null>(null);
 
   if (!trainingInProgress || !selectedSuperset) return null;
@@ -72,25 +68,16 @@ export default function TrainingInProgressSuperset() {
         anchorEl={anchorEl}
         open={open}
         onClose={handleCloseMenu}
-        anchorOrigin={{
-          vertical: 'top',
-          horizontal: 'center',
-        }}
-        transformOrigin={{
-          vertical: 'bottom',
-          horizontal: 'center',
-        }}
-        PaperProps={{
-          sx: { mb: 1 },
-        }}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        transformOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        PaperProps={{ sx: { mb: 1 } }}
       >
         <MenuItem
           onClick={() =>
             handleFinishSuperset({
               useTraining: { ...traininContext, trainingInProgress },
               useTrainingInProgress: trainingInProgressContext,
-              useTrainingInProgressUndoneExercises:
-                trainingInProgressUndoneExercisesContext,
+              useUndoneExercises: trainingInProgressUndoneExercisesContext,
               useTrainingInProgressUtils: trainingInProgressUtilsContext,
             })
           }

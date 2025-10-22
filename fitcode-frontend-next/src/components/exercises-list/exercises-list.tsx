@@ -6,7 +6,7 @@ import type { Exercise } from '@/core/exercise/type/exercise.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 
-interface ExercisesListProps {
+interface Props {
   exercises: Exercise[];
   setSelectedExerciseIds?: SetState<string[]>;
   selectedExerciseIds?: string[];
@@ -22,18 +22,17 @@ interface ExercisesListProps {
   children?: React.ReactNode;
 }
 
-export default function ExercisesList(props: ExercisesListProps) {
+export default function ExercisesList({
+  exercises,
+  setModal,
+  setExercise,
+  addExerciseForm,
+  selectedExerciseIds,
+  setSelectedExerciseIds,
+  children,
+}: Props) {
   const theme = useTheme();
   const screenSize = useScreenSize();
-  const {
-    exercises,
-    setModal,
-    setExercise,
-    addExerciseForm,
-    selectedExerciseIds,
-    setSelectedExerciseIds,
-    children,
-  } = props;
 
   return (
     <Box

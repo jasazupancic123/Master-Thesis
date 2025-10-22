@@ -51,15 +51,12 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
           display="flex"
           flexDirection="column"
           justifyContent="center"
-          sx={{
-            p: 0,
-            pl: 2,
-            m: 0,
-          }}
+          sx={{ p: 0, pl: 2, m: 0 }}
         >
           <Typography fontSize={12}>
             {lib.common.date.format(trainingComponent.from, {}, 'H:mm')}
           </Typography>
+
           <Box display="flex" alignItems="center" gap={0.5}>
             <Typography
               fontSize={16}
@@ -85,6 +82,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                 ? `${trainingComponent.component.name} - ${trainingComponent.target.name}`
                 : trainingComponent.component.name}
             </Typography>
+
             {component?.id === trainingComponent.id && (
               <Box display="flex" justifyContent="flex-start" gap={0.5}>
                 <IconButton
@@ -143,6 +141,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                       </IconButton>
                     </Tooltip>
                   )}
+
                   {!selectedAthlete && selectedExerciseIds.length > 0 && (
                     <Tooltip title="Delete selected exercises">
                       <IconButton
@@ -161,6 +160,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                 </>
               </Box>
             )}
+
             {training && (
               <Box ml={2}>
                 <CompletedMembersGroup componentId={trainingComponent.id} />

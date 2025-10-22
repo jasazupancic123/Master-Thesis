@@ -9,7 +9,7 @@ import {
 } from '@mui/material';
 import { useMemo } from 'react';
 
-import { app } from '@/core/app.service';
+import { core } from '@/core/core.service';
 import type { Attribute } from '@/core/attribute/type/attribute.type';
 
 interface Props {
@@ -19,12 +19,15 @@ interface Props {
   label?: boolean;
 }
 
-export default function FlatSelectAttribute(props: Props) {
-  const { attribute, onChange, initialValue = [], label } = props;
+export default function FlatSelectAttribute({
+  attribute,
+  onChange,
+  initialValue = [],
+  label,
+}: Props) {
   const field = attribute.field as string;
-
   const flatOptions = useMemo(
-    () => app.attribute.flatten(attribute, '', 0, true),
+    () => core.attribute.flatten(attribute, '', 0, true),
     [attribute]
   );
 
@@ -44,7 +47,7 @@ export default function FlatSelectAttribute(props: Props) {
           onChange={handleChange}
           renderValue={(selected) =>
             (selected as string[])
-              .map((v) => app.attribute.leaf(attribute, v)?.name ?? v) // show leaf name
+              .map((v) => core.attribute.leaf(attribute, v)?.name ?? v) // show leaf name
               .join(', ')
           }
         >

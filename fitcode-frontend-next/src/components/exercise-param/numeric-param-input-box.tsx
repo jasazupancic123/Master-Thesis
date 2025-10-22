@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { theme } from '@/app/style';
 import type { SetState } from '@/lib/common/type/state.type';
 
-interface NumericParamInputBoxProps {
+interface Props {
   anchorEl: HTMLElement | null;
   value: number;
   setOpen: (open: boolean) => void;
@@ -14,9 +14,14 @@ interface NumericParamInputBoxProps {
   isFloat?: boolean;
 }
 
-export default function NumericParamInputBox(props: NumericParamInputBoxProps) {
-  const { anchorEl, value, open, setOpen, onSubOptionChange, isFloat } = props;
-
+export default function NumericParamInputBox({
+  anchorEl,
+  value,
+  open,
+  setOpen,
+  onSubOptionChange,
+  isFloat,
+}: Props) {
   const [isNegative, setIsNegative] = useState(false);
 
   const inputValues = !isFloat

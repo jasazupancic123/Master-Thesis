@@ -21,7 +21,7 @@ import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 import LeftRightExerciseText from '@/util/left-right-exercise-text';
 
-interface TrainingExerciseCarExpandedSetsProps {
+interface Props {
   component: TrainingComponent;
   exercise: TrainingExercise;
   expandedSetsView: boolean;
@@ -29,14 +29,15 @@ interface TrainingExerciseCarExpandedSetsProps {
   supersetIndex: number;
 }
 
-export default function TrainingExerciseCardExpandedSets(
-  props: TrainingExerciseCarExpandedSetsProps
-) {
+export default function TrainingExerciseCardExpandedSets({
+  exercise,
+  expandedSetsView,
+  setExpandedSetsView,
+}: Props) {
   const screenSize = useScreenSize();
   const trainerDayViewContext = useTrainerDayView();
   const supersetsContext = useSupersets();
 
-  const { exercise, expandedSetsView, setExpandedSetsView } = props;
   const { training, component } = trainerDayViewContext;
 
   const uni = exercise.exercise?.isUnilateral;

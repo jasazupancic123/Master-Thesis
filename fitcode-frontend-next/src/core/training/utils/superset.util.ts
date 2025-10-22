@@ -1,4 +1,5 @@
 import { MainSet } from '../enum/main-set.enum';
+import type { ExerciseSetTracking } from '../type/exercise-set-tracking-state.type';
 import type { Superset } from '../type/superset.type';
 import type { Training } from '../type/training.type';
 import type { TrainingExercise } from '../type/training-exercise.type';
@@ -6,9 +7,36 @@ import {
   NUM_MAX_EXERCISES_PER_SUPERSET,
   NUM_MAX_SUPERSETS,
 } from '@/components/trainer-group-day-view/constant/supersets.constant';
-import { app } from '@/core/app.service';
+import { core } from '@/core/core.service';
+import {
+  KG,
+  REC_TIME,
+  REPS,
+  TEMPO,
+} from '@/core/exercise/constant/exercise-param.constant';
+import type { Exercise } from '@/core/exercise/type/exercise.type';
 
 export class TrainingSupersetUtil {
+  toTrainingExercise(exercise: Exercise): TrainingExercise {
+    const uni = exercise.isUnilateral || false;
+
+    return {
+      exercise,
+      id: exercise.id,
+      params: [],
+      sets: Array.from({ length: 3 }, (_, i) => ({
+        setNumber: i + 1,
+        reps: REPS.defaultValue as number,
+        ...(uni && { repsR: REPS.defaultValue as number }),
+        loadKg: KG.defaultValue as number,
+        ...(uni && { loadKgR: KG.defaultValue as number }),
+        tempo: TEMPO.defaultValue as string,
+        ...(uni && { tempoR: TEMPO.defaultValue as string }),
+        recTime: REC_TIME.defaultValue as number,
+      })),
+    };
+  }
+
   addExercises(
     supersets: Superset[],
     exercises: TrainingExercise[],
@@ -86,6 +114,26 @@ export class TrainingSupersetUtil {
     return supersets;
   }
 
+  getUndoneExercises(
+    superset: Superset,
+    tracking: ExerciseSetTracking[]
+  ): TrainingExercise[] {
+    const undone: TrainingExercise[] = [];
+
+    for (const e of superset.exercises) {
+      const t = tracking.find((t) => t.exerciseId === e.id);
+      for (const s of e.sets)
+        if (
+          !t ||
+          (!t.completedSetNumbers.includes(s.setNumber) &&
+            !undone.find((u) => u.id === e.id))
+        )
+          undone.push(e);
+    }
+
+    return undone;
+  }
+
   isEqual(a: Superset, b: Superset): boolean {
     if (a?.exercises?.length !== b?.exercises?.length) return false;
 
@@ -97,7 +145,7 @@ export class TrainingSupersetUtil {
       for (let j = 0; j < exerciseA.sets.length; j++) {
         const setA = exerciseA.sets[j];
         const setB = exerciseB.sets[j];
-        if (!setB || !app.training.set.isEqual(setA, setB)) return false;
+        if (!setB || !core.training.set.isEqual(setA, setB)) return false;
       }
     }
 

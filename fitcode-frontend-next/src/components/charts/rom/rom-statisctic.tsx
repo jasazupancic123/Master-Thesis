@@ -2,14 +2,12 @@ import { Typography } from '@mui/material';
 
 import type { TrainingExerciseRecording } from '@/core/training/type/training-exercise.type';
 
-interface RomStatisticProps {
+interface Props {
   selectedExercise: TrainingExerciseRecording;
   setIndex: number;
 }
 
-export default function RomStatistic(props: RomStatisticProps) {
-  const { selectedExercise, setIndex } = props;
-
+export default function RomStatistic({ selectedExercise, setIndex }: Props) {
   const currentSet = selectedExercise.recordedSets?.find(
     (s) => s.setIndex === setIndex
   );

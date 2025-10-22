@@ -2,7 +2,7 @@ import { createContext, useContext } from 'react';
 
 import { useMain } from './main.provider';
 import { useTrainerDayView } from './trainer-day-view.provider';
-import { app } from '@/core/app.service';
+import { core } from '@/core/core.service';
 import type { ExerciseParamField } from '@/core/training/type/exercise-set.type';
 import type { Superset } from '@/core/training/type/superset.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
@@ -75,7 +75,7 @@ export function SupersetsProvider(
 
     let updatedSupersets: Superset[] = [];
     for (const exercise of exercises)
-      updatedSupersets = app.training.superset.updateExercise(exercise, {
+      updatedSupersets = core.training.superset.updateExercise(exercise, {
         training,
         componentId: component.id,
         subgroupId: selectedSubgroup?.id,
@@ -105,7 +105,7 @@ export function SupersetsProvider(
   ) {
     if (!component || !training) return;
 
-    const trainingExercises = app.training.getExercises(training, {
+    const trainingExercises = core.training.getExercises(training, {
       componentId: component.id,
       subgroupId: selectedSubgroup?.id,
     });
@@ -135,7 +135,7 @@ export function SupersetsProvider(
               ...e.sets,
               ...Array(+sets - prevSets).fill(
                 e.sets[prevSets - 1] ||
-                  app.training.set.stub(prevSets, foundExercise)
+                  core.training.set.stub(prevSets, foundExercise)
               ),
             ];
           }

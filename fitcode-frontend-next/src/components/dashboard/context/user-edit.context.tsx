@@ -39,6 +39,7 @@ export function DashboardUserEditProvider({
   children,
 }: React.PropsWithChildren) {
   const {
+    filter,
     members,
     setMembers,
     setUsers,
@@ -63,7 +64,7 @@ export function DashboardUserEditProvider({
     const groupUsers = selectedGroup?.members || [];
     setFilteredUsers(groupUsers);
     setCurrentUsers(groupUsers);
-  }, [selectedGroup]);
+  }, [selectedGroup, filter]);
 
   function onHoverUser(user: AuthUser | null) {
     setHoveredUser(user);

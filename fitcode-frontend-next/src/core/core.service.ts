@@ -5,7 +5,7 @@ import { GroupUtil } from './group/group.util';
 import { InstitutionUtil } from './institution/institution.util';
 import { TrainingUtil } from './training/utils/training.util';
 
-class AppService {
+class CoreService {
   readonly attribute: AttributeUtil;
   readonly component: ComponentUtil;
   readonly exercise: ExerciseUtil;
@@ -23,4 +23,4 @@ class AppService {
   }
 }
 
-export const app = new AppService();
+export const core = new CoreService();

@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react';
 
 import DashboardGroups from '@/components/dashboard/dashboard-groups';
 import RegisterUsersDashboard from '@/components/dashboard/dashboard-register-users-modal';
-import { app } from '@/core/app.service';
+import { core } from '@/core/core.service';
 import type { Institution } from '@/core/institution/type/institution.type';
 import { UserRole } from '@/core/profile/enum/user-role.enum';
 import { lib } from '@/lib';
@@ -44,7 +44,7 @@ export default function DashboardPage() {
         (g) => g.institutionId === selectedInstitution.id
       );
 
-      for (const group of groups) app.group.mapMembers(group, users);
+      for (const group of groups) core.group.mapMembers(group, users);
 
       setSelectedInstitution((prev) => ({ ...prev, groups }) as Institution);
       if (groups.length) setSelectedGroup(groups[0]);

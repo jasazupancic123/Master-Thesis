@@ -5,7 +5,7 @@ import type { Subgroup } from '../type/subgroup.type';
 import type { Superset } from '../type/superset.type';
 import type { TrainingComponent } from '../type/training-component.type';
 import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-group-day-view/constant/subgroups.constant';
-import { app } from '@/core/app.service';
+import { core } from '@/core/core.service';
 import type { AuthUser } from '@/core/auth/type/user.type';
 
 export class TrainingSubgroupUtil {
@@ -68,7 +68,7 @@ export class TrainingSubgroupUtil {
     for (let i = 0; i < subgroup.supersets.length; i++) {
       const supersetA = subgroup.supersets[i];
       const supersetB = supersets[i];
-      if (!app.training.superset.isEqual(supersetA, supersetB)) return false;
+      if (!core.training.superset.isEqual(supersetA, supersetB)) return false;
     }
 
     return true;

@@ -8,8 +8,8 @@ import {
   goToNextExercise,
   goToPreviousExercise,
 } from './actions/actions-exercise';
-import TrainingExerciseSetDoneCheckbox from './components/training-exercise-set-done-checkbox';
 import useExerciseIndexLabel from './hooks/use-exercise-index-label';
+import TrainingExerciseSetDoneCheckbox from './training-exercise-set-done-checkbox';
 import AthleteTrainingExerciseSets from '@/components/athlete/athlete-training-exercise-sets';
 import RomChart from '@/components/charts/rom/rom-chart';
 import RomStatistic from '@/components/charts/rom/rom-statisctic';
@@ -250,10 +250,7 @@ export default function TrainingInProgressExerciseCard() {
                     {letter}
                     {isSelected && (
                       <Circle
-                        sx={{
-                          color: theme.palette.primary.main,
-                          fontSize: 10,
-                        }}
+                        sx={{ color: theme.palette.primary.main, fontSize: 10 }}
                       />
                     )}
                   </Typography>
@@ -317,12 +314,7 @@ export default function TrainingInProgressExerciseCard() {
                 display="flex"
                 justifyContent="center"
                 alignItems="center"
-                sx={{
-                  px: 1.2,
-                  py: 2,
-                  pb: 0,
-                  position: 'relative',
-                }}
+                sx={{ px: 1.2, py: 2, pb: 0, position: 'relative' }}
               >
                 <AthleteTrainingExerciseSets
                   training={trainingInProgress?.training}
@@ -333,7 +325,6 @@ export default function TrainingInProgressExerciseCard() {
                   passedSet={selectedExercise.sets[setIndex]}
                   supersetIndex={supersetIndex}
                   setIndex={setIndex}
-                  colorSetsToPrimary
                 />
               </Box>
             )}

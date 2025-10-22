@@ -130,9 +130,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           setMenuExercise(null);
           setOpenVideoPlayerModal(false);
         }}
-        sx={{
-          p: menuExercise?.exercise?.videoUrl?.length ? 0 : undefined,
-        }}
+        sx={{ p: menuExercise?.exercise?.videoUrl?.length ? 0 : undefined }}
         dialogueContentSx={{
           p: menuExercise?.exercise?.videoUrl?.length ? 0 : undefined,
         }}
