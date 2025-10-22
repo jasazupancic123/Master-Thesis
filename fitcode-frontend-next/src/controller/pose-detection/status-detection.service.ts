@@ -73,7 +73,10 @@ export class StatusDetectionService {
         );
       }
       case DetectionStatus.NOT_FACING_CAMERA: {
-        const isFacingCamera = this.checkIsFacingCamera(keypoints);
+        const isFacingCamera = this.checkIsFacingCamera(
+          keypoints,
+          exerciseDetectionData.stillnessEvaluationKeypoints
+        );
 
         const canUpdateToNotStill = isFacingCamera;
 
@@ -256,8 +259,11 @@ export class StatusDetectionService {
     });
   }
 
-  private static checkIsFacingCamera(keypoints: Keypoint[]): boolean {
-    const facingCameraKeypointIds = [
+  private static checkIsFacingCamera(
+    keypoints: Keypoint[],
+    passedFacingCameraKeypointIds?: KeypointId[]
+  ): boolean {
+    const facingCameraKeypointIds = passedFacingCameraKeypointIds || [
       KeypointId.LEFT_EYE,
       KeypointId.RIGHT_EYE,
       KeypointId.LEFT_SHOULDER,
