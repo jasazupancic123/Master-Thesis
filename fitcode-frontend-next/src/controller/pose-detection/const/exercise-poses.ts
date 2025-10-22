@@ -222,7 +222,14 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     },
   },
   {
-    exerciseIds: ['pull-up'],
+    exerciseIds: [
+      'pull-up',
+      'trx-row-[level-1]',
+      'trx-row-[level-2]',
+      'trx-row-[level-3]',
+      'incline-bench-db-row',
+      'inverted-bar-row-bw',
+    ],
     data: {
       romValueType: KeypointValueType.POSITION_Y,
       leftSide: {
@@ -234,6 +241,24 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
             direction: ConditionDirection.POSITIVE,
             duration: 1000,
             distance: 0.04,
+          },
+        ],
+      },
+    },
+  },
+  {
+    exerciseIds: ['sa-bent-over-row-db'],
+    data: {
+      romValueType: KeypointValueType.POSITION_Y,
+      leftSide: {
+        romKeypointId: KeypointId.LEFT_WRIST,
+        conditions: [
+          {
+            keypointId: KeypointId.LEFT_WRIST,
+            type: KeypointValueType.POSITION_Y,
+            direction: ConditionDirection.POSITIVE,
+            duration: 750, // ms
+            distance: 0.05, // meters
           },
         ],
       },
@@ -343,7 +368,15 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     },
   },
   {
-    exerciseIds: ['biceps-curl-sa-db'],
+    exerciseIds: [
+      'biceps-curl-sa-db',
+      'bent-over-row-bb',
+      'bent-over-row-db',
+      'gorilla-row-kb',
+      'incline-bench-db-row',
+      'renegade-rows-db',
+      'upright-rows-bb',
+    ],
     data: {
       romValueType: KeypointValueType.POSITION_Y,
       leftSide: {
@@ -391,25 +424,15 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     },
   },
   {
-    exerciseIds: ['skull-crusher-db'],
-    data: {
-      romValueType: KeypointValueType.POSITION_Y,
-      leftSide: {
-        romKeypointId: KeypointId.LEFT_WRIST,
-        conditions: [
-          {
-            keypointId: KeypointId.LEFT_WRIST,
-            type: KeypointValueType.POSITION_Y,
-            direction: ConditionDirection.NEGATIVE,
-            duration: 750, // ms
-            distance: 0.05, // meters
-          },
-        ],
-      },
-    },
-  },
-  {
-    exerciseIds: ['bench-press-bb'],
+    exerciseIds: [
+      'bench-press',
+      'bench-press-bb',
+      'bench-press-db',
+      'incline-bench-press-db',
+      'narrow-bench-press-db',
+      'skull-crasher-1-db',
+      'skull-crasher-2-db',
+    ],
     data: {
       romValueType: KeypointValueType.POSITION_Y,
       stillnessEvaluationKeypoints: [
@@ -428,7 +451,67 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
           {
             keypointId: KeypointId.LEFT_WRIST,
             type: KeypointValueType.POSITION_Y,
-            direction: ConditionDirection.POSITIVE,
+            direction: ConditionDirection.NEGATIVE,
+            duration: 1000, // ms
+            distance: 0.04, // meters
+          },
+        ],
+        requiredPoseConditions: [
+          {
+            keypointId1: KeypointId.LEFT_WRIST,
+            keypointId2: KeypointId.LEFT_ELBOW,
+            valueType: KeypointValueType.POSITION_Y,
+            minDiffM: 0.05,
+          },
+          {
+            keypointId1: KeypointId.RIGHT_WRIST,
+            keypointId2: KeypointId.RIGHT_ELBOW,
+            valueType: KeypointValueType.POSITION_Y,
+            minDiffM: 0.05,
+          },
+        ],
+      },
+    },
+  },
+  {
+    exerciseIds: ['triceps-bench-dips', 'triceps-dips'],
+    data: {
+      romValueType: KeypointValueType.POSITION_Y,
+      leftSide: {
+        romKeypointId: KeypointId.LEFT_SHOULDER,
+        conditions: [
+          {
+            keypointId: KeypointId.LEFT_SHOULDER,
+            type: KeypointValueType.POSITION_Y,
+            direction: ConditionDirection.NEGATIVE,
+            duration: 1000, // ms
+            distance: 0.05, // meters
+          },
+        ],
+      },
+    },
+  },
+  {
+    exerciseIds: ['bench-press-[top-down-alt]-db', 'bench-press-sa-db'],
+    data: {
+      romValueType: KeypointValueType.POSITION_Y,
+      stillnessEvaluationKeypoints: [
+        KeypointId.LEFT_WRIST,
+        KeypointId.RIGHT_WRIST,
+        KeypointId.LEFT_ELBOW,
+        KeypointId.RIGHT_ELBOW,
+        KeypointId.LEFT_KNEE,
+        KeypointId.RIGHT_KNEE,
+        KeypointId.LEFT_ANKLE,
+        KeypointId.RIGHT_ANKLE,
+      ],
+      leftSide: {
+        romKeypointId: KeypointId.LEFT_WRIST,
+        conditions: [
+          {
+            keypointId: KeypointId.LEFT_WRIST,
+            type: KeypointValueType.POSITION_Y,
+            direction: ConditionDirection.NEGATIVE,
             duration: 750, // ms
             distance: 0.07, // meters
           },
@@ -440,6 +523,20 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
             valueType: KeypointValueType.POSITION_Y,
             minDiffM: 0.07,
           },
+        ],
+      },
+      rightSide: {
+        romKeypointId: KeypointId.RIGHT_WRIST,
+        conditions: [
+          {
+            keypointId: KeypointId.RIGHT_WRIST,
+            type: KeypointValueType.POSITION_Y,
+            direction: ConditionDirection.NEGATIVE,
+            duration: 750, // ms
+            distance: 0.07, // meters
+          },
+        ],
+        requiredPoseConditions: [
           {
             keypointId1: KeypointId.RIGHT_WRIST,
             keypointId2: KeypointId.RIGHT_ELBOW,
