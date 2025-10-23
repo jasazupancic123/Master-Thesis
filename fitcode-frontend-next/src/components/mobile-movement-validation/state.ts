@@ -4,7 +4,6 @@ import type { RefObject } from 'react';
 
 import { EXERCISE_TIMES_ROUNDING_STEP_S } from './mobile-movement-validation';
 import { lib } from '@/lib';
-import type { CommonService } from '@/lib/common/common.service';
 import type { SetState } from '@/lib/common/type/state.type';
 import type { FrameBitmapBuffer } from '@/lib/pose-detection/class/frame-bitmap-buffer';
 import type { KeypointHistory } from '@/lib/pose-detection/class/keypoint-history';
@@ -601,11 +600,8 @@ export function getStatusMessage(status: DetectionStatus) {
   return STATUS_MESSAGES[status - 1];
 }
 
-export function getTempoString(state: {
-  recordedReps: Rep[];
-  commonService: CommonService;
-}): string {
-  const { recordedReps, commonService } = state;
+export function getTempoString(state: { recordedReps: Rep[] }): string {
+  const { recordedReps } = state;
 
   let avgTimeToExtremeMs = 0,
     avgTimeAtExtremeMs = 0,
@@ -621,25 +617,25 @@ export function getTempoString(state: {
 
   const avgTimeToExtremeS = Math.max(
     EXERCISE_TIMES_ROUNDING_STEP_S,
-    commonService.number.roundToStep(
+    lib.common.number.roundToStep(
       Math.max(avgTimeToExtremeMs / 1000 / recordedReps.length, 0),
       EXERCISE_TIMES_ROUNDING_STEP_S
     )
   );
 
-  const avgTimeAtExtremeS = commonService.number.roundToStep(
+  const avgTimeAtExtremeS = lib.common.number.roundToStep(
     Math.max(avgTimeAtExtremeMs / 1000 / recordedReps.length, 0),
     EXERCISE_TIMES_ROUNDING_STEP_S
   );
 
   const avgTimeFromExtremeToEndS = Math.max(
-    commonService.number.roundToStep(
+    lib.common.number.roundToStep(
       Math.max(avgTimeFromExtremeToEndMs / 1000 / recordedReps.length, 0),
       EXERCISE_TIMES_ROUNDING_STEP_S
     )
   );
 
-  const avgIdleTimeS = commonService.number.roundToStep(
+  const avgIdleTimeS = lib.common.number.roundToStep(
     Math.max(avgIdleTimeMs / 1000 / recordedReps.length, 0),
     EXERCISE_TIMES_ROUNDING_STEP_S
   );

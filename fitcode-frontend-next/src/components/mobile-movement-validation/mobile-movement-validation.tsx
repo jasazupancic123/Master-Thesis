@@ -61,9 +61,6 @@ import LoadingOverlay from '@/util/loading-overlay';
 
 const DEBUG = false;
 
-const commonService = lib.common;
-const firebaseStorage = lib.firebase.storage;
-
 export const EXERCISE_TIMES_ROUNDING_STEP_S = 0.1; // round to 0.1
 
 interface MobileMovementValidationProps {
@@ -561,15 +558,9 @@ export default function MobileMovementValidation(
         }
 
         if (i === 0) {
-          tempoL = getTempoString({
-            recordedReps: side,
-            commonService,
-          });
+          tempoL = getTempoString({ recordedReps: side });
         } else if (i === 1) {
-          tempoR = getTempoString({
-            recordedReps: side,
-            commonService,
-          });
+          tempoR = getTempoString({ recordedReps: side });
         }
 
         i++;
@@ -738,7 +729,7 @@ export default function MobileMovementValidation(
 
       const path = `training/${trainingId}/${file.name}`;
 
-      const url = await firebaseStorage.uploadFile(file, path);
+      const url = await lib.firebase.storage.uploadFile(file, path);
 
       lastRep.extremumImageUrl = url;
 
