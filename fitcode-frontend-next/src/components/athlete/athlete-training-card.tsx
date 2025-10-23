@@ -29,10 +29,12 @@ export default function AthleteTrainingCard({ training }: Props) {
 
   const { modal, setModal, showSupersets, setShowSupersets } =
     useAthleteTrainingCardUtils();
-  const { components, selectedComponent, setSelectedComponent } =
+  const { selectedComponent, setSelectedComponent } =
     useAthleteTrainingCardComponents(training);
 
+  const components = core.training.getComponents(training);
   const isActive = core.training.isActive(training);
+
   return (
     <>
       <Box

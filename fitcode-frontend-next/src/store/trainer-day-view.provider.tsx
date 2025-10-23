@@ -11,20 +11,13 @@ import type {
   GroupContextProps,
   TrainerDayViewContextProps,
 } from '@/app/(trainer)/groups/[group_id]/props';
-import { removeExerciseFromSuperset } from '@/components/supersets/actions/actions-drag-exercise';
 import type { AuthUser } from '@/core/auth/type/user.type';
-import type { Component } from '@/core/component/type/component.type';
 import { Controller } from '@/core/controller';
 import { core } from '@/core/core.service';
 import { ExerciseService } from '@/core/exercise/exercise.service';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
-import type { Method } from '@/core/method/type/method.type';
 import type { Profile } from '@/core/profile/type/user.type';
 import type { WellnessZScore } from '@/core/profile/type/wellness.type';
-import {
-  COOLDOWN_ID,
-  WARMUP_ID,
-} from '@/core/training/const/warmup-cooldown.const';
 import type { MainSet } from '@/core/training/enum/main-set.enum';
 import { TrainingController } from '@/core/training/training.controller';
 import { TrainingService } from '@/core/training/training.service';
@@ -40,7 +33,6 @@ import type {
 import { lib } from '@/lib';
 import type { Day } from '@/lib/common/service/date.util';
 import type { Pagination } from '@/lib/common/type/paginate.type';
-import type { SetState, SetStateNullable } from '@/lib/common/type/state.type';
 import { handleApiRequest } from '@/lib/common/type/state.type';
 
 export const TrainerDayViewContext =
@@ -309,19 +301,35 @@ export function TrainerDayViewProvider(
   useEffect(() => {
     if (!selectedPeriod) return;
 
-    setTrainingOnDayView(selectedPeriod, {
-      day,
-      trainings,
-      component,
-      setTraining,
-      setComponent,
-      setLoading,
-      components,
-      exercises,
-      methods,
-      selectedSubgroup,
-      setSelectedSubgroup,
-    });
+    const { from, to } = core.training.getPeriodDateRange(
+      day.date,
+      selectedPeriod.value
+    );
+
+    const training = trainings.find(
+      (t) => dayjs(t.from).isAfter(from) && dayjs(t.to).isBefore(to)
+    );
+
+    if (!training) {
+      setTraining(undefined);
+      setLoading(false);
+      setComponent(undefined);
+      return;
+    }
+
+    TrainingService.mapData(training, { components, exercises, methods });
+
+    const foundComponent = component?.id
+      ? training.components.find((c) => c.id === component.id)
+      : undefined;
+    const foundSubgroup =
+      foundComponent?.subgroups.find((sg) => sg.id === selectedSubgroup?.id) ||
+      null;
+
+    setComponent(foundComponent);
+    setSelectedSubgroup(foundSubgroup);
+    setTraining(training);
+    setLoading(false);
   }, [selectedPeriod]);
 
   useEffect(() => {
@@ -350,81 +358,6 @@ export function TrainerDayViewProvider(
       pageSize: screenSize.isUltraSmall ? 3 : screenSize.isMobile ? 6 : 10,
     }));
   }, [window.innerWidth]);
-
-  const setTrainingOnDayView = (
-    selectedPeriod: {
-      key: Date;
-      value: string;
-    },
-    state: {
-      day: Day;
-      trainings: Training[];
-      component?: TrainingComponent;
-      selectedSubgroup: Subgroup | null;
-      setSelectedSubgroup: SetState<Subgroup | null>;
-      setTraining: SetStateNullable<Training>;
-      setComponent: SetStateNullable<TrainingComponent>;
-      setLoading: SetState<boolean>;
-      components: Component[];
-      exercises: Exercise[];
-      methods: Method[];
-    }
-  ) => {
-    const {
-      day,
-      trainings,
-      component,
-      selectedSubgroup,
-      setSelectedSubgroup,
-      setComponent,
-      setTraining,
-      setLoading,
-      components,
-      exercises,
-      methods,
-    } = state;
-
-    let from: Date, to: Date;
-    if (selectedPeriod.value === 'AM') {
-      from = day.date.startOf('day').toDate();
-      to = day.date.startOf('day').add(12, 'hours').toDate();
-    } else {
-      from = day.date.startOf('day').add(11, 'hours').toDate();
-      to = day.date.endOf('day').toDate();
-    }
-
-    const currentComponentId = component?.id;
-    const currentSubgroupId = selectedSubgroup?.id;
-
-    const foundTraining = trainings.find(
-      (t) => dayjs(t.from).isAfter(from) && dayjs(t.to).isBefore(to)
-    );
-
-    if (!foundTraining) {
-      setTraining(undefined);
-      setLoading(false);
-      setComponent(undefined);
-      return;
-    }
-
-    TrainingService.mapData(foundTraining, {
-      components,
-      exercises,
-      methods,
-    });
-
-    const foundComponent = currentComponentId
-      ? foundTraining.components.find((c) => c.id === currentComponentId)
-      : undefined;
-    const foundSubgroup =
-      foundComponent?.subgroups.find((sg) => sg.id === currentSubgroupId) ||
-      null;
-
-    setComponent(foundComponent);
-    setSelectedSubgroup(foundSubgroup);
-    setTraining(foundTraining);
-    setLoading(false);
-  };
 
   async function handleRemoveMember(user: AuthUser) {
     if (!training) return;
@@ -480,108 +413,88 @@ export function TrainerDayViewProvider(
     exercises: TrainingExercise[],
     mainSet: MainSet
   ) {
-    if (!component || !training) return;
-    if (selectedSubgroup?.parentId) return; // disable for virtual subgroups
-
-    const newComponent = structuredClone(component);
-    const newTraining = structuredClone(training);
-    const newSupersets = structuredClone(supersets);
+    if (!component || !training || selectedSubgroup?.parentId) return; // disable for virtual subgroups
 
     // filter out already added exercises
-    const existingExerciseIds = newSupersets
+    const existingExerciseIds = supersets
       .map((s) => s.exercises.map((e) => e.id))
       .flat();
 
     exercises = exercises.filter((e) => !existingExerciseIds.includes(e.id));
-    core.training.superset.addExercises(newSupersets, exercises, mainSet);
 
-    // update component or subgroup supersets
-    if (!selectedSubgroup) newComponent.supersets = newSupersets;
-    else
-      newComponent.subgroups = newComponent.subgroups.map((sg) =>
-        sg.id === selectedSubgroup.id ? { ...sg, supersets: newSupersets } : sg
-      );
-
-    // update training components
-    newTraining.components = newTraining.components.map((c) =>
-      c.id === newComponent.id ? newComponent : c
+    // add exercises to current component/subgroup and its children
+    const childrenSubgroups = core.training.subgroup.getChildren(
+      selectedSubgroup || component,
+      component
     );
 
-    setSupersets(newSupersets);
-    setComponent(newComponent);
-    setTraining(newTraining);
-    setSelectedSubgroup((prev) =>
-      !prev ? null : { ...prev, supersets: newSupersets }
-    );
+    core.training.superset.addExercises(supersets, exercises, mainSet);
+    for (const sg of childrenSubgroups)
+      core.training.superset.addExercises(sg.supersets, exercises, mainSet);
+
+    updateSupersets(supersets, childrenSubgroups);
   }
 
   function deleteSupersetExercise(
-    exerciseId: string,
+    _exerciseId: string,
     supersetIndex: number,
     exerciseIndex: number
   ) {
-    // if it's custom workloads subgroup, then dissable
-    if (!component || !training || selectedSubgroup?.parentId) return;
+    if (!component || !training || selectedSubgroup?.parentId) return; // disable for virtual subgroups
 
-    const updatedSubgroup: Subgroup | null = selectedSubgroup
-      ? {
-          ...selectedSubgroup,
-          supersets: core.training.superset.removeExercise(
-            selectedSubgroup.supersets,
-            exerciseIndex,
-            supersetIndex
-          ),
-        }
-      : null;
+    // remove exercise from current component/subgroup and its children
+    const childrenSubgroups = core.training.subgroup.getChildren(
+      selectedSubgroup || component,
+      component
+    );
 
-    if (updatedSubgroup) {
-      updatedSubgroup.supersets = updatedSubgroup.supersets.filter(
-        (s) => s.exercises.length > 0
-      );
-
-      setSelectedSubgroup(updatedSubgroup);
-    }
-
-    const updatedComponent = updatedSubgroup
-      ? {
-          ...component,
-          subgroups: component.subgroups.map((sg) =>
-            sg.id === updatedSubgroup.id ? updatedSubgroup : sg
-          ),
-        }
-      : {
-          ...component,
-          supersets: core.training.superset.removeExercise(
-            component.supersets,
-            exerciseIndex,
-            supersetIndex
-          ),
-        };
-
-    updatedComponent.subgroups = removeExerciseFromSuperset(
-      updatedComponent,
-      updatedSubgroup,
+    const newSupersets = core.training.superset.removeExercise(
+      supersets,
       supersetIndex,
       exerciseIndex
     );
 
-    setComponent(updatedComponent);
-
-    const updatedTraining = structuredClone(training);
-
-    if (component.id === WARMUP_ID) updatedTraining.warmup = updatedComponent;
-    else if (component.id === COOLDOWN_ID)
-      updatedTraining.cooldown = updatedComponent;
-    else
-      updatedTraining.components = training.components.map((c) =>
-        c.id === component.id ? updatedComponent : c
+    for (const sg of childrenSubgroups)
+      sg.supersets = core.training.superset.removeExercise(
+        sg.supersets,
+        supersetIndex,
+        exerciseIndex
       );
 
-    setSelectedExerciseIds((prev) => prev.filter((ex) => ex !== exerciseId));
-    setTraining(updatedTraining);
-    setTrainings((prev) =>
-      prev.map((t) => (t.id === updatedTraining.id ? updatedTraining : t))
+    updateSupersets(newSupersets, childrenSubgroups);
+  }
+
+  /**
+   * Updates state after modifying supersets in component or subgroup
+   */
+  function updateSupersets(
+    supersets: Superset[], // new supersets
+    childrenSubgroups: Subgroup[]
+  ) {
+    if (!component || !training) return;
+
+    // update component or subgroup supersets
+    if (!selectedSubgroup) component.supersets = supersets;
+    else
+      component.subgroups = component.subgroups.map((sg) =>
+        sg.id === selectedSubgroup.id ? { ...sg, supersets } : sg
+      );
+
+    // update children subgroups
+    for (const sg of childrenSubgroups)
+      component.subgroups = component.subgroups.map((s) =>
+        s.id === sg.id ? sg : s
+      );
+
+    // update training components
+    training.components = training.components.map((c) =>
+      c.id === component.id ? component : c
     );
+
+    setSupersets(supersets);
+    setComponent(component);
+    setTraining(training);
+    setSelectedSubgroup((prev) => (!prev ? null : { ...prev, supersets }));
   }
 
   const value: TrainerDayViewContextProps = {

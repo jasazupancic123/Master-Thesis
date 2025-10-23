@@ -1,4 +1,5 @@
 import { addMinutes } from 'date-fns';
+import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 
 import {
@@ -22,6 +23,7 @@ import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/core/training/const/warmup-cooldown.const';
+import type { DateRange } from '@/lib/common/type/date-range.type';
 
 export class TrainingUtil {
   readonly component: TrainingComponentUtil;
@@ -65,6 +67,12 @@ export class TrainingUtil {
     const isTrainingAM = from.hour() < 12;
 
     return isNowAM === isTrainingAM && now.isSame(from, 'day');
+  }
+
+  isTrainingComponent(
+    item: Subgroup | TrainingComponent
+  ): item is TrainingComponent {
+    return (item as TrainingComponent).subgroups !== undefined;
   }
 
   getAvailableSuperset(item: TrainingComponent | Subgroup): number {
@@ -213,5 +221,20 @@ export class TrainingUtil {
 
     const durationText = `${hours > 0 ? `${hours}h ` : ''}${minutes}min`;
     return durationText;
+  }
+
+  getPeriodDateRange(date: Dayjs, period: 'AM' | 'PM'): Required<DateRange> {
+    switch (period) {
+      case 'AM':
+        return {
+          from: date.startOf('day').toDate(),
+          to: date.startOf('day').add(12, 'hours').toDate(),
+        };
+      case 'PM':
+        return {
+          from: date.startOf('day').add(11, 'hours').toDate(),
+          to: date.endOf('day').toDate(),
+        };
+    }
   }
 }

@@ -4,7 +4,7 @@ import {
   IntersectionType,
 } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
-import { IsEnum, IsInt, IsOptional, Max, Min } from 'class-validator';
+import { IsEnum, IsInt, IsNumber, IsOptional, Max, Min } from 'class-validator';
 
 import { IsTempo } from '@src/common/decorator/is-tempo.decorator';
 import { LoadType } from '@src/training/enum/load-type.enum';
@@ -16,21 +16,21 @@ export class ExerciseSetPrimarySide {
   @Expose()
   reps: number;
 
-  @IsInt()
+  @IsNumber()
   @Min(0)
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
   loadKg?: number;
 
-  @IsInt()
+  @IsNumber()
   @Min(0)
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
   loadRm?: number;
 
-  @IsInt()
+  @IsNumber()
   @Min(0)
   @IsOptional()
   @ApiPropertyOptional()
@@ -43,7 +43,7 @@ export class ExerciseSetPrimarySide {
   @Expose()
   tempo?: string; // e.g. "2.5:0:3.5:0", meaning "eccentric:isometric:concentric:isometric" in seconds
 
-  @IsInt()
+  @IsNumber()
   @Min(0)
   @IsOptional()
   @ApiPropertyOptional()
@@ -59,21 +59,21 @@ export class ExerciseSetSecondarySide {
   @Expose()
   repsR?: number;
 
-  @IsInt()
+  @IsNumber()
   @Min(0)
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
   loadKgR?: number;
 
-  @IsInt()
+  @IsNumber()
   @Min(0)
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
   loadRmR?: number;
 
-  @IsInt()
+  @IsNumber()
   @Min(0)
   @IsOptional()
   @ApiPropertyOptional()
@@ -86,7 +86,7 @@ export class ExerciseSetSecondarySide {
   @Expose()
   tempoR?: string;
 
-  @IsInt()
+  @IsNumber()
   @Min(0)
   @IsOptional()
   @ApiPropertyOptional()

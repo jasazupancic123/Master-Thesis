@@ -2,11 +2,10 @@ import type { DraggableLocation } from 'react-beautiful-dnd';
 import toast from 'react-hot-toast';
 
 import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-group-day-view/constant/subgroups.constant';
-import { NUM_MAX_SUPERSETS } from '@/components/trainer-group-day-view/constant/supersets.constant';
 import { onMainSetChange } from '@/components/training-component/actions/actions-main-set';
 import { removeSelectedExercisesFromSupersets } from '@/components/training-component/actions/actions-selected-exercises';
-import { core } from '@/core/core.service';
 import { ADD_SUPERSET_DROPPABLE_ID } from '@/core/training/const/add-superset-droppable-id.const';
+import { MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT } from '@/core/training/const/training-limits.const';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
@@ -42,9 +41,9 @@ export async function onDragEndExercise(
     return; // if virtual subgroup, then disable
 
   if (destination.droppableId === ADD_SUPERSET_DROPPABLE_ID) {
-    if (supersets.length >= NUM_MAX_SUPERSETS)
+    if (supersets.length >= MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT)
       toast.error(
-        `You can only have ${NUM_MAX_SUPERSETS} supersets per component`
+        `You can only have ${MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT} supersets per component`
       );
 
     const _supersets = structuredClone(supersets);
@@ -183,9 +182,9 @@ export const onAddExerciseDrop = (
   supersets: Superset[],
   draggableId: string
 ): Superset[] | undefined => {
-  if (supersets.length >= NUM_MAX_SUPERSETS) {
+  if (supersets.length >= MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT) {
     toast.error(
-      `You can only have ${NUM_MAX_SUPERSETS} supersets per component`
+      `You can only have ${MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT} supersets per component`
     );
     return;
   }
@@ -273,9 +272,12 @@ export function onDragEndExerciseToExistingSuperset(
   }
 
   // onDragEnd exercise to another existing superset
-  if (supersetWithNewExercise.exercises.length >= NUM_MAX_SUPERSETS) {
+  if (
+    supersetWithNewExercise.exercises.length >=
+    MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT
+  ) {
     toast.error(
-      `You can only have ${NUM_MAX_SUPERSETS} exercises per superset`
+      `You can only have ${MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT} exercises per superset`
     );
 
     return;
@@ -285,7 +287,6 @@ export function onDragEndExerciseToExistingSuperset(
     (e) => e.id === draggableId
   );
 
-  // ČORI TU MORE BIT UNDEFINED KER !exerciseIndex se kliče tudi te ko je 0!
   if (exerciseIndex === undefined || exerciseIndex === -1) return;
 
   const exercise = supersetWithExercise.exercises[exerciseIndex];
@@ -391,30 +392,6 @@ export function updateMainSet(input: {
       return { ...sg, supersets: newSupersets, mainSet };
     }
 
-    return sg;
-  });
-
-  return component.subgroups;
-}
-
-export function removeExerciseFromSuperset(
-  component: TrainingComponent,
-  selectedSubgroup: Subgroup | null,
-  supersetIndex: number,
-  exerciseIndex: number
-): Subgroup[] {
-  const parentId = selectedSubgroup?.id || DEFAULT_SUBGROUP_ID;
-
-  component.subgroups = component.subgroups.map((sg) => {
-    if (sg.parentId && sg.parentId === parentId) {
-      const newSupersets = core.training.superset.removeExercise(
-        sg.supersets,
-        exerciseIndex,
-        supersetIndex
-      );
-
-      return { ...sg, supersets: newSupersets };
-    }
     return sg;
   });
 
