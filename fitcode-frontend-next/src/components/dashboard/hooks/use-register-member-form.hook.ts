@@ -2,21 +2,21 @@ import { useState } from 'react';
 
 export type IRegisterMemberFormHook = ReturnType<typeof useRegisterMemberForm>;
 
-interface IFormData {
+export interface IFormData {
   displayName: string;
   email: string;
   password: string;
   confirmPassword: string;
 }
 
-export default function useRegisterMemberForm() {
-  const DEFAULT_FORM_DATA: IFormData = {
-    displayName: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-  };
+const DEFAULT_FORM_DATA: IFormData = {
+  displayName: '',
+  email: '',
+  password: '',
+  confirmPassword: '',
+};
 
+export default function useRegisterMemberForm() {
   const [formData, setFormData] = useState(DEFAULT_FORM_DATA);
 
   function resetForm() {
@@ -36,5 +36,5 @@ export default function useRegisterMemberForm() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   }
 
-  return { formData, setFormField, resetForm, isFormEmpty };
+  return { formData, setFormData, setFormField, resetForm, isFormEmpty };
 }

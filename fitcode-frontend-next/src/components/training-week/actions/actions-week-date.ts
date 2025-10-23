@@ -3,9 +3,9 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import toast from 'react-hot-toast';
 
-import { core } from '@/core/core.service';
 import type { Component } from '@/core/component/type/component.type';
 import { COLOR } from '@/core/const/color.const';
+import { core } from '@/core/core.service';
 import type { Target } from '@/core/target/type/target.type';
 import { MainSet } from '@/core/training/enum/main-set.enum';
 import { TrainingController } from '@/core/training/training.controller';

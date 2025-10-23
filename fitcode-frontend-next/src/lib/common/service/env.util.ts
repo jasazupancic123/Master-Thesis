@@ -2,7 +2,7 @@ import {
   POSE_LANDMARKER_FULL_PATH,
   POSE_LANDMARKER_HEAVY_PATH,
   POSE_LANDMARKER_LITE_PATH,
-} from '@/core/pose-detection/const/pose-landmarker-paths';
+} from '@/lib/pose-detection/const/pose-landmarker-paths';
 
 export class EnvUtil {
   isProd(): boolean {

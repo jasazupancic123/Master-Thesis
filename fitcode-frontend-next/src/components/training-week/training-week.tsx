@@ -5,7 +5,7 @@ import dayjs from 'dayjs';
 import React, { useState } from 'react';
 
 import type { TrainingCycleViewWeekProps } from '../trainer-group-cycle-view/types/type';
-import TrainingWeekDates from './components/training-week-date';
+import TrainingWeekDates from './training-week-date';
 import type { Training } from '@/core/training/type/training.type';
 import { useMain } from '@/store/main.provider';
 import MyModal from '@/util/modal';

@@ -2,8 +2,8 @@ import toast from 'react-hot-toast';
 
 import { updateGlobalStates } from '@/components/supersets/actions/actions-drag-exercise';
 import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-group-day-view/constant/subgroups.constant';
-import { core } from '@/core/core.service';
 import type { AuthUser } from '@/core/auth/type/user.type';
+import { core } from '@/core/core.service';
 import {
   COOLDOWN_ID,
   WARMUP_ID,

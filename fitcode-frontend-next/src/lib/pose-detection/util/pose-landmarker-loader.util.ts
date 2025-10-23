@@ -1,6 +1,3 @@
-// lib/pose-landmarker.singleton.ts
-'use client';
-
 import { FilesetResolver, PoseLandmarker } from '@mediapipe/tasks-vision';
 
 import { lib } from '@/lib';

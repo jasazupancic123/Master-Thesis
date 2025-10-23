@@ -6,12 +6,24 @@ import type { KeypointId } from '../enum/keypoint-id';
 import type { Keypoint } from '../type/keypoint.type';
 import type { Rep } from '../type/rep.type';
 import { KeypointUtil } from './keypoint.util';
-import { TimeUtil } from './time.util';
 import { EXERCISE_TIMES_ROUNDING_STEP_S } from '@/components/mobile-movement-validation/mobile-movement-validation';
 import { lib } from '@/lib';
 
 export class RepPostProcessingUtil {
-  static getAtExtremumStartAndEndTimes(input: {
+  private static _instance: RepPostProcessingUtil;
+  private readonly keypoint: KeypointUtil;
+
+  private constructor() {
+    this.keypoint = KeypointUtil.instance;
+  }
+
+  static get instance(): RepPostProcessingUtil {
+    if (!RepPostProcessingUtil._instance)
+      RepPostProcessingUtil._instance = new RepPostProcessingUtil();
+    return RepPostProcessingUtil._instance;
+  }
+
+  getAtExtremumStartAndEndTimes(input: {
     currentRepRef: RefObject<Rep | null>;
     initialValues: number[];
     avgFps: { value: number; count: number } | null;
@@ -38,11 +50,11 @@ export class RepPostProcessingUtil {
       };
     }
 
-    const initialVelocity = KeypointUtil.getVelocityFromValues(
+    const initialVelocity = this.keypoint.getVelocityFromValues(
       initialValues
     ) as number[];
 
-    const velocity = KeypointUtil.smoothKeypointValues(
+    const velocity = this.keypoint.smoothKeypointValues(
       initialVelocity,
       undefined,
       13,
@@ -67,7 +79,7 @@ export class RepPostProcessingUtil {
     let timeAtExtremumStartKeypoint: Keypoint | undefined;
     let timeAtExtremumEndKeypoint: Keypoint | undefined;
 
-    const numConsecutiveFrames = KeypointUtil.getFramesCountFromSeconds(
+    const numConsecutiveFrames = this.keypoint.getFramesCountFromSeconds(
       POSE_DETECTION_CONSTRAINTS.TIME_AT_EXTREMUM_VELOCITY_SUSTAIN_S,
       avgFps?.value || 30
     );
@@ -75,7 +87,7 @@ export class RepPostProcessingUtil {
     // time at extremum start meassurement
     let startHit = 0;
     for (let i = indexOfExtreme; i >= 0; i--) {
-      const currentKeypoint = KeypointUtil.getDesiredKeypointFromArray(
+      const currentKeypoint = this.keypoint.getDesiredKeypointFromArray(
         currentRepRef.current.buffer.history[i],
         keypointId
       );
@@ -98,7 +110,7 @@ export class RepPostProcessingUtil {
       if (startHit >= numConsecutiveFrames) {
         const keypointIndex = i + numConsecutiveFrames - 1;
 
-        timeAtExtremumStartKeypoint = KeypointUtil.getDesiredKeypointFromArray(
+        timeAtExtremumStartKeypoint = this.keypoint.getDesiredKeypointFromArray(
           currentRepRef.current.buffer.history[keypointIndex],
           keypointId
         );
@@ -120,7 +132,7 @@ export class RepPostProcessingUtil {
       i < currentRepRef.current.buffer.history.length;
       i++
     ) {
-      const currentKeypoint = KeypointUtil.getDesiredKeypointFromArray(
+      const currentKeypoint = this.keypoint.getDesiredKeypointFromArray(
         currentRepRef.current.buffer.history[i],
         keypointId
       );
@@ -145,7 +157,7 @@ export class RepPostProcessingUtil {
       if (endHit >= numConsecutiveFrames) {
         const keypointIndex = i - numConsecutiveFrames;
 
-        timeAtExtremumEndKeypoint = KeypointUtil.getDesiredKeypointFromArray(
+        timeAtExtremumEndKeypoint = this.keypoint.getDesiredKeypointFromArray(
           currentRepRef.current.buffer.history[keypointIndex],
           keypointId
         );
@@ -166,7 +178,7 @@ export class RepPostProcessingUtil {
     };
   }
 
-  static setRepTimes(input: {
+  setRepTimes(input: {
     recordedReps: Rep[];
     currentRepRef: RefObject<Rep | null>;
     timeAtExtremumStartKeypoint: Keypoint | undefined;
@@ -183,7 +195,7 @@ export class RepPostProcessingUtil {
 
     if (currentRepRef.current.endValueTimestamp) {
       currentRepRef.current.durationMs = lib.common.number.roundToStep(
-        TimeUtil.getMsDiff(
+        lib.common.date.getMsDiff(
           currentRepRef.current.startTimestamp,
           currentRepRef.current.endValueTimestamp
         ),
@@ -195,7 +207,7 @@ export class RepPostProcessingUtil {
       const prevRep = recordedReps[recordedReps.length - 1];
       if (prevRep.endValueTimestamp) {
         currentRepRef.current.idleTimeMs = lib.common.number.roundToStep(
-          TimeUtil.getMsDiff(
+          lib.common.date.getMsDiff(
             prevRep.endValueTimestamp,
             currentRepRef.current.startTimestamp
           ),
@@ -208,7 +220,7 @@ export class RepPostProcessingUtil {
       currentRepRef.current.timeToExtremeMs = Math.max(
         EXERCISE_TIMES_ROUNDING_STEP_S * 1000,
         lib.common.number.roundToStep(
-          TimeUtil.getMsDiff(
+          lib.common.date.getMsDiff(
             currentRepRef.current.startTimestamp,
             timeAtExtremumStartKeypoint.capturedAt
           ),
@@ -228,7 +240,7 @@ export class RepPostProcessingUtil {
       currentRepRef.current.timeFromExtremeToEndMs = Math.max(
         EXERCISE_TIMES_ROUNDING_STEP_S * 1000,
         lib.common.number.roundToStep(
-          TimeUtil.getMsDiff(
+          lib.common.date.getMsDiff(
             (timeAtExtremumEndKeypoint ||
               currentRepRef.current.extremeKeypoint)!.capturedAt,
             currentRepRef.current.endValueTimestamp
@@ -245,7 +257,7 @@ export class RepPostProcessingUtil {
 
     if (timeAtExtremumStartKeypoint && timeAtExtremumEndKeypoint) {
       currentRepRef.current.timeAtExtremeMs = lib.common.number.roundToStep(
-        TimeUtil.getMsDiff(
+        lib.common.date.getMsDiff(
           timeAtExtremumStartKeypoint.capturedAt,
           timeAtExtremumEndKeypoint.capturedAt
         ),
@@ -254,7 +266,7 @@ export class RepPostProcessingUtil {
     }
   }
 
-  static setRepRom(input: {
+  setRepRom(input: {
     currentRepRef: RefObject<Rep | null>;
     initialValues: number[];
   }) {

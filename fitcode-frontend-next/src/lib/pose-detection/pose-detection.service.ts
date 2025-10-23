@@ -13,7 +13,22 @@ import type { RepState } from './type/rep-state.type';
 import { KeypointUtil } from './util/keypoint.util';
 
 export class PoseDetectionService {
-  static checkStatus(state: {
+  private static _instance: PoseDetectionService;
+  private readonly keypoint: KeypointUtil;
+  private readonly status: StatusDetectionService;
+
+  private constructor() {
+    this.keypoint = KeypointUtil.instance;
+    this.status = StatusDetectionService.instance;
+  }
+
+  static get instance(): PoseDetectionService {
+    if (!PoseDetectionService._instance)
+      PoseDetectionService._instance = new PoseDetectionService();
+    return PoseDetectionService._instance;
+  }
+
+  checkStatus(state: {
     statusRef: RefObject<DetectionStatus>;
     canProceedIntoReadyStateRef: RefObject<boolean>;
     repStateRefL: RefObject<RepState>;
@@ -54,29 +69,26 @@ export class PoseDetectionService {
           ];
 
     for (const status of initStatuses) {
-      const validStatus = StatusDetectionService.checkAndValidateStatus(
-        status,
-        {
-          repStateRefL,
-          repStateRefR,
-          keypoints,
-          statusRef,
-          canProceedIntoReadyStateRef,
-          keypointBuffer: keypointBuffer,
-          exerciseDetectionData,
-          avgFps,
-          recordingTimestampRef,
-          statusMessage,
-          stillnessCountdownRef,
-          videoHeight,
-        }
-      );
+      const validStatus = this.status.checkAndValidateStatus(status, {
+        repStateRefL,
+        repStateRefR,
+        keypoints,
+        statusRef,
+        canProceedIntoReadyStateRef,
+        keypointBuffer: keypointBuffer,
+        exerciseDetectionData,
+        avgFps,
+        recordingTimestampRef,
+        statusMessage,
+        stillnessCountdownRef,
+        videoHeight,
+      });
 
       if (!validStatus) return;
     }
   }
 
-  static validateKeypointConditions(
+  validateKeypointConditions(
     conditions: PoseValidationCondition[],
     keypoints: Keypoint[]
   ): string | undefined {
@@ -86,7 +98,7 @@ export class PoseDetectionService {
 
       if (!keypoint1 || !keypoint2) return condition.errorMessage;
 
-      const { value1, value2 } = KeypointUtil.getKeypointsValuesByType(
+      const { value1, value2 } = this.keypoint.getKeypointsValuesByType(
         keypoint1,
         keypoint2,
         condition.relation
@@ -100,141 +112,13 @@ export class PoseDetectionService {
     }
   }
 
-  static checkHasShakedHead(state: {
+  checkHasNodded(state: {
     keypointBuffer: KeypointHistory;
     avgFps: { value: number; count: number } | null;
   }): boolean {
     const { keypointBuffer, avgFps } = state;
 
-    const numFrames = KeypointUtil.getFramesCountFromSeconds(
-      POSE_DETECTION_CONSTRAINTS.HEAD_SHAKE_DETECTION_BUFFER_DURATION_S,
-      avgFps?.value || 30
-    );
-
-    const frames = keypointBuffer.history.slice(-numFrames);
-
-    const startLeftShoulder = KeypointUtil.getDesiredKeypointFromArray(
-      frames[0],
-      KeypointId.LEFT_SHOULDER
-    );
-
-    const startRightShoulder = KeypointUtil.getDesiredKeypointFromArray(
-      frames[0],
-      KeypointId.RIGHT_SHOULDER
-    );
-
-    const startNose = KeypointUtil.getDesiredKeypointFromArray(
-      frames[0],
-      KeypointId.NOSE
-    );
-
-    if (!startNose || !startLeftShoulder || !startRightShoulder) return false;
-
-    const startNoseX = KeypointUtil.getKeypointValueByType(
-      startNose,
-      KeypointValueType.POSITION_X
-    );
-
-    const startLeftShoulderX = KeypointUtil.getKeypointValueByType(
-      startLeftShoulder,
-      KeypointValueType.POSITION_X
-    );
-
-    const startRightShoulderX = KeypointUtil.getKeypointValueByType(
-      startRightShoulder,
-      KeypointValueType.POSITION_X
-    );
-
-    if (
-      startNoseX === undefined ||
-      startLeftShoulderX === undefined ||
-      startRightShoulderX === undefined
-    )
-      return false;
-
-    const startNoseLeftShoulderDist = startLeftShoulderX - startNoseX; // left shoulderX is bigger than right shoulderX
-    const startNoseRightShoulderDist = startNoseX - startRightShoulderX;
-
-    const hasMovedLeft = false,
-      hasMovedRight = false;
-    let hasRotatedLeft = false,
-      hasRotatedRight = false;
-
-    for (const frame of frames) {
-      const nose = KeypointUtil.getDesiredKeypointFromArray(
-        frame,
-        KeypointId.NOSE
-      );
-
-      const leftShoulder = KeypointUtil.getDesiredKeypointFromArray(
-        frame,
-        KeypointId.LEFT_SHOULDER
-      );
-
-      const rightShoulder = KeypointUtil.getDesiredKeypointFromArray(
-        frame,
-        KeypointId.RIGHT_SHOULDER
-      );
-
-      if (nose && leftShoulder && !hasMovedLeft) {
-        const noseX = KeypointUtil.getKeypointValueByType(
-          nose,
-          KeypointValueType.POSITION_X
-        );
-
-        const leftShoulderX = KeypointUtil.getKeypointValueByType(
-          leftShoulder,
-          KeypointValueType.POSITION_X
-        );
-
-        if (noseX !== undefined && leftShoulderX !== undefined) {
-          const noseLeftShoulderDist = leftShoulderX - noseX;
-
-          if (
-            startNoseLeftShoulderDist - noseLeftShoulderDist >
-            POSE_DETECTION_CONSTRAINTS.MIN_NOSE_X_MOVEMENT_M
-          ) {
-            // console.log('HAS ROTATED LEFT');
-            hasRotatedLeft = true;
-          }
-        }
-      }
-
-      if (nose && rightShoulder && !hasMovedRight) {
-        const rightShoulderX = KeypointUtil.getKeypointValueByType(
-          rightShoulder,
-          KeypointValueType.POSITION_X
-        );
-
-        const noseX = KeypointUtil.getKeypointValueByType(
-          nose,
-          KeypointValueType.POSITION_X
-        );
-
-        if (noseX !== undefined && rightShoulderX !== undefined) {
-          const noseRightShoulderDist = noseX - rightShoulderX;
-
-          if (
-            startNoseRightShoulderDist - noseRightShoulderDist >
-            POSE_DETECTION_CONSTRAINTS.MIN_NOSE_X_MOVEMENT_M
-          ) {
-            // console.log('HAS ROTATED RIGHT');
-            hasRotatedRight = true;
-          }
-        }
-      }
-    }
-
-    return hasRotatedLeft && hasRotatedRight;
-  }
-
-  static checkHasNodded(state: {
-    keypointBuffer: KeypointHistory;
-    avgFps: { value: number; count: number } | null;
-  }): boolean {
-    const { keypointBuffer, avgFps } = state;
-
-    const numFrames = KeypointUtil.getFramesCountFromSeconds(
+    const numFrames = this.keypoint.getFramesCountFromSeconds(
       POSE_DETECTION_CONSTRAINTS.NOD_DETECTION_BUFFER_DURATION_S,
       avgFps?.value || 30
     );
@@ -248,42 +132,42 @@ export class PoseDetectionService {
     let shouldersAlwaysAboveHips = true;
 
     for (const frame of frames) {
-      const leftEyeKeypoint = KeypointUtil.getDesiredKeypointFromArray(
+      const leftEyeKeypoint = this.keypoint.getDesiredKeypointFromArray(
         frame,
         KeypointId.LEFT_EYE_OUTER
       );
 
-      const rightEyeKeypoint = KeypointUtil.getDesiredKeypointFromArray(
+      const rightEyeKeypoint = this.keypoint.getDesiredKeypointFromArray(
         frame,
         KeypointId.RIGHT_EYE_OUTER
       );
 
-      const leftEarKeypoint = KeypointUtil.getDesiredKeypointFromArray(
+      const leftEarKeypoint = this.keypoint.getDesiredKeypointFromArray(
         frame,
         KeypointId.LEFT_EAR
       );
 
-      const rightEarKeypoint = KeypointUtil.getDesiredKeypointFromArray(
+      const rightEarKeypoint = this.keypoint.getDesiredKeypointFromArray(
         frame,
         KeypointId.RIGHT_EAR
       );
 
-      const leftHipKeypoint = KeypointUtil.getDesiredKeypointFromArray(
+      const leftHipKeypoint = this.keypoint.getDesiredKeypointFromArray(
         frame,
         KeypointId.LEFT_HIP
       );
 
-      const rightHipKeypoint = KeypointUtil.getDesiredKeypointFromArray(
+      const rightHipKeypoint = this.keypoint.getDesiredKeypointFromArray(
         frame,
         KeypointId.RIGHT_HIP
       );
 
-      const leftShoulderKeypoint = KeypointUtil.getDesiredKeypointFromArray(
+      const leftShoulderKeypoint = this.keypoint.getDesiredKeypointFromArray(
         frame,
         KeypointId.LEFT_SHOULDER
       );
 
-      const rightShoulderKeypoint = KeypointUtil.getDesiredKeypointFromArray(
+      const rightShoulderKeypoint = this.keypoint.getDesiredKeypointFromArray(
         frame,
         KeypointId.RIGHT_SHOULDER
       );
@@ -300,38 +184,38 @@ export class PoseDetectionService {
       )
         continue;
 
-      const leftEyeY = KeypointUtil.getKeypointValueByType(
+      const leftEyeY = this.keypoint.getKeypointValueByType(
         leftEyeKeypoint,
         KeypointValueType.POSITION_Y
       );
-      const rightEyeY = KeypointUtil.getKeypointValueByType(
+      const rightEyeY = this.keypoint.getKeypointValueByType(
         rightEyeKeypoint,
         KeypointValueType.POSITION_Y
       );
 
-      const leftEarY = KeypointUtil.getKeypointValueByType(
+      const leftEarY = this.keypoint.getKeypointValueByType(
         leftEarKeypoint,
         KeypointValueType.POSITION_Y
       );
-      const rightEarY = KeypointUtil.getKeypointValueByType(
+      const rightEarY = this.keypoint.getKeypointValueByType(
         rightEarKeypoint,
         KeypointValueType.POSITION_Y
       );
 
-      const leftHipY = KeypointUtil.getKeypointValueByType(
+      const leftHipY = this.keypoint.getKeypointValueByType(
         leftHipKeypoint,
         KeypointValueType.POSITION_Y
       );
-      const rightHipY = KeypointUtil.getKeypointValueByType(
+      const rightHipY = this.keypoint.getKeypointValueByType(
         rightHipKeypoint,
         KeypointValueType.POSITION_Y
       );
 
-      const leftShoulderY = KeypointUtil.getKeypointValueByType(
+      const leftShoulderY = this.keypoint.getKeypointValueByType(
         leftShoulderKeypoint,
         KeypointValueType.POSITION_Y
       );
-      const rightShoulderY = KeypointUtil.getKeypointValueByType(
+      const rightShoulderY = this.keypoint.getKeypointValueByType(
         rightShoulderKeypoint,
         KeypointValueType.POSITION_Y
       );

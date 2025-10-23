@@ -11,17 +11,17 @@ import {
 import { useRef } from 'react';
 
 import { theme } from '@/app/style';
-import { EXERCISE_POSES } from '@/core/pose-detection/const/exercise-poses';
-import { ConditionDirection } from '@/core/pose-detection/enum/condition-detection.enum';
+import type { TrainingExerciseRecording } from '@/core/training/type/training-exercise.type';
+import { EXERCISE_POSES } from '@/lib/pose-detection/const/exercise-poses';
+import { ConditionDirection } from '@/lib/pose-detection/enum/condition-detection.enum';
 import type {
   ExerciseDetectionData,
   ExerciseDetectionDataWithExerciseIds,
-} from '@/core/pose-detection/type/exercise-start-condition.type';
+} from '@/lib/pose-detection/type/exercise-start-condition.type';
 import type {
   RecordedReps,
   RecordedRepsInfo,
-} from '@/core/pose-detection/type/rep.type';
-import type { TrainingExerciseRecording } from '@/core/training/type/training-exercise.type';
+} from '@/lib/pose-detection/type/rep.type';
 
 function IsoOverlayDual({
   rows,

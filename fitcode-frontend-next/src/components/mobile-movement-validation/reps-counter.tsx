@@ -12,10 +12,7 @@ export default function RepsCounter(props: RepsCounterProps) {
       <Typography
         variant="caption"
         fontSize={30}
-        sx={{
-          color: 'white',
-          textShadow: '1px 1px 2px black',
-        }}
+        sx={{ color: 'white', textShadow: '1px 1px 2px black' }}
       >
         Reps: {reps}
       </Typography>

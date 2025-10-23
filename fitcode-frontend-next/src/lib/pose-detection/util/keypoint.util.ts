@@ -11,7 +11,16 @@ import type { NumericValueFrameNum } from '../type/numeric-value-frame-num';
 import { lib } from '@/lib';
 
 export class KeypointUtil {
-  static getDesiredKeypointsByModel(
+  private static _instance: KeypointUtil;
+
+  private constructor() {}
+
+  static get instance(): KeypointUtil {
+    if (!KeypointUtil._instance) KeypointUtil._instance = new KeypointUtil();
+    return KeypointUtil._instance;
+  }
+
+  getDesiredKeypointsByModel(
     // add different types to currentFrameKeypoints for different models
     currentFrameKeypoints: Landmark[] | undefined,
     currentFrameKeypointsPixel2D: NormalizedLandmark[] | undefined,
@@ -116,14 +125,14 @@ export class KeypointUtil {
     return keypoints;
   }
 
-  static getDesiredKeypointFromArray(
+  getDesiredKeypointFromArray(
     keypoints: Keypoint[],
     keypointId: KeypointId
   ): Keypoint | undefined {
     return (keypoints || []).find((kp) => kp.id === keypointId);
   }
 
-  static getKeypointsValuesByType(
+  getKeypointsValuesByType(
     keypoint1: Keypoint,
     keypoint2: Keypoint,
     type: KeypointValueType
@@ -142,7 +151,7 @@ export class KeypointUtil {
     }
   }
 
-  static getKeypointValueByType(
+  getKeypointValueByType(
     keypoint: Keypoint,
     type: KeypointValueType
   ): number | undefined {
@@ -162,7 +171,7 @@ export class KeypointUtil {
     }
   }
 
-  static smoothKeypointValues(
+  smoothKeypointValues(
     keypointValues: NumericValueFrameNum[] | number[],
     fps = 30,
     windowSizeProps?: number,
@@ -200,7 +209,7 @@ export class KeypointUtil {
       : values;
   }
 
-  static drawKeypointValuesGraph(
+  drawKeypointValuesGraph(
     history: Keypoint[][] | number[],
     keypointId: KeypointId,
     type: KeypointValueType,
@@ -221,7 +230,7 @@ export class KeypointUtil {
           const kp = frame.find((k) => k.id === keypointId);
           if (!kp) return undefined;
           // make sure you call your util correctly (args order!)
-          const v = KeypointUtil.getKeypointValueByType(kp, type);
+          const v = this.getKeypointValueByType(kp, type);
           if (v === null || !Number.isFinite(Number(v))) return undefined;
 
           return Number(v);
@@ -298,11 +307,11 @@ export class KeypointUtil {
     canvas.remove();
   }
 
-  static getFramesCountFromSeconds(seconds: number, fps: number): number {
+  getFramesCountFromSeconds(seconds: number, fps: number): number {
     return Math.ceil(seconds * fps);
   }
 
-  static getVelocityFromValues(values: number[]) {
+  getVelocityFromValues(values: number[]) {
     const n = values.length;
     const velocity: number[] = Array(n).fill(0);
     for (let i = 1; i < n; i++) velocity[i] = values[i] - values[i - 1];
@@ -310,7 +319,7 @@ export class KeypointUtil {
     return velocity;
   }
 
-  static convertToMetricScale(
+  convertToMetricScale(
     keypoints: Keypoint[],
     conversionType: MetricConversionType,
     videoWidth: number,
@@ -364,13 +373,13 @@ export class KeypointUtil {
     });
   }
 
-  private static checkIsNumericValueFrameNum = (
+  private checkIsNumericValueFrameNum = (
     item: number | NumericValueFrameNum
   ): item is NumericValueFrameNum => {
     return typeof item === 'object' && 'value' in item && 'frameNum' in item;
   };
 
-  private static checkIsNumericValueFrameNumArray = (
+  private checkIsNumericValueFrameNumArray = (
     arr: (number | NumericValueFrameNum)[]
   ): arr is NumericValueFrameNum[] => {
     return arr.every((item) => this.checkIsNumericValueFrameNum(item));

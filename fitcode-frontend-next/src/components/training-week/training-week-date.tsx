@@ -8,7 +8,7 @@ import React from 'react';
 import {
   getFilteredTrainings,
   handleClickDateCell,
-} from '../actions/actions-week-date';
+} from './actions/actions-week-date';
 import { TrainingGridItem } from '@/components/trainer-group-cycle-view/components/training-cycle-view-grid-item/training-cycle-view-grid-item';
 import type { Component } from '@/core/component/type/component.type';
 import type { Target } from '@/core/target/type/target.type';

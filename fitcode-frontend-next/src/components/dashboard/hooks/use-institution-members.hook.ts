@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { useDashboardUserEdit } from '../context/user-edit.context';
+import type { IFormData } from './use-register-member-form.hook';
 import useRegisterMemberForm from './use-register-member-form.hook';
 import type { AuthUser } from '@/core/auth/type/user.type';
 import { BACKEND_API_BASE_URL } from '@/core/const/api.const';
@@ -15,8 +16,9 @@ import { useMain } from '@/store/main.provider';
 export type IInstitutionMembersHook = ReturnType<typeof useInstitutionMembers>;
 
 export default function useInstitutionMembers() {
+  const { isFormEmpty, setFormData, formData, resetForm } =
+    useRegisterMemberForm();
   const { users } = useMain();
-  const { formData, resetForm, isFormEmpty } = useRegisterMemberForm();
   const { setFilteredUsers } = useDashboardUserEdit();
   const {
     selectedGroup,
@@ -81,8 +83,9 @@ export default function useInstitutionMembers() {
     }
   }
 
-  async function registerUser(registerRole: UserRole) {
+  async function registerUser(registerRole: UserRole, formData: IFormData) {
     if (!selectedInstitution) return;
+    setFormData(formData);
 
     const { displayName, email, password, confirmPassword } = formData;
 
