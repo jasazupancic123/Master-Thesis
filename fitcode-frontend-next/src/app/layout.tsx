@@ -13,6 +13,10 @@ const onest = Onest({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'Blind/off',
   description: 'Do it right.',
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+  },
   openGraph: {
     type: 'website',
     url: '/',
