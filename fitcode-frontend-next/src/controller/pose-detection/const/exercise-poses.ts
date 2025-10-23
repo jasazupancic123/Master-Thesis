@@ -267,6 +267,12 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
   {
     exerciseIds: ['push-up'],
     data: {
+      stillnessEvaluationKeypoints: [
+        KeypointId.LEFT_WRIST,
+        KeypointId.RIGHT_WRIST,
+        KeypointId.LEFT_SHOULDER,
+        KeypointId.RIGHT_SHOULDER,
+      ],
       romValueType: KeypointValueType.POSITION_Y,
       leftSide: {
         romKeypointId: KeypointId.LEFT_SHOULDER,
@@ -275,8 +281,8 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
             keypointId: KeypointId.LEFT_SHOULDER,
             type: KeypointValueType.POSITION_Y,
             direction: ConditionDirection.NEGATIVE,
-            duration: 1000,
-            distance: 0.04,
+            duration: 1200,
+            distance: 0.03,
           },
         ],
       },
@@ -432,6 +438,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
       'narrow-bench-press-db',
       'skull-crasher-1-db',
       'skull-crasher-2-db',
+      'skull-crasher-ca',
     ],
     data: {
       romValueType: KeypointValueType.POSITION_Y,
@@ -492,7 +499,202 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     },
   },
   {
-    exerciseIds: ['bench-press-[top-down-alt]-db', 'bench-press-sa-db'],
+    exerciseIds: ['triceps-press-down-ca'],
+    data: {
+      romValueType: KeypointValueType.POSITION_Y,
+      leftSide: {
+        romKeypointId: KeypointId.LEFT_WRIST,
+        conditions: [
+          {
+            keypointId: KeypointId.LEFT_WRIST,
+            type: KeypointValueType.POSITION_Y,
+            direction: ConditionDirection.NEGATIVE,
+            duration: 1000, // ms
+            distance: 0.04, // meters
+          },
+        ],
+      },
+    },
+  },
+  {
+    exerciseIds: ['overhead-triceps-extensions-ca'],
+    data: {
+      romValueType: KeypointValueType.POSITION_Y,
+      leftSide: {
+        romKeypointId: KeypointId.LEFT_WRIST,
+        conditions: [
+          {
+            keypointId: KeypointId.LEFT_WRIST,
+            type: KeypointValueType.POSITION_Y,
+            direction: ConditionDirection.POSITIVE,
+            duration: 1000, // ms
+            distance: 0.04, // meters
+          },
+        ],
+      },
+    },
+  },
+  {
+    exerciseIds: ['sit-up'],
+    data: {
+      stillnessEvaluationKeypoints: [
+        KeypointId.LEFT_SHOULDER,
+        KeypointId.RIGHT_SHOULDER,
+        KeypointId.LEFT_KNEE,
+        KeypointId.RIGHT_KNEE,
+        KeypointId.LEFT_ANKLE,
+        KeypointId.RIGHT_ANKLE,
+      ],
+      romValueType: KeypointValueType.POSITION_Y,
+      leftSide: {
+        romKeypointId: KeypointId.LEFT_SHOULDER,
+        conditions: [
+          {
+            keypointId: KeypointId.LEFT_SHOULDER,
+            type: KeypointValueType.POSITION_Y,
+            direction: ConditionDirection.POSITIVE,
+            duration: 1200, // ms
+            distance: 0.04, // meters
+          },
+        ],
+        requiredPoseConditions: [
+          {
+            keypointId1: KeypointId.LEFT_KNEE,
+            keypointId2: KeypointId.LEFT_HIP,
+            valueType: KeypointValueType.POSITION_Y,
+            minDiffM: 0.01,
+          },
+          {
+            keypointId1: KeypointId.RIGHT_KNEE,
+            keypointId2: KeypointId.RIGHT_HIP,
+            valueType: KeypointValueType.POSITION_Y,
+            minDiffM: 0.01,
+          },
+        ],
+      },
+    },
+  },
+  {
+    exerciseIds: ['triceps-press-down-sa-ca'],
+    data: {
+      romValueType: KeypointValueType.POSITION_Y,
+      cannotDoBothSidesSimultaneously: true,
+      leftSide: {
+        romKeypointId: KeypointId.LEFT_WRIST,
+        conditions: [
+          {
+            keypointId: KeypointId.LEFT_WRIST,
+            type: KeypointValueType.POSITION_Y,
+            direction: ConditionDirection.NEGATIVE,
+            duration: 1000, // ms
+            distance: 0.04, // meters
+          },
+        ],
+      },
+      rightSide: {
+        romKeypointId: KeypointId.RIGHT_WRIST,
+        conditions: [
+          {
+            keypointId: KeypointId.RIGHT_WRIST,
+            type: KeypointValueType.POSITION_Y,
+            direction: ConditionDirection.NEGATIVE,
+            duration: 1000, // ms
+            distance: 0.04, // meters
+          },
+        ],
+      },
+    },
+  },
+  {
+    exerciseIds: ['overhead-triceps-extension-sa-ca'],
+    data: {
+      romValueType: KeypointValueType.POSITION_Y,
+      cannotDoBothSidesSimultaneously: true,
+      leftSide: {
+        romKeypointId: KeypointId.LEFT_WRIST,
+        conditions: [
+          {
+            keypointId: KeypointId.LEFT_WRIST,
+            type: KeypointValueType.POSITION_Y,
+            direction: ConditionDirection.POSITIVE,
+            duration: 1000, // ms
+            distance: 0.04, // meters
+          },
+        ],
+      },
+      rightSide: {
+        romKeypointId: KeypointId.RIGHT_WRIST,
+        conditions: [
+          {
+            keypointId: KeypointId.RIGHT_WRIST,
+            type: KeypointValueType.POSITION_Y,
+            direction: ConditionDirection.POSITIVE,
+            duration: 1000, // ms
+            distance: 0.04, // meters
+          },
+        ],
+      },
+    },
+  },
+  {
+    exerciseIds: ['bench-press-sa-db'],
+    data: {
+      romValueType: KeypointValueType.POSITION_Y,
+      cannotDoBothSidesSimultaneously: true,
+      stillnessEvaluationKeypoints: [
+        KeypointId.LEFT_WRIST,
+        KeypointId.RIGHT_WRIST,
+        KeypointId.LEFT_ELBOW,
+        KeypointId.RIGHT_ELBOW,
+        KeypointId.LEFT_KNEE,
+        KeypointId.RIGHT_KNEE,
+        KeypointId.LEFT_ANKLE,
+        KeypointId.RIGHT_ANKLE,
+      ],
+      leftSide: {
+        romKeypointId: KeypointId.LEFT_WRIST,
+        conditions: [
+          {
+            keypointId: KeypointId.LEFT_WRIST,
+            type: KeypointValueType.POSITION_Y,
+            direction: ConditionDirection.POSITIVE,
+            duration: 1200, // ms
+            distance: 0.05, // meters
+          },
+        ],
+        requiredPoseConditions: [
+          {
+            keypointId1: KeypointId.LEFT_WRIST,
+            keypointId2: KeypointId.LEFT_ELBOW,
+            valueType: KeypointValueType.POSITION_Y,
+            minDiffM: 0.05,
+          },
+        ],
+      },
+      rightSide: {
+        romKeypointId: KeypointId.RIGHT_WRIST,
+        conditions: [
+          {
+            keypointId: KeypointId.RIGHT_WRIST,
+            type: KeypointValueType.POSITION_Y,
+            direction: ConditionDirection.POSITIVE,
+            duration: 1200, // ms
+            distance: 0.05, // meters
+          },
+        ],
+        requiredPoseConditions: [
+          {
+            keypointId1: KeypointId.RIGHT_WRIST,
+            keypointId2: KeypointId.RIGHT_ELBOW,
+            valueType: KeypointValueType.POSITION_Y,
+            minDiffM: 0.05,
+          },
+        ],
+      },
+    },
+  },
+  {
+    exerciseIds: ['bench-press-[top-down-alt]-db'],
     data: {
       romValueType: KeypointValueType.POSITION_Y,
       stillnessEvaluationKeypoints: [
@@ -549,6 +751,79 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
   },
   {
     exerciseIds: [
+      'diagonal-shoulder-raises-sa-ca',
+      'lateral-shoulder-raises-sa-ca',
+    ],
+    data: {
+      romValueType: KeypointValueType.POSITION_Y,
+      cannotDoBothSidesSimultaneously: true,
+      leftSide: {
+        romKeypointId: KeypointId.LEFT_WRIST,
+        conditions: [
+          {
+            keypointId: KeypointId.LEFT_WRIST,
+            type: KeypointValueType.POSITION_Y,
+            direction: ConditionDirection.POSITIVE,
+            duration: 1500, // ms
+            distance: 0.04, // meters
+          },
+        ],
+        requiredPoseConditions: [
+          {
+            keypointId1: KeypointId.LEFT_ELBOW,
+            keypointId2: KeypointId.LEFT_WRIST,
+            valueType: KeypointValueType.POSITION_Y,
+            minDiffM: 0.02,
+          },
+        ],
+      },
+      rightSide: {
+        romKeypointId: KeypointId.RIGHT_WRIST,
+        conditions: [
+          {
+            keypointId: KeypointId.RIGHT_WRIST,
+            type: KeypointValueType.POSITION_Y,
+            direction: ConditionDirection.POSITIVE,
+            duration: 1500, // ms
+            distance: 0.04, // meters
+          },
+        ],
+        requiredPoseConditions: [
+          {
+            keypointId1: KeypointId.RIGHT_ELBOW,
+            keypointId2: KeypointId.RIGHT_WRIST,
+            valueType: KeypointValueType.POSITION_Y,
+            minDiffM: 0.02,
+          },
+        ],
+      },
+    },
+  },
+  {
+    exerciseIds: [
+      'shoulder-press-bb',
+      'shoulder-press-db',
+      'lateral-shoulder-raises-db',
+    ],
+    data: {
+      romValueType: KeypointValueType.POSITION_Y,
+      cannotDoBothSidesSimultaneously: true,
+      leftSide: {
+        romKeypointId: KeypointId.LEFT_WRIST,
+        conditions: [
+          {
+            keypointId: KeypointId.LEFT_WRIST,
+            type: KeypointValueType.POSITION_Y,
+            direction: ConditionDirection.POSITIVE,
+            duration: 1500, // ms
+            distance: 0.04, // meters
+          },
+        ],
+      },
+    },
+  },
+  {
+    exerciseIds: [
       'sl-rdl-bw',
       'sl-rdl-db',
       'rdl-bb',
@@ -569,6 +844,30 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
             direction: ConditionDirection.NEGATIVE,
             duration: 750, // ms
             distance: 0.04, // meters
+          },
+        ],
+      },
+    },
+  },
+  {
+    exerciseIds: ['leg-raises'],
+    data: {
+      romValueType: KeypointValueType.POSITION_Y,
+      stillnessEvaluationKeypoints: [
+        KeypointId.LEFT_ANKLE,
+        KeypointId.RIGHT_ANKLE,
+        KeypointId.LEFT_KNEE,
+        KeypointId.RIGHT_KNEE,
+      ],
+      leftSide: {
+        romKeypointId: KeypointId.LEFT_ANKLE,
+        conditions: [
+          {
+            keypointId: KeypointId.LEFT_ANKLE,
+            type: KeypointValueType.POSITION_Y,
+            direction: ConditionDirection.POSITIVE,
+            duration: 1200, // ms
+            distance: 0.03, // meters
           },
         ],
       },

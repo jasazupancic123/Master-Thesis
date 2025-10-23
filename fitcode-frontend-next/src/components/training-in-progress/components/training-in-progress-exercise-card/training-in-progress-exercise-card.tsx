@@ -96,7 +96,7 @@ export default function TrainingInProgressExerciseCard() {
             backgroundSize: '100% auto',
             backgroundRepeat: 'no-repeat',
             overflow: 'hidden',
-            py: 1.5,
+            py: 2,
           }}
         >
           {/* Background Overlay */}
@@ -140,7 +140,7 @@ export default function TrainingInProgressExerciseCard() {
               </Typography>
             </Box>
             <Box
-              width="90%"
+              width="80%"
               display="flex"
               justifyContent="center"
               alignItems="center"
@@ -161,9 +161,6 @@ export default function TrainingInProgressExerciseCard() {
                 sx={{
                   textAlign: 'center',
                   overflow: 'hidden',
-                  whiteSpace: 'nowrap',
-                  textOverflow: 'ellipsis',
-                  maxWidth: '75%',
                   zIndex: 1,
                   textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
                 }}
