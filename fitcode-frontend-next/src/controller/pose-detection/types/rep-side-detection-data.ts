@@ -1,13 +1,14 @@
-import { RefObject } from 'react';
-import { RepState } from './rep-state.type';
-import { Rep } from './rep.type';
-import { KeypointId } from '../enum/keypoint-id';
-import {
+import type { RefObject } from 'react';
+
+import type { ConditionDirection } from '../enum/condition-detection.enum';
+import type { KeypointId } from '../enum/keypoint-id';
+import type {
   ExerciseRepStartCondition,
   RequiredPoseCondition,
   StillnessCondition,
 } from './exercise-start-condition.type';
-import { ConditionDirection } from '../enum/condition-detection.enum';
+import type { Rep } from './rep.type';
+import type { RepState } from './rep-state.type';
 
 export type RepSideDetectionData = {
   repStateRef: RefObject<RepState>;

@@ -4,10 +4,10 @@ import toast from 'react-hot-toast';
 
 import { KeypointId } from '../enum/keypoint-id';
 import { KeypointValueType } from '../enum/keypoint-value-type';
+import { MetricConversionType } from '../enum/metric-conversion-type.enum';
 import { PoseModel } from '../enum/pose-model.enum';
 import type { Keypoint } from '../types/keypoint.type';
 import type { NumericValueFrameNum } from '../types/numeric-value-frame-num';
-import { MetricConversionType } from '../enum/metric-conversion-type.enum';
 import EnvUtil from '@/common/util/env.util';
 
 export class KeypointUtil {

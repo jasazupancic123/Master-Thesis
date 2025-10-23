@@ -5,10 +5,12 @@ import type { TrainingExercise } from '../training/type/training-exercise.type';
 import { KeypointHistory } from './class/keypoint-history';
 import { POSE_DETECTION_CONSTRAINTS } from './const/pose-detection-constrains.const';
 import { ConditionDirection } from './enum/condition-detection.enum';
+import { CurrentSideMutexValues } from './enum/current-side-mutex-values.enum';
 import type { KeypointId } from './enum/keypoint-id';
 import { KeypointValueType } from './enum/keypoint-value-type';
 import { RepStatus } from './enum/rep-state';
 import { StatusDetectionService } from './status-detection.service';
+import type { AvgFps } from './types/avg-fps.type';
 import type {
   ExerciseDetectionData,
   ExerciseRepStartCondition,
@@ -18,18 +20,14 @@ import type {
 import type { Keypoint } from './types/keypoint.type';
 import type { NumericValueFrameNum } from './types/numeric-value-frame-num';
 import type { RecordedReps, Rep, RepsCount } from './types/rep.type';
-import type { RepState } from './types/rep-state.type';
+import type { RepSideDetectionData } from './types/rep-side-detection-data';
 import { KeypointUtil } from './util/keypoint.util';
+import { RepPostProcessingUtil } from './util/rep-post-processing.util';
 import { TimeUtil } from './util/time.util';
 import { CommonService } from '@/common/service/common.service';
 import type { SetState } from '@/common/type/state.type';
 import { EXERCISE_TIMES_ROUNDING_STEP_S } from '@/components/mobile-movement-validation/mobile-movement-validation';
-import { RepSideDetectionData } from './types/rep-side-detection-data';
-import { RepPostProcessingUtil } from './util/rep-post-processing.util';
-import { CurrentSideMutex } from '@/controller/pose-detection/types/current-side-mutex.type';
-import { CurrentSideMutexValues } from './enum/current-side-mutex-values.enum';
-import { AvgFps } from './types/avg-fps.type';
-import { DetectionStatus } from './enum/detection-status';
+import type { CurrentSideMutex } from '@/controller/pose-detection/types/current-side-mutex.type';
 
 const commonService = CommonService.instance;
 

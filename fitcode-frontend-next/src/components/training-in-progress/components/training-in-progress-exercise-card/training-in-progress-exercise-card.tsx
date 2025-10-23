@@ -12,8 +12,11 @@ import TrainingExerciseSetDoneCheckbox from './components/training-exercise-set-
 import useExerciseIndexLabel from './hooks/use-exercise-index-label';
 import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 import ImageGallery from '@/common/util/image-gallery';
-import TempoChart from '@/components/charts/tempo/tempo-chart';
 import AthleteTrainingExerciseSets from '@/components/athlete/athlete-training-exercise-sets/athlete-training-exercise-sets';
+import RomChart from '@/components/charts/rom/rom-chart';
+import RomStatistic from '@/components/charts/rom/rom-statisctic';
+import TempoChart from '@/components/charts/tempo/tempo-chart';
+import TempoStatistic from '@/components/charts/tempo/tempo-statistic';
 import MobileMovementValidation from '@/components/mobile-movement-validation/mobile-movement-validation';
 import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
@@ -21,9 +24,6 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import SwipeableBox from '@/util/swipeable-box/swipeable-box';
-import RomChart from '@/components/charts/rom/rom-chart';
-import RomStatistic from '@/components/charts/rom/rom-statisctic';
-import TempoStatistic from '@/components/charts/tempo/tempo-statistic';
 
 export default function TrainingInProgressExerciseCard() {
   const theme = useTheme();
@@ -96,7 +96,7 @@ export default function TrainingInProgressExerciseCard() {
             backgroundSize: '100% auto',
             backgroundRepeat: 'no-repeat',
             overflow: 'hidden',
-            py: 1.5,
+            py: 2,
           }}
         >
           {/* Background Overlay */}
@@ -140,7 +140,7 @@ export default function TrainingInProgressExerciseCard() {
               </Typography>
             </Box>
             <Box
-              width="90%"
+              width="80%"
               display="flex"
               justifyContent="center"
               alignItems="center"
@@ -161,9 +161,6 @@ export default function TrainingInProgressExerciseCard() {
                 sx={{
                   textAlign: 'center',
                   overflow: 'hidden',
-                  whiteSpace: 'nowrap',
-                  textOverflow: 'ellipsis',
-                  maxWidth: '75%',
                   zIndex: 1,
                   textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
                 }}

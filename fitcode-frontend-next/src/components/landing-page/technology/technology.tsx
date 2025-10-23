@@ -126,7 +126,7 @@ export default function Technology(props: TechnologyProps) {
         }}
         gap={6}
       >
-        {items.map((item, index) => (
+        {items.map((item) => (
           <Box
             key={item.title}
             width="100%"
