@@ -1,7 +1,7 @@
 import type { SvgIconComponent } from '@mui/icons-material';
-import { Tooltip, Typography } from '@mui/material';
+import { SvgIconProps, Tooltip, Typography } from '@mui/material';
 import Box from '@mui/material/Box';
-import React, { useRef } from 'react';
+import React, { ElementType, useRef } from 'react';
 import toast from 'react-hot-toast';
 
 import useTrainingCycleComponents from './hooks/use-components';
@@ -70,7 +70,7 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
         {components.map((trainingComponent) => {
           const component = trainingComponent.component;
           if (!component) return null;
-          const IconComponent: SvgIconComponent | SvgC | null =
+          const IconComponent: ElementType<SvgIconProps> | null =
             lib.common.component.getIcon(component?.name);
 
           return (
