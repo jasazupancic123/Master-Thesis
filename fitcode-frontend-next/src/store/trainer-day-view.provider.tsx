@@ -38,7 +38,7 @@ import { handleApiRequest } from '@/lib/common/type/state.type';
 interface Props extends GroupContextProps, React.PropsWithChildren {}
 
 // eslint-disable-next-line
-export interface ITrainerDayViewContext extends Props {}
+export interface ITrainerDayViewContext extends TrainerDayViewContextProps {}
 
 export const TrainerDayViewContext =
   createContext<TrainerDayViewContextProps | null>(null);
