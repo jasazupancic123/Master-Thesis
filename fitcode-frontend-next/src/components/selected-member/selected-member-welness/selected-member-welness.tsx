@@ -66,16 +66,18 @@ export default function SelectedMemberWelness() {
           </Box>
         )}
       </Box>
-      <Typography
-        textAlign="center"
-        fontWeight="medium"
-        fontSize={12}
-        sx={{
-          textTransform: 'uppercase',
-        }}
-      >
-        Wellness
-      </Typography>
+      {wellnessChartData.some((data) => data.today !== null) && (
+        <Typography
+          textAlign="center"
+          fontWeight="medium"
+          fontSize={12}
+          sx={{
+            textTransform: 'uppercase',
+          }}
+        >
+          Wellness
+        </Typography>
+      )}
     </Box>
   );
 }
