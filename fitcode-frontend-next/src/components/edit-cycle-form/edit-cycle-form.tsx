@@ -10,9 +10,9 @@ import { useState } from 'react';
 
 import { handleDeleteCycle } from '../trainer-group-year-view/components/multi-cycle-slider/actions/actions-cycle';
 import { useMultiCycleSliderCyclesProvider } from '../trainer-group-year-view/context/cycles.provider';
+import { CommonService } from '@/common/service/common.service';
 import { GroupController } from '@/controller/group/group.controller';
 import { useGroup } from '@/store/group.provider';
-import { CommonService } from '@/common/service/common.service';
 
 const commonService = CommonService.instance;
 

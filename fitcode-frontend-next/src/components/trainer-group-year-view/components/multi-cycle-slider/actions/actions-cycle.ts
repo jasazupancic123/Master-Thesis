@@ -1,13 +1,11 @@
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
 
+import type { CommonService } from '@/common/service/common.service';
 import { handleApiRequest } from '@/common/type/state.type';
 import type { SliderCyclesProviderReturnType } from '@/components/trainer-group-year-view/context/cycles.provider';
 import type { GroupController } from '@/controller/group/group.controller';
 import type { GroupProviderReturnType } from '@/store/group.provider';
-import { Group } from '@/controller/group/type/group.type';
-import dayjs from 'dayjs';
-import { CommonService } from '@/common/service/common.service';
 
 export async function handleDeleteCycle(
   input: {
@@ -52,8 +50,7 @@ export async function handleDeleteCycle(
         ...prev,
         cycles: prev.cycles.filter((c) => c.id !== editCycle.id),
       }));
-      console.log('cycle id', editCycle.id);
-      console.log('trainings', trainings);
+      
       setTrainings((prev) =>
         prev.filter(
           (t) =>

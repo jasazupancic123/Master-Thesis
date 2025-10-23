@@ -41,7 +41,7 @@ export default function ImageGallery(props: ImageGalleryProps) {
 
   const maxIndex = Math.max(imagesL.length, imagesR.length) - 1;
 
-  let images = [] as (string | RepImage)[];
+  const images = [] as (string | RepImage)[];
 
   for (let i = 0; i <= maxIndex; i++) {
     const imgL = imagesL[i];

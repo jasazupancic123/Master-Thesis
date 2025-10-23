@@ -1,5 +1,6 @@
 import { Typography } from '@mui/material';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { stateUpdate } from '../actions/actions-training-component';
@@ -13,9 +14,8 @@ import type { TrainingComponent } from '@/controller/training/type/training-comp
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
-import MyModal from '@/util/modal/modal';
-import { useState } from 'react';
 import LoadingOverlay from '@/util/loading-overlay/loading-overlay';
+import MyModal from '@/util/modal/modal';
 
 export default function PeriodizeModal(
   props: ModalProps & {

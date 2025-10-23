@@ -6,11 +6,11 @@ import { DetectionStatus } from './enum/detection-status';
 import { KeypointId } from './enum/keypoint-id';
 import { KeypointValueType } from './enum/keypoint-value-type';
 import { StatusDetectionService } from './status-detection.service';
+import type { ExerciseDetectionData } from './types/exercise-start-condition.type';
 import type { Keypoint } from './types/keypoint.type';
 import type { PoseValidationCondition } from './types/pose-validation-condition.type';
 import type { RepState } from './types/rep-state.type';
 import { KeypointUtil } from './util/keypoint.util';
-import { ExerciseDetectionData } from './types/exercise-start-condition.type';
 
 export class PoseDetectionService {
   static checkStatus(state: {

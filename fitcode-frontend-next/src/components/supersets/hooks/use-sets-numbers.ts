@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 
 import { VolWorkSetType } from '@/controller/component/enum/param.enum';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
-import { useSupersets } from '@/store/supersets.provider';
 
 export type SetsNumbers = { exerciseId: string; setsNumber: number }[];
 

@@ -32,7 +32,7 @@ export default function MovementValidationHeader(
         left: '50%',
         transform: 'translate(-50%, -50%)',
         p: 1,
-        zIndex: 100000,
+        zIndex: 100,
         opacity: 0.8,
       }}
     >
