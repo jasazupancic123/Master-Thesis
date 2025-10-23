@@ -534,13 +534,7 @@ export default function MobileMovementValidation(
 
         if (!recordedSets) {
           // can only happen for left side
-          recordedSets = [
-            {
-              setIndex,
-              imagesL: images,
-              repsL: reps,
-            },
-          ];
+          recordedSets = [{ setIndex, imagesL: images, repsL: reps }];
         } else {
           if (recordedSets.find((rs) => rs.setIndex === setIndex)) {
             // already recorded for this set, update it
@@ -549,18 +543,10 @@ export default function MobileMovementValidation(
 
               if (i === 0) {
                 // left side
-                return {
-                  ...rs,
-                  repsL: reps,
-                  imagesL: images,
-                };
+                return { ...rs, repsL: reps, imagesL: images };
               } else if (i === 1) {
                 // right side
-                return {
-                  ...rs,
-                  repsR: reps,
-                  imagesR: images,
-                };
+                return { ...rs, repsR: reps, imagesR: images };
               }
 
               return rs;
