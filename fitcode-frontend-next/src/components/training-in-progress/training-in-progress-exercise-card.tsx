@@ -4,15 +4,15 @@ import { useTheme } from '@mui/material';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
 
+import AthleteTrainingExerciseSets from '../athlete/athlete-training-exercise-sets';
 import {
   goToNextExercise,
   goToPreviousExercise,
 } from './actions/actions-exercise';
 import useExerciseIndexLabel from './hooks/use-exercise-index-label';
 import TrainingExerciseSetDoneCheckbox from './training-exercise-set-done-checkbox';
-import AthleteTrainingExerciseSets from '@/components/athlete/athlete-training-exercise-sets';
 import RomChart from '@/components/charts/rom/rom-chart';
-import RomStatistic from '@/components/charts/rom/rom-statisctic';
+import RomStatistic from '@/components/charts/rom/rom-statistics';
 import TempoChart from '@/components/charts/tempo/tempo-chart';
 import TempoStatistic from '@/components/charts/tempo/tempo-statistic';
 import MobileMovementValidation from '@/components/mobile-movement-validation/mobile-movement-validation';
@@ -97,7 +97,7 @@ export default function TrainingInProgressExerciseCard() {
             backgroundSize: '100% auto',
             backgroundRepeat: 'no-repeat',
             overflow: 'hidden',
-            py: 1.5,
+            py: 2,
           }}
         >
           {/* Background Overlay */}
@@ -141,7 +141,7 @@ export default function TrainingInProgressExerciseCard() {
               </Typography>
             </Box>
             <Box
-              width="90%"
+              width="80%"
               display="flex"
               justifyContent="center"
               alignItems="center"
@@ -162,9 +162,6 @@ export default function TrainingInProgressExerciseCard() {
                 sx={{
                   textAlign: 'center',
                   overflow: 'hidden',
-                  whiteSpace: 'nowrap',
-                  textOverflow: 'ellipsis',
-                  maxWidth: '75%',
                   zIndex: 1,
                   textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
                 }}
