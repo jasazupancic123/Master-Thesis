@@ -11,7 +11,7 @@ import { Box, Grid2, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 
 import AddExerciseForm from '../add-exercise-form/add-exercise-form';
-import TrainingExerciseCardStub from '../training-exercise-card/components/card-stub';
+import TrainingExerciseCardStub from '../training-exercise-card/card-stub';
 import { onDragEndExercise } from './actions/actions-drag-exercise';
 import useSupersetExercises from './hooks/use-exercises';
 import useSelectedExerciseIds from './hooks/use-selected-exercises-ids';

@@ -17,8 +17,8 @@ import {
   disableBorder,
   exerciseCardSetAttributeSx,
 } from '../trainer-group-day-view/style/exercise-card-set-attribute.style';
-import { core } from '@/core/core.service';
 import type { Attribute } from '@/core/attribute/type/attribute.type';
+import { core } from '@/core/core.service';
 import type { ExerciseParamField } from '@/core/training/type/exercise-set.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { SetState } from '@/lib/common/type/state.type';

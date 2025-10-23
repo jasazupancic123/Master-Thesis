@@ -1,6 +1,6 @@
 import { Box, CircularProgress, Typography } from '@mui/material';
 
-import useExerciseMembersInProgress from '../hooks/use-members-in-progress';
+import useExerciseMembersInProgress from './hooks/use-members-in-progress';
 
 export type ExerciseMembersInProgressProps = {
   trainingMembersLength: number;

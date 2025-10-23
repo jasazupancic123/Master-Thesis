@@ -8,13 +8,13 @@ import React, { useEffect, useState } from 'react';
 
 import FlatSelectAttribute from './flat-select-attribute';
 import SelectComponent from './select-component';
-import { core } from '@/core/core.service';
 import { AttributeType } from '@/core/attribute/enum/attribute-value.enum';
 import type { Attribute } from '@/core/attribute/type/attribute.type';
 import type {
   Component,
   TreeComponent,
 } from '@/core/component/type/component.type';
+import { core } from '@/core/core.service';
 import type {
   Exercise,
   ExerciseAttributes,
