@@ -35,6 +35,7 @@ export default function ImagePickerSlider(props: ImagePickerSliderProps) {
           width={width}
           height={0}
           layout="intrinsic"
+          unoptimized
           onClick={() => onClick(index)}
           style={{
             border:
