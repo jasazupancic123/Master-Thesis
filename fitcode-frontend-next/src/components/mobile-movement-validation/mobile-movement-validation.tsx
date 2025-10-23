@@ -118,30 +118,30 @@ export default function MobileMovementValidation(
     new FrameBitmapBuffer(60)
   ); // buffer of image blobs
 
-  const defaultExerciseName = 'Biceps Curl';
+  const defaultExerciseName = 'Trx';
   const exercisePose = {
     romValueType: KeypointValueType.POSITION_Y,
     leftSide: {
-      romKeypointId: KeypointId.LEFT_WRIST,
+      romKeypointId: KeypointId.LEFT_SHOULDER,
       conditions: [
         {
-          keypointId: KeypointId.LEFT_WRIST,
+          keypointId: KeypointId.LEFT_SHOULDER,
           type: KeypointValueType.POSITION_Y,
           direction: ConditionDirection.POSITIVE,
-          duration: 750, // ms
-          distance: 0.1, // meters
+          duration: 1000,
+          distance: 0.04,
         },
       ],
     },
     rightSide: {
-      romKeypointId: KeypointId.RIGHT_WRIST,
+      romKeypointId: KeypointId.RIGHT_SHOULDER,
       conditions: [
         {
-          keypointId: KeypointId.RIGHT_WRIST,
+          keypointId: KeypointId.RIGHT_SHOULDER,
           type: KeypointValueType.POSITION_Y,
           direction: ConditionDirection.POSITIVE,
-          duration: 750, // ms
-          distance: 0.1, // meters
+          duration: 1000,
+          distance: 0.04,
         },
       ],
     },
