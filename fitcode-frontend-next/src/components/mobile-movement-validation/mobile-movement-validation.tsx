@@ -137,7 +137,12 @@ export default function MobileMovementValidation(
 
   const [exercisePose, setExercisePose] = useState<
     ExerciseDetectionData | undefined
-  >(EXERCISE_POSES[0].data);
+  >(
+    selectedExercise
+      ? EXERCISE_POSES.find((e) => e.exerciseIds.includes(selectedExercise.id))
+          ?.data
+      : EXERCISE_POSES[0].data
+  );
 
   const exerciseDetectionDataRef = useRef<ExerciseDetectionData | undefined>(
     selectedExercise
@@ -237,14 +242,17 @@ export default function MobileMovementValidation(
   }, [sandboxExerciseId]);
 
   useEffect(() => {
-    if (!exercisePose || !isSandbox) return;
-
-    exerciseDetectionDataRef.current = exercisePose;
+    if (!exercisePose) return;
 
     if (exercisePose.rightSide) {
       recordedRepsRef.current.right = [];
       repCountPrev.current.right = 0;
     }
+
+    if (!isSandbox) return;
+
+    exerciseDetectionDataRef.current = exercisePose;
+
     if (exercisePose.cannotDoBothSidesSimultaneously)
       currentSideMutexRef.current = CurrentSideMutexValues.NoneAtm;
   }, [exercisePose]);

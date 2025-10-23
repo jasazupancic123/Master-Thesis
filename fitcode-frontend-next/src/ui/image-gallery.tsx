@@ -36,7 +36,7 @@ export default function ImageGallery(props: ImageGalleryProps) {
     return typeof image === 'object' && 'repNumber' in image && 'url' in image;
   }
 
-  if (!imagesL || imagesL.length === 0 || !imagesR || imagesR.length === 0)
+  if ((!imagesL || imagesL.length === 0) && (!imagesR || imagesR.length === 0))
     return null;
 
   const maxIndex = Math.max(imagesL.length, imagesR.length) - 1;
@@ -110,7 +110,9 @@ export default function ImageGallery(props: ImageGalleryProps) {
         >
           {isRepImageArray(images) &&
           images[currentIndex]?.repNumber !== undefined
-            ? `Rep ${images[currentIndex]?.repNumber} - ${images[currentIndex]?.side || ''}`
+            ? imagesL && imagesR && imagesL.length && imagesR.length
+              ? `Rep ${images[currentIndex]?.repNumber} - ${images[currentIndex]?.side || ''}`
+              : `Rep ${images[currentIndex]?.repNumber}`
             : `${currentIndex + 1} / ${images.length}`}
         </Typography>
       </Box>
