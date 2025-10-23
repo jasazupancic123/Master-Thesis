@@ -66,7 +66,6 @@ export default function SelectedMemberWelness() {
           </Box>
         )}
       </Box>
-
       {wellnessChartData.some((data) => data.today !== null) && (
         <Typography
           textAlign="center"

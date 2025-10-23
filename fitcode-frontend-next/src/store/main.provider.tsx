@@ -23,7 +23,7 @@ export interface MainProviderProps extends React.PropsWithChildren {
   groups: Group[];
 }
 
-interface IMainContext extends MainProviderProps {
+export interface IMainContext extends MainProviderProps {
   setProfile: SetStateNullable<Profile>;
   setUsers: SetState<AuthUser[]>;
   setComponents: SetState<Component[]>;
