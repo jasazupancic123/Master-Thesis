@@ -12,7 +12,7 @@ export function updateTrainingExerciseWithAI(
   trainingCtx: TrainingProviderReturnTypeDefined,
   trainingInProgressCtx: ITrainingInProgressCtx
 ) {
-  const { trainingInProgress, updateTrainingInProgress } = trainingCtx;
+  const { updateTrainingInProgress } = trainingCtx;
   const { selectedExercise, setSelectedExercise, supersetIndex, setIndex } =
     trainingInProgressCtx;
 
@@ -26,47 +26,13 @@ export function updateTrainingExerciseWithAI(
 
   if (!selectedSet) return;
 
-  /* updateExerciseAttributeValues(
-    {
-      newValue: repsCount.toString(),
-      i: setIndex,
-      set: selectedSet,
-      lOrR: 'L',
-      correctSelectedExercises: [updatableExercise],
-      correctExercise: updatableExercise,
-      correctParam: REPS,
-      correctSupersets: trainingInProgress.supersets,
-      correctSelectedSubgroup: null,
-    },
-    {
-      training: trainingInProgress.training,
-      component: trainingInProgress.selectedComponent,
-      setTraining: () => {},
-      setDetectedChanges: () => {},
-      setSelectedSubgroup: () => {},
-    }
-  ); */
-
-  /* updateExerciseAttributeValues(
-    {
-      newValue: tempo.toString(),
-      i: setIndex,
-      set: selectedSet,
-      lOrR: 'L',
-      correctSelectedExercises: [updatableExercise],
-      correctExercise: updatableExercise,
-      correctParam: TEMPO,
-      correctSupersets: trainingInProgress.supersets,
-      correctSelectedSubgroup: null,
-    },
-    {
-      training: trainingInProgress.training,
-      component: trainingInProgress.selectedComponent,
-      setTraining: () => {},
-      setDetectedChanges: () => {},
-      setSelectedSubgroup: () => {},
-    }
-  ); */
+  updatableExercise.sets[setIndex] = {
+    ...selectedSet,
+    reps: repsCountL,
+    repsR: repsCountR,
+    tempo: tempoL || selectedSet.tempo,
+    tempoR: tempoR || undefined,
+  };
 
   if (updateSelectedExercise) setSelectedExercise(updatableExercise);
   updateTrainingInProgress(updatableExercise, supersetIndex);
