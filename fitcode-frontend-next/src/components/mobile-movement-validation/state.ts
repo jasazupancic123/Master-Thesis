@@ -98,7 +98,7 @@ export const predictWebcam = async (state: {
   currentRepRefR: RefObject<Rep | null>;
   recordedRepsRef: RefObject<RecordedReps>;
   lastRecordedRepRef: RefObject<Rep | null>;
-  exerciseDetectionData: ExerciseDetectionData;
+  exerciseDetectionDataRef: RefObject<ExerciseDetectionData | undefined>;
   currentSideMutexRef: RefObject<CurrentSideMutex>;
   videoRef: RefObject<HTMLVideoElement | null>;
   canvasRef: RefObject<HTMLCanvasElement | null>;
@@ -136,7 +136,7 @@ export const predictWebcam = async (state: {
     currentRepRefR,
     recordedRepsRef,
     lastRecordedRepRef,
-    exerciseDetectionData,
+    exerciseDetectionDataRef,
     currentSideMutexRef,
     videoRef,
     canvasRef,
@@ -173,7 +173,17 @@ export const predictWebcam = async (state: {
   const ctx = canvasCtxRef.current;
   const drawingUtils = drawingUtilsRef.current;
 
-  if (!video || !canvas || !ctx || !poseLandmarker || !drawingUtils) return;
+  if (
+    !video ||
+    !canvas ||
+    !ctx ||
+    !poseLandmarker ||
+    !drawingUtils ||
+    !exerciseDetectionDataRef.current
+  )
+    return;
+
+  const exerciseDetectionData = exerciseDetectionDataRef.current;
 
   if (
     !frameBitmapBufferRef.current.canvas ||

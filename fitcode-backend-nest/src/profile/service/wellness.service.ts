@@ -1,5 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { isBefore, isSameDay, startOfDay, subDays } from 'date-fns';
+import { plainToInstance } from 'class-transformer';
+import { startOfDay, subDays } from 'date-fns';
 
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
 import { DateFilterDto } from '@src/common/dto/date-filter.dto';
@@ -62,65 +63,46 @@ export class WellnessService {
       range,
     );
 
-    return wellnesses
-      .map((_) => this.zScore(wellnesses, new Date()))
-      .filter(Boolean);
-  }
+    if (!wellnesses.length) return [];
 
-  private zScore(docs: Wellness[], date: Date): WellnessZScore | null {
-    const dayStart = startOfDay(date);
-    const found = docs.find((wd) => isSameDay(wd.date, dayStart));
+    const sleepValues = wellnesses.map((w) => w.sleep ?? 0);
+    const fatigueValues = wellnesses.map((w) => w.fatigue ?? 0);
+    const sorenessValues = wellnesses.map((w) => w.soreness ?? 0);
 
-    if (!found) return null;
-    if (docs.length < 2) return found;
+    const stats = (values: number[]) => {
+      const mean = values.reduce((a, b) => a + b, 0) / values.length;
+      const variance =
+        values.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / values.length;
+      const std = Math.sqrt(variance);
 
-    const history = docs.filter((wd) => isBefore(wd.date, dayStart));
-    const hist = {
-      sleep: history
-        .map((w) => w.sleep)
-        .filter(this.commonService.number.isNumber),
-      fatigue: history
-        .map((w) => w.fatigue)
-        .filter(this.commonService.number.isNumber),
-      soreness: history
-        .map((w) => w.soreness)
-        .filter(this.commonService.number.isNumber),
+      return { mean, std };
     };
 
-    function mean(history: number[]): number | null {
-      if (history.length === 0) return null;
-      return this.commonService.number.mean(history);
-    }
+    const sleepStats = stats(sleepValues);
+    const fatigueStats = stats(fatigueValues);
+    const sorenessStats = stats(sorenessValues);
 
-    const means = {
-      sleep: mean.call(this, hist.sleep),
-      fatigue: mean.call(this, hist.fatigue),
-      soreness: mean.call(this, hist.soreness),
-    };
+    const wellnessZScores = wellnesses.map((w) => {
+      const sleepZ = sleepStats.std
+        ? (w.sleep! - sleepStats.mean) / sleepStats.std
+        : 0;
 
-    const stds = {
-      sleep: this.commonService.number.std(hist.sleep),
-      fatigue: this.commonService.number.std(hist.fatigue),
-      soreness: this.commonService.number.std(hist.soreness),
-    };
+      const fatigueZ = fatigueStats.std
+        ? (w.fatigue! - fatigueStats.mean) / fatigueStats.std
+        : 0;
 
-    return {
-      ...found,
-      sleepZScore: this.commonService.number.z(
-        found.sleep,
-        means.sleep,
-        stds.sleep,
-      ),
-      fatigueZScore: this.commonService.number.z(
-        found.fatigue,
-        means.fatigue,
-        stds.fatigue,
-      ),
-      sorenessZScore: this.commonService.number.z(
-        found.soreness,
-        means.soreness,
-        stds.soreness,
-      ),
-    };
+      const sorenessZ = sorenessStats.std
+        ? (w.soreness! - sorenessStats.mean) / sorenessStats.std
+        : 0;
+
+      return plainToInstance(WellnessZScore, {
+        ...w,
+        sleepZScore: isFinite(sleepZ) ? sleepZ : 0,
+        fatigueZScore: isFinite(fatigueZ) ? fatigueZ : 0,
+        sorenessZScore: isFinite(sorenessZ) ? sorenessZ : 0,
+      });
+    });
+
+    return wellnessZScores;
   }
 }
