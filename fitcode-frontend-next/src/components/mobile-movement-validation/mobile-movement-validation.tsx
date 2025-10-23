@@ -1,7 +1,14 @@
 'use client';
 
 import type { DrawingUtils, PoseLandmarker } from '@mediapipe/tasks-vision';
-import { Box, Button, Divider, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  Divider,
+  MenuItem,
+  Select,
+  Typography,
+} from '@mui/material';
 import { useTheme } from '@mui/material';
 import dayjs from 'dayjs';
 import { useEffect, useRef, useState } from 'react';
@@ -114,6 +121,8 @@ export default function MobileMovementValidation(
     setIndex,
   } = props;
 
+  const isSandbox = pathname.endsWith('pose-model');
+
   // Buffers
   const keypointHistoryRef = useRef<KeypointHistory>(
     new KeypointHistory([], 100, true)
@@ -126,40 +135,31 @@ export default function MobileMovementValidation(
     new FrameBitmapBuffer(60)
   ); // buffer of image blobs
 
-  const defaultExerciseName = 'Trx';
-  const exercisePose = {
-    romValueType: KeypointValueType.POSITION_Y,
-    leftSide: {
-      romKeypointId: KeypointId.LEFT_SHOULDER,
-      conditions: [
-        {
-          keypointId: KeypointId.LEFT_SHOULDER,
-          type: KeypointValueType.POSITION_Y,
-          direction: ConditionDirection.POSITIVE,
-          duration: 1000,
-          distance: 0.04,
-        },
-      ],
-    },
-    rightSide: {
-      romKeypointId: KeypointId.RIGHT_SHOULDER,
-      conditions: [
-        {
-          keypointId: KeypointId.RIGHT_SHOULDER,
-          type: KeypointValueType.POSITION_Y,
-          direction: ConditionDirection.POSITIVE,
-          duration: 1000,
-          distance: 0.04,
-        },
-      ],
-    },
-  };
+  const [sandboxExercisesIds] = useState<string[] | undefined>(
+    isSandbox
+      ? EXERCISE_POSES.map((e) => e.exerciseIds)
+          .flat()
+          .sort()
+      : undefined
+  );
+  const [sandboxExerciseId, setSandboxExercise] = useState<string | undefined>(
+    sandboxExercisesIds && sandboxExercisesIds.length
+      ? sandboxExercisesIds[0]
+      : undefined
+  );
 
-  const exerciseDetectionData: ExerciseDetectionData | undefined =
+  const [defaultExerciseName, setDefaultExerciseName] = useState('');
+
+  const [exercisePose, setExercisePose] = useState<
+    ExerciseDetectionData | undefined
+  >(EXERCISE_POSES[0].data);
+
+  const exerciseDetectionDataRef = useRef<ExerciseDetectionData | undefined>(
     selectedExercise
       ? EXERCISE_POSES.find((e) => e.exerciseIds.includes(selectedExercise.id))
           ?.data
-      : exercisePose;
+      : exercisePose
+  );
 
   // Main Status
   const statusRef = useRef<DetectionStatus>(DetectionStatus.NOT_FULLY_IN_FRAME);
@@ -190,13 +190,13 @@ export default function MobileMovementValidation(
 
   const recordedRepsRef = useRef<RecordedReps>({
     left: [],
-    right: exerciseDetectionData?.rightSide ? [] : undefined,
+    right: exerciseDetectionDataRef.current?.rightSide ? [] : undefined,
   });
 
   const lastRecordedRepRef = useRef<Rep | null>(null);
 
   const currentSideMutexRef = useRef<CurrentSideMutex>(
-    exerciseDetectionData?.cannotDoBothSidesSimultaneously
+    exerciseDetectionDataRef.current?.cannotDoBothSidesSimultaneously
       ? CurrentSideMutexValues.NoneAtm
       : undefined
   );
@@ -208,11 +208,11 @@ export default function MobileMovementValidation(
 
   const [repCount, setRepCount] = useState<RepsCount>({
     left: 0,
-    right: exerciseDetectionData?.rightSide ? 0 : undefined,
+    right: exerciseDetectionDataRef.current?.rightSide ? 0 : undefined,
   });
   const repCountPrev = useRef<RepsCount>({
     left: 0,
-    right: exerciseDetectionData?.rightSide ? 0 : undefined,
+    right: exerciseDetectionDataRef.current?.rightSide ? 0 : undefined,
   });
 
   // FPS and Error
@@ -237,6 +237,32 @@ export default function MobileMovementValidation(
   const isCurrentlySavingImageRef = useRef(false);
   const canExitWhenImageIsDoneSavingRef = useRef(false);
   const [startedExitTimeout, setStartedExitTimeout] = useState(false);
+
+  useEffect(() => {
+    if (!sandboxExerciseId) return;
+
+    const foundExercisePose = EXERCISE_POSES.find((e) =>
+      e.exerciseIds.includes(sandboxExerciseId)
+    );
+
+    if (!foundExercisePose) return;
+
+    setExercisePose(foundExercisePose.data);
+    setDefaultExerciseName(sandboxExerciseId.replace('-', ' '));
+  }, [sandboxExerciseId]);
+
+  useEffect(() => {
+    if (!exercisePose || !isSandbox) return;
+
+    exerciseDetectionDataRef.current = exercisePose;
+
+    if (exercisePose.rightSide) {
+      recordedRepsRef.current.right = [];
+      repCountPrev.current.right = 0;
+    }
+    if (exercisePose.cannotDoBothSidesSimultaneously)
+      currentSideMutexRef.current = CurrentSideMutexValues.NoneAtm;
+  }, [exercisePose]);
 
   useEffect(() => {
     let raf: number | null = null;
@@ -394,7 +420,7 @@ export default function MobileMovementValidation(
   };
 
   useEffect(() => {
-    if (!exerciseDetectionData) return;
+    if (!exerciseDetectionDataRef) return;
 
     if (statusRef.current === DetectionStatus.STOPPED) return;
 
@@ -429,7 +455,7 @@ export default function MobileMovementValidation(
           frameCountRef,
           isMobile: screenSize.isMobile,
           avgFps,
-          exerciseDetectionData: exerciseDetectionData!,
+          exerciseDetectionDataRef,
           currentSideMutexRef,
           initedFirstFrameInRecordingMode,
           centerPosRef,
@@ -472,6 +498,7 @@ export default function MobileMovementValidation(
 
     if (
       selectedTrackingMethod === TrackingMethod.CAMERA &&
+      exercisePose &&
       setSelectedTrackingMethod &&
       trainingInProgress &&
       setTrainingInProgress !== undefined &&
@@ -628,7 +655,7 @@ export default function MobileMovementValidation(
         recordedRepsRef.current.right && exercisePose.rightSide
           ? recordedRepsRef.current.right
               .map((r) =>
-                r.buffer.getHistoryById(exercisePose.rightSide.romKeypointId)
+                r.buffer.getHistoryById(exercisePose.rightSide!.romKeypointId)
               )
               .flat()
           : undefined;
@@ -802,7 +829,7 @@ export default function MobileMovementValidation(
     }
   }, [startedExitTimeout]);
 
-  if (!exerciseDetectionData) {
+  if (!exerciseDetectionDataRef) {
     return <div>No pose detection logic for this exercise yet</div>;
   }
 
@@ -815,10 +842,9 @@ export default function MobileMovementValidation(
         position: 'relative',
       }}
     >
-      {!pathname.endsWith('pose-model') &&
-        canExitWhenImageIsDoneSavingRef.current === true && (
-          <LoadingOverlay title="Saving images..." topDownCircularProgress />
-        )}
+      {!isSandbox && canExitWhenImageIsDoneSavingRef.current === true && (
+        <LoadingOverlay title="Saving images..." topDownCircularProgress />
+      )}
 
       {!poseLandmarker && (
         <Box
@@ -1049,7 +1075,7 @@ export default function MobileMovementValidation(
                   passedExercisePose={exercisePose}
                   isUnilateral={
                     selectedExercise?.exercise?.isUnilateral ||
-                    exerciseDetectionData.rightSide !== undefined
+                    exerciseDetectionDataRef.current?.rightSide !== undefined
                   }
                   hideLabels={true}
                   aiRecordingView
@@ -1082,20 +1108,51 @@ export default function MobileMovementValidation(
                 flexDirection="column"
                 alignItems="center"
               >
-                <Typography
-                  width="100%"
-                  textAlign="center"
-                  fontWeight="bold"
-                  fontSize={20}
-                  sx={{
-                    backgroundColor: theme.palette.primary.main,
-                    py: 1,
-                    textTransform: 'uppercase',
-                    color: theme.palette.text.secondary,
-                  }}
-                >
-                  {selectedExercise?.exercise?.name || defaultExerciseName}
-                </Typography>
+                {isSandbox ? (
+                  <Select
+                    value={sandboxExerciseId}
+                    onChange={(e) =>
+                      setSandboxExercise(e.target.value as string)
+                    }
+                    sx={{
+                      width: '70%',
+                      mt: 1,
+                      zIndex: 200,
+                      backgroundColor: theme.palette.background.default,
+                    }}
+                  >
+                    {(sandboxExercisesIds || []).map((exerciseId, i) => {
+                      return (
+                        <MenuItem
+                          key={i}
+                          value={exerciseId}
+                          sx={{
+                            textAlign: 'center',
+                            textShadow: '1px 1px 2px rgba(23, 16, 16, 0.5)',
+                          }}
+                        >
+                          {exerciseId}
+                        </MenuItem>
+                      );
+                    })}
+                  </Select>
+                ) : (
+                  <Typography
+                    width="100%"
+                    textAlign="center"
+                    fontWeight="bold"
+                    fontSize={20}
+                    sx={{
+                      backgroundColor: theme.palette.primary.main,
+                      py: 1,
+                      textTransform: 'uppercase',
+                      color: theme.palette.text.secondary,
+                    }}
+                  >
+                    {selectedExercise?.exercise?.name || defaultExerciseName}
+                  </Typography>
+                )}
+
                 {trainingInProgress?.training &&
                   selectedExercise &&
                   selectedExercise.sets[setIndex] && (
