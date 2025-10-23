@@ -1,13 +1,14 @@
+import type { RefObject } from 'react';
+
 import { POSE_DETECTION_CONSTRAINTS } from '../const/pose-detection-constrains.const';
 import { ConditionDirection } from '../enum/condition-detection.enum';
+import type { KeypointId } from '../enum/keypoint-id';
+import type { Keypoint } from '../types/keypoint.type';
+import type { Rep } from '../types/rep.type';
 import { KeypointUtil } from './keypoint.util';
-import { RefObject } from 'react';
-import { Rep } from '../types/rep.type';
-import { Keypoint } from '../types/keypoint.type';
-import { KeypointId } from '../enum/keypoint-id';
-import { EXERCISE_TIMES_ROUNDING_STEP_S } from '@/components/mobile-movement-validation/mobile-movement-validation';
 import { TimeUtil } from './time.util';
-import { CommonService } from '@/common/service/common.service';
+import type { CommonService } from '@/common/service/common.service';
+import { EXERCISE_TIMES_ROUNDING_STEP_S } from '@/components/mobile-movement-validation/mobile-movement-validation';
 
 export class RepPostProcessingUtil {
   static getAtExtremumStartAndEndTimes(input: {

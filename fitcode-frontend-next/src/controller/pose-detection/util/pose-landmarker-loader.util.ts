@@ -1,8 +1,9 @@
 // lib/pose-landmarker.singleton.ts
 'use client';
 
-import EnvUtil from '@/common/util/env.util';
 import { FilesetResolver, PoseLandmarker } from '@mediapipe/tasks-vision';
+
+import EnvUtil from '@/common/util/env.util';
 
 let poseLandmarkerPromise: Promise<PoseLandmarker> | null = null;
 

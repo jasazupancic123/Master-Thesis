@@ -12,8 +12,11 @@ import TrainingExerciseSetDoneCheckbox from './components/training-exercise-set-
 import useExerciseIndexLabel from './hooks/use-exercise-index-label';
 import { TrackingMethod } from '@/common/enum/tracking-method.enum';
 import ImageGallery from '@/common/util/image-gallery';
-import TempoChart from '@/components/charts/tempo/tempo-chart';
 import AthleteTrainingExerciseSets from '@/components/athlete/athlete-training-exercise-sets/athlete-training-exercise-sets';
+import RomChart from '@/components/charts/rom/rom-chart';
+import RomStatistic from '@/components/charts/rom/rom-statisctic';
+import TempoChart from '@/components/charts/tempo/tempo-chart';
+import TempoStatistic from '@/components/charts/tempo/tempo-statistic';
 import MobileMovementValidation from '@/components/mobile-movement-validation/mobile-movement-validation';
 import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
@@ -21,9 +24,6 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import SwipeableBox from '@/util/swipeable-box/swipeable-box';
-import RomChart from '@/components/charts/rom/rom-chart';
-import RomStatistic from '@/components/charts/rom/rom-statisctic';
-import TempoStatistic from '@/components/charts/tempo/tempo-statistic';
 
 export default function TrainingInProgressExerciseCard() {
   const theme = useTheme();

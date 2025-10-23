@@ -11,14 +11,13 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material';
 import dayjs from 'dayjs';
+import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
+import type { CurrentSideMutex } from '../../controller/pose-detection/types/current-side-mutex.type';
 import AthleteTrainingExerciseSets from '../athlete/athlete-training-exercise-sets/athlete-training-exercise-sets';
 import { updateExerciseValues } from '../training-in-progress/components/training-in-progress-exercise-card/actions/actions-exercise';
-import {
-  demoReps,
-  finishSet,
-} from '../training-in-progress/components/training-in-progress-exercise-card/actions/actions-exercise-set';
+import { finishSet } from '../training-in-progress/components/training-in-progress-exercise-card/actions/actions-exercise-set';
 import FpsText from './components/fps-text';
 import MovementValidationHeader from './components/movement-validation-header';
 import {
@@ -39,13 +38,12 @@ import { KeypointHistory } from '@/controller/pose-detection/class/keypoint-hist
 import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
 import { POSE_DETECTION_CONSTRAINTS } from '@/controller/pose-detection/const/pose-detection-constrains.const';
 import { STATUS_MESSAGES } from '@/controller/pose-detection/const/status-messages';
-import { ConditionDirection } from '@/controller/pose-detection/enum/condition-detection.enum';
+import { CurrentSideMutexValues } from '@/controller/pose-detection/enum/current-side-mutex-values.enum';
 import { DetectionStatus } from '@/controller/pose-detection/enum/detection-status';
-import { KeypointId } from '@/controller/pose-detection/enum/keypoint-id';
-import { KeypointValueType } from '@/controller/pose-detection/enum/keypoint-value-type';
 import { PoseModel } from '@/controller/pose-detection/enum/pose-model.enum';
 import { RepStatus } from '@/controller/pose-detection/enum/rep-state';
 import { RepDetectionService } from '@/controller/pose-detection/rep-detection.service';
+import type { AvgFps } from '@/controller/pose-detection/types/avg-fps.type';
 import type { ExerciseDetectionData } from '@/controller/pose-detection/types/exercise-start-condition.type';
 import type {
   RecordedReps,
@@ -54,6 +52,7 @@ import type {
   RepsCount,
 } from '@/controller/pose-detection/types/rep.type';
 import type { RepState } from '@/controller/pose-detection/types/rep-state.type';
+import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
 import { getPoseLandmarker } from '@/controller/pose-detection/util/pose-landmarker-loader.util';
 import type {
   RepImage,
@@ -66,13 +65,6 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import LoadingOverlay from '@/util/loading-overlay/loading-overlay';
-import { usePathname } from 'next/navigation';
-import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
-import { Keypoint } from '@/controller/pose-detection/types/keypoint.type';
-import { CurrentSideMutex } from '../../controller/pose-detection/types/current-side-mutex.type';
-import { CurrentSideMutexValues } from '@/controller/pose-detection/enum/current-side-mutex-values.enum';
-import { AvgFps } from '@/controller/pose-detection/types/avg-fps.type';
-import { RepsGraphService } from '@/controller/pose-detection/rep-graph.service';
 
 const DEBUG = false;
 
@@ -526,7 +518,7 @@ export default function MobileMovementValidation(
         recordedRepsRef.current.right,
       ].filter((r) => r !== undefined) as Rep[][];
 
-      let updatedExercise = {
+      const updatedExercise = {
         ...selectedExercise,
       } as TrainingExerciseRecording;
 

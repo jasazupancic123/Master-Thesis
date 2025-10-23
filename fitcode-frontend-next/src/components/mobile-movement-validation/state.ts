@@ -1,10 +1,12 @@
-import { PoseLandmarker, RGBAColor } from '@mediapipe/tasks-vision';
-import { DrawingUtils, FilesetResolver } from '@mediapipe/tasks-vision';
+import type { PoseLandmarker } from '@mediapipe/tasks-vision';
+import { DrawingUtils } from '@mediapipe/tasks-vision';
 import type { RefObject } from 'react';
 
+import type { CurrentSideMutex } from '../../controller/pose-detection/types/current-side-mutex.type';
 import { EXERCISE_TIMES_ROUNDING_STEP_S } from './mobile-movement-validation';
 import type { CommonService } from '@/common/service/common.service';
 import type { SetState } from '@/common/type/state.type';
+import EnvUtil from '@/common/util/env.util';
 import type { FrameBitmapBuffer } from '@/controller/pose-detection/class/frame-bitmap-buffer';
 import type { KeypointHistory } from '@/controller/pose-detection/class/keypoint-history';
 import { POSE_DETECTION_CONSTRAINTS } from '@/controller/pose-detection/const/pose-detection-constrains.const';
@@ -14,6 +16,7 @@ import type { PoseModel } from '@/controller/pose-detection/enum/pose-model.enum
 import { RepStatus } from '@/controller/pose-detection/enum/rep-state';
 import { PoseDetectionService } from '@/controller/pose-detection/pose-detection.service';
 import { RepDetectionService } from '@/controller/pose-detection/rep-detection.service';
+import type { AvgFps } from '@/controller/pose-detection/types/avg-fps.type';
 import type { ExerciseDetectionData } from '@/controller/pose-detection/types/exercise-start-condition.type';
 import type { Keypoint } from '@/controller/pose-detection/types/keypoint.type';
 import type {
@@ -23,9 +26,6 @@ import type {
 } from '@/controller/pose-detection/types/rep.type';
 import type { RepState } from '@/controller/pose-detection/types/rep-state.type';
 import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
-import EnvUtil from '@/common/util/env.util';
-import { CurrentSideMutex } from '../../controller/pose-detection/types/current-side-mutex.type';
-import { AvgFps } from '@/controller/pose-detection/types/avg-fps.type';
 
 export async function setupVideoAndContex(state: {
   videoRef: RefObject<HTMLVideoElement | null>;
