@@ -7,7 +7,7 @@ import { core } from '@/core/core.service';
 import type { Profile } from '@/core/profile/type/user.type';
 import { useFetch } from '@/hooks/use-fetch.hook';
 import DashboardLayout from '@/sites/dashboard.layout';
-import type { PageProps } from '@/store/dashboard.provider';
+import type { Props } from '@/store/dashboard.provider';
 import { DashboardProvider } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 
@@ -31,7 +31,7 @@ function DashboardInitializer({
   children,
   institutionId,
 }: React.PropsWithChildren & WithInstitutionProps) {
-  const [state, setState] = useState<PageProps | null>(null);
+  const [state, setState] = useState<Props | null>(null);
   const { users, institutions: allInstitutions, groups: allGroups } = useMain();
   const [members, setMembers] = useState<Profile[]>([]);
 

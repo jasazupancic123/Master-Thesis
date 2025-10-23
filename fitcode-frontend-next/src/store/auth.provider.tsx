@@ -9,12 +9,12 @@ import type { AuthUser } from '@/core/auth/type/user.type';
 import type { UserRole } from '@/core/profile/enum/user-role.enum';
 import { LINK_SIGN_IN } from '@/lib/common/const/nav.const';
 import type {
-  AuthContextType,
   AuthStatus,
+  IAuthContext,
 } from '@/lib/common/type/auth-context.type';
 import { getFirebaseAuth } from '@/lib/firebase/config';
 
-const AuthContext = createContext<AuthContextType | null>(null);
+const AuthContext = createContext<IAuthContext | null>(null);
 
 export const useAuth = () => useContext(AuthContext)!;
 
@@ -150,7 +150,7 @@ export const AuthProvider = (props: React.PropsWithChildren) => {
 };
 
 export type AuthenticatedAuth<T = unknown> = T & {
-  auth: Extract<AuthContextType, { status: 'authenticated' }>;
+  auth: Extract<IAuthContext, { status: 'authenticated' }>;
 };
 
 const AuthenticatedAuthContext = createContext<

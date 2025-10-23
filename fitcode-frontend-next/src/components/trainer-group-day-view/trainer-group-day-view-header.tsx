@@ -15,7 +15,7 @@ import { lib } from '@/lib';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
-import HorizontalItemsList from '@/util/horizontal-items-list';
+import HorizontalItemsList from '@/ui/horizontal-items-list';
 
 dayjs.extend(weekOfYear);
 

@@ -5,7 +5,7 @@ import type { TrainingInProgress } from '@/core/training/type/training-in-progre
 import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
-import MyModal from '@/util/modal';
+import MyModal from '@/ui/modal';
 
 interface Props extends ModalProps {
   boxRef: RefObject<HTMLDivElement | null>;

@@ -23,8 +23,8 @@ import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import FileUpload from '@/util/file-upload';
-import MyModal from '@/util/modal';
+import FileUpload from '@/ui/file-upload';
+import MyModal from '@/ui/modal';
 
 const firebaseStorage = lib.firebase.storage;
 

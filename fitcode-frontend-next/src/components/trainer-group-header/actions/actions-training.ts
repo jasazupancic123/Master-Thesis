@@ -5,14 +5,14 @@ import { TrainingService } from '@/core/training/training.service';
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
 import type { IGroupCtx } from '@/store/group.provider';
-import type { IMainCtx } from '@/store/main.provider';
-import type { TrainerDayViewCtx } from '@/store/trainer-day-view.provider';
+import type { IMainContext } from '@/store/main.provider';
+import type { ITrainerDayViewContext } from '@/store/trainer-day-view.provider';
 
 export async function handleUpdateTraining(
   setIsUpdatingTraining: SetState<boolean>,
-  mainCtx: IMainCtx,
+  mainCtx: IMainContext,
   groupCtx: IGroupCtx,
-  trainerDayViewCtx: TrainerDayViewCtx
+  trainerDayViewCtx: ITrainerDayViewContext
 ) {
   const { components, exercises, methods } = mainCtx;
   const { setTrainings, setDetectedChanges } = groupCtx;

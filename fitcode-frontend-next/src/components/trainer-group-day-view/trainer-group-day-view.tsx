@@ -3,8 +3,8 @@ import dayjs from 'dayjs';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
 import React from 'react';
 
-import CustomDivider from '../../util/custom-divider';
-import VerticalLinesBorders from '../../util/vertical-lines-borders';
+import CustomDivider from '../../ui/custom-divider';
+import VerticalLinesBorders from '../../ui/vertical-lines-borders';
 import { MAX_WIDTH } from './constant/dimensions.constant';
 import GroupTrainerDayViewTrainings from './group-trainer-day-view-trainings';
 import useTrainerDayWeek from './hooks/use-day-week';

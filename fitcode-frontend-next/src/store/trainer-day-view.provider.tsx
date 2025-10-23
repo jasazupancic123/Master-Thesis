@@ -35,21 +35,22 @@ import type { Day } from '@/lib/common/service/date.util';
 import type { Pagination } from '@/lib/common/type/paginate.type';
 import { handleApiRequest } from '@/lib/common/type/state.type';
 
+interface Props extends GroupContextProps, React.PropsWithChildren {}
+
+// eslint-disable-next-line
+export interface ITrainerDayViewContext extends Props {}
+
 export const TrainerDayViewContext =
   createContext<TrainerDayViewContextProps | null>(null);
 
 export const useTrainerDayView = () => useContext(TrainerDayViewContext)!;
 
-export type TrainerDayViewCtx = ReturnType<typeof useTrainerDayView>;
-
 export type TrainerDayViewCtxExtended = Omit<
-  TrainerDayViewCtx,
+  ITrainerDayViewContext,
   'training' | 'component'
 > & { training: Training; component: TrainingComponent };
 
-export function TrainerDayViewProvider(
-  props: GroupContextProps & React.PropsWithChildren
-) {
+export function TrainerDayViewProvider(props: Props) {
   const { children, cycle, dateFrom, dateTo, group, trainings, setTrainings } =
     props;
 

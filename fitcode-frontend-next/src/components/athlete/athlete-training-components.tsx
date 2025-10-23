@@ -21,7 +21,7 @@ import { handleApiRequest } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import { useTraining } from '@/store/training.provider';
-import MyModal from '@/util/modal';
+import MyModal from '@/ui/modal';
 
 interface Props {
   training: Training;

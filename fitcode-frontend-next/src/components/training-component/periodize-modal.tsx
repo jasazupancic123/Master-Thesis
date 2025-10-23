@@ -14,8 +14,8 @@ import { handleApiRequest } from '@/lib/common/type/state.type';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
-import LoadingOverlay from '@/util/loading-overlay';
-import MyModal from '@/util/modal';
+import LoadingOverlay from '@/ui/loading-overlay';
+import MyModal from '@/ui/modal';
 
 export default function PeriodizeModal(
   props: ModalProps & {

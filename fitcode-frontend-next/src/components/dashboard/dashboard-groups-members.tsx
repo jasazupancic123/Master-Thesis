@@ -13,8 +13,8 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import CustomDivider from '@/util/custom-divider';
-import { SearchBar } from '@/util/search-bar/search-bar';
+import CustomDivider from '@/ui/custom-divider';
+import { SearchBar } from '@/ui/search-bar/search-bar';
 
 export default function DashboardGroupsMembers() {
   const theme = useTheme();

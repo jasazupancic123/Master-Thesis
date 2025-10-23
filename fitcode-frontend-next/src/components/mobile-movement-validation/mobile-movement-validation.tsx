@@ -61,7 +61,7 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
-import LoadingOverlay from '@/util/loading-overlay';
+import LoadingOverlay from '@/ui/loading-overlay';
 
 const DEBUG = false;
 

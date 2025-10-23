@@ -4,7 +4,7 @@ import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
-import MyModal from '@/util/modal';
+import MyModal from '@/ui/modal';
 
 export default function AddMemberModal(props: ModalProps) {
   const { open, setOpen } = props;

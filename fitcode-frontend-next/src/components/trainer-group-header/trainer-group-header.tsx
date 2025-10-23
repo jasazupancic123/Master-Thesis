@@ -25,8 +25,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
-import LoadingOverlay from '../../util/loading-overlay';
-import Logo from '../../util/logo';
+import LoadingOverlay from '../../ui/loading-overlay';
+import Logo from '../../ui/logo';
 import ProfileHeaderMenu from '../profile-header-menu/profile-header-menu';
 import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
 import { handleUpdateTraining } from './actions/actions-training';
@@ -48,7 +48,7 @@ import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
-import FilterButton from '@/util/filter-button';
+import FilterButton from '@/ui/filter-button';
 
 export interface TrainerGroupHeaderProps {
   filter: GroupDateFilter;

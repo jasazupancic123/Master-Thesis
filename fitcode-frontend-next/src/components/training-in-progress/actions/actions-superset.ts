@@ -6,14 +6,14 @@ import type {
   TrainingExercise,
   TrainingExerciseExtended,
 } from '@/core/training/type/training-exercise.type';
-import type { TrainingProviderReturnTypeDefined } from '@/store/training.provider';
-import type { ITrainingInProgressCtx } from '@/store/training-in-progress.provider';
+import type { ITrainingContextDefined } from '@/store/training.provider';
+import type { ITrainingInProgressContext } from '@/store/training-in-progress.provider';
 
 export function handleChangeSuperset(
   input: { superset: Superset; i: number },
   context: {
-    useTraining: TrainingProviderReturnTypeDefined;
-    useTrainingInProgress: ITrainingInProgressCtx;
+    useTraining: ITrainingContextDefined;
+    useTrainingInProgress: ITrainingInProgressContext;
     useTrainingInProgressUtils: ITrainingInProgressUtilsCtx;
     useUndoneExercises: IUndoneExercisesCtx;
   }
@@ -60,8 +60,8 @@ export function handleChangeSuperset(
 }
 
 export const handleFinishSuperset = (context: {
-  useTraining: TrainingProviderReturnTypeDefined;
-  useTrainingInProgress: ITrainingInProgressCtx;
+  useTraining: ITrainingContextDefined;
+  useTrainingInProgress: ITrainingInProgressContext;
   useTrainingInProgressUtils: ITrainingInProgressUtilsCtx;
   useUndoneExercises: IUndoneExercisesCtx;
 }) => {

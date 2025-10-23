@@ -18,8 +18,8 @@ import { SPORTS } from '@/lib/common/const/sport.const';
 import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import FileUpload from '@/util/file-upload';
-import MyModal from '@/util/modal';
+import FileUpload from '@/ui/file-upload';
+import MyModal from '@/ui/modal';
 
 const DEFAULT_MARGIN = 1;
 

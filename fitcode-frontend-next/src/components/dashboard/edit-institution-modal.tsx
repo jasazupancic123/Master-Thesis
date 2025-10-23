@@ -20,8 +20,8 @@ import type { Institution } from '@/core/institution/type/institution.type';
 import { lib } from '@/lib';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
-import EditableTextField from '@/util/editable-text-field';
-import ImageUpload from '@/util/image-upload';
+import EditableTextField from '@/ui/editable-text-field';
+import ImageUpload from '@/ui/image-upload';
 
 interface Props {
   open: boolean;

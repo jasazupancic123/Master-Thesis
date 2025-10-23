@@ -11,7 +11,7 @@ import React, { useState } from 'react';
 import AthleteTrainingCardHeader from './athlete-training-card-header';
 import { theme } from '@/app/style';
 import type { TrainingReport } from '@/core/training/type/training-report.type';
-import { PieCenterLabel } from '@/util/mui-charts';
+import { PieCenterLabel } from '@/ui/mui-charts';
 
 interface Props {
   report: TrainingReport;

@@ -14,12 +14,12 @@ import {
 import type { ILink } from '@/lib/common/type/link.type';
 import type { SetState } from '@/lib/common/type/state.type';
 
-interface AthleteProviderProps {
+interface Props extends React.PropsWithChildren {
   trainings: Training[];
   reports: TrainingReport[];
 }
 
-interface AthleteContext extends AthleteProviderProps {
+interface IAthleteContext extends Props {
   selectedDate: Dayjs;
   setSelectedDate: SetState<Dayjs>;
   hasJustLoggedIn: boolean;
@@ -28,13 +28,11 @@ interface AthleteContext extends AthleteProviderProps {
   setFilter: SetState<ILink>;
 }
 
-const AthleteContext = createContext<AthleteContext | null>(null);
+const AthleteContext = createContext<IAthleteContext | null>(null);
 
 export const useAthlete = () => useContext(AthleteContext)!;
 
-export function AthleteProvider(
-  props: AthleteProviderProps & React.PropsWithChildren
-) {
+export function AthleteProvider(props: Props) {
   const { children, trainings, reports } = props;
   const [selectedDate, setSelectedDate] = useState(dayjs(new Date()));
   const [hasJustLoggedIn, setHasJustLoggedIn] = useState(true);
@@ -50,7 +48,7 @@ export function AthleteProvider(
 
   const [filter, setFilter] = useState<ILink>(currentFilter);
 
-  const value: AthleteContext = {
+  const value: IAthleteContext = {
     selectedDate,
     setSelectedDate,
     hasJustLoggedIn,

@@ -15,7 +15,7 @@ import type { TrainingComponent } from '@/core/training/type/training-component.
 import { lib } from '@/lib';
 import { type SetState } from '@/lib/common/type/state.type';
 import type { IGroupCtx } from '@/store/group.provider';
-import type { IMainCtx } from '@/store/main.provider';
+import type { IMainContext } from '@/store/main.provider';
 
 export async function handleClickDateCell(
   userId: string,
@@ -32,7 +32,7 @@ export async function handleClickDateCell(
     setTrainingInPeriodForModal?: SetState<Training | null>;
   },
   groupCtx: IGroupCtx,
-  mainCtx: IMainCtx
+  mainCtx: IMainContext
 ) {
   const {
     date,
@@ -188,7 +188,7 @@ function handleAddTraining(
     selectedTargets?: { componentId: string; target: Target }[];
   },
   groupCtx: IGroupCtx,
-  mainCtx: IMainCtx
+  mainCtx: IMainContext
 ) {
   const { date, period, selected, selectedTargets } = input;
 
@@ -229,7 +229,7 @@ async function handleCreateTraining(
     selectedComponents: TrainingComponent[];
   },
   groupCtx: IGroupCtx,
-  mainCtx: IMainCtx
+  mainCtx: IMainContext
 ) {
   const { date, from, period, selectedComponents } = input;
   const { components, exercises, methods } = mainCtx;

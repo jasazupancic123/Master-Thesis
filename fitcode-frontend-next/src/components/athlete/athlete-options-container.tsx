@@ -3,7 +3,7 @@
 import { Box, Typography, useTheme } from '@mui/material';
 
 import TrapezoidTitle from './trapezoid-title';
-import SimpleCircle from '@/util/simple-circle';
+import SimpleCircle from '@/ui/simple-circle';
 
 interface Props {
   items: string[];

@@ -16,7 +16,13 @@ import { type SetState } from '@/lib/common/type/state.type';
 type ExerciseOrTraining =
   (typeof ExerciseTrainingView)[keyof typeof ExerciseTrainingView];
 
-interface TrainingContextType extends TrainingProviderProps {
+export interface TrainingProviderProps {
+  trainings: Training[];
+  reports: TrainingReport[];
+  refetchTraining: (trainingId: string) => Promise<void>;
+}
+
+interface ITrainingContext extends TrainingProviderProps {
   clearTrainingState: () => void;
   trainingInProgress: TrainingInProgress | null;
   setTrainingInProgress: SetState<TrainingInProgress | null>;
@@ -29,19 +35,9 @@ interface TrainingContextType extends TrainingProviderProps {
   ) => void;
 }
 
-export interface TrainingProviderProps {
-  trainings: Training[];
-  reports: TrainingReport[];
-  refetchTraining: (trainingId: string) => Promise<void>;
-}
+const TrainingContext = createContext<ITrainingContext | undefined>(undefined);
 
-const TrainingContext = createContext<TrainingContextType | undefined>(
-  undefined
-);
-
-export type TrainingProviderReturnType = ReturnType<typeof useTraining>;
-
-export type TrainingProviderReturnTypeDefined = Omit<
+export type ITrainingContextDefined = Omit<
   ReturnType<typeof useTraining>,
   'trainingInProgress'
 > & {

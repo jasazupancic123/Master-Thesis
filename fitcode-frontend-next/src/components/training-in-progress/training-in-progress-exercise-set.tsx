@@ -15,7 +15,7 @@ import type { Superset } from '@/core/training/type/superset.type';
 import type { TrainingExerciseExtended } from '@/core/training/type/training-exercise.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useTraining } from '@/store/training.provider';
-import LeftRightExerciseText from '@/util/left-right-exercise-text';
+import LeftRightExerciseText from '@/ui/left-right-exercise-text';
 
 interface Props {
   set: ExerciseSet;

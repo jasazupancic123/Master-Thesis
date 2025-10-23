@@ -7,7 +7,7 @@ import { useEffect } from 'react';
 
 import { POWERED_BY_ASPIRE_IMG_URL } from '@/lib/common/const/image.const';
 import { useScreenSize } from '@/store/screen-size.provider';
-import Logo from '@/util/logo';
+import Logo from '@/ui/logo';
 
 interface Props {
   duration?: number; // ms

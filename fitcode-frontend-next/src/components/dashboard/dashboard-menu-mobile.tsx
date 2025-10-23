@@ -29,7 +29,7 @@ import {
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import SelectInputHorizontal from '@/util/select-input/select-input-horizontal';
+import SelectInputHorizontal from '@/ui/select-input/select-input-horizontal';
 
 export default function DashboardMenuMobile() {
   const { user, role, logout } = useAuthenticatedAuth();

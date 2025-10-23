@@ -7,7 +7,7 @@ import useExerciseFormComponentExercises from './hooks/use-component-exercises';
 import useExerciseFormFilters from './hooks/use-filters';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
-import { SearchBar } from '@/util/search-bar/search-bar';
+import { SearchBar } from '@/ui/search-bar/search-bar';
 
 export default function AddExerciseForm(props: AddExerciseFormProps) {
   const { selectedExerciseIds, setSelectedExerciseIds, component } = props;
@@ -42,6 +42,7 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
           maxWidth="100%"
         />
       </Box>
+
       <Box
         width="100%"
         display="flex"

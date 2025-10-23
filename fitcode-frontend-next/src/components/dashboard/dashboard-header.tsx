@@ -34,8 +34,8 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import FilterButton from '@/util/filter-button';
-import Logo from '@/util/logo';
+import FilterButton from '@/ui/filter-button';
+import Logo from '@/ui/logo';
 
 export default function DashboardHeader() {
   const { user, role } = useAuthenticatedAuth();

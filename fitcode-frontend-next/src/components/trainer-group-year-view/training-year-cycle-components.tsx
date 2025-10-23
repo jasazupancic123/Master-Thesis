@@ -16,7 +16,7 @@ import {
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import SelectInput from '@/util/select-input/select-input';
+import SelectInput from '@/ui/select-input/select-input';
 
 interface CycleComponentsProps {
   useSliderProperties: UseSliderPropertiesReturnType;

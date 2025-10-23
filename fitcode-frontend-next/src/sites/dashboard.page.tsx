@@ -17,7 +17,7 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import MyModal from '@/util/modal';
+import MyModal from '@/ui/modal';
 
 export default function DashboardPage() {
   const screenSize = useScreenSize();
