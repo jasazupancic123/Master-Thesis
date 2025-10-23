@@ -20,10 +20,10 @@ import {
   YAxis,
 } from 'recharts';
 
-import useTrainingExerciseCardChart from '../hooks/use-chart.hook';
-import TrainingExerciseCard from '../training-exercise-card';
 import CustomTooltip from './chart-custom-tooltip';
 import { TodayDot } from './chart-today-dot';
+import useTrainingExerciseCardChart from './hooks/use-chart.hook';
+import TrainingExerciseCard from './training-exercise-card';
 import { GRAPH_COLORS } from '@/core/const/color.const';
 import { core } from '@/core/core.service';
 import type { ExerciseParamField } from '@/core/training/type/exercise-set.type';

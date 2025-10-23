@@ -5,8 +5,8 @@ import Typography from '@mui/material/Typography';
 import { useState } from 'react';
 
 import type { TrainingExerciseCardProps } from '../trainer-group-day-view/props/props';
-import TrainingExerciseCardCollapsedSets from './components/collapsed-sets';
-import TrainingExerciseCardExpandedSets from './components/expanded-sets';
+import TrainingExerciseCardCollapsedSets from './collapsed-sets';
+import TrainingExerciseCardExpandedSets from './expanded-sets';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';

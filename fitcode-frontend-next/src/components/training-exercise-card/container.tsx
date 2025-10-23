@@ -2,8 +2,8 @@
 
 import { Box } from '@mui/material';
 
-import TrainingExerciseCard from '../training-exercise-card';
 import TrainingExerciseChart from './chart';
+import TrainingExerciseCard from './training-exercise-card';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import { useSupersets } from '@/store/supersets.provider';
 

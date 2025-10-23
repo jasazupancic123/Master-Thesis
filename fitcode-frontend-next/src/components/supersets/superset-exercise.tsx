@@ -13,8 +13,8 @@ import { useTheme } from '@mui/material';
 
 import useSupersetExerciseMenu from './hooks/use-menu';
 import useSupersetExerciseSortable from './hooks/use-sortable';
-import TrainingExerciseCardContainer from '@/components/training-exercise-card/components/container';
-import ExerciseMembersInProgress from '@/components/training-exercise-card/components/exercise-members-in-progress';
+import TrainingExerciseCardContainer from '@/components/training-exercise-card/container';
+import ExerciseMembersInProgress from '@/components/training-exercise-card/exercise-members-in-progress';
 import { MainSet } from '@/core/training/enum/main-set.enum';
 import type { Superset } from '@/core/training/type/superset.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';

@@ -1,4 +1,4 @@
-import type { ExerciseMembersInProgressProps } from '../components/exercise-members-in-progress';
+import type { ExerciseMembersInProgressProps } from '../exercise-members-in-progress';
 import { useMain } from '@/store/main.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 

@@ -9,8 +9,8 @@ import {
 } from '@mui/material';
 import { useMemo } from 'react';
 
-import { core } from '@/core/core.service';
 import type { Attribute } from '@/core/attribute/type/attribute.type';
+import { core } from '@/core/core.service';
 
 interface Props {
   attribute: Attribute;

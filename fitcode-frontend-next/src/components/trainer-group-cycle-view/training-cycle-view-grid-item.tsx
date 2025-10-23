@@ -4,8 +4,8 @@ import Box from '@mui/material/Box';
 import React, { useRef } from 'react';
 import toast from 'react-hot-toast';
 
-import type { TrainingCycleViewGridItemProps } from '../../types/type';
 import useTrainingCycleComponents from './hooks/use-components';
+import type { TrainingCycleViewGridItemProps } from './types/type';
 import type { SvgC } from '@/components/muscle-map-with-tooltip/muscle-map-with-tooltip';
 import { lib } from '@/lib';
 import { useGroup } from '@/store/group.provider';

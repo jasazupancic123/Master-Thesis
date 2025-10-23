@@ -23,8 +23,8 @@ import {
 import WeekViewItem from '../training-week/training-week-view-item';
 import { onDragEndAddEvent } from './actions/actions-drag';
 import { getAmPmItems } from './actions/actions-items';
-import DraggableSelect from './components/draggable-select';
-import DroppableSlot from './components/droppable-slot';
+import DraggableSelect from './draggable-select';
+import DroppableSlot from './droppable-slot';
 import useWeekViewUtils from './hooks/use-utils';
 import { customScrollBarStyle } from './styles/custom-toolbar.style';
 import { EventType } from '@/core/group/enum/event-type.enum';

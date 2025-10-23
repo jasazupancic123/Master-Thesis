@@ -21,8 +21,8 @@ import useTrainerCycleViewCycles from './hooks/use-cycles';
 import useTrainerCycleViewSticky from './hooks/use-sticky';
 import useTrainingCycleViewTargets from './hooks/use-targets';
 import TrainingWeek from '@/components/training-week/training-week';
-import { core } from '@/core/core.service';
 import type { Component } from '@/core/component/type/component.type';
+import { core } from '@/core/core.service';
 import {
   COOLDOWN_ID,
   WARMUP_ID,

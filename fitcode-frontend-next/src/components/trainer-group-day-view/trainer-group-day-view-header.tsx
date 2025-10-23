@@ -8,8 +8,8 @@ import toast from 'react-hot-toast';
 
 import { DIVIDER_HEIGHT, MAX_WIDTH } from './constant/dimensions.constant';
 import { useTrainerDayViewHeaderSticky } from './hooks/use-sticky';
-import SelectedMemberReport from '@/components/selected-member/selected-member-report/selected-member-report';
-import SelectedMemberWelness from '@/components/selected-member/selected-member-welness/selected-member-welness';
+import SelectedMemberReport from '@/components/selected-member/selected-member-report';
+import SelectedMemberWelness from '@/components/selected-member/selected-member-welness';
 import TrainingMembers from '@/components/training-members/training-members';
 import { lib } from '@/lib';
 import { useGroup } from '@/store/group.provider';
