@@ -12,15 +12,14 @@ import { theme } from '@/app/style';
 import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
 import { ConditionDirection } from '@/controller/pose-detection/enum/condition-detection.enum';
 import type {
+  ExerciseDetectionData,
+  ExerciseDetectionDataWithExerciseIds,
+} from '@/controller/pose-detection/types/exercise-start-condition.type';
+import type {
   RecordedReps,
   RecordedRepsInfo,
 } from '@/controller/pose-detection/types/rep.type';
 import type { TrainingExerciseRecording } from '@/controller/training/type/training-exercise.type';
-import { demoReps } from '@/components/training-in-progress/components/training-in-progress-exercise-card/actions/actions-exercise-set';
-import {
-  ExerciseDetectionData,
-  ExerciseDetectionDataWithExerciseIds,
-} from '@/controller/pose-detection/types/exercise-start-condition.type';
 
 function IsoOverlayDual({
   rows,
@@ -44,7 +43,7 @@ function IsoOverlayDual({
     <g pointerEvents="none">
       {rows.map((r) => {
         const xBase = (xScale as any)(r.label);
-        if (xBase == null) return null;
+        if (xBase === null) return null;
 
         // Centers for L then R:
         const centers = [xBase + groupWidth * 0.5, xBase + groupWidth * 1.5];
