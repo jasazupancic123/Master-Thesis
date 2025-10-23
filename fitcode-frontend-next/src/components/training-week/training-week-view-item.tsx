@@ -8,7 +8,7 @@ import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-import { handleUpdateTrainingTimes } from '../actions/actions-week-item';
+import { handleUpdateTrainingTimes } from './actions/actions-week-item';
 import TrainerWeekViewItem from './training-week-component-item';
 import type { GroupEvent } from '@/core/group/type/group-event.type';
 import type { TrainingComponentWithTrainingId } from '@/core/training/type/training-component.type';

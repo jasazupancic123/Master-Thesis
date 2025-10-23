@@ -6,6 +6,7 @@ export type FetchOptions = {
   formData?: FormData;
   cacheTimeInMs?: number; // in seconds
   cache?: 'no-store';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   next?: any;
 };
 

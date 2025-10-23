@@ -14,10 +14,10 @@ import CancelTrainingModal from './modals/cancel-training-modal';
 import UndoneSetsErrorModal from './modals/undone-sets-error-modal';
 import UndoneSetsWarningModal from './modals/undone-sets-warning-modal';
 import TrainingInProgressSuperset from './training-in-progress-superset';
-import { preloadPoseLandmarker } from '@/core/pose-detection/util/pose-landmarker-loader.util';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
 import { useHorizontalOverflow } from '@/hooks/use-horizontal-overflow.hook';
+import { preloadPoseLandmarker } from '@/lib/pose-detection/util/pose-landmarker-loader.util';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
@@ -57,7 +57,6 @@ export default function TrainingInProgress() {
   /* Preload pose landmarker */
   useEffect(() => {
     if (typeof window === 'undefined') return;
-
     preloadPoseLandmarker();
   }, []);
 

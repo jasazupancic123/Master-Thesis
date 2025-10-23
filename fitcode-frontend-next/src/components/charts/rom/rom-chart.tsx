@@ -2,8 +2,8 @@ import { axisClasses, LineChart } from '@mui/x-charts';
 import dayjs from 'dayjs';
 
 import { theme } from '@/app/style';
-import { KeypointUtil } from '@/core/pose-detection/util/keypoint.util';
 import type { TrainingExerciseRecording } from '@/core/training/type/training-exercise.type';
+import { lib } from '@/lib';
 
 interface Props {
   selectedExercise: TrainingExerciseRecording;
@@ -35,7 +35,7 @@ export default function RomChart({
     ) || [])
   );
 
-  const romL = KeypointUtil.smoothKeypointValues(
+  const romL = lib.ai.keypoint.smoothKeypointValues(
     currentSet.romL
       ?.filter(
         (r) =>
@@ -45,7 +45,7 @@ export default function RomChart({
       .map((r) => r.value) || []
   ) as number[];
 
-  let romR = KeypointUtil.smoothKeypointValues(
+  let romR = lib.ai.keypoint.smoothKeypointValues(
     currentSet.romR
       ?.filter(
         (r) =>
@@ -88,10 +88,10 @@ export default function RomChart({
     const valuesL = dataset.map((d) => d.valueL);
     const valuesR = dataset.map((d) => d.valueR).filter((v) => v !== undefined);
 
-    const smoothedL = KeypointUtil.smoothKeypointValues(valuesL) as number[];
+    const smoothedL = lib.ai.keypoint.smoothKeypointValues(valuesL) as number[];
 
     const smoothedR = valuesR
-      ? (KeypointUtil.smoothKeypointValues(valuesR) as number[])
+      ? (lib.ai.keypoint.smoothKeypointValues(valuesR) as number[])
       : [];
 
     dataset.forEach((d, i) => {

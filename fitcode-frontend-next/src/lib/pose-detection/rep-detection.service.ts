@@ -1,7 +1,6 @@
 import dayjs from 'dayjs';
 import type { RefObject } from 'react';
 
-import type { TrainingExercise } from '../training/type/training-exercise.type';
 import { KeypointHistory } from './class/keypoint-history';
 import { POSE_DETECTION_CONSTRAINTS } from './const/pose-detection-constrains.const';
 import { ConditionDirection } from './enum/condition-detection.enum';
@@ -24,12 +23,29 @@ import type { RecordedReps, Rep, RepsCount } from './type/rep.type';
 import type { RepSideDetectionData } from './type/rep-side-detection-data';
 import { KeypointUtil } from './util/keypoint.util';
 import { RepPostProcessingUtil } from './util/rep-post-processing.util';
-import { TimeUtil } from './util/time.util';
 import { EXERCISE_TIMES_ROUNDING_STEP_S } from '@/components/mobile-movement-validation/mobile-movement-validation';
+import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
 
 export class RepDetectionService {
+  private static _instance: RepDetectionService;
+  private readonly keypoint: KeypointUtil;
+  private readonly status: StatusDetectionService;
+  private readonly repPostProcessing: RepPostProcessingUtil;
+
+  private constructor() {
+    this.keypoint = KeypointUtil.instance;
+    this.status = StatusDetectionService.instance;
+    this.repPostProcessing = RepPostProcessingUtil.instance;
+  }
+
+  static get instance(): RepDetectionService {
+    if (!RepDetectionService._instance)
+      RepDetectionService._instance = new RepDetectionService();
+    return RepDetectionService._instance;
+  }
+
   /*
     DETECT_REP
 
@@ -51,7 +67,7 @@ export class RepDetectionService {
     When we detect end of a new rep, also update avgStartValue and avgExtremeValue in RepState
   */
 
-  static checkRepStatus(state: {
+  checkRepStatus(state: {
     currentFrameKeypoints: Keypoint[];
     keypointHistory: KeypointHistory;
     constantKeypointHistory: KeypointHistory;
@@ -230,7 +246,7 @@ export class RepDetectionService {
 
   // Detect whether the value went up/down (opposite dirrection of the rep start direction) consecutive times
   // via the slope of the velocity (K score), example: (rep_direction=NEGATIVE; k=[0.5, 0.75, 1, 2]) -> true
-  private static detectExtremum(state: {
+  private detectExtremum(state: {
     currentRepRef: RefObject<Rep | null>;
     direction: ConditionDirection;
     keypointId: KeypointId;
@@ -257,7 +273,7 @@ export class RepDetectionService {
     const totalNumFrames = avgFps
       ? Math.max(
           POSE_DETECTION_CONSTRAINTS.MIN_FRAMES_FOR_EXTREMUM,
-          KeypointUtil.getFramesCountFromSeconds(
+          this.keypoint.getFramesCountFromSeconds(
             POSE_DETECTION_CONSTRAINTS.MIN_TIME_FOR_EXTREMUM_S,
             avgFps.value
           )
@@ -285,7 +301,7 @@ export class RepDetectionService {
     }
   }
 
-  private static checkHasRepEnded(state: {
+  private checkHasRepEnded(state: {
     currentRepRef: RefObject<Rep | null>;
     recordedReps: Rep[];
     keypointHistory: KeypointHistory;
@@ -378,7 +394,7 @@ export class RepDetectionService {
       return { isRepDone: false };
     }
 
-    const endKeypoint = KeypointUtil.getDesiredKeypointFromArray(
+    const endKeypoint = this.keypoint.getDesiredKeypointFromArray(
       currentRepRef.current?.buffer.history[slope],
       keypointId
     );
@@ -396,7 +412,7 @@ export class RepDetectionService {
     return { isRepDone: true, endKeypoint };
   }
 
-  private static checkHasRepStarted(state: {
+  private checkHasRepStarted(state: {
     currentFrameKeypoints: Keypoint[];
     keypointHistory: KeypointHistory;
     keypointId: KeypointId;
@@ -434,14 +450,13 @@ export class RepDetectionService {
     // const currentHistory = isFirstRep ? keypointHistory : currentRepBuffer;
 
     // checks if exercise state conditions are met (traveling certain distance in certain time)
-    const checkStartedRep =
-      StatusDetectionService.checkExerciseRepStartConditions(
-        currentFrameKeypoints,
-        keypointHistory,
-        exerciseStartConditions,
-        avgFps,
-        recordedReps
-      );
+    const checkStartedRep = this.status.checkExerciseRepStartConditions(
+      currentFrameKeypoints,
+      keypointHistory,
+      exerciseStartConditions,
+      avgFps,
+      recordedReps
+    );
 
     const checkRequiredPoseConditions = this.checkRequiredPoseConditions(
       currentFrameKeypoints,
@@ -465,18 +480,17 @@ export class RepDetectionService {
     if (keypointHistory.history.length < 2) return { hasRepStarted: false };
 
     // New rep detected, find percise starting point
-    const { startIndex, startValue, startValueFrameNum } =
-      RepDetectionService.findStartOfRep({
-        buffer: keypointHistory,
-        keypointId,
-        valueType,
-        direction,
-        avgFps,
-      });
+    const { startIndex, startValue, startValueFrameNum } = this.findStartOfRep({
+      buffer: keypointHistory,
+      keypointId,
+      valueType,
+      direction,
+      avgFps,
+    });
 
     keypointHistory.cutAtIndex(startIndex, true);
 
-    const startKeypoint = KeypointUtil.getDesiredKeypointFromArray(
+    const startKeypoint = this.keypoint.getDesiredKeypointFromArray(
       keypointHistory.history[0],
       keypointId
     );
@@ -508,7 +522,7 @@ export class RepDetectionService {
     };
   }
 
-  private static checkRequiredPoseConditions(
+  private checkRequiredPoseConditions(
     currentFrameKeypoints: Keypoint[],
     requiredPoseConditions?: RequiredPoseCondition[]
   ): boolean {
@@ -517,20 +531,20 @@ export class RepDetectionService {
     for (const poseCondition of requiredPoseConditions) {
       const { keypointId1, keypointId2, valueType, minDiffM } = poseCondition;
 
-      const keypoint1 = KeypointUtil.getDesiredKeypointFromArray(
+      const keypoint1 = this.keypoint.getDesiredKeypointFromArray(
         currentFrameKeypoints,
         keypointId1
       );
 
-      const keypoint2 = KeypointUtil.getDesiredKeypointFromArray(
+      const keypoint2 = this.keypoint.getDesiredKeypointFromArray(
         currentFrameKeypoints,
         keypointId2
       );
 
       if (!keypoint1 || !keypoint2) return false;
 
-      const value1 = KeypointUtil.getKeypointValueByType(keypoint1, valueType);
-      const value2 = KeypointUtil.getKeypointValueByType(keypoint2, valueType);
+      const value1 = this.keypoint.getKeypointValueByType(keypoint1, valueType);
+      const value2 = this.keypoint.getKeypointValueByType(keypoint2, valueType);
 
       if (value1 === undefined || value2 === undefined) return false;
 
@@ -546,7 +560,7 @@ export class RepDetectionService {
     return true;
   }
 
-  private static checkStillnessConditions(
+  private checkStillnessConditions(
     keypointHistory: KeypointHistory,
     currentFrameKeypoints: Keypoint[],
     avgFps: AvgFps,
@@ -575,7 +589,7 @@ export class RepDetectionService {
   }
 
   // Calculates diffs and checks if it's under a certain threshold
-  private static detectStillnessViaVelocity(
+  private detectStillnessViaVelocity(
     buffer: KeypointHistory,
     keypointId: KeypointId,
     maxMovementM: number,
@@ -584,7 +598,7 @@ export class RepDetectionService {
   ): boolean {
     if (!avgFps) return false;
 
-    const numFrames = KeypointUtil.getFramesCountFromSeconds(
+    const numFrames = this.keypoint.getFramesCountFromSeconds(
       seconds,
       avgFps.value
     );
@@ -597,19 +611,19 @@ export class RepDetectionService {
 
     const keypoints = cutBuffer
       .map((frame) =>
-        KeypointUtil.getDesiredKeypointFromArray(frame, keypointId)
+        this.keypoint.getDesiredKeypointFromArray(frame, keypointId)
       )
       .filter((k) => k !== undefined);
 
     const valuesX = keypoints
       .map((k) =>
-        KeypointUtil.getKeypointValueByType(k, KeypointValueType.POSITION_X)
+        this.keypoint.getKeypointValueByType(k, KeypointValueType.POSITION_X)
       )
       .filter((v) => v !== undefined);
 
     const valuesY = keypoints
       .map((k) =>
-        KeypointUtil.getKeypointValueByType(k, KeypointValueType.POSITION_Y)
+        this.keypoint.getKeypointValueByType(k, KeypointValueType.POSITION_Y)
       )
       .filter((v) => v !== undefined);
 
@@ -628,7 +642,7 @@ export class RepDetectionService {
     return true;
   }
 
-  private static findStartOfRep(state: {
+  private findStartOfRep(state: {
     buffer: KeypointHistory;
     keypointId: KeypointId;
     valueType: KeypointValueType;
@@ -647,7 +661,7 @@ export class RepDetectionService {
     const n = values.length;
 
     // 2) Velocity
-    const velocity: number[] = KeypointUtil.getVelocityFromValues(
+    const velocity: number[] = this.keypoint.getVelocityFromValues(
       values.map((v) => v.value)
     );
 
@@ -763,7 +777,7 @@ export class RepDetectionService {
     };
   }
 
-  private static checkValueCloseEnoughToStartValue(
+  private checkValueCloseEnoughToStartValue(
     currentValue: number,
     recordedReps: Rep[],
     currentRepRef: RefObject<Rep | null>,
@@ -798,7 +812,7 @@ export class RepDetectionService {
     return isValueCloseEnough;
   }
 
-  private static updateExtremeRepValue(state: {
+  private updateExtremeRepValue(state: {
     direction: ConditionDirection;
     currentValue: number;
     currentKeypoint: Keypoint;
@@ -843,7 +857,7 @@ export class RepDetectionService {
     currentRepRef.current.timeToExtremeMs = Math.max(
       EXERCISE_TIMES_ROUNDING_STEP_S * 1000,
       lib.common.number.roundToStep(
-        TimeUtil.getMsDiff(
+        lib.common.date.getMsDiff(
           currentRepRef.current.startTimestamp,
           timeToFirstExtreme
         ),
@@ -852,7 +866,7 @@ export class RepDetectionService {
     );
   }
 
-  static getSmoothedValues(
+  getSmoothedValues(
     buffer: KeypointHistory,
     keypointId: KeypointId,
     valueType: KeypointValueType
@@ -868,12 +882,12 @@ export class RepDetectionService {
 
     const unsmoothedValues = keypoints
       .map((k) => ({
-        value: KeypointUtil.getKeypointValueByType(k, valueType),
+        value: this.keypoint.getKeypointValueByType(k, valueType),
         frameNum: k.frameNum,
       }))
       .filter((v): v is NumericValueFrameNum => v.value !== undefined);
 
-    const values = KeypointUtil.smoothKeypointValues(
+    const values = this.keypoint.smoothKeypointValues(
       unsmoothedValues,
       undefined,
       13,
@@ -883,7 +897,7 @@ export class RepDetectionService {
     return values;
   }
 
-  static getScaleFromVelocity(velocity: number[]): number {
+  getScaleFromVelocity(velocity: number[]): number {
     const meanV = velocity.reduce((a, b) => a + b, 0) / velocity.length;
     const stdV = Math.sqrt(
       velocity.reduce((a, b) => a + (b - meanV) ** 2, 0) / velocity.length
@@ -893,7 +907,7 @@ export class RepDetectionService {
   }
 
   // loops from the back of the array and returns the first index, which satisfies the slopeK and sustainW conditions
-  private static getSlopeK(state: {
+  private getSlopeK(state: {
     velocity: number[];
     direction: ConditionDirection;
     detectingRepStart: boolean;
@@ -914,7 +928,7 @@ export class RepDetectionService {
         : POSE_DETECTION_CONSTRAINTS.REP_END_VELOCITY_M_PER_S) /
       (avgFps?.value || 30); // when we go under this velocity, then we started/ended the rep!
 
-    const minVelocitySustainNumFrames = KeypointUtil.getFramesCountFromSeconds(
+    const minVelocitySustainNumFrames = this.keypoint.getFramesCountFromSeconds(
       POSE_DETECTION_CONSTRAINTS.REP_START_VELOCITY_SUSTAIN_S,
       avgFps?.value || 30
     );
@@ -1042,7 +1056,7 @@ export class RepDetectionService {
       : undefined;
   }
 
-  private static initStartValues(
+  private initStartValues(
     currentRepBuffer: KeypointHistory | undefined,
     keypointId: KeypointId,
     valueType: KeypointValueType
@@ -1060,7 +1074,7 @@ export class RepDetectionService {
         scale: null,
       };
 
-    const currentKeypoint = KeypointUtil.getDesiredKeypointFromArray(
+    const currentKeypoint = this.keypoint.getDesiredKeypointFromArray(
       currentRepBuffer.history[currentRepBuffer.history.length - 1] || [],
       keypointId
     );
@@ -1073,7 +1087,7 @@ export class RepDetectionService {
         scale: null,
       };
 
-    const currentValue = KeypointUtil.getKeypointValueByType(
+    const currentValue = this.keypoint.getKeypointValueByType(
       currentKeypoint,
       valueType
     );
@@ -1092,7 +1106,7 @@ export class RepDetectionService {
       valueType
     ) as NumericValueFrameNum[];
 
-    const velocity: number[] = KeypointUtil.getVelocityFromValues(
+    const velocity: number[] = this.keypoint.getVelocityFromValues(
       values.map((v) => v.value)
     );
 
@@ -1107,7 +1121,7 @@ export class RepDetectionService {
     };
   }
 
-  private static initNewRep(
+  private initNewRep(
     repNumber: number,
     startValue: number,
     startValueFrameNum: number,
@@ -1138,7 +1152,7 @@ export class RepDetectionService {
     };
   }
 
-  private static async postProcessRep(state: {
+  private async postProcessRep(state: {
     currentRepRef: RefObject<Rep | null>;
     recordedReps: Rep[];
     keypointId: KeypointId;
@@ -1164,11 +1178,11 @@ export class RepDetectionService {
     const keypoints = currentRepRef.current.buffer.getHistoryById(keypointId);
 
     const initialValues: number[] = keypoints
-      .map((k) => KeypointUtil.getKeypointValueByType(k, valueType))
+      .map((k) => this.keypoint.getKeypointValueByType(k, valueType))
       .filter((v) => v !== undefined);
 
     const { timeAtExtremumStartKeypoint, timeAtExtremumEndKeypoint } =
-      RepPostProcessingUtil.getAtExtremumStartAndEndTimes({
+      this.repPostProcessing.getAtExtremumStartAndEndTimes({
         currentRepRef,
         initialValues,
         avgFps,
@@ -1180,14 +1194,14 @@ export class RepDetectionService {
     // UPDATE ALL NECESARY TIMES HERE!
     // durationMs, idleTimeMs, timeToExtremeMs, timeAtExtremeMs, timeFromExtremeToEndMs
 
-    RepPostProcessingUtil.setRepTimes({
+    this.repPostProcessing.setRepTimes({
       currentRepRef,
       recordedReps,
       timeAtExtremumStartKeypoint,
       timeAtExtremumEndKeypoint,
     });
 
-    RepPostProcessingUtil.setRepRom({ currentRepRef, initialValues });
+    this.repPostProcessing.setRepRom({ currentRepRef, initialValues });
   }
 
   static saveRepTimesToJsonFiles = (state: {

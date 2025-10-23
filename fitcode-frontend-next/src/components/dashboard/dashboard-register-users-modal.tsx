@@ -46,7 +46,7 @@ export default function RegisterUsersDashboard({ registerRole }: Props) {
         <form
           onSubmit={async (e) => {
             e.preventDefault();
-            await registerUser(registerRole);
+            await registerUser(registerRole, formData);
           }}
         >
           <Stack spacing={2}>

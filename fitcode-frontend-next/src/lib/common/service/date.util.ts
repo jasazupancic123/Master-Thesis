@@ -96,6 +96,10 @@ export class DateUtil {
     };
   }
 
+  getMsDiff(start: Date, end: Date): number {
+    return end.getTime() - start.getTime();
+  }
+
   getWeekStartsOn(): DayDateFns {
     const locale = Intl.DateTimeFormat().resolvedOptions().locale;
 

@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-'use client';
 
 import type { KeypointHistory } from './class/keypoint-history';
 import type { KeypointId } from './enum/keypoint-id';
@@ -8,8 +7,21 @@ import type { RecordedReps } from './type/rep.type';
 import { KeypointUtil } from './util/keypoint.util';
 
 export class RepsGraphService {
+  private static _instance: RepsGraphService;
+  private readonly keypoint: KeypointUtil;
+
+  private constructor() {
+    this.keypoint = KeypointUtil.instance;
+  }
+
+  static get instance(): RepsGraphService {
+    if (!RepsGraphService._instance)
+      RepsGraphService._instance = new RepsGraphService();
+    return RepsGraphService._instance;
+  }
+
   // ---------- palette ----------
-  static palette = {
+  palette = {
     start: '#F3A712',
     background: '#111111',
     extreme: '#F22B29',
@@ -29,7 +41,7 @@ export class RepsGraphService {
    *
    * If combine=true fails for any reason, it falls back to multiple files.
    */
-  static async downloadReps(
+  async downloadReps(
     state: {
       recordedRepsRef: React.RefObject<RecordedReps>;
       keypointId: KeypointId;
@@ -51,7 +63,7 @@ export class RepsGraphService {
       filenameBase = 'reps-graph',
       width = 1000,
       height = 500,
-      backgroundColor = RepsGraphService.palette.background,
+      backgroundColor = this.palette.background,
       combine = true,
       spacing = 24,
       useGetUrl = false,
@@ -114,7 +126,7 @@ export class RepsGraphService {
   /**
    * Always download one PNG per rep (no combining).
    */
-  static async downloadEachRepPNG(
+  async downloadEachRepPNG(
     state: {
       recordedRepsRef: React.RefObject<RecordedReps>;
       keypointId: KeypointId;
@@ -134,7 +146,7 @@ export class RepsGraphService {
       filenameBase = 'reps-graph',
       width = 1000,
       height = 500,
-      backgroundColor = RepsGraphService.palette.background,
+      backgroundColor = this.palette.background,
       useGetUrl = false,
     } = opts ?? {};
 
@@ -158,7 +170,7 @@ export class RepsGraphService {
   /**
    * Always attempt to combine all reps into one tall PNG (throws on failure).
    */
-  static async downloadCombinedPNG(
+  async downloadCombinedPNG(
     state: {
       recordedRepsRef: React.RefObject<RecordedReps>;
       keypointId: KeypointId;
@@ -179,7 +191,7 @@ export class RepsGraphService {
       filename = 'reps-graph_all.png',
       width = 1000,
       height = 500,
-      backgroundColor = RepsGraphService.palette.background,
+      backgroundColor = this.palette.background,
       spacing = 24,
       useGetUrl = false,
     } = opts ?? {};
@@ -218,7 +230,7 @@ export class RepsGraphService {
   /**
    * Returns a Chart.js config per rep (one dataset each).
    */
-  static buildConfigsPerRep(state: {
+  buildConfigsPerRep(state: {
     recordedRepsRef: React.RefObject<RecordedReps>;
     keypointId: KeypointId;
     valueType: KeypointValueType;
@@ -239,7 +251,7 @@ export class RepsGraphService {
       const points = rep.buffer
         .getHistoryById(keypointId)
         .map((k) => {
-          const v = KeypointUtil.getKeypointValueByType(k, valueType);
+          const v = this.keypoint.getKeypointValueByType(k, valueType);
           if (v === null) return undefined;
 
           const color =
@@ -338,7 +350,7 @@ export class RepsGraphService {
         .map((c) => c.find((k) => k.id === keypointId))
         .filter((k) => k !== null && k !== undefined)
         .map((k) => {
-          const v = KeypointUtil.getKeypointValueByType(k, valueType);
+          const v = this.keypoint.getKeypointValueByType(k, valueType);
           if (v === null) return undefined;
 
           const color = reps.left.some(
@@ -380,7 +392,7 @@ export class RepsGraphService {
 
       // SMOOTH VALUES
       if (smooth) {
-        const smoothedValues = KeypointUtil.smoothKeypointValues(
+        const smoothedValues = this.keypoint.smoothKeypointValues(
           points.map((p) => p.value),
           undefined,
           13,
@@ -468,11 +480,11 @@ export class RepsGraphService {
 
   // ---------- rendering via QuickChart ----------
 
-  static buildQuickChartURL(
+  buildQuickChartURL(
     config: any,
     width = 1000,
     height = 500,
-    backgroundColor = RepsGraphService.palette.background
+    backgroundColor = this.palette.background
   ) {
     const base = 'https://quickchart.io/chart';
     const c = encodeURIComponent(JSON.stringify(config));
@@ -480,7 +492,7 @@ export class RepsGraphService {
     return `${base}?c=${c}&width=${width}&height=${height}&backgroundColor=${bg}`;
   }
 
-  static async fetchChartPngBlob(
+  async fetchChartPngBlob(
     config: any,
     opts: {
       width: number;
@@ -528,7 +540,7 @@ export class RepsGraphService {
    * Stacks PNGs vertically into one PNG.
    * All images are drawn at their native size; `width/height` here are the size of each original chart.
    */
-  static async combinePngsVertically(
+  async combinePngsVertically(
     blobs: Blob[],
     opts: {
       width: number;
@@ -623,9 +635,7 @@ export class RepsGraphService {
     );
   }
 
-  static async blobToBitmap(
-    blob: Blob
-  ): Promise<ImageBitmap | HTMLImageElement> {
+  async blobToBitmap(blob: Blob): Promise<ImageBitmap | HTMLImageElement> {
     // Prefer createImageBitmap if available
     if (
       'createImageBitmap' in window &&
@@ -650,7 +660,7 @@ export class RepsGraphService {
 
   // ---------- download helpers ----------
 
-  static async downloadEach(blobs: Blob[], filenameBase: string) {
+  async downloadEach(blobs: Blob[], filenameBase: string) {
     for (let i = 0; i < blobs.length; i++) {
       this.downloadBlob(blobs[i], `${filenameBase}_rep${i + 1}.png`);
       // Small gap helps some browsers finish downloads cleanly
@@ -659,7 +669,7 @@ export class RepsGraphService {
     }
   }
 
-  static downloadBlob(blob: Blob, filename: string) {
+  downloadBlob(blob: Blob, filename: string) {
     const objectUrl = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = objectUrl;

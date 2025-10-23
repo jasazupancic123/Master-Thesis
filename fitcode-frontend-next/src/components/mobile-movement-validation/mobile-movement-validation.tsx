@@ -20,31 +20,6 @@ import {
   predictWebcam,
   setupVideoAndContex,
 } from './state';
-import { FrameBitmapBuffer } from '@/core/pose-detection/class/frame-bitmap-buffer';
-import { KeypointHistory } from '@/core/pose-detection/class/keypoint-history';
-import { EXERCISE_POSES } from '@/core/pose-detection/const/exercise-poses';
-import { POSE_DETECTION_CONSTRAINTS } from '@/core/pose-detection/const/pose-detection-constrains.const';
-import { STATUS_MESSAGES } from '@/core/pose-detection/const/status-messages';
-import { ConditionDirection } from '@/core/pose-detection/enum/condition-detection.enum';
-import { CurrentSideMutexValues } from '@/core/pose-detection/enum/current-side-mutex-values.enum';
-import { DetectionStatus } from '@/core/pose-detection/enum/detection-status';
-import { KeypointId } from '@/core/pose-detection/enum/keypoint-id';
-import { KeypointValueType } from '@/core/pose-detection/enum/keypoint-value-type';
-import { PoseModel } from '@/core/pose-detection/enum/pose-model.enum';
-import { RepStatus } from '@/core/pose-detection/enum/rep-state';
-import { RepDetectionService } from '@/core/pose-detection/rep-detection.service';
-import type { AvgFps } from '@/core/pose-detection/type/avg-fps.type';
-import type { CurrentSideMutex } from '@/core/pose-detection/type/current-side-mutex.type';
-import type { ExerciseDetectionData } from '@/core/pose-detection/type/exercise-start-condition.type';
-import type {
-  RecordedReps,
-  Rep,
-  RepInfo,
-  RepsCount,
-} from '@/core/pose-detection/type/rep.type';
-import type { RepState } from '@/core/pose-detection/type/rep-state.type';
-import { KeypointUtil } from '@/core/pose-detection/util/keypoint.util';
-import { getPoseLandmarker } from '@/core/pose-detection/util/pose-landmarker-loader.util';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
 import type {
   RepImage,
@@ -54,6 +29,30 @@ import type {
 } from '@/core/training/type/training-exercise.type';
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
+import { FrameBitmapBuffer } from '@/lib/pose-detection/class/frame-bitmap-buffer';
+import { KeypointHistory } from '@/lib/pose-detection/class/keypoint-history';
+import { EXERCISE_POSES } from '@/lib/pose-detection/const/exercise-poses';
+import { POSE_DETECTION_CONSTRAINTS } from '@/lib/pose-detection/const/pose-detection-constrains.const';
+import { STATUS_MESSAGES } from '@/lib/pose-detection/const/status-messages';
+import { ConditionDirection } from '@/lib/pose-detection/enum/condition-detection.enum';
+import { CurrentSideMutexValues } from '@/lib/pose-detection/enum/current-side-mutex-values.enum';
+import { DetectionStatus } from '@/lib/pose-detection/enum/detection-status';
+import { KeypointId } from '@/lib/pose-detection/enum/keypoint-id';
+import { KeypointValueType } from '@/lib/pose-detection/enum/keypoint-value-type';
+import { PoseModel } from '@/lib/pose-detection/enum/pose-model.enum';
+import { RepStatus } from '@/lib/pose-detection/enum/rep-state';
+import { RepDetectionService } from '@/lib/pose-detection/rep-detection.service';
+import type { AvgFps } from '@/lib/pose-detection/type/avg-fps.type';
+import type { CurrentSideMutex } from '@/lib/pose-detection/type/current-side-mutex.type';
+import type { ExerciseDetectionData } from '@/lib/pose-detection/type/exercise-start-condition.type';
+import type {
+  RecordedReps,
+  Rep,
+  RepInfo,
+  RepsCount,
+} from '@/lib/pose-detection/type/rep.type';
+import type { RepState } from '@/lib/pose-detection/type/rep-state.type';
+import { getPoseLandmarker } from '@/lib/pose-detection/util/pose-landmarker-loader.util';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
@@ -588,7 +587,7 @@ export default function MobileMovementValidation(
 
       const romL = romLKeypoints
         .map((r) => ({
-          value: KeypointUtil.getKeypointValueByType(
+          value: lib.ai.keypoint.getKeypointValueByType(
             r,
             exercisePose.romValueType
           ),
@@ -614,7 +613,7 @@ export default function MobileMovementValidation(
       const romR = romRKeypoints
         ? (romRKeypoints
             .map((r) => ({
-              value: KeypointUtil.getKeypointValueByType(
+              value: lib.ai.keypoint.getKeypointValueByType(
                 r,
                 exercisePose.romValueType
               ),

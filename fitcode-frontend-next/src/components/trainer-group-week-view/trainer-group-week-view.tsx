@@ -20,13 +20,13 @@ import {
   DIVIDER_HEIGHT,
   MAX_WIDTH,
 } from '../trainer-group-day-view/constant/dimensions.constant';
+import WeekViewItem from '../training-week/training-week-view-item';
 import { onDragEndAddEvent } from './actions/actions-drag';
 import { getAmPmItems } from './actions/actions-items';
 import DraggableSelect from './components/draggable-select';
 import DroppableSlot from './components/droppable-slot';
 import useWeekViewUtils from './hooks/use-utils';
 import { customScrollBarStyle } from './styles/custom-toolbar.style';
-import WeekViewItem from '@/components/training-week/components/training-week-view-item';
 import { EventType } from '@/core/group/enum/event-type.enum';
 import type { Week } from '@/core/group/type/cycle.type';
 import { lib } from '@/lib';

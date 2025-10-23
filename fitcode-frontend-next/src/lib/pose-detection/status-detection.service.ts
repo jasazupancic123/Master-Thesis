@@ -6,8 +6,8 @@ import { POSE_DETECTION_CONSTRAINTS } from './const/pose-detection-constrains.co
 import { ConditionDirection } from './enum/condition-detection.enum';
 import { DetectionStatus } from './enum/detection-status';
 import { KeypointId } from './enum/keypoint-id';
+import { KeypointValueType } from './enum/keypoint-value-type';
 import { RepStatus } from './enum/rep-state';
-import { PoseDetectionService } from './pose-detection.service';
 import type {
   ExerciseDetectionData,
   ExerciseRepStartCondition,
@@ -19,8 +19,21 @@ import { KeypointUtil } from './util/keypoint.util';
 import { getStatusMessage } from '@/components/mobile-movement-validation/state';
 
 export class StatusDetectionService {
+  private static _instance: StatusDetectionService;
+  private readonly keypoint: KeypointUtil;
+
+  private constructor() {
+    this.keypoint = KeypointUtil.instance;
+  }
+
+  static get instance(): StatusDetectionService {
+    if (!StatusDetectionService._instance)
+      StatusDetectionService._instance = new StatusDetectionService();
+    return StatusDetectionService._instance;
+  }
+
   // if it returns false, it means we need to return in main loop
-  static checkAndValidateStatus(
+  checkAndValidateStatus(
     detectionStatus: DetectionStatus,
     state: {
       repStateRefL: RefObject<RepState>;
@@ -99,7 +112,7 @@ export class StatusDetectionService {
         );
       }
       case DetectionStatus.NOT_STILL: {
-        const bufferCutOf = KeypointUtil.getFramesCountFromSeconds(
+        const bufferCutOf = this.keypoint.getFramesCountFromSeconds(
           1,
           avgFps?.value || 30
         );
@@ -179,7 +192,7 @@ export class StatusDetectionService {
           return false;
 
         // look for 1 second of stillness
-        const bufferCutOf = KeypointUtil.getFramesCountFromSeconds(
+        const bufferCutOf = this.keypoint.getFramesCountFromSeconds(
           POSE_DETECTION_CONSTRAINTS.STILLNESS_DETECTION_WINDOW_DURING_RECORDING_S,
           avgFps?.value || 30
         );
@@ -192,12 +205,12 @@ export class StatusDetectionService {
           videoHeight,
         });
 
-        // const hasNodded = PoseDetectionService.checkHasNodded({
+        // const hasNodded = this.checkHasNodded({
         //   keypointBuffer,
         //   avgFps,
         // });
 
-        const hasShakedHead = PoseDetectionService.checkHasShakedHead({
+        const hasShakedHead = this.checkHasShakedHead({
           keypointBuffer,
           avgFps,
         });
@@ -217,7 +230,7 @@ export class StatusDetectionService {
   }
 
   // if it returns false, it means we also need to return in main loop
-  private static updateStatus(
+  private updateStatus(
     statusRef: RefObject<DetectionStatus>,
     condition: boolean,
     currentStatus: DetectionStatus,
@@ -240,7 +253,7 @@ export class StatusDetectionService {
     return true;
   }
 
-  private static checkIsFullyInFrame(keypoints: Keypoint[]): boolean {
+  private checkIsFullyInFrame(keypoints: Keypoint[]): boolean {
     const requiredKeypointCombinations = [
       [KeypointId.LEFT_SHOULDER, KeypointId.LEFT_EYE, KeypointId.LEFT_ANKLE],
       [KeypointId.RIGHT_SHOULDER, KeypointId.RIGHT_EYE, KeypointId.RIGHT_ANKLE],
@@ -248,7 +261,7 @@ export class StatusDetectionService {
 
     return requiredKeypointCombinations.some((combination) => {
       return combination.every((id) => {
-        const kp = KeypointUtil.getDesiredKeypointFromArray(keypoints, id);
+        const kp = this.keypoint.getDesiredKeypointFromArray(keypoints, id);
         return (
           kp &&
           kp.visibility >
@@ -258,7 +271,7 @@ export class StatusDetectionService {
     });
   }
 
-  private static checkIsFacingCamera(
+  private checkIsFacingCamera(
     keypoints: Keypoint[],
     passedFacingCameraKeypointIds?: KeypointId[]
   ): boolean {
@@ -276,7 +289,7 @@ export class StatusDetectionService {
     ];
 
     const facingCameraKeypoints = facingCameraKeypointIds.map((id) =>
-      KeypointUtil.getDesiredKeypointFromArray(keypoints, id)
+      this.keypoint.getDesiredKeypointFromArray(keypoints, id)
     );
 
     return facingCameraKeypoints.every(
@@ -287,7 +300,7 @@ export class StatusDetectionService {
     );
   }
 
-  static checkIsStill(state: {
+  checkIsStill(state: {
     keypoints: Keypoint[];
     buffer: KeypointHistory;
     avgFps: { value: number; count: number } | null;
@@ -328,7 +341,7 @@ export class StatusDetectionService {
     ];
 
     const stillnessKeypoints = stillnessKeypointIds.map((id) =>
-      KeypointUtil.getDesiredKeypointFromArray(keypoints, id)
+      this.keypoint.getDesiredKeypointFromArray(keypoints, id)
     );
 
     if (buffer.history.length < framesNeededInBuffer) return false;
@@ -342,7 +355,7 @@ export class StatusDetectionService {
       const history = buffer.getHistoryById(kp.id, bufferCutOff);
       if (history.some((h) => !h)) return false;
 
-      const stdDev = StatusDetectionService.calculateStandardDeviation(history);
+      const stdDev = this.calculateStandardDeviation(history);
 
       const isKeypointStill =
         stdDev < POSE_DETECTION_CONSTRAINTS.STILLNESS_THRESHOLD_M;
@@ -380,7 +393,7 @@ export class StatusDetectionService {
     return isStill;
   }
 
-  private static isZAxisStill = (state: {
+  private isZAxisStill = (state: {
     buffer: KeypointHistory;
     videoHeight: number;
     tresholdPercentage: number;
@@ -392,15 +405,15 @@ export class StatusDetectionService {
       smallestValueBetweenNoseAndFoots: number | undefined;
 
     buffer.history.slice(bufferCutOff ? bufferCutOff : 0).forEach((frame) => {
-      const nose = KeypointUtil.getDesiredKeypointFromArray(
+      const nose = this.keypoint.getDesiredKeypointFromArray(
         frame,
         KeypointId.NOSE
       );
-      const leftFoot = KeypointUtil.getDesiredKeypointFromArray(
+      const leftFoot = this.keypoint.getDesiredKeypointFromArray(
         frame,
         KeypointId.LEFT_FOOT_INDEX
       );
-      const rightFoot = KeypointUtil.getDesiredKeypointFromArray(
+      const rightFoot = this.keypoint.getDesiredKeypointFromArray(
         frame,
         KeypointId.RIGHT_FOOT_INDEX
       );
@@ -444,7 +457,7 @@ export class StatusDetectionService {
     );
   };
 
-  private static calculateStandardDeviation = (keypoints: Keypoint[]) => {
+  private calculateStandardDeviation = (keypoints: Keypoint[]) => {
     if (keypoints.length === 0) return 0;
     const meanX =
       keypoints.reduce((acc, pos) => acc + pos.position.x, 0) /
@@ -461,7 +474,7 @@ export class StatusDetectionService {
     return Math.sqrt(variance);
   };
 
-  static checkExerciseRepStartConditions(
+  checkExerciseRepStartConditions(
     keypoints: Keypoint[],
     buffer: KeypointHistory,
     exerciseStartConditions: ExerciseRepStartCondition[],
@@ -507,7 +520,7 @@ export class StatusDetectionService {
       );
       if (!currentFrameKeypoint) return false;
 
-      // const currentValue = KeypointUtil.getKeypointValueByType(
+      // const currentValue = this.keypoint.getKeypointValueByType(
       //   currentFrameKeypoint,
       //   condition.type
       // );
@@ -526,13 +539,141 @@ export class StatusDetectionService {
     return true;
   }
 
-  private static validateKeypointCondition(
+  checkHasShakedHead(state: {
+    keypointBuffer: KeypointHistory;
+    avgFps: { value: number; count: number } | null;
+  }): boolean {
+    const { keypointBuffer, avgFps } = state;
+
+    const numFrames = this.keypoint.getFramesCountFromSeconds(
+      POSE_DETECTION_CONSTRAINTS.HEAD_SHAKE_DETECTION_BUFFER_DURATION_S,
+      avgFps?.value || 30
+    );
+
+    const frames = keypointBuffer.history.slice(-numFrames);
+
+    const startLeftShoulder = this.keypoint.getDesiredKeypointFromArray(
+      frames[0],
+      KeypointId.LEFT_SHOULDER
+    );
+
+    const startRightShoulder = this.keypoint.getDesiredKeypointFromArray(
+      frames[0],
+      KeypointId.RIGHT_SHOULDER
+    );
+
+    const startNose = this.keypoint.getDesiredKeypointFromArray(
+      frames[0],
+      KeypointId.NOSE
+    );
+
+    if (!startNose || !startLeftShoulder || !startRightShoulder) return false;
+
+    const startNoseX = this.keypoint.getKeypointValueByType(
+      startNose,
+      KeypointValueType.POSITION_X
+    );
+
+    const startLeftShoulderX = this.keypoint.getKeypointValueByType(
+      startLeftShoulder,
+      KeypointValueType.POSITION_X
+    );
+
+    const startRightShoulderX = this.keypoint.getKeypointValueByType(
+      startRightShoulder,
+      KeypointValueType.POSITION_X
+    );
+
+    if (
+      startNoseX === undefined ||
+      startLeftShoulderX === undefined ||
+      startRightShoulderX === undefined
+    )
+      return false;
+
+    const startNoseLeftShoulderDist = startLeftShoulderX - startNoseX; // left shoulderX is bigger than right shoulderX
+    const startNoseRightShoulderDist = startNoseX - startRightShoulderX;
+
+    const hasMovedLeft = false,
+      hasMovedRight = false;
+    let hasRotatedLeft = false,
+      hasRotatedRight = false;
+
+    for (const frame of frames) {
+      const nose = this.keypoint.getDesiredKeypointFromArray(
+        frame,
+        KeypointId.NOSE
+      );
+
+      const leftShoulder = this.keypoint.getDesiredKeypointFromArray(
+        frame,
+        KeypointId.LEFT_SHOULDER
+      );
+
+      const rightShoulder = this.keypoint.getDesiredKeypointFromArray(
+        frame,
+        KeypointId.RIGHT_SHOULDER
+      );
+
+      if (nose && leftShoulder && !hasMovedLeft) {
+        const noseX = this.keypoint.getKeypointValueByType(
+          nose,
+          KeypointValueType.POSITION_X
+        );
+
+        const leftShoulderX = this.keypoint.getKeypointValueByType(
+          leftShoulder,
+          KeypointValueType.POSITION_X
+        );
+
+        if (noseX !== undefined && leftShoulderX !== undefined) {
+          const noseLeftShoulderDist = leftShoulderX - noseX;
+
+          if (
+            startNoseLeftShoulderDist - noseLeftShoulderDist >
+            POSE_DETECTION_CONSTRAINTS.MIN_NOSE_X_MOVEMENT_M
+          ) {
+            // console.log('HAS ROTATED LEFT');
+            hasRotatedLeft = true;
+          }
+        }
+      }
+
+      if (nose && rightShoulder && !hasMovedRight) {
+        const rightShoulderX = this.keypoint.getKeypointValueByType(
+          rightShoulder,
+          KeypointValueType.POSITION_X
+        );
+
+        const noseX = this.keypoint.getKeypointValueByType(
+          nose,
+          KeypointValueType.POSITION_X
+        );
+
+        if (noseX !== undefined && rightShoulderX !== undefined) {
+          const noseRightShoulderDist = noseX - rightShoulderX;
+
+          if (
+            startNoseRightShoulderDist - noseRightShoulderDist >
+            POSE_DETECTION_CONSTRAINTS.MIN_NOSE_X_MOVEMENT_M
+          ) {
+            // console.log('HAS ROTATED RIGHT');
+            hasRotatedRight = true;
+          }
+        }
+      }
+    }
+
+    return hasRotatedLeft && hasRotatedRight;
+  }
+
+  private validateKeypointCondition(
     currentKeypoint: Keypoint,
     nextKeypoint: Keypoint,
     condition: ExerciseRepStartCondition
   ): boolean {
     const { value1: currentValue, value2: nextValue } =
-      KeypointUtil.getKeypointsValuesByType(
+      this.keypoint.getKeypointsValuesByType(
         currentKeypoint,
         nextKeypoint,
         condition.type

@@ -1,12 +1,12 @@
 import toast from 'react-hot-toast';
 
-import { KeypointHistory } from '@/core/pose-detection/class/keypoint-history';
-import type { Rep } from '@/core/pose-detection/type/rep.type';
 import type { ExerciseSetTracking } from '@/core/training/type/exercise-set-tracking-state.type';
 import type { TrainingExerciseRecording } from '@/core/training/type/training-exercise.type';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
 import type { CreateWorkload } from '@/core/training/type/workload.type';
 import type { SetState } from '@/lib/common/type/state.type';
+import { KeypointHistory } from '@/lib/pose-detection/class/keypoint-history';
+import type { Rep } from '@/lib/pose-detection/type/rep.type';
 
 export const finishSet = async (state: {
   exercise: TrainingExerciseRecording;
