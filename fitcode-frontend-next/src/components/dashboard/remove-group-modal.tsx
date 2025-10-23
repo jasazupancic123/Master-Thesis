@@ -1,6 +1,6 @@
 import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import { useDashboard } from '@/store/dashboard.provider';
-import MyModal from '@/util/modal';
+import MyModal from '@/ui/modal';
 
 export default function RemoveGroupModal({ open, setOpen }: ModalProps) {
   const { selectedGroup, deleteGroup } = useDashboard();

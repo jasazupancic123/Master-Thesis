@@ -26,7 +26,7 @@ import {
 import type { ILink } from '@/lib/common/type/link.type';
 import type { SetState } from '@/lib/common/type/state.type';
 
-export interface PageProps {
+export interface Props extends React.PropsWithChildren {
   institutions: Institution[];
   selectedInstitution: Institution | null;
   members: Profile[];
@@ -34,7 +34,7 @@ export interface PageProps {
   setMembers: SetState<Profile[]>;
 }
 
-interface Props {
+export interface IDashboardContext {
   filter: ILink;
   setFilter: SetState<ILink>;
   institutions: Institution[];
@@ -63,13 +63,11 @@ interface Props {
   ) => Promise<void>;
 }
 
-const DashboardContext = createContext<Props | null>(null);
-
-export type UseDashboardReturnType = ReturnType<typeof useDashboard>;
+const DashboardContext = createContext<IDashboardContext | null>(null);
 
 export const useDashboard = () => useContext(DashboardContext)!;
 
-export function DashboardProvider(props: PageProps & React.PropsWithChildren) {
+export function DashboardProvider(props: Props) {
   const { groups } = useMain();
 
   const {
@@ -138,7 +136,7 @@ export function DashboardProvider(props: PageProps & React.PropsWithChildren) {
     fetchGroups().then();
   }, [selectedInstitution]);
 
-  const value: Props = {
+  const value: IDashboardContext = {
     filter,
     setFilter,
     refetchUsers,

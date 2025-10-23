@@ -9,7 +9,7 @@ import {
   DO_IT_RIGHT_IMG_URL,
 } from '@/lib/common/const/image.const';
 import { useScreenSize } from '@/store/screen-size.provider';
-import Logo from '@/util/logo';
+import Logo from '@/ui/logo';
 
 export default function Hero() {
   const screenSize = useScreenSize();

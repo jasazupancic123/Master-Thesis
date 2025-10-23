@@ -17,7 +17,7 @@ import MobileDoubleTextItems from '@/components/trainer-group-year-view/mobile-d
 import { GroupController } from '@/core/group/group.controller';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import HorizontalItemsList from '@/util/horizontal-items-list';
+import HorizontalItemsList from '@/ui/horizontal-items-list';
 
 dayjs.extend(dayOfYear);
 

@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from 'react';
 
 import { RevealSensor } from './reveal-sensor';
 import { LOADING_ANIMATION_MIN_DURATION_MS } from '@/lib/common/const/animation.const';
-import Animation from '@/util/animation';
+import Animation from '@/ui/animation';
 
 interface Props extends React.PropsWithChildren {
   minMs?: number;
@@ -16,13 +16,12 @@ export default function AnimationMinDurationGate({
 }: Props) {
   const [timeUp, setTimeUp] = useState(false);
   const [revealed, setRevealed] = useState(false);
+  const hideOverlay = revealed && timeUp;
 
   useEffect(() => {
     const id = setTimeout(() => setTimeUp(true), minMs);
     return () => clearTimeout(id);
   }, [minMs]);
-
-  const hideOverlay = revealed && timeUp;
 
   return (
     <>

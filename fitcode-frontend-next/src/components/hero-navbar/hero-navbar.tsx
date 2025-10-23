@@ -21,7 +21,7 @@ import {
 } from '@/lib/common/const/nav.const';
 import { useAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import Logo from '@/util/logo';
+import Logo from '@/ui/logo';
 
 interface HeroNavbarProps {
   height: string;

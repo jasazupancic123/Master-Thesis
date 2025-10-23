@@ -9,7 +9,7 @@ import type { TrainingExerciseRecording } from '@/core/training/type/training-ex
 import type { CreateWorkload } from '@/core/training/type/workload.type';
 import { handleApiRequest, type SetState } from '@/lib/common/type/state.type';
 
-export interface ITrainingInProgressCtx {
+export interface ITrainingInProgressContext {
   selectedSuperset: SupersetRecording | undefined;
   setSelectedSuperset: SetState<SupersetRecording | undefined>;
   selectedExercise: TrainingExerciseRecording | undefined;
@@ -26,9 +26,8 @@ export interface ITrainingInProgressCtx {
   ) => Promise<void>;
 }
 
-const TrainingInProgressContext = createContext<ITrainingInProgressCtx | null>(
-  null
-);
+const TrainingInProgressContext =
+  createContext<ITrainingInProgressContext | null>(null);
 
 export const useTrainingInProgress = () =>
   useContext(TrainingInProgressContext)!;

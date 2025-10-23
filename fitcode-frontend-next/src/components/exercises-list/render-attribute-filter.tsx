@@ -3,8 +3,8 @@ import { Box, Divider, Typography } from '@mui/material';
 import type { Attribute } from '@/core/attribute/type/attribute.type';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
 import type { SetState } from '@/lib/common/type/state.type';
-import AttributeFilter from '@/util/attribute-filter/attribute-filter';
-import { SearchBar } from '@/util/search-bar/search-bar';
+import AttributeFilter from '@/ui/attribute-filter/attribute-filter';
+import { SearchBar } from '@/ui/search-bar/search-bar';
 
 interface Props {
   attribute: Attribute<Exercise>;

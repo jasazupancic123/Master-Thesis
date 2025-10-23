@@ -18,8 +18,8 @@ import type { Institution } from '@/core/institution/type/institution.type';
 import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import { handleApiRequest, type SetState } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
-import MyModal from '@/util/modal';
-import { SearchBar } from '@/util/search-bar/search-bar';
+import MyModal from '@/ui/modal';
+import { SearchBar } from '@/ui/search-bar/search-bar';
 
 interface Props extends ModalProps {
   title?: string;

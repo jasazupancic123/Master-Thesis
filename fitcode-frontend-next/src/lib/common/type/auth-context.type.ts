@@ -5,7 +5,7 @@ import type { AuthState } from '@/store/auth.provider';
 
 export type AuthStatus = 'loading' | 'unauthenticated' | 'authenticated';
 
-export type AuthContextType =
+export type IAuthContext =
   | {
       status: 'loading';
       handleUserChange: (user: AuthUser | null) => AuthState;

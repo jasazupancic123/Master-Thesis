@@ -8,7 +8,7 @@ import type { Superset } from '@/core/training/type/superset.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { SetState } from '@/lib/common/type/state.type';
 
-type SupersetsContextInputProps = {
+interface Props extends React.PropsWithChildren {
   expandedExercisesView: boolean;
   setExpandedExercisesView: SetState<boolean>;
   selectedExercise: TrainingExercise | null;
@@ -19,9 +19,9 @@ type SupersetsContextInputProps = {
   setOpenVideoPlayerModal: SetState<boolean>;
   openAddExerciseModal: boolean;
   setOpenAddExerciseModal: SetState<boolean>;
-};
+}
 
-type SupersetsContextProps = SupersetsContextInputProps & {
+interface ISupersetsContext extends Props {
   handleMenuClose: () => void;
   updateTrainingExercises: (exercises: TrainingExercise[]) => void;
   updateTrainingExerciseParam: (
@@ -30,17 +30,13 @@ type SupersetsContextProps = SupersetsContextInputProps & {
     value: number | string,
     setIndex?: number
   ) => void;
-};
+}
 
-const SupersetsContext = createContext<SupersetsContextProps | null>(null);
-
-export type SupersetsProviderReturnType = ReturnType<typeof useSupersets>;
+const SupersetsContext = createContext<ISupersetsContext | null>(null);
 
 export const useSupersets = () => useContext(SupersetsContext)!;
 
-export function SupersetsProvider(
-  props: SupersetsContextInputProps & React.PropsWithChildren
-) {
+export function SupersetsProvider(props: Props) {
   const {
     children,
     expandedExercisesView,
@@ -154,7 +150,7 @@ export function SupersetsProvider(
     updateTrainingExercises(exercises);
   }
 
-  const value: SupersetsContextProps = {
+  const value: ISupersetsContext = {
     expandedExercisesView,
     setExpandedExercisesView,
     selectedExercise,

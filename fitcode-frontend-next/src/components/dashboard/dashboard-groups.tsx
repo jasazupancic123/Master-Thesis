@@ -15,9 +15,9 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import EditableTextField from '@/util/editable-text-field';
-import HorizontalItemsList from '@/util/horizontal-items-list';
-import SimpleCircle from '@/util/simple-circle';
+import EditableTextField from '@/ui/editable-text-field';
+import HorizontalItemsList from '@/ui/horizontal-items-list';
+import SimpleCircle from '@/ui/simple-circle';
 
 export default function DashboardGroups() {
   const theme = useTheme();

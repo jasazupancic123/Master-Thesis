@@ -10,18 +10,18 @@ import {
 } from '@/core/training/const/warmup-cooldown.const';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import type { IGroupCtx } from '@/store/group.provider';
-import type { IMainCtx, useMain } from '@/store/main.provider';
+import type { IMainContext, useMain } from '@/store/main.provider';
 import type {
-  TrainerDayViewCtx,
+  ITrainerDayViewContext,
   TrainerDayViewCtxExtended,
 } from '@/store/trainer-day-view.provider';
 
 export const handleOnDragEnd = async (
   input: { result: DropResult },
   context: {
-    useMain: IMainCtx;
+    useMain: IMainContext;
     useGroup: IGroupCtx;
-    useTrainerDayViewContext: TrainerDayViewCtx;
+    useTrainerDayViewContext: ITrainerDayViewContext;
     useTrainingMembersSubgroups: ReturnType<typeof useTrainingMembersSubgroups>;
     useTrainingMembers: ReturnType<typeof useTrainingMembers>;
   }

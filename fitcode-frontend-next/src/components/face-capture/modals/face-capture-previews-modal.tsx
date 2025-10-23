@@ -11,7 +11,7 @@ import type { UseFaceCaptureUtilsReturnType } from '../hooks/use-utils';
 import { AuthController } from '@/core/auth/auth.controller';
 import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
-import MyModal from '@/util/modal';
+import MyModal from '@/ui/modal';
 
 interface FaceCapturePreviewsModalProps {
   faceCaptureProps: FaceCaptureProps;

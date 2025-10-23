@@ -5,9 +5,11 @@ import {
 } from '@/core/training/const/warmup-cooldown.const';
 import type { Superset } from '@/core/training/type/superset.type';
 import type { IGroupCtx } from '@/store/group.provider';
-import type { TrainerDayViewCtx } from '@/store/trainer-day-view.provider';
+import type { ITrainerDayViewContext } from '@/store/trainer-day-view.provider';
 
-export function handleSelectedExercisesSelection(context: TrainerDayViewCtx) {
+export function handleSelectedExercisesSelection(
+  context: ITrainerDayViewContext
+) {
   const { selectedExerciseIds, setSelectedExerciseIds, supersets } = context;
   const allExercisesSelected = supersets.every((s) =>
     s.exercises.every((e) =>
@@ -25,7 +27,7 @@ export function handleSelectedExercisesSelection(context: TrainerDayViewCtx) {
 export function deleteSelectedExercises(
   selectedExerciseIds: string[],
   context: {
-    useTrainerDayViewContext: TrainerDayViewCtx;
+    useTrainerDayViewContext: ITrainerDayViewContext;
     useGroup: IGroupCtx;
   }
 ) {

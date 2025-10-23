@@ -1,12 +1,12 @@
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
-import type { TrainerDayViewCtx } from '@/store/trainer-day-view.provider';
+import type { ITrainerDayViewContext } from '@/store/trainer-day-view.provider';
 
 export function handleSelectTrainingComponent(
   input: {
     trainingComponent: TrainingComponent | undefined;
   },
   context: {
-    useTrainerDayViewContext: TrainerDayViewCtx;
+    useTrainerDayViewContext: ITrainerDayViewContext;
   }
 ) {
   const { trainingComponent } = input;
@@ -34,7 +34,7 @@ export function handleSelectTrainingComponent(
 export const stateUpdate = (
   input: { updatedComponent: TrainingComponent },
   context: {
-    useTrainerDayViewContext: TrainerDayViewCtx;
+    useTrainerDayViewContext: ITrainerDayViewContext;
   }
 ) => {
   const { updatedComponent } = input;

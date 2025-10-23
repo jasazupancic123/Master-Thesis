@@ -14,10 +14,11 @@ import type { Institution } from '@/core/institution/type/institution.type';
 import { lib } from '@/lib';
 import type { GroupDateFilter } from '@/lib/common/type/filter.type';
 
-const GroupContext = createContext<GroupContextProps | null>(null);
-export const useGroup = () => useContext(GroupContext)!;
+// eslint-disable-next-line
+export interface IGroupCtx extends GroupContextProps {}
 
-export type IGroupCtx = ReturnType<typeof useGroup>;
+const GroupContext = createContext<IGroupCtx | null>(null);
+export const useGroup = () => useContext(GroupContext)!;
 
 export function GroupProvider(
   props: GroupIdPageProps & React.PropsWithChildren
@@ -60,7 +61,7 @@ export function GroupProvider(
     setDateTo(dayjs(cycle.to));
   }, [cycle]);
 
-  const value: GroupContextProps = {
+  const value: IGroupCtx = {
     filter,
     setFilter,
     institution,

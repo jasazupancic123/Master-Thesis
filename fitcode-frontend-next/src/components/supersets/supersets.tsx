@@ -28,7 +28,7 @@ import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { SupersetsProvider } from '@/store/supersets.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
-import MyModal from '@/util/modal';
+import MyModal from '@/ui/modal';
 
 interface Props {
   openAddExerciseModal: boolean;

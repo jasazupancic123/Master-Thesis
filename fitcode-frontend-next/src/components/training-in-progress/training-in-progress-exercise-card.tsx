@@ -23,8 +23,8 @@ import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
-import ImageGallery from '@/util/image-gallery';
-import SwipeableBox from '@/util/swipeable-box';
+import ImageGallery from '@/ui/image-gallery';
+import SwipeableBox from '@/ui/swipeable-box';
 
 export default function TrainingInProgressExerciseCard() {
   const theme = useTheme();

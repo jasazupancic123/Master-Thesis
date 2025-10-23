@@ -13,7 +13,7 @@ import type { Training } from '@/core/training/type/training.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import type { IGroupCtx, useGroup } from '@/store/group.provider';
 import type {
-  TrainerDayViewCtx,
+  ITrainerDayViewContext,
   TrainerDayViewCtxExtended,
 } from '@/store/trainer-day-view.provider';
 
@@ -174,7 +174,7 @@ const handleAddSubgroup = (
 export function updateSelectedAthleteSubgroup(
   athlete: AuthUser,
   subgroupId: string,
-  trainerDayViewCtx: TrainerDayViewCtx
+  trainerDayViewCtx: ITrainerDayViewContext
 ) {
   const {
     component,

@@ -33,11 +33,11 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import FileUpload from '@/util/file-upload';
-import HorizontalItemsList from '@/util/horizontal-items-list';
-import MyModal from '@/util/modal';
-import { SearchBar } from '@/util/search-bar/search-bar';
-import SimpleCircle from '@/util/simple-circle';
+import FileUpload from '@/ui/file-upload';
+import HorizontalItemsList from '@/ui/horizontal-items-list';
+import MyModal from '@/ui/modal';
+import { SearchBar } from '@/ui/search-bar/search-bar';
+import SimpleCircle from '@/ui/simple-circle';
 
 export default function DashboardInstitutionPage() {
   const screenSize = useScreenSize();

@@ -13,7 +13,7 @@ import { UserRole } from '@/core/profile/enum/user-role.enum';
 import type { Profile } from '@/core/profile/type/user.type';
 import type { SetState, SetStateNullable } from '@/lib/common/type/state.type';
 
-export interface MainProviderProps {
+export interface MainProviderProps extends React.PropsWithChildren {
   profile: Profile;
   users: AuthUser[];
   components: Component[];
@@ -23,7 +23,7 @@ export interface MainProviderProps {
   groups: Group[];
 }
 
-interface MainContextProps extends MainProviderProps {
+interface IMainContext extends MainProviderProps {
   setProfile: SetStateNullable<Profile>;
   setUsers: SetState<AuthUser[]>;
   setComponents: SetState<Component[]>;
@@ -32,11 +32,9 @@ interface MainContextProps extends MainProviderProps {
   setGroups: SetState<Group[]>;
 }
 
-const MainContext = createContext<MainContextProps | null>(null);
+const MainContext = createContext<IMainContext | null>(null);
 
 export const useMain = () => useContext(MainContext)!;
-
-export type IMainCtx = ReturnType<typeof useMain>;
 
 export const AthleteMainProvider = withAuth(MainProvider, [UserRole.ATHLETE]);
 export const CoachMainProvider = withAuth(MainProvider, [
@@ -45,9 +43,7 @@ export const CoachMainProvider = withAuth(MainProvider, [
   UserRole.ADMIN,
 ]);
 
-export default function MainProvider(
-  props: React.PropsWithChildren & MainProviderProps
-) {
+export default function MainProvider(props: MainProviderProps) {
   const { children } = props;
 
   const [profile, setProfile] = useState<Profile | undefined>(props.profile);
@@ -57,7 +53,7 @@ export default function MainProvider(
   const [methods, setMethods] = useState<Method[]>(props.methods);
   const [groups, setGroups] = useState<Group[]>(props.groups);
 
-  const value: MainContextProps = {
+  const value: IMainContext = {
     profile: profile!,
     setProfile: setProfile as SetStateNullable<Profile>,
     users,

@@ -10,7 +10,7 @@ import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import { handleApiRequest } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
-import MyModal from '@/util/modal';
+import MyModal from '@/ui/modal';
 
 export default function AddGroupModal({ open, setOpen }: ModalProps) {
   const router = useRouter();

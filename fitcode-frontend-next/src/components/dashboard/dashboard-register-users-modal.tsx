@@ -12,7 +12,7 @@ import {
 import useInstitutionMembers from './hooks/use-institution-members.hook';
 import useRegisterMemberForm from './hooks/use-register-member-form.hook';
 import type { UserRole } from '@/core/profile/enum/user-role.enum';
-import MyModal from '@/util/modal';
+import MyModal from '@/ui/modal';
 
 interface Props {
   registerRole: UserRole;

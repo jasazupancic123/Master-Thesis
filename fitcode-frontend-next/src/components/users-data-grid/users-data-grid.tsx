@@ -22,7 +22,7 @@ import type { AuthUser, UpdateUser } from '@/core/auth/type/user.type';
 import { UserRole } from '@/core/profile/enum/user-role.enum';
 import { lib } from '@/lib';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
-import ImageUpload from '@/util/image-upload';
+import ImageUpload from '@/ui/image-upload';
 
 interface UsersDataGridProps {
   users: AuthUser[];
