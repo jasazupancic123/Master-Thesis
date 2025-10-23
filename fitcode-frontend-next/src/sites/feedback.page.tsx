@@ -47,10 +47,10 @@ export default function FeedbackPage() {
   const theme = useTheme();
   const router = useRouter();
 
+  const [muscleLoads, setMuscleLoads] = useState<[string, number][]>([]);
   const [filter, setFilter] = useState<WellnessAnthropometry>(
     WellnessAnthropometry.WELLNESS
   );
-  const [muscleLoads, setMuscleLoads] = useState<[string, number][]>([]);
 
   useEffect(() => {
     if (muscleLoads.length) return; // Already set

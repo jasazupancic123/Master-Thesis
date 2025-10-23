@@ -40,7 +40,8 @@ export default function MuscleMapWithTooltip(props: Props) {
   const screenSize = useScreenSize();
 
   const { exercises: allExercises } = useMain();
-  const { training, component, addTrainingExercises } = useTrainerDayView();
+  const { training, component, addTrainingExercises } =
+    useTrainerDayView() || {};
 
   const {
     front,

@@ -155,11 +155,11 @@ export default function PeriodizeModal(
                 setNumTrainingsWithSameTarget(0);
                 setSelectedPeriodizationType(null);
                 setOpen(false);
-
-                toast.success(
-                  `${selectedSubgroup ? 'Subgroups' : 'Trainings'} periodized successfully`
-                );
               });
+
+              toast.success(
+                `${selectedSubgroup ? 'Subgroups' : 'Trainings'} periodized successfully`
+              );
             },
             () => {
               setIsPeriodizing(false);
