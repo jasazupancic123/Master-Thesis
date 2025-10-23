@@ -1,12 +1,15 @@
+import {
+  DEFAULT_NUM_SETS_IN_EXERCISE,
+  MAX_NUM_EXERCISES_IN_BLOCK_SUPERSET,
+  MAX_NUM_EXERCISES_IN_CIRCUIT_SUPERSET,
+  MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT,
+  MAX_NUM_SUPERSETS_IN_CIRCUIT_COMPONENT,
+} from '../const/training-limits.const';
 import { MainSet } from '../enum/main-set.enum';
 import type { ExerciseSetTracking } from '../type/exercise-set-tracking-state.type';
 import type { Superset } from '../type/superset.type';
 import type { Training } from '../type/training.type';
 import type { TrainingExercise } from '../type/training-exercise.type';
-import {
-  NUM_MAX_EXERCISES_PER_SUPERSET,
-  NUM_MAX_SUPERSETS,
-} from '@/components/trainer-group-day-view/constant/supersets.constant';
 import { core } from '@/core/core.service';
 import {
   KG,
@@ -24,7 +27,7 @@ export class TrainingSupersetUtil {
       exercise,
       id: exercise.id,
       params: [],
-      sets: Array.from({ length: 3 }, (_, i) => ({
+      sets: Array.from({ length: DEFAULT_NUM_SETS_IN_EXERCISE }, (_, i) => ({
         setNumber: i + 1,
         reps: REPS.defaultValue as number,
         ...(uni && { repsR: REPS.defaultValue as number }),
@@ -37,6 +40,9 @@ export class TrainingSupersetUtil {
     };
   }
 
+  /**
+   * Adds exercises to provided supersets.
+   */
   addExercises(
     supersets: Superset[],
     exercises: TrainingExercise[],
@@ -44,9 +50,15 @@ export class TrainingSupersetUtil {
   ): void {
     if (supersets.length === 0) supersets.push({ exercises: [] });
 
-    const maxSupersets = mainSet === MainSet.CIRCUIT ? 1 : NUM_MAX_SUPERSETS;
+    const maxSupersets =
+      mainSet === MainSet.CIRCUIT
+        ? MAX_NUM_SUPERSETS_IN_CIRCUIT_COMPONENT
+        : MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT;
+
     const maxExercisesPerSuperset =
-      mainSet === MainSet.CIRCUIT ? 32 : NUM_MAX_EXERCISES_PER_SUPERSET;
+      mainSet === MainSet.CIRCUIT
+        ? MAX_NUM_EXERCISES_IN_CIRCUIT_SUPERSET
+        : MAX_NUM_EXERCISES_IN_BLOCK_SUPERSET;
 
     let i = 0;
     for (const superset of supersets) {
@@ -70,8 +82,8 @@ export class TrainingSupersetUtil {
 
   removeExercise(
     supersets: Superset[],
-    exerciseIndex: number,
-    supersetIndex: number
+    supersetIndex: number,
+    exerciseIndex: number
   ): Superset[] {
     return supersets
       .map((s, i) =>
@@ -79,7 +91,7 @@ export class TrainingSupersetUtil {
           ? s
           : {
               ...s,
-              exercises: s.exercises.filter((ex, k) => k !== exerciseIndex),
+              exercises: s.exercises.filter((_, k) => k !== exerciseIndex),
             }
       )
       .filter((s) => s.exercises.length > 0);

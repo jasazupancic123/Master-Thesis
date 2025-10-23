@@ -23,7 +23,7 @@ export type SvgC = React.ForwardRefExoticComponent<
   React.SVGProps<SVGSVGElement> & React.RefAttributes<SVGSVGElement>
 >;
 
-interface MuscleMapWithTooltipProps {
+interface Props {
   front: boolean;
   Svg: SvgC;
   exercisesInComponent: TrainingExercise[];
@@ -35,13 +35,12 @@ interface MuscleMapWithTooltipProps {
   setMuscleLoads?: SetState<[string, number][]>;
 }
 
-export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
+export default function MuscleMapWithTooltip(props: Props) {
   const theme = useTheme();
   const screenSize = useScreenSize();
 
   const { exercises: allExercises } = useMain();
-  const { training, component, selectedSubgroup, addTrainingExercises } =
-    useTrainerDayView();
+  const { training, component, addTrainingExercises } = useTrainerDayView();
 
   const {
     front,
@@ -164,7 +163,6 @@ export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
         }
 
         if (aMuscle.value < bMuscle.value) return -1;
-
         return 1;
       });
 
@@ -311,6 +309,7 @@ export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
           cursor: 'pointer',
         }}
       />
+
       {tip && tip.show && (
         <Box
           id="muscle-tip"
@@ -339,11 +338,7 @@ export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
         >
           {tip.focus && (
             <IconButton
-              sx={{
-                position: 'absolute',
-                top: 0,
-                right: 5,
-              }}
+              sx={{ position: 'absolute', top: 0, right: 5 }}
               onClick={(e) => {
                 e.preventDefault();
                 setTip((t) => ({ ...t, focus: false, show: false }));
@@ -356,6 +351,7 @@ export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
           <Typography fontWeight={600} noWrap textAlign="center">
             {tip.name}
           </Typography>
+
           <Box
             display="flex"
             justifyContent="center"
@@ -387,6 +383,7 @@ export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
                   <Typography fontSize={14} noWrap>
                     In training
                   </Typography>
+
                   <Box
                     width="100%"
                     display="flex"
@@ -407,17 +404,18 @@ export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
                   flexDirection="column"
                   alignItems="center"
                   sx={{
+                    maxWidth: screenSize.isUltraSmall ? 80 : undefined,
                     minWidth: screenSize.isUltraSmall
                       ? 80
                       : screenSize.isMobile
                         ? 100
                         : 150,
-                    maxWidth: screenSize.isUltraSmall ? 80 : undefined,
                   }}
                 >
                   <Typography fontSize={14} noWrap>
                     Suggested
                   </Typography>
+
                   <Box
                     width="100%"
                     display="flex"
@@ -429,12 +427,12 @@ export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
                         width="100%"
                         key={ex.id}
                         sx={{
+                          cursor: 'pointer',
                           '&:hover': {
                             border: `1px solid ${theme.palette.text.primary}`,
                             borderRadius: 1,
                             p: 0.1,
                           },
-                          cursor: 'pointer',
                         }}
                         onClick={() => {
                           if (
@@ -448,17 +446,10 @@ export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
                           const trainingExercise =
                             core.training.superset.toTrainingExercise(ex);
 
-                          const item = selectedSubgroup || component;
-                          const supersetIndex =
-                            core.training.getAvailableSuperset(item);
-
-                          if (supersetIndex === -1) return;
-
+                          tip.componentExercises.push(trainingExercise);
                           tip.possibleExercises = tip.possibleExercises.filter(
                             (e) => e.id !== ex.id
                           );
-
-                          tip.componentExercises.push(trainingExercise);
 
                           addTrainingExercises(
                             [trainingExercise],
@@ -490,12 +481,7 @@ export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
                       display="flex"
                       justifyContent="center"
                       alignItems="center"
-                      sx={{
-                        p: 4,
-                        py: 2,
-                        pb: 0,
-                        position: 'relative',
-                      }}
+                      sx={{ p: 4, py: 2, pb: 0, position: 'relative' }}
                     >
                       <Typography
                         fontSize={12}
@@ -511,6 +497,7 @@ export default function MuscleMapWithTooltip(props: MuscleMapWithTooltipProps) {
                         <SorenessIcon />
                         Soreness
                       </Typography>
+
                       <Slider
                         valueLabelDisplay="auto"
                         value={

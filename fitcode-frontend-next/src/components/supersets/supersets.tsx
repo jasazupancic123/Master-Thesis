@@ -11,7 +11,6 @@ import { Box, Grid2, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 
 import AddExerciseForm from '../add-exercise-form/add-exercise-form';
-import { NUM_MAX_SUPERSETS } from '../trainer-group-day-view/constant/supersets.constant';
 import TrainingExerciseCardStub from '../training-exercise-card/components/card-stub';
 import { onDragEndExercise } from './actions/actions-drag-exercise';
 import useSupersetExercises from './hooks/use-exercises';
@@ -20,6 +19,7 @@ import useSupersetUtils from './hooks/use-utils';
 import Superset from './superset';
 import { core } from '@/core/core.service';
 import { ADD_SUPERSET_DROPPABLE_ID } from '@/core/training/const/add-superset-droppable-id.const';
+import { MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT } from '@/core/training/const/training-limits.const';
 import { MainSet } from '@/core/training/enum/main-set.enum';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { SetState } from '@/lib/common/type/state.type';
@@ -200,7 +200,7 @@ export default function Supersets({
         {selectedAthlete ||
         (supersets.length === 1 && supersets[0].exercises.length === 0)
           ? null
-          : supersets.length < NUM_MAX_SUPERSETS && (
+          : supersets.length < MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT && (
               <Grid2
                 size={{
                   xs: 12,

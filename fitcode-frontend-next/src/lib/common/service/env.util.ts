@@ -1,3 +1,9 @@
+import {
+  POSE_LANDMARKER_FULL_PATH,
+  POSE_LANDMARKER_HEAVY_PATH,
+  POSE_LANDMARKER_LITE_PATH,
+} from '@/core/pose-detection/const/pose-landmarker-paths';
+
 export class EnvUtil {
   isProd(): boolean {
     return process.env.NODE_ENV === 'production';
@@ -19,10 +25,12 @@ export class EnvUtil {
     return process.env.NEXT_PUBLIC_AI_CONVERT_TO_METRIC_SCALE === '1';
   }
 
-  getPoseLandmarkerModelPath(): 'lite' | 'full' | 'heavy' {
-    const version = process.env.NEXT_PUBLIC_POSE_LANDMARKER_VERSION as string;
-    return ['lite', 'full', 'heavy'].includes(version)
-      ? (version as 'lite' | 'full' | 'heavy')
-      : 'lite';
+  getPoseLandmarkerModelPath(): string {
+    const model = process.env.NEXT_PUBLIC_POSE_LANDMARKER_VERSION;
+
+    if (model === 'lite') return POSE_LANDMARKER_LITE_PATH;
+    else if (model === 'heavy') return POSE_LANDMARKER_HEAVY_PATH;
+
+    return POSE_LANDMARKER_FULL_PATH; // default to full
   }
 }

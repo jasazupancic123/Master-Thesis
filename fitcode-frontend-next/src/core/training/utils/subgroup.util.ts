@@ -81,6 +81,20 @@ export class TrainingSubgroupUtil {
     return component.subgroups.find((s) => s.id === subgroup.parentId) || null;
   }
 
+  getChildren(
+    item: Subgroup | TrainingComponent,
+    component: TrainingComponent
+  ): Subgroup[] {
+    return !core.training.isTrainingComponent(item)
+      ? component.subgroups.filter((s) => s.parentId === item.id) // item is subgroup, find its virtual children
+      : component.subgroups.filter(
+          (s) =>
+            s.parentId &&
+            s.parentId === DEFAULT_SUBGROUP_ID &&
+            s.membersIds.length === 1
+        ); // item is component, find virtual children subgroups
+  }
+
   private getParentSupersets(
     subgroup: Subgroup,
     component: TrainingComponent

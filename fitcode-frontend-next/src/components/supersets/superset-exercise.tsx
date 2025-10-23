@@ -160,12 +160,12 @@ export default function SupersetExercise({
             >
               <IconButton
                 size="small"
+                sx={{ zIndex: 1000, pt: 0.5, mt: 0 }}
+                disableRipple
                 onClick={(e) => {
                   handleMenuClick(e);
                   setMenuExercise(exercise);
                 }}
-                sx={{ zIndex: 1000, pt: 0.5, mt: 0 }}
-                disableRipple
               >
                 <MoreVert fontSize="small" />
               </IconButton>
