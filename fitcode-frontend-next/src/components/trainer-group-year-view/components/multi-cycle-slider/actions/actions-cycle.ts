@@ -50,7 +50,7 @@ export async function handleDeleteCycle(
         ...prev,
         cycles: prev.cycles.filter((c) => c.id !== editCycle.id),
       }));
-      
+
       setTrainings((prev) =>
         prev.filter(
           (t) =>
