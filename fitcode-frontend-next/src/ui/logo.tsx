@@ -24,6 +24,7 @@ export default function Logo({ width = 100, marginLeft, sx, version }: Props) {
       height={0}
       style={{ marginLeft, ...sx }} // Correctly spread additional styles
       layout="intrinsic"
+      unoptimized
     />
   );
 }

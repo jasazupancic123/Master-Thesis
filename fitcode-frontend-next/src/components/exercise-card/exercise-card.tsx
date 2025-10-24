@@ -60,6 +60,7 @@ export function ExerciseCard({ exercise, addExerciseForm }: Props) {
             height={0}
             width={140}
             sizes="100vw"
+            unoptimized
             style={{
               objectFit: 'cover',
               width: '100%',

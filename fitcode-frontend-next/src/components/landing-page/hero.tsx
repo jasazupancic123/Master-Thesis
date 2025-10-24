@@ -141,6 +141,7 @@ export default function Hero() {
               alt="Do it right"
               width={initialLogoWidth / 2}
               height={0} // not 0
+              unoptimized
               style={{ height: 'auto' }} // keeps aspect ratio while preventing stretch
               className="block" // removes baseline gap
             />
@@ -158,6 +159,7 @@ export default function Hero() {
             alt="Aspire Logo"
             width={initialAspireLogoWidth}
             height={0} // not 0
+            unoptimized
             style={{ height: 'auto' }} // keeps aspect ratio while preventing stretch
             className="block" // removes baseline gap
           />

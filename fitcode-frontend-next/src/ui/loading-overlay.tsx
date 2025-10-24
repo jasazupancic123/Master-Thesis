@@ -54,6 +54,7 @@ export default function LoadingOverlay(props: LoadingOverlayProps) {
           width={screenSize.isMobile ? 200 : 300}
           height={0}
           layout="intrinsic"
+          unoptimized
         />
       )}
     </Box>

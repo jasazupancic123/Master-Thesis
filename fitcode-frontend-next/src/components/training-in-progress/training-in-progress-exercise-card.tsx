@@ -198,6 +198,7 @@ export default function TrainingInProgressExerciseCard() {
               width={0}
               height={0}
               sizes={'100vw'}
+              unoptimized
               style={{
                 maxWidth: '1200px',
                 width: '100vw',
