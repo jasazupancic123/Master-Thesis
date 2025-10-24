@@ -5,6 +5,7 @@ import React from 'react';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
 import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
 import { useScreenSize } from '@/store/screen-size.provider';
+import { lib } from '@/lib';
 
 interface Props {
   exercise: Exercise;
@@ -60,7 +61,7 @@ export function ExerciseCard({ exercise, addExerciseForm }: Props) {
             height={0}
             width={140}
             sizes="100vw"
-            unoptimized
+            unoptimized={lib.common.env.unoptimizeImages()}
             style={{
               objectFit: 'cover',
               width: '100%',

@@ -2,6 +2,7 @@ import { Box } from '@mui/material';
 import Image from 'next/image';
 
 import { theme } from '@/app/style';
+import { lib } from '@/lib';
 
 interface Props {
   images: string[];
@@ -37,6 +38,7 @@ export default function ImagePickerSlider({
           alt="Image Picker"
           width={width}
           height={0}
+          unoptimized={lib.common.env.unoptimizeImages()}
           layout="intrinsic"
           onClick={() => onClick(index)}
           style={{

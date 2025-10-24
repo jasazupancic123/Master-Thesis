@@ -5,6 +5,7 @@ import { useState } from 'react';
 import ImagePickerSlider from './image-picker-slider';
 import { theme } from '@/app/style';
 import type { RepImage } from '@/core/training/type/training-exercise.type';
+import { lib } from '@/lib';
 
 interface ImageGalleryProps {
   imagesL: string[] | RepImage[];
@@ -90,6 +91,7 @@ export default function ImageGallery(props: ImageGalleryProps) {
                 ? images[currentIndex].url
                 : (images[currentIndex] as string)
             }
+            unoptimized={lib.common.env.unoptimizeImages()}
             alt="Exercise Image"
             width={width}
             height={0}
