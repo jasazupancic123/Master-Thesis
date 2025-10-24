@@ -5,6 +5,7 @@ import type { TooltipContentProps } from 'recharts';
 import { DEFAULT_CHART_PARAMS, graphColorMap } from './chart';
 import { theme } from '@/app/style';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
+import { ExerciseParamField } from '@/core/training/type/exercise-set.type';
 
 export default function CustomTooltip({
   active,
@@ -15,6 +16,10 @@ export default function CustomTooltip({
 
   const isVisible = active && payload && payload.length;
   const p = payload[0];
+
+  console.log('payload', payload);
+  console.log('p', p);
+
   if (!p || !p.payload) return null;
 
   const completed = selectedAthleteCompletedWorkloads.some(
@@ -44,6 +49,7 @@ export default function CustomTooltip({
       <Typography textAlign="center">{label}</Typography>
       {Array.from({ length: 2 }).map((_, i) => {
         let found = false;
+
         for (const dataKey of DEFAULT_CHART_PARAMS.slice(i)) {
           if (found) return null;
 

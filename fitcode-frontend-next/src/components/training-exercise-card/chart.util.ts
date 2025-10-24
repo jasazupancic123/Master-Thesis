@@ -6,6 +6,7 @@ import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { Workload } from '@/core/training/type/workload.type';
+import { ExerciseParamField } from '@/core/training/type/exercise-set.type';
 
 export function getAthleteChart(
   athleteId: string,
@@ -16,6 +17,7 @@ export function getAthleteChart(
     trainings: Training[];
     workloads: Workload[];
     subgroup: Subgroup | null;
+    selectedParams: ExerciseParamField[];
   }
 ): ChartWorkloadData[] {
   const result: ChartWorkloadData[] = [];
@@ -78,7 +80,10 @@ export function getAthleteChart(
       });
     }
 
-    result.push({ ...item, ...getAggregatedWorkloadValues(workloads) });
+    result.push({
+      ...item,
+      ...getAggregatedWorkloadValues(workloads, data.selectedParams),
+    });
   }
 
   return result.sort(
@@ -90,7 +95,7 @@ export function getGroupChart(
   exercise: TrainingExercise,
   component: TrainingComponent,
   training: Training,
-  data: { trainings: Training[] }
+  data: { trainings: Training[]; selectedParams: ExerciseParamField[] }
 ): ChartWorkloadData[] {
   const result: ChartWorkloadData[] = [];
 
@@ -158,7 +163,10 @@ export function getGroupChart(
           });
         }
 
-    result.push({ ...item, ...getAggregatedWorkloadValues(workloads) });
+    result.push({
+      ...item,
+      ...getAggregatedWorkloadValues(workloads, data.selectedParams),
+    });
   }
 
   return result.sort(
@@ -173,25 +181,43 @@ export function getGroupChart(
  * @returns
  */
 function getAggregatedWorkloadValues(
-  workloads: Partial<Workload>[]
-): Pick<ChartWorkloadData, 'int' | 'vol' | 'intFullValue' | 'volFullValue'> {
-  const intValues = workloads
-    .map((w) => w.loadKg || w.loadRm || w.loadBw)
-    .filter((v): v is number => typeof v === 'number' && !isNaN(v));
+  workloads: Partial<Workload>[],
+  selectedParams: ExerciseParamField[]
+): Pick<ChartWorkloadData, 'int' | 'vol'> & {
+  loadKgFullValue?: string;
+  repsFullValue?: string;
+} {
+  const intValues = selectedParams.includes('loadKg')
+    ? workloads
+        .map((w) => w.loadKg || w.loadRm || w.loadBw)
+        .filter((v): v is number => typeof v === 'number' && !isNaN(v))
+    : [];
 
-  const volValues = workloads
-    .map((w) => w.reps)
-    .filter((v): v is number => typeof v === 'number' && !isNaN(v));
+  const w = workloads[0];
+
+  let intField: string | undefined = w
+    ? w.loadKg
+      ? 'Kg'
+      : w.loadRm
+        ? 'Rm'
+        : w.loadBw
+          ? 'Bw'
+          : undefined
+    : undefined;
+
+  const volValues = selectedParams.includes('reps')
+    ? workloads
+        .map((w) => w.reps)
+        .filter((v): v is number => typeof v === 'number' && !isNaN(v))
+    : [];
 
   return {
     int: avg(intValues),
     vol: avg(volValues),
-    intFullValue: intValues.length
-      ? `Int: ${Math.min(...intValues)} - ${Math.max(...intValues)}`
+    loadKgFullValue: intValues.length
+      ? `${intField}: ${avg(intValues)}`
       : undefined,
-    volFullValue: volValues.length
-      ? `Vol: ${Math.min(...volValues)} - ${Math.max(...volValues)}`
-      : undefined,
+    repsFullValue: volValues.length ? `Reps: ${avg(volValues)}` : undefined,
   };
 }
 

@@ -34,15 +34,15 @@ import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 
 export const graphColorMap: Record<ExerciseParamField, string> = {
-  sets: GRAPH_COLORS[0],
-  reps: GRAPH_COLORS[0],
-  repsR: GRAPH_COLORS[0],
-  loadKg: GRAPH_COLORS[1],
-  loadKgR: GRAPH_COLORS[1],
-  loadRm: GRAPH_COLORS[2],
-  loadRmR: GRAPH_COLORS[2],
-  loadBw: GRAPH_COLORS[3],
-  loadBwR: GRAPH_COLORS[3],
+  loadKg: GRAPH_COLORS[0],
+  loadKgR: GRAPH_COLORS[0],
+  loadRm: GRAPH_COLORS[0],
+  loadRmR: GRAPH_COLORS[0],
+  loadBw: GRAPH_COLORS[0],
+  loadBwR: GRAPH_COLORS[0],
+  reps: GRAPH_COLORS[1],
+  repsR: GRAPH_COLORS[1],
+  sets: GRAPH_COLORS[2],
   tempo: GRAPH_COLORS[4],
   tempoR: GRAPH_COLORS[4],
   vel: GRAPH_COLORS[5],
@@ -54,7 +54,7 @@ export const graphColorMap: Record<ExerciseParamField, string> = {
   eff: GRAPH_COLORS[7],
 } as const;
 
-export const DEFAULT_CHART_PARAMS: ExerciseParamField[] = ['reps', 'loadKg'];
+export const DEFAULT_CHART_PARAMS: ExerciseParamField[] = ['loadKg', 'reps'];
 
 interface TrainingExerciseSelectedProps {
   supersetIndex: number;
@@ -75,15 +75,14 @@ export default function TrainingExerciseChart(
 
   const {
     chartData,
+    selectedParams,
+    setSelectedParams,
     range,
     setRange,
     max,
     paddingForChartBackground,
     percentageForChartBackground,
   } = useTrainingExerciseCardChart({ exercise });
-
-  const [selectedParams, setSelectedParams] =
-    useState<ExerciseParamField[]>(DEFAULT_CHART_PARAMS);
 
   const handleChange = (_event: Event, newValue: number | number[]) => {
     setRange(newValue as number[]);
