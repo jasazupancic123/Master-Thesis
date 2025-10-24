@@ -140,10 +140,6 @@ export default function AthleteWellnessForm({
           ))}
         </Box>
       </Box>
-
-      <Button variant="contained" onClick={() => onSubmit(state)}>
-        Submit
-      </Button>
     </Box>
   );
 }
