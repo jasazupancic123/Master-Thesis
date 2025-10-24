@@ -25,6 +25,13 @@ export function getAthleteChart(
   for (const t of data.trainings) {
     if (!t.membersIds.includes(athleteId)) continue;
 
+    const foundExercise = t.components
+      .find((c) => c.id === component.id)
+      ?.supersets.flatMap((s) => s.exercises)
+      .find((e) => e.id === exercise.id);
+
+    if (!foundExercise) continue; // do not add chart data for trainings without the exercise
+
     const workloads: Omit<Workload, 'id' | 'prescribed'>[] = [];
     const item: ChartWorkloadData = {
       trainingId: t.id,
@@ -44,13 +51,6 @@ export function getAthleteChart(
           w.componentId === component.id
       )
     );
-
-    const foundExercise = athleteTraining.components
-      .find((c) => c.id === component.id)
-      ?.supersets.flatMap((s) => s.exercises)
-      .find((e) => e.id === exercise.id);
-
-    if (!foundExercise) continue; // do not add chart data for trainings without the exercise
 
     for (let i = 0; i < (foundExercise.sets?.length || 0); i++) {
       const set = foundExercise.sets[i];
@@ -100,6 +100,19 @@ export function getGroupChart(
   const result: ChartWorkloadData[] = [];
 
   for (const t of data.trainings) {
+    const foundComponent = t.components.find((c) => c.id === component.id);
+
+    if (!foundComponent) continue;
+
+    const foundExercise = [
+      foundComponent.supersets,
+      foundComponent.subgroups.map((sg) => sg.supersets),
+    ]
+      .flat(2)
+      .find((e) => e.exercises.some((ex) => ex.id === exercise.id));
+
+    if (!foundExercise) continue; // do not add chart data for trainings without the exercise
+
     const workloads: Omit<Workload, 'id' | 'prescribed'>[] = [];
     const item: ChartWorkloadData = {
       trainingId: t.id,

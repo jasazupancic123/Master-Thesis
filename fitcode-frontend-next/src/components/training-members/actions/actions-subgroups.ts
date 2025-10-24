@@ -185,32 +185,38 @@ export function updateSelectedAthleteSubgroup(
     setSelectedAthlete,
   } = trainerDayViewCtx;
 
-  if (!component) return;
   if (subgroupId !== (selectedSubgroup?.id || DEFAULT_SUBGROUP_ID)) return;
 
-  const virtual =
-    core.training.subgroup.getVirtual(athlete.uid, component) ||
-    core.training.subgroup.createVirtual(athlete, selectedSubgroup, component);
-
-  const updatedComponent = structuredClone(component);
-  updatedComponent.subgroups = [
-    ...updatedComponent.subgroups.filter((s) => s.id !== virtual.id),
-    virtual,
-  ];
-
   setSelectedAthlete(athlete);
-  setSelectedSubgroup(virtual);
-  setComponent(updatedComponent);
-  setTraining((prev) =>
-    !prev
-      ? undefined
-      : {
-          ...prev,
-          components: prev.components.map((c) =>
-            c.id === updatedComponent.id ? updatedComponent : c
-          ),
-        }
-  );
+
+  if (component) {
+    const virtual =
+      core.training.subgroup.getVirtual(athlete.uid, component) ||
+      core.training.subgroup.createVirtual(
+        athlete,
+        selectedSubgroup,
+        component
+      );
+
+    const updatedComponent = structuredClone(component);
+    updatedComponent.subgroups = [
+      ...updatedComponent.subgroups.filter((s) => s.id !== virtual.id),
+      virtual,
+    ];
+
+    setSelectedSubgroup(virtual);
+    setComponent(updatedComponent);
+    setTraining((prev) =>
+      !prev
+        ? undefined
+        : {
+            ...prev,
+            components: prev.components.map((c) =>
+              c.id === updatedComponent.id ? updatedComponent : c
+            ),
+          }
+    );
+  }
 }
 
 export function handleDeleteSubgroup(

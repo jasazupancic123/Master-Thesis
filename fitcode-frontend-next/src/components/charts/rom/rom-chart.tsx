@@ -71,16 +71,18 @@ export default function RomChart({
 
   if (!currentSet.romL && !currentSet.romR) return null;
 
-  const dataset = (romR && romR.length > romL.length ? romR : romL)
-    .map((v, i) => ({
-      index: i,
-      valueL: romL[i],
-      valueR: romR ? romR[i] : undefined,
-      timestamp: currentSet.romL
-        ? new Date(currentSet.romL[i]?.timestamp)
-        : undefined,
-    }))
-    .filter((d) => d.valueL !== undefined || d.valueR !== undefined);
+  const dataset = (romR && romR.length > romL.length ? romR : romL).map(
+    (v, i) => {
+      const currentRom = currentSet.romL?.[i] || currentSet.romR?.[i];
+
+      return {
+        index: i,
+        valueL: romL[i],
+        valueR: romR ? romR[i] : undefined,
+        timestamp: currentRom ? new Date(currentRom.timestamp) : undefined,
+      };
+    }
+  );
 
   const SMOOTH = false;
 
@@ -141,7 +143,7 @@ export default function RomChart({
       ]}
       yAxis={[
         {
-          label: 'ROM (m)',
+          label: 'ROM',
         },
       ]}
       sx={{

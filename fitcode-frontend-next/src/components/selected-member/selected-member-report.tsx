@@ -14,7 +14,7 @@ export default function SelectedMemberReport() {
   const trainerDayViewContext = useTrainerDayView();
   const { component, training, selectedAthlete } = trainerDayViewContext;
 
-  if (!component || !training || !selectedAthlete) return null;
+  if (!selectedAthlete) return null;
 
   return (
     <Box
