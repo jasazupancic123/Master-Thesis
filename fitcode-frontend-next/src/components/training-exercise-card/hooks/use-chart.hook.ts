@@ -8,6 +8,8 @@ import type { Dimensions } from '@/lib/common/type/dimensions.type';
 import { useGroup } from '@/store/group.provider';
 import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
+import { ExerciseParamField } from '@/core/training/type/exercise-set.type';
+import { DEFAULT_CHART_PARAMS } from '../chart';
 
 interface Props {
   exercise: TrainingExercise;
@@ -31,6 +33,9 @@ export default function useTrainingExerciseCardChart({ exercise }: Props) {
     component,
   } = trainerDayViewContext;
 
+  const [selectedParams, setSelectedParams] =
+    useState<ExerciseParamField[]>(DEFAULT_CHART_PARAMS);
+
   const [chartData, setChartData] = useState<ChartWorkloadData[]>([]);
   const [max, setMax] = useState<number>(10);
   const [range, setRange] = useState<number[]>([1, 6]); // Example range
@@ -46,7 +51,10 @@ export default function useTrainingExerciseCardChart({ exercise }: Props) {
     if (exercise.id !== selectedExercise?.id || !training || !component) return;
 
     const chartData = !selectedAthlete
-      ? getGroupChart(exercise, component, training, { trainings })
+      ? getGroupChart(exercise, component, training, {
+          trainings,
+          selectedParams,
+        })
       : getAthleteChart(
           selectedAthlete.uid,
           exercise,
@@ -56,13 +64,14 @@ export default function useTrainingExerciseCardChart({ exercise }: Props) {
             trainings,
             workloads: selectedAthleteWorkloads,
             subgroup: trainerDayViewContext.selectedSubgroup,
+            selectedParams,
           }
         );
 
     setChartData(chartData);
     setMax(chartData.length);
     setRange([1, chartData.length]);
-  }, [selectedAthleteWorkloads, trainings]);
+  }, [selectedAthleteWorkloads, trainings, selectedParams]);
 
   useEffect(() => {
     // Set the percentage for the chart background (completed vs future) based on the range
@@ -115,6 +124,8 @@ export default function useTrainingExerciseCardChart({ exercise }: Props) {
   return {
     chartData,
     setChartData,
+    selectedParams,
+    setSelectedParams,
     percentageForChartBackground,
     setPercentageForChartBackground,
     paddingForChartBackground,
