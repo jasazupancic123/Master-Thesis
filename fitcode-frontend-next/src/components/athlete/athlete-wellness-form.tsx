@@ -1,4 +1,4 @@
-import { Box, Button, Divider } from '@mui/material';
+import { Box, Divider } from '@mui/material';
 
 import useTip from './hooks/use-tip';
 import UserWellnessSlider from './user-wellness-slider';

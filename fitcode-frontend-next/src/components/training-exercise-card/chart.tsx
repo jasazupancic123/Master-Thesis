@@ -10,7 +10,6 @@ import {
   Typography,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { useState } from 'react';
 import {
   Line,
   LineChart,
