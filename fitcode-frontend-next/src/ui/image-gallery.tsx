@@ -95,6 +95,7 @@ export default function ImageGallery(props: ImageGalleryProps) {
             alt="Exercise Image"
             width={width}
             height={0}
+            unoptimized
             layout="intrinsic"
           />
         )}
