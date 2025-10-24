@@ -258,7 +258,7 @@ async function handleCreateTraining(
   });
 
   if (periodTrainings.length >= 1)
-    return toast.error('You can only create 1 trainings per period');
+    return toast.error('Only 1 training per period allowed');
 
   const state = { trainings: [...trainings] };
   const tempId = 'training-id';

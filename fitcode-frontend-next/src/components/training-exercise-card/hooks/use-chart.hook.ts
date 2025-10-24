@@ -52,7 +52,9 @@ export default function useTrainingExerciseCardChart({ exercise }: Props) {
 
     const chartData = !selectedAthlete
       ? getGroupChart(exercise, component, training, {
-          trainings,
+          trainings: trainings.map((t) =>
+            t.id === training.id ? training : t
+          ),
           selectedParams,
         })
       : getAthleteChart(
@@ -61,7 +63,9 @@ export default function useTrainingExerciseCardChart({ exercise }: Props) {
           component,
           core.training.getAthleteTraining(selectedAthlete.uid, training),
           {
-            trainings,
+            trainings: trainings.map((t) =>
+              t.id === training.id ? training : t
+            ),
             workloads: selectedAthleteWorkloads,
             subgroup: trainerDayViewContext.selectedSubgroup,
             selectedParams,

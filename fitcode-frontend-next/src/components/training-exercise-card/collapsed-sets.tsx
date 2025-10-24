@@ -69,6 +69,7 @@ export default function TrainingExerciseCardCollapsedSets(
     <Grid2
       key={componentIndex}
       container
+      spacing={1}
       columns={11}
       px={screenSize.isSmallerThanLaptop ? 1 : 0}
     >
@@ -82,7 +83,10 @@ export default function TrainingExerciseCardCollapsedSets(
         >
           <IconButton
             disableRipple
-            sx={{ p: 0, m: 0 }}
+            sx={{
+              p: 0,
+              m: 0,
+            }}
             onClick={() => setExpandedSetsView(!expandedSetsView)}
           >
             <KeyboardArrowRightIcon
@@ -95,8 +99,12 @@ export default function TrainingExerciseCardCollapsedSets(
               }}
             />
           </IconButton>
-
-          <Box display="flex" flexDirection="column" gap={0.8}>
+          <Box
+            key="exercise-title"
+            display="flex"
+            flexDirection="column"
+            gap={1}
+          >
             {uni ? (
               <>
                 <LeftRightExerciseText key="L" title="L" />
@@ -111,131 +119,32 @@ export default function TrainingExerciseCardCollapsedSets(
         </Box>
       </Grid2>
 
-      <Grid2 size={10} mt={uni ? -1.5 : 0}>
+      <Grid2 size={10} spacing={10}>
         <Box
-          display="flex"
+          key={exercise.id}
           width="100%"
-          justifyContent="center"
-          alignItems={uni ? 'center' : 'flex-start'}
-          gap={1}
-          sx={{ height: 77 }}
+          display="flex"
+          flexDirection="column"
+          gap={2}
+          minHeight={80}
         >
-          <NumberExerciseParam
-            options={[SETS]}
-            selected={SETS.field}
-            value={exercise.sets.length}
-            showOptions
-            exercise={exercise}
-            disableOptions={!!selectedAthlete}
-            onInputChange={(value) => {
-              supersetsContext.updateTrainingExerciseParam(
-                exercise,
-                'sets',
-                +value
-              );
-            }}
-          />
-
-          <NumberExerciseParam
-            options={[REPS]}
-            selected={REPS.field}
-            value={exercise.sets[0]?.reps}
-            showOptions
-            exercise={exercise}
-            disableOptions={!!selectedAthlete}
-            onInputChange={(value) => {
-              supersetsContext.updateTrainingExerciseParam(
-                exercise,
-                'reps',
-                +value
-              );
-            }}
-          />
-
-          <NumberExerciseParam
-            options={[KG, RM, BW]}
-            selected={loadType}
-            value={exercise.sets[0]?.[loadType] as number}
-            showOptions
-            exercise={exercise}
-            disableOptions={!!selectedAthlete}
-            onSelectChange={(selected) => {
-              // update load type
-              const field = selected.toString() as LoadType;
-              const value = core.exercise.param.get(field)
-                ?.defaultValue as number;
-
-              supersetsContext.updateTrainingExerciseParam(
-                exercise,
-                'loadType' as ExerciseParamField,
-                field
-              );
-
-              supersetsContext.updateTrainingExerciseParam(
-                exercise,
-                field,
-                value
-              );
-            }}
-            onInputChange={(value) => {
-              supersetsContext.updateTrainingExerciseParam(
-                exercise,
-                loadType,
-                +value
-              );
-            }}
-          />
-
-          <TempoExerciseParam
-            options={[TEMPO]}
-            selected={TEMPO.field}
-            value={exercise.sets[0]?.tempo || ''}
-            showOptions
-            exercise={exercise}
-            disableOptions={!!selectedAthlete}
-            onInputChange={(value) => {
-              supersetsContext.updateTrainingExerciseParam(
-                exercise,
-                'tempo',
-                value.toString()
-              );
-            }}
-          />
-
-          <NumberExerciseParam
-            options={[REC_TIME]}
-            selected={REC_TIME.field}
-            value={exercise.sets[0].recTime}
-            showOptions
-            exercise={exercise}
-            disableOptions={!!selectedAthlete}
-            onInputChange={(value) => {
-              supersetsContext.updateTrainingExerciseParam(
-                exercise,
-                'recTime',
-                +value
-              );
-            }}
-          />
-        </Box>
-
-        {/* Show secondary side if unilateral exercise */}
-        {uni && (
           <Box
             display="flex"
             width="100%"
             justifyContent="center"
-            alignItems={uni ? 'center' : 'flex-start'}
+            alignItems={'flex-start'}
             gap={1}
-            mt={-5}
-            sx={{ height: 77 }}
+            sx={{
+              height: 77,
+            }}
           >
             <NumberExerciseParam
               options={[SETS]}
               selected={SETS.field}
               value={exercise.sets.length}
+              showOptions
               exercise={exercise}
-              showOptions={false}
+              disableOptions={!!selectedAthlete}
               onInputChange={(value) => {
                 supersetsContext.updateTrainingExerciseParam(
                   exercise,
@@ -248,13 +157,14 @@ export default function TrainingExerciseCardCollapsedSets(
             <NumberExerciseParam
               options={[REPS]}
               selected={REPS.field}
-              value={exercise.sets[0]?.repsR || exercise.sets[0]?.reps}
+              value={exercise.sets[0]?.reps}
+              showOptions
               exercise={exercise}
-              showOptions={false}
+              disableOptions={!!selectedAthlete}
               onInputChange={(value) => {
                 supersetsContext.updateTrainingExerciseParam(
                   exercise,
-                  'repsR',
+                  'reps',
                   +value
                 );
               }}
@@ -263,18 +173,32 @@ export default function TrainingExerciseCardCollapsedSets(
             <NumberExerciseParam
               options={[KG, RM, BW]}
               selected={loadType}
-              value={
-                exercise.sets[0]?.[`${loadType}R`] ||
-                exercise.sets[0]?.[loadType] ||
-                0
-              }
-              showOptions={false}
+              value={exercise.sets[0]?.[loadType] as number}
+              showOptions
               exercise={exercise}
               disableOptions={!!selectedAthlete}
+              onSelectChange={(selected) => {
+                // update load type
+                const field = selected.toString() as LoadType;
+                const value = core.exercise.param.get(field)
+                  ?.defaultValue as number;
+
+                supersetsContext.updateTrainingExerciseParam(
+                  exercise,
+                  'loadType' as ExerciseParamField,
+                  field
+                );
+
+                supersetsContext.updateTrainingExerciseParam(
+                  exercise,
+                  field,
+                  value
+                );
+              }}
               onInputChange={(value) => {
                 supersetsContext.updateTrainingExerciseParam(
                   exercise,
-                  `${loadType}R`,
+                  loadType,
                   +value
                 );
               }}
@@ -283,14 +207,14 @@ export default function TrainingExerciseCardCollapsedSets(
             <TempoExerciseParam
               options={[TEMPO]}
               selected={TEMPO.field}
-              value={exercise.sets[0]?.tempoR || exercise.sets[0]?.tempo || ''}
-              showOptions={false}
+              value={exercise.sets[0]?.tempo || ''}
+              showOptions
               exercise={exercise}
               disableOptions={!!selectedAthlete}
               onInputChange={(value) => {
                 supersetsContext.updateTrainingExerciseParam(
                   exercise,
-                  'tempoR',
+                  'tempo',
                   value.toString()
                 );
               }}
@@ -300,7 +224,7 @@ export default function TrainingExerciseCardCollapsedSets(
               options={[REC_TIME]}
               selected={REC_TIME.field}
               value={exercise.sets[0].recTime}
-              showOptions={false}
+              showOptions
               exercise={exercise}
               disableOptions={!!selectedAthlete}
               onInputChange={(value) => {
@@ -312,7 +236,103 @@ export default function TrainingExerciseCardCollapsedSets(
               }}
             />
           </Box>
-        )}
+
+          {/* Show secondary side if unilateral exercise */}
+          {uni && (
+            <Box
+              display="flex"
+              width="100%"
+              justifyContent="center"
+              alignItems={uni ? 'center' : 'flex-start'}
+              gap={1}
+              mt={-5}
+            >
+              <NumberExerciseParam
+                options={[SETS]}
+                selected={SETS.field}
+                value={exercise.sets.length}
+                exercise={exercise}
+                showOptions={false}
+                onInputChange={(value) => {
+                  supersetsContext.updateTrainingExerciseParam(
+                    exercise,
+                    'sets',
+                    +value
+                  );
+                }}
+              />
+
+              <NumberExerciseParam
+                options={[REPS]}
+                selected={REPS.field}
+                value={exercise.sets[0]?.repsR || exercise.sets[0]?.reps}
+                exercise={exercise}
+                showOptions={false}
+                onInputChange={(value) => {
+                  supersetsContext.updateTrainingExerciseParam(
+                    exercise,
+                    'repsR',
+                    +value
+                  );
+                }}
+              />
+
+              <NumberExerciseParam
+                options={[KG, RM, BW]}
+                selected={loadType}
+                value={
+                  exercise.sets[0]?.[`${loadType}R`] ||
+                  exercise.sets[0]?.[loadType] ||
+                  0
+                }
+                showOptions={false}
+                exercise={exercise}
+                disableOptions={!!selectedAthlete}
+                onInputChange={(value) => {
+                  supersetsContext.updateTrainingExerciseParam(
+                    exercise,
+                    `${loadType}R`,
+                    +value
+                  );
+                }}
+              />
+
+              <TempoExerciseParam
+                options={[TEMPO]}
+                selected={TEMPO.field}
+                value={
+                  exercise.sets[0]?.tempoR || exercise.sets[0]?.tempo || ''
+                }
+                showOptions={false}
+                exercise={exercise}
+                disableOptions={!!selectedAthlete}
+                onInputChange={(value) => {
+                  supersetsContext.updateTrainingExerciseParam(
+                    exercise,
+                    'tempoR',
+                    value.toString()
+                  );
+                }}
+              />
+
+              <NumberExerciseParam
+                options={[REC_TIME]}
+                selected={REC_TIME.field}
+                value={exercise.sets[0].recTime}
+                showOptions={false}
+                exercise={exercise}
+                disableOptions={!!selectedAthlete}
+                onInputChange={(value) => {
+                  supersetsContext.updateTrainingExerciseParam(
+                    exercise,
+                    'recTime',
+                    +value
+                  );
+                }}
+              />
+            </Box>
+          )}
+        </Box>
       </Grid2>
     </Grid2>
   );
