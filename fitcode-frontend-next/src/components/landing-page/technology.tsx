@@ -311,6 +311,7 @@ export default function Technology(props: TechnologyProps) {
             alt="Aspire"
             width={initialAspireLogoWidth}
             height={0}
+            unoptimized
             style={{
               height: 'auto',
             }}

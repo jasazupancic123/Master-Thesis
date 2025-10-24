@@ -106,6 +106,7 @@ export default function ImageUpload({
               alt="Preview"
               width={size}
               height={size}
+              unoptimized
               style={{
                 objectFit: 'cover',
                 borderRadius: round ? '50%' : undefined,

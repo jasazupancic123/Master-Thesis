@@ -49,6 +49,7 @@ export default function AboutUs() {
           fill
           priority
           sizes="100vw"
+          unoptimized
           style={{ objectFit: 'cover' }}
         />
 
@@ -168,6 +169,7 @@ export default function AboutUs() {
           alt="Aspire"
           width={initialAspireLogoWidth}
           height={0}
+          unoptimized
           style={{
             height: 'auto',
             position: 'absolute',

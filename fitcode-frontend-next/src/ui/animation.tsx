@@ -56,6 +56,7 @@ export default function Animation({ duration = 6000 }: Props) {
           width={screenSize.isMobile ? 200 : 400}
           height={0}
           layout="intrinsic"
+          unoptimized
         />
       </motion.div>
       <motion.div
