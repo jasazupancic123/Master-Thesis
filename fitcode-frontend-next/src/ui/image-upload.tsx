@@ -1,3 +1,4 @@
+import { lib } from '@/lib';
 import { Box, Typography } from '@mui/material';
 import Image from 'next/image';
 import { useCallback, useEffect, useState } from 'react';
@@ -106,7 +107,7 @@ export default function ImageUpload({
               alt="Preview"
               width={size}
               height={size}
-              unoptimized
+              unoptimized={lib.common.env.unoptimizeImages()}
               style={{
                 objectFit: 'cover',
                 borderRadius: round ? '50%' : undefined,

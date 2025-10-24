@@ -9,6 +9,7 @@ import {
 import { HERO_NAVBAR_HEIGHT } from '@/lib/common/const/state';
 import { useScreenSize } from '@/store/screen-size.provider';
 import IndexPageTitleText from '@/ui/index-page-title-text';
+import { lib } from '@/lib';
 
 export default function AboutUs() {
   const screenSize = useScreenSize();
@@ -49,7 +50,7 @@ export default function AboutUs() {
           fill
           priority
           sizes="100vw"
-          unoptimized
+          unoptimized={lib.common.env.unoptimizeImages()}
           style={{ objectFit: 'cover' }}
         />
 
@@ -169,7 +170,7 @@ export default function AboutUs() {
           alt="Aspire"
           width={initialAspireLogoWidth}
           height={0}
-          unoptimized
+          unoptimized={lib.common.env.unoptimizeImages()}
           style={{
             height: 'auto',
             position: 'absolute',
