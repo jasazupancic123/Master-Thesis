@@ -40,6 +40,7 @@ export default function ImagePickerSlider({
           height={0}
           unoptimized={lib.common.env.unoptimizeImages()}
           layout="intrinsic"
+          unoptimized
           onClick={() => onClick(index)}
           style={{
             border:
