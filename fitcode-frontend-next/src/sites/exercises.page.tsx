@@ -29,8 +29,8 @@ import ExerciseChips from '@/components/exercise-chips/exercise-chips';
 import ExerciseModal from '@/components/exercise-modal/exercise-modal';
 import ExerciseFilter from '@/components/exercises-list/exercise-filter';
 import ExercisesList from '@/components/exercises-list/exercises-list';
-import { core } from '@/core/core.service';
 import type { Component } from '@/core/component/type/component.type';
+import { core } from '@/core/core.service';
 import type {
   CreateExerciseMuscleValues,
   Exercise,

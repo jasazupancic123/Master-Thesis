@@ -1,12 +1,12 @@
 import { core } from '@/core/core.service';
 import { SetStatus } from '@/core/training/enum/set-status.enum';
 import type { ChartWorkloadData } from '@/core/training/type/chart-workload-data.type';
+import type { ExerciseParamField } from '@/core/training/type/exercise-set.type';
 import type { Subgroup } from '@/core/training/type/subgroup.type';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { Workload } from '@/core/training/type/workload.type';
-import { ExerciseParamField } from '@/core/training/type/exercise-set.type';
 
 export function getAthleteChart(
   athleteId: string,
@@ -208,7 +208,7 @@ function getAggregatedWorkloadValues(
 
   const w = workloads[0];
 
-  let intField: string | undefined = w
+  const intField: string | undefined = w
     ? w.loadKg
       ? 'Kg'
       : w.loadRm

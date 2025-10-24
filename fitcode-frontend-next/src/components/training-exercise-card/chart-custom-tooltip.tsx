@@ -5,7 +5,6 @@ import type { TooltipContentProps } from 'recharts';
 import { DEFAULT_CHART_PARAMS, graphColorMap } from './chart';
 import { theme } from '@/app/style';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
-import { ExerciseParamField } from '@/core/training/type/exercise-set.type';
 
 export default function CustomTooltip({
   active,

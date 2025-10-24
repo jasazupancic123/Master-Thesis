@@ -1,12 +1,12 @@
-import type { SvgIconComponent } from '@mui/icons-material';
-import { SvgIconProps, Tooltip, Typography } from '@mui/material';
+import type { SvgIconProps } from '@mui/material';
+import { Tooltip, Typography } from '@mui/material';
 import Box from '@mui/material/Box';
-import React, { ElementType, useRef } from 'react';
+import type { ElementType } from 'react';
+import React, { useRef } from 'react';
 import toast from 'react-hot-toast';
 
 import useTrainingCycleComponents from './hooks/use-components';
 import type { TrainingCycleViewGridItemProps } from './types/type';
-import type { SvgC } from '@/components/muscle-map-with-tooltip/muscle-map-with-tooltip';
 import { lib } from '@/lib';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';

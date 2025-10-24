@@ -11,8 +11,8 @@ import {
 import React, { useState } from 'react';
 
 import type { AttributeDropdownProps } from './type';
-import { core } from '@/core/core.service';
 import type { Attribute } from '@/core/attribute/type/attribute.type';
+import { core } from '@/core/core.service';
 
 export default function AttributeFilterSelect({
   attributes,
