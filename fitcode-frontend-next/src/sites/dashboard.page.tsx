@@ -109,23 +109,25 @@ export default function DashboardPage() {
           }}
           gap={1}
         >
-          {role && lib.firebase.auth.isTrainer(role) && (
-            <Tooltip title="Go to group" placement="top">
-              <Fab
-                color="primary"
-                aria-label="go"
-                onClick={() => {
-                  if (selectedGroup)
-                    redirect(
-                      LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS(selectedGroup.id)
-                        .home.href
-                    );
-                }}
-              >
-                <ArrowForward />
-              </Fab>
-            </Tooltip>
-          )}
+          {role &&
+            (lib.firebase.auth.isTrainer(role) ||
+              lib.firebase.auth.isManager(role)) && (
+              <Tooltip title="Go to group" placement="top">
+                <Fab
+                  color="primary"
+                  aria-label="go"
+                  onClick={() => {
+                    if (selectedGroup)
+                      redirect(
+                        LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS(selectedGroup.id)
+                          .home.href
+                      );
+                  }}
+                >
+                  <ArrowForward />
+                </Fab>
+              </Tooltip>
+            )}
         </Box>
 
         <DashboardGroups />

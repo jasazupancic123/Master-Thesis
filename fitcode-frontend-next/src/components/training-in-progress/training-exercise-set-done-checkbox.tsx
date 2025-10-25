@@ -86,7 +86,10 @@ export default function TrainingExerciseSetDoneCheckbox(
       if (firstExercise.sets.length < setIndex + 2) return;
 
       setSelectedExercise(firstExercise);
-      setSetIndex((prev) => (prev !== undefined ? prev + 1 : 0));
+
+      const newSetIndex = setIndex + 1;
+      if (firstExercise.sets.length > newSetIndex) setSetIndex(newSetIndex);
+      else setSetIndex(0);
 
       return;
     } else {
@@ -101,6 +104,8 @@ export default function TrainingExerciseSetDoneCheckbox(
           : undefined;
 
       if (!nextExercise) return;
+
+      if (nextExercise.sets.length <= setIndex) setSetIndex(0);
 
       setSelectedExercise(nextExercise);
     }
