@@ -212,9 +212,9 @@ export default function TrainingInProgressExerciseCard() {
             flexDirection="column"
             sx={{
               position: 'absolute',
-              top: 5,
+              top: 0,
               left: 0,
-              transform: 'translate(50%, 0)',
+              backgroundColor: theme.palette.background.default,
             }}
             gap={2}
           >
@@ -229,29 +229,24 @@ export default function TrainingInProgressExerciseCard() {
                 return (
                   <Typography
                     key={index}
-                    display="flex"
-                    alignItems="center"
+                    fontSize={screenSize.isUltraSmall ? 12 : 14}
                     fontWeight={600}
                     color={isSelected ? theme.palette.primary.main : undefined}
-                    lineHeight={1}
-                    gap={0.5}
+                    lineHeight={1.1}
                     onClick={() => {
                       const exerciseToSelect =
                         selectedSuperset.exercises[index];
-                      if (exerciseToSelect)
+                      if (exerciseToSelect) {
                         setSelectedExercise(exerciseToSelect);
+                        setSetIndex(0);
+                      }
                     }}
                     sx={{
                       textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
-                      pr: 1.5,
+                      px: 1.5,
                     }}
                   >
                     {letter}
-                    {isSelected && (
-                      <Circle
-                        sx={{ color: theme.palette.primary.main, fontSize: 10 }}
-                      />
-                    )}
                   </Typography>
                 );
               }

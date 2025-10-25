@@ -1,6 +1,6 @@
 import { Box, Card, Typography } from '@mui/material';
 import Image from 'next/image';
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import type { Exercise } from '@/core/exercise/type/exercise.type';
 import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
