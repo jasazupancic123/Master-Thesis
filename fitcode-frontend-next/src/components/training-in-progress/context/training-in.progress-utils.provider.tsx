@@ -24,7 +24,7 @@ export interface ITrainingInProgressUtilsCtx {
   handleOpenMenu: (event: React.MouseEvent<HTMLElement>) => void;
   handleCloseMenu: () => void;
   handleCancel: () => void;
-  handleCancelTraining: () => void;
+  handleCancelTraining: () => Promise<void>;
   formatTime: (seconds: number) => string;
 }
 
@@ -57,6 +57,7 @@ export function TrainingInProgressUtilsProvider({
   useEffect(() => {
     if (!trainingInProgress) return;
     if (!trainingInProgress.startOfTraining) {
+      console.log('set training in progress 1');
       setTrainingInProgress(
         (prev) => ({ ...prev, startOfTraining: dayjs() }) as TrainingInProgress
       );
@@ -71,8 +72,8 @@ export function TrainingInProgressUtilsProvider({
     return () => clearInterval(interval);
   }, [trainingInProgress?.startOfTraining]);
 
-  const handleCancelTraining = () => {
-    clearTrainingState();
+  const handleCancelTraining = async () => {
+    await clearTrainingState();
     setView(ExerciseTrainingView.ExerciseView);
     setElapsedTime(0);
     setSelectedSuperset(undefined);

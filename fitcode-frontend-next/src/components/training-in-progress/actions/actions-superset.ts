@@ -59,7 +59,7 @@ export function handleChangeSuperset(
   );
 }
 
-export const handleFinishSuperset = (context: {
+export const handleFinishSuperset = async (context: {
   useTraining: ITrainingContextDefined;
   useTrainingInProgress: ITrainingInProgressContext;
   useTrainingInProgressUtils: ITrainingInProgressUtilsCtx;
@@ -113,5 +113,5 @@ export const handleFinishSuperset = (context: {
     return;
   }
 
-  handleCancelTraining();
+  await handleCancelTraining();
 };

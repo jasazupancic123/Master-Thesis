@@ -15,8 +15,8 @@ export default function CancelTrainingModal(props: ModalProps) {
       setIsOpen={setOpen}
       cancelText="Cancel"
       onCancel={() => setOpen(false)}
-      onConfirm={() => {
-        handleCancelTraining();
+      onConfirm={async () => {
+        await handleCancelTraining();
         setOpen(false);
       }}
     >

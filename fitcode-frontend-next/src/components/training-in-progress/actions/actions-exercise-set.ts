@@ -133,6 +133,7 @@ export const markExerciseSetAsCompleted = (
 
   setTrainingInProgress((prev) => {
     if (!prev) return prev;
+
     return {
       ...prev,
       exerciseSetTrackingState,

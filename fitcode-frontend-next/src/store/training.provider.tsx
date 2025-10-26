@@ -12,6 +12,7 @@ import type {
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
 import type { TrainingReport } from '@/core/training/type/training-report.type';
 import { type SetState } from '@/lib/common/type/state.type';
+import { lib } from '@/lib';
 
 type ExerciseOrTraining =
   (typeof ExerciseTrainingView)[keyof typeof ExerciseTrainingView];
@@ -23,7 +24,7 @@ export interface TrainingProviderProps {
 }
 
 interface ITrainingContext extends TrainingProviderProps {
-  clearTrainingState: () => void;
+  clearTrainingState: () => Promise<void>;
   trainingInProgress: TrainingInProgress | null;
   setTrainingInProgress: SetState<TrainingInProgress | null>;
   view: ExerciseOrTraining;
@@ -60,42 +61,67 @@ export const TrainingProvider = (
   const { user } = useAuthenticatedAuth();
 
   useEffect(() => {
-    const storedTrainingInProgress = localStorage.getItem(
-      STORED_TRAINING_IN_PROGRESS
-    );
+    // const storedTrainingInProgress = localStorage.getItem(
+    //   STORED_TRAINING_IN_PROGRESS
+    // );
 
-    if (storedTrainingInProgress) {
-      const parsedTrainingInProgress = JSON.parse(
-        storedTrainingInProgress
-      ) as TrainingInProgress;
+    const setupTrainingInProgress = async () => {
+      const storedTrainingInProgress = await lib.common.indexedDb.items.get(
+        STORED_TRAINING_IN_PROGRESS
+      );
 
-      if (parsedTrainingInProgress.userId !== user?.uid) {
-        clearTrainingState();
-        setIsLoaded(true);
-        return;
+      console.log({ storedTrainingInProgress });
+
+      if (storedTrainingInProgress) {
+        const parsedTrainingInProgress = JSON.parse(
+          storedTrainingInProgress.payload
+        ) as TrainingInProgress;
+
+        if (parsedTrainingInProgress.userId !== user?.uid) {
+          await clearTrainingState();
+          setIsLoaded(true);
+          return;
+        }
+
+        console.log('set training in progress 9');
+        setTrainingInProgress({ ...parsedTrainingInProgress });
       }
 
-      setTrainingInProgress({ ...parsedTrainingInProgress });
-    }
+      setIsLoaded(true);
+    };
 
-    setIsLoaded(true);
+    setupTrainingInProgress();
   }, [user]);
 
   useEffect(() => {
     if (!trainingInProgress) return;
 
-    if (trainingInProgress.startOfTraining) {
-      localStorage.setItem(
-        STORED_TRAINING_IN_PROGRESS,
-        JSON.stringify(trainingInProgress)
-      );
-    }
+    const storeTrainingInProgress = async () => {
+      if (trainingInProgress.startOfTraining) {
+        // localStorage.setItem(
+        //   STORED_TRAINING_IN_PROGRESS,
+        //   JSON.stringify(trainingInProgress)
+        // );
+
+        // console.log('storing training in progress', trainingInProgress);
+
+        await lib.common.indexedDb.items.put({
+          id: STORED_TRAINING_IN_PROGRESS,
+          payload: JSON.stringify(trainingInProgress),
+          updatedAt: Date.now(),
+        });
+      }
+    };
+
+    storeTrainingInProgress();
   }, [trainingInProgress, isLoaded]);
 
-  const clearTrainingState = () => {
+  const clearTrainingState = async () => {
+    console.log('set training in progress 10');
     setTrainingInProgress(null);
     setView(ExerciseTrainingView.ExerciseView);
-    localStorage.removeItem(STORED_TRAINING_IN_PROGRESS);
+    // localStorage.removeItem(STORED_TRAINING_IN_PROGRESS);
+    await lib.common.indexedDb.items.delete(STORED_TRAINING_IN_PROGRESS);
   };
 
   const updateTrainingInProgress = (
@@ -104,7 +130,7 @@ export const TrainingProvider = (
   ) => {
     if (!trainingInProgress) return;
 
-    setTrainingInProgress({
+    const newTrainingInProgress = {
       ...trainingInProgress,
       selectedComponent: {
         ...trainingInProgress.selectedComponent,
@@ -127,7 +153,9 @@ export const TrainingProvider = (
             }
           : superset
       ),
-    });
+    };
+
+    setTrainingInProgress(newTrainingInProgress);
   };
 
   return (
