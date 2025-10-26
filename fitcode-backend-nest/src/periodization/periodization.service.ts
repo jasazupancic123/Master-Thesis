@@ -5,6 +5,7 @@ import type {
   SubgroupRef,
   TrainingComponentRef,
 } from '@src/common/type/firestore.type';
+import { ExerciseParamService } from '@src/exercise/service/exercise-param.service';
 import { MAIN_GROUP_PARENT_ID } from '@src/training/constant/main-group-parent-id.constant';
 import {
   MAX_NUM_EXERCISES_IN_BLOCK_SUPERSET,
@@ -35,7 +36,10 @@ import { WeekUndulatingPeriodizationStrategy } from './strategy/periodization-we
 export class PeriodizationService {
   private strategiesMap = new Map<PeriodizationType, PeriodizationStrategy>();
 
-  constructor(private readonly common: CommonService) {
+  constructor(
+    private readonly common: CommonService,
+    private readonly exerciseParamService: ExerciseParamService,
+  ) {
     const strategies: PeriodizationStrategy[] = [
       new ReplicatePeriodizationStrategy(),
       new LinearPeriodizationStrategy(),
@@ -157,6 +161,7 @@ export class PeriodizationService {
               for (const lr of ['L', 'R'] as const) {
                 const baseIntensity = lr === 'L' ? baseIntL : baseIntR;
                 const baseVolume = lr === 'L' ? baseVolL : baseVolR;
+
                 const prevInt = lr === 'L' ? prevIntL : prevIntR;
                 const prevVol = lr === 'L' ? prevVolL : prevVolR;
 
@@ -175,13 +180,13 @@ export class PeriodizationService {
                 const foundInt = this.getIntParamValue(lr, set);
                 const foundVol = this.getVolParamValue(lr, set);
 
-                if (foundInt) {
-                  set[foundInt.field] = intensity as never;
+                if (foundInt && intensity) {
+                  set[foundInt.field] = +intensity as never;
                   updatePreviousValue(prevInt, intensity);
                 }
 
-                if (foundVol) {
-                  set[foundVol.field] = volume as never;
+                if (foundVol && volume) {
+                  set[foundVol.field] = +volume as never;
                   updatePreviousValue(prevVol, volume);
                 }
 
@@ -304,7 +309,6 @@ export class PeriodizationService {
     // fill the trainings in weeks
     for (const training of trainings) {
       const weekIndex = this.common.date.getIsoWeek(training.from) - startWeek;
-
       if (weekIndex >= 0 && weekIndex < weeks.length)
         weeks[weekIndex].push(training);
     }
@@ -338,13 +342,6 @@ export class PeriodizationService {
             ? 'loadRm'
             : undefined;
 
-      const loadFieldR =
-        loadField === 'loadRm'
-          ? 'loadRmR'
-          : loadField === 'loadBw'
-            ? 'loadBwR'
-            : 'loadKgR';
-
       const volField = !this.common.object.isEmpty(s.reps)
         ? 'reps'
         : !this.common.object.isEmpty(s.time)
@@ -353,8 +350,8 @@ export class PeriodizationService {
             ? 'dist'
             : undefined;
 
-      const volFieldR =
-        volField === 'reps' ? 'repsR' : volField === 'time' ? 'time' : 'dist';
+      const loadFieldR = this.exerciseParamService.getPair(loadField);
+      const volFieldR = this.exerciseParamService.getPair(volField);
 
       return {
         setIndex,
@@ -380,17 +377,8 @@ export class PeriodizationService {
           ? 'loadRm'
           : undefined;
 
-    const loadFieldR: ExerciseParamField = !this.common.object.isEmpty(
-      set.loadKgR,
-    )
-      ? 'loadKgR'
-      : !this.common.object.isEmpty(set.loadBwR)
-        ? 'loadBwR'
-        : !this.common.object.isEmpty(set.loadRmR)
-          ? 'loadRmR'
-          : undefined;
-
-    if (!loadFieldL || !loadFieldR) return undefined;
+    if (!loadFieldL) return undefined;
+    const loadFieldR = this.exerciseParamService.getPair(loadFieldL);
 
     return {
       field: lr === 'L' ? loadFieldL : loadFieldR,
@@ -410,15 +398,8 @@ export class PeriodizationService {
           ? 'dist'
           : undefined;
 
-    const volFieldR = !this.common.object.isEmpty(set.repsR)
-      ? 'repsR'
-      : !this.common.object.isEmpty(set.time)
-        ? 'time'
-        : !this.common.object.isEmpty(set.dist)
-          ? 'dist'
-          : undefined;
-
-    if (!volFieldL || !volFieldR) return undefined;
+    if (!volFieldL) return undefined;
+    const volFieldR = this.exerciseParamService.getPair(volFieldL);
 
     return {
       field: lr === 'L' ? volFieldL : volFieldR,
