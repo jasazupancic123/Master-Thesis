@@ -38,9 +38,6 @@ function IsoOverlayDual({
 
   const bw = (xScale as any).bandwidth();
 
-  const groupCount = 2; // L and R
-  const groupWidth = bw / groupCount;
-
   return (
     <g pointerEvents="none">
       {rows.map((r) => {
@@ -48,8 +45,15 @@ function IsoOverlayDual({
         if (xBase === null) return null;
 
         // Centers for L then R:
+
+        const isoVals = [r.isometricL, r.isometricR].filter(
+          (v) => v !== undefined
+        ) as number[];
+
+        const groupCount = isoVals.length;
+        const groupWidth = bw / groupCount;
+
         const centers = [xBase + groupWidth * 0.5, xBase + groupWidth * 1.5];
-        const isoVals = [r.isometricL ?? 0, r.isometricR ?? 0];
 
         return (
           <g key={r.label}>
@@ -61,6 +65,8 @@ function IsoOverlayDual({
               // keep your two-layer line; you can tweak stroke for R if you want
               const outerColor = theme.palette.background.lightBorder;
               const innerColor = theme.palette.background.default;
+
+              if (isNaN(xCenter) || !yIso) return null;
 
               return (
                 <g key={`${r.label}-${idx}`}>

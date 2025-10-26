@@ -53,7 +53,6 @@ export default function UndoneExercisesList() {
                   exercise={exercise}
                   selectedSuperset={selectedSuperset!}
                   setSelectedSuperset={() => {}}
-                  isUnilateral={exercise.exercise?.isUnilateral || false}
                   showDoneCheckbox
                 />
               );
