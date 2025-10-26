@@ -50,10 +50,7 @@ export default function AthleteTrainingExerciseSets({
   const { updateTrainingInProgress } = useTraining();
 
   const uni = exercise.exercise?.isUnilateral;
-  const loadType = core.training.set.getLoadType(exercise.sets[0]);
-  const volType = core.training.set.getVolType(exercise.sets[0]);
   const effType = core.training.set.getEffType(exercise.sets[0]);
-  const recType = core.training.set.getRecType(exercise.sets[0]);
 
   return (
     <Box

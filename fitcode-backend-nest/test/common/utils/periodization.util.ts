@@ -44,21 +44,18 @@ export class TestPeriodizationUtil {
       generateExerciseSet(3, { reps: 10 }),
     ];
 
-    // different param values for left and right side
-    const SETS_LR_DIFFERENT = [
-      generateExerciseSet(1, { reps: 10, repsR: 12, loadKg: 30, loadKgR: 34 }),
-      generateExerciseSet(2, { reps: 10, repsR: 12, loadKg: 30, loadKgR: 34 }),
-      generateExerciseSet(3, { reps: 10, repsR: 12, loadKg: 30, loadKgR: 34 }),
+    const SETS_NO_VOL = [
+      generateExerciseSet(1, { loadKg: 50 }),
+      generateExerciseSet(2, { loadKg: 50 }),
+      generateExerciseSet(3, { loadKg: 50 }),
     ];
 
-    let i = 0;
-    for (const set of SETS_LR_DIFFERENT) {
-      set.reps = 20 + i;
-      set.loadKg = 30 + i;
-      set.repsR = 22 + i;
-      set.loadKgR = 34 + i;
-      i++;
-    }
+    // different param values for left and right side
+    const SETS_LR_DIFFERENT = [
+      generateExerciseSet(1, { reps: 20, repsR: 22, loadKg: 30, loadKgR: 34 }),
+      generateExerciseSet(2, { reps: 21, repsR: 23, loadKg: 31, loadKgR: 35 }),
+      generateExerciseSet(3, { reps: 22, repsR: 24, loadKg: 32, loadKgR: 36 }),
+    ];
 
     const baseDay = nextWednesday(new Date());
     return generateTrainingStub({
@@ -74,7 +71,7 @@ export class TestPeriodizationUtil {
                 generateTrainingExercise({ id: 'e1', sets: SETS_ALL_PARAMS }),
                 generateTrainingExercise({ id: 'e2', sets: SETS_ALL_PARAMS }),
                 generateTrainingExercise({ id: 'no-int', sets: SETS_NO_INT }),
-                generateTrainingExercise({ id: 'e3', sets: SETS_ALL_PARAMS }),
+                generateTrainingExercise({ id: 'no-vol', sets: SETS_NO_VOL }),
                 generateTrainingExercise({ id: 'lr', sets: SETS_LR_DIFFERENT }),
               ],
             }),

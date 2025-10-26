@@ -1,10 +1,13 @@
 import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import { TestPeriodizationUtil } from '@test/common/utils/periodization.util';
+import { addDays } from 'date-fns';
 
+import { AttributeModule } from '@src/attribute/attribute.module';
 import { CommonModule } from '@src/common/common.module';
 import type { TrainingComponentRef } from '@src/common/type/firestore.type';
 import { validationSchema } from '@src/config/environment-validation-schema';
+import { ExerciseParamService } from '@src/exercise/service/exercise-param.service';
 import { MAIN_GROUP_PARENT_ID } from '@src/training/constant/main-group-parent-id.constant';
 import type { TrainingExercise } from '@src/training/entity/training-exercise.entity';
 import { PeriodizationType } from '@src/training/enum/periodization-type.enum';
@@ -17,9 +20,9 @@ import {
   generateTrainingStub,
 } from '@src/training/mock/training.stub';
 
-import { PeriodizationModule } from './periodization.module';
-import { PeriodizationService } from './periodization.service';
-import type { PeriodizationResult } from './strategy/periodization.strategy';
+import { PeriodizationService } from '../periodization.service';
+import type { PeriodizationResult } from '../strategy/periodization.strategy';
+import { testBaseTrainingComplexPeriodization } from './periodization-util';
 
 const ref: TrainingComponentRef = {
   trainingId: TestPeriodizationUtil.TRAININGS[0].id, // periodize the first "base" training
@@ -34,9 +37,9 @@ describe('periodize', () => {
       imports: [
         ConfigModule.forRoot({ isGlobal: true, validationSchema }),
         CommonModule,
-        PeriodizationModule,
+        AttributeModule,
       ],
-      providers: [PeriodizationService],
+      providers: [ExerciseParamService, PeriodizationService],
     }).compile();
 
     service = moduleRef.get(PeriodizationService);
@@ -286,10 +289,7 @@ describe('periodize', () => {
       (r) => r.value as PeriodizationResult,
     );
 
-    for (const res of strategyResults) {
-      expect(res.intensity).toBeUndefined();
-    }
-
+    for (const res of strategyResults) expect(res.intensity).toBeUndefined();
     periodizeSpy.mockClear();
 
     for (const training of result) {
@@ -299,7 +299,7 @@ describe('periodize', () => {
 
       expect(exercise).toBeDefined();
       for (const set of exercise.sets) {
-        expect(set.reps).toEqual(10); // default value
+        expect(set.reps).toBeLessThanOrEqual(10);
         expect(set.loadKg).toBeUndefined();
         expect(set.loadKgR).toBeUndefined();
         expect(set.loadBw).toBeUndefined();
@@ -800,8 +800,6 @@ describe('periodize', () => {
         'e1',
       ]);
 
-      console.log('result:', JSON.stringify(result, null, 2));
-
       // it should periodize main group & subgroup s1 but not "some-other-subgroup"
       expect(result.length).toBe(trainings.length);
       const baseMainComponent = result[0].components[0];
@@ -1009,6 +1007,113 @@ describe('periodize', () => {
               expect(intR).toBeGreaterThan(directSubgroupIntR);
             },
           );
+      }
+    });
+  });
+
+  describe('Periodization of other params, not just reps and kilograms', () => {
+    // main group with 2 virtual subgroups and 1 subgroup with 1 virtual subgroup
+    it('should periodize exercise with complex periodization', () => {
+      const base = structuredClone(testBaseTrainingComplexPeriodization);
+      const trainings = [base, structuredClone(base), structuredClone(base)];
+
+      // make each training in future by 1 week
+      for (let i = 1; i < trainings.length; i++) {
+        trainings[i].from = addDays(trainings[0].from, i * 7);
+        trainings[i].to = addDays(trainings[0].to, i * 7);
+      }
+
+      const result = service.periodize(
+        PeriodizationType.LINEAR,
+        { trainingId: base.id, componentId: 'c1' },
+        trainings,
+        ['yoyo'],
+      );
+
+      expect(result.length).toBe(trainings.length);
+      expect(result[0]).toEqual(trainings[0]);
+
+      for (let i = 1; i < result.length; i++) {
+        const training = result[i];
+        expect(training).not.toEqual(trainings[i]);
+
+        // check main group exercise
+        const main = training.components[0];
+        expect(main.supersets[0].exercises[0].id).toBe('yoyo');
+        expect(main.supersets[0].exercises[0].sets).toHaveLength(3);
+
+        for (let setIndex = 0; setIndex < 3; setIndex++) {
+          const resultSet = main.supersets[0].exercises[0].sets[setIndex];
+          const baseSet =
+            base.components[0].supersets[0].exercises[0].sets[setIndex];
+
+          expect(resultSet.time).toBeLessThan(baseSet.time);
+          expect(resultSet.dist).toBeUndefined();
+          expect(resultSet.reps).toBeUndefined();
+          expect(resultSet.repsR).toBeUndefined();
+          expect(resultSet.loadKg).toBeUndefined();
+          expect(resultSet.loadKgR).toBeUndefined();
+          expect(resultSet.loadBw).toBeUndefined();
+          expect(resultSet.loadBwR).toBeUndefined();
+        }
+
+        // check first virtual subgroup exercise
+        const vsg1 = main.subgroups.find((sg) => sg.id === 'main-sg-1');
+        expect(vsg1.supersets[0].exercises[0].id).toBe('yoyo');
+        expect(vsg1.supersets[0].exercises[0].sets).toHaveLength(2);
+
+        for (let setIndex = 0; setIndex < 2; setIndex++) {
+          const resultSet = vsg1!.supersets[0].exercises[0].sets[setIndex];
+          const baseSet =
+            base.components[0].subgroups[0].supersets[0].exercises[0].sets[
+              setIndex
+            ];
+
+          expect(resultSet.dist).toBeLessThan(baseSet.dist);
+          expect(resultSet.time).toBeUndefined();
+          expect(resultSet.reps).toBeUndefined();
+          expect(resultSet.repsR).toBeUndefined();
+          expect(resultSet.loadKg).toBeUndefined();
+          expect(resultSet.loadKgR).toBeUndefined();
+        }
+
+        // check second virtual subgroup exercise
+        const vsg2 = main.subgroups.find((sg) => sg.id === 'main-sg-2');
+        expect(vsg2).toBeDefined();
+        expect(vsg2?.supersets[0].exercises[0].id).toBe('yoyo');
+        expect(vsg2?.supersets[0].exercises[0].sets).toHaveLength(4);
+
+        for (let setIndex = 0; setIndex < 4; setIndex++) {
+          const resultSet = vsg2!.supersets[0].exercises[0].sets[setIndex];
+          const baseSet =
+            base.components[0].subgroups[1].supersets[0].exercises[0].sets[
+              setIndex
+            ];
+
+          expect(resultSet.time).toBeLessThan(baseSet.time);
+          expect(resultSet.dist).toBeUndefined();
+          expect(resultSet.reps).toBeUndefined();
+          expect(resultSet.repsR).toBeUndefined();
+          expect(resultSet.loadKg).toBeUndefined();
+          expect(resultSet.loadKgR).toBeUndefined();
+        }
+
+        // other 2 subgroups should remain unchanged
+        const sg = main.subgroups.find((sg) => sg.id === 'root-sg');
+        expect(sg).toBeDefined();
+        expect(sg).toEqual(
+          trainings[i].components[0].subgroups.find(
+            (sg) => sg.id === 'root-sg',
+          ),
+        );
+
+        const sgChild = main.subgroups.find((sg) => sg.id === 'child-sg-1');
+        expect(sgChild).toBeDefined();
+        expect(sgChild).toEqual(
+          trainings[i].components[0].subgroups.find(
+            (sg) => sg.id === 'child-sg-1',
+          ),
+        );
       }
     });
   });

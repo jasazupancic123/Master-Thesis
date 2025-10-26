@@ -23,21 +23,23 @@ export class ExerciseParamService {
     private readonly attributeService: AttributeService,
   ) {}
 
-  readonly pairs: (
-    | [ExerciseParamField, ExerciseParamField]
-    | [ExerciseParamField]
-  )[] = [
+  getPair(field: ExerciseParamField): ExerciseParamField | null {
+    const pair = this.pairs.find((p) => p.includes(field));
+    return pair ? (pair[0] === field ? pair[1] : pair[0]) : null;
+  }
+
+  readonly pairs: [ExerciseParamField, ExerciseParamField][] = [
     ['reps', 'repsR'],
     ['loadKg', 'loadKgR'],
     ['loadRm', 'loadRmR'],
     ['loadBw', 'loadBwR'],
     ['tempo', 'tempoR'],
     ['vel', 'velR'],
-    ['eff'],
-    ['time'],
-    ['dist'],
-    ['recTime'],
-    ['recDist'],
+    ['eff', 'eff'],
+    ['time', 'time'],
+    ['dist', 'dist'],
+    ['recTime', 'recTime'],
+    ['recDist', 'recDist'],
   ];
 
   getAttributes(exercise: Exercise): Attribute<ExerciseSet>[] {
@@ -220,18 +222,15 @@ export class ExerciseParamService {
       const isMainDefined = !this.common.object.isEmpty(set[pair[0]]);
       const isSecondaryDefined = !this.common.object.isEmpty(set[pair[1]]);
 
-      if (pair.length === 1) continue; // only one param in the pair, doesn't matter if it's defined or not, so skip
-      if (pair.length === 2) {
-        if (
-          (!isMainDefined && isSecondaryDefined) ||
-          (isMainDefined && !isSecondaryDefined)
-        ) {
-          const primary = ExerciseParamAttribute[pair[0]];
-          errors.push({
-            field: primary.field,
-            message: `Both primary and secondary side must be defined for param ${primary.name.toLowerCase()} in unilateral exercises`,
-          });
-        }
+      if (
+        (!isMainDefined && isSecondaryDefined) ||
+        (isMainDefined && !isSecondaryDefined)
+      ) {
+        const primary = ExerciseParamAttribute[pair[0]];
+        errors.push({
+          field: primary.field,
+          message: `Both primary and secondary side must be defined for param ${primary.name.toLowerCase()} in unilateral exercises`,
+        });
       }
     }
 
