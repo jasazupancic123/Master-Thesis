@@ -26,6 +26,7 @@ export interface FirebaseClient {
 export function getFirebaseClient(
   configService: ConfigService<Environment>,
   commonService: CommonService,
+  overrideOptions?: AppOptions,
 ): FirebaseClient {
   const options: AppOptions = {};
 
@@ -39,7 +40,9 @@ export function getFirebaseClient(
 
   const apps = getApps();
   const app = (
-    !apps.length ? initializeApp(options) : apps[0]
+    !apps.length
+      ? initializeApp(overrideOptions ? overrideOptions : options)
+      : apps[0]
   ) as admin.app.App;
 
   const auth = getAuth(app);
