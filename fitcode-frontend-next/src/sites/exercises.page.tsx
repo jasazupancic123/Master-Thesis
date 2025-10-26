@@ -406,14 +406,10 @@ export default function ExercisesPage() {
         }
         width={screenSize.isMobile ? undefined : 500}
         onConfirm={() => {
+          console.log('BEFORE UPsert', importedMuscleValueExercises);
           handleUpsertMuscleValues(
             {
-              exercises: importedMuscleValueExercises.map(
-                (muscleValuesExercise) => ({
-                  name: muscleValuesExercise.name,
-                  muscleValues: muscleValuesExercise.muscleValues,
-                })
-              ),
+              exercises: importedMuscleValueExercises,
             },
             { router, setExercises: setAllExercises }
           );

@@ -2,6 +2,7 @@ import type { AttributeValue } from '@/core/attribute/type/attribute-value.type'
 import type { Component } from '@/core/component/type/component.type';
 import type { BaseEntity } from '@/core/entity.type';
 import type { ExerciseParamField } from '@/core/training/type/exercise-set.type';
+import { ExerciseMuscleValue } from './exercise-muscle-value.entity';
 
 export type Exercise = BaseEntity &
   ExerciseAttributes & {
@@ -24,7 +25,7 @@ export type Exercise = BaseEntity &
 export type ExerciseAttributes = {
   categories: string[];
   equipment: string[];
-  muscleValues?: AttributeValue[];
+  muscleValues?: ExerciseMuscleValue[];
   prescriptions: string[];
   patterns: string[];
   bodyRegions: string[];
