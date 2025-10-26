@@ -322,6 +322,16 @@ export async function handleExerciseCsvFileUpload(
   });
 }
 
+type MuscleWithExerciseValues = {
+  muscleId: string;
+  values: {
+    exerciseName: string;
+    concentric: number;
+    isometric: number;
+    eccentric: number;
+  }[];
+};
+
 export async function handleMuscleValuesCsvFileUpload(
   file: File,
   exercises: Exercise[],
@@ -340,11 +350,48 @@ export async function handleMuscleValuesCsvFileUpload(
     .map((header) => header.replace('\r', '').trim());
   if (rows[0].toLowerCase().includes('name')) rows.shift();
 
-  const importedMuscleValues: (CreateExerciseMuscleValues | null)[] = rows.map(
-    (row) => {
+  const musclesWithValues = rows
+    .map((row) => {
       return getMuscleValuesFromCsvRow(row, exercises, headers);
-    }
-  );
+    })
+    .filter((mv) => mv !== null) as MuscleWithExerciseValues[];
+
+  const importedMuscleValues: (CreateExerciseMuscleValues | null)[] = [];
+
+  console.log('musclesWithValues', musclesWithValues);
+
+  musclesWithValues.forEach((muscle) => {
+    muscle.values.forEach((mv) => {
+      const existing = importedMuscleValues.find(
+        (e) => e?.name === mv.exerciseName
+      );
+
+      if (!existing) {
+        importedMuscleValues.push({
+          name: mv.exerciseName,
+          muscleValues: [
+            {
+              muscleId: muscle.muscleId,
+              concentric: mv.concentric,
+              isometric: mv.isometric,
+              eccentric: mv.eccentric,
+            },
+          ],
+        });
+
+        return;
+      }
+
+      existing.muscleValues!.push({
+        muscleId: muscle.muscleId,
+        concentric: mv.concentric,
+        isometric: mv.isometric,
+        eccentric: mv.eccentric,
+      });
+    });
+  });
+
+  console.log('importedMuscleValues', importedMuscleValues);
 
   const validImportedMuscleValues = importedMuscleValues.filter(
     (e) => e !== null
@@ -422,61 +469,80 @@ export async function handleUpsertMuscleValues(
   );
 }
 
-function getMuscleValue(
-  load: string,
-  i: number,
-  headers: string[]
-): AttributeValue {
-  const columnName = headers[i]; // example: biceps_brachi:short_biceps_brachi:short_biceps_brachi
-
-  const [field, ...rest] = columnName.split(':');
-  const selected = rest.join(':');
-  const value = load;
-
-  return { field, selected, value };
-}
-
 function getMuscleValuesFromCsvRow(
   row: string,
   exercises: Exercise[],
   headers: string[]
-): CreateExerciseMuscleValues | null {
+): MuscleWithExerciseValues | null {
   const columns = row.split(',');
-  if (columns.length !== 73) {
+  if (columns.length !== 59) {
     toast.error(
-      `Invalid row format. Expected 73 columns, got ${columns.length}.`
+      `Invalid row format. Expected 59 columns, got ${columns.length}.`
     );
 
     return null;
   }
 
-  const [name, ...muscleLoads] = columns;
+  const [muscleId, ...muscleLoads] = columns;
 
-  const foundExercise = exercises.find((exercise) => exercise.name === name);
+  const muscleValues: MuscleWithExerciseValues = {
+    muscleId,
+    values: [],
+  };
 
-  if (!foundExercise) {
-    toast.error(`Exercise not found: ${name}`);
-    return null;
-  }
+  muscleLoads.forEach((loadsString, i) => {
+    const exerciseName = headers[i];
 
-  const muscleValues: AttributeValue[] = [];
+    const foundExercise = exercises.find(
+      (exercise) => exercise.name === exerciseName
+    );
 
-  muscleLoads.forEach((load, i) => {
-    if (load) {
-      load = load
+    if (!foundExercise) {
+      toast.error(`Exercise not found: ${exerciseName}`);
+      return;
+    }
+
+    console.log({ loadsString });
+    if (loadsString) {
+      loadsString = loadsString
         .replace('\r', '')
         .replace(/\r/g, '')
         .replace(/\n/g, '')
         .trim();
 
-      if (!load || !load.length) return;
+      if (!loadsString || !loadsString.length) {
+        console.log('returning cuz of empty loadsString', loadsString);
+        return;
+      }
 
-      muscleValues.push(getMuscleValue(load, i + 1, headers));
+      const loads = loadsString.split(';').map((l) => l.trim());
+
+      if (loads.length !== 3) {
+        toast.error(
+          `Invalid muscle load format for exercise ${muscleId} in column ${headers[i + 1]}. Expected 3 values, got ${loads.length}.`
+        );
+        return;
+      }
+
+      const numericLoads = loads.map((l) => Number(l));
+
+      if (numericLoads.some((l) => isNaN(l))) {
+        toast.error(
+          `Invalid muscle load value for exercise ${muscleId} in column ${headers[i + 1]}. All values must be numeric.`
+        );
+        return;
+      }
+
+      muscleValues.values.push({
+        exerciseName,
+        concentric: numericLoads[0],
+        isometric: numericLoads[1],
+        eccentric: numericLoads[2],
+      });
     }
   });
 
-  return {
-    name,
-    muscleValues,
-  };
+  console.log('muscleValues', muscleValues);
+
+  return muscleValues;
 }
