@@ -300,6 +300,7 @@ export default function TrainingExerciseChart(
                 yAxisId="right"
                 orientation="right"
                 domain={['dataMin - 1', 'dataMax + 1']}
+                allowDecimals={false}
               />
 
               <Line
