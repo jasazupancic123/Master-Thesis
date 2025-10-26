@@ -263,7 +263,5 @@ function getFormatedName(plannedAt: Date) {
   let month = (date.getMonth() + 1).toString().padStart(2, '0');
   if (month[0] === '0') month = month.slice(1);
 
-  const hours = date.getHours();
-  const ampm = hours >= 12 ? 'PM' : 'AM';
-  return `${day}.${month}. ${ampm}`; // Final format: "DD MM, AM/PM"
+  return `${day}.${month}.`; // Final format: "DD MM, AM/PM"
 }
