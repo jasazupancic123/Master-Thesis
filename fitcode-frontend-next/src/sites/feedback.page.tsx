@@ -7,18 +7,18 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
-import { WellnessAnthropometry } from '@/common/enum/wellnes-anthropometry.enum';
-import { handleApiRequest } from '@/common/type/state.type';
-import AthleteOptionsContainer from '@/components/athlete/athlete-options-container/athlete-options-container';
-import AthleteWellnessForm from '@/components/athlete/athlete-wellness-form/athlete-wellness-form';
+import AthleteOptionsContainer from '@/components/athlete/athlete-options-container';
+import AthleteWellnessForm from '@/components/athlete/athlete-wellness-form';
 import AthleteAnthropometryForm from '@/components/athlete-anthropometry-form/athlete-anthropometry-form';
-import { paintHeatmaps } from '@/components/training-component/training-component-layout/components/muscle-heatmap-view/actions/actions-color-heatmap';
-import { MuscleService } from '@/controller/exercise/muscle.service';
-import { ProfileController } from '@/controller/profile/profile.controller';
+import { paintHeatmaps } from '@/components/training-component/actions/actions-color-heatmap';
+import { core } from '@/core/core.service';
+import { WellnessAnthropometry } from '@/core/profile/enum/wellness-anthropometry.enum';
+import { ProfileController } from '@/core/profile/profile.controller';
 import type {
   CreateWellness,
   Wellness,
-} from '@/controller/profile/type/wellness.type';
+} from '@/core/profile/type/wellness.type';
+import { handleApiRequest } from '@/lib/common/type/state.type';
 import { setCachedWellness } from '@/session-cache/wellness.session-cache';
 import { useWellness } from '@/store/wellness-provider';
 
@@ -47,15 +47,14 @@ export default function FeedbackPage() {
   const theme = useTheme();
   const router = useRouter();
 
+  const [muscleLoads, setMuscleLoads] = useState<[string, number][]>([]);
   const [filter, setFilter] = useState<WellnessAnthropometry>(
     WellnessAnthropometry.WELLNESS
   );
-  const [muscleLoads, setMuscleLoads] = useState<[string, number][]>([]);
 
   useEffect(() => {
     if (muscleLoads.length) return; // Already set
-
-    const loads = MuscleService.generateEmptyMuscleLoadsForAllMuscles(1);
+    const loads = core.exercise.muscle.generateEmptyLoads(1);
     setMuscleLoads(loads);
   }, []);
 
@@ -119,7 +118,6 @@ export default function FeedbackPage() {
               )
             }
             disabled={false}
-            setDisabled={() => {}}
             state={state}
             setState={setState}
             muscleLoads={muscleLoads}

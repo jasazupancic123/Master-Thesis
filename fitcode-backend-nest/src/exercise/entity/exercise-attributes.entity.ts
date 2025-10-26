@@ -2,8 +2,8 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import { IsIn, IsString, ValidateNested } from 'class-validator';
 
-import { IsValidSelectPath } from '@src/attribute/decorator/is-valid-select-path.decorator';
 import { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
+import { IsValidSelectPath } from '@src/common/decorator/is-valid-select-path.decorator';
 
 import { BodyRegionValues } from '../constant/body-region.constant';
 import { Category } from '../constant/category.constant';

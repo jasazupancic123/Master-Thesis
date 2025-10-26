@@ -3,7 +3,7 @@ import type { RefObject } from 'react';
 import {
   HEATMAP_BACK_ID,
   HEATMAP_FRONT_ID,
-} from '@/common/constant/heatmap.constant';
+} from '@/core/exercise/constant/heatmap.const';
 
 // normalize ids like `upper_pectoralis_major-l_3` → `upper_pectoralis_major-l`
 export const normId = (id: string) => id.replace(/_\d+$/, '');

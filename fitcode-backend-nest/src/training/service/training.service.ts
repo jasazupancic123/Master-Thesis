@@ -33,7 +33,6 @@ import { CommonService } from '@src/common/service/common.service';
 import { Create, Update } from '@src/common/type/entity.type';
 import { User } from '@src/common/type/firebase-auth.type';
 import {
-  ComponentRef,
   CycleRef,
   SubgroupRef,
   TrainingComponentRef,
@@ -41,10 +40,7 @@ import {
   UserRef,
   WorkloadRef,
 } from '@src/common/type/firestore.type';
-import {
-  BatchUpdateOperation,
-  BatchWriteOperation,
-} from '@src/common/type/orm.type';
+import { BatchUpdateOperation } from '@src/common/type/orm.type';
 import { Filter } from '@src/common/type/orm.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
 import { ComponentService } from '@src/component/component.service';
@@ -52,8 +48,8 @@ import {
   COOLDOWN_COMPONENT_ID,
   WARMUP_COMPONENT_ID,
 } from '@src/component/constant/warmup-cooldown.constant';
-import { IntType, ParamType } from '@src/component/enum/param.enum';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
+import { ExerciseParamService } from '@src/exercise/service/exercise-param.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { DELETE_GROUP_EVENT } from '@src/group/constant/delete-group-event.constant';
 import { Cycle } from '@src/group/entity/cycle.entity';
@@ -67,33 +63,29 @@ import { InstitutionService } from '@src/institution/service/institution.service
 import { MethodService } from '@src/method/service/method.service';
 import { PeriodizationService } from '@src/periodization/periodization.service';
 import { WellnessService } from '@src/profile/service/wellness.service';
+import { TrainingReportService } from '@src/training/service/training-report.service';
+import { WorkloadService } from '@src/training/service/workload.service';
 
 import {
   DURATION_TRAINING_COMPONENT_IN_MIN,
   DURATION_TRAINING_COMPONENT_WARMUP_COOLDOWN_IN_MIN,
   MAX_NUM_TRAININGS_PER_DAY,
 } from '../constant/training-limits.constant';
-import { CompleteSetDto } from '../dto/complete-set.dto';
 import {
   CreateTrainingComponentDto,
   CreateTrainingDto,
 } from '../dto/create-training.dto';
 import { PeriodizeTrainingsDto } from '../dto/periodize-training.dto';
-import { CompletedTrainingComponent } from '../entity/completed-training.entity';
-import { ExerciseSet } from '../entity/exercise-set.entity';
 import { Superset } from '../entity/superset.entity';
 import { Training } from '../entity/training.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
 import { TrainingReport } from '../entity/training-report.entity';
-import { Workload } from '../entity/workload.entity';
+import { CreateWorkload, Workload } from '../entity/workload.entity';
 import { MainSet } from '../enum/main-set.enum';
 import { UpdateTraining } from '../interface/update-training.interface';
 import { TrainingRepository } from '../repository/training.repository';
-import { WorkloadRepository } from '../repository/workload.repository';
 import { TrainingPlanService } from './training-plan.service';
-import { TrainingReportService } from './training-report.service';
-import { WorkloadService } from './workload.service';
 
 @Injectable()
 export class TrainingService implements Permission<Training, Institution> {
@@ -104,18 +96,18 @@ export class TrainingService implements Permission<Training, Institution> {
     @Inject(forwardRef(() => AuthService))
     private readonly authService: Wrapper<AuthService>,
     private readonly commonService: CommonService,
+    private readonly repository: TrainingRepository,
     private readonly componentService: ComponentService,
     private readonly methodService: MethodService,
     private readonly periodizationService: PeriodizationService,
     private readonly wellnessService: WellnessService,
-    private readonly repository: TrainingRepository,
     private readonly trainingPlanService: TrainingPlanService,
-    private readonly workloadRepository: WorkloadRepository,
     private readonly workloadService: WorkloadService,
     private readonly trainingReportService: TrainingReportService,
     private readonly groupService: GroupService,
     private readonly institutionService: InstitutionService,
     private readonly exerciseService: ExerciseService,
+    private readonly exerciseParamService: ExerciseParamService,
   ) {}
 
   async findOneById(
@@ -327,7 +319,6 @@ export class TrainingService implements Permission<Training, Institution> {
       from: warmup.from,
       to: cooldown.to,
       membersIds,
-      stats: [],
       warmup,
       cooldown,
       components: inputComponents
@@ -392,31 +383,6 @@ export class TrainingService implements Permission<Training, Institution> {
         const found = training.components.find((tc) => tc.id === c.id)!;
         return { ...c, from: found?.from, to: found?.to };
       });
-
-    // validate custom workloads
-    if (input.workloads) {
-      const inputWorkloads = await this.workloadService.validateWorkloads(
-        training.id,
-        input.workloads,
-        trainingComponents,
-      );
-
-      const operations: BatchWriteOperation<Workload>[] = [];
-      for (const w of inputWorkloads) {
-        const ref: WorkloadRef = { ...w, trainingId: training.id };
-        w.id = this.workloadRepository.getKey(ref);
-
-        operations.push({
-          operation: 'set',
-          data: this.firebase.buildCreateQuery<Workload>(w),
-          ref: this.workloadRepository.doc(ref),
-        });
-      }
-
-      const batch = this.firebase.firestore.batch();
-      for (const { ref, data } of operations) batch.set(ref, data);
-      await batch.commit();
-    }
 
     const updateTraining: Update<Training> = {
       warmup: input.warmup,
@@ -708,14 +674,19 @@ export class TrainingService implements Permission<Training, Institution> {
   async completeNextSet(
     user: User,
     ref: Pick<WorkloadRef, 'trainingId' | 'exerciseId' | 'userId'>,
-    input: CompleteSetDto,
+    input: CreateWorkload,
   ) {
     const { userId } = ref;
     const training = await this.findOneByIdOrFail(user, ref);
     const athlete = await this.getAthlete(user, userId, training.institution);
+    const exercise = await this.exerciseService.findOneByIdOrFail(user, ref);
 
-    const exercise = await this.exerciseService.findOneByIdOrFail(athlete, ref);
-    this.workloadService.checkUnilateralInput(exercise.isUnilateral, input);
+    const errors = this.exerciseParamService.validateSetValues(exercise, {
+      ...input,
+      setNumber: 1,
+    });
+
+    if (errors.length) throw new BadRequestException(JSON.stringify(errors));
 
     if (
       !this.commonService.date.isBetween(
@@ -742,20 +713,25 @@ export class TrainingService implements Permission<Training, Institution> {
 
     // update report
     await this.trainingReportService.updateReport(userId, training, {
-      photoURLs: [input.photoUrl, input.photoUrlR].filter(Boolean),
+      photoURLs: input.photoURLs,
     });
 
     return workload;
   }
 
   @LogMethod()
-  async upsertSet(user: User, ref: WorkloadRef, input: CompleteSetDto) {
+  async upsertSet(user: User, ref: WorkloadRef, input: CreateWorkload) {
     const { userId } = ref;
     const training = await this.findOneByIdOrFail(user, ref);
     const athlete = await this.getAthlete(user, userId, training.institution);
-    const exercise = await this.exerciseService.findOneByIdOrFail(athlete, ref);
+    const exercise = await this.exerciseService.findOneByIdOrFail(user, ref);
 
-    this.workloadService.checkUnilateralInput(exercise.isUnilateral, input);
+    const errors = this.exerciseParamService.validateSetValues(exercise, {
+      ...input,
+      setNumber: ref.setNumber,
+    });
+
+    if (errors.length) throw new BadRequestException(JSON.stringify(errors));
 
     const prescribedTraining = this.trainingPlanService.getTrainingByAthlete(
       athlete.uid,
@@ -772,88 +748,10 @@ export class TrainingService implements Permission<Training, Institution> {
     );
 
     await this.trainingReportService.updateReport(userId, training, {
-      photoURLs: [input.photoUrl, input.photoUrlR].filter(Boolean),
+      photoURLs: input.photoURLs,
     });
 
     return workload;
-  }
-
-  @LogMethod()
-  async completeTrainingComponent(
-    user: User,
-    ref: TrainingRef & ComponentRef,
-    input: CompletedTrainingComponent,
-  ): Promise<Training> {
-    const { trainingId, componentId } = ref;
-    const training = await this.findOneByIdOrFail(user, ref);
-
-    // if training does not start within the current day, throw error
-    if (
-      !this.commonService.date.isBetween(
-        training.from,
-        startOfDay(new Date()),
-        endOfDay(new Date()),
-      )
-    )
-      throw new ConflictException(
-        'You cannot complete trainings that are not on the same day',
-      );
-
-    const trainingComponent = this.trainingPlanService.findComponentOrFail(
-      training,
-      componentId,
-    );
-
-    // validate athlete input for manager / trainer
-    const athlete = await this.getAthlete(
-      user,
-      input.userId,
-      training.institution,
-    );
-
-    const report = await this.trainingReportService.findById({
-      trainingId,
-      userId: athlete.uid,
-    });
-
-    if (report) {
-      const status = report.componentStatuses.find(
-        (s) => s.componentId === componentId,
-      );
-
-      if (status && ['in_progress', 'completed'].includes(status.status))
-        throw new ConflictException(
-          this.firebase.isAthlete(user)
-            ? `You have already completed this component`
-            : `Athlete already completed this component`,
-        );
-    }
-
-    // create workloads
-    await this.workloadService.createForTrainingComponent(
-      trainingComponent,
-      {
-        institutionId: training.institutionId,
-        groupId: training.groupId,
-        cycleId: training.cycleId,
-        trainingId,
-        componentId,
-        uid: athlete.uid,
-      },
-      input.exercises,
-    );
-
-    // update stats
-    const stats = this.trainingPlanService.recalculateCompletedTrainingStats(
-      trainingComponent.id,
-      training.stats,
-      input.exercises,
-    );
-
-    // mark user as completed (for component and training)
-    await this.trainingReportService.updateReport(athlete.uid, training);
-    await this.repository.update(trainingId, { stats });
-    return { ...training, stats };
   }
 
   @LogMethod()
@@ -873,83 +771,46 @@ export class TrainingService implements Permission<Training, Institution> {
     await this.updateBodyweightSets(athlete.uid, athleteTraining);
     await this.updateRepMaxSets(athlete.uid, athleteTraining);
 
-    const customPrescribedWorkloads =
-      await this.workloadService.findAllCustomByTraining(training.id);
-
     const newPrescribedTrainingComponents: TrainingComponent[] = [];
     for (const trainingComponent of athleteTraining.components) {
       const newPrescribedSupersets: Superset[] = [];
       const prescribedSupersets = trainingComponent.supersets;
 
-      prescribedSupersets.forEach(
-        ({ exercises: prescribedExercises }, supersetIndex) => {
-          const newPrescribedExercises: TrainingExercise[] = [];
-
-          prescribedExercises.forEach((prescribedExercise) => {
-            let newPrescribedSets: ExerciseSet[] = [];
-
-            prescribedExercise.sets.forEach((prescribedSet) => {
-              const customPrescribedWorkload = customPrescribedWorkloads.find(
-                (w) =>
-                  w.componentId === trainingComponent.id &&
-                  w.exerciseId === prescribedExercise.id &&
-                  w.supersetIndex === supersetIndex &&
-                  w.setNumber === prescribedSet.setNumber &&
-                  w.userId === athlete.uid,
-              );
-
-              const newPrescribedSet = customPrescribedWorkload
-                ? this.workloadService.getExerciseSet(customPrescribedWorkload)
-                : prescribedSet;
-
-              newPrescribedSets.push(newPrescribedSet);
-            });
-
-            // sort sets by setNumber
-            newPrescribedSets = newPrescribedSets.sort(
+      prescribedSupersets.forEach(({ exercises: prescribedExercises }) => {
+        const newPrescribedExercises: TrainingExercise[] = [];
+        prescribedExercises.forEach((prescribedExercise) =>
+          newPrescribedExercises.push({
+            id: prescribedExercise.id,
+            params: prescribedExercise.params,
+            sets: prescribedExercise.sets.sort(
               (a, b) => a.setNumber - b.setNumber,
-            );
+            ),
+          }),
+        );
 
-            newPrescribedExercises.push({
-              id: prescribedExercise.id,
-              color: prescribedExercise.color,
-              params: prescribedExercise.params,
-              sets: newPrescribedSets,
-            });
-          });
-
-          newPrescribedSupersets.push({
-            color: trainingComponent.color,
-            exercises: newPrescribedExercises,
-          });
-        },
-      );
+        newPrescribedSupersets.push({ exercises: newPrescribedExercises });
+      });
 
       newPrescribedTrainingComponents.push({
         id: trainingComponent.id,
         from: trainingComponent.from,
         to: trainingComponent.to,
-        color: trainingComponent.color,
         copiedFrom: trainingComponent.copiedFrom,
         target: trainingComponent.target,
         methodId: trainingComponent.methodId,
+        mainSet: trainingComponent.mainSet,
         supersets: newPrescribedSupersets,
         subgroups: [],
-        mainSet: trainingComponent.mainSet,
       });
     }
 
-    return {
-      ...training,
-      components: newPrescribedTrainingComponents,
-    };
+    return { ...training, components: newPrescribedTrainingComponents };
   }
 
   async updateBodyweightSets(athleteId: string, training: Training) {
-    const bwParam = { field: ParamType.IntWork1, selected: IntType.Bw };
-    const hasBwParamType = this.trainingPlanService.hasParamType(
+    const hasBwParamType = this.trainingPlanService.hasLoadType(
       training,
-      bwParam,
+      'loadBw',
     );
 
     if (!hasBwParamType) return;
@@ -960,17 +821,16 @@ export class TrainingService implements Permission<Training, Institution> {
 
     this.trainingPlanService.modifyPrescribedParamValuesByType(
       training,
-      bwParam,
+      'loadBw',
       (value) =>
         this.commonService.number.roundIntensity((value * bw) / 100, bw), // convert % value to kg and round to 2 decimals
     );
   }
 
   async updateRepMaxSets(athleteId: string, training: Training) {
-    const rmParam = { field: ParamType.IntWork1, selected: IntType.Rm };
-    const exercises = this.trainingPlanService.findExercisesByParamType(
+    const exercises = this.trainingPlanService.findExercisesByLoadType(
       training,
-      rmParam,
+      'loadRm',
     );
 
     if (!exercises.length) return;
@@ -978,24 +838,20 @@ export class TrainingService implements Permission<Training, Institution> {
     const maxes: Workload[] = (
       await Promise.all(
         exercises.map((e) =>
-          this.workloadRepository.findExerciseMax(athleteId, e.id),
+          this.workloadService.findExerciseMax(athleteId, e.id),
         ),
       )
     ).filter(Boolean);
 
     this.trainingPlanService.modifyPrescribedParamValuesByType(
       training,
-      rmParam,
+      'loadRm',
       (value, exerciseId) => {
         // prescribed value is in % of 1RM (between 1 and 100)
         const best = maxes.find((max) => max.exerciseId === exerciseId);
-        if (!best || !best.intWork1ValueL || !best.volWork1ValueL)
-          return DEFAULT_WEIGHT_KG;
+        if (!best || !best.loadKg || !best.reps) return DEFAULT_WEIGHT_KG;
 
-        const reps = best.volWork1ValueL;
-        const weight = best.intWork1ValueL;
-        const oneRM = this.commonService.number.rm(weight, reps);
-
+        const oneRM = this.commonService.number.rm(best.loadKg, best.reps);
         return this.commonService.number.roundIntensity(
           (value * oneRM) / 100,
           oneRM,

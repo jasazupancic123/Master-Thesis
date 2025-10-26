@@ -5,10 +5,7 @@ import type {
   TrainingExerciseRef,
   TrainingSupersetRef,
 } from '@src/common/type/firestore.type';
-import { IntType, ParamType, VolType } from '@src/component/enum/param.enum';
-import { generateComponentParamsStub } from '@src/component/mock/component-param.stub';
 import type { Training } from '@src/training/entity/training.entity';
-import { generateParamAttributeValue } from '@src/training/mock/param-values.stub';
 import {
   generateExerciseSet,
   generateSuperset,
@@ -33,77 +30,32 @@ export class TestPeriodizationUtil {
     addDaysFromToday: number,
     data?: Partial<Training>,
   ): Training {
-    const options = { isUnilateral: true };
-
     // same param values for all sets for both left and right side
     const SETS_ALL_PARAMS = [
-      generateExerciseSet(1, null, options),
-      generateExerciseSet(2, null, options),
-      generateExerciseSet(3, null, options),
+      generateExerciseSet(1, { reps: 10, loadKg: 50 }),
+      generateExerciseSet(2, { reps: 10, loadKg: 50 }),
+      generateExerciseSet(3, { reps: 10, loadKg: 50 }),
     ];
 
     // sets with no intensity (only volume 1)
     const SETS_NO_INT = [
-      generateExerciseSet(
-        1,
-        generateComponentParamsStub([ParamType.VolWork1]),
-        options,
-      ),
-      generateExerciseSet(
-        2,
-        generateComponentParamsStub([ParamType.VolWork1]),
-        options,
-      ),
-      generateExerciseSet(
-        3,
-        generateComponentParamsStub([ParamType.VolWork1]),
-        options,
-      ),
+      generateExerciseSet(1, { reps: 10 }),
+      generateExerciseSet(2, { reps: 10 }),
+      generateExerciseSet(3, { reps: 10 }),
     ];
 
-    // sets with no volume (only intensity 1)
     const SETS_NO_VOL = [
-      generateExerciseSet(
-        1,
-        generateComponentParamsStub([ParamType.IntWork1]),
-        options,
-      ),
-      generateExerciseSet(
-        2,
-        generateComponentParamsStub([ParamType.IntWork1]),
-        options,
-      ),
-      generateExerciseSet(
-        3,
-        generateComponentParamsStub([ParamType.IntWork1]),
-        options,
-      ),
+      generateExerciseSet(1, { loadKg: 50 }),
+      generateExerciseSet(2, { loadKg: 50 }),
+      generateExerciseSet(3, { loadKg: 50 }),
     ];
 
     // different param values for left and right side
     const SETS_LR_DIFFERENT = [
-      generateExerciseSet(1, null, options),
-      generateExerciseSet(2, null, options),
-      generateExerciseSet(3, null, options),
+      generateExerciseSet(1, { reps: 20, repsR: 22, loadKg: 30, loadKgR: 34 }),
+      generateExerciseSet(2, { reps: 21, repsR: 23, loadKg: 31, loadKgR: 35 }),
+      generateExerciseSet(3, { reps: 22, repsR: 24, loadKg: 32, loadKgR: 36 }),
     ];
-
-    const reps = { field: ParamType.VolWork1, selected: VolType.Rep };
-    const kg = { field: ParamType.IntWork1, selected: IntType.Kg };
-
-    let i = 0;
-    for (const set of SETS_LR_DIFFERENT) {
-      set.paramValuesL = [
-        generateParamAttributeValue({ ...reps, value: 20 + i }),
-        generateParamAttributeValue({ ...kg, value: 30 + i }),
-      ];
-
-      set.paramValuesR = [
-        generateParamAttributeValue({ ...reps, value: 22 + i }),
-        generateParamAttributeValue({ ...kg, value: 34 + i }),
-      ];
-
-      i++;
-    }
 
     const baseDay = nextWednesday(new Date());
     return generateTrainingStub({
@@ -171,21 +123,10 @@ export class TestPeriodizationUtil {
         `Set ${ref.setIndex} not found in exercise ${exercise.id}`,
       );
 
-    const intL = set.paramValuesL.find(
-      (p) => p.field === ParamType.IntWork1,
-    )?.value;
-
-    const intR = set.paramValuesR?.find(
-      (p) => p.field === ParamType.IntWork1,
-    )?.value;
-
-    const volL = set.paramValuesL.find(
-      (p) => p.field === ParamType.VolWork1,
-    )?.value;
-
-    const volR = set.paramValuesR?.find(
-      (p) => p.field === ParamType.VolWork1,
-    )?.value;
+    const intL = set.loadKg;
+    const intR = set.loadKgR;
+    const volL = set.reps;
+    const volR = set.repsR;
 
     data({
       intL: intL ? +intL : intL,
@@ -196,6 +137,6 @@ export class TestPeriodizationUtil {
   }
 
   static getExercises(training: Training, supersetIndex = 0) {
-    return training.components[0].supersets[supersetIndex].exercises;
+    return training.components[0].supersets[supersetIndex]?.exercises || [];
   }
 }

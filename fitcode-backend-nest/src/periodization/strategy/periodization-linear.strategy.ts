@@ -17,10 +17,9 @@ export class LinearPeriodizationStrategy extends PeriodizationStrategy {
     const increase = Math.min(maxWeeklyIncrease, maxMonthlyIncrease / 4);
 
     const newVolume = Math.max(prevVolume - 1, 3); // Ensure volume doesn't drop below 3
-    const newIntensity = this.roundIntensity(
-      prevIntensity + increase,
-      baseIntensity,
-    );
+    const newIntensity = isFinite(increase)
+      ? this.roundIntensity(prevIntensity + increase, baseIntensity)
+      : undefined;
 
     return { intensity: newIntensity, volume: newVolume };
   }

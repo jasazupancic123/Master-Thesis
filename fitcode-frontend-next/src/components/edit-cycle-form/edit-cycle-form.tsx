@@ -8,13 +8,10 @@ import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-import { handleDeleteCycle } from '../trainer-group-year-view/components/multi-cycle-slider/actions/actions-cycle';
+import { handleDeleteCycle } from '../trainer-group-year-view/actions/actions-cycle';
 import { useMultiCycleSliderCyclesProvider } from '../trainer-group-year-view/context/cycles.provider';
-import { CommonService } from '@/common/service/common.service';
-import { GroupController } from '@/controller/group/group.controller';
+import { GroupController } from '@/core/group/group.controller';
 import { useGroup } from '@/store/group.provider';
-
-const commonService = CommonService.instance;
 
 export default function EditCycleForm() {
   const router = useRouter();
@@ -88,7 +85,6 @@ export default function EditCycleForm() {
               {
                 router,
                 controller,
-                commonService,
               },
               {
                 useGroup: groupContext,

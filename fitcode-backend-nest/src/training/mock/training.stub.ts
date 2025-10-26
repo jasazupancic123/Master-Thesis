@@ -1,18 +1,12 @@
 import { addDays, addHours } from 'date-fns';
 import { v4 } from 'uuid';
 
-import type { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
 import { getTime } from '@src/common/service/util/date.util';
-import {
-  generateRandomColor,
-  generateRandomName,
-} from '@src/common/utils/random.util';
-import { PARAMS } from '@src/component/constant/param.constant';
+import { generateRandomName } from '@src/common/utils/random.util';
 import {
   COOLDOWN_COMPONENT_ID,
   WARMUP_COMPONENT_ID,
 } from '@src/component/constant/warmup-cooldown.constant';
-import type { ComponentParam } from '@src/component/entity/component-param.entity';
 
 import type { ExerciseSet } from '../entity/exercise-set.entity';
 import type { Subgroup } from '../entity/subgroup.entity';
@@ -21,7 +15,6 @@ import type { Training } from '../entity/training.entity';
 import type { TrainingComponent } from '../entity/training-component.entity';
 import type { TrainingExercise } from '../entity/training-exercise.entity';
 import { MainSet } from '../enum/main-set.enum';
-import { generateParamAttributeValuesFromComponentParams } from './param-values.stub';
 
 /**
  * Generates a training stub with default values or overrides from the provided data.
@@ -66,7 +59,6 @@ export function generateTrainingStub(
     cycleId: data?.cycleId,
     ownerId: data?.ownerId || global.trainer.uid,
     membersIds: data?.membersIds || [global.athlete.uid],
-    stats: data?.stats || [],
     copiedFromId: data?.copiedFromId || null,
     from,
     to,
@@ -86,7 +78,6 @@ export function generateTrainingComponent(
 
   return {
     id: data?.id ?? v4(),
-    color: data?.color || generateRandomColor(),
     from,
     to: data?.to || addHours(from, 1),
     target: data?.target || null,
@@ -99,7 +90,6 @@ export function generateTrainingComponent(
 
 export function generateSuperset(data?: Partial<Superset>): Superset {
   return {
-    color: data?.color || generateRandomColor(),
     exercises: data?.exercises || [],
   };
 }
@@ -120,16 +110,10 @@ export function generateTrainingExercise(
 ): TrainingExercise {
   return {
     id: data?.id ?? v4(),
-    color: data?.color || generateRandomColor(),
     params: data?.params || [],
     sets: data?.sets || [],
   };
 }
-
-type ExerciseSetOptions = {
-  random?: boolean;
-  isUnilateral?: boolean;
-};
 
 /**
  * Generates an ExerciseSet object. If paramValuesOrComponentParams is not provided,
@@ -145,37 +129,12 @@ type ExerciseSetOptions = {
 
 export function generateExerciseSet(
   setNumber: number,
-  paramValuesOrComponentParams:
-    | AttributeValue[]
-    | ComponentParam[]
-    | null = null,
-  options?: ExerciseSetOptions,
+  params?: Partial<ExerciseSet>,
 ): ExerciseSet {
-  const isRandom = options?.random || false;
-  const isUnilateral = options?.isUnilateral || false;
+  // defaults
+  const set: ExerciseSet = { setNumber };
+  if (params && typeof params === 'object' && !Array.isArray(params))
+    Object.assign(set, params);
 
-  let paramValues: AttributeValue[] =
-    generateParamAttributeValuesFromComponentParams(PARAMS, isRandom);
-
-  if (Array.isArray(paramValuesOrComponentParams)) {
-    if (isAttributeValueArray(paramValuesOrComponentParams))
-      paramValues = paramValuesOrComponentParams;
-    else
-      paramValues = generateParamAttributeValuesFromComponentParams(
-        paramValuesOrComponentParams,
-        isRandom,
-      );
-  }
-
-  return {
-    setNumber,
-    paramValuesL: paramValues,
-    ...(isUnilateral && { paramValuesR: paramValues }),
-  };
-}
-
-function isAttributeValueArray(
-  arr: AttributeValue[] | ComponentParam[],
-): arr is AttributeValue[] {
-  return (arr[0] as AttributeValue)?.value !== undefined;
+  return set;
 }

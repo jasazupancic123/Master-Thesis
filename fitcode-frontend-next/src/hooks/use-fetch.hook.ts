@@ -1,0 +1,39 @@
+import { useCallback, useEffect, useState } from 'react';
+
+import { BACKEND_API_BASE_URL } from '../core/const/api.const';
+
+export function useFetch<T = unknown>(
+  url: string,
+  options?: { enabled?: boolean }
+) {
+  const [data, setData] = useState<T | null>(null);
+  const [error, setError] = useState<Error | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`${BACKEND_API_BASE_URL}${url}`, {
+        credentials: 'include',
+      });
+
+      if (!response.ok)
+        throw new Error(`HTTP error! Status: ${response.status}`);
+
+      const result: T = await response.json();
+      setData(result);
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setLoading(false);
+    }
+  }, [url]);
+
+  useEffect(() => {
+    if (options?.enabled && url) fetchData();
+  }, [fetchData, options?.enabled]);
+
+  return { data, setData, error, loading, refetch: fetchData };
+}

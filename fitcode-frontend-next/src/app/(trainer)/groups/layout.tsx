@@ -1,8 +1,6 @@
 import { Box, Container } from '@mui/material';
 
-import type { ChildrenProps } from '@/common/type/props.type';
-
-export default function Layout({ children }: ChildrenProps) {
+export default function Layout({ children }: React.PropsWithChildren) {
   const styles = {
     bgcolor: 'background.default',
     minHeight: `calc(100vh - 64px)`,

@@ -1,7 +1,7 @@
 import type { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 
-import { SESSION_COOKIE_NAME } from '@src/auth/constant/cookie.constant';
+import { SESSION_COOKIE_NAME } from '@src/common/constant/cookie.constant';
 import type { FirebaseService } from '@src/firebase/firebase.service';
 
 /**

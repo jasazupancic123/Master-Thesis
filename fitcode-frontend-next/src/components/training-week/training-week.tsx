@@ -5,10 +5,10 @@ import dayjs from 'dayjs';
 import React, { useState } from 'react';
 
 import type { TrainingCycleViewWeekProps } from '../trainer-group-cycle-view/types/type';
-import TrainingWeekDates from './components/training-week-date';
-import type { Training } from '@/controller/training/type/training.type';
+import TrainingWeekDates from './training-week-date';
+import type { Training } from '@/core/training/type/training.type';
 import { useMain } from '@/store/main.provider';
-import MyModal from '@/util/modal/modal';
+import MyModal from '@/ui/modal';
 
 export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
   const { components } = useMain();
@@ -28,7 +28,6 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
     selectedTargets,
     selectedTarget,
     copyComponent,
-    day,
     addTrainingComponent,
     deleteTrainingComponent,
   } = props;

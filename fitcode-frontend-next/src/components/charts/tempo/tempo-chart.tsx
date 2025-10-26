@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import type { SxProps } from '@mui/material';
 import {
   axisClasses,
@@ -9,17 +11,17 @@ import {
 import { useRef } from 'react';
 
 import { theme } from '@/app/style';
-import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
-import { ConditionDirection } from '@/controller/pose-detection/enum/condition-detection.enum';
+import type { TrainingExerciseRecording } from '@/core/training/type/training-exercise.type';
+import { EXERCISE_POSES } from '@/lib/pose-detection/const/exercise-poses';
+import { ConditionDirection } from '@/lib/pose-detection/enum/condition-detection.enum';
 import type {
   ExerciseDetectionData,
   ExerciseDetectionDataWithExerciseIds,
-} from '@/controller/pose-detection/types/exercise-start-condition.type';
+} from '@/lib/pose-detection/type/exercise-start-condition.type';
 import type {
   RecordedReps,
   RecordedRepsInfo,
-} from '@/controller/pose-detection/types/rep.type';
-import type { TrainingExerciseRecording } from '@/controller/training/type/training-exercise.type';
+} from '@/lib/pose-detection/type/rep.type';
 
 function IsoOverlayDual({
   rows,
@@ -36,9 +38,6 @@ function IsoOverlayDual({
 
   const bw = (xScale as any).bandwidth();
 
-  const groupCount = 2; // L and R
-  const groupWidth = bw / groupCount;
-
   return (
     <g pointerEvents="none">
       {rows.map((r) => {
@@ -46,8 +45,15 @@ function IsoOverlayDual({
         if (xBase === null) return null;
 
         // Centers for L then R:
+
+        const isoVals = [r.isometricL, r.isometricR].filter(
+          (v) => v !== undefined
+        ) as number[];
+
+        const groupCount = isoVals.length;
+        const groupWidth = bw / groupCount;
+
         const centers = [xBase + groupWidth * 0.5, xBase + groupWidth * 1.5];
-        const isoVals = [r.isometricL ?? 0, r.isometricR ?? 0];
 
         return (
           <g key={r.label}>
@@ -59,6 +65,8 @@ function IsoOverlayDual({
               // keep your two-layer line; you can tweak stroke for R if you want
               const outerColor = theme.palette.background.lightBorder;
               const innerColor = theme.palette.background.default;
+
+              if (isNaN(xCenter) || !yIso) return null;
 
               return (
                 <g key={`${r.label}-${idx}`}>
@@ -90,7 +98,7 @@ function IsoOverlayDual({
   );
 }
 
-interface TempoChartProps {
+interface Props {
   selectedExercise: TrainingExerciseRecording | undefined;
   setIndex: number;
   width: number;
@@ -103,20 +111,18 @@ interface TempoChartProps {
   aiRecordingView?: boolean;
 }
 
-export default function TempoChart(props: TempoChartProps) {
-  const {
-    selectedExercise,
-    setIndex,
-    width,
-    height = 300,
-    passedReps,
-    passedExercisePose,
-    isUnilateral,
-    hideLabels = false,
-    sx,
-    aiRecordingView,
-  } = props;
-
+export default function TempoChart({
+  selectedExercise,
+  setIndex,
+  width,
+  height = 300,
+  passedReps,
+  passedExercisePose,
+  isUnilateral,
+  hideLabels = false,
+  sx,
+  aiRecordingView,
+}: Props) {
   const maxValueRef = useRef(0);
 
   const currentRepsRef = useRef<RecordedRepsInfo | null>(passedReps || null);

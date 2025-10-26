@@ -1,14 +1,21 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 
-import { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
 import { CommonService } from '@src/common/service/common.service';
 import type {
   SubgroupRef,
   TrainingComponentRef,
 } from '@src/common/type/firestore.type';
-import { ParamType } from '@src/component/enum/param.enum';
+import { ExerciseParamService } from '@src/exercise/service/exercise-param.service';
 import { MAIN_GROUP_PARENT_ID } from '@src/training/constant/main-group-parent-id.constant';
-import { ExerciseSet } from '@src/training/entity/exercise-set.entity';
+import {
+  MAX_NUM_EXERCISES_IN_BLOCK_SUPERSET,
+  MAX_NUM_EXERCISES_IN_CIRCUIT_SUPERSET,
+  MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT,
+} from '@src/training/constant/training-limits.constant';
+import {
+  ExerciseParamField,
+  ExerciseSet,
+} from '@src/training/entity/exercise-set.entity';
 import { Subgroup } from '@src/training/entity/subgroup.entity';
 import { Training } from '@src/training/entity/training.entity';
 import { TrainingComponent } from '@src/training/entity/training-component.entity';
@@ -29,7 +36,10 @@ import { WeekUndulatingPeriodizationStrategy } from './strategy/periodization-we
 export class PeriodizationService {
   private strategiesMap = new Map<PeriodizationType, PeriodizationStrategy>();
 
-  constructor(private readonly commonService: CommonService) {
+  constructor(
+    private readonly common: CommonService,
+    private readonly exerciseParamService: ExerciseParamService,
+  ) {
     const strategies: PeriodizationStrategy[] = [
       new ReplicatePeriodizationStrategy(),
       new LinearPeriodizationStrategy(),
@@ -141,7 +151,7 @@ export class PeriodizationService {
             const readinessFactor = Math.random() * 0.2 + 0.9; // simulate readiness factor between 0.9 and 1.1
 
             for (const baseSet of baseExercise.sets) {
-              const exerciseSet = exercise.sets[baseSet.setNumber - 1];
+              const set = exercise.sets[baseSet.setNumber - 1];
 
               const { setIndex, baseIntL, baseVolL, baseIntR, baseVolR } =
                 baseSetValues.find(
@@ -167,16 +177,16 @@ export class PeriodizationService {
                     ?.value,
                 });
 
-                const foundInt = this.getIntParamValue(lr, exerciseSet);
-                const foundVol = this.getVolParamValue(lr, exerciseSet);
+                const foundInt = this.getIntParamValue(lr, set);
+                const foundVol = this.getVolParamValue(lr, set);
 
-                if (foundInt) {
-                  foundInt.value = intensity.toString();
+                if (foundInt && intensity) {
+                  set[foundInt.field] = +intensity as never;
                   updatePreviousValue(prevInt, intensity);
                 }
 
-                if (foundVol) {
-                  foundVol.value = volume.toString();
+                if (foundVol && volume) {
+                  set[foundVol.field] = +volume as never;
                   updatePreviousValue(prevVol, volume);
                 }
 
@@ -207,7 +217,11 @@ export class PeriodizationService {
   getAvailableSuperset(item: TrainingComponent | Subgroup): number {
     // circuit can have max 1 superset and max 32 exercises in it
     if (item.mainSet === MainSet.CIRCUIT) {
-      if (item.supersets.length && item.supersets[0].exercises.length < 32)
+      if (
+        item.supersets.length &&
+        item.supersets[0].exercises.length <
+          MAX_NUM_EXERCISES_IN_CIRCUIT_SUPERSET
+      )
         return 0;
 
       return -1;
@@ -215,10 +229,13 @@ export class PeriodizationService {
 
     // each superset can have max 4 exercises, so find first superset with less than 4 exercises
     for (let i = 0; i < item.supersets.length; i++)
-      if (item.supersets[i].exercises.length < 4) return i;
+      if (
+        item.supersets[i].exercises.length < MAX_NUM_EXERCISES_IN_BLOCK_SUPERSET
+      )
+        return i;
 
     // if all supersets are full, check if we can create a new one (max 8 supersets) and create it
-    if (item.supersets.length < 8) {
+    if (item.supersets.length < MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT) {
       item.supersets = [...item.supersets, { exercises: [] }];
       return item.supersets.length - 1; // return index of the newly created superset
     }
@@ -283,17 +300,15 @@ export class PeriodizationService {
     const firstTraining = trainings[0];
     const lastTraining = trainings[trainings.length - 1];
 
-    const startWeek = this.commonService.date.getIsoWeek(firstTraining.from);
-    const lastWeek = this.commonService.date.getIsoWeek(lastTraining.from);
+    const startWeek = this.common.date.getIsoWeek(firstTraining.from);
+    const lastWeek = this.common.date.getIsoWeek(lastTraining.from);
     const numWeeks = lastWeek - startWeek + 1;
 
     const weeks = Array.from({ length: numWeeks }, () => [] as Training[]);
 
     // fill the trainings in weeks
     for (const training of trainings) {
-      const weekIndex =
-        this.commonService.date.getIsoWeek(training.from) - startWeek;
-
+      const weekIndex = this.common.date.getIsoWeek(training.from) - startWeek;
       if (weekIndex >= 0 && weekIndex < weeks.length)
         weeks[weekIndex].push(training);
     }
@@ -319,51 +334,77 @@ export class PeriodizationService {
    */
   private getBaseSetValues(baseExercise: TrainingExercise) {
     return baseExercise.sets.map((s, setIndex) => {
-      const baseIntL = s.paramValuesL.find(
-        (pv) => pv.field === ParamType.IntWork1,
-      );
+      const loadField = !this.common.object.isEmpty(s.loadKg)
+        ? 'loadKg'
+        : !this.common.object.isEmpty(s.loadBw)
+          ? 'loadBw'
+          : !this.common.object.isEmpty(s.loadRm)
+            ? 'loadRm'
+            : undefined;
 
-      const baseVolL = s.paramValuesL.find(
-        (pv) => pv.field === ParamType.VolWork1,
-      );
+      const volField = !this.common.object.isEmpty(s.reps)
+        ? 'reps'
+        : !this.common.object.isEmpty(s.time)
+          ? 'time'
+          : !this.common.object.isEmpty(s.dist)
+            ? 'dist'
+            : undefined;
 
-      const baseIntR = s.paramValuesR?.find(
-        (pv) => pv.field === ParamType.IntWork1,
-      );
-
-      const baseVolR = s.paramValuesR?.find(
-        (pv) => pv.field === ParamType.VolWork1,
-      );
+      const loadFieldR = this.exerciseParamService.getPair(loadField);
+      const volFieldR = this.exerciseParamService.getPair(volField);
 
       return {
         setIndex,
-        baseIntL: baseIntL ? +baseIntL.value : undefined,
-        baseVolL: baseVolL ? +baseVolL.value : undefined,
-        baseIntR: baseIntR ? +baseIntR.value : undefined,
-        baseVolR: baseVolR ? +baseVolR.value : undefined,
+        baseIntL: s[loadField] ? +s[loadField] : undefined,
+        baseVolL: s[volField] ? +s[volField] : undefined,
+        baseIntR: s[loadFieldR] ? +s[loadFieldR] : undefined,
+        baseVolR: s[volFieldR] ? +s[volFieldR] : undefined,
       };
     });
   }
 
-  private getParamValuesBySide(
+  private getIntParamValue(
     lr: 'L' | 'R',
     set: ExerciseSet,
-  ): AttributeValue[] {
-    return lr === 'L'
-      ? [...set.paramValuesL]
-      : set.paramValuesR
-        ? [...set.paramValuesR]
-        : [];
+  ): { field: ExerciseParamField; value: number } | undefined {
+    const loadFieldL: ExerciseParamField = !this.common.object.isEmpty(
+      set.loadKg,
+    )
+      ? 'loadKg'
+      : !this.common.object.isEmpty(set.loadBw)
+        ? 'loadBw'
+        : !this.common.object.isEmpty(set.loadRm)
+          ? 'loadRm'
+          : undefined;
+
+    if (!loadFieldL) return undefined;
+    const loadFieldR = this.exerciseParamService.getPair(loadFieldL);
+
+    return {
+      field: lr === 'L' ? loadFieldL : loadFieldR,
+      value: +(set[lr === 'L' ? loadFieldL : loadFieldR] || 0),
+    };
   }
 
-  private getIntParamValue(lr: 'L' | 'R', set: ExerciseSet): AttributeValue {
-    const paramValues = this.getParamValuesBySide(lr, set);
-    return paramValues.find((pv) => pv.field === ParamType.IntWork1);
-  }
+  private getVolParamValue(
+    lr: 'L' | 'R',
+    set: ExerciseSet,
+  ): { field: ExerciseParamField; value: number } | undefined {
+    const volFieldL = !this.common.object.isEmpty(set.reps)
+      ? 'reps'
+      : !this.common.object.isEmpty(set.time)
+        ? 'time'
+        : !this.common.object.isEmpty(set.dist)
+          ? 'dist'
+          : undefined;
 
-  private getVolParamValue(lr: 'L' | 'R', set: ExerciseSet): AttributeValue {
-    const paramValues = this.getParamValuesBySide(lr, set);
-    return paramValues.find((pv) => pv.field === ParamType.VolWork1);
+    if (!volFieldL) return undefined;
+    const volFieldR = this.exerciseParamService.getPair(volFieldL);
+
+    return {
+      field: lr === 'L' ? volFieldL : volFieldR,
+      value: +(set[lr === 'L' ? volFieldL : volFieldR] || 0),
+    };
   }
 
   private isSubgroup(item: TrainingComponent | Subgroup): item is Subgroup {

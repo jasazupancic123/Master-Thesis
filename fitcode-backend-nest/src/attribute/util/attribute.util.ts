@@ -21,7 +21,7 @@ export function checkPathWithNextOptions(
       return {
         isValid: false,
         lastValidPath,
-        nextOptions: current.map((c) => c.field),
+        nextOptions: current.map((c) => c.field) as string[],
       };
 
     lastValidPath = lastValidPath ? `${lastValidPath}:${part}` : part;
@@ -31,6 +31,6 @@ export function checkPathWithNextOptions(
   return {
     isValid: true,
     lastValidPath,
-    nextOptions: current.map((c) => c.field),
+    nextOptions: current.map((c) => c.field) as string[],
   };
 }

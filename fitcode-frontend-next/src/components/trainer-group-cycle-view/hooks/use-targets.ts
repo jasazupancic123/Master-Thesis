@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import type { Target } from '@/controller/target/type/target.type';
+import type { Target } from '@/core/target/type/target.type';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 

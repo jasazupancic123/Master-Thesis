@@ -9,7 +9,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 
-export class TraininComponentStats {
+export class TrainingComponentStats {
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
@@ -24,11 +24,11 @@ export class TraininComponentStats {
 }
 
 export class TrainingStats {
-  @Type(() => TraininComponentStats)
+  @Type(() => TrainingComponentStats)
   @ValidateNested({ each: true })
-  @ApiProperty({ type: () => TraininComponentStats, isArray: true })
+  @ApiProperty({ type: () => TrainingComponentStats, isArray: true })
   @Expose()
-  plannedComponents: TraininComponentStats[];
+  plannedComponents: TrainingComponentStats[];
 
   @IsNumber()
   @Min(0)
@@ -77,31 +77,13 @@ export class TrainingStats {
   @Min(0)
   @ApiProperty()
   @Expose()
-  totalActiveTime: number; // time when executing the training (in seconds) - sets * reps/dist/time * tempo (sum), for example 3 * 12 * 1:0:1 tempo (2s) = 72s @IsNumber()
+  totalTit: number; // time when executing the training (in seconds) - sets * reps/dist/time * tempo (sum), for example 3 * 12 * 1:0:1 tempo (2s) = 72s @IsNumber()
 
   @IsNumber()
   @Min(0)
   @ApiProperty()
   @Expose()
   totalTonnage: number; // total weight lifted prescribed (in kg: sets * reps * weight)
-
-  @IsNumber()
-  @Min(0)
-  @ApiProperty()
-  @Expose()
-  totalTimeWork: number; // total time under load
-
-  @IsNumber()
-  @Min(0)
-  @ApiProperty()
-  @Expose()
-  totalDistWork: number; // total distance under load
-
-  @IsNumber()
-  @Min(0)
-  @ApiProperty()
-  @Expose()
-  totalPower: number; // total power output (in watts)
 
   @IsNumber()
   @Min(0)

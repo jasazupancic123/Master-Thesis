@@ -4,8 +4,7 @@ import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 import { IdEntity } from '@src/common/entity/id.entity';
 import { Target } from '@src/target/entity/target.entity';
-
-import { ComponentParam } from './component-param.entity';
+import { ExerciseMainParamField } from '@src/training/entity/exercise-set.entity';
 
 export class Component extends IdEntity {
   @IsString()
@@ -38,10 +37,12 @@ export class Component extends IdEntity {
   @Expose()
   attributes?: string[];
 
+  @IsString({ each: true })
+  @IsNotEmpty({ each: true })
   @ApiPropertyOptional()
   @IsOptional()
   @Expose()
-  params?: { [condition: string]: ComponentParam[] }; // only root components have params
+  params?: ExerciseMainParamField[]; // exercise params fields
 
   // virtual fields
   children?: string[];

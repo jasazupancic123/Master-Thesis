@@ -2,19 +2,22 @@ import { axisClasses, LineChart } from '@mui/x-charts';
 import dayjs from 'dayjs';
 
 import { theme } from '@/app/style';
-import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
-import type { TrainingExerciseRecording } from '@/controller/training/type/training-exercise.type';
+import type { TrainingExerciseRecording } from '@/core/training/type/training-exercise.type';
+import { lib } from '@/lib';
 
-interface RomChartProps {
+interface Props {
   selectedExercise: TrainingExerciseRecording;
   setIndex: number;
   width: number;
   height?: number;
 }
 
-export default function RomChart(props: RomChartProps) {
-  const { selectedExercise, setIndex, width, height = 300 } = props;
-
+export default function RomChart({
+  selectedExercise,
+  setIndex,
+  width,
+  height = 300,
+}: Props) {
   if (!selectedExercise.recordedSets) return null;
 
   const currentSet = selectedExercise.recordedSets.find(
@@ -32,7 +35,7 @@ export default function RomChart(props: RomChartProps) {
     ) || [])
   );
 
-  const romL = KeypointUtil.smoothKeypointValues(
+  const romL = lib.ai.keypoint.smoothKeypointValues(
     currentSet.romL
       ?.filter(
         (r) =>
@@ -42,7 +45,7 @@ export default function RomChart(props: RomChartProps) {
       .map((r) => r.value) || []
   ) as number[];
 
-  let romR = KeypointUtil.smoothKeypointValues(
+  let romR = lib.ai.keypoint.smoothKeypointValues(
     currentSet.romR
       ?.filter(
         (r) =>
@@ -68,16 +71,18 @@ export default function RomChart(props: RomChartProps) {
 
   if (!currentSet.romL && !currentSet.romR) return null;
 
-  const dataset = (romR && romR.length > romL.length ? romR : romL)
-    .map((v, i) => ({
-      index: i,
-      valueL: romL[i],
-      valueR: romR ? romR[i] : undefined,
-      timestamp: currentSet.romL
-        ? new Date(currentSet.romL[i]?.timestamp)
-        : undefined,
-    }))
-    .filter((d) => d.valueL !== undefined || d.valueR !== undefined);
+  const dataset = (romR && romR.length > romL.length ? romR : romL).map(
+    (v, i) => {
+      const currentRom = currentSet.romL?.[i] || currentSet.romR?.[i];
+
+      return {
+        index: i,
+        valueL: romL[i],
+        valueR: romR ? romR[i] : undefined,
+        timestamp: currentRom ? new Date(currentRom.timestamp) : undefined,
+      };
+    }
+  );
 
   const SMOOTH = false;
 
@@ -85,10 +90,10 @@ export default function RomChart(props: RomChartProps) {
     const valuesL = dataset.map((d) => d.valueL);
     const valuesR = dataset.map((d) => d.valueR).filter((v) => v !== undefined);
 
-    const smoothedL = KeypointUtil.smoothKeypointValues(valuesL) as number[];
+    const smoothedL = lib.ai.keypoint.smoothKeypointValues(valuesL) as number[];
 
     const smoothedR = valuesR
-      ? (KeypointUtil.smoothKeypointValues(valuesR) as number[])
+      ? (lib.ai.keypoint.smoothKeypointValues(valuesR) as number[])
       : [];
 
     dataset.forEach((d, i) => {
@@ -138,7 +143,7 @@ export default function RomChart(props: RomChartProps) {
       ]}
       yAxis={[
         {
-          label: 'ROM (m)',
+          label: 'ROM',
         },
       ]}
       sx={{

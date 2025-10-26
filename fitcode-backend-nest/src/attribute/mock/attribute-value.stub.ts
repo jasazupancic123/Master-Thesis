@@ -10,6 +10,6 @@ export function generateAttributeValueStub(
   return {
     field: data?.field || generateRandomString(),
     value: value,
-    selected: data?.selected || value,
+    selected: data?.selected,
   };
 }

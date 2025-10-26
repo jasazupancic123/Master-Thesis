@@ -98,27 +98,3 @@ export const theme = createTheme({
     },
   },
 });
-
-export const buttonStyle = {
-  p: 2,
-  bgcolor: 'rgba(255, 255, 255, 0.1)',
-  borderRadius: 2,
-  height: '100%',
-  display: 'flex',
-  flexDirection: 'column',
-  justifyContent: 'center',
-  alignItems: 'center',
-  backgroundSize: 'cover',
-  backgroundPosition: 'center',
-  color: 'white', // Ensures button text is white
-  textAlign: 'center',
-};
-
-export const titleStyle = {
-  p: 3,
-  bgcolor: 'rgba(0, 0, 0, 0.5)',
-  borderRadius: 2,
-  transition: 'transform 0.3s',
-  color: 'white', // Title text is white
-  '&:hover': { transform: 'scale(1.05)' },
-};

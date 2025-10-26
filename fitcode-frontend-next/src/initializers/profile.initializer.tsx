@@ -2,11 +2,10 @@
 
 import { useEffect, useState } from 'react';
 
-import type { ChildrenProps } from '@/common/type/props.type';
-import { AuthController } from '@/controller/auth/auth.controller';
-import type { AuthUser } from '@/controller/auth/type/user.type';
-import { ProfileController } from '@/controller/profile/profile.controller';
-import type { Profile } from '@/controller/profile/type/user.type';
+import { AuthController } from '@/core/auth/auth.controller';
+import type { AuthUser } from '@/core/auth/type/user.type';
+import { ProfileController } from '@/core/profile/profile.controller';
+import type { Profile } from '@/core/profile/type/user.type';
 import {
   getCachedProfile,
   getCachedUser,
@@ -15,7 +14,9 @@ import {
 } from '@/session-cache/profile.session-cache';
 import { ProfileProvider } from '@/store/profile.provider';
 
-export default function ProfileInitializer({ children }: ChildrenProps) {
+export default function ProfileInitializer({
+  children,
+}: React.PropsWithChildren) {
   const [user, setUser] = useState<AuthUser | undefined>(
     getCachedUser() || undefined
   );

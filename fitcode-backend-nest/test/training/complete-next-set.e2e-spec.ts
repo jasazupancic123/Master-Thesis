@@ -1,18 +1,17 @@
-import { COMPONENT_PARAMS_OPT1 } from '@test/common/constant/component-params.constant';
 import { TestApp } from '@test/common/utils/app.util';
 import { addHours, subDays } from 'date-fns';
 
 import type { TestInstitution } from '@src/common/type/entity.type';
 import type { Component } from '@src/component/entity/component.entity';
-import { IntType, ParamType, VolType } from '@src/component/enum/param.enum';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import type { Group } from '@src/group/entity/group.entity';
 import { TestDbService } from '@src/test-db/test-db.service';
-import type { CompleteSetDto } from '@src/training/dto/complete-set.dto';
-import type { Workload } from '@src/training/entity/workload.entity';
+import type {
+  CreateWorkload,
+  Workload,
+} from '@src/training/entity/workload.entity';
 import { SetStatus } from '@src/training/enum/set-status.enum';
-import { generateParamAttributeValue } from '@src/training/mock/param-values.stub';
 import {
   generateExerciseSet,
   generateSubgroup,
@@ -33,12 +32,6 @@ describe('Complete Next Set (e2e)', () => {
   let group: Group;
   let component1: Component;
   let trainingId: string;
-
-  function generateSet(setNumber: number, isUnilateral = true) {
-    const set = generateExerciseSet(setNumber, COMPONENT_PARAMS_OPT1);
-    if (isUnilateral) set.paramValuesR = undefined;
-    return set;
-  }
 
   beforeAll(async () => {
     testApp = await TestApp.init();
@@ -80,11 +73,14 @@ describe('Complete Next Set (e2e)', () => {
                 exercises: [
                   generateTrainingExercise({
                     id: 'squat',
-                    sets: [generateSet(1)],
+                    sets: [generateExerciseSet(1, { reps: 10, loadKg: 50 })],
                   }),
                   generateTrainingExercise({
                     id: 'bench',
-                    sets: [generateSet(1), generateSet(2)],
+                    sets: [
+                      generateExerciseSet(1, { reps: 10, loadKg: 50 }),
+                      generateExerciseSet(2, { reps: 10, loadKg: 50 }),
+                    ],
                   }),
                 ],
               }),
@@ -92,11 +88,18 @@ describe('Complete Next Set (e2e)', () => {
                 exercises: [
                   generateTrainingExercise({
                     id: 'deadlift',
-                    sets: [generateSet(1), generateSet(2), generateSet(3)],
+                    sets: [
+                      generateExerciseSet(1, { reps: 10, loadKg: 50 }),
+                      generateExerciseSet(2, { reps: 10, loadKg: 50 }),
+                      generateExerciseSet(3, { reps: 10, loadKg: 50 }),
+                    ],
                   }),
                   generateTrainingExercise({
                     id: 'squat',
-                    sets: [generateSet(1), generateSet(2)],
+                    sets: [
+                      generateExerciseSet(1, { reps: 10, loadKg: 50 }),
+                      generateExerciseSet(2, { reps: 10, loadKg: 50 }),
+                    ],
                   }),
                 ],
               }),
@@ -109,7 +112,11 @@ describe('Complete Next Set (e2e)', () => {
                 exercises: [
                   generateTrainingExercise({
                     id: 'squat',
-                    sets: [generateSet(1), generateSet(2), generateSet(3)],
+                    sets: [
+                      generateExerciseSet(1, { reps: 10, loadKg: 50 }),
+                      generateExerciseSet(2, { reps: 10, loadKg: 50 }),
+                      generateExerciseSet(3, { reps: 10, loadKg: 50 }),
+                    ],
                   }),
                 ],
               }),
@@ -137,7 +144,7 @@ describe('Complete Next Set (e2e)', () => {
     token: string,
     trainingId: string,
     exerciseId: string,
-    body: CompleteSetDto,
+    body: CreateWorkload,
   ) {
     return await testApp.http.post(
       `/training/${trainingId}/exercise/${exerciseId}/complete-next-set`,
@@ -153,8 +160,10 @@ describe('Complete Next Set (e2e)', () => {
       'invalid-exercise-id',
       {
         userId: global.athlete.uid,
-        from: new Date(),
-        to: new Date(),
+        timestamp: new Date(),
+        reps: 1,
+        recTime: 0,
+        photoURLs: [],
       },
     );
 
@@ -174,8 +183,10 @@ describe('Complete Next Set (e2e)', () => {
 
       await req(token, trainingId, 'invalid-exercise-id', {
         userId: global.athlete.uid,
-        from: new Date(),
-        to: new Date(),
+        timestamp: new Date(),
+        reps: 1,
+        recTime: 0,
+        photoURLs: [],
       });
 
       const spyResult = spy.mock.results[0].value;
@@ -195,8 +206,10 @@ describe('Complete Next Set (e2e)', () => {
       'invalid-exercise-id',
       {
         userId: global.athlete.uid,
-        from: new Date(),
-        to: new Date(),
+        timestamp: new Date(),
+        reps: 1,
+        recTime: 0,
+        photoURLs: [],
       },
     );
 
@@ -213,8 +226,10 @@ describe('Complete Next Set (e2e)', () => {
 
     const res = await req(global.trainer.token, trainingId, exercise.id, {
       userId: global.athlete.uid,
-      from: new Date(),
-      to: new Date(),
+      timestamp: new Date(),
+      reps: 1,
+      recTime: 0,
+      photoURLs: [],
     });
 
     expect(res.status).toBe(401);
@@ -237,8 +252,10 @@ describe('Complete Next Set (e2e)', () => {
 
     const res = await req(global.trainer.token, pastTrainingId, 'squat', {
       userId: global.athlete.uid,
-      from: new Date(),
-      to: new Date(),
+      timestamp: new Date(),
+      reps: 1,
+      recTime: 0,
+      photoURLs: [],
     });
 
     expect(res.status).toBe(409);
@@ -250,11 +267,10 @@ describe('Complete Next Set (e2e)', () => {
     const spy = jest.spyOn(workloadService, 'findAllByUserTraining');
     const res = await req(global.trainer.token, trainingId, 'squat', {
       userId: global.athlete.uid,
-      from,
-      to: addHours(from, 1),
+      timestamp: from,
       notes: 'left hip too low',
       reps: 12,
-      load: 100,
+      loadKg: 100,
       recTime: 60,
       tempo: '2:0:2:0',
     });
@@ -277,28 +293,24 @@ describe('Complete Next Set (e2e)', () => {
     expect(result.componentId).toBe('c1');
     expect(result.supersetIndex).toBe(0);
     expect(result.setNumber).toBe(1);
-    expect(new Date(result.plannedAt).getTime()).toBe(from.getTime());
+    expect(new Date(result.timestamp).getTime()).toBe(from.getTime());
     expect(result.status).toBe(SetStatus.OVER);
     expect(result.notes).toBe('left hip too low');
 
     // prescribed workload
-    expect(result.volWork1Type).toBe('rep');
-    expect(result.prescribedVolWork1ValueL).toBe(10);
-    expect(result.prescribedVolWork1ValueR).toBeUndefined();
-    expect(result.intWork1Type).toBe('kg');
-    expect(result.prescribedIntWork1ValueL).toBe(50);
-    expect(result.prescribedIntWork1ValueR).toBeUndefined();
+    expect(result.prescribed.reps).toBe(10);
+    expect(result.prescribed.repsR).toBeUndefined();
+    expect(result.prescribed.loadKg).toBe(50);
+    expect(result.prescribed.loadKgR).toBeUndefined();
 
     // completed workload
-    expect(result.volWork1ValueL).toBe(12);
-    expect(result.volWork1ValueR).toBeUndefined();
-    expect(result.intWork1ValueL).toBe(100);
-    expect(result.intWork1ValueR).toBeUndefined();
+    expect(result.reps).toBe(12);
+    expect(result.repsR).toBeUndefined();
+    expect(result.loadKg).toBe(100);
     // additional properties - tempo and rom
-    expect(result.volWork2ValueL).toBe(2020);
-    expect(result.volWork2ValueR).toBeUndefined();
-    expect(result.volRecValueL).toBe(60);
-    expect(result.volRecValueR).toBe(60);
+    expect(result.tempo).toBe('2:0:2:0');
+    expect(result.tempoR).toBeUndefined();
+    expect(result.recTime).toBe(60);
 
     const workloads = await db.workloads.getAll(trainingId);
     expect(workloads).toHaveLength(1);
@@ -325,6 +337,9 @@ describe('Complete Next Set (e2e)', () => {
         supersetIndex: 0,
         setNumber: 1,
         status: SetStatus.PARTIAL,
+        reps: 1,
+        recTime: 0,
+        prescribed: { reps: 10, recTime: 90 },
       },
     ]);
 
@@ -332,10 +347,9 @@ describe('Complete Next Set (e2e)', () => {
     const spy = jest.spyOn(workloadService, 'findAllByUserTraining');
     const res = await req(global.trainer.token, trainingId, 'squat', {
       userId: global.athlete.uid,
-      from,
-      to: addHours(from, 1),
+      timestamp: from,
       reps: 10,
-      load: 80,
+      loadKg: 80,
       recTime: 90,
       tempo: '2:0:2:0',
     });
@@ -358,28 +372,19 @@ describe('Complete Next Set (e2e)', () => {
     expect(result.componentId).toBe('c1');
     expect(result.supersetIndex).toBe(1); // because first superset squat has only 1 set and is already completed
     expect(result.setNumber).toBe(1);
-    expect(new Date(result.plannedAt).getTime()).toBe(from.getTime());
+    expect(new Date(result.timestamp).getTime()).toBe(from.getTime());
     expect(result.status).toBe(SetStatus.OVER);
     expect(result.notes).toBeUndefined();
 
     // prescribed workload
-    expect(result.volWork1Type).toBe('rep');
-    expect(result.prescribedVolWork1ValueL).toBe(10);
-    expect(result.prescribedVolWork1ValueR).toBeUndefined();
-    expect(result.intWork1Type).toBe('kg');
-    expect(result.prescribedIntWork1ValueL).toBe(50);
-    expect(result.prescribedIntWork1ValueR).toBeUndefined();
-
-    // completed workload
-    expect(result.volWork1ValueL).toBe(10);
-    expect(result.volWork1ValueR).toBeUndefined();
-    expect(result.intWork1ValueL).toBe(80);
-    expect(result.intWork1ValueR).toBeUndefined();
+    expect(result.reps).toBe(10);
+    expect(result.repsR).toBeUndefined();
+    expect(result.loadKg).toBe(80);
+    expect(result.loadKgR).toBeUndefined();
     // additional properties - tempo and rom
-    expect(result.volWork2ValueL).toBe(2020);
-    expect(result.volWork2ValueR).toBeUndefined();
-    expect(result.volRecValueL).toBe(90);
-    expect(result.volRecValueR).toBe(90);
+    expect(result.tempo).toBe('2:0:2:0');
+    expect(result.tempoR).toBeUndefined();
+    expect(result.recTime).toBe(90);
 
     const workloads = await db.workloads.getAll(trainingId);
     expect(workloads).toHaveLength(2);
@@ -398,16 +403,17 @@ describe('Complete Next Set (e2e)', () => {
         supersetIndex: 0,
         setNumber: i,
         status: SetStatus.PARTIAL,
+        reps: 1,
+        recTime: 0,
+        prescribed: { reps: 10, recTime: 90 },
       })),
     );
 
-    const from = new Date();
     const res = await req(global.trainer.token, trainingId, 'squat', {
       userId: global.athlete.uid,
-      from,
-      to: addHours(from, 1),
+      timestamp: new Date(),
       reps: 8,
-      load: 60,
+      loadKg: 60,
       recTime: 120,
       tempo: '2:0:2:0',
     });
@@ -446,30 +452,8 @@ describe('Complete Next Set (e2e)', () => {
                       generateTrainingExercise({
                         id: 'squat',
                         sets: [
-                          generateExerciseSet(1, [
-                            generateParamAttributeValue({
-                              field: ParamType.VolWork1,
-                              selected: VolType.Rep,
-                              value: 5,
-                            }),
-                            generateParamAttributeValue({
-                              field: ParamType.IntWork1,
-                              selected: IntType.Rm,
-                              value: 80, // 80% of RM
-                            }),
-                          ]),
-                          generateExerciseSet(2, [
-                            generateParamAttributeValue({
-                              field: ParamType.VolWork1,
-                              selected: VolType.Rep,
-                              value: 5,
-                            }),
-                            generateParamAttributeValue({
-                              field: ParamType.IntWork1,
-                              selected: IntType.Bw,
-                              value: 85, // 85% of BW
-                            }),
-                          ]),
+                          generateExerciseSet(1, { reps: 5, loadRm: 80 }),
+                          generateExerciseSet(2, { reps: 5, loadBw: 85 }),
                         ],
                       }),
                     ],
@@ -497,53 +481,54 @@ describe('Complete Next Set (e2e)', () => {
         supersetIndex: 0,
         setNumber: 0,
         status: SetStatus.PARTIAL,
-        volWork1ValueL: 1, // 1 rep
-        intWork1ValueL: 120, // 120 kg
+        loadKg: 120,
+        reps: 1,
+        recTime: 0,
+        prescribed: { reps: 5, loadRm: 80 }, // 80% of 120 kg
       },
     ]);
 
-    const from = new Date();
     const res1 = await req(global.trainer.token, trainingId2, 'squat', {
       userId: global.athlete.uid,
-      from,
-      to: addHours(from, 1),
+      timestamp: new Date(),
       reps: 6,
-      load: 90,
+      loadKg: 90,
+      recTime: 0,
     });
 
     expect(res1.status).toBe(201);
     const result1 = res1.body as Workload;
 
     // reps
-    expect(result1.prescribedVolWork1ValueL).toBe(5);
-    expect(result1.volWork1ValueL).toBe(6);
-    expect(result1.volWork1ValueR).toBeUndefined();
+    expect(result1.prescribed.reps).toBe(5);
+    expect(result1.reps).toBe(6);
+    expect(result1.repsR).toBeUndefined();
 
     // rm
-    expect(result1.prescribedIntWork1ValueL).toBeLessThan(100); // 80% of 120 kg
-    expect(result1.intWork1ValueL).toBe(90);
-    expect(result1.intWork1ValueR).toBeUndefined();
+    expect(result1.prescribed.loadKg).toBeLessThan(100); // 80% of 120 kg
+    expect(result1.loadKg).toBe(90);
+    expect(result1.loadKgR).toBeUndefined();
 
     const res2 = await req(global.trainer.token, trainingId2, 'squat', {
       userId: global.athlete.uid,
-      from,
-      to: addHours(from, 1),
+      timestamp: new Date(),
       reps: 4,
-      load: 70,
+      loadKg: 70,
+      recTime: 0,
     });
 
     expect(res2.status).toBe(201);
     const result2 = res2.body as Workload;
 
     // reps
-    expect(result2.prescribedVolWork1ValueL).toBe(5);
-    expect(result2.volWork1ValueL).toBe(4);
-    expect(result2.volWork1ValueR).toBeUndefined();
+    expect(result2.prescribed.reps).toBe(5);
+    expect(result2.reps).toBe(4);
+    expect(result2.repsR).toBeUndefined();
 
     // bw
-    expect(result2.prescribedIntWork1ValueL).toBeCloseTo(66.5); // 85% of 78.5 kg, rounded to first 0.25 kg
-    expect(result2.intWork1ValueL).toBe(70);
-    expect(result2.intWork1ValueR).toBeUndefined();
+    expect(result2.prescribed.loadKg).toBeCloseTo(66.5); // 85% of 78.5 kg, rounded to first 0.25 kg
+    expect(result2.loadKg).toBe(70);
+    expect(result2.loadKgR).toBeUndefined();
 
     const workloads = await db.workloads.getAll(trainingId2);
     expect(workloads).toHaveLength(2);
@@ -576,7 +561,7 @@ describe('Complete Next Set (e2e)', () => {
                 exercises: [
                   generateTrainingExercise({
                     id: exercise.id,
-                    sets: [generateExerciseSet(1, COMPONENT_PARAMS_OPT1)],
+                    sets: [generateExerciseSet(1, { reps: 10, loadKg: 50 })],
                   }),
                 ],
               }),
@@ -586,19 +571,26 @@ describe('Complete Next Set (e2e)', () => {
       }),
     );
 
-    const from = new Date();
     const res = await req(global.trainer.token, trainingId3, exercise.id, {
       userId: global.athlete.uid,
-      from,
-      to: addHours(from, 1),
+      timestamp: addHours(new Date(), 1),
       reps: 12,
       repsR: 11,
-      load: 60,
+      loadKg: 60,
+      recTime: 0,
       // loadR should be provided
     });
 
     expect(res.status).toBe(400);
-    expect(res.body.message).toBe(`Both sides must be filled for load or none`);
+    expect(res.body.message).toBe(
+      JSON.stringify([
+        {
+          field: 'loadKg',
+          message:
+            'Both primary and secondary side must be defined for param load in unilateral exercises',
+        },
+      ]),
+    );
 
     await db.trainings.delete(trainingId3);
   });

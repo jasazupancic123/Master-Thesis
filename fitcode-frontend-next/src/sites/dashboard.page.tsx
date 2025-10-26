@@ -6,18 +6,18 @@ import { Box } from '@mui/material';
 import { redirect } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-import { LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS } from '@/common/constant/navigation.constant';
-import { isTrainer } from '@/common/firebase/firebase-auth.util';
-import DashboardGroups from '@/components/dashboard/components/dashboard-groups/dashboard-groups';
-import RegisterUsersDashboard from '@/components/dashboard/components/dashboard-register-users-modal/dashboard-register-users-modal';
-import { GroupService } from '@/controller/group/group.service';
-import type { Institution } from '@/controller/institution/type/institution.type';
-import { UserRole } from '@/controller/profile/enum/user-role.enum';
+import DashboardGroups from '@/components/dashboard/dashboard-groups';
+import RegisterUsersDashboard from '@/components/dashboard/dashboard-register-users-modal';
+import { core } from '@/core/core.service';
+import type { Institution } from '@/core/institution/type/institution.type';
+import { UserRole } from '@/core/profile/enum/user-role.enum';
+import { lib } from '@/lib';
+import { LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS } from '@/lib/common/const/nav.const';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import MyModal from '@/util/modal/modal';
+import MyModal from '@/ui/modal';
 
 export default function DashboardPage() {
   const screenSize = useScreenSize();
@@ -33,7 +33,6 @@ export default function DashboardPage() {
     setSelectedGroup,
   } = useDashboard();
 
-  const [openEditAthleteModal, setOpenEditAthleteModal] = useState(false);
   const [openAddTrainerModal, setOpenAddTrainerModal] = useState(false);
 
   useEffect(() => {
@@ -45,7 +44,7 @@ export default function DashboardPage() {
         (g) => g.institutionId === selectedInstitution.id
       );
 
-      for (const group of groups) GroupService.mapMembers(group, users);
+      for (const group of groups) core.group.mapMembers(group, users);
 
       setSelectedInstitution((prev) => ({ ...prev, groups }) as Institution);
       if (groups.length) setSelectedGroup(groups[0]);
@@ -56,7 +55,7 @@ export default function DashboardPage() {
 
   if (!profile) return null;
 
-  if (!institutions.length) {
+  if (!institutions.length)
     return (
       <Box
         sx={{
@@ -70,9 +69,8 @@ export default function DashboardPage() {
         <Typography variant="h6">No institutions available</Typography>
       </Box>
     );
-  }
 
-  if (!selectedInstitution) {
+  if (!selectedInstitution)
     return (
       <Box
         sx={{
@@ -86,7 +84,6 @@ export default function DashboardPage() {
         <Typography variant="h6">No institution selected</Typography>
       </Box>
     );
-  }
 
   return (
     <>
@@ -112,23 +109,25 @@ export default function DashboardPage() {
           }}
           gap={1}
         >
-          {role && isTrainer(role) && (
-            <Tooltip title="Go to group" placement="top">
-              <Fab
-                color="primary"
-                aria-label="go"
-                onClick={() => {
-                  if (selectedGroup)
-                    redirect(
-                      LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS(selectedGroup.id)
-                        .home.href
-                    );
-                }}
-              >
-                <ArrowForward />
-              </Fab>
-            </Tooltip>
-          )}
+          {role &&
+            (lib.firebase.auth.isTrainer(role) ||
+              lib.firebase.auth.isManager(role)) && (
+              <Tooltip title="Go to group" placement="top">
+                <Fab
+                  color="primary"
+                  aria-label="go"
+                  onClick={() => {
+                    if (selectedGroup)
+                      redirect(
+                        LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS(selectedGroup.id)
+                          .home.href
+                      );
+                  }}
+                >
+                  <ArrowForward />
+                </Fab>
+              </Tooltip>
+            )}
         </Box>
 
         <DashboardGroups />
@@ -139,7 +138,7 @@ export default function DashboardPage() {
         isOpen={openAddTrainerModal}
         setIsOpen={(open) => setOpenAddTrainerModal(open)}
         onConfirm={undefined}
-        onCancel={() => setOpenEditAthleteModal(false)}
+        onCancel={() => setOpenAddTrainerModal(false)}
         cancelText="Close"
       >
         <RegisterUsersDashboard registerRole={UserRole.TRAINER} />

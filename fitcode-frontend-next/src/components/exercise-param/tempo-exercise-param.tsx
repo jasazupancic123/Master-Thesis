@@ -1,0 +1,269 @@
+import CloseIcon from '@mui/icons-material/Close';
+import {
+  Button,
+  FormControl,
+  IconButton,
+  MenuItem,
+  Popover,
+  Select,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
+import { useTheme } from '@mui/material';
+import { useState } from 'react';
+
+import {
+  disableBorder,
+  exerciseCardSetAttributeSx,
+} from '../trainer-group-day-view/style/exercise-card-set-attribute.style';
+import type { Attribute } from '@/core/attribute/type/attribute.type';
+import { core } from '@/core/core.service';
+import type { ExerciseParamField } from '@/core/training/type/exercise-set.type';
+import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import type { SetState } from '@/lib/common/type/state.type';
+import { useGroup } from '@/store/group.provider';
+
+interface Props {
+  exercise: TrainingExercise;
+  options: Attribute[];
+  selected: string;
+  value: number | string | null;
+  onSelectChange?: SetState<string>;
+  onInputChange?: SetState<string>;
+  athleteView?: boolean;
+  trainingInProgressView?: boolean;
+  lOrR?: 'L' | 'R';
+  showOptions?: boolean;
+  readOnly?: boolean;
+  disableOptions?: boolean;
+  disableSets?: boolean;
+  disableSettingValue?: boolean;
+}
+
+export function TempoExerciseParam({
+  options,
+  selected,
+  value,
+  onSelectChange,
+  onInputChange,
+  showOptions = true,
+  disableOptions = false,
+  disableSets = false,
+  readOnly = false,
+  athleteView,
+  trainingInProgressView,
+}: Props) {
+  const theme = useTheme();
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const open = Boolean(anchorEl);
+
+  const group = useGroup() ?? {};
+  const { setDetectedChanges } =
+    athleteView || !group ? { setDetectedChanges: undefined } : group;
+
+  const exerciseParam = core.exercise.param.get(selected as ExerciseParamField);
+
+  if (!value || !exerciseParam) return null;
+
+  return (
+    <Stack
+      direction="column"
+      justifyContent={trainingInProgressView ? 'flex-start' : 'center'}
+      alignItems="center"
+    >
+      {showOptions && (
+        <FormControl
+          variant="filled"
+          size="small"
+          sx={exerciseCardSetAttributeSx}
+          disabled={disableOptions}
+        >
+          <Select
+            variant="filled"
+            sx={{
+              ...exerciseCardSetAttributeSx['& .MuiSelect-select'],
+              textAlign: 'center',
+              pr: 0,
+              pl: 0,
+              fontWeight: 700,
+              '& .MuiSelect-select': {
+                textAlign: 'center',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                pr: 0,
+                pl: 0,
+              },
+              '& .MuiInputBase-input': {
+                textAlign: 'center',
+                paddingRight: '0px !important',
+                paddingLeft: '0px !important',
+              },
+              '&.Mui-disabled': {
+                backgroundColor: 'transparent',
+              },
+              '&.Mui-disabled .MuiSelect-select': trainingInProgressView
+                ? {
+                    color: theme.palette.text.primary,
+                    WebkitTextFillColor: theme.palette.text.primary, // <-- important for disabled text
+                  }
+                : {},
+            }}
+            disableUnderline={true}
+            value={selected}
+            onChange={(e) => {
+              onSelectChange?.(e.target.value as string);
+              if (!athleteView && setDetectedChanges) setDetectedChanges(true);
+            }}
+          >
+            <MenuItem
+              disabled
+              key={selected}
+              value={selected}
+              sx={{
+                textAlign: 'center',
+                p: 2,
+                textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
+              }}
+            >
+              {exerciseParam.name[0].toUpperCase() +
+                exerciseParam.name.slice(1)}
+            </MenuItem>
+
+            {options?.map((p) => (
+              <MenuItem
+                key={p.field as string}
+                value={p.field as string}
+                sx={{
+                  textAlign: 'center',
+                  p: 2,
+                  textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
+                }}
+              >
+                {p.name[0].toUpperCase() + p.name.slice(1)}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      )}
+
+      <FormControl
+        variant="filled"
+        size="small"
+        sx={{
+          ...exerciseCardSetAttributeSx,
+          '& .MuiInputBase-input': disableBorder,
+        }}
+      >
+        <Button
+          variant="text"
+          size="small"
+          onClick={(e) => setAnchorEl(e.currentTarget)}
+          disabled={readOnly || disableSets}
+        >
+          {/* parsed value for tempo */}
+          <Typography sx={{ textAlign: 'center', fontSize: 12 }}>
+            {value}
+          </Typography>
+        </Button>
+
+        <TempoPicker
+          open={open}
+          anchorEl={anchorEl}
+          onClose={() => setAnchorEl(null)}
+          value={value as string}
+          onChange={(val) => {
+            onInputChange?.(val);
+            if (!athleteView && setDetectedChanges) setDetectedChanges(true);
+          }}
+        />
+      </FormControl>
+    </Stack>
+  );
+}
+
+type TempoPickerProps = {
+  open: boolean;
+  anchorEl: HTMLElement | null;
+  onClose: () => void;
+  value: string | null;
+  onChange: (value: string) => void;
+};
+
+function TempoPicker({
+  open,
+  anchorEl,
+  onClose,
+  value,
+  onChange,
+}: TempoPickerProps) {
+  const [tempoParts, setTempoParts] = useState(
+    value?.split(':').map(Number) ?? [2, 0, 1, 0]
+  );
+
+  const updatePart = (index: number, newValue: number) => {
+    const next = [...tempoParts];
+    next[index] = newValue;
+    setTempoParts(next);
+  };
+
+  const handleSave = () => {
+    onChange(tempoParts.join(':'));
+    onClose();
+  };
+
+  return (
+    <Popover
+      open={open}
+      anchorEl={anchorEl}
+      onClose={onClose}
+      anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+    >
+      <Stack spacing={1} sx={{ p: 2, minWidth: 220 }}>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+        >
+          <Typography fontWeight={600}>Set Tempo</Typography>
+          <IconButton onClick={onClose} size="small">
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </Stack>
+
+        <Stack
+          direction="row"
+          justifyContent="space-around"
+          alignItems="center"
+        >
+          {['Ecc', 'Pause', 'Con', 'Pause'].map((label, i) => (
+            <Stack key={i} alignItems="center" spacing={0.5}>
+              <Typography variant="caption">{label}</Typography>
+              <TextField
+                type="number"
+                size="small"
+                value={tempoParts[i]}
+                inputProps={{
+                  min: 0,
+                  max: 9,
+                  style: { width: 40, textAlign: 'center' },
+                }}
+                onChange={(e) => updatePart(i, Number(e.target.value))}
+              />
+            </Stack>
+          ))}
+        </Stack>
+
+        <Button
+          variant="contained"
+          size="small"
+          sx={{ mt: 1 }}
+          onClick={handleSave}
+        >
+          Save
+        </Button>
+      </Stack>
+    </Popover>
+  );
+}

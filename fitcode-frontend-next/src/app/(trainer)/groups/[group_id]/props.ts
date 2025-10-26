@@ -1,23 +1,26 @@
 import type { Dayjs } from 'dayjs';
 
-import type { Day } from '@/common/service/util/date.util';
-import type { GroupDateFilter } from '@/common/type/filter.type';
-import type { Pagination } from '@/common/type/paginate.type';
-import type { SetState, SetStateNullable } from '@/common/type/state.type';
-import type { AuthUser } from '@/controller/auth/type/user.type';
-import type { Exercise } from '@/controller/exercise/type/exercise.type';
-import type { Cycle } from '@/controller/group/type/cycle.type';
-import type { Group } from '@/controller/group/type/group.type';
-import type { Institution } from '@/controller/institution/type/institution.type';
-import type { Profile } from '@/controller/profile/type/user.type';
-import type { WellnessZScore } from '@/controller/profile/type/wellness.type';
-import type { Subgroup } from '@/controller/training/type/subgroup.type';
-import type { Superset } from '@/controller/training/type/superset.type';
-import type { Training } from '@/controller/training/type/training.type';
-import type { TrainingComponent } from '@/controller/training/type/training-component.type';
-import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import type { Workload } from '@/controller/training/type/workload.type';
-import type { UserProgress } from '@/controller/training/workload.service';
+import type { AuthUser } from '@/core/auth/type/user.type';
+import type { Exercise } from '@/core/exercise/type/exercise.type';
+import type { Cycle } from '@/core/group/type/cycle.type';
+import type { Group } from '@/core/group/type/group.type';
+import type { Institution } from '@/core/institution/type/institution.type';
+import type { Profile } from '@/core/profile/type/user.type';
+import type { WellnessZScore } from '@/core/profile/type/wellness.type';
+import type { MainSet } from '@/core/training/enum/main-set.enum';
+import type { Subgroup } from '@/core/training/type/subgroup.type';
+import type { Superset } from '@/core/training/type/superset.type';
+import type { Training } from '@/core/training/type/training.type';
+import type { TrainingComponent } from '@/core/training/type/training-component.type';
+import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import type {
+  UserProgress,
+  Workload,
+} from '@/core/training/type/workload.type';
+import type { Day } from '@/lib/common/service/date.util';
+import type { GroupDateFilter } from '@/lib/common/type/filter.type';
+import type { Pagination } from '@/lib/common/type/paginate.type';
+import type { SetState, SetStateNullable } from '@/lib/common/type/state.type';
 
 export type GroupIdPageParams = { params: Promise<{ group_id: string }> };
 
@@ -74,8 +77,8 @@ export type TrainerDayViewContextProps = {
   setComponent: SetStateNullable<TrainingComponent>;
   wellness: WellnessZScore[];
   setWellness: SetState<WellnessZScore[]>;
-  selectedExercises: TrainingExercise[]; // selected exercises in the component
-  setSelectedExercises: SetState<TrainingExercise[]>;
+  selectedExerciseIds: string[]; // selected exercises in the component
+  setSelectedExerciseIds: SetState<string[]>;
   supersets: Superset[]; // supersets of the selected component
   setSupersets: SetState<Superset[]>;
   selectedAthlete: AuthUser | undefined;
@@ -96,4 +99,13 @@ export type TrainerDayViewContextProps = {
   setLoading: SetState<boolean>;
   handleAddMember: (user: AuthUser) => Promise<void>;
   handleRemoveMember: (user: AuthUser) => Promise<void>;
+  addTrainingExercises: (
+    exercises: TrainingExercise[],
+    mainSet: MainSet
+  ) => void;
+  deleteSupersetExercise: (
+    exerciseId: string,
+    supersetIndex: number,
+    exerciseIndex: number
+  ) => void;
 };

@@ -2,9 +2,8 @@ import dayjs from 'dayjs';
 import { createContext, useContext, useEffect, useState } from 'react';
 
 import { useMultiCycleSliderYearProvider } from './years.provider';
-import type { ChildrenProps } from '@/common/type/props.type';
-import type { SetState } from '@/common/type/state.type';
-import type { Cycle } from '@/controller/group/type/cycle.type';
+import type { Cycle } from '@/core/group/type/cycle.type';
+import type { SetState } from '@/lib/common/type/state.type';
 import { useGroup } from '@/store/group.provider';
 
 interface SliderCyclesContextProps {
@@ -27,7 +26,7 @@ export type SliderCyclesProviderReturnType = ReturnType<
   typeof useMultiCycleSliderCyclesProvider
 >;
 
-export function SliderCycleProvider(props: ChildrenProps) {
+export function SliderCycleProvider(props: React.PropsWithChildren) {
   const { children } = props;
 
   const { group, selectedGroup, setSelectedGroup } = useGroup();

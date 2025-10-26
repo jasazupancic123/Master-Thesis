@@ -1,26 +1,25 @@
 import { addMinutes, setHours, setMinutes } from 'date-fns';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
-import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
 
-import { COLOR } from '@/common/constant/color.constant';
-import { CommonService } from '@/common/service/common.service';
-import { handleApiRequest, type SetState } from '@/common/type/state.type';
-import type { Component } from '@/controller/component/type/component.type';
-import type { Target } from '@/controller/target/type/target.type';
-import { MainSet } from '@/controller/training/enum/main-set.enum';
-import type { TrainingController } from '@/controller/training/training.controller';
-import { TrainingService } from '@/controller/training/training.service';
-import type { Training } from '@/controller/training/type/training.type';
-import type { TrainingComponent } from '@/controller/training/type/training-component.type';
-import type { GroupProviderReturnType } from '@/store/group.provider';
-import type { MainProviderReturnType } from '@/store/main.provider';
+import type { Component } from '@/core/component/type/component.type';
+import { COLOR } from '@/core/const/color.const';
+import { core } from '@/core/core.service';
+import type { Target } from '@/core/target/type/target.type';
+import { MainSet } from '@/core/training/enum/main-set.enum';
+import { TrainingController } from '@/core/training/training.controller';
+import { TrainingService } from '@/core/training/training.service';
+import type { Training } from '@/core/training/type/training.type';
+import type { TrainingComponent } from '@/core/training/type/training-component.type';
+import { lib } from '@/lib';
+import { type SetState } from '@/lib/common/type/state.type';
+import type { IGroupCtx } from '@/store/group.provider';
+import type { IMainContext } from '@/store/main.provider';
 
 export async function handleClickDateCell(
-  controller: TrainingController,
+  userId: string,
   input: {
-    router: AppRouterInstance;
     date: Dayjs;
     period: string;
     componentCalendarView?: boolean;
@@ -28,20 +27,14 @@ export async function handleClickDateCell(
     copyComponent?: boolean;
     trainingComponent?: TrainingComponent;
     selected?: Component[];
-    selectedTargets?: {
-      componentId: string;
-      target: Target;
-    }[];
+    selectedTargets?: { componentId: string; target: Target }[];
     setOpenOverwriteModal?: SetState<boolean>;
     setTrainingInPeriodForModal?: SetState<Training | null>;
   },
-  context: {
-    useMain: MainProviderReturnType;
-    useGroup: GroupProviderReturnType;
-  }
+  groupCtx: IGroupCtx,
+  mainCtx: IMainContext
 ) {
   const {
-    router,
     date,
     period,
     componentCalendarView,
@@ -53,9 +46,7 @@ export async function handleClickDateCell(
     setTrainingInPeriodForModal,
   } = input;
 
-  const { useGroup } = context;
-
-  const { cycle, trainings } = useGroup;
+  const { cycle, trainings } = groupCtx;
 
   if (componentCalendarView) {
     const trainingInPeriod = trainings.find((t) => {
@@ -83,28 +74,20 @@ export async function handleClickDateCell(
     // do nothing
     return;
   } else {
-    if (
-      !cycle ||
-      !CommonService.instance.date.isBetween(date, cycle.from, cycle.to)
-    )
+    if (!cycle || !lib.common.date.isBetween(date, cycle.from, cycle.to))
       return;
 
     handleAddTraining(
-      controller,
-      {
-        date,
-        period: period as 'AM' | 'PM',
-        selected,
-        selectedTargets,
-        router,
-      },
-      context
+      userId,
+      { date, period: period as 'AM' | 'PM', selected, selectedTargets },
+      groupCtx,
+      mainCtx
     );
   }
 }
 
 export function getFilteredTrainings(
-  input: { date: dayjs.Dayjs },
+  date: dayjs.Dayjs,
   state: {
     periodizationView?: boolean;
     trainingComponent?: TrainingComponent;
@@ -115,7 +98,6 @@ export function getFilteredTrainings(
     period: string;
   }
 ) {
-  let { date } = input;
   const {
     periodizationView,
     trainingComponent,
@@ -131,7 +113,7 @@ export function getFilteredTrainings(
       const end = dayjs(training_.to).endOf('day');
 
       // Check if training falls within the given day
-      const isBetween = CommonService.instance.date.isBetween(date, start, end);
+      const isBetween = lib.common.date.isBetween(date, start, end);
       if (!isBetween) return false;
 
       // Apply AM/PM filtering
@@ -186,7 +168,7 @@ export function getFilteredTrainings(
     const end = dayjs(training.to).endOf('day');
 
     // Check if training falls within the given day
-    const isBetween = CommonService.instance.date.isBetween(date, start, end);
+    const isBetween = lib.common.date.isBetween(date, start, end);
     if (!isBetween) return false;
 
     // Apply AM/PM filtering
@@ -198,23 +180,17 @@ export function getFilteredTrainings(
 }
 
 function handleAddTraining(
-  controller: TrainingController,
+  userId: string,
   input: {
-    router: AppRouterInstance;
     date: Dayjs;
     period: 'AM' | 'PM';
     selected?: Component[];
-    selectedTargets?: {
-      componentId: string;
-      target: Target;
-    }[];
+    selectedTargets?: { componentId: string; target: Target }[];
   },
-  context: {
-    useGroup: GroupProviderReturnType;
-    useMain: MainProviderReturnType;
-  }
+  groupCtx: IGroupCtx,
+  mainCtx: IMainContext
 ) {
-  const { date, period, selected, selectedTargets, router } = input;
+  const { date, period, selected, selectedTargets } = input;
 
   if (!selected) {
     toast.error('Please select at least one component to add');
@@ -224,9 +200,8 @@ function handleAddTraining(
   const from = setMinutes(setHours(date.toDate(), period === 'AM' ? 8 : 14), 0);
 
   handleCreateTraining(
-    controller,
+    userId,
     {
-      router,
       date,
       period,
       from,
@@ -240,41 +215,29 @@ function handleAddTraining(
         target: selectedTargets?.find((m) => m.componentId === c.id)?.target,
       })),
     },
-    context
+    groupCtx,
+    mainCtx
   );
 }
 
 async function handleCreateTraining(
-  controller: TrainingController,
+  userId: string,
   input: {
-    router: AppRouterInstance;
     date: Dayjs;
     from: Date;
     period: 'AM' | 'PM';
     selectedComponents: TrainingComponent[];
   },
-  context: {
-    useGroup: GroupProviderReturnType;
-    useMain: MainProviderReturnType;
-  }
+  groupCtx: IGroupCtx,
+  mainCtx: IMainContext
 ) {
-  const { router, date, from, period, selectedComponents } = input;
-
-  const { useGroup, useMain } = context;
-
-  const { components, exercises, methods } = useMain;
-
-  const { group, cycle, trainings, setTrainings } = useGroup;
+  const { date, from, period, selectedComponents } = input;
+  const { components, exercises, methods } = mainCtx;
+  const { group, cycle, trainings, setTrainings } = groupCtx;
 
   if (!selectedComponents.length) return; // toast.error('Select at least one component to add');
 
-  if (
-    !CommonService.instance.date.isBetween(
-      date,
-      dayjs(cycle!.from),
-      dayjs(cycle!.to)
-    )
-  )
+  if (!lib.common.date.isBetween(date, dayjs(cycle!.from), dayjs(cycle!.to)))
     return toast.error('Selected date is not within the cycle');
 
   // get number of trainings in the selected period
@@ -284,7 +247,7 @@ async function handleCreateTraining(
     const end = dayjs(training.to).endOf('day');
 
     // check if training falls within the given day
-    const isBetween = CommonService.instance.date.isBetween(date, start, end);
+    const isBetween = lib.common.date.isBetween(date, start, end);
     if (!isBetween) return false;
 
     // apply AM/PM filtering
@@ -295,18 +258,43 @@ async function handleCreateTraining(
   });
 
   if (periodTrainings.length >= 1)
-    return toast.error('You can only create 1 trainings per period');
+    return toast.error('Only 1 training per period allowed');
 
-  handleApiRequest(
-    router,
-    () =>
-      controller.create({
+  const state = { trainings: [...trainings] };
+  const tempId = 'training-id';
+
+  await lib.common.generic.optimisticUpdate(
+    () => {
+      // Optimistically add the new training to the state
+      const temp = core.training.stub(userId, {
+        id: tempId,
+        groupId: group!.id,
+        cycleId: cycle!.id,
+        from,
+        to: addMinutes(from, selectedComponents.length * 30),
+        components: selectedComponents.map((c) =>
+          core.training.component.stub(c.id)
+        ),
+      });
+
+      setTrainings((prev) =>
+        [...prev, temp].sort(
+          (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime()
+        )
+      );
+    },
+    (snapshot) => {
+      setTrainings(snapshot.trainings);
+    },
+    async () =>
+      await TrainingController.getInstance().create({
         groupId: group.id,
         cycleId: cycle!.id,
         components: selectedComponents,
         membersIds: [],
         from,
       }),
+    state,
     (training) => {
       TrainingService.mapData(training, {
         components,
@@ -314,10 +302,14 @@ async function handleCreateTraining(
         methods,
       });
 
-      setTrainings((prev) => [...prev, training]);
+      // update the training with the response from the server
+      setTrainings((prev) =>
+        [...prev.filter((t) => t.id !== tempId), training].sort(
+          (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime()
+        )
+      );
+
       toast.success('Training created successfully');
-    },
-    undefined,
-    'Failed to create training'
+    }
   );
 }

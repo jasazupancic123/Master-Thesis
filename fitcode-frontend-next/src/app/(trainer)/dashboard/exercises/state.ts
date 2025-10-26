@@ -2,23 +2,21 @@ import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.
 import Papa from 'papaparse';
 import toast from 'react-hot-toast';
 
-import { CommonService } from '@/common/service/common.service';
-import type { Pagination } from '@/common/type/paginate.type';
-import type { SetState } from '@/common/type/state.type';
-import { handleApiRequest } from '@/common/type/state.type';
-import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
-import type { Component } from '@/controller/component/type/component.type';
-import { ExerciseController } from '@/controller/exercise/exercise.controller';
-import { ExerciseService } from '@/controller/exercise/exercise.service';
+import type { AttributeValue } from '@/core/attribute/type/attribute-value.type';
+import type { Component } from '@/core/component/type/component.type';
+import { ExerciseController } from '@/core/exercise/exercise.controller';
+import { ExerciseService } from '@/core/exercise/exercise.service';
 import type {
   CreateExerciseMuscleValues,
   Exercise,
   UpsertManyExercises,
   UpsertManyMuscleValues,
-} from '@/controller/exercise/type/exercise.type';
+} from '@/core/exercise/type/exercise.type';
+import { lib } from '@/lib';
+import type { Pagination } from '@/lib/common/type/paginate.type';
+import type { SetState } from '@/lib/common/type/state.type';
+import { handleApiRequest } from '@/lib/common/type/state.type';
 import { DEFAULT_EXERCISE, EXERCISES_PAGE_SIZE } from '@/sites/exercises.page';
-
-const commonService = CommonService.instance;
 
 export function handlePaginateExercises(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -49,7 +47,7 @@ export function handlePaginateExercises(
   const pages = Math.max(1, Math.ceil(total / pagination.pageSize));
   const page = Math.min(Math.max(1, pagination.page), pages);
 
-  filtered = commonService.generic.paginate(filtered, {
+  filtered = lib.common.generic.paginate(filtered, {
     page,
     pageSize: pagination.pageSize,
     orderBy: { field: 'name', value: 'asc' },
@@ -131,7 +129,7 @@ export async function handleAddExercise(
 
       const rootComponents = exercise.componentIds!.map((cId) => {
         const component = components.find((c) => c.id === cId)!;
-        return commonService.tree.getRoot(component, components);
+        return lib.common.tree.getRoot(component, components);
       });
 
       if (
@@ -317,6 +315,7 @@ export async function handleExerciseCsvFileUpload(
           movementDirections: e.movementDirections || [],
           locations: e.locations || [],
           liftPriorities: e.liftPriorities || [],
+          params: [],
         }))
       );
     },
@@ -374,6 +373,7 @@ export async function handleUpsertManyExercises(
         const filtered = prev.filter(
           (e) => !exercises.find((newE) => newE.name === e.name)
         );
+
         return [...filtered, ...exercises];
       };
 

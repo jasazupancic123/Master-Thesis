@@ -1,13 +1,13 @@
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
 
-import { handleApiRequest } from '@/common/type/state.type';
-import type { GroupEvent } from '@/controller/group/type/group-event.type';
-import { TrainingController } from '@/controller/training/training.controller';
-import type { TrainingComponentWithTrainingId } from '@/controller/training/type/training-component.type';
-import type { GroupProviderReturnType } from '@/store/group.provider';
+import type { GroupEvent } from '@/core/group/type/group-event.type';
+import { TrainingController } from '@/core/training/training.controller';
+import type { TrainingComponentWithTrainingId } from '@/core/training/type/training-component.type';
+import { handleApiRequest } from '@/lib/common/type/state.type';
+import type { IGroupCtx } from '@/store/group.provider';
 
-export const handleUpdateTrainingTimes = async (
+export async function handleUpdateTrainingTimes(
   input: {
     item: TrainingComponentWithTrainingId | GroupEvent;
     newItem: TrainingComponentWithTrainingId | GroupEvent;
@@ -22,10 +22,8 @@ export const handleUpdateTrainingTimes = async (
     ) => item is TrainingComponentWithTrainingId;
     router: AppRouterInstance;
   },
-  context: {
-    useGroup: GroupProviderReturnType;
-  }
-) => {
+  groupCtx: IGroupCtx
+) {
   const {
     item,
     newItem,
@@ -35,10 +33,7 @@ export const handleUpdateTrainingTimes = async (
     checkIsTrainingComponent,
   } = input;
 
-  const { useGroup } = context;
-
-  const { setTrainings, setGroup } = useGroup;
-
+  const { setTrainings, setGroup } = groupCtx;
   if (!checkIsTrainingComponent(item) || !selectedItem) return;
 
   await handleApiRequest(
@@ -100,4 +95,4 @@ export const handleUpdateTrainingTimes = async (
         (e as Error).message || 'Failed to update training component time'
       )
   );
-};
+}

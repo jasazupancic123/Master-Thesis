@@ -4,7 +4,7 @@ export type Validate<Response = unknown> = {
   data?: Response;
 };
 
-export type ValidateError<T = Record<string, unknown>> = {
+export type ValidateError<T = unknown> = {
   field: keyof T;
   message: string;
 };

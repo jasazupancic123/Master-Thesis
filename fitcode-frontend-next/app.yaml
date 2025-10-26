@@ -1,6 +1,0 @@
-runtime: nodejs20
-service: fitcode-frontend-next
-env: standard
-
-automatic_scaling:
-  min_instances: 1

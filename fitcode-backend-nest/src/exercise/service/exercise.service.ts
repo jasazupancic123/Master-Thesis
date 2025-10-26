@@ -22,7 +22,6 @@ import {
 } from '@src/common/type/validate.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
 import { ComponentService } from '@src/component/component.service';
-import { DEFAULT_PARAMS_KEY } from '@src/component/constant/param.constant';
 import { Component } from '@src/component/entity/component.entity';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { Institution } from '@src/institution/entity/institution.entity';
@@ -36,6 +35,7 @@ import { UpdateExerciseDto } from '../dto/update-exercise.dto';
 import { Exercise } from '../entity/exercise.entity';
 import { ExerciseRepository } from '../repository/exercise.repository';
 import { ExerciseAttributeService } from './exercise-attribute.service';
+import { ExerciseParamService } from './exercise-param.service';
 
 @Injectable()
 export class ExerciseService implements Permission<Exercise, Institution> {
@@ -46,6 +46,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     private readonly firebaseService: FirebaseService,
     private readonly institutionService: InstitutionService,
     private readonly exerciseAttributeService: ExerciseAttributeService,
+    private readonly exerciseParamService: ExerciseParamService,
     @Inject(forwardRef(() => ComponentService))
     private readonly componentService: Wrapper<ComponentService>,
   ) {}
@@ -78,29 +79,6 @@ export class ExerciseService implements Permission<Exercise, Institution> {
       : exercises;
   }
 
-  private async map(exercises: Exercise[]) {
-    const components = await this.componentService.findAllFlat();
-
-    // map params
-    return exercises.map((exercise) => {
-      const component = components.find(
-        (c) => c.id === exercise.componentIds[0],
-      )!;
-
-      const root = this.componentService.getRoot(component, components);
-      const componentParams = root.params || { [DEFAULT_PARAMS_KEY]: [] };
-
-      const params = this.componentService.getComponentParamAttributes(
-        componentParams,
-        this.exerciseAttributeService.getValues(exercise),
-        this.exerciseAttributeService.getAttributes(),
-      );
-
-      exercise.defaultParams = this.componentService.getParamAttributes(params);
-      return exercise;
-    });
-  }
-
   async findAllBy(
     key: 'ownerId' | 'institutionId',
     userOrInstitutionId: string, // either global or institution id
@@ -108,8 +86,6 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     filter?: Record<string, string>,
   ): Promise<Exercise[]> {
     const components = await this.componentService.findAllFlat();
-    let exercises: Exercise[] = [];
-
     let query = this.repository
       .collection()
       .where(key, '==', userOrInstitutionId);
@@ -133,8 +109,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
       .get()
       .then(({ docs }) => docs.map((doc) => doc.data().id as string));
 
-    exercises = await this.getAll(exerciseIds);
-    return await this.map(exercises);
+    return await this.getAll(exerciseIds);
   }
 
   async findOneById(user: User, ref: ExerciseRef): Promise<Exercise | null> {
@@ -189,12 +164,16 @@ export class ExerciseService implements Permission<Exercise, Institution> {
 
     // create exercise
     const id = this.repository.slug(data.name, institution?.id);
+    const main = components.find((c) => c.id === data.componentIds[0])!;
     const create: Create<Exercise> = {
       ...data,
       id,
       ownerId,
       isUnilateral,
       institutionId: institution?.id,
+      params: data.params?.length
+        ? data.params
+        : this.exerciseParamService.getComponentParams(main, isUnilateral),
     };
 
     await this.repository.save(create);
@@ -243,7 +222,15 @@ export class ExerciseService implements Permission<Exercise, Institution> {
         },
       );
 
-      exercisesToCreate.push(data);
+      const isUnilateral = data.isUnilateral || false;
+      const main = components.find((c) => c.id === data.componentIds[0])!;
+      exercisesToCreate.push({
+        ...data,
+        isUnilateral,
+        params: data.params?.length
+          ? data.params
+          : this.exerciseParamService.getComponentParams(main, isUnilateral),
+      });
     });
 
     if (errors.length > 0)
@@ -277,6 +264,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
         movementDirections: e.movementDirections || [],
         locations: e.locations || [],
         liftPriorities: e.liftPriorities || [],
+        params: e.params || [],
       };
 
       const query = this.firebaseService.buildCreateQuery<Exercise>(item, {

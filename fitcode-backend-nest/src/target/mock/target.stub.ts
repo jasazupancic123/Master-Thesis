@@ -12,6 +12,5 @@ export function generateTargetStub(data?: Partial<Target>): Target {
     id: data?.id || v4(),
     name: data?.name || data?.id || generateRandomName(),
     componentId: data?.componentId || generateRandomString(),
-    color: data?.color,
   };
 }

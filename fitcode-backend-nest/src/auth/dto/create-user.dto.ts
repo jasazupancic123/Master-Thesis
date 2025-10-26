@@ -2,7 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
-import { AuthUser } from '../entities/user.entity';
+import { AuthUser } from '../entity/user.entity';
 import { UserRole } from '../enum/user-role.enum';
 
 export type CreateUser = AuthUser & { password: string };

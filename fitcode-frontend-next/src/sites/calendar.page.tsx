@@ -16,9 +16,9 @@ import {
   fetchAthleteTrainings,
   handleNavigate,
 } from '../app/(athlete)/calendar/state';
-import type { CalendarEvent } from '../common/type/calendar-event-type';
 import CustomToolbar from '../components/calendar-custom-toolbar/calendar-custom-toolbar';
-import { getComponentIcon } from '@/common/service/util/icons.util';
+import type { CalendarEvent } from '../lib/common/type/calendar-event.type';
+import { lib } from '@/lib';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 export default function CalendarPage() {
@@ -50,8 +50,7 @@ export default function CalendarPage() {
         const events = _trainings.map((training) => {
           const componentsIcons = [];
           for (const component of Object.values(training.components)) {
-            const IconComponent = getComponentIcon(component.id);
-
+            const IconComponent = lib.common.component.getIcon(component.id);
             componentsIcons.push(IconComponent);
           }
 

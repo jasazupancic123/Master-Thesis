@@ -3,17 +3,18 @@ import { cookies } from 'next/headers';
 
 import { AthleteProvider } from './athlete.provider';
 import { AthleteMainProvider } from './main.provider';
-import { SESSION_COOKIE_NAME } from '@/common/constant/auth.constant';
-import { LOADING_ANIMATION_MIN_DURATION_MS } from '@/common/constant/loading.constant';
-import { isAthlete } from '@/common/firebase/firebase-auth.util';
-import type { ChildrenProps } from '@/common/type/props.type';
-import { Controller } from '@/controller/controller';
-import { TrainingService } from '@/controller/training/training.service';
-import Alert from '@/util/alert/alert';
+import { SESSION_COOKIE_NAME } from '@/core/const/auth.const';
+import { Controller } from '@/core/controller';
+import { TrainingService } from '@/core/training/training.service';
+import { lib } from '@/lib';
+import { LOADING_ANIMATION_MIN_DURATION_MS } from '@/lib/common/const/animation.const';
+import Alert from '@/ui/alert';
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-export default async function InitAthleteProvider({ children }: ChildrenProps) {
+export default async function InitAthleteProvider({
+  children,
+}: React.PropsWithChildren) {
   try {
     const cookieStore = await cookies();
     const session = cookieStore.get(SESSION_COOKIE_NAME)?.value;
@@ -24,7 +25,7 @@ export default async function InitAthleteProvider({ children }: ChildrenProps) {
     if (!profile) throw new Error('No profile found');
     console.log('[AthleteProvider] profile', profile);
 
-    if (!isAthlete(profile.customClaims.role[0]))
+    if (!lib.firebase.auth.isAthlete(profile.customClaims.role[0]))
       throw new Error('Not an athlete');
 
     const [data] = await Promise.all([

@@ -7,9 +7,9 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import Link from 'next/link';
 
-import { SITE_MAIL } from '@/common/constant/browser.constant';
 import Copyright from '@/components/copyright/copyright';
-import Logo from '@/util/logo/logo';
+import { SITE_MAIL } from '@/core/const/web.const';
+import Logo from '@/ui/logo';
 
 export default function Footer() {
   return (

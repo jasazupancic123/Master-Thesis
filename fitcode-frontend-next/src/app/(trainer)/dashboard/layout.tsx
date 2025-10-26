@@ -1,6 +1,5 @@
-import type { ChildrenProps } from '@/common/type/props.type';
 import DashboardInitializer from '@/initializers/dashboard.initializer';
 
-export default function Layout({ children }: ChildrenProps) {
+export default function Layout({ children }: React.PropsWithChildren) {
   return <DashboardInitializer>{children}</DashboardInitializer>;
 }
