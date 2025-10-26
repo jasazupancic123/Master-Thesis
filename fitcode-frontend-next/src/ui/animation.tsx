@@ -5,10 +5,10 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { useEffect } from 'react';
 
+import { lib } from '@/lib';
 import { POWERED_BY_ASPIRE_IMG_URL } from '@/lib/common/const/image.const';
 import { useScreenSize } from '@/store/screen-size.provider';
 import Logo from '@/ui/logo';
-import { lib } from '@/lib';
 
 interface Props {
   duration?: number; // ms

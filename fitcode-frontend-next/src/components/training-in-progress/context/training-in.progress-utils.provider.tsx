@@ -57,7 +57,6 @@ export function TrainingInProgressUtilsProvider({
   useEffect(() => {
     if (!trainingInProgress) return;
     if (!trainingInProgress.startOfTraining) {
-      console.log('set training in progress 1');
       setTrainingInProgress(
         (prev) => ({ ...prev, startOfTraining: dayjs() }) as TrainingInProgress
       );

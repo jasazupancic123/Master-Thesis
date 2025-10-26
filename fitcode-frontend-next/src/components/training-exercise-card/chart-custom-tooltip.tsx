@@ -16,9 +16,6 @@ export default function CustomTooltip({
   const isVisible = active && payload && payload.length;
   const p = payload[0];
 
-  console.log('payload', payload);
-  console.log('p', p);
-
   if (!p || !p.payload) return null;
 
   const completed = selectedAthleteCompletedWorkloads.some(

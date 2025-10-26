@@ -53,7 +53,6 @@ export default function DashboardInstitutionPage() {
     setCurrentUsers,
     toggleUser,
     onHoverUser,
-    setUserToEdit,
   } = useDashboardUserEdit();
 
   const { selectedInstitution, setSelectedInstitution, setMembers, setUsers } =

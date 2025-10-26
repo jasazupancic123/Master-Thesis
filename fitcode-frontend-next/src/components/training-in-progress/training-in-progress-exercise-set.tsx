@@ -14,9 +14,9 @@ import type { ExerciseSet } from '@/core/training/type/exercise-set.type';
 import type { Superset } from '@/core/training/type/superset.type';
 import type { TrainingExerciseExtended } from '@/core/training/type/training-exercise.type';
 import type { SetState } from '@/lib/common/type/state.type';
+import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import LeftRightExerciseText from '@/ui/left-right-exercise-text';
-import { useScreenSize } from '@/store/screen-size.provider';
 
 interface Props {
   set: ExerciseSet;
