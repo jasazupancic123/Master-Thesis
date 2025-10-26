@@ -8,6 +8,7 @@ import { useEffect } from 'react';
 import { POWERED_BY_ASPIRE_IMG_URL } from '@/lib/common/const/image.const';
 import { useScreenSize } from '@/store/screen-size.provider';
 import Logo from '@/ui/logo';
+import { lib } from '@/lib';
 
 interface Props {
   duration?: number; // ms
@@ -56,6 +57,7 @@ export default function Animation({ duration = 6000 }: Props) {
           width={screenSize.isMobile ? 200 : 400}
           height={0}
           layout="intrinsic"
+          unoptimized={lib.common.env.unoptimizeImages()}
         />
       </motion.div>
       <motion.div

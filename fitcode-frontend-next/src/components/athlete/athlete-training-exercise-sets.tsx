@@ -187,11 +187,10 @@ export default function AthleteTrainingExerciseSets({
 
               {uni && (
                 <Box
-                  display="flex"
                   width="100%"
+                  display="flex"
                   justifyContent="center"
                   alignItems="center"
-                  gap={1}
                 >
                   <NumberExerciseParam
                     options={[REPS]}

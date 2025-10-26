@@ -10,7 +10,6 @@ import type { FormEvent } from 'react';
 import React from 'react';
 import toast from 'react-hot-toast';
 
-import { HERO_NAVBAR_HEIGHT } from '@/lib/common/const/state';
 import HeroNavbar from '@/components/hero-navbar/hero-navbar';
 import { AuthController } from '@/core/auth/auth.controller';
 import { lib } from '@/lib';
@@ -18,6 +17,7 @@ import {
   LINKS_AUTH,
   SIGN_IN_REDIRECT_MAPPER,
 } from '@/lib/common/const/nav.const';
+import { HERO_NAVBAR_HEIGHT } from '@/lib/common/const/state';
 import { useAuth } from '@/store/auth.provider';
 
 export default function SignInPage() {

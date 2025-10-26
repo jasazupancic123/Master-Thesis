@@ -10,6 +10,7 @@ import {
 } from '@/lib/common/const/image.const';
 import { useScreenSize } from '@/store/screen-size.provider';
 import Logo from '@/ui/logo';
+import { lib } from '@/lib';
 
 export default function Hero() {
   const screenSize = useScreenSize();
@@ -141,6 +142,7 @@ export default function Hero() {
               alt="Do it right"
               width={initialLogoWidth / 2}
               height={0} // not 0
+              unoptimized={lib.common.env.unoptimizeImages()}
               style={{ height: 'auto' }} // keeps aspect ratio while preventing stretch
               className="block" // removes baseline gap
             />
@@ -158,6 +160,7 @@ export default function Hero() {
             alt="Aspire Logo"
             width={initialAspireLogoWidth}
             height={0} // not 0
+            unoptimized={lib.common.env.unoptimizeImages()}
             style={{ height: 'auto' }} // keeps aspect ratio while preventing stretch
             className="block" // removes baseline gap
           />

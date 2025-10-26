@@ -1,6 +1,7 @@
 import { core } from '@/core/core.service';
 import { SetStatus } from '@/core/training/enum/set-status.enum';
 import type { ChartWorkloadData } from '@/core/training/type/chart-workload-data.type';
+import type { ExerciseParamField } from '@/core/training/type/exercise-set.type';
 import type { Subgroup } from '@/core/training/type/subgroup.type';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
@@ -16,12 +17,20 @@ export function getAthleteChart(
     trainings: Training[];
     workloads: Workload[];
     subgroup: Subgroup | null;
+    selectedParams: ExerciseParamField[];
   }
 ): ChartWorkloadData[] {
   const result: ChartWorkloadData[] = [];
 
   for (const t of data.trainings) {
     if (!t.membersIds.includes(athleteId)) continue;
+
+    const foundExercise = t.components
+      .find((c) => c.id === component.id)
+      ?.supersets.flatMap((s) => s.exercises)
+      .find((e) => e.id === exercise.id);
+
+    if (!foundExercise) continue; // do not add chart data for trainings without the exercise
 
     const workloads: Omit<Workload, 'id' | 'prescribed'>[] = [];
     const item: ChartWorkloadData = {
@@ -42,13 +51,6 @@ export function getAthleteChart(
           w.componentId === component.id
       )
     );
-
-    const foundExercise = athleteTraining.components
-      .find((c) => c.id === component.id)
-      ?.supersets.flatMap((s) => s.exercises)
-      .find((e) => e.id === exercise.id);
-
-    if (!foundExercise) continue; // do not add chart data for trainings without the exercise
 
     for (let i = 0; i < (foundExercise.sets?.length || 0); i++) {
       const set = foundExercise.sets[i];
@@ -78,7 +80,10 @@ export function getAthleteChart(
       });
     }
 
-    result.push({ ...item, ...getAggregatedWorkloadValues(workloads) });
+    result.push({
+      ...item,
+      ...getAggregatedWorkloadValues(workloads, data.selectedParams),
+    });
   }
 
   return result.sort(
@@ -90,11 +95,24 @@ export function getGroupChart(
   exercise: TrainingExercise,
   component: TrainingComponent,
   training: Training,
-  data: { trainings: Training[] }
+  data: { trainings: Training[]; selectedParams: ExerciseParamField[] }
 ): ChartWorkloadData[] {
   const result: ChartWorkloadData[] = [];
 
   for (const t of data.trainings) {
+    const foundComponent = t.components.find((c) => c.id === component.id);
+
+    if (!foundComponent) continue;
+
+    const foundExercise = [
+      foundComponent.supersets,
+      foundComponent.subgroups.map((sg) => sg.supersets),
+    ]
+      .flat(2)
+      .find((e) => e.exercises.some((ex) => ex.id === exercise.id));
+
+    if (!foundExercise) continue; // do not add chart data for trainings without the exercise
+
     const workloads: Omit<Workload, 'id' | 'prescribed'>[] = [];
     const item: ChartWorkloadData = {
       trainingId: t.id,
@@ -158,7 +176,10 @@ export function getGroupChart(
           });
         }
 
-    result.push({ ...item, ...getAggregatedWorkloadValues(workloads) });
+    result.push({
+      ...item,
+      ...getAggregatedWorkloadValues(workloads, data.selectedParams),
+    });
   }
 
   return result.sort(
@@ -173,25 +194,43 @@ export function getGroupChart(
  * @returns
  */
 function getAggregatedWorkloadValues(
-  workloads: Partial<Workload>[]
-): Pick<ChartWorkloadData, 'int' | 'vol' | 'intFullValue' | 'volFullValue'> {
-  const intValues = workloads
-    .map((w) => w.loadKg || w.loadRm || w.loadBw)
-    .filter((v): v is number => typeof v === 'number' && !isNaN(v));
+  workloads: Partial<Workload>[],
+  selectedParams: ExerciseParamField[]
+): Pick<ChartWorkloadData, 'int' | 'vol'> & {
+  loadKgFullValue?: string;
+  repsFullValue?: string;
+} {
+  const intValues = selectedParams.includes('loadKg')
+    ? workloads
+        .map((w) => w.loadKg || w.loadRm || w.loadBw)
+        .filter((v): v is number => typeof v === 'number' && !isNaN(v))
+    : [];
 
-  const volValues = workloads
-    .map((w) => w.reps)
-    .filter((v): v is number => typeof v === 'number' && !isNaN(v));
+  const w = workloads[0];
+
+  const intField: string | undefined = w
+    ? w.loadKg
+      ? 'Kg'
+      : w.loadRm
+        ? 'Rm'
+        : w.loadBw
+          ? 'Bw'
+          : undefined
+    : undefined;
+
+  const volValues = selectedParams.includes('reps')
+    ? workloads
+        .map((w) => w.reps)
+        .filter((v): v is number => typeof v === 'number' && !isNaN(v))
+    : [];
 
   return {
     int: avg(intValues),
     vol: avg(volValues),
-    intFullValue: intValues.length
-      ? `Int: ${Math.min(...intValues)} - ${Math.max(...intValues)}`
+    loadKgFullValue: intValues.length
+      ? `${intField}: ${avg(intValues)}`
       : undefined,
-    volFullValue: volValues.length
-      ? `Vol: ${Math.min(...volValues)} - ${Math.max(...volValues)}`
-      : undefined,
+    repsFullValue: volValues.length ? `Reps: ${avg(volValues)}` : undefined,
   };
 }
 

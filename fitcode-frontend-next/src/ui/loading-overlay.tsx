@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Logo from './logo';
 import { POWERED_BY_ASPIRE_IMG_URL } from '@/lib/common/const/image.const';
 import { useScreenSize } from '@/store/screen-size.provider';
+import { lib } from '@/lib';
 
 interface LoadingOverlayProps {
   title: string;
@@ -54,6 +55,7 @@ export default function LoadingOverlay(props: LoadingOverlayProps) {
           width={screenSize.isMobile ? 200 : 300}
           height={0}
           layout="intrinsic"
+          unoptimized={lib.common.env.unoptimizeImages()}
         />
       )}
     </Box>
