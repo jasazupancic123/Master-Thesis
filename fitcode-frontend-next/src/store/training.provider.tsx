@@ -126,7 +126,7 @@ export const TrainingProvider = (
   ) => {
     if (!trainingInProgress) return;
 
-    const newTrainingInProgress = {
+    const newTrainingInProgress: TrainingInProgress = {
       ...trainingInProgress,
       selectedComponent: {
         ...trainingInProgress.selectedComponent,

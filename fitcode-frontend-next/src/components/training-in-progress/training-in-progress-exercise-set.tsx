@@ -117,24 +117,26 @@ export default function TrainingInProgressExerciseSet(props: Props) {
               }}
             />
 
-            <NumberExerciseParam
-              options={[KG]}
-              selected={KG.field} // always in kg
-              value={exercise.sets[index]?.loadKg || 0}
-              exercise={exercise}
-              showOptions={showOptions}
-              disableOptions
-              onInputChange={(value) => {
-                exercise.sets[index].loadKg = +value;
-                updateTrainingInProgress(exercise, supersetIndex || 0);
-              }}
-            />
+            {exercise.sets[index]?.loadKg !== undefined && (
+              <NumberExerciseParam
+                options={[KG]}
+                selected={KG.field} // always in kg
+                value={exercise.sets[index]?.loadKg || 0}
+                exercise={exercise}
+                showOptions={showOptions}
+                disableOptions
+                onInputChange={(value) => {
+                  exercise.sets[index].loadKg = +value;
+                  updateTrainingInProgress(exercise, supersetIndex || 0);
+                }}
+              />
+            )}
 
             {effType === 'tempo' ? (
               <TempoExerciseParam
                 options={[TEMPO, EFF]}
                 selected={effType}
-                value={exercise.sets[0]?.[effType] || ''}
+                value={exercise.sets[index]?.[effType] || ''}
                 exercise={exercise}
                 showOptions={showOptions}
                 disableOptions
@@ -147,7 +149,7 @@ export default function TrainingInProgressExerciseSet(props: Props) {
               <NumberExerciseParam
                 options={[TEMPO, EFF]}
                 selected={effType}
-                value={exercise.sets[0]?.[effType] || 0}
+                value={exercise.sets[index]?.[effType] || 0}
                 showOptions
                 exercise={exercise}
                 disableOptions
@@ -209,11 +211,7 @@ export default function TrainingInProgressExerciseSet(props: Props) {
               <NumberExerciseParam
                 options={[KG]}
                 selected={KG.field}
-                value={
-                  exercise.sets[index]?.loadKgR ||
-                  exercise.sets[index]?.loadKg ||
-                  0
-                }
+                value={exercise.sets[index]?.loadKgR || 0}
                 exercise={exercise}
                 showOptions={false}
                 disableOptions
@@ -226,12 +224,8 @@ export default function TrainingInProgressExerciseSet(props: Props) {
               {effType === 'tempo' ? (
                 <TempoExerciseParam
                   options={[TEMPO, EFF]}
-                  selected={effType}
-                  value={
-                    effType === 'tempo'
-                      ? exercise.sets[index]?.tempoR || ''
-                      : exercise.sets[index]?.eff || 0
-                  }
+                  selected={'tempo'}
+                  value={exercise.sets[index]?.tempoR || ''}
                   exercise={exercise}
                   showOptions={false}
                   disableOptions
@@ -243,8 +237,8 @@ export default function TrainingInProgressExerciseSet(props: Props) {
               ) : (
                 <NumberExerciseParam
                   options={[TEMPO, EFF]}
-                  selected={effType}
-                  value={exercise.sets[0]?.[effType] || 0}
+                  selected={'eff'}
+                  value={exercise.sets[0]?.eff || 0}
                   showOptions
                   exercise={exercise}
                   disableOptions
