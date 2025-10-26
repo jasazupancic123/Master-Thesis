@@ -32,23 +32,23 @@ export class TestPeriodizationUtil {
   ): Training {
     // same param values for all sets for both left and right side
     const SETS_ALL_PARAMS = [
-      generateExerciseSet(1),
-      generateExerciseSet(2),
-      generateExerciseSet(3),
+      generateExerciseSet(1, { reps: 10, loadKg: 50 }),
+      generateExerciseSet(2, { reps: 10, loadKg: 50 }),
+      generateExerciseSet(3, { reps: 10, loadKg: 50 }),
     ];
 
     // sets with no intensity (only volume 1)
     const SETS_NO_INT = [
-      generateExerciseSet(1),
-      generateExerciseSet(2),
-      generateExerciseSet(3),
+      generateExerciseSet(1, { reps: 10 }),
+      generateExerciseSet(2, { reps: 10 }),
+      generateExerciseSet(3, { reps: 10 }),
     ];
 
     // different param values for left and right side
     const SETS_LR_DIFFERENT = [
-      generateExerciseSet(1),
-      generateExerciseSet(2),
-      generateExerciseSet(3),
+      generateExerciseSet(1, { reps: 10, repsR: 12, loadKg: 30, loadKgR: 34 }),
+      generateExerciseSet(2, { reps: 10, repsR: 12, loadKg: 30, loadKgR: 34 }),
+      generateExerciseSet(3, { reps: 10, repsR: 12, loadKg: 30, loadKgR: 34 }),
     ];
 
     let i = 0;

@@ -4,6 +4,7 @@ import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 import { IdEntity } from '@src/common/entity/id.entity';
 import { Target } from '@src/target/entity/target.entity';
+import { ExerciseMainParamField } from '@src/training/entity/exercise-set.entity';
 
 export class Component extends IdEntity {
   @IsString()
@@ -41,7 +42,7 @@ export class Component extends IdEntity {
   @ApiPropertyOptional()
   @IsOptional()
   @Expose()
-  params?: string[]; // exercise params fields
+  params?: ExerciseMainParamField[]; // exercise params fields
 
   // virtual fields
   children?: string[];

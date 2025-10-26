@@ -4,17 +4,27 @@ import {
   IntersectionType,
 } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
-import { IsEnum, IsInt, IsNumber, IsOptional, Max, Min } from 'class-validator';
+import { IsInt, IsNumber, IsOptional, Max, Min } from 'class-validator';
 
 import { IsTempo } from '@src/common/decorator/is-tempo.decorator';
-import { LoadType } from '@src/training/enum/load-type.enum';
+
+export type ExerciseParamField = Exclude<
+  keyof ExerciseSet,
+  'setNumber' // "meta" field
+>;
+
+export type ExerciseMainParamField = Exclude<
+  ExerciseParamField,
+  keyof ExerciseSetSecondarySide
+>;
 
 export class ExerciseSetPrimarySide {
   @IsInt()
-  @Min(1)
-  @ApiProperty()
+  @Min(0)
+  @ApiPropertyOptional()
+  @IsOptional()
   @Expose()
-  reps: number;
+  reps?: number;
 
   @IsNumber()
   @Min(0)
@@ -54,7 +64,7 @@ export class ExerciseSetPrimarySide {
 export class ExerciseSetSecondarySide {
   @IsInt()
   @IsOptional()
-  @Min(1)
+  @Min(0)
   @ApiPropertyOptional()
   @Expose()
   repsR?: number;
@@ -105,12 +115,6 @@ export class ExerciseSet extends IntersectionType(
   @Expose()
   setNumber: number;
 
-  @IsOptional()
-  @IsEnum(LoadType)
-  @ApiPropertyOptional({ enum: LoadType })
-  @Expose()
-  loadType?: LoadType;
-
   @IsInt()
   @Min(1)
   @Max(4)
@@ -121,9 +125,10 @@ export class ExerciseSet extends IntersectionType(
 
   @IsInt()
   @Min(0)
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @Expose()
-  recTime: number; // in seconds
+  recTime?: number; // in seconds
 
   @IsInt()
   @Min(0)

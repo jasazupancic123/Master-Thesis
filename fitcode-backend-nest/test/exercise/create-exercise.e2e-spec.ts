@@ -394,4 +394,58 @@ describe('Create Exercise (e2e)', () => {
     expect(response.status).toBe(201);
     expect(response.body).toHaveLength(NUM_MAX_EXERCISES); // trainer has 5 exercises from previous test
   }); */
+
+  it('should create bilateral exercise and populate correct params', async () => {
+    const component = await componentService.create(
+      generateComponentStub({ params: ['reps', 'loadKg'] }),
+    );
+
+    const exercise = generateExerciseStub({
+      name: 'Bilateral Exercise',
+      componentIds: [component.id],
+      isUnilateral: false,
+    });
+
+    exerciseAttributeService.getValues = jest.fn().mockReturnValueOnce([]);
+    exerciseAttributeService.getAttributes = jest.fn().mockReturnValueOnce([]);
+
+    const response = await req(exercise, global.manager.token);
+    expect(response.status).toBe(201);
+    expect(response.body.name).toBe(exercise.name);
+
+    const found = await db.exercises.get(response.body.id);
+    expect(found?.isUnilateral).toBe(false);
+    expect(found?.params).toEqual(expect.arrayContaining(['reps', 'loadKg']));
+
+    await db.exercises.delete(response.body.id);
+    await db.components.delete(component.id);
+  });
+
+  it('should create unilateral exercise and populate correct params', async () => {
+    const component = await componentService.create(
+      generateComponentStub({ params: ['reps', 'loadKg'] }),
+    );
+
+    const exercise = generateExerciseStub({
+      name: 'Unilateral Exercise',
+      componentIds: [component.id],
+      isUnilateral: true,
+    });
+
+    exerciseAttributeService.getValues = jest.fn().mockReturnValueOnce([]);
+    exerciseAttributeService.getAttributes = jest.fn().mockReturnValueOnce([]);
+
+    const response = await req(exercise, global.manager.token);
+    expect(response.status).toBe(201);
+    expect(response.body.name).toBe(exercise.name);
+
+    const found = await db.exercises.get(response.body.id);
+    expect(found?.isUnilateral).toBe(true);
+    expect(found?.params).toEqual(
+      expect.arrayContaining(['reps', 'loadKg', 'repsR', 'loadKgR']),
+    );
+
+    await db.exercises.delete(response.body.id);
+    await db.components.delete(component.id);
+  });
 });

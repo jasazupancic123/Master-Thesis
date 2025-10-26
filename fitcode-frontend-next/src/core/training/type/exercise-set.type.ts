@@ -1,22 +1,24 @@
-import type { LoadType } from '../enum/load-type.enum';
-
 export type ExerciseParamField =
-  | Exclude<keyof ExerciseSet, 'setNumber' | 'loadType'>
+  | Exclude<keyof ExerciseSet, 'setNumber'>
   | 'sets';
+
+export type ExerciseMainParamField = Exclude<
+  ExerciseParamField,
+  keyof ExerciseSetSecondarySide
+>;
 
 export type ExerciseSet = ExerciseSetPrimarySide &
   ExerciseSetSecondarySide & {
     setNumber: number;
-    recTime: number; // in seconds
+    recTime?: number; // in seconds
     recDist?: number; // in meters, for distance-based recovery
-    loadType?: LoadType;
     eff?: number; // 1 - 4
     time?: number; // in seconds, for time-based sets
     dist?: number; // in meters, for distance-based sets
   };
 
 export interface ExerciseSetPrimarySide {
-  reps: number;
+  reps?: number; // e.g. number of repetitions
   loadKg?: number; // e.g. weight in kg or percentage of 1RM or bodyweight
   loadRm?: number; // e.g. percentage of 1RM
   loadBw?: number; // e.g. percentage of bodyweight

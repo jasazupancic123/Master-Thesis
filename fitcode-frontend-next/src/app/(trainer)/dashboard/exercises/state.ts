@@ -315,6 +315,7 @@ export async function handleExerciseCsvFileUpload(
           movementDirections: e.movementDirections || [],
           locations: e.locations || [],
           liftPriorities: e.liftPriorities || [],
+          params: [],
         }))
       );
     },

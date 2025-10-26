@@ -82,7 +82,6 @@ import { TrainingComponent } from '../entity/training-component.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
 import { TrainingReport } from '../entity/training-report.entity';
 import { CreateWorkload, Workload } from '../entity/workload.entity';
-import { LoadType } from '../enum/load-type.enum';
 import { MainSet } from '../enum/main-set.enum';
 import { UpdateTraining } from '../interface/update-training.interface';
 import { TrainingRepository } from '../repository/training.repository';
@@ -811,7 +810,7 @@ export class TrainingService implements Permission<Training, Institution> {
   async updateBodyweightSets(athleteId: string, training: Training) {
     const hasBwParamType = this.trainingPlanService.hasLoadType(
       training,
-      LoadType.Bw,
+      'loadBw',
     );
 
     if (!hasBwParamType) return;
@@ -822,7 +821,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
     this.trainingPlanService.modifyPrescribedParamValuesByType(
       training,
-      LoadType.Bw,
+      'loadBw',
       (value) =>
         this.commonService.number.roundIntensity((value * bw) / 100, bw), // convert % value to kg and round to 2 decimals
     );
@@ -831,7 +830,7 @@ export class TrainingService implements Permission<Training, Institution> {
   async updateRepMaxSets(athleteId: string, training: Training) {
     const exercises = this.trainingPlanService.findExercisesByLoadType(
       training,
-      LoadType.Rm,
+      'loadRm',
     );
 
     if (!exercises.length) return;
@@ -846,7 +845,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
     this.trainingPlanService.modifyPrescribedParamValuesByType(
       training,
-      LoadType.Rm,
+      'loadRm',
       (value, exerciseId) => {
         // prescribed value is in % of 1RM (between 1 and 100)
         const best = maxes.find((max) => max.exerciseId === exerciseId);

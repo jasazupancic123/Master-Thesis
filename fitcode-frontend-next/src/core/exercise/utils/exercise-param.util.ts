@@ -17,8 +17,8 @@ import {
 } from '../constant/exercise-param.constant';
 
 export class ExerciseParamUtil {
-  readonly pairs: Record<ExerciseParamField, ExerciseParamField | undefined> = {
-    sets: undefined,
+  readonly pairs: Record<ExerciseParamField, ExerciseParamField> = {
+    sets: 'sets',
     reps: 'repsR',
     repsR: 'reps',
     loadKg: 'loadKgR',
@@ -31,11 +31,11 @@ export class ExerciseParamUtil {
     tempoR: 'tempo',
     vel: 'velR',
     velR: 'vel',
-    eff: undefined,
-    time: undefined,
-    dist: undefined,
-    recTime: undefined,
-    recDist: undefined,
+    eff: 'eff',
+    time: 'time',
+    dist: 'dist',
+    recTime: 'recTime',
+    recDist: 'recDist',
   };
 
   get(field: ExerciseParamField | 'sets') {

@@ -42,6 +42,7 @@ import {
   MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT,
   MAX_NUM_SUPERSETS_IN_CIRCUIT_COMPONENT,
 } from '../constant/training-limits.constant';
+import { ExerciseParamField } from '../entity/exercise-set.entity';
 import { Subgroup } from '../entity/subgroup.entity';
 import { Superset } from '../entity/superset.entity';
 import { Training } from '../entity/training.entity';
@@ -50,7 +51,6 @@ import {
   TrainingComponentWithoutTime,
 } from '../entity/training-component.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
-import { LoadType } from '../enum/load-type.enum';
 import { MainSet } from '../enum/main-set.enum';
 import { TrainingPeriod } from '../enum/training-period.enum';
 import {
@@ -166,19 +166,20 @@ export class TrainingPlanService {
     };
   }
 
-  hasLoadType(training: Training, loadType: LoadType): boolean {
+  hasLoadType(training: Training, loadType: ExerciseParamField): boolean {
     for (const component of training.components)
       for (const superset of component.supersets)
         for (const exercise of superset.exercises)
           for (const set of exercise.sets)
-            if (set.loadType === loadType) return true;
+            if (this.exerciseParamService.getLoadField(set) === loadType)
+              return true;
 
     return false;
   }
 
   modifyPrescribedParamValuesByType(
     training: Training,
-    loadType: LoadType,
+    loadType: ExerciseParamField,
     modify: (value: number, exerciseId: string) => number,
   ) {
     for (const component of training.components) {
@@ -193,7 +194,7 @@ export class TrainingPlanService {
 
   findExercisesByLoadType(
     training: Training,
-    loadType: LoadType,
+    loadType: ExerciseParamField,
   ): TrainingExercise[] {
     const exercises: TrainingExercise[] = [];
 
@@ -202,7 +203,7 @@ export class TrainingPlanService {
         for (const exercise of superset.exercises) {
           if (exercises.find((e) => e.id === exercise.id)) continue;
           for (const set of exercise.sets)
-            if (set.loadType === loadType) {
+            if (this.exerciseParamService.getLoadField(set) === loadType) {
               exercises.push(exercise);
               break;
             }
@@ -759,12 +760,12 @@ export class TrainingPlanService {
 
   private modifySupersetValuesByLoadType(
     superset: Superset,
-    loadType: LoadType,
+    loadType: ExerciseParamField,
     modify: (value: number, exerciseId: string) => number,
   ) {
     for (const exercise of superset.exercises)
       for (const set of exercise.sets)
-        if (set.loadType === loadType)
+        if (this.exerciseParamService.getLoadField(set) === loadType)
           this.exerciseParamService.modifyLoad(set, loadType, (current) =>
             modify(current, exercise.id),
           );

@@ -1,4 +1,3 @@
-import { LoadType } from '../enum/load-type.enum';
 import type { ExerciseSet } from '../type/exercise-set.type';
 import {
   KG,
@@ -21,13 +20,34 @@ export class TrainingExerciseSetUtil {
       ...(uni ? { repsR: data?.repsR || (REPS.defaultValue as number) } : {}),
       loadKg: data?.loadKg || (KG.defaultValue as number),
       ...(uni ? { loadKgR: data?.loadKgR || (KG.defaultValue as number) } : {}),
-      loadType: data?.loadType || LoadType.Kg,
       tempo: data?.tempo || (TEMPO.defaultValue as string),
       ...(uni
         ? { tempoR: data?.tempoR || (TEMPO.defaultValue as string) }
         : {}),
       recTime: data?.recTime || 60,
     };
+  }
+
+  getLoadType(set: ExerciseSet) {
+    if (set.loadRm !== undefined) return 'loadRm';
+    if (set.loadBw !== undefined) return 'loadBw';
+    return 'loadKg';
+  }
+
+  getVolType(set: ExerciseSet) {
+    if (set.dist !== undefined) return 'dist';
+    if (set.time !== undefined) return 'time';
+    return 'reps';
+  }
+
+  getEffType(set: ExerciseSet) {
+    if (set.eff !== undefined) return 'eff';
+    return 'tempo';
+  }
+
+  getRecType(set: ExerciseSet) {
+    if (set.recDist !== undefined) return 'recDist';
+    return 'recTime';
   }
 
   isEqual(a: ExerciseSet, b: ExerciseSet): boolean {
@@ -47,7 +67,6 @@ export class TrainingExerciseSetUtil {
       a.velR === b.velR &&
       a.recTime === b.recTime &&
       a.recDist === b.recDist &&
-      a.loadType === b.loadType &&
       a.eff === b.eff &&
       a.time === b.time &&
       a.dist === b.dist

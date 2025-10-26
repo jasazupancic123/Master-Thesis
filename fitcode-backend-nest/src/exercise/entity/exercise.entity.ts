@@ -8,7 +8,7 @@ import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 import { BaseEntity } from '@src/common/entity/base.entity';
 import { Institution } from '@src/institution/entity/institution.entity';
-import { ExerciseSet } from '@src/training/entity/exercise-set.entity';
+import { ExerciseParamField } from '@src/training/entity/exercise-set.entity';
 
 import { ExerciseAttributes } from './exercise-attributes.entity';
 
@@ -70,5 +70,9 @@ export class Exercise extends IntersectionType(BaseEntity, ExerciseAttributes) {
   @ApiProperty()
   disabled: boolean; // exercise is disabled and cannot be used for new programs, but existing programs are not affected
 
-  defaultParams?: (keyof ExerciseSet)[]; // for frontend display, not stored in db
+  @IsString({ each: true })
+  @IsNotEmpty({ each: true })
+  @Expose()
+  @ApiProperty()
+  params: ExerciseParamField[];
 }
