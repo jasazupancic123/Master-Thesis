@@ -2,15 +2,11 @@ import { addDays, addHours } from 'date-fns';
 import { v4 } from 'uuid';
 
 import { getTime } from '@src/common/service/util/date.util';
-import {
-  generateRandomName,
-  generateRandomNumber,
-} from '@src/common/utils/random.util';
+import { generateRandomName } from '@src/common/utils/random.util';
 import {
   COOLDOWN_COMPONENT_ID,
   WARMUP_COMPONENT_ID,
 } from '@src/component/constant/warmup-cooldown.constant';
-import { ExerciseParam } from '@src/exercise/constant/exercise-param.constant';
 
 import type { ExerciseSet } from '../entity/exercise-set.entity';
 import type { Subgroup } from '../entity/subgroup.entity';
@@ -18,7 +14,6 @@ import type { Superset } from '../entity/superset.entity';
 import type { Training } from '../entity/training.entity';
 import type { TrainingComponent } from '../entity/training-component.entity';
 import type { TrainingExercise } from '../entity/training-exercise.entity';
-import { LoadType } from '../enum/load-type.enum';
 import { MainSet } from '../enum/main-set.enum';
 
 /**
@@ -137,51 +132,9 @@ export function generateExerciseSet(
   params?: Partial<ExerciseSet>,
 ): ExerciseSet {
   // defaults
-  const set: ExerciseSet = {
-    setNumber,
-    reps: 10,
-    recTime: 60,
-    loadType: LoadType.Kg,
-  };
-
+  const set: ExerciseSet = { setNumber };
   if (params && typeof params === 'object' && !Array.isArray(params))
     Object.assign(set, params);
 
   return set;
-}
-
-function _generateParamValue<T extends keyof ExerciseSet>(
-  param: T,
-  random?: boolean,
-): ExerciseSet[T] {
-  if (!random) return ExerciseParam.get(param).defaultValue as ExerciseSet[T];
-
-  switch (param) {
-    case 'reps':
-    case 'repsR':
-      return generateRandomNumber(3, 20) as ExerciseSet[T];
-    case 'loadKg':
-    case 'loadKgR':
-      return generateRandomNumber(20, 120) as ExerciseSet[T];
-    case 'loadRm':
-    case 'loadRmR':
-    case 'loadBw':
-    case 'loadBwR':
-      return generateRandomNumber(50, 100) as ExerciseSet[T];
-    case 'tempo':
-    case 'tempoR':
-      const t = () => generateRandomNumber(0, 4);
-      return `${t()}:${t()}:${t()}:${t()}` as ExerciseSet[T];
-    case 'vel':
-    case 'velR':
-      return generateRandomNumber(1, 5) as ExerciseSet[T]; // in m/s
-    case 'eff':
-      return generateRandomNumber(1, 4) as ExerciseSet[T];
-    case 'recTime':
-    case 'time':
-      return generateRandomNumber(30, 180) as ExerciseSet[T]; // in seconds
-    case 'dist':
-    case 'recDist':
-      return generateRandomNumber(100, 1000) as ExerciseSet[T]; // in meters
-  }
 }

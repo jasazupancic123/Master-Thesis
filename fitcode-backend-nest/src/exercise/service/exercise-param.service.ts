@@ -1,23 +1,20 @@
 import { Injectable } from '@nestjs/common';
 
+import { Attribute } from '@src/attribute/entity/attribute.entity';
 import { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
 import { AttributeService } from '@src/attribute/service/attribute.service';
 import { CommonService } from '@src/common/service/common.service';
 import { ValidateError } from '@src/common/type/validate.type';
+import { Component } from '@src/component/entity/component.entity';
 import { Exercise } from '@src/exercise/entity/exercise.entity';
 import { Method } from '@src/method/entity/method.entity';
+import { MAX_NUM_SETS_IN_EXERCISE } from '@src/training/constant/training-limits.constant';
 import {
-  DEFAULT_NUM_SETS_IN_EXERCISE,
-  MAX_NUM_SETS_IN_EXERCISE,
-} from '@src/training/constant/training-limits.constant';
-import {
+  ExerciseParamField,
   ExerciseSet,
-  ExerciseSetPrimarySide,
-  ExerciseSetSecondarySide,
 } from '@src/training/entity/exercise-set.entity';
-import { LoadType } from '@src/training/enum/load-type.enum';
 
-import { ExerciseParam } from '../constant/exercise-param.constant';
+import { ExerciseParamAttribute } from '../constant/exercise-param.constant';
 
 @Injectable()
 export class ExerciseParamService {
@@ -26,93 +23,104 @@ export class ExerciseParamService {
     private readonly attributeService: AttributeService,
   ) {}
 
-  getAttributeValues(set: ExerciseSet): AttributeValue<ExerciseSet>[] {
+  readonly pairs: (
+    | [ExerciseParamField, ExerciseParamField]
+    | [ExerciseParamField]
+  )[] = [
+    ['reps', 'repsR'],
+    ['loadKg', 'loadKgR'],
+    ['loadRm', 'loadRmR'],
+    ['loadBw', 'loadBwR'],
+    ['tempo', 'tempoR'],
+    ['vel', 'velR'],
+    ['eff'],
+    ['time'],
+    ['dist'],
+    ['recTime'],
+    ['recDist'],
+  ];
+
+  getAttributes(exercise: Exercise): Attribute<ExerciseSet>[] {
+    const attributes: Attribute<ExerciseSet>[] = [];
+    for (const param of exercise.params) {
+      const attr = ExerciseParamAttribute[param];
+      if (attr) attributes.push(attr);
+    }
+
+    return attributes;
+  }
+
+  /**
+   * Converts set properties to array of attribute values for compatibility
+   * with attribute service validation. If set is not provided, default values
+   * are used.
+   */
+  getAttributeValues(
+    exercise: Exercise,
+    set?: ExerciseSet,
+  ): AttributeValue<ExerciseSet>[] {
     const values: AttributeValue<ExerciseSet>[] = [];
-    for (const field of ExerciseParam.fields)
-      if (!this.common.object.isEmpty(set[field]))
-        values.push({ field, value: set[field] });
+    for (const field of exercise.params) {
+      if (set)
+        if (!this.common.object.isEmpty(set[field]))
+          values.push({ field, value: set[field] }); // provided set
+        else
+          // default value
+          values.push({
+            field,
+            value: ExerciseParamAttribute[field]
+              ?.defaultValue as ExerciseSet[ExerciseParamField],
+          });
+    }
 
     return values;
   }
 
-  getDefaultSets(isUnilateral: boolean, fields: string[]): ExerciseSet[] {
-    return Array.from({ length: DEFAULT_NUM_SETS_IN_EXERCISE }).map((_, i) => ({
-      setNumber: i + 1,
-      ...this.getSetParams(isUnilateral, fields),
-    }));
+  getComponentParams(
+    component: Component,
+    isUnilateral: boolean,
+  ): ExerciseParamField[] {
+    const params: ExerciseParamField[] = [];
+    for (const param of component?.params || [])
+      if (isUnilateral) {
+        // unilateral exercise, add both main and secondary side params
+        const pair = this.pairs.find((p) => p.includes(param));
+        if (pair && pair.length === 2) params.push(pair[0], pair[1]);
+        else params.push(param);
+      } else params.push(param); // bilateral exercise
+
+    return Array.from(new Set(params));
   }
 
-  getSetParams(
-    isUnilateral: boolean,
-    fields: string[] = ExerciseParam.fields,
-  ): Omit<ExerciseSet, 'setNumber'> {
-    const params = ExerciseParam.getAll(fields as (keyof ExerciseSet)[]);
+  attributeValuesToSet(
+    values: AttributeValue<ExerciseSet>[],
+    setNumber: number,
+  ): ExerciseSet {
+    const set: ExerciseSet = { setNumber };
+    for (const val of values)
+      set[val.field as any] = val.value as ExerciseSet[ExerciseParamField];
 
-    const reps = params.find((a) => a.field === ExerciseParam.REPS.field);
-    const loadKg = params.find((a) => a.field === ExerciseParam.KG.field);
-    const loadRm = params.find((a) => a.field === ExerciseParam.RM.field);
-    const loadBw = params.find((a) => a.field === ExerciseParam.BW.field);
-    const tempo = params.find((a) => a.field === ExerciseParam.TEMPO.field);
-    const vel = params.find((a) => a.field === ExerciseParam.VEL.field);
-    const eff = params.find((a) => a.field === ExerciseParam.EFF.field);
-    const time = params.find((a) => a.field === ExerciseParam.TIME.field);
-    const dist = params.find((a) => a.field === ExerciseParam.DIST.field);
-    const rt = params.find((a) => a.field === ExerciseParam.REC_TIME.field);
-    const rd = params.find((a) => a.field === ExerciseParam.REC_DIST.field);
-
-    const primarySide: ExerciseSetPrimarySide = {
-      reps: (reps || ExerciseParam.REPS).defaultValue as number,
-      loadKg: loadKg?.defaultValue as number,
-      loadRm: loadRm?.defaultValue as number,
-      loadBw: loadBw?.defaultValue as number,
-      tempo: tempo?.defaultValue as string,
-      vel: vel?.defaultValue as number,
-    };
-
-    const secondarySide: ExerciseSetSecondarySide = isUnilateral
-      ? {
-          repsR: primarySide.reps,
-          loadKgR: primarySide.loadKg,
-          loadRmR: primarySide.loadRm,
-          loadBwR: primarySide.loadBw,
-          tempoR: primarySide.tempo,
-          velR: primarySide.vel,
-        }
-      : {};
-
-    return this.common.object.clean(
-      {
-        ...primarySide,
-        ...secondarySide,
-        loadType: this.getLoadType(primarySide),
-        eff: eff?.defaultValue as number,
-        recTime: rt?.defaultValue as number,
-        time: time?.defaultValue as number,
-        dist: dist?.defaultValue as number,
-        recDist: rd?.defaultValue as number,
-      },
-      true,
-    ) as ExerciseSet;
+    return set;
   }
 
   modifyLoad(
     set: ExerciseSet,
-    loadType: LoadType,
+    loadType: ExerciseParamField,
     value: (current: number) => number,
   ) {
     let prevValue: number | undefined;
     let prevValueR: number | undefined;
 
     switch (loadType) {
-      case LoadType.Kg:
+      case 'loadKg':
         prevValue = set.loadKg as number;
         prevValueR = set.loadKgR as number;
         break;
-      case LoadType.Rm:
+      case 'loadRm':
         prevValue = set.loadRm as number;
         prevValueR = set.loadRmR as number;
         break;
-      case LoadType.Bw:
+      case 'loadBw':
         prevValue = set.loadBw as number;
         prevValueR = set.loadBwR as number;
         break;
@@ -137,8 +145,8 @@ export class ExerciseParamService {
     errors.push(...this.validateUnilaterality(set, exercise.isUnilateral));
 
     this.attributeService.validate(
-      this.getAttributeValues(set),
-      ExerciseParam.getAll(),
+      this.getAttributeValues(exercise, set),
+      this.getAttributes(exercise),
       (error) => errors.push(error),
     );
 
@@ -187,12 +195,18 @@ export class ExerciseParamService {
     return 0;
   }
 
-  // priority: kg > rm > bw
-  getLoadType(set: ExerciseSetPrimarySide): LoadType | undefined {
-    if (!this.common.object.isEmpty(set.loadKg)) return LoadType.Kg;
-    if (!this.common.object.isEmpty(set.loadRm)) return LoadType.Rm;
-    if (!this.common.object.isEmpty(set.loadBw)) return LoadType.Bw;
-    return undefined;
+  getLoadField(set: ExerciseSet): ExerciseParamField | null {
+    if (!this.common.object.isEmpty(set.loadKg)) return 'loadKg';
+    if (!this.common.object.isEmpty(set.loadRm)) return 'loadRm';
+    if (!this.common.object.isEmpty(set.loadBw)) return 'loadBw';
+    return null;
+  }
+
+  getVolField(set: ExerciseSet): ExerciseParamField | null {
+    if (!this.common.object.isEmpty(set.reps)) return 'reps';
+    if (!this.common.object.isEmpty(set.time)) return 'time';
+    if (!this.common.object.isEmpty(set.dist)) return 'dist';
+    return null;
   }
 
   private validateUnilaterality(
@@ -202,7 +216,7 @@ export class ExerciseParamService {
     const errors: ValidateError<ExerciseSet>[] = [];
     if (!isUnilateral) return errors;
 
-    for (const pair of ExerciseParam.pairs) {
+    for (const pair of this.pairs) {
       const isMainDefined = !this.common.object.isEmpty(set[pair[0]]);
       const isSecondaryDefined = !this.common.object.isEmpty(set[pair[1]]);
 
@@ -212,7 +226,7 @@ export class ExerciseParamService {
           (!isMainDefined && isSecondaryDefined) ||
           (isMainDefined && !isSecondaryDefined)
         ) {
-          const primary = ExerciseParam.get(pair[0]);
+          const primary = ExerciseParamAttribute[pair[0]];
           errors.push({
             field: primary.field,
             message: `Both primary and secondary side must be defined for param ${primary.name.toLowerCase()} in unilateral exercises`,
@@ -231,7 +245,10 @@ export class ExerciseParamService {
     const errors: ValidateError<ExerciseSet>[] = [];
 
     for (const attr of method.attributes) {
-      const pairs = ExerciseParam.pairs.find((p) => p.includes(attr.field));
+      const pairs = this.pairs.find((p) =>
+        p.includes(attr.field as ExerciseParamField),
+      );
+
       if (!pairs) continue;
 
       for (const field of pairs) {

@@ -4,16 +4,20 @@ import { Box, Grid2, IconButton } from '@mui/material';
 import type { TrainingExerciseCardCollapsedSetsProps } from './collapsed-sets';
 import { NumberExerciseParam } from '@/components/exercise-param/number-exercise-param';
 import { TempoExerciseParam } from '@/components/exercise-param/tempo-exercise-param';
+import { core } from '@/core/core.service';
 import {
   BW,
+  DIST,
+  EFF,
   KG,
+  REC_DIST,
   REC_TIME,
   REPS,
   RM,
   SETS,
   TEMPO,
+  TIME,
 } from '@/core/exercise/constant/exercise-param.constant';
-import { LoadType } from '@/core/training/enum/load-type.enum';
 import { useScreenSize } from '@/store/screen-size.provider';
 import LeftRightExerciseText from '@/ui/left-right-exercise-text';
 
@@ -25,7 +29,10 @@ export default function StubTrainingExerciseCardCollapsedSets(
     props;
 
   const uni = exercise.exercise?.isUnilateral;
-  const loadType = exercise.sets[0]?.loadType || LoadType.Kg;
+  const loadType = core.training.set.getLoadType(exercise.sets[0]);
+  const volType = core.training.set.getVolType(exercise.sets[0]);
+  const effType = core.training.set.getEffType(exercise.sets[0]);
+  const recType = core.training.set.getRecType(exercise.sets[0]);
 
   return (
     <Grid2
@@ -99,9 +106,9 @@ export default function StubTrainingExerciseCardCollapsedSets(
           />
 
           <NumberExerciseParam
-            options={[REPS]}
-            selected={REPS.field}
-            value={exercise.sets[0]?.reps}
+            options={[REPS, DIST, TIME]}
+            selected={volType}
+            value={exercise.sets[0]?.[volType] as number}
             showOptions
             exercise={exercise}
           />
@@ -114,18 +121,28 @@ export default function StubTrainingExerciseCardCollapsedSets(
             showOptions
           />
 
-          <TempoExerciseParam
-            options={[TEMPO]}
-            selected={TEMPO.field}
-            value={exercise.sets[0]?.tempo || ''}
-            exercise={exercise}
-            showOptions
-          />
+          {effType === 'tempo' ? (
+            <TempoExerciseParam
+              options={[TEMPO, EFF]}
+              selected={effType}
+              value={exercise.sets[0]?.[effType] || ''}
+              exercise={exercise}
+              showOptions
+            />
+          ) : (
+            <NumberExerciseParam
+              options={[TEMPO, EFF]}
+              selected={effType}
+              value={exercise.sets[0]?.[effType] || 0}
+              exercise={exercise}
+              showOptions
+            />
+          )}
 
           <NumberExerciseParam
-            options={[REC_TIME]}
-            selected={REC_TIME.field}
-            value={exercise.sets[0].recTime}
+            options={[REC_TIME, REC_DIST]}
+            selected={recType}
+            value={exercise.sets[0]?.[recType] || 0}
             exercise={exercise}
             showOptions
           />
@@ -151,9 +168,13 @@ export default function StubTrainingExerciseCardCollapsedSets(
             />
 
             <NumberExerciseParam
-              options={[REPS]}
-              selected={REPS.field}
-              value={exercise.sets[0]?.repsR || exercise.sets[0]?.reps}
+              options={[REPS, DIST, TIME]}
+              selected={volType}
+              value={
+                volType === 'reps'
+                  ? exercise.sets[0]?.repsR || 0
+                  : exercise.sets[0]?.[volType] || 0 // dist and time are the same for both sides
+              }
               exercise={exercise}
               showOptions={false}
             />
@@ -170,18 +191,32 @@ export default function StubTrainingExerciseCardCollapsedSets(
               exercise={exercise}
             />
 
-            <TempoExerciseParam
-              options={[TEMPO]}
-              selected={TEMPO.field}
-              value={exercise.sets[0]?.tempoR || exercise.sets[0]?.tempo || ''}
-              showOptions={false}
-              exercise={exercise}
-            />
+            {effType === 'tempo' ? (
+              <TempoExerciseParam
+                options={[TEMPO, EFF]}
+                selected={effType}
+                value={exercise.sets[0]?.tempoR || ''}
+                showOptions={false}
+                exercise={exercise}
+              />
+            ) : (
+              <NumberExerciseParam
+                options={[TEMPO, EFF]}
+                selected={effType}
+                value={exercise.sets[0]?.eff || 0}
+                showOptions={false}
+                exercise={exercise}
+              />
+            )}
 
             <NumberExerciseParam
-              options={[REC_TIME]}
-              selected={REC_TIME.field}
-              value={exercise.sets[0].recTime}
+              options={[REC_TIME, REC_DIST]}
+              selected={recType}
+              value={
+                recType === 'recTime'
+                  ? exercise.sets[0]?.recTime || 0
+                  : exercise.sets[0]?.recDist || 0
+              }
               showOptions={false}
               exercise={exercise}
             />

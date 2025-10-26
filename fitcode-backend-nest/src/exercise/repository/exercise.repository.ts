@@ -54,6 +54,7 @@ export class ExerciseRepository extends FirestoreRepository<Exercise> {
         movementDirections: input.movementDirections || [],
         locations: input.locations || [],
         liftPriorities: input.liftPriorities || [],
+        params: input.params || [],
       },
       { timestamps: true },
     );

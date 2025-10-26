@@ -11,12 +11,14 @@ import {
   MAX_NUM_EXERCISES_IN_CIRCUIT_SUPERSET,
   MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT,
 } from '@src/training/constant/training-limits.constant';
-import { ExerciseSet } from '@src/training/entity/exercise-set.entity';
+import {
+  ExerciseParamField,
+  ExerciseSet,
+} from '@src/training/entity/exercise-set.entity';
 import { Subgroup } from '@src/training/entity/subgroup.entity';
 import { Training } from '@src/training/entity/training.entity';
 import { TrainingComponent } from '@src/training/entity/training-component.entity';
 import { TrainingExercise } from '@src/training/entity/training-exercise.entity';
-import { LoadType } from '@src/training/enum/load-type.enum';
 import { MainSet } from '@src/training/enum/main-set.enum';
 import { PeriodizationType } from '@src/training/enum/periodization-type.enum';
 
@@ -33,7 +35,7 @@ import { WeekUndulatingPeriodizationStrategy } from './strategy/periodization-we
 export class PeriodizationService {
   private strategiesMap = new Map<PeriodizationType, PeriodizationStrategy>();
 
-  constructor(private readonly commonService: CommonService) {
+  constructor(private readonly common: CommonService) {
     const strategies: PeriodizationStrategy[] = [
       new ReplicatePeriodizationStrategy(),
       new LinearPeriodizationStrategy(),
@@ -155,7 +157,6 @@ export class PeriodizationService {
               for (const lr of ['L', 'R'] as const) {
                 const baseIntensity = lr === 'L' ? baseIntL : baseIntR;
                 const baseVolume = lr === 'L' ? baseVolL : baseVolR;
-
                 const prevInt = lr === 'L' ? prevIntL : prevIntR;
                 const prevVol = lr === 'L' ? prevVolL : prevVolR;
 
@@ -294,16 +295,15 @@ export class PeriodizationService {
     const firstTraining = trainings[0];
     const lastTraining = trainings[trainings.length - 1];
 
-    const startWeek = this.commonService.date.getIsoWeek(firstTraining.from);
-    const lastWeek = this.commonService.date.getIsoWeek(lastTraining.from);
+    const startWeek = this.common.date.getIsoWeek(firstTraining.from);
+    const lastWeek = this.common.date.getIsoWeek(lastTraining.from);
     const numWeeks = lastWeek - startWeek + 1;
 
     const weeks = Array.from({ length: numWeeks }, () => [] as Training[]);
 
     // fill the trainings in weeks
     for (const training of trainings) {
-      const weekIndex =
-        this.commonService.date.getIsoWeek(training.from) - startWeek;
+      const weekIndex = this.common.date.getIsoWeek(training.from) - startWeek;
 
       if (weekIndex >= 0 && weekIndex < weeks.length)
         weeks[weekIndex].push(training);
@@ -330,32 +330,38 @@ export class PeriodizationService {
    */
   private getBaseSetValues(baseExercise: TrainingExercise) {
     return baseExercise.sets.map((s, setIndex) => {
-      const loadType = s.loadType;
-      const loadField =
-        loadType === LoadType.Rm
-          ? 'loadRm'
-          : loadType === LoadType.Bw
-            ? 'loadBw'
-            : 'loadKg';
+      const loadField = !this.common.object.isEmpty(s.loadKg)
+        ? 'loadKg'
+        : !this.common.object.isEmpty(s.loadBw)
+          ? 'loadBw'
+          : !this.common.object.isEmpty(s.loadRm)
+            ? 'loadRm'
+            : undefined;
 
       const loadFieldR =
-        loadType === LoadType.Rm
+        loadField === 'loadRm'
           ? 'loadRmR'
-          : loadType === LoadType.Bw
+          : loadField === 'loadBw'
             ? 'loadBwR'
             : 'loadKgR';
 
-      const baseIntL = s[loadField];
-      const baseVolL = s.reps;
-      const baseIntR = s[loadFieldR];
-      const baseVolR = s.repsR;
+      const volField = !this.common.object.isEmpty(s.reps)
+        ? 'reps'
+        : !this.common.object.isEmpty(s.time)
+          ? 'time'
+          : !this.common.object.isEmpty(s.dist)
+            ? 'dist'
+            : undefined;
+
+      const volFieldR =
+        volField === 'reps' ? 'repsR' : volField === 'time' ? 'time' : 'dist';
 
       return {
         setIndex,
-        baseIntL: baseIntL ? +baseIntL : undefined,
-        baseVolL: baseVolL ? +baseVolL : undefined,
-        baseIntR: baseIntR ? +baseIntR : undefined,
-        baseVolR: baseVolR ? +baseVolR : undefined,
+        baseIntL: s[loadField] ? +s[loadField] : undefined,
+        baseVolL: s[volField] ? +s[volField] : undefined,
+        baseIntR: s[loadFieldR] ? +s[loadFieldR] : undefined,
+        baseVolR: s[volFieldR] ? +s[volFieldR] : undefined,
       };
     });
   }
@@ -363,20 +369,28 @@ export class PeriodizationService {
   private getIntParamValue(
     lr: 'L' | 'R',
     set: ExerciseSet,
-  ): { field: keyof ExerciseSet; value: number } | undefined {
-    const loadFieldL: keyof ExerciseSet =
-      set.loadType === LoadType.Rm
-        ? 'loadRm'
-        : set.loadType === LoadType.Bw
-          ? 'loadBw'
-          : 'loadKg';
+  ): { field: ExerciseParamField; value: number } | undefined {
+    const loadFieldL: ExerciseParamField = !this.common.object.isEmpty(
+      set.loadKg,
+    )
+      ? 'loadKg'
+      : !this.common.object.isEmpty(set.loadBw)
+        ? 'loadBw'
+        : !this.common.object.isEmpty(set.loadRm)
+          ? 'loadRm'
+          : undefined;
 
-    const loadFieldR: keyof ExerciseSet =
-      set.loadType === LoadType.Rm
-        ? 'loadRmR'
-        : set.loadType === LoadType.Bw
-          ? 'loadBwR'
-          : 'loadKgR';
+    const loadFieldR: ExerciseParamField = !this.common.object.isEmpty(
+      set.loadKgR,
+    )
+      ? 'loadKgR'
+      : !this.common.object.isEmpty(set.loadBwR)
+        ? 'loadBwR'
+        : !this.common.object.isEmpty(set.loadRmR)
+          ? 'loadRmR'
+          : undefined;
+
+    if (!loadFieldL || !loadFieldR) return undefined;
 
     return {
       field: lr === 'L' ? loadFieldL : loadFieldR,
@@ -387,10 +401,28 @@ export class PeriodizationService {
   private getVolParamValue(
     lr: 'L' | 'R',
     set: ExerciseSet,
-  ): { field: keyof ExerciseSet; value: number } | undefined {
+  ): { field: ExerciseParamField; value: number } | undefined {
+    const volFieldL = !this.common.object.isEmpty(set.reps)
+      ? 'reps'
+      : !this.common.object.isEmpty(set.time)
+        ? 'time'
+        : !this.common.object.isEmpty(set.dist)
+          ? 'dist'
+          : undefined;
+
+    const volFieldR = !this.common.object.isEmpty(set.repsR)
+      ? 'repsR'
+      : !this.common.object.isEmpty(set.time)
+        ? 'time'
+        : !this.common.object.isEmpty(set.dist)
+          ? 'dist'
+          : undefined;
+
+    if (!volFieldL || !volFieldR) return undefined;
+
     return {
-      field: lr === 'L' ? 'reps' : 'repsR',
-      value: +(set[lr === 'L' ? 'reps' : 'repsR'] || 0),
+      field: lr === 'L' ? volFieldL : volFieldR,
+      value: +(set[lr === 'L' ? volFieldL : volFieldR] || 0),
     };
   }
 

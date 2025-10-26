@@ -3,16 +3,20 @@ import { Box, Grid2, IconButton } from '@mui/material';
 
 import { NumberExerciseParam } from '@/components/exercise-param/number-exercise-param';
 import { TempoExerciseParam } from '@/components/exercise-param/tempo-exercise-param';
+import { core } from '@/core/core.service';
 import {
   BW,
+  DIST,
+  EFF,
   KG,
+  REC_DIST,
   REC_TIME,
   REPS,
   RM,
   SETS,
   TEMPO,
+  TIME,
 } from '@/core/exercise/constant/exercise-param.constant';
-import { LoadType } from '@/core/training/enum/load-type.enum';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { SetState } from '@/lib/common/type/state.type';
@@ -41,7 +45,10 @@ export default function TrainingExerciseCardExpandedSets({
   const { training, component } = trainerDayViewContext;
 
   const uni = exercise.exercise?.isUnilateral;
-  const loadType = exercise.sets[0]?.loadType || LoadType.Kg;
+  const loadType = core.training.set.getLoadType(exercise.sets[0]);
+  const volType = core.training.set.getVolType(exercise.sets[0]);
+  const effType = core.training.set.getEffType(exercise.sets[0]);
+  const recType = core.training.set.getRecType(exercise.sets[0]);
 
   if (!training || !component) return null;
 
@@ -129,16 +136,16 @@ export default function TrainingExerciseCardExpandedSets({
                 />
 
                 <NumberExerciseParam
-                  options={[REPS]}
-                  selected={REPS.field}
-                  value={exercise.sets[setIndex]?.reps}
+                  options={[REPS, DIST, TIME]}
+                  selected={volType}
+                  value={exercise.sets[setIndex]?.[volType] as number}
                   exercise={exercise}
                   showOptions={setIndex === 0}
                   disableOptions
                   onInputChange={(value) => {
                     supersetsContext.updateTrainingExerciseParam(
                       exercise,
-                      'reps',
+                      volType,
                       +value,
                       setIndex
                     );
@@ -162,34 +169,53 @@ export default function TrainingExerciseCardExpandedSets({
                   }}
                 />
 
-                <TempoExerciseParam
-                  options={[TEMPO]}
-                  selected={TEMPO.field}
-                  value={exercise.sets[setIndex]?.tempo || ''}
-                  exercise={exercise}
-                  showOptions={setIndex === 0}
-                  disableOptions
-                  onInputChange={(value) => {
-                    supersetsContext.updateTrainingExerciseParam(
-                      exercise,
-                      'tempo',
-                      value.toString(),
-                      setIndex
-                    );
-                  }}
-                />
+                {effType === 'tempo' ? (
+                  <TempoExerciseParam
+                    options={[TEMPO, EFF]}
+                    selected={effType}
+                    value={exercise.sets[setIndex]?.[effType] || ''}
+                    exercise={exercise}
+                    showOptions={setIndex === 0}
+                    disableOptions
+                    onInputChange={(value) => {
+                      supersetsContext.updateTrainingExerciseParam(
+                        exercise,
+                        effType,
+                        value.toString(),
+                        setIndex
+                      );
+                    }}
+                  />
+                ) : (
+                  <NumberExerciseParam
+                    options={[TEMPO, EFF]}
+                    selected={effType}
+                    value={exercise.sets[setIndex]?.[effType] || 0}
+                    exercise={exercise}
+                    showOptions={setIndex === 0}
+                    disableOptions
+                    onInputChange={(value) => {
+                      supersetsContext.updateTrainingExerciseParam(
+                        exercise,
+                        effType,
+                        +value,
+                        setIndex
+                      );
+                    }}
+                  />
+                )}
 
                 <NumberExerciseParam
-                  options={[REC_TIME]}
-                  selected={REC_TIME.field}
-                  value={exercise.sets[setIndex].recTime}
+                  options={[REC_TIME, REC_DIST]}
+                  selected={recType}
+                  value={exercise.sets[setIndex]?.[recType] || 0}
                   exercise={exercise}
                   showOptions={setIndex === 0}
                   disableOptions
                   onInputChange={(value) => {
                     supersetsContext.updateTrainingExerciseParam(
                       exercise,
-                      'recTime',
+                      recType,
                       +value,
                       setIndex
                     );
@@ -215,18 +241,20 @@ export default function TrainingExerciseCardExpandedSets({
                   />
 
                   <NumberExerciseParam
-                    options={[REPS]}
-                    selected={REPS.field}
+                    options={[REPS, DIST, TIME]}
+                    selected={volType}
                     value={
-                      exercise.sets[setIndex]?.repsR ||
-                      exercise.sets[setIndex]?.reps
+                      volType === 'reps'
+                        ? exercise.sets[setIndex]?.repsR || 0
+                        : exercise.sets[setIndex]?.[volType] || 0 // dist and time are the same for both sides
                     }
                     exercise={exercise}
                     showOptions={false}
                     onInputChange={(value) => {
+                      const field = volType === 'reps' ? 'repsR' : volType;
                       supersetsContext.updateTrainingExerciseParam(
                         exercise,
-                        'repsR',
+                        field,
                         +value,
                         setIndex
                       );
@@ -254,13 +282,49 @@ export default function TrainingExerciseCardExpandedSets({
                     }}
                   />
 
-                  <TempoExerciseParam
-                    options={[TEMPO]}
-                    selected={TEMPO.field}
+                  {effType === 'tempo' ? (
+                    <TempoExerciseParam
+                      options={[TEMPO, EFF]}
+                      selected={effType}
+                      value={exercise.sets[0]?.tempoR || ''}
+                      showOptions={false}
+                      exercise={exercise}
+                      disableOptions
+                      onInputChange={(value) => {
+                        supersetsContext.updateTrainingExerciseParam(
+                          exercise,
+                          'tempoR',
+                          value.toString(),
+                          setIndex
+                        );
+                      }}
+                    />
+                  ) : (
+                    <NumberExerciseParam
+                      options={[TEMPO, EFF]}
+                      selected={effType}
+                      value={exercise.sets[0]?.eff || 0}
+                      showOptions={false}
+                      exercise={exercise}
+                      disableOptions
+                      onInputChange={(value) => {
+                        supersetsContext.updateTrainingExerciseParam(
+                          exercise,
+                          'eff',
+                          +value,
+                          setIndex
+                        );
+                      }}
+                    />
+                  )}
+
+                  <NumberExerciseParam
+                    options={[REC_TIME, REC_DIST]}
+                    selected={recType}
                     value={
-                      exercise.sets[setIndex]?.tempoR ||
-                      exercise.sets[setIndex]?.tempo ||
-                      ''
+                      recType === 'recTime'
+                        ? exercise.sets[0]?.recTime || 0
+                        : exercise.sets[0]?.recDist || 0
                     }
                     showOptions={false}
                     exercise={exercise}
@@ -268,24 +332,7 @@ export default function TrainingExerciseCardExpandedSets({
                     onInputChange={(value) => {
                       supersetsContext.updateTrainingExerciseParam(
                         exercise,
-                        'tempoR',
-                        value.toString(),
-                        setIndex
-                      );
-                    }}
-                  />
-
-                  <NumberExerciseParam
-                    options={[REC_TIME]}
-                    selected={REC_TIME.field}
-                    value={exercise.sets[setIndex].recTime}
-                    showOptions={false}
-                    exercise={exercise}
-                    disableOptions
-                    onInputChange={(value) => {
-                      supersetsContext.updateTrainingExerciseParam(
-                        exercise,
-                        'recTime',
+                        recType,
                         +value,
                         setIndex
                       );

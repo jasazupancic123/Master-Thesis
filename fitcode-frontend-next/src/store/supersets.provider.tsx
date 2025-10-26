@@ -23,12 +23,16 @@ interface Props extends React.PropsWithChildren {
 
 interface ISupersetsContext extends Props {
   handleMenuClose: () => void;
-  updateTrainingExercises: (exercises: TrainingExercise[]) => void;
+  updateTrainingExercises: (
+    exercises: TrainingExercise[],
+    options?: { updateSubgroups?: boolean }
+  ) => void;
   updateTrainingExerciseParam: (
     exercise: TrainingExercise,
     field: ExerciseParamField,
-    value: number | string,
-    setIndex?: number
+    value: number | string | undefined,
+    setIndex?: number,
+    options?: { updateSubgroups?: boolean }
   ) => void;
 }
 
@@ -66,8 +70,35 @@ export function SupersetsProvider(props: Props) {
 
   const handleMenuClose = () => setMenuExercise(null);
 
-  function updateTrainingExercises(exercises: TrainingExercise[]) {
+  function updateTrainingExercises(
+    exercises: TrainingExercise[],
+    options?: { updateSubgroups?: boolean }
+  ) {
     if (!component || !training) return;
+
+    const newTraining = structuredClone(training);
+    const newComponent = newTraining.components.find(
+      (c) => c.id === component.id
+    )!;
+
+    if (options?.updateSubgroups) {
+      const children = core.training.subgroup.getChildren(component, component);
+      for (const child of children) {
+        let updatedSupersets: Superset[] = [];
+        for (const exercise of exercises)
+          updatedSupersets = core.training.superset.updateExercise(exercise, {
+            training,
+            componentId: component.id,
+            subgroupId: child.id,
+          });
+
+        // update components subgroup
+        const subgroup = newComponent.subgroups.find(
+          (sg) => sg.id === child.id
+        );
+        if (subgroup) subgroup.supersets = updatedSupersets;
+      }
+    }
 
     let updatedSupersets: Superset[] = [];
     for (const exercise of exercises)
@@ -77,27 +108,22 @@ export function SupersetsProvider(props: Props) {
         subgroupId: selectedSubgroup?.id,
       });
 
-    const newTraining = structuredClone(training);
-    const updatedComponent = newTraining.components.find(
-      (c) => c.id === component.id
-    );
-
     const updatedSubgroup =
-      updatedComponent?.subgroups.find(
-        (sg) => sg.id === selectedSubgroup?.id
-      ) || null;
+      newComponent.subgroups.find((sg) => sg.id === selectedSubgroup?.id) ||
+      null;
 
     setSupersets(updatedSupersets);
     setSelectedSubgroup(updatedSubgroup);
-    setComponent(updatedComponent);
+    setComponent(newComponent);
     setTraining(newTraining);
   }
 
   function updateTrainingExerciseParam(
     exercise: TrainingExercise,
     field: ExerciseParamField,
-    value: number | string,
-    setIndex?: number
+    value: number | string | undefined,
+    setIndex?: number,
+    options?: { updateSubgroups?: boolean }
   ) {
     if (!component || !training) return;
 
@@ -147,7 +173,7 @@ export function SupersetsProvider(props: Props) {
         e.sets[setIndex] = { ...e.sets[setIndex], [field]: value }; // update provided set
     }
 
-    updateTrainingExercises(exercises);
+    updateTrainingExercises(exercises, options);
   }
 
   const value: ISupersetsContext = {

@@ -22,11 +22,10 @@ import { InstitutionService } from '@src/institution/service/institution.service
 import type { Wellness } from '@src/profile/entity/wellness.entity';
 import { WellnessService } from '@src/profile/service/wellness.service';
 import { TestDbService } from '@src/test-db/test-db.service';
-import type { ExerciseSet } from '@src/training/entity/exercise-set.entity';
+import type { ExerciseMainParamField } from '@src/training/entity/exercise-set.entity';
 import type { Training } from '@src/training/entity/training.entity';
 import type { TrainingComponent } from '@src/training/entity/training-component.entity';
 import type { Workload } from '@src/training/entity/workload.entity';
-import { LoadType } from '@src/training/enum/load-type.enum';
 import { SetStatus } from '@src/training/enum/set-status.enum';
 import {
   generateExerciseSet,
@@ -56,7 +55,7 @@ describe('Get prescribed training (e2e)', () => {
   let a: TestUser;
   let b: TestUser;
 
-  const componentParams: (keyof ExerciseSet)[] = [
+  const componentParams: ExerciseMainParamField[] = [
     'reps',
     'loadKg',
     'loadRm',
@@ -229,10 +228,8 @@ describe('Get prescribed training (e2e)', () => {
     expect(firstExercise.sets).toHaveLength(3);
 
     const set = firstExercise.sets[0];
-    expect(set.loadType).toBe(LoadType.Kg);
     expect(set.reps).toBe(10);
     expect(set.loadKg).toBe(50);
-    expect(set.recTime).toBe(60);
 
     // not defined params
     expect(set.repsR).toBeUndefined();
@@ -271,10 +268,8 @@ describe('Get prescribed training (e2e)', () => {
     expect(firstExercise.sets).toHaveLength(1);
 
     const e1s1 = firstExercise.sets[0];
-    expect(e1s1.loadType).toBe(LoadType.Kg);
     expect(e1s1.reps).toBe(10);
     expect(e1s1.loadKg).toBe(50);
-    expect(e1s1.recTime).toBe(60);
     expect(e1s1.repsR).toBeUndefined();
     expect(e1s1.loadKgR).toBeUndefined();
     // expect(e1s1.loadRm).toBeUndefined();
@@ -295,10 +290,8 @@ describe('Get prescribed training (e2e)', () => {
     expect(secondExercise.sets).toHaveLength(2);
 
     const e2s1 = secondExercise.sets[0];
-    expect(e2s1.loadType).toBe(LoadType.Kg);
     expect(e2s1.reps).toBe(10);
     expect(e2s1.loadKg).toBe(50);
-    expect(e2s1.recTime).toBe(60);
     expect(e2s1.repsR).toBeUndefined();
     expect(e2s1.loadKgR).toBeUndefined();
     // expect(e2s1.loadRm).toBeUndefined();
@@ -319,10 +312,8 @@ describe('Get prescribed training (e2e)', () => {
     expect(thirdExercise.sets).toHaveLength(3);
 
     const e3s1 = thirdExercise.sets[0];
-    expect(e3s1.loadType).toBe(LoadType.Kg);
     expect(e3s1.reps).toBe(10);
     expect(e3s1.loadKg).toBe(50);
-    expect(e3s1.recTime).toBe(60);
     expect(e3s1.repsR).toBeUndefined();
     expect(e3s1.loadKgR).toBeUndefined();
     // expect(e3s1.loadRm).toBeUndefined();
@@ -401,18 +392,9 @@ describe('Get prescribed training (e2e)', () => {
                   generateTrainingExercise({
                     id: 'deadlift', // deadlift has bodyweight param
                     sets: [
-                      generateExerciseSet(1, {
-                        loadType: LoadType.Bw,
-                        loadBw: 75,
-                      }),
-                      generateExerciseSet(2, {
-                        loadType: LoadType.Bw,
-                        loadBw: 75,
-                      }),
-                      generateExerciseSet(3, {
-                        loadType: LoadType.Bw,
-                        loadBw: 75,
-                      }),
+                      generateExerciseSet(1, { loadBw: 75 }),
+                      generateExerciseSet(2, { loadBw: 75 }),
+                      generateExerciseSet(3, { loadBw: 75 }),
                     ],
                   }),
                   generateTrainingExercise({
@@ -426,18 +408,9 @@ describe('Get prescribed training (e2e)', () => {
                   generateTrainingExercise({
                     id: 'bench', // bench has bodyweight param
                     sets: [
-                      generateExerciseSet(1, {
-                        loadType: LoadType.Bw,
-                        loadBw: 65,
-                      }),
-                      generateExerciseSet(2, {
-                        loadType: LoadType.Bw,
-                        loadBw: 65,
-                      }),
-                      generateExerciseSet(3, {
-                        loadType: LoadType.Bw,
-                        loadBw: 65,
-                      }),
+                      generateExerciseSet(1, { loadBw: 65 }),
+                      generateExerciseSet(2, { loadBw: 65 }),
+                      generateExerciseSet(3, { loadBw: 65 }),
                     ],
                   }),
                 ],
@@ -578,48 +551,24 @@ describe('Get prescribed training (e2e)', () => {
                   generateTrainingExercise({
                     id: 'deadlift',
                     sets: [
-                      generateExerciseSet(1, {
-                        loadType: LoadType.Rm,
-                        loadRm: 80,
-                      }),
-                      generateExerciseSet(2, {
-                        loadType: LoadType.Rm,
-                        loadRm: 80,
-                      }),
-                      generateExerciseSet(3, {
-                        loadType: LoadType.Rm,
-                        loadRm: 80,
-                      }),
+                      generateExerciseSet(1, { loadRm: 80 }),
+                      generateExerciseSet(2, { loadRm: 80 }),
+                      generateExerciseSet(3, { loadRm: 80 }),
                     ],
                   }),
                   generateTrainingExercise({
                     id: 'bench',
                     sets: [
-                      generateExerciseSet(2, {
-                        loadType: LoadType.Rm,
-                        loadRm: 65,
-                      }),
-                      generateExerciseSet(3, {
-                        loadType: LoadType.Rm,
-                        loadRm: 65,
-                      }),
+                      generateExerciseSet(2, { loadRm: 65 }),
+                      generateExerciseSet(3, { loadRm: 65 }),
                     ],
                   }),
                   generateTrainingExercise({
                     id: 'squat',
                     sets: [
-                      generateExerciseSet(1, {
-                        loadType: LoadType.Rm,
-                        loadRm: 40,
-                      }),
-                      generateExerciseSet(2, {
-                        loadType: LoadType.Rm,
-                        loadRm: 40,
-                      }),
-                      generateExerciseSet(3, {
-                        loadType: LoadType.Rm,
-                        loadRm: 40,
-                      }),
+                      generateExerciseSet(1, { loadRm: 40 }),
+                      generateExerciseSet(2, { loadRm: 40 }),
+                      generateExerciseSet(3, { loadRm: 40 }),
                     ],
                   }),
                 ],

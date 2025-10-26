@@ -10,7 +10,10 @@ import { WorkloadRef } from '@src/common/type/firestore.type';
 import { BatchWriteOperation } from '@src/common/type/orm.type';
 import { Component } from '@src/component/entity/component.entity';
 import { FirebaseService } from '@src/firebase/firebase.service';
-import { ExerciseSet } from '@src/training/entity/exercise-set.entity';
+import {
+  ExerciseParamField,
+  ExerciseSet,
+} from '@src/training/entity/exercise-set.entity';
 import {
   Workload,
   WorkloadMeta,
@@ -54,7 +57,7 @@ export class TestWorkloadService extends AbstractChangeLogService<Workload> {
       Omit<WorkloadValue, 'reps' | 'recTime' | 'timestamp' | 'photoURLs'> & {
         component: Component;
         prescribed: Partial<ExerciseSet>;
-        params?: (keyof ExerciseSet)[];
+        params?: ExerciseParamField[];
         reps?: number;
         recTime?: number;
         timestamp?: Date;

@@ -11,7 +11,6 @@ import type {
   CreateWorkload,
   Workload,
 } from '@src/training/entity/workload.entity';
-import { LoadType } from '@src/training/enum/load-type.enum';
 import { SetStatus } from '@src/training/enum/set-status.enum';
 import {
   generateExerciseSet,
@@ -301,7 +300,6 @@ describe('Complete Next Set (e2e)', () => {
     // prescribed workload
     expect(result.prescribed.reps).toBe(10);
     expect(result.prescribed.repsR).toBeUndefined();
-    expect(result.prescribed.recTime).toBe(60);
     expect(result.prescribed.loadKg).toBe(50);
     expect(result.prescribed.loadKgR).toBeUndefined();
 
@@ -454,16 +452,8 @@ describe('Complete Next Set (e2e)', () => {
                       generateTrainingExercise({
                         id: 'squat',
                         sets: [
-                          generateExerciseSet(1, {
-                            reps: 5,
-                            loadRm: 80,
-                            loadType: LoadType.Rm,
-                          }),
-                          generateExerciseSet(2, {
-                            reps: 5,
-                            loadBw: 85,
-                            loadType: LoadType.Bw,
-                          }),
+                          generateExerciseSet(1, { reps: 5, loadRm: 80 }),
+                          generateExerciseSet(2, { reps: 5, loadBw: 85 }),
                         ],
                       }),
                     ],

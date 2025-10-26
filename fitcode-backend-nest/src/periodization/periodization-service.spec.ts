@@ -5,7 +5,6 @@ import { TestPeriodizationUtil } from '@test/common/utils/periodization.util';
 import { CommonModule } from '@src/common/common.module';
 import type { TrainingComponentRef } from '@src/common/type/firestore.type';
 import { validationSchema } from '@src/config/environment-validation-schema';
-import { ExerciseParam } from '@src/exercise/constant/exercise-param.constant';
 import { MAIN_GROUP_PARENT_ID } from '@src/training/constant/main-group-parent-id.constant';
 import type { TrainingExercise } from '@src/training/entity/training-exercise.entity';
 import { PeriodizationType } from '@src/training/enum/periodization-type.enum';
@@ -300,7 +299,7 @@ describe('periodize', () => {
 
       expect(exercise).toBeDefined();
       for (const set of exercise.sets) {
-        expect(set.reps).toEqual(ExerciseParam.REPS.defaultValue); // default value
+        expect(set.reps).toEqual(10); // default value
         expect(set.loadKg).toBeUndefined();
         expect(set.loadKgR).toBeUndefined();
         expect(set.loadBw).toBeUndefined();
@@ -393,17 +392,17 @@ describe('periodize', () => {
                     id: 'e1',
                     sets: [
                       // default values for L and R params
-                      generateExerciseSet(1, { recDist: 50 }),
-                      generateExerciseSet(2, { recDist: 50 }),
-                      generateExerciseSet(3, { recDist: 50 }),
+                      generateExerciseSet(1, { reps: 10, recDist: 50 }),
+                      generateExerciseSet(2, { reps: 10, recDist: 50 }),
+                      generateExerciseSet(3, { reps: 10, recDist: 50 }),
                     ],
                   }),
                   generateTrainingExercise({
                     id: 'e3',
                     sets: [
-                      generateExerciseSet(1, { recDist: 50 }),
-                      generateExerciseSet(2, { recDist: 50 }),
-                      generateExerciseSet(3, { recDist: 50 }),
+                      generateExerciseSet(1, { reps: 10, recDist: 50 }),
+                      generateExerciseSet(2, { reps: 10, recDist: 50 }),
+                      generateExerciseSet(3, { reps: 10, recDist: 50 }),
                     ],
                   }),
                 ],
@@ -698,7 +697,7 @@ describe('periodize', () => {
 
   describe('Direct subgroup periodization', () => {
     it('should periodize main group and all its direct children with special id', () => {
-      const directSubgroup = generateSubgroup({
+      const virtual = generateSubgroup({
         id: 's1',
         parentId: MAIN_GROUP_PARENT_ID, // direct child of main group
         supersets: [
@@ -727,7 +726,7 @@ describe('periodize', () => {
         ],
       });
 
-      const otherSubgroup = generateSubgroup({
+      const regular = generateSubgroup({
         id: 'some-other-subgroup',
         supersets: [
           generateSuperset({
@@ -776,15 +775,15 @@ describe('periodize', () => {
                       id: 'e1',
                       sets: [
                         // default values for L and R params
-                        generateExerciseSet(1, { loadKg: 50 }),
-                        generateExerciseSet(2, { loadKg: 50 }),
-                        generateExerciseSet(3, { loadKg: 50 }),
+                        generateExerciseSet(1, { reps: 10, loadKg: 60 }),
+                        generateExerciseSet(2, { reps: 11, loadKg: 55 }),
+                        generateExerciseSet(3, { reps: 12, loadKg: 50 }),
                       ],
                     }),
                   ],
                 }),
               ],
-              subgroups: [directSubgroup, otherSubgroup],
+              subgroups: [virtual, regular],
             }),
           ],
         });
@@ -800,6 +799,8 @@ describe('periodize', () => {
       const result = service.periodize(periodizationType, ref, trainings, [
         'e1',
       ]);
+
+      console.log('result:', JSON.stringify(result, null, 2));
 
       // it should periodize main group & subgroup s1 but not "some-other-subgroup"
       expect(result.length).toBe(trainings.length);
@@ -817,12 +818,12 @@ describe('periodize', () => {
           (sg) => sg.id === 'some-other-subgroup',
         );
         expect(subgroup2).toBeDefined();
-        expect(subgroup2).toEqual(otherSubgroup); // should not be periodized
+        expect(subgroup2).toEqual(regular); // should not be periodized
         expect(subgroup2.supersets[0].exercises[0].sets).toHaveLength(3); // should have same number of sets
 
         const subgroup1 = mainComponent.subgroups.find((sg) => sg.id === 's1');
         expect(subgroup1).toBeDefined();
-        expect(subgroup1).not.toEqual(directSubgroup);
+        expect(subgroup1).not.toEqual(virtual);
         expect(subgroup1?.supersets[0].exercises[0].sets).toHaveLength(2); // should have same number of sets
 
         // expect values to be different than in base training
@@ -838,10 +839,9 @@ describe('periodize', () => {
             },
             ({ intL, intR }) => {
               const directSubgroupIntL =
-                +directSubgroup.supersets[0].exercises[0].sets[setIndex].loadKg;
+                +virtual.supersets[0].exercises[0].sets[setIndex].loadKg;
               const directSubgroupIntR =
-                +directSubgroup.supersets[0].exercises[0].sets[setIndex]
-                  .loadKgR;
+                +virtual.supersets[0].exercises[0].sets[setIndex].loadKgR;
 
               expect(intL).toBeGreaterThan(directSubgroupIntL);
               expect(intR).toBeGreaterThan(directSubgroupIntR);
@@ -930,9 +930,9 @@ describe('periodize', () => {
                       id: 'e1',
                       sets: [
                         // default values for L and R params
-                        generateExerciseSet(1),
-                        generateExerciseSet(2),
-                        generateExerciseSet(3),
+                        generateExerciseSet(1, { reps: 10, loadKg: 50 }),
+                        generateExerciseSet(2, { reps: 10, loadKg: 50 }),
+                        generateExerciseSet(3, { reps: 10, loadKg: 50 }),
                       ],
                     }),
                   ],

@@ -22,21 +22,17 @@
         "color": "#619eae"
       }
     ],
-    "params": {
-      "default": [
-        { "field": "reps" },
-        { "field": "load_kg" },
-        { "field": "load_bw" },
-        { "field": "load_rm" },
-        { "field": "tempo" },
-        { "field": "recTime" }
-      ],
-      "equipment:!": [
-        { "field": "reps" },
-        { "field": "tempo" },
-        { "field": "recTime" }
-      ]
-    },
+    "params": [
+      "reps",
+      "time",
+      "dist",
+      "loadKg",
+      "loadRm",
+      "loadBw",
+      "tempo",
+      "eff",
+      "recTime"
+    ],
     "children": [
       {
         "name": "Power",
@@ -197,34 +193,7 @@
         "color": "#f25a1f"
       }
     ],
-    "params": {
-      "default": [
-        {
-          "field": "volWorkSets",
-          "defaultValue": "set",
-          "options": [{ "field": "set" }]
-        },
-        {
-          "field": "vol1",
-          "defaultValue": "dist",
-          "options": [
-            { "field": "dist" },
-            { "field": "time" },
-            { "field": "rep" }
-          ]
-        },
-        {
-          "field": "int1",
-          "defaultValue": "eff",
-          "options": [{ "field": "eff" }]
-        },
-        {
-          "field": "volRec",
-          "defaultValue": "time",
-          "options": [{ "field": "time" }]
-        }
-      ]
-    },
+    "params": ["reps", "time", "dist", "eff"],
     "children": [
       {
         "name": "Acceleration",
@@ -444,9 +413,7 @@
         "color": "#2b1af9"
       }
     ],
-    "params": {
-      "default": [{ "field": "time" }, { "field": "dist" }, { "field": "eff" }]
-    },
+    "params": ["time", "dist", "eff", "recTime", "recDist"],
     "children": [
       {
         "name": "Aerobic Capacity",
@@ -474,7 +441,7 @@
     "name": "Coordination",
     "slug": "coordination",
     "attributes": [],
-    "params": [],
+    "params": ["reps", "time", "dist"],
     "children": [
       {
         "name": "Technical Work",
@@ -531,9 +498,7 @@
         "color": "#d87d40"
       }
     ],
-    "params": {
-      "default": [{ "field": "reps" }, { "field": "time" }, { "field": "time" }]
-    },
+    "params": ["reps", "time"],
     "children": [
       {
         "name": "Flexibility",
@@ -618,7 +583,7 @@
         "color": "#f02846"
       }
     ],
-    "params": { "default": [] },
+    "params": [],
     "children": []
   }
 ]
