@@ -229,6 +229,7 @@ export default function AthleteTrainingComponents(props: Props) {
                   })
                   .flat() || [];
 
+              console.log('set training in progress 1');
               setTrainingInProgress({
                 training,
                 selectedComponent: selectedComponent,

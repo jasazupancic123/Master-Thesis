@@ -58,15 +58,20 @@ export default function TrainingPage() {
 
   useEffect(() => {
     if (!isLoaded) return;
-    if (
-      trainingInProgress &&
-      trainingInProgress.training &&
-      trainingInProgress.selectedComponent
-    ) {
-      setView(ExerciseTrainingView.TrainingView);
-    } else {
-      clearTrainingState();
-    }
+
+    const onLoad = async () => {
+      if (
+        trainingInProgress &&
+        trainingInProgress.training &&
+        trainingInProgress.selectedComponent
+      ) {
+        setView(ExerciseTrainingView.TrainingView);
+      } else {
+        await clearTrainingState();
+      }
+    };
+
+    onLoad();
   }, [isLoaded]);
 
   const handlePaginateTrainings = async () => {
