@@ -276,10 +276,20 @@ export default function TrainingExerciseChart(
             <LineChart data={chartData.slice(range[0] - 1, range[1])}>
               <Tooltip content={CustomTooltip} />
               <XAxis dataKey="name" />
-              <YAxis domain={['dataMin - 3', 'dataMax + 3']} />
+
+              {/* LEFT Y AXIS (e.g. loadKg) */}
+              <YAxis yAxisId="left" domain={['dataMin - 3', 'dataMax + 3']} />
+
+              {/* RIGHT Y AXIS (e.g. reps) */}
+              <YAxis
+                yAxisId="right"
+                orientation="right"
+                domain={['dataMin - 1', 'dataMax + 1']}
+              />
 
               <Line
                 type="monotone"
+                yAxisId="left"
                 dataKey="int"
                 stroke={GRAPH_COLORS[0]}
                 strokeWidth={3}
@@ -288,6 +298,7 @@ export default function TrainingExerciseChart(
 
               <Line
                 type="monotone"
+                yAxisId="right"
                 dataKey="vol"
                 stroke={GRAPH_COLORS[1]}
                 strokeWidth={3}
