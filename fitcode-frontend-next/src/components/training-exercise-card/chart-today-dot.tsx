@@ -21,7 +21,7 @@ export const TodayDot: React.FC<DotProps> = ({
 
   const big = payload?.trainingId === training?.id;
 
-  const r = big ? 6 : 3; // bigger dot for today
+  const r = big ? 6 : 2; // bigger dot for today
   const sw = 3;
 
   return (
