@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 
+import { DEFAULT_CHART_PARAMS } from '../chart';
 import { getAthleteChart, getGroupChart } from '../chart.util';
 import { core } from '@/core/core.service';
 import type { ChartWorkloadData } from '@/core/training/type/chart-workload-data.type';
+import type { ExerciseParamField } from '@/core/training/type/exercise-set.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { Dimensions } from '@/lib/common/type/dimensions.type';
 import { useGroup } from '@/store/group.provider';
@@ -31,6 +33,9 @@ export default function useTrainingExerciseCardChart({ exercise }: Props) {
     component,
   } = trainerDayViewContext;
 
+  const [selectedParams, setSelectedParams] =
+    useState<ExerciseParamField[]>(DEFAULT_CHART_PARAMS);
+
   const [chartData, setChartData] = useState<ChartWorkloadData[]>([]);
   const [max, setMax] = useState<number>(10);
   const [range, setRange] = useState<number[]>([1, 6]); // Example range
@@ -46,23 +51,31 @@ export default function useTrainingExerciseCardChart({ exercise }: Props) {
     if (exercise.id !== selectedExercise?.id || !training || !component) return;
 
     const chartData = !selectedAthlete
-      ? getGroupChart(exercise, component, training, { trainings })
+      ? getGroupChart(exercise, component, training, {
+          trainings: trainings.map((t) =>
+            t.id === training.id ? training : t
+          ),
+          selectedParams,
+        })
       : getAthleteChart(
           selectedAthlete.uid,
           exercise,
           component,
           core.training.getAthleteTraining(selectedAthlete.uid, training),
           {
-            trainings,
+            trainings: trainings.map((t) =>
+              t.id === training.id ? training : t
+            ),
             workloads: selectedAthleteWorkloads,
             subgroup: trainerDayViewContext.selectedSubgroup,
+            selectedParams,
           }
         );
 
     setChartData(chartData);
     setMax(chartData.length);
     setRange([1, chartData.length]);
-  }, [selectedAthleteWorkloads, trainings]);
+  }, [selectedAthleteWorkloads, trainings, selectedParams]);
 
   useEffect(() => {
     // Set the percentage for the chart background (completed vs future) based on the range
@@ -115,6 +128,8 @@ export default function useTrainingExerciseCardChart({ exercise }: Props) {
   return {
     chartData,
     setChartData,
+    selectedParams,
+    setSelectedParams,
     percentageForChartBackground,
     setPercentageForChartBackground,
     paddingForChartBackground,

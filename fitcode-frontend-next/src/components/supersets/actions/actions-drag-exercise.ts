@@ -43,7 +43,7 @@ export async function onDragEndExercise(
   if (destination.droppableId === ADD_SUPERSET_DROPPABLE_ID) {
     if (supersets.length >= MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT)
       toast.error(
-        `You can only have ${MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT} supersets per component`
+        `Only ${MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT} supersets per component allowed`
       );
 
     const _supersets = structuredClone(supersets);
@@ -184,7 +184,7 @@ export const onAddExerciseDrop = (
 ): Superset[] | undefined => {
   if (supersets.length >= MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT) {
     toast.error(
-      `You can only have ${MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT} supersets per component`
+      `Only ${MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT} supersets per component allowed`
     );
     return;
   }
@@ -277,7 +277,7 @@ export function onDragEndExerciseToExistingSuperset(
     MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT
   ) {
     toast.error(
-      `You can only have ${MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT} exercises per superset`
+      `Only ${MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT} exercises per superset allowed`
     );
 
     return;

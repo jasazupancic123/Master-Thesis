@@ -4,6 +4,7 @@ import {
   LOGO_BLACK_IMG_URL,
   LOGO_IMG_URL,
 } from '@/lib/common/const/image.const';
+import { lib } from '@/lib';
 
 interface Props {
   width?: number;
@@ -24,6 +25,7 @@ export default function Logo({ width = 100, marginLeft, sx, version }: Props) {
       height={0}
       style={{ marginLeft, ...sx }} // Correctly spread additional styles
       layout="intrinsic"
+      unoptimized={lib.common.env.unoptimizeImages()}
     />
   );
 }

@@ -16,6 +16,7 @@ import { HERO_NAVBAR_HEIGHT } from '@/lib/common/const/state';
 import { useScreenSize } from '@/store/screen-size.provider';
 import IndexPageTitleText from '@/ui/index-page-title-text';
 import Logo from '@/ui/logo';
+import { lib } from '@/lib';
 
 type Item = { imageUrl: string; title: string; description: string };
 
@@ -311,6 +312,7 @@ export default function Technology(props: TechnologyProps) {
             alt="Aspire"
             width={initialAspireLogoWidth}
             height={0}
+            unoptimized={lib.common.env.unoptimizeImages()}
             style={{
               height: 'auto',
             }}

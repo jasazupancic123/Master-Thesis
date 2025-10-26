@@ -167,7 +167,6 @@ export default function PeriodizeModal(
             'Failed to periodize trainings'
           );
         }}
-        title="Periodize Training"
         confirmText="Periodize"
         cancelText="Close"
       >

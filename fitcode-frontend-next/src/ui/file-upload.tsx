@@ -1,3 +1,4 @@
+import { lib } from '@/lib';
 import type { SxProps } from '@mui/material';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -164,6 +165,7 @@ export default function FileUpload(props: Props) {
                   overflow: 'hidden', // ensures overflow is hidden
                   display: 'block',
                 }}
+                unoptimized={lib.common.env.unoptimizeImages()}
                 onError={(_e) => {
                   setPreview((prev) => ({ ...prev, error: 'Invalid image' }));
                 }}

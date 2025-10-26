@@ -75,6 +75,7 @@ export default function TrainingExerciseCardCollapsedSets(
     <Grid2
       key={componentIndex}
       container
+      spacing={1}
       columns={11}
       px={screenSize.isSmallerThanLaptop ? 1 : 0}
     >
@@ -88,7 +89,10 @@ export default function TrainingExerciseCardCollapsedSets(
         >
           <IconButton
             disableRipple
-            sx={{ p: 0, m: 0 }}
+            sx={{
+              p: 0,
+              m: 0,
+            }}
             onClick={() => setExpandedSetsView(!expandedSetsView)}
           >
             <KeyboardArrowRightIcon
@@ -101,8 +105,12 @@ export default function TrainingExerciseCardCollapsedSets(
               }}
             />
           </IconButton>
-
-          <Box display="flex" flexDirection="column" gap={0.8}>
+          <Box
+            key="exercise-title"
+            display="flex"
+            flexDirection="column"
+            gap={1}
+          >
             {uni ? (
               <>
                 <LeftRightExerciseText key="L" title="L" />
@@ -117,14 +125,14 @@ export default function TrainingExerciseCardCollapsedSets(
         </Box>
       </Grid2>
 
-      <Grid2 size={10} mt={uni ? -1.5 : 0}>
+      <Grid2 size={10} spacing={10}>
         <Box
-          display="flex"
+          key={exercise.id}
           width="100%"
-          justifyContent="center"
-          alignItems={uni ? 'center' : 'flex-start'}
-          gap={1}
-          sx={{ height: 77 }}
+          display="flex"
+          flexDirection="column"
+          gap={2}
+          minHeight={80}
         >
           <NumberExerciseParam
             options={[SETS]}
@@ -433,14 +441,14 @@ export default function TrainingExerciseCardCollapsedSets(
             alignItems={uni ? 'center' : 'flex-start'}
             gap={1}
             mt={-5}
-            sx={{ height: 77 }}
           >
             <NumberExerciseParam
               options={[SETS]}
               selected={SETS.field}
               value={exercise.sets.length}
+              showOptions
               exercise={exercise}
-              showOptions={false}
+              disableOptions={!!selectedAthlete}
               onInputChange={(value) => {
                 supersetsContext.updateTrainingExerciseParam(
                   exercise,
@@ -459,7 +467,7 @@ export default function TrainingExerciseCardCollapsedSets(
                   : exercise.sets[0]?.[volType] || 0 // dist and time are the same for both sides
               }
               exercise={exercise}
-              showOptions={false}
+              disableOptions={!!selectedAthlete}
               onInputChange={(value) => {
                 const field = volType === 'reps' ? 'repsR' : volType;
                 supersetsContext.updateTrainingExerciseParam(
@@ -473,18 +481,60 @@ export default function TrainingExerciseCardCollapsedSets(
             <NumberExerciseParam
               options={[KG, RM, BW]}
               selected={loadType}
-              value={
-                exercise.sets[0]?.[`${loadType}R`] ||
-                exercise.sets[0]?.[loadType] ||
-                0
-              }
-              showOptions={false}
+              value={exercise.sets[0]?.[loadType] as number}
+              showOptions
               exercise={exercise}
               disableOptions={!!selectedAthlete}
+              onSelectChange={(selected) => {
+                // update load type
+                const field = selected.toString() as typeof loadType;
+                const value = core.exercise.param.get(field)
+                  ?.defaultValue as number;
+
+                // set new selected field to default value
+                supersetsContext.updateTrainingExerciseParam(
+                  exercise,
+                  field,
+                  value,
+                  undefined,
+                  { updateSubgroups: true }
+                );
+
+                if (uni)
+                  supersetsContext.updateTrainingExerciseParam(
+                    exercise,
+                    core.exercise.param.pairs[field],
+                    value,
+                    undefined,
+                    { updateSubgroups: true }
+                  );
+
+                // make all other load fields undefined
+                (
+                  [
+                    'loadKg',
+                    'loadRm',
+                    'loadBw',
+                    'loadKgR',
+                    'loadRmR',
+                    'loadBwR',
+                  ] as ExerciseParamField[]
+                ).forEach((f) => {
+                  if (f !== field && core.exercise.param.pairs[field] !== f) {
+                    supersetsContext.updateTrainingExerciseParam(
+                      exercise,
+                      f,
+                      undefined,
+                      undefined,
+                      { updateSubgroups: true }
+                    );
+                  }
+                });
+              }}
               onInputChange={(value) => {
                 supersetsContext.updateTrainingExerciseParam(
                   exercise,
-                  `${loadType}R`,
+                  loadType,
                   +value
                 );
               }}

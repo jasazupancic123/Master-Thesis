@@ -25,6 +25,7 @@ import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import ImageGallery from '@/ui/image-gallery';
 import SwipeableBox from '@/ui/swipeable-box';
+import { lib } from '@/lib';
 
 export default function TrainingInProgressExerciseCard() {
   const theme = useTheme();
@@ -198,6 +199,7 @@ export default function TrainingInProgressExerciseCard() {
               width={0}
               height={0}
               sizes={'100vw'}
+              unoptimized={lib.common.env.unoptimizeImages()}
               style={{
                 maxWidth: '1200px',
                 width: '100vw',

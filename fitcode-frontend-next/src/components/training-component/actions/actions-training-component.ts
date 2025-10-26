@@ -1,3 +1,4 @@
+import { core } from '@/core/core.service';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import type { ITrainerDayViewContext } from '@/store/trainer-day-view.provider';
 
@@ -16,6 +17,9 @@ export function handleSelectTrainingComponent(
   const {
     training,
     component,
+    selectedAthlete,
+    selectedSubgroup,
+    setSelectedSubgroup,
     setComponent,
     setTraining,
     setSelectedExerciseIds,
@@ -26,6 +30,38 @@ export function handleSelectTrainingComponent(
   } else {
     setTraining(training);
     setComponent(trainingComponent);
+  }
+
+  if (selectedAthlete && trainingComponent) {
+    const virtual =
+      core.training.subgroup.getVirtual(
+        selectedAthlete.uid,
+        trainingComponent
+      ) ||
+      core.training.subgroup.createVirtual(
+        selectedAthlete,
+        selectedSubgroup,
+        trainingComponent
+      );
+
+    const updatedComponent = structuredClone(trainingComponent);
+    updatedComponent.subgroups = [
+      ...updatedComponent.subgroups.filter((s) => s.id !== virtual.id),
+      virtual,
+    ];
+
+    setSelectedSubgroup(virtual);
+    setComponent(updatedComponent);
+    setTraining((prev) =>
+      !prev
+        ? undefined
+        : {
+            ...prev,
+            components: prev.components.map((c) =>
+              c.id === updatedComponent.id ? updatedComponent : c
+            ),
+          }
+    );
   }
 
   setSelectedExerciseIds([]);

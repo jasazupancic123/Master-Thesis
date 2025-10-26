@@ -33,4 +33,8 @@ export class EnvUtil {
 
     return POSE_LANDMARKER_FULL_PATH; // default to full
   }
+
+  unoptimizeImages(): boolean {
+    return process.env.NEXT_PUBLIC_UNOPTIMIZE_IMAGES === '1';
+  }
 }
