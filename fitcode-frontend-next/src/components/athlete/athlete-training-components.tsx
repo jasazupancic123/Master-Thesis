@@ -216,8 +216,20 @@ export default function AthleteTrainingComponents(props: Props) {
               }
               TrainingService.mapData(training, { exercises });
 
+              const component = training.components.find(
+                (c) => c.id === selectedComponent.id
+              );
+
+              if (!component) {
+                toast.error(
+                  'Selected component not found in training. Please try again.'
+                );
+
+                return;
+              }
+
               const state: ExerciseSetTracking[] =
-                selectedComponent.supersets
+                component.supersets
                   .map((s, sIndex) => {
                     return s.exercises.map((e) => {
                       return {
@@ -231,7 +243,7 @@ export default function AthleteTrainingComponents(props: Props) {
 
               setTrainingInProgress({
                 training,
-                selectedComponent: selectedComponent,
+                selectedComponent: component,
                 userId: user.uid,
                 exerciseSetTrackingState: state,
               } as TrainingInProgress);

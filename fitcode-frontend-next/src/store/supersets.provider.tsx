@@ -3,6 +3,10 @@ import { createContext, useContext } from 'react';
 import { useMain } from './main.provider';
 import { useTrainerDayView } from './trainer-day-view.provider';
 import { core } from '@/core/core.service';
+import {
+  COOLDOWN_ID,
+  WARMUP_ID,
+} from '@/core/training/const/warmup-cooldown.const';
 import type { ExerciseParamField } from '@/core/training/type/exercise-set.type';
 import type { Superset } from '@/core/training/type/superset.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
@@ -77,9 +81,14 @@ export function SupersetsProvider(props: Props) {
     if (!component || !training) return;
 
     const newTraining = structuredClone(training);
-    const newComponent = newTraining.components.find(
-      (c) => c.id === component.id
-    )!;
+    const newComponent =
+      component.id === WARMUP_ID
+        ? newTraining.warmup!
+        : component.id === COOLDOWN_ID
+          ? newTraining.cooldown!
+          : newTraining.components.find((c) => c.id === component.id)!;
+
+    if (!newComponent) return;
 
     if (options?.updateSubgroups) {
       const children = core.training.subgroup.getChildren(component, component);
