@@ -25,29 +25,29 @@ import {
   handleUpsertManyExercises,
   handleUpsertMuscleValues,
 } from '@/app/(trainer)/dashboard/exercises/state';
-import {
-  COOLDOWN_ID,
-  WARMUP_ID,
-} from '@/common/constant/warmup-cooldown-ids-constants';
-import { isAdmin, isManager } from '@/common/firebase/firebase-auth.util';
-import type { Pagination as PaginationType } from '@/common/type/paginate.type';
 import ExerciseChips from '@/components/exercise-chips/exercise-chips';
 import ExerciseModal from '@/components/exercise-modal/exercise-modal';
-import ExerciseFilter from '@/components/exercises-list/components/exercise-filter/exercise-filter';
+import ExerciseFilter from '@/components/exercises-list/exercise-filter';
 import ExercisesList from '@/components/exercises-list/exercises-list';
-import { ComponentService } from '@/controller/component/component.service';
-import type { Component } from '@/controller/component/type/component.type';
+import type { Component } from '@/core/component/type/component.type';
+import { core } from '@/core/core.service';
 import type {
   CreateExerciseMuscleValues,
   Exercise,
-} from '@/controller/exercise/type/exercise.type';
-import { UserRole } from '@/controller/profile/enum/user-role.enum';
+} from '@/core/exercise/type/exercise.type';
+import { UserRole } from '@/core/profile/enum/user-role.enum';
+import {
+  COOLDOWN_ID,
+  WARMUP_ID,
+} from '@/core/training/const/warmup-cooldown.const';
+import { lib } from '@/lib';
+import type { Pagination as PaginationType } from '@/lib/common/type/paginate.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import FileUpload from '@/util/file-upload/file-upload';
-import MyModal from '@/util/modal/modal';
-import { SearchBar } from '@/util/search-bar/search-bar';
+import FileUpload from '@/ui/file-upload';
+import MyModal from '@/ui/modal';
+import { SearchBar } from '@/ui/search-bar/search-bar';
 
 type AttributeValue =
   | string
@@ -175,7 +175,7 @@ export default function ExercisesPage() {
       >
         <ExerciseChips
           noSelectionLabel="All"
-          components={ComponentService.toTree(
+          components={core.component.tree(
             components.filter((c) => c.id !== WARMUP_ID && c.id !== COOLDOWN_ID)
           )}
           selected={selectedComponent}
@@ -208,7 +208,8 @@ export default function ExercisesPage() {
           justifyContent={{ xs: 'flex-end', md: 'flex-start' }}
           alignItems="center"
         >
-          {(isAdmin(role) || isManager(role)) && (
+          {(lib.firebase.auth.isAdmin(role) ||
+            lib.firebase.auth.isManager(role)) && (
             <Box position="relative">
               <SpeedDial
                 ariaLabel="Exercise Actions"

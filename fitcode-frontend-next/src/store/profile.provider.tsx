@@ -2,23 +2,22 @@
 
 import { createContext, useContext } from 'react';
 
-import type { ChildrenProps } from '@/common/type/props.type';
-import type { SetStateNullable } from '@/common/type/state.type';
-import type { AuthUser } from '@/controller/auth/type/user.type';
-import type { Profile } from '@/controller/profile/type/user.type';
+import type { AuthUser } from '@/core/auth/type/user.type';
+import type { Profile } from '@/core/profile/type/user.type';
+import type { SetStateNullable } from '@/lib/common/type/state.type';
 
-export interface ProfileContextProps {
+interface Props extends React.PropsWithChildren {
   user: AuthUser;
   profile: Profile;
   setProfile: SetStateNullable<Profile>;
   setUser: SetStateNullable<AuthUser>;
 }
 
-const ProfileContext = createContext<ProfileContextProps | null>(null);
+const ProfileContext = createContext<Props | null>(null);
 
 export const useProfile = () => useContext(ProfileContext)!;
 
-export function ProfileProvider(props: ProfileContextProps & ChildrenProps) {
+export function ProfileProvider(props: Props) {
   const { children } = props;
   return (
     <ProfileContext.Provider value={props}>{children}</ProfileContext.Provider>

@@ -1,26 +1,27 @@
 import toast from 'react-hot-toast';
 
+import { updateGlobalStates } from '@/components/supersets/actions/actions-drag-exercise';
+import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-group-day-view/constant/subgroups.constant';
+import type { AuthUser } from '@/core/auth/type/user.type';
+import { core } from '@/core/core.service';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
-} from '@/common/constant/warmup-cooldown-ids-constants';
-import type { SetState } from '@/common/type/state.type';
-import { updateGlobalStates } from '@/components/supersets/actions/actions-drag-exercise';
-import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-group-day-view/constant/subgroups.constant';
-import type { AuthUser } from '@/controller/auth/type/user.type';
-import type { Subgroup } from '@/controller/training/type/subgroup.type';
-import type { Training } from '@/controller/training/type/training.type';
-import type { GroupProviderReturnType, useGroup } from '@/store/group.provider';
+} from '@/core/training/const/warmup-cooldown.const';
+import type { Subgroup } from '@/core/training/type/subgroup.type';
+import type { Training } from '@/core/training/type/training.type';
+import type { SetState } from '@/lib/common/type/state.type';
+import type { IGroupCtx, useGroup } from '@/store/group.provider';
 import type {
-  TrainerDayViewProviderReturnType,
-  TrainerDayViewProviderReturnTypeDefined,
+  ITrainerDayViewContext,
+  TrainerDayViewCtxExtended,
 } from '@/store/trainer-day-view.provider';
 
 export const handleAddMembersSubgroup = (
   input: { member: AuthUser },
   context: {
     useGroup: ReturnType<typeof useGroup>;
-    useTrainerDayViewContext: TrainerDayViewProviderReturnTypeDefined;
+    useTrainerDayViewContext: TrainerDayViewCtxExtended;
   }
 ) => {
   const { member } = input;
@@ -91,32 +92,8 @@ export const handleAddMembersSubgroup = (
   );
 
   if (memberSubgroup) {
-    // member already exists in a subgroup, remove him from it
-    const newSubgroups = [...component.subgroups].map((subgroup) =>
-      subgroup.membersIds.includes(member.uid) && !subgroup.parentId
-        ? {
-            ...subgroup,
-            membersIds: subgroup.membersIds.filter((id) => id !== member.uid),
-          }
-        : subgroup
-    );
-
-    const supersets = [...component.supersets].map((s) => ({
-      ...s,
-      exercises: [...s.exercises].map((e) => ({ ...e })),
-    }));
-
-    const newComponent = {
-      ...component,
-      subgroups: newSubgroups,
-      supersets: supersets,
-    };
-
     handleAddSubgroup(
-      {
-        createSubgroup,
-        setCreateSubgroup: undefined,
-      },
+      { createSubgroup, setCreateSubgroup: undefined },
       context
     );
 
@@ -141,15 +118,12 @@ const handleAddSubgroup = (
   },
   context: {
     useGroup: ReturnType<typeof useGroup>;
-    useTrainerDayViewContext: TrainerDayViewProviderReturnTypeDefined;
+    useTrainerDayViewContext: TrainerDayViewCtxExtended;
   }
 ) => {
   const { createSubgroup, setCreateSubgroup } = input;
-
   const { useGroup, useTrainerDayViewContext } = context;
-
   const { setDetectedChanges } = useGroup;
-
   const {
     training,
     setTraining,
@@ -187,86 +161,73 @@ const handleAddSubgroup = (
     );
   });
 
-  const newComponent = {
-    ...component,
-    subgroups: updatedSubgroups,
-  };
+  const newComponent = { ...component, subgroups: updatedSubgroups };
 
   setSelectedAthlete(undefined);
   setSelectedSubgroup(newSubgroup);
-
   setComponent(newComponent);
-
-  updateGlobalStates(
-    training,
-    component,
-    newComponent,
-    setTraining,
-    component.id === WARMUP_ID || component.id === COOLDOWN_ID
-  );
-
+  updateGlobalStates(training, component, newComponent, setTraining);
   setCreateSubgroup?.({ name: '', membersIds: [] });
   setDetectedChanges(true);
 };
 
-export const updateSelectedAthleteSubgroup = (
-  input: {
-    member: AuthUser;
-    subgroupId: string;
-  },
-  context: {
-    useTrainerDayViewContext: TrainerDayViewProviderReturnType;
-  }
-) => {
-  const { member, subgroupId } = input;
-
-  const { useTrainerDayViewContext } = context;
-
+export function updateSelectedAthleteSubgroup(
+  athlete: AuthUser,
+  subgroupId: string,
+  trainerDayViewCtx: ITrainerDayViewContext
+) {
   const {
     component,
     selectedSubgroup,
     setSelectedSubgroup,
-    selectedAthlete,
+    setComponent,
+    setTraining,
     setSelectedAthlete,
-  } = useTrainerDayViewContext;
+  } = trainerDayViewCtx;
 
   if (subgroupId !== (selectedSubgroup?.id || DEFAULT_SUBGROUP_ID)) return;
 
-  const foundCustomUserSubgroup = component?.subgroups.find(
-    (subgroup) => subgroup.parentId && subgroup.membersIds.includes(member.uid)
-  );
+  setSelectedAthlete(athlete);
 
-  if (selectedAthlete?.uid === member.uid) {
-    // update selectedSubgroup on member deselect
-    if (foundCustomUserSubgroup) {
-      const parentSubgroup = component?.subgroups.find(
-        (subgroup) => subgroup.id === foundCustomUserSubgroup.parentId
+  if (component) {
+    const virtual =
+      core.training.subgroup.getVirtual(athlete.uid, component) ||
+      core.training.subgroup.createVirtual(
+        athlete,
+        selectedSubgroup,
+        component
       );
 
-      if (parentSubgroup) setSelectedSubgroup(parentSubgroup);
-      else setSelectedSubgroup(null);
-    }
+    const updatedComponent = structuredClone(component);
+    updatedComponent.subgroups = [
+      ...updatedComponent.subgroups.filter((s) => s.id !== virtual.id),
+      virtual,
+    ];
 
-    setSelectedAthlete(undefined);
-    return;
+    setSelectedSubgroup(virtual);
+    setComponent(updatedComponent);
+    setTraining((prev) =>
+      !prev
+        ? undefined
+        : {
+            ...prev,
+            components: prev.components.map((c) =>
+              c.id === updatedComponent.id ? updatedComponent : c
+            ),
+          }
+    );
   }
-
-  setSelectedAthlete(member);
-
-  if (foundCustomUserSubgroup) setSelectedSubgroup(foundCustomUserSubgroup);
-};
+}
 
 export function handleDeleteSubgroup(
   input: { subgroupId: string },
   context: {
-    useGroup: GroupProviderReturnType;
-    useTrainerDayViewContext: TrainerDayViewProviderReturnTypeDefined;
+    useGroup: IGroupCtx;
+    useTrainerDayViewContext: TrainerDayViewCtxExtended;
   }
 ) {
   const { subgroupId } = input;
-
   const { useGroup, useTrainerDayViewContext } = context;
-
   const { setTrainings, setDetectedChanges } = useGroup;
 
   const {
@@ -274,12 +235,10 @@ export function handleDeleteSubgroup(
     setTraining,
     component,
     setComponent,
-    selectedExercises,
-    setSelectedExercises,
+    selectedExerciseIds,
+    setSelectedExerciseIds,
     setSelectedSubgroup,
   } = useTrainerDayViewContext;
-
-  setDetectedChanges(true);
 
   const subgroupsCopy = [...component.subgroups];
   const deletingSubgroup = subgroupsCopy.find((sg) => sg.id === subgroupId);
@@ -303,12 +262,7 @@ export function handleDeleteSubgroup(
     });
   }
 
-  const newComponent = {
-    ...component,
-    subgroups: updatedSubgroups,
-  };
-
-  setComponent(newComponent);
+  const newComponent = { ...component, subgroups: updatedSubgroups };
 
   const updatedComponents = [...training.components].map((c) =>
     c.id === component.id ? newComponent : c
@@ -324,15 +278,17 @@ export function handleDeleteSubgroup(
             components: updatedComponents,
           };
 
+  setDetectedChanges(true);
+  setSelectedSubgroup(null);
+  setComponent(newComponent);
   setTraining(newTraining);
   setTrainings((prev) =>
     prev.map((t) => (t.id === training.id ? newTraining : t))
   );
-
-  setSelectedSubgroup(null);
-  setSelectedExercises(
+  setSelectedExerciseIds(
     component?.supersets
       .flatMap((s) => s.exercises)
-      .filter((e) => selectedExercises.some((se) => se.id === e.id)) || []
+      .filter((e) => selectedExerciseIds.some((se) => se === e.id))
+      .map((e) => e.id) || []
   );
 }

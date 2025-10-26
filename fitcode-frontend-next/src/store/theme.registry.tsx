@@ -3,9 +3,8 @@
 import { CssBaseline, ThemeProvider } from '@mui/material';
 
 import { theme } from '@/app/style';
-import type { ChildrenProps } from '@/common/type/props.type';
 
-export default function ThemeRegistry({ children }: ChildrenProps) {
+export default function ThemeRegistry({ children }: React.PropsWithChildren) {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />

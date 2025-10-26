@@ -3,25 +3,25 @@ import type { DropResult } from 'react-beautiful-dnd';
 import type useTrainingMembers from '../hooks/use-members.hook';
 import type useTrainingMembersSubgroups from '../hooks/use-subgroups.hook';
 import { handleAddMembersSubgroup } from './actions-subgroups';
+import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-group-day-view/constant/subgroups.constant';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
-} from '@/common/constant/warmup-cooldown-ids-constants';
-import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-group-day-view/constant/subgroups.constant';
-import type { TrainingComponent } from '@/controller/training/type/training-component.type';
-import type { GroupProviderReturnType } from '@/store/group.provider';
-import type { MainProviderReturnType, useMain } from '@/store/main.provider';
+} from '@/core/training/const/warmup-cooldown.const';
+import type { TrainingComponent } from '@/core/training/type/training-component.type';
+import type { IGroupCtx } from '@/store/group.provider';
+import type { IMainContext, useMain } from '@/store/main.provider';
 import type {
-  TrainerDayViewProviderReturnType,
-  TrainerDayViewProviderReturnTypeDefined,
+  ITrainerDayViewContext,
+  TrainerDayViewCtxExtended,
 } from '@/store/trainer-day-view.provider';
 
 export const handleOnDragEnd = async (
   input: { result: DropResult },
   context: {
-    useMain: MainProviderReturnType;
-    useGroup: GroupProviderReturnType;
-    useTrainerDayViewContext: TrainerDayViewProviderReturnType;
+    useMain: IMainContext;
+    useGroup: IGroupCtx;
+    useTrainerDayViewContext: ITrainerDayViewContext;
     useTrainingMembersSubgroups: ReturnType<typeof useTrainingMembersSubgroups>;
     useTrainingMembers: ReturnType<typeof useTrainingMembers>;
   }
@@ -76,7 +76,7 @@ const onDragEndSubgroup = (
   { destination, draggableId }: DropResult,
   context: {
     useMain: ReturnType<typeof useMain>;
-    useTrainerDayViewContext: TrainerDayViewProviderReturnTypeDefined;
+    useTrainerDayViewContext: TrainerDayViewCtxExtended;
     useTrainingMembersSubgroups: ReturnType<typeof useTrainingMembersSubgroups>;
   }
 ) => {

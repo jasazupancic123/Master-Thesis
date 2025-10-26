@@ -1,2 +1,0 @@
-export const NUM_MAX_SUPERSETS = 8;
-export const NUM_MAX_EXERCISES_PER_SUPERSET = 4;

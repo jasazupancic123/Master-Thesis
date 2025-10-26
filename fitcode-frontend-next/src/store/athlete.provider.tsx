@@ -4,23 +4,22 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { createContext, useContext, useState } from 'react';
 
+import { UserRole } from '@/core/profile/enum/user-role.enum';
+import type { Training } from '@/core/training/type/training.type';
+import type { TrainingReport } from '@/core/training/type/training-report.type';
 import {
   LINK_TRAININGS,
   LINKS_SIDEBAR_GROUP_VIEW,
-} from '@/common/constant/navigation.constant';
-import type { ILink } from '@/common/type/link.type';
-import type { ChildrenProps } from '@/common/type/props.type';
-import type { SetState } from '@/common/type/state.type';
-import { UserRole } from '@/controller/profile/enum/user-role.enum';
-import type { Training } from '@/controller/training/type/training.type';
-import type { TrainingReport } from '@/controller/training/type/training-report.type';
+} from '@/lib/common/const/nav.const';
+import type { ILink } from '@/lib/common/type/link.type';
+import type { SetState } from '@/lib/common/type/state.type';
 
-interface AthleteProviderProps {
+interface Props extends React.PropsWithChildren {
   trainings: Training[];
   reports: TrainingReport[];
 }
 
-interface AthleteContext extends AthleteProviderProps {
+interface IAthleteContext extends Props {
   selectedDate: Dayjs;
   setSelectedDate: SetState<Dayjs>;
   hasJustLoggedIn: boolean;
@@ -29,11 +28,11 @@ interface AthleteContext extends AthleteProviderProps {
   setFilter: SetState<ILink>;
 }
 
-const AthleteContext = createContext<AthleteContext | null>(null);
+const AthleteContext = createContext<IAthleteContext | null>(null);
 
 export const useAthlete = () => useContext(AthleteContext)!;
 
-export function AthleteProvider(props: AthleteProviderProps & ChildrenProps) {
+export function AthleteProvider(props: Props) {
   const { children, trainings, reports } = props;
   const [selectedDate, setSelectedDate] = useState(dayjs(new Date()));
   const [hasJustLoggedIn, setHasJustLoggedIn] = useState(true);
@@ -49,7 +48,7 @@ export function AthleteProvider(props: AthleteProviderProps & ChildrenProps) {
 
   const [filter, setFilter] = useState<ILink>(currentFilter);
 
-  const value: AthleteContext = {
+  const value: IAthleteContext = {
     selectedDate,
     setSelectedDate,
     hasJustLoggedIn,

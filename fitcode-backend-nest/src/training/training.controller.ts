@@ -26,6 +26,7 @@ import { DateFilterDto } from '@src/common/dto/date-filter.dto';
 import { DateRangeDto } from '@src/common/dto/date-range.dto';
 import { UserIdDto } from '@src/common/dto/user-id.dto';
 import { InstitutionService } from '@src/institution/service/institution.service';
+import { TrainingReportService } from '@src/training/service/training-report.service';
 
 import { UserRole } from '../auth/enum/user-role.enum';
 import { Auth } from '../common/decorator/auth.decorator';
@@ -33,15 +34,13 @@ import { RequestUser } from '../common/decorator/request-user.decorator';
 import { CommonService } from '../common/service/common.service';
 import { User } from '../common/type/firebase-auth.type';
 import { AddTrainingComponentsDto } from './dto/add-training-components.dto';
-import { CompleteSetDto } from './dto/complete-set.dto';
 import { CreateTrainingDto } from './dto/create-training.dto';
 import { FilterTrainingQueryDto } from './dto/filter-training-query.dto';
 import { PeriodizeTrainingsDto } from './dto/periodize-training.dto';
 import { UpdateTrainingDto } from './dto/update-training.dto';
-import { CompletedTrainingComponent } from './entity/completed-training.entity';
 import { Training } from './entity/training.entity';
+import { CreateWorkload, Workload } from './entity/workload.entity';
 import { TrainingService } from './service/training.service';
-import { TrainingReportService } from './service/training-report.service';
 
 @ApiTags('Training')
 @Controller('training')
@@ -228,7 +227,7 @@ export class TrainingController {
   @Post(':trainingId/exercise/:exerciseId/complete-next-set')
   @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
   @ApiBearerAuth()
-  @ApiBody({ type: CompleteSetDto })
+  @ApiBody({ type: Workload })
   @ApiParam({
     name: 'exerciseId',
     required: true,
@@ -260,7 +259,7 @@ export class TrainingController {
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
     @Param('exerciseId') exerciseId: string,
-    @Body() body: CompleteSetDto,
+    @Body() body: CreateWorkload,
   ) {
     const ref = { trainingId, exerciseId, userId: body.userId };
     return await this.trainingService.completeNextSet(user, ref, body);
@@ -275,7 +274,7 @@ export class TrainingController {
     @Param('eId') exerciseId: string,
     @Param('i', ParseIntPipe) supersetIndex: number,
     @Param('s', ParseIntPipe) setNumber: number,
-    @Body() body: CompleteSetDto,
+    @Body() body: CreateWorkload,
   ) {
     if (supersetIndex < 0)
       throw new BadRequestException('Superset index must be 0 or greater');
@@ -292,22 +291,6 @@ export class TrainingController {
     };
 
     return await this.trainingService.upsertSet(user, ref, body);
-  }
-
-  @Patch(':trainingId/component/:componentId/complete')
-  @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
-  async completeTrainingComponent(
-    @RequestUser() user: User,
-    @Param('trainingId') trainingId: string,
-    @Param('componentId') componentId: string,
-    @Body() body: CompletedTrainingComponent,
-  ) {
-    const ref = { trainingId, componentId };
-    return await this.trainingService.completeTrainingComponent(
-      user,
-      ref,
-      body,
-    );
   }
 
   @Post(':trainingId/component')

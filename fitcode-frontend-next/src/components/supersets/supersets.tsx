@@ -11,26 +11,26 @@ import { Box, Grid2, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 
 import AddExerciseForm from '../add-exercise-form/add-exercise-form';
-import { NUM_MAX_SUPERSETS } from '../trainer-group-day-view/constant/supersets.constant';
-import StubTrainingExerciseCard from '../training-exercise-card/stub/training-exercise-card-stub';
+import TrainingExerciseCardStub from '../training-exercise-card/card-stub';
 import { onDragEndExercise } from './actions/actions-drag-exercise';
-import { handleAddExerciseToSupersetComponent } from './actions/actions-training-exercise';
-import Superset from './components/superset/superset';
-import useSupersetsExercises from './hooks/use-exercises';
-import useSelectedExercisesIds from './hooks/use-selected-exercises-ids';
-import useSupersetsSetsNumbers from './hooks/use-sets-numbers';
-import useSupersetsUtils from './hooks/use-utils';
-import { ADD_SUPERSET_DROPPABLE_ID } from '@/common/constant/add-superset-droppable-id.constant';
-import type { SetState } from '@/common/type/state.type';
-import { VolWorkSetType } from '@/controller/component/enum/param.enum';
+import useSupersetExercises from './hooks/use-exercises';
+import useSelectedExerciseIds from './hooks/use-selected-exercises-ids';
+import useSupersetUtils from './hooks/use-utils';
+import Superset from './superset';
+import { core } from '@/core/core.service';
+import { ADD_SUPERSET_DROPPABLE_ID } from '@/core/training/const/add-superset-droppable-id.const';
+import { MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT } from '@/core/training/const/training-limits.const';
+import { MainSet } from '@/core/training/enum/main-set.enum';
+import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import type { SetState } from '@/lib/common/type/state.type';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { SupersetsProvider } from '@/store/supersets.provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
-import MyModal from '@/util/modal/modal';
+import { useTrainerDayView } from '@/store/trainer-day-view.provider';
+import MyModal from '@/ui/modal';
 
-interface SupersetsProps {
+interface Props {
   openAddExerciseModal: boolean;
   setOpenAddExerciseModal: SetState<boolean>;
   expandedExercisesView: boolean;
@@ -59,21 +59,19 @@ function DroppableArea({
   );
 }
 
-export default function Supersets(props: SupersetsProps) {
+export default function Supersets({
+  openAddExerciseModal,
+  setOpenAddExerciseModal,
+  expandedExercisesView,
+  setExpandedExercisesView,
+}: Props) {
   const screenSize = useScreenSize();
   const theme = useTheme();
 
-  const {
-    openAddExerciseModal,
-    setOpenAddExerciseModal,
-    expandedExercisesView,
-    setExpandedExercisesView,
-  } = props;
-
   const groupContext = useGroup();
-  const trainerDayViewContext = useTrainerDayViewContext();
+  const trainerDayViewContext = useTrainerDayView();
 
-  const { exercises: allExercises } = useMain();
+  const { exercises } = useMain();
 
   const {
     training,
@@ -84,10 +82,8 @@ export default function Supersets(props: SupersetsProps) {
     setPagination,
   } = trainerDayViewContext;
 
-  const { setsNumbers, setSetsNumbers } = useSupersetsSetsNumbers();
-
-  const { selectedExercisesIds, setSelectedExercisesIds } =
-    useSelectedExercisesIds();
+  const { selectedExerciseIds, setSelectedExerciseIds } =
+    useSelectedExerciseIds();
 
   const {
     menuExercise,
@@ -96,7 +92,7 @@ export default function Supersets(props: SupersetsProps) {
     setActiveExercise,
     selectedExercise,
     setSelectedExercise,
-  } = useSupersetsExercises();
+  } = useSupersetExercises();
 
   const {
     isCircuit,
@@ -105,7 +101,7 @@ export default function Supersets(props: SupersetsProps) {
     sensors,
     disabledSensors,
     itemsByContainer,
-  } = useSupersetsUtils();
+  } = useSupersetUtils();
 
   if (!component || !training) return null;
 
@@ -114,7 +110,6 @@ export default function Supersets(props: SupersetsProps) {
     if (!training || !component) return;
 
     setActiveExercise(null);
-
     const { active, over } = e;
     if (!over) return; // dropped outside
 
@@ -142,58 +137,27 @@ export default function Supersets(props: SupersetsProps) {
       destinationIndex = destItems.length;
     }
 
-    // Special case: add-superset droppable
-    if (destinationDroppableId === ADD_SUPERSET_DROPPABLE_ID) {
-      // mimic RBD shape where droppableId is the add area
-      const input = {
-        draggableId: String(active.id),
-        destination: {
-          droppableId: destinationDroppableId,
-          index: destinationIndex!,
-        },
-      };
-
-      onDragEndExercise(input, {
-        useGroup: groupContext,
-        useTrainerDayViewContext: {
-          ...trainerDayViewContext,
-          training,
-          component,
-        },
-      });
-      return;
-    }
-
     if (
       !sourceDroppableId ||
-      destinationDroppableId === undefined ||
+      !destinationDroppableId ||
       sourceIndex === undefined ||
       destinationIndex === undefined
     )
       return;
 
-    const input = {
-      draggableId: String(active.id),
-      destination: {
-        droppableId: destinationDroppableId,
-        index: destinationIndex,
-      },
-    };
-
-    onDragEndExercise(input, {
-      useGroup: groupContext,
-      useTrainerDayViewContext: {
-        ...trainerDayViewContext,
-        training,
-        component,
-      },
-    });
+    onDragEndExercise(
+      String(active.id),
+      { droppableId: destinationDroppableId, index: destinationIndex! },
+      groupContext,
+      { ...trainerDayViewContext, training, component }
+    );
   }
 
   return (
     <DndContext
       sensors={selectedAthlete ? disabledSensors : sensors}
       collisionDetection={closestCenter}
+      onDragEnd={selectedAthlete ? undefined : adaptAndCallOnDragEnd}
       onDragStart={
         selectedAthlete
           ? undefined
@@ -203,17 +167,15 @@ export default function Supersets(props: SupersetsProps) {
                 supersets
                   .flatMap((s) => s.exercises)
                   .find((ex) => ex.id === id) || null;
+
               setActiveExercise(found);
             }
       }
-      onDragEnd={selectedAthlete ? undefined : adaptAndCallOnDragEnd}
     >
       <Grid2
         container
         rowSpacing={2}
-        sx={{
-          mt: screenSize.isSmallerThanLaptop ? 2 : undefined,
-        }}
+        sx={{ mt: screenSize.isSmallerThanLaptop ? 2 : undefined }}
       >
         {/* Supersets */}
         <SupersetsProvider
@@ -227,8 +189,6 @@ export default function Supersets(props: SupersetsProps) {
           setOpenVideoPlayerModal={setOpenVideoPlayerModal}
           openAddExerciseModal={openAddExerciseModal}
           setOpenAddExerciseModal={setOpenAddExerciseModal}
-          setsNumbers={setsNumbers}
-          setSetsNumbers={setSetsNumbers}
         >
           {supersets &&
             supersets.map((superset, i) => (
@@ -240,7 +200,7 @@ export default function Supersets(props: SupersetsProps) {
         {selectedAthlete ||
         (supersets.length === 1 && supersets[0].exercises.length === 0)
           ? null
-          : supersets.length < NUM_MAX_SUPERSETS && (
+          : supersets.length < MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT && (
               <Grid2
                 size={{
                   xs: 12,
@@ -296,6 +256,7 @@ export default function Supersets(props: SupersetsProps) {
               </Grid2>
             )}
       </Grid2>
+
       <DragOverlay>
         {activeExercise ? (
           <Box
@@ -306,7 +267,7 @@ export default function Supersets(props: SupersetsProps) {
               border: `1px solid ${theme.palette.text.primary}`,
             }}
           >
-            <StubTrainingExerciseCard
+            <TrainingExerciseCardStub
               exercise={activeExercise}
               expandedExercisesView={expandedExercisesView}
             />
@@ -320,7 +281,7 @@ export default function Supersets(props: SupersetsProps) {
         setIsOpen={(open) => setOpenAddExerciseModal(open)}
         cancelText="Close"
         onCancel={() => {
-          const oldExercises = selectedExercisesIds.filter((id) =>
+          const oldExercises = selectedExerciseIds.filter((id) =>
             supersets
               .map((s) => s.exercises.map((e) => e.id))
               .flat()
@@ -328,7 +289,7 @@ export default function Supersets(props: SupersetsProps) {
           );
 
           setPagination((prev) => ({ ...prev, page: 1 }));
-          setSelectedExercisesIds(oldExercises);
+          setSelectedExerciseIds(oldExercises);
           setOpenAddExerciseModal(false);
           setSearch('');
         }}
@@ -345,38 +306,41 @@ export default function Supersets(props: SupersetsProps) {
           px: screenSize.isMobile ? 0 : undefined,
         }}
         onConfirm={() => {
-          if (selectedExercisesIds.length === 0) {
+          if (selectedExerciseIds.length === 0) {
             setOpenAddExerciseModal(false);
             return;
           }
 
-          const setsRange = component.method?.attributes
-            ?.map((a) => a.options?.find((o) => o.field === VolWorkSetType.Set))
-            .find(Boolean);
+          const trainingExercises: TrainingExercise[] = selectedExerciseIds
+            .filter((id) => exercises.some((e) => e.id === id))
+            .map((id) => {
+              const exercise = exercises.find((e) => e.id === id)!;
+              return {
+                id: exercise.id,
+                params: [],
+                exercise,
+                sets: [
+                  core.training.set.stub(1, exercise),
+                  core.training.set.stub(2, exercise),
+                  core.training.set.stub(3, exercise),
+                ],
+              };
+            });
 
-          handleAddExerciseToSupersetComponent(
-            {
-              selectedExercisesIds,
-              allExercises,
-              minSets: setsRange?.min,
-              maxSets: setsRange?.max,
-              setOpenAddExerciseModal,
-              setSearch,
-            },
-            {
-              useGroup: groupContext,
-              useTrainerDayViewContext: {
-                ...trainerDayViewContext,
-                training,
-                component,
-              },
-            }
+          trainerDayViewContext.addTrainingExercises(
+            trainingExercises,
+            MainSet.BLOCK
           );
+
+          setOpenAddExerciseModal(false);
+          setSearch('');
+          setSelectedExerciseIds([]);
+          setPagination((prev) => ({ ...prev, page: 1 }));
         }}
       >
         <AddExerciseForm
-          selectedExercisesIds={selectedExercisesIds}
-          setSelectedExercisesIds={setSelectedExercisesIds}
+          selectedExerciseIds={selectedExerciseIds}
+          setSelectedExerciseIds={setSelectedExerciseIds}
           component={component}
         />
       </MyModal>

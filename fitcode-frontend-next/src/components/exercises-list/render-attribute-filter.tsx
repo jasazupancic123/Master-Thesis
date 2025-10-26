@@ -1,0 +1,62 @@
+import { Box, Divider, Typography } from '@mui/material';
+
+import type { Attribute } from '@/core/attribute/type/attribute.type';
+import type { Exercise } from '@/core/exercise/type/exercise.type';
+import type { SetState } from '@/lib/common/type/state.type';
+import AttributeFilter from '@/ui/attribute-filter/attribute-filter';
+import { SearchBar } from '@/ui/search-bar/search-bar';
+
+interface Props {
+  attribute: Attribute<Exercise>;
+  search: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  filters: Partial<Record<string, any>>;
+  setSearch: SetState<string>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  handleFilterChange: (field: string, value: any) => void;
+}
+
+export default function renderAttributeFilter({
+  attribute,
+  search,
+  filters,
+  setSearch,
+  handleFilterChange,
+}: Props) {
+  if (!attribute) return null;
+
+  return (
+    <Box key={attribute.field} mb={2}>
+      <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+        {attribute.name}
+      </Typography>
+
+      {attribute.searchBar && (
+        <Box
+          sx={{
+            py: 1,
+            width: '50%',
+            minWidth: 240,
+            maxWidth: 400,
+          }}
+        >
+          <SearchBar
+            placeholder="Search Equipment"
+            value={search}
+            handleSearchChange={(e) => setSearch(e.target.value)}
+            maxWidth="100%"
+          />
+        </Box>
+      )}
+
+      <AttributeFilter
+        attribute={attribute}
+        value={filters[attribute.field]}
+        onChange={(val) => handleFilterChange(attribute.field, val)}
+        search={search}
+      />
+
+      <Divider sx={{ mt: 2 }} />
+    </Box>
+  );
+}

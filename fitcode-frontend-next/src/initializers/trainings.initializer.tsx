@@ -2,14 +2,13 @@
 
 import { useState } from 'react';
 
-import type { ChildrenProps } from '@/common/type/props.type';
-import { TrainingController } from '@/controller/training/training.controller';
-import { TrainingService } from '@/controller/training/training.service';
+import { TrainingController } from '@/core/training/training.controller';
+import { TrainingService } from '@/core/training/training.service';
 import { useAthlete } from '@/store/athlete.provider';
 import { useMain } from '@/store/main.provider';
 import { TrainingProvider } from '@/store/training.provider';
 
-export default function TrainingsInitializer(props: ChildrenProps) {
+export default function TrainingsInitializer(props: React.PropsWithChildren) {
   const { children } = props;
   const { trainings, reports } = useAthlete();
   const { components, exercises, methods, institutions, groups } = useMain();

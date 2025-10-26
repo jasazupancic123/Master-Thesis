@@ -9,7 +9,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import NextLink from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import {
   DASHBOARD_LINK_ID,
@@ -18,10 +18,10 @@ import {
   LINKS_HERO_NAVBAR,
   SIGN_IN_LINK_ID,
   SIGN_OUT_LINK_ID,
-} from '@/common/constant/navigation.constant';
+} from '@/lib/common/const/nav.const';
 import { useAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import Logo from '@/util/logo/logo';
+import Logo from '@/ui/logo';
 
 interface HeroNavbarProps {
   height: string;
@@ -38,7 +38,7 @@ export default function HeroNavbar(props: HeroNavbarProps) {
   const pathname = usePathname();
   const screenSize = useScreenSize();
 
-  const { height, dissableLogo, position, currentView, activeSection } = props;
+  const { height, dissableLogo, position, activeSection } = props;
 
   const [open, setOpen] = useState(false);
 
@@ -66,26 +66,6 @@ export default function HeroNavbar(props: HeroNavbarProps) {
       )
     );
   }, [auth.status]);
-
-  // helpers
-  const getIdFromHref = (href: string) =>
-    href?.startsWith('#') ? href.slice(1) : null;
-
-  const navOnly = useMemo(
-    () =>
-      links.filter(
-        (l) =>
-          // only keep hash links for the dot nav row
-          l.href?.startsWith('#') &&
-          ![SIGN_IN_LINK_ID, SIGN_OUT_LINK_ID, DASHBOARD_LINK_ID].includes(l.id)
-      ),
-    [links]
-  );
-
-  const activeIndex = useMemo(() => {
-    if (!activeSection) return -1;
-    return navOnly.findIndex((l) => getIdFromHref(l.href) === activeSection);
-  }, [navOnly, activeSection]);
 
   return (
     <div>

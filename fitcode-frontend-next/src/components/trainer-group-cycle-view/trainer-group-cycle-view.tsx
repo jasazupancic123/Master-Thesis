@@ -5,9 +5,9 @@ import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 import React, { Fragment, useState } from 'react';
 
-import CustomDivider from '../../util/custom-divider/custom-divider';
-import HorizontalItemsList from '../../util/horizontal-items-list/horizontal-items-list';
-import VerticalLinesBorders from '../../util/vertical-lines-borders/vertical-lines-borders';
+import CustomDivider from '../../ui/custom-divider';
+import HorizontalItemsList from '../../ui/horizontal-items-list';
+import VerticalLinesBorders from '../../ui/vertical-lines-borders';
 import ExerciseChips from '../exercise-chips/exercise-chips';
 import {
   DIVIDER_HEIGHT,
@@ -20,17 +20,18 @@ import {
 import useTrainerCycleViewCycles from './hooks/use-cycles';
 import useTrainerCycleViewSticky from './hooks/use-sticky';
 import useTrainingCycleViewTargets from './hooks/use-targets';
-import { CommonService } from '@/common/service/common.service';
 import TrainingWeek from '@/components/training-week/training-week';
-import { ComponentService } from '@/controller/component/component.service';
-import type { Component } from '@/controller/component/type/component.type';
-import { TrainingController } from '@/controller/training/training.controller';
-import { TrainingService } from '@/controller/training/training.service';
+import type { Component } from '@/core/component/type/component.type';
+import { core } from '@/core/core.service';
+import {
+  COOLDOWN_ID,
+  WARMUP_ID,
+} from '@/core/training/const/warmup-cooldown.const';
+import { TrainingController } from '@/core/training/training.controller';
+import { lib } from '@/lib';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-
-const commonService = CommonService.instance;
 
 export default function TrainerCycleView() {
   const { components, exercises: allExercises, methods } = useMain();
@@ -133,8 +134,10 @@ export default function TrainerCycleView() {
           }}
         >
           <ExerciseChips
-            components={ComponentService.toTree(
-              TrainingService.excludeWarmupCooldown(components)
+            components={core.component.tree(
+              components.filter(
+                (c) => c.id !== WARMUP_ID && c.id !== COOLDOWN_ID
+              )
             )}
             selected={selectedComponents}
             bgColor={theme.palette.background.default}
@@ -195,7 +198,7 @@ export default function TrainerCycleView() {
               backgroundColor: theme.palette.background.dark,
             }}
           >
-            {commonService.date.weeks(cycle.from, cycle.to).map((week, i) => (
+            {lib.common.date.weeks(cycle.from, cycle.to).map((week, i) => (
               <Fragment key={i}>
                 <TrainingWeek
                   week={week.map(({ date }) => dayjs(date!))}

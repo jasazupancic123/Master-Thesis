@@ -11,9 +11,10 @@ import { updateSelectedAthleteSubgroup } from './actions/actions-subgroups';
 import useTrainingMembers from './hooks/use-members.hook';
 import useTrainingMembersSubgroups from './hooks/use-subgroups.hook';
 import TrainingMembersSubgroup from './training-members-subgroups';
+import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
+import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 
 interface TrainingMembersProps {
   isSticky: boolean;
@@ -25,20 +26,17 @@ export default function TrainingMembers(props: TrainingMembersProps) {
 
   const mainContext = useMain();
   const groupContext = useGroup();
-  const trainerDayViewContext = useTrainerDayViewContext();
+  const trainerDayViewContext = useTrainerDayView();
   const trainingMembersContext = useTrainingMembers();
   const trainingMembersSubgroupsContext = useTrainingMembersSubgroups(
     trainingMembersContext
   );
 
   const { users } = mainContext;
-
   const { training, component, selectedAthlete } = trainerDayViewContext;
 
   const { members, sortedMembers, item } = trainingMembersContext;
-
   const { subgroups } = trainingMembersSubgroupsContext;
-
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   if (selectedAthlete) return null;
@@ -123,13 +121,9 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                         sx={{ p: 0, m: 0 }}
                         onClick={() => {
                           updateSelectedAthleteSubgroup(
-                            {
-                              member,
-                              subgroupId: DEFAULT_SUBGROUP_ID,
-                            },
-                            {
-                              useTrainerDayViewContext: trainerDayViewContext,
-                            }
+                            member,
+                            DEFAULT_SUBGROUP_ID,
+                            trainerDayViewContext
                           );
                         }}
                         zIndex={1000}
@@ -138,7 +132,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                           className="avatar-border"
                           src={
                             users.find((m) => m.uid === member.uid)?.photoURL ||
-                            '/user_avatar.png'
+                            USER_AVATAR_IMG_URL
                           }
                           sx={{
                             width: 50,

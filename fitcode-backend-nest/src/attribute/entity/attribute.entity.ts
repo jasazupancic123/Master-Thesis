@@ -10,14 +10,15 @@ import {
   ValidateNested,
 } from 'class-validator';
 
+import { IsValidDefaultValue } from '@src/common/decorator/is-valid-default-value.decorator';
 import { AttributeType } from '@src/common/enum/attribute-type.enum';
 
-export class BaseAttribute {
+export class BaseAttribute<T> {
   @IsString()
   @ApiProperty()
   @IsNotEmpty()
   @Expose()
-  field: string; // name of the field in the database
+  field: keyof T;
 
   @IsString()
   @ApiProperty()
@@ -50,15 +51,14 @@ export class BaseAttribute {
   @Expose()
   unit?: string; // kg, lbs, ...
 
-  @IsString()
+  @IsValidDefaultValue()
   @ApiPropertyOptional()
-  @IsNotEmpty()
   @IsOptional()
   @Expose()
-  defaultValue?: string;
+  defaultValue?: string | number | boolean;
 }
 
-export class Attribute extends BaseAttribute {
+export class Attribute<T = any> extends BaseAttribute<T> {
   @IsNumber()
   @IsOptional()
   @ApiProperty()
@@ -71,10 +71,12 @@ export class Attribute extends BaseAttribute {
   @Expose()
   max?: number;
 
+  @IsString()
+  @IsNotEmpty()
   @ApiPropertyOptional()
   @IsOptional()
   @Expose()
-  pattern?: RegExp; // regex pattern for validation
+  pattern?: string; // regex pattern for validation
 
   @ValidateNested({ each: true })
   @Type(() => Attribute)

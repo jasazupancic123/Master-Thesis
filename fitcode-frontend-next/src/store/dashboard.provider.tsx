@@ -6,28 +6,27 @@ import toast from 'react-hot-toast';
 
 import { useAuthenticatedAuth } from './auth.provider';
 import { useMain } from './main.provider';
-import {
-  LINK_DASHBOARD_GROUPS,
-  LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS,
-} from '@/common/constant/navigation.constant';
-import { useNestBackendFetch } from '@/common/hooks/use-fetch.hook';
-import type { ILink } from '@/common/type/link.type';
-import type { ChildrenProps } from '@/common/type/props.type';
-import type { SetState } from '@/common/type/state.type';
-import { optimisticUpdate } from '@/common/util/optimistic-update';
-import { AuthController } from '@/controller/auth/auth.controller';
-import type { AuthUser, UpdateUser } from '@/controller/auth/type/user.type';
-import { GroupController } from '@/controller/group/group.controller';
-import type { Group, UpdateGroup } from '@/controller/group/type/group.type';
-import { InstitutionController } from '@/controller/institution/institution.controller';
+import { AuthController } from '@/core/auth/auth.controller';
+import type { AuthUser, UpdateUser } from '@/core/auth/type/user.type';
+import { GroupController } from '@/core/group/group.controller';
+import type { Group, UpdateGroup } from '@/core/group/type/group.type';
+import { InstitutionController } from '@/core/institution/institution.controller';
 import type {
   Institution,
   UpdateInstitution,
-} from '@/controller/institution/type/institution.type';
-import type { UserRole } from '@/controller/profile/enum/user-role.enum';
-import type { Profile } from '@/controller/profile/type/user.type';
+} from '@/core/institution/type/institution.type';
+import type { UserRole } from '@/core/profile/enum/user-role.enum';
+import type { Profile } from '@/core/profile/type/user.type';
+import { useFetch } from '@/hooks/use-fetch.hook';
+import { lib } from '@/lib';
+import {
+  LINK_DASHBOARD_GROUPS,
+  LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS,
+} from '@/lib/common/const/nav.const';
+import type { ILink } from '@/lib/common/type/link.type';
+import type { SetState } from '@/lib/common/type/state.type';
 
-export interface DashboardPageProps {
+export interface Props extends React.PropsWithChildren {
   institutions: Institution[];
   selectedInstitution: Institution | null;
   members: Profile[];
@@ -35,7 +34,7 @@ export interface DashboardPageProps {
   setMembers: SetState<Profile[]>;
 }
 
-interface DashboardContextProps {
+export interface IDashboardContext {
   filter: ILink;
   setFilter: SetState<ILink>;
   institutions: Institution[];
@@ -64,13 +63,11 @@ interface DashboardContextProps {
   ) => Promise<void>;
 }
 
-const DashboardContext = createContext<DashboardContextProps | null>(null);
-
-export type UseDashboardReturnType = ReturnType<typeof useDashboard>;
+const DashboardContext = createContext<IDashboardContext | null>(null);
 
 export const useDashboard = () => useContext(DashboardContext)!;
 
-export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
+export function DashboardProvider(props: Props) {
   const { groups } = useMain();
 
   const {
@@ -111,7 +108,7 @@ export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
   const { users, setUsers } = useMain();
 
   const { data: fetchedUsers, refetch: refetchUsers } =
-    useNestBackendFetch<AuthUser[]>(`/auth`);
+    useFetch<AuthUser[]>(`/auth`);
 
   useEffect(() => {
     if (fetchedUsers) setUsers(fetchedUsers);
@@ -139,7 +136,7 @@ export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
     fetchGroups().then();
   }, [selectedInstitution]);
 
-  const value: DashboardContextProps = {
+  const value: IDashboardContext = {
     filter,
     setFilter,
     refetchUsers,
@@ -170,7 +167,7 @@ export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
         };
       }
 
-      await optimisticUpdate(
+      await lib.common.generic.optimisticUpdate(
         () => {
           setInstitutions((prev) => prev.map(mapper));
           if (institutionId === selectedInstitution?.id)
@@ -202,7 +199,7 @@ export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
         };
       }
 
-      await optimisticUpdate(
+      await lib.common.generic.optimisticUpdate(
         () => {
           // apply optimistic update
           setSelectedInstitution((prev) =>
@@ -248,7 +245,7 @@ export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
         };
       }
 
-      await optimisticUpdate(
+      await lib.common.generic.optimisticUpdate(
         () => {
           setUsers((prev) => prev.map(mapper));
           setSelectedInstitution((prev) =>
@@ -298,7 +295,7 @@ export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
         group: selectedGroup ? { ...selectedGroup } : null,
       };
 
-      await optimisticUpdate(
+      await lib.common.generic.optimisticUpdate(
         () => {
           setSelectedInstitution((prev) =>
             prev
@@ -328,7 +325,7 @@ export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
         group: selectedGroup ? { ...selectedGroup } : null,
       };
 
-      return await optimisticUpdate(
+      return await lib.common.generic.optimisticUpdate(
         () => {
           setSelectedGroup(data);
           setSelectedInstitution((prev) =>

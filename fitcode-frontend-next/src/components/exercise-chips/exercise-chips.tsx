@@ -4,17 +4,17 @@ import Stack from '@mui/material/Stack';
 import React from 'react';
 
 import { theme } from '@/app/style';
-import { getComponentIcon } from '@/common/service/util/icons.util';
-import type { SetState } from '@/common/type/state.type';
 import type {
   Component,
   TreeComponent,
-} from '@/controller/component/type/component.type';
-import type { Target } from '@/controller/target/type/target.type';
-import type { TrainingComponent } from '@/controller/training/type/training-component.type';
+} from '@/core/component/type/component.type';
+import type { Target } from '@/core/target/type/target.type';
+import type { TrainingComponent } from '@/core/training/type/training-component.type';
+import { lib } from '@/lib';
+import type { SetState } from '@/lib/common/type/state.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 
-export interface ExerciseChipsProps {
+interface Props {
   components: (Component | TreeComponent)[];
   noSelectionLabel?: string; // for all / no selection
   selected?:
@@ -23,7 +23,7 @@ export interface ExerciseChipsProps {
     | TreeComponent
     | TrainingComponent
     | (Component | TreeComponent | TrainingComponent)[];
-  setSelected?: SetState<ExerciseChipsProps['selected']>;
+  setSelected?: SetState<Props['selected']>;
   small?: boolean;
   direction?: 'row' | 'column';
   itemSx?: SxProps;
@@ -37,20 +37,19 @@ export interface ExerciseChipsProps {
   gap?: number; // gap between chips
 }
 
-export default function ExerciseChips(props: ExerciseChipsProps) {
+export default function ExerciseChips({
+  selected,
+  components,
+  setSelected,
+  direction = 'row',
+  primaryColor,
+  gap,
+  cycleView,
+  selectedTargets,
+  setSelectedTargets,
+  sx,
+}: Props) {
   const screenSize = useScreenSize();
-
-  const {
-    selected,
-    components,
-    setSelected,
-    direction = 'row',
-    primaryColor,
-    gap,
-    cycleView,
-    selectedTargets,
-    setSelectedTargets,
-  } = props;
 
   return (
     <Stack
@@ -60,12 +59,11 @@ export default function ExerciseChips(props: ExerciseChipsProps) {
       sx={{
         justifyContent: 'center',
         alignItems: 'center',
-        ...props.sx,
+        ...sx,
       }}
     >
       {components.reverse().map((c, i) => {
-        const IconComponent = getComponentIcon(c.name);
-
+        const IconComponent = lib.common.component.getIcon(c.name);
         const targets = c.targets || [];
 
         const isSelected =

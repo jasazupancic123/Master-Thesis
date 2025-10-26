@@ -32,11 +32,7 @@ export abstract class PeriodizationStrategy {
   }
 
   protected isBaseTraining(ctx: PeriodizationContext): boolean {
-    return (
-      (ctx.weekIndex === 0 && ctx.dayIndex === 0) ||
-      ctx.prevIntensity === undefined ||
-      ctx.prevVolume === undefined
-    );
+    return ctx.weekIndex === 0 && ctx.dayIndex === 0;
   }
 
   /**

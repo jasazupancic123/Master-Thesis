@@ -3,9 +3,7 @@
 import { useMediaQuery } from '@mui/material';
 import React, { createContext, useContext } from 'react';
 
-import type { ChildrenProps } from '@/common/type/props.type';
-
-interface ScreenSizeContextType {
+interface Props {
   isGigaSmall: boolean;
   isUltraSmall: boolean;
   isReallySmall: boolean;
@@ -20,11 +18,9 @@ interface ScreenSizeContextType {
   isSmallerThanLaptop: boolean;
 }
 
-const ScreenSizeContext = createContext<ScreenSizeContextType | undefined>(
-  undefined
-);
+const ScreenSizeContext = createContext<Props | undefined>(undefined);
 
-export const ScreenSizeProvider = ({ children }: ChildrenProps) => {
+export const ScreenSizeProvider = ({ children }: React.PropsWithChildren) => {
   const isGigaSmall = useMediaQuery('(max-width:275px)');
   const isUltraSmall = useMediaQuery('(max-width:330px)');
   const isReallySmall = useMediaQuery('(max-width:360px)');

@@ -1,4 +1,4 @@
-import type { AfterSet } from '@/controller/component/type/after-set.type';
+import type { AfterSet } from '@/core/component/type/after-set.type';
 
 export const AFTER_SETS: AfterSet[] = [
   { id: '1', name: 'Plus Sets' },

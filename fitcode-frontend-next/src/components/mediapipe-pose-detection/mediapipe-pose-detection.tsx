@@ -5,7 +5,7 @@ import { Box, IconButton } from '@mui/material';
 
 import '@mediapipe/pose';
 
-import type { SetState } from '@/common/type/state.type';
+import type { SetState } from '@/lib/common/type/state.type';
 
 interface MediapipePoseDetectionProps {
   setOpenPoseDetection: SetState<boolean>;

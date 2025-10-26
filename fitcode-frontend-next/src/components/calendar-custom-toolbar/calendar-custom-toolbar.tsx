@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import React from 'react';
 import type { ToolbarProps } from 'react-big-calendar';
 
-import type { CalendarEvent } from '@/common/type/calendar-event-type';
+import type { CalendarEvent } from '@/lib/common/type/calendar-event.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 const CustomToolbar: React.FC<ToolbarProps<CalendarEvent, object>> = ({
@@ -16,9 +16,8 @@ const CustomToolbar: React.FC<ToolbarProps<CalendarEvent, object>> = ({
   const theme = useTheme();
 
   let formattedLabel = format(date, 'MMM. yyyy').toUpperCase();
-  if (formattedLabel.split(' ')[1] === new Date().getFullYear().toString()) {
+  if (formattedLabel.split(' ')[1] === new Date().getFullYear().toString())
     formattedLabel = formattedLabel.split(' ')[0];
-  }
 
   return (
     <Box

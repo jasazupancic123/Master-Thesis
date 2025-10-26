@@ -13,34 +13,32 @@ import Typography from '@mui/material/Typography';
 import dayjs from 'dayjs';
 import React, { Fragment, useRef } from 'react';
 
-import CustomDivider from '../../util/custom-divider/custom-divider';
-import HorizontalItemsList from '../../util/horizontal-items-list/horizontal-items-list';
-import VerticalLinesBorders from '../../util/vertical-lines-borders/vertical-lines-borders';
+import CustomDivider from '../../ui/custom-divider';
+import HorizontalItemsList from '../../ui/horizontal-items-list';
+import VerticalLinesBorders from '../../ui/vertical-lines-borders';
 import {
   DIVIDER_HEIGHT,
   MAX_WIDTH,
 } from '../trainer-group-day-view/constant/dimensions.constant';
+import WeekViewItem from '../training-week/training-week-view-item';
 import { onDragEndAddEvent } from './actions/actions-drag';
 import { getAmPmItems } from './actions/actions-items';
-import DraggableSelect from './components/draggable-select';
-import DroppableSlot from './components/droppable-slot';
+import DraggableSelect from './draggable-select';
+import DroppableSlot from './droppable-slot';
 import useWeekViewUtils from './hooks/use-utils';
 import { customScrollBarStyle } from './styles/custom-toolbar.style';
-import { CommonService } from '@/common/service/common.service';
-import WeekViewItem from '@/components/training-week/components/training-week-view-item';
-import { EventType } from '@/controller/group/enum/event-type.enum';
-import type { Week } from '@/controller/group/type/cycle.type';
+import { EventType } from '@/core/group/enum/event-type.enum';
+import type { Week } from '@/core/group/type/cycle.type';
+import { lib } from '@/lib';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-
-const commonService = CommonService.instance;
 
 export default function TrainerWeekView() {
   const theme = useTheme();
   const screenSize = useScreenSize();
 
   const groupContext = useGroup();
-  const weekViewUtils = useWeekViewUtils(commonService);
+  const weekViewUtils = useWeekViewUtils();
 
   const { group, trainings } = groupContext;
 
@@ -68,7 +66,7 @@ export default function TrainerWeekView() {
       onDragEnd={(e) =>
         selectedEventType
           ? onDragEndAddEvent(
-              { e, selectRef, commonService },
+              { e, selectRef, commonService: lib.common },
               {
                 useGroup: groupContext,
                 useWeekUtils: weekViewUtils,
@@ -226,7 +224,7 @@ export default function TrainerWeekView() {
             return (
               <Box key={i} width={`${100 / 7}%`}>
                 <Typography textAlign="center" fontSize={16}>
-                  {commonService.date.format(
+                  {lib.common.date.format(
                     day,
                     {},
                     screenSize.isSmallerThanLaptop ? 'D/M' : 'dddd - D/M'
@@ -251,7 +249,7 @@ export default function TrainerWeekView() {
             {weeks[index]?.map(({ date }, i) => {
               const { amItems, pmItems } = getAmPmItems(date, {
                 trainings,
-                commonService,
+                commonService: lib.common,
                 group,
               });
 

@@ -2,7 +2,7 @@ import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 
-import { SESSION_COOKIE_NAME } from '@src/auth/constant/cookie.constant';
+import { SESSION_COOKIE_NAME } from '@src/common/constant/cookie.constant';
 import { FirebaseService } from '@src/firebase/firebase.service';
 
 import { User } from '../type/firebase-auth.type';

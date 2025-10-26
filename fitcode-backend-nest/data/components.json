@@ -22,70 +22,17 @@
         "color": "#619eae"
       }
     ],
-    "params": {
-      "default": [
-        {
-          "field": "volWorkSets",
-          "defaultValue": "set",
-          "options": [{ "field": "set" }]
-        },
-        {
-          "field": "vol1",
-          "defaultValue": "rep",
-          "options": [
-            { "field": "rep" },
-            { "field": "time" },
-            { "field": "dist" }
-          ]
-        },
-        {
-          "field": "int1",
-          "defaultValue": "kg",
-          "options": [
-            { "field": "kg" },
-            { "field": "bw" },
-            { "field": "rm" },
-            { "field": "vbt" }
-          ]
-        },
-        {
-          "field": "int2",
-          "defaultValue": "tempo",
-          "options": [{ "field": "tempo" }, { "field": "eff" }]
-        },
-        {
-          "field": "volRec",
-          "defaultValue": "time",
-          "options": [{ "field": "time" }]
-        }
-      ],
-      "equipment:!": [
-        {
-          "field": "volWorkSets",
-          "defaultValue": "set",
-          "options": [{ "field": "set" }]
-        },
-        {
-          "field": "vol1",
-          "defaultValue": "rep",
-          "options": [
-            { "field": "rep" },
-            { "field": "time" },
-            { "field": "dist" }
-          ]
-        },
-        {
-          "field": "int1",
-          "defaultValue": "eff",
-          "options": [{ "field": "tempo" }, { "field": "eff" }]
-        },
-        {
-          "field": "volRec",
-          "defaultValue": "time",
-          "options": [{ "field": "time" }]
-        }
-      ]
-    },
+    "params": [
+      "reps",
+      "time",
+      "dist",
+      "loadKg",
+      "loadRm",
+      "loadBw",
+      "tempo",
+      "eff",
+      "recTime"
+    ],
     "children": [
       {
         "name": "Power",
@@ -246,34 +193,7 @@
         "color": "#f25a1f"
       }
     ],
-    "params": {
-      "default": [
-        {
-          "field": "volWorkSets",
-          "defaultValue": "set",
-          "options": [{ "field": "set" }]
-        },
-        {
-          "field": "vol1",
-          "defaultValue": "dist",
-          "options": [
-            { "field": "dist" },
-            { "field": "time" },
-            { "field": "rep" }
-          ]
-        },
-        {
-          "field": "int1",
-          "defaultValue": "eff",
-          "options": [{ "field": "eff" }]
-        },
-        {
-          "field": "volRec",
-          "defaultValue": "time",
-          "options": [{ "field": "time" }]
-        }
-      ]
-    },
+    "params": ["reps", "time", "dist", "eff"],
     "children": [
       {
         "name": "Acceleration",
@@ -493,148 +413,7 @@
         "color": "#2b1af9"
       }
     ],
-    "params": {
-      "default": [
-        {
-          "field": "vol1",
-          "defaultValue": "time",
-          "options": [{ "field": "time" }, { "field": "dist" }]
-        },
-        {
-          "field": "int1",
-          "defaultValue": "eff",
-          "options": [
-            { "field": "mas" },
-            { "field": "hrmax" },
-            { "field": "eff" }
-          ]
-        }
-      ],
-      "end-opts:selected:end-opt-2": [
-        {
-          "field": "volWorkSets",
-          "defaultValue": "set",
-          "options": [{ "field": "set" }]
-        },
-        {
-          "field": "vol1",
-          "defaultValue": "time",
-          "options": [{ "field": "time" }, { "field": "dist" }]
-        },
-        {
-          "field": "int1",
-          "defaultValue": "eff",
-          "options": [
-            { "field": "mas" },
-            { "field": "hrmax" },
-            { "field": "eff" }
-          ]
-        },
-        {
-          "field": "volRec",
-          "defaultValue": "time",
-          "options": [{ "field": "time" }, { "field": "dist" }]
-        },
-        {
-          "field": "intRec",
-          "defaultValue": "eff",
-          "options": [
-            { "field": "mas" },
-            { "field": "hrmax" },
-            { "field": "eff" }
-          ]
-        }
-      ],
-      "end-opts:selected:end-opt-3": [
-        {
-          "field": "volWorkSets",
-          "defaultValue": "set",
-          "options": [{ "field": "set" }]
-        },
-        {
-          "field": "vol1",
-          "defaultValue": "time",
-          "options": [{ "field": "time" }, { "field": "dist" }]
-        },
-        {
-          "field": "vol2",
-          "defaultValue": "time",
-          "options": [{ "field": "time" }, { "field": "dist" }]
-        },
-        {
-          "field": "int1",
-          "defaultValue": "eff",
-          "options": [
-            { "field": "mas" },
-            { "field": "hrmax" },
-            { "field": "eff" }
-          ]
-        },
-        {
-          "field": "int2",
-          "defaultValue": "eff",
-          "options": [
-            { "field": "mas" },
-            { "field": "hrmax" },
-            { "field": "eff" }
-          ]
-        },
-        {
-          "field": "volRec",
-          "defaultValue": "time",
-          "options": [{ "field": "time" }, { "field": "dist" }]
-        },
-        {
-          "field": "intRec",
-          "defaultValue": "eff",
-          "options": [
-            { "field": "mas" },
-            { "field": "hrmax" },
-            { "field": "eff" }
-          ]
-        }
-      ],
-      "end-opts:selected:end-opt-4": [
-        {
-          "field": "volWorkSets",
-          "defaultValue": "set",
-          "options": [{ "field": "set" }]
-        },
-        {
-          "field": "vol1",
-          "defaultValue": "rep",
-          "options": [{ "field": "rep" }]
-        },
-        {
-          "field": "vol2",
-          "defaultValue": "time",
-          "options": [{ "field": "time" }, { "field": "dist" }]
-        },
-        {
-          "field": "int2",
-          "defaultValue": "eff",
-          "options": [
-            { "field": "mas" },
-            { "field": "hrmax" },
-            { "field": "eff" }
-          ]
-        },
-        {
-          "field": "volRec",
-          "defaultValue": "time",
-          "options": [{ "field": "time" }, { "field": "dist" }]
-        },
-        {
-          "field": "intRec",
-          "defaultValue": "eff",
-          "options": [
-            { "field": "mas" },
-            { "field": "hrmax" },
-            { "field": "eff" }
-          ]
-        }
-      ]
-    },
+    "params": ["time", "dist", "eff", "recTime", "recDist"],
     "children": [
       {
         "name": "Aerobic Capacity",
@@ -662,7 +441,7 @@
     "name": "Coordination",
     "slug": "coordination",
     "attributes": [],
-    "params": [],
+    "params": ["reps", "time", "dist"],
     "children": [
       {
         "name": "Technical Work",
@@ -719,20 +498,7 @@
         "color": "#d87d40"
       }
     ],
-    "params": {
-      "default": [
-        {
-          "field": "vol",
-          "defaultValue": "rep",
-          "options": [{ "field": "rep" }, { "field": "time" }]
-        },
-        {
-          "field": "volRec",
-          "defaultValue": "time",
-          "options": [{ "field": "time" }]
-        }
-      ]
-    },
+    "params": ["reps", "time"],
     "children": [
       {
         "name": "Flexibility",
@@ -817,7 +583,7 @@
         "color": "#f02846"
       }
     ],
-    "params": { "default": [] },
+    "params": [],
     "children": []
   }
 ]

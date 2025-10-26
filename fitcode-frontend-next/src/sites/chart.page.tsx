@@ -5,11 +5,11 @@ import { useTheme } from '@mui/material';
 import { useState } from 'react';
 import { Line, LineChart, ResponsiveContainer, Tooltip } from 'recharts';
 
-import type { Component } from '@/controller/component/type/component.type';
-import type { Exercise } from '@/controller/exercise/type/exercise.type';
+import type { Component } from '@/core/component/type/component.type';
+import type { Exercise } from '@/core/exercise/type/exercise.type';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import SelectInput from '@/util/select-input/select-input';
+import SelectInput from '@/ui/select-input/select-input';
 
 const data = [
   { name: 'A', intensity: 50, volume: 80 },

@@ -2,22 +2,21 @@
 
 import { createContext, useContext, useMemo, useState } from 'react';
 
-import type { ChildrenProps } from '@/common/type/props.type';
-import type { Wellness } from '@/controller/profile/type/wellness.type';
+import type { Wellness } from '@/core/profile/type/wellness.type';
 
-export interface WellnessProviderProps {
+interface Props {
   wellness: Wellness;
 }
 
-interface WellnessContextProps extends WellnessProviderProps {
+interface IWellnessContext extends Props {
   setWellness: (_wellness: Wellness) => void;
 }
 
-const WellnessContext = createContext<WellnessContextProps | null>(null);
+const WellnessContext = createContext<IWellnessContext | null>(null);
 
 export const useWellness = () => useContext(WellnessContext)!;
 
-export function WellnessProvider(props: WellnessProviderProps & ChildrenProps) {
+export function WellnessProvider(props: Props & React.PropsWithChildren) {
   const { children, wellness: providedWellness } = props;
   const [wellness, setWellness] = useState<Wellness>(providedWellness);
   const value = useMemo(() => ({ wellness, setWellness }), [wellness]);

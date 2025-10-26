@@ -46,6 +46,7 @@ import { TrainingController } from './training.controller';
     WorkloadRepository,
     TrainingRepository,
     WorkloadService,
+    TrainingReportService,
     TrainingPlanService,
   ],
 })

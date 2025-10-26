@@ -14,12 +14,12 @@ import dayjs from 'dayjs';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
-import type { CurrentSideMutex } from '../../controller/pose-detection/types/current-side-mutex.type';
-import AthleteTrainingExerciseSets from '../athlete/athlete-training-exercise-sets/athlete-training-exercise-sets';
-import { updateExerciseValues } from '../training-in-progress/components/training-in-progress-exercise-card/actions/actions-exercise';
-import { finishSet } from '../training-in-progress/components/training-in-progress-exercise-card/actions/actions-exercise-set';
-import FpsText from './components/fps-text';
-import MovementValidationHeader from './components/movement-validation-header';
+import AthleteTrainingExerciseSets from '../athlete/athlete-training-exercise-sets';
+import TempoChart from '../charts/tempo/tempo-chart';
+import { updateTrainingExerciseWithAI } from '../training-in-progress/actions/actions-exercise';
+import { finishSet } from '../training-in-progress/actions/actions-exercise-set';
+import FpsText from './fps-text';
+import MovementValidationHeader from './movement-validation-header';
 import {
   enableCam,
   getStatusMessage,
@@ -27,49 +27,43 @@ import {
   predictWebcam,
   setupVideoAndContex,
 } from './state';
-import { TrackingMethod } from '@/common/enum/tracking-method.enum';
-import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
-import { CommonService } from '@/common/service/common.service';
-import type { SetState } from '@/common/type/state.type';
-import EnvUtil from '@/common/util/env.util';
-import TempoChart from '@/components/charts/tempo/tempo-chart';
-import { FrameBitmapBuffer } from '@/controller/pose-detection/class/frame-bitmap-buffer';
-import { KeypointHistory } from '@/controller/pose-detection/class/keypoint-history';
-import { EXERCISE_POSES } from '@/controller/pose-detection/const/exercise-poses';
-import { POSE_DETECTION_CONSTRAINTS } from '@/controller/pose-detection/const/pose-detection-constrains.const';
-import { STATUS_MESSAGES } from '@/controller/pose-detection/const/status-messages';
-import { CurrentSideMutexValues } from '@/controller/pose-detection/enum/current-side-mutex-values.enum';
-import { DetectionStatus } from '@/controller/pose-detection/enum/detection-status';
-import { PoseModel } from '@/controller/pose-detection/enum/pose-model.enum';
-import { RepStatus } from '@/controller/pose-detection/enum/rep-state';
-import { RepDetectionService } from '@/controller/pose-detection/rep-detection.service';
-import type { AvgFps } from '@/controller/pose-detection/types/avg-fps.type';
-import type { ExerciseDetectionData } from '@/controller/pose-detection/types/exercise-start-condition.type';
-import type {
-  RecordedReps,
-  Rep,
-  RepInfo,
-  RepsCount,
-} from '@/controller/pose-detection/types/rep.type';
-import type { RepState } from '@/controller/pose-detection/types/rep-state.type';
-import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
-import { getPoseLandmarker } from '@/controller/pose-detection/util/pose-landmarker-loader.util';
+import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
 import type {
   RepImage,
   RepRomTimestamp,
   TrainingExerciseRecordedSet,
   TrainingExerciseRecording,
-} from '@/controller/training/type/training-exercise.type';
+} from '@/core/training/type/training-exercise.type';
+import { lib } from '@/lib';
+import type { SetState } from '@/lib/common/type/state.type';
+import { FrameBitmapBuffer } from '@/lib/pose-detection/class/frame-bitmap-buffer';
+import { KeypointHistory } from '@/lib/pose-detection/class/keypoint-history';
+import { EXERCISE_POSES } from '@/lib/pose-detection/const/exercise-poses';
+import { POSE_DETECTION_CONSTRAINTS } from '@/lib/pose-detection/const/pose-detection-constrains.const';
+import { STATUS_MESSAGES } from '@/lib/pose-detection/const/status-messages';
+import { CurrentSideMutexValues } from '@/lib/pose-detection/enum/current-side-mutex-values.enum';
+import { DetectionStatus } from '@/lib/pose-detection/enum/detection-status';
+import { PoseModel } from '@/lib/pose-detection/enum/pose-model.enum';
+import { RepStatus } from '@/lib/pose-detection/enum/rep-state';
+import { RepDetectionService } from '@/lib/pose-detection/rep-detection.service';
+import type { AvgFps } from '@/lib/pose-detection/type/avg-fps.type';
+import type { CurrentSideMutex } from '@/lib/pose-detection/type/current-side-mutex.type';
+import type { ExerciseDetectionData } from '@/lib/pose-detection/type/exercise-start-condition.type';
+import type {
+  RecordedReps,
+  Rep,
+  RepInfo,
+  RepsCount,
+} from '@/lib/pose-detection/type/rep.type';
+import type { RepState } from '@/lib/pose-detection/type/rep-state.type';
+import { getPoseLandmarker } from '@/lib/pose-detection/util/pose-landmarker-loader.util';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
-import LoadingOverlay from '@/util/loading-overlay/loading-overlay';
+import LoadingOverlay from '@/ui/loading-overlay';
 
 const DEBUG = false;
-
-const commonService = CommonService.instance;
-const firebaseStorage = FirebaseStorageUtil.Instance;
 
 export const EXERCISE_TIMES_ROUNDING_STEP_S = 0.1; // round to 0.1
 
@@ -104,7 +98,6 @@ export default function MobileMovementValidation(
 
   const {
     selectedExercise,
-    setSelectedExercise,
     selectedTrackingMethod,
     setSelectedTrackingMethod,
     trainingId,
@@ -165,7 +158,7 @@ export default function MobileMovementValidation(
   const stillnessCountdownRef = useRef<Date | null>(null); // countdown to recording start when stillness is detected
 
   // Model and PoseLandmarker
-  const [model, setModel] = useState<PoseModel>(PoseModel.MEDIAPIPE);
+  const [model] = useState<PoseModel>(PoseModel.MEDIAPIPE);
   const [poseLandmarker, setPoseLandmarker] = useState<PoseLandmarker | null>(
     null
   );
@@ -376,7 +369,7 @@ export default function MobileMovementValidation(
 
     if (typeof window === 'undefined') return;
 
-    const wantDebug = !EnvUtil.AI.disableEruda();
+    const wantDebug = !lib.common.env.disableErudaAI();
 
     if (!wantDebug) return;
 
@@ -569,13 +562,7 @@ export default function MobileMovementValidation(
 
         if (!recordedSets) {
           // can only happen for left side
-          recordedSets = [
-            {
-              setIndex,
-              imagesL: images,
-              repsL: reps,
-            },
-          ];
+          recordedSets = [{ setIndex, imagesL: images, repsL: reps }];
         } else {
           if (recordedSets.find((rs) => rs.setIndex === setIndex)) {
             // already recorded for this set, update it
@@ -584,18 +571,10 @@ export default function MobileMovementValidation(
 
               if (i === 0) {
                 // left side
-                return {
-                  ...rs,
-                  repsL: reps,
-                  imagesL: images,
-                };
+                return { ...rs, repsL: reps, imagesL: images };
               } else if (i === 1) {
                 // right side
-                return {
-                  ...rs,
-                  repsR: reps,
-                  imagesR: images,
-                };
+                return { ...rs, repsR: reps, imagesR: images };
               }
 
               return rs;
@@ -611,15 +590,9 @@ export default function MobileMovementValidation(
         }
 
         if (i === 0) {
-          tempoL = getTempoString({
-            recordedReps: side,
-            commonService,
-          });
+          tempoL = getTempoString({ recordedReps: side });
         } else if (i === 1) {
-          tempoR = getTempoString({
-            recordedReps: side,
-            commonService,
-          });
+          tempoR = getTempoString({ recordedReps: side });
         }
 
         i++;
@@ -637,7 +610,7 @@ export default function MobileMovementValidation(
 
       const romL = romLKeypoints
         .map((r) => ({
-          value: KeypointUtil.getKeypointValueByType(
+          value: lib.ai.keypoint.getKeypointValueByType(
             r,
             exercisePose.romValueType
           ),
@@ -663,7 +636,7 @@ export default function MobileMovementValidation(
       const romR = romRKeypoints
         ? (romRKeypoints
             .map((r) => ({
-              value: KeypointUtil.getKeypointValueByType(
+              value: lib.ai.keypoint.getKeypointValueByType(
                 r,
                 exercisePose.romValueType
               ),
@@ -686,19 +659,15 @@ export default function MobileMovementValidation(
 
       updatedExercise.recordedSets = recordedSets;
 
-      updateExerciseValues(
-        {
-          repsCountL: recordedRepsRef.current.left.length,
-          repsCountR: recordedRepsRef.current.right?.length,
-          tempoL,
-          tempoR,
-          passedExercise: updatedExercise,
-          updateSelectedExercise: true,
-        },
-        {
-          useTraining: { ...trainingContext, trainingInProgress },
-          useTrainingInProgress: trainingInProgressContext,
-        }
+      updateTrainingExerciseWithAI(
+        recordedRepsRef.current.left.length,
+        recordedRepsRef.current.right?.length,
+        tempoL,
+        tempoR,
+        updatedExercise,
+        true,
+        { ...trainingContext, trainingInProgress },
+        trainingInProgressContext
       );
 
       await finishSet({
@@ -792,7 +761,7 @@ export default function MobileMovementValidation(
 
       const path = `training/${trainingId}/${file.name}`;
 
-      const url = await firebaseStorage.uploadFile(file, path);
+      const url = await lib.firebase.storage.uploadFile(file, path);
 
       lastRep.extremumImageUrl = url;
 
@@ -819,9 +788,8 @@ export default function MobileMovementValidation(
   }, [isCurrentlySavingImageRef.current]);
 
   useEffect(() => {
-    let timeout: NodeJS.Timeout | null = null;
     if (startedExitTimeout) {
-      timeout = setTimeout(async () => {
+      setTimeout(async () => {
         await finishAiDetection();
         canExitWhenImageIsDoneSavingRef.current = false;
         setStartedExitTimeout(false);
@@ -909,7 +877,7 @@ export default function MobileMovementValidation(
         </>
       )}
 
-      {!EnvUtil.AI.disableAIFPS() && (
+      {!lib.common.env.disableFpsAI() && (
         <Box
           width="100%"
           display="flex"
@@ -1165,7 +1133,6 @@ export default function MobileMovementValidation(
                       passedSet={selectedExercise.sets[setIndex]}
                       supersetIndex={supersetIndex}
                       setIndex={setIndex}
-                      colorSetsToPrimary
                       aiDetectionView
                     />
                   )}
@@ -1243,7 +1210,7 @@ export default function MobileMovementValidation(
               background: '#fff',
               fontWeight: 600,
               cursor: 'pointer',
-              opacity: !EnvUtil.AI.disableEruda() ? 0.7 : 0.9,
+              opacity: !lib.common.env.disableErudaAI() ? 0.7 : 0.9,
             }}
           >
             Debug

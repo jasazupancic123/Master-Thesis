@@ -6,13 +6,12 @@ import {
   getCachedWellness,
   setCachedWellness,
 } from '../session-cache/wellness.session-cache';
-import Alert from '../util/alert/alert';
-import type { ChildrenProps } from '@/common/type/props.type';
-import { ProfileController } from '@/controller/profile/profile.controller';
-import type { Wellness } from '@/controller/profile/type/wellness.type';
+import Alert from '../ui/alert';
+import { ProfileController } from '@/core/profile/profile.controller';
+import type { Wellness } from '@/core/profile/type/wellness.type';
 import { WellnessProvider } from '@/store/wellness-provider';
 
-export default function WellnessInitializer(props: ChildrenProps) {
+export default function WellnessInitializer(props: React.PropsWithChildren) {
   const { children } = props;
   const controller = ProfileController.getInstance();
 

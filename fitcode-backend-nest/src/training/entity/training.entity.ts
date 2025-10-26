@@ -14,7 +14,6 @@ import { Group } from '@src/group/entity/group.entity';
 import { Institution } from '@src/institution/entity/institution.entity';
 
 import { TrainingComponent } from './training-component.entity';
-import { TrainingExerciseAverageStats } from './training-exercise-average-stats.entity';
 
 export class Training extends BaseEntity {
   @IsString()
@@ -71,12 +70,6 @@ export class Training extends BaseEntity {
   @Expose()
   @Transform(({ value }) => new Date(value))
   to: Date;
-
-  @ValidateNested({ each: true })
-  @Type(() => TrainingExerciseAverageStats)
-  @ApiProperty({ type: () => TrainingExerciseAverageStats, isArray: true })
-  @Expose()
-  stats: TrainingExerciseAverageStats[]; // completed stats for each exercise for this training
 
   @ValidateNested()
   @Type(() => TrainingComponent)

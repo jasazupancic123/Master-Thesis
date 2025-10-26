@@ -1,24 +1,22 @@
-// components/ExerciseCard.tsx
 import { Box, Card, Typography } from '@mui/material';
 import Image from 'next/image';
 import React from 'react';
 
-import type { Exercise } from '@/controller/exercise/type/exercise.type';
+import type { Exercise } from '@/core/exercise/type/exercise.type';
+import { lib } from '@/lib';
+import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
 import { useScreenSize } from '@/store/screen-size.provider';
 
-interface ExerciseCardProps {
+interface Props {
   exercise: Exercise;
   addExerciseForm?: boolean;
-  prioritizeVideo?: boolean;
 }
 
-export function ExerciseCard(props: ExerciseCardProps) {
+export function ExerciseCard({ exercise, addExerciseForm }: Props) {
   const screenSize = useScreenSize();
 
-  const { exercise, addExerciseForm } = props;
   const isVideo = false;
-  // const isVideo = exercise.videoUrl !== undefined;
-  const imgSrc = exercise.imageUrl || '/exercise-image-default.png';
+  const imgSrc = exercise.imageUrl || EXERCISE_DEFAULT_IMG_URL;
 
   // Fixed media height similar to your previous maxHeight: 140
   const MEDIA_HEIGHT =
@@ -63,6 +61,7 @@ export function ExerciseCard(props: ExerciseCardProps) {
             height={0}
             width={140}
             sizes="100vw"
+            unoptimized={lib.common.env.unoptimizeImages()}
             style={{
               objectFit: 'cover',
               width: '100%',

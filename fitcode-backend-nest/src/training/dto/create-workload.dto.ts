@@ -1,7 +1,6 @@
 import { IntersectionType, PickType } from '@nestjs/mapped-types';
 
-import { WorkloadMeta } from '../entity/workload.entity';
-import { PrescribedWorkload } from '../entity/workload-value.entity';
+import { Workload, WorkloadMeta } from '../entity/workload.entity';
 
 export class CreatePrescribedWorkloadDto extends IntersectionType(
   PickType(WorkloadMeta, [
@@ -12,5 +11,5 @@ export class CreatePrescribedWorkloadDto extends IntersectionType(
     'setNumber',
     'notes',
   ] as const),
-  PrescribedWorkload,
+  Workload,
 ) {}

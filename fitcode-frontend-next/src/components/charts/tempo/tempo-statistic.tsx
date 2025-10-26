@@ -1,15 +1,13 @@
 import { Typography } from '@mui/material';
 
-import type { TrainingExerciseRecording } from '@/controller/training/type/training-exercise.type';
+import type { TrainingExerciseRecording } from '@/core/training/type/training-exercise.type';
 
-interface TempoStatisticProps {
+interface Props {
   selectedExercise: TrainingExerciseRecording;
   setIndex: number;
 }
 
-export default function TempoStatistic(props: TempoStatisticProps) {
-  const { selectedExercise, setIndex } = props;
-
+export default function TempoStatistic({ selectedExercise, setIndex }: Props) {
   const currentSet = selectedExercise.recordedSets?.find(
     (s) => s.setIndex === setIndex
   );

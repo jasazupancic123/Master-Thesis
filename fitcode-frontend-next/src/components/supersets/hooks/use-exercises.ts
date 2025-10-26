@@ -1,12 +1,10 @@
 import { useState } from 'react';
 
-import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 
-export type UseSupersetExercisesReturnType = ReturnType<
-  typeof useSupersetsExercises
->;
+export type SupersetExercisesHook = ReturnType<typeof useSupersetExercises>;
 
-export default function useSupersetsExercises() {
+export default function useSupersetExercises() {
   const [menuExercise, setMenuExercise] = useState<TrainingExercise | null>(
     null
   );

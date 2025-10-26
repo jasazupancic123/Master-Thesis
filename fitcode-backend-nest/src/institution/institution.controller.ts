@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -18,7 +17,6 @@ import { RequestUser } from '../common/decorator/request-user.decorator';
 import { User } from '../common/type/firebase-auth.type';
 import { CreateInstitutionDto } from './dto/create-institution.dto';
 import { UpdateInstitutionDto } from './dto/update-institution.dto';
-import { GetMembersType } from './enum/institution-get-members.enum';
 import { InstitutionService } from './service/institution.service';
 
 @ApiTags('Institution')
@@ -38,20 +36,10 @@ export class InstitutionController {
     return this.institutionService.findByIdOrFail({ institutionId });
   }
 
-  @Get(':institutionId/find/:type')
+  @Get(':institutionId/members')
   @Auth([UserRole.ADMIN, UserRole.TRAINER, UserRole.MANAGER])
-  async findMembers(
-    @Param('institutionId') institutionId: string,
-    @Param('type') type: string,
-  ) {
-    const getType = GetMembersType[type.toUpperCase()];
-    if (!getType)
-      throw new BadRequestException('Invalid type for fetching members');
-
-    return this.institutionService.findMembers(
-      { institutionId },
-      type as GetMembersType,
-    );
+  async findMembers(@Param('institutionId') institutionId: string) {
+    return this.institutionService.findMembers({ institutionId });
   }
 
   @Post()

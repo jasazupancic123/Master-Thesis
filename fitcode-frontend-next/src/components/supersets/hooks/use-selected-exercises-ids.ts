@@ -1,18 +1,18 @@
 import { useEffect, useState } from 'react';
 
-import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
+import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 
-export default function useSelectedExercisesIds() {
-  const { component, selectedSubgroup, supersets } = useTrainerDayViewContext();
+export default function useSelectedExerciseIds() {
+  const { component, selectedSubgroup, supersets } = useTrainerDayView();
 
-  const [selectedExercisesIds, setSelectedExercisesIds] = useState(
+  const [selectedExerciseIds, setSelectedExerciseIds] = useState(
     supersets && supersets.length
       ? supersets.flatMap((s) => s.exercises.map((e) => e.id))
       : []
   );
 
   useEffect(() => {
-    setSelectedExercisesIds(
+    setSelectedExerciseIds(
       supersets && supersets.length
         ? supersets.flatMap((s) => s.exercises.map((e) => e.id))
         : []
@@ -20,11 +20,11 @@ export default function useSelectedExercisesIds() {
   }, [supersets, supersets.length]);
 
   useEffect(() => {
-    if (!selectedSubgroup && !component) setSelectedExercisesIds([]);
+    if (!selectedSubgroup && !component) setSelectedExerciseIds([]);
   }, [component, selectedSubgroup]);
 
   return {
-    selectedExercisesIds,
-    setSelectedExercisesIds,
+    selectedExerciseIds,
+    setSelectedExerciseIds,
   };
 }

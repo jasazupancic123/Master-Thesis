@@ -21,25 +21,22 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
-import {
-  LINK_DASHBOARD,
-  LINK_TRAININGS,
-} from '@/common/constant/navigation.constant';
-import { SPORTS } from '@/common/constant/sport.constant';
-import { FirebaseStorageUtil } from '@/common/firebase/firebase-storage.util';
-import { handleApiRequest } from '@/common/type/state.type';
 import FaceCapture from '@/components/face-capture/face-capture';
-import { AuthController } from '@/controller/auth/auth.controller';
-import type { AuthUser } from '@/controller/auth/type/user.type';
-import { Gender } from '@/controller/profile/enum/gender.enum';
-import { SportLevel } from '@/controller/profile/enum/sport-level.enum';
-import { UserRole } from '@/controller/profile/enum/user-role.enum';
-import { ProfileController } from '@/controller/profile/profile.controller';
-import type { Profile } from '@/controller/profile/type/user.type';
+import { AuthController } from '@/core/auth/auth.controller';
+import type { AuthUser } from '@/core/auth/type/user.type';
+import { Gender } from '@/core/profile/enum/gender.enum';
+import { SportLevel } from '@/core/profile/enum/sport-level.enum';
+import { UserRole } from '@/core/profile/enum/user-role.enum';
+import { ProfileController } from '@/core/profile/profile.controller';
+import type { Profile } from '@/core/profile/type/user.type';
+import { lib } from '@/lib';
+import { LINK_DASHBOARD, LINK_TRAININGS } from '@/lib/common/const/nav.const';
+import { SPORTS } from '@/lib/common/const/sport.const';
+import { handleApiRequest } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useProfile } from '@/store/profile.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import FileUpload from '@/util/file-upload/file-upload';
+import FileUpload from '@/ui/file-upload';
 
 const DEFAULT_MARGIN = 1;
 
@@ -208,11 +205,7 @@ export default function ProfilePage() {
           makeRound
           onFileUpload={async (file) => {
             const path = `user/${user.uid}/${file.name}`;
-            const url = await FirebaseStorageUtil.Instance.uploadFile(
-              file,
-              path
-            );
-
+            const url = await lib.firebase.storage.uploadFile(file, path);
             handleChangeUser('photoURL', url);
           }}
         />

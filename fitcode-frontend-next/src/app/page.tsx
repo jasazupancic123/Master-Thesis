@@ -3,16 +3,15 @@
 import Box from '@mui/material/Box';
 import React from 'react';
 
-import { HERO_NAVBAR_HEIGHT } from './state';
+import { HERO_NAVBAR_HEIGHT } from '../lib/common/const/state';
 import { theme } from '@/app/style';
-import { LINKS_HERO_NAVBAR } from '@/common/constant/navigation.constant';
-import { useActiveSection } from '@/common/hooks/use-active-section.hook';
-import type { ChildrenProps } from '@/common/type/props.type';
 import HeroNavbar from '@/components/hero-navbar/hero-navbar';
-import AboutUs from '@/components/landing-page/about-us/about-us';
-import ContactUs from '@/components/landing-page/contact-us/contact-us';
-import Hero from '@/components/landing-page/hero/hero';
-import Technology from '@/components/landing-page/technology/technology';
+import AboutUs from '@/components/landing-page/about-us';
+import ContactUs from '@/components/landing-page/contact-us';
+import Hero from '@/components/landing-page/hero';
+import Technology from '@/components/landing-page/technology';
+import { useActiveSection } from '@/hooks/use-active-section.hook';
+import { LINKS_HERO_NAVBAR } from '@/lib/common/const/nav.const';
 
 // Convert "64px" -> 64
 const toPx = (v: string | number) =>
@@ -23,7 +22,7 @@ const SECTION_IDS: string[] = Object.values(LINKS_HERO_NAVBAR).map(
 );
 export type SectionId = (typeof SECTION_IDS)[number];
 
-export type AppPageProps = ChildrenProps & {
+export type AppPageProps = React.PropsWithChildren & {
   title: string;
   description: string;
   id: string;

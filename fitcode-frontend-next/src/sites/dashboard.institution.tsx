@@ -14,28 +14,30 @@ import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { theme } from '@/app/style';
-import { AthletesTrainers } from '@/common/enum/athletes-trainer.enum';
-import { isManager } from '@/common/firebase/firebase-auth.util';
-import { handleApiRequest } from '@/common/type/state.type';
-import DashboardEditAthleteModal from '@/components/dashboard/components/dashboard-groups/components/dashboard-groups-members/modals/dashboard-edit-athlete-modal/dashboard-edit-athlete-modal';
-import RegisterUsersDashboard from '@/components/dashboard/components/dashboard-register-users-modal/dashboard-register-users-modal';
+import { useDashboardUserEdit } from '@/components/dashboard/context/user-edit.context';
+import DashboardEditAthleteModal from '@/components/dashboard/dashboard-edit-athlete-modal';
+import RegisterUsersDashboard from '@/components/dashboard/dashboard-register-users-modal';
 import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
-import type { AuthUser } from '@/controller/auth/type/user.type';
-import { InstitutionController } from '@/controller/institution/institution.controller';
-import { Gender } from '@/controller/profile/enum/gender.enum';
-import { SportLevel } from '@/controller/profile/enum/sport-level.enum';
-import { UserRole } from '@/controller/profile/enum/user-role.enum';
-import { ProfileController } from '@/controller/profile/profile.controller';
-import type { ImportProfile } from '@/controller/profile/type/user.type';
+import type { AuthUser } from '@/core/auth/type/user.type';
+import { AthletesTrainers } from '@/core/institution/enum/athletes-trainer.enum';
+import { InstitutionController } from '@/core/institution/institution.controller';
+import { Gender } from '@/core/profile/enum/gender.enum';
+import { SportLevel } from '@/core/profile/enum/sport-level.enum';
+import { UserRole } from '@/core/profile/enum/user-role.enum';
+import { ProfileController } from '@/core/profile/profile.controller';
+import type { ImportProfile } from '@/core/profile/type/user.type';
+import { lib } from '@/lib';
+import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
+import { handleApiRequest } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import FileUpload from '@/util/file-upload/file-upload';
-import HorizontalItemsList from '@/util/horizontal-items-list/horizontal-items-list';
-import MyModal from '@/util/modal/modal';
-import { SearchBar } from '@/util/search-bar/search-bar';
-import SimpleCircle from '@/util/simple-circle/simple-circle';
+import FileUpload from '@/ui/file-upload';
+import HorizontalItemsList from '@/ui/horizontal-items-list';
+import MyModal from '@/ui/modal';
+import { SearchBar } from '@/ui/search-bar/search-bar';
+import SimpleCircle from '@/ui/simple-circle';
 
 export default function DashboardInstitutionPage() {
   const screenSize = useScreenSize();
@@ -43,25 +45,29 @@ export default function DashboardInstitutionPage() {
   const { role } = useAuthenticatedAuth();
   const { users } = useMain();
 
+  const {
+    hoveredUser,
+    currentUsers,
+    filteredUsers,
+    setFilteredUsers,
+    setCurrentUsers,
+    toggleUser,
+    onHoverUser,
+  } = useDashboardUserEdit();
+
   const { selectedInstitution, setSelectedInstitution, setMembers, setUsers } =
     useDashboard();
 
-  const controller = InstitutionController.getInstance();
   const [selectedView, setSelectedView] = useState<AthletesTrainers>(
     AthletesTrainers.ATHLETES
   );
 
-  const [currentUsers, setCurrentUsers] = useState<AuthUser[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<AuthUser[]>([]);
   const [search, setSearch] = useState('');
-
   const [openAddMemberModal, setOpenAddMemberModal] = useState(false);
+  const [openEditAthleteModal, setOpenEditAthleteModal] = useState(false);
   const [openAddMemberViaCsvModal, setOpenAddMemberViaCsvModal] =
     useState(false);
-  const [openEditAthleteModal, setOpenEditAthleteModal] = useState(false);
 
-  const [hoveredUser, setHoveredUser] = useState<AuthUser | null>(null);
-  const [editUser, setEditUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [csvUserEmails, setCsvUserEmails] = useState<string[]>([]);
   const [isUploadingMembers, setIsUploadingMembers] = useState(false);
@@ -73,7 +79,6 @@ export default function DashboardInstitutionPage() {
         : (selectedInstitution?.trainers ?? []);
 
     if (!current) return;
-
     setSearch('');
     setCurrentUsers(current);
     setFilteredUsers(current);
@@ -84,13 +89,11 @@ export default function DashboardInstitutionPage() {
     if (!selectedInstitution || !csvUserEmails.length) return;
 
     const newUsers = [] as AuthUser[];
-
     for (const email of csvUserEmails) {
       if (!email) continue;
 
       const user = users.find((user) => user.email === email.toLowerCase());
       if (!user) continue;
-
       newUsers.push(user);
     }
 
@@ -122,12 +125,14 @@ export default function DashboardInstitutionPage() {
       router,
       () =>
         view === AthletesTrainers.ATHLETES
-          ? controller.removeAthlete(selectedInstitution.id, {
-              userId,
-            })
-          : controller.removeTrainer(selectedInstitution.id, {
-              userId,
-            }),
+          ? InstitutionController.getInstance().removeAthlete(
+              selectedInstitution.id,
+              { userId }
+            )
+          : InstitutionController.getInstance().removeTrainer(
+              selectedInstitution.id,
+              { userId }
+            ),
       () => {
         setSelectedInstitution((prev) => {
           if (!prev) return null;
@@ -242,10 +247,10 @@ export default function DashboardInstitutionPage() {
           birthDate: r.birthDate ? new Date(r.birthDate) : undefined,
         }));
 
-        const controller = ProfileController.getInstance();
         await handleApiRequest(
           router,
-          () => controller.importProfiles({ profiles: data }),
+          () =>
+            ProfileController.getInstance().importProfiles({ profiles: data }),
           (res) => {
             setOpenAddMemberViaCsvModal(false);
             setCsvUserEmails(data.map((d) => d.email));
@@ -269,28 +274,23 @@ export default function DashboardInstitutionPage() {
     setIsUploadingMembers(false);
   };
 
-  const HorizontalItems = () => {
+  function HorizontalItems() {
     return (
       <HorizontalItemsList
         dashboardInstitutionsView
+        value={selectedView}
+        setValue={(value) => setSelectedView(value as AthletesTrainers)}
+        checkIsSameValue={(value: string) => selectedView === value}
+        alertOnChange
         items={
           Object.values(AthletesTrainers).map((item) => ({
             label: item,
             value: item,
           })) || []
         }
-        value={selectedView}
-        setValue={(value) => {
-          setSelectedView(value as AthletesTrainers);
-        }}
-        checkIsSameValue={(value: string) => {
-          return selectedView === value;
-        }}
-        alertOnChange
-        onArrowClick={() => {}}
       />
     );
-  };
+  }
 
   return (
     <Box
@@ -300,10 +300,7 @@ export default function DashboardInstitutionPage() {
       width="100%"
       maxWidth={MAX_WIDTH}
       gap={screenSize.isSmallTablet || screenSize.isMobile ? 0 : 5}
-      sx={{
-        backgroundColor: theme.palette.background.default,
-        pb: 2,
-      }}
+      sx={{ backgroundColor: theme.palette.background.default, pb: 2 }}
     >
       {screenSize.isSmallTablet || screenSize.isMobile ? (
         <>
@@ -324,19 +321,13 @@ export default function DashboardInstitutionPage() {
                 fontWeight={600}
                 fontSize={16}
                 textAlign="center"
-                sx={{
-                  textTransform: 'uppercase',
-                }}
+                sx={{ textTransform: 'uppercase' }}
               >
                 {selectedInstitution?.name || 'Select A Group'}
               </Typography>
+
               <IconButton
-                sx={{
-                  position: 'absolute',
-                  right: 0,
-                  top: 0,
-                  zIndex: 1,
-                }}
+                sx={{ position: 'absolute', right: 0, top: 0, zIndex: 1 }}
               >
                 <MoreVert fontSize="medium" />
               </IconButton>
@@ -356,25 +347,23 @@ export default function DashboardInstitutionPage() {
             justifyContent="flex-start"
             alignItems="center"
             gap={1}
-            sx={{
-              mt: 1,
-            }}
+            sx={{ mt: 1 }}
           >
             <SimpleCircle />
 
             <Typography
               fontWeight={600}
               fontSize={16}
-              sx={{
-                textTransform: 'uppercase',
-              }}
+              sx={{ textTransform: 'uppercase' }}
             >
               {selectedInstitution?.name || 'Select A Group'}
             </Typography>
           </Box>
+
           <Box width="50%">
             <HorizontalItems />
           </Box>
+
           <Box width="25%" display="flex" justifyContent="flex-end" mt={1}>
             <IconButton sx={{ m: 0, p: 0 }}>
               <MoreVert fontSize="large" />
@@ -386,10 +375,7 @@ export default function DashboardInstitutionPage() {
         width="100%"
         display="flex"
         gap={1}
-        sx={{
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}
+        sx={{ justifyContent: 'center', alignItems: 'center' }}
       >
         <SearchBar
           placeholder={`Search ${selectedView.toLowerCase()}`}
@@ -413,7 +399,7 @@ export default function DashboardInstitutionPage() {
             position: 'relative',
           }}
         >
-          {isManager(role) && (
+          {lib.firebase.auth.isManager(role) && (
             <Box
               display="flex"
               gap={1.5}
@@ -453,10 +439,7 @@ export default function DashboardInstitutionPage() {
       <Box width="100%" display="flex" flexDirection="column">
         <Box
           width="100%"
-          sx={{
-            height: 7,
-            backgroundColor: theme.palette.background.paper,
-          }}
+          sx={{ height: 7, backgroundColor: theme.palette.background.paper }}
         />
         <Box
           width="100%"
@@ -486,36 +469,36 @@ export default function DashboardInstitutionPage() {
                   display="flex"
                   flexDirection="column"
                   gap={1}
-                  sx={{
-                    position: 'relative',
-                  }}
-                  onMouseEnter={() => setHoveredUser(user)}
-                  onMouseLeave={() => setHoveredUser(null)}
+                  sx={{ position: 'relative' }}
+                  onMouseEnter={() => onHoverUser(user)}
+                  onMouseLeave={() => onHoverUser(null)}
                 >
-                  {isManager(role) && user.uid === hoveredUser?.uid && (
-                    <IconButton
-                      className="remove-icon"
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRemoveUser(user.uid, selectedView);
-                      }}
-                      sx={{
-                        position: 'absolute',
-                        top: -8,
-                        right: -8,
-                        backgroundColor: theme.palette.error.main,
-                        zIndex: 1,
-                      }}
-                    >
-                      <Remove sx={{ fontSize: 10 }} />
-                    </IconButton>
-                  )}
+                  {lib.firebase.auth.isManager(role) &&
+                    user.uid === hoveredUser?.uid && (
+                      <IconButton
+                        className="remove-icon"
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveUser(user.uid, selectedView);
+                        }}
+                        sx={{
+                          position: 'absolute',
+                          top: -8,
+                          right: -8,
+                          backgroundColor: theme.palette.error.main,
+                          zIndex: 1,
+                        }}
+                      >
+                        <Remove sx={{ fontSize: 10 }} />
+                      </IconButton>
+                    )}
+
                   <Avatar
                     className="avatar-border"
                     src={
                       users.find((m) => m.uid === user.uid)?.photoURL ||
-                      '/user_avatar.png'
+                      USER_AVATAR_IMG_URL
                     }
                     sx={{
                       width: screenSize.isMobile ? 70 : 80,
@@ -523,10 +506,11 @@ export default function DashboardInstitutionPage() {
                       cursor: 'pointer',
                     }}
                     onClick={() => {
-                      setEditUser(user);
+                      toggleUser(user);
                       setOpenEditAthleteModal(true);
                     }}
                   />
+
                   <Typography
                     variant="body2"
                     sx={{
@@ -578,18 +562,13 @@ export default function DashboardInstitutionPage() {
         <FileUpload
           label="CSV of users"
           input="csv"
-          onFileUpload={async (file) => {
-            handleCsvFileUpload(file);
-          }}
+          onFileUpload={async (file) => handleCsvFileUpload(file)}
         />
       </MyModal>
 
       <DashboardEditAthleteModal
         open={openEditAthleteModal}
         setOpen={setOpenEditAthleteModal}
-        editUser={editUser}
-        setEditUser={setEditUser}
-        setFilteredUsers={setFilteredUsers}
       />
 
       {isUploadingMembers && (
@@ -604,10 +583,7 @@ export default function DashboardInstitutionPage() {
           justifyContent="center"
           alignItems="center"
           gap={2}
-          sx={{
-            zIndex: 130000,
-            backgroundColor: 'rgba(0, 0, 0, 0.3)',
-          }}
+          sx={{ zIndex: 130000, backgroundColor: 'rgba(0, 0, 0, 0.3)' }}
         >
           <CircularProgress size={24} />
           <Typography fontSize={20}>Registering...</Typography>

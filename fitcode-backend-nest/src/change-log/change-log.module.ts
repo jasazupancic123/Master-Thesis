@@ -8,7 +8,7 @@ import { ChangeLogManager } from './change-log.manager';
 export class ChangeLogModule {
   static forEntity<T>(entityClass: Type<T>): DynamicModule {
     const provider: Provider = {
-      provide: entityClass, // <<<<<< this is CRUCIAL
+      provide: entityClass,
       useFactory: (firebase: FirebaseService) =>
         new ChangeLogManager<T>(firebase),
     };

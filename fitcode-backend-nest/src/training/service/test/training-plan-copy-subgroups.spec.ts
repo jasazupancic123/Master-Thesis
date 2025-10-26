@@ -10,6 +10,7 @@ import { ComponentRepository } from '@src/component/repository/component.reposit
 import { validationSchema } from '@src/config/environment-validation-schema';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { ExerciseAttributeService } from '@src/exercise/service/exercise-attribute.service';
+import { ExerciseParamService } from '@src/exercise/service/exercise-param.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import type { Training } from '@src/training/entity/training.entity';
@@ -78,6 +79,7 @@ describe('copySubgroup', () => {
           provide: WorkloadService,
           useValue: createMock<WorkloadService>(),
         },
+        ExerciseParamService,
         TrainingPlanService,
       ],
     }).compile();

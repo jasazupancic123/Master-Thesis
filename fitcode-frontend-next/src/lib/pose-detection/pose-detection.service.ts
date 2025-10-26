@@ -1,0 +1,399 @@
+import type { RefObject } from 'react';
+
+import type { KeypointHistory } from './class/keypoint-history';
+import { POSE_DETECTION_CONSTRAINTS } from './const/pose-detection-constrains.const';
+import { DetectionStatus } from './enum/detection-status';
+import { KeypointId } from './enum/keypoint-id';
+import { KeypointValueType } from './enum/keypoint-value-type';
+import { StatusDetectionService } from './status-detection.service';
+import type { ExerciseDetectionData } from './type/exercise-start-condition.type';
+import type { Keypoint } from './type/keypoint.type';
+import type { PoseValidationCondition } from './type/pose-validation-condition.type';
+import type { RepState } from './type/rep-state.type';
+import { KeypointUtil } from './util/keypoint.util';
+
+export class PoseDetectionService {
+  private static _instance: PoseDetectionService;
+  private readonly keypoint: KeypointUtil;
+  private readonly status: StatusDetectionService;
+
+  private constructor() {
+    this.keypoint = KeypointUtil.instance;
+    this.status = StatusDetectionService.instance;
+  }
+
+  static get instance(): PoseDetectionService {
+    if (!PoseDetectionService._instance)
+      PoseDetectionService._instance = new PoseDetectionService();
+    return PoseDetectionService._instance;
+  }
+
+  checkStatus(state: {
+    statusRef: RefObject<DetectionStatus>;
+    canProceedIntoReadyStateRef: RefObject<boolean>;
+    repStateRefL: RefObject<RepState>;
+    repStateRefR: RefObject<RepState>;
+    keypoints: Keypoint[];
+    keypointBuffer: KeypointHistory;
+    keypointHistory: KeypointHistory;
+    exerciseDetectionData: ExerciseDetectionData;
+    avgFps: { value: number; count: number } | null;
+    recordingTimestampRef: RefObject<Date | null>;
+    statusMessage: RefObject<string>;
+    stillnessCountdownRef: RefObject<Date | null>;
+    videoHeight: number;
+  }) {
+    const {
+      statusRef,
+      canProceedIntoReadyStateRef,
+      repStateRefL,
+      repStateRefR,
+      keypoints,
+      keypointBuffer,
+      exerciseDetectionData,
+      avgFps,
+      recordingTimestampRef,
+      statusMessage,
+      stillnessCountdownRef,
+      videoHeight,
+    } = state;
+
+    const initStatuses =
+      statusRef.current === DetectionStatus.RECORDING
+        ? [DetectionStatus.RECORDING]
+        : [
+            DetectionStatus.NOT_FULLY_IN_FRAME,
+            DetectionStatus.NOT_FACING_CAMERA,
+            DetectionStatus.NOT_STILL,
+            DetectionStatus.READY,
+          ];
+
+    for (const status of initStatuses) {
+      const validStatus = this.status.checkAndValidateStatus(status, {
+        repStateRefL,
+        repStateRefR,
+        keypoints,
+        statusRef,
+        canProceedIntoReadyStateRef,
+        keypointBuffer: keypointBuffer,
+        exerciseDetectionData,
+        avgFps,
+        recordingTimestampRef,
+        statusMessage,
+        stillnessCountdownRef,
+        videoHeight,
+      });
+
+      if (!validStatus) return;
+    }
+  }
+
+  validateKeypointConditions(
+    conditions: PoseValidationCondition[],
+    keypoints: Keypoint[]
+  ): string | undefined {
+    for (const condition of conditions) {
+      const keypoint1 = keypoints.find((kp) => kp.id === condition.keypointId1);
+      const keypoint2 = keypoints.find((kp) => kp.id === condition.keypointId2);
+
+      if (!keypoint1 || !keypoint2) return condition.errorMessage;
+
+      const { value1, value2 } = this.keypoint.getKeypointsValuesByType(
+        keypoint1,
+        keypoint2,
+        condition.relation
+      );
+
+      if (value1 === undefined || value2 === undefined)
+        return condition.errorMessage;
+
+      if (Math.abs(value1 - value2) > condition.threshold)
+        return condition.errorMessage;
+    }
+  }
+
+  checkHasShakedHead(state: {
+    keypointBuffer: KeypointHistory;
+    avgFps: { value: number; count: number } | null;
+  }): boolean {
+    const { keypointBuffer, avgFps } = state;
+
+    const numFrames = this.keypoint.getFramesCountFromSeconds(
+      POSE_DETECTION_CONSTRAINTS.HEAD_SHAKE_DETECTION_BUFFER_DURATION_S,
+      avgFps?.value || 30
+    );
+
+    const frames = keypointBuffer.history.slice(-numFrames);
+
+    const startLeftShoulder = this.keypoint.getDesiredKeypointFromArray(
+      frames[0],
+      KeypointId.LEFT_SHOULDER
+    );
+
+    const startRightShoulder = this.keypoint.getDesiredKeypointFromArray(
+      frames[0],
+      KeypointId.RIGHT_SHOULDER
+    );
+
+    const startNose = this.keypoint.getDesiredKeypointFromArray(
+      frames[0],
+      KeypointId.NOSE
+    );
+
+    if (!startNose || !startLeftShoulder || !startRightShoulder) return false;
+
+    const startNoseX = this.keypoint.getKeypointValueByType(
+      startNose,
+      KeypointValueType.POSITION_X
+    );
+
+    const startLeftShoulderX = this.keypoint.getKeypointValueByType(
+      startLeftShoulder,
+      KeypointValueType.POSITION_X
+    );
+
+    const startRightShoulderX = this.keypoint.getKeypointValueByType(
+      startRightShoulder,
+      KeypointValueType.POSITION_X
+    );
+
+    if (
+      startNoseX === undefined ||
+      startLeftShoulderX === undefined ||
+      startRightShoulderX === undefined
+    )
+      return false;
+
+    const startNoseLeftShoulderDist = startLeftShoulderX - startNoseX; // left shoulderX is bigger than right shoulderX
+    const startNoseRightShoulderDist = startNoseX - startRightShoulderX;
+
+    const hasMovedLeft = false;
+    const hasMovedRight = false;
+    let hasRotatedLeft = false,
+      hasRotatedRight = false;
+
+    for (const frame of frames) {
+      const nose = this.keypoint.getDesiredKeypointFromArray(
+        frame,
+        KeypointId.NOSE
+      );
+
+      const leftShoulder = this.keypoint.getDesiredKeypointFromArray(
+        frame,
+        KeypointId.LEFT_SHOULDER
+      );
+
+      const rightShoulder = this.keypoint.getDesiredKeypointFromArray(
+        frame,
+        KeypointId.RIGHT_SHOULDER
+      );
+
+      if (nose && leftShoulder && !hasMovedLeft) {
+        const noseX = this.keypoint.getKeypointValueByType(
+          nose,
+          KeypointValueType.POSITION_X
+        );
+
+        const leftShoulderX = this.keypoint.getKeypointValueByType(
+          leftShoulder,
+          KeypointValueType.POSITION_X
+        );
+
+        if (noseX !== undefined && leftShoulderX !== undefined) {
+          const noseLeftShoulderDist = leftShoulderX - noseX;
+
+          if (
+            startNoseLeftShoulderDist - noseLeftShoulderDist >
+            POSE_DETECTION_CONSTRAINTS.MIN_NOSE_X_MOVEMENT_M
+          ) {
+            // console.log('HAS ROTATED LEFT');
+            hasRotatedLeft = true;
+          }
+        }
+      }
+
+      if (nose && rightShoulder && !hasMovedRight) {
+        const rightShoulderX = this.keypoint.getKeypointValueByType(
+          rightShoulder,
+          KeypointValueType.POSITION_X
+        );
+
+        const noseX = this.keypoint.getKeypointValueByType(
+          nose,
+          KeypointValueType.POSITION_X
+        );
+
+        if (noseX !== undefined && rightShoulderX !== undefined) {
+          const noseRightShoulderDist = noseX - rightShoulderX;
+
+          if (
+            startNoseRightShoulderDist - noseRightShoulderDist >
+            POSE_DETECTION_CONSTRAINTS.MIN_NOSE_X_MOVEMENT_M
+          ) {
+            // console.log('HAS ROTATED RIGHT');
+            hasRotatedRight = true;
+          }
+        }
+      }
+    }
+
+    return hasRotatedLeft && hasRotatedRight;
+  }
+
+  checkHasNodded(state: {
+    keypointBuffer: KeypointHistory;
+    avgFps: { value: number; count: number } | null;
+  }): boolean {
+    const { keypointBuffer, avgFps } = state;
+
+    const numFrames = this.keypoint.getFramesCountFromSeconds(
+      POSE_DETECTION_CONSTRAINTS.NOD_DETECTION_BUFFER_DURATION_S,
+      avgFps?.value || 30
+    );
+
+    const frames = keypointBuffer.history.slice(-numFrames);
+
+    // conditions for nod
+    let earsBelowEyesStart = false;
+    let earsAboveEyes = false;
+    let earsBelowEyesEnd = false;
+    let shouldersAlwaysAboveHips = true;
+
+    for (const frame of frames) {
+      const leftEyeKeypoint = this.keypoint.getDesiredKeypointFromArray(
+        frame,
+        KeypointId.LEFT_EYE_OUTER
+      );
+
+      const rightEyeKeypoint = this.keypoint.getDesiredKeypointFromArray(
+        frame,
+        KeypointId.RIGHT_EYE_OUTER
+      );
+
+      const leftEarKeypoint = this.keypoint.getDesiredKeypointFromArray(
+        frame,
+        KeypointId.LEFT_EAR
+      );
+
+      const rightEarKeypoint = this.keypoint.getDesiredKeypointFromArray(
+        frame,
+        KeypointId.RIGHT_EAR
+      );
+
+      const leftHipKeypoint = this.keypoint.getDesiredKeypointFromArray(
+        frame,
+        KeypointId.LEFT_HIP
+      );
+
+      const rightHipKeypoint = this.keypoint.getDesiredKeypointFromArray(
+        frame,
+        KeypointId.RIGHT_HIP
+      );
+
+      const leftShoulderKeypoint = this.keypoint.getDesiredKeypointFromArray(
+        frame,
+        KeypointId.LEFT_SHOULDER
+      );
+
+      const rightShoulderKeypoint = this.keypoint.getDesiredKeypointFromArray(
+        frame,
+        KeypointId.RIGHT_SHOULDER
+      );
+
+      if (
+        !leftEyeKeypoint ||
+        !rightEyeKeypoint ||
+        !leftEarKeypoint ||
+        !rightEarKeypoint ||
+        !leftHipKeypoint ||
+        !rightHipKeypoint ||
+        !leftShoulderKeypoint ||
+        !rightShoulderKeypoint
+      )
+        continue;
+
+      const leftEyeY = this.keypoint.getKeypointValueByType(
+        leftEyeKeypoint,
+        KeypointValueType.POSITION_Y
+      );
+      const rightEyeY = this.keypoint.getKeypointValueByType(
+        rightEyeKeypoint,
+        KeypointValueType.POSITION_Y
+      );
+
+      const leftEarY = this.keypoint.getKeypointValueByType(
+        leftEarKeypoint,
+        KeypointValueType.POSITION_Y
+      );
+      const rightEarY = this.keypoint.getKeypointValueByType(
+        rightEarKeypoint,
+        KeypointValueType.POSITION_Y
+      );
+
+      const leftHipY = this.keypoint.getKeypointValueByType(
+        leftHipKeypoint,
+        KeypointValueType.POSITION_Y
+      );
+      const rightHipY = this.keypoint.getKeypointValueByType(
+        rightHipKeypoint,
+        KeypointValueType.POSITION_Y
+      );
+
+      const leftShoulderY = this.keypoint.getKeypointValueByType(
+        leftShoulderKeypoint,
+        KeypointValueType.POSITION_Y
+      );
+      const rightShoulderY = this.keypoint.getKeypointValueByType(
+        rightShoulderKeypoint,
+        KeypointValueType.POSITION_Y
+      );
+
+      if (
+        leftEyeY === undefined ||
+        rightEyeY === undefined ||
+        leftEarY === undefined ||
+        rightEarY === undefined ||
+        leftHipY === undefined ||
+        rightHipY === undefined ||
+        leftShoulderY === undefined ||
+        rightShoulderY === undefined
+      )
+        continue;
+
+      const avgEyeY = (leftEyeY + rightEyeY) / 2;
+      const avgEarY = (leftEarY + rightEarY) / 2;
+
+      if (!earsBelowEyesStart) {
+        if (avgEarY > avgEyeY) earsBelowEyesStart = true;
+        continue;
+      }
+
+      if (!earsAboveEyes) {
+        if (avgEarY < avgEyeY + POSE_DETECTION_CONSTRAINTS.Y_POS_HELPER_M) {
+          // console.log('EARS ABOVE EYES');
+          earsAboveEyes = true;
+        }
+        continue;
+      }
+
+      if (!earsBelowEyesEnd) {
+        if (avgEarY > avgEyeY) {
+          earsBelowEyesEnd = true;
+          break;
+        }
+      }
+
+      const avgHipY = (leftHipY + rightHipY) / 2;
+      const avgShoulderY = (leftShoulderY + rightShoulderY) / 2;
+
+      if (avgShoulderY - 0.2 <= avgHipY) shouldersAlwaysAboveHips = false;
+    }
+
+    return (
+      earsBelowEyesStart &&
+      earsAboveEyes &&
+      earsBelowEyesEnd &&
+      shouldersAlwaysAboveHips
+    );
+  }
+}

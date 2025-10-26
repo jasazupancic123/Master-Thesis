@@ -11,69 +11,53 @@ import type {
   GroupContextProps,
   TrainerDayViewContextProps,
 } from '@/app/(trainer)/groups/[group_id]/props';
-import { FirebaseFirestoreUtil } from '@/common/firebase/firebase-firestore.util';
-import { CommonService } from '@/common/service/common.service';
-import type { Day } from '@/common/service/util/date.util';
-import type { Pagination } from '@/common/type/paginate.type';
-import type { ChildrenProps } from '@/common/type/props.type';
-import type { SetState, SetStateNullable } from '@/common/type/state.type';
-import { handleApiRequest } from '@/common/type/state.type';
-import { firestoreSerialize } from '@/common/util/firebase.util';
-import { optimisticUpdate } from '@/common/util/optimistic-update';
-import type { AuthUser } from '@/controller/auth/type/user.type';
-import type { Component } from '@/controller/component/type/component.type';
-import { Controller } from '@/controller/controller';
-import { ExerciseService } from '@/controller/exercise/exercise.service';
-import type { Exercise } from '@/controller/exercise/type/exercise.type';
-import type { Method } from '@/controller/method/type/method.type';
-import type { Profile } from '@/controller/profile/type/user.type';
-import type { WellnessZScore } from '@/controller/profile/type/wellness.type';
-import { TrainingController } from '@/controller/training/training.controller';
-import { TrainingService } from '@/controller/training/training.service';
-import type { Subgroup } from '@/controller/training/type/subgroup.type';
-import type { Superset } from '@/controller/training/type/superset.type';
-import type { Training } from '@/controller/training/type/training.type';
-import type { TrainingComponent } from '@/controller/training/type/training-component.type';
-import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import type { Workload } from '@/controller/training/type/workload.type';
-import {
-  type UserProgress,
-  WorkloadService,
-} from '@/controller/training/workload.service';
+import type { AuthUser } from '@/core/auth/type/user.type';
+import { Controller } from '@/core/controller';
+import { core } from '@/core/core.service';
+import { ExerciseService } from '@/core/exercise/exercise.service';
+import type { Exercise } from '@/core/exercise/type/exercise.type';
+import type { Profile } from '@/core/profile/type/user.type';
+import type { WellnessZScore } from '@/core/profile/type/wellness.type';
+import type { MainSet } from '@/core/training/enum/main-set.enum';
+import { TrainingController } from '@/core/training/training.controller';
+import { TrainingService } from '@/core/training/training.service';
+import type { Subgroup } from '@/core/training/type/subgroup.type';
+import type { Superset } from '@/core/training/type/superset.type';
+import type { Training } from '@/core/training/type/training.type';
+import type { TrainingComponent } from '@/core/training/type/training-component.type';
+import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import type {
+  UserProgress,
+  Workload,
+} from '@/core/training/type/workload.type';
+import { lib } from '@/lib';
+import type { Day } from '@/lib/common/service/date.util';
+import type { Pagination } from '@/lib/common/type/paginate.type';
+import { handleApiRequest } from '@/lib/common/type/state.type';
 
-const commonService = CommonService.instance;
-const firestore = FirebaseFirestoreUtil.Instance;
+interface Props extends GroupContextProps, React.PropsWithChildren {}
+
+// eslint-disable-next-line
+export interface ITrainerDayViewContext extends TrainerDayViewContextProps {}
 
 export const TrainerDayViewContext =
   createContext<TrainerDayViewContextProps | null>(null);
 
-export const useTrainerDayViewContext = () =>
-  useContext(TrainerDayViewContext)!;
+export const useTrainerDayView = () => useContext(TrainerDayViewContext)!;
 
-export type TrainerDayViewProviderReturnType = ReturnType<
-  typeof useTrainerDayViewContext
->;
-
-export type TrainerDayViewProviderReturnTypeDefined = Omit<
-  ReturnType<typeof useTrainerDayViewContext>,
+export type TrainerDayViewCtxExtended = Omit<
+  ITrainerDayViewContext,
   'training' | 'component'
-> & {
-  training: Training;
-  component: TrainingComponent;
-};
+> & { training: Training; component: TrainingComponent };
 
-export function TrainerDayViewProvider(
-  props: GroupContextProps & ChildrenProps
-) {
+export function TrainerDayViewProvider(props: Props) {
   const { children, cycle, dateFrom, dateTo, group, trainings, setTrainings } =
     props;
 
   const router = useRouter();
   const screenSize = useScreenSize();
   const { components, exercises, methods } = useMain();
-
   const { setCycle } = useGroup();
-
   const controller = Controller.getInstance();
 
   // filtering selected component exercises
@@ -86,24 +70,23 @@ export function TrainerDayViewProvider(
     total: 0,
   });
 
-  const [day, setDay] = useState<Day>(commonService.date.getToday());
-
   // check if it's after 12:00, then set to PM, else AM
   const [selectedPeriod, setSelectedPeriod] = useState<
     { key: Date; value: 'AM' | 'PM' } | undefined
   >(undefined);
 
+  const [day, setDay] = useState<Day>(lib.common.date.getToday());
   const [training, setTraining] = useState<Training | undefined>();
   const [progress, setProgress] = useState<UserProgress[]>([]);
   const [component, setComponent] = useState<TrainingComponent | undefined>();
   const [supersets, setSupersets] = useState<Superset[]>([]);
   const [members, setMembers] = useState<Profile[]>([]);
-
   const [wellness, setWellness] = useState<WellnessZScore[]>([]);
+  const [loading, setLoading] = useState(false);
+  const isSettingAthleteWorkloads = useRef(false);
+  const previousSelectedAthlete = useRef<AuthUser | undefined>(undefined);
 
-  const [selectedExercises, setSelectedExercises] = useState<
-    TrainingExercise[]
-  >([]);
+  const [selectedExerciseIds, setSelectedExerciseIds] = useState<string[]>([]);
   const [selectedAthlete, setSelectedAthlete] = useState<
     AuthUser | undefined
   >();
@@ -116,14 +99,9 @@ export function TrainerDayViewProvider(
     setSelectedAthleteCompletedWorkloads,
   ] = useState<Workload[]>([]);
 
-  const isSettingAthleteWorkloads = useRef(false);
-  const previousSelectedAthlete = useRef<AuthUser | undefined>(undefined);
-
-  const [loading, setLoading] = useState(false);
-
   useEffect(() => {
     const cycleInDate = group.cycles.find((c) =>
-      commonService.date.isBetween(day.date, c.from, c.to)
+      lib.common.date.isBetween(day.date, c.from, c.to)
     );
     if (cycleInDate) setCycle(cycleInDate);
   }, [day]);
@@ -148,7 +126,7 @@ export function TrainerDayViewProvider(
     async function fetchMembers() {
       handleApiRequest(
         router,
-        () => controller.institution.findAthletes(group.institutionId),
+        () => controller.institution.findMembers(group.institutionId),
         (members) => setMembers(members),
         undefined
       );
@@ -173,9 +151,8 @@ export function TrainerDayViewProvider(
    * Reset selected training and its children on certain changes
    */
   useEffect(() => {
-    // setSelectedSubgroup(null);
     setSelectedAthlete(undefined);
-    setSelectedExercises([]);
+    setSelectedExerciseIds([]);
   }, [cycle, dateFrom, dateTo]);
 
   /**
@@ -185,10 +162,7 @@ export function TrainerDayViewProvider(
     if (!component) return;
 
     ExerciseService.paginate(
-      {
-        componentIds: [component.id],
-        name: search,
-      },
+      { componentIds: [component.id], name: search },
       {
         pagination,
         components,
@@ -201,16 +175,20 @@ export function TrainerDayViewProvider(
 
   useEffect(() => {
     if (!training) return;
-    if (!isSameDay(day.date.toDate(), new Date())) return; // only for today
+    if (!isSameDay(day.date.toDate(), new Date())) {
+      // workloads only for current day
+      setProgress([]);
+      return;
+    }
 
-    const unsub = firestore.listenCollection<Workload>(
+    const unsub = lib.firebase.firestore.listenCollection<Workload>(
       `trainings/${training.id}/training-workload`,
       (snapshot) => {
         const data: Workload[] = snapshot.docs.map((doc) =>
-          firestoreSerialize(doc.data())
+          lib.firebase.firestore.serialize(doc.data())
         );
 
-        const progress = WorkloadService.getProgress(training, data);
+        const progress = core.training.workload.getProgress(training, data);
         setProgress(progress);
       },
       (error) => {
@@ -220,11 +198,6 @@ export function TrainerDayViewProvider(
 
     return () => unsub();
   }, [training]);
-
-  useEffect(() => {
-    // reset workloads
-    if (!isSameDay(day.date.toDate(), new Date())) setProgress([]);
-  }, [day]);
 
   async function handleAddMember(user: AuthUser) {
     if (!training) return;
@@ -242,7 +215,7 @@ export function TrainerDayViewProvider(
       members: [...members],
     };
 
-    await optimisticUpdate(
+    await lib.common.generic.optimisticUpdate(
       () => {
         // first update member locally
         setMembers((prev) =>
@@ -325,25 +298,39 @@ export function TrainerDayViewProvider(
     else setSelectedAthleteCompletedWorkloads([]);
   }, [selectedAthlete]);
 
-  {
-    /* Sets new training when new period or day is clicked */
-  }
+  /* Sets new training when new period or day is clicked */
   useEffect(() => {
     if (!selectedPeriod) return;
 
-    setTrainingOnDayView(selectedPeriod, {
-      day,
-      trainings,
-      component,
-      setTraining,
-      setComponent,
-      setLoading,
-      components,
-      exercises,
-      methods,
-      selectedSubgroup,
-      setSelectedSubgroup,
-    });
+    const { from, to } = core.training.getPeriodDateRange(
+      day.date,
+      selectedPeriod.value
+    );
+
+    const training = trainings.find(
+      (t) => dayjs(t.from).isAfter(from) && dayjs(t.to).isBefore(to)
+    );
+
+    if (!training) {
+      setTraining(undefined);
+      setLoading(false);
+      setComponent(undefined);
+      return;
+    }
+
+    TrainingService.mapData(training, { components, exercises, methods });
+
+    const foundComponent = component?.id
+      ? training.components.find((c) => c.id === component.id)
+      : undefined;
+    const foundSubgroup =
+      foundComponent?.subgroups.find((sg) => sg.id === selectedSubgroup?.id) ||
+      null;
+
+    setComponent(foundComponent);
+    setSelectedSubgroup(foundSubgroup);
+    setTraining(training);
+    setLoading(false);
   }, [selectedPeriod]);
 
   useEffect(() => {
@@ -373,81 +360,6 @@ export function TrainerDayViewProvider(
     }));
   }, [window.innerWidth]);
 
-  const setTrainingOnDayView = (
-    selectedPeriod: {
-      key: Date;
-      value: string;
-    },
-    state: {
-      day: Day;
-      trainings: Training[];
-      component?: TrainingComponent;
-      selectedSubgroup: Subgroup | null;
-      setSelectedSubgroup: SetState<Subgroup | null>;
-      setTraining: SetStateNullable<Training>;
-      setComponent: SetStateNullable<TrainingComponent>;
-      setLoading: SetState<boolean>;
-      components: Component[];
-      exercises: Exercise[];
-      methods: Method[];
-    }
-  ) => {
-    const {
-      day,
-      trainings,
-      component,
-      selectedSubgroup,
-      setSelectedSubgroup,
-      setComponent,
-      setTraining,
-      setLoading,
-      components,
-      exercises,
-      methods,
-    } = state;
-
-    let from: Date, to: Date;
-    if (selectedPeriod.value === 'AM') {
-      from = day.date.startOf('day').toDate();
-      to = day.date.startOf('day').add(12, 'hours').toDate();
-    } else {
-      from = day.date.startOf('day').add(11, 'hours').toDate();
-      to = day.date.endOf('day').toDate();
-    }
-
-    const currentComponentId = component?.id;
-    const currentSubgroupId = selectedSubgroup?.id;
-
-    const foundTraining = trainings.find(
-      (t) => dayjs(t.from).isAfter(from) && dayjs(t.to).isBefore(to)
-    );
-
-    if (!foundTraining) {
-      setTraining(undefined);
-      setLoading(false);
-      setComponent(undefined);
-      return;
-    }
-
-    TrainingService.mapData(foundTraining, {
-      components,
-      exercises,
-      methods,
-    });
-
-    const foundComponent = currentComponentId
-      ? foundTraining.components.find((c) => c.id === currentComponentId)
-      : undefined;
-    const foundSubgroup =
-      foundComponent?.subgroups.find((sg) => sg.id === currentSubgroupId) ||
-      null;
-
-    setComponent(foundComponent);
-    setSelectedSubgroup(foundSubgroup);
-    setTraining(foundTraining);
-    setLoading(false);
-  };
-
   async function handleRemoveMember(user: AuthUser) {
     if (!training) return;
 
@@ -457,7 +369,7 @@ export function TrainerDayViewProvider(
       members: [...members],
     };
 
-    await optimisticUpdate(
+    await lib.common.generic.optimisticUpdate(
       () => {
         // first update member locally
         setMembers((prev) => prev.filter((m) => m.uid !== user.uid));
@@ -481,7 +393,7 @@ export function TrainerDayViewProvider(
         // if the removed member is the selected athlete, clear the selection
         if (selectedAthlete?.uid === user.uid) {
           setSelectedAthlete(undefined);
-          setSelectedExercises([]);
+          setSelectedExerciseIds([]);
         }
       },
       (snapshot) => {
@@ -498,6 +410,94 @@ export function TrainerDayViewProvider(
     );
   }
 
+  function addTrainingExercises(
+    exercises: TrainingExercise[],
+    mainSet: MainSet
+  ) {
+    if (!component || !training || selectedSubgroup?.parentId) return; // disable for virtual subgroups
+
+    // filter out already added exercises
+    const existingExerciseIds = supersets
+      .map((s) => s.exercises.map((e) => e.id))
+      .flat();
+
+    exercises = exercises.filter((e) => !existingExerciseIds.includes(e.id));
+
+    // add exercises to current component/subgroup and its children
+    const childrenSubgroups = core.training.subgroup.getChildren(
+      selectedSubgroup || component,
+      component
+    );
+
+    core.training.superset.addExercises(supersets, exercises, mainSet);
+    for (const sg of childrenSubgroups)
+      core.training.superset.addExercises(sg.supersets, exercises, mainSet);
+
+    updateSupersets(supersets, childrenSubgroups);
+  }
+
+  function deleteSupersetExercise(
+    _exerciseId: string,
+    supersetIndex: number,
+    exerciseIndex: number
+  ) {
+    if (!component || !training || selectedSubgroup?.parentId) return; // disable for virtual subgroups
+
+    // remove exercise from current component/subgroup and its children
+    const childrenSubgroups = core.training.subgroup.getChildren(
+      selectedSubgroup || component,
+      component
+    );
+
+    const newSupersets = core.training.superset.removeExercise(
+      supersets,
+      supersetIndex,
+      exerciseIndex
+    );
+
+    for (const sg of childrenSubgroups)
+      sg.supersets = core.training.superset.removeExercise(
+        sg.supersets,
+        supersetIndex,
+        exerciseIndex
+      );
+
+    updateSupersets(newSupersets, childrenSubgroups);
+  }
+
+  /**
+   * Updates state after modifying supersets in component or subgroup
+   */
+  function updateSupersets(
+    supersets: Superset[], // new supersets
+    childrenSubgroups: Subgroup[]
+  ) {
+    if (!component || !training) return;
+
+    // update component or subgroup supersets
+    if (!selectedSubgroup) component.supersets = supersets;
+    else
+      component.subgroups = component.subgroups.map((sg) =>
+        sg.id === selectedSubgroup.id ? { ...sg, supersets } : sg
+      );
+
+    // update children subgroups
+    for (const sg of childrenSubgroups)
+      component.subgroups = component.subgroups.map((s) =>
+        s.id === sg.id ? sg : s
+      );
+
+    // update training components
+    training.components = training.components.map((c) =>
+      c.id === component.id ? component : c
+    );
+
+    setSupersets(supersets);
+    setComponent(component);
+    setTraining(training);
+    setSelectedSubgroup((prev) => (!prev ? null : { ...prev, supersets }));
+  }
+
   const value: TrainerDayViewContextProps = {
     day,
     setDay,
@@ -510,8 +510,8 @@ export function TrainerDayViewProvider(
     setComponent,
     wellness,
     setWellness,
-    selectedExercises,
-    setSelectedExercises,
+    selectedExerciseIds,
+    setSelectedExerciseIds,
     supersets,
     setSupersets,
     members,
@@ -533,6 +533,8 @@ export function TrainerDayViewProvider(
     setLoading,
     handleAddMember,
     handleRemoveMember,
+    addTrainingExercises,
+    deleteSupersetExercise,
   };
 
   return (

@@ -5,17 +5,17 @@ import { Onest } from 'next/font/google';
 import { redirect } from 'next/navigation';
 import { useEffect } from 'react';
 
-import {} from '@/common/config/firebase.config';
-import { LINK_SIGN_IN } from '@/common/constant/navigation.constant';
+import { LINK_SIGN_IN } from '@/lib/common/const/nav.const';
+import {} from '@/lib/firebase/config';
 
-interface GlobalErrorProps {
+interface Props {
   error: Error & { digest?: string };
   reset: () => void;
 }
 
 const onest = Onest({ subsets: ['latin'] });
 
-export default function GlobalError({ error }: GlobalErrorProps) {
+export default function GlobalError({ error }: Props) {
   useEffect(() => {
     console.error(error);
   }, [error]);

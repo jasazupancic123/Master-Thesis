@@ -13,11 +13,8 @@ import {
 } from '@src/common/utils/data.util';
 import { getTime } from '@src/common/utils/date.util';
 import { ComponentService } from '@src/component/component.service';
-import { DEFAULT_PARAMS_KEY } from '@src/component/constant/param.constant';
 import type { Component } from '@src/component/entity/component.entity';
-import { ParamType } from '@src/component/enum/param.enum';
 import { generateComponentStub } from '@src/component/mock/component.stub';
-import { generateComponentParamsStub } from '@src/component/mock/component-param.stub';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
@@ -414,14 +411,7 @@ describe('Create Training (e2e)', () => {
       async (_, user) => {
         // create overlapping training in another group to ensure no error is thrown
         const component = await componentService.create(
-          generateComponentStub({
-            params: {
-              [DEFAULT_PARAMS_KEY]: generateComponentParamsStub([
-                ParamType.VolWorkSets,
-                ParamType.VolWork1,
-              ]),
-            },
-          }),
+          generateComponentStub({ params: ['reps'] }),
         );
 
         const globalExercise = await exerciseService.create(

@@ -31,6 +31,7 @@ export function generateExerciseStub(data?: Partial<Exercise>): Exercise {
     locations: data?.locations || [],
     liftPriorities: data?.liftPriorities || [],
     movementDirections: data?.movementDirections || [],
+    params: data?.params || [],
     createdAt: new Date(),
     updatedAt: new Date(),
     deletedAt: undefined,

@@ -1,24 +1,21 @@
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 
-import { CommonService } from '@/common/service/common.service';
+import { lib } from '@/lib';
 import { useGroup } from '@/store/group.provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
-
-const commonService = CommonService.instance;
+import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 
 export default function useTrainerDayWeek() {
-  const { cycle, setDateFrom, setDateTo } = useGroup();
-
-  const { day } = useTrainerDayViewContext();
-
   const [week, setWeek] = useState<number>(1);
 
+  const { day } = useTrainerDayView();
+  const { cycle, setDateFrom, setDateTo } = useGroup();
+
   const [days, setDays] = useState(
-    commonService.date.getWeekDays().map(({ label, date }) => ({
+    lib.common.date.getWeekDays().map(({ label, date }) => ({
       label,
       value: date.toString(),
-      sublabel: commonService.date.format(date, {
+      sublabel: lib.common.date.format(date, {
         withYear: false,
         withMonth: false,
         withoutDots: true,
@@ -26,6 +23,10 @@ export default function useTrainerDayWeek() {
     }))
   );
 
+  /**
+   * Sets the date range based on the selected day
+   * and calculates the current week in the cycle.
+   */
   useEffect(() => {
     setDateFrom(day.date.startOf('day'));
     setDateTo(day.date.endOf('day'));
@@ -39,10 +40,5 @@ export default function useTrainerDayWeek() {
     setWeek(diff);
   }, [day, cycle]);
 
-  return {
-    week,
-    setWeek,
-    days,
-    setDays,
-  };
+  return { week, setWeek, days, setDays };
 }

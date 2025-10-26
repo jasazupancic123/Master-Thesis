@@ -1,19 +1,15 @@
 import { useEffect, useState } from 'react';
 
-import type {
-  UseExerciseFormComponentExercisesProps,
-  UseExerciseFormComponentExercisesReturnType,
-} from './use-component-exercises';
 import { handlePaginateExercises } from '@/app/(trainer)/dashboard/exercises/state';
-import type { Exercise } from '@/controller/exercise/type/exercise.type';
+import type { Exercise } from '@/core/exercise/type/exercise.type';
+import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import type { AttributeFilters } from '@/sites/exercises.page';
 import { useMain } from '@/store/main.provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view.provider';
+import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 
 export default function useExerciseFormFilters(
-  props: UseExerciseFormComponentExercisesProps & {
-    useExerciseFormComponentExercises: UseExerciseFormComponentExercisesReturnType;
-  }
+  component: TrainingComponent,
+  componentExercises: Exercise[]
 ) {
   const { components } = useMain();
 
@@ -21,11 +17,7 @@ export default function useExerciseFormFilters(
     filteredExercises: exercises,
     pagination,
     setPagination,
-  } = useTrainerDayViewContext();
-
-  const { component, useExerciseFormComponentExercises } = props;
-
-  const { componentExercises } = useExerciseFormComponentExercises;
+  } = useTrainerDayView();
 
   const [filters, setFilters] = useState<AttributeFilters>({});
 

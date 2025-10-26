@@ -7,13 +7,13 @@ import {
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 
-import type { CommonService } from '@/common/service/common.service';
-import type { EventType } from '@/controller/group/enum/event-type.enum';
+import type { EventType } from '@/core/group/enum/event-type.enum';
+import { lib } from '@/lib';
 import { useGroup } from '@/store/group.provider';
 
 export type UseWeekViewUtilsReturnType = ReturnType<typeof useWeekViewUtils>;
 
-export default function useWeekViewUtils(commonService: CommonService) {
+export default function useWeekViewUtils() {
   const { cycle, setDateFrom, setDateTo } = useGroup();
 
   const [index, setIndex] = useState(0); // week index
@@ -24,8 +24,8 @@ export default function useWeekViewUtils(commonService: CommonService) {
   );
 
   const weeks = cycle
-    ? commonService.date.weeks(cycle.from, cycle.to)
-    : commonService.date.weeks(new Date(), dayjs().add(6, 'day').toDate());
+    ? lib.common.date.weeks(cycle.from, cycle.to)
+    : lib.common.date.weeks(new Date(), dayjs().add(6, 'day').toDate());
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),

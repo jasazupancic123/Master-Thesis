@@ -2,30 +2,26 @@ import type { PoseLandmarker } from '@mediapipe/tasks-vision';
 import { DrawingUtils } from '@mediapipe/tasks-vision';
 import type { RefObject } from 'react';
 
-import type { CurrentSideMutex } from '../../controller/pose-detection/types/current-side-mutex.type';
 import { EXERCISE_TIMES_ROUNDING_STEP_S } from './mobile-movement-validation';
-import type { CommonService } from '@/common/service/common.service';
-import type { SetState } from '@/common/type/state.type';
-import EnvUtil from '@/common/util/env.util';
-import type { FrameBitmapBuffer } from '@/controller/pose-detection/class/frame-bitmap-buffer';
-import type { KeypointHistory } from '@/controller/pose-detection/class/keypoint-history';
-import { POSE_DETECTION_CONSTRAINTS } from '@/controller/pose-detection/const/pose-detection-constrains.const';
-import { STATUS_MESSAGES } from '@/controller/pose-detection/const/status-messages';
-import { DetectionStatus } from '@/controller/pose-detection/enum/detection-status';
-import type { PoseModel } from '@/controller/pose-detection/enum/pose-model.enum';
-import { RepStatus } from '@/controller/pose-detection/enum/rep-state';
-import { PoseDetectionService } from '@/controller/pose-detection/pose-detection.service';
-import { RepDetectionService } from '@/controller/pose-detection/rep-detection.service';
-import type { AvgFps } from '@/controller/pose-detection/types/avg-fps.type';
-import type { ExerciseDetectionData } from '@/controller/pose-detection/types/exercise-start-condition.type';
-import type { Keypoint } from '@/controller/pose-detection/types/keypoint.type';
+import { lib } from '@/lib';
+import type { SetState } from '@/lib/common/type/state.type';
+import type { FrameBitmapBuffer } from '@/lib/pose-detection/class/frame-bitmap-buffer';
+import type { KeypointHistory } from '@/lib/pose-detection/class/keypoint-history';
+import { POSE_DETECTION_CONSTRAINTS } from '@/lib/pose-detection/const/pose-detection-constrains.const';
+import { STATUS_MESSAGES } from '@/lib/pose-detection/const/status-messages';
+import { DetectionStatus } from '@/lib/pose-detection/enum/detection-status';
+import type { PoseModel } from '@/lib/pose-detection/enum/pose-model.enum';
+import { RepStatus } from '@/lib/pose-detection/enum/rep-state';
+import type { AvgFps } from '@/lib/pose-detection/type/avg-fps.type';
+import type { CurrentSideMutex } from '@/lib/pose-detection/type/current-side-mutex.type';
+import type { ExerciseDetectionData } from '@/lib/pose-detection/type/exercise-start-condition.type';
+import type { Keypoint } from '@/lib/pose-detection/type/keypoint.type';
 import type {
   RecordedReps,
   Rep,
   RepsCount,
-} from '@/controller/pose-detection/types/rep.type';
-import type { RepState } from '@/controller/pose-detection/types/rep-state.type';
-import { KeypointUtil } from '@/controller/pose-detection/util/keypoint.util';
+} from '@/lib/pose-detection/type/rep.type';
+import type { RepState } from '@/lib/pose-detection/type/rep-state.type';
 
 export async function setupVideoAndContex(state: {
   videoRef: RefObject<HTMLVideoElement | null>;
@@ -246,8 +242,8 @@ export const predictWebcam = async (state: {
       setFps(instFps);
     } else {
       // only update fps every 0.5 seconds when in ready or recording state to save performance
-      if (!EnvUtil.AI.disableAIFPS() && avgFps.current) {
-        const frameCount = KeypointUtil.getFramesCountFromSeconds(
+      if (!lib.common.env.disableErudaAI() && avgFps.current) {
+        const frameCount = lib.ai.keypoint.getFramesCountFromSeconds(
           0.5,
           avgFps.current.value
         ); // smooth over 0.5s
@@ -325,7 +321,7 @@ export const predictWebcam = async (state: {
         return;
       }
 
-      const keypoints = KeypointUtil.getDesiredKeypointsByModel(
+      const keypoints = lib.ai.keypoint.getDesiredKeypointsByModel(
         result.worldLandmarks[0], // unit: m, origin: center of hips
         result.landmarks[0], // unit: normalized to [0,1], origin: top-left of image
         model,
@@ -349,7 +345,7 @@ export const predictWebcam = async (state: {
         avgFps,
       });
 
-      PoseDetectionService.checkStatus({
+      lib.ai.pose.checkStatus({
         statusRef,
         canProceedIntoReadyStateRef,
         repStateRefL,
@@ -367,7 +363,7 @@ export const predictWebcam = async (state: {
 
       if (statusRef.current === DetectionStatus.RECORDING) {
         // this upper if must go into the function
-        RepDetectionService.checkRepStatus({
+        lib.ai.rep.checkRepStatus({
           currentFrameKeypoints: keypoints,
           keypointHistory: keypointHistory,
           constantKeypointHistory,
@@ -614,11 +610,8 @@ export function getStatusMessage(status: DetectionStatus) {
   return STATUS_MESSAGES[status - 1];
 }
 
-export function getTempoString(state: {
-  recordedReps: Rep[];
-  commonService: CommonService;
-}): string {
-  const { recordedReps, commonService } = state;
+export function getTempoString(state: { recordedReps: Rep[] }): string {
+  const { recordedReps } = state;
 
   let avgTimeToExtremeMs = 0,
     avgTimeAtExtremeMs = 0,
@@ -634,25 +627,25 @@ export function getTempoString(state: {
 
   const avgTimeToExtremeS = Math.max(
     EXERCISE_TIMES_ROUNDING_STEP_S,
-    commonService.number.roundToStep(
+    lib.common.number.roundToStep(
       Math.max(avgTimeToExtremeMs / 1000 / recordedReps.length, 0),
       EXERCISE_TIMES_ROUNDING_STEP_S
     )
   );
 
-  const avgTimeAtExtremeS = commonService.number.roundToStep(
+  const avgTimeAtExtremeS = lib.common.number.roundToStep(
     Math.max(avgTimeAtExtremeMs / 1000 / recordedReps.length, 0),
     EXERCISE_TIMES_ROUNDING_STEP_S
   );
 
   const avgTimeFromExtremeToEndS = Math.max(
-    commonService.number.roundToStep(
+    lib.common.number.roundToStep(
       Math.max(avgTimeFromExtremeToEndMs / 1000 / recordedReps.length, 0),
       EXERCISE_TIMES_ROUNDING_STEP_S
     )
   );
 
-  const avgIdleTimeS = commonService.number.roundToStep(
+  const avgIdleTimeS = lib.common.number.roundToStep(
     Math.max(avgIdleTimeMs / 1000 / recordedReps.length, 0),
     EXERCISE_TIMES_ROUNDING_STEP_S
   );
