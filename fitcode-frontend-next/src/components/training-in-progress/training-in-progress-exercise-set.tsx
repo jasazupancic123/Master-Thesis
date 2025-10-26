@@ -16,6 +16,7 @@ import type { TrainingExerciseExtended } from '@/core/training/type/training-exe
 import type { SetState } from '@/lib/common/type/state.type';
 import { useTraining } from '@/store/training.provider';
 import LeftRightExerciseText from '@/ui/left-right-exercise-text';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 interface Props {
   set: ExerciseSet;
@@ -23,19 +24,19 @@ interface Props {
   selectedSuperset: Superset;
   setSelectedSuperset: SetState<Superset | undefined>;
   setIndex: number;
-  isUnilateral: boolean;
   showOptions?: boolean;
   showDoneCheckbox?: boolean;
 }
 
 export default function TrainingInProgressExerciseSet(props: Props) {
+  const screenSize = useScreenSize();
+
   const { trainingInProgress, updateTrainingInProgress } = useTraining();
 
   const {
     set,
     exercise,
     setIndex: index,
-    isUnilateral,
     showOptions,
     showDoneCheckbox,
   } = props;
@@ -48,19 +49,36 @@ export default function TrainingInProgressExerciseSet(props: Props) {
 
   return (
     <Box width="100%" display="flex" alignItems="center">
-      <Grid2 size={0.5}>
-        {isUnilateral && (
+      <Grid2
+        container
+        spacing={1}
+        columns={11}
+        px={screenSize.isSmallerThanLaptop ? 1 : 0}
+      >
+        <Grid2 size={0.5}>
           <Box
             display="flex"
             flexDirection="column"
-            gap={1}
-            justifyContent="end"
-            height={index === 0 || showOptions ? 80 : 55}
+            alignItems="center"
+            mt={index === 0 ? 3.8 : 0.5}
           >
-            <LeftRightExerciseText title="L" />
-            <LeftRightExerciseText title="R" />
+            <Box
+              key="exercise-title"
+              display="flex"
+              flexDirection="column"
+              gap={1}
+            >
+              {uni ? (
+                <>
+                  <LeftRightExerciseText title="L" />
+                  <LeftRightExerciseText title="R" />
+                </>
+              ) : (
+                <LeftRightExerciseText title="" />
+              )}
+            </Box>
           </Box>
-        )}
+        </Grid2>
 
         <Grid2 size={10}>
           <Box
@@ -74,7 +92,7 @@ export default function TrainingInProgressExerciseSet(props: Props) {
               selected={SETS.field}
               value={set.setNumber}
               exercise={exercise}
-              showOptions={index === 0}
+              showOptions={showOptions}
               disable
               disableOptions
             />
@@ -84,7 +102,7 @@ export default function TrainingInProgressExerciseSet(props: Props) {
               selected={REPS.field}
               value={exercise.sets[index]?.reps}
               exercise={exercise}
-              showOptions={index === 0}
+              showOptions={showOptions}
               disableOptions
               onInputChange={(value) => {
                 exercise.sets[index].reps = +value;
@@ -98,7 +116,7 @@ export default function TrainingInProgressExerciseSet(props: Props) {
                 selected={KG.field} // always in kg
                 value={exercise.sets[index]?.loadKg || 0}
                 exercise={exercise}
-                showOptions={index === 0}
+                showOptions={showOptions}
                 disableOptions
                 onInputChange={(value) => {
                   exercise.sets[index].loadKg = +value;
@@ -112,7 +130,7 @@ export default function TrainingInProgressExerciseSet(props: Props) {
               selected={TEMPO.field}
               value={exercise.sets[index]?.tempo || ''}
               exercise={exercise}
-              showOptions={index === 0}
+              showOptions={showOptions}
               disableOptions
               onInputChange={(value) => {
                 exercise.sets[index].tempo = value as string;
@@ -125,7 +143,7 @@ export default function TrainingInProgressExerciseSet(props: Props) {
               selected={REC_TIME.field}
               value={exercise.sets[index].recTime}
               exercise={exercise}
-              showOptions={index === 0}
+              showOptions={showOptions}
               disableOptions
               onInputChange={(value) => {
                 exercise.sets[index].recTime = +value;
@@ -140,8 +158,16 @@ export default function TrainingInProgressExerciseSet(props: Props) {
               width="100%"
               justifyContent="center"
               alignItems="center"
-              gap={1}
             >
+              <NumberExerciseParam
+                options={[SETS]}
+                selected={SETS.field}
+                value={set.setNumber}
+                exercise={exercise}
+                showOptions={false}
+                disable
+                disableOptions
+              />
               <NumberExerciseParam
                 options={[REPS]}
                 selected={REPS.field}
