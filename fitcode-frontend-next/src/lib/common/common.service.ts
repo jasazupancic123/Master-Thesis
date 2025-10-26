@@ -2,6 +2,7 @@ import { DateUtil } from './service/date.util';
 import { EnvUtil } from './service/env.util';
 import { GenericUtil } from './service/generic.util';
 import { ComponentUtil } from './service/icons.util';
+import { IndexedDbUtil } from './service/indexed-db.util';
 import { NavigationUtil } from './service/navigation.util';
 import { NumberUtil } from './service/number.util';
 import { ObjectUtil } from './service/object.util';
@@ -16,6 +17,7 @@ export class CommonService {
   readonly generic: GenericUtil;
   readonly number: NumberUtil;
   readonly component: ComponentUtil;
+  readonly indexedDb: IndexedDbUtil;
 
   constructor() {
     this.env = new EnvUtil();
@@ -26,5 +28,6 @@ export class CommonService {
     this.generic = new GenericUtil();
     this.number = new NumberUtil();
     this.component = new ComponentUtil();
+    this.indexedDb = new IndexedDbUtil();
   }
 }

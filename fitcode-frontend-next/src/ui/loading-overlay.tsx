@@ -4,9 +4,9 @@ import { Box, CircularProgress, Typography } from '@mui/material';
 import Image from 'next/image';
 
 import Logo from './logo';
+import { lib } from '@/lib';
 import { POWERED_BY_ASPIRE_IMG_URL } from '@/lib/common/const/image.const';
 import { useScreenSize } from '@/store/screen-size.provider';
-import { lib } from '@/lib';
 
 interface LoadingOverlayProps {
   title: string;

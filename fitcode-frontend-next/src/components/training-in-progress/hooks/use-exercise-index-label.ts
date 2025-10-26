@@ -23,7 +23,7 @@ export default function useExerciseIndexLabel() {
     const letter = String.fromCharCode(65 + exerciseIndex);
     labelRef.current = `${supersetIndex + 1}${letter}`;
     return `${supersetIndex + 1}${letter}`;
-  }, [exerciseIndex]);
+  }, [supersetIndex, exerciseIndex]);
 
   if (computedLabel) labelRef.current = computedLabel;
 

@@ -3,12 +3,11 @@ import DoneIcon from '@mui/icons-material/Done';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { Box, Fab, Menu, MenuItem } from '@mui/material';
 import { useTheme } from '@mui/material';
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 
 import { handleFinishSuperset } from './actions/actions-superset';
 import { useTrainingInProgressUtils } from './context/training-in.progress-utils.provider';
 import { useUndoneExercises } from './context/undone-exercises.provider';
-import NextSupersetModal from './modals/next-superset-modal';
 import TrainingInProgressExerciseCard from './training-in-progress-exercise-card';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
@@ -30,7 +29,6 @@ export default function TrainingInProgressSuperset() {
 
   const { selectedSuperset, selectedExercise } = trainingInProgressContext;
 
-  const [openNextSupersetModal, setOpenNextSupersetModal] = useState(false);
   const boxRef = useRef<HTMLDivElement | null>(null);
 
   if (!trainingInProgress || !selectedSuperset) return null;
@@ -73,8 +71,8 @@ export default function TrainingInProgressSuperset() {
         PaperProps={{ sx: { mb: 1 } }}
       >
         <MenuItem
-          onClick={() =>
-            handleFinishSuperset({
+          onClick={async () =>
+            await handleFinishSuperset({
               useTraining: { ...traininContext, trainingInProgress },
               useTrainingInProgress: trainingInProgressContext,
               useUndoneExercises: trainingInProgressUndoneExercisesContext,
@@ -92,12 +90,6 @@ export default function TrainingInProgressSuperset() {
           Cancel Training
         </MenuItem>
       </Menu>
-
-      <NextSupersetModal
-        boxRef={boxRef}
-        open={openNextSupersetModal}
-        setOpen={setOpenNextSupersetModal}
-      />
     </Box>
   );
 }

@@ -31,6 +31,7 @@ import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
+import dayjs from 'dayjs';
 
 export const graphColorMap: Record<ExerciseParamField, string> = {
   loadKg: GRAPH_COLORS[0],
@@ -211,12 +212,11 @@ export default function TrainingExerciseChart(
               px: 0.5,
             }}
           >
-            <Box height="100%" display="flex">
+            {/* <Box id="chart-background" width="90%" height="100%" display="flex">
               <Box
                 width={`${percentageForChartBackground}%`}
                 height="100%"
                 sx={{
-                  backgroundColor: theme.palette.background.dark,
                   zIndex: 0,
                 }}
               />
@@ -225,9 +225,10 @@ export default function TrainingExerciseChart(
                 height="100%"
                 sx={{
                   zIndex: 0,
+                  backgroundColor: theme.palette.background.dark,
                 }}
               />
-            </Box>
+            </Box> */}
           </Box>
 
           {/* Custom Legend */}
@@ -275,11 +276,36 @@ export default function TrainingExerciseChart(
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={chartData.slice(range[0] - 1, range[1])}>
               <Tooltip content={CustomTooltip} />
-              <XAxis dataKey="name" />
-              <YAxis domain={['dataMin - 3', 'dataMax + 3']} />
+              <XAxis
+                dataKey="name"
+                tickFormatter={(value: string) => {
+                  const data = chartData.find((d) => d.name === value);
+                  if (!data) return '';
+
+                  return dayjs(data.timestamp).isSame(new Date(), 'day')
+                    ? dayjs(data.timestamp).format('DD.MM.')
+                    : '\u200B';
+                }}
+              />
+
+              {/* LEFT Y AXIS (e.g. loadKg) */}
+              <YAxis
+                yAxisId="left"
+                domain={['dataMin - 3', 'dataMax + 3']}
+                allowDecimals={false}
+              />
+
+              {/* RIGHT Y AXIS (e.g. reps) */}
+              <YAxis
+                yAxisId="right"
+                orientation="right"
+                domain={['dataMin - 1', 'dataMax + 1']}
+                allowDecimals={false}
+              />
 
               <Line
                 type="monotone"
+                yAxisId="left"
                 dataKey="int"
                 stroke={GRAPH_COLORS[0]}
                 strokeWidth={3}
@@ -288,6 +314,7 @@ export default function TrainingExerciseChart(
 
               <Line
                 type="monotone"
+                yAxisId="right"
                 dataKey="vol"
                 stroke={GRAPH_COLORS[1]}
                 strokeWidth={3}

@@ -10,6 +10,7 @@ import type { Dimensions } from '@/lib/common/type/dimensions.type';
 import { useGroup } from '@/store/group.provider';
 import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
+import dayjs from 'dayjs';
 
 interface Props {
   exercise: TrainingExercise;
@@ -86,9 +87,13 @@ export default function useTrainingExerciseCardChart({ exercise }: Props) {
       (d) => d.trainingId === training?.id
     );
 
+    console.log('todayIndex', todayIndex, newDataInRange.length);
+
     if (todayIndex === -1 || newDataInRange.length < 2) return;
 
     const percentage = (todayIndex / (newDataInRange.length - 1)) * 100;
+
+    console.log('percentage', percentage);
     setPercentageForChartBackground(percentage);
   }, [range]);
 

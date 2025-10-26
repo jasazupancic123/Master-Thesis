@@ -7,6 +7,7 @@ import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { Workload } from '@/core/training/type/workload.type';
+import { lib } from '@/lib';
 
 export function getAthleteChart(
   athleteId: string,
@@ -25,9 +26,17 @@ export function getAthleteChart(
   for (const t of data.trainings) {
     if (!t.membersIds.includes(athleteId)) continue;
 
-    const foundExercise = t.components
-      .find((c) => c.id === component.id)
-      ?.supersets.flatMap((s) => s.exercises)
+    const trainingComponent = t.components.find((c) => c.id === component.id);
+
+    if (!trainingComponent) continue;
+
+    const supersets = core.training.getAthleteSupersets(
+      athleteId,
+      trainingComponent
+    );
+
+    const foundExercise = supersets
+      .flatMap((s) => s.exercises)
       .find((e) => e.id === exercise.id);
 
     if (!foundExercise) continue; // do not add chart data for trainings without the exercise
@@ -80,11 +89,15 @@ export function getAthleteChart(
       });
     }
 
+    console.log('item', item, 'workloads', workloads);
+
     result.push({
       ...item,
       ...getAggregatedWorkloadValues(workloads, data.selectedParams),
     });
   }
+
+  console.log('result', result);
 
   return result.sort(
     (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
@@ -250,7 +263,5 @@ function getFormatedName(plannedAt: Date) {
   let month = (date.getMonth() + 1).toString().padStart(2, '0');
   if (month[0] === '0') month = month.slice(1);
 
-  const hours = date.getHours();
-  const ampm = hours >= 12 ? 'PM' : 'AM';
-  return `${day}.${month}. ${ampm}`; // Final format: "DD MM, AM/PM"
+  return `${day}.${month}.`; // Final format: "DD MM, AM/PM"
 }
