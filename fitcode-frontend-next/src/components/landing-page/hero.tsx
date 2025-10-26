@@ -4,13 +4,13 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 
 import { theme } from '@/app/style';
+import { lib } from '@/lib';
 import {
   ASPIRE_LOGO_IMG_URL,
   DO_IT_RIGHT_IMG_URL,
 } from '@/lib/common/const/image.const';
 import { useScreenSize } from '@/store/screen-size.provider';
 import Logo from '@/ui/logo';
-import { lib } from '@/lib';
 
 export default function Hero() {
   const screenSize = useScreenSize();

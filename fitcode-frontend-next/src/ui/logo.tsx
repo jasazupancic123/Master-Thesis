@@ -1,10 +1,10 @@
 import Image from 'next/image';
 
+import { lib } from '@/lib';
 import {
   LOGO_BLACK_IMG_URL,
   LOGO_IMG_URL,
 } from '@/lib/common/const/image.const';
-import { lib } from '@/lib';
 
 interface Props {
   width?: number;

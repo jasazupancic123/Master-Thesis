@@ -2,6 +2,7 @@ import { Box, Typography } from '@mui/material';
 import Image from 'next/image';
 
 import { theme } from '@/app/style';
+import { lib } from '@/lib';
 import {
   ABOUT_US_IMG_URL,
   ASPIRE_LOGO_IMG_URL,
@@ -9,7 +10,6 @@ import {
 import { HERO_NAVBAR_HEIGHT } from '@/lib/common/const/state';
 import { useScreenSize } from '@/store/screen-size.provider';
 import IndexPageTitleText from '@/ui/index-page-title-text';
-import { lib } from '@/lib';
 
 export default function AboutUs() {
   const screenSize = useScreenSize();

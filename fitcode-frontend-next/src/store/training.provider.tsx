@@ -11,8 +11,8 @@ import type {
 } from '@/core/training/type/training-exercise.type';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
 import type { TrainingReport } from '@/core/training/type/training-report.type';
-import { type SetState } from '@/lib/common/type/state.type';
 import { lib } from '@/lib';
+import { type SetState } from '@/lib/common/type/state.type';
 
 type ExerciseOrTraining =
   (typeof ExerciseTrainingView)[keyof typeof ExerciseTrainingView];
@@ -70,8 +70,6 @@ export const TrainingProvider = (
         STORED_TRAINING_IN_PROGRESS
       );
 
-      console.log({ storedTrainingInProgress });
-
       if (storedTrainingInProgress) {
         const parsedTrainingInProgress = JSON.parse(
           storedTrainingInProgress.payload
@@ -83,7 +81,6 @@ export const TrainingProvider = (
           return;
         }
 
-        console.log('set training in progress 9');
         setTrainingInProgress({ ...parsedTrainingInProgress });
       }
 
@@ -117,7 +114,6 @@ export const TrainingProvider = (
   }, [trainingInProgress, isLoaded]);
 
   const clearTrainingState = async () => {
-    console.log('set training in progress 10');
     setTrainingInProgress(null);
     setView(ExerciseTrainingView.ExerciseView);
     // localStorage.removeItem(STORED_TRAINING_IN_PROGRESS);

@@ -1,4 +1,3 @@
-import { lib } from '@/lib';
 import type { SxProps } from '@mui/material';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -7,6 +6,8 @@ import type { ReactNode } from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import type { Accept } from 'react-dropzone';
 import { useDropzone } from 'react-dropzone';
+
+import { lib } from '@/lib';
 
 interface Props extends Partial<React.PropsWithChildren> {
   label: string;
