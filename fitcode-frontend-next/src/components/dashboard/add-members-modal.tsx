@@ -263,7 +263,6 @@ export function AddMembersModal({
                         variant="contained"
                         sx={{
                           backgroundColor: theme.palette.primary.main,
-                          color: 'white',
                           mr: 0.5,
                           '&:hover': {
                             backgroundColor: theme.palette.primary.dark,
@@ -275,7 +274,13 @@ export function AddMembersModal({
                             : handleAddMember(user)
                         }
                       >
-                        <Typography variant="body2">Add</Typography>
+                        <Typography
+                          variant="body2"
+                          fontWeight={500}
+                          sx={{ color: theme.palette.text.secondary }}
+                        >
+                          Add
+                        </Typography>
                       </Button>
                     )}
                   </ListItem>

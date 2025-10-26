@@ -54,10 +54,8 @@ export const TrainingInProgressProvider = ({
   const [setIndex, setSetIndex] = useState<number | undefined>(undefined);
 
   useEffect(() => {
-    if (!trainingInProgress || !selectedSuperset) {
-      setSelectedExercise(undefined);
-      return;
-    }
+    if (!trainingInProgress || !selectedSuperset) return;
+
     setSupersetIndex(
       trainingInProgress.selectedComponent.supersets.indexOf(selectedSuperset)
     );

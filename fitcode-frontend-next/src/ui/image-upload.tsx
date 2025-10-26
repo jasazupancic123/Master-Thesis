@@ -1,8 +1,9 @@
-import { lib } from '@/lib';
 import { Box, Typography } from '@mui/material';
 import Image from 'next/image';
 import { useCallback, useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
+
+import { lib } from '@/lib';
 
 interface ImageUploadProps extends React.PropsWithChildren {
   /** Current image URL (remote or initial) */

@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { useRef } from 'react';
 
 import { theme } from '@/app/style';
+import { lib } from '@/lib';
 import {
   ASPIRE_LOGO_WHITE_IMG_URL,
   TECHNOLOGY_2_IMG_URL,
@@ -16,7 +17,6 @@ import { HERO_NAVBAR_HEIGHT } from '@/lib/common/const/state';
 import { useScreenSize } from '@/store/screen-size.provider';
 import IndexPageTitleText from '@/ui/index-page-title-text';
 import Logo from '@/ui/logo';
-import { lib } from '@/lib';
 
 type Item = { imageUrl: string; title: string; description: string };
 

@@ -62,7 +62,7 @@ export default function ExercisesList({
           key={exercise.id}
           width={
             !screenSize.isTablet && !screenSize.isMobile
-              ? '18%'
+              ? `${100 / Math.min(exercises.length, 5) - 2}%`
               : screenSize.isUltraSmall && addExerciseForm
                 ? '100%'
                 : screenSize.isSmallMobile && addExerciseForm

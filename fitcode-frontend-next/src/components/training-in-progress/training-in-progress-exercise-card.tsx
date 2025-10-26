@@ -1,4 +1,3 @@
-import { Circle } from '@mui/icons-material';
 import { Box, Stack, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Image from 'next/image';
@@ -17,6 +16,7 @@ import TempoChart from '@/components/charts/tempo/tempo-chart';
 import TempoStatistic from '@/components/charts/tempo/tempo-statistic';
 import MobileMovementValidation from '@/components/mobile-movement-validation/mobile-movement-validation';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
+import { lib } from '@/lib';
 import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
 import { EXERCISE_POSES } from '@/lib/pose-detection/const/exercise-poses';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
@@ -25,7 +25,6 @@ import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import ImageGallery from '@/ui/image-gallery';
 import SwipeableBox from '@/ui/swipeable-box';
-import { lib } from '@/lib';
 
 export default function TrainingInProgressExerciseCard() {
   const theme = useTheme();
@@ -212,9 +211,9 @@ export default function TrainingInProgressExerciseCard() {
             flexDirection="column"
             sx={{
               position: 'absolute',
-              top: 5,
+              top: 0,
               left: 0,
-              transform: 'translate(50%, 0)',
+              backgroundColor: theme.palette.background.default,
             }}
             gap={2}
           >
@@ -229,29 +228,24 @@ export default function TrainingInProgressExerciseCard() {
                 return (
                   <Typography
                     key={index}
-                    display="flex"
-                    alignItems="center"
+                    fontSize={screenSize.isUltraSmall ? 12 : 14}
                     fontWeight={600}
                     color={isSelected ? theme.palette.primary.main : undefined}
-                    lineHeight={1}
-                    gap={0.5}
+                    lineHeight={1.1}
                     onClick={() => {
                       const exerciseToSelect =
                         selectedSuperset.exercises[index];
-                      if (exerciseToSelect)
+                      if (exerciseToSelect) {
                         setSelectedExercise(exerciseToSelect);
+                        setSetIndex(0);
+                      }
                     }}
                     sx={{
                       textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
-                      pr: 1.5,
+                      px: 1.5,
                     }}
                   >
                     {letter}
-                    {isSelected && (
-                      <Circle
-                        sx={{ color: theme.palette.primary.main, fontSize: 10 }}
-                      />
-                    )}
                   </Typography>
                 );
               }
