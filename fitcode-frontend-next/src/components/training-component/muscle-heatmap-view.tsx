@@ -14,7 +14,8 @@ import {
 
 import { paintHeatmaps } from './actions/actions-color-heatmap';
 import { theme } from '@/app/style';
-import HeatmapBack from '@/assets/svg/heatmap-back.svg';
+//import HeatmapBack from '@/assets/svg/heatmap-back.svg';
+import HeatmapBackNew from '@/assets/svg/heatmap_back_new.svg';
 import HeatmapFront from '@/assets/svg/heatmap-front.svg';
 import MuscleMapWithTooltip from '@/components/muscle-map-with-tooltip/muscle-map-with-tooltip';
 import { HEATMAP_COLORS } from '@/core/const/color.const';
@@ -73,10 +74,9 @@ export default function MuscleHeatmapView() {
 
   const [exercises, setExercises] = useState<TrainingExercise[]>([]);
 
-  const [heatmapLevel, setHeatmapLevel] = useState<number>(1);
-  const [maxHeatmapLevel, setMaxHeatmapLevel] = useState<number>(1);
+  const [heatmapLevel, setHeatmapLevel] = useState<number>(0);
+  const [maxHeatmapLevel, setMaxHeatmapLevel] = useState<number>(0);
 
-  // type [Muscle(enum), color(string)]
   const [muscleLoads, setMuscleLoads] = useState<[string, HeatmapLoad][]>([]);
 
   const [tipHeatmapFront, setTipHeatmapFront] = useState<MuscleTip>({
@@ -110,7 +110,7 @@ export default function MuscleHeatmapView() {
 
   useEffect(() => {
     // Generate muscle loads
-    if (heatmapLevel < 1 || heatmapLevel > 3) return; // levels 1-3
+    if (heatmapLevel > maxHeatmapLevel) return; // levels 1-3
 
     const loads = core.exercise.muscle.generateLoads(
       exercises,
@@ -118,12 +118,12 @@ export default function MuscleHeatmapView() {
       maxHeatmapLevel
     );
 
-    console.log('setting muscle loads', loads);
     setMuscleLoads(loads);
   }, [exercises, heatmapLevel, maxHeatmapLevel]);
 
   useEffect(() => {
-    setMaxHeatmapLevel(core.exercise.muscle.getHeatmapLevel(muscleLoads));
+    const newHeatmapLevel = core.exercise.muscle.getHeatmapLevel(muscleLoads);
+    setMaxHeatmapLevel(newHeatmapLevel);
 
     paintHeatmaps(muscleLoads);
   }, [muscleLoads]);
@@ -193,15 +193,17 @@ export default function MuscleHeatmapView() {
             Svg={HeatmapFront}
             exercisesInComponent={supersets.flatMap((s) => s.exercises)}
             heatmapLevel={heatmapLevel}
+            maxHeatmapLevel={maxHeatmapLevel}
             muscleLoads={muscleLoads}
             tip={tipHeatmapFront}
             setTip={setTipHeatmapFront}
           />
           <MuscleMapWithTooltip
             front={false}
-            Svg={HeatmapBack}
+            Svg={HeatmapBackNew}
             exercisesInComponent={supersets.flatMap((s) => s.exercises)}
             heatmapLevel={heatmapLevel}
+            maxHeatmapLevel={maxHeatmapLevel}
             muscleLoads={muscleLoads}
             tip={tipHeatmapBack}
             setTip={setTipHeatmapBack}

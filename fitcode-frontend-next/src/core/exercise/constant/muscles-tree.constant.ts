@@ -14,11 +14,11 @@ export const MUSCLES_TREE: Attribute[] = [
             name: 'Trapezii',
             options: [
               {
-                field: 'trapezius-r',
+                field: 'trapezius_front-r',
                 name: 'Right Trapezius',
               },
               {
-                field: 'trapezius-l',
+                field: 'trapezius_front-l',
                 name: 'Left Trapezius',
               },
             ],
@@ -90,6 +90,14 @@ export const MUSCLES_TREE: Attribute[] = [
                 name: 'Left Pectoralis Minor',
               },
               {
+                field: 'upper_pectoralis_major-r',
+                name: 'Right Upper Pectoralis Major',
+              },
+              {
+                field: 'upper_pectoralis_major-l',
+                name: 'Left Upper Pectoralis Major',
+              },
+              {
                 field: 'mid_pectoralis_major-r',
                 name: 'Right Mid Pectoralis Major',
               },
@@ -119,6 +127,14 @@ export const MUSCLES_TREE: Attribute[] = [
                 field: 'seratus_anterior-l',
                 name: 'Left Seratus Anterior',
               },
+              {
+                field: 'seratus_anterior-r_2',
+                name: 'Right Seratus Anterior',
+              },
+              {
+                field: 'seratus_anterior-l_2',
+                name: 'Left Seratus Anterior',
+              },
             ],
           },
         ],
@@ -137,6 +153,14 @@ export const MUSCLES_TREE: Attribute[] = [
               },
               {
                 field: 'external_oblique-r',
+                name: 'Right External Oblique',
+              },
+              {
+                field: 'external_oblique-l_2',
+                name: 'Left External Oblique',
+              },
+              {
+                field: 'external_oblique-r_2',
                 name: 'Right External Oblique',
               },
               {
@@ -161,6 +185,22 @@ export const MUSCLES_TREE: Attribute[] = [
               },
               {
                 field: 'upper_rectus_abdominis-l',
+                name: 'Left Upper Rectus Abdominis',
+              },
+              {
+                field: 'upper_rectus_abdominis-r_2',
+                name: 'Right Upper Rectus Abdominis',
+              },
+              {
+                field: 'upper_rectus_abdominis-l_2',
+                name: 'Left Upper Rectus Abdominis',
+              },
+              {
+                field: 'upper_rectus_abdominis-r_3',
+                name: 'Right Upper Rectus Abdominis',
+              },
+              {
+                field: 'upper_rectus_abdominis-l_3',
                 name: 'Left Upper Rectus Abdominis',
               },
               {
@@ -230,11 +270,19 @@ export const MUSCLES_TREE: Attribute[] = [
                 name: 'Left Deltoid Posterior',
               },
               {
-                field: 'deltoid_lateral-r',
+                field: 'deltoid_lateral_front-r',
                 name: 'Right Deltoid Lateral',
               },
               {
-                field: 'deltoid_lateral-l',
+                field: 'deltoid_lateral_front-l',
+                name: 'Left Deltoid Lateral',
+              },
+              {
+                field: 'deltoid_lateral_back-r',
+                name: 'Right Deltoid Lateral',
+              },
+              {
+                field: 'deltoid_lateral_back-l',
                 name: 'Left Deltoid Lateral',
               },
             ],
@@ -260,7 +308,7 @@ export const MUSCLES_TREE: Attribute[] = [
                 name: 'Left Infraspinatus',
               },
               {
-                field: 'teres_mami_r',
+                field: 'teres_mami-r',
                 name: 'Teres Mami R',
               },
               {
@@ -319,6 +367,14 @@ export const MUSCLES_TREE: Attribute[] = [
                 field: 'triceps_brachi_long_head-r',
                 name: 'Right Triceps Brachi Long Head',
               },
+              {
+                field: 'hand-r',
+                name: 'Right Hand',
+              },
+              {
+                field: 'hand-l',
+                name: 'Left Hand',
+              },
             ],
           },
           {
@@ -342,11 +398,27 @@ export const MUSCLES_TREE: Attribute[] = [
                 name: 'Left Wrist Flexors',
               },
               {
+                field: 'wrist_flexors-r_2',
+                name: 'Right Wrist Flexors',
+              },
+              {
+                field: 'wrist_flexors-l_2',
+                name: 'Left Wrist Flexors',
+              },
+              {
                 field: 'wrist_extensors-r',
                 name: 'Right Wrist Extensors',
               },
               {
                 field: 'wrist_extensors-l',
+                name: 'Left Wrist Extensors',
+              },
+              {
+                field: 'wrist_extensors-r_2',
+                name: 'Right Wrist Extensors',
+              },
+              {
+                field: 'wrist_extensors-l_2',
                 name: 'Left Wrist Extensors',
               },
               {
@@ -396,12 +468,12 @@ export const MUSCLES_TREE: Attribute[] = [
                 name: 'Right Middle Trapezius',
               },
               {
-                field: 'lower_trapazius-l',
-                name: 'Left Lower Trapazius',
+                field: 'lower_trapezius-l',
+                name: 'Left Lower Trapezius',
               },
               {
-                field: 'lower_trapazius-r',
-                name: 'Right Lower Trapazius',
+                field: 'lower_trapezius-r',
+                name: 'Right Lower Trapezius',
               },
             ],
           },
@@ -428,8 +500,8 @@ export const MUSCLES_TREE: Attribute[] = [
             ],
           },
           {
-            field: 'nan',
-            name: 'nan',
+            field: 'Serratus Posterior',
+            name: 'Serratus Posterior',
             options: [
               {
                 field: 'serratus_posterior',
@@ -452,7 +524,11 @@ export const MUSCLES_TREE: Attribute[] = [
                 name: 'Erector Spinae Lumbar',
               },
               {
-                field: 'erector_spinae-thoracis',
+                field: 'erector_spinae_thoracis',
+                name: 'Erector Spinae-Thoracis',
+              },
+              {
+                field: 'erector_spinae_thoracis_2',
                 name: 'Erector Spinae-Thoracis',
               },
               {
@@ -466,8 +542,8 @@ export const MUSCLES_TREE: Attribute[] = [
             ],
           },
           {
-            field: 'nan',
-            name: 'nan',
+            field: 'Latisimus Dorsi',
+            name: 'Latisimus Dorsi',
             options: [
               {
                 field: 'latisimus_dorsi-r',
@@ -623,6 +699,54 @@ export const MUSCLES_TREE: Attribute[] = [
                 field: 'hip_deep_muscles-l',
                 name: 'Left Hip Deep Muscles',
               },
+              {
+                field: 'hip_deep_muscles-r_2',
+                name: 'Right Hip Deep Muscles',
+              },
+              {
+                field: 'hip_deep_muscles-l_2',
+                name: 'Left Hip Deep Muscles',
+              },
+              {
+                field: 'hip_deep_muscles-r_3',
+                name: 'Right Hip Deep Muscles',
+              },
+              {
+                field: 'hip_deep_muscles-l_3',
+                name: 'Left Hip Deep Muscles',
+              },
+              {
+                field: 'hip_deep_muscles-r_4',
+                name: 'Right Hip Deep Muscles',
+              },
+              {
+                field: 'hip_deep_muscles-l_4',
+                name: 'Left Hip Deep Muscles',
+              },
+              {
+                field: 'hip_deep_muscles-r_5',
+                name: 'Right Hip Deep Muscles',
+              },
+              {
+                field: 'hip_deep_muscles-l_5',
+                name: 'Left Hip Deep Muscles',
+              },
+              {
+                field: 'hip_deep_muscles-r_6',
+                name: 'Right Hip Deep Muscles',
+              },
+              {
+                field: 'hip_deep_muscles-l_6',
+                name: 'Left Hip Deep Muscles',
+              },
+              {
+                field: 'hip_deep_muscles-r_7',
+                name: 'Right Hip Deep Muscles',
+              },
+              {
+                field: 'hip_deep_muscles-l_7',
+                name: 'Left Hip Deep Muscles',
+              },
             ],
           },
           {
@@ -711,6 +835,30 @@ export const MUSCLES_TREE: Attribute[] = [
                 field: 'tibialis_anterior-l',
                 name: 'Left Tibialis Anterior',
               },
+              {
+                field: 'tibialis_anterior-r_2',
+                name: 'Right Tibialis Anterior',
+              },
+              {
+                field: 'tibialis_anterior-l_2',
+                name: 'Left Tibialis Anterior',
+              },
+              {
+                field: 'knee-r',
+                name: 'Right Knee',
+              },
+              {
+                field: 'knee-l',
+                name: 'Left Knee',
+              },
+              {
+                field: 'foot-r',
+                name: 'Right Foot',
+              },
+              {
+                field: 'foot-l',
+                name: 'Left Foot',
+              },
             ],
           },
           {
@@ -726,11 +874,35 @@ export const MUSCLES_TREE: Attribute[] = [
                 name: 'Left Gastrocnemius',
               },
               {
+                field: 'gastrocnemius-r_2',
+                name: 'Right Gastrocnemius',
+              },
+              {
+                field: 'gastrocnemius-l_2',
+                name: 'Left Gastrocnemius',
+              },
+              {
                 field: 'soleus-r',
                 name: 'Right Soleus',
               },
               {
                 field: 'soleus-l',
+                name: 'Left Soleus',
+              },
+              {
+                field: 'soleus-r_2',
+                name: 'Right Soleus',
+              },
+              {
+                field: 'soleus-l_2',
+                name: 'Left Soleus',
+              },
+              {
+                field: 'soleus-r_3',
+                name: 'Right Soleus',
+              },
+              {
+                field: 'soleus-l_3',
                 name: 'Left Soleus',
               },
             ],

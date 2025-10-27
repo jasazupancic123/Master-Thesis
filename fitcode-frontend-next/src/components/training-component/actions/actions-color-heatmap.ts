@@ -45,6 +45,8 @@ export function paintHeatmaps(
     }
   });
 
+  console.log('muscleLoads', muscleLoads);
+
   // Paint
   muscleLoads.forEach(([muscleType, muscleLoad]) => {
     const totalLoad =

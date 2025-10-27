@@ -475,22 +475,15 @@ function getMuscleValuesFromCsvRow(
   headers: string[]
 ): MuscleWithExerciseValues | null {
   const columns = row.split(',');
-  if (columns.length !== 59) {
-    toast.error(
-      `Invalid row format. Expected 59 columns, got ${columns.length}.`
-    );
 
-    return null;
-  }
-
-  const [muscleId, ...muscleLoads] = columns;
+  const [muscleId, ...exerciseNames] = columns;
 
   const muscleValues: MuscleWithExerciseValues = {
     muscleId,
     values: [],
   };
 
-  muscleLoads.forEach((loadsString, i) => {
+  exerciseNames.forEach((loadsString, i) => {
     const exerciseName = headers[i];
 
     const foundExercise = exercises.find(
