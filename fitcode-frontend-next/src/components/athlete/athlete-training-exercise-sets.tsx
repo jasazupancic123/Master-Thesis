@@ -5,19 +5,7 @@ import { useTheme } from '@mui/material';
 import { NumberExerciseParam } from '../exercise-param/number-exercise-param';
 import { TempoExerciseParam } from '../exercise-param/tempo-exercise-param';
 import { core } from '@/core/core.service';
-import {
-  BW,
-  DIST,
-  EFF,
-  KG,
-  REC_DIST,
-  REC_TIME,
-  REPS,
-  RM,
-  SETS,
-  TEMPO,
-  TIME,
-} from '@/core/exercise/constant/exercise-param.constant';
+import { KG, SETS } from '@/core/exercise/constant/exercise-param.constant';
 import type { ExerciseSet } from '@/core/training/type/exercise-set.type';
 import type { ExerciseSetTracking } from '@/core/training/type/exercise-set-tracking-state.type';
 import type { Training } from '@/core/training/type/training.type';
@@ -59,7 +47,12 @@ export default function AthleteTrainingExerciseSets({
   const volType = core.training.set.getVolType(exercise.sets[0]);
   const effType = core.training.set.getEffType(exercise.sets[0]);
   const recType = core.training.set.getRecType(exercise.sets[0]);
-  const loadType = core.training.set.getLoadType(exercise.sets[0]);
+  const load = exercise.sets[setIndex || 0].loadKg;
+
+  const volOptions = core.training.set.getVolOptions(exercise.exercise!);
+  const intOptions = core.training.set.getIntOptions(exercise.exercise!);
+  const effOptions = core.training.set.getEffOptions(exercise.exercise!);
+  const recOptions = core.training.set.getRecOptions(exercise.exercise!);
 
   return (
     <Box
@@ -140,67 +133,75 @@ export default function AthleteTrainingExerciseSets({
                   disable
                 />
 
-                <NumberExerciseParam
-                  options={[REPS, DIST, TIME]}
-                  selected={volType}
-                  value={exercise.sets[index]?.[volType] || 0}
-                  exercise={exercise}
-                  disableOptions
-                  onInputChange={(value) => {
-                    exercise.sets[index][volType] = +value;
-                    updateTrainingInProgress(exercise, supersetIndex || 0);
-                  }}
-                />
-
-                <NumberExerciseParam
-                  options={[KG, RM, BW]}
-                  selected={loadType}
-                  value={exercise.sets[index]?.[loadType] || 0}
-                  exercise={exercise}
-                  disableOptions
-                  onInputChange={(value) => {
-                    exercise.sets[index][loadType] = +value;
-                    updateTrainingInProgress(exercise, supersetIndex || 0);
-                  }}
-                />
-
-                {effType === 'tempo' ? (
-                  <TempoExerciseParam
-                    options={[TEMPO, EFF]}
-                    selected="tempo"
-                    value={exercise.sets[index]?.tempo || ''}
-                    exercise={exercise}
-                    disableOptions
-                    onInputChange={(value) => {
-                      exercise.sets[index].tempo = value.toString();
-                      updateTrainingInProgress(exercise, supersetIndex || 0);
-                    }}
-                  />
-                ) : (
+                {volType && volOptions.length > 0 && (
                   <NumberExerciseParam
-                    options={[TEMPO, EFF]}
-                    selected="eff"
-                    value={exercise.sets[index]?.eff || 0}
+                    options={volOptions}
+                    selected={volType}
+                    value={exercise.sets[index]?.[volType] || 0}
                     exercise={exercise}
                     disableOptions
                     onInputChange={(value) => {
-                      exercise.sets[index].eff = +value;
+                      exercise.sets[index][volType] = +value;
                       updateTrainingInProgress(exercise, supersetIndex || 0);
                     }}
                   />
                 )}
 
-                <NumberExerciseParam
-                  options={[REC_TIME, REC_DIST]}
-                  selected={recType}
-                  value={exercise.sets[index][recType] || 0}
-                  exercise={exercise}
-                  disableOptions
-                  onInputChange={(value) => {
-                    exercise.sets[index][recType] = +value;
-                    updateTrainingInProgress(exercise, supersetIndex || 0);
-                  }}
-                />
+                {load && intOptions.length > 0 && (
+                  <NumberExerciseParam
+                    options={[KG]}
+                    selected="loadKg"
+                    value={exercise.sets[index]?.loadKg || 0}
+                    exercise={exercise}
+                    disableOptions
+                    onInputChange={(value) => {
+                      exercise.sets[index].loadKg = +value;
+                      updateTrainingInProgress(exercise, supersetIndex || 0);
+                    }}
+                  />
+                )}
+
+                {effType && effOptions.length > 0 ? (
+                  effType === 'tempo' ? (
+                    <TempoExerciseParam
+                      options={effOptions}
+                      selected="tempo"
+                      value={exercise.sets[index]?.tempo || ''}
+                      exercise={exercise}
+                      disableOptions
+                      onInputChange={(value) => {
+                        exercise.sets[index].tempo = value.toString();
+                        updateTrainingInProgress(exercise, supersetIndex || 0);
+                      }}
+                    />
+                  ) : (
+                    <NumberExerciseParam
+                      options={effOptions}
+                      selected="eff"
+                      value={exercise.sets[index]?.eff || 0}
+                      exercise={exercise}
+                      disableOptions
+                      onInputChange={(value) => {
+                        exercise.sets[index].eff = +value;
+                        updateTrainingInProgress(exercise, supersetIndex || 0);
+                      }}
+                    />
+                  )
+                ) : null}
+
+                {recType && recOptions.length > 0 && (
+                  <NumberExerciseParam
+                    options={recOptions}
+                    selected={recType}
+                    value={exercise.sets[index][recType] || 0}
+                    exercise={exercise}
+                    disableOptions
+                    onInputChange={(value) => {
+                      exercise.sets[index][recType] = +value;
+                      updateTrainingInProgress(exercise, supersetIndex || 0);
+                    }}
+                  />
+                )}
               </Box>
 
               {uni && (
@@ -219,77 +220,94 @@ export default function AthleteTrainingExerciseSets({
                     showOptions={false}
                     disable
                   />
-                  <NumberExerciseParam
-                    options={[REPS, DIST, TIME]}
-                    selected={volType}
-                    value={
-                      exercise.sets[0]?.[
-                        volType === 'reps' ? 'repsR' : volType
-                      ] as number
-                    }
-                    exercise={exercise}
-                    showOptions={false}
-                    onInputChange={(value) => {
-                      const field = core.exercise.param.pairs[
-                        volType
-                      ] as typeof volType;
 
-                      exercise.sets[index][field] = +value;
-                      updateTrainingInProgress(exercise, supersetIndex || 0);
-                    }}
-                  />
-
-                  <NumberExerciseParam
-                    options={[KG, RM, BW]}
-                    selected={KG.field}
-                    value={exercise.sets[index]?.[`${loadType}R`] || 0}
-                    exercise={exercise}
-                    showOptions={false}
-                    disableOptions
-                    onInputChange={(value) => {
-                      exercise.sets[index][`${loadType}R`] = +value;
-                      updateTrainingInProgress(exercise, supersetIndex || 0);
-                    }}
-                  />
-                  {effType === 'tempo' ? (
-                    <TempoExerciseParam
-                      options={[TEMPO, EFF]}
-                      selected="tempo"
-                      value={exercise.sets[index]?.tempoR || ''}
-                      exercise={exercise}
-                      showOptions={false}
-                      disableOptions
-                      onInputChange={(value) => {
-                        exercise.sets[index].tempoR = value.toString();
-                        updateTrainingInProgress(exercise, supersetIndex || 0);
-                      }}
-                    />
-                  ) : (
+                  {volType && volOptions.length > 0 && (
                     <NumberExerciseParam
-                      options={[TEMPO, EFF]}
-                      selected="eff"
-                      value={exercise.sets[index]?.eff || 0}
+                      options={volOptions}
+                      selected={volType}
+                      value={
+                        exercise.sets[0]?.[
+                          volType === 'reps' ? 'repsR' : volType
+                        ] as number
+                      }
                       exercise={exercise}
                       showOptions={false}
-                      disableOptions
                       onInputChange={(value) => {
-                        exercise.sets[index].eff = +value;
+                        const field = core.exercise.param.pairs[
+                          volType
+                        ] as typeof volType;
+
+                        exercise.sets[index][field] = +value;
                         updateTrainingInProgress(exercise, supersetIndex || 0);
                       }}
                     />
                   )}
-                  <NumberExerciseParam
-                    options={[REC_TIME, REC_DIST]}
-                    selected={recType}
-                    value={exercise.sets[index][recType] || 0}
-                    exercise={exercise}
-                    showOptions={false}
-                    disableOptions
-                    onInputChange={(value) => {
-                      exercise.sets[index][recType] = +value;
-                      updateTrainingInProgress(exercise, supersetIndex || 0);
-                    }}
-                  />
+
+                  {load && intOptions.length > 0 && (
+                    <NumberExerciseParam
+                      options={[KG]}
+                      selected={KG.field}
+                      value={exercise.sets[index]?.loadKgR || 0}
+                      exercise={exercise}
+                      showOptions={false}
+                      disableOptions
+                      onInputChange={(value) => {
+                        exercise.sets[index].loadKgR = +value;
+                        updateTrainingInProgress(exercise, supersetIndex || 0);
+                      }}
+                    />
+                  )}
+
+                  {effType && effOptions.length > 0 ? (
+                    effType === 'tempo' ? (
+                      <TempoExerciseParam
+                        options={effOptions}
+                        selected="tempo"
+                        value={exercise.sets[index]?.tempoR || ''}
+                        exercise={exercise}
+                        showOptions={false}
+                        disableOptions
+                        onInputChange={(value) => {
+                          exercise.sets[index].tempoR = value.toString();
+                          updateTrainingInProgress(
+                            exercise,
+                            supersetIndex || 0
+                          );
+                        }}
+                      />
+                    ) : (
+                      <NumberExerciseParam
+                        options={effOptions}
+                        selected="eff"
+                        value={exercise.sets[index]?.eff || 0}
+                        exercise={exercise}
+                        showOptions={false}
+                        disableOptions
+                        onInputChange={(value) => {
+                          exercise.sets[index].eff = +value;
+                          updateTrainingInProgress(
+                            exercise,
+                            supersetIndex || 0
+                          );
+                        }}
+                      />
+                    )
+                  ) : null}
+
+                  {recType && recOptions.length > 0 && (
+                    <NumberExerciseParam
+                      options={recOptions}
+                      selected={recType}
+                      value={exercise.sets[index][recType] || 0}
+                      exercise={exercise}
+                      showOptions={false}
+                      disableOptions
+                      onInputChange={(value) => {
+                        exercise.sets[index][recType] = +value;
+                        updateTrainingInProgress(exercise, supersetIndex || 0);
+                      }}
+                    />
+                  )}
                 </Box>
               )}
             </Grid2>
