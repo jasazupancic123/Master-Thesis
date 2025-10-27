@@ -3,6 +3,7 @@ import {
   HEATMAP_BACK_ID,
   HEATMAP_FRONT_ID,
 } from '@/core/exercise/constant/heatmap.const';
+import { HeatmapLoad } from '@/core/exercise/type/heatmap-load.entity';
 
 const getMuscleColor = (load: number, athleteAnthropometry?: boolean) => {
   let color = undefined;
@@ -28,7 +29,7 @@ const getMuscleColor = (load: number, athleteAnthropometry?: boolean) => {
 };
 
 export function paintHeatmaps(
-  muscleLoads: [string, number][],
+  muscleLoads: [string, HeatmapLoad][],
   athleteAnthropometry?: boolean
 ) {
   // Limit to actual shapes
@@ -46,7 +47,10 @@ export function paintHeatmaps(
 
   // Paint
   muscleLoads.forEach(([muscleType, muscleLoad]) => {
-    const color = getMuscleColor(muscleLoad, athleteAnthropometry);
+    const totalLoad =
+      muscleLoad.eccentric + muscleLoad.isometric + muscleLoad.concentric;
+
+    const color = getMuscleColor(totalLoad, athleteAnthropometry);
     if (!color) return;
 
     // Find the actual shapes by id
