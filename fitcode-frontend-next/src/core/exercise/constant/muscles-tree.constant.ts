@@ -1,6 +1,6 @@
 import { Attribute } from '@/core/attribute/type/attribute.type';
 
-export const musclesTree: Attribute[] = [
+export const MUSCLES_TREE: Attribute[] = [
   {
     field: 'Upper',
     name: 'Upper',
