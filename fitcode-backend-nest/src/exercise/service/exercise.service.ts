@@ -164,8 +164,11 @@ export class ExerciseService implements Permission<Exercise, Institution> {
 
     // create exercise
     const id = this.repository.slug(data.name, institution?.id);
-    const main = components.find((c) => c.id === data.componentIds[0])!;
+    const main = components.find((c) => c.id === data.componentIds[0]);
+    if (!main) throw new BadRequestException('Main component not found');
+
     const root = this.componentService.getRoot(main, components);
+    if (!root) throw new BadRequestException('Root component not found');
 
     const create: Create<Exercise> = {
       ...data,
@@ -225,8 +228,11 @@ export class ExerciseService implements Permission<Exercise, Institution> {
       );
 
       const isUnilateral = data.isUnilateral || false;
-      const main = components.find((c) => c.id === data.componentIds[0])!;
+      const main = components.find((c) => c.id === data.componentIds[0]);
+      if (!main) return;
+
       const root = this.componentService.getRoot(main, components);
+      if (!root) return;
 
       exercisesToCreate.push({
         ...data,
