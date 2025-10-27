@@ -13,8 +13,7 @@ export class MuscleUtil {
     heatmapLevel: number,
     maxHeatmapLevel: number
   ): [string, HeatmapLoad][] {
-    console.log('GENERATE LOADS');
-    const loads: [string, HeatmapLoad][] = [];
+    let loads: [string, HeatmapLoad][] = [];
 
     exercises.forEach((exercise) => {
       if (!exercise.exercise || !exercise.exercise.muscleValues) return;
@@ -40,70 +39,74 @@ export class MuscleUtil {
       });
     });
 
-    console.log(
-      'heatmapLevel',
-      heatmapLevel,
-      'maxHeatmapLevel',
-      maxHeatmapLevel
-    );
-
-    if (heatmapLevel === maxHeatmapLevel) return loads; // no need to run through muscle tree
-
-    const allParents = this.getParents();
-
     const parents: Attribute[] = [];
 
-    console.log('loads345', loads);
-
+    // Compute parents depending on level
     loads.forEach(([muscleId]) => {
-      let levelsToClimb = maxHeatmapLevel - heatmapLevel; // 1
-
-      let parent = allParents.find((p) =>
-        p.options?.find((o) => o.field === muscleId)
+      const parent = this.getCorrectMuscleByLevel(
+        muscleId,
+        heatmapLevel,
+        maxHeatmapLevel
       );
-
-      console.log(
-        'levelsToClimb',
-        levelsToClimb,
-        'parent',
-        parent,
-        'muscleId',
-        muscleId
-      );
-
-      if (!parent) return;
-
-      while (levelsToClimb > 0 && parent) {
-        console.log('levelsToClimb', levelsToClimb);
-        levelsToClimb--;
-        muscleId = parent.field as string;
-
-        const potentialParent = allParents.find((p) =>
-          p.options?.find((o) => o.field === muscleId)
-        );
-
-        if (!potentialParent) break;
-
-        parent = potentialParent;
-      }
 
       if (parent && !parents.includes(parent)) parents.push(parent);
     });
 
-    console.log('parents123', parents);
+    // Calculate averages for parents
+    for (const parent of parents) {
+      const childrenIds = this.computeLeafMuscleIds([parent]);
+
+      const muscleLoads = loads.filter(
+        (load) =>
+          childrenIds.includes(load[0]) &&
+          load[1].concentric + load[1].isometric + load[1].eccentric > 0
+      );
+
+      const totalEccentric = Math.round(
+        muscleLoads.reduce((sum, [, load]) => sum + load.eccentric, 0) /
+          muscleLoads.length /
+          (heatmapLevel === maxHeatmapLevel ? 2 : 1) // average by -l and -r, which happens only at max level
+      );
+
+      const totalIsometric = Math.round(
+        muscleLoads.reduce((sum, [, load]) => sum + load.isometric, 0) /
+          muscleLoads.length /
+          (heatmapLevel === maxHeatmapLevel ? 2 : 1) // average by -l and -r, which happens only at max level
+      );
+
+      const totalConcentric = Math.round(
+        muscleLoads.reduce((sum, [, load]) => sum + load.concentric, 0) /
+          muscleLoads.length /
+          (heatmapLevel === maxHeatmapLevel ? 2 : 1) // average by -l and -r, which happens only at max level
+      );
+
+      loads = loads.map((load) => {
+        if (!childrenIds.includes(load[0])) return load;
+
+        return [
+          load[0],
+          {
+            eccentric: totalEccentric,
+            isometric: totalIsometric,
+            concentric: totalConcentric,
+          },
+        ];
+      });
+    }
 
     return loads;
   }
+
   /**
    * Returns the max heatmap level based on the muscles tree depth
    */
   getHeatmapLevel(muscleLoads: [string, HeatmapLoad][]) {
-    let level = 1;
+    let level = 0;
 
     const parents = this.getParents();
 
     muscleLoads.forEach((ml) => {
-      let currentLevel = 1;
+      let currentLevel = 0;
 
       let parent = parents.find((p) =>
         p.options?.find((o) => o.field === ml[0])
@@ -125,6 +128,43 @@ export class MuscleUtil {
     });
 
     return level;
+  }
+
+  getCorrectMuscleByLevel(
+    muscleId: string,
+    level: number,
+    maxLevel: number
+  ): Attribute | undefined {
+    console.log('muscleId', muscleId, 'level', level, 'maxLevel', maxLevel);
+    if (level === maxLevel) {
+      const leafes = this.computeLeafMuscles(MUSCLES_TREE);
+      return leafes.find((m) => m.field === muscleId);
+    }
+
+    const parents = this.getParents();
+
+    let parent = parents.find((p) =>
+      p.options?.find((o) => o.field === muscleId)
+    );
+
+    console.log('parent', parent, muscleId);
+
+    if (!parent) return undefined;
+
+    let levelsToClimb = maxLevel - level;
+
+    while (levelsToClimb > 0 && parent) {
+      levelsToClimb--;
+      muscleId = parent.field as string;
+      const potentialParent = parents.find((p) =>
+        p.options?.find((o) => o.field === muscleId)
+      );
+
+      if (!potentialParent) break;
+      parent = potentialParent;
+    }
+
+    return parent;
   }
 
   /**
@@ -180,10 +220,39 @@ export class MuscleUtil {
       .filter((id): id is string => Boolean(id));
   }
 
-  computeLeafMuscleIds(): string[] {
+  computeLeafMuscles(root: Attribute[]): Attribute[] {
+    const leafes = [] as Attribute[];
+
+    root.forEach((muscle) => {
+      let leaf = muscle;
+
+      if (!leaf.options) {
+        leafes.push(leaf);
+        return;
+      }
+
+      const optionsToEval = [...leaf.options];
+
+      while (optionsToEval.length) {
+        const option = optionsToEval.shift();
+
+        if (!option) continue;
+
+        if (option.options) {
+          optionsToEval.push(...option.options);
+        } else {
+          leafes.push(option);
+        }
+      }
+    });
+
+    return leafes;
+  }
+
+  computeLeafMuscleIds(root: Attribute[]): string[] {
     const leafes = [] as string[];
 
-    MUSCLES_TREE.forEach((muscle) => {
+    root.forEach((muscle) => {
       let leaf = muscle;
 
       if (!leaf.options) {

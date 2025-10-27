@@ -29,6 +29,7 @@ interface Props {
   Svg: SvgC;
   exercisesInComponent: TrainingExercise[];
   heatmapLevel: number;
+  maxHeatmapLevel: number;
   tip: MuscleTip;
   setTip: SetState<MuscleTip>;
   athleteAnthropometry?: boolean;
@@ -49,6 +50,7 @@ export default function MuscleMapWithTooltip(props: Props) {
     Svg,
     exercisesInComponent,
     heatmapLevel,
+    maxHeatmapLevel,
     tip,
     athleteAnthropometry,
     setTip,
@@ -81,7 +83,7 @@ export default function MuscleMapWithTooltip(props: Props) {
     // 3) otherwise nothing (we'll maybe hide below).
     const group = findFilledGroup(
       raw,
-      heatmapLevel,
+      maxHeatmapLevel,
       athleteAnthropometry && muscleLoads
         ? muscleLoads.map(([id]) => id)
         : undefined
@@ -192,8 +194,9 @@ export default function MuscleMapWithTooltip(props: Props) {
       const key = normId(el.id); // includes -r/-l if present
 
       //const muscleId = key.replace('-r', '').replace('-l', '');
-      const muscleId = key;
-      const muscleName = formatName(muscleId);
+      const muscleId = el.id;
+
+      const muscleName = formatName(key);
 
       const muscleIds = [muscleId];
       children.forEach((child) => {
@@ -203,15 +206,11 @@ export default function MuscleMapWithTooltip(props: Props) {
         if (!muscleIds.includes(childMuscleId)) muscleIds.push(childMuscleId);
       });
 
-      console.log('muscleLoads123', muscleLoads, muscleId);
-
       // console.log(muscleLoads, 'muscleId', muscleId);
 
       const muscleLoad = (muscleLoads as [string, HeatmapLoad][]).find(
         (ml) => ml[0] === muscleId
       )?.[1];
-
-      console.log('muscleLoad', muscleLoad);
 
       // console.log('muscleLoad', muscleLoad);
 
@@ -238,6 +237,16 @@ export default function MuscleMapWithTooltip(props: Props) {
           };
         }
 
+        const correctMuscle = core.exercise.muscle.getCorrectMuscleByLevel(
+          muscleId,
+          heatmapLevel,
+          maxHeatmapLevel
+        );
+
+        console.log('correctMuscle', correctMuscle, 'muscleId', muscleId);
+
+        if (!correctMuscle) return prev;
+
         // const { componentExercises, possibleExercises } = athleteAnthropometry
         //   ? { componentExercises: undefined, possibleExercises: undefined }
         //   : computeExercises(muscleIds);
@@ -252,8 +261,8 @@ export default function MuscleMapWithTooltip(props: Props) {
           show: true,
           x: x === 0 && athleteAnthropometry ? prev.x : x,
           y: y === 0 && athleteAnthropometry ? prev.y : y,
-          id: key,
-          name: muscleName,
+          id: correctMuscle.field as string,
+          name: correctMuscle.name,
           isometric: muscleLoad?.isometric,
           cocentric: muscleLoad?.concentric,
           eccentric: muscleLoad?.eccentric,
@@ -384,8 +393,8 @@ export default function MuscleMapWithTooltip(props: Props) {
           ].map(({ value, title }) => (
             <>
               {value !== undefined && (
-                <Typography fontSize={12} textAlign="center">
-                  {title}: {value}
+                <Typography fontSize={12} noWrap textAlign="center">
+                  {title}: {!isNaN(value) ? value : 0}
                 </Typography>
               )}
             </>
