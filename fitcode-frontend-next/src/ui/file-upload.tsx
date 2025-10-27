@@ -151,8 +151,6 @@ export default function FileUpload(props: Props) {
                 muted
                 style={{ objectFit: 'cover', width: '100%', height: '100%' }}
                 onError={(e) => {
-                  console.log('preview.url', preview.url);
-                  console.log('INVALID VIDEO ERROR', e);
                   setPreview((prev) => ({ ...prev, error: 'Invalid video' }));
                 }}
               />
