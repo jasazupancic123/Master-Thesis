@@ -15,7 +15,6 @@ interface Props {
 export function ExerciseCard({ exercise, addExerciseForm }: Props) {
   const screenSize = useScreenSize();
 
-  const isVideo = false;
   const imgSrc = exercise.imageUrl || EXERCISE_DEFAULT_IMG_URL;
 
   // Fixed media height similar to your previous maxHeight: 140
@@ -37,24 +36,9 @@ export function ExerciseCard({ exercise, addExerciseForm }: Props) {
           filter: 'grayscale(100%)',
         }}
       >
-        {isVideo ? (
-          <Box
-            component="video"
-            sx={{
-              position: 'absolute',
-              inset: 0,
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-            }}
-            src={exercise.videoUrl!}
-            muted
-            loop
-            autoPlay
-            playsInline
-            poster={imgSrc}
-          />
-        ) : (
+        {exercise.imageUrl ||
+        !exercise.videoUrl ||
+        (!exercise.imageUrl && !exercise.videoUrl) ? (
           <Image
             src={imgSrc}
             alt={exercise.name}
@@ -67,6 +51,21 @@ export function ExerciseCard({ exercise, addExerciseForm }: Props) {
               width: '100%',
               height: '100%',
             }}
+          />
+        ) : (
+          <Box
+            component="video"
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+            }}
+            src={exercise.videoUrl!}
+            muted
+            loop
+            playsInline
           />
         )}
       </Box>
