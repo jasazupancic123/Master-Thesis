@@ -3,7 +3,6 @@ import {
   forwardRef,
   Inject,
   Injectable,
-  Logger,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -33,8 +32,6 @@ import { InstitutionRepository } from '../repository/institution.repository';
 
 @Injectable()
 export class InstitutionService implements Permission<Institution> {
-  private logger = new Logger(InstitutionService.name);
-
   constructor(
     private readonly firebase: FirebaseService,
     private readonly commonService: CommonService,
@@ -190,6 +187,25 @@ export class InstitutionService implements Permission<Institution> {
       athleteId,
       true,
     );
+  }
+
+  buildAddTrainerOperation(
+    institutionId: string,
+    trainerId: string,
+  ): BatchWriteOperation<Institution> {
+    return this.repository.getUpdateTrainerOperation(
+      institutionId,
+      trainerId,
+      true,
+    );
+  }
+
+  addTrainer(institutionId: string, trainerId: string) {
+    return this.repository.addTrainer(institutionId, trainerId);
+  }
+
+  addAthlete(institutionId: string, athleteId: string) {
+    return this.repository.addAthlete(institutionId, athleteId);
   }
 
   canView(user: User, institution: Institution) {

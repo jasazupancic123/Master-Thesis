@@ -62,15 +62,14 @@ export class ProfileService implements Permission<Profile, Institution> {
 
     // only keep profiles that don’t exist yet
     const profilesToImport = input.map((u) => ({ ...u, uid: v4() }));
-    const result = await this.authService.importUsers(profilesToImport);
+    const result = await this.authService.importUsers(user, profilesToImport);
 
-    const successfulUsers = profilesToImport.filter(
-      (_, i) => !result.errors.find((e) => e.index === i),
-    );
-
-    const failedUsers = result.errors.map((e) => ({
-      email: profilesToImport[e.index].email,
-      reason: e.error.message,
+    const successfulUsers = result.successful.map((u) => ({
+      uid: u.uid,
+      email: u.email,
+      displayName: u.displayName,
+      photoURL: u.photoURL,
+      role: profilesToImport.find((p) => p.email === u.email)!.role,
     }));
 
     // create profiles for successful imports
@@ -93,7 +92,7 @@ export class ProfileService implements Permission<Profile, Institution> {
       ...(institutionOperations as BatchOperation<unknown>[]),
     ]);
 
-    return { successful: successfulUsers, failed: failedUsers };
+    return result;
   }
 
   @LogMethod()
