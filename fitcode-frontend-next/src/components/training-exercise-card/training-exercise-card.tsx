@@ -14,6 +14,7 @@ import MyModal from '@/ui/modal';
 
 export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   const { supersetIndex, chartView, exercise } = props;
+
   const screenSize = useScreenSize();
   const theme = useTheme();
   const [expandedSetsView, setExpandedSetsView] = useState(false);

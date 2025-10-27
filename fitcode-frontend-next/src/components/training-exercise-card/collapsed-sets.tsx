@@ -5,19 +5,7 @@ import { useEffect } from 'react';
 import { NumberExerciseParam } from '@/components/exercise-param/number-exercise-param';
 import { TempoExerciseParam } from '@/components/exercise-param/tempo-exercise-param';
 import { core } from '@/core/core.service';
-import {
-  BW,
-  DIST,
-  EFF,
-  KG,
-  REC_DIST,
-  REC_TIME,
-  REPS,
-  RM,
-  SETS,
-  TEMPO,
-  TIME,
-} from '@/core/exercise/constant/exercise-param.constant';
+import { SETS } from '@/core/exercise/constant/exercise-param.constant';
 import type { ExerciseParamField } from '@/core/training/type/exercise-set.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
@@ -52,6 +40,11 @@ export default function TrainingExerciseCardCollapsedSets(
   const effType = core.training.set.getEffType(exercise.sets[0]);
   const recType = core.training.set.getRecType(exercise.sets[0]);
 
+  const volOptions = core.training.set.getVolOptions(exercise.exercise!);
+  const recOptions = core.training.set.getRecOptions(exercise.exercise!);
+  const intOptions = core.training.set.getIntOptions(exercise.exercise!);
+  const effOptions = core.training.set.getEffOptions(exercise.exercise!);
+
   // if unilateral, populate right side params with left side values if empty
   useEffect(() => {
     if (uni) {
@@ -67,7 +60,7 @@ export default function TrainingExerciseCardCollapsedSets(
 
       supersetsContext.updateTrainingExercises([newExercise]);
     }
-  }, [loadType, volType, effType, recType]);
+  }, []);
 
   if (!training || !component) return null;
 
@@ -161,291 +154,230 @@ export default function TrainingExerciseCardCollapsedSets(
               }}
             />
 
-            <NumberExerciseParam
-              options={[REPS, DIST, TIME]}
-              selected={volType}
-              value={exercise.sets[0]?.[volType] as number}
-              showOptions
-              exercise={exercise}
-              disableOptions={!!selectedAthlete}
-              onSelectChange={(selected) => {
-                // update vol type
-                const field = selected.toString() as typeof volType;
-                const value = core.exercise.param.get(field)
-                  ?.defaultValue as number;
-
-                // set new selected field to default value
-                supersetsContext.updateTrainingExerciseParam(
-                  exercise,
-                  field,
-                  value,
-                  undefined,
-                  { updateSubgroups: true }
-                );
-
-                if (uni)
-                  supersetsContext.updateTrainingExerciseParam(
-                    exercise,
-                    core.exercise.param.pairs[field],
-                    value,
-                    undefined,
-                    { updateSubgroups: true }
-                  );
-
-                // make all other vol fields undefined
-                (
-                  ['reps', 'dist', 'time', 'repsR'] as ExerciseParamField[]
-                ).forEach((f) => {
-                  if (f !== field && core.exercise.param.pairs[field] !== f) {
-                    supersetsContext.updateTrainingExerciseParam(
-                      exercise,
-                      f,
-                      undefined,
-                      undefined,
-                      { updateSubgroups: true }
-                    );
-                  }
-                });
-              }}
-              onInputChange={(value) => {
-                supersetsContext.updateTrainingExerciseParam(
-                  exercise,
-                  volType,
-                  +value
-                );
-              }}
-            />
-
-            <NumberExerciseParam
-              options={[KG, RM, BW]}
-              selected={loadType}
-              value={exercise.sets[0]?.[loadType] as number}
-              showOptions
-              exercise={exercise}
-              disableOptions={!!selectedAthlete}
-              onSelectChange={(selected) => {
-                // update load type
-                const field = selected.toString() as typeof loadType;
-                const value = core.exercise.param.get(field)
-                  ?.defaultValue as number;
-
-                // set new selected field to default value
-                supersetsContext.updateTrainingExerciseParam(
-                  exercise,
-                  field,
-                  value,
-                  undefined,
-                  { updateSubgroups: true }
-                );
-
-                if (uni)
-                  supersetsContext.updateTrainingExerciseParam(
-                    exercise,
-                    core.exercise.param.pairs[field],
-                    value,
-                    undefined,
-                    { updateSubgroups: true }
-                  );
-
-                // make all other load fields undefined
-                (
-                  [
-                    'loadKg',
-                    'loadRm',
-                    'loadBw',
-                    'loadKgR',
-                    'loadRmR',
-                    'loadBwR',
-                  ] as ExerciseParamField[]
-                ).forEach((f) => {
-                  if (f !== field && core.exercise.param.pairs[field] !== f) {
-                    supersetsContext.updateTrainingExerciseParam(
-                      exercise,
-                      f,
-                      undefined,
-                      undefined,
-                      { updateSubgroups: true }
-                    );
-                  }
-                });
-              }}
-              onInputChange={(value) => {
-                supersetsContext.updateTrainingExerciseParam(
-                  exercise,
-                  loadType,
-                  +value
-                );
-              }}
-            />
-
-            {effType === 'tempo' ? (
-              <TempoExerciseParam
-                options={[TEMPO, EFF]}
-                selected={effType}
-                value={exercise.sets[0]?.[effType] || ''}
-                showOptions
-                exercise={exercise}
-                disableOptions={!!selectedAthlete}
-                onSelectChange={(selected) => {
-                  // update eff type
-                  const field = selected.toString() as typeof effType;
-                  const value = core.exercise.param.get(field)?.defaultValue as
-                    | string
-                    | number;
-
-                  // set new selected field to default value
-                  supersetsContext.updateTrainingExerciseParam(
-                    exercise,
-                    field,
-                    value,
-                    undefined,
-                    { updateSubgroups: true }
-                  );
-
-                  if (uni)
-                    supersetsContext.updateTrainingExerciseParam(
-                      exercise,
-                      core.exercise.param.pairs[field],
-                      value,
-                      undefined,
-                      { updateSubgroups: true }
-                    );
-
-                  // make all other eff fields undefined
-                  (['tempo', 'eff', 'tempoR'] as ExerciseParamField[]).forEach(
-                    (f) => {
-                      if (
-                        f !== field &&
-                        core.exercise.param.pairs[field] !== f
-                      ) {
-                        supersetsContext.updateTrainingExerciseParam(
-                          exercise,
-                          f,
-                          undefined,
-                          undefined,
-                          { updateSubgroups: true }
-                        );
-                      }
-                    }
-                  );
-                }}
-                onInputChange={(value) => {
-                  supersetsContext.updateTrainingExerciseParam(
-                    exercise,
-                    effType,
-                    value.toString()
-                  );
-                }}
-              />
-            ) : (
+            {volType && volOptions.length > 0 && (
               <NumberExerciseParam
-                options={[TEMPO, EFF]}
-                selected={effType}
-                value={exercise.sets[0]?.[effType] || 0}
+                options={volOptions}
+                selected={volType}
+                value={exercise.sets[0]?.[volType] as number}
                 showOptions
                 exercise={exercise}
                 disableOptions={!!selectedAthlete}
                 onSelectChange={(selected) => {
-                  // update eff type
-                  const field = selected.toString() as typeof effType;
+                  // update vol type
+                  const field = selected.toString() as typeof volType;
+                  const pair = core.exercise.param.pairs[field];
                   const value = core.exercise.param.get(field)
                     ?.defaultValue as number;
 
-                  // set new selected field to default value
-                  supersetsContext.updateTrainingExerciseParam(
-                    exercise,
-                    field,
-                    value,
-                    undefined,
-                    { updateSubgroups: true }
-                  );
-
-                  if (uni)
-                    supersetsContext.updateTrainingExerciseParam(
-                      exercise,
-                      core.exercise.param.pairs[field],
-                      value,
-                      undefined,
-                      { updateSubgroups: true }
-                    );
-
-                  // make all other eff fields undefined
-                  (['tempo', 'eff'] as ExerciseParamField[]).forEach((f) => {
-                    if (f !== field && core.exercise.param.pairs[field] !== f) {
-                      supersetsContext.updateTrainingExerciseParam(
-                        exercise,
-                        f,
-                        undefined,
-                        undefined,
-                        { updateSubgroups: true }
-                      );
-                    }
-                  });
+                  supersetsContext.updateTrainingExerciseParams(exercise, [
+                    // update param with new value
+                    { field, value, setIndex: undefined },
+                    // update its pair
+                    ...(uni
+                      ? [{ field: pair, value, setIndex: undefined }]
+                      : []),
+                    // clear other vol params
+                    ...['reps', 'dist', 'time', 'repsR']
+                      .filter((f) => f !== field && f !== pair)
+                      .map((f) => ({
+                        field: f as ExerciseParamField,
+                        value: undefined,
+                        setIndex: undefined,
+                      })),
+                  ]);
                 }}
                 onInputChange={(value) => {
                   supersetsContext.updateTrainingExerciseParam(
                     exercise,
-                    effType,
+                    volType,
                     +value
                   );
                 }}
               />
             )}
 
-            <NumberExerciseParam
-              options={[REC_TIME, REC_DIST]}
-              selected={recType}
-              value={exercise.sets[0]?.[recType] || 0}
-              showOptions
-              exercise={exercise}
-              disableOptions={!!selectedAthlete}
-              onSelectChange={(selected) => {
-                // update rec type
-                const field = selected.toString() as typeof recType;
-                const value = core.exercise.param.get(field)
-                  ?.defaultValue as number;
+            {loadType && intOptions.length > 0 && (
+              <NumberExerciseParam
+                options={intOptions}
+                selected={loadType}
+                value={exercise.sets[0]?.[loadType] as number}
+                showOptions
+                exercise={exercise}
+                disableOptions={!!selectedAthlete}
+                onSelectChange={(selected) => {
+                  // update load type
+                  const field = selected.toString() as typeof loadType;
+                  const value = core.exercise.param.get(field)
+                    ?.defaultValue as number;
 
-                // set new selected field to default value
-                supersetsContext.updateTrainingExerciseParam(
-                  exercise,
-                  field,
-                  value,
-                  undefined,
-                  { updateSubgroups: true }
-                );
-
-                if (uni)
+                  supersetsContext.updateTrainingExerciseParams(exercise, [
+                    // update param with new value
+                    { field, value, setIndex: undefined },
+                    // update its pair
+                    ...(uni
+                      ? [
+                          {
+                            field: core.exercise.param.pairs[field],
+                            value,
+                            setIndex: undefined,
+                          },
+                        ]
+                      : []),
+                    // clear other load params
+                    ...[
+                      'loadKg',
+                      'loadRm',
+                      'loadBw',
+                      'loadKgR',
+                      'loadRmR',
+                      'loadBwR',
+                    ]
+                      .filter(
+                        (f) =>
+                          f !== field && core.exercise.param.pairs[field] !== f
+                      )
+                      .map((f) => ({
+                        field: f as ExerciseParamField,
+                        value: undefined,
+                        setIndex: undefined,
+                      })),
+                  ]);
+                }}
+                onInputChange={(value) => {
                   supersetsContext.updateTrainingExerciseParam(
                     exercise,
-                    core.exercise.param.pairs[field],
-                    value,
-                    undefined,
-                    { updateSubgroups: true }
+                    loadType,
+                    +value
                   );
+                }}
+              />
+            )}
 
-                // make all other rec fields undefined
-                (['recTime', 'recDist'] as ExerciseParamField[]).forEach(
-                  (f) => {
-                    if (f !== field) {
-                      supersetsContext.updateTrainingExerciseParam(
-                        exercise,
-                        f,
-                        undefined,
-                        undefined,
-                        { updateSubgroups: true }
-                      );
-                    }
-                  }
-                );
-              }}
-              onInputChange={(value) => {
-                supersetsContext.updateTrainingExerciseParam(
-                  exercise,
-                  recType,
-                  +value
-                );
-              }}
-            />
+            {effType && effOptions.length > 0 ? (
+              effType === 'tempo' ? (
+                <TempoExerciseParam
+                  options={effOptions}
+                  selected="tempo"
+                  value={exercise.sets[0]?.tempo || ''}
+                  showOptions
+                  exercise={exercise}
+                  disableOptions={!!selectedAthlete}
+                  onSelectChange={(selected) => {
+                    // update eff type
+                    const field = selected.toString() as typeof effType;
+                    const pair = core.exercise.param.pairs[field];
+                    const value = core.exercise.param.get(field)
+                      ?.defaultValue as number;
+
+                    supersetsContext.updateTrainingExerciseParams(exercise, [
+                      // update param with new value
+                      { field, value, setIndex: undefined },
+                      // update its pair
+                      ...(uni
+                        ? [{ field: pair, value, setIndex: undefined }]
+                        : []),
+                      // clear other eff params
+                      ...['tempo', 'tempoR', 'eff']
+                        .filter((f) => f !== field && f !== pair)
+                        .map((f) => ({
+                          field: f as ExerciseParamField,
+                          value: undefined,
+                          setIndex: undefined,
+                        })),
+                    ]);
+                  }}
+                  onInputChange={(value) => {
+                    supersetsContext.updateTrainingExerciseParam(
+                      exercise,
+                      'tempo',
+                      value.toString()
+                    );
+                  }}
+                />
+              ) : (
+                <NumberExerciseParam
+                  options={effOptions}
+                  selected="eff"
+                  value={exercise.sets[0]?.eff || 0}
+                  showOptions
+                  exercise={exercise}
+                  disableOptions={!!selectedAthlete}
+                  onSelectChange={(selected) => {
+                    // update eff type
+                    const field = selected.toString() as typeof effType;
+                    const pair = core.exercise.param.pairs[field];
+                    const value = core.exercise.param.get(field)
+                      ?.defaultValue as string;
+
+                    supersetsContext.updateTrainingExerciseParams(exercise, [
+                      // update param with new value
+                      { field, value, setIndex: undefined },
+                      // update its pair
+                      ...(uni
+                        ? [{ field: pair, value, setIndex: undefined }]
+                        : []),
+                      // clear other eff params
+                      ...['tempo', 'tempoR', 'eff']
+                        .filter((f) => f !== field && f !== pair)
+                        .map((f) => ({
+                          field: f as ExerciseParamField,
+                          value: undefined,
+                          setIndex: undefined,
+                        })),
+                    ]);
+                  }}
+                  onInputChange={(value) => {
+                    supersetsContext.updateTrainingExerciseParam(
+                      exercise,
+                      'eff',
+                      +value
+                    );
+                  }}
+                />
+              )
+            ) : null}
+
+            {recType && recOptions.length > 0 && (
+              <NumberExerciseParam
+                options={recOptions}
+                selected={recType}
+                value={exercise.sets[0]?.[recType] || 0}
+                showOptions
+                exercise={exercise}
+                disableOptions={!!selectedAthlete}
+                onSelectChange={(selected) => {
+                  // update rec type
+                  const field = selected.toString() as typeof recType;
+                  const pair = core.exercise.param.pairs[field];
+                  const value = core.exercise.param.get(field)
+                    ?.defaultValue as number;
+
+                  supersetsContext.updateTrainingExerciseParams(exercise, [
+                    // update param with new value
+                    { field, value, setIndex: undefined },
+                    // update its pair
+                    ...(uni
+                      ? [{ field: pair, value, setIndex: undefined }]
+                      : []),
+                    // clear other rec params
+                    ...['recTime', 'recDist']
+                      .filter((f) => f !== field && f !== pair)
+                      .map((f) => ({
+                        field: f as ExerciseParamField,
+                        value: undefined,
+                        setIndex: undefined,
+                      })),
+                  ]);
+                }}
+                onInputChange={(value) => {
+                  supersetsContext.updateTrainingExerciseParam(
+                    exercise,
+                    recType,
+                    +value
+                  );
+                }}
+              />
+            )}
           </Box>
 
           {/* Show secondary side if unilateral exercise */}
@@ -474,142 +406,153 @@ export default function TrainingExerciseCardCollapsedSets(
                 }}
               />
 
-              <NumberExerciseParam
-                options={[REPS, DIST, TIME]}
-                selected={volType}
-                value={
-                  volType === 'reps'
-                    ? exercise.sets[0]?.repsR || 0
-                    : exercise.sets[0]?.[volType] || 0 // dist and time are the same for both sides
-                }
-                exercise={exercise}
-                showOptions={false}
-                disableOptions={!!selectedAthlete}
-                onInputChange={(value) => {
-                  const field = volType === 'reps' ? 'repsR' : volType;
-                  supersetsContext.updateTrainingExerciseParam(
-                    exercise,
-                    field,
-                    +value
-                  );
-                }}
-              />
-
-              <NumberExerciseParam
-                options={[KG, RM, BW]}
-                selected={loadType}
-                value={exercise.sets[0]?.[`${loadType}R`] as number}
-                exercise={exercise}
-                showOptions={false}
-                disableOptions={!!selectedAthlete}
-                onSelectChange={(selected) => {
-                  // update load type
-                  const field = selected.toString() as typeof loadType;
-                  const value = core.exercise.param.get(field)
-                    ?.defaultValue as number;
-
-                  // set new selected field to default value
-                  supersetsContext.updateTrainingExerciseParam(
-                    exercise,
-                    field,
-                    value,
-                    undefined,
-                    { updateSubgroups: true }
-                  );
-
-                  if (uni)
-                    supersetsContext.updateTrainingExerciseParam(
-                      exercise,
-                      core.exercise.param.pairs[field],
-                      value,
-                      undefined,
-                      { updateSubgroups: true }
-                    );
-
-                  // make all other load fields undefined
-                  (
-                    [
-                      'loadKg',
-                      'loadRm',
-                      'loadBw',
-                      'loadKgR',
-                      'loadRmR',
-                      'loadBwR',
-                    ] as ExerciseParamField[]
-                  ).forEach((f) => {
-                    if (f !== field && core.exercise.param.pairs[field] !== f) {
-                      supersetsContext.updateTrainingExerciseParam(
-                        exercise,
-                        f,
-                        undefined,
-                        undefined,
-                        { updateSubgroups: true }
-                      );
-                    }
-                  });
-                }}
-                onInputChange={(value) => {
-                  supersetsContext.updateTrainingExerciseParam(
-                    exercise,
-                    `${loadType}R`,
-                    +value
-                  );
-                }}
-              />
-
-              {effType === 'tempo' ? (
-                <TempoExerciseParam
-                  options={[TEMPO, EFF]}
-                  selected={effType}
-                  value={exercise.sets[0]?.tempoR || ''}
-                  showOptions={false}
-                  exercise={exercise}
-                  disableOptions={!!selectedAthlete}
-                  onInputChange={(value) => {
-                    supersetsContext.updateTrainingExerciseParam(
-                      exercise,
-                      'tempoR',
-                      value.toString()
-                    );
-                  }}
-                />
-              ) : (
+              {volType && volOptions.length > 0 && (
                 <NumberExerciseParam
-                  options={[TEMPO, EFF]}
-                  selected={effType}
-                  value={exercise.sets[0]?.eff || 0}
-                  showOptions={false}
+                  options={volOptions}
+                  selected={volType}
+                  value={
+                    volType === 'reps'
+                      ? exercise.sets[0]?.repsR || 0
+                      : exercise.sets[0]?.[volType] || 0 // dist and time are the same for both sides
+                  }
                   exercise={exercise}
+                  showOptions={false}
                   disableOptions={!!selectedAthlete}
                   onInputChange={(value) => {
+                    const field = volType === 'reps' ? 'repsR' : volType;
                     supersetsContext.updateTrainingExerciseParam(
                       exercise,
-                      'eff',
+                      field,
                       +value
                     );
                   }}
                 />
               )}
 
-              <NumberExerciseParam
-                options={[REC_TIME, REC_DIST]}
-                selected={recType}
-                value={
-                  recType === 'recTime'
-                    ? exercise.sets[0]?.recTime || 0
-                    : exercise.sets[0]?.recDist || 0
-                }
-                showOptions={false}
-                exercise={exercise}
-                disableOptions={!!selectedAthlete}
-                onInputChange={(value) => {
-                  supersetsContext.updateTrainingExerciseParam(
-                    exercise,
-                    recType,
-                    +value
-                  );
-                }}
-              />
+              {loadType && intOptions.length > 0 && (
+                <NumberExerciseParam
+                  options={intOptions}
+                  selected={loadType}
+                  value={exercise.sets[0]?.[`${loadType}R`] as number}
+                  exercise={exercise}
+                  showOptions={false}
+                  disableOptions={!!selectedAthlete}
+                  onSelectChange={(selected) => {
+                    // update load type
+                    const field = selected.toString() as typeof loadType;
+                    const value = core.exercise.param.get(field)
+                      ?.defaultValue as number;
+
+                    // set new selected field to default value
+                    supersetsContext.updateTrainingExerciseParam(
+                      exercise,
+                      field,
+                      value,
+                      undefined,
+                      { updateSubgroups: true }
+                    );
+
+                    if (uni)
+                      supersetsContext.updateTrainingExerciseParam(
+                        exercise,
+                        core.exercise.param.pairs[field],
+                        value,
+                        undefined,
+                        { updateSubgroups: true }
+                      );
+
+                    // make all other load fields undefined
+                    (
+                      [
+                        'loadKg',
+                        'loadRm',
+                        'loadBw',
+                        'loadKgR',
+                        'loadRmR',
+                        'loadBwR',
+                      ] as ExerciseParamField[]
+                    ).forEach((f) => {
+                      if (
+                        f !== field &&
+                        core.exercise.param.pairs[field] !== f
+                      ) {
+                        supersetsContext.updateTrainingExerciseParam(
+                          exercise,
+                          f,
+                          undefined,
+                          undefined,
+                          { updateSubgroups: true }
+                        );
+                      }
+                    });
+                  }}
+                  onInputChange={(value) => {
+                    supersetsContext.updateTrainingExerciseParam(
+                      exercise,
+                      `${loadType}R`,
+                      +value
+                    );
+                  }}
+                />
+              )}
+
+              {effType && effOptions.length > 0 ? (
+                effType === 'tempo' ? (
+                  <TempoExerciseParam
+                    options={effOptions}
+                    selected="tempo"
+                    value={exercise.sets[0]?.tempoR || ''}
+                    showOptions={false}
+                    exercise={exercise}
+                    disableOptions={!!selectedAthlete}
+                    onInputChange={(value) => {
+                      supersetsContext.updateTrainingExerciseParam(
+                        exercise,
+                        'tempoR',
+                        value.toString()
+                      );
+                    }}
+                  />
+                ) : (
+                  <NumberExerciseParam
+                    options={effOptions}
+                    selected="eff"
+                    value={exercise.sets[0]?.eff || 0}
+                    showOptions={false}
+                    exercise={exercise}
+                    disableOptions={!!selectedAthlete}
+                    onInputChange={(value) => {
+                      supersetsContext.updateTrainingExerciseParam(
+                        exercise,
+                        'eff',
+                        +value
+                      );
+                    }}
+                  />
+                )
+              ) : null}
+
+              {recType && recOptions.length > 0 && (
+                <NumberExerciseParam
+                  options={recOptions}
+                  selected={recType}
+                  value={
+                    recType === 'recTime'
+                      ? exercise.sets[0]?.recTime || 0
+                      : exercise.sets[0]?.recDist || 0
+                  }
+                  showOptions={false}
+                  exercise={exercise}
+                  disableOptions={!!selectedAthlete}
+                  onInputChange={(value) => {
+                    supersetsContext.updateTrainingExerciseParam(
+                      exercise,
+                      recType,
+                      +value
+                    );
+                  }}
+                />
+              )}
             </Box>
           )}
         </Box>
