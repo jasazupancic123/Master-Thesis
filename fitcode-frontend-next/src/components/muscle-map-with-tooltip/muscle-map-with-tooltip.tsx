@@ -18,6 +18,7 @@ import type { SetState } from '@/lib/common/type/state.type';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
+import { HeatmapLoad } from '@/core/exercise/type/heatmap-load.entity';
 
 export type SvgC = React.ForwardRefExoticComponent<
   React.SVGProps<SVGSVGElement> & React.RefAttributes<SVGSVGElement>
@@ -31,7 +32,7 @@ interface Props {
   tip: MuscleTip;
   setTip: SetState<MuscleTip>;
   athleteAnthropometry?: boolean;
-  muscleLoads?: [string, number][];
+  muscleLoads?: [string, HeatmapLoad][] | [string, number][];
   setMuscleLoads?: SetState<[string, number][]>;
 }
 
@@ -123,63 +124,63 @@ export default function MuscleMapWithTooltip(props: Props) {
 
   const handleBlur = () => handleMouseLeave();
 
-  const computeExercises = useCallback(
-    (muscleIds: string[]) => {
-      const componentExercises = exercisesInComponent.filter((e) =>
-        e.exercise?.muscleValues?.some(
-          (mv) =>
-            muscleIds.includes(mv.field) ||
-            muscleIds.some((mid) => mv.selected?.startsWith(`${mid}:`)) ||
-            muscleIds.some((mid) => mv.selected?.endsWith(`:${mid}`))
-        )
-      );
+  // const computeExercises = useCallback(
+  //   (muscleIds: string[]) => {
+  //     const componentExercises = exercisesInComponent.filter((e) =>
+  //       e.exercise?.muscleValues?.some(
+  //         (mv) =>
+  //           muscleIds.includes(mv.field) ||
+  //           muscleIds.some((mid) => mv.selected?.startsWith(`${mid}:`)) ||
+  //           muscleIds.some((mid) => mv.selected?.endsWith(`:${mid}`))
+  //       )
+  //     );
 
-      componentExercises.sort((a, b) => {
-        const aMuscle = a.exercise?.muscleValues?.find((mv) =>
-          heatmapLevel === 1
-            ? muscleIds.includes(mv.field)
-            : heatmapLevel === 2
-              ? muscleIds.some((mid) => mv.selected?.startsWith(`${mid}:`))
-              : muscleIds.some((mid) => mv.selected?.endsWith(`:${mid}`))
-        );
+  //     componentExercises.sort((a, b) => {
+  //       const aMuscle = a.exercise?.muscleValues?.find((mv) =>
+  //         heatmapLevel === 1
+  //           ? muscleIds.includes(mv.field)
+  //           : heatmapLevel === 2
+  //             ? muscleIds.some((mid) => mv.selected?.startsWith(`${mid}:`))
+  //             : muscleIds.some((mid) => mv.selected?.endsWith(`:${mid}`))
+  //       );
 
-        const bMuscle = b.exercise?.muscleValues?.find((mv) =>
-          heatmapLevel === 1
-            ? muscleIds.includes(mv.field)
-            : heatmapLevel === 2
-              ? muscleIds.some((mid) => mv.selected?.startsWith(`${mid}:`))
-              : muscleIds.some((mid) => mv.selected?.endsWith(`:${mid}`))
-        );
+  //       const bMuscle = b.exercise?.muscleValues?.find((mv) =>
+  //         heatmapLevel === 1
+  //           ? muscleIds.includes(mv.field)
+  //           : heatmapLevel === 2
+  //             ? muscleIds.some((mid) => mv.selected?.startsWith(`${mid}:`))
+  //             : muscleIds.some((mid) => mv.selected?.endsWith(`:${mid}`))
+  //       );
 
-        if (!aMuscle || !bMuscle) return 0;
+  //       if (!aMuscle || !bMuscle) return 0;
 
-        if (
-          aMuscle.value === bMuscle.value &&
-          a.exercise?.muscleValues &&
-          b.exercise?.muscleValues
-        ) {
-          return (
-            a.exercise?.muscleValues.length - b.exercise?.muscleValues.length
-          );
-        }
+  //       if (
+  //         aMuscle.value === bMuscle.value &&
+  //         a.exercise?.muscleValues &&
+  //         b.exercise?.muscleValues
+  //       ) {
+  //         return (
+  //           a.exercise?.muscleValues.length - b.exercise?.muscleValues.length
+  //         );
+  //       }
 
-        if (aMuscle.value < bMuscle.value) return -1;
-        return 1;
-      });
+  //       if (aMuscle.value < bMuscle.value) return -1;
+  //       return 1;
+  //     });
 
-      const possibleExercises = allExercises.filter((e) =>
-        e.muscleValues?.some(
-          (mv) =>
-            muscleIds.includes(mv.field) ||
-            muscleIds.some((mid) => mv.selected?.startsWith(`${mid}:`)) ||
-            muscleIds.some((mid) => mv.selected?.endsWith(`:${mid}`))
-        )
-      );
+  //     const possibleExercises = allExercises.filter((e) =>
+  //       e.muscleValues?.some(
+  //         (mv) =>
+  //           muscleIds.includes(mv.field) ||
+  //           muscleIds.some((mid) => mv.selected?.startsWith(`${mid}:`)) ||
+  //           muscleIds.some((mid) => mv.selected?.endsWith(`:${mid}`))
+  //       )
+  //     );
 
-      return { componentExercises, possibleExercises };
-    },
-    [exercisesInComponent, heatmapLevel]
-  );
+  //     return { componentExercises, possibleExercises };
+  //   },
+  //   [exercisesInComponent, heatmapLevel]
+  // );
 
   const showForEl = useCallback(
     (el: SVGGraphicsElement, px?: number, py?: number) => {
@@ -190,7 +191,8 @@ export default function MuscleMapWithTooltip(props: Props) {
       // id → display name
       const key = normId(el.id); // includes -r/-l if present
 
-      const muscleId = key.replace('-r', '').replace('-l', '');
+      //const muscleId = key.replace('-r', '').replace('-l', '');
+      const muscleId = key;
       const muscleName = formatName(muscleId);
 
       const muscleIds = [muscleId];
@@ -200,6 +202,18 @@ export default function MuscleMapWithTooltip(props: Props) {
         if (!childMuscleId.length) return;
         if (!muscleIds.includes(childMuscleId)) muscleIds.push(childMuscleId);
       });
+
+      console.log('muscleLoads123', muscleLoads, muscleId);
+
+      // console.log(muscleLoads, 'muscleId', muscleId);
+
+      const muscleLoad = (muscleLoads as [string, HeatmapLoad][]).find(
+        (ml) => ml[0] === muscleId
+      )?.[1];
+
+      console.log('muscleLoad', muscleLoad);
+
+      // console.log('muscleLoad', muscleLoad);
 
       // pointer coords or center on element (for keyboard focus)
       let x = px ?? 0;
@@ -224,9 +238,14 @@ export default function MuscleMapWithTooltip(props: Props) {
           };
         }
 
-        const { componentExercises, possibleExercises } = athleteAnthropometry
-          ? { componentExercises: undefined, possibleExercises: undefined }
-          : computeExercises(muscleIds);
+        // const { componentExercises, possibleExercises } = athleteAnthropometry
+        //   ? { componentExercises: undefined, possibleExercises: undefined }
+        //   : computeExercises(muscleIds);
+
+        const { componentExercises, possibleExercises } = {
+          componentExercises: undefined,
+          possibleExercises: undefined,
+        };
 
         // New muscle → compute exercises once
         return {
@@ -235,13 +254,17 @@ export default function MuscleMapWithTooltip(props: Props) {
           y: y === 0 && athleteAnthropometry ? prev.y : y,
           id: key,
           name: muscleName,
+          isometric: muscleLoad?.isometric,
+          cocentric: muscleLoad?.concentric,
+          eccentric: muscleLoad?.eccentric,
           componentExercises,
           possibleExercises,
           focus: false,
         };
       });
     },
-    [computeExercises]
+    [muscleLoads]
+    // [computeExercises]
   );
 
   return (
@@ -331,6 +354,7 @@ export default function MuscleMapWithTooltip(props: Props) {
             zIndex: 1000000,
             backgroundColor: theme.palette.background.paper,
             p: 1,
+            pb: 0,
             border: `1px solid ${theme.palette.divider}`,
             boxShadow: 3,
             borderRadius: 1,
@@ -352,6 +376,20 @@ export default function MuscleMapWithTooltip(props: Props) {
           <Typography fontWeight={600} noWrap textAlign="center">
             {tip.name}
           </Typography>
+
+          {[
+            { value: tip.cocentric, title: 'Cocentric' },
+            { value: tip.eccentric, title: 'Eccentric' },
+            { value: tip.isometric, title: 'Isometric' },
+          ].map(({ value, title }) => (
+            <>
+              {value !== undefined && (
+                <Typography fontSize={12} textAlign="center">
+                  {title}: {value}
+                </Typography>
+              )}
+            </>
+          ))}
 
           <Box
             display="flex"
@@ -502,7 +540,9 @@ export default function MuscleMapWithTooltip(props: Props) {
                       <Slider
                         valueLabelDisplay="auto"
                         value={
-                          muscleLoads.find(([id]) => id === tip.id)?.[1] ?? 5
+                          (muscleLoads as [string, number][]).find(
+                            ([id]) => id === tip.id
+                          )?.[1] ?? 5
                         }
                         onChange={(_, value) => {
                           if (!setMuscleLoads || !tip.id) return;

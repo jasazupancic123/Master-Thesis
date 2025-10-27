@@ -7,6 +7,9 @@ export type MuscleTip = {
   y: number;
   id?: string;
   name?: string;
+  cocentric?: number;
+  isometric?: number;
+  eccentric?: number;
   componentExercises?: TrainingExercise[];
   possibleExercises?: Exercise[];
   focus: boolean;
