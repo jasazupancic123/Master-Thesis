@@ -1,6 +1,9 @@
 import { TestApp } from '@test/common/utils/app.util';
 
+import type { AuthUser } from '@src/auth/entity/user.entity';
 import { UserRole } from '@src/auth/enum/user-role.enum';
+import { AuthService } from '@src/auth/service/auth.service';
+import type { ValidateRowError } from '@src/common/type/validate.type';
 import { deleteUsersByIds } from '@src/common/utils/data.util';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import type {
@@ -69,7 +72,8 @@ describe('Import Users (e2e)', () => {
     const allProfilesBefore = await db.profiles.findAll();
     expect(allProfilesBefore).toHaveLength(4); // global test profiles
 
-    const spy = jest.spyOn(firebase.auth, 'importUsers');
+    const auth = testApp.module.get(AuthService);
+    const spy = jest.spyOn(auth, 'importUsers');
     const result = await req(
       global.manager.token,
       Array.from({ length: 10 }).map((_, i) => ({
@@ -80,27 +84,23 @@ describe('Import Users (e2e)', () => {
       })),
     );
 
-    expect(spy).toHaveBeenCalledTimes(1);
-    const { successCount, failureCount, errors } =
-      await spy.mock.results[0].value;
-
-    expect(successCount).toBe(5);
-    expect(failureCount).toBe(5);
-    expect(errors).toHaveLength(5);
-    spy.mockRestore();
-
     expect(result.status).toBe(201);
-    const body = result.body as {
-      failed: { email: string; reason: string }[];
-      successful: { email: string; uid: string }[];
+    expect(spy).toHaveBeenCalledTimes(1);
+
+    const spyResult = (await spy.mock.results[0].value) as {
+      successful: AuthUser[];
+      errors: ValidateRowError[];
     };
 
-    expect(body.successful).toHaveLength(5);
-    expect(body.failed).toHaveLength(5);
-    body.failed.forEach((f) => {
-      expect(f.email).toMatch(/invalid/);
-      expect(f.reason).toBe('The email address is improperly formatted.');
+    expect(spyResult.successful).toHaveLength(5);
+    expect(spyResult.errors).toHaveLength(5);
+    spyResult.errors.forEach((e) => {
+      expect(e.errors[0].message).toBe(
+        'The email address is improperly formatted.',
+      );
     });
+
+    spy.mockRestore();
 
     // it should add members to institution
     let institution = await db.institutions.findById(institutionId);
@@ -130,7 +130,8 @@ describe('Import Users (e2e)', () => {
     let institution = await db.institutions.findById(institutionId);
     expect(institution.athleteIds).toHaveLength(1); // only global.athlete
 
-    const spy = jest.spyOn(firebase.auth, 'importUsers');
+    const auth = testApp.module.get(AuthService);
+    const spy = jest.spyOn(auth, 'importUsers');
     const result = await req(
       global.manager.token,
       Array.from({ length: 50 }).map((_, i) => ({
@@ -141,23 +142,17 @@ describe('Import Users (e2e)', () => {
       })),
     );
 
-    expect(spy).toHaveBeenCalledTimes(1);
-    const { successCount, failureCount, errors } =
-      await spy.mock.results[0].value;
-
-    expect(successCount).toBe(50);
-    expect(failureCount).toBe(0);
-    expect(errors).toHaveLength(0);
-    spy.mockRestore();
-
     expect(result.status).toBe(201);
-    const body = result.body as {
-      failed: { email: string; reason: string }[];
-      successful: { email: string; uid: string }[];
+    expect(spy).toHaveBeenCalledTimes(1);
+
+    const spyResult = (await spy.mock.results[0].value) as {
+      successful: AuthUser[];
+      errors: ValidateRowError[];
     };
 
-    expect(body.successful).toHaveLength(50);
-    expect(body.failed).toHaveLength(0);
+    expect(spyResult.successful).toHaveLength(50);
+    expect(spyResult.errors).toHaveLength(0);
+    spy.mockRestore();
 
     // it should add members to institution
     institution = await db.institutions.findById(institutionId);
@@ -197,12 +192,12 @@ describe('Import Users (e2e)', () => {
 
     expect(result.status).toBe(201);
     let body = result.body as {
-      failed: { email: string; reason: string }[];
-      successful: { email: string; uid: string }[];
+      successful: AuthUser[];
+      errors: ValidateRowError[];
     };
 
     expect(body.successful).toHaveLength(10);
-    expect(body.failed).toHaveLength(0);
+    expect(body.errors).toHaveLength(0);
 
     let institution = await db.institutions.findById(institutionId);
     expect(institution.athleteIds).toHaveLength(10 + 1); // +1 for global.athlete
@@ -225,10 +220,10 @@ describe('Import Users (e2e)', () => {
     body = result.body;
 
     expect(body.successful).toHaveLength(0);
-    expect(body.failed).toHaveLength(10);
-    body.failed.forEach((f) => {
-      expect(f.email).toMatch(/test\d+@mail\.com/);
-      expect(f.reason).toContain('duplicate');
+    expect(body.errors).toHaveLength(10);
+    body.errors.forEach((f) => {
+      expect(f.errors[0].field).toMatch(/test\d+@mail\.com/);
+      expect(f.errors[0].message).toContain('already');
     });
 
     institution = await db.institutions.findById(institutionId);
@@ -247,6 +242,58 @@ describe('Import Users (e2e)', () => {
     );
 
     await db.institutions.update(institutionId, {
+      athleteIds: [global.athlete.uid], // reset members
+    });
+  });
+
+  it('should import athletes and trainers', async () => {
+    const result = await req(global.manager.token, [
+      {
+        email: `trainer@mail.com`,
+        displayName: `Trainer`,
+        password: 'password',
+        role: UserRole.TRAINER,
+      },
+      {
+        email: `athlete@mail.com`,
+        displayName: `Athlete`,
+        password: 'password',
+        role: UserRole.ATHLETE,
+      },
+    ]);
+
+    expect(result.status).toBe(201);
+    const body = result.body as {
+      successful: AuthUser[];
+      errors: ValidateRowError[];
+    };
+
+    expect(body.successful).toHaveLength(2);
+    expect(body.errors).toHaveLength(0);
+
+    const institution = await db.institutions.findById(institutionId);
+    expect(institution.trainerIds).toContain(
+      body.successful.find((u) => u.email === 'trainer@mail.com')!.uid,
+    );
+
+    expect(institution.athleteIds).toContain(
+      body.successful.find((u) => u.email === 'athlete@mail.com')!.uid,
+    );
+
+    // delete users
+    const allUsers = await firebase.auth.listUsers();
+    await deleteUsersByIds(
+      firebase,
+      allUsers.users
+        .filter(
+          (u) =>
+            u.email === 'trainer@mail.com' || u.email === 'athlete@mail.com',
+        )
+        .map((u) => u.uid),
+    );
+
+    await db.institutions.update(institutionId, {
+      trainerIds: [global.trainer.uid], // reset trainers
       athleteIds: [global.athlete.uid], // reset members
     });
   });

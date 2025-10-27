@@ -131,4 +131,20 @@ export class InstitutionRepository extends FirestoreRepository<Institution> {
       },
     };
   }
+
+  getUpdateTrainerOperation(
+    id: string,
+    trainerId: string,
+    add: boolean,
+  ): BatchWriteOperation<Institution> {
+    return {
+      ref: this.doc(id),
+      operation: 'update',
+      data: {
+        trainerIds: add
+          ? (FieldValue.arrayUnion(trainerId) as unknown as string[])
+          : (FieldValue.arrayRemove(trainerId) as unknown as string[]),
+      },
+    };
+  }
 }

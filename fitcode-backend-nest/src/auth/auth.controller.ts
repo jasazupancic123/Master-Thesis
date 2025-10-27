@@ -14,10 +14,10 @@ import { Auth } from '@src/common/decorator/auth.decorator';
 import { RequestUser } from '@src/common/decorator/request-user.decorator';
 import { User } from '@src/common/type/firebase-auth.type';
 
+import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateCustomClaimsDto } from './dto/custom-claims.dto';
 import { FilterUserQueryDto } from './dto/filter-user-query.dto';
 import { IdTokenDto } from './dto/login.dto';
-import { RegisterAthleteDto } from './dto/register-athlete.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { AuthUser } from './entity/user.entity';
 import { UserRole } from './enum/user-role.enum';
@@ -73,15 +73,9 @@ export class AuthController {
     await this.authService.updateCustomClaims(user, id, body);
   }
 
-  @Post('athlete/register')
-  @Auth([UserRole.TRAINER, UserRole.MANAGER])
-  async registerAthlete(
-    @RequestUser() user: User,
-    @Body() body: RegisterAthleteDto,
-  ) {
-    return await this.authService.registerAthlete({
-      ...body,
-      role: UserRole.ATHLETE,
-    });
+  @Post('register')
+  @Auth([UserRole.ADMIN, UserRole.MANAGER])
+  async registerUser(@RequestUser() user: User, @Body() body: CreateUserDto) {
+    return await this.authService.registerUser(user, body);
   }
 }
