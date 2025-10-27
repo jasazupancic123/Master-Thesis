@@ -189,6 +189,7 @@ export default function TrainingCard() {
           ) : null}
         </Box>
       </Box>
+
       <Box
         sx={{
           border: '1px solidrgb(36, 38, 46)',
