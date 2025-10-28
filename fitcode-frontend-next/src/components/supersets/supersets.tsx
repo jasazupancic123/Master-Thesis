@@ -82,8 +82,12 @@ export default function Supersets({
     setPagination,
   } = trainerDayViewContext;
 
-  const { selectedExerciseIds, setSelectedExerciseIds } =
-    useSelectedExerciseIds();
+  const {
+    selectedExerciseIds,
+    setSelectedExerciseIds,
+    newAddedExercisesIds,
+    setNewAddedExercisesIds,
+  } = useSelectedExerciseIds();
 
   const {
     menuExercise,
@@ -288,6 +292,7 @@ export default function Supersets({
               .includes(id)
           );
 
+          setNewAddedExercisesIds([]);
           setPagination((prev) => ({ ...prev, page: 1 }));
           setSelectedExerciseIds(oldExercises);
           setOpenAddExerciseModal(false);
@@ -332,6 +337,7 @@ export default function Supersets({
             MainSet.BLOCK
           );
 
+          setNewAddedExercisesIds([]);
           setOpenAddExerciseModal(false);
           setSearch('');
           setSelectedExerciseIds([]);
@@ -341,6 +347,8 @@ export default function Supersets({
         <AddExerciseForm
           selectedExerciseIds={selectedExerciseIds}
           setSelectedExerciseIds={setSelectedExerciseIds}
+          newAddedExercisesIds={newAddedExercisesIds}
+          setNewAddedExercisesIds={setNewAddedExercisesIds}
           component={component}
         />
       </MyModal>

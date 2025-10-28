@@ -18,12 +18,21 @@ import { SearchBar } from '@/ui/search-bar/search-bar';
 import { KeyboardArrowDown } from '@mui/icons-material';
 import { theme } from '@/app/style';
 import useComponentFilter from './hooks/use-component-filter';
+import SelectedExercisesList from './selected-exercises-list';
 
 export default function AddExerciseForm(props: AddExerciseFormProps) {
-  const { selectedExerciseIds, setSelectedExerciseIds, component } = props;
+  const {
+    selectedExerciseIds,
+    setSelectedExerciseIds,
+    newAddedExercisesIds,
+    setNewAddedExercisesIds,
+    component,
+  } = props;
 
   const screenSize = useScreenSize();
+
   const { pagination, setPagination } = useTrainerDayView();
+
   const componentExercisesContext =
     useExerciseFormComponentExercises(component);
 
@@ -172,11 +181,19 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
         </Box>
       </Box>
 
+      <SelectedExercisesList
+        newAddedExercisesIds={newAddedExercisesIds}
+        setNewAddedExercisesIds={setNewAddedExercisesIds}
+        setSelectedExerciseIds={setSelectedExerciseIds}
+      />
+
       <ExercisesList
         exercises={filteredExercises}
         addExerciseForm
-        setSelectedExerciseIds={setSelectedExerciseIds}
         selectedExerciseIds={selectedExerciseIds}
+        setSelectedExerciseIds={setSelectedExerciseIds}
+        newAddedExercisesIds={newAddedExercisesIds}
+        setNewAddedExercisesIds={setNewAddedExercisesIds}
       />
     </Box>
   );
