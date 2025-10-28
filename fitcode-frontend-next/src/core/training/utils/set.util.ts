@@ -38,7 +38,7 @@ export class TrainingExerciseSetUtil {
     const recOptions = this.getRecOptions(exercise);
 
     if (volOptions.length > 0) {
-      const vol = volOptions[0];
+      const vol = volOptions.find((v) => v.field === 'reps') || volOptions[0];
       const field = vol.field as ExerciseParamNoSets;
       const value = (data?.[field] || vol.defaultValue) as number;
       set[field] = value as never;
@@ -53,7 +53,7 @@ export class TrainingExerciseSetUtil {
     }
 
     if (intOptions.length > 0) {
-      const int = intOptions[0];
+      const int = intOptions.find((i) => i.field === 'loadKg') || intOptions[0];
       const field = int.field as ExerciseParamNoSets;
       const value = (data?.[field] || int.defaultValue) as number;
       set[field] = value as never;
@@ -68,7 +68,7 @@ export class TrainingExerciseSetUtil {
     }
 
     if (effOptions.length > 0) {
-      const eff = effOptions[0];
+      const eff = effOptions.find((e) => e.field === 'tempo') || effOptions[0];
       const field = eff.field as ExerciseParamNoSets;
       const value = (data?.[field] || eff.defaultValue) as number | string;
       set[field] = value as never;
@@ -83,7 +83,9 @@ export class TrainingExerciseSetUtil {
     }
 
     if (recOptions.length > 0) {
-      const rec = recOptions[0];
+      const rec =
+        recOptions.find((r) => r.field === 'recTime') || recOptions[0];
+
       const field = rec.field as ExerciseParamNoSets;
       const value = (data?.[field] || rec.defaultValue) as number;
       set[field] = value as never;

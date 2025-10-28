@@ -36,30 +36,22 @@ export class TrainingService {
     if (data.exercises) {
       for (const tc of item.components) {
         for (const s of tc.supersets)
-          for (const e of s.exercises) {
+          for (const e of s.exercises)
             e.exercise = data.exercises.find(({ id }) => id === e.id);
-            if (!Array.isArray(e.params)) e.params = Object.values(e.params);
-          }
 
         for (const subgroup of tc.subgroups)
           for (const s of subgroup.supersets)
-            for (const e of s.exercises) {
+            for (const e of s.exercises)
               e.exercise = data.exercises.find(({ id }) => id === e.id);
-              if (!Array.isArray(e.params)) e.params = Object.values(e.params);
-            }
       }
 
       for (const s of item.warmup.supersets)
-        for (const e of s.exercises) {
+        for (const e of s.exercises)
           e.exercise = data.exercises.find(({ id }) => id === e.id);
-          if (!Array.isArray(e.params)) e.params = Object.values(e.params);
-        }
 
       for (const s of item.cooldown.supersets)
-        for (const e of s.exercises) {
+        for (const e of s.exercises)
           e.exercise = data.exercises.find(({ id }) => id === e.id);
-          if (!Array.isArray(e.params)) e.params = Object.values(e.params);
-        }
     }
 
     return item;

@@ -52,7 +52,7 @@ export class AuthController extends BaseController {
     return this.api.patch<object>(`/${id}/claims`, input, options);
   }
 
-  async registerAthlete(input: CreateUser, options?: FetchOptions) {
-    return this.api.post<AuthUser>('/athlete/register', input, options);
+  async registerUser(input: CreateUser, options?: FetchOptions) {
+    return this.api.post<AuthUser>('/register', input, options);
   }
 }

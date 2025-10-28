@@ -77,14 +77,25 @@ export class ProfileService implements Permission<Profile, Institution> {
       (profile) => ({
         ref: this.repository.doc(profile.uid),
         operation: 'set',
-        data: this.firebase.buildCreateQuery<Profile>(profile),
+        data: this.firebase.buildCreateQuery<Profile>({
+          uid: profile.uid,
+          email: profile.email!,
+        }),
       }),
     );
 
     // add users to institution
     const institutionOperations: BatchWriteOperation<Institution>[] =
-      successfulUsers.map(({ uid }) =>
-        this.institutionService.buildAddAthleteOperation(institution.id, uid),
+      successfulUsers.map(({ uid, role }) =>
+        role === UserRole.TRAINER
+          ? this.institutionService.buildAddTrainerOperation(
+              institution.id,
+              uid,
+            )
+          : this.institutionService.buildAddAthleteOperation(
+              institution.id,
+              uid,
+            ),
       );
 
     await this.firebase.paginateBatches([

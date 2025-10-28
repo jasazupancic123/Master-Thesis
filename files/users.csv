@@ -1,4 +1,5 @@
-﻿email,password,displayName,photoURL,role,sport,level,gender,birthDate
+email,password,displayName,photoURL,role,sport,level,gender,birthDate
+tomi.jagarinec@mail.com,password,Tomi Jagarinec,https://iamaspire.aspire.qa/assets/Tomaz.png,trainer,Football,advanced,male,11/6/80
 abdulrahman.musleh@mail.com,password,Abdulrahman Musleh,https://iamaspire.aspire.qa/assets/players/79182.png,athlete,Football,intermediate,male,5/12/06
 ali.abbas@mail.com,password,Ali Abbas,https://iamaspire.aspire.qa/assets/players/71979.png,athlete,Football,beginner,male,5/13/06
 faris.obaidah@mail.com,password,Faris Obaidah Alzaareer,https://iamaspire.aspire.qa/assets/players/114233.png,athlete,Football,advanced,male,5/14/06

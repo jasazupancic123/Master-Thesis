@@ -4,12 +4,12 @@ import toast from 'react-hot-toast';
 import { useDashboardUserEdit } from '../context/user-edit.context';
 import type { IFormData } from './use-register-member-form.hook';
 import useRegisterMemberForm from './use-register-member-form.hook';
+import { AuthController } from '@/core/auth/auth.controller';
 import type { AuthUser } from '@/core/auth/type/user.type';
-import { BACKEND_API_BASE_URL } from '@/core/const/api.const';
 import { GroupController } from '@/core/group/group.controller';
 import { InstitutionController } from '@/core/institution/institution.controller';
 import { UserRole } from '@/core/profile/enum/user-role.enum';
-import { lib } from '@/lib';
+import type { Profile } from '@/core/profile/type/user.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 
@@ -24,8 +24,8 @@ export default function useInstitutionMembers() {
     selectedGroup,
     selectedInstitution,
     setSelectedInstitution,
-    refetchMembers,
-    refetchUsers,
+    setUsers,
+    setMembers,
   } = useDashboard();
 
   const [existingUser, setExistingUser] = useState<AuthUser | null>(null);
@@ -116,17 +116,22 @@ export default function useInstitutionMembers() {
     setIsUploadingMembers(true);
 
     try {
-      await lib.firebase.functions.createUserWithRole({
+      const user = await AuthController.getInstance().registerUser({
         displayName,
         email,
         password,
         role: registerRole,
       });
 
-      refetchUsers();
-      refetchMembers(
-        `${BACKEND_API_BASE_URL}/institution/${selectedInstitution.id}/members`
-      );
+      const profile: Profile = {
+        uid: user.uid,
+        email: user.email!,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      setUsers((prev) => [...prev, user]);
+      setMembers((prev) => [...prev, profile]);
     } catch (e) {
       console.error(e);
       toast.error('An error occurred while registering the user');
@@ -141,7 +146,6 @@ export default function useInstitutionMembers() {
 
     try {
       await GroupController.getInstance().removeMember(groupId, { userId });
-
       toast.success('Member removed successfully');
     } catch (e) {
       console.error(e);

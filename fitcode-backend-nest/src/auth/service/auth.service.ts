@@ -231,17 +231,18 @@ export class AuthService {
     } else throw new ForbiddenException('Cannot register user');
 
     let created: AuthUser | null = null;
+    const customClaims: CustomClaims = { role: [input.role] };
 
     try {
       const user = await this.firebase.auth.createUser(input);
-      const customClaims: CustomClaims = { role: [input.role] };
       await this.firebase.auth.setCustomUserClaims(user.uid, customClaims);
       created = { ...user, customClaims } as AuthUser;
     } catch (e) {
       // if user already exists, fetch it
-      if (e.code === 'auth/email-already-exists')
+      if (e.code === 'auth/email-already-exists') {
         created = await this.findOneBy('email', input.email);
-      else throw e;
+        await this.firebase.auth.setCustomUserClaims(created.uid, customClaims);
+      } else throw e;
     }
 
     if (!created) throw new BadRequestException('User could not be created');

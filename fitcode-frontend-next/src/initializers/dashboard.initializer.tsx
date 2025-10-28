@@ -45,7 +45,6 @@ function DashboardInitializer({
       setMembers(fetchedMembers);
       setState((prev) => {
         if (!prev) return null;
-
         return { ...prev, members: fetchedMembers };
       });
     }
