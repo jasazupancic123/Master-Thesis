@@ -5,14 +5,14 @@ import UserWellnessSlider from './user-wellness-slider';
 import FatigueIcon from '@/assets/icons/Fatigue.svg';
 import SleepIcon from '@/assets/icons/Sleep.svg';
 import SorenessIcon from '@/assets/icons/Soreness.svg';
-import HeatmapFront from '@/assets/svg/heatmap_front_yellow.svg';
 import HeatmapBack from '@/assets/svg/heatmap_back_yellow.svg';
+import HeatmapFront from '@/assets/svg/heatmap_front_yellow.svg';
 import MuscleMapWithTooltip from '@/components/muscle-map-with-tooltip/muscle-map-with-tooltip';
 import { HEATMAP_COLORS } from '@/core/const/color.const';
+import { core } from '@/core/core.service';
 import type { Wellness } from '@/core/profile/type/wellness.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useScreenSize } from '@/store/screen-size.provider';
-import { core } from '@/core/core.service';
 
 interface Props {
   disabled: boolean;

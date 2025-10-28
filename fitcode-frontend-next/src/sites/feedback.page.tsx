@@ -21,7 +21,6 @@ import type {
 import { handleApiRequest } from '@/lib/common/type/state.type';
 import { setCachedWellness } from '@/session-cache/wellness.session-cache';
 import { useWellness } from '@/store/wellness-provider';
-import { HeatmapLoad } from '@/core/exercise/type/heatmap-load.entity';
 
 export async function submitWellness(
   input: CreateWellness,

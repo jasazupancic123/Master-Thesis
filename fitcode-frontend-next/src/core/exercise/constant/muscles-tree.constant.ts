@@ -1,4 +1,4 @@
-import { Attribute } from '@/core/attribute/type/attribute.type';
+import type { Attribute } from '@/core/attribute/type/attribute.type';
 
 export const MUSCLES_TREE: Attribute[] = [
   {

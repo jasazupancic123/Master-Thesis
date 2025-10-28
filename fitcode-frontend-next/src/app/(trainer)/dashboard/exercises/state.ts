@@ -2,7 +2,6 @@ import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.
 import Papa from 'papaparse';
 import toast from 'react-hot-toast';
 
-import type { AttributeValue } from '@/core/attribute/type/attribute-value.type';
 import type { Component } from '@/core/component/type/component.type';
 import { ExerciseController } from '@/core/exercise/exercise.controller';
 import { ExerciseService } from '@/core/exercise/exercise.service';
@@ -358,8 +357,6 @@ export async function handleMuscleValuesCsvFileUpload(
 
   const importedMuscleValues: (CreateExerciseMuscleValues | null)[] = [];
 
-  console.log('musclesWithValues', musclesWithValues);
-
   musclesWithValues.forEach((muscle) => {
     muscle.values.forEach((mv) => {
       const existing = importedMuscleValues.find(
@@ -390,8 +387,6 @@ export async function handleMuscleValuesCsvFileUpload(
       });
     });
   });
-
-  console.log('importedMuscleValues', importedMuscleValues);
 
   const validImportedMuscleValues = importedMuscleValues.filter(
     (e) => e !== null
@@ -495,7 +490,6 @@ function getMuscleValuesFromCsvRow(
       return;
     }
 
-    console.log({ loadsString });
     if (loadsString) {
       loadsString = loadsString
         .replace('\r', '')
@@ -504,7 +498,6 @@ function getMuscleValuesFromCsvRow(
         .trim();
 
       if (!loadsString || !loadsString.length) {
-        console.log('returning cuz of empty loadsString', loadsString);
         return;
       }
 
@@ -534,8 +527,6 @@ function getMuscleValuesFromCsvRow(
       });
     }
   });
-
-  console.log('muscleValues', muscleValues);
 
   return muscleValues;
 }

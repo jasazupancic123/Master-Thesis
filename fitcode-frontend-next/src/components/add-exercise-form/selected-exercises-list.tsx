@@ -1,10 +1,11 @@
-import { theme } from '@/app/style';
-import { Exercise } from '@/core/exercise/type/exercise.type';
-import { SetState } from '@/lib/common/type/state.type';
-import { useMain } from '@/store/main.provider';
-import { Close, CloseOutlined } from '@mui/icons-material';
+import { CloseOutlined } from '@mui/icons-material';
 import { Box, IconButton } from '@mui/material';
 import { useEffect, useState } from 'react';
+
+import { theme } from '@/app/style';
+import type { Exercise } from '@/core/exercise/type/exercise.type';
+import type { SetState } from '@/lib/common/type/state.type';
+import { useMain } from '@/store/main.provider';
 
 interface Props {
   newAddedExercisesIds: string[];
@@ -30,6 +31,7 @@ export default function SelectedExercisesList(props: Props) {
 
     setSelectedExercises(selected);
   }, [newAddedExercisesIds]);
+
   return (
     <Box
       width="100%"

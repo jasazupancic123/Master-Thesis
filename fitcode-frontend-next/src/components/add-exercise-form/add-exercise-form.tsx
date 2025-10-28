@@ -1,3 +1,4 @@
+import { KeyboardArrowDown } from '@mui/icons-material';
 import {
   Box,
   Button,
@@ -11,14 +12,13 @@ import ExerciseFilter from '../exercises-list/exercise-filter';
 import ExercisesList from '../exercises-list/exercises-list';
 import type { AddExerciseFormProps } from '../trainer-group-day-view/props/props';
 import useExerciseFormComponentExercises from './hooks/use-component-exercises';
+import useComponentFilter from './hooks/use-component-filter';
 import useExerciseFormFilters from './hooks/use-filters';
+import SelectedExercisesList from './selected-exercises-list';
+import { theme } from '@/app/style';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 import { SearchBar } from '@/ui/search-bar/search-bar';
-import { KeyboardArrowDown } from '@mui/icons-material';
-import { theme } from '@/app/style';
-import useComponentFilter from './hooks/use-component-filter';
-import SelectedExercisesList from './selected-exercises-list';
 
 export default function AddExerciseForm(props: AddExerciseFormProps) {
   const {

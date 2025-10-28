@@ -11,16 +11,15 @@ import {
   normId,
 } from './state';
 import SorenessIcon from '@/assets/icons/Soreness.svg';
+import type { Attribute } from '@/core/attribute/type/attribute.type';
 import { core } from '@/core/core.service';
+import type { MuscleLoadType } from '@/core/exercise/enum/muscle-load-type.enum';
+import type { HeatmapLoad } from '@/core/exercise/type/heatmap-load.entity';
 import type { MuscleTip } from '@/core/exercise/type/muscle-tip.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { SetState } from '@/lib/common/type/state.type';
-import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
-import { HeatmapLoad } from '@/core/exercise/type/heatmap-load.entity';
-import { MuscleLoadType } from '@/core/exercise/enum/muscle-load-type.enum';
-import { Attribute } from '@/core/attribute/type/attribute.type';
 
 export type SvgC = React.ForwardRefExoticComponent<
   React.SVGProps<SVGSVGElement> & React.RefAttributes<SVGSVGElement>
@@ -46,7 +45,6 @@ export default function MuscleMapWithTooltip(props: Props) {
   const theme = useTheme();
   const screenSize = useScreenSize();
 
-  const { exercises: allExercises } = useMain();
   const { training, component, addTrainingExercises } =
     useTrainerDayView() || {};
 
