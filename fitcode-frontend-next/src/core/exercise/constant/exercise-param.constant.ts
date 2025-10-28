@@ -19,7 +19,7 @@ export const SETS: Attribute<ExerciseSetParamsObj> = {
 
 export const REPS: Attribute<ExerciseSetParamsObj> = {
   field: 'reps',
-  name: 'Reps',
+  name: 'Rep',
   description: 'repetitions',
   type: AttributeType.Number,
   defaultValue: 10,
@@ -30,7 +30,7 @@ export const REPS: Attribute<ExerciseSetParamsObj> = {
 
 export const REC_TIME: Attribute<ExerciseSetParamsObj> = {
   field: 'recTime',
-  name: 'Time',
+  name: 'Rec',
   description: 'recovery time between sets',
   unit: 's',
   type: AttributeType.Number,
@@ -106,7 +106,7 @@ export const TIME: Attribute<ExerciseSetParamsObj> = {
 export const DIST: Attribute<ExerciseSetParamsObj> = {
   field: 'dist',
   type: AttributeType.Number,
-  name: 'Distance',
+  name: 'Dist',
   description: 'distance',
   unit: 'm',
   defaultValue: 100,
