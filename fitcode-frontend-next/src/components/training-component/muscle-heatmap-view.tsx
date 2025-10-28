@@ -13,18 +13,18 @@ import {
 } from 'recharts';
 
 import { theme } from '@/app/style';
-//import HeatmapBack from '@/assets/svg/heatmap-back.svg';
-//import HeatmapBackNew from '@/assets/svg/heatmap_back_new.svg';
+
 import HeatmapBackYellow from '@/assets/svg/heatmap_back_yellow.svg';
 import HeatmapFrontYellow from '@/assets/svg/heatmap_front_yellow.svg';
 import MuscleMapWithTooltip from '@/components/muscle-map-with-tooltip/muscle-map-with-tooltip';
 import { HEATMAP_COLORS } from '@/core/const/color.const';
-import { core } from '@/core/core.service';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 import useMuscleHeatmap from './hooks/use-muscle-heatmap';
 import { MuscleLoadType } from '@/core/exercise/enum/muscle-load-type.enum';
+import { useGroup } from '@/store/group.provider';
+import { core } from '@/core/core.service';
 
 const data = [
   { time: '', value: 0 },
@@ -69,7 +69,8 @@ const CustomChartTooltip: React.FC<TooltipProps> = ({ active, payload }) => {
 export default function MuscleHeatmapView() {
   const screenSize = useScreenSize();
 
-  const { supersets } = useTrainerDayView();
+  const { trainings } = useGroup();
+  const { supersets, selectedAthlete } = useTrainerDayView();
 
   const [exercises, setExercises] = useState<TrainingExercise[]>([]);
 
@@ -84,11 +85,17 @@ export default function MuscleHeatmapView() {
     setTipHeatmapBack,
     selectedLoadType,
     setSelectedLoadType,
+    range,
+    setRange,
   } = useMuscleHeatmap(exercises);
 
   useEffect(() => {
     setExercises(supersets.flatMap((s) => s.exercises));
   }, [supersets]);
+
+  const handleChange = (_event: Event, newValue: number | number[]) => {
+    setRange(newValue as number[]);
+  };
 
   return (
     <Box
@@ -112,6 +119,7 @@ export default function MuscleHeatmapView() {
         <Typography gutterBottom align="center">
           Heatmap Level: {Math.max(1, heatmapLevel)}
         </Typography>
+
         <Slider
           value={heatmapLevel}
           onChange={(_, value) => setHeatmapLevel(value as number)}
@@ -134,24 +142,84 @@ export default function MuscleHeatmapView() {
           flexDirection: screenSize.isSmallerThanLaptop ? 'column' : 'row',
         }}
       >
-        <Box display="flex" flexDirection="column" alignItems="center">
-          <Select
-            value={selectedLoadType}
-            onChange={(e) =>
-              setSelectedLoadType(e.target.value as 'ALL' | MuscleLoadType)
-            }
-            sx={{
-              mb: 2,
-              '& .MuiSelect-select': {
-                p: 1,
-              },
-            }}
+        <Box
+          display="flex"
+          flexDirection="column"
+          justifyContent="center"
+          alignItems="center"
+          gap={1}
+        >
+          <Box
+            width="100%"
+            display="flex"
+            flexDirection="column"
+            justifyContent="center"
+            alignItems="center"
           >
-            <MenuItem value="ALL">All</MenuItem>
-            <MenuItem value={MuscleLoadType.CONCENTRIC}>Concentric</MenuItem>
-            <MenuItem value={MuscleLoadType.ECCENTRIC}>Eccentric</MenuItem>
-            <MenuItem value={MuscleLoadType.ISOMETRIC}>Isometric</MenuItem>
-          </Select>
+            <Select
+              value={selectedLoadType}
+              onChange={(e) =>
+                setSelectedLoadType(e.target.value as 'ALL' | MuscleLoadType)
+              }
+              sx={{
+                '& .MuiSelect-select': {
+                  p: 1,
+                },
+              }}
+            >
+              <MenuItem value="ALL">All</MenuItem>
+              <MenuItem value={MuscleLoadType.CONCENTRIC}>Concentric</MenuItem>
+              <MenuItem value={MuscleLoadType.ECCENTRIC}>Eccentric</MenuItem>
+              <MenuItem value={MuscleLoadType.ISOMETRIC}>Isometric</MenuItem>
+            </Select>
+            <Box
+              width="100%"
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              zIndex={1}
+            >
+              <Slider
+                value={range}
+                onChange={handleChange}
+                valueLabelDisplay="off"
+                min={1}
+                max={trainings.length}
+                step={1}
+                sx={{
+                  width: '80%',
+                  color: 'background.paper',
+                  '& .MuiSlider-thumb': {
+                    backgroundColor: theme.palette.primary.main,
+                    width: 20,
+                    height: 20,
+                  },
+                  '& .MuiSlider-track': {
+                    height: 5,
+                    backgroundColor: 'background.paper',
+                  },
+                  '& .MuiSlider-rail': {
+                    backgroundColor: 'white',
+                    height: 5,
+                    opacity: 1,
+                  },
+                }}
+              />
+              <Box display="flex" justifyContent="space-between" width="80%">
+                <Typography variant="body2">First training</Typography>
+                {selectedAthlete && selectedAthlete.displayName && (
+                  <Typography variant="subtitle1">
+                    <i>
+                      {core.training.athlete.getShortName(
+                        selectedAthlete.displayName
+                      )}
+                    </i>
+                  </Typography>
+                )}
+                <Typography variant="body2">Last training</Typography>
+              </Box>
+            </Box>
+          </Box>
           <Box
             sx={
               screenSize.isSmallerThanLaptop

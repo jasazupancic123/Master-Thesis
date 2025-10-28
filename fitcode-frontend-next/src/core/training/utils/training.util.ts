@@ -24,6 +24,7 @@ import {
   WARMUP_ID,
 } from '@/core/training/const/warmup-cooldown.const';
 import type { DateRange } from '@/lib/common/type/date-range.type';
+import { AthleteUtil } from './athlete.util';
 
 export class TrainingUtil {
   readonly component: TrainingComponentUtil;
@@ -31,6 +32,7 @@ export class TrainingUtil {
   readonly superset: TrainingSupersetUtil;
   readonly set: TrainingExerciseSetUtil;
   readonly workload: WorkloadUtil;
+  readonly athlete: AthleteUtil;
 
   constructor() {
     this.component = new TrainingComponentUtil();
@@ -38,6 +40,7 @@ export class TrainingUtil {
     this.superset = new TrainingSupersetUtil();
     this.set = new TrainingExerciseSetUtil();
     this.workload = new WorkloadUtil();
+    this.athlete = new AthleteUtil();
   }
 
   stub(userId: string, data?: Partial<Training>): Training {
