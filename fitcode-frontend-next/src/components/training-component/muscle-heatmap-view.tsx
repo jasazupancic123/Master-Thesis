@@ -25,46 +25,8 @@ import useMuscleHeatmap from './hooks/use-muscle-heatmap';
 import { MuscleLoadType } from '@/core/exercise/enum/muscle-load-type.enum';
 import { useGroup } from '@/store/group.provider';
 import { core } from '@/core/core.service';
-
-const data = [
-  { time: '', value: 0 },
-  { time: '15:00', value: 30 },
-  { time: '30:00', value: 50 },
-  { time: '45:00', value: 20 },
-  { time: '60:00', value: 80 },
-  { time: '75:00', value: 60 },
-  { time: '90:00', value: 90 },
-  { time: '105:00', value: 70 },
-];
-
-type DataPoint = {
-  time: string;
-  value: number;
-};
-
-type TooltipProps = {
-  active?: boolean;
-  payload?: { payload: DataPoint; value: number }[];
-};
-
-const CustomChartTooltip: React.FC<TooltipProps> = ({ active, payload }) => {
-  if (active && payload && payload.length) {
-    return (
-      <div
-        style={{
-          background: '#2a2a2a',
-          padding: '8px',
-          borderRadius: '5px',
-          color: '#fff',
-        }}
-      >
-        <p>{`Time: ${payload[0].payload.time}`}</p>
-        <p>{`Value: ${payload[0].value}`}</p>
-      </div>
-    );
-  }
-  return null;
-};
+import MuscleChart from './muscle-chart';
+import { Attribute } from '@/core/attribute/type/attribute.type';
 
 export default function MuscleHeatmapView() {
   const screenSize = useScreenSize();
@@ -73,6 +35,11 @@ export default function MuscleHeatmapView() {
   const { supersets, selectedAthlete } = useTrainerDayView();
 
   const [exercises, setExercises] = useState<TrainingExercise[]>([]);
+
+  const [selectedMuscle, setSelectedMuscle] = useState<Attribute | null>(null);
+  const [selectedMuscleName, setSelectedMuscleName] = useState<string | null>(
+    null
+  );
 
   const {
     heatmapLevel,
@@ -137,7 +104,7 @@ export default function MuscleHeatmapView() {
         display="flex"
         justifyContent="center"
         alignItems="center"
-        gap={5}
+        gap={0}
         sx={{
           flexDirection: screenSize.isSmallerThanLaptop ? 'column' : 'row',
         }}
@@ -246,6 +213,8 @@ export default function MuscleHeatmapView() {
               tip={tipHeatmapFront}
               setTip={setTipHeatmapFront}
               selectedLoadType={selectedLoadType}
+              setSelectedMuscle={setSelectedMuscle}
+              setSelectedMuscleName={setSelectedMuscleName}
             />
             <MuscleMapWithTooltip
               front={false}
@@ -257,6 +226,8 @@ export default function MuscleHeatmapView() {
               tip={tipHeatmapBack}
               setTip={setTipHeatmapBack}
               selectedLoadType={selectedLoadType}
+              setSelectedMuscle={setSelectedMuscle}
+              setSelectedMuscleName={setSelectedMuscleName}
             />
 
             {/* Legend */}
@@ -284,46 +255,13 @@ export default function MuscleHeatmapView() {
             </Box>
           </Box>
         </Box>
-        <ResponsiveContainer
-          width={screenSize.isSmallerThanLaptop ? '100%' : '35%'}
-          height={400}
-        >
-          <AreaChart data={data}>
-            <defs>
-              <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#00aaff" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="#00aaff" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-
-            <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-            <XAxis dataKey="time" stroke="#aaa" />
-            <YAxis stroke="#aaa" />
-            <Tooltip content={<CustomChartTooltip />} />
-
-            <Area
-              type="monotone"
-              dataKey="value"
-              stroke="#00aaff"
-              fillOpacity={1}
-              fill="url(#colorUv)"
-            />
-            <Line
-              type="monotone"
-              dataKey="value"
-              stroke="#ffffff"
-              strokeWidth={2}
-              dot={false}
-            />
-            <Scatter
-              data={data}
-              dataKey="value"
-              fill="#fff"
-              stroke="#000"
-              strokeWidth={2}
-            />
-          </AreaChart>
-        </ResponsiveContainer>
+        <MuscleChart
+          heatmapLevel={heatmapLevel}
+          maxHeatmapLevel={maxHeatmapLevel}
+          range={range}
+          selectedMuscle={selectedMuscle}
+          selectedMuscleName={selectedMuscleName}
+        />
       </Box>
     </Box>
   );

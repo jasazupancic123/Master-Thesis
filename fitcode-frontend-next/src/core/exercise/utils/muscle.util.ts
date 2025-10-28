@@ -256,6 +256,22 @@ export class MuscleUtil {
       .filter((id): id is string => Boolean(id));
   }
 
+  computeAllMusces(): Attribute[] {
+    const muscles = [] as Attribute[];
+
+    const musclesToEval = MUSCLES_TREE.map((m) => m);
+
+    while (musclesToEval.length) {
+      const muscle = musclesToEval.shift();
+      if (!muscle) continue;
+
+      muscles.push(muscle);
+      if (muscle.options) musclesToEval.push(...muscle.options);
+    }
+
+    return muscles;
+  }
+
   computeLeafMuscles(root: Attribute[]): Attribute[] {
     const leafes = [] as Attribute[];
 
@@ -312,5 +328,19 @@ export class MuscleUtil {
     });
 
     return leafes;
+  }
+
+  getRandomLeafMuscle(muscleId: string): Attribute | null {
+    const allMuscles = this.computeAllMusces();
+
+    const foundMuscle = allMuscles.find((m) => m.field === muscleId);
+
+    if (foundMuscle && !foundMuscle.options) return foundMuscle; // leaf
+
+    if (!foundMuscle) return null;
+
+    const leafes = this.computeLeafMuscles([foundMuscle]);
+
+    return leafes[0] || null;
   }
 }
