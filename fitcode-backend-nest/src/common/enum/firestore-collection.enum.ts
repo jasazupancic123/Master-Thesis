@@ -6,6 +6,7 @@ export enum FirestoreCollection {
   // root
   EXERCISE = 'exercises',
   INSTITUTION = 'institutions',
+  INSTITUTION_MEMBERS = 'institution-members',
   GROUP = 'groups',
   PROFILE = 'profile',
   WELLNESS = 'wellness',

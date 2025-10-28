@@ -65,7 +65,7 @@ export class InstitutionController {
     @Param('institutionId') institutionId: string,
     @Body() { userId }: UserIdDto,
   ) {
-    return this.institutionService.updateMembers(
+    return this.institutionService.updateMember(
       user,
       { institutionId },
       { add: true, userId, trainer: false },
@@ -79,7 +79,7 @@ export class InstitutionController {
     @Param('institutionId') institutionId: string,
     @Body() { userId }: UserIdDto,
   ) {
-    return this.institutionService.updateMembers(
+    return this.institutionService.updateMember(
       user,
       { institutionId },
       { add: false, userId, trainer: false },
@@ -93,7 +93,7 @@ export class InstitutionController {
     @Param('institutionId') institutionId: string,
     @Body() { userId }: UserIdDto,
   ) {
-    return this.institutionService.updateMembers(
+    return this.institutionService.updateMember(
       user,
       { institutionId },
       { add: true, userId, trainer: true },
@@ -107,7 +107,7 @@ export class InstitutionController {
     @Param('institutionId') institutionId: string,
     @Body() { userId }: UserIdDto,
   ) {
-    return this.institutionService.updateMembers(
+    return this.institutionService.updateMember(
       user,
       { institutionId },
       { add: false, userId, trainer: true },

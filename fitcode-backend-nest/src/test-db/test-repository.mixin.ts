@@ -10,6 +10,10 @@ export function TestRepositoryMixin<Model extends object, Ref = string>() {
       async clear(): Promise<void> {
         await this.firebase.deleteCollection(this.collectionName);
       }
+
+      async deleteByIds(ids: Ref[]): Promise<void> {
+        await Promise.all(ids.map((id) => this.delete(id)));
+      }
     }
 
     return TestRepository;

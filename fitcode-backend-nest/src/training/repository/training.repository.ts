@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -14,7 +13,6 @@ import {
 } from 'firebase-admin/firestore';
 
 import { UserRole } from '@src/auth/enum/user-role.enum';
-import { ChangeLogManager } from '@src/change-log/change-log.manager';
 import { DateRangeDto } from '@src/common/dto/date-range.dto';
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { Create, Update } from '@src/common/type/entity.type';
@@ -30,11 +28,7 @@ import { TrainingComponent } from '../entity/training-component.entity';
 export class TrainingRepository extends FirestoreRepository<Training> {
   collectionName = FirestoreCollection.TRAINING;
 
-  constructor(
-    readonly firebase: FirebaseService,
-    @Inject(Training)
-    readonly changeLog: ChangeLogManager<Training>,
-  ) {
+  constructor(readonly firebase: FirebaseService) {
     super(firebase);
   }
 
@@ -113,7 +107,6 @@ export class TrainingRepository extends FirestoreRepository<Training> {
     );
 
     const ref = this.doc(id);
-    this.changeLog.trackCreate(ref);
     await ref.set(query);
 
     return id;
@@ -122,13 +115,11 @@ export class TrainingRepository extends FirestoreRepository<Training> {
   async update(id: string, input: Update<Training>) {
     const query = this.firebase.buildUpdateQuery<Training>(input);
     const ref = this.doc(id);
-    await this.changeLog.trackUpdate(ref);
     await ref.update(query);
   }
 
   async delete(id: string) {
     const ref = this.doc(id);
-    await this.changeLog.trackDelete(ref);
     await ref.delete();
   }
 
@@ -139,7 +130,6 @@ export class TrainingRepository extends FirestoreRepository<Training> {
       true,
     );
 
-    await this.changeLog.trackUpdate(ref);
     await ref.update(data);
   }
 
@@ -150,7 +140,6 @@ export class TrainingRepository extends FirestoreRepository<Training> {
       false,
     );
 
-    await this.changeLog.trackUpdate(ref);
     await ref.update(data);
   }
 

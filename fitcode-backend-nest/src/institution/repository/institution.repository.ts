@@ -1,18 +1,18 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   CollectionReference,
   DocumentReference,
-  FieldValue,
+  Query,
 } from 'firebase-admin/firestore';
 
-import { ChangeLogManager } from '@src/change-log/change-log.manager';
+import { UserRole } from '@src/auth/enum/user-role.enum';
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { Create, Update } from '@src/common/type/entity.type';
 import { FirestoreRepository } from '@src/common/type/firestore.type';
-import { BatchWriteOperation } from '@src/common/type/orm.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 
 import { Institution } from '../entity/institution.entity';
+import { InstitutionMembersRepository } from './institution-members.repository';
 
 @Injectable()
 export class InstitutionRepository extends FirestoreRepository<Institution> {
@@ -20,8 +20,7 @@ export class InstitutionRepository extends FirestoreRepository<Institution> {
 
   constructor(
     readonly firebase: FirebaseService,
-    @Inject(Institution)
-    readonly changeLog: ChangeLogManager<Institution>,
+    readonly members: InstitutionMembersRepository,
   ) {
     super(firebase);
   }
@@ -34,6 +33,47 @@ export class InstitutionRepository extends FirestoreRepository<Institution> {
     return this.collection().doc(ref);
   }
 
+  async findById(ref: string): Promise<Institution | null> {
+    const snapshot = await this.doc(ref).get();
+    if (!snapshot.exists) return null;
+
+    const institution = this.serialize(snapshot);
+    const members = await this.members.findAllMembers(institution.id);
+
+    return {
+      ...institution,
+      trainerIds: members
+        .filter((m) => m.role === UserRole.TRAINER)
+        .map((m) => m.id),
+      athleteIds: members
+        .filter((m) => m.role === UserRole.ATHLETE)
+        .map((m) => m.id),
+    };
+  }
+
+  async findAll(
+    query: (ref: Query) => Query = (ref) => ref,
+  ): Promise<Institution[]> {
+    const snapshot = await query(this.collection()).get();
+    const institutions = snapshot.docs.map((doc) => this.serialize(doc));
+
+    // for each institution, fetch members
+    return await Promise.all(
+      institutions.map(async (institution) => {
+        const members = await this.members.findAllMembers(institution.id);
+        return {
+          ...institution,
+          trainerIds: members
+            .filter((m) => m.role === UserRole.TRAINER)
+            .map((m) => m.id),
+          athleteIds: members
+            .filter((m) => m.role === UserRole.ATHLETE)
+            .map((m) => m.id),
+        };
+      }),
+    );
+  }
+
   async findAllByAdmin() {
     return await this.findAll();
   }
@@ -42,31 +82,27 @@ export class InstitutionRepository extends FirestoreRepository<Institution> {
     return await this.findAll((q) => q.where('ownerId', '==', managerId));
   }
 
-  async findAllByTrainer(trainerId: string) {
-    return await this.findAll((q) =>
-      q.where('trainerIds', 'array-contains', trainerId),
-    );
+  async findAllByMember(memberId: string) {
+    const institutionIds =
+      await this.members.findInstitutionIdsByMember(memberId);
+
+    return await this.findAll((q) => q.where('id', 'in', institutionIds));
   }
 
-  async findAllByAthlete(athleteId: string) {
-    return await this.findAll((q) =>
-      q.where('athleteIds', 'array-contains', athleteId),
-    );
-  }
-
-  async save(input: Create<Institution>): Promise<string> {
+  async save(
+    input: Create<Omit<Institution, 'trainerIds' | 'athleteIds'>>,
+  ): Promise<string> {
     const { id } = this.collection().doc();
-    const query = this.firebase.buildCreateQuery<Institution>({
+    const query = this.firebase.buildCreateQuery<
+      Omit<Institution, 'trainerIds' | 'athleteIds'>
+    >({
       id,
       ownerId: input.ownerId,
-      trainerIds: input.trainerIds || [],
-      athleteIds: input.athleteIds || [],
       name: input.name,
       imageUrl: input.imageUrl,
     });
 
     const ref = this.doc(id);
-    this.changeLog.trackCreate(ref);
     await ref.set(query);
 
     return id;
@@ -77,74 +113,14 @@ export class InstitutionRepository extends FirestoreRepository<Institution> {
       ownerId: input.ownerId,
       name: input.name,
       imageUrl: input.imageUrl,
-      ...(input.athleteIds && { athleteIds: input.athleteIds }),
-      ...(input.trainerIds && { trainerIds: input.trainerIds }),
     });
 
     const ref = this.doc(id);
-    await this.changeLog.trackUpdate(ref);
     await ref.update(query);
   }
 
   async delete(id: string) {
     const ref = this.doc(id);
-    await this.changeLog.trackDelete(ref);
     await ref.delete();
-  }
-
-  async addTrainer(id: string, trainerId: string) {
-    const ref = this.doc(id);
-    await this.changeLog.trackUpdate(ref);
-    await ref.update({ trainerIds: FieldValue.arrayUnion(trainerId) });
-  }
-
-  async removeTrainer(id: string, trainerId: string) {
-    const ref = this.doc(id);
-    await this.changeLog.trackUpdate(ref);
-    await ref.update({ trainerIds: FieldValue.arrayRemove(trainerId) });
-  }
-
-  async addAthlete(id: string, athleteId: string) {
-    const ref = this.doc(id);
-    await this.changeLog.trackUpdate(ref);
-    await ref.update({ athleteIds: FieldValue.arrayUnion(athleteId) });
-  }
-
-  async removeAthlete(id: string, athleteId: string) {
-    const ref = this.doc(id);
-    await this.changeLog.trackUpdate(ref);
-    await ref.update({ athleteIds: FieldValue.arrayRemove(athleteId) });
-  }
-
-  getUpdateAthleteOperation(
-    id: string,
-    athleteId: string,
-    add: boolean,
-  ): BatchWriteOperation<Institution> {
-    return {
-      ref: this.doc(id),
-      operation: 'update',
-      data: {
-        athleteIds: add
-          ? (FieldValue.arrayUnion(athleteId) as unknown as string[])
-          : (FieldValue.arrayRemove(athleteId) as unknown as string[]),
-      },
-    };
-  }
-
-  getUpdateTrainerOperation(
-    id: string,
-    trainerId: string,
-    add: boolean,
-  ): BatchWriteOperation<Institution> {
-    return {
-      ref: this.doc(id),
-      operation: 'update',
-      data: {
-        trainerIds: add
-          ? (FieldValue.arrayUnion(trainerId) as unknown as string[])
-          : (FieldValue.arrayRemove(trainerId) as unknown as string[]),
-      },
-    };
   }
 }

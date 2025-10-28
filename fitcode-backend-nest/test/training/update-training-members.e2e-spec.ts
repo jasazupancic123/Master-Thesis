@@ -1,19 +1,14 @@
 import { TestApp } from '@test/common/utils/app.util';
 
+import { UserRole } from '@src/auth/enum/user-role.enum';
 import { getTime } from '@src/common/service/util';
 import type { TestUser } from '@src/common/type/entity.type';
-import { createAthleteUserAndToken } from '@src/common/utils/auth.util';
-import { deleteUsers } from '@src/common/utils/data.util';
-import { FirebaseService } from '@src/firebase/firebase.service';
-import { generateGroupStub } from '@src/group/mock/group.stub';
-import { generateInstitutionStub } from '@src/institution/mock/institution.mock';
 import { TestDbService } from '@src/test-db/test-db.service';
 import { generateTrainingStub } from '@src/training/mock/training.stub';
 
 describe('Update Group (e2e)', () => {
   let testApp: TestApp;
   let db: TestDbService;
-  let firebase: FirebaseService;
 
   let institutionId: string;
   let groupId: string;
@@ -22,28 +17,20 @@ describe('Update Group (e2e)', () => {
 
   beforeAll(async () => {
     testApp = await TestApp.init();
-    firebase = testApp.module.get(FirebaseService);
     db = testApp.module.get(TestDbService);
 
     athletes = await Promise.all([
-      createAthleteUserAndToken(firebase),
-      createAthleteUserAndToken(firebase),
-      createAthleteUserAndToken(firebase),
+      testApp.auth.createAthlete(),
+      testApp.auth.createAthlete(),
+      testApp.auth.createAthlete(),
     ]);
 
     const membersIds = athletes.map((a) => a.uid);
-    institutionId = await db.institutions.save(
-      generateInstitutionStub({ athleteIds: membersIds }),
-    );
+    const institution = await db.institutions.createTest({ athletes });
+    const group = await db.groups.createTest(institution, { membersIds });
 
-    groupId = await db.groups.save(
-      generateGroupStub({
-        institutionId,
-        ownerId: global.trainer.uid,
-        membersIds,
-      }),
-    );
-
+    institutionId = institution.id;
+    groupId = group.id;
     trainingId = await db.trainings.save(
       generateTrainingStub({
         ownerId: global.trainer.uid,
@@ -56,8 +43,8 @@ describe('Update Group (e2e)', () => {
   });
 
   afterAll(async () => {
-    await deleteUsers(firebase, athletes);
-    await db.cleanup();
+    await testApp.auth.deleteUsers(athletes.map((a) => a.uid));
+    await db.clear();
     await testApp.close();
   });
 
@@ -137,7 +124,7 @@ describe('Update Group (e2e)', () => {
   });
 
   it('should fail if member is not part of the institution', async () => {
-    const newAthlete = await createAthleteUserAndToken(firebase);
+    const newAthlete = await testApp.auth.createAthlete();
     const response = await addMemberReq(
       trainingId,
       global.trainer.token,
@@ -146,14 +133,15 @@ describe('Update Group (e2e)', () => {
 
     expect(response.status).toBe(400);
     expect(response.body.message).toBe('Member is not part of the institution');
-    await deleteUsers(firebase, [newAthlete]);
+    await testApp.auth.deleteUsers([newAthlete.uid]);
   });
 
   it('should successfully add a member to the training', async () => {
-    db.checkpoint();
-
-    const newAthlete = await createAthleteUserAndToken(firebase);
-    await db.institutions.addAthlete(institutionId, newAthlete.uid);
+    const newAthlete = await testApp.auth.createAthlete();
+    await db.institutions.members.addMember(
+      { role: UserRole.ATHLETE },
+      { institutionId, uid: newAthlete.uid },
+    );
 
     const response = await addMemberReq(
       trainingId,
@@ -167,8 +155,10 @@ describe('Update Group (e2e)', () => {
     expect(training.membersIds).toHaveLength(4);
     expect(training.membersIds).toContain(newAthlete.uid);
 
-    await deleteUsers(firebase, [newAthlete]);
-    await db.checkpointRestore();
+    await testApp.auth.deleteUsers([newAthlete.uid]);
+    await db.trainings.update(trainingId, {
+      membersIds: athletes.map((a) => a.uid),
+    });
   });
 
   it('should successfully remove a member from the training', async () => {
@@ -186,6 +176,8 @@ describe('Update Group (e2e)', () => {
     expect(training.membersIds).toContain(athletes[1].uid);
 
     // Clean up by adding the athlete back
-    await db.checkpointRestore();
+    await db.trainings.update(trainingId, {
+      membersIds: athletes.map((a) => a.uid),
+    });
   });
 });

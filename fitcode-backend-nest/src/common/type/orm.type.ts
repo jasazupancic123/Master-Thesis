@@ -46,11 +46,8 @@ export interface BatchDeleteOperation extends BatchOperationBase {
   operation: 'delete';
 }
 
-export type BatchOperation<T> =
-  | BatchSetOperation<T>
-  | BatchUpdateOperation<T>
-  | BatchDeleteOperation;
-
 export type BatchWriteOperation<T> =
   | BatchSetOperation<T>
   | BatchUpdateOperation<T>;
+
+export type BatchOperation<T> = BatchWriteOperation<T> | BatchDeleteOperation;

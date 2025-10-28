@@ -1,21 +1,9 @@
 import { TestApp } from '@test/common/utils/app.util';
 
 import type { TestInstitution } from '@src/common/type/entity.type';
-import {
-  createGroupWithCycles,
-  createInstitution,
-  createInstitutionWithUsers,
-  deleteDoc,
-  deleteDocs,
-  deleteInstitution,
-} from '@src/common/utils/data.util';
-import { ComponentService } from '@src/component/component.service';
 import type { Component } from '@src/component/entity/component.entity';
 import { generateComponentStub } from '@src/component/mock/component.stub';
-import { FirebaseService } from '@src/firebase/firebase.service';
 import type { Group } from '@src/group/entity/group.entity';
-import { GroupService } from '@src/group/group.service';
-import { InstitutionService } from '@src/institution/service/institution.service';
 import { TestDbService } from '@src/test-db/test-db.service';
 import type { Training } from '@src/training/entity/training.entity';
 import type { UpdateTraining } from '@src/training/interface/update-training.interface';
@@ -32,11 +20,7 @@ describe('Update Training (e2e)', () => {
   let testApp: TestApp;
   let db: TestDbService;
 
-  let firebase: FirebaseService;
-  let componentService: ComponentService;
   let trainingService: TrainingService;
-  let groupService: GroupService;
-  let institutionService: InstitutionService;
 
   let component1: Component;
   let component2: Component;
@@ -53,42 +37,33 @@ describe('Update Training (e2e)', () => {
   beforeAll(async () => {
     testApp = await TestApp.init();
     db = testApp.module.get(TestDbService);
-    firebase = testApp.module.get(FirebaseService);
-    componentService = testApp.module.get(ComponentService);
     trainingService = testApp.module.get(TrainingService);
-    groupService = testApp.module.get(GroupService);
-    institutionService = testApp.module.get(InstitutionService);
 
-    component1 = await componentService.create(
+    component1 = await db.components.create(
       generateComponentStub({ params: ['reps', 'loadKg'] }),
     );
 
-    component2 = await componentService.create(
+    component2 = await db.components.create(
       generateComponentStub({ params: ['dist', 'tempo', 'eff'] }),
     );
 
-    institution = await createInstitution(institutionService);
-    group = await createGroupWithCycles(groupService, institution);
+    institution = await db.institutions.createTest();
+    group = await db.groups.createTest(institution);
     training = await createTraining();
 
-    otherInstitution = await createInstitutionWithUsers(
-      firebase,
-      institutionService,
-    );
+    otherInstitution = await db.institutions.createTest({
+      createRandomAthlete: true,
+      createRandomTrainer: true,
+      createRandomManager: true,
+    });
 
-    otherGroup = await createGroupWithCycles(groupService, otherInstitution);
+    otherGroup = await db.groups.createTest(otherInstitution);
   });
 
   afterAll(async () => {
-    await Promise.all([
-      deleteDoc(firebase, 'TRAINING', training.id),
-      deleteDocs(firebase, 'GROUP', [otherGroup.id, group.id]),
-      deleteInstitution(firebase, institution),
-      deleteInstitution(firebase, otherInstitution),
-      deleteDoc(firebase, 'COMPONENT', component1.id),
-      deleteDoc(firebase, 'COMPONENT', component2.id),
-    ]);
-
+    await db.institutions.remove(institution.id);
+    await db.institutions.remove(otherInstitution.id);
+    await db.clear();
     await testApp.close();
   });
 
@@ -155,12 +130,12 @@ describe('Update Training (e2e)', () => {
       expect(response.status).toBe(200);
       expect(trainings).toHaveLength(0);
 
-      await deleteDoc(firebase, 'TRAINING', training.id);
+      await db.trainings.delete(training.id);
       training = await createTraining();
     });
 
     it('should fail if input has unilateral exercise with only one side set', async () => {
-      const exercise = await db.exercises.create({
+      const exercise = await db.exercises.createTest({
         name: 'Bilateral Exercise',
         ownerId: global.trainer.uid,
         componentIds: [component1.id],

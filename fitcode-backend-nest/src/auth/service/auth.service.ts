@@ -254,13 +254,19 @@ export class AuthService {
           if (institution.trainerIds.includes(created.uid))
             throw new ConflictException('Trainer already in institution');
 
-          await this.institutionService.addTrainer(institution.id, created.uid);
+          await this.institutionService.addMember(
+            { role: input.role },
+            { institutionId: institution.id, uid: created.uid },
+          );
           break;
         case UserRole.ATHLETE:
           if (institution.athleteIds.includes(created.uid))
             throw new ConflictException('Athlete already in institution');
 
-          await this.institutionService.addAthlete(institution.id, created.uid);
+          await this.institutionService.addMember(
+            { role: input.role },
+            { institutionId: institution.id, uid: created.uid },
+          );
           break;
         default:
           throw new BadRequestException('Invalid role for institution user');

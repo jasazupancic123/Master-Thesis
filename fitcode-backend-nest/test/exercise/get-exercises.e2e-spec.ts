@@ -1,29 +1,17 @@
 import { TestApp } from '@test/common/utils/app.util';
 
 import type { TestInstitution } from '@src/common/type/entity.type';
-import {
-  createInstitution,
-  createInstitutionWithUsers,
-  deleteCollection,
-  deleteDoc,
-  deleteDocs,
-  deleteInstitution,
-} from '@src/common/utils/data.util';
-import { ComponentService } from '@src/component/component.service';
 import type { Component } from '@src/component/entity/component.entity';
 import { generateComponentStub } from '@src/component/mock/component.stub';
 import type { Exercise } from '@src/exercise/entity/exercise.entity';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
-import { FirebaseService } from '@src/firebase/firebase.service';
-import { InstitutionService } from '@src/institution/service/institution.service';
+import { TestDbService } from '@src/test-db/test-db.service';
 
 describe('Get Exercises (e2e)', () => {
   let testApp: TestApp;
-  let firebase: FirebaseService;
+  let db: TestDbService;
   let exerciseService: ExerciseService;
-  let componentService: ComponentService;
-  let institutionService: InstitutionService;
 
   // global
   let component: Component;
@@ -39,23 +27,22 @@ describe('Get Exercises (e2e)', () => {
 
   beforeAll(async () => {
     testApp = await TestApp.init();
-    firebase = testApp.module.get(FirebaseService);
+    db = testApp.module.get(TestDbService);
     exerciseService = testApp.module.get(ExerciseService);
-    componentService = testApp.module.get(ComponentService);
-    institutionService = testApp.module.get(InstitutionService);
 
-    component = await componentService.create(generateComponentStub());
+    component = await db.components.create(generateComponentStub());
     globalExercises = await exerciseService.upsertMany(global.admin, [
       generateExerciseStub({ componentIds: [component.id] }),
       generateExerciseStub({ componentIds: [component.id] }),
       generateExerciseStub({ componentIds: [component.id] }),
     ]);
 
-    institution1 = await createInstitution(institutionService);
-    institution2 = await createInstitutionWithUsers(
-      firebase,
-      institutionService,
-    );
+    institution1 = await db.institutions.createTest();
+    institution2 = await db.institutions.createTest({
+      createRandomAthlete: true,
+      createRandomTrainer: true,
+      createRandomManager: true,
+    });
 
     [institution1Exercises, institution2Exercises] = await Promise.all([
       exerciseService.upsertMany(institution1.manager, [
@@ -69,13 +56,8 @@ describe('Get Exercises (e2e)', () => {
   });
 
   afterAll(async () => {
-    await Promise.all([
-      deleteCollection(firebase, 'EXERCISE'),
-      deleteInstitution(firebase, institution1),
-      deleteInstitution(firebase, institution2),
-      deleteDoc(firebase, 'COMPONENT', component.id),
-    ]);
-
+    await db.institutions.remove(institution2.id); // to remove users as well
+    await db.clear();
     await testApp.close();
   });
 
@@ -165,7 +147,7 @@ describe('Get Exercises (e2e)', () => {
         response.body.find((e: Exercise) => e.id === disabledExercise.id),
       ).toBeDefined();
 
-      await deleteDoc(firebase, 'EXERCISE', disabledExercise.id);
+      await db.exercises.delete(disabledExercise.id);
     });
 
     it.each([
@@ -185,14 +167,14 @@ describe('Get Exercises (e2e)', () => {
         response.body.find((e: Exercise) => e.id === disabledExercise.id),
       ).toBeUndefined();
 
-      await deleteDoc(firebase, 'EXERCISE', disabledExercise.id);
+      await db.exercises.delete(disabledExercise.id);
     });
   });
 
   describe('Filtering Exercises', () => {
     it('should filter exercises by component', async () => {
-      const comp1 = await componentService.create(generateComponentStub());
-      const comp2 = await componentService.create(generateComponentStub());
+      const comp1 = await db.components.create(generateComponentStub());
+      const comp2 = await db.components.create(generateComponentStub());
 
       const exercises = [
         generateExerciseStub({ componentIds: [comp1.id] }),
@@ -228,15 +210,14 @@ describe('Get Exercises (e2e)', () => {
         expect(response.body).toHaveLength(filters[i][1]);
       }
 
-      await Promise.all([
-        deleteDocs(firebase, 'COMPONENT', [comp1.id, comp2.id]),
-        deleteDocs(firebase, 'EXERCISE', exerciseIds),
-      ]);
+      await db.components.delete(comp1.id);
+      await db.components.delete(comp2.id);
+      for (const id of exerciseIds) await db.exercises.delete(id);
     });
 
     it('should filter exercises by component', async () => {
-      const comp1 = await componentService.create(generateComponentStub());
-      const comp2 = await componentService.create(generateComponentStub());
+      const comp1 = await db.components.create(generateComponentStub());
+      const comp2 = await db.components.create(generateComponentStub());
 
       const exercises = [
         generateExerciseStub({ componentIds: [comp1.id] }),
@@ -272,10 +253,9 @@ describe('Get Exercises (e2e)', () => {
         expect(response.body).toHaveLength(filters[i][1]);
       }
 
-      await Promise.all([
-        deleteDocs(firebase, 'COMPONENT', [comp1.id, comp2.id]),
-        deleteDocs(firebase, 'EXERCISE', exerciseIds),
-      ]);
+      await db.components.delete(comp1.id);
+      await db.components.delete(comp2.id);
+      for (const id of exerciseIds) await db.exercises.delete(id);
     });
 
     it('should filter exercises by one field', async () => {
@@ -329,7 +309,7 @@ describe('Get Exercises (e2e)', () => {
         expect(response.body).toHaveLength(filters[i][1]);
       }
 
-      await deleteDocs(firebase, 'EXERCISE', exerciseIds);
+      await db.exercises.deleteByIds(exerciseIds);
     });
 
     it('should not filter exercises by multiple fields', async () => {
@@ -394,7 +374,7 @@ describe('Get Exercises (e2e)', () => {
         );
       }
 
-      await deleteDocs(firebase, 'EXERCISE', exerciseIds);
+      await db.exercises.deleteByIds(exerciseIds);
     });
   });
 });

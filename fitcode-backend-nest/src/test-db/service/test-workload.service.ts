@@ -22,14 +22,11 @@ import {
 } from '@src/training/entity/workload.entity';
 import { generateWorkloadStub } from '@src/training/mock/workload.stub';
 
-import { AbstractChangeLogService } from './abstract-test-change-log.service';
-
 @Injectable()
-export class TestWorkloadService extends AbstractChangeLogService<Workload> {
+export class TestWorkloadService {
   readonly collectionGroup: CollectionGroup;
 
   constructor(protected readonly firebase: FirebaseService) {
-    super(firebase);
     this.collectionGroup = this.firebase.firestore.collectionGroup(
       FirestoreCollection.TRAINING_WORKLOAD,
     );
@@ -73,7 +70,6 @@ export class TestWorkloadService extends AbstractChangeLogService<Workload> {
       const ref = this.collection(item.trainingId).doc(id);
       const query = this.firebase.buildCreateQuery<Workload>(workload);
 
-      this.trackCreate(ref);
       return { operation: 'set', ref, data: query };
     });
 

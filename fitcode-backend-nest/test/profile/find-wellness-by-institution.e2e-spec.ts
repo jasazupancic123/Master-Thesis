@@ -2,28 +2,20 @@ import { TestApp } from '@test/common/utils/app.util';
 import { subDays } from 'date-fns';
 
 import type { TestInstitution } from '@src/common/type/entity.type';
-import {
-  createAthleteUserAndToken,
-  createTrainerUserAndToken,
-} from '@src/common/utils/auth.util';
-import { deleteUsersByIds } from '@src/common/utils/data.util';
-import type { FirebaseService } from '@src/firebase/firebase.service';
 import { TestDbService } from '@src/test-db/test-db.service';
 
 describe('Find Wellness By Institution (e2e)', () => {
   let testApp: TestApp;
   let testDb: TestDbService;
-  let firebase: FirebaseService;
   let institution: TestInstitution;
 
   beforeAll(async () => {
     testApp = await TestApp.init();
-    firebase = testApp.firebase;
     testDb = testApp.app.get(TestDbService);
 
     const testAthletes = await Promise.all(
       Array.from({ length: 50 }).map((_, i) =>
-        createAthleteUserAndToken(firebase, i.toString()),
+        testApp.auth.createAthlete(i.toString()),
       ),
     );
 
@@ -56,12 +48,12 @@ describe('Find Wellness By Institution (e2e)', () => {
   });
 
   it('should fail if user is trainer that is not in this institution', async () => {
-    const otherTrainer = await createTrainerUserAndToken(firebase);
+    const otherTrainer = await testApp.auth.createTrainer();
     const res = await req(otherTrainer.token);
     expect(res.status).toBe(401);
     expect(res.body.message).toBe('Unauthorized');
 
-    await deleteUsersByIds(firebase, [otherTrainer.uid]);
+    await testApp.auth.deleteUsers([otherTrainer.uid]);
   });
 
   it('should find all wellnesses for members by institution', async () => {

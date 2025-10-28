@@ -4,7 +4,6 @@ import type { AuthUser } from '@src/auth/entity/user.entity';
 import { UserRole } from '@src/auth/enum/user-role.enum';
 import { AuthService } from '@src/auth/service/auth.service';
 import type { ValidateRowError } from '@src/common/type/validate.type';
-import { deleteUsersByIds } from '@src/common/utils/data.util';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import type {
   ImportProfileDto,
@@ -111,16 +110,18 @@ describe('Import Users (e2e)', () => {
 
     // delete users
     const allUsers = await firebase.auth.listUsers();
-    await deleteUsersByIds(
-      firebase,
+    await testApp.auth.deleteUsers(
       allUsers.users
         .filter((u) => u.email?.startsWith('test') ?? false)
         .map((u) => u.uid),
     );
 
-    await db.institutions.update(institutionId, {
-      athleteIds: [global.athlete.uid], // reset members
-    });
+    for (const uid of institution.athleteIds)
+      if (uid !== global.athlete.uid)
+        await db.institutions.members.removeMember({
+          institutionId,
+          uid,
+        });
   });
 
   it('should successfully import all users', async () => {
@@ -163,16 +164,18 @@ describe('Import Users (e2e)', () => {
 
     // delete users
     const allUsers = await firebase.auth.listUsers();
-    await deleteUsersByIds(
-      firebase,
+    await testApp.auth.deleteUsers(
       allUsers.users
         .filter((u) => u.email?.startsWith('test') ?? false)
         .map((u) => u.uid),
     );
 
-    await db.institutions.update(institutionId, {
-      athleteIds: [global.athlete.uid], // reset members
-    });
+    for (const uid of institution.athleteIds)
+      if (uid !== global.athlete.uid)
+        await db.institutions.members.removeMember({
+          institutionId,
+          uid,
+        });
   });
 
   it('should not throw error if users already exist', async () => {
@@ -234,8 +237,7 @@ describe('Import Users (e2e)', () => {
 
     // delete users
     const allUsers = await firebase.auth.listUsers();
-    await deleteUsersByIds(
-      firebase,
+    await testApp.auth.deleteUsers(
       allUsers.users
         .filter((u) => u.email?.startsWith('test') ?? false)
         .map((u) => u.uid),
@@ -282,8 +284,7 @@ describe('Import Users (e2e)', () => {
 
     // delete users
     const allUsers = await firebase.auth.listUsers();
-    await deleteUsersByIds(
-      firebase,
+    await testApp.auth.deleteUsers(
       allUsers.users
         .filter(
           (u) =>

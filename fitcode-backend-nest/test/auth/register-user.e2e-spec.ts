@@ -4,8 +4,6 @@ import type { CreateUserDto } from '@src/auth/dto/create-user.dto';
 import { UserRole } from '@src/auth/enum/user-role.enum';
 import { generateCreateUserStub } from '@src/auth/mock/auth.stub';
 import type { TestInstitution } from '@src/common/type/entity.type';
-import { createTestUserAndToken } from '@src/common/utils/auth.util';
-import { deleteUsersByIds } from '@src/common/utils/data.util';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { TestDbService } from '@src/test-db/test-db.service';
 
@@ -25,7 +23,7 @@ describe('Register User (e2e)', () => {
 
   afterAll(async () => {
     await db.institutions.remove(institution.id);
-    await db.cleanup();
+    await db.clear();
     await testApp.close();
   });
 
@@ -64,7 +62,7 @@ describe('Register User (e2e)', () => {
       expect(dbUser?.customClaims).toMatchObject({ role: [UserRole.MANAGER] });
 
       // delete user
-      await deleteUsersByIds(firebase, [dbUser!.uid]);
+      await testApp.auth.deleteUsers([dbUser!.uid]);
     });
   });
 
@@ -110,19 +108,18 @@ describe('Register User (e2e)', () => {
           expect(dbInstitution.athleteIds).toContain(dbUser!.uid);
 
         // delete user
-        await deleteUsersByIds(firebase, [dbUser!.uid]);
-
-        if (role === UserRole.TRAINER)
-          await db.institutions.removeTrainer(dbInstitution.id, dbUser!.uid);
-        if (role === UserRole.ATHLETE)
-          await db.institutions.removeAthlete(dbInstitution.id, dbUser!.uid);
+        await testApp.auth.deleteUsers([dbUser!.uid]);
+        await db.institutions.institutionMembersRepository.removeMember({
+          institutionId: dbInstitution.id,
+          uid: dbUser!.uid,
+        });
       },
     );
 
     it.each([[UserRole.TRAINER], [UserRole.ATHLETE]])(
       'should add %s to institution even if auth user already exists',
       async (role) => {
-        const existingUser = await createTestUserAndToken(firebase, role);
+        const existingUser = await testApp.auth.createUser(role);
         const input = generateCreateUserStub({
           role,
           email: existingUser.email,
@@ -156,18 +153,11 @@ describe('Register User (e2e)', () => {
           expect(dbInstitutionAfter.athleteIds).toContain(existingUser.uid);
 
         // delete user
-        await deleteUsersByIds(firebase, [existingUser.uid]);
-
-        if (role === UserRole.TRAINER)
-          await db.institutions.removeTrainer(
-            dbInstitutionAfter.id,
-            existingUser.uid,
-          );
-        if (role === UserRole.ATHLETE)
-          await db.institutions.removeAthlete(
-            dbInstitutionAfter.id,
-            existingUser.uid,
-          );
+        await testApp.auth.deleteUsers([existingUser.uid]);
+        await db.institutions.institutionMembersRepository.removeMember({
+          institutionId: dbInstitutionAfter.id,
+          uid: existingUser.uid,
+        });
       },
     );
   });

@@ -1,15 +1,10 @@
 import { TestApp } from '@test/common/utils/app.util';
 import { addDays, startOfDay, subDays } from 'date-fns';
 
+import { UserRole } from '@src/auth/enum/user-role.enum';
 import type { TestUser } from '@src/common/type/entity.type';
-import {
-  createAthleteUserAndToken,
-  createTrainerUserAndToken,
-} from '@src/common/utils/auth.util';
-import { deleteUsers } from '@src/common/utils/data.util';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { generateGroupStub } from '@src/group/mock/group.stub';
-import { generateInstitutionStub } from '@src/institution/mock/institution.mock';
 import { TestDbService } from '@src/test-db/test-db.service';
 import { generateTrainingStub } from '@src/training/mock/training.stub';
 
@@ -28,14 +23,13 @@ describe('Update Group (e2e)', () => {
     db = testApp.module.get(TestDbService);
 
     athletes = await Promise.all([
-      createAthleteUserAndToken(firebase),
-      createAthleteUserAndToken(firebase),
-      createAthleteUserAndToken(firebase),
+      testApp.auth.createAthlete(),
+      testApp.auth.createAthlete(),
+      testApp.auth.createAthlete(),
     ]);
 
-    institutionId = await db.institutions.save(
-      generateInstitutionStub({ athleteIds: athletes.map((a) => a.uid) }),
-    );
+    const institution = await db.institutions.createTest({ athletes });
+    institutionId = institution.id;
 
     groupId = await db.groups.save(
       generateGroupStub({
@@ -47,8 +41,8 @@ describe('Update Group (e2e)', () => {
   });
 
   afterAll(async () => {
-    await deleteUsers(firebase, athletes);
-    await db.cleanup();
+    await testApp.auth.deleteUsers(athletes.map((a) => a.uid));
+    await db.clear();
     await testApp.close();
   });
 
@@ -92,7 +86,7 @@ describe('Update Group (e2e)', () => {
   });
 
   it('should fail if other trainer tries to update group members', async () => {
-    const newTrainer = await createTrainerUserAndToken(firebase);
+    const newTrainer = await testApp.auth.createTrainer();
     const response = await testApp.http.patch(
       `/group/${groupId}/member`,
       newTrainer.token,
@@ -104,7 +98,7 @@ describe('Update Group (e2e)', () => {
       'You are not allowed to view this group',
     );
 
-    await deleteUsers(firebase, [newTrainer]);
+    await testApp.auth.deleteUsers([newTrainer.uid]);
   });
 
   it('should fail if member does not exist', async () => {
@@ -141,7 +135,7 @@ describe('Update Group (e2e)', () => {
   });
 
   it('should fail if member is not part of the institution', async () => {
-    const newAthlete = await createAthleteUserAndToken(firebase);
+    const newAthlete = await testApp.auth.createAthlete();
     const response = await addMemberReq(
       groupId,
       global.trainer.token,
@@ -151,7 +145,7 @@ describe('Update Group (e2e)', () => {
     expect(response.status).toBe(400);
     expect(response.body.message).toBe('Member is not part of the institution');
 
-    await deleteUsers(firebase, [newAthlete]);
+    await testApp.auth.deleteUsers([newAthlete.uid]);
   });
 
   it('should successfully add a member to the group and all trainings', async () => {
@@ -165,8 +159,6 @@ describe('Update Group (e2e)', () => {
       });
     }
 
-    db.checkpoint();
-
     // 2 past and 3 future trainings
     await Promise.all([
       db.trainings.save(training(subDays(new Date(), 3))),
@@ -176,8 +168,11 @@ describe('Update Group (e2e)', () => {
       db.trainings.save(training(addDays(new Date(), 3))),
     ]);
 
-    const newAthlete = await createAthleteUserAndToken(firebase);
-    await db.institutions.addAthlete(institutionId, newAthlete.uid);
+    const newAthlete = await testApp.auth.createAthlete();
+    await db.institutions.members.addMember(
+      { role: UserRole.ATHLETE },
+      { institutionId, uid: newAthlete.uid },
+    );
 
     const response = await addMemberReq(
       groupId,
@@ -211,8 +206,10 @@ describe('Update Group (e2e)', () => {
       expect(training.membersIds).not.toContain(newAthlete.uid);
     }
 
-    await db.checkpointRestore();
-    await deleteUsers(firebase, [newAthlete]);
+    await testApp.auth.deleteUsers([newAthlete.uid]);
+    await Promise.all(
+      trainings.map((training) => db.trainings.delete(training.id)),
+    );
 
     // manually remove the athlete from the group
     await db.groups.removeMember(groupId, newAthlete.uid);
@@ -228,8 +225,6 @@ describe('Update Group (e2e)', () => {
         date,
       });
     }
-
-    db.checkpoint();
 
     // 2 past and 3 future trainings
     await Promise.all([
@@ -271,7 +266,10 @@ describe('Update Group (e2e)', () => {
       expect(training.membersIds).toContain(athletes[0].uid);
     }
 
-    await db.checkpointRestore();
+    // clean up trainings
+    await Promise.all(
+      trainings.map((training) => db.trainings.delete(training.id)),
+    );
 
     // manually add the athlete back to the group
     await db.groups.addMember(groupId, athletes[0].uid);
@@ -287,8 +285,6 @@ describe('Update Group (e2e)', () => {
         date,
       });
     }
-
-    db.checkpoint();
 
     const otherGroupId = await db.groups.save(
       generateGroupStub({
@@ -326,8 +322,11 @@ describe('Update Group (e2e)', () => {
       db.trainings.save(training(addDays(new Date(), 3))),
     ]);
 
-    const newAthlete = await createAthleteUserAndToken(firebase);
-    await db.institutions.addAthlete(institutionId, newAthlete.uid);
+    const newAthlete = await testApp.auth.createAthlete();
+    await db.institutions.members.addMember(
+      { role: UserRole.ATHLETE },
+      { institutionId, uid: newAthlete.uid },
+    );
 
     const response = await addMemberReq(
       groupId,
@@ -386,10 +385,14 @@ describe('Update Group (e2e)', () => {
       expect(training.membersIds).not.toContain(newAthlete.uid);
     }
 
-    await db.checkpointRestore();
-    await deleteUsers(firebase, [newAthlete]);
+    await testApp.auth.deleteUsers([newAthlete.uid]);
 
-    // manually remove the athlete from the group
+    await Promise.all(
+      trainings.map((training) => db.trainings.delete(training.id)),
+    );
+
+    // delete groups and manually remove the athlete from the group
+    await db.groups.delete(otherGroupId);
     await db.groups.removeMember(groupId, newAthlete.uid);
   });
 });

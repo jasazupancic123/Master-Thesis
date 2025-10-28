@@ -222,14 +222,14 @@ export class DataSetup extends BaseSetup {
     });
 
     for (const user of athletes)
-      await institutionService.updateMembers(
+      await institutionService.updateMember(
         this.admin,
         { institutionId: institution.id },
         { add: true, userId: user.uid, trainer: false },
       );
 
     // add trainer
-    await institutionService.updateMembers(
+    await institutionService.updateMember(
       this.admin,
       { institutionId: institution.id },
       {

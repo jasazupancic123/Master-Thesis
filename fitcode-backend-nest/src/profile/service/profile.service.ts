@@ -17,6 +17,7 @@ import { BatchOperation, BatchWriteOperation } from '@src/common/type/orm.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { Institution } from '@src/institution/entity/institution.entity';
+import { InstitutionMember } from '@src/institution/entity/institution-member.entity';
 import { InstitutionService } from '@src/institution/service/institution.service';
 
 import { ImportProfileDto } from '../dto/import-profiles.dto';
@@ -85,18 +86,15 @@ export class ProfileService implements Permission<Profile, Institution> {
     );
 
     // add users to institution
-    const institutionOperations: BatchWriteOperation<Institution>[] =
-      successfulUsers.map(({ uid, role }) =>
-        role === UserRole.TRAINER
-          ? this.institutionService.buildAddTrainerOperation(
-              institution.id,
-              uid,
-            )
-          : this.institutionService.buildAddAthleteOperation(
-              institution.id,
-              uid,
-            ),
-      );
+    const institutionOperations: BatchWriteOperation<InstitutionMember>[] =
+      successfulUsers
+        .map(({ uid, role }) =>
+          this.institutionService.buildAddMembersOperation(
+            { institutionId: institution.id },
+            [{ id: uid, role }],
+          ),
+        )
+        .flat();
 
     await this.firebase.paginateBatches([
       ...(profileOperations.filter(Boolean) as BatchOperation<unknown>[]),
