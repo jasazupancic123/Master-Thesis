@@ -20,6 +20,7 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 import { HeatmapLoad } from '@/core/exercise/type/heatmap-load.entity';
 import { MuscleLoadType } from '@/core/exercise/enum/muscle-load-type.enum';
+import { Attribute } from '@/core/attribute/type/attribute.type';
 
 export type SvgC = React.ForwardRefExoticComponent<
   React.SVGProps<SVGSVGElement> & React.RefAttributes<SVGSVGElement>
@@ -37,6 +38,8 @@ interface Props {
   muscleLoads?: [string, HeatmapLoad][] | [string, number][];
   setMuscleLoads?: SetState<[string, number][]>;
   selectedLoadType?: 'ALL' | MuscleLoadType;
+  setSelectedMuscle?: SetState<Attribute | null>;
+  setSelectedMuscleName?: SetState<string | null>;
 }
 
 export default function MuscleMapWithTooltip(props: Props) {
@@ -59,6 +62,8 @@ export default function MuscleMapWithTooltip(props: Props) {
     muscleLoads,
     setMuscleLoads,
     selectedLoadType,
+    setSelectedMuscle,
+    setSelectedMuscleName,
   } = props;
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -266,6 +271,7 @@ export default function MuscleMapWithTooltip(props: Props) {
           y: y === 0 && athleteAnthropometry ? prev.y : y,
           id: correctMuscle.field as string,
           name: correctMuscle.name,
+          muscle: correctMuscle,
           isometric: muscleLoad?.isometric,
           cocentric: muscleLoad?.concentric,
           eccentric: muscleLoad?.eccentric,
@@ -331,12 +337,21 @@ export default function MuscleMapWithTooltip(props: Props) {
 
           if (!tip.show) return;
 
-          setTip((t) => ({
-            ...t,
-            focus: true,
-            x: 0,
-            y: 0,
-          }));
+          if (setSelectedMuscle && setSelectedMuscleName && tip.muscle) {
+            const randomLeafMuscle = core.exercise.muscle.getRandomLeafMuscle(
+              tip.muscle.field as string
+            );
+            setSelectedMuscle(randomLeafMuscle);
+            setSelectedMuscleName(tip.muscle.name);
+          }
+
+          // UNCOMMENT THIS FOR FOCUSED TIP ON CLICK
+          // setTip((t) => ({
+          //   ...t,
+          //   focus: true,
+          //   x: 0,
+          //   y: 0,
+          // }));
         }}
         role="img"
         style={{

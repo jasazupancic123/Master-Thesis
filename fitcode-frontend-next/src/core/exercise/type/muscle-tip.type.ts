@@ -1,3 +1,4 @@
+import { Attribute } from '@/core/attribute/type/attribute.type';
 import type { Exercise } from './exercise.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 
@@ -7,6 +8,7 @@ export type MuscleTip = {
   y: number;
   id?: string;
   name?: string;
+  muscle?: Attribute;
   cocentric?: number;
   isometric?: number;
   eccentric?: number;
