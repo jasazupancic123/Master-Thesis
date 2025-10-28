@@ -5,8 +5,13 @@ import { paintHeatmaps } from '../actions/actions-color-heatmap';
 import { MuscleTip } from '@/core/exercise/type/muscle-tip.type';
 import { MuscleLoadType } from '@/core/exercise/enum/muscle-load-type.enum';
 import { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import { useGroup } from '@/store/group.provider';
+import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 
 export default function useMuscleHeatmap(exercises: TrainingExercise[]) {
+  const { trainings } = useGroup();
+  const { training, component, selectedAthlete } = useTrainerDayView();
+
   const [heatmapLevel, setHeatmapLevel] = useState<number>(0);
   const [maxHeatmapLevel, setMaxHeatmapLevel] = useState<number>(0);
 
@@ -34,6 +39,12 @@ export default function useMuscleHeatmap(exercises: TrainingExercise[]) {
     focus: false,
   });
 
+  const trainingIndex = trainings.findIndex((t) => t.id === training?.id);
+  const [range, setRange] = useState<number[]>([
+    trainingIndex + 1,
+    trainingIndex + 1,
+  ]);
+
   useEffect(() => {
     if (tipHeatmapBack.show && tipHeatmapFront.show) {
       setTipHeatmapFront((prev) => ({ ...prev, show: false, focus: false }));
@@ -42,24 +53,111 @@ export default function useMuscleHeatmap(exercises: TrainingExercise[]) {
   }, [tipHeatmapFront, tipHeatmapBack]);
 
   useEffect(() => {
-    const newHeatmapLevel = core.exercise.muscle.getHeatmapLevel(muscleLoads);
+    const newHeatmapLevel =
+      core.exercise.muscle.getMaxHeatmapLevel(muscleLoads);
     setMaxHeatmapLevel(newHeatmapLevel);
 
+    console.log('newHeatmapLevel', newHeatmapLevel);
+
     paintHeatmaps(muscleLoads, selectedLoadType);
-  }, [muscleLoads, selectedLoadType]);
+  }, [muscleLoads, selectedLoadType, selectedAthlete, range, component]);
 
+  /* Generate muscle loads */
   useEffect(() => {
-    // Generate muscle loads
-    if (heatmapLevel > maxHeatmapLevel) return; // levels 1-3
+    if (!component) return;
 
-    const loads = core.exercise.muscle.generateLoads(
-      exercises,
-      heatmapLevel,
-      maxHeatmapLevel
+    // Multiple trainings
+
+    let filteredTrainings = trainings.filter((t, index) => {
+      return index + 1 >= range[0] && index + 1 <= range[1];
+    });
+
+    if (selectedAthlete) {
+      filteredTrainings = filteredTrainings.map((t) =>
+        core.training.getAthleteTraining(selectedAthlete.uid, t)
+      );
+    }
+
+    const trainingsLoads: [string, HeatmapLoad][][] = filteredTrainings.map(
+      (t) => {
+        const exercises = core.training.getExercises(t, {
+          componentId: component.id,
+        });
+
+        return core.exercise.muscle.generateLoads(
+          exercises,
+          heatmapLevel,
+          maxHeatmapLevel
+        );
+      }
     );
 
+    // Combine all training loads
+    let loads = trainingsLoads.reduce(
+      (acc, curr) => {
+        curr.forEach(([muscleId, load]) => {
+          const existingLoad = acc.find(([id]) => id === muscleId);
+
+          if (
+            isNaN(load.eccentric) ||
+            isNaN(load.isometric) ||
+            isNaN(load.concentric)
+          )
+            return;
+
+          if (existingLoad) {
+            existingLoad[1].eccentric += load.eccentric;
+            existingLoad[1].isometric += load.isometric;
+            existingLoad[1].concentric += load.concentric;
+          } else {
+            acc.push([muscleId, { ...load }]);
+          }
+        });
+        return acc;
+      },
+      [] as [string, HeatmapLoad][]
+    );
+
+    // Average across trainings
+    loads = loads.map(([muscleId, load]) => {
+      const count = Math.max(
+        1,
+        trainingsLoads.reduce((cnt, trainingLoad) => {
+          const muscleLoad = trainingLoad.find(([id]) => id === muscleId);
+
+          return (
+            cnt +
+            (muscleLoad &&
+            muscleLoad[1].concentric +
+              muscleLoad[1].eccentric +
+              muscleLoad[1].isometric >
+              0
+              ? 1
+              : 0)
+          );
+        }, 0)
+      );
+
+      return [
+        muscleId,
+        {
+          eccentric: Math.round(load.eccentric / count),
+          isometric: Math.round(load.isometric / count),
+          concentric: Math.round(load.concentric / count),
+        },
+      ];
+    });
+
+    console.log('muscle loads', loads);
     setMuscleLoads(loads);
-  }, [exercises, heatmapLevel, maxHeatmapLevel]);
+  }, [
+    exercises,
+    heatmapLevel,
+    maxHeatmapLevel,
+    range,
+    selectedAthlete,
+    component,
+  ]);
 
   return {
     heatmapLevel,
@@ -74,5 +172,7 @@ export default function useMuscleHeatmap(exercises: TrainingExercise[]) {
     setTipHeatmapBack,
     selectedLoadType,
     setSelectedLoadType,
+    range,
+    setRange,
   };
 }

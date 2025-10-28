@@ -139,7 +139,7 @@ export class MuscleUtil {
   /**
    * Returns the max heatmap level based on the muscles tree depth
    */
-  getHeatmapLevel(muscleLoads: [string, HeatmapLoad][]) {
+  getMaxHeatmapLevel(muscleLoads: [string, HeatmapLoad][]) {
     let level = 0;
 
     const parents = this.getParents();

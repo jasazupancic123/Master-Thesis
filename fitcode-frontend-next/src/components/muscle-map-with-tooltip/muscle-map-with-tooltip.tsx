@@ -1,7 +1,7 @@
 'use client';
 import { Close } from '@mui/icons-material';
 import { Box, IconButton, Slider, Typography, useTheme } from '@mui/material';
-import { useCallback, useEffect, useRef } from 'react';
+import { Fragment, useCallback, useEffect, useRef } from 'react';
 
 import {
   clearHideTimer,
@@ -394,13 +394,13 @@ export default function MuscleMapWithTooltip(props: Props) {
             { value: tip.eccentric, title: 'Eccentric' },
             { value: tip.isometric, title: 'Isometric' },
           ].map(({ value, title }) => (
-            <>
+            <Fragment key={title}>
               {value !== undefined && (
                 <Typography fontSize={12} noWrap textAlign="center">
                   {title}: {!isNaN(value) ? value : 0}
                 </Typography>
               )}
-            </>
+            </Fragment>
           ))}
 
           <Box
