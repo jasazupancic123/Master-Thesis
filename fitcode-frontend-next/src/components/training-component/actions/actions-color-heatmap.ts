@@ -3,33 +3,25 @@ import {
   HEATMAP_BACK_ID,
   HEATMAP_FRONT_ID,
 } from '@/core/exercise/constant/heatmap.const';
+import { MuscleLoadType } from '@/core/exercise/enum/muscle-load-type.enum';
 import { HeatmapLoad } from '@/core/exercise/type/heatmap-load.entity';
 
-const getMuscleColor = (load: number, athleteAnthropometry?: boolean) => {
+const getMuscleColor = (load: number) => {
   let color = undefined;
-  if (athleteAnthropometry) {
-    if (load > 0 && load <= 2) color = HEATMAP_COLORS[0];
-    else if (load > 2 && load <= 4) color = HEATMAP_COLORS[1];
-    else if (load > 4 && load <= 6) color = HEATMAP_COLORS[2];
-    else if (load > 6 && load <= 8) color = HEATMAP_COLORS[3];
-    else if (load > 8 && load <= 9) color = HEATMAP_COLORS[4];
-    else if (load > 9) color = HEATMAP_COLORS[5];
 
-    return color;
-  }
-
-  if (load >= 5 && load <= 10) color = HEATMAP_COLORS[0];
-  else if (load >= 11 && load <= 25) color = HEATMAP_COLORS[1];
-  else if (load >= 26 && load <= 35) color = HEATMAP_COLORS[2];
-  else if (load >= 36 && load <= 50) color = HEATMAP_COLORS[3];
-  else if (load >= 51 && load <= 55) color = HEATMAP_COLORS[4];
-  else if (load >= 56) color = HEATMAP_COLORS[5];
+  if (load > 0 && load <= 2) color = HEATMAP_COLORS[0];
+  else if (load > 2 && load <= 4) color = HEATMAP_COLORS[1];
+  else if (load > 4 && load <= 6) color = HEATMAP_COLORS[2];
+  else if (load > 6 && load <= 8) color = HEATMAP_COLORS[3];
+  else if (load > 8 && load <= 9) color = HEATMAP_COLORS[4];
+  else if (load > 9) color = HEATMAP_COLORS[5];
 
   return color;
 };
 
 export function paintHeatmaps(
   muscleLoads: [string, HeatmapLoad][],
+  selectedLoadType: 'ALL' | MuscleLoadType,
   athleteAnthropometry?: boolean
 ) {
   // Limit to actual shapes
@@ -45,14 +37,20 @@ export function paintHeatmaps(
     }
   });
 
-  console.log('muscleLoads', muscleLoads);
-
   // Paint
   muscleLoads.forEach(([muscleType, muscleLoad]) => {
     const totalLoad =
-      muscleLoad.eccentric + muscleLoad.isometric + muscleLoad.concentric;
+      selectedLoadType === MuscleLoadType.CONCENTRIC
+        ? muscleLoad.concentric
+        : selectedLoadType === MuscleLoadType.ECCENTRIC
+          ? muscleLoad.eccentric
+          : selectedLoadType === MuscleLoadType.ISOMETRIC
+            ? muscleLoad.isometric
+            : muscleLoad.eccentric +
+              muscleLoad.isometric +
+              muscleLoad.concentric;
 
-    const color = getMuscleColor(totalLoad, athleteAnthropometry);
+    const color = getMuscleColor(totalLoad);
     if (!color) return;
 
     // Find the actual shapes by id

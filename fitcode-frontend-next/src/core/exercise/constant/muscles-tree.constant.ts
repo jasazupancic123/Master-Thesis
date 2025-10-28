@@ -367,14 +367,14 @@ export const MUSCLES_TREE: Attribute[] = [
                 field: 'triceps_brachi_long_head-r',
                 name: 'Right Triceps Brachi Long Head',
               },
-              {
-                field: 'hand-r',
-                name: 'Right Hand',
-              },
-              {
-                field: 'hand-l',
-                name: 'Left Hand',
-              },
+              // {
+              //   field: 'hand-r',
+              //   name: 'Right Hand',
+              // },
+              // {
+              //   field: 'hand-l',
+              //   name: 'Left Hand',
+              // },
             ],
           },
           {
@@ -443,6 +443,10 @@ export const MUSCLES_TREE: Attribute[] = [
             options: [
               {
                 field: 'erector_spinae_cervical',
+                name: 'Erector Spinae Cervical',
+              },
+              {
+                field: 'erector_spinae_cervical_2',
                 name: 'Erector Spinae Cervical',
               },
             ],
@@ -521,6 +525,10 @@ export const MUSCLES_TREE: Attribute[] = [
             options: [
               {
                 field: 'erector_spinae_lumbar',
+                name: 'Erector Spinae Lumbar',
+              },
+              {
+                field: 'erector_spinae_lumbar_2',
                 name: 'Erector Spinae Lumbar',
               },
               {
@@ -843,28 +851,36 @@ export const MUSCLES_TREE: Attribute[] = [
                 field: 'tibialis_anterior-l_2',
                 name: 'Left Tibialis Anterior',
               },
-              {
-                field: 'knee-r',
-                name: 'Right Knee',
-              },
-              {
-                field: 'knee-l',
-                name: 'Left Knee',
-              },
-              {
-                field: 'foot-r',
-                name: 'Right Foot',
-              },
-              {
-                field: 'foot-l',
-                name: 'Left Foot',
-              },
+              // {
+              //   field: 'knee-r',
+              //   name: 'Right Knee',
+              // },
+              // {
+              //   field: 'knee-l',
+              //   name: 'Left Knee',
+              // },
+              // {
+              //   field: 'foot-r',
+              //   name: 'Right Foot',
+              // },
+              // {
+              //   field: 'foot-l',
+              //   name: 'Left Foot',
+              // },
             ],
           },
           {
             field: 'Calf',
             name: 'Calf',
             options: [
+              {
+                field: 'gastrocnemius_front-r',
+                name: 'Right Gastrocnemius',
+              },
+              {
+                field: 'gastrocnemius_front-l',
+                name: 'Left Gastrocnemius',
+              },
               {
                 field: 'gastrocnemius-r',
                 name: 'Right Gastrocnemius',

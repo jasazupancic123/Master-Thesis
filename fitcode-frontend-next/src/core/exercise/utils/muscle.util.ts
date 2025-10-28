@@ -15,19 +15,30 @@ export class MuscleUtil {
   ): [string, HeatmapLoad][] {
     let loads: [string, HeatmapLoad][] = [];
 
+    const muscleIdCounter: { [muscleId: string]: number } = {};
+
     exercises.forEach((exercise) => {
       if (!exercise.exercise || !exercise.exercise.muscleValues) return;
 
       exercise.exercise.muscleValues.forEach((muscleValue) => {
+        if (
+          muscleValue.eccentric === 0 &&
+          muscleValue.isometric === 0 &&
+          muscleValue.concentric === 0
+        )
+          return;
+
         let muscleId = muscleValue.muscleId;
 
         const existingLoad = loads.find(([type]) => type === muscleId);
+
         if (existingLoad) {
           existingLoad[1].eccentric += Number(muscleValue.eccentric || 0);
           existingLoad[1].isometric += Number(muscleValue.isometric || 0);
           existingLoad[1].concentric += Number(muscleValue.concentric || 0);
-          return;
-        } else
+
+          muscleIdCounter[muscleId] = (muscleIdCounter[muscleId] || 0) + 1;
+        } else {
           loads.push([
             muscleId,
             {
@@ -36,7 +47,39 @@ export class MuscleUtil {
               concentric: Number(muscleValue.concentric || 0),
             },
           ]);
+
+          muscleIdCounter[muscleId] = 1;
+        }
       });
+    });
+
+    // Average loads
+    loads = loads.map(([muscleId, load]) => {
+      const count = muscleIdCounter[muscleId] || 1;
+      return [
+        muscleId,
+        {
+          eccentric: Math.round(load.eccentric / count),
+          isometric: Math.round(load.isometric / count),
+          concentric: Math.round(load.concentric / count),
+        },
+      ];
+    });
+
+    // Fill missing muscles with 0 load
+    const leafChildren = this.computeLeafMuscleIds(MUSCLES_TREE);
+
+    leafChildren.forEach((muscleId) => {
+      if (!loads.find(([type]) => type === muscleId)) {
+        loads.push([
+          muscleId,
+          {
+            eccentric: 0,
+            isometric: 0,
+            concentric: 0,
+          },
+        ]);
+      }
     });
 
     const parents: Attribute[] = [];
@@ -62,22 +105,18 @@ export class MuscleUtil {
           load[1].concentric + load[1].isometric + load[1].eccentric > 0
       );
 
-      const totalEccentric = Math.round(
-        muscleLoads.reduce((sum, [, load]) => sum + load.eccentric, 0) /
-          muscleLoads.length /
-          (heatmapLevel === maxHeatmapLevel ? 2 : 1) // average by -l and -r, which happens only at max level
+      const count = muscleLoads.length;
+
+      let totalEccentric = Math.round(
+        muscleLoads.reduce((sum, [, load]) => sum + load.eccentric, 0) / count
       );
 
-      const totalIsometric = Math.round(
-        muscleLoads.reduce((sum, [, load]) => sum + load.isometric, 0) /
-          muscleLoads.length /
-          (heatmapLevel === maxHeatmapLevel ? 2 : 1) // average by -l and -r, which happens only at max level
+      let totalIsometric = Math.round(
+        muscleLoads.reduce((sum, [, load]) => sum + load.isometric, 0) / count
       );
 
-      const totalConcentric = Math.round(
-        muscleLoads.reduce((sum, [, load]) => sum + load.concentric, 0) /
-          muscleLoads.length /
-          (heatmapLevel === maxHeatmapLevel ? 2 : 1) // average by -l and -r, which happens only at max level
+      let totalConcentric = Math.round(
+        muscleLoads.reduce((sum, [, load]) => sum + load.concentric, 0) / count
       );
 
       loads = loads.map((load) => {
@@ -135,7 +174,6 @@ export class MuscleUtil {
     level: number,
     maxLevel: number
   ): Attribute | undefined {
-    console.log('muscleId', muscleId, 'level', level, 'maxLevel', maxLevel);
     if (level === maxLevel) {
       const leafes = this.computeLeafMuscles(MUSCLES_TREE);
       return leafes.find((m) => m.field === muscleId);
@@ -146,8 +184,6 @@ export class MuscleUtil {
     let parent = parents.find((p) =>
       p.options?.find((o) => o.field === muscleId)
     );
-
-    console.log('parent', parent, muscleId);
 
     if (!parent) return undefined;
 
