@@ -8,8 +8,10 @@ import { useScreenSize } from '@/store/screen-size.provider';
 
 interface Props {
   exercises: Exercise[];
-  setSelectedExerciseIds?: SetState<string[]>;
   selectedExerciseIds?: string[];
+  setSelectedExerciseIds?: SetState<string[]>;
+  newAddedExercisesIds?: string[];
+  setNewAddedExercisesIds?: SetState<string[]>;
   setModal?: SetState<{
     add: boolean;
     edit: boolean;
@@ -29,6 +31,8 @@ export default function ExercisesList({
   addExerciseForm,
   selectedExerciseIds,
   setSelectedExerciseIds,
+  newAddedExercisesIds,
+  setNewAddedExercisesIds,
   children,
 }: Props) {
   const theme = useTheme();
@@ -85,8 +89,21 @@ export default function ExercisesList({
                 setSelectedExerciseIds?.(
                   selectedExerciseIds.filter((id) => id !== exercise.id)
                 );
-              else
+              else {
                 setSelectedExerciseIds?.([...selectedExerciseIds, exercise.id]);
+              }
+            }
+
+            if (newAddedExercisesIds !== undefined) {
+              if (newAddedExercisesIds.includes(exercise.id))
+                setNewAddedExercisesIds?.(
+                  newAddedExercisesIds.filter((id) => id !== exercise.id)
+                );
+              else
+                setNewAddedExercisesIds?.([
+                  ...newAddedExercisesIds,
+                  exercise.id,
+                ]);
             }
           }}
         >
