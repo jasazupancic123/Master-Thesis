@@ -19,6 +19,7 @@ import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 import { HeatmapLoad } from '@/core/exercise/type/heatmap-load.entity';
+import { MuscleLoadType } from '@/core/exercise/enum/muscle-load-type.enum';
 
 export type SvgC = React.ForwardRefExoticComponent<
   React.SVGProps<SVGSVGElement> & React.RefAttributes<SVGSVGElement>
@@ -35,6 +36,7 @@ interface Props {
   athleteAnthropometry?: boolean;
   muscleLoads?: [string, HeatmapLoad][] | [string, number][];
   setMuscleLoads?: SetState<[string, number][]>;
+  selectedLoadType?: 'ALL' | MuscleLoadType;
 }
 
 export default function MuscleMapWithTooltip(props: Props) {
@@ -56,6 +58,7 @@ export default function MuscleMapWithTooltip(props: Props) {
     setTip,
     muscleLoads,
     setMuscleLoads,
+    selectedLoadType,
   } = props;
 
   const containerRef = useRef<HTMLDivElement>(null);

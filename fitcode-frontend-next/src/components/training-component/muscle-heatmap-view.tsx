@@ -1,4 +1,4 @@
-import { Box, Slider, Typography } from '@mui/material';
+import { Box, MenuItem, Select, Slider, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import {
   Area,
@@ -12,20 +12,19 @@ import {
   YAxis,
 } from 'recharts';
 
-import { paintHeatmaps } from './actions/actions-color-heatmap';
 import { theme } from '@/app/style';
 //import HeatmapBack from '@/assets/svg/heatmap-back.svg';
-import HeatmapBackNew from '@/assets/svg/heatmap_back_new.svg';
-import HeatmapFront from '@/assets/svg/heatmap-front.svg';
+//import HeatmapBackNew from '@/assets/svg/heatmap_back_new.svg';
+import HeatmapBackYellow from '@/assets/svg/heatmap_back_yellow.svg';
+import HeatmapFrontYellow from '@/assets/svg/heatmap_front_yellow.svg';
 import MuscleMapWithTooltip from '@/components/muscle-map-with-tooltip/muscle-map-with-tooltip';
 import { HEATMAP_COLORS } from '@/core/const/color.const';
 import { core } from '@/core/core.service';
-import type { MuscleTip } from '@/core/exercise/type/muscle-tip.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
-import { HeatmapLoad } from '@/core/exercise/type/heatmap-load.entity';
-import { MuscleUtil } from '@/core/exercise/utils/muscle.util';
+import useMuscleHeatmap from './hooks/use-muscle-heatmap';
+import { MuscleLoadType } from '@/core/exercise/enum/muscle-load-type.enum';
 
 const data = [
   { time: '', value: 0 },
@@ -74,59 +73,22 @@ export default function MuscleHeatmapView() {
 
   const [exercises, setExercises] = useState<TrainingExercise[]>([]);
 
-  const [heatmapLevel, setHeatmapLevel] = useState<number>(0);
-  const [maxHeatmapLevel, setMaxHeatmapLevel] = useState<number>(0);
-
-  const [muscleLoads, setMuscleLoads] = useState<[string, HeatmapLoad][]>([]);
-
-  const [tipHeatmapFront, setTipHeatmapFront] = useState<MuscleTip>({
-    show: false,
-    x: 0,
-    y: 0,
-    componentExercises: [],
-    possibleExercises: [],
-    focus: false,
-  });
-
-  const [tipHeatmapBack, setTipHeatmapBack] = useState<MuscleTip>({
-    show: false,
-    x: 0,
-    y: 0,
-    componentExercises: [],
-    possibleExercises: [],
-    focus: false,
-  });
-
-  useEffect(() => {
-    if (tipHeatmapBack.show && tipHeatmapFront.show) {
-      setTipHeatmapFront((prev) => ({ ...prev, show: false, focus: false }));
-      setTipHeatmapBack((prev) => ({ ...prev, show: false, focus: false }));
-    }
-  }, [tipHeatmapFront, tipHeatmapBack]);
+  const {
+    heatmapLevel,
+    setHeatmapLevel,
+    maxHeatmapLevel,
+    muscleLoads,
+    tipHeatmapFront,
+    setTipHeatmapFront,
+    tipHeatmapBack,
+    setTipHeatmapBack,
+    selectedLoadType,
+    setSelectedLoadType,
+  } = useMuscleHeatmap(exercises);
 
   useEffect(() => {
     setExercises(supersets.flatMap((s) => s.exercises));
   }, [supersets]);
-
-  useEffect(() => {
-    // Generate muscle loads
-    if (heatmapLevel > maxHeatmapLevel) return; // levels 1-3
-
-    const loads = core.exercise.muscle.generateLoads(
-      exercises,
-      heatmapLevel,
-      maxHeatmapLevel
-    );
-
-    setMuscleLoads(loads);
-  }, [exercises, heatmapLevel, maxHeatmapLevel]);
-
-  useEffect(() => {
-    const newHeatmapLevel = core.exercise.muscle.getHeatmapLevel(muscleLoads);
-    setMaxHeatmapLevel(newHeatmapLevel);
-
-    paintHeatmaps(muscleLoads);
-  }, [muscleLoads]);
 
   return (
     <Box
@@ -148,7 +110,7 @@ export default function MuscleHeatmapView() {
         mb={2}
       >
         <Typography gutterBottom align="center">
-          Heatmap Level: {heatmapLevel}
+          Heatmap Level: {Math.max(1, heatmapLevel)}
         </Typography>
         <Slider
           value={heatmapLevel}
@@ -172,65 +134,86 @@ export default function MuscleHeatmapView() {
           flexDirection: screenSize.isSmallerThanLaptop ? 'column' : 'row',
         }}
       >
-        <Box
-          sx={
-            screenSize.isSmallerThanLaptop
-              ? {
-                  width: '100%',
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  textAlign: 'center',
-                  flexWrap: 'nowrap',
-                  maxHeight: screenSize.isReallySmall ? 350 : undefined,
-                }
-              : {}
-          }
-          position="relative"
-        >
-          <MuscleMapWithTooltip
-            front={true}
-            Svg={HeatmapFront}
-            exercisesInComponent={supersets.flatMap((s) => s.exercises)}
-            heatmapLevel={heatmapLevel}
-            maxHeatmapLevel={maxHeatmapLevel}
-            muscleLoads={muscleLoads}
-            tip={tipHeatmapFront}
-            setTip={setTipHeatmapFront}
-          />
-          <MuscleMapWithTooltip
-            front={false}
-            Svg={HeatmapBackNew}
-            exercisesInComponent={supersets.flatMap((s) => s.exercises)}
-            heatmapLevel={heatmapLevel}
-            maxHeatmapLevel={maxHeatmapLevel}
-            muscleLoads={muscleLoads}
-            tip={tipHeatmapBack}
-            setTip={setTipHeatmapBack}
-          />
-
-          {/* Legend */}
-          <Box
-            display="flex"
-            flexDirection="column-reverse"
+        <Box display="flex" flexDirection="column" alignItems="center">
+          <Select
+            value={selectedLoadType}
+            onChange={(e) =>
+              setSelectedLoadType(e.target.value as 'ALL' | MuscleLoadType)
+            }
             sx={{
-              position: 'absolute',
-              bottom: 20,
-              right: screenSize.isSmallerThanLaptop ? '50%' : -50,
-              transform: screenSize.isSmallerThanLaptop
-                ? 'translateX(+50%)'
-                : 'none',
+              mb: 2,
+              '& .MuiSelect-select': {
+                p: 1,
+              },
             }}
-            gap={1}
           >
-            {HEATMAP_COLORS.map((color, index) => (
-              <Box
-                key={index}
-                bgcolor={color}
-                width={screenSize.isMobile ? 40 : 100}
-                height={screenSize.isMobile ? 3 : 5}
-              />
-            ))}
+            <MenuItem value="ALL">All</MenuItem>
+            <MenuItem value={MuscleLoadType.CONCENTRIC}>Concentric</MenuItem>
+            <MenuItem value={MuscleLoadType.ECCENTRIC}>Eccentric</MenuItem>
+            <MenuItem value={MuscleLoadType.ISOMETRIC}>Isometric</MenuItem>
+          </Select>
+          <Box
+            sx={
+              screenSize.isSmallerThanLaptop
+                ? {
+                    width: '100%',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    textAlign: 'center',
+                    flexWrap: 'nowrap',
+                    maxHeight: screenSize.isReallySmall ? 350 : undefined,
+                  }
+                : {}
+            }
+            position="relative"
+          >
+            <MuscleMapWithTooltip
+              front={true}
+              Svg={HeatmapFrontYellow}
+              exercisesInComponent={supersets.flatMap((s) => s.exercises)}
+              heatmapLevel={heatmapLevel}
+              maxHeatmapLevel={maxHeatmapLevel}
+              muscleLoads={muscleLoads}
+              tip={tipHeatmapFront}
+              setTip={setTipHeatmapFront}
+              selectedLoadType={selectedLoadType}
+            />
+            <MuscleMapWithTooltip
+              front={false}
+              Svg={HeatmapBackYellow}
+              exercisesInComponent={supersets.flatMap((s) => s.exercises)}
+              heatmapLevel={heatmapLevel}
+              maxHeatmapLevel={maxHeatmapLevel}
+              muscleLoads={muscleLoads}
+              tip={tipHeatmapBack}
+              setTip={setTipHeatmapBack}
+              selectedLoadType={selectedLoadType}
+            />
+
+            {/* Legend */}
+            <Box
+              display="flex"
+              flexDirection="column-reverse"
+              sx={{
+                position: 'absolute',
+                bottom: 20,
+                right: screenSize.isSmallerThanLaptop ? '50%' : -50,
+                transform: screenSize.isSmallerThanLaptop
+                  ? 'translateX(+50%)'
+                  : 'none',
+              }}
+              gap={1}
+            >
+              {HEATMAP_COLORS.map((color, index) => (
+                <Box
+                  key={index}
+                  bgcolor={color}
+                  width={screenSize.isMobile ? 40 : 100}
+                  height={screenSize.isMobile ? 3 : 5}
+                />
+              ))}
+            </Box>
           </Box>
         </Box>
         <ResponsiveContainer
