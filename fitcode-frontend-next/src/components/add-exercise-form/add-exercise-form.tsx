@@ -1,4 +1,11 @@
-import { Box, Pagination, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  Menu,
+  MenuItem,
+  Pagination,
+  Typography,
+} from '@mui/material';
 
 import ExerciseFilter from '../exercises-list/exercise-filter';
 import ExercisesList from '../exercises-list/exercises-list';
@@ -8,6 +15,9 @@ import useExerciseFormFilters from './hooks/use-filters';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 import { SearchBar } from '@/ui/search-bar/search-bar';
+import { KeyboardArrowDown } from '@mui/icons-material';
+import { theme } from '@/app/style';
+import useComponentFilter from './hooks/use-component-filter';
 
 export default function AddExerciseForm(props: AddExerciseFormProps) {
   const { selectedExerciseIds, setSelectedExerciseIds, component } = props;
@@ -16,6 +26,16 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
   const { pagination, setPagination } = useTrainerDayView();
   const componentExercisesContext =
     useExerciseFormComponentExercises(component);
+
+  const {
+    filterComponents,
+    selectedComponentsIds,
+    setSelectedComponentsIds,
+    anchorEl,
+    open,
+    handleClick,
+    handleClose,
+  } = useComponentFilter();
 
   const {
     filters,
@@ -27,7 +47,8 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
     filteredExercises,
   } = useExerciseFormFilters(
     component,
-    componentExercisesContext.componentExercises
+    componentExercisesContext.componentExercises,
+    selectedComponentsIds
   );
 
   return (
@@ -50,8 +71,59 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
         alignItems="center"
         justifyContent="center"
         sx={{ m: 2 }}
+        gap={screenSize.isMobile ? 2 : 0}
       >
-        <Box width="15%" />
+        <Box width="15%">
+          <Button
+            id="demo-customized-button"
+            aria-haspopup="true"
+            variant="contained"
+            disableElevation
+            onClick={handleClick}
+            endIcon={<KeyboardArrowDown />}
+            sx={{
+              py: 0.5,
+            }}
+          >
+            Filter{' '}
+            {selectedComponentsIds.length
+              ? `(${selectedComponentsIds.length})`
+              : ''}
+          </Button>
+          <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
+            {filterComponents
+              .sort((a, b) => a.name.localeCompare(b.name))
+              .map((c) => (
+                <MenuItem
+                  key={c.id}
+                  value={c.id}
+                  onClick={() => {
+                    if (selectedComponentsIds.includes(c.id)) {
+                      setSelectedComponentsIds((prev) =>
+                        prev.filter((id) => id !== c.id)
+                      );
+                    } else {
+                      setSelectedComponentsIds((prev) => [...prev, c.id]);
+                    }
+                  }}
+                  sx={
+                    selectedComponentsIds.includes(c.id)
+                      ? {
+                          backgroundColor: theme.palette.primary.main,
+                          color: theme.palette.text.secondary,
+                          fontWeight: 500,
+                          '&:hover': {
+                            backgroundColor: theme.palette.primary.main,
+                          },
+                        }
+                      : {}
+                  }
+                >
+                  {c.name}
+                </MenuItem>
+              ))}
+          </Menu>
+        </Box>
         <Box
           width={screenSize.isMobile ? '100%' : '70%'}
           display="flex"

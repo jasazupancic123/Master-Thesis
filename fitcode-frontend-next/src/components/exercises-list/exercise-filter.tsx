@@ -69,6 +69,10 @@ export default function ExerciseFilter({
         color="primary"
         onClick={() => setOpen((prev) => !prev)}
         size="large"
+        sx={{
+          p: 0,
+          m: 0,
+        }}
       >
         <FilterList />
       </IconButton>
