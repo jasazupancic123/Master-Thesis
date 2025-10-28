@@ -1,7 +1,8 @@
-import { Component } from '@/core/component/type/component.type';
+import { useEffect, useState } from 'react';
+
+import type { Component } from '@/core/component/type/component.type';
 import { useMain } from '@/store/main.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
-import { useEffect, useState } from 'react';
 
 export default function useComponentFilter() {
   const { components } = useMain();

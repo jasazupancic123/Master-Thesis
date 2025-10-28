@@ -10,6 +10,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import dayjs from 'dayjs';
 import {
   Line,
   LineChart,
@@ -31,7 +32,6 @@ import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
-import dayjs from 'dayjs';
 
 export const graphColorMap: Record<ExerciseParamField, string> = {
   loadKg: GRAPH_COLORS[0],

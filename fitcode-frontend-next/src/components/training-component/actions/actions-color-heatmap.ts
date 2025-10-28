@@ -4,7 +4,7 @@ import {
   HEATMAP_FRONT_ID,
 } from '@/core/exercise/constant/heatmap.const';
 import { MuscleLoadType } from '@/core/exercise/enum/muscle-load-type.enum';
-import { HeatmapLoad } from '@/core/exercise/type/heatmap-load.entity';
+import type { HeatmapLoad } from '@/core/exercise/type/heatmap-load.entity';
 
 const getMuscleColor = (load: number) => {
   let color = undefined;
@@ -21,8 +21,7 @@ const getMuscleColor = (load: number) => {
 
 export function paintHeatmaps(
   muscleLoads: [string, HeatmapLoad][] | [string, number][],
-  selectedLoadType: 'ALL' | MuscleLoadType,
-  athleteAnthropometry?: boolean
+  selectedLoadType: 'ALL' | MuscleLoadType
 ) {
   // Limit to actual shapes
   const resetContainers = [HEATMAP_FRONT_ID, HEATMAP_BACK_ID];

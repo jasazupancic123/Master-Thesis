@@ -1,10 +1,11 @@
-import { core } from '@/core/core.service';
-import { HeatmapLoad } from '@/core/exercise/type/heatmap-load.entity';
 import { useEffect, useState } from 'react';
+
 import { paintHeatmaps } from '../actions/actions-color-heatmap';
-import { MuscleTip } from '@/core/exercise/type/muscle-tip.type';
-import { MuscleLoadType } from '@/core/exercise/enum/muscle-load-type.enum';
-import { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import { core } from '@/core/core.service';
+import type { MuscleLoadType } from '@/core/exercise/enum/muscle-load-type.enum';
+import type { HeatmapLoad } from '@/core/exercise/type/heatmap-load.entity';
+import type { MuscleTip } from '@/core/exercise/type/muscle-tip.type';
+import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import { useGroup } from '@/store/group.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 
@@ -56,8 +57,6 @@ export default function useMuscleHeatmap(exercises: TrainingExercise[]) {
     const newHeatmapLevel =
       core.exercise.muscle.getMaxHeatmapLevel(muscleLoads);
     setMaxHeatmapLevel(newHeatmapLevel);
-
-    console.log('newHeatmapLevel', newHeatmapLevel);
 
     paintHeatmaps(muscleLoads, selectedLoadType);
   }, [muscleLoads, selectedLoadType, selectedAthlete, range, component]);
@@ -148,7 +147,6 @@ export default function useMuscleHeatmap(exercises: TrainingExercise[]) {
       ];
     });
 
-    console.log('muscle loads', loads);
     setMuscleLoads(loads);
   }, [
     exercises,

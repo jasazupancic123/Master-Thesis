@@ -7,7 +7,6 @@ import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { Workload } from '@/core/training/type/workload.type';
-import { lib } from '@/lib';
 
 export function getAthleteChart(
   athleteId: string,
@@ -89,15 +88,11 @@ export function getAthleteChart(
       });
     }
 
-    console.log('item', item, 'workloads', workloads);
-
     result.push({
       ...item,
       ...getAggregatedWorkloadValues(workloads, data.selectedParams),
     });
   }
-
-  console.log('result', result);
 
   return result.sort(
     (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()

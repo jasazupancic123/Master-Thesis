@@ -1,32 +1,20 @@
 import { Box, MenuItem, Select, Slider, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  Line,
-  ResponsiveContainer,
-  Scatter,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
 
+import useMuscleHeatmap from './hooks/use-muscle-heatmap';
+import MuscleChart from './muscle-chart';
 import { theme } from '@/app/style';
-
 import HeatmapBackYellow from '@/assets/svg/heatmap_back_yellow.svg';
 import HeatmapFrontYellow from '@/assets/svg/heatmap_front_yellow.svg';
 import MuscleMapWithTooltip from '@/components/muscle-map-with-tooltip/muscle-map-with-tooltip';
+import type { Attribute } from '@/core/attribute/type/attribute.type';
 import { HEATMAP_COLORS } from '@/core/const/color.const';
+import { core } from '@/core/core.service';
+import { MuscleLoadType } from '@/core/exercise/enum/muscle-load-type.enum';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
-import useMuscleHeatmap from './hooks/use-muscle-heatmap';
-import { MuscleLoadType } from '@/core/exercise/enum/muscle-load-type.enum';
-import { useGroup } from '@/store/group.provider';
-import { core } from '@/core/core.service';
-import MuscleChart from './muscle-chart';
-import { Attribute } from '@/core/attribute/type/attribute.type';
 
 export default function MuscleHeatmapView() {
   const screenSize = useScreenSize();

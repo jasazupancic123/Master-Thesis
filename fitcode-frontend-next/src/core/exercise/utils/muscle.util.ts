@@ -1,12 +1,11 @@
 import type { TrainingExercise } from '../../training/type/training-exercise.type';
+import { MUSCLES_TREE } from '../constant/muscles-tree.constant';
+import type { HeatmapLoad } from '../type/heatmap-load.entity';
+import type { Attribute } from '@/core/attribute/type/attribute.type';
 import {
   HEATMAP_BACK_ID,
   HEATMAP_FRONT_ID,
 } from '@/core/exercise/constant/heatmap.const';
-import { HeatmapLoad } from '../type/heatmap-load.entity';
-import { MUSCLES_TREE } from '../constant/muscles-tree.constant';
-import { Attribute } from '@/core/attribute/type/attribute.type';
-import MuscleHeatmapView from '@/components/training-component/muscle-heatmap-view';
 
 export class MuscleUtil {
   generateLoads(
@@ -29,7 +28,7 @@ export class MuscleUtil {
         )
           return;
 
-        let muscleId = muscleValue.muscleId;
+        const muscleId = muscleValue.muscleId;
 
         const existingLoad = loads.find(([type]) => type === muscleId);
 
@@ -108,15 +107,15 @@ export class MuscleUtil {
 
       const count = muscleLoads.length;
 
-      let totalEccentric = Math.round(
+      const totalEccentric = Math.round(
         muscleLoads.reduce((sum, [, load]) => sum + load.eccentric, 0) / count
       );
 
-      let totalIsometric = Math.round(
+      const totalIsometric = Math.round(
         muscleLoads.reduce((sum, [, load]) => sum + load.isometric, 0) / count
       );
 
-      let totalConcentric = Math.round(
+      const totalConcentric = Math.round(
         muscleLoads.reduce((sum, [, load]) => sum + load.concentric, 0) / count
       );
 
@@ -280,7 +279,7 @@ export class MuscleUtil {
     const leafes = [] as Attribute[];
 
     root.forEach((muscle) => {
-      let leaf = muscle;
+      const leaf = muscle;
 
       if (!leaf.options) {
         leafes.push(leaf);
@@ -309,7 +308,7 @@ export class MuscleUtil {
     const leafes = [] as string[];
 
     root.forEach((muscle) => {
-      let leaf = muscle;
+      const leaf = muscle;
 
       if (!leaf.options) {
         leafes.push(leaf.field as string);

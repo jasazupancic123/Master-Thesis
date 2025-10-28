@@ -1,13 +1,13 @@
+import { Box, Typography } from '@mui/material';
 import { LineChart } from '@mui/x-charts/LineChart';
+import dayjs from 'dayjs';
+import { useEffect, useState } from 'react';
 
+import { theme } from '@/app/style';
+import type { Attribute } from '@/core/attribute/type/attribute.type';
 import { core } from '@/core/core.service';
 import { useGroup } from '@/store/group.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
-import { useEffect, useRef, useState } from 'react';
-import { theme } from '@/app/style';
-import dayjs from 'dayjs';
-import { Attribute } from '@/core/attribute/type/attribute.type';
-import { Box, Typography } from '@mui/material';
 
 interface Props {
   heatmapLevel: number;
@@ -29,8 +29,6 @@ export default function MuscleChart(props: Props) {
     selectedMuscleName,
   } = props;
 
-  if (!component) return null;
-
   const [dataset, setDataset] = useState<
     {
       index: number;
@@ -42,7 +40,7 @@ export default function MuscleChart(props: Props) {
   >([]);
 
   useEffect(() => {
-    if (!selectedMuscle) return;
+    if (!selectedMuscle || !component) return;
 
     let filteredTrainings = trainings.filter((t, index) => {
       return index + 1 >= range[0] && index + 1 <= range[1];

@@ -13,6 +13,7 @@ import type { Superset } from '../type/superset.type';
 import type { Training } from '../type/training.type';
 import type { TrainingComponent } from '../type/training-component.type';
 import type { TrainingExercise } from '../type/training-exercise.type';
+import { AthleteUtil } from './athlete.util';
 import { TrainingComponentUtil } from './component.util';
 import { TrainingExerciseSetUtil } from './set.util';
 import { TrainingSubgroupUtil } from './subgroup.util';
@@ -24,7 +25,6 @@ import {
   WARMUP_ID,
 } from '@/core/training/const/warmup-cooldown.const';
 import type { DateRange } from '@/lib/common/type/date-range.type';
-import { AthleteUtil } from './athlete.util';
 
 export class TrainingUtil {
   readonly component: TrainingComponentUtil;
