@@ -80,7 +80,7 @@ export default function MuscleMapWithTooltip(props: Props) {
   }, []);
 
   const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
-    if (!containerRef.current || tip.focus) return;
+    if (!containerRef.current || tip.focus || athleteAnthropometry) return;
     clearHideTimer(hideTimer);
 
     const raw = e.target as Element;
@@ -214,13 +214,9 @@ export default function MuscleMapWithTooltip(props: Props) {
         if (!muscleIds.includes(childMuscleId)) muscleIds.push(childMuscleId);
       });
 
-      // console.log(muscleLoads, 'muscleId', muscleId);
-
       const muscleLoad = (muscleLoads as [string, HeatmapLoad][]).find(
         (ml) => ml[0] === muscleId
       )?.[1];
-
-      // console.log('muscleLoad', muscleLoad);
 
       // pointer coords or center on element (for keyboard focus)
       let x = px ?? 0;
@@ -251,8 +247,6 @@ export default function MuscleMapWithTooltip(props: Props) {
           maxHeatmapLevel
         );
 
-        console.log('correctMuscle', correctMuscle, 'muscleId', muscleId);
-
         if (!correctMuscle) return prev;
 
         // const { componentExercises, possibleExercises } = athleteAnthropometry
@@ -281,7 +275,7 @@ export default function MuscleMapWithTooltip(props: Props) {
         };
       });
     },
-    [muscleLoads]
+    [muscleLoads, tip]
     // [computeExercises]
   );
 
@@ -310,31 +304,6 @@ export default function MuscleMapWithTooltip(props: Props) {
         onFocus={handleFocus}
         onBlur={handleBlur}
         onClick={(e: React.MouseEvent<SVGSVGElement>) => {
-          if (athleteAnthropometry && muscleLoads) {
-            const raw = e.target as Element;
-            const group = findFilledGroup(
-              raw,
-              heatmapLevel,
-              muscleLoads.map(([id]) => id)
-            );
-            const target =
-              group ??
-              (raw instanceof SVGGraphicsElement && hasExplicitFill(raw)
-                ? raw
-                : null);
-
-            if (!target) return;
-
-            showForEl(target!);
-            setTip((t) => ({
-              ...t,
-              show: true,
-              focus: true,
-            }));
-
-            return;
-          }
-
           if (!tip.show) return;
 
           if (setSelectedMuscle && setSelectedMuscleName && tip.muscle) {
@@ -346,12 +315,14 @@ export default function MuscleMapWithTooltip(props: Props) {
           }
 
           // UNCOMMENT THIS FOR FOCUSED TIP ON CLICK
-          // setTip((t) => ({
-          //   ...t,
-          //   focus: true,
-          //   x: 0,
-          //   y: 0,
-          // }));
+          if (athleteAnthropometry) {
+            setTip((t) => ({
+              ...t,
+              focus: true,
+              x: 0,
+              y: 0,
+            }));
+          }
         }}
         role="img"
         style={{
@@ -539,81 +510,77 @@ export default function MuscleMapWithTooltip(props: Props) {
                 alignItems="center"
                 sx={{ px: 1 }}
               >
-                {muscleLoads &&
-                  setMuscleLoads &&
-                  muscleLoads.find(([id]) => id === tip.id) && (
-                    <Box
-                      width="100%"
-                      display="flex"
-                      justifyContent="center"
-                      alignItems="center"
-                      sx={{ p: 4, py: 2, pb: 0, position: 'relative' }}
-                    >
-                      <Typography
-                        fontSize={12}
-                        sx={{
-                          position: 'absolute',
-                          left: 32,
-                          top: 5,
-                          display: 'flex',
-                          alignItems: 'center',
-                        }}
-                        gap={0.5}
-                      >
-                        <SorenessIcon />
-                        Soreness
-                      </Typography>
+                <Box
+                  width="100%"
+                  display="flex"
+                  justifyContent="center"
+                  alignItems="center"
+                  sx={{ p: 4, py: 2, pb: 0, position: 'relative' }}
+                >
+                  <Typography
+                    fontSize={12}
+                    sx={{
+                      position: 'absolute',
+                      left: 32,
+                      top: 5,
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                    gap={0.5}
+                  >
+                    <SorenessIcon />
+                    Soreness
+                  </Typography>
 
-                      <Slider
-                        valueLabelDisplay="auto"
-                        value={
-                          (muscleLoads as [string, number][]).find(
-                            ([id]) => id === tip.id
-                          )?.[1] ?? 5
+                  <Slider
+                    valueLabelDisplay="auto"
+                    value={
+                      (muscleLoads as [string, number][]).find(
+                        ([id]) => id === tip.id
+                      )?.[1] ?? 0
+                    }
+                    onChange={(_, value) => {
+                      if (!setMuscleLoads || !tip.id) return;
+                      const v = value as number;
+                      setMuscleLoads((ml) => {
+                        const existing = ml.find(([id]) => id === tip.id);
+                        if (existing) {
+                          existing[1] = v;
+                          return [...ml];
                         }
-                        onChange={(_, value) => {
-                          if (!setMuscleLoads || !tip.id) return;
-                          const v = value as number;
-                          setMuscleLoads((ml) => {
-                            const existing = ml.find(([id]) => id === tip.id);
-                            if (existing) {
-                              existing[1] = v;
-                              return [...ml];
-                            }
-                            if (!tip.id) return ml;
-                            return [...ml, [tip.id, v]];
-                          });
-                        }}
-                        step={1}
-                        min={0}
-                        max={10}
-                        sx={{
-                          width: 200,
-                          color: theme.palette.primary.main,
-                          '& .MuiSlider-track': {
-                            backgroundColor: theme.palette.primary.main,
-                            border: 'none',
-                          },
-                          '& .MuiSlider-thumb': {
-                            width: 14,
-                            height: 14,
-                            backgroundColor: theme.palette.primary.main,
-                          },
-                          '& .MuiSlider-rail': {
-                            backgroundColor: '#ffffff',
-                          },
-                          '& .MuiSlider-valueLabelOpen': {
-                            backgroundColor: 'transparent',
-                            top: 2,
-                            fontSize: 12,
-                          },
-                          '& .MuiSlider-valueLabelOpen:before': {
-                            display: 'none',
-                          },
-                        }}
-                      />
-                    </Box>
-                  )}
+                        if (!tip.id) return ml;
+                        return [...ml, [tip.id, v]];
+                      });
+                    }}
+                    step={1}
+                    min={0}
+                    max={10}
+                    sx={{
+                      width: 200,
+                      color: theme.palette.primary.main,
+                      '& .MuiSlider-track': {
+                        backgroundColor: theme.palette.primary.main,
+                        border: 'none',
+                      },
+                      '& .MuiSlider-thumb': {
+                        width: 14,
+                        height: 14,
+                        backgroundColor: theme.palette.primary.main,
+                      },
+                      '& .MuiSlider-rail': {
+                        backgroundColor: '#ffffff',
+                      },
+                      '& .MuiSlider-valueLabelOpen': {
+                        backgroundColor: 'transparent',
+                        top: 2,
+                        fontSize: 12,
+                      },
+                      '& .MuiSlider-valueLabelOpen:before': {
+                        display: 'none',
+                      },
+                    }}
+                  />
+                </Box>
               </Box>
             )}
           </Box>

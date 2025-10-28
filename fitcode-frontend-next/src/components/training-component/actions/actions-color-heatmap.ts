@@ -20,7 +20,7 @@ const getMuscleColor = (load: number) => {
 };
 
 export function paintHeatmaps(
-  muscleLoads: [string, HeatmapLoad][],
+  muscleLoads: [string, HeatmapLoad][] | [string, number][],
   selectedLoadType: 'ALL' | MuscleLoadType,
   athleteAnthropometry?: boolean
 ) {
@@ -40,15 +40,17 @@ export function paintHeatmaps(
   // Paint
   muscleLoads.forEach(([muscleType, muscleLoad]) => {
     const totalLoad =
-      selectedLoadType === MuscleLoadType.CONCENTRIC
-        ? muscleLoad.concentric
-        : selectedLoadType === MuscleLoadType.ECCENTRIC
-          ? muscleLoad.eccentric
-          : selectedLoadType === MuscleLoadType.ISOMETRIC
-            ? muscleLoad.isometric
-            : muscleLoad.eccentric +
-              muscleLoad.isometric +
-              muscleLoad.concentric;
+      typeof muscleLoad === 'number'
+        ? muscleLoad
+        : selectedLoadType === MuscleLoadType.CONCENTRIC
+          ? muscleLoad.concentric
+          : selectedLoadType === MuscleLoadType.ECCENTRIC
+            ? muscleLoad.eccentric
+            : selectedLoadType === MuscleLoadType.ISOMETRIC
+              ? muscleLoad.isometric
+              : muscleLoad.eccentric +
+                muscleLoad.isometric +
+                muscleLoad.concentric;
 
     const color = getMuscleColor(totalLoad);
     if (!color) return;

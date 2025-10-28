@@ -6,6 +6,7 @@ import {
 import { HeatmapLoad } from '../type/heatmap-load.entity';
 import { MUSCLES_TREE } from '../constant/muscles-tree.constant';
 import { Attribute } from '@/core/attribute/type/attribute.type';
+import MuscleHeatmapView from '@/components/training-component/muscle-heatmap-view';
 
 export class MuscleUtil {
   generateLoads(
@@ -139,7 +140,9 @@ export class MuscleUtil {
   /**
    * Returns the max heatmap level based on the muscles tree depth
    */
-  getMaxHeatmapLevel(muscleLoads: [string, HeatmapLoad][]) {
+  getMaxHeatmapLevel(
+    muscleLoads: [string, HeatmapLoad][] | [string, number][]
+  ): number {
     let level = 0;
 
     const parents = this.getParents();
@@ -243,6 +246,7 @@ export class MuscleUtil {
     });
 
     muscleIds.forEach((id) => loads.push([id, 0]));
+
     return loads;
   }
 
