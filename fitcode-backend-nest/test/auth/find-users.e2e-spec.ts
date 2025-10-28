@@ -1,7 +1,6 @@
 import { TestApp } from '@test/common/utils/app.util';
 
 import type { TestInstitution, TestUser } from '@src/common/type/entity.type';
-import { createAthleteUserAndToken } from '@src/common/utils/auth.util';
 import { TestDbService } from '@src/test-db/test-db.service';
 
 describe('Update Institution (e2e)', () => {
@@ -18,8 +17,8 @@ describe('Update Institution (e2e)', () => {
     testApp = await TestApp.init();
     db = testApp.module.get(TestDbService);
 
-    newAthlete1 = await createAthleteUserAndToken(testApp.firebase);
-    newAthlete2 = await createAthleteUserAndToken(testApp.firebase);
+    newAthlete1 = await testApp.auth.createAthlete();
+    newAthlete2 = await testApp.auth.createAthlete();
 
     // first institution has 3 global users (manager & trainer & athlete) + 1 additional athlete
     institution1 = await db.institutions.createTest({
@@ -36,7 +35,7 @@ describe('Update Institution (e2e)', () => {
   afterAll(async () => {
     await db.institutions.remove(institution1.id);
     await db.institutions.remove(institution2.id);
-    await db.cleanup();
+    await db.clear();
     await testApp.close();
   });
 

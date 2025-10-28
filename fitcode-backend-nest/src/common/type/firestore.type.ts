@@ -60,12 +60,9 @@ export abstract class FirestoreRepository<Model extends object, Ref = string> {
 
 export type ComponentRef = { componentId: string };
 export type InstitutionRef = { institutionId: string };
-export type TargetRef = { targetId: string };
+export type InstitutionMemberRef = InstitutionRef & UserRef;
 export type MethodRef = { methodId: string };
 export type ExerciseRef = { exerciseId: string };
-export type ExerciseAttributeValueRef = ExerciseRef & {
-  exerciseAttributeValueId: string;
-};
 
 export type UserRef = { uid: string }; // auth user uid
 export type ProfileRef = UserRef;
@@ -87,5 +84,4 @@ export type WorkloadRef = TrainingExerciseRef & {
   supersetIndex: number;
   setNumber: number;
 };
-export type TrainingStatusRef = TrainingComponentRef & { userId: string };
 export type TrainingReportRef = TrainingRef & { userId: string };

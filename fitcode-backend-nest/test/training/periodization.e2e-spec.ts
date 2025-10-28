@@ -2,13 +2,10 @@ import { TestApp } from '@test/common/utils/app.util';
 import { TestPeriodizationUtil } from '@test/common/utils/periodization.util';
 import { addDays } from 'date-fns';
 
-import { deleteCollection } from '@src/common/utils/data.util';
 import type { Component } from '@src/component/entity/component.entity';
 import { generateComponentStub } from '@src/component/mock/component.stub';
-import { FirebaseService } from '@src/firebase/firebase.service';
 import { generateCyclesStub } from '@src/group/mock/cycle.stub';
 import { generateGroupStub } from '@src/group/mock/group.stub';
-import { generateInstitutionStub } from '@src/institution/mock/institution.mock';
 import type { Target } from '@src/target/entity/target.entity';
 import { generateTargetStub } from '@src/target/mock/target.stub';
 import { TestDbService } from '@src/test-db/test-db.service';
@@ -28,7 +25,6 @@ import {
 describe('Periodization functions (e2e)', () => {
   let testApp: TestApp;
   let db: TestDbService;
-  let firebase: FirebaseService;
 
   let institutionId: string;
   let groupId: string;
@@ -39,14 +35,12 @@ describe('Periodization functions (e2e)', () => {
   beforeAll(async () => {
     testApp = await TestApp.init();
     db = testApp.module.get(TestDbService);
-    firebase = testApp.module.get(FirebaseService);
 
-    target = generateTargetStub({
-      id: 'strength',
-      componentId: 'strength',
-    });
+    target = generateTargetStub({ id: 'strength', componentId: 'strength' });
+    const institution = await db.institutions.createTest();
+    // const group = await db.groups.createTest(institution)
+    institutionId = institution.id;
 
-    institutionId = await db.institutions.save(generateInstitutionStub());
     groupId = await db.groups.save(
       generateGroupStub({ institutionId, cycles: generateCyclesStub(3) }),
     );
@@ -65,14 +59,7 @@ describe('Periodization functions (e2e)', () => {
   });
 
   afterAll(async () => {
-    await Promise.all([
-      db.trainings.clear(),
-      db.groups.delete(groupId),
-      deleteCollection(firebase, 'EXERCISE'),
-      db.institutions.delete(institutionId),
-      db.components.delete(component.id),
-    ]);
-
+    await db.clear();
     await testApp.close();
   });
 
@@ -199,7 +186,7 @@ describe('Periodization functions (e2e)', () => {
       expect(componentC1?.supersets[0].exercises).toHaveLength(5); // 5 from base component
     }
 
-    await deleteCollection(firebase, 'TRAINING');
+    await db.trainings.clear();
   });
 
   it('should periodize subgroups successfully', async () => {

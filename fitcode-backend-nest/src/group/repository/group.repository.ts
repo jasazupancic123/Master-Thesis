@@ -1,11 +1,10 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   CollectionReference,
   DocumentReference,
   FieldValue,
 } from 'firebase-admin/firestore';
 
-import { ChangeLogManager } from '@src/change-log/change-log.manager';
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { Create, FirestoreEntity, Update } from '@src/common/type/entity.type';
 import { FirestoreRepository } from '@src/common/type/firestore.type';
@@ -19,11 +18,7 @@ import { Group } from '../entity/group.entity';
 export class GroupRepository extends FirestoreRepository<Group> {
   collectionName = FirestoreCollection.GROUP;
 
-  constructor(
-    readonly firebase: FirebaseService,
-    @Inject(Group)
-    readonly changeLog: ChangeLogManager<Group>,
-  ) {
+  constructor(readonly firebase: FirebaseService) {
     super(firebase);
   }
 
@@ -86,7 +81,6 @@ export class GroupRepository extends FirestoreRepository<Group> {
     );
 
     const ref = this.doc(id);
-    this.changeLog.trackCreate(ref);
     await ref.set(query);
     return id;
   }
@@ -98,25 +92,21 @@ export class GroupRepository extends FirestoreRepository<Group> {
     });
 
     const ref = this.doc(id);
-    await this.changeLog.trackUpdate(ref);
     await ref.update(query);
   }
 
   async delete(id: string) {
     const ref = this.doc(id);
-    await this.changeLog.trackDelete(ref);
     await ref.delete();
   }
 
   async addMember(id: string, memberId: string) {
     const ref = this.doc(id);
-    await this.changeLog.trackUpdate(ref);
     await ref.update({ membersIds: FieldValue.arrayUnion(memberId) });
   }
 
   async removeMember(id: string, memberId: string) {
     const ref = this.doc(id);
-    await this.changeLog.trackUpdate(ref);
     await ref.update({ membersIds: FieldValue.arrayRemove(memberId) });
   }
 
@@ -145,7 +135,6 @@ export class GroupRepository extends FirestoreRepository<Group> {
       ],
     });
 
-    await this.changeLog.trackUpdate(ref);
     await ref.update(query);
   }
 
@@ -157,7 +146,6 @@ export class GroupRepository extends FirestoreRepository<Group> {
       cycles: cycles,
     });
 
-    await this.changeLog.trackUpdate(ref);
     await ref.update(query);
   }
 }

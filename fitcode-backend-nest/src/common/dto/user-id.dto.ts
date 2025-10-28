@@ -10,7 +10,7 @@ export class UserIdDto {
   userId: string;
 }
 
-export class UpdateMembersDto extends UserIdDto {
+export class UpdateMemberDto extends UserIdDto {
   @IsBoolean()
   @ApiProperty()
   @Expose()

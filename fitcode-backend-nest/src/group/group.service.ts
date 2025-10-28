@@ -7,7 +7,7 @@ import {
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 
 import { AuthService } from '@src/auth/service/auth.service';
-import { UpdateMembersDto } from '@src/common/dto/user-id.dto';
+import { UpdateMemberDto } from '@src/common/dto/user-id.dto';
 import {
   BatchDeleteOperation,
   BatchOperation,
@@ -261,7 +261,7 @@ export class GroupService implements Permission<Group, Institution> {
   }
 
   @LogMethod()
-  async updateMembers(user: User, ref: GroupRef, input: UpdateMembersDto) {
+  async updateMembers(user: User, ref: GroupRef, input: UpdateMemberDto) {
     const { userId: memberId, add } = input;
 
     // validate

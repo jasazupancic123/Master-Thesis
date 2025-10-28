@@ -1,17 +1,11 @@
 import { TestApp } from '@test/common/utils/app.util';
 import { addDays, isAfter, isBefore, startOfDay, subDays } from 'date-fns';
 
+import { UserRole } from '@src/auth/enum/user-role.enum';
 import type { TestUser } from '@src/common/type/entity.type';
-import {
-  createAthleteUserAndToken,
-  createManagerUserAndToken,
-  createTrainerUserAndToken,
-} from '@src/common/utils/auth.util';
-import { deleteUsers } from '@src/common/utils/data.util';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { GroupService } from '@src/group/group.service';
 import { generateGroupStub } from '@src/group/mock/group.stub';
-import { generateInstitutionStub } from '@src/institution/mock/institution.mock';
 import { TestDbService } from '@src/test-db/test-db.service';
 import {
   generateSubgroup,
@@ -38,17 +32,18 @@ describe('Update Institution (e2e)', () => {
     groupService = testApp.module.get(GroupService);
     trainingService = testApp.module.get(TrainingService);
 
-    institutionId = await db.institutions.save(generateInstitutionStub());
+    const institution = await db.institutions.createTest();
+    institutionId = institution.id;
     athletes = await Promise.all([
-      createAthleteUserAndToken(firebase),
-      createAthleteUserAndToken(firebase),
-      createAthleteUserAndToken(firebase),
+      testApp.auth.createAthlete(),
+      testApp.auth.createAthlete(),
+      testApp.auth.createAthlete(),
     ]);
   });
 
   afterAll(async () => {
-    await deleteUsers(firebase, athletes);
-    await db.cleanup();
+    await testApp.auth.deleteUsers(athletes.map((a) => a.uid));
+    await db.clear();
     await testApp.close();
   });
 
@@ -60,9 +55,7 @@ describe('Update Institution (e2e)', () => {
     return await testApp.http.patch(
       `/institution/${institutionId}/athlete`,
       token,
-      {
-        userId,
-      },
+      { userId },
     );
   }
 
@@ -74,9 +67,7 @@ describe('Update Institution (e2e)', () => {
     return await testApp.http.patch(
       `/institution/${institutionId}/trainer`,
       token,
-      {
-        userId,
-      },
+      { userId },
     );
   }
 
@@ -118,7 +109,7 @@ describe('Update Institution (e2e)', () => {
     });
 
     it('should fail if user is not authorized', async () => {
-      const otherManager = await createManagerUserAndToken(firebase);
+      const otherManager = await testApp.auth.createManager();
       const response = await addAthleteReq(
         institutionId,
         otherManager.token,
@@ -128,7 +119,7 @@ describe('Update Institution (e2e)', () => {
       expect(response.status).toBe(401);
       expect(response.body.message).toBe('You cannot edit this institution');
 
-      await deleteUsers(firebase, [otherManager]);
+      await testApp.auth.deleteUsers([otherManager.uid]);
     });
 
     it('should fail if user does not exist', async () => {
@@ -160,8 +151,6 @@ describe('Update Institution (e2e)', () => {
     it('should successfully add an athlete to the institution but not its groups and trainings', async () => {
       const membersIds = [athletes[0], athletes[1]].map((a) => a.uid); // only the first two athletes
       const newAthlete = athletes[2];
-
-      db.checkpoint();
 
       const existingGroups = await Promise.all([
         db.groups.save(generateGroupStub({ institutionId, membersIds })),
@@ -263,7 +252,9 @@ describe('Update Institution (e2e)', () => {
         expect(training.membersIds).not.toContain(newAthlete.uid);
       }
 
-      await db.checkpointRestore();
+      // delete created groups and trainings
+      for (const groupId of existingGroups) await db.groups.delete(groupId);
+      for (const training of trainings) await db.trainings.delete(training.id);
     });
 
     it('should successfully remove an athlete from the institution and all groups and trainings', async () => {
@@ -272,11 +263,11 @@ describe('Update Institution (e2e)', () => {
 
       // delete institution and recreate it to reset the state
       await db.institutions.delete(institutionId);
-      institutionId = await db.institutions.save(
-        generateInstitutionStub({ athleteIds: membersIds }),
-      );
+      const institution = await db.institutions.createTest({
+        athletes: [athletes[0], athletes[1]],
+      });
 
-      db.checkpoint();
+      institutionId = institution.id;
 
       const existingGroups = await Promise.all([
         db.groups.save(generateGroupStub({ institutionId, membersIds })),
@@ -336,9 +327,9 @@ describe('Update Institution (e2e)', () => {
       );
 
       expect(response.status).toBe(200);
-      const institution = await db.institutions.findById(institutionId);
-      expect(institution.athleteIds).toHaveLength(1);
-      expect(institution.athleteIds).not.toContain(userId);
+      const found = await db.institutions.findById(institutionId);
+      expect(found.athleteIds).toHaveLength(1);
+      expect(found.athleteIds).not.toContain(userId);
 
       const groups = await db.groups.findAll();
       expect(groups).toHaveLength(3);
@@ -367,11 +358,13 @@ describe('Update Institution (e2e)', () => {
         expect(training.membersIds).toContain(userId);
       }
 
-      await db.checkpointRestore();
+      // delete created groups and trainings
+      for (const groupId of existingGroups) await db.groups.delete(groupId);
+      for (const training of trainings) await db.trainings.delete(training.id);
     });
 
     it('should fail to add trainer if user is not a trainer', async () => {
-      const nonTrainer = await createAthleteUserAndToken(firebase);
+      const nonTrainer = await testApp.auth.createAthlete();
       const response = await addTrainerReq(
         institutionId,
         global.manager.token,
@@ -383,11 +376,11 @@ describe('Update Institution (e2e)', () => {
         'Member must be a trainer to be added as a trainer',
       );
 
-      await deleteUsers(firebase, [nonTrainer]);
+      await testApp.auth.deleteUsers([nonTrainer.uid]);
     });
 
     it('should successfully add a trainer to the institution', async () => {
-      const newTrainer = await createTrainerUserAndToken(firebase);
+      const newTrainer = await testApp.auth.createTrainer();
       const response = await addTrainerReq(
         institutionId,
         global.manager.token,
@@ -399,8 +392,11 @@ describe('Update Institution (e2e)', () => {
       expect(institution.trainerIds).toContain(newTrainer.uid);
       expect(institution.trainerIds).toHaveLength(2);
 
-      await deleteUsers(firebase, [newTrainer]);
-      await db.institutions.removeTrainer(institutionId, newTrainer.uid);
+      await testApp.auth.deleteUsers([newTrainer.uid]);
+      await db.institutions.members.removeMember({
+        institutionId,
+        uid: newTrainer.uid,
+      });
     });
 
     it('should successfully remove a trainer from the institution', async () => {
@@ -416,7 +412,10 @@ describe('Update Institution (e2e)', () => {
       expect(institution.trainerIds).not.toContain(trainer.uid);
       expect(institution.trainerIds).toHaveLength(0);
 
-      await db.institutions.addTrainer(institutionId, trainer.uid);
+      await db.institutions.members.addMember(
+        { role: UserRole.TRAINER },
+        { institutionId, uid: trainer.uid },
+      );
     });
 
     it('should remove member from all subgroups and completed members for all components and trainings in the future', async () => {

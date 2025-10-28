@@ -3,7 +3,7 @@ import { config } from 'dotenv';
 
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { CommonService } from '@src/common/service/common.service';
-import { deleteUsersByIds } from '@src/common/utils/data.util';
+import { TestAuth } from '@src/common/utils/test-auth.util';
 import type {
   Environment,
   NodeEnv,
@@ -39,7 +39,8 @@ export default async function () {
     firebase.deleteCollection(FirestoreCollection.PROFILE),
   ]);
 
-  await deleteUsersByIds(firebase, [
+  const auth = new TestAuth(firebase);
+  await auth.deleteUsers([
     global.athlete.uid,
     global.trainer.uid,
     global.manager.uid,

@@ -1,7 +1,6 @@
 import { TestApp } from '@test/common/utils/app.util';
 
 import { generateGroupStub } from '@src/group/mock/group.stub';
-import { generateInstitutionStub } from '@src/institution/mock/institution.mock';
 import { TestDbService } from '@src/test-db/test-db.service';
 import { generateTrainingStub } from '@src/training/mock/training.stub';
 
@@ -15,12 +14,14 @@ describe('Delete Group (e2e)', () => {
   beforeAll(async () => {
     testApp = await TestApp.init();
     db = testApp.module.get(TestDbService);
-    institutionId = await db.institutions.save(generateInstitutionStub());
+
+    const institution = await db.institutions.createTest();
+    institutionId = institution.id;
     groupId = await db.groups.save(generateGroupStub({ institutionId }));
   });
 
   afterAll(async () => {
-    await db.cleanup();
+    await db.clear();
     await testApp.close();
   });
 
