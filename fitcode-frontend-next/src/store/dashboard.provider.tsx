@@ -17,7 +17,6 @@ import type {
 } from '@/core/institution/type/institution.type';
 import type { UserRole } from '@/core/profile/enum/user-role.enum';
 import type { Profile } from '@/core/profile/type/user.type';
-import { useFetch } from '@/hooks/use-fetch.hook';
 import { lib } from '@/lib';
 import {
   LINK_DASHBOARD_GROUPS,
@@ -45,7 +44,6 @@ export interface IDashboardContext {
   setDetectedChanges: SetState<boolean>;
   selectedGroup: Group | null;
   setSelectedGroup: SetState<Group | null>;
-  refetchUsers: () => void;
   members: Profile[];
   refetchMembers: (providedUrl?: string) => void;
   setMembers: SetState<Profile[]>;
@@ -107,13 +105,6 @@ export function DashboardProvider(props: Props) {
 
   const { users, setUsers } = useMain();
 
-  const { data: fetchedUsers, refetch: refetchUsers } =
-    useFetch<AuthUser[]>(`/auth`);
-
-  useEffect(() => {
-    if (fetchedUsers) setUsers(fetchedUsers);
-  }, [fetchedUsers, setUsers]);
-
   useEffect(() => {
     async function fetchGroups() {
       if (!selectedInstitution || selectedInstitution.groups) return;
@@ -139,7 +130,6 @@ export function DashboardProvider(props: Props) {
   const value: IDashboardContext = {
     filter,
     setFilter,
-    refetchUsers,
     institutions,
     setInstitutions,
     selectedInstitution,

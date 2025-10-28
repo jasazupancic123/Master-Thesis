@@ -84,8 +84,9 @@ export class ProfileRepository extends FirestoreRepository<Profile> {
       const operations: BatchSetOperation<Profile>[] = [];
       missingIds.forEach((uid) => {
         const user = users.find((u) => u.uid === uid);
-        const profile = { uid, email: user.email };
+        if (!user || !user.email) return;
 
+        const profile = { uid, email: user.email };
         profiles.push({
           ...profile,
           createdAt: new Date(),

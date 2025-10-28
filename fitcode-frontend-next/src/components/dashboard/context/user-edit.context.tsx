@@ -5,7 +5,6 @@ import { toast } from 'react-hot-toast';
 
 import { AuthController } from '@/core/auth/auth.controller';
 import type { AuthUser } from '@/core/auth/type/user.type';
-import { BACKEND_API_BASE_URL } from '@/core/const/api.const';
 import { ProfileController } from '@/core/profile/profile.controller';
 import type { Profile } from '@/core/profile/type/user.type';
 import type { SetState } from '@/lib/common/type/state.type';
@@ -45,8 +44,6 @@ export function DashboardUserEditProvider({
     setUsers,
     selectedInstitution,
     selectedGroup,
-    refetchMembers,
-    refetchUsers,
   } = useDashboard();
 
   const [hoveredUser, setHoveredUser] = useState<AuthUser | null>(null);
@@ -103,11 +100,18 @@ export function DashboardUserEditProvider({
           photoURL: userToEdit.photoURL,
         });
 
-      refetchUsers();
-      refetchMembers(
-        selectedInstitution
-          ? `${BACKEND_API_BASE_URL}/institution/${selectedInstitution.id}/find/all`
-          : undefined
+      setMembers((prev) =>
+        prev.map((member) =>
+          member.uid === profileToEdit?.uid ? profileToEdit : member
+        )
+      );
+
+      setFilteredUsers((prev) =>
+        prev.map((user) => (user.uid === userToEdit?.uid ? userToEdit : user))
+      );
+
+      setCurrentUsers((prev) =>
+        prev.map((user) => (user.uid === userToEdit?.uid ? userToEdit : user))
       );
 
       toast.success('Successfully updated user profile');

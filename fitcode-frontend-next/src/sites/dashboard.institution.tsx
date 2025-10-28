@@ -25,7 +25,7 @@ import { Gender } from '@/core/profile/enum/gender.enum';
 import { SportLevel } from '@/core/profile/enum/sport-level.enum';
 import { UserRole } from '@/core/profile/enum/user-role.enum';
 import { ProfileController } from '@/core/profile/profile.controller';
-import type { ImportProfile } from '@/core/profile/type/user.type';
+import type { ImportProfile, Profile } from '@/core/profile/type/user.type';
 import { lib } from '@/lib';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { handleApiRequest } from '@/lib/common/type/state.type';
@@ -239,7 +239,7 @@ export default function DashboardInstitutionPage() {
           email: r.email,
           password: r.password,
           displayName: r.displayName,
-          photoURL: r.photoURL,
+          photoURL: undefined,
           role: r.role,
           sport: r.sport || undefined,
           level: r.level || undefined,
@@ -254,13 +254,20 @@ export default function DashboardInstitutionPage() {
           (res) => {
             setOpenAddMemberViaCsvModal(false);
             setCsvUserEmails(data.map((d) => d.email));
-            setMembers((prev) => [...prev, ...(res.successful || [])]);
+            setMembers((prev) => [
+              ...prev,
+              ...(res.successful || []).map(
+                (u) =>
+                  ({
+                    uid: u.uid,
+                    email: u.email!,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                  }) as Profile
+              ),
+            ]);
 
-            const authUsers = (res.successful || []).map((u) => ({
-              ...u,
-              customClaims: { role: [u.role] },
-            }));
-
+            const authUsers = res.successful || [];
             setUsers((prev) => [...prev, ...authUsers]);
             setCurrentUsers((prev) => [...prev, ...authUsers]);
             setFilteredUsers((prev) => [...prev, ...authUsers]);

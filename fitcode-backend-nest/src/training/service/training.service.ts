@@ -153,11 +153,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
     const trainings = await this.repository.findAll((_) =>
       this.repository.buildGetQuery(
-        {
-          uid: user.uid,
-          role: this.firebase.getRole(user),
-          institutionId,
-        },
+        { uid: user.uid, role: this.firebase.getRole(user), institutionId },
         filter,
         options,
       ),
