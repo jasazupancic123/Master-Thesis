@@ -5,13 +5,14 @@ import UserWellnessSlider from './user-wellness-slider';
 import FatigueIcon from '@/assets/icons/Fatigue.svg';
 import SleepIcon from '@/assets/icons/Sleep.svg';
 import SorenessIcon from '@/assets/icons/Soreness.svg';
-import HeatmapBack from '@/assets/svg/heatmap-back.svg';
-import HeatmapFront from '@/assets/svg/heatmap-front.svg';
+import HeatmapFront from '@/assets/svg/heatmap_front_yellow.svg';
+import HeatmapBack from '@/assets/svg/heatmap_back_yellow.svg';
 import MuscleMapWithTooltip from '@/components/muscle-map-with-tooltip/muscle-map-with-tooltip';
 import { HEATMAP_COLORS } from '@/core/const/color.const';
 import type { Wellness } from '@/core/profile/type/wellness.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useScreenSize } from '@/store/screen-size.provider';
+import { core } from '@/core/core.service';
 
 interface Props {
   disabled: boolean;
@@ -22,14 +23,7 @@ interface Props {
   onSubmit: (data: Partial<Wellness>) => void;
 }
 
-export default function AthleteWellnessForm({
-  disabled,
-  state,
-  setState,
-  muscleLoads,
-  setMuscleLoads,
-  onSubmit,
-}: Props) {
+export default function AthleteWellnessForm(props: Props) {
   const screenSize = useScreenSize();
 
   const {
@@ -38,6 +32,9 @@ export default function AthleteWellnessForm({
     tipHeatmapBack,
     setTipHeatmapBack,
   } = useTip();
+
+  const { disabled, state, setState, muscleLoads, setMuscleLoads, onSubmit } =
+    props;
 
   return (
     <Box width="100%" display="flex" flexDirection="column" alignItems="center">
@@ -97,7 +94,8 @@ export default function AthleteWellnessForm({
           front={true}
           Svg={HeatmapFront}
           exercisesInComponent={[]}
-          heatmapLevel={1}
+          heatmapLevel={core.exercise.muscle.getMaxHeatmapLevel(muscleLoads)}
+          maxHeatmapLevel={core.exercise.muscle.getMaxHeatmapLevel(muscleLoads)}
           tip={tipHeatmapFront}
           setTip={setTipHeatmapFront}
           athleteAnthropometry
@@ -108,7 +106,8 @@ export default function AthleteWellnessForm({
           front={false}
           Svg={HeatmapBack}
           exercisesInComponent={[]}
-          heatmapLevel={1}
+          heatmapLevel={core.exercise.muscle.getMaxHeatmapLevel(muscleLoads)}
+          maxHeatmapLevel={core.exercise.muscle.getMaxHeatmapLevel(muscleLoads)}
           tip={tipHeatmapBack}
           setTip={setTipHeatmapBack}
           athleteAnthropometry

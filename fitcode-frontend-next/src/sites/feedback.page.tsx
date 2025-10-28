@@ -21,6 +21,7 @@ import type {
 import { handleApiRequest } from '@/lib/common/type/state.type';
 import { setCachedWellness } from '@/session-cache/wellness.session-cache';
 import { useWellness } from '@/store/wellness-provider';
+import { HeatmapLoad } from '@/core/exercise/type/heatmap-load.entity';
 
 export async function submitWellness(
   input: CreateWellness,
@@ -54,7 +55,7 @@ export default function FeedbackPage() {
 
   useEffect(() => {
     if (muscleLoads.length) return; // Already set
-    const loads = core.exercise.muscle.generateEmptyLoads(1);
+    const loads = core.exercise.muscle.generateEmptyLoads(3);
     setMuscleLoads(loads);
   }, []);
 
@@ -73,7 +74,7 @@ export default function FeedbackPage() {
   });
 
   useEffect(() => {
-    paintHeatmaps(muscleLoads, true);
+    paintHeatmaps(muscleLoads, 'ALL');
   }, [muscleLoads, filter]);
 
   return (
