@@ -4,9 +4,9 @@ import type {
   Component,
   TreeComponent,
 } from '@/core/component/type/component.type';
+import { lib } from '@/lib';
 import { useMain } from '@/store/main.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
-import { lib } from '@/lib';
 
 export default function useComponentFilter() {
   const { components } = useMain();

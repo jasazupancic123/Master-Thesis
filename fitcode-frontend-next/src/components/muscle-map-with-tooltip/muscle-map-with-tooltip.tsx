@@ -45,9 +45,6 @@ export default function MuscleMapWithTooltip(props: Props) {
   const theme = useTheme();
   const screenSize = useScreenSize();
 
-  const { training, component, addTrainingExercises } =
-    useTrainerDayView() || {};
-
   const {
     front,
     Svg,
@@ -143,8 +140,6 @@ export default function MuscleMapWithTooltip(props: Props) {
 
       //const muscleId = key.replace('-r', '').replace('-l', '');
       const muscleId = el.id;
-
-      const muscleName = formatName(key);
 
       const muscleIds = [muscleId];
       children.forEach((child) => {
@@ -243,7 +238,7 @@ export default function MuscleMapWithTooltip(props: Props) {
         onMouseLeave={handleMouseLeave}
         onFocus={handleFocus}
         onBlur={handleBlur}
-        onClick={(e: React.MouseEvent<SVGSVGElement>) => {
+        onClick={() => {
           if (!tip.show) return;
 
           if (setSelectedMuscle && setSelectedMuscleName && tip.muscle) {
