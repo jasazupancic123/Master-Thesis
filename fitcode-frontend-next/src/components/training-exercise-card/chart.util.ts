@@ -1,13 +1,12 @@
 import { core } from '@/core/core.service';
 import { SetStatus } from '@/core/training/enum/set-status.enum';
 import type { ChartWorkloadData } from '@/core/training/type/chart-workload-data.type';
-import type { ExerciseParamField } from '@/core/training/type/exercise-set.type';
+import type { ExerciseParamFieldExtended } from '@/core/training/type/exercise-set.type';
 import type { Subgroup } from '@/core/training/type/subgroup.type';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { Workload } from '@/core/training/type/workload.type';
-import { lib } from '@/lib';
 
 export function getAthleteChart(
   athleteId: string,
@@ -18,7 +17,7 @@ export function getAthleteChart(
     trainings: Training[];
     workloads: Workload[];
     subgroup: Subgroup | null;
-    selectedParams: ExerciseParamField[];
+    selectedParams: ExerciseParamFieldExtended[];
   }
 ): ChartWorkloadData[] {
   const result: ChartWorkloadData[] = [];
@@ -89,15 +88,11 @@ export function getAthleteChart(
       });
     }
 
-    console.log('item', item, 'workloads', workloads);
-
     result.push({
       ...item,
       ...getAggregatedWorkloadValues(workloads, data.selectedParams),
     });
   }
-
-  console.log('result', result);
 
   return result.sort(
     (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
@@ -108,7 +103,7 @@ export function getGroupChart(
   exercise: TrainingExercise,
   component: TrainingComponent,
   training: Training,
-  data: { trainings: Training[]; selectedParams: ExerciseParamField[] }
+  data: { trainings: Training[]; selectedParams: ExerciseParamFieldExtended[] }
 ): ChartWorkloadData[] {
   const result: ChartWorkloadData[] = [];
 
@@ -208,7 +203,7 @@ export function getGroupChart(
  */
 function getAggregatedWorkloadValues(
   workloads: Partial<Workload>[],
-  selectedParams: ExerciseParamField[]
+  selectedParams: ExerciseParamFieldExtended[]
 ): Pick<ChartWorkloadData, 'int' | 'vol'> & {
   loadKgFullValue?: string;
   repsFullValue?: string;

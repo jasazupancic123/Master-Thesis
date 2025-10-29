@@ -1,9 +1,7 @@
-export type ExerciseParamField =
-  | Exclude<keyof ExerciseSet, 'setNumber'>
-  | 'sets';
-
+export type ExerciseParamField = Exclude<keyof ExerciseSet, 'setNumber'>;
+export type ExerciseParamFieldExtended = ExerciseParamField | 'sets';
 export type ExerciseMainParamField = Exclude<
-  ExerciseParamField,
+  ExerciseParamFieldExtended,
   keyof ExerciseSetSecondarySide
 >;
 

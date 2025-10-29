@@ -1,6 +1,6 @@
 import type {
   ExerciseMainParamField,
-  ExerciseParamField,
+  ExerciseParamFieldExtended,
   ExerciseSet,
 } from '../type/exercise-set.type';
 import type { Attribute } from '@/core/attribute/type/attribute.type';
@@ -186,7 +186,10 @@ export class TrainingExerciseSetUtil {
     );
   }
 
-  private hasParam(exercise: Exercise, param: ExerciseParamField): boolean {
+  private hasParam(
+    exercise: Exercise,
+    param: ExerciseParamFieldExtended
+  ): boolean {
     return exercise.params.includes(param);
   }
 }

@@ -10,7 +10,6 @@ import {
   REC_TIME,
   REPS,
   RM,
-  SETS,
   TEMPO,
   TIME,
   VEL,
@@ -18,7 +17,6 @@ import {
 
 export class ExerciseParamUtil {
   readonly pairs: Record<ExerciseParamField, ExerciseParamField> = {
-    sets: 'sets',
     reps: 'repsR',
     repsR: 'reps',
     loadKg: 'loadKgR',
@@ -38,12 +36,11 @@ export class ExerciseParamUtil {
     recDist: 'recDist',
   };
 
-  get(field: ExerciseParamField | 'sets') {
+  get(field: ExerciseParamField) {
     const mapper: Record<
       ExerciseParamField,
       Attribute<ExerciseSetParamsObj>
     > = {
-      sets: SETS,
       reps: REPS,
       repsR: { ...REPS, required: false },
       loadKg: KG,

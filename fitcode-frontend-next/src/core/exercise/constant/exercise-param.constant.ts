@@ -3,12 +3,9 @@ import { AttributeType } from '@/core/attribute/enum/attribute-value.enum';
 import type { Attribute } from '@/core/attribute/type/attribute.type';
 import type { ExerciseSet } from '@/core/training/type/exercise-set.type';
 
-export type ExerciseSetParamsObj = Omit<
-  ExerciseSet,
-  'setNumber' | 'loadType'
-> & { sets: number };
+export type ExerciseSetParamsObj = Omit<ExerciseSet, 'setNumber' | 'loadType'>;
 
-export const SETS: Attribute<ExerciseSetParamsObj> = {
+export const SETS: Attribute = {
   field: 'sets',
   type: AttributeType.Number,
   name: 'Set',

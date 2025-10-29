@@ -1,7 +1,7 @@
 import type { AttributeValue } from '@/core/attribute/type/attribute-value.type';
 import type { Component } from '@/core/component/type/component.type';
 import type { BaseEntity } from '@/core/entity.type';
-import type { ExerciseParamField } from '@/core/training/type/exercise-set.type';
+import type { ExerciseParamFieldExtended } from '@/core/training/type/exercise-set.type';
 
 export type Exercise = BaseEntity &
   ExerciseAttributes & {
@@ -11,7 +11,7 @@ export type Exercise = BaseEntity &
     institutionId?: string;
     isUnilateral: boolean;
     disabled: boolean;
-    params: ExerciseParamField[];
+    params: ExerciseParamFieldExtended[];
     imageUrl?: string;
     videoUrl?: string;
     instruction?: string;

@@ -10,6 +10,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import dayjs from 'dayjs';
 import {
   Line,
   LineChart,
@@ -25,15 +26,17 @@ import useTrainingExerciseCardChart from './hooks/use-chart.hook';
 import TrainingExerciseCard from './training-exercise-card';
 import { GRAPH_COLORS } from '@/core/const/color.const';
 import { core } from '@/core/core.service';
-import type { ExerciseParamField } from '@/core/training/type/exercise-set.type';
+import type {
+  ExerciseParamField,
+  ExerciseParamFieldExtended,
+} from '@/core/training/type/exercise-set.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
-import dayjs from 'dayjs';
 
-export const graphColorMap: Record<ExerciseParamField, string> = {
+export const graphColorMap: Record<ExerciseParamFieldExtended, string> = {
   loadKg: GRAPH_COLORS[0],
   loadKgR: GRAPH_COLORS[0],
   loadRm: GRAPH_COLORS[0],
@@ -251,7 +254,7 @@ export default function TrainingExerciseChart(
                         // add to selected
                         setSelectedParams((prev) => [
                           ...prev,
-                          p.field as ExerciseParamField,
+                          p.field as ExerciseParamFieldExtended,
                         ]);
                       else
                         setSelectedParams((prev) =>

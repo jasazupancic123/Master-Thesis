@@ -92,7 +92,7 @@ export default function StubTrainingExerciseCardCollapsedSets(
         >
           <NumberExerciseParam
             options={[SETS]}
-            selected={SETS.field}
+            selected={SETS.field as string}
             value={exercise.sets.length}
             exercise={exercise}
             showOptions
@@ -122,16 +122,16 @@ export default function StubTrainingExerciseCardCollapsedSets(
             effType === 'tempo' ? (
               <TempoExerciseParam
                 options={effOptions}
-                selected="tempo"
-                value={exercise.sets[0]?.tempo || ''}
+                selected={effType}
+                value={exercise.sets[0]?.[effType] || ''}
                 exercise={exercise}
                 showOptions
               />
             ) : (
               <NumberExerciseParam
                 options={effOptions}
-                selected="eff"
-                value={exercise.sets[0]?.eff || 0}
+                selected={effType}
+                value={exercise.sets[0]?.[effType] || 0}
                 exercise={exercise}
                 showOptions
               />
@@ -162,7 +162,7 @@ export default function StubTrainingExerciseCardCollapsedSets(
           >
             <NumberExerciseParam
               options={[SETS]}
-              selected={SETS.field}
+              selected={SETS.field as string}
               value={exercise.sets.length}
               exercise={exercise}
               showOptions={false}
@@ -173,9 +173,7 @@ export default function StubTrainingExerciseCardCollapsedSets(
                 options={volOptions}
                 selected={volType}
                 value={
-                  volType === 'reps'
-                    ? exercise.sets[0]?.repsR || 0
-                    : exercise.sets[0]?.[volType] || 0 // dist and time are the same for both sides
+                  exercise.sets[0]?.[core.exercise.param.pairs[volType]] || 0
                 }
                 exercise={exercise}
                 showOptions={false}
@@ -187,9 +185,7 @@ export default function StubTrainingExerciseCardCollapsedSets(
                 options={intOptions}
                 selected={loadType}
                 value={
-                  exercise.sets[0]?.[`${loadType}R`] ||
-                  exercise.sets[0]?.[loadType] ||
-                  0
+                  exercise.sets[0]?.[core.exercise.param.pairs[loadType]] || 0
                 }
                 showOptions={false}
                 exercise={exercise}
@@ -200,16 +196,20 @@ export default function StubTrainingExerciseCardCollapsedSets(
               effType === 'tempo' ? (
                 <TempoExerciseParam
                   options={effOptions}
-                  selected="tempo"
-                  value={exercise.sets[0]?.tempoR || ''}
+                  selected={effType}
+                  value={
+                    exercise.sets[0]?.[core.exercise.param.pairs[effType]] || ''
+                  }
                   showOptions={false}
                   exercise={exercise}
                 />
               ) : (
                 <NumberExerciseParam
                   options={effOptions}
-                  selected="eff"
-                  value={exercise.sets[0]?.eff || 0}
+                  selected={effType}
+                  value={
+                    exercise.sets[0]?.[core.exercise.param.pairs[effType]] || 0
+                  }
                   showOptions={false}
                   exercise={exercise}
                 />
@@ -221,9 +221,7 @@ export default function StubTrainingExerciseCardCollapsedSets(
                 options={recOptions}
                 selected={recType}
                 value={
-                  recType === 'recTime'
-                    ? exercise.sets[0]?.recTime || 0
-                    : exercise.sets[0]?.recDist || 0
+                  exercise.sets[0]?.[core.exercise.param.pairs[recType]] || 0
                 }
                 showOptions={false}
                 exercise={exercise}
