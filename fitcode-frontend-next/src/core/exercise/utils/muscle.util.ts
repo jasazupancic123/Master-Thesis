@@ -1,3 +1,4 @@
+import { core } from '@/core/core.service';
 import type { TrainingExercise } from '../../training/type/training-exercise.type';
 import { MUSCLES_TREE } from '../constant/muscles-tree.constant';
 import type { HeatmapLoad } from '../type/heatmap-load.entity';
@@ -6,6 +7,7 @@ import {
   HEATMAP_BACK_ID,
   HEATMAP_FRONT_ID,
 } from '@/core/exercise/constant/heatmap.const';
+import { lib } from '@/lib';
 
 export class MuscleUtil {
   generateLoads(
@@ -67,7 +69,11 @@ export class MuscleUtil {
     });
 
     // Fill missing muscles with 0 load
-    const leafChildren = this.computeLeafMuscleIds(MUSCLES_TREE);
+    const leafChildren = lib.common.tree.computeLeafIds(
+      MUSCLES_TREE,
+      'field',
+      'options'
+    );
 
     leafChildren.forEach((muscleId) => {
       if (!loads.find(([type]) => type === muscleId)) {
@@ -97,7 +103,11 @@ export class MuscleUtil {
 
     // Calculate averages for parents
     for (const parent of parents) {
-      const childrenIds = this.computeLeafMuscleIds([parent]);
+      const childrenIds = lib.common.tree.computeLeafIds(
+        [parent],
+        'field',
+        'options'
+      );
 
       const muscleLoads = loads.filter(
         (load) =>
@@ -144,7 +154,7 @@ export class MuscleUtil {
   ): number {
     let level = 0;
 
-    const parents = this.getParents();
+    const parents = lib.common.tree.computeParents(MUSCLES_TREE, 'options');
 
     muscleLoads.forEach((ml) => {
       let currentLevel = 0;
@@ -177,11 +187,11 @@ export class MuscleUtil {
     maxLevel: number
   ): Attribute | undefined {
     if (level === maxLevel) {
-      const leafes = this.computeLeafMuscles(MUSCLES_TREE);
+      const leafes = lib.common.tree.computeLeafes(MUSCLES_TREE, 'options');
       return leafes.find((m) => m.field === muscleId);
     }
 
-    const parents = this.getParents();
+    const parents = lib.common.tree.computeParents(MUSCLES_TREE, 'options');
 
     let parent = parents.find((p) =>
       p.options?.find((o) => o.field === muscleId)
@@ -203,27 +213,6 @@ export class MuscleUtil {
     }
 
     return parent;
-  }
-
-  /**
-   * Returns all muscles who have children (options array)
-   */
-  getParents(): Attribute[] {
-    const musclesToEval: Attribute[] = MUSCLES_TREE.map((m) => m);
-    const parents: Attribute[] = [];
-
-    while (musclesToEval.length) {
-      const muscle = musclesToEval?.shift();
-
-      if (!muscle) continue;
-
-      if (muscle.options && muscle.options.length) {
-        parents.push(muscle);
-        musclesToEval.push(...muscle.options);
-      }
-    }
-
-    return parents;
   }
 
   /**
@@ -259,82 +248,8 @@ export class MuscleUtil {
       .filter((id): id is string => Boolean(id));
   }
 
-  computeAllMusces(): Attribute[] {
-    const muscles = [] as Attribute[];
-
-    const musclesToEval = MUSCLES_TREE.map((m) => m);
-
-    while (musclesToEval.length) {
-      const muscle = musclesToEval.shift();
-      if (!muscle) continue;
-
-      muscles.push(muscle);
-      if (muscle.options) musclesToEval.push(...muscle.options);
-    }
-
-    return muscles;
-  }
-
-  computeLeafMuscles(root: Attribute[]): Attribute[] {
-    const leafes = [] as Attribute[];
-
-    root.forEach((muscle) => {
-      const leaf = muscle;
-
-      if (!leaf.options) {
-        leafes.push(leaf);
-        return;
-      }
-
-      const optionsToEval = [...leaf.options];
-
-      while (optionsToEval.length) {
-        const option = optionsToEval.shift();
-
-        if (!option) continue;
-
-        if (option.options) {
-          optionsToEval.push(...option.options);
-        } else {
-          leafes.push(option);
-        }
-      }
-    });
-
-    return leafes;
-  }
-
-  computeLeafMuscleIds(root: Attribute[]): string[] {
-    const leafes = [] as string[];
-
-    root.forEach((muscle) => {
-      const leaf = muscle;
-
-      if (!leaf.options) {
-        leafes.push(leaf.field as string);
-        return;
-      }
-
-      const optionsToEval = [...leaf.options];
-
-      while (optionsToEval.length) {
-        const option = optionsToEval.shift();
-
-        if (!option) continue;
-
-        if (option.options) {
-          optionsToEval.push(...option.options);
-        } else {
-          leafes.push(option.field as string);
-        }
-      }
-    });
-
-    return leafes;
-  }
-
   getRandomLeafMuscle(muscleId: string): Attribute | null {
-    const allMuscles = this.computeAllMusces();
+    const allMuscles = lib.common.tree.toArray(MUSCLES_TREE, 'options');
 
     const foundMuscle = allMuscles.find((m) => m.field === muscleId);
 
@@ -342,7 +257,7 @@ export class MuscleUtil {
 
     if (!foundMuscle) return null;
 
-    const leafes = this.computeLeafMuscles([foundMuscle]);
+    const leafes = lib.common.tree.computeLeafes([foundMuscle], 'options');
 
     return leafes[0] || null;
   }

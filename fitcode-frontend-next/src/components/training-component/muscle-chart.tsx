@@ -142,6 +142,9 @@ export default function MuscleChart(props: Props) {
       <LineChart
         height={400}
         dataset={dataset}
+        localeText={{
+          noData: 'Select a muscle',
+        }}
         xAxis={[
           {
             dataKey: 'timestamp',
