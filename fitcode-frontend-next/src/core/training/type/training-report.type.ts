@@ -1,5 +1,5 @@
 import type { TrainingStats } from './training-stats.type';
-import type { ExerciseMuscleValue } from '@/core/exercise/type/muscle-tip.type';
+import type { ExerciseMuscleValue } from '@/core/exercise/type/exercise-muscle-value.entity';
 import type { Cycle } from '@/core/group/type/cycle.type';
 import type { Group } from '@/core/group/type/group.type';
 import type { Institution } from '@/core/institution/type/institution.type';

@@ -23,6 +23,7 @@ class CoreService {
     this.profile = new ProfileUtil();
     this.group = new GroupUtil();
     this.training = new TrainingUtil();
+    this.profile = new ProfileUtil();
   }
 }
 

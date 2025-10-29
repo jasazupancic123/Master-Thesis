@@ -9,6 +9,7 @@ import {
 } from '@dnd-kit/core';
 import { Box, Grid2, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
+import { useEffect } from 'react';
 
 import AddExerciseForm from '../add-exercise-form/add-exercise-form';
 import TrainingExerciseCardStub from '../training-exercise-card/card-stub';
@@ -82,8 +83,12 @@ export default function Supersets({
     setPagination,
   } = trainerDayViewContext;
 
-  const { selectedExerciseIds, setSelectedExerciseIds } =
-    useSelectedExerciseIds();
+  const {
+    selectedExerciseIds,
+    setSelectedExerciseIds,
+    newAddedExercisesIds,
+    setNewAddedExercisesIds,
+  } = useSelectedExerciseIds();
 
   const {
     menuExercise,
@@ -102,6 +107,13 @@ export default function Supersets({
     disabledSensors,
     itemsByContainer,
   } = useSupersetUtils();
+
+  useEffect(() => {
+    if (!openAddExerciseModal) {
+      setNewAddedExercisesIds([]);
+      setSelectedExerciseIds([]);
+    }
+  }, [openAddExerciseModal]);
 
   if (!component || !training) return null;
 
@@ -152,6 +164,40 @@ export default function Supersets({
       { ...trainerDayViewContext, training, component }
     );
   }
+
+  const handleAddExercises = () => {
+    if (selectedExerciseIds.length === 0) {
+      setOpenAddExerciseModal(false);
+      return;
+    }
+
+    const trainingExercises: TrainingExercise[] = selectedExerciseIds
+      .filter((id) => exercises.some((e) => e.id === id))
+      .map((id) => {
+        const exercise = exercises.find((e) => e.id === id)!;
+        return {
+          id: exercise.id,
+          params: [],
+          exercise,
+          sets: [
+            core.training.set.stub(1, exercise),
+            core.training.set.stub(2, exercise),
+            core.training.set.stub(3, exercise),
+          ],
+        };
+      });
+
+    trainerDayViewContext.addTrainingExercises(
+      trainingExercises,
+      MainSet.BLOCK
+    );
+
+    setNewAddedExercisesIds([]);
+    setOpenAddExerciseModal(false);
+    setSearch('');
+    setSelectedExerciseIds([]);
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  };
 
   return (
     <DndContext
@@ -288,6 +334,7 @@ export default function Supersets({
               .includes(id)
           );
 
+          setNewAddedExercisesIds([]);
           setPagination((prev) => ({ ...prev, page: 1 }));
           setSelectedExerciseIds(oldExercises);
           setOpenAddExerciseModal(false);
@@ -306,42 +353,16 @@ export default function Supersets({
           px: screenSize.isMobile ? 0 : undefined,
         }}
         onConfirm={() => {
-          if (selectedExerciseIds.length === 0) {
-            setOpenAddExerciseModal(false);
-            return;
-          }
-
-          const trainingExercises: TrainingExercise[] = selectedExerciseIds
-            .filter((id) => exercises.some((e) => e.id === id))
-            .map((id) => {
-              const exercise = exercises.find((e) => e.id === id)!;
-              return {
-                id: exercise.id,
-                params: exercise.params,
-                exercise,
-                sets: [
-                  core.training.set.stub(1, exercise),
-                  core.training.set.stub(2, exercise),
-                  core.training.set.stub(3, exercise),
-                ],
-              };
-            });
-
-          trainerDayViewContext.addTrainingExercises(
-            trainingExercises,
-            MainSet.BLOCK
-          );
-
-          setOpenAddExerciseModal(false);
-          setSearch('');
-          setSelectedExerciseIds([]);
-          setPagination((prev) => ({ ...prev, page: 1 }));
+          handleAddExercises();
         }}
       >
         <AddExerciseForm
           selectedExerciseIds={selectedExerciseIds}
           setSelectedExerciseIds={setSelectedExerciseIds}
+          newAddedExercisesIds={newAddedExercisesIds}
+          setNewAddedExercisesIds={setNewAddedExercisesIds}
           component={component}
+          handleAddExercises={handleAddExercises}
         />
       </MyModal>
     </DndContext>
