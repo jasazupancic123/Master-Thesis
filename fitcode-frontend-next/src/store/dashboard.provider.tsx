@@ -8,6 +8,7 @@ import { useAuthenticatedAuth } from './auth.provider';
 import { useMain } from './main.provider';
 import { AuthController } from '@/core/auth/auth.controller';
 import type { AuthUser, UpdateUser } from '@/core/auth/type/user.type';
+import { core } from '@/core/core.service';
 import { GroupController } from '@/core/group/group.controller';
 import type { Group, UpdateGroup } from '@/core/group/type/group.type';
 import { InstitutionController } from '@/core/institution/institution.controller';
@@ -16,7 +17,6 @@ import type {
   UpdateInstitution,
 } from '@/core/institution/type/institution.type';
 import type { UserRole } from '@/core/profile/enum/user-role.enum';
-import type { Profile } from '@/core/profile/type/user.type';
 import { lib } from '@/lib';
 import {
   LINK_DASHBOARD_GROUPS,
@@ -25,12 +25,8 @@ import {
 import type { ILink } from '@/lib/common/type/link.type';
 import type { SetState } from '@/lib/common/type/state.type';
 
-export interface Props extends React.PropsWithChildren {
-  institutions: Institution[];
-  selectedInstitution: Institution | null;
-  members: Profile[];
-  refetchMembers: (providedUrl?: string) => void;
-  setMembers: SetState<Profile[]>;
+interface Props extends React.PropsWithChildren {
+  institutionId: string;
 }
 
 export interface IDashboardContext {
@@ -44,9 +40,6 @@ export interface IDashboardContext {
   setDetectedChanges: SetState<boolean>;
   selectedGroup: Group | null;
   setSelectedGroup: SetState<Group | null>;
-  members: Profile[];
-  refetchMembers: (providedUrl?: string) => void;
-  setMembers: SetState<Profile[]>;
   setUsers: SetState<AuthUser[]>;
   updateInstitution: (
     institutionId: string,
@@ -55,6 +48,8 @@ export interface IDashboardContext {
   updateGroup: (groupId: string, input: UpdateGroup) => Promise<void>;
   deleteGroup: (groupId: string) => Promise<void>;
   addGroup: (data: Group) => Promise<Group | undefined>;
+  addGroupMember: (user: AuthUser, groupId: string) => Promise<void>;
+  removeGroupMember: (userId: string, groupId: string) => Promise<void>;
   updateUser: (
     userId: string,
     input: UpdateUser & { role?: UserRole }
@@ -66,20 +61,46 @@ const DashboardContext = createContext<IDashboardContext | null>(null);
 export const useDashboard = () => useContext(DashboardContext)!;
 
 export function DashboardProvider(props: Props) {
-  const { groups } = useMain();
-
-  const {
-    institutions: propsInstitutions,
-    selectedInstitution: propsSelectedInstitution,
-    children,
-    members,
-    refetchMembers,
-    setMembers,
-  } = props;
+  const { children, institutionId } = props;
 
   const { role, user } = useAuthenticatedAuth();
+  const {
+    users,
+    setUsers,
+    setProfiles,
+    institutions: propsInstitutions,
+  } = useMain();
   const pathname = usePathname();
+  const { groups } = useMain();
 
+  const [filter, setFilter] = useState<ILink>(LINK_DASHBOARD_GROUPS);
+  const [detectedChanges, setDetectedChanges] = useState(false);
+
+  const [institutions, setInstitutions] = useState<Institution[]>(() =>
+    core.institution.mapUsers(propsInstitutions || [], users)
+  );
+
+  const [selectedInstitution, setSelectedInstitution] =
+    useState<Institution | null>(() => {
+      const institution = propsInstitutions.find((i) => i.id === institutionId);
+      if (!institution) return null;
+
+      core.institution.mapUsers([institution], users);
+      institution.groups = groups.filter(
+        (g) => g.institutionId === institution.id
+      );
+
+      for (const group of institution.groups)
+        core.group.mapMembers(group, users);
+
+      return institution;
+    });
+
+  const [selectedGroup, setSelectedGroup] = useState<Group | null>(
+    selectedInstitution?.groups?.length ? selectedInstitution.groups[0] : null
+  );
+
+  // update filter based on url
   useEffect(() => {
     if (!pathname || !role) return;
 
@@ -91,40 +112,20 @@ export function DashboardProvider(props: Props) {
     setFilter(matched || LINK_DASHBOARD_GROUPS);
   }, [pathname, role]);
 
-  const [filter, setFilter] = useState<ILink>(LINK_DASHBOARD_GROUPS);
-  const [institutions, setInstitutions] =
-    useState<Institution[]>(propsInstitutions);
-  const [selectedInstitution, setSelectedInstitution] =
-    useState<Institution | null>(propsSelectedInstitution);
-  const [detectedChanges, setDetectedChanges] = useState(false);
-  const [selectedGroup, setSelectedGroup] = useState<Group | null>(
-    selectedInstitution?.groups && selectedInstitution?.groups.length
-      ? selectedInstitution.groups[0]
-      : null
-  );
-
-  const { users, setUsers } = useMain();
-
+  // reset selected group when institution changes
   useEffect(() => {
-    async function fetchGroups() {
-      if (!selectedInstitution || selectedInstitution.groups) return;
-      selectedInstitution.groups = groups.filter(
-        (g) => g.institutionId === selectedInstitution.id
-      );
+    if (!selectedInstitution || selectedInstitution.groups) return;
+    const filtered = groups.filter(
+      (g) => g.institutionId === selectedInstitution.id
+    );
 
-      if (
-        !selectedInstitution.groups ||
-        !selectedInstitution.groups.length ||
-        (selectedGroup &&
-          !selectedInstitution.groups
-            .map((g) => g.id)
-            .includes(selectedGroup?.id))
-      ) {
-        setSelectedGroup(null);
-      }
-    }
+    for (const group of filtered) core.group.mapMembers(group, users);
 
-    fetchGroups().then();
+    setSelectedInstitution(
+      (prev) => ({ ...prev, groups: filtered }) as Institution
+    );
+
+    if (filtered.length) setSelectedGroup(filtered[0]);
   }, [selectedInstitution]);
 
   const value: IDashboardContext = {
@@ -138,9 +139,6 @@ export function DashboardProvider(props: Props) {
     setDetectedChanges,
     selectedGroup,
     setSelectedGroup,
-    members,
-    refetchMembers,
-    setMembers,
     setUsers,
     updateInstitution: async (institutionId, input) => {
       const prevState = {
@@ -345,6 +343,84 @@ export function DashboardProvider(props: Props) {
 
           setSelectedGroup(created);
         }
+      );
+    },
+    addGroupMember: async (user: AuthUser, groupId: string) => {
+      const group = selectedInstitution?.groups?.find((g) => g.id === groupId);
+      if (!selectedInstitution || !group) return;
+
+      const prevState = {
+        institution: structuredClone(selectedInstitution),
+        group: structuredClone(group),
+      };
+
+      await lib.common.generic.optimisticUpdate(
+        () => {
+          const newGroup: Group = {
+            ...group,
+            members: group.members ? [...group.members, user] : [user],
+            membersIds: group.membersIds
+              ? [...group.membersIds, user.uid]
+              : [user.uid],
+          };
+
+          setProfiles((prev) => [...prev, core.profile.userToProfile(user)]);
+          if (selectedGroup?.id === group.id) setSelectedGroup(newGroup);
+          setSelectedInstitution((prev) => ({
+            ...prev!,
+            groups: prev!.groups.map((g) =>
+              g.id === newGroup.id ? newGroup : g
+            ),
+          }));
+        },
+        (snapshot) => {
+          setSelectedInstitution(snapshot.institution);
+          if (selectedGroup?.id === group.id) setSelectedGroup(snapshot.group);
+          toast.error('Failed to add member to group');
+        },
+        () =>
+          GroupController.getInstance().addMember(group.id, {
+            userId: user.uid,
+          }),
+        prevState
+      );
+    },
+    removeGroupMember: async (userId: string, groupId: string) => {
+      const group = selectedInstitution?.groups?.find((g) => g.id === groupId);
+      if (!selectedInstitution || !group) return;
+
+      const prevState = {
+        institution: structuredClone(selectedInstitution),
+        group: structuredClone(group),
+      };
+
+      await lib.common.generic.optimisticUpdate(
+        () => {
+          const newGroup: Group = {
+            ...group,
+            members: group.members?.filter((m) => m.uid !== userId),
+            membersIds: group.membersIds?.filter((id) => id !== userId),
+          };
+
+          setProfiles((prev) => prev.filter((m) => m.uid !== userId));
+          if (selectedGroup?.id === group.id) setSelectedGroup(newGroup);
+          setSelectedInstitution((prev) => ({
+            ...prev!,
+            groups: prev!.groups.map((g) =>
+              g.id === newGroup.id ? newGroup : g
+            ),
+          }));
+        },
+        (snapshot) => {
+          setSelectedInstitution(snapshot.institution);
+          if (selectedGroup?.id === group.id) setSelectedGroup(snapshot.group);
+          toast.error('Failed to remove member from group');
+        },
+        () =>
+          GroupController.getInstance().removeMember(group.id, {
+            userId,
+          }),
+        prevState
       );
     },
   };

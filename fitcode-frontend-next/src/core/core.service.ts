@@ -3,6 +3,7 @@ import { ComponentUtil } from './component/component.util';
 import { ExerciseUtil } from './exercise/utils/exercise.util';
 import { GroupUtil } from './group/group.util';
 import { InstitutionUtil } from './institution/institution.util';
+import { ProfileUtil } from './profile/profile.util';
 import { TrainingUtil } from './training/utils/training.util';
 
 class CoreService {
@@ -10,6 +11,7 @@ class CoreService {
   readonly component: ComponentUtil;
   readonly exercise: ExerciseUtil;
   readonly institution: InstitutionUtil;
+  readonly profile: ProfileUtil;
   readonly group: GroupUtil;
   readonly training: TrainingUtil;
 
@@ -18,6 +20,7 @@ class CoreService {
     this.component = new ComponentUtil();
     this.exercise = new ExerciseUtil();
     this.institution = new InstitutionUtil();
+    this.profile = new ProfileUtil();
     this.group = new GroupUtil();
     this.training = new TrainingUtil();
   }

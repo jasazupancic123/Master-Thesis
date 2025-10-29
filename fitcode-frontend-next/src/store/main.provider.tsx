@@ -15,6 +15,7 @@ import type { SetState, SetStateNullable } from '@/lib/common/type/state.type';
 
 export interface MainProviderProps extends React.PropsWithChildren {
   profile: Profile;
+  profiles: Profile[];
   users: AuthUser[];
   components: Component[];
   exercises: Exercise[];
@@ -25,6 +26,7 @@ export interface MainProviderProps extends React.PropsWithChildren {
 
 export interface IMainContext extends MainProviderProps {
   setProfile: SetStateNullable<Profile>;
+  setProfiles: SetState<Profile[]>;
   setUsers: SetState<AuthUser[]>;
   setComponents: SetState<Component[]>;
   setExercises: SetState<Exercise[]>;
@@ -46,6 +48,7 @@ export const CoachMainProvider = withAuth(MainProvider, [
 export default function MainProvider(props: MainProviderProps) {
   const { children } = props;
 
+  const [profiles, setProfiles] = useState<Profile[]>(props.profiles);
   const [profile, setProfile] = useState<Profile | undefined>(props.profile);
   const [users, setUsers] = useState<AuthUser[]>(props.users);
   const [exercises, setExercises] = useState<Exercise[]>(props.exercises);
@@ -56,6 +59,8 @@ export default function MainProvider(props: MainProviderProps) {
   const value: IMainContext = {
     profile: profile!,
     setProfile: setProfile as SetStateNullable<Profile>,
+    profiles,
+    setProfiles,
     users,
     setUsers,
     components,

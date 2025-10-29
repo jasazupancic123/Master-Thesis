@@ -39,6 +39,38 @@ export class ProfileService implements Permission<Profile, Institution> {
     return await this.repository.findOneOrCreate(uid);
   }
 
+  async findAll(user: User): Promise<Profile[]> {
+    // if manager or trainer, return all profiles for institution they belong to, for athlete only his profile
+    switch (user.customClaims?.role[0]) {
+      case UserRole.ADMIN:
+        return [];
+      case UserRole.MANAGER: {
+        const institution = await this.institutionService.findByOwnerId(
+          user.uid,
+        );
+
+        if (!institution) return [];
+        return await this.repository.findAllByInstitution(institution);
+      }
+      case UserRole.TRAINER: {
+        const institutions = await this.institutionService.findAll(user);
+        const profiles: Profile[] = [];
+
+        for (const institution of institutions) {
+          const institutionProfiles =
+            await this.repository.findAllByInstitution(institution);
+          profiles.push(...institutionProfiles);
+        }
+
+        return profiles;
+      }
+      case UserRole.ATHLETE:
+        return [await this.findOneById(user.uid)];
+      default:
+        throw new BadRequestException('User has no role assigned');
+    }
+  }
+
   async findAllByInstitution(institution: Institution) {
     return await this.repository.findAllByInstitution(institution);
   }
