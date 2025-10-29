@@ -38,6 +38,15 @@ interface ISupersetsContext extends Props {
     setIndex?: number,
     options?: { updateSubgroups?: boolean }
   ) => void;
+  updateTrainingExerciseParams: (
+    exercise: TrainingExercise,
+    params: {
+      field: ExerciseParamField;
+      value: number | string | undefined;
+      setIndex?: number;
+    }[],
+    options?: { updateSubgroups?: boolean }
+  ) => void;
 }
 
 const SupersetsContext = createContext<ISupersetsContext | null>(null);
@@ -185,6 +194,71 @@ export function SupersetsProvider(props: Props) {
     updateTrainingExercises(exercises, options);
   }
 
+  // same as updateTrainingExerciseParam but for multiple fields with a single state update
+  function updateTrainingExerciseParams(
+    exercise: TrainingExercise,
+    params: {
+      field: ExerciseParamField;
+      value: number | string | undefined;
+      setIndex?: number;
+    }[],
+    options?: { updateSubgroups?: boolean }
+  ) {
+    if (!component || !training) return;
+
+    const trainingExercises = core.training.getExercises(training, {
+      componentId: component.id,
+      subgroupId: selectedSubgroup?.id,
+    });
+
+    const exercises = trainingExercises
+      .filter((e) => selectedExerciseIds.includes(e.id))
+      .filter((e) => e.id !== exercise.id); // exclude current exercise
+
+    exercises.push(exercise); // add new updated exercise
+
+    // update all selected exercises with the param change
+    for (const e of exercises) {
+      const foundExercise = allExercises.find((ex) => ex.id === e.id);
+      if (!foundExercise) continue;
+
+      for (const param of params) {
+        const { field, value, setIndex } = param;
+
+        switch (field) {
+          case 'sets':
+            // special case for sets, we need to add or remove sets
+            const sets = value as number;
+            const prevSets = e.sets?.length || 0;
+            if (setIndex !== undefined) break; // we only allow updating sets as a whole, not by index separately
+
+            if (prevSets > +sets && +sets > 0)
+              e.sets = [...e.sets].slice(0, +sets); // remove sets
+            else {
+              e.sets = [
+                ...e.sets,
+                ...Array(+sets - prevSets).fill(
+                  e.sets[prevSets - 1] ||
+                    core.training.set.stub(prevSets, foundExercise)
+                ),
+              ];
+            }
+
+            break;
+          default:
+            break;
+        }
+
+        if (setIndex === undefined)
+          e.sets = e.sets.map((s) => ({ ...s, [field]: value })); // update all sets
+        else if (e.sets[setIndex])
+          e.sets[setIndex] = { ...e.sets[setIndex], [field]: value }; // update provided set
+      }
+    }
+
+    updateTrainingExercises(exercises, options);
+  }
+
   const value: ISupersetsContext = {
     expandedExercisesView,
     setExpandedExercisesView,
@@ -199,6 +273,7 @@ export function SupersetsProvider(props: Props) {
     handleMenuClose,
     updateTrainingExercises,
     updateTrainingExerciseParam,
+    updateTrainingExerciseParams,
   };
 
   return (
