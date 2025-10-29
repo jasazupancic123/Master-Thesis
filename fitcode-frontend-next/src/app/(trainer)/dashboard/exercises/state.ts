@@ -321,16 +321,6 @@ export async function handleExerciseCsvFileUpload(
   });
 }
 
-type MuscleWithExerciseValues = {
-  muscleId: string;
-  values: {
-    exerciseName: string;
-    concentric: number;
-    isometric: number;
-    eccentric: number;
-  }[];
-};
-
 export async function handleMuscleValuesCsvFileUpload(
   file: File,
   exercises: Exercise[],
@@ -340,59 +330,30 @@ export async function handleMuscleValuesCsvFileUpload(
 ) {
   const { setImportedMuscleValueExercises } = state;
 
-  const text = await file.text();
-  const rows = text.split('\n').filter((row) => row);
+  Papa.parse<string[]>(file, {
+    header: false,
+    skipEmptyLines: true,
+    error: (e: Error) => toast.error(`Failed to parse CSV file: ${e.message}`),
+    complete: (results) => {
+      const data = results.data as string[][];
 
-  // ignore first row if it contains headers
-  const headers = rows[0]
-    .split(',')
-    .map((header) => header.replace('\r', '').trim());
-  if (rows[0].toLowerCase().includes('name')) rows.shift();
+      const headers = data[0].slice(1);
 
-  const musclesWithValues = rows
-    .map((row) => {
-      return getMuscleValuesFromCsvRow(row, exercises, headers);
-    })
-    .filter((mv) => mv !== null) as MuscleWithExerciseValues[];
+      const exercisesWithMuscleValues: (CreateExerciseMuscleValues | null)[] =
+        data
+          .slice(1)
+          .filter((row) => row.length > 0 && row[0])
+          .map((row) => {
+            return getMuscleValuesFromCsvRow(row, exercises, headers);
+          });
 
-  const importedMuscleValues: (CreateExerciseMuscleValues | null)[] = [];
+      const validImportedMuscleValues = exercisesWithMuscleValues.filter(
+        (e) => e !== null
+      ) as CreateExerciseMuscleValues[];
 
-  musclesWithValues.forEach((muscle) => {
-    muscle.values.forEach((mv) => {
-      const existing = importedMuscleValues.find(
-        (e) => e?.name === mv.exerciseName
-      );
-
-      if (!existing) {
-        importedMuscleValues.push({
-          name: mv.exerciseName,
-          muscleValues: [
-            {
-              muscleId: muscle.muscleId,
-              concentric: mv.concentric,
-              isometric: mv.isometric,
-              eccentric: mv.eccentric,
-            },
-          ],
-        });
-
-        return;
-      }
-
-      existing.muscleValues!.push({
-        muscleId: muscle.muscleId,
-        concentric: mv.concentric,
-        isometric: mv.isometric,
-        eccentric: mv.eccentric,
-      });
-    });
+      setImportedMuscleValueExercises(validImportedMuscleValues);
+    },
   });
-
-  const validImportedMuscleValues = importedMuscleValues.filter(
-    (e) => e !== null
-  ) as CreateExerciseMuscleValues[];
-
-  setImportedMuscleValueExercises(validImportedMuscleValues);
 }
 
 export async function handleUpsertManyExercises(
@@ -465,30 +426,28 @@ export async function handleUpsertMuscleValues(
 }
 
 function getMuscleValuesFromCsvRow(
-  row: string,
+  row: string[],
   exercises: Exercise[],
   headers: string[]
-): MuscleWithExerciseValues | null {
-  const columns = row.split(',');
+): CreateExerciseMuscleValues | null {
+  const [exerciseName, ...muscleLoads] = row;
 
-  const [muscleId, ...exerciseNames] = columns;
-
-  const muscleValues: MuscleWithExerciseValues = {
-    muscleId,
-    values: [],
+  const exerciseValues: CreateExerciseMuscleValues = {
+    name: exerciseName,
+    muscleValues: [],
   };
 
-  exerciseNames.forEach((loadsString, i) => {
-    const exerciseName = headers[i];
+  const foundExercise = exercises.find(
+    (exercise) => exercise.name === exerciseName
+  );
 
-    const foundExercise = exercises.find(
-      (exercise) => exercise.name === exerciseName
-    );
+  if (!foundExercise) {
+    toast.error(`Exercise not found: ${exerciseName}`);
+    return null;
+  }
 
-    if (!foundExercise) {
-      toast.error(`Exercise not found: ${exerciseName}`);
-      return;
-    }
+  muscleLoads.forEach((loadsString, i) => {
+    const muscleId = headers[i];
 
     if (loadsString) {
       loadsString = loadsString
@@ -497,9 +456,7 @@ function getMuscleValuesFromCsvRow(
         .replace(/\n/g, '')
         .trim();
 
-      if (!loadsString || !loadsString.length) {
-        return;
-      }
+      if (!loadsString || !loadsString.length) return;
 
       const loads = loadsString.split(';').map((l) => l.trim());
 
@@ -519,8 +476,10 @@ function getMuscleValuesFromCsvRow(
         return;
       }
 
-      muscleValues.values.push({
-        exerciseName,
+      if (!exerciseValues.muscleValues) exerciseValues.muscleValues = [];
+
+      exerciseValues.muscleValues.push({
+        muscleId,
         concentric: numericLoads[0],
         isometric: numericLoads[1],
         eccentric: numericLoads[2],
@@ -528,5 +487,5 @@ function getMuscleValuesFromCsvRow(
     }
   });
 
-  return muscleValues;
+  return exerciseValues;
 }

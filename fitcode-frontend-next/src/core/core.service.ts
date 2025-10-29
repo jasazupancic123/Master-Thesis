@@ -3,6 +3,7 @@ import { ComponentUtil } from './component/component.util';
 import { ExerciseUtil } from './exercise/utils/exercise.util';
 import { GroupUtil } from './group/group.util';
 import { InstitutionUtil } from './institution/institution.util';
+import { ProfileUtil } from './profile/util/profile.util';
 import { TrainingUtil } from './training/utils/training.util';
 
 class CoreService {
@@ -12,6 +13,7 @@ class CoreService {
   readonly institution: InstitutionUtil;
   readonly group: GroupUtil;
   readonly training: TrainingUtil;
+  readonly profile: ProfileUtil;
 
   constructor() {
     this.attribute = new AttributeUtil();
@@ -20,6 +22,7 @@ class CoreService {
     this.institution = new InstitutionUtil();
     this.group = new GroupUtil();
     this.training = new TrainingUtil();
+    this.profile = new ProfileUtil();
   }
 }
 

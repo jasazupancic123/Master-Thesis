@@ -13,7 +13,6 @@ import type { Superset } from '../type/superset.type';
 import type { Training } from '../type/training.type';
 import type { TrainingComponent } from '../type/training-component.type';
 import type { TrainingExercise } from '../type/training-exercise.type';
-import { AthleteUtil } from './athlete.util';
 import { TrainingComponentUtil } from './component.util';
 import { TrainingExerciseSetUtil } from './set.util';
 import { TrainingSubgroupUtil } from './subgroup.util';
@@ -32,7 +31,6 @@ export class TrainingUtil {
   readonly superset: TrainingSupersetUtil;
   readonly set: TrainingExerciseSetUtil;
   readonly workload: WorkloadUtil;
-  readonly athlete: AthleteUtil;
 
   constructor() {
     this.component = new TrainingComponentUtil();
@@ -40,7 +38,6 @@ export class TrainingUtil {
     this.superset = new TrainingSupersetUtil();
     this.set = new TrainingExerciseSetUtil();
     this.workload = new WorkloadUtil();
-    this.athlete = new AthleteUtil();
   }
 
   stub(userId: string, data?: Partial<Training>): Training {

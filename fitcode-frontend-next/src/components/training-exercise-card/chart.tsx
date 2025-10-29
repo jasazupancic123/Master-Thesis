@@ -121,9 +121,7 @@ export default function TrainingExerciseChart(
           <Typography variant="subtitle1" sx={{ color: 'rgb(108, 121, 134)' }}>
             <i>
               {selectedAthlete && selectedAthlete.displayName
-                ? core.training.athlete.getShortName(
-                    selectedAthlete.displayName
-                  )
+                ? core.profile.getShortName(selectedAthlete.displayName)
                 : group.name}
             </i>
           </Typography>
