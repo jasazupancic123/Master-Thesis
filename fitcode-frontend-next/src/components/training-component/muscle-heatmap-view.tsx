@@ -165,9 +165,7 @@ export default function MuscleHeatmapView() {
                 {selectedAthlete && selectedAthlete.displayName && (
                   <Typography variant="subtitle1">
                     <i>
-                      {core.training.athlete.getShortName(
-                        selectedAthlete.displayName
-                      )}
+                      {core.profile.getShortName(selectedAthlete.displayName)}
                     </i>
                   </Typography>
                 )}

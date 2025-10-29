@@ -1,4 +1,4 @@
-export class AthleteUtil {
+export class ProfileUtil {
   getShortName(name: string): string {
     const shortName =
       name.split(' ').length > 1
