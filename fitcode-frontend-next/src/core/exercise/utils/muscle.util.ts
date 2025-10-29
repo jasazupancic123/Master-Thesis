@@ -1,4 +1,3 @@
-import { core } from '@/core/core.service';
 import type { TrainingExercise } from '../../training/type/training-exercise.type';
 import { MUSCLES_TREE } from '../constant/muscles-tree.constant';
 import type { HeatmapLoad } from '../type/heatmap-load.entity';

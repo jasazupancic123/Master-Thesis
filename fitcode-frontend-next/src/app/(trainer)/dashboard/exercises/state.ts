@@ -480,9 +480,9 @@ function getMuscleValuesFromCsvRow(
 
       exerciseValues.muscleValues.push({
         muscleId,
-        concentric: numericLoads[0],
+        concentric: numericLoads[2],
         isometric: numericLoads[1],
-        eccentric: numericLoads[2],
+        eccentric: numericLoads[0],
       });
     }
   });

@@ -132,64 +132,6 @@ export default function MuscleMapWithTooltip(props: Props) {
 
   const handleBlur = () => handleMouseLeave();
 
-  // const computeExercises = useCallback(
-  //   (muscleIds: string[]) => {
-  //     const componentExercises = exercisesInComponent.filter((e) =>
-  //       e.exercise?.muscleValues?.some(
-  //         (mv) =>
-  //           muscleIds.includes(mv.field) ||
-  //           muscleIds.some((mid) => mv.selected?.startsWith(`${mid}:`)) ||
-  //           muscleIds.some((mid) => mv.selected?.endsWith(`:${mid}`))
-  //       )
-  //     );
-
-  //     componentExercises.sort((a, b) => {
-  //       const aMuscle = a.exercise?.muscleValues?.find((mv) =>
-  //         heatmapLevel === 1
-  //           ? muscleIds.includes(mv.field)
-  //           : heatmapLevel === 2
-  //             ? muscleIds.some((mid) => mv.selected?.startsWith(`${mid}:`))
-  //             : muscleIds.some((mid) => mv.selected?.endsWith(`:${mid}`))
-  //       );
-
-  //       const bMuscle = b.exercise?.muscleValues?.find((mv) =>
-  //         heatmapLevel === 1
-  //           ? muscleIds.includes(mv.field)
-  //           : heatmapLevel === 2
-  //             ? muscleIds.some((mid) => mv.selected?.startsWith(`${mid}:`))
-  //             : muscleIds.some((mid) => mv.selected?.endsWith(`:${mid}`))
-  //       );
-
-  //       if (!aMuscle || !bMuscle) return 0;
-
-  //       if (
-  //         aMuscle.value === bMuscle.value &&
-  //         a.exercise?.muscleValues &&
-  //         b.exercise?.muscleValues
-  //       ) {
-  //         return (
-  //           a.exercise?.muscleValues.length - b.exercise?.muscleValues.length
-  //         );
-  //       }
-
-  //       if (aMuscle.value < bMuscle.value) return -1;
-  //       return 1;
-  //     });
-
-  //     const possibleExercises = allExercises.filter((e) =>
-  //       e.muscleValues?.some(
-  //         (mv) =>
-  //           muscleIds.includes(mv.field) ||
-  //           muscleIds.some((mid) => mv.selected?.startsWith(`${mid}:`)) ||
-  //           muscleIds.some((mid) => mv.selected?.endsWith(`:${mid}`))
-  //       )
-  //     );
-
-  //     return { componentExercises, possibleExercises };
-  //   },
-  //   [exercisesInComponent, heatmapLevel]
-  // );
-
   const showForEl = useCallback(
     (el: SVGGraphicsElement, px?: number, py?: number) => {
       if (!containerRef.current || tip.focus) return;
@@ -387,205 +329,87 @@ export default function MuscleMapWithTooltip(props: Props) {
             </Fragment>
           ))}
 
-          <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="flex-start"
-            gap={1}
-            sx={{
-              maxHeight: 300,
-              overflowY: !athleteAnthropometry ? 'auto' : undefined,
-            }}
-          >
-            {!athleteAnthropometry &&
-            tip.possibleExercises &&
-            tip.componentExercises ? (
-              <>
-                <Box
-                  maxWidth="50%"
-                  display="flex"
-                  flexDirection="column"
-                  alignItems="center"
+          {athleteAnthropometry && (
+            <Box
+              width="100%"
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              sx={{ px: 1 }}
+            >
+              <Box
+                width="100%"
+                display="flex"
+                justifyContent="center"
+                alignItems="center"
+                sx={{ p: 4, py: 2, pb: 0, position: 'relative' }}
+              >
+                <Typography
+                  fontSize={12}
                   sx={{
-                    minWidth: screenSize.isUltraSmall
-                      ? 80
-                      : screenSize.isMobile
-                        ? 100
-                        : 150,
-                    maxWidth: screenSize.isUltraSmall ? 80 : undefined,
+                    position: 'absolute',
+                    left: 32,
+                    top: 5,
+                    display: 'flex',
+                    alignItems: 'center',
                   }}
+                  gap={0.5}
                 >
-                  <Typography fontSize={14} noWrap>
-                    In training
-                  </Typography>
+                  <SorenessIcon />
+                  Soreness
+                </Typography>
 
-                  <Box
-                    width="100%"
-                    display="flex"
-                    flexDirection="column"
-                    alignItems="flex-start"
-                  >
-                    {tip.componentExercises.map((ex) => (
-                      <Typography key={ex.id} fontSize={14} textAlign="start">
-                        • {ex.exercise?.name}
-                      </Typography>
-                    ))}
-                  </Box>
-                </Box>
-
-                <Box
-                  maxWidth="50%"
-                  display="flex"
-                  flexDirection="column"
-                  alignItems="center"
+                <Slider
+                  valueLabelDisplay="auto"
+                  value={
+                    (muscleLoads as [string, number][]).find(
+                      ([id]) => id === tip.id
+                    )?.[1] ?? 0
+                  }
+                  onChange={(_, value) => {
+                    if (!setMuscleLoads || !tip.id) return;
+                    const v = value as number;
+                    setMuscleLoads((ml) => {
+                      const existing = ml.find(([id]) => id === tip.id);
+                      if (existing) {
+                        existing[1] = v;
+                        return [...ml];
+                      }
+                      if (!tip.id) return ml;
+                      return [...ml, [tip.id, v]];
+                    });
+                  }}
+                  step={1}
+                  min={0}
+                  max={10}
                   sx={{
-                    maxWidth: screenSize.isUltraSmall ? 80 : undefined,
-                    minWidth: screenSize.isUltraSmall
-                      ? 80
-                      : screenSize.isMobile
-                        ? 100
-                        : 150,
+                    width: 200,
+                    color: theme.palette.primary.main,
+                    '& .MuiSlider-track': {
+                      backgroundColor: theme.palette.primary.main,
+                      border: 'none',
+                    },
+                    '& .MuiSlider-thumb': {
+                      width: 14,
+                      height: 14,
+                      backgroundColor: theme.palette.primary.main,
+                    },
+                    '& .MuiSlider-rail': {
+                      backgroundColor: '#ffffff',
+                    },
+                    '& .MuiSlider-valueLabelOpen': {
+                      backgroundColor: 'transparent',
+                      top: 2,
+                      fontSize: 12,
+                    },
+                    '& .MuiSlider-valueLabelOpen:before': {
+                      display: 'none',
+                    },
                   }}
-                >
-                  <Typography fontSize={14} noWrap>
-                    Suggested
-                  </Typography>
-
-                  <Box
-                    width="100%"
-                    display="flex"
-                    flexDirection="column"
-                    alignItems="flex-start"
-                  >
-                    {tip.possibleExercises.map((ex) => (
-                      <Box
-                        width="100%"
-                        key={ex.id}
-                        sx={{
-                          cursor: 'pointer',
-                          '&:hover': {
-                            border: `1px solid ${theme.palette.text.primary}`,
-                            borderRadius: 1,
-                            p: 0.1,
-                          },
-                        }}
-                        onClick={() => {
-                          if (
-                            !training ||
-                            !component ||
-                            !tip.possibleExercises ||
-                            !tip.componentExercises
-                          )
-                            return;
-
-                          const trainingExercise =
-                            core.training.superset.toTrainingExercise(ex);
-
-                          tip.componentExercises.push(trainingExercise);
-                          tip.possibleExercises = tip.possibleExercises.filter(
-                            (e) => e.id !== ex.id
-                          );
-
-                          addTrainingExercises(
-                            [trainingExercise],
-                            component.mainSet
-                          );
-                        }}
-                      >
-                        <Typography fontSize={14} textAlign="start">
-                          • {ex.name}
-                        </Typography>
-                      </Box>
-                    ))}
-                  </Box>
-                </Box>
-              </>
-            ) : (
-              <>
-                {athleteAnthropometry && (
-                  <Box
-                    width="100%"
-                    display="flex"
-                    flexDirection="column"
-                    alignItems="center"
-                    sx={{ px: 1 }}
-                  >
-                    <Box
-                      width="100%"
-                      display="flex"
-                      justifyContent="center"
-                      alignItems="center"
-                      sx={{ p: 4, py: 2, pb: 0, position: 'relative' }}
-                    >
-                      <Typography
-                        fontSize={12}
-                        sx={{
-                          position: 'absolute',
-                          left: 32,
-                          top: 5,
-                          display: 'flex',
-                          alignItems: 'center',
-                        }}
-                        gap={0.5}
-                      >
-                        <SorenessIcon />
-                        Soreness
-                      </Typography>
-
-                      <Slider
-                        valueLabelDisplay="auto"
-                        value={
-                          (muscleLoads as [string, number][]).find(
-                            ([id]) => id === tip.id
-                          )?.[1] ?? 0
-                        }
-                        onChange={(_, value) => {
-                          if (!setMuscleLoads || !tip.id) return;
-                          const v = value as number;
-                          setMuscleLoads((ml) => {
-                            const existing = ml.find(([id]) => id === tip.id);
-                            if (existing) {
-                              existing[1] = v;
-                              return [...ml];
-                            }
-                            if (!tip.id) return ml;
-                            return [...ml, [tip.id, v]];
-                          });
-                        }}
-                        step={1}
-                        min={0}
-                        max={10}
-                        sx={{
-                          width: 200,
-                          color: theme.palette.primary.main,
-                          '& .MuiSlider-track': {
-                            backgroundColor: theme.palette.primary.main,
-                            border: 'none',
-                          },
-                          '& .MuiSlider-thumb': {
-                            width: 14,
-                            height: 14,
-                            backgroundColor: theme.palette.primary.main,
-                          },
-                          '& .MuiSlider-rail': {
-                            backgroundColor: '#ffffff',
-                          },
-                          '& .MuiSlider-valueLabelOpen': {
-                            backgroundColor: 'transparent',
-                            top: 2,
-                            fontSize: 12,
-                          },
-                          '& .MuiSlider-valueLabelOpen:before': {
-                            display: 'none',
-                          },
-                        }}
-                      />
-                    </Box>
-                  </Box>
-                )}
-              </>
-            )}
-          </Box>
+                />
+              </Box>
+            </Box>
+          )}
 
           {!athleteAnthropometry && (
             <Typography

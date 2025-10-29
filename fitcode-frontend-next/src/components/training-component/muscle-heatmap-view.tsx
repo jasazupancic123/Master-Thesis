@@ -15,6 +15,7 @@ import type { TrainingExercise } from '@/core/training/type/training-exercise.ty
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
+import { HEATMAP_LEVEL_LABELS } from './constant/heatmap-level-labels.constant';
 
 export default function MuscleHeatmapView() {
   const screenSize = useScreenSize();
@@ -62,30 +63,57 @@ export default function MuscleHeatmapView() {
     >
       {/* Slider here */}
       <Box
+        display="flex"
         width={
           screenSize.isMobile
             ? '75%'
             : screenSize.isSmallerThanLaptop
               ? '50%'
-              : '25%'
+              : '100%'
         }
+        justifyContent="center"
         mb={2}
+        gap={1}
       >
-        <Typography gutterBottom align="center">
-          Heatmap Level: {Math.max(1, heatmapLevel)}
-        </Typography>
-
-        <Slider
-          value={heatmapLevel}
-          onChange={(_, value) => setHeatmapLevel(value as number)}
-          step={1}
-          min={1}
-          max={maxHeatmapLevel}
+        <Select
+          value={heatmapLevel ? heatmapLevel : 1}
+          onChange={(e) => setHeatmapLevel(e.target.value as number)}
+          fullWidth
           sx={{
-            color: theme.palette.common.white,
+            '& .MuiSelect-select': {
+              p: 1,
+            },
+            width: 200,
           }}
-          valueLabelDisplay="auto"
-        />
+        >
+          {Array.from({ length: maxHeatmapLevel }, (_, i) => i + 1).map(
+            (level, i) => {
+              const label = HEATMAP_LEVEL_LABELS[i] || `Heatmap Level ${level}`;
+              return (
+                <MenuItem key={level} value={level}>
+                  {label}
+                </MenuItem>
+              );
+            }
+          )}
+        </Select>
+        <Select
+          value={selectedLoadType}
+          onChange={(e) =>
+            setSelectedLoadType(e.target.value as 'ALL' | MuscleLoadType)
+          }
+          sx={{
+            '& .MuiSelect-select': {
+              p: 1,
+              width: 100,
+            },
+          }}
+        >
+          <MenuItem value="ALL">All</MenuItem>
+          <MenuItem value={MuscleLoadType.CONCENTRIC}>Concentric</MenuItem>
+          <MenuItem value={MuscleLoadType.ECCENTRIC}>Eccentric</MenuItem>
+          <MenuItem value={MuscleLoadType.ISOMETRIC}>Isometric</MenuItem>
+        </Select>
       </Box>
       <Box
         width="100%"
@@ -111,22 +139,6 @@ export default function MuscleHeatmapView() {
             justifyContent="center"
             alignItems="center"
           >
-            <Select
-              value={selectedLoadType}
-              onChange={(e) =>
-                setSelectedLoadType(e.target.value as 'ALL' | MuscleLoadType)
-              }
-              sx={{
-                '& .MuiSelect-select': {
-                  p: 1,
-                },
-              }}
-            >
-              <MenuItem value="ALL">All</MenuItem>
-              <MenuItem value={MuscleLoadType.CONCENTRIC}>Concentric</MenuItem>
-              <MenuItem value={MuscleLoadType.ECCENTRIC}>Eccentric</MenuItem>
-              <MenuItem value={MuscleLoadType.ISOMETRIC}>Isometric</MenuItem>
-            </Select>
             <Box
               width="100%"
               display="flex"
