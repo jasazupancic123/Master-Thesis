@@ -14,6 +14,7 @@ export interface AddExerciseFormProps {
   newAddedExercisesIds: string[];
   setNewAddedExercisesIds: SetState<string[]>;
   component: TrainingComponent;
+  handleAddExercises: () => void;
 }
 
 export interface TrainingExerciseCardProps {

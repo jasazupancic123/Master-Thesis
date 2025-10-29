@@ -29,6 +29,7 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import { SupersetsProvider } from '@/store/supersets.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 import MyModal from '@/ui/modal';
+import { useEffect } from 'react';
 
 interface Props {
   openAddExerciseModal: boolean;
@@ -107,6 +108,13 @@ export default function Supersets({
     itemsByContainer,
   } = useSupersetUtils();
 
+  useEffect(() => {
+    if (!openAddExerciseModal) {
+      setNewAddedExercisesIds([]);
+      setSelectedExerciseIds([]);
+    }
+  }, [openAddExerciseModal]);
+
   if (!component || !training) return null;
 
   // This function needs to be here
@@ -156,6 +164,40 @@ export default function Supersets({
       { ...trainerDayViewContext, training, component }
     );
   }
+
+  const handleAddExercises = () => {
+    if (selectedExerciseIds.length === 0) {
+      setOpenAddExerciseModal(false);
+      return;
+    }
+
+    const trainingExercises: TrainingExercise[] = selectedExerciseIds
+      .filter((id) => exercises.some((e) => e.id === id))
+      .map((id) => {
+        const exercise = exercises.find((e) => e.id === id)!;
+        return {
+          id: exercise.id,
+          params: [],
+          exercise,
+          sets: [
+            core.training.set.stub(1, exercise),
+            core.training.set.stub(2, exercise),
+            core.training.set.stub(3, exercise),
+          ],
+        };
+      });
+
+    trainerDayViewContext.addTrainingExercises(
+      trainingExercises,
+      MainSet.BLOCK
+    );
+
+    setNewAddedExercisesIds([]);
+    setOpenAddExerciseModal(false);
+    setSearch('');
+    setSelectedExerciseIds([]);
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  };
 
   return (
     <DndContext
@@ -311,37 +353,7 @@ export default function Supersets({
           px: screenSize.isMobile ? 0 : undefined,
         }}
         onConfirm={() => {
-          if (selectedExerciseIds.length === 0) {
-            setOpenAddExerciseModal(false);
-            return;
-          }
-
-          const trainingExercises: TrainingExercise[] = selectedExerciseIds
-            .filter((id) => exercises.some((e) => e.id === id))
-            .map((id) => {
-              const exercise = exercises.find((e) => e.id === id)!;
-              return {
-                id: exercise.id,
-                params: [],
-                exercise,
-                sets: [
-                  core.training.set.stub(1, exercise),
-                  core.training.set.stub(2, exercise),
-                  core.training.set.stub(3, exercise),
-                ],
-              };
-            });
-
-          trainerDayViewContext.addTrainingExercises(
-            trainingExercises,
-            MainSet.BLOCK
-          );
-
-          setNewAddedExercisesIds([]);
-          setOpenAddExerciseModal(false);
-          setSearch('');
-          setSelectedExerciseIds([]);
-          setPagination((prev) => ({ ...prev, page: 1 }));
+          handleAddExercises();
         }}
       >
         <AddExerciseForm
@@ -350,6 +362,7 @@ export default function Supersets({
           newAddedExercisesIds={newAddedExercisesIds}
           setNewAddedExercisesIds={setNewAddedExercisesIds}
           component={component}
+          handleAddExercises={handleAddExercises}
         />
       </MyModal>
     </DndContext>
