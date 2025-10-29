@@ -218,7 +218,7 @@ describe('Complete Next Set (e2e)', () => {
   });
 
   it('should fail if athlete cannot view exercise', async () => {
-    const exercise = await db.exercises.create(
+    const exercise = await db.exercises.createTest(
       generateExerciseStub({
         ownerId: 'some-other-user-id',
       }),
@@ -537,7 +537,7 @@ describe('Complete Next Set (e2e)', () => {
   });
 
   it('should fail if exercise is unilateral and both sides are not specified', async () => {
-    const exercise = await db.exercises.create(
+    const exercise = await db.exercises.createTest(
       generateExerciseStub({
         name: 'unilateral-exercise',
         componentIds: ['c1'],

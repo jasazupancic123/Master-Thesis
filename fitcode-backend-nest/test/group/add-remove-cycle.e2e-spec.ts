@@ -1,12 +1,9 @@
 import { TestApp } from '@test/common/utils/app.util';
 import { addMonths } from 'date-fns';
 
-import { createTrainerUserAndToken } from '@src/common/utils/auth.util';
-import { deleteUsers } from '@src/common/utils/data.util';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { generateCycleStub } from '@src/group/mock/cycle.stub';
 import { generateGroupStub } from '@src/group/mock/group.stub';
-import { generateInstitutionStub } from '@src/institution/mock/institution.mock';
 import { TestDbService } from '@src/test-db/test-db.service';
 import { generateTrainingStub } from '@src/training/mock/training.stub';
 
@@ -21,18 +18,17 @@ describe('Add / Remove Group Cycle (e2e)', () => {
     db = testApp.module.get(TestDbService);
     firebase = testApp.module.get(FirebaseService);
 
-    const institutionId = await db.institutions.save(generateInstitutionStub());
-
+    const institution = await db.institutions.createTest();
     groupId = await db.groups.save(
       generateGroupStub({
-        institutionId,
+        institutionId: institution.id,
         cycles: [generateCycleStub({ id: 'existing-cycle-id' })],
       }),
     );
   });
 
   afterAll(async () => {
-    await db.cleanup();
+    await db.clear();
     await testApp.close();
   });
 
@@ -50,7 +46,7 @@ describe('Add / Remove Group Cycle (e2e)', () => {
     });
 
     it('should fail if user cannot edit group', async () => {
-      const otherTrainer = await createTrainerUserAndToken(firebase);
+      const otherTrainer = await testApp.auth.createTrainer();
       const response = await testApp.http.post(
         `/group/${groupId}/cycle`,
         otherTrainer.token,
@@ -61,7 +57,7 @@ describe('Add / Remove Group Cycle (e2e)', () => {
         'You are not allowed to view this group',
       );
 
-      await deleteUsers(firebase, [otherTrainer]);
+      await testApp.auth.deleteUsers([otherTrainer.uid]);
     });
 
     it('should fail if cycle already exists in group', async () => {
@@ -95,8 +91,6 @@ describe('Add / Remove Group Cycle (e2e)', () => {
     });
 
     it('should successfully add cycle to group', async () => {
-      db.checkpoint();
-
       const newCycle = generateCycleStub({
         name: 'New Cycle',
         from: addMonths(new Date(), 1),
@@ -115,7 +109,10 @@ describe('Add / Remove Group Cycle (e2e)', () => {
       expect(group.cycles.length).toBe(2);
       expect(group.cycles[1].name).toBe(newCycle.name);
 
-      await db.checkpointRestore();
+      // delete the added cycle for further tests
+      await db.groups.update(groupId, {
+        cycles: group.cycles.filter((cycle) => cycle.id !== newCycle.id),
+      });
     });
   });
 
@@ -134,7 +131,7 @@ describe('Add / Remove Group Cycle (e2e)', () => {
     });
 
     it('should fail if user cannot edit group', async () => {
-      const otherTrainer = await createTrainerUserAndToken(firebase);
+      const otherTrainer = await testApp.auth.createTrainer();
       const response = await testApp.http.delete(
         `/group/${groupId}/cycle/existing-cycle-id`,
         otherTrainer.token,
@@ -145,7 +142,7 @@ describe('Add / Remove Group Cycle (e2e)', () => {
         'You are not allowed to view this group',
       );
 
-      await deleteUsers(firebase, [otherTrainer]);
+      await testApp.auth.deleteUsers([otherTrainer.uid]);
     });
 
     it('should successfully remove cycle from group', async () => {

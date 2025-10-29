@@ -1,12 +1,11 @@
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import { Box, Grid2, IconButton } from '@mui/material';
-import { useEffect } from 'react';
 
 import { NumberExerciseParam } from '@/components/exercise-param/number-exercise-param';
 import { TempoExerciseParam } from '@/components/exercise-param/tempo-exercise-param';
 import { core } from '@/core/core.service';
 import { SETS } from '@/core/exercise/constant/exercise-param.constant';
-import type { ExerciseParamField } from '@/core/training/type/exercise-set.type';
+import type { ExerciseParamFieldExtended } from '@/core/training/type/exercise-set.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { SetState } from '@/lib/common/type/state.type';
@@ -45,23 +44,6 @@ export default function TrainingExerciseCardCollapsedSets(
   const intOptions = core.training.set.getIntOptions(exercise.exercise!);
   const effOptions = core.training.set.getEffOptions(exercise.exercise!);
 
-  // if unilateral, populate right side params with left side values if empty
-  useEffect(() => {
-    if (uni) {
-      const newExercise = structuredClone(exercise);
-      for (const s of newExercise.sets) {
-        if (s && !s.repsR && s.reps) s.repsR = s.reps;
-        if (s && !s.loadKgR && s.loadKg) s.loadKgR = s.loadKg;
-        if (s && !s.loadRmR && s.loadRm) s.loadRmR = s.loadRm;
-        if (s && !s.loadBwR && s.loadBw) s.loadBwR = s.loadBw;
-        if (s && !s.tempoR && s.tempo) s.tempoR = s.tempo;
-        if (s && !s.velR && s.vel) s.velR = s.vel;
-      }
-
-      supersetsContext.updateTrainingExercises([newExercise]);
-    }
-  }, []);
-
   if (!training || !component) return null;
 
   return (
@@ -82,10 +64,7 @@ export default function TrainingExerciseCardCollapsedSets(
         >
           <IconButton
             disableRipple
-            sx={{
-              p: 0,
-              m: 0,
-            }}
+            sx={{ p: 0, m: 0 }}
             onClick={() => setExpandedSetsView(!expandedSetsView)}
           >
             <KeyboardArrowRightIcon
@@ -134,13 +113,11 @@ export default function TrainingExerciseCardCollapsedSets(
             justifyContent="center"
             alignItems={'flex-start'}
             gap={1}
-            sx={{
-              height: 77,
-            }}
+            sx={{ height: 77 }}
           >
             <NumberExerciseParam
               options={[SETS]}
-              selected={SETS.field}
+              selected={SETS.field as string}
               value={exercise.sets.length}
               showOptions
               exercise={exercise}
@@ -180,7 +157,7 @@ export default function TrainingExerciseCardCollapsedSets(
                     ...['reps', 'dist', 'time', 'repsR']
                       .filter((f) => f !== field && f !== pair)
                       .map((f) => ({
-                        field: f as ExerciseParamField,
+                        field: f as ExerciseParamFieldExtended,
                         value: undefined,
                         setIndex: undefined,
                       })),
@@ -207,6 +184,7 @@ export default function TrainingExerciseCardCollapsedSets(
                 onSelectChange={(selected) => {
                   // update load type
                   const field = selected.toString() as typeof loadType;
+                  const pair = core.exercise.param.pairs[field];
                   const value = core.exercise.param.get(field)
                     ?.defaultValue as number;
 
@@ -215,13 +193,7 @@ export default function TrainingExerciseCardCollapsedSets(
                     { field, value, setIndex: undefined },
                     // update its pair
                     ...(uni
-                      ? [
-                          {
-                            field: core.exercise.param.pairs[field],
-                            value,
-                            setIndex: undefined,
-                          },
-                        ]
+                      ? [{ field: pair, value, setIndex: undefined }]
                       : []),
                     // clear other load params
                     ...[
@@ -232,12 +204,9 @@ export default function TrainingExerciseCardCollapsedSets(
                       'loadRmR',
                       'loadBwR',
                     ]
-                      .filter(
-                        (f) =>
-                          f !== field && core.exercise.param.pairs[field] !== f
-                      )
+                      .filter((f) => f !== field && pair !== f)
                       .map((f) => ({
-                        field: f as ExerciseParamField,
+                        field: f as ExerciseParamFieldExtended,
                         value: undefined,
                         setIndex: undefined,
                       })),
@@ -257,8 +226,8 @@ export default function TrainingExerciseCardCollapsedSets(
               effType === 'tempo' ? (
                 <TempoExerciseParam
                   options={effOptions}
-                  selected="tempo"
-                  value={exercise.sets[0]?.tempo || ''}
+                  selected={effType}
+                  value={exercise.sets[0]?.[effType] || ''}
                   showOptions
                   exercise={exercise}
                   disableOptions={!!selectedAthlete}
@@ -277,10 +246,10 @@ export default function TrainingExerciseCardCollapsedSets(
                         ? [{ field: pair, value, setIndex: undefined }]
                         : []),
                       // clear other eff params
-                      ...['tempo', 'tempoR', 'eff']
+                      ...['tempo', 'eff', 'tempoR']
                         .filter((f) => f !== field && f !== pair)
                         .map((f) => ({
-                          field: f as ExerciseParamField,
+                          field: f as ExerciseParamFieldExtended,
                           value: undefined,
                           setIndex: undefined,
                         })),
@@ -289,7 +258,7 @@ export default function TrainingExerciseCardCollapsedSets(
                   onInputChange={(value) => {
                     supersetsContext.updateTrainingExerciseParam(
                       exercise,
-                      'tempo',
+                      effType,
                       value.toString()
                     );
                   }}
@@ -297,8 +266,8 @@ export default function TrainingExerciseCardCollapsedSets(
               ) : (
                 <NumberExerciseParam
                   options={effOptions}
-                  selected="eff"
-                  value={exercise.sets[0]?.eff || 0}
+                  selected={effType}
+                  value={exercise.sets[0]?.[effType] || 0}
                   showOptions
                   exercise={exercise}
                   disableOptions={!!selectedAthlete}
@@ -317,10 +286,10 @@ export default function TrainingExerciseCardCollapsedSets(
                         ? [{ field: pair, value, setIndex: undefined }]
                         : []),
                       // clear other eff params
-                      ...['tempo', 'tempoR', 'eff']
+                      ...['tempo', 'eff', 'tempoR']
                         .filter((f) => f !== field && f !== pair)
                         .map((f) => ({
-                          field: f as ExerciseParamField,
+                          field: f as ExerciseParamFieldExtended,
                           value: undefined,
                           setIndex: undefined,
                         })),
@@ -329,7 +298,7 @@ export default function TrainingExerciseCardCollapsedSets(
                   onInputChange={(value) => {
                     supersetsContext.updateTrainingExerciseParam(
                       exercise,
-                      'eff',
+                      effType,
                       +value
                     );
                   }}
@@ -363,7 +332,7 @@ export default function TrainingExerciseCardCollapsedSets(
                     ...['recTime', 'recDist']
                       .filter((f) => f !== field && f !== pair)
                       .map((f) => ({
-                        field: f as ExerciseParamField,
+                        field: f as ExerciseParamFieldExtended,
                         value: undefined,
                         setIndex: undefined,
                       })),
@@ -392,7 +361,7 @@ export default function TrainingExerciseCardCollapsedSets(
             >
               <NumberExerciseParam
                 options={[SETS]}
-                selected={SETS.field}
+                selected={SETS.field as string}
                 value={exercise.sets.length}
                 showOptions={false}
                 exercise={exercise}
@@ -411,18 +380,15 @@ export default function TrainingExerciseCardCollapsedSets(
                   options={volOptions}
                   selected={volType}
                   value={
-                    volType === 'reps'
-                      ? exercise.sets[0]?.repsR || 0
-                      : exercise.sets[0]?.[volType] || 0 // dist and time are the same for both sides
+                    exercise.sets[0]?.[core.exercise.param.pairs[volType]] || 0
                   }
                   exercise={exercise}
                   showOptions={false}
                   disableOptions={!!selectedAthlete}
                   onInputChange={(value) => {
-                    const field = volType === 'reps' ? 'repsR' : volType;
                     supersetsContext.updateTrainingExerciseParam(
                       exercise,
-                      field,
+                      core.exercise.param.pairs[volType],
                       +value
                     );
                   }}
@@ -433,63 +399,16 @@ export default function TrainingExerciseCardCollapsedSets(
                 <NumberExerciseParam
                   options={intOptions}
                   selected={loadType}
-                  value={exercise.sets[0]?.[`${loadType}R`] as number}
+                  value={
+                    exercise.sets[0]?.[core.exercise.param.pairs[loadType]] || 0
+                  }
                   exercise={exercise}
                   showOptions={false}
                   disableOptions={!!selectedAthlete}
-                  onSelectChange={(selected) => {
-                    // update load type
-                    const field = selected.toString() as typeof loadType;
-                    const value = core.exercise.param.get(field)
-                      ?.defaultValue as number;
-
-                    // set new selected field to default value
-                    supersetsContext.updateTrainingExerciseParam(
-                      exercise,
-                      field,
-                      value,
-                      undefined,
-                      { updateSubgroups: true }
-                    );
-
-                    if (uni)
-                      supersetsContext.updateTrainingExerciseParam(
-                        exercise,
-                        core.exercise.param.pairs[field],
-                        value,
-                        undefined,
-                        { updateSubgroups: true }
-                      );
-
-                    // make all other load fields undefined
-                    (
-                      [
-                        'loadKg',
-                        'loadRm',
-                        'loadBw',
-                        'loadKgR',
-                        'loadRmR',
-                        'loadBwR',
-                      ] as ExerciseParamField[]
-                    ).forEach((f) => {
-                      if (
-                        f !== field &&
-                        core.exercise.param.pairs[field] !== f
-                      ) {
-                        supersetsContext.updateTrainingExerciseParam(
-                          exercise,
-                          f,
-                          undefined,
-                          undefined,
-                          { updateSubgroups: true }
-                        );
-                      }
-                    });
-                  }}
                   onInputChange={(value) => {
                     supersetsContext.updateTrainingExerciseParam(
                       exercise,
-                      `${loadType}R`,
+                      core.exercise.param.pairs[loadType],
                       +value
                     );
                   }}
@@ -500,15 +419,18 @@ export default function TrainingExerciseCardCollapsedSets(
                 effType === 'tempo' ? (
                   <TempoExerciseParam
                     options={effOptions}
-                    selected="tempo"
-                    value={exercise.sets[0]?.tempoR || ''}
+                    selected={effType}
+                    value={
+                      exercise.sets[0]?.[core.exercise.param.pairs[effType]] ||
+                      ''
+                    }
                     showOptions={false}
                     exercise={exercise}
                     disableOptions={!!selectedAthlete}
                     onInputChange={(value) => {
                       supersetsContext.updateTrainingExerciseParam(
                         exercise,
-                        'tempoR',
+                        core.exercise.param.pairs[effType],
                         value.toString()
                       );
                     }}
@@ -516,15 +438,18 @@ export default function TrainingExerciseCardCollapsedSets(
                 ) : (
                   <NumberExerciseParam
                     options={effOptions}
-                    selected="eff"
-                    value={exercise.sets[0]?.eff || 0}
+                    selected={effType}
+                    value={
+                      exercise.sets[0]?.[core.exercise.param.pairs[effType]] ||
+                      0
+                    }
                     showOptions={false}
                     exercise={exercise}
                     disableOptions={!!selectedAthlete}
                     onInputChange={(value) => {
                       supersetsContext.updateTrainingExerciseParam(
                         exercise,
-                        'eff',
+                        core.exercise.param.pairs[effType],
                         +value
                       );
                     }}
@@ -537,9 +462,7 @@ export default function TrainingExerciseCardCollapsedSets(
                   options={recOptions}
                   selected={recType}
                   value={
-                    recType === 'recTime'
-                      ? exercise.sets[0]?.recTime || 0
-                      : exercise.sets[0]?.recDist || 0
+                    exercise.sets[0]?.[core.exercise.param.pairs[recType]] || 0
                   }
                   showOptions={false}
                   exercise={exercise}
@@ -547,7 +470,7 @@ export default function TrainingExerciseCardCollapsedSets(
                   onInputChange={(value) => {
                     supersetsContext.updateTrainingExerciseParam(
                       exercise,
-                      recType,
+                      core.exercise.param.pairs[recType],
                       +value
                     );
                   }}

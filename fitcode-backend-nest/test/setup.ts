@@ -11,13 +11,7 @@ import type {
 } from '@src/config/environment-validation-schema';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { getFirebaseClient } from '@src/firebase/get-firebase-client';
-
-import {
-  createAdminUserAndToken,
-  createAthleteUserAndToken,
-  createManagerUserAndToken,
-  createTrainerUserAndToken,
-} from '@src/common/utils/auth.util';
+import { TestAuth } from '@src/common/utils/test-auth.util';
 
 const nodeEnv = (process.env.NODE_ENV || 'dev') as NodeEnv;
 if (!['production', 'staging'].includes(nodeEnv))
@@ -35,11 +29,13 @@ export default async function () {
     firebaseAdminClient,
   );
 
+  const auth = new TestAuth(firebaseService);
+
   [global.athlete, global.trainer, global.manager, global.admin] =
     await Promise.all([
-      createAthleteUserAndToken(firebaseService, 'athlete'),
-      createTrainerUserAndToken(firebaseService, 'trainer'),
-      createManagerUserAndToken(firebaseService, 'manager'),
-      createAdminUserAndToken(firebaseService, 'admin'),
+      auth.createAthlete('athlete'),
+      auth.createTrainer('trainer'),
+      auth.createManager('manager'),
+      auth.createAdmin('admin'),
     ]);
 }

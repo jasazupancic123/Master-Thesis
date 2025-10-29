@@ -1,15 +1,15 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useState } from 'react';
 import { toast } from 'react-hot-toast';
 
 import { AuthController } from '@/core/auth/auth.controller';
 import type { AuthUser } from '@/core/auth/type/user.type';
-import { BACKEND_API_BASE_URL } from '@/core/const/api.const';
 import { ProfileController } from '@/core/profile/profile.controller';
 import type { Profile } from '@/core/profile/type/user.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
 
 interface IDashboardUserEditCtx {
   // getters
@@ -38,16 +38,8 @@ export const useDashboardUserEdit = () => useContext(DashboardUserEditContext)!;
 export function DashboardUserEditProvider({
   children,
 }: React.PropsWithChildren) {
-  const {
-    filter,
-    members,
-    setMembers,
-    setUsers,
-    selectedInstitution,
-    selectedGroup,
-    refetchMembers,
-    refetchUsers,
-  } = useDashboard();
+  const { profiles, setProfiles } = useMain();
+  const { setUsers, setSelectedInstitution, setSelectedGroup } = useDashboard();
 
   const [hoveredUser, setHoveredUser] = useState<AuthUser | null>(null);
   const [userToEdit, setUserToEdit] = useState<AuthUser | null>(null);
@@ -56,15 +48,6 @@ export function DashboardUserEditProvider({
   const [isEditedUser, setIsEditedUser] = useState(false);
   const [filteredUsers, setFilteredUsers] = useState<AuthUser[]>([]);
   const [currentUsers, setCurrentUsers] = useState<AuthUser[]>([]);
-
-  /**
-   * Update filtered users arrays when selected group changes
-   */
-  useEffect(() => {
-    const groupUsers = selectedGroup?.members || [];
-    setFilteredUsers(groupUsers);
-    setCurrentUsers(groupUsers);
-  }, [selectedGroup, filter]);
 
   function onHoverUser(user: AuthUser | null) {
     setHoveredUser(user);
@@ -77,7 +60,7 @@ export function DashboardUserEditProvider({
       setUserToEdit(null);
       setProfileToEdit(undefined);
     } else {
-      const profile = members.find((m) => m.uid === user.uid);
+      const profile = profiles.find((m) => m.uid === user.uid);
       setUserToEdit(user);
       setProfileToEdit(profile);
     }
@@ -103,11 +86,37 @@ export function DashboardUserEditProvider({
           photoURL: userToEdit.photoURL,
         });
 
-      refetchUsers();
-      refetchMembers(
-        selectedInstitution
-          ? `${BACKEND_API_BASE_URL}/institution/${selectedInstitution.id}/find/all`
-          : undefined
+      function mapUsers(users?: AuthUser[]) {
+        if (!users) return [];
+        return users.map((user) =>
+          user.uid === userToEdit?.uid ? userToEdit : user
+        );
+      }
+
+      function mapProfiles(profiles?: Profile[]) {
+        if (!profiles) return [];
+        return profiles.map((p) =>
+          p.uid === profileToEdit?.uid ? profileToEdit : p
+        );
+      }
+
+      setUsers(mapUsers);
+      setProfiles(mapProfiles);
+      setFilteredUsers(mapUsers);
+      setCurrentUsers(mapUsers);
+
+      setSelectedInstitution((prev) =>
+        !prev
+          ? null
+          : {
+              ...prev,
+              athletes: mapUsers(prev.athletes),
+              trainers: mapUsers(prev.trainers),
+            }
+      );
+
+      setSelectedGroup((prev) =>
+        !prev ? null : { ...prev, members: mapUsers(prev.members) }
       );
 
       toast.success('Successfully updated user profile');
@@ -126,10 +135,8 @@ export function DashboardUserEditProvider({
 
     setProfileToEdit(newProfile);
     setIsEditedProfile(true);
-    setMembers((prev) =>
-      prev.map((member) =>
-        member.uid === newProfile.uid ? newProfile : member
-      )
+    setProfiles((prev) =>
+      prev.map((p) => (p.uid === newProfile.uid ? newProfile : p))
     );
   }
 

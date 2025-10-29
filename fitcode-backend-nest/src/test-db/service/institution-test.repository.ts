@@ -1,15 +1,14 @@
 import { Injectable } from '@nestjs/common';
 
+import { UserRole } from '@src/auth/enum/user-role.enum';
+import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { TestInstitution, TestUser } from '@src/common/type/entity.type';
-import {
-  createAthleteUserAndToken,
-  createManagerUserAndToken,
-  createTrainerUserAndToken,
-} from '@src/common/utils/auth.util';
-import { deleteUsersByIds } from '@src/common/utils/data.util';
+import { TestAuth } from '@src/common/utils/test-auth.util';
+import { FirebaseService } from '@src/firebase/firebase.service';
 import { Institution } from '@src/institution/entity/institution.entity';
 import { generateInstitutionStub } from '@src/institution/mock/institution.mock';
 import { InstitutionRepository } from '@src/institution/repository/institution.repository';
+import { InstitutionMembersRepository } from '@src/institution/repository/institution-members.repository';
 
 import { TestRepositoryMixin } from '../test-repository.mixin';
 
@@ -17,6 +16,16 @@ import { TestRepositoryMixin } from '../test-repository.mixin';
 export class InstitutionTestRepository extends TestRepositoryMixin<Institution>()(
   InstitutionRepository,
 ) {
+  private readonly auth: TestAuth;
+
+  constructor(
+    readonly firebase: FirebaseService,
+    readonly institutionMembersRepository: InstitutionMembersRepository,
+  ) {
+    super(firebase, institutionMembersRepository);
+    this.auth = new TestAuth(this.firebase);
+  }
+
   /**
    * Creates a test institution with associated users.
    */
@@ -37,38 +46,59 @@ export class InstitutionTestRepository extends TestRepositoryMixin<Institution>(
 
     const { random = false } = input || {};
     if (random || input?.createRandomManager)
-      input.manager = await createManagerUserAndToken(this.firebase);
+      input.manager = await this.auth.createManager();
 
     if (random || input?.createRandomTrainer)
-      trainers.push(await createTrainerUserAndToken(this.firebase));
+      trainers.push(await this.auth.createTrainer());
 
     if (random || input?.createRandomAthlete)
-      athletes.push(await createAthleteUserAndToken(this.firebase));
+      athletes.push(await this.auth.createAthlete());
 
     const manager = input?.manager || global.manager;
     if (!athletes.length) athletes.push(global.athlete);
     if (!trainers.length) trainers.push(global.trainer);
 
     const institutionId = await this.save(
-      generateInstitutionStub({
-        ownerId: manager.uid,
-        athleteIds: athletes.map((a) => a.uid),
-        trainerIds: trainers.map((t) => t.uid),
-      }),
+      generateInstitutionStub({ ownerId: manager.uid }),
+    );
+
+    // add members
+    await this.firebase.paginateBatches(
+      this.institutionMembersRepository.getAddMembersOperation(
+        { institutionId },
+        [
+          ...trainers.map((t) => ({ id: t.uid, role: UserRole.TRAINER })),
+          ...athletes.map((a) => ({ id: a.uid, role: UserRole.ATHLETE })),
+        ],
+      ),
     );
 
     const data = await this.findById(institutionId);
-    return { ...data, manager, trainers, athletes };
+    return {
+      ...data,
+      manager,
+      trainers,
+      athletes,
+      trainerIds: trainers.map((t) => t.uid),
+      athleteIds: athletes.map((a) => a.uid),
+    };
   }
 
   async remove(institutionId: string) {
     // remove associated users (but not global ones)
     const institution = await this.findById(institutionId);
-    const userIds = [
-      ...institution.athleteIds,
-      ...institution.trainerIds,
-      institution.ownerId,
-    ].filter(
+    const members =
+      await this.institutionMembersRepository.findAllMembers(institutionId);
+
+    const athleteIds = members
+      .filter((m) => m.role === UserRole.ATHLETE)
+      .map((m) => m.id);
+
+    const trainerIds = members
+      .filter((m) => m.role === UserRole.TRAINER)
+      .map((m) => m.id);
+
+    const userIds = [...athleteIds, ...trainerIds, institution.ownerId].filter(
       (uid) =>
         ![
           global.athlete.uid,
@@ -78,7 +108,16 @@ export class InstitutionTestRepository extends TestRepositoryMixin<Institution>(
         ].includes(uid),
     );
 
-    await deleteUsersByIds(this.firebase, userIds);
-    await this.delete(institutionId);
+    try {
+      await this.auth.deleteUsers(userIds);
+      for (const uid of userIds)
+        await this.firebase.firestore
+          .collection(FirestoreCollection.PROFILE)
+          .doc(uid)
+          .delete();
+    } catch {
+    } finally {
+      await this.delete(institutionId);
+    }
   }
 }

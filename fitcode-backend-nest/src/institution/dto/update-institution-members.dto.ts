@@ -2,9 +2,9 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 import { IsBoolean } from 'class-validator';
 
-import { UpdateMembersDto } from '@src/common/dto/user-id.dto';
+import { UpdateMemberDto } from '@src/common/dto/user-id.dto';
 
-export class UpdateInstitutionMembersDto extends UpdateMembersDto {
+export class UpdateInstitutionMemberDto extends UpdateMemberDto {
   @IsBoolean()
   @ApiProperty()
   @Expose()

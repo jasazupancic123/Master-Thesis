@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   forwardRef,
   Inject,
@@ -7,20 +8,17 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Response } from 'express';
-import {
-  UserImportOptions,
-  UserImportRecord,
-  UserImportResult,
-  UserRecord,
-} from 'firebase-admin/auth';
+import { UserRecord } from 'firebase-admin/auth';
 import { v4 } from 'uuid';
 
 import { SESSION_COOKIE_NAME } from '@src/common/constant/cookie.constant';
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
 import { CommonService } from '@src/common/service/common.service';
-import { User } from '@src/common/type/firebase-auth.type';
+import { CustomClaims, User } from '@src/common/type/firebase-auth.type';
+import { ValidateRowError } from '@src/common/type/validate.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
+import { Institution } from '@src/institution/entity/institution.entity';
 import { InstitutionService } from '@src/institution/service/institution.service';
 
 import { CreateUserDto } from '../dto/create-user.dto';
@@ -185,41 +183,93 @@ export class AuthService {
     return user?.uid ? ((await auth.getUser(user.uid)) as User) : null;
   }
 
+  /**
+   * Import users from a CSV file. It returns the list of successfully created users
+   * and the list of errors for the rows that failed to be created.
+   */
   async importUsers(
+    user: User,
     input: (CreateUserDto & { uid: string })[],
-  ): Promise<UserImportResult> {
-    const data: UserImportRecord[] = input.map((user) => ({
-      uid: user.uid,
-      email: user.email,
-      passwordHash: Buffer.from(user.password, 'utf-8'),
-      displayName: user.displayName,
-      photoURL: user.photoURL,
-      customClaims: { role: [user.role] },
-    }));
+  ): Promise<{ successful: AuthUser[]; errors: ValidateRowError[] }> {
+    if (input.length === 0) return { successful: [], errors: [] };
+    const errors: ValidateRowError[] = [];
+    const result: AuthUser[] = [];
 
-    if (data.length === 0) return;
+    for (let i = 0; i < input.length; i++) {
+      const row: ValidateRowError = { row: i + 1, errors: [] };
 
-    let hash: UserImportOptions['hash'] = { algorithm: 'BCRYPT' };
-    try {
-      const hashConfigFile = require('../../../firebase-auth-hash-config.json');
-      if (hashConfigFile)
-        hash = {
-          algorithm: hashConfigFile.algorithm,
-          key: Buffer.from(hashConfigFile.key, 'base64'),
-          saltSeparator: Buffer.from(hashConfigFile.saltSeparator, 'base64'),
-          rounds: hashConfigFile.rounds,
-          memoryCost: hashConfigFile.memoryCost,
-        };
-    } catch {
-      this.logger.warn('No hash config file found, using default BCRYPT');
+      try {
+        const created = await this.registerUser(user, input[i]);
+        if (created)
+          result.push({ ...created, customClaims: { role: [input[i].role] } });
+      } catch (e) {
+        row.errors.push({ field: input[i].email, message: e.message });
+      }
+
+      if (row.errors.length > 0) errors.push(row);
     }
 
-    return await this.firebase.auth.importUsers(data, { hash });
+    return { successful: result, errors };
   }
 
   @LogMethod()
-  async registerAthlete(input: CreateUserDto) {
-    return await this.firebase.auth.createUser(input);
+  async registerUser(
+    user: User,
+    input: CreateUserDto,
+  ): Promise<AuthUser | null> {
+    // admin can register managers, and managers can register trainers and athletes
+    let institution: Institution | null = null;
+    if (this.firebase.isAdmin(user)) {
+      if (input.role !== UserRole.MANAGER)
+        throw new BadRequestException('Admin can only register managers');
+    } else if (this.firebase.isManager(user)) {
+      if (![UserRole.TRAINER, UserRole.ATHLETE].includes(input.role))
+        throw new BadRequestException(
+          'Manager can only register trainers and athletes',
+        );
+
+      institution = await this.institutionService.findByOwnerId(user.uid);
+      if (!institution)
+        throw new NotFoundException('Institution not found for manager');
+    } else throw new ForbiddenException('Cannot register user');
+
+    let created: AuthUser | null = null;
+    const customClaims: CustomClaims = { role: [input.role] };
+
+    try {
+      const user = await this.firebase.auth.createUser({
+        email: input.email,
+        password: input.password,
+        displayName: input.displayName,
+        photoURL: input.photoURL,
+      });
+
+      await this.firebase.auth.setCustomUserClaims(user.uid, customClaims);
+      created = { ...user, customClaims } as AuthUser;
+    } catch (e) {
+      // if user already exists, fetch it
+      if (e.code === 'auth/email-already-exists') {
+        const found = await this.findOneBy('email', input.email);
+
+        // if user is already in other institution, throw error
+        const userInstitutions = await this.institutionService.findAll(found);
+        if (userInstitutions.length > 0)
+          throw new BadRequestException(
+            'User already belongs to an institution',
+          );
+
+        created = found as AuthUser;
+      } else throw e;
+    }
+
+    // if institution is defined, add user to institution
+    if (institution)
+      await this.institutionService.addMember(
+        { role: input.role },
+        { institutionId: institution.id, uid: created.uid },
+      );
+
+    return created;
   }
 
   async getUserToUpdate(mainUser: User, userToUpdateId: string): Promise<User> {

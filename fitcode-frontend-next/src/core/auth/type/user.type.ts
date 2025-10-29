@@ -11,12 +11,12 @@ export type AuthUser = Pick<
   customClaims: CustomClaims;
 };
 
-export type CreateUser = Omit<AuthUser, 'uid' | 'customClaims'> & {
+export type CreateUser = Omit<AuthUser, 'uid' | 'customClaims' | 'photoURL'> & {
   email: string;
   password: string;
   displayName: string;
-  photoURL?: string;
   role: UserRole;
+  photoURL?: string;
 };
 
 export type UpdateUser = Partial<Pick<AuthUser, 'displayName' | 'photoURL'>>;

@@ -11,18 +11,6 @@ export class Institution extends BaseEntity {
   @Expose()
   ownerId: string; // added by admin
 
-  @IsString({ each: true })
-  @IsNotEmpty({ each: true })
-  @ApiProperty()
-  @Expose()
-  trainerIds: string[];
-
-  @IsString({ each: true })
-  @IsNotEmpty({ each: true })
-  @ApiProperty()
-  @Expose()
-  athleteIds: string[];
-
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
@@ -35,4 +23,8 @@ export class Institution extends BaseEntity {
   @Expose()
   @IsOptional()
   imageUrl?: string;
+
+  // virtual, must be populated
+  trainerIds: string[];
+  athleteIds: string[];
 }

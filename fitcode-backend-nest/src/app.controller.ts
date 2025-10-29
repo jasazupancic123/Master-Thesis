@@ -39,14 +39,20 @@ export class AppController {
   @Get('init')
   async init(@RequestUser() user: User) {
     const [
+      profileRes,
       usersRes,
       exercisesRes,
       componentsRes,
       methodsRes,
       institutionsRes,
-      profileRes,
+      profilesRes,
       groupsRes,
     ] = await Promise.all([
+      measureAsync(
+        'profileService.findOneById()',
+        () => this.profileService.findOneById(user.uid),
+        this.logger,
+      ),
       measureAsync(
         'authService.findAll()',
         () => this.authService.findAll(user),
@@ -73,8 +79,8 @@ export class AppController {
         this.logger,
       ),
       measureAsync(
-        'profileService.findProfile()',
-        () => this.profileService.findOneById(user.uid),
+        'profileService.findAll()',
+        () => this.profileService.findAll(user),
         this.logger,
       ),
       measureAsync(
@@ -84,12 +90,13 @@ export class AppController {
       ),
     ]);
 
+    const profile = profileRes.result;
     const users = usersRes.result;
     const exercises = exercisesRes.result;
     const components = componentsRes.result;
     const methods = methodsRes.result;
     const institutions = institutionsRes.result;
-    const profile = profileRes.result;
+    const profiles = profilesRes.result;
     const groups = groupsRes.result;
 
     const institutionExercises = await Promise.all(
@@ -102,6 +109,7 @@ export class AppController {
 
     return {
       profile,
+      profiles,
       users,
       exercises,
       components,

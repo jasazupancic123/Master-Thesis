@@ -2,41 +2,19 @@ import { TestApp } from '@test/common/utils/app.util';
 import { addDays, subDays } from 'date-fns';
 import { stringify } from 'qs';
 
-import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { getTime } from '@src/common/service/util';
 import type { TestInstitution, TestUser } from '@src/common/type/entity.type';
-import {
-  createAthleteUserAndToken,
-  createTrainerUserAndToken,
-} from '@src/common/utils/auth.util';
-import {
-  createGroupWithCycles,
-  createInstitution,
-  deleteDoc,
-  deleteUsers,
-} from '@src/common/utils/data.util';
-import { ComponentService } from '@src/component/component.service';
-import type { Component } from '@src/component/entity/component.entity';
-import { generateComponentStub } from '@src/component/mock/component.stub';
-import { FirebaseService } from '@src/firebase/firebase.service';
 import type { Group } from '@src/group/entity/group.entity';
-import { GroupService } from '@src/group/group.service';
-import { InstitutionService } from '@src/institution/service/institution.service';
 import { TestDbService } from '@src/test-db/test-db.service';
 import type { FilterTrainingQueryDto } from '@src/training/dto/filter-training-query.dto';
 import { generateTrainingStub } from '@src/training/mock/training.stub';
 
 describe('Get Trainings (e2e)', () => {
   let testApp: TestApp;
-  let firebase: FirebaseService;
   let db: TestDbService;
-  let componentService: ComponentService;
-  let institutionService: InstitutionService;
-  let groupService: GroupService;
 
   let institution: TestInstitution;
   let group: Group;
-  let component: Component;
 
   let trainer1: TestUser;
   let trainer2: TestUser;
@@ -46,19 +24,14 @@ describe('Get Trainings (e2e)', () => {
   beforeAll(async () => {
     testApp = await TestApp.init();
     db = testApp.module.get(TestDbService);
-    firebase = testApp.module.get(FirebaseService);
-    componentService = testApp.module.get(ComponentService);
-    groupService = testApp.module.get(GroupService);
-    institutionService = testApp.module.get(InstitutionService);
 
-    component = await componentService.create(generateComponentStub());
-    institution = await createInstitution(institutionService);
-    group = await createGroupWithCycles(groupService, institution);
+    institution = await db.institutions.createTest();
+    group = await db.groups.createTest(institution);
 
     trainer1 = global.trainer;
-    trainer2 = await createTrainerUserAndToken(firebase);
+    trainer2 = await testApp.auth.createTrainer();
     athlete1 = global.athlete;
-    athlete2 = await createAthleteUserAndToken(firebase);
+    athlete2 = await testApp.auth.createAthlete();
 
     // create 7 trainings for global trainer with global athlete and test-athlete and 2 trainings for test-trainer
     const d = new Date();
@@ -171,14 +144,8 @@ describe('Get Trainings (e2e)', () => {
   });
 
   afterAll(async () => {
-    await Promise.all([
-      firebase.deleteCollection(FirestoreCollection.TRAINING),
-      deleteDoc(firebase, 'GROUP', group.id),
-      deleteDoc(firebase, 'COMPONENT', component.id),
-      deleteDoc(firebase, 'INSTITUTION', institution.id),
-      deleteUsers(firebase, [trainer2, athlete2]),
-    ]);
-
+    await testApp.auth.deleteUsers([trainer2.uid, athlete2.uid]);
+    await db.clear();
     await testApp.close();
   });
 

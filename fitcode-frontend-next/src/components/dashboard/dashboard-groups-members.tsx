@@ -5,7 +5,6 @@ import { useState } from 'react';
 
 import { useDashboardUserEdit } from './context/user-edit.context';
 import DashboardEditAthleteModal from './dashboard-edit-athlete-modal';
-import useInstitutionMembers from './hooks/use-institution-members.hook';
 import { AddMembersModal } from '@/components/dashboard/add-members-modal';
 import { lib } from '@/lib';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
@@ -22,18 +21,10 @@ export default function DashboardGroupsMembers() {
 
   const { users } = useMain();
   const { role } = useAuthenticatedAuth();
-  const { selectedInstitution, setSelectedInstitution, selectedGroup } =
+  const { selectedInstitution, selectedGroup, removeGroupMember } =
     useDashboard();
-
-  const {
-    filteredUsers,
-    setFilteredUsers,
-    hoveredUser,
-    toggleUser,
-    onHoverUser,
-  } = useDashboardUserEdit();
-
-  const { removeAthleteFromGroup } = useInstitutionMembers();
+  const { setFilteredUsers, hoveredUser, toggleUser, onHoverUser } =
+    useDashboardUserEdit();
 
   const [search, setSearch] = useState('');
   const [openEditAthleteModal, setOpenEditAthleteModal] = useState(false);
@@ -91,7 +82,7 @@ export default function DashboardGroupsMembers() {
             <Typography>Select a group</Typography>
           ) : (
             <>
-              {filteredUsers.map((user) => {
+              {(selectedGroup.members || []).map((user) => {
                 if (!user || !user.displayName) return;
                 const names = user.displayName.split(' ');
 
@@ -112,9 +103,9 @@ export default function DashboardGroupsMembers() {
                         <IconButton
                           className="remove-icon"
                           size="small"
-                          onClick={(e) => {
+                          onClick={async (e) => {
                             e.stopPropagation();
-                            removeAthleteFromGroup(user.uid);
+                            await removeGroupMember(user.uid, selectedGroup.id);
                           }}
                           sx={{
                             position: 'absolute',
@@ -165,6 +156,7 @@ export default function DashboardGroupsMembers() {
                   </Box>
                 );
               })}
+
               {role &&
                 (lib.firebase.auth.isTrainer(role) ||
                   lib.firebase.auth.isManager(role)) && (
@@ -189,13 +181,6 @@ export default function DashboardGroupsMembers() {
 
       <AddMembersModal
         users={selectedInstitution?.athletes || []}
-        members={filteredUsers}
-        setMembers={setFilteredUsers}
-        setSelectedInstitution={setSelectedInstitution}
-        addUserToEnd={true}
-        dashboardView={true}
-        group={selectedGroup}
-        selectedInstitution={selectedInstitution}
         enableFirstShowUsers
         enableScroll
         open={openAddMemberModal}

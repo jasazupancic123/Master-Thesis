@@ -2,54 +2,32 @@ import { TestApp } from '@test/common/utils/app.util';
 import { addDays } from 'date-fns';
 
 import type { TestInstitution, TestUser } from '@src/common/type/entity.type';
-import {
-  createGroupWithCycles,
-  createInstitution,
-  createInstitutionWithUsers,
-  deleteDoc,
-  deleteInstitution,
-} from '@src/common/utils/data.util';
-import { ComponentService } from '@src/component/component.service';
-import type { Component } from '@src/component/entity/component.entity';
-import { generateComponentStub } from '@src/component/mock/component.stub';
-import { FirebaseService } from '@src/firebase/firebase.service';
 import type { BatchUpdateOneGroupDto } from '@src/group/dto/update-group.dto';
 import type { Group } from '@src/group/entity/group.entity';
 import { GroupService } from '@src/group/group.service';
 import { generateCycleStub } from '@src/group/mock/cycle.stub';
 import { generateGroupStub } from '@src/group/mock/group.stub';
-import { InstitutionService } from '@src/institution/service/institution.service';
+import { TestDbService } from '@src/test-db/test-db.service';
 
 describe('Update Group (e2e)', () => {
   let testApp: TestApp;
-  let firebase: FirebaseService;
+  let db: TestDbService;
   let groupService: GroupService;
-  let institutionService: InstitutionService;
-  let componentService: ComponentService;
 
-  let component: Component;
   let institution: TestInstitution;
   let group: Group;
 
   beforeAll(async () => {
     testApp = await TestApp.init();
-    firebase = testApp.module.get(FirebaseService);
+    db = testApp.module.get(TestDbService);
     groupService = testApp.module.get(GroupService);
-    institutionService = testApp.module.get(InstitutionService);
-    componentService = testApp.module.get(ComponentService);
 
-    component = await componentService.create(generateComponentStub());
-    institution = await createInstitution(institutionService);
-    group = await createGroupWithCycles(groupService, institution);
+    institution = await db.institutions.createTest();
+    group = await db.groups.createTest(institution);
   });
 
   afterAll(async () => {
-    await Promise.all([
-      deleteDoc(firebase, 'GROUP', group.id),
-      deleteInstitution(firebase, institution),
-      deleteDoc(firebase, 'COMPONENT', component.id),
-    ]);
-
+    await db.clear();
     await testApp.close();
   });
 
@@ -82,30 +60,24 @@ describe('Update Group (e2e)', () => {
     });
 
     it('should fail if not all groups have the same institution', async () => {
-      const newInstitution = await createInstitutionWithUsers(
-        firebase,
-        institutionService,
-        { additionalTrainers: [global.trainer] },
-      );
+      const newInstitution = await db.institutions.createTest({
+        trainers: [global.trainer],
+      });
 
-      const newGroup = await createGroupWithCycles(
-        groupService,
-        newInstitution,
-      );
+      const newGroup = await db.groups.createTest(newInstitution);
 
       const response = await batchUpdateRequest(global.trainer, [
         group,
         newGroup,
       ]);
+
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
         `You can only update groups from the same institution`,
       );
 
-      await Promise.all([
-        deleteInstitution(firebase, newInstitution),
-        deleteDoc(firebase, 'GROUP', newGroup.id),
-      ]);
+      await db.institutions.remove(newInstitution.id);
+      await db.groups.delete(newGroup.id);
     });
 
     it('should fail if cycles overlap', async () => {

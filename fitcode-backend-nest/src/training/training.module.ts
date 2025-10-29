@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 
-import { ChangeLogModule } from '@src/change-log/change-log.module';
 import { PeriodizationModule } from '@src/periodization/periodization.module';
 
 import { AttributeModule } from '../attribute/attribute.module';
@@ -9,7 +8,6 @@ import { ExerciseModule } from '../exercise/exercise.module';
 import { GroupModule } from '../group/group.module';
 import { InstitutionModule } from '../institution/institution.module';
 import { MethodModule } from '../method/method.module';
-import { Training } from './entity/training.entity';
 import { TrainingRepository } from './repository/training.repository';
 import { TrainingReportRepository } from './repository/training-report.repository';
 import { WorkloadRepository } from './repository/workload.repository';
@@ -21,7 +19,6 @@ import { TrainingController } from './training.controller';
 
 @Module({
   imports: [
-    ChangeLogModule.forEntity(Training),
     AttributeModule,
     MethodModule,
     ComponentModule,

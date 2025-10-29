@@ -5,13 +5,6 @@ import { generateAttributeStub } from '@src/attribute/mock/attribute.stub';
 import { generateAttributeValueStub } from '@src/attribute/mock/attribute-value.stub';
 import { AttributeType } from '@src/common/enum/attribute-type.enum';
 import type { TestInstitution } from '@src/common/type/entity.type';
-import {
-  createInstitution,
-  deleteDoc,
-  deleteDocs,
-  deleteInstitution,
-} from '@src/common/utils/data.util';
-import { ComponentService } from '@src/component/component.service';
 import type { Component } from '@src/component/entity/component.entity';
 import { generateComponentStub } from '@src/component/mock/component.stub';
 import { GLOBAL_EXERCISE_OWNER } from '@src/exercise/constant/global-exercise-owner.constant';
@@ -19,16 +12,13 @@ import type { CreateExerciseDto } from '@src/exercise/dto/create-exercise.dto';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseAttributeService } from '@src/exercise/service/exercise-attribute.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
-import { InstitutionService } from '@src/institution/service/institution.service';
 import { TestDbService } from '@src/test-db/test-db.service';
 
 describe('Create Exercise (e2e)', () => {
   let testApp: TestApp;
-  let firebase: FirebaseService;
-  let componentService: ComponentService;
-  let institutionService: InstitutionService;
-  let exerciseAttributeService: ExerciseAttributeService;
   let db: TestDbService;
+  let firebase: FirebaseService;
+  let exerciseAttributeService: ExerciseAttributeService;
 
   let root: Component;
   let leaf: Component;
@@ -38,28 +28,22 @@ describe('Create Exercise (e2e)', () => {
     testApp = await TestApp.init();
     db = testApp.module.get(TestDbService);
     firebase = testApp.module.get(FirebaseService);
-    componentService = testApp.module.get(ComponentService);
-    institutionService = testApp.module.get(InstitutionService);
     exerciseAttributeService = testApp.module.get(ExerciseAttributeService);
 
     const attribute = generateAttributeStub();
-    root = await componentService.create(
+    root = await db.components.create(
       generateComponentStub({ attributes: [attribute.field as string] }),
     );
 
-    leaf = await componentService.create(
+    leaf = await db.components.create(
       generateComponentStub({ parentId: root.id }),
     );
 
-    institution = await createInstitution(institutionService);
+    institution = await db.institutions.createTest();
   });
 
   afterAll(async () => {
-    await Promise.all([
-      deleteDocs(firebase, 'COMPONENT', [leaf.id, root.id]),
-      deleteInstitution(firebase, institution),
-    ]);
-
+    await db.clear();
     await testApp.close();
   });
 
@@ -85,7 +69,7 @@ describe('Create Exercise (e2e)', () => {
     expect(response.body.ownerId).toBe(global.manager.uid);
     expect(response.body.institutionId).toBe(institution.id);
 
-    await deleteDoc(firebase, 'EXERCISE', response.body.id);
+    await db.exercises.delete(response.body.id);
   });
 
   it('should fail if the component does not exist', async () => {
@@ -136,7 +120,7 @@ describe('Create Exercise (e2e)', () => {
     expect(response.body.name).toBe(exercise.name);
     expect(response.body.ownerId).toBe(GLOBAL_EXERCISE_OWNER); // Should be global owner
 
-    await deleteDoc(firebase, 'EXERCISE', response.body.id);
+    await db.exercises.delete(response.body.id);
   });
 
   it('should validate attributes before creating the exercise', async () => {
@@ -246,7 +230,7 @@ describe('Create Exercise (e2e)', () => {
       }),
     ]);
 
-    const component = await componentService.create(
+    const component = await db.components.create(
       generateComponentStub({
         attributes: attributes.map((attr) => attr.field) as string[],
       }),
@@ -301,8 +285,8 @@ describe('Create Exercise (e2e)', () => {
     expect(response.status).toBe(201);
 
     await Promise.all([
-      deleteDoc(firebase, 'EXERCISE', response.body.id),
-      deleteDoc(firebase, 'COMPONENT', component.id),
+      db.exercises.delete(response.body.id),
+      db.components.delete(component.id),
     ]);
   });
 
@@ -313,7 +297,7 @@ describe('Create Exercise (e2e)', () => {
       name: 'is-required',
     });
 
-    const component = await componentService.create(
+    const component = await db.components.create(
       generateComponentStub({ attributes: [attribute.field as string] }),
     );
 
@@ -329,7 +313,7 @@ describe('Create Exercise (e2e)', () => {
       `Attribute "${attribute.name}" is required`,
     );
 
-    await Promise.all([deleteDoc(firebase, 'COMPONENT', component.id)]);
+    await Promise.all([db.components.delete(component.id)]);
   });
 
   it('should create disabled exercise for an admin user', async () => {
@@ -352,7 +336,7 @@ describe('Create Exercise (e2e)', () => {
     expect(response.body.ownerId).toBe(GLOBAL_EXERCISE_OWNER); // Should be global owner
     expect(response.body.disabled).toBe(true);
 
-    const fetched = await db.exercises.get(response.body.id);
+    const fetched = await db.exercises.findById(response.body.id);
     expect(fetched?.disabled).toBe(true);
 
     await db.exercises.delete(response.body.id);
@@ -396,7 +380,7 @@ describe('Create Exercise (e2e)', () => {
   }); */
 
   it('should create bilateral exercise and populate correct params', async () => {
-    const component = await componentService.create(
+    const component = await db.components.create(
       generateComponentStub({ params: ['reps', 'loadKg'] }),
     );
 
@@ -413,7 +397,7 @@ describe('Create Exercise (e2e)', () => {
     expect(response.status).toBe(201);
     expect(response.body.name).toBe(exercise.name);
 
-    const found = await db.exercises.get(response.body.id);
+    const found = await db.exercises.findById(response.body.id);
     expect(found?.isUnilateral).toBe(false);
     expect(found?.params).toEqual(expect.arrayContaining(['reps', 'loadKg']));
 
@@ -422,7 +406,7 @@ describe('Create Exercise (e2e)', () => {
   });
 
   it('should create unilateral exercise and populate correct params', async () => {
-    const component = await componentService.create(
+    const component = await db.components.create(
       generateComponentStub({ params: ['reps', 'loadKg'] }),
     );
 
@@ -439,7 +423,7 @@ describe('Create Exercise (e2e)', () => {
     expect(response.status).toBe(201);
     expect(response.body.name).toBe(exercise.name);
 
-    const found = await db.exercises.get(response.body.id);
+    const found = await db.exercises.findById(response.body.id);
     expect(found?.isUnilateral).toBe(true);
     expect(found?.params).toEqual(
       expect.arrayContaining(['reps', 'loadKg', 'repsR', 'loadKgR']),

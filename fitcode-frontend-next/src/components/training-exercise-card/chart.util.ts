@@ -1,7 +1,7 @@
 import { core } from '@/core/core.service';
 import { SetStatus } from '@/core/training/enum/set-status.enum';
 import type { ChartWorkloadData } from '@/core/training/type/chart-workload-data.type';
-import type { ExerciseParamField } from '@/core/training/type/exercise-set.type';
+import type { ExerciseParamFieldExtended } from '@/core/training/type/exercise-set.type';
 import type { Subgroup } from '@/core/training/type/subgroup.type';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
@@ -17,7 +17,7 @@ export function getAthleteChart(
     trainings: Training[];
     workloads: Workload[];
     subgroup: Subgroup | null;
-    selectedParams: ExerciseParamField[];
+    selectedParams: ExerciseParamFieldExtended[];
   }
 ): ChartWorkloadData[] {
   const result: ChartWorkloadData[] = [];
@@ -103,7 +103,7 @@ export function getGroupChart(
   exercise: TrainingExercise,
   component: TrainingComponent,
   training: Training,
-  data: { trainings: Training[]; selectedParams: ExerciseParamField[] }
+  data: { trainings: Training[]; selectedParams: ExerciseParamFieldExtended[] }
 ): ChartWorkloadData[] {
   const result: ChartWorkloadData[] = [];
 
@@ -203,7 +203,7 @@ export function getGroupChart(
  */
 function getAggregatedWorkloadValues(
   workloads: Partial<Workload>[],
-  selectedParams: ExerciseParamField[]
+  selectedParams: ExerciseParamFieldExtended[]
 ): Pick<ChartWorkloadData, 'int' | 'vol'> & {
   loadKgFullValue?: string;
   repsFullValue?: string;

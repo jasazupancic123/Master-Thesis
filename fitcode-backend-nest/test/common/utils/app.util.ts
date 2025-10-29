@@ -4,6 +4,7 @@ import { Test } from '@nestjs/testing';
 import * as cookieParser from 'cookie-parser';
 
 import { AppModule } from '@src/app.module';
+import { TestAuth } from '@src/common/utils/test-auth.util';
 import { FirebaseService } from '@src/firebase/firebase.service';
 
 import { TestExpress } from './express.util';
@@ -13,6 +14,7 @@ export class TestApp {
   firebase: FirebaseService;
   module: TestingModule;
   http: TestExpress;
+  auth: TestAuth;
 
   private constructor(
     app: INestApplication,
@@ -22,6 +24,7 @@ export class TestApp {
     this.app = app;
     this.firebase = firebase;
     this.module = module;
+    this.auth = new TestAuth(firebase);
     this.http = new TestExpress(app, firebase);
   }
 

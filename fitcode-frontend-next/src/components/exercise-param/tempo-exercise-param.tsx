@@ -63,7 +63,6 @@ export function TempoExerciseParam({
     athleteView || !group ? { setDetectedChanges: undefined } : group;
 
   const exerciseParam = core.exercise.param.get(selected as ExerciseParamField);
-
   if (!value || !exerciseParam) return null;
 
   return (

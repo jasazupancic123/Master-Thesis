@@ -1,13 +1,13 @@
 import { Expose } from 'class-transformer';
 import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
-import { BatchWriteOperation } from '@src/common/type/orm.type';
+import { BatchOperation } from '@src/common/type/orm.type';
+
+import { InstitutionMember } from '../entity/institution-member.entity';
 
 export class UpdateInstitutionAthleteEvent {
   @Expose()
-  operations: BatchWriteOperation<
-    { athleteIds: string[] } | { membersIds: string[] }
-  >[];
+  operations: BatchOperation<InstitutionMember | { membersIds: string[] }>[];
 
   @IsString()
   @IsNotEmpty()

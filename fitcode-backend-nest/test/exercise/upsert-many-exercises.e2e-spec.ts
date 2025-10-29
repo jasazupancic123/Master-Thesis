@@ -34,7 +34,7 @@ describe('Upsert Many Exercises (e2e)', () => {
 
   afterEach(async () => db.exercises.clear());
   afterAll(async () => {
-    await db.cleanup();
+    await db.clear();
     await testApp.close();
   });
 
@@ -224,7 +224,7 @@ describe('Upsert Many Exercises (e2e)', () => {
       expect(response.status).toBe(201);
       expect(response.body.length).toBe(4);
 
-      const dbExercises = await db.exercises.getAll();
+      const dbExercises = await db.exercises.findAll();
       expect(dbExercises.length).toBe(4);
 
       const deadlift = dbExercises.find((e) => e.name === 'deadlift');
@@ -271,7 +271,7 @@ describe('Upsert Many Exercises (e2e)', () => {
         generateComponentStub({ parentId: newRoot.id }),
       );
 
-      const exercise = await db.exercises.create({
+      const exercise = await db.exercises.createTest({
         ownerId: global.admin.uid,
         name: 'existing',
         componentIds: [component.id],
@@ -297,7 +297,7 @@ describe('Upsert Many Exercises (e2e)', () => {
       expect(response.status).toBe(201);
       expect(response.body.length).toBe(2);
 
-      const dbExercises = await db.exercises.getAll();
+      const dbExercises = await db.exercises.findAll();
       expect(dbExercises.length).toBe(2);
 
       const updatedExercise = dbExercises.find((e) => e.id === exercise.id);
@@ -345,7 +345,7 @@ describe('Upsert Many Exercises (e2e)', () => {
       expect(response.status).toBe(201);
       expect(response.body.length).toBe(1);
 
-      const dbExercises = await db.exercises.getAll();
+      const dbExercises = await db.exercises.findAll();
       expect(dbExercises.length).toBe(1);
       expect(dbExercises[0].name).toBe('manager exercise');
       expect(dbExercises[0].ownerId).toBe(global.manager.uid);
@@ -356,7 +356,7 @@ describe('Upsert Many Exercises (e2e)', () => {
     });
 
     it('should create exercise with the same name as global exercise because institution id is added', async () => {
-      await db.exercises.create({
+      await db.exercises.createTest({
         name: 'squat',
         ownerId: global.GLOBAL_EXERCISE_OWNER,
         componentIds: [component.id],
@@ -373,7 +373,7 @@ describe('Upsert Many Exercises (e2e)', () => {
       expect(response.status).toBe(201);
       expect(response.body.length).toBe(1);
 
-      const dbExercises = await db.exercises.getAll();
+      const dbExercises = await db.exercises.findAll();
       expect(dbExercises.length).toBe(2); // One global and one manager exercise
 
       const globalExercise = dbExercises.find(

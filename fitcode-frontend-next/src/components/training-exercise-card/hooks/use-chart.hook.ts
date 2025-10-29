@@ -4,7 +4,7 @@ import { DEFAULT_CHART_PARAMS } from '../chart';
 import { getAthleteChart, getGroupChart } from '../chart.util';
 import { core } from '@/core/core.service';
 import type { ChartWorkloadData } from '@/core/training/type/chart-workload-data.type';
-import type { ExerciseParamField } from '@/core/training/type/exercise-set.type';
+import type { ExerciseParamFieldExtended } from '@/core/training/type/exercise-set.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { Dimensions } from '@/lib/common/type/dimensions.type';
 import { useGroup } from '@/store/group.provider';
@@ -34,7 +34,7 @@ export default function useTrainingExerciseCardChart({ exercise }: Props) {
   } = trainerDayViewContext;
 
   const [selectedParams, setSelectedParams] =
-    useState<ExerciseParamField[]>(DEFAULT_CHART_PARAMS);
+    useState<ExerciseParamFieldExtended[]>(DEFAULT_CHART_PARAMS);
 
   const [chartData, setChartData] = useState<ChartWorkloadData[]>([]);
   const [max, setMax] = useState<number>(10);

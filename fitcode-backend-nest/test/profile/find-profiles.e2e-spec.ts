@@ -1,6 +1,5 @@
 import { TestApp } from '@test/common/utils/app.util';
 
-import { deleteUsersByIds } from '@src/common/utils/data.util';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { generateInstitutionStub } from '@src/institution/mock/institution.mock';
 import { ProfileService } from '@src/profile/service/profile.service';
@@ -36,7 +35,7 @@ describe('Find Profiles (e2e)', () => {
     expect(profile.uid).toBe(user.uid);
     expect(profile.email).toBe(user.email);
 
-    await deleteUsersByIds(firebase, [user.uid]);
+    await testApp.auth.deleteUsers([user.uid]);
   });
 
   it('should return all institution profiles even if some do not exist', async () => {
@@ -76,9 +75,6 @@ describe('Find Profiles (e2e)', () => {
 
     expect(profiles).toHaveLength(10);
 
-    await deleteUsersByIds(
-      firebase,
-      users.map((u) => u.uid),
-    );
+    await testApp.auth.deleteUsers(users.map((u) => u.uid));
   });
 });

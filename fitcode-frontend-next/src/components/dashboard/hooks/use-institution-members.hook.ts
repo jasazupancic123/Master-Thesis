@@ -1,14 +1,18 @@
+import Papa from 'papaparse';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
-import { useDashboardUserEdit } from '../context/user-edit.context';
 import type { IFormData } from './use-register-member-form.hook';
 import useRegisterMemberForm from './use-register-member-form.hook';
+import { AuthController } from '@/core/auth/auth.controller';
 import type { AuthUser } from '@/core/auth/type/user.type';
-import { BACKEND_API_BASE_URL } from '@/core/const/api.const';
-import { GroupController } from '@/core/group/group.controller';
+import { core } from '@/core/core.service';
 import { InstitutionController } from '@/core/institution/institution.controller';
+import { Gender } from '@/core/profile/enum/gender.enum';
+import { SportLevel } from '@/core/profile/enum/sport-level.enum';
 import { UserRole } from '@/core/profile/enum/user-role.enum';
+import { ProfileController } from '@/core/profile/profile.controller';
+import type { ImportProfile } from '@/core/profile/type/user.type';
 import { lib } from '@/lib';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
@@ -16,23 +20,22 @@ import { useMain } from '@/store/main.provider';
 export type IInstitutionMembersHook = ReturnType<typeof useInstitutionMembers>;
 
 export default function useInstitutionMembers() {
+  const { users, profiles, setProfiles } = useMain();
   const { isFormEmpty, setFormData, formData, resetForm } =
     useRegisterMemberForm();
-  const { users } = useMain();
-  const { setFilteredUsers } = useDashboardUserEdit();
+
   const {
-    selectedGroup,
     selectedInstitution,
+    selectedGroup,
+    setSelectedGroup,
     setSelectedInstitution,
-    refetchMembers,
-    refetchUsers,
+    setUsers,
   } = useDashboard();
 
   const [existingUser, setExistingUser] = useState<AuthUser | null>(null);
   const [isUploadingMembers, setIsUploadingMembers] = useState(false);
   const [openModal, setOpenModal] = useState(false);
 
-  // refetch users and update institution's athletes or trainers
   useEffect(() => {
     if (isFormEmpty()) return setIsUploadingMembers(false);
 
@@ -83,6 +86,84 @@ export default function useInstitutionMembers() {
     }
   }
 
+  async function removeUser(userId: string) {
+    if (!selectedInstitution) return;
+
+    const controller = InstitutionController.getInstance();
+    const institutionId = selectedInstitution!.id;
+
+    const user = users?.find((user) => user.uid === userId);
+    if (!user) return;
+
+    const role = user.customClaims.role[0];
+
+    const prevState = {
+      institution: structuredClone(selectedInstitution),
+      group: selectedGroup ? structuredClone(selectedGroup) : null,
+      users: structuredClone(users || []),
+      profiles: structuredClone(profiles || []),
+    };
+
+    await lib.common.generic.optimisticUpdate(
+      () => {
+        const newGroups = selectedInstitution.groups?.map((group) => {
+          if (!group.membersIds.includes(userId)) return group;
+          return {
+            ...group,
+            membersIds: group.membersIds.filter((id) => id !== userId),
+            members: (group.members || []).filter(
+              (member) => member.uid !== userId
+            ),
+          };
+        });
+
+        if (role === UserRole.TRAINER)
+          setSelectedInstitution((prev) => ({
+            ...prev!,
+            groups: newGroups,
+            trainers: prev!.trainers?.filter(
+              (trainer) => trainer.uid !== userId
+            ),
+            trainerIds: prev!.trainerIds?.filter((id) => id !== userId),
+          }));
+        else if (role === UserRole.ATHLETE)
+          setSelectedInstitution((prev) => ({
+            ...prev!,
+            groups: newGroups,
+            athletes: prev!.athletes?.filter(
+              (athlete) => athlete.uid !== userId
+            ),
+            athleteIds: prev!.athleteIds?.filter((id) => id !== userId),
+          }));
+
+        setSelectedGroup((prev) =>
+          !prev
+            ? prev
+            : {
+                ...prev,
+                membersIds: prev.membersIds.filter((id) => id !== userId),
+                members: (prev.members || []).filter(
+                  (member) => member.uid !== userId
+                ),
+              }
+        );
+      },
+      (snapshot) => {
+        setSelectedInstitution(snapshot.institution);
+        setSelectedGroup(snapshot.group);
+        setUsers(snapshot.users);
+        setProfiles(snapshot.profiles);
+      },
+      async () => {
+        if (role === UserRole.TRAINER)
+          await controller.removeTrainer(institutionId, { userId });
+        else if (role === UserRole.ATHLETE)
+          await controller.removeAthlete(institutionId, { userId });
+      },
+      prevState
+    );
+  }
+
   async function registerUser(registerRole: UserRole, formData: IFormData) {
     if (!selectedInstitution) return;
     setFormData(formData);
@@ -116,17 +197,15 @@ export default function useInstitutionMembers() {
     setIsUploadingMembers(true);
 
     try {
-      await lib.firebase.functions.createUserWithRole({
+      const user = await AuthController.getInstance().registerUser({
         displayName,
         email,
         password,
         role: registerRole,
       });
 
-      refetchUsers();
-      refetchMembers(
-        `${BACKEND_API_BASE_URL}/institution/${selectedInstitution.id}/members`
-      );
+      setUsers((prev) => [...prev, user]);
+      setProfiles((prev) => [...prev, core.profile.userToProfile(user)]);
     } catch (e) {
       console.error(e);
       toast.error('An error occurred while registering the user');
@@ -135,34 +214,153 @@ export default function useInstitutionMembers() {
     }
   }
 
-  async function removeAthleteFromGroup(userId: string) {
-    if (!selectedGroup) return;
-    const groupId = selectedGroup.id;
+  async function uploadUsers(file: File) {
+    setIsUploadingMembers(true);
 
-    try {
-      await GroupController.getInstance().removeMember(groupId, { userId });
+    let result: AuthUser[] = [];
 
-      toast.success('Member removed successfully');
-    } catch (e) {
-      console.error(e);
-      toast.error('Failed to remove member from group');
-    } finally {
-      setFilteredUsers((prev) => prev.filter((m) => m.uid !== userId));
-      setSelectedInstitution((prev) => {
-        if (!prev) return null;
-        const updatedGroups = prev.groups.map((g) =>
-          g.id !== groupId
-            ? g
-            : {
-                ...g,
-                members: g.members?.filter((m) => m.uid !== userId),
-                membersIds: g.membersIds.filter((uid) => uid !== userId),
-              }
-        );
+    Papa.parse<ImportProfile>(file, {
+      header: true,
+      skipEmptyLines: true,
+      error: (e: Error) =>
+        toast.error(`Failed to parse CSV file: ${e.message}`),
+      transform: (value, column: keyof ImportProfile) => {
+        switch (column) {
+          case 'email':
+            value = value.trim().toLowerCase();
+            break;
+          case 'password':
+            value = value.trim();
+            break;
+          case 'displayName':
+            value = value.trim();
+            break;
+          case 'photoURL':
+            value = value.trim();
+            break;
+          case 'role':
+            value = value.trim().toLowerCase();
+            if (
+              ![UserRole.ATHLETE, UserRole.TRAINER].includes(value as UserRole)
+            )
+              value = UserRole.ATHLETE;
 
-        return { ...prev, groups: updatedGroups };
-      });
-    }
+            break;
+          case 'level':
+            value = value.trim().toLowerCase();
+            if (
+              ![
+                SportLevel.BEGINNER,
+                SportLevel.INTERMEDIATE,
+                SportLevel.ADVANCED,
+              ].includes(value as SportLevel)
+            )
+              value = SportLevel.BEGINNER;
+            break;
+          case 'gender':
+            value = value.trim().toLowerCase();
+            if (value && ![Gender.M, Gender.F].includes(value as Gender))
+              value = Gender.M;
+            break;
+          case 'birthDate':
+            value = value.trim();
+            if (value && isNaN(new Date(value).getTime())) value = '';
+            break;
+        }
+
+        return value;
+      },
+      complete: async (results) => {
+        results.data.pop();
+
+        // validate rows
+        const errors: { row: number; message: string }[] = [];
+        results.data.forEach((r) => {
+          const row = results.data.indexOf(r) + 2;
+          if (!r.email) errors.push({ row, message: 'Missing email' });
+          if (!r.password) errors.push({ row, message: 'Missing password' });
+          if (!r.displayName) errors.push({ row, message: 'Missing name' });
+          if (!r.role) errors.push({ row, message: 'Missing role' });
+        });
+
+        if (errors.length) {
+          toast.error(
+            `Errors in CSV file:\n${errors
+              .map((e) => `Row ${e.row}: ${e.message}`)
+              .join('\n')}`
+          );
+
+          setIsUploadingMembers(false);
+          return;
+        }
+
+        const data: ImportProfile[] = results.data.map((r) => ({
+          email: r.email,
+          password: r.password,
+          displayName: r.displayName,
+          photoURL: r.photoURL,
+          role: r.role,
+          sport: r.sport || undefined,
+          level: r.level || undefined,
+          gender: r.gender || undefined,
+          birthDate: r.birthDate ? new Date(r.birthDate) : undefined,
+        }));
+
+        try {
+          const response = await ProfileController.getInstance().importProfiles(
+            { profiles: data }
+          );
+
+          result = response.successful || [];
+
+          setUsers((prev) => [...prev, ...result]);
+          setProfiles((prev) => [
+            ...prev,
+            ...(response.successful || []).map((u) =>
+              core.profile.userToProfile(u)
+            ),
+          ]);
+
+          const athletes = result.filter(
+            (u) => u.customClaims.role[0] === UserRole.ATHLETE
+          );
+
+          const trainers = result.filter(
+            (u) => u.customClaims.role[0] === UserRole.TRAINER
+          );
+
+          const athleteIds = athletes.map((u) => u.uid);
+          const trainerIds = trainers.map((u) => u.uid);
+
+          // update selected institution
+          setSelectedInstitution((prev) =>
+            !prev
+              ? prev
+              : {
+                  ...prev,
+                  athletes: [...(prev.athletes || []), ...athletes],
+                  athleteIds: [...(prev.athleteIds || []), ...athleteIds],
+                  trainers: [...(prev.trainers || []), ...trainers],
+                  trainerIds: [...(prev.trainerIds || []), ...trainerIds],
+                }
+          );
+
+          toast.success(`Sueccessfully registered ${result.length} users`);
+          if (response.errors?.length) {
+            console.error('Errors during bulk user import:', response.errors);
+            toast.error(
+              `Failed to register some users. See console for details.`
+            );
+          }
+        } catch (e) {
+          toast.error(`Failed to register users: ${(e as Error).message}`);
+        } finally {
+          setIsUploadingMembers(false);
+        }
+      },
+    });
+
+    return result;
   }
 
   return {
@@ -174,6 +372,7 @@ export default function useInstitutionMembers() {
     setOpenModal,
     registerUser,
     addUser,
-    removeAthleteFromGroup,
+    removeUser,
+    uploadUsers,
   };
 }

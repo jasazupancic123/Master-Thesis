@@ -28,12 +28,14 @@ export async function handleUpdateTraining(
         prev.map((t) => (t.id === training.id ? training : t))
       );
     },
-    (snapshot) => {
+    (snapshot, e) => {
       setIsUpdatingTraining(false);
       setTraining(snapshot.training);
       setTrainings((prev) =>
         prev.map((t) => (t.id === snapshot.training.id ? snapshot.training : t))
       );
+
+      toast.error(e.message);
     },
     async () => TrainingController.getInstance().update(training.id, training),
     state,

@@ -14,7 +14,7 @@ export class GenericUtil {
 
   async optimisticUpdate<T, U>(
     apply: () => void, // called before async operation (optimistic UI update)
-    rollback: (snapshot: T) => void, // restores old state on failure
+    rollback: (snapshot: T, e: Error) => void, // restores old state on failure
     action: () => Promise<U>, // async function (API call)
     snapshot: T, // previous state snapshot
     postAction?: (result: U) => void // optional function called after successful action
@@ -27,7 +27,7 @@ export class GenericUtil {
       return result;
     } catch (e) {
       console.error('Optimistic update failed:', e);
-      rollback(snapshot);
+      rollback(snapshot, e as Error);
       throw e; // rethrow for optional handling by caller
     }
   }
