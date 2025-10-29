@@ -408,12 +408,7 @@ export default function ExercisesPage() {
         onConfirm={() => {
           handleUpsertMuscleValues(
             {
-              exercises: importedMuscleValueExercises.map(
-                (muscleValuesExercise) => ({
-                  name: muscleValuesExercise.name,
-                  muscleValues: muscleValuesExercise.muscleValues,
-                })
-              ),
+              exercises: importedMuscleValueExercises,
             },
             { router, setExercises: setAllExercises }
           );
