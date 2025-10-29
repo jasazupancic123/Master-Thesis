@@ -27,7 +27,7 @@ import {
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
 import { DateFilterDto } from '@src/common/dto/date-filter.dto';
 import { DateRangeDto } from '@src/common/dto/date-range.dto';
-import { UpdateMembersDto } from '@src/common/dto/user-id.dto';
+import { UpdateMemberDto } from '@src/common/dto/user-id.dto';
 import { Permission } from '@src/common/interface/permission.interface';
 import { CommonService } from '@src/common/service/common.service';
 import { Create, Update } from '@src/common/type/entity.type';
@@ -153,11 +153,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
     const trainings = await this.repository.findAll((_) =>
       this.repository.buildGetQuery(
-        {
-          uid: user.uid,
-          role: this.firebase.getRole(user),
-          institutionId,
-        },
+        { uid: user.uid, role: this.firebase.getRole(user), institutionId },
         filter,
         options,
       ),
@@ -444,7 +440,7 @@ export class TrainingService implements Permission<Training, Institution> {
   }
 
   @LogMethod()
-  async updateMembers(user: User, ref: TrainingRef, input: UpdateMembersDto) {
+  async updateMembers(user: User, ref: TrainingRef, input: UpdateMemberDto) {
     const { userId: memberId, add } = input;
 
     // validate

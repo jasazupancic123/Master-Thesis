@@ -2,9 +2,11 @@
 
 import { Box, Button, FormControl, TextField } from '@mui/material';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import toast from 'react-hot-toast';
 
+import { AuthController } from '@/core/auth/auth.controller';
+import type { CreateUser } from '@/core/auth/type/user.type';
 import { core } from '@/core/core.service';
 import { InstitutionController } from '@/core/institution/institution.controller';
 import { UserRole } from '@/core/profile/enum/user-role.enum';
@@ -19,50 +21,13 @@ export default function AddInstitutionDashboard() {
   const { users } = useMain();
   const router = useRouter();
   const screenSize = useScreenSize();
-  const { setInstitutions, refetchUsers } = useDashboard();
-
-  const controller = InstitutionController.getInstance();
+  const { setInstitutions, setUsers } = useDashboard();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
-
-  useEffect(() => {
-    if (!name || !imageUrl || !email) return;
-
-    const owner = users.find((user) => user.email === email.toLowerCase());
-    if (!owner) {
-      toast.error('Institution not registered correctly');
-      return;
-    }
-
-    handleApiRequest(
-      router,
-      () =>
-        controller.create({
-          name,
-          imageUrl,
-          ownerId: owner.uid,
-        }),
-      (institution) => {
-        institution = core.institution.mapUsers([institution], users || [])[0];
-        setInstitutions((prev) => {
-          const newInstitutions = [...prev, institution];
-          return newInstitutions;
-        });
-        setName('');
-        setEmail('');
-        setPassword('');
-        setConfirmPassword('');
-        setImageUrl('');
-        toast.success('Successfully created institution!');
-      },
-      undefined,
-      'Failed to create institution'
-    );
-  }, [users]);
 
   const handleAddInstitution = () => {
     if (name.trim().length < 3) {
@@ -85,26 +50,37 @@ export default function AddInstitutionDashboard() {
       return;
     }
 
-    const userInput = {
+    const userInput: CreateUser = {
       displayName: name,
       email,
       password,
       role: UserRole.MANAGER,
     };
 
-    toast.error('Creating institution...', {
-      icon: '⚠️',
-      duration: 3000,
-    });
-
     handleApiRequest(
       router,
-      () => lib.firebase.functions.createUserWithRole(userInput),
-      () => {
-        refetchUsers();
+      async () => {
+        const user = await AuthController.getInstance().registerUser(userInput);
+        const institution = await InstitutionController.getInstance().create({
+          name,
+          imageUrl,
+          ownerId: user.uid,
+        });
+
+        return { institution, user };
+      },
+      ({ user, institution }) => {
+        institution = core.institution.mapUsers([institution], users || [])[0];
+        setUsers((prev) => [...prev, user]);
+        setInstitutions((prev) => [...prev, institution]);
+        setEmail('');
+        setPassword('');
+        setConfirmPassword('');
+        setImageUrl('');
+        toast.success('Successfully created institution!');
       },
       undefined,
-      'Failed to register user'
+      'Failed to create institution'
     );
   };
 

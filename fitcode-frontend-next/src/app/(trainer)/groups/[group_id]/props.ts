@@ -5,7 +5,6 @@ import type { Exercise } from '@/core/exercise/type/exercise.type';
 import type { Cycle } from '@/core/group/type/cycle.type';
 import type { Group } from '@/core/group/type/group.type';
 import type { Institution } from '@/core/institution/type/institution.type';
-import type { Profile } from '@/core/profile/type/user.type';
 import type { WellnessZScore } from '@/core/profile/type/wellness.type';
 import type { MainSet } from '@/core/training/enum/main-set.enum';
 import type { Subgroup } from '@/core/training/type/subgroup.type';
@@ -54,7 +53,6 @@ export type GroupContextProps = GroupIdPageProps & {
 };
 
 export type TrainerDayViewContextProps = {
-  members: Profile[]; // group members
   day: Day;
   setDay: SetState<Day>;
   training: Training | undefined;

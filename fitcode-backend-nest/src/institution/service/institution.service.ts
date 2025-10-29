@@ -3,7 +3,6 @@ import {
   forwardRef,
   Inject,
   Injectable,
-  Logger,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -16,8 +15,11 @@ import { Permission } from '@src/common/interface/permission.interface';
 import { CommonService } from '@src/common/service/common.service';
 import { Create } from '@src/common/type/entity.type';
 import { User } from '@src/common/type/firebase-auth.type';
-import { InstitutionRef } from '@src/common/type/firestore.type';
-import { BatchWriteOperation } from '@src/common/type/orm.type';
+import {
+  InstitutionMemberRef,
+  InstitutionRef,
+} from '@src/common/type/firestore.type';
+import { BatchOperation, BatchWriteOperation } from '@src/common/type/orm.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { Profile } from '@src/profile/entity/profile.entity';
@@ -26,15 +28,15 @@ import { ProfileService } from '@src/profile/service/profile.service';
 import { INSTITUTION_ATHLETE_EVENT } from '../constant/update-institution-athlete-event.constant';
 import { CreateInstitutionDto } from '../dto/create-institution.dto';
 import { UpdateInstitutionDto } from '../dto/update-institution.dto';
-import { UpdateInstitutionMembersDto } from '../dto/update-institution-members.dto';
+import { UpdateInstitutionMemberDto } from '../dto/update-institution-members.dto';
 import { Institution } from '../entity/institution.entity';
+import { InstitutionMember } from '../entity/institution-member.entity';
 import { UpdateInstitutionAthleteEvent } from '../event/update-institution-athlete.event';
 import { InstitutionRepository } from '../repository/institution.repository';
+import { InstitutionMembersRepository } from '../repository/institution-members.repository';
 
 @Injectable()
 export class InstitutionService implements Permission<Institution> {
-  private logger = new Logger(InstitutionService.name);
-
   constructor(
     private readonly firebase: FirebaseService,
     private readonly commonService: CommonService,
@@ -43,6 +45,7 @@ export class InstitutionService implements Permission<Institution> {
     private readonly authService: Wrapper<AuthService>,
     private readonly repository: InstitutionRepository,
     private readonly profileService: ProfileService,
+    private readonly institutionMembersRepository: InstitutionMembersRepository,
   ) {}
 
   async findById(ref: InstitutionRef): Promise<Institution | null> {
@@ -68,9 +71,8 @@ export class InstitutionService implements Permission<Institution> {
       case UserRole.MANAGER:
         return await this.repository.findAllByManager(user.uid);
       case UserRole.TRAINER:
-        return await this.repository.findAllByTrainer(user.uid);
       case UserRole.ATHLETE:
-        return await this.repository.findAllByAthlete(user.uid);
+        return await this.repository.findAllByMember(user.uid);
       default:
         return [];
     }
@@ -92,11 +94,9 @@ export class InstitutionService implements Permission<Institution> {
         'Owner of the institution must be a manager',
       );
 
-    const data: Create<Institution> = {
+    const data: Create<Omit<Institution, 'trainerIds' | 'athleteIds'>> = {
       id: null,
       ownerId: input.ownerId,
-      athleteIds: [],
-      trainerIds: [],
       name: input.name,
       imageUrl: input.imageUrl,
     };
@@ -106,7 +106,14 @@ export class InstitutionService implements Permission<Institution> {
     });
 
     const id = await this.repository.save(query);
-    return { ...data, id, createdAt: new Date(), updatedAt: new Date() };
+    return {
+      ...data,
+      id,
+      trainerIds: [],
+      athleteIds: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
   }
 
   @LogMethod()
@@ -129,10 +136,10 @@ export class InstitutionService implements Permission<Institution> {
   }
 
   @LogMethod()
-  async updateMembers(
+  async updateMember(
     user: User,
     ref: InstitutionRef,
-    input: UpdateInstitutionMembersDto,
+    input: UpdateInstitutionMemberDto,
   ) {
     const { add, trainer } = input;
 
@@ -143,6 +150,11 @@ export class InstitutionService implements Permission<Institution> {
     const member = await this.authService.findOneBy('id', input.userId);
     if (!member) throw new BadRequestException('Member does not exist');
 
+    const memberRef: InstitutionMemberRef = {
+      institutionId: institution.id,
+      uid: member.uid,
+    };
+
     if (trainer) {
       if (!this.firebase.isTrainer(member))
         throw new BadRequestException(
@@ -150,20 +162,21 @@ export class InstitutionService implements Permission<Institution> {
         );
 
       // updating trainer
-      if (add) await this.repository.addTrainer(institution.id, member.uid);
-      else await this.repository.removeTrainer(institution.id, member.uid);
+      if (!add) await this.institutionMembersRepository.removeMember(memberRef);
+      else
+        await this.institutionMembersRepository.addMember(
+          { role: UserRole.TRAINER },
+          memberRef,
+        );
     } else {
       // updating athlete
-      const operations: BatchWriteOperation<
-        { athleteIds: string[] } | { membersIds: string[] }
-      >[] = [
-        // update athlete in institution
-        this.repository.getUpdateAthleteOperation(
-          institution.id,
-          member.uid,
-          add,
-        ),
-      ];
+      const operations: BatchOperation<InstitutionMember>[] = add
+        ? this.institutionMembersRepository.getAddMembersOperation(ref, [
+            { id: member.uid, role: UserRole.ATHLETE },
+          ])
+        : this.institutionMembersRepository.getRemoveMembersOperation(ref, [
+            member.uid,
+          ]);
 
       // remove athlete in all groups & trainings
       if (!add)
@@ -181,15 +194,18 @@ export class InstitutionService implements Permission<Institution> {
     }
   }
 
-  buildAddAthleteOperation(
-    institutionId: string,
-    athleteId: string,
-  ): BatchWriteOperation<Institution> {
-    return this.repository.getUpdateAthleteOperation(
-      institutionId,
-      athleteId,
-      true,
-    );
+  async addMember(
+    data: Pick<InstitutionMember, 'role'>,
+    ref: InstitutionMemberRef,
+  ) {
+    await this.institutionMembersRepository.addMember(data, ref);
+  }
+
+  buildAddMembersOperation(
+    ref: InstitutionRef,
+    data: Create<Omit<InstitutionMember, 'institutionId'>>[],
+  ): BatchWriteOperation<InstitutionMember>[] {
+    return this.institutionMembersRepository.getAddMembersOperation(ref, data);
   }
 
   canView(user: User, institution: Institution) {

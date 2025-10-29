@@ -1,7 +1,6 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { startOfDay, subDays } from 'date-fns';
 
-import { ChangeLogManager } from '@src/change-log/change-log.manager';
 import { DateFilterDto } from '@src/common/dto/date-filter.dto';
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { FirestoreEntity } from '@src/common/type/entity.type';
@@ -26,8 +25,6 @@ export class WellnessRepository extends FirestoreRepository<
   constructor(
     readonly firebase: FirebaseService,
     private readonly parent: ProfileRepository,
-    @Inject(Wellness)
-    readonly changeLog: ChangeLogManager<Wellness>,
   ) {
     super(firebase);
   }
@@ -76,7 +73,6 @@ export class WellnessRepository extends FirestoreRepository<
     );
 
     const docRef = this.doc(ref);
-    this.changeLog.trackCreate(docRef);
     await docRef.set(query);
 
     return this.getKey(ref);
@@ -85,13 +81,11 @@ export class WellnessRepository extends FirestoreRepository<
   async update(ref: WellnessRef, input: Wellness): Promise<void> {
     const query = this.firebase.buildUpdateQuery(input);
     const docRef = this.doc(ref);
-    await this.changeLog.trackUpdate(docRef);
     await docRef.update(query);
   }
 
   async delete(ref: WellnessRef): Promise<void> {
     const docRef = this.doc(ref);
-    await this.changeLog.trackDelete(docRef);
     await docRef.delete();
   }
 

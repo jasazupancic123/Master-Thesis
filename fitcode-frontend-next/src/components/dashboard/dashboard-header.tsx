@@ -24,7 +24,6 @@ import EditInstitutionModal from './edit-institution-modal';
 import useDashboardHeaderUtils from './hooks/use-utils';
 import ProfileHeaderMenu from '@/components/profile-header-menu/profile-header-menu';
 import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
-import { BACKEND_API_BASE_URL } from '@/core/const/api.const';
 import { core } from '@/core/core.service';
 import { lib } from '@/lib';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
@@ -51,7 +50,6 @@ export default function DashboardHeader() {
     selectedInstitution,
     setSelectedInstitution,
     setSelectedGroup,
-    refetchMembers,
   } = useDashboard();
 
   const {
@@ -273,9 +271,6 @@ export default function DashboardHeader() {
 
               setOpenInstitutionsMenu(false);
               setAnchorInstitutionsEl(null);
-              refetchMembers(
-                `${BACKEND_API_BASE_URL}/institution/${institution.id}/members`
-              );
             }}
           >
             <Box

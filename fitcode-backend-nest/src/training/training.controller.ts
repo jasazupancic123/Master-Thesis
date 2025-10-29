@@ -64,7 +64,7 @@ export class TrainingController {
       user,
       {
         groupId: filter.groupId,
-        cycleId: filter.cycleId,
+        ...(filter.cycleId && { cycleId: filter.cycleId }),
         ...(filter.from && { from: filter.from }),
         ...(filter.to && { to: filter.to }),
       },

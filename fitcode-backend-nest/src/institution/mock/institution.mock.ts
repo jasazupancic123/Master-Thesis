@@ -14,8 +14,8 @@ export function generateInstitutionStub(
     deletedAt: data?.deletedAt || null,
     name: data?.name || generateRandomName(),
     ownerId: data?.ownerId || global.manager.uid,
-    trainerIds: data?.trainerIds || [global.trainer.uid],
-    athleteIds: data?.athleteIds || [global.athlete.uid],
     imageUrl: data?.imageUrl || null,
+    trainerIds: data?.trainerIds || [],
+    athleteIds: data?.athleteIds || [],
   };
 }

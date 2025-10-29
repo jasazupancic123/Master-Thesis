@@ -7,7 +7,10 @@ import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/core/training/const/warmup-cooldown.const';
-import type { ExerciseParamField } from '@/core/training/type/exercise-set.type';
+import type {
+  ExerciseParamField,
+  ExerciseParamFieldExtended,
+} from '@/core/training/type/exercise-set.type';
 import type { Superset } from '@/core/training/type/superset.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { SetState } from '@/lib/common/type/state.type';
@@ -33,7 +36,7 @@ interface ISupersetsContext extends Props {
   ) => void;
   updateTrainingExerciseParam: (
     exercise: TrainingExercise,
-    field: ExerciseParamField,
+    field: ExerciseParamFieldExtended,
     value: number | string | undefined,
     setIndex?: number,
     options?: { updateSubgroups?: boolean }
@@ -41,7 +44,7 @@ interface ISupersetsContext extends Props {
   updateTrainingExerciseParams: (
     exercise: TrainingExercise,
     params: {
-      field: ExerciseParamField;
+      field: ExerciseParamFieldExtended;
       value: number | string | undefined;
       setIndex?: number;
     }[],
@@ -138,7 +141,7 @@ export function SupersetsProvider(props: Props) {
 
   function updateTrainingExerciseParam(
     exercise: TrainingExercise,
-    field: ExerciseParamField,
+    field: ExerciseParamFieldExtended,
     value: number | string | undefined,
     setIndex?: number,
     options?: { updateSubgroups?: boolean }
@@ -158,37 +161,47 @@ export function SupersetsProvider(props: Props) {
 
     // update all selected exercises with the param change
     for (const e of exercises) {
-      const foundExercise = allExercises.find((ex) => ex.id === e.id);
-      if (!foundExercise) continue;
+      const dbExercise = allExercises.find((ex) => ex.id === e.id);
+      if (!dbExercise) continue;
 
-      switch (field) {
-        case 'sets':
-          // special case for sets, we need to add or remove sets
-          const sets = value as number;
-          const prevSets = e.sets?.length || 0;
-          if (setIndex !== undefined) break; // we only allow updating sets as a whole, not by index separately
+      if (field === 'sets') {
+        // special case for sets, we need to add or remove sets
+        const sets = value as number;
+        const prevSets = e.sets?.length || 0;
+        if (setIndex !== undefined) break; // we only allow updating sets as a whole, not by index separately
 
-          if (prevSets > +sets && +sets > 0)
-            e.sets = [...e.sets].slice(0, +sets); // remove sets
-          else {
-            e.sets = [
-              ...e.sets,
-              ...Array(+sets - prevSets).fill(
-                e.sets[prevSets - 1] ||
-                  core.training.set.stub(prevSets, foundExercise)
-              ),
-            ];
-          }
-
-          break;
-        default:
-          break;
+        if (prevSets > +sets && +sets > 0)
+          e.sets = [...e.sets].slice(0, +sets); // remove sets
+        else {
+          e.sets = [
+            ...e.sets,
+            ...Array(+sets - prevSets).fill(
+              e.sets[prevSets - 1] ||
+                core.training.set.stub(prevSets, dbExercise)
+            ),
+          ];
+        }
       }
 
+      const uni = dbExercise.isUnilateral;
+      const pair = uni
+        ? core.exercise.param.pairs[field as ExerciseParamField]
+        : null;
+
       if (setIndex === undefined)
-        e.sets = e.sets.map((s) => ({ ...s, [field]: value })); // update all sets
+        // update all sets
+        e.sets = e.sets.map((s) => ({
+          ...s,
+          [field]: value,
+          ...(pair && value === undefined ? { [pair]: value } : {}),
+        }));
       else if (e.sets[setIndex])
-        e.sets[setIndex] = { ...e.sets[setIndex], [field]: value }; // update provided set
+        // update provided set
+        e.sets[setIndex] = {
+          ...e.sets[setIndex],
+          [field]: value,
+          ...(pair && value === undefined ? { [pair]: value } : {}),
+        };
     }
 
     updateTrainingExercises(exercises, options);
@@ -198,7 +211,7 @@ export function SupersetsProvider(props: Props) {
   function updateTrainingExerciseParams(
     exercise: TrainingExercise,
     params: {
-      field: ExerciseParamField;
+      field: ExerciseParamFieldExtended;
       value: number | string | undefined;
       setIndex?: number;
     }[],
@@ -219,40 +232,49 @@ export function SupersetsProvider(props: Props) {
 
     // update all selected exercises with the param change
     for (const e of exercises) {
-      const foundExercise = allExercises.find((ex) => ex.id === e.id);
-      if (!foundExercise) continue;
+      const dbExercise = allExercises.find((ex) => ex.id === e.id);
+      if (!dbExercise) continue;
 
       for (const param of params) {
         const { field, value, setIndex } = param;
+        if (field === 'sets') {
+          // special case for sets, we need to add or remove sets
+          const sets = value as number;
+          const prevSets = e.sets?.length || 0;
+          if (setIndex !== undefined) break; // we only allow updating sets as a whole, not by index separately
 
-        switch (field) {
-          case 'sets':
-            // special case for sets, we need to add or remove sets
-            const sets = value as number;
-            const prevSets = e.sets?.length || 0;
-            if (setIndex !== undefined) break; // we only allow updating sets as a whole, not by index separately
-
-            if (prevSets > +sets && +sets > 0)
-              e.sets = [...e.sets].slice(0, +sets); // remove sets
-            else {
-              e.sets = [
-                ...e.sets,
-                ...Array(+sets - prevSets).fill(
-                  e.sets[prevSets - 1] ||
-                    core.training.set.stub(prevSets, foundExercise)
-                ),
-              ];
-            }
-
-            break;
-          default:
-            break;
+          if (prevSets > +sets && +sets > 0)
+            e.sets = [...e.sets].slice(0, +sets); // remove sets
+          else {
+            e.sets = [
+              ...e.sets,
+              ...Array(+sets - prevSets).fill(
+                e.sets[prevSets - 1] ||
+                  core.training.set.stub(prevSets, dbExercise)
+              ),
+            ];
+          }
         }
 
+        const uni = dbExercise.isUnilateral;
+        const pair = uni
+          ? core.exercise.param.pairs[field as ExerciseParamField]
+          : null;
+
         if (setIndex === undefined)
-          e.sets = e.sets.map((s) => ({ ...s, [field]: value })); // update all sets
+          // update all sets
+          e.sets = e.sets.map((s) => ({
+            ...s,
+            [field]: value,
+            ...(pair && value === undefined ? { [pair]: value } : {}),
+          }));
         else if (e.sets[setIndex])
-          e.sets[setIndex] = { ...e.sets[setIndex], [field]: value }; // update provided set
+          // update provided set
+          e.sets[setIndex] = {
+            ...e.sets[setIndex],
+            [field]: value,
+            ...(pair && value === undefined ? { [pair]: value } : {}),
+          };
       }
     }
 

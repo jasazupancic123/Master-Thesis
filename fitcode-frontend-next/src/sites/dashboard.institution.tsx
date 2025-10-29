@@ -8,8 +8,6 @@ import {
   IconButton,
   Typography,
 } from '@mui/material';
-import { useRouter } from 'next/navigation';
-import Papa from 'papaparse';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
@@ -17,18 +15,13 @@ import { theme } from '@/app/style';
 import { useDashboardUserEdit } from '@/components/dashboard/context/user-edit.context';
 import DashboardEditAthleteModal from '@/components/dashboard/dashboard-edit-athlete-modal';
 import RegisterUsersDashboard from '@/components/dashboard/dashboard-register-users-modal';
+import useInstitutionMembers from '@/components/dashboard/hooks/use-institution-members.hook';
 import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
 import type { AuthUser } from '@/core/auth/type/user.type';
 import { AthletesTrainers } from '@/core/institution/enum/athletes-trainer.enum';
-import { InstitutionController } from '@/core/institution/institution.controller';
-import { Gender } from '@/core/profile/enum/gender.enum';
-import { SportLevel } from '@/core/profile/enum/sport-level.enum';
 import { UserRole } from '@/core/profile/enum/user-role.enum';
-import { ProfileController } from '@/core/profile/profile.controller';
-import type { ImportProfile } from '@/core/profile/type/user.type';
 import { lib } from '@/lib';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
-import { handleApiRequest } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
@@ -41,7 +34,6 @@ import SimpleCircle from '@/ui/simple-circle';
 
 export default function DashboardInstitutionPage() {
   const screenSize = useScreenSize();
-  const router = useRouter();
   const { role } = useAuthenticatedAuth();
   const { users } = useMain();
 
@@ -55,8 +47,8 @@ export default function DashboardInstitutionPage() {
     onHoverUser,
   } = useDashboardUserEdit();
 
-  const { selectedInstitution, setSelectedInstitution, setMembers, setUsers } =
-    useDashboard();
+  const { selectedInstitution } = useDashboard();
+  const { removeUser, uploadUsers } = useInstitutionMembers();
 
   const [selectedView, setSelectedView] = useState<AthletesTrainers>(
     AthletesTrainers.ATHLETES
@@ -117,162 +109,6 @@ export default function DashboardInstitutionPage() {
     setCsvUserEmails([]);
     setIsUploadingMembers(false);
   }, [users]);
-
-  const handleRemoveUser = (userId: string, view: AthletesTrainers) => {
-    if (!selectedInstitution) return;
-
-    handleApiRequest(
-      router,
-      () =>
-        view === AthletesTrainers.ATHLETES
-          ? InstitutionController.getInstance().removeAthlete(
-              selectedInstitution.id,
-              { userId }
-            )
-          : InstitutionController.getInstance().removeTrainer(
-              selectedInstitution.id,
-              { userId }
-            ),
-      () => {
-        setSelectedInstitution((prev) => {
-          if (!prev) return null;
-          const updatedUsers = (
-            view === AthletesTrainers.ATHLETES ? prev.athletes : prev.trainers
-          )?.filter((a) => a.uid !== userId);
-          const updatedUserIds =
-            view === AthletesTrainers.ATHLETES
-              ? prev.athleteIds.filter((id) => id !== userId)
-              : prev.trainerIds.filter((id) => id !== userId);
-
-          return view === AthletesTrainers.ATHLETES
-            ? { ...prev, athletes: updatedUsers, athleteIds: updatedUserIds }
-            : { ...prev, trainers: updatedUsers, trainerIds: updatedUserIds };
-        });
-        toast.success(
-          `${view[0].toUpperCase() + view.slice(1, view.length - 1).toLowerCase()} removed successfully`
-        );
-      },
-      undefined,
-      `Failed to remove ${view[0].toUpperCase() + view.slice(1, view.length - 1).toLowerCase()}`
-    );
-  };
-
-  const handleCsvFileUpload = async (file: File) => {
-    setIsUploadingMembers(true);
-
-    Papa.parse<ImportProfile>(file, {
-      header: true,
-      skipEmptyLines: true,
-      error: (e: Error) =>
-        toast.error(`Failed to parse CSV file: ${e.message}`),
-      transform: (value, column: keyof ImportProfile) => {
-        switch (column) {
-          case 'email':
-            value = value.trim().toLowerCase();
-            break;
-          case 'password':
-            value = value.trim();
-            break;
-          case 'displayName':
-            value = value.trim();
-            break;
-          case 'photoURL':
-            value = value.trim();
-            break;
-          case 'role':
-            value = value.trim().toLowerCase();
-            if (
-              ![UserRole.ATHLETE, UserRole.TRAINER].includes(value as UserRole)
-            )
-              value = UserRole.ATHLETE;
-
-            break;
-          case 'level':
-            value = value.trim().toLowerCase();
-            if (
-              ![
-                SportLevel.BEGINNER,
-                SportLevel.INTERMEDIATE,
-                SportLevel.ADVANCED,
-              ].includes(value as SportLevel)
-            )
-              value = SportLevel.BEGINNER;
-            break;
-          case 'gender':
-            value = value.trim().toLowerCase();
-            if (value && ![Gender.M, Gender.F].includes(value as Gender))
-              value = Gender.M;
-            break;
-          case 'birthDate':
-            value = value.trim();
-            if (value && isNaN(new Date(value).getTime())) value = '';
-            break;
-        }
-
-        return value;
-      },
-      complete: async (results) => {
-        results.data.pop();
-
-        // validate rows
-        const errors: { row: number; message: string }[] = [];
-        results.data.forEach((r) => {
-          const row = results.data.indexOf(r) + 2;
-          if (!r.email) errors.push({ row, message: 'Missing email' });
-          if (!r.password) errors.push({ row, message: 'Missing password' });
-          if (!r.displayName) errors.push({ row, message: 'Missing name' });
-          if (!r.role) errors.push({ row, message: 'Missing role' });
-        });
-
-        if (errors.length) {
-          toast.error(
-            `Errors in CSV file:\n${errors
-              .map((e) => `Row ${e.row}: ${e.message}`)
-              .join('\n')}`
-          );
-
-          setIsUploadingMembers(false);
-          return;
-        }
-
-        const data: ImportProfile[] = results.data.map((r) => ({
-          email: r.email,
-          password: r.password,
-          displayName: r.displayName,
-          photoURL: r.photoURL,
-          role: r.role,
-          sport: r.sport || undefined,
-          level: r.level || undefined,
-          gender: r.gender || undefined,
-          birthDate: r.birthDate ? new Date(r.birthDate) : undefined,
-        }));
-
-        await handleApiRequest(
-          router,
-          () =>
-            ProfileController.getInstance().importProfiles({ profiles: data }),
-          (res) => {
-            setOpenAddMemberViaCsvModal(false);
-            setCsvUserEmails(data.map((d) => d.email));
-            setMembers((prev) => [...prev, ...(res.successful || [])]);
-
-            const authUsers = (res.successful || []).map((u) => ({
-              ...u,
-              customClaims: { role: [u.role] },
-            }));
-
-            setUsers((prev) => [...prev, ...authUsers]);
-            setCurrentUsers((prev) => [...prev, ...authUsers]);
-            setFilteredUsers((prev) => [...prev, ...authUsers]);
-          },
-          undefined,
-          'Failed to register users'
-        );
-      },
-    });
-
-    setIsUploadingMembers(false);
-  };
 
   function HorizontalItems() {
     return (
@@ -478,9 +314,9 @@ export default function DashboardInstitutionPage() {
                       <IconButton
                         className="remove-icon"
                         size="small"
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           e.stopPropagation();
-                          handleRemoveUser(user.uid, selectedView);
+                          await removeUser(user.uid);
                         }}
                         sx={{
                           position: 'absolute',
@@ -562,7 +398,28 @@ export default function DashboardInstitutionPage() {
         <FileUpload
           label="CSV of users"
           input="csv"
-          onFileUpload={async (file) => handleCsvFileUpload(file)}
+          onFileUpload={async (file) => {
+            const authUsers = await uploadUsers(file);
+
+            setOpenAddMemberViaCsvModal(false);
+            setCsvUserEmails(authUsers.map((d) => d.email!));
+
+            const athletes = authUsers.filter((user) =>
+              user.customClaims.role.includes(UserRole.ATHLETE)
+            );
+
+            const trainers = authUsers.filter((user) =>
+              user.customClaims.role.includes(UserRole.TRAINER)
+            );
+
+            if (selectedView === AthletesTrainers.ATHLETES) {
+              setCurrentUsers((prev) => [...prev, ...athletes]);
+              setFilteredUsers((prev) => [...prev, ...athletes]);
+            } else {
+              setCurrentUsers((prev) => [...prev, ...trainers]);
+              setFilteredUsers((prev) => [...prev, ...trainers]);
+            }
+          }}
         />
       </MyModal>
 

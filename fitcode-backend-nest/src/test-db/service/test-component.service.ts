@@ -9,16 +9,12 @@ import { Component } from '@src/component/entity/component.entity';
 import { generateComponentStub } from '@src/component/mock/component.stub';
 import { FirebaseService } from '@src/firebase/firebase.service';
 
-import { AbstractChangeLogService } from './abstract-test-change-log.service';
-
 @Injectable()
-export class TestComponentService extends AbstractChangeLogService<Component> {
+export class TestComponentService {
   constructor(
     protected readonly firebase: FirebaseService,
     private readonly cache: CacheManagerService,
-  ) {
-    super(firebase);
-  }
+  ) {}
 
   collection(): CollectionReference {
     return this.firebase.firestore.collection(FirestoreCollection.COMPONENT);
@@ -40,7 +36,6 @@ export class TestComponentService extends AbstractChangeLogService<Component> {
 
     const ref = this.collection().doc(data.id);
     await ref.set(query);
-    this.trackCreate(ref);
 
     await this.cache.del(CACHE_KEY_FLAT_COMPONENTS);
     return this.firebase.serialize(query);
@@ -52,7 +47,6 @@ export class TestComponentService extends AbstractChangeLogService<Component> {
       const query = this.firebase.buildCreateQuery<Component>(data);
 
       const ref = this.collection().doc(data.id);
-      this.trackCreate(ref);
       return ref.set(query).then(() => this.firebase.serialize(query));
     });
 

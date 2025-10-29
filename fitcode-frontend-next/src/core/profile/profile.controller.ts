@@ -1,4 +1,4 @@
-import type { CreateUser } from '../auth/type/user.type';
+import type { AuthUser } from '../auth/type/user.type';
 import { BaseController } from '../base.controller';
 import type { ImportProfiles, Profile, UpdateProfile } from './type/user.type';
 import type {
@@ -6,6 +6,7 @@ import type {
   Wellness,
   WellnessZScore,
 } from './type/wellness.type';
+import type { ValidateRowError } from '@/lib/common/type/validate-row-error.type';
 
 export class ProfileController extends BaseController {
   private static instance: ProfileController;
@@ -21,8 +22,8 @@ export class ProfileController extends BaseController {
 
   async importProfiles(input: ImportProfiles) {
     return this.api.post<{
-      failed: { email: string; reason: string }[];
-      successful: ({ uid: string } & CreateUser & Profile)[];
+      successful: AuthUser[];
+      errors: ValidateRowError[];
     }>('/import', input);
   }
 

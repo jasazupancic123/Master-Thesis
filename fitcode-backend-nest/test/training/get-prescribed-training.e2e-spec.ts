@@ -2,23 +2,11 @@ import { TestApp } from '@test/common/utils/app.util';
 import { subDays } from 'date-fns';
 
 import type { TestInstitution, TestUser } from '@src/common/type/entity.type';
-import { createAthleteUserAndToken } from '@src/common/utils/auth.util';
-import {
-  createGroupWithCycles,
-  createInstitution,
-  deleteCollection,
-  deleteDoc,
-  deleteUsers,
-} from '@src/common/utils/data.util';
-import { ComponentService } from '@src/component/component.service';
 import type { Component } from '@src/component/entity/component.entity';
 import { generateComponentStub } from '@src/component/mock/component.stub';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
-import { FirebaseService } from '@src/firebase/firebase.service';
 import type { Group } from '@src/group/entity/group.entity';
-import { GroupService } from '@src/group/group.service';
-import { InstitutionService } from '@src/institution/service/institution.service';
 import type { Wellness } from '@src/profile/entity/wellness.entity';
 import { WellnessService } from '@src/profile/service/wellness.service';
 import { TestDbService } from '@src/test-db/test-db.service';
@@ -42,8 +30,6 @@ describe('Get prescribed training (e2e)', () => {
   let testApp: TestApp;
   let db: TestDbService;
 
-  let firebase: FirebaseService;
-  let componentService: ComponentService;
   let exerciseService: ExerciseService;
   let wellnessService: WellnessService;
   let workloadRepository: WorkloadRepository;
@@ -65,16 +51,11 @@ describe('Get prescribed training (e2e)', () => {
   beforeAll(async () => {
     testApp = await TestApp.init();
     db = testApp.module.get(TestDbService);
-    firebase = testApp.module.get(FirebaseService);
-    componentService = testApp.module.get(ComponentService);
     exerciseService = testApp.module.get(ExerciseService);
     wellnessService = testApp.module.get(WellnessService);
     workloadRepository = testApp.module.get(WorkloadRepository);
 
-    const institutionService = testApp.module.get(InstitutionService);
-    const groupService = testApp.module.get(GroupService);
-
-    component = await componentService.create(
+    component = await db.components.create(
       generateComponentStub({ params: componentParams }),
     );
 
@@ -84,14 +65,14 @@ describe('Get prescribed training (e2e)', () => {
       generateExerciseStub({ name: 'Deadlift', componentIds: [component.id] }),
     ]);
 
-    a = await createAthleteUserAndToken(firebase);
-    b = await createAthleteUserAndToken(firebase);
+    a = await testApp.auth.createAthlete();
+    b = await testApp.auth.createAthlete();
 
-    institution = await createInstitution(institutionService, {
+    institution = await db.institutions.createTest({
       athletes: [global.athlete, a, b],
     });
 
-    group = await createGroupWithCycles(groupService, institution);
+    group = await db.groups.createTest(institution);
     trainingId = await db.trainings.save(
       generateTrainingStub({
         ownerId: global.trainer.uid,
@@ -184,15 +165,8 @@ describe('Get prescribed training (e2e)', () => {
   });
 
   afterAll(async () => {
-    await Promise.all([
-      db.exercises.clear(),
-      db.trainings.clear(),
-      deleteDoc(firebase, 'GROUP', group.id),
-      deleteDoc(firebase, 'INSTITUTION', institution.id),
-      deleteCollection(firebase, 'COMPONENT'),
-      deleteUsers(firebase, [a, b]),
-    ]);
-
+    await db.clear();
+    await testApp.auth.deleteUsers([a.uid, b.uid]);
     await testApp.close();
   });
 
@@ -348,8 +322,6 @@ describe('Get prescribed training (e2e)', () => {
   });
 
   it('should populate weight for exercises with bodyweight param', async () => {
-    db.checkpoint();
-
     const wellnessRefToday = { uid: global.athlete.uid, date: new Date() };
     const wellnessRefYesterday = {
       ...wellnessRefToday,
@@ -463,7 +435,10 @@ describe('Get prescribed training (e2e)', () => {
       expect(set.loadKg).toBe(55.5);
     });
 
-    await db.checkpointRestore();
+    // clear up
+    await db.trainings.delete(trainingId);
+    await db.wellness.delete(wellnessRefToday);
+    await db.wellness.delete(wellnessRefYesterday);
   });
 
   it('should not call "getLatestWellnessByUser" if no bodyweight param', async () => {
@@ -503,8 +478,6 @@ describe('Get prescribed training (e2e)', () => {
   });
 
   it('should populate weight for exercises with rep max param', async () => {
-    db.checkpoint();
-
     // create another (different) training before with workloads completed
     await db.trainings.save(
       generateTrainingStub({
@@ -654,6 +627,7 @@ describe('Get prescribed training (e2e)', () => {
       expect(set.loadKg).toBe(20); // no data, so default value of 20 kg is used
     });
 
-    await db.checkpointRestore();
+    // clear up
+    await db.trainings.delete(trainingId);
   });
 });

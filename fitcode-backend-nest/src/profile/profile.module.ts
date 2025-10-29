@@ -1,9 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 
-import { ChangeLogModule } from '@src/change-log/change-log.module';
 import { InstitutionModule } from '@src/institution/institution.module';
 
-import { Wellness } from './entity/wellness.entity';
 import { ProfileController } from './profile.controller';
 import { ProfileRepository } from './repository/profile.repository';
 import { WellnessRepository } from './repository/wellness.repository';
@@ -12,7 +10,7 @@ import { WellnessService } from './service/wellness.service';
 
 @Global()
 @Module({
-  imports: [InstitutionModule, ChangeLogModule.forEntity(Wellness)],
+  imports: [InstitutionModule],
   controllers: [ProfileController],
   providers: [
     ProfileRepository,

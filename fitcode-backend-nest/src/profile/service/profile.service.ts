@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ConflictException,
   forwardRef,
   Inject,
   Injectable,
@@ -17,6 +16,7 @@ import { BatchOperation, BatchWriteOperation } from '@src/common/type/orm.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { Institution } from '@src/institution/entity/institution.entity';
+import { InstitutionMember } from '@src/institution/entity/institution-member.entity';
 import { InstitutionService } from '@src/institution/service/institution.service';
 
 import { ImportProfileDto } from '../dto/import-profiles.dto';
@@ -39,6 +39,38 @@ export class ProfileService implements Permission<Profile, Institution> {
     return await this.repository.findOneOrCreate(uid);
   }
 
+  async findAll(user: User): Promise<Profile[]> {
+    // if manager or trainer, return all profiles for institution they belong to, for athlete only his profile
+    switch (user.customClaims?.role[0]) {
+      case UserRole.ADMIN:
+        return [];
+      case UserRole.MANAGER: {
+        const institution = await this.institutionService.findByOwnerId(
+          user.uid,
+        );
+
+        if (!institution) return [];
+        return await this.repository.findAllByInstitution(institution);
+      }
+      case UserRole.TRAINER: {
+        const institutions = await this.institutionService.findAll(user);
+        const profiles: Profile[] = [];
+
+        for (const institution of institutions) {
+          const institutionProfiles =
+            await this.repository.findAllByInstitution(institution);
+          profiles.push(...institutionProfiles);
+        }
+
+        return profiles;
+      }
+      case UserRole.ATHLETE:
+        return [await this.findOneById(user.uid)];
+      default:
+        throw new BadRequestException('User has no role assigned');
+    }
+  }
+
   async findAllByInstitution(institution: Institution) {
     return await this.repository.findAllByInstitution(institution);
   }
@@ -51,8 +83,6 @@ export class ProfileService implements Permission<Profile, Institution> {
       throw new BadRequestException('User does not own any institution');
 
     if (input.length === 0) return { successful: [], failed: [] };
-    if (input.length > 100)
-      throw new ConflictException('Cannot import more than 100 users at once');
 
     // roles can be only trainer and athlete
     input.forEach((user) => {
@@ -62,15 +92,14 @@ export class ProfileService implements Permission<Profile, Institution> {
 
     // only keep profiles that don’t exist yet
     const profilesToImport = input.map((u) => ({ ...u, uid: v4() }));
-    const result = await this.authService.importUsers(profilesToImport);
+    const result = await this.authService.importUsers(user, profilesToImport);
 
-    const successfulUsers = profilesToImport.filter(
-      (_, i) => !result.errors.find((e) => e.index === i),
-    );
-
-    const failedUsers = result.errors.map((e) => ({
-      email: profilesToImport[e.index].email,
-      reason: e.error.message,
+    const successfulUsers = result.successful.map((u) => ({
+      uid: u.uid,
+      email: u.email,
+      displayName: u.displayName,
+      photoURL: u.photoURL,
+      role: profilesToImport.find((p) => p.email === u.email)!.role,
     }));
 
     // create profiles for successful imports
@@ -78,22 +107,30 @@ export class ProfileService implements Permission<Profile, Institution> {
       (profile) => ({
         ref: this.repository.doc(profile.uid),
         operation: 'set',
-        data: this.firebase.buildCreateQuery<Profile>(profile),
+        data: this.firebase.buildCreateQuery<Profile>({
+          uid: profile.uid,
+          email: profile.email!,
+        }),
       }),
     );
 
     // add users to institution
-    const institutionOperations: BatchWriteOperation<Institution>[] =
-      successfulUsers.map(({ uid }) =>
-        this.institutionService.buildAddAthleteOperation(institution.id, uid),
-      );
+    const institutionOperations: BatchWriteOperation<InstitutionMember>[] =
+      successfulUsers
+        .map(({ uid, role }) =>
+          this.institutionService.buildAddMembersOperation(
+            { institutionId: institution.id },
+            [{ id: uid, role }],
+          ),
+        )
+        .flat();
 
     await this.firebase.paginateBatches([
       ...(profileOperations.filter(Boolean) as BatchOperation<unknown>[]),
       ...(institutionOperations as BatchOperation<unknown>[]),
     ]);
 
-    return { successful: successfulUsers, failed: failedUsers };
+    return result;
   }
 
   @LogMethod()

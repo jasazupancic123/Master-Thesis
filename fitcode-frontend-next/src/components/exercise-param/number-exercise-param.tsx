@@ -7,6 +7,7 @@ import {
 } from '../trainer-group-day-view/style/exercise-card-set-attribute.style';
 import type { Attribute } from '@/core/attribute/type/attribute.type';
 import { core } from '@/core/core.service';
+import { SETS } from '@/core/exercise/constant/exercise-param.constant';
 import type { ExerciseParamField } from '@/core/training/type/exercise-set.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { SetState } from '@/lib/common/type/state.type';
@@ -51,7 +52,10 @@ export function NumberExerciseParam(props: Props) {
   const { setDetectedChanges } =
     athleteView || !group ? { setDetectedChanges: undefined } : group;
 
-  const exerciseParam = core.exercise.param.get(selected as ExerciseParamField);
+  const exerciseParam =
+    selected === 'sets'
+      ? SETS
+      : core.exercise.param.get(selected as ExerciseParamField);
 
   if (!exerciseParam) return null;
   const { min, max } = exerciseParam;
