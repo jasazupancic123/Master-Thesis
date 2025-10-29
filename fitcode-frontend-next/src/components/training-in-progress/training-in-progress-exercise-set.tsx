@@ -90,7 +90,7 @@ export default function TrainingInProgressExerciseSet(props: Props) {
           >
             <NumberExerciseParam
               options={[SETS]}
-              selected={SETS.field}
+              selected={SETS.field as string}
               value={set.setNumber}
               exercise={exercise}
               showOptions={showOptions}
@@ -113,16 +113,16 @@ export default function TrainingInProgressExerciseSet(props: Props) {
               />
             )}
 
-            {exercise.sets[index]?.loadKg !== undefined && (
+            {exercise.sets[index]?.[KG.field] !== undefined && (
               <NumberExerciseParam
                 options={[KG]}
                 selected={KG.field} // always in kg
-                value={exercise.sets[index]?.loadKg || 0}
+                value={exercise.sets[index]?.[KG.field] || 0}
                 exercise={exercise}
                 showOptions={showOptions}
                 disableOptions
                 onInputChange={(value) => {
-                  exercise.sets[index].loadKg = +value;
+                  exercise.sets[index][KG.field] = +value as never;
                   updateTrainingInProgress(exercise, supersetIndex || 0);
                 }}
               />
@@ -132,26 +132,26 @@ export default function TrainingInProgressExerciseSet(props: Props) {
               effType === 'tempo' ? (
                 <TempoExerciseParam
                   options={effOptions}
-                  selected="tempo"
-                  value={exercise.sets[index]?.tempo || ''}
+                  selected={effType}
+                  value={exercise.sets[index]?.[effType] || ''}
                   exercise={exercise}
                   showOptions={showOptions}
                   disableOptions
                   onInputChange={(value) => {
-                    exercise.sets[index].tempo = value.toString();
+                    exercise.sets[index][effType] = value.toString();
                     updateTrainingInProgress(exercise, supersetIndex || 0);
                   }}
                 />
               ) : (
                 <NumberExerciseParam
                   options={effOptions}
-                  selected="eff"
-                  value={exercise.sets[index]?.eff || 0}
+                  selected={effType}
+                  value={exercise.sets[index]?.[effType] || 0}
                   showOptions
                   exercise={exercise}
                   disableOptions
                   onInputChange={(value) => {
-                    exercise.sets[index].eff = +value;
+                    exercise.sets[index][effType] = +value;
                     updateTrainingInProgress(exercise, supersetIndex || 0);
                   }}
                 />
@@ -183,7 +183,7 @@ export default function TrainingInProgressExerciseSet(props: Props) {
             >
               <NumberExerciseParam
                 options={[SETS]}
-                selected={SETS.field}
+                selected={SETS.field as string}
                 value={set.setNumber}
                 exercise={exercise}
                 showOptions={false}
@@ -196,75 +196,94 @@ export default function TrainingInProgressExerciseSet(props: Props) {
                   options={volOptions}
                   selected={volType}
                   value={
-                    volType === 'reps'
-                      ? exercise.sets[index]?.repsR || 0
-                      : exercise.sets[index]?.[volType] || 0 // dist and time are the same for both sides
+                    exercise.sets[index]?.[
+                      core.exercise.param.pairs[volType]
+                    ] || 0
                   }
                   exercise={exercise}
                   showOptions={false}
                   onInputChange={(value) => {
-                    const field = volType === 'reps' ? 'repsR' : volType;
-                    exercise.sets[index][field] = +value;
+                    const field = core.exercise.param.pairs[volType];
+                    exercise.sets[index][field] = +value as never;
                     updateTrainingInProgress(exercise, supersetIndex || 0);
                   }}
                 />
               )}
 
-              {exercise.sets[index]?.loadKg !== undefined && (
+              {exercise.sets[index]?.[KG.field] !== undefined && (
                 <NumberExerciseParam
                   options={[KG]}
                   selected={KG.field}
-                  value={exercise.sets[index]?.loadKgR || 0}
+                  value={
+                    exercise.sets[index]?.[
+                      core.exercise.param.pairs[KG.field]
+                    ] || 0
+                  }
                   exercise={exercise}
                   showOptions={false}
                   disableOptions
                   onInputChange={(value) => {
-                    exercise.sets[index].loadKgR = +value;
+                    const field = core.exercise.param.pairs[KG.field];
+                    exercise.sets[index][field] = +value as never;
                     updateTrainingInProgress(exercise, supersetIndex || 0);
                   }}
                 />
               )}
 
-              {effOptions.length > 0 ? (
-                effType === 'tempo' ? (
+              {effOptions.length > 0 &&
+                (effType === 'tempo' ? (
                   <TempoExerciseParam
                     options={effOptions}
-                    selected="tempo"
-                    value={exercise.sets[index]?.tempoR || ''}
+                    selected={effType}
+                    value={
+                      exercise.sets[index]?.[
+                        core.exercise.param.pairs[effType]
+                      ] || ''
+                    }
                     exercise={exercise}
                     showOptions={false}
                     disableOptions
                     onInputChange={(value) => {
-                      exercise.sets[index].tempoR = value.toString();
+                      const field = core.exercise.param.pairs[effType];
+                      exercise.sets[index][field] = value.toString() as never;
                       updateTrainingInProgress(exercise, supersetIndex || 0);
                     }}
                   />
                 ) : (
                   <NumberExerciseParam
                     options={effOptions}
-                    selected="eff"
-                    value={exercise.sets[0]?.eff || 0}
+                    selected={effType!}
+                    value={
+                      exercise.sets[index]?.[
+                        core.exercise.param.pairs[effType!]
+                      ] || 0
+                    }
                     showOptions
                     exercise={exercise}
                     disableOptions
                     onInputChange={(value) => {
-                      exercise.sets[index].eff = +value;
+                      const field = core.exercise.param.pairs[effType!];
+                      exercise.sets[index][field] = +value as never;
                       updateTrainingInProgress(exercise, supersetIndex || 0);
                     }}
                   />
-                )
-              ) : null}
+                ))}
 
               {recType && recOptions.length > 0 && (
                 <NumberExerciseParam
                   options={recOptions}
                   selected={recType}
-                  value={exercise.sets[index]?.[recType] as number}
+                  value={
+                    exercise.sets[index]?.[
+                      core.exercise.param.pairs[recType]
+                    ] as number
+                  }
                   exercise={exercise}
                   showOptions={false}
                   disableOptions
                   onInputChange={(value) => {
-                    exercise.sets[index][recType] = +value;
+                    const field = core.exercise.param.pairs[recType];
+                    exercise.sets[index][field] = +value as never;
                     updateTrainingInProgress(exercise, supersetIndex || 0);
                   }}
                 />

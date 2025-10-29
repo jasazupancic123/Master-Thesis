@@ -80,7 +80,6 @@ export function TrainerDayViewProvider(props: Props) {
   const [progress, setProgress] = useState<UserProgress[]>([]);
   const [component, setComponent] = useState<TrainingComponent | undefined>();
   const [supersets, setSupersets] = useState<Superset[]>([]);
-  const [members, setMembers] = useState<Profile[]>([]);
   const [wellness, setWellness] = useState<WellnessZScore[]>([]);
   const [loading, setLoading] = useState(false);
   const isSettingAthleteWorkloads = useRef(false);
@@ -103,35 +102,24 @@ export function TrainerDayViewProvider(props: Props) {
     const cycleInDate = group.cycles.find((c) =>
       lib.common.date.isBetween(day.date, c.from, c.to)
     );
+
     if (cycleInDate) setCycle(cycleInDate);
   }, [day]);
 
+  // Update supersets when component or subgroup changes
   useEffect(() => {
     if (selectedSubgroup) setSupersets(selectedSubgroup.supersets);
-    else if (component) {
-      setSupersets(component.supersets);
-    } else setSupersets([]);
+    else if (component) setSupersets(component.supersets);
+    else setSupersets([]);
   }, [selectedSubgroup, component]);
 
+  // Keep track of previous selected athlete
   useEffect(() => {
-    if (selectedAthlete) {
-      previousSelectedAthlete.current = selectedAthlete;
-    }
+    if (selectedAthlete) previousSelectedAthlete.current = selectedAthlete;
   }, [selectedAthlete]);
 
-  /**
-   * Group members
-   */
+  // Fetch group members and wellness data
   useEffect(() => {
-    async function fetchMembers() {
-      handleApiRequest(
-        router,
-        () => controller.institution.findMembers(group.institutionId),
-        (members) => setMembers(members),
-        undefined
-      );
-    }
-
     async function fetchWellness() {
       handleApiRequest(
         router,
@@ -143,7 +131,6 @@ export function TrainerDayViewProvider(props: Props) {
       );
     }
 
-    fetchMembers().then();
     fetchWellness().then();
   }, [group.institutionId]);
 
@@ -212,16 +199,11 @@ export function TrainerDayViewProvider(props: Props) {
     const prevState = {
       training: structuredClone(training),
       trainings: structuredClone(trainings),
-      members: [...members],
     };
 
     await lib.common.generic.optimisticUpdate(
       () => {
         // first update member locally
-        setMembers((prev) =>
-          prev.find((m) => m.uid === member.uid) ? prev : [...prev, member]
-        );
-
         setTraining((prev) => ({
           ...prev!,
           membersIds: [...prev!.membersIds, member.uid],
@@ -237,7 +219,6 @@ export function TrainerDayViewProvider(props: Props) {
       },
       (snapshot) => {
         toast.error('Failed to add member');
-        setMembers(snapshot.members);
         setTraining(snapshot.training);
         setTrainings(snapshot.trainings);
       },
@@ -323,6 +304,7 @@ export function TrainerDayViewProvider(props: Props) {
     const foundComponent = component?.id
       ? training.components.find((c) => c.id === component.id)
       : undefined;
+
     const foundSubgroup =
       foundComponent?.subgroups.find((sg) => sg.id === selectedSubgroup?.id) ||
       null;
@@ -331,6 +313,10 @@ export function TrainerDayViewProvider(props: Props) {
     setSelectedSubgroup(foundSubgroup);
     setTraining(training);
     setLoading(false);
+
+    // put training id in url, but don't push to history
+    const url = `/groups/${group.id}/training/${training.id}`;
+    window.history.replaceState(null, '', url);
   }, [selectedPeriod]);
 
   useEffect(() => {
@@ -366,14 +352,11 @@ export function TrainerDayViewProvider(props: Props) {
     const prevState = {
       training: structuredClone(training),
       trainings: structuredClone(trainings),
-      members: [...members],
     };
 
     await lib.common.generic.optimisticUpdate(
       () => {
         // first update member locally
-        setMembers((prev) => prev.filter((m) => m.uid !== user.uid));
-
         setTraining((prev) => ({
           ...prev!,
           membersIds: prev!.membersIds.filter((id) => id !== user.uid),
@@ -398,7 +381,6 @@ export function TrainerDayViewProvider(props: Props) {
       },
       (snapshot) => {
         toast.error('Failed to remove member');
-        setMembers(snapshot.members);
         setTraining(snapshot.training);
         setTrainings(snapshot.trainings);
       },
@@ -514,7 +496,6 @@ export function TrainerDayViewProvider(props: Props) {
     setSelectedExerciseIds,
     supersets,
     setSupersets,
-    members,
     selectedSubgroup,
     setSelectedSubgroup,
     selectedAthlete,

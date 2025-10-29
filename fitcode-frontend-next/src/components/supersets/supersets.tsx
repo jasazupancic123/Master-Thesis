@@ -317,7 +317,7 @@ export default function Supersets({
               const exercise = exercises.find((e) => e.id === id)!;
               return {
                 id: exercise.id,
-                params: [],
+                params: exercise.params,
                 exercise,
                 sets: [
                   core.training.set.stub(1, exercise),

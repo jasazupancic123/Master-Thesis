@@ -32,21 +32,18 @@ export default function GroupInitializer({
       if (!institution) return notFound();
 
       const trainings = await controller.training.findAll({ groupId });
-
-      const mappedTrainings = trainings.map((t) => {
+      const mapped = trainings.map((t) =>
         TrainingService.mapData(t, {
           components,
           exercises,
           methods,
-        });
-
-        return t;
-      });
+        })
+      );
 
       const context: GroupIdPageProps = {
         group,
         institution,
-        trainings: mappedTrainings,
+        trainings: mapped,
       };
 
       setState(context);
