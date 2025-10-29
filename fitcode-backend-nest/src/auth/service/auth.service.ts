@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ConflictException,
   ForbiddenException,
   forwardRef,
   Inject,
@@ -201,7 +200,8 @@ export class AuthService {
 
       try {
         const created = await this.registerUser(user, input[i]);
-        result.push({ ...created, customClaims: { role: [input[i].role] } });
+        if (created)
+          result.push({ ...created, customClaims: { role: [input[i].role] } });
       } catch (e) {
         row.errors.push({ field: input[i].email, message: e.message });
       }
@@ -213,7 +213,10 @@ export class AuthService {
   }
 
   @LogMethod()
-  async registerUser(user: User, input: CreateUserDto) {
+  async registerUser(
+    user: User,
+    input: CreateUserDto,
+  ): Promise<AuthUser | null> {
     // admin can register managers, and managers can register trainers and athletes
     let institution: Institution | null = null;
     if (this.firebase.isAdmin(user)) {
@@ -234,43 +237,37 @@ export class AuthService {
     const customClaims: CustomClaims = { role: [input.role] };
 
     try {
-      const user = await this.firebase.auth.createUser(input);
+      const user = await this.firebase.auth.createUser({
+        email: input.email,
+        password: input.password,
+        displayName: input.displayName,
+        photoURL: input.photoURL,
+      });
+
       await this.firebase.auth.setCustomUserClaims(user.uid, customClaims);
       created = { ...user, customClaims } as AuthUser;
     } catch (e) {
       // if user already exists, fetch it
       if (e.code === 'auth/email-already-exists') {
-        created = await this.findOneBy('email', input.email);
-        await this.firebase.auth.setCustomUserClaims(created.uid, customClaims);
+        const found = await this.findOneBy('email', input.email);
+
+        // if user is already in other institution, throw error
+        const userInstitutions = await this.institutionService.findAll(found);
+        if (userInstitutions.length > 0)
+          throw new BadRequestException(
+            'User already belongs to an institution',
+          );
+
+        created = found as AuthUser;
       } else throw e;
     }
 
-    if (!created) throw new BadRequestException('User could not be created');
-
-    // add user to institution
+    // if institution is defined, add user to institution
     if (institution)
-      switch (input.role) {
-        case UserRole.TRAINER:
-          if (institution.trainerIds.includes(created.uid))
-            throw new ConflictException('Trainer already in institution');
-
-          await this.institutionService.addMember(
-            { role: input.role },
-            { institutionId: institution.id, uid: created.uid },
-          );
-          break;
-        case UserRole.ATHLETE:
-          if (institution.athleteIds.includes(created.uid))
-            throw new ConflictException('Athlete already in institution');
-
-          await this.institutionService.addMember(
-            { role: input.role },
-            { institutionId: institution.id, uid: created.uid },
-          );
-          break;
-        default:
-          throw new BadRequestException('Invalid role for institution user');
-      }
+      await this.institutionService.addMember(
+        { role: input.role },
+        { institutionId: institution.id, uid: created.uid },
+      );
 
     return created;
   }
