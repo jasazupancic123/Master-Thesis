@@ -9,7 +9,8 @@ import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 
 export default function useExerciseFormFilters(
   component: TrainingComponent,
-  componentExercises: Exercise[]
+  componentExercises: Exercise[],
+  selectedComponentsIds: string[]
 ) {
   const { components } = useMain();
 
@@ -33,8 +34,11 @@ export default function useExerciseFormFilters(
    */
   useEffect(() => {
     const filter: Partial<Exercise> = {
-      ...(component?.id && { componentIds: [component.id] }),
+      // ...(component?.id && { componentIds: [component.id] }),
       ...(search && { name: search }),
+      ...(selectedComponentsIds.length && {
+        componentIds: selectedComponentsIds,
+      }),
       ...filters,
     };
 
@@ -56,6 +60,7 @@ export default function useExerciseFormFilters(
     pagination.page,
     pagination.pageSize,
     pagination.pages,
+    selectedComponentsIds,
   ]);
 
   return {
