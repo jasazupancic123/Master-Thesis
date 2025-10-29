@@ -3,6 +3,7 @@ interface TreeOptions<T> {
   parentIdPropertyName: keyof T;
   childrenPropertyName: keyof T;
   rootId?: string | null;
+  getAllChildren?: boolean;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -15,6 +16,7 @@ export class TreeUtil {
       parentIdPropertyName,
       childrenPropertyName,
       rootId = null,
+      getAllChildren,
     } = options;
 
     const map = new Map<unknown, T & TreeItem>();
@@ -33,6 +35,23 @@ export class TreeUtil {
       else {
         const parent = map.get(parentId);
         if (parent) parent[childrenPropertyName].push(map.get(itemId));
+      }
+    }
+
+    // Also returns all children nodes of roots
+    if (getAllChildren) {
+      const nodesToEval = [...roots];
+
+      while (nodesToEval.length) {
+        const currentNode = nodesToEval.shift();
+
+        if (!currentNode) continue;
+
+        const childNodes = currentNode[childrenPropertyName] as T[];
+
+        nodesToEval.push(...childNodes);
+
+        if (!roots.includes(currentNode)) roots.push(currentNode);
       }
     }
 

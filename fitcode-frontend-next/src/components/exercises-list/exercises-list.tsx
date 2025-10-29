@@ -45,7 +45,7 @@ export default function ExercisesList({
       flexWrap="wrap"
       justifyContent="center"
       gap={2}
-      mb={10}
+      mb={addExerciseForm ? 2 : 10}
       maxWidth={
         !addExerciseForm
           ? undefined

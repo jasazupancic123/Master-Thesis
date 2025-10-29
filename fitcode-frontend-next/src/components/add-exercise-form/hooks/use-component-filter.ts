@@ -1,65 +1,129 @@
 import { useEffect, useState } from 'react';
 
-import type { Component } from '@/core/component/type/component.type';
+import type {
+  Component,
+  TreeComponent,
+} from '@/core/component/type/component.type';
 import { useMain } from '@/store/main.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
+import { lib } from '@/lib';
 
 export default function useComponentFilter() {
   const { components } = useMain();
   const { component } = useTrainerDayView();
 
-  const [filterComponents, setFilterComponents] = useState<Component[]>([]);
+  const [selectedComponent, setSelectedComponent] = useState<Component | null>(
+    component?.component ? component.component : null
+  );
+
+  const [filterComponents, setFilterComponents] = useState<TreeComponent[]>([]);
+  const [leafComponents, setLeafComponents] = useState<Component[]>([]);
 
   const [selectedComponentsIds, setSelectedComponentsIds] = useState<string[]>(
     []
   );
+  const [selectedRootComponentId, setSelectedRootComponentId] = useState<
+    string | null
+  >(null); // which one is clicked, used for leaf menu
 
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [anchorElRoot, setAnchorElRoot] = useState<null | HTMLElement>(null);
+  const [anchorElLeaf, setAnchorElLeaf] = useState<null | HTMLElement>(null);
 
-  const open = Boolean(anchorEl);
-  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
+  const openLeafMenu = Boolean(anchorElLeaf);
+
+  const handleClickLeaf = (
+    event: React.MouseEvent<HTMLElement>,
+    componentId: string
+  ) => {
+    setAnchorElLeaf(event.currentTarget);
+    setSelectedRootComponentId(componentId);
   };
-  const handleClose = (): void => {
-    setAnchorEl(null);
+
+  const handleCloseLeaf = (): void => {
+    setAnchorElLeaf(null);
+    setSelectedRootComponentId(null);
   };
 
   useEffect(() => {
-    if (!component) return;
+    if (!selectedComponent) return;
 
-    const rootComponents = components.filter(
-      (c) => c.parentId === component.id
-    );
+    const componentTree = lib.common.tree.fromArray(components, {
+      rootId: selectedComponent.id,
+      idPropertyName: 'id',
+      parentIdPropertyName: 'parentId',
+      childrenPropertyName: 'children',
+    }) as unknown as TreeComponent[];
 
-    const finalComponents: Component[] = [];
-    const componentsToEval = [...rootComponents];
+    setFilterComponents(componentTree);
+  }, [component, selectedComponent]);
 
-    while (componentsToEval.length) {
-      const currentComponent = componentsToEval.shift();
+  useEffect(() => {
+    if (!selectedRootComponentId) return;
 
-      if (!currentComponent) continue;
+    const componentTree = lib.common.tree.fromArray(components, {
+      rootId: selectedRootComponentId,
+      idPropertyName: 'id',
+      parentIdPropertyName: 'parentId',
+      childrenPropertyName: 'children',
+    });
 
-      const childComponents = components.filter(
-        (c) => c.parentId === currentComponent.id
-      );
+    setLeafComponents(componentTree);
+  }, [selectedRootComponentId]);
 
-      if (childComponents.length) {
-        componentsToEval.push(...childComponents);
+  const onComponentsMenuItemClick = (
+    e: React.MouseEvent<HTMLElement>,
+    id: string
+  ) => {
+    const children = lib.common.tree.fromArray(components, {
+      rootId: id,
+      idPropertyName: 'id',
+      parentIdPropertyName: 'parentId',
+      childrenPropertyName: 'children',
+    });
+
+    if (selectedRootComponentId !== id) setSelectedRootComponentId(id);
+    else if (selectedRootComponentId === id) setSelectedRootComponentId(null);
+
+    if (children.length) {
+      if (children.every((c) => selectedComponentsIds.includes(c.id))) {
+        setSelectedComponentsIds((prev) =>
+          prev.filter(
+            (componentId) => !children.some((child) => child.id === componentId)
+          )
+        );
+      } else if (children.every((c) => !selectedComponentsIds.includes(c.id))) {
+        const childrenIds = children.map((c) => c.id);
+        setSelectedComponentsIds((prev) => [
+          ...prev,
+          ...childrenIds.filter((childId) => !prev.includes(childId)),
+        ]);
       }
-
-      finalComponents.push(currentComponent);
+    } else {
+      if (selectedComponentsIds.includes(id)) {
+        setSelectedComponentsIds((prev) =>
+          prev.filter((componentId) => componentId !== id)
+        );
+      } else {
+        setSelectedComponentsIds((prev) => [...prev, id]);
+      }
     }
 
-    setFilterComponents(finalComponents);
-  }, [component]);
+    handleClickLeaf(e, id);
+  };
 
   return {
+    selectedComponent,
+    setSelectedComponent,
     filterComponents,
+    leafComponents,
     selectedComponentsIds,
     setSelectedComponentsIds,
-    anchorEl,
-    open,
-    handleClick,
-    handleClose,
+    selectedRootComponentId,
+    anchorElRoot,
+    anchorElLeaf,
+    openLeafMenu,
+    handleClickLeaf,
+    handleCloseLeaf,
+    onComponentsMenuItemClick,
   };
 }

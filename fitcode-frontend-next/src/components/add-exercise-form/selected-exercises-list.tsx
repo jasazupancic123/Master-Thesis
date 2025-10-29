@@ -6,6 +6,7 @@ import { theme } from '@/app/style';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useMain } from '@/store/main.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 interface Props {
   newAddedExercisesIds: string[];
@@ -14,6 +15,8 @@ interface Props {
 }
 
 export default function SelectedExercisesList(props: Props) {
+  const screenSize = useScreenSize();
+
   const { exercises } = useMain();
 
   const {
@@ -37,7 +40,7 @@ export default function SelectedExercisesList(props: Props) {
       width="100%"
       display="flex"
       flexWrap="wrap"
-      justifyContent="flex-start"
+      justifyContent={screenSize.isMobile ? 'center' : 'flex-start'}
       gap={1}
       mb={1}
     >
@@ -50,8 +53,8 @@ export default function SelectedExercisesList(props: Props) {
             py: 0.5,
             px: 1,
             borderRadius: 4,
-            backgroundColor: theme.palette.primary.main,
-            color: theme.palette.text.secondary,
+            border: `1px solid ${theme.palette.primary.main}`,
+            // backgroundColor: theme.palette.primary.main,
             fontSize: 12,
             fontWeight: 600,
           }}
@@ -73,8 +76,9 @@ export default function SelectedExercisesList(props: Props) {
           >
             <CloseOutlined
               sx={{
-                color: theme.palette.text.secondary,
+                color: theme.palette.text.primary,
                 fontSize: 16,
+                mb: 0.1,
               }}
             />
           </IconButton>

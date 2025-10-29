@@ -34,7 +34,7 @@ export default function useExerciseFormFilters(
    */
   useEffect(() => {
     const filter: Partial<Exercise> = {
-      ...(component?.id && { componentIds: [component.id] }),
+      // ...(component?.id && { componentIds: [component.id] }),
       ...(search && { name: search }),
       ...(selectedComponentsIds.length && {
         componentIds: selectedComponentsIds,
