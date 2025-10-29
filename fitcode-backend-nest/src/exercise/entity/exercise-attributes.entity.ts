@@ -2,7 +2,6 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import { IsIn, IsString, ValidateNested } from 'class-validator';
 
-import { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
 import { IsValidSelectPath } from '@src/common/decorator/is-valid-select-path.decorator';
 
 import { BodyRegionValues } from '../constant/body-region.constant';
@@ -14,6 +13,7 @@ import { LocationValues } from '../constant/location.constant';
 import { MovementDirectionValues } from '../constant/movement-direction.constant';
 import { PatternValues } from '../constant/patterns.constant';
 import { PrescriptionTypeValues } from '../constant/prescription-type.constant';
+import { ExerciseMuscleValue } from './exercise-muscle-value.entity';
 
 export class ExerciseAttributes {
   @IsString({ each: true })
@@ -29,10 +29,10 @@ export class ExerciseAttributes {
   equipment: string[];
 
   @ValidateNested({ each: true })
-  @Type(() => AttributeValue)
-  @ApiProperty({ type: () => AttributeValue, isArray: true })
+  @Type(() => ExerciseMuscleValue)
+  @ApiProperty({ type: () => ExerciseMuscleValue, isArray: true })
   @Expose()
-  muscleValues: AttributeValue[];
+  muscleValues: ExerciseMuscleValue[];
 
   @IsIn(PrescriptionTypeValues, { each: true })
   @ApiProperty({ enum: PrescriptionTypeValues, isArray: true })

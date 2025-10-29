@@ -3,6 +3,7 @@ interface TreeOptions<T> {
   parentIdPropertyName: keyof T;
   childrenPropertyName: keyof T;
   rootId?: string | null;
+  getAllChildren?: boolean;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -15,6 +16,7 @@ export class TreeUtil {
       parentIdPropertyName,
       childrenPropertyName,
       rootId = null,
+      getAllChildren,
     } = options;
 
     const map = new Map<unknown, T & TreeItem>();
@@ -36,7 +38,44 @@ export class TreeUtil {
       }
     }
 
+    // Also returns all children nodes of roots
+    if (getAllChildren) {
+      const nodesToEval = [...roots];
+
+      while (nodesToEval.length) {
+        const currentNode = nodesToEval.shift();
+
+        if (!currentNode) continue;
+
+        const childNodes = currentNode[childrenPropertyName] as T[];
+
+        if (childNodes) nodesToEval.push(...childNodes);
+
+        if (!roots.includes(currentNode)) roots.push(currentNode);
+      }
+    }
+
     return roots;
+  }
+
+  toArray<T extends TreeItem>(roots: T[], childrenPropertyName: keyof T): T[] {
+    const result: T[] = [];
+
+    const nodesToEval = [...roots];
+
+    while (nodesToEval.length) {
+      const currentNode = nodesToEval.shift();
+
+      if (!currentNode) continue;
+
+      result.push(currentNode);
+
+      const childNodes = currentNode[childrenPropertyName] as T[];
+
+      if (childNodes) nodesToEval.push(...childNodes);
+    }
+
+    return result;
   }
 
   forEach<T extends TreeItem, Result = unknown>(
@@ -86,6 +125,94 @@ export class TreeUtil {
   }
 
   isLeaf<T extends TreeItem>(item: T, childrenPropertyName: keyof T): boolean {
-    return item[childrenPropertyName].length === 0;
+    return (
+      !item[childrenPropertyName] || item[childrenPropertyName].length === 0
+    );
+  }
+
+  /**
+   * Returns all leaf ids in the tree
+   */
+  computeLeafIds<T extends TreeItem>(
+    items: T[],
+    idPropertyName: keyof T,
+    childrenPropertyName: keyof T
+  ): string[] {
+    const leafes: string[] = [];
+
+    const nodesToEval = [...items];
+
+    while (nodesToEval.length) {
+      const currentNode = nodesToEval.shift();
+
+      if (!currentNode) continue;
+
+      const id = currentNode[idPropertyName];
+
+      if (!id) continue;
+
+      if (this.isLeaf(currentNode, childrenPropertyName)) leafes.push(id);
+      else {
+        const childNodes = currentNode[childrenPropertyName] as T[];
+
+        if (childNodes) nodesToEval.push(...childNodes);
+      }
+    }
+
+    return leafes;
+  }
+
+  /**
+   * Returns all leaf nodes in the tree
+   */
+  computeLeafes<T extends TreeItem>(
+    items: T[],
+    childrenPropertyName: keyof T
+  ): T[] {
+    const leafes: T[] = [];
+
+    const nodesToEval = [...items];
+
+    while (nodesToEval.length) {
+      const currentNode = nodesToEval.shift();
+
+      if (!currentNode) continue;
+
+      if (this.isLeaf(currentNode, childrenPropertyName))
+        leafes.push(currentNode);
+      else {
+        const childNodes = currentNode[childrenPropertyName] as T[];
+
+        if (childNodes) nodesToEval.push(...childNodes);
+      }
+    }
+
+    return leafes;
+  }
+
+  /**
+   * Returns all muscles who have children array
+   */
+  computeParents<T extends TreeItem>(
+    items: T[],
+    childrenPropertyName: keyof T
+  ): T[] {
+    const itemsToEval: T[] = [...items];
+    const parents: T[] = [];
+
+    while (itemsToEval.length) {
+      const item = itemsToEval.shift();
+
+      if (!item) continue;
+
+      const children = item[childrenPropertyName] as T[];
+
+      if (children && Array.isArray(children) && children.length) {
+        parents.push(item);
+        itemsToEval.push(...children);
+      }
+    }
+
+    return parents;
   }
 }
