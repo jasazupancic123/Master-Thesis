@@ -298,4 +298,42 @@ describe('Import Users (e2e)', () => {
       athleteIds: [global.athlete.uid], // reset members
     });
   });
+
+  it('should import users that already exist in auth but dont belong to institution', async () => {
+    // create user beforehand
+    const preExistingUser = await testApp.auth.createUser(
+      UserRole.ATHLETE,
+      'existing-uid',
+    );
+
+    const result = await req(global.manager.token, [
+      {
+        email: preExistingUser.email!,
+        displayName: `Existing User`,
+        password: 'password',
+        role: UserRole.ATHLETE,
+      },
+      {
+        email: `correct@mail.com`,
+        displayName: `Correct User`,
+        password: 'password',
+        role: UserRole.ATHLETE,
+      },
+    ]);
+
+    expect(result.status).toBe(201);
+    const body = result.body as {
+      successful: AuthUser[];
+      errors: ValidateRowError[];
+    };
+
+    expect(body.successful).toHaveLength(2);
+    expect(body.errors).toHaveLength(0);
+
+    // delete both users
+    await testApp.auth.deleteUsers([
+      body.successful[0].uid,
+      body.successful[1].uid,
+    ]);
+  });
 });

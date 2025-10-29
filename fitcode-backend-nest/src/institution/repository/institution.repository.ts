@@ -82,10 +82,11 @@ export class InstitutionRepository extends FirestoreRepository<Institution> {
     return await this.findAll((q) => q.where('ownerId', '==', managerId));
   }
 
-  async findAllByMember(memberId: string) {
+  async findAllByMember(memberId: string): Promise<Institution[]> {
     const institutionIds =
       await this.members.findInstitutionIdsByMember(memberId);
 
+    if (institutionIds.length === 0) return [];
     return await this.findAll((q) => q.where('id', 'in', institutionIds));
   }
 

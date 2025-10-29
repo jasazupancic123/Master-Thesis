@@ -160,5 +160,29 @@ describe('Register User (e2e)', () => {
         });
       },
     );
+
+    it('should throw error if user already belongs to some institution', async () => {
+      const existingUser = await testApp.auth.createAthlete();
+
+      // add to institution
+      const otherInstitution = await db.institutions.createTest();
+      await db.institutions.institutionMembersRepository.addMember(
+        { role: UserRole.ATHLETE },
+        { institutionId: otherInstitution.id, uid: existingUser.uid },
+      );
+
+      const input = generateCreateUserStub({
+        role: UserRole.ATHLETE,
+        email: existingUser.email,
+      });
+
+      const res = await req(global.manager.token, input);
+      expect(res.status).toBe(400);
+      expect(res.body.message).toBe('User already belongs to an institution');
+
+      // cleanup
+      await testApp.auth.deleteUsers([existingUser.uid]);
+      await db.institutions.remove(otherInstitution.id);
+    });
   });
 });

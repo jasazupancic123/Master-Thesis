@@ -239,7 +239,7 @@ export default function DashboardInstitutionPage() {
           email: r.email,
           password: r.password,
           displayName: r.displayName,
-          photoURL: undefined,
+          photoURL: r.photoURL,
           role: r.role,
           sport: r.sport || undefined,
           level: r.level || undefined,

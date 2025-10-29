@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ConflictException,
   forwardRef,
   Inject,
   Injectable,
@@ -52,8 +51,6 @@ export class ProfileService implements Permission<Profile, Institution> {
       throw new BadRequestException('User does not own any institution');
 
     if (input.length === 0) return { successful: [], failed: [] };
-    if (input.length > 100)
-      throw new ConflictException('Cannot import more than 100 users at once');
 
     // roles can be only trainer and athlete
     input.forEach((user) => {
