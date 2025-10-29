@@ -9,6 +9,7 @@ import {
 } from '@dnd-kit/core';
 import { Box, Grid2, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
+import { useEffect } from 'react';
 
 import AddExerciseForm from '../add-exercise-form/add-exercise-form';
 import TrainingExerciseCardStub from '../training-exercise-card/card-stub';
@@ -29,7 +30,6 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import { SupersetsProvider } from '@/store/supersets.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 import MyModal from '@/ui/modal';
-import { useEffect } from 'react';
 
 interface Props {
   openAddExerciseModal: boolean;

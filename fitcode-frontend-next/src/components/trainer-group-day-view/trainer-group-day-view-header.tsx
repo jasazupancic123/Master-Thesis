@@ -7,7 +7,6 @@ import React from 'react';
 import toast from 'react-hot-toast';
 
 import { DIVIDER_HEIGHT, MAX_WIDTH } from './constant/dimensions.constant';
-import { useTrainerDayViewHeaderSticky } from './hooks/use-sticky';
 import SelectedMemberReport from '@/components/selected-member/selected-member-report';
 import SelectedMemberWelness from '@/components/selected-member/selected-member-welness';
 import TrainingMembers from '@/components/training-members/training-members';

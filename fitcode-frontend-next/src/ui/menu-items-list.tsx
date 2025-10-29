@@ -1,4 +1,5 @@
-import { Menu, MenuItem, SxProps } from '@mui/material';
+import type { SxProps } from '@mui/material';
+import { Menu, MenuItem } from '@mui/material';
 
 interface Props<T> {
   anchorEl: HTMLElement | null;

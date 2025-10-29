@@ -1,6 +1,7 @@
 import { Box, MenuItem, Select, Slider, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 
+import { HEATMAP_LEVEL_LABELS } from './constant/heatmap-level-labels.constant';
 import useMuscleHeatmap from './hooks/use-muscle-heatmap';
 import MuscleChart from './muscle-chart';
 import { theme } from '@/app/style';
@@ -15,7 +16,6 @@ import type { TrainingExercise } from '@/core/training/type/training-exercise.ty
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
-import { HEATMAP_LEVEL_LABELS } from './constant/heatmap-level-labels.constant';
 
 export default function MuscleHeatmapView() {
   const screenSize = useScreenSize();

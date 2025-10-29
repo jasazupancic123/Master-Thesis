@@ -1,6 +1,7 @@
 import { KeyboardArrowDown } from '@mui/icons-material';
 import { Box, Button, Pagination, Typography } from '@mui/material';
 
+import ExerciseChips from '../exercise-chips/exercise-chips';
 import ExerciseFilter from '../exercises-list/exercise-filter';
 import ExercisesList from '../exercises-list/exercises-list';
 import type { AddExerciseFormProps } from '../trainer-group-day-view/props/props';
@@ -9,19 +10,18 @@ import useComponentFilter from './hooks/use-component-filter';
 import useExerciseFormFilters from './hooks/use-filters';
 import SelectedExercisesList from './selected-exercises-list';
 import { theme } from '@/app/style';
-import { useScreenSize } from '@/store/screen-size.provider';
-import { useTrainerDayView } from '@/store/trainer-day-view.provider';
-import { SearchBar } from '@/ui/search-bar/search-bar';
-import MenuItemsList from '@/ui/menu-items-list';
-import { Component } from '@/core/component/type/component.type';
-import { useMain } from '@/store/main.provider';
+import type { Component } from '@/core/component/type/component.type';
+import { core } from '@/core/core.service';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/core/training/const/warmup-cooldown.const';
-import { core } from '@/core/core.service';
-import ExerciseChips from '../exercise-chips/exercise-chips';
 import { ComponentIds } from '@/core/training/enum/component-ids.enum';
+import { useMain } from '@/store/main.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
+import { useTrainerDayView } from '@/store/trainer-day-view.provider';
+import MenuItemsList from '@/ui/menu-items-list';
+import { SearchBar } from '@/ui/search-bar/search-bar';
 
 export default function AddExerciseForm(props: AddExerciseFormProps) {
   const {
@@ -108,6 +108,7 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
 
           return (
             <Button
+              key={c.id}
               id="demo-customized-button"
               aria-haspopup="true"
               variant="contained"
