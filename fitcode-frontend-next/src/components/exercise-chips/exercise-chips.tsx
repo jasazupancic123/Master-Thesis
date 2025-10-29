@@ -24,6 +24,7 @@ interface Props {
     | TrainingComponent
     | (Component | TreeComponent | TrainingComponent)[];
   setSelected?: SetState<Props['selected']>;
+  dissableNoSelection?: boolean;
   small?: boolean;
   direction?: 'row' | 'column';
   itemSx?: SxProps;
@@ -41,6 +42,7 @@ export default function ExerciseChips({
   selected,
   components,
   setSelected,
+  dissableNoSelection,
   direction = 'row',
   primaryColor,
   gap,
@@ -115,7 +117,9 @@ export default function ExerciseChips({
                       setSelected([...selected, c]);
                     }
                   } else {
-                    setSelected(selected?.id === c.id ? null : c);
+                    if (selected?.id === c.id && !dissableNoSelection)
+                      setSelected(null);
+                    else setSelected(c);
                   }
                 }}
                 style={{

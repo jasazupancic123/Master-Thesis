@@ -1,10 +1,6 @@
 import { useEffect, useState } from 'react';
 
 import type { Exercise } from '@/core/exercise/type/exercise.type';
-import {
-  COOLDOWN_ID,
-  WARMUP_ID,
-} from '@/core/training/const/warmup-cooldown.const';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import { useMain } from '@/store/main.provider';
 
@@ -16,16 +12,8 @@ export default function useExerciseFormComponentExercises(
 
   useEffect(() => {
     if (!component) return;
-    if (component.id === WARMUP_ID || component.id === COOLDOWN_ID) {
-      setComponentExercises(allExercises);
-      return;
-    }
 
-    setComponentExercises(
-      allExercises.filter((exercise) =>
-        exercise.components?.some((c) => c.parents.includes(component.id))
-      )
-    );
+    setComponentExercises(allExercises);
   }, [component]);
 
   return {

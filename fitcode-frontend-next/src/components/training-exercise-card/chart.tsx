@@ -124,15 +124,7 @@ export default function TrainingExerciseChart(
           <Typography variant="subtitle1" sx={{ color: 'rgb(108, 121, 134)' }}>
             <i>
               {selectedAthlete && selectedAthlete.displayName
-                ? selectedAthlete.displayName.split(' ').length > 1
-                  ? selectedAthlete.displayName?.split(' ')[0] +
-                    ' ' +
-                    selectedAthlete.displayName
-                      ?.split(' ')
-                      .slice(1)
-                      .map((name) => name.toUpperCase())
-                      .join(' ')
-                  : selectedAthlete.displayName?.toUpperCase()
+                ? core.profile.getShortName(selectedAthlete.displayName)
                 : group.name}
             </i>
           </Typography>

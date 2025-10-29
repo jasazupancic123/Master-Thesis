@@ -86,13 +86,10 @@ export default function useTrainingExerciseCardChart({ exercise }: Props) {
       (d) => d.trainingId === training?.id
     );
 
-    console.log('todayIndex', todayIndex, newDataInRange.length);
-
     if (todayIndex === -1 || newDataInRange.length < 2) return;
 
     const percentage = (todayIndex / (newDataInRange.length - 1)) * 100;
 
-    console.log('percentage', percentage);
     setPercentageForChartBackground(percentage);
   }, [range]);
 
