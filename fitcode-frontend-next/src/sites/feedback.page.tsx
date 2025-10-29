@@ -54,7 +54,7 @@ export default function FeedbackPage() {
 
   useEffect(() => {
     if (muscleLoads.length) return; // Already set
-    const loads = core.exercise.muscle.generateEmptyLoads(1);
+    const loads = core.exercise.muscle.generateEmptyLoads(3);
     setMuscleLoads(loads);
   }, []);
 
@@ -73,7 +73,7 @@ export default function FeedbackPage() {
   });
 
   useEffect(() => {
-    paintHeatmaps(muscleLoads, true);
+    paintHeatmaps(muscleLoads, 'ALL');
   }, [muscleLoads, filter]);
 
   return (

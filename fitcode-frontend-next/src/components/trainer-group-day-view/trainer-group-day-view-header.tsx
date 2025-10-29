@@ -7,7 +7,6 @@ import React from 'react';
 import toast from 'react-hot-toast';
 
 import { DIVIDER_HEIGHT, MAX_WIDTH } from './constant/dimensions.constant';
-import { useTrainerDayViewHeaderSticky } from './hooks/use-sticky';
 import SelectedMemberReport from '@/components/selected-member/selected-member-report';
 import SelectedMemberWelness from '@/components/selected-member/selected-member-welness';
 import TrainingMembers from '@/components/training-members/training-members';
@@ -46,7 +45,8 @@ export default function GroupTrainerDayViewHeader({ days, setDays }: Props) {
     setSelectedExerciseIds,
   } = useTrainerDayView();
 
-  const { isSticky } = useTrainerDayViewHeaderSticky();
+  // const { isSticky } = useTrainerDayViewHeaderSticky();
+  const isSticky = false;
 
   interface PeriodSelectProps {
     smallDisplay?: boolean;

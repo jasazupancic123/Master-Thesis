@@ -10,6 +10,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import dayjs from 'dayjs';
 import {
   Line,
   LineChart,
@@ -31,7 +32,6 @@ import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
-import dayjs from 'dayjs';
 
 export const graphColorMap: Record<ExerciseParamField, string> = {
   loadKg: GRAPH_COLORS[0],
@@ -121,15 +121,7 @@ export default function TrainingExerciseChart(
           <Typography variant="subtitle1" sx={{ color: 'rgb(108, 121, 134)' }}>
             <i>
               {selectedAthlete && selectedAthlete.displayName
-                ? selectedAthlete.displayName.split(' ').length > 1
-                  ? selectedAthlete.displayName?.split(' ')[0] +
-                    ' ' +
-                    selectedAthlete.displayName
-                      ?.split(' ')
-                      .slice(1)
-                      .map((name) => name.toUpperCase())
-                      .join(' ')
-                  : selectedAthlete.displayName?.toUpperCase()
+                ? core.profile.getShortName(selectedAthlete.displayName)
                 : group.name}
             </i>
           </Typography>

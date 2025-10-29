@@ -162,7 +162,8 @@ export function TrainerDayViewProvider(props: Props) {
     if (!component) return;
 
     ExerciseService.paginate(
-      { componentIds: [component.id], name: search },
+      // { componentIds: [component.id], name: search },
+      { name: search },
       {
         pagination,
         components,
