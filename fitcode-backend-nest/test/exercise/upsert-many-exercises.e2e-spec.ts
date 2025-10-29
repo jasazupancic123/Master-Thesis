@@ -3,6 +3,7 @@ import type * as request from 'supertest';
 
 import type { ValidateRows } from '@src/common/type/validate.type';
 import type { Component } from '@src/component/entity/component.entity';
+import { generateComponentStub } from '@src/component/mock/component.stub';
 import { GLOBAL_EXERCISE_OWNER } from '@src/exercise/constant/global-exercise-owner.constant';
 import type { Exercise } from '@src/exercise/entity/exercise.entity';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
@@ -15,16 +16,23 @@ describe('Upsert Many Exercises (e2e)', () => {
 
   let institutionId: string;
   let component: Component;
+  let root: Component;
 
   beforeAll(async () => {
     testApp = await TestApp.init();
     db = testApp.module.get(TestDbService);
     institutionId = await db.institutions.save(generateInstitutionStub());
-    component = await db.components.create();
+
+    root = await db.components.create(
+      generateComponentStub({ params: ['reps', 'time', 'dist', 'loadKg'] }),
+    );
+
+    component = await db.components.create(
+      generateComponentStub({ parentId: root.id }),
+    );
   });
 
   afterEach(async () => db.exercises.clear());
-
   afterAll(async () => {
     await db.cleanup();
     await testApp.close();
@@ -189,6 +197,7 @@ describe('Upsert Many Exercises (e2e)', () => {
           name: 'deadlift',
           componentIds: [component.id],
           equipment: ['cardio:treadmill', 'strength:barbells:olympic'],
+          isUnilateral: true,
         }),
         generateExerciseStub({
           name: 'squat',
@@ -219,26 +228,49 @@ describe('Upsert Many Exercises (e2e)', () => {
       expect(dbExercises.length).toBe(4);
 
       const deadlift = dbExercises.find((e) => e.name === 'deadlift');
+      expect(deadlift.params).toEqual([
+        'reps',
+        'repsR',
+        'time',
+        'dist',
+        'loadKg', // additional params for unilateral exercise
+        'loadKgR',
+      ]);
       expect(deadlift?.equipment).toEqual([
         'cardio:treadmill',
         'strength:barbells:olympic',
       ]);
 
       const squat = dbExercises.find((e) => e.name === 'squat');
+      expect(squat.params).toEqual(['reps', 'time', 'dist', 'loadKg']);
       expect(squat?.equipment).toEqual([
         'cardio:elliptical-trainer',
         'strength:barbells:ez-bar',
       ]);
 
       const benchPress = dbExercises.find((e) => e.name === 'bench press');
+      expect(benchPress.params).toEqual(['reps', 'time', 'dist', 'loadKg']);
       expect(benchPress?.equipment).toEqual([
         'cardio:air-bike',
         'strength:barbells:olympic',
         'strength:dumbbells:regular',
       ]);
+
+      const disabledExercise = dbExercises.find(
+        (e) => e.name === 'disabled exercise',
+      );
+      expect(disabledExercise.disabled).toBe(true);
     });
 
     it('should update existing exercises', async () => {
+      const newRoot = await db.components.create(
+        generateComponentStub({ params: ['loadKg', 'time'] }),
+      );
+
+      const newLeaf = await db.components.create(
+        generateComponentStub({ parentId: newRoot.id }),
+      );
+
       const exercise = await db.exercises.create({
         ownerId: global.admin.uid,
         name: 'existing',
@@ -250,7 +282,7 @@ describe('Upsert Many Exercises (e2e)', () => {
       const exercises = [
         generateExerciseStub({
           name: exercise.name,
-          componentIds: [component.id],
+          componentIds: [newLeaf.id],
           equipment: ['strength:dumbbells:regular'],
           locations: ['pitch'],
         }),
