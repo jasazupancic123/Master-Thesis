@@ -47,9 +47,10 @@ export function paintHeatmaps(
             ? muscleLoad.eccentric
             : selectedLoadType === MuscleLoadType.ISOMETRIC
               ? muscleLoad.isometric
-              : muscleLoad.eccentric +
-                muscleLoad.isometric +
-                muscleLoad.concentric;
+              : (muscleLoad.eccentric +
+                  muscleLoad.isometric +
+                  muscleLoad.concentric) /
+                3;
 
     const color = getMuscleColor(totalLoad);
     if (!color) return;
