@@ -1,5 +1,8 @@
 import { MUSCLE_LOAD_LEVELS } from '@/components/muscle-map-with-tooltip/constant/muscle-load-levels';
-import { HEATMAP_EXERCISE_COUNT_COLORS } from '@/core/const/color.const';
+import {
+  HEATMAP_COLORS,
+  HEATMAP_EXERCISE_COUNT_COLORS,
+} from '@/core/const/color.const';
 import { core } from '@/core/core.service';
 import {
   HEATMAP_BACK_ID,
@@ -10,6 +13,19 @@ import { MuscleLoadType } from '@/core/exercise/enum/muscle-load-type.enum';
 import type { HeatmapLoad } from '@/core/exercise/type/heatmap-load.entity';
 import { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import { lib } from '@/lib';
+
+const getMuscleColorForAthlete = (load: number) => {
+  let color = undefined;
+
+  if (load > 0 && load <= 2) color = HEATMAP_COLORS[0];
+  else if (load > 2 && load <= 4) color = HEATMAP_COLORS[1];
+  else if (load > 4 && load <= 6) color = HEATMAP_COLORS[2];
+  else if (load > 6 && load <= 8) color = HEATMAP_COLORS[3];
+  else if (load > 8 && load <= 9) color = HEATMAP_COLORS[4];
+  else if (load > 9) color = HEATMAP_COLORS[5];
+
+  return color;
+};
 
 const getMuscleColorByRepIndex = (load: number, repLevelIndex: number) => {
   let color = undefined;
@@ -25,10 +41,10 @@ const getMuscleColorByRepIndex = (load: number, repLevelIndex: number) => {
 
 export function paintHeatmaps(
   muscleLoads: [string, HeatmapLoad][] | [string, number][],
-  exercisesInTraining: TrainingExercise[],
   selectedLoadType: 'ALL' | MuscleLoadType,
-  heatmapLevel: number,
-  maxHeatmapLevel: number
+  exercisesInTraining?: TrainingExercise[],
+  heatmapLevel?: number,
+  maxHeatmapLevel?: number
 ) {
   // Limit to actual shapes
   const resetContainers = [HEATMAP_FRONT_ID, HEATMAP_BACK_ID];
@@ -64,26 +80,32 @@ export function paintHeatmaps(
 
     let color: string | undefined | null = undefined;
 
-    if (heatmapLevel <= maxHeatmapLevel / 2) {
-      color = getMuscleColorByNumberExercises(
-        muscleId,
-        exercisesInTraining,
-        heatmapLevel,
-        maxHeatmapLevel,
-        selectedLoadType
-      );
+    if (heatmapLevel && maxHeatmapLevel && exercisesInTraining) {
+      // Trainer day view
+      if (heatmapLevel <= maxHeatmapLevel / 2) {
+        color = getMuscleColorByNumberExercises(
+          muscleId,
+          exercisesInTraining,
+          heatmapLevel,
+          maxHeatmapLevel,
+          selectedLoadType
+        );
+      } else {
+        const repColorIndex = getRepColorLevelIndexForMuscle(
+          muscleId,
+          exercisesInTraining,
+          selectedLoadType,
+          heatmapLevel,
+          maxHeatmapLevel
+        );
+
+        if (repColorIndex === null) return;
+
+        color = getMuscleColorByRepIndex(totalLoad, repColorIndex);
+      }
     } else {
-      const repColorIndex = getRepColorLevelIndexForMuscle(
-        muscleId,
-        exercisesInTraining,
-        selectedLoadType,
-        heatmapLevel,
-        maxHeatmapLevel
-      );
-
-      if (repColorIndex === null) return;
-
-      color = getMuscleColorByRepIndex(totalLoad, repColorIndex);
+      // Athlete wellness view
+      color = getMuscleColorForAthlete(totalLoad);
     }
 
     if (!color) return;

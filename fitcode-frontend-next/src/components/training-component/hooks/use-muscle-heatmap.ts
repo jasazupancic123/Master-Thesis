@@ -66,8 +66,8 @@ export default function useMuscleHeatmap() {
 
     paintHeatmaps(
       muscleLoads,
-      exercises,
       selectedLoadType,
+      exercises,
       heatmapLevel,
       newMaxHeatmapLevel
     );

@@ -329,98 +329,103 @@ export default function MuscleMapWithTooltip(props: Props) {
             gap={1}
             minWidth={250}
           >
-            {tip.componentExercises && tip.componentExercises.length > 0 && (
-              <Box
-                width="100%"
-                display="flex"
-                flexDirection="column"
-                alignItems="center"
-                gap={0.5}
-              >
-                <Typography
-                  fontSize={12}
-                  fontWeight={600}
-                  textAlign="center"
-                  mt={1}
+            {!athleteAnthropometry &&
+              tip.componentExercises &&
+              tip.componentExercises.length > 0 && (
+                <Box
+                  width="100%"
+                  display="flex"
+                  flexDirection="column"
+                  alignItems="center"
+                  gap={0.5}
                 >
-                  Exercises:
-                </Typography>
-                {tip.componentExercises.map((exercise) => (
                   <Typography
-                    key={exercise.id}
-                    fontSize={10}
+                    fontSize={12}
                     fontWeight={600}
                     textAlign="center"
+                    mt={1}
                   >
-                    &bull; {exercise.exercise?.name}
+                    Exercises:
                   </Typography>
-                ))}
-              </Box>
-            )}
-            {tip.possibleExercises && tip.possibleExercises.length > 0 && (
-              <Box
-                width="100%"
-                display="flex"
-                flexDirection="column"
-                alignItems="center"
-                gap={0.5}
-              >
-                <Typography
-                  fontSize={12}
-                  fontWeight={600}
-                  textAlign="center"
-                  mt={1}
+                  {tip.componentExercises.map((exercise) => (
+                    <Typography
+                      key={exercise.id}
+                      fontSize={10}
+                      fontWeight={600}
+                      textAlign="center"
+                    >
+                      &bull; {exercise.exercise?.name}
+                    </Typography>
+                  ))}
+                </Box>
+              )}
+            {!athleteAnthropometry &&
+              tip.possibleExercises &&
+              tip.possibleExercises.length > 0 && (
+                <Box
+                  width="100%"
+                  display="flex"
+                  flexDirection="column"
+                  alignItems="center"
+                  gap={0.5}
                 >
-                  Possible exercises:
-                </Typography>
-                {tip.possibleExercises.map((exercise) => (
                   <Typography
-                    fontSize={10}
+                    fontSize={12}
                     fontWeight={600}
                     textAlign="center"
-                    sx={{
-                      cursor: 'pointer',
-                      border: `1px solid transparent`,
-                      px: 0.5,
-                      '&:hover': {
-                        border: `1px solid ${theme.palette.text.primary}`,
-                        borderRadius: 1,
-                      },
-                    }}
-                    onClick={() => {
-                      if (
-                        !training ||
-                        !component ||
-                        !tip.componentExercises ||
-                        !tip.possibleExercises
-                      )
-                        return;
-
-                      const trainingExercise =
-                        core.training.superset.toTrainingExercise(exercise);
-
-                      tip.componentExercises.push(trainingExercise);
-                      tip.possibleExercises = tip.possibleExercises.filter(
-                        (e) => e.id !== exercise.id
-                      );
-
-                      setTip((prev) => ({
-                        ...prev,
-                        componentExercises: tip.componentExercises,
-                        possibleExercises: tip.possibleExercises,
-                      }));
-
-                      addTrainingExercises(
-                        [trainingExercise],
-                        component.mainSet
-                      );
-                    }}
+                    mt={1}
                   >
-                    &bull; {exercise.name}
+                    Possible exercises:
                   </Typography>
-                ))}
-              </Box>
-            )}
+                  {tip.possibleExercises.map((exercise) => (
+                    <Typography
+                      key={exercise.id}
+                      fontSize={10}
+                      fontWeight={600}
+                      textAlign="center"
+                      sx={{
+                        cursor: 'pointer',
+                        border: `1px solid transparent`,
+                        px: 0.5,
+                        '&:hover': {
+                          border: `1px solid ${theme.palette.text.primary}`,
+                          borderRadius: 1,
+                        },
+                      }}
+                      onClick={() => {
+                        if (
+                          !training ||
+                          !component ||
+                          !tip.componentExercises ||
+                          !tip.possibleExercises
+                        )
+                          return;
+
+                        const trainingExercise =
+                          core.training.superset.toTrainingExercise(exercise);
+
+                        tip.componentExercises.push(trainingExercise);
+                        tip.possibleExercises = tip.possibleExercises.filter(
+                          (e) => e.id !== exercise.id
+                        );
+
+                        setTip((prev) => ({
+                          ...prev,
+                          componentExercises: tip.componentExercises,
+                          possibleExercises: tip.possibleExercises,
+                        }));
+
+                        addTrainingExercises(
+                          [trainingExercise],
+                          component.mainSet
+                        );
+                      }}
+                    >
+                      &bull; {exercise.name}
+                    </Typography>
+                  ))}
+                </Box>
+              )}
           </Box>
 
           {athleteAnthropometry && (
