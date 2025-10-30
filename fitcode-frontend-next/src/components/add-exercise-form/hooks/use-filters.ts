@@ -6,13 +6,18 @@ import type { TrainingComponent } from '@/core/training/type/training-component.
 import type { AttributeFilters } from '@/sites/exercises.page';
 import { useMain } from '@/store/main.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
+import { Component } from '@/core/component/type/component.type';
+import {
+  COOLDOWN_ID,
+  WARMUP_ID,
+} from '@/core/training/const/warmup-cooldown.const';
 
 export default function useExerciseFormFilters(
   component: TrainingComponent,
-  componentExercises: Exercise[],
-  selectedComponentsIds: string[]
+  selectedComponentsIds: string[],
+  selectedComponent: Component | null
 ) {
-  const { components } = useMain();
+  const { components, exercises: allExercises } = useMain();
 
   const {
     filteredExercises: exercises,
@@ -21,24 +26,27 @@ export default function useExerciseFormFilters(
   } = useTrainerDayView();
 
   const [filters, setFilters] = useState<AttributeFilters>({});
+  const [search, setSearch] = useState('');
 
   const [openFilters, setOpenFilters] = useState(false);
 
-  const [search, setSearch] = useState('');
-
   const [filteredExercises, setFilteredExercises] =
     useState<Exercise[]>(exercises);
+
+  const [componentExercises, setComponentExercises] = useState<Exercise[]>([]);
 
   /**
    * Filter exercises
    */
   useEffect(() => {
     const filter: Partial<Exercise> = {
-      // ...(component?.id && { componentIds: [component.id] }),
+      ...(selectedComponent?.id &&
+        !search.length && { componentIds: [selectedComponent.id] }),
       ...(search && { name: search }),
-      ...(selectedComponentsIds.length && {
-        componentIds: selectedComponentsIds,
-      }),
+      ...(!search.length &&
+        selectedComponentsIds.length && {
+          componentIds: selectedComponentsIds,
+        }),
       ...filters,
     };
 
@@ -62,6 +70,27 @@ export default function useExerciseFormFilters(
     pagination.pages,
     selectedComponentsIds,
   ]);
+
+  useEffect(() => {
+    if (!selectedComponent) return;
+
+    if (
+      search.length ||
+      selectedComponent.id === WARMUP_ID ||
+      selectedComponent.id === COOLDOWN_ID
+    ) {
+      setComponentExercises(allExercises);
+      return;
+    }
+
+    setComponentExercises(
+      allExercises.filter((exercise) =>
+        exercise.components?.some((c) =>
+          c.parents.includes(selectedComponent.id)
+        )
+      )
+    );
+  }, [selectedComponent, search]);
 
   return {
     filters,

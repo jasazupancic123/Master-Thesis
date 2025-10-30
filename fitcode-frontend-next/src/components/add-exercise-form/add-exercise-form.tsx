@@ -1,11 +1,10 @@
-import { KeyboardArrowDown } from '@mui/icons-material';
+import { KeyboardArrowDown, KeyboardArrowUp } from '@mui/icons-material';
 import { Box, Button, Pagination, Typography } from '@mui/material';
 
 import ExerciseChips from '../exercise-chips/exercise-chips';
 import ExerciseFilter from '../exercises-list/exercise-filter';
 import ExercisesList from '../exercises-list/exercises-list';
 import type { AddExerciseFormProps } from '../trainer-group-day-view/props/props';
-import useExerciseFormComponentExercises from './hooks/use-component-exercises';
 import useComponentFilter from './hooks/use-component-filter';
 import useExerciseFormFilters from './hooks/use-filters';
 import SelectedExercisesList from './selected-exercises-list';
@@ -22,6 +21,7 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 import MenuItemsList from '@/ui/menu-items-list';
 import { SearchBar } from '@/ui/search-bar/search-bar';
+import { lib } from '@/lib';
 
 export default function AddExerciseForm(props: AddExerciseFormProps) {
   const {
@@ -38,9 +38,6 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
   const { components } = useMain();
 
   const { pagination, setPagination } = useTrainerDayView();
-
-  const componentExercisesContext =
-    useExerciseFormComponentExercises(component);
 
   const {
     selectedComponent,
@@ -61,13 +58,13 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
     setFilters,
     openFilters,
     setOpenFilters,
+    filteredExercises,
     search,
     setSearch,
-    filteredExercises,
   } = useExerciseFormFilters(
     component,
-    componentExercisesContext.componentExercises,
-    selectedComponentsIds
+    selectedComponentsIds,
+    selectedComponent
   );
 
   return (
@@ -106,21 +103,46 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
             c.children.some((child) => child.id === id)
           ).length;
 
+          const children = lib.common.tree.fromArray(components, {
+            rootId: c.id,
+            idPropertyName: 'id',
+            parentIdPropertyName: 'parentId',
+            childrenPropertyName: 'children',
+          });
+
+          const isSelected =
+            children.length === 0
+              ? selectedComponentsIds.includes(c.id)
+              : numOfSelected === children.length;
+
           return (
             <Button
               key={c.id}
-              id="demo-customized-button"
-              aria-haspopup="true"
               variant="contained"
               disableElevation
               onClick={(e) => handleClickLeaf(e, c.id)}
-              endIcon={<KeyboardArrowDown />}
-              sx={{
-                py: 0.5,
-                mx: screenSize.isMobile ? 'auto' : 0,
-                backgroundColor: theme.palette.background.dark,
-                color: theme.palette.text.primary,
-              }}
+              endIcon={
+                selectedRootComponentId === c.id ? (
+                  <KeyboardArrowUp />
+                ) : (
+                  <KeyboardArrowDown />
+                )
+              }
+              sx={
+                isSelected
+                  ? {
+                      py: 0.5,
+                      mx: screenSize.isMobile ? 'auto' : 0,
+                      backgroundColor: theme.palette.primary.main,
+                      color: theme.palette.text.secondary,
+                    }
+                  : {
+                      py: 0.5,
+                      mx: screenSize.isMobile ? 'auto' : 0,
+                      backgroundColor: theme.palette.background.dark,
+                      color: theme.palette.text.primary,
+                    }
+              }
             >
               {`${c.name}${numOfSelected ? ` (${numOfSelected})` : ''}`}
             </Button>
