@@ -131,7 +131,7 @@ export class TrainingUtil {
   }
 
   getComponents(training: Training): TrainingComponent[] {
-    return [training.warmup, ...training.components, training.cooldown];
+    return [training.warmup!, ...training.components, training.cooldown!];
   }
 
   getAthleteSupersets(

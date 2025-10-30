@@ -46,6 +46,7 @@ export class TrainingRepository extends FirestoreRepository<Training> {
     options?: { limit?: number },
   ): Query {
     let q = this.collection() as Query;
+
     switch (input.role) {
       case UserRole.ADMIN:
         break;
@@ -58,7 +59,12 @@ export class TrainingRepository extends FirestoreRepository<Training> {
         q = this.getQueryByInstitution(q, input.institutionId);
         break;
       case UserRole.TRAINER:
-        q = this.getQueryByTrainer(q, input.uid);
+        if (!filter.groupId)
+          throw new BadRequestException(
+            'You have to provide group for trainer to get trainings',
+          );
+
+        q = this.getQueryByTrainer(q, filter.groupId!);
         break;
       case UserRole.ATHLETE:
         q = this.getQueryByMember(q, input.uid);
@@ -91,8 +97,8 @@ export class TrainingRepository extends FirestoreRepository<Training> {
     return q.where('institutionId', '==', institutionId);
   }
 
-  private getQueryByTrainer(q: Query, trainerId: string): Query {
-    return q.where('ownerId', '==', trainerId);
+  private getQueryByTrainer(q: Query, groupId: string): Query {
+    return q.where('groupId', '==', groupId);
   }
 
   private getQueryByMember(q: Query, memberId: string): Query {
