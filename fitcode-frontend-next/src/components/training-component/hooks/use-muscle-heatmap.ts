@@ -9,12 +9,14 @@ import type { TrainingExercise } from '@/core/training/type/training-exercise.ty
 import { useGroup } from '@/store/group.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 
-export default function useMuscleHeatmap(exercises: TrainingExercise[]) {
+export default function useMuscleHeatmap() {
   const { trainings } = useGroup();
-  const { training, component, selectedAthlete } = useTrainerDayView();
+  const { training, component, supersets, selectedAthlete, selectedSubgroup } =
+    useTrainerDayView();
 
-  const [heatmapLevel, setHeatmapLevel] = useState<number>(0);
-  const [maxHeatmapLevel, setMaxHeatmapLevel] = useState<number>(0);
+  const [exercises, setExercises] = useState<TrainingExercise[]>([]);
+  const [heatmapLevel, setHeatmapLevel] = useState<number>(1);
+  const [maxHeatmapLevel, setMaxHeatmapLevel] = useState<number>(1);
 
   const [muscleLoads, setMuscleLoads] = useState<[string, HeatmapLoad][]>([]);
 
@@ -47,6 +49,14 @@ export default function useMuscleHeatmap(exercises: TrainingExercise[]) {
   ]);
 
   useEffect(() => {
+    if (selectedSubgroup) {
+      setExercises(selectedSubgroup.supersets.flatMap((s) => s.exercises));
+    } else if (component) {
+      setExercises(component.supersets.flatMap((s) => s.exercises));
+    }
+  }, [component, selectedSubgroup]);
+
+  useEffect(() => {
     if (tipHeatmapBack.show && tipHeatmapFront.show) {
       setTipHeatmapFront((prev) => ({ ...prev, show: false, focus: false }));
       setTipHeatmapBack((prev) => ({ ...prev, show: false, focus: false }));
@@ -54,22 +64,30 @@ export default function useMuscleHeatmap(exercises: TrainingExercise[]) {
   }, [tipHeatmapFront, tipHeatmapBack]);
 
   useEffect(() => {
-    const newHeatmapLevel =
+    const newMaxHeatmapLevel =
       core.exercise.muscle.getMaxHeatmapLevel(muscleLoads);
-    setMaxHeatmapLevel(newHeatmapLevel);
+    setMaxHeatmapLevel(newMaxHeatmapLevel);
 
-    paintHeatmaps(muscleLoads, selectedLoadType);
-  }, [muscleLoads, selectedLoadType, selectedAthlete, range, component]);
+    paintHeatmaps(
+      muscleLoads,
+      selectedLoadType,
+      exercises,
+      heatmapLevel,
+      newMaxHeatmapLevel
+    );
+  }, [muscleLoads, selectedLoadType, selectedAthlete, range, exercises]);
 
   /* Generate muscle loads */
   useEffect(() => {
-    if (!component) return;
+    if (!training || !component) return;
 
     // Multiple trainings
 
-    let filteredTrainings = trainings.filter((t, index) => {
-      return index + 1 >= range[0] && index + 1 <= range[1];
-    });
+    let filteredTrainings = trainings
+      .filter((t, index) => {
+        return index + 1 >= range[0] && index + 1 <= range[1];
+      })
+      .map((t) => (t.id === training.id ? training : t));
 
     if (selectedAthlete) {
       filteredTrainings = filteredTrainings.map((t) =>
@@ -81,6 +99,7 @@ export default function useMuscleHeatmap(exercises: TrainingExercise[]) {
       (t) => {
         const exercises = core.training.getExercises(t, {
           componentId: component.id,
+          subgroupId: selectedSubgroup?.id,
         });
 
         return core.exercise.muscle.generateLoads(
@@ -154,7 +173,9 @@ export default function useMuscleHeatmap(exercises: TrainingExercise[]) {
     maxHeatmapLevel,
     range,
     selectedAthlete,
+    selectedSubgroup,
     component,
+    supersets,
   ]);
 
   return {

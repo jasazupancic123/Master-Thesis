@@ -1,6 +1,10 @@
 import type { TrainingExercise } from '../../training/type/training-exercise.type';
 import { MUSCLES_TREE } from '../constant/muscles-tree.constant';
+import { MuscleLoadType } from '../enum/muscle-load-type.enum';
+import type { ExerciseMuscleValue } from '../type/exercise-muscle-value.entity';
 import type { HeatmapLoad } from '../type/heatmap-load.entity';
+import { MUSCLE_LOAD_LEVELS } from '@/components/muscle-map-with-tooltip/constant/muscle-load-levels';
+import type { MuscleColorLevelType } from '@/components/muscle-map-with-tooltip/types/muscle-load-level';
 import type { Attribute } from '@/core/attribute/type/attribute.type';
 import {
   HEATMAP_BACK_ID,
@@ -177,7 +181,7 @@ export class MuscleUtil {
       if (currentLevel > level) level = currentLevel;
     });
 
-    return level;
+    return level + 1; // +1 for leaf level
   }
 
   getCorrectMuscleByLevel(
@@ -198,7 +202,7 @@ export class MuscleUtil {
 
     if (!parent) return undefined;
 
-    let levelsToClimb = maxLevel - level;
+    let levelsToClimb = maxLevel - (level + 1);
 
     while (levelsToClimb > 0 && parent) {
       levelsToClimb--;
@@ -259,5 +263,34 @@ export class MuscleUtil {
     const leafes = lib.common.tree.computeLeafes([foundMuscle], 'options');
 
     return leafes[0] || null;
+  }
+
+  getMuscleLoadSum(load: ExerciseMuscleValue): number {
+    return load.eccentric + load.isometric + load.concentric;
+  }
+
+  getSelectedMuscleLoad(
+    load: HeatmapLoad,
+    selectedLoadType: MuscleLoadType | 'ALL'
+  ): number {
+    if (selectedLoadType === MuscleLoadType.CONCENTRIC) {
+      return load.concentric;
+    } else if (selectedLoadType === MuscleLoadType.ECCENTRIC) {
+      return load.eccentric;
+    } else if (selectedLoadType === MuscleLoadType.ISOMETRIC) {
+      return load.isometric;
+    }
+
+    return Math.max(load.concentric, load.eccentric) || 0;
+  }
+
+  getMuscleLoadLevel(load: number): MuscleColorLevelType | null {
+    for (const level of MUSCLE_LOAD_LEVELS) {
+      if (load >= level.min && load <= level.max) {
+        return level;
+      }
+    }
+
+    return null;
   }
 }

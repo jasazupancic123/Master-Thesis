@@ -1,15 +1,15 @@
 'use client';
 import { Close } from '@mui/icons-material';
 import { Box, IconButton, Slider, Typography, useTheme } from '@mui/material';
-import { Fragment, useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 import {
   clearHideTimer,
+  computeCurrentAndPossibleExercises,
   findFilledGroup,
-  formatName,
   hasExplicitFill,
   normId,
-} from './state';
+} from './actions/actions-muscle-heatmap';
 import SorenessIcon from '@/assets/icons/Soreness.svg';
 import type { Attribute } from '@/core/attribute/type/attribute.type';
 import { core } from '@/core/core.service';
@@ -18,6 +18,7 @@ import type { HeatmapLoad } from '@/core/exercise/type/heatmap-load.entity';
 import type { MuscleTip } from '@/core/exercise/type/muscle-tip.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { SetState } from '@/lib/common/type/state.type';
+import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 
@@ -44,6 +45,13 @@ interface Props {
 export default function MuscleMapWithTooltip(props: Props) {
   const theme = useTheme();
   const screenSize = useScreenSize();
+
+  const trainerDayViewProvider = useTrainerDayView();
+
+  const { training, component, supersets, addTrainingExercises } =
+    trainerDayViewProvider || {};
+
+  const { exercises: allExercises } = useMain();
 
   const {
     front,
@@ -87,6 +95,7 @@ export default function MuscleMapWithTooltip(props: Props) {
     const group = findFilledGroup(
       raw,
       maxHeatmapLevel,
+      maxHeatmapLevel,
       athleteAnthropometry && muscleLoads
         ? muscleLoads.map(([id]) => id)
         : undefined
@@ -108,7 +117,7 @@ export default function MuscleMapWithTooltip(props: Props) {
     const px = e.clientX - crect.left;
     const py = e.clientY - crect.top;
 
-    showForEl(target, px, py);
+    showTip(target, px, py);
   };
 
   const handleMouseLeave = () => {
@@ -122,16 +131,16 @@ export default function MuscleMapWithTooltip(props: Props) {
     const el = (e.target as Element).closest<SVGGraphicsElement>('[id]');
     if (!el) return;
     // Only show for nodes that actually have/are within a filled region
-    const group = findFilledGroup(el, heatmapLevel);
+    const group = findFilledGroup(el, heatmapLevel, maxHeatmapLevel);
     const target = group ?? (hasExplicitFill(el) ? el : null);
-    if (target) showForEl(target); // centers on element
+    if (target) showTip(target); // centers on element
   };
 
   const handleBlur = () => handleMouseLeave();
 
-  const showForEl = useCallback(
+  const showTip = useCallback(
     (el: SVGGraphicsElement, px?: number, py?: number) => {
-      if (!containerRef.current || tip.focus) return;
+      if (!containerRef.current) return;
 
       const children = Array.from(el.children);
 
@@ -184,16 +193,13 @@ export default function MuscleMapWithTooltip(props: Props) {
 
         if (!correctMuscle) return prev;
 
-        // const { componentExercises, possibleExercises } = athleteAnthropometry
-        //   ? { componentExercises: undefined, possibleExercises: undefined }
-        //   : computeExercises(muscleIds);
+        const { componentExercises, possibleExercises } =
+          computeCurrentAndPossibleExercises(
+            correctMuscle,
+            exercisesInComponent,
+            allExercises
+          );
 
-        const { componentExercises, possibleExercises } = {
-          componentExercises: undefined,
-          possibleExercises: undefined,
-        };
-
-        // New muscle → compute exercises once
         return {
           show: true,
           x: x === 0 && athleteAnthropometry ? prev.x : x,
@@ -210,8 +216,7 @@ export default function MuscleMapWithTooltip(props: Props) {
         };
       });
     },
-    [muscleLoads, tip]
-    // [computeExercises]
+    [component, supersets, muscleLoads, tip]
   );
 
   return (
@@ -250,14 +255,12 @@ export default function MuscleMapWithTooltip(props: Props) {
           }
 
           // UNCOMMENT THIS FOR FOCUSED TIP ON CLICK
-          if (athleteAnthropometry) {
-            setTip((t) => ({
-              ...t,
-              focus: true,
-              x: 0,
-              y: 0,
-            }));
-          }
+          setTip((t) => ({
+            ...t,
+            focus: true,
+            x: 0,
+            y: 0,
+          }));
         }}
         role="img"
         style={{
@@ -310,19 +313,120 @@ export default function MuscleMapWithTooltip(props: Props) {
             {tip.name}
           </Typography>
 
-          {[
-            { value: tip.cocentric, title: 'Cocentric' },
-            { value: tip.eccentric, title: 'Eccentric' },
-            { value: tip.isometric, title: 'Isometric' },
-          ].map(({ value, title }) => (
-            <Fragment key={title}>
-              {value !== undefined && (
-                <Typography fontSize={12} noWrap textAlign="center">
-                  {title}: {!isNaN(value) ? value : 0}
-                </Typography>
+          <Typography fontSize={12} noWrap textAlign="center">
+            {[tip.cocentric, tip.eccentric, tip.isometric].every(
+              (v) => v !== undefined
+            ) &&
+              `Coc: ${!isNaN(tip.cocentric ?? 0) ? tip.cocentric : 0} | Ecc: ${
+                !isNaN(tip.eccentric ?? 0) ? tip.eccentric : 0
+              } | Iso: ${!isNaN(tip.isometric ?? 0) ? tip.isometric : 0}`}
+          </Typography>
+
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="flex-start"
+            gap={1}
+            minWidth={250}
+          >
+            {!athleteAnthropometry &&
+              tip.componentExercises &&
+              tip.componentExercises.length > 0 && (
+                <Box
+                  width="100%"
+                  display="flex"
+                  flexDirection="column"
+                  alignItems="center"
+                  gap={0.5}
+                >
+                  <Typography
+                    fontSize={12}
+                    fontWeight={600}
+                    textAlign="center"
+                    mt={1}
+                  >
+                    Exercises:
+                  </Typography>
+                  {tip.componentExercises.map((exercise) => (
+                    <Typography
+                      key={exercise.id}
+                      fontSize={10}
+                      fontWeight={600}
+                      textAlign="center"
+                    >
+                      &bull; {exercise.exercise?.name}
+                    </Typography>
+                  ))}
+                </Box>
               )}
-            </Fragment>
-          ))}
+            {!athleteAnthropometry &&
+              tip.possibleExercises &&
+              tip.possibleExercises.length > 0 && (
+                <Box
+                  width="100%"
+                  display="flex"
+                  flexDirection="column"
+                  alignItems="center"
+                  gap={0.5}
+                >
+                  <Typography
+                    fontSize={12}
+                    fontWeight={600}
+                    textAlign="center"
+                    mt={1}
+                  >
+                    Possible exercises:
+                  </Typography>
+                  {tip.possibleExercises.map((exercise) => (
+                    <Typography
+                      key={exercise.id}
+                      fontSize={10}
+                      fontWeight={600}
+                      textAlign="center"
+                      sx={{
+                        cursor: 'pointer',
+                        border: `1px solid transparent`,
+                        px: 0.5,
+                        '&:hover': {
+                          border: `1px solid ${theme.palette.text.primary}`,
+                          borderRadius: 1,
+                        },
+                      }}
+                      onClick={() => {
+                        if (
+                          !training ||
+                          !component ||
+                          !tip.componentExercises ||
+                          !tip.possibleExercises
+                        )
+                          return;
+
+                        const trainingExercise =
+                          core.training.superset.toTrainingExercise(exercise);
+
+                        tip.componentExercises.push(trainingExercise);
+                        tip.possibleExercises = tip.possibleExercises.filter(
+                          (e) => e.id !== exercise.id
+                        );
+
+                        setTip((prev) => ({
+                          ...prev,
+                          componentExercises: tip.componentExercises,
+                          possibleExercises: tip.possibleExercises,
+                        }));
+
+                        addTrainingExercises(
+                          [trainingExercise],
+                          component.mainSet
+                        );
+                      }}
+                    >
+                      &bull; {exercise.name}
+                    </Typography>
+                  ))}
+                </Box>
+              )}
+          </Box>
 
           {athleteAnthropometry && (
             <Box
