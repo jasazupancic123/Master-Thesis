@@ -23,8 +23,6 @@ export default function MuscleHeatmapView() {
   const { trainings } = useGroup();
   const { supersets, selectedAthlete } = useTrainerDayView();
 
-  const [exercises, setExercises] = useState<TrainingExercise[]>([]);
-
   const [selectedMuscle, setSelectedMuscle] = useState<Attribute | null>(null);
   const [selectedMuscleName, setSelectedMuscleName] = useState<string | null>(
     null
@@ -44,10 +42,6 @@ export default function MuscleHeatmapView() {
     range,
     setRange,
   } = useMuscleHeatmap();
-
-  useEffect(() => {
-    setExercises(supersets.flatMap((s) => s.exercises));
-  }, [supersets]);
 
   const handleChange = (_event: Event, newValue: number | number[]) => {
     setRange(newValue as number[]);

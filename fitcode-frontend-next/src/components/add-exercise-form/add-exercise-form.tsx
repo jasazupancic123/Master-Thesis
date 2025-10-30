@@ -16,12 +16,12 @@ import {
   WARMUP_ID,
 } from '@/core/training/const/warmup-cooldown.const';
 import { ComponentIds } from '@/core/training/enum/component-ids.enum';
+import { lib } from '@/lib';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 import MenuItemsList from '@/ui/menu-items-list';
 import { SearchBar } from '@/ui/search-bar/search-bar';
-import { lib } from '@/lib';
 
 export default function AddExerciseForm(props: AddExerciseFormProps) {
   const {

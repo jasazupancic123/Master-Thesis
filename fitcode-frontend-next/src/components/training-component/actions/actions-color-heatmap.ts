@@ -11,7 +11,7 @@ import {
 } from '@/core/exercise/constant/heatmap.const';
 import { MuscleLoadType } from '@/core/exercise/enum/muscle-load-type.enum';
 import type { HeatmapLoad } from '@/core/exercise/type/heatmap-load.entity';
-import { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import { lib } from '@/lib';
 
 const getMuscleColorForAthlete = (load: number) => {

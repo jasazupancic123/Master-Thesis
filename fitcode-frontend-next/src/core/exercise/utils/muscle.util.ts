@@ -1,17 +1,16 @@
-import { MUSCLE_LOAD_LEVELS } from '@/components/muscle-map-with-tooltip/constant/muscle-load-levels';
 import type { TrainingExercise } from '../../training/type/training-exercise.type';
 import { MUSCLES_TREE } from '../constant/muscles-tree.constant';
 import { MuscleLoadType } from '../enum/muscle-load-type.enum';
-import { ExerciseMuscleValue } from '../type/exercise-muscle-value.entity';
-import { Exercise } from '../type/exercise.type';
+import type { ExerciseMuscleValue } from '../type/exercise-muscle-value.entity';
 import type { HeatmapLoad } from '../type/heatmap-load.entity';
+import { MUSCLE_LOAD_LEVELS } from '@/components/muscle-map-with-tooltip/constant/muscle-load-levels';
+import type { MuscleColorLevelType } from '@/components/muscle-map-with-tooltip/types/muscle-load-level';
 import type { Attribute } from '@/core/attribute/type/attribute.type';
 import {
   HEATMAP_BACK_ID,
   HEATMAP_FRONT_ID,
 } from '@/core/exercise/constant/heatmap.const';
 import { lib } from '@/lib';
-import { MuscleColorLevelType } from '@/components/muscle-map-with-tooltip/types/muscle-load-level';
 
 export class MuscleUtil {
   generateLoads(

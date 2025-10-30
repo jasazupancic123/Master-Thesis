@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react';
 
 import { handlePaginateExercises } from '@/app/(trainer)/dashboard/exercises/state';
+import type { Component } from '@/core/component/type/component.type';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
-import type { TrainingComponent } from '@/core/training/type/training-component.type';
-import type { AttributeFilters } from '@/sites/exercises.page';
-import { useMain } from '@/store/main.provider';
-import { useTrainerDayView } from '@/store/trainer-day-view.provider';
-import { Component } from '@/core/component/type/component.type';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/core/training/const/warmup-cooldown.const';
+import type { TrainingComponent } from '@/core/training/type/training-component.type';
+import type { AttributeFilters } from '@/sites/exercises.page';
+import { useMain } from '@/store/main.provider';
+import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 
 export default function useExerciseFormFilters(
   component: TrainingComponent,

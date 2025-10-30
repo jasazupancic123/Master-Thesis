@@ -1,14 +1,14 @@
 import type { RefObject } from 'react';
 
+import type { Attribute } from '@/core/attribute/type/attribute.type';
+import { core } from '@/core/core.service';
 import {
   HEATMAP_BACK_ID,
   HEATMAP_FRONT_ID,
 } from '@/core/exercise/constant/heatmap.const';
-import { Attribute } from '@/core/attribute/type/attribute.type';
-import { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import type { Exercise } from '@/core/exercise/type/exercise.type';
+import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import { lib } from '@/lib';
-import { core } from '@/core/core.service';
-import { Exercise } from '@/core/exercise/type/exercise.type';
 
 // normalize ids like `upper_pectoralis_major-l_3` → `upper_pectoralis_major-l`
 export const normId = (id: string) => id.replace(/_\d+$/, '');

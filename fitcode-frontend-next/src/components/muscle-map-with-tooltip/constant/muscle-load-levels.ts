@@ -1,4 +1,4 @@
-import { MuscleColorLevelType } from '../types/muscle-load-level';
+import type { MuscleColorLevelType } from '../types/muscle-load-level';
 
 export const MUSCLE_LOAD_LEVELS: MuscleColorLevelType[] = [
   {
