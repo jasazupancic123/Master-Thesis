@@ -146,22 +146,26 @@ export default function TrainingExerciseCardCollapsedSets(
                   const value = core.exercise.param.get(field)
                     ?.defaultValue as number;
 
-                  supersetsContext.updateTrainingExerciseParams(exercise, [
-                    // update param with new value
-                    { field, value, setIndex: undefined },
-                    // update its pair
-                    ...(uni
-                      ? [{ field: pair, value, setIndex: undefined }]
-                      : []),
-                    // clear other vol params
-                    ...['reps', 'dist', 'time', 'repsR']
-                      .filter((f) => f !== field && f !== pair)
-                      .map((f) => ({
-                        field: f as ExerciseParamFieldExtended,
-                        value: undefined,
-                        setIndex: undefined,
-                      })),
-                  ]);
+                  supersetsContext.updateTrainingExerciseParams(
+                    exercise,
+                    [
+                      // update param with new value
+                      { field, value, setIndex: undefined },
+                      // update its pair
+                      ...(uni
+                        ? [{ field: pair, value, setIndex: undefined }]
+                        : []),
+                      // clear other vol params
+                      ...['reps', 'dist', 'time', 'repsR']
+                        .filter((f) => f !== field && f !== pair)
+                        .map((f) => ({
+                          field: f as ExerciseParamFieldExtended,
+                          value: undefined,
+                          setIndex: undefined,
+                        })),
+                    ],
+                    { updateSubgroups: true, updateWholePair: true }
+                  );
                 }}
                 onInputChange={(value) => {
                   supersetsContext.updateTrainingExerciseParam(
@@ -188,29 +192,33 @@ export default function TrainingExerciseCardCollapsedSets(
                   const value = core.exercise.param.get(field)
                     ?.defaultValue as number;
 
-                  supersetsContext.updateTrainingExerciseParams(exercise, [
-                    // update param with new value
-                    { field, value, setIndex: undefined },
-                    // update its pair
-                    ...(uni
-                      ? [{ field: pair, value, setIndex: undefined }]
-                      : []),
-                    // clear other load params
-                    ...[
-                      'loadKg',
-                      'loadRm',
-                      'loadBw',
-                      'loadKgR',
-                      'loadRmR',
-                      'loadBwR',
-                    ]
-                      .filter((f) => f !== field && pair !== f)
-                      .map((f) => ({
-                        field: f as ExerciseParamFieldExtended,
-                        value: undefined,
-                        setIndex: undefined,
-                      })),
-                  ]);
+                  supersetsContext.updateTrainingExerciseParams(
+                    exercise,
+                    [
+                      // update param with new value
+                      { field, value, setIndex: undefined },
+                      // update its pair
+                      ...(uni
+                        ? [{ field: pair, value, setIndex: undefined }]
+                        : []),
+                      // clear other load params
+                      ...[
+                        'loadKg',
+                        'loadRm',
+                        'loadBw',
+                        'loadKgR',
+                        'loadRmR',
+                        'loadBwR',
+                      ]
+                        .filter((f) => f !== field && pair !== f)
+                        .map((f) => ({
+                          field: f as ExerciseParamFieldExtended,
+                          value: undefined,
+                          setIndex: undefined,
+                        })),
+                    ],
+                    { updateSubgroups: true, updateWholePair: true }
+                  );
                 }}
                 onInputChange={(value) => {
                   supersetsContext.updateTrainingExerciseParam(
@@ -238,22 +246,26 @@ export default function TrainingExerciseCardCollapsedSets(
                     const value = core.exercise.param.get(field)
                       ?.defaultValue as number;
 
-                    supersetsContext.updateTrainingExerciseParams(exercise, [
-                      // update param with new value
-                      { field, value, setIndex: undefined },
-                      // update its pair
-                      ...(uni
-                        ? [{ field: pair, value, setIndex: undefined }]
-                        : []),
-                      // clear other eff params
-                      ...['tempo', 'eff', 'tempoR']
-                        .filter((f) => f !== field && f !== pair)
-                        .map((f) => ({
-                          field: f as ExerciseParamFieldExtended,
-                          value: undefined,
-                          setIndex: undefined,
-                        })),
-                    ]);
+                    supersetsContext.updateTrainingExerciseParams(
+                      exercise,
+                      [
+                        // update param with new value
+                        { field, value, setIndex: undefined },
+                        // update its pair
+                        ...(uni
+                          ? [{ field: pair, value, setIndex: undefined }]
+                          : []),
+                        // clear other eff params
+                        ...['tempo', 'eff', 'tempoR']
+                          .filter((f) => f !== field && f !== pair)
+                          .map((f) => ({
+                            field: f as ExerciseParamFieldExtended,
+                            value: undefined,
+                            setIndex: undefined,
+                          })),
+                      ],
+                      { updateSubgroups: true, updateWholePair: true }
+                    );
                   }}
                   onInputChange={(value) => {
                     supersetsContext.updateTrainingExerciseParam(
@@ -278,22 +290,26 @@ export default function TrainingExerciseCardCollapsedSets(
                     const value = core.exercise.param.get(field)
                       ?.defaultValue as string;
 
-                    supersetsContext.updateTrainingExerciseParams(exercise, [
-                      // update param with new value
-                      { field, value, setIndex: undefined },
-                      // update its pair
-                      ...(uni
-                        ? [{ field: pair, value, setIndex: undefined }]
-                        : []),
-                      // clear other eff params
-                      ...['tempo', 'eff', 'tempoR']
-                        .filter((f) => f !== field && f !== pair)
-                        .map((f) => ({
-                          field: f as ExerciseParamFieldExtended,
-                          value: undefined,
-                          setIndex: undefined,
-                        })),
-                    ]);
+                    supersetsContext.updateTrainingExerciseParams(
+                      exercise,
+                      [
+                        // update param with new value
+                        { field, value, setIndex: undefined },
+                        // update its pair
+                        ...(uni
+                          ? [{ field: pair, value, setIndex: undefined }]
+                          : []),
+                        // clear other eff params
+                        ...['tempo', 'eff', 'tempoR']
+                          .filter((f) => f !== field && f !== pair)
+                          .map((f) => ({
+                            field: f as ExerciseParamFieldExtended,
+                            value: undefined,
+                            setIndex: undefined,
+                          })),
+                      ],
+                      { updateSubgroups: true, updateWholePair: true }
+                    );
                   }}
                   onInputChange={(value) => {
                     supersetsContext.updateTrainingExerciseParam(
@@ -321,22 +337,26 @@ export default function TrainingExerciseCardCollapsedSets(
                   const value = core.exercise.param.get(field)
                     ?.defaultValue as number;
 
-                  supersetsContext.updateTrainingExerciseParams(exercise, [
-                    // update param with new value
-                    { field, value, setIndex: undefined },
-                    // update its pair
-                    ...(uni
-                      ? [{ field: pair, value, setIndex: undefined }]
-                      : []),
-                    // clear other rec params
-                    ...['recTime', 'recDist']
-                      .filter((f) => f !== field && f !== pair)
-                      .map((f) => ({
-                        field: f as ExerciseParamFieldExtended,
-                        value: undefined,
-                        setIndex: undefined,
-                      })),
-                  ]);
+                  supersetsContext.updateTrainingExerciseParams(
+                    exercise,
+                    [
+                      // update param with new value
+                      { field, value, setIndex: undefined },
+                      // update its pair
+                      ...(uni
+                        ? [{ field: pair, value, setIndex: undefined }]
+                        : []),
+                      // clear other rec params
+                      ...['recTime', 'recDist']
+                        .filter((f) => f !== field && f !== pair)
+                        .map((f) => ({
+                          field: f as ExerciseParamFieldExtended,
+                          value: undefined,
+                          setIndex: undefined,
+                        })),
+                    ],
+                    { updateSubgroups: true, updateWholePair: true }
+                  );
                 }}
                 onInputChange={(value) => {
                   supersetsContext.updateTrainingExerciseParam(

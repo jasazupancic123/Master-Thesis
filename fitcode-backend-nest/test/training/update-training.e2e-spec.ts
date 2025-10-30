@@ -126,7 +126,10 @@ describe('Update Training (e2e)', () => {
 
     it('should delete training if there are not any components left', async () => {
       const response = await req({ ...training, components: [] });
-      const trainings = await trainingService.findAll(global.trainer);
+      const trainings = await trainingService.findAll(global.trainer, {
+        groupId: group.id,
+      });
+
       expect(response.status).toBe(200);
       expect(trainings).toHaveLength(0);
 
