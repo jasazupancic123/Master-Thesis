@@ -9,10 +9,12 @@ import type { TrainingExercise } from '@/core/training/type/training-exercise.ty
 import { useGroup } from '@/store/group.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 
-export default function useMuscleHeatmap(exercises: TrainingExercise[]) {
+export default function useMuscleHeatmap() {
   const { trainings } = useGroup();
-  const { training, component, selectedAthlete } = useTrainerDayView();
+  const { training, component, supersets, selectedAthlete } =
+    useTrainerDayView();
 
+  const [exercises, setExercises] = useState<TrainingExercise[]>([]);
   const [heatmapLevel, setHeatmapLevel] = useState<number>(0);
   const [maxHeatmapLevel, setMaxHeatmapLevel] = useState<number>(0);
 
@@ -47,6 +49,10 @@ export default function useMuscleHeatmap(exercises: TrainingExercise[]) {
   ]);
 
   useEffect(() => {
+    setExercises(supersets.flatMap((s) => s.exercises));
+  }, [component, supersets]);
+
+  useEffect(() => {
     if (tipHeatmapBack.show && tipHeatmapFront.show) {
       setTipHeatmapFront((prev) => ({ ...prev, show: false, focus: false }));
       setTipHeatmapBack((prev) => ({ ...prev, show: false, focus: false }));
@@ -59,17 +65,19 @@ export default function useMuscleHeatmap(exercises: TrainingExercise[]) {
     setMaxHeatmapLevel(newHeatmapLevel);
 
     paintHeatmaps(muscleLoads, selectedLoadType);
-  }, [muscleLoads, selectedLoadType, selectedAthlete, range, component]);
+  }, [muscleLoads, selectedLoadType, selectedAthlete, range, exercises]);
 
   /* Generate muscle loads */
   useEffect(() => {
-    if (!component) return;
+    if (!training || !component) return;
 
     // Multiple trainings
 
-    let filteredTrainings = trainings.filter((t, index) => {
-      return index + 1 >= range[0] && index + 1 <= range[1];
-    });
+    let filteredTrainings = trainings
+      .filter((t, index) => {
+        return index + 1 >= range[0] && index + 1 <= range[1];
+      })
+      .map((t) => (t.id === training.id ? training : t));
 
     if (selectedAthlete) {
       filteredTrainings = filteredTrainings.map((t) =>
@@ -155,6 +163,7 @@ export default function useMuscleHeatmap(exercises: TrainingExercise[]) {
     range,
     selectedAthlete,
     component,
+    supersets,
   ]);
 
   return {

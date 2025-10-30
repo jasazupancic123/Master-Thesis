@@ -452,33 +452,41 @@ export function TrainerDayViewProvider(props: Props) {
    * Updates state after modifying supersets in component or subgroup
    */
   function updateSupersets(
-    supersets: Superset[], // new supersets
+    newSupersets: Superset[], // treat as immutable input
     childrenSubgroups: Subgroup[]
   ) {
     if (!component || !training) return;
 
-    // update component or subgroup supersets
-    if (!selectedSubgroup) component.supersets = supersets;
-    else
-      component.subgroups = component.subgroups.map((sg) =>
-        sg.id === selectedSubgroup.id ? { ...sg, supersets } : sg
-      );
+    // 1) Update the target component (not in place)
+    const nextSubgroups = component.subgroups.map((sg) => {
+      // If this subgroup is the selected one, replace its supersets
+      if (selectedSubgroup && sg.id === selectedSubgroup.id) {
+        return { ...sg, supersets: [...newSupersets] };
+      }
+      // If this subgroup is one of the children we adjusted, replace it by id
+      const child = childrenSubgroups.find((c) => c.id === sg.id);
+      return child ? { ...child, supersets: [...child.supersets] } : sg;
+    });
 
-    // update children subgroups
-    for (const sg of childrenSubgroups)
-      component.subgroups = component.subgroups.map((s) =>
-        s.id === sg.id ? sg : s
-      );
+    const nextComponent: TrainingComponent = !selectedSubgroup
+      ? { ...component, supersets: [...newSupersets], subgroups: nextSubgroups }
+      : { ...component, subgroups: nextSubgroups };
 
-    // update training components
-    training.components = training.components.map((c) =>
-      c.id === component.id ? component : c
+    // 2) Update training.components immutably
+    const nextTraining: Training = {
+      ...training,
+      components: training.components.map((c) =>
+        c.id === nextComponent.id ? nextComponent : c
+      ),
+    };
+
+    // 3) Push all-new references into state
+    setSupersets([...newSupersets]); // new array ref
+    setComponent(nextComponent); // new object ref
+    setTraining(nextTraining); // new object ref
+    setSelectedSubgroup((prev) =>
+      prev ? { ...prev, supersets: [...newSupersets] } : null
     );
-
-    setSupersets(supersets);
-    setComponent(component);
-    setTraining(training);
-    setSelectedSubgroup((prev) => (!prev ? null : { ...prev, supersets }));
   }
 
   const value: TrainerDayViewContextProps = {

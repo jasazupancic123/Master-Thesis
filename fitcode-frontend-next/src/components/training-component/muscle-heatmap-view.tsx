@@ -43,7 +43,7 @@ export default function MuscleHeatmapView() {
     setSelectedLoadType,
     range,
     setRange,
-  } = useMuscleHeatmap(exercises);
+  } = useMuscleHeatmap();
 
   useEffect(() => {
     setExercises(supersets.flatMap((s) => s.exercises));
