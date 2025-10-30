@@ -163,13 +163,13 @@ describe('Get Trainings (e2e)', () => {
   }
 
   it('should return all trainings by trainer', async () => {
-    const response1 = await req({}, trainer1.token);
+    const response1 = await req({ groupId: group.id }, trainer1.token);
     expect(response1.status).toBe(200);
-    expect(response1.body.length).toBe(7);
+    expect(response1.body.length).toBe(5);
 
-    const response2 = await req({}, trainer2.token);
+    const response2 = await req({ groupId: group.id }, trainer2.token);
     expect(response2.status).toBe(200);
-    expect(response2.body.length).toBe(2);
+    expect(response2.body.length).toBe(5);
   });
 
   it('should return trainings by athlete', async () => {
@@ -182,10 +182,16 @@ describe('Get Trainings (e2e)', () => {
     expect(response2.body.length).toBe(6);
   });
 
+  it('should return all trainings by manager', async () => {
+    const response = await req({}, global.manager.token);
+    expect(response.status).toBe(200);
+    expect(response.body.length).toBe(9);
+  });
+
   it('should filter by group', async () => {
     const response1 = await req({ groupId: group.id }, trainer1.token);
     expect(response1.status).toBe(200);
-    expect(response1.body.length).toBe(3);
+    expect(response1.body.length).toBe(5);
 
     const response2 = await req({ groupId: 'test-group' }, trainer1.token);
     expect(response2.status).toBe(200);
@@ -197,7 +203,11 @@ describe('Get Trainings (e2e)', () => {
 
     // from today 00:00 to today 23:59
     const response1 = await req(
-      { from: getTime(today, 0, 0), to: getTime(today, 23, 59) },
+      {
+        from: getTime(today, 0, 0),
+        to: getTime(today, 23, 59),
+        groupId: group.id,
+      },
       trainer1.token,
     );
 
@@ -208,28 +218,35 @@ describe('Get Trainings (e2e)', () => {
       {
         from: getTime(subDays(today, 1), 0, 0), // yesterday, 00:00
         to: getTime(addDays(today, 1), 23, 59), // tomorrow, 23:59
+        groupId: group.id,
       },
       trainer1.token,
     );
 
     expect(response2.status).toBe(200);
-    expect(response2.body.length).toBe(5);
+    expect(response2.body.length).toBe(3);
   });
 
   it('should filter by only start date range', async () => {
     const today = new Date();
-    const response1 = await req({ from: getTime(today, 0, 0) }, trainer1.token);
+    const response1 = await req(
+      { from: getTime(today, 0, 0), groupId: group.id },
+      trainer1.token,
+    );
 
     expect(response1.status).toBe(200);
-    expect(response1.body.length).toBe(5);
+    expect(response1.body.length).toBe(2);
   });
 
   it('should filter by only end date range', async () => {
     const today = new Date();
-    const response1 = await req({ to: getTime(today, 23, 59) }, trainer1.token);
+    const response1 = await req(
+      { to: getTime(today, 23, 59), groupId: group.id },
+      trainer1.token,
+    );
 
     expect(response1.status).toBe(200);
-    expect(response1.body.length).toBe(4);
+    expect(response1.body.length).toBe(5);
   });
 
   it('should filter by multiple properties', async () => {
@@ -241,6 +258,6 @@ describe('Get Trainings (e2e)', () => {
     );
 
     expect(response1.status).toBe(200);
-    expect(response1.body.length).toBe(1);
+    expect(response1.body.length).toBe(2);
   });
 });
