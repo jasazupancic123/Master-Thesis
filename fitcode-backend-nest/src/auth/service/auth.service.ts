@@ -94,11 +94,12 @@ export class AuthService {
     return this.common.env.getFrontendUrl(`/auth/magic?token=${magicJwt}`);
   }
 
-  async verifyMagicLink(token: string): Promise<AuthUser> {
+  // Returns firebase custom token
+  async verifyMagicLink(token: string): Promise<string> {
     try {
       const jwtSecret = this.common.env.getKey('JWT_SECRET');
       const payload = jwt.verify(token, jwtSecret) as { token: string };
-      return await this.verify(payload.token);
+      return payload.token;
     } catch (e) {
       this.logger.error('Magic link verification failed', e);
       throw new BadRequestException('Link expired');
