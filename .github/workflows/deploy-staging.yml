@@ -53,8 +53,10 @@ jobs:
           echo "" >> app-staging.yaml
           echo "env_variables:" >> app-staging.yaml
           echo "  NODE_ENV: 'staging'" >> app-staging.yaml
+          echo "  JWT_SECRET: '${{ vars.JWT_SECRET }}'" >> app-staging.yaml
           echo "  ADMIN_EMAIL: '${{ vars.ADMIN_EMAIL }}'" >> app-staging.yaml
           echo "  ADMIN_PASSWORD: '${{ vars.ADMIN_PASSWORD }}'" >> app-staging.yaml
+          echo "  FRONTEND_URL: '${{ vars.FRONTEND_URL }}'" >> app-staging.yaml
           echo "  FRONTEND_WHITELIST: '${{ vars.FRONTEND_WHITELIST }}'" >> app-staging.yaml
 
       - name: Deploy to App Engine (with retry)

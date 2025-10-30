@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { UserRecord } from 'firebase-admin/auth';
+import * as jwt from 'jsonwebtoken';
 import { v4 } from 'uuid';
 
 import { SESSION_COOKIE_NAME } from '@src/common/constant/cookie.constant';
@@ -69,6 +70,39 @@ export class AuthService {
 
   async logout(res: Response) {
     res.clearCookie(SESSION_COOKIE_NAME);
+  }
+
+  async createMagicLink(user: User, uid: string): Promise<string> {
+    const found = await this.findOneBy('id', uid);
+    if (!found) throw new NotFoundException('User not found');
+
+    // check that user belongs to same institution as requester
+    const institutions = await this.institutionService.findAll(user);
+    if (
+      !institutions.some((institution) =>
+        institution.athleteIds.includes(found.uid),
+      )
+    )
+      throw new ForbiddenException('Cannot create link for this user');
+
+    const jwtSecret = this.common.env.getKey('JWT_SECRET');
+    const customToken = await this.firebase.auth.createCustomToken(found.uid);
+    const magicJwt = jwt.sign({ token: customToken }, jwtSecret, {
+      expiresIn: '15m',
+    });
+
+    return this.common.env.getFrontendUrl(`/auth/magic?token=${magicJwt}`);
+  }
+
+  async verifyMagicLink(token: string): Promise<AuthUser> {
+    try {
+      const jwtSecret = this.common.env.getKey('JWT_SECRET');
+      const payload = jwt.verify(token, jwtSecret) as { token: string };
+      return await this.verify(payload.token);
+    } catch (e) {
+      this.logger.error('Magic link verification failed', e);
+      throw new BadRequestException('Link expired');
+    }
   }
 
   async verify(idToken: string): Promise<AuthUser> {

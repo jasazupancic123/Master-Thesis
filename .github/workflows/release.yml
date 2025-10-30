@@ -77,8 +77,10 @@ jobs:
           echo "" >> app.yaml
           echo "env_variables:" >> app.yaml
           echo "  NODE_ENV: 'production'" >> app.yaml
+          echo "  JWT_SECRET: '${{ vars.JWT_SECRET }}'" >> app.yaml
           echo "  ADMIN_EMAIL: '${{ vars.ADMIN_EMAIL }}'" >> app.yaml
           echo "  ADMIN_PASSWORD: '${{ vars.ADMIN_PASSWORD }}'" >> app.yaml
+          echo "  FRONTEND_URL: '${{ vars.FRONTEND_URL }}'" >> app.yaml
           echo "  FRONTEND_WHITELIST: '${{ vars.FRONTEND_WHITELIST }}'" >> app.yaml
 
       - name: Deploy to App Engine (with retry)

@@ -20,6 +20,8 @@ export class TestExpress {
   }
 
   async get(path: string, idToken: string) {
+    if (!idToken) return request(this.app.getHttpServer()).get(path);
+
     const session = await this.getSessionCookie(idToken);
     return request(this.app.getHttpServer())
       .get(path)
@@ -27,6 +29,11 @@ export class TestExpress {
   }
 
   async post<T = undefined>(path: string, idToken: string, body?: T) {
+    if (!idToken)
+      return request(this.app.getHttpServer())
+        .post(path)
+        .send(body || {});
+
     const session = await this.getSessionCookie(idToken);
     return request(this.app.getHttpServer())
       .post(path)
@@ -35,6 +42,11 @@ export class TestExpress {
   }
 
   async patch<T = undefined>(path: string, idToken: string, body?: T) {
+    if (!idToken)
+      return request(this.app.getHttpServer())
+        .patch(path)
+        .send(body || {});
+
     const session = await this.getSessionCookie(idToken);
     return request(this.app.getHttpServer())
       .patch(path)
@@ -43,6 +55,11 @@ export class TestExpress {
   }
 
   async delete<T = undefined>(path: string, idToken: string, body?: T) {
+    if (!idToken)
+      return request(this.app.getHttpServer())
+        .delete(path)
+        .send(body || {});
+
     const session = await this.getSessionCookie(idToken);
     return request(this.app.getHttpServer())
       .delete(path)

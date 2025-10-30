@@ -2,6 +2,7 @@ import { FirebaseError } from 'firebase/app';
 import type { Auth, UserCredential } from 'firebase/auth';
 import {
   createUserWithEmailAndPassword,
+  signInWithCustomToken,
   signInWithEmailAndPassword,
   updateProfile,
 } from 'firebase/auth';
@@ -44,6 +45,30 @@ export class FirebaseAuthUtil {
           case 'auth/invalid-email':
           case 'auth/weak-password':
             throw new Error('Email or password is incorrect');
+          case 'auth/app-deleted':
+          case 'auth/app-not-authorized':
+          case 'auth/argument-error':
+          case 'auth/invalid-api-key':
+          case 'auth/operation-not-allowed':
+            throw new Error('Internal error');
+          default:
+            throw new Error('An error occurred');
+        }
+      }
+
+      throw new Error('An error occurred');
+    }
+  }
+
+  async signInWithCustomToken(token: string): Promise<UserCredential> {
+    try {
+      return await signInWithCustomToken(this.auth, token);
+    } catch (e: unknown) {
+      if (e instanceof FirebaseError) {
+        switch (e.code) {
+          case 'auth/invalid-custom-token':
+          case 'auth/custom-token-mismatch':
+            throw new Error('Invalid token');
           case 'auth/app-deleted':
           case 'auth/app-not-authorized':
           case 'auth/argument-error':
