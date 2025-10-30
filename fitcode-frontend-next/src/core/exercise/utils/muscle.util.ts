@@ -1,5 +1,6 @@
 import type { TrainingExercise } from '../../training/type/training-exercise.type';
 import { MUSCLES_TREE } from '../constant/muscles-tree.constant';
+import { ExerciseMuscleValue } from '../type/exercise-muscle-value.entity';
 import type { HeatmapLoad } from '../type/heatmap-load.entity';
 import type { Attribute } from '@/core/attribute/type/attribute.type';
 import {
@@ -177,7 +178,7 @@ export class MuscleUtil {
       if (currentLevel > level) level = currentLevel;
     });
 
-    return level;
+    return level + 1; // +1 for leaf level
   }
 
   getCorrectMuscleByLevel(
@@ -198,7 +199,7 @@ export class MuscleUtil {
 
     if (!parent) return undefined;
 
-    let levelsToClimb = maxLevel - level;
+    let levelsToClimb = maxLevel - (level + 1);
 
     while (levelsToClimb > 0 && parent) {
       levelsToClimb--;
@@ -259,5 +260,9 @@ export class MuscleUtil {
     const leafes = lib.common.tree.computeLeafes([foundMuscle], 'options');
 
     return leafes[0] || null;
+  }
+
+  getMuscleLoadSum(load: ExerciseMuscleValue): number {
+    return load.eccentric + load.isometric + load.concentric;
   }
 }
