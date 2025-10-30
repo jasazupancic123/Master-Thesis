@@ -22,6 +22,10 @@ export class EnvUtil {
     return value?.[key];
   }
 
+  getFrontendUrl(path = ''): string {
+    return `${process.env.FRONTEND_URL || `http://localhost:3000`}${path}`;
+  }
+
   isDev() {
     return process.env.NODE_ENV === 'dev';
   }
