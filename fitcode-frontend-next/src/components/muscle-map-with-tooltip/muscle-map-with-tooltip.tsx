@@ -346,7 +346,12 @@ export default function MuscleMapWithTooltip(props: Props) {
                   Exercises:
                 </Typography>
                 {tip.componentExercises.map((exercise) => (
-                  <Typography fontSize={10} fontWeight={600} textAlign="center">
+                  <Typography
+                    key={exercise.id}
+                    fontSize={10}
+                    fontWeight={600}
+                    textAlign="center"
+                  >
                     &bull; {exercise.exercise?.name}
                   </Typography>
                 ))}

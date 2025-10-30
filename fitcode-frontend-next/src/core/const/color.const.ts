@@ -18,6 +18,8 @@ export const GRAPH_COLORS = [
   '#FFA500',
 ];
 
+export const HEATMAP_EXERCISE_COUNT_COLORS = ['#EAFF48', '#FF7B00', '#E02600'];
+
 export const HEATMAP_COLORS = [
   COMMON_COLORS.yellow,
   '#FFA14E',

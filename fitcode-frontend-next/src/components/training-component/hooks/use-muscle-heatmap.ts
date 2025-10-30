@@ -60,11 +60,17 @@ export default function useMuscleHeatmap() {
   }, [tipHeatmapFront, tipHeatmapBack]);
 
   useEffect(() => {
-    const newHeatmapLevel =
+    const newMaxHeatmapLevel =
       core.exercise.muscle.getMaxHeatmapLevel(muscleLoads);
-    setMaxHeatmapLevel(newHeatmapLevel);
+    setMaxHeatmapLevel(newMaxHeatmapLevel);
 
-    paintHeatmaps(muscleLoads, selectedLoadType);
+    paintHeatmaps(
+      muscleLoads,
+      exercises,
+      selectedLoadType,
+      heatmapLevel,
+      newMaxHeatmapLevel
+    );
   }, [muscleLoads, selectedLoadType, selectedAthlete, range, exercises]);
 
   /* Generate muscle loads */
