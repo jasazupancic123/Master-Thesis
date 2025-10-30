@@ -1,4 +1,5 @@
 import { createContext, useContext } from 'react';
+import { unstable_batchedUpdates } from 'react-dom';
 
 import { useMain } from './main.provider';
 import { useTrainerDayView } from './trainer-day-view.provider';
@@ -12,6 +13,7 @@ import type {
   ExerciseParamFieldExtended,
 } from '@/core/training/type/exercise-set.type';
 import type { Superset } from '@/core/training/type/superset.type';
+import type { Training } from '@/core/training/type/training.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { SetState } from '@/lib/common/type/state.type';
 
@@ -31,6 +33,7 @@ interface Props extends React.PropsWithChildren {
 interface ISupersetsContext extends Props {
   handleMenuClose: () => void;
   updateTrainingExercises: (
+    newTraining: Training,
     exercises: TrainingExercise[],
     options?: { updateSubgroups?: boolean }
   ) => void;
@@ -48,7 +51,7 @@ interface ISupersetsContext extends Props {
       value: number | string | undefined;
       setIndex?: number;
     }[],
-    options?: { updateSubgroups?: boolean }
+    options?: { updateSubgroups?: boolean; updateWholePair?: boolean }
   ) => void;
 }
 
@@ -87,12 +90,12 @@ export function SupersetsProvider(props: Props) {
   const handleMenuClose = () => setMenuExercise(null);
 
   function updateTrainingExercises(
+    newTraining: Training,
     exercises: TrainingExercise[],
     options?: { updateSubgroups?: boolean }
   ) {
-    if (!component || !training) return;
+    if (!component || !newTraining) return;
 
-    const newTraining = structuredClone(training);
     const newComponent =
       component.id === WARMUP_ID
         ? newTraining.warmup!
@@ -108,7 +111,7 @@ export function SupersetsProvider(props: Props) {
         let updatedSupersets: Superset[] = [];
         for (const exercise of exercises)
           updatedSupersets = core.training.superset.updateExercise(exercise, {
-            training,
+            training: newTraining,
             componentId: component.id,
             subgroupId: child.id,
           });
@@ -117,26 +120,30 @@ export function SupersetsProvider(props: Props) {
         const subgroup = newComponent.subgroups.find(
           (sg) => sg.id === child.id
         );
+
         if (subgroup) subgroup.supersets = updatedSupersets;
       }
     }
 
     let updatedSupersets: Superset[] = [];
-    for (const exercise of exercises)
+    for (const exercise of exercises) {
       updatedSupersets = core.training.superset.updateExercise(exercise, {
-        training,
+        training: newTraining,
         componentId: component.id,
         subgroupId: selectedSubgroup?.id,
       });
+    }
 
     const updatedSubgroup =
       newComponent.subgroups.find((sg) => sg.id === selectedSubgroup?.id) ||
       null;
 
-    setSupersets(updatedSupersets);
-    setSelectedSubgroup(updatedSubgroup);
-    setComponent(newComponent);
-    setTraining(newTraining);
+    unstable_batchedUpdates(() => {
+      setSupersets(updatedSupersets);
+      setSelectedSubgroup(updatedSubgroup);
+      setComponent(newComponent);
+      setTraining(newTraining);
+    });
   }
 
   function updateTrainingExerciseParam(
@@ -148,7 +155,8 @@ export function SupersetsProvider(props: Props) {
   ) {
     if (!component || !training) return;
 
-    const trainingExercises = core.training.getExercises(training, {
+    const newTraining = structuredClone(training);
+    const trainingExercises = core.training.getExercises(newTraining, {
       componentId: component.id,
       subgroupId: selectedSubgroup?.id,
     });
@@ -172,7 +180,7 @@ export function SupersetsProvider(props: Props) {
 
         if (prevSets > +sets && +sets > 0)
           e.sets = [...e.sets].slice(0, +sets); // remove sets
-        else {
+        else
           e.sets = [
             ...e.sets,
             ...Array(+sets - prevSets).fill(
@@ -180,7 +188,9 @@ export function SupersetsProvider(props: Props) {
                 core.training.set.stub(prevSets, dbExercise)
             ),
           ];
-        }
+
+        // update set numbers after adding/removing sets
+        e.sets = e.sets.map((s, i) => ({ ...s, setNumber: i + 1 }));
       }
 
       const uni = dbExercise.isUnilateral;
@@ -204,7 +214,7 @@ export function SupersetsProvider(props: Props) {
         };
     }
 
-    updateTrainingExercises(exercises, options);
+    updateTrainingExercises(newTraining, exercises, options);
   }
 
   // same as updateTrainingExerciseParam but for multiple fields with a single state update
@@ -215,20 +225,22 @@ export function SupersetsProvider(props: Props) {
       value: number | string | undefined;
       setIndex?: number;
     }[],
-    options?: { updateSubgroups?: boolean }
+    options?: { updateWholePair?: boolean; updateSubgroups?: boolean }
   ) {
     if (!component || !training) return;
 
-    const trainingExercises = core.training.getExercises(training, {
+    const newTraining = structuredClone(training);
+    const trainingExercises = core.training.getExercises(newTraining, {
       componentId: component.id,
       subgroupId: selectedSubgroup?.id,
     });
 
     const exercises = trainingExercises
       .filter((e) => selectedExerciseIds.includes(e.id))
+      .map((e) => structuredClone(e))
       .filter((e) => e.id !== exercise.id); // exclude current exercise
 
-    exercises.push(exercise); // add new updated exercise
+    exercises.push(structuredClone(exercise)); // add new updated exercise
 
     // update all selected exercises with the param change
     for (const e of exercises) {
@@ -261,24 +273,27 @@ export function SupersetsProvider(props: Props) {
           ? core.exercise.param.pairs[field as ExerciseParamField]
           : null;
 
+        const updatePairObject =
+          pair && options?.updateWholePair ? { [pair]: value } : {};
+
         if (setIndex === undefined)
           // update all sets
           e.sets = e.sets.map((s) => ({
             ...s,
             [field]: value,
-            ...(pair && value === undefined ? { [pair]: value } : {}),
+            ...updatePairObject,
           }));
         else if (e.sets[setIndex])
           // update provided set
           e.sets[setIndex] = {
             ...e.sets[setIndex],
             [field]: value,
-            ...(pair && value === undefined ? { [pair]: value } : {}),
+            ...updatePairObject,
           };
       }
     }
 
-    updateTrainingExercises(exercises, options);
+    updateTrainingExercises(newTraining, exercises, options);
   }
 
   const value: ISupersetsContext = {

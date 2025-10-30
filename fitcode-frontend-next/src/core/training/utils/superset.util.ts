@@ -119,7 +119,7 @@ export class TrainingSupersetUtil {
     for (const s of supersets)
       for (let i = 0; i < s.exercises.length; i++)
         if (s.exercises[i].id === newExercise.id) {
-          s.exercises[i] = structuredClone(newExercise);
+          s.exercises[i] = newExercise;
           break;
         }
 
