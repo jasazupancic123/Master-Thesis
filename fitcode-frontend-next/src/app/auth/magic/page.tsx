@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { AuthController } from '@/core/auth/auth.controller';
@@ -47,6 +47,9 @@ export default function Page() {
     login().then();
   }, [token]);
 
-  if (error) return <div>{error}</div>;
-  return <div>Logging you in...</div>;
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      {error ? <div>{error}</div> : <div>Logging you in...</div>}
+    </Suspense>
+  );
 }
