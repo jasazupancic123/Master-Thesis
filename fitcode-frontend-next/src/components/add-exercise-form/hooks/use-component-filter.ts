@@ -24,7 +24,7 @@ export default function useComponentFilter() {
   );
   const [selectedRootComponentId, setSelectedRootComponentId] = useState<
     string | null
-  >(null); // which one is clicked, used for leaf menu
+  >(null); // which subcomponent tree is open
 
   const [anchorElRoot, setAnchorElRoot] = useState<null | HTMLElement>(null);
   const [anchorElLeaf, setAnchorElLeaf] = useState<null | HTMLElement>(null);
@@ -36,6 +36,33 @@ export default function useComponentFilter() {
     componentId: string
   ) => {
     setAnchorElLeaf(event.currentTarget);
+
+    const children = lib.common.tree.fromArray(components, {
+      rootId: componentId,
+      idPropertyName: 'id',
+      parentIdPropertyName: 'parentId',
+      childrenPropertyName: 'children',
+    });
+
+    const selectedChildren = children.filter((c) =>
+      selectedComponentsIds.includes(c.id)
+    );
+
+    if (children.length === 0) {
+      if (selectedComponentsIds.includes(componentId))
+        setSelectedComponentsIds((prev) =>
+          prev.filter((id) => id !== componentId)
+        );
+      else setSelectedComponentsIds((prev) => [...prev, componentId]);
+    } else if (!selectedChildren.length) {
+      setSelectedComponentsIds((prev) => [
+        ...prev,
+        ...children
+          .map((c) => c.id)
+          .filter((childId) => !prev.includes(childId)),
+      ]);
+    }
+
     setSelectedRootComponentId(componentId);
   };
 
@@ -55,6 +82,8 @@ export default function useComponentFilter() {
     }) as unknown as TreeComponent[];
 
     setFilterComponents(componentTree);
+    setSelectedRootComponentId(null);
+    setSelectedComponentsIds([]);
   }, [component, selectedComponent]);
 
   useEffect(() => {
@@ -70,47 +99,6 @@ export default function useComponentFilter() {
     setLeafComponents(componentTree);
   }, [selectedRootComponentId]);
 
-  const onComponentsMenuItemClick = (
-    e: React.MouseEvent<HTMLElement>,
-    id: string
-  ) => {
-    const children = lib.common.tree.fromArray(components, {
-      rootId: id,
-      idPropertyName: 'id',
-      parentIdPropertyName: 'parentId',
-      childrenPropertyName: 'children',
-    });
-
-    if (selectedRootComponentId !== id) setSelectedRootComponentId(id);
-    else if (selectedRootComponentId === id) setSelectedRootComponentId(null);
-
-    if (children.length) {
-      if (children.every((c) => selectedComponentsIds.includes(c.id))) {
-        setSelectedComponentsIds((prev) =>
-          prev.filter(
-            (componentId) => !children.some((child) => child.id === componentId)
-          )
-        );
-      } else if (children.every((c) => !selectedComponentsIds.includes(c.id))) {
-        const childrenIds = children.map((c) => c.id);
-        setSelectedComponentsIds((prev) => [
-          ...prev,
-          ...childrenIds.filter((childId) => !prev.includes(childId)),
-        ]);
-      }
-    } else {
-      if (selectedComponentsIds.includes(id)) {
-        setSelectedComponentsIds((prev) =>
-          prev.filter((componentId) => componentId !== id)
-        );
-      } else {
-        setSelectedComponentsIds((prev) => [...prev, id]);
-      }
-    }
-
-    handleClickLeaf(e, id);
-  };
-
   return {
     selectedComponent,
     setSelectedComponent,
@@ -124,6 +112,5 @@ export default function useComponentFilter() {
     openLeafMenu,
     handleClickLeaf,
     handleCloseLeaf,
-    onComponentsMenuItemClick,
   };
 }
