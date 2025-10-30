@@ -11,12 +11,12 @@ import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 
 export default function useMuscleHeatmap() {
   const { trainings } = useGroup();
-  const { training, component, supersets, selectedAthlete } =
+  const { training, component, supersets, selectedAthlete, selectedSubgroup } =
     useTrainerDayView();
 
   const [exercises, setExercises] = useState<TrainingExercise[]>([]);
-  const [heatmapLevel, setHeatmapLevel] = useState<number>(0);
-  const [maxHeatmapLevel, setMaxHeatmapLevel] = useState<number>(0);
+  const [heatmapLevel, setHeatmapLevel] = useState<number>(1);
+  const [maxHeatmapLevel, setMaxHeatmapLevel] = useState<number>(1);
 
   const [muscleLoads, setMuscleLoads] = useState<[string, HeatmapLoad][]>([]);
 
@@ -49,8 +49,12 @@ export default function useMuscleHeatmap() {
   ]);
 
   useEffect(() => {
-    setExercises(supersets.flatMap((s) => s.exercises));
-  }, [component, supersets]);
+    if (selectedSubgroup) {
+      setExercises(selectedSubgroup.supersets.flatMap((s) => s.exercises));
+    } else if (component) {
+      setExercises(component.supersets.flatMap((s) => s.exercises));
+    }
+  }, [component, selectedSubgroup]);
 
   useEffect(() => {
     if (tipHeatmapBack.show && tipHeatmapFront.show) {
@@ -95,6 +99,7 @@ export default function useMuscleHeatmap() {
       (t) => {
         const exercises = core.training.getExercises(t, {
           componentId: component.id,
+          subgroupId: selectedSubgroup?.id,
         });
 
         return core.exercise.muscle.generateLoads(
@@ -168,6 +173,7 @@ export default function useMuscleHeatmap() {
     maxHeatmapLevel,
     range,
     selectedAthlete,
+    selectedSubgroup,
     component,
     supersets,
   ]);

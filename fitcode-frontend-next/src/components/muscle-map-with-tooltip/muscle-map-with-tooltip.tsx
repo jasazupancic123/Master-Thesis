@@ -1,7 +1,7 @@
 'use client';
 import { Close } from '@mui/icons-material';
 import { Box, IconButton, Slider, Typography, useTheme } from '@mui/material';
-import { Fragment, useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 import {
   clearHideTimer,
@@ -48,7 +48,7 @@ export default function MuscleMapWithTooltip(props: Props) {
 
   const trainerDayViewProvider = useTrainerDayView();
 
-  const { training, component, addTrainingExercises } =
+  const { training, component, supersets, addTrainingExercises } =
     trainerDayViewProvider || {};
 
   const { exercises: allExercises } = useMain();
@@ -216,7 +216,7 @@ export default function MuscleMapWithTooltip(props: Props) {
         };
       });
     },
-    [component, muscleLoads, tip]
+    [component, supersets, muscleLoads, tip]
   );
 
   return (
