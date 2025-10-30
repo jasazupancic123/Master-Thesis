@@ -14,6 +14,10 @@ import { Auth } from '@src/common/decorator/auth.decorator';
 import { RequestUser } from '@src/common/decorator/request-user.decorator';
 import { User } from '@src/common/type/firebase-auth.type';
 
+import {
+  CreateMagicLinkDto,
+  VerifyMagicLinkDto,
+} from './dto/create-magic-link.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateCustomClaimsDto } from './dto/custom-claims.dto';
 import { FilterUserQueryDto } from './dto/filter-user-query.dto';
@@ -77,5 +81,21 @@ export class AuthController {
   @Auth([UserRole.ADMIN, UserRole.MANAGER])
   async registerUser(@RequestUser() user: User, @Body() body: CreateUserDto) {
     return await this.authService.registerUser(user, body);
+  }
+
+  @Post('link')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER])
+  async createLink(
+    @RequestUser() user: User,
+    @Body() { userId }: CreateMagicLinkDto,
+  ) {
+    const link = await this.authService.createMagicLink(user, userId);
+    return { link };
+  }
+
+  @Post('link/verify')
+  async verifyLink(@Body() { token }: VerifyMagicLinkDto) {
+    const firebaseToken = await this.authService.verifyMagicLink(token);
+    return { firebaseToken };
   }
 }
