@@ -1,4 +1,7 @@
-import { RadioButtonChecked, RadioButtonUnchecked } from '@mui/icons-material';
+import {
+  CheckBox as CheckBoxIcon,
+  CheckBoxOutlineBlank,
+} from '@mui/icons-material';
 import { Checkbox, useTheme } from '@mui/material';
 
 import {
@@ -31,7 +34,6 @@ export default function TrainingExerciseSetDoneCheckbox(
     setSetIndex,
     supersetIndex,
     setSupersetIndex,
-    setSelectedSuperset,
   } = useTrainingInProgress();
 
   const { exercise, applyTopMargin, exerciseView, small, setIndex } = props;
@@ -74,7 +76,6 @@ export default function TrainingExerciseSetDoneCheckbox(
       }));
       setSelectedExercise(nextSuperset.exercises[0]);
       setSetIndex(0);
-      setSelectedSuperset(nextSuperset);
       setSupersetIndex(supersetIndex + 1);
 
       return;
@@ -114,7 +115,7 @@ export default function TrainingExerciseSetDoneCheckbox(
   return (
     <Checkbox
       icon={
-        <RadioButtonUnchecked
+        <CheckBoxOutlineBlank
           sx={{
             color: theme.palette.primary.main,
             fontSize: small ? 14 : undefined,
@@ -122,7 +123,7 @@ export default function TrainingExerciseSetDoneCheckbox(
         />
       }
       checkedIcon={
-        <RadioButtonChecked
+        <CheckBoxIcon
           sx={{
             color: theme.palette.primary.main,
             fontSize: small ? 14 : undefined,

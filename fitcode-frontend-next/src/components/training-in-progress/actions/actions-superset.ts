@@ -14,28 +14,20 @@ export function handleChangeSuperset(
   context: {
     useTraining: ITrainingContextDefined;
     useTrainingInProgress: ITrainingInProgressContext;
-    useTrainingInProgressUtils: ITrainingInProgressUtilsCtx;
     useUndoneExercises: IUndoneExercisesCtx;
   }
 ) {
   const { superset, i } = input;
 
-  const {
-    useTraining,
-    useTrainingInProgress,
-    useTrainingInProgressUtils,
-    useUndoneExercises,
-  } = context;
+  const { useTraining, useTrainingInProgress, useUndoneExercises } = context;
 
-  const { trainingInProgress, setTrainingInProgress } = useTraining;
+  const { trainingInProgress } = useTraining;
   const { setUndoneExercises } = useUndoneExercises;
-  const { setSelectedSuperset, setSelectedExercise, setSetIndex } =
+  const { setSelectedExercise, setSetIndex, setSupersetIndex, supersetIndex } =
     useTrainingInProgress;
 
-  const { setShowUndoneSetsWarning } = useTrainingInProgressUtils;
-
   const undoneExercises = core.training.superset.getUndoneExercises(
-    trainingInProgress.supersets[trainingInProgress.supersetIndex ?? 0],
+    trainingInProgress.supersets[supersetIndex ?? 0],
     trainingInProgress.exerciseSetTrackingState
   );
 
@@ -43,20 +35,16 @@ export function handleChangeSuperset(
     undoneExercises.map((exercise) => ({
       ...exercise,
       componentId: trainingInProgress.selectedComponent.id,
-      supersetIndex: trainingInProgress.supersetIndex || 0,
+      supersetIndex: supersetIndex || 0,
     }));
 
   if (undoneExercises.length > 0) {
     setUndoneExercises(extendedUndoneExercises);
-    setShowUndoneSetsWarning(true);
   }
 
-  setSelectedSuperset(superset);
+  setSupersetIndex(i);
   setSelectedExercise(superset.exercises[0] || null);
   setSetIndex(0);
-  setTrainingInProgress((prev) =>
-    prev && prev.supersetIndex !== i ? { ...prev, supersetIndex: i } : prev
-  );
 }
 
 export const handleFinishSuperset = async (context: {
@@ -74,14 +62,14 @@ export const handleFinishSuperset = async (context: {
 
   const { trainingInProgress } = useTraining;
 
-  const { selectedSuperset } = useTrainingInProgress;
+  const { supersetIndex } = useTrainingInProgress;
 
   const { handleCloseMenu, handleCancelTraining, setShowUndoneSetsError } =
     useTrainingInProgressUtils;
 
   const { setUndoneExercises } = useUndoneExercises;
 
-  if (!trainingInProgress?.supersets || !selectedSuperset) return;
+  if (!trainingInProgress?.supersets) return;
 
   handleCloseMenu();
 
@@ -104,7 +92,7 @@ export const handleFinishSuperset = async (context: {
     undoneExercises.map((exercise) => ({
       ...exercise,
       componentId: trainingInProgress.selectedComponent.id,
-      supersetIndex: trainingInProgress.supersetIndex || 0,
+      supersetIndex: supersetIndex || 0,
     }));
 
   if (undoneExercises.length > 0) {

@@ -10,14 +10,10 @@ import type { CreateWorkload } from '@/core/training/type/workload.type';
 import { handleApiRequest, type SetState } from '@/lib/common/type/state.type';
 
 export interface ITrainingInProgressContext {
-  selectedSuperset: SupersetRecording | undefined;
-  setSelectedSuperset: SetState<SupersetRecording | undefined>;
   selectedExercise: TrainingExerciseRecording | undefined;
   setSelectedExercise: SetState<TrainingExerciseRecording | undefined>;
   supersetIndex: number | undefined;
   setSupersetIndex: SetState<number | undefined>;
-  exerciseIndex: number | undefined;
-  setExerciseIndex: SetState<number | undefined>;
   setIndex: number | undefined;
   setSetIndex: SetState<number | undefined>;
   handleUpsertSet: (
@@ -118,14 +114,10 @@ export const TrainingInProgressProvider = ({
   return (
     <TrainingInProgressContext.Provider
       value={{
-        selectedSuperset,
-        setSelectedSuperset,
         selectedExercise,
         setSelectedExercise,
         supersetIndex,
         setSupersetIndex,
-        exerciseIndex,
-        setExerciseIndex,
         setIndex,
         setSetIndex,
         handleUpsertSet,

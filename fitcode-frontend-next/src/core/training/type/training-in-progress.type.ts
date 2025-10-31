@@ -10,7 +10,6 @@ export type TrainingInProgress = {
   selectedComponent: TrainingComponentRecording;
   supersets: SupersetRecording[];
   startOfTraining: Dayjs | null;
-  supersetIndex: number;
   userId: string;
   exerciseSetTrackingState: ExerciseSetTracking[];
 };

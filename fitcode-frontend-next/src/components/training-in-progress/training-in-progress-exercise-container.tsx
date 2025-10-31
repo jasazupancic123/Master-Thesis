@@ -14,7 +14,7 @@ import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 
-export default function TrainingInProgressSuperset() {
+export default function TrainingInProgressExerciseContainer() {
   const theme = useTheme();
   const traininContext = useTraining();
   const trainingInProgressContext = useTrainingInProgress();
@@ -27,11 +27,11 @@ export default function TrainingInProgressSuperset() {
   const { anchorEl, open, handleCancel, handleOpenMenu, handleCloseMenu } =
     trainingInProgressUtilsContext;
 
-  const { selectedSuperset, selectedExercise } = trainingInProgressContext;
+  const { selectedExercise } = trainingInProgressContext;
 
   const boxRef = useRef<HTMLDivElement | null>(null);
 
-  if (!trainingInProgress || !selectedSuperset) return null;
+  if (!trainingInProgress) return null;
 
   return (
     <Box width="100%" display="flex" flexDirection="column" alignItems="center">
@@ -74,8 +74,8 @@ export default function TrainingInProgressSuperset() {
           onClick={async () =>
             await handleFinishSuperset({
               useTraining: { ...traininContext, trainingInProgress },
-              useTrainingInProgress: trainingInProgressContext,
               useUndoneExercises: trainingInProgressUndoneExercisesContext,
+              useTrainingInProgress: trainingInProgressContext,
               useTrainingInProgressUtils: trainingInProgressUtilsContext,
             })
           }

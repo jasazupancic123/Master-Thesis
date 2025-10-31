@@ -8,8 +8,14 @@ import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 export default function UndoneExercisesList() {
   const { undoneExercises } = useUndoneExercises();
   const { trainingInProgress } = useTraining();
-  const { selectedSuperset } = useTrainingInProgress();
+
+  const { supersetIndex } = useTrainingInProgress();
+
   if (!trainingInProgress) return null;
+
+  const selectedSuperset = trainingInProgress.supersets[supersetIndex!];
+
+  if (!selectedSuperset) return null;
 
   return (
     <Box

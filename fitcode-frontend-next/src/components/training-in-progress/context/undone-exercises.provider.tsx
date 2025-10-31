@@ -16,8 +16,7 @@ export const useUndoneExercises = () => useContext(UndoneExercisesContext)!;
 
 export function UndoneExercisesProvider({ children }: React.PropsWithChildren) {
   const { trainingInProgress } = useTraining();
-  const { setShowUndoneSetsWarning, setShowUndoneSetsError } =
-    useTrainingInProgressUtils();
+  const { setShowUndoneSetsError } = useTrainingInProgressUtils();
 
   const [undoneExercises, setUndoneExercises] = useState<
     TrainingExerciseExtended[]
@@ -25,7 +24,6 @@ export function UndoneExercisesProvider({ children }: React.PropsWithChildren) {
 
   useEffect(() => {
     if (!undoneExercises.length) {
-      setShowUndoneSetsWarning(false);
       setShowUndoneSetsError(false);
       return;
     }
