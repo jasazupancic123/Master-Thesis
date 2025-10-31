@@ -20,7 +20,6 @@ export interface ITrainingInProgressUtilsCtx {
   handleCloseMenu: () => void;
   handleCancel: () => void;
   handleCancelTraining: () => Promise<void>;
-  formatTime: (seconds: number) => string;
 }
 
 const TrainingInProgressUtilsContext =
@@ -76,14 +75,6 @@ export function TrainingInProgressUtilsProvider({
     setOpenCancelTrainingModal(true);
   };
 
-  const formatTime = (seconds: number) => {
-    if (isNaN(seconds)) return '00:00:00'; // Default to zero time if invalid
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = seconds % 60;
-    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-  };
-
   const value: ITrainingInProgressUtilsCtx = {
     showUndoneSetsError,
     setShowUndoneSetsError,
@@ -96,7 +87,6 @@ export function TrainingInProgressUtilsProvider({
     handleCloseMenu,
     handleCancel,
     handleCancelTraining,
-    formatTime,
   };
 
   return (

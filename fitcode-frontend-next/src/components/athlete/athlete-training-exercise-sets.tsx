@@ -5,7 +5,7 @@ import { useTheme } from '@mui/material';
 import { NumberExerciseParam } from '../exercise-param/number-exercise-param';
 import { TempoExerciseParam } from '../exercise-param/tempo-exercise-param';
 import { core } from '@/core/core.service';
-import { KG, SETS } from '@/core/exercise/constant/exercise-param.constant';
+import { KG } from '@/core/exercise/constant/exercise-param.constant';
 import type { ExerciseSet } from '@/core/training/type/exercise-set.type';
 import type { ExerciseSetTracking } from '@/core/training/type/exercise-set-tracking-state.type';
 import type { Training } from '@/core/training/type/training.type';
@@ -172,8 +172,6 @@ export default function AthleteTrainingExerciseSets({
                       disableOptions
                       onInputChange={(value) => {
                         exercise.sets[index][KG.field] = +value as never;
-
-                        console.log('supersetIndex', supersetIndex);
 
                         updateTrainingInProgress(exercise, supersetIndex || 0);
                       }}
