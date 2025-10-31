@@ -14,10 +14,11 @@ export function handleInitTrainingInProgressComponent(context: {
   const { trainingInProgress, setTrainingInProgress } = useTraining;
 
   const {
-    setSelectedSuperset,
     selectedExercise,
     setSelectedExercise,
     setSetIndex,
+    supersetIndex,
+    setSupersetIndex,
   } = useTrainingInProgressContext;
 
   const newTrainingInProgress = { ...trainingInProgress };
@@ -43,15 +44,12 @@ export function handleInitTrainingInProgressComponent(context: {
 
   let newSelectedSuperset: SupersetRecording | undefined = undefined;
 
-  if (!newTrainingInProgress.supersetIndex) {
-    newTrainingInProgress.supersetIndex = 0;
+  if (supersetIndex === undefined) {
     newSelectedSuperset = component.supersets[0];
+    setSupersetIndex(0);
   } else {
-    newSelectedSuperset =
-      component.supersets[newTrainingInProgress.supersetIndex || 0];
+    newSelectedSuperset = component.supersets[supersetIndex || 0];
   }
-
-  setSelectedSuperset(newSelectedSuperset);
 
   if (!selectedExercise) {
     setSelectedExercise(newSelectedSuperset?.exercises[0] || null);
@@ -64,7 +62,6 @@ export function handleInitTrainingInProgressComponent(context: {
       selectedComponent: component,
       supersets: component.supersets,
       startOfTraining: newTrainingInProgress.startOfTraining,
-      supersetIndex: newTrainingInProgress.supersetIndex,
     } as TrainingInProgress;
   });
 }

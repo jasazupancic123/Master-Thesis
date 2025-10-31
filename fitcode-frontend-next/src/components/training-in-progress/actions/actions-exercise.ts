@@ -39,18 +39,21 @@ export function updateTrainingExerciseWithAI(
 }
 
 export const goToNextExercise = (context: {
+  useTraining: ITrainingContextDefined;
   useTrainingInProgress: ITrainingInProgressContext;
 }) => {
-  const { useTrainingInProgress } = context;
+  const { useTraining, useTrainingInProgress } = context;
 
-  const {
-    selectedSuperset,
-    selectedExercise,
-    setSelectedExercise,
-    setSetIndex,
-  } = useTrainingInProgress;
+  const { trainingInProgress } = useTraining;
 
-  if (!selectedSuperset || !selectedExercise) return;
+  const { selectedExercise, supersetIndex, setSelectedExercise, setSetIndex } =
+    useTrainingInProgress;
+
+  if (!selectedExercise) return;
+
+  const selectedSuperset = trainingInProgress.supersets[supersetIndex!];
+
+  if (!selectedSuperset) return;
 
   const currentIndex = selectedSuperset.exercises.indexOf(selectedExercise);
   const nextExercise = selectedSuperset.exercises[currentIndex + 1];
@@ -61,16 +64,17 @@ export const goToNextExercise = (context: {
 };
 
 export const goToPreviousExercise = (context: {
+  useTraining: ITrainingContextDefined;
   useTrainingInProgress: ITrainingInProgressContext;
 }) => {
-  const { useTrainingInProgress } = context;
+  const { useTraining, useTrainingInProgress } = context;
 
-  const {
-    selectedSuperset,
-    selectedExercise,
-    setSelectedExercise,
-    setSetIndex,
-  } = useTrainingInProgress;
+  const { trainingInProgress } = useTraining;
+
+  const { selectedExercise, supersetIndex, setSelectedExercise, setSetIndex } =
+    useTrainingInProgress;
+
+  const selectedSuperset = trainingInProgress.supersets[supersetIndex!];
 
   if (!selectedSuperset || !selectedExercise) return;
 
