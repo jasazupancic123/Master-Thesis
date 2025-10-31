@@ -2,7 +2,11 @@ import React from 'react';
 import { useEffect, useState } from 'react';
 
 // A tiny, isolated ticker that only re-renders itself
-export const ElapsedTime = React.memo(({ startMs }: { startMs: number }) => {
+export const ElapsedTime = React.memo(function ElapsedTime({
+  startMs,
+}: {
+  startMs: number;
+}) {
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {

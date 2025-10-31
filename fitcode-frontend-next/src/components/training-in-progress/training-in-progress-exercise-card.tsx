@@ -1,3 +1,4 @@
+import { Circle } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Image from 'next/image';
@@ -18,7 +19,6 @@ import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import ImageGallery from '@/ui/image-gallery';
-import { Circle } from '@mui/icons-material';
 
 export default function TrainingInProgressExerciseCard() {
   const theme = useTheme();

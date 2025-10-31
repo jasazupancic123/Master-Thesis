@@ -4,15 +4,15 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import {
   Box,
   Fab,
-  Menu,
   LinearProgress,
+  Menu,
   MenuItem,
   Typography,
 } from '@mui/material';
-
 import { linearProgressClasses } from '@mui/material';
-
 import { useTheme } from '@mui/material';
+import dayjs from 'dayjs';
+import Image from 'next/image';
 import React, { useEffect } from 'react';
 
 import AthleteOptionsContainer from '../athlete/athlete-options-container';
@@ -23,14 +23,12 @@ import UndoneSetsErrorModal from './modals/undone-sets-error-modal';
 import TrainingInProgressExerciseContainer from './training-in-progress-exercise-container';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
+import { lib } from '@/lib';
+import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
 import { preloadPoseLandmarker } from '@/lib/pose-detection/util/pose-landmarker-loader.util';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
-import Image from 'next/image';
-import { lib } from '@/lib';
-import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
-import dayjs from 'dayjs';
 
 export default function TrainingInProgress() {
   const theme = useTheme();
@@ -55,7 +53,6 @@ export default function TrainingInProgress() {
     handleOpenMenu,
     handleCloseMenu,
     handleCancel,
-    formatTime,
     openCancelTrainingModal,
     setOpenCancelTrainingModal,
     showUndoneSetsError,
