@@ -16,6 +16,7 @@ interface LoadingOverlayProps {
 }
 
 export default function LoadingOverlay(props: LoadingOverlayProps) {
+  console.log('LOADING OVERLAY RENDER');
   const screenSize = useScreenSize();
 
   const { title, children, showLogos, topDownCircularProgress } = props;
@@ -33,7 +34,7 @@ export default function LoadingOverlay(props: LoadingOverlayProps) {
       gap={2}
       sx={{
         zIndex: 130000,
-        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
       }}
     >
       {showLogos && <Logo width={screenSize.isMobile ? 200 : 250} />}

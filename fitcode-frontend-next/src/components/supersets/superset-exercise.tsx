@@ -72,15 +72,11 @@ export default function SupersetExercise({
     <Grid2
       size={
         (selectedSubgroup || component).mainSet === MainSet.CIRCUIT
-          ? screenSize.isSmallerThanLaptop
-            ? 12
-            : numExercises === 1
+          ? screenSize.isDesktop
+            ? 3
+            : screenSize.isSmallerThanLaptop
               ? 12
-              : numExercises === 2
-                ? 6
-                : numExercises === 3
-                  ? 4
-                  : 3
+              : 4
           : screenSize.isSmallerThanLaptop
             ? 12
             : { xs: 12 }
