@@ -1,19 +1,8 @@
 import type { Component } from '../entity/component.entity';
 
-export const WARMUP_ID = 'warmup';
-export const COOLDOWN_ID = 'cooldown';
-
-export const WARMUP: Component = { field: WARMUP_ID, name: 'Warmup' };
-export const COOLDOWN: Component = { field: COOLDOWN_ID, name: 'Cooldown' };
-
 export const Components: Component[] = [
   { field: 'other', name: 'Other' },
-  WARMUP,
-  COOLDOWN,
-  {
-    field: 'competition',
-    name: 'Competition',
-  },
+  { field: 'competition', name: 'Competition' },
   {
     field: 'coordination',
     name: 'Coordination',

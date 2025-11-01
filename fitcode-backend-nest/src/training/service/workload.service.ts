@@ -235,12 +235,7 @@ export class WorkloadService {
     input: CreateWorkload,
   ): Promise<Workload> {
     // find prescribed set
-    const component = [
-      training.warmup,
-      ...training.components,
-      training.cooldown,
-    ].find((c) => c.id === ref.componentId);
-
+    const component = training.components.find((c) => c.id === ref.componentId);
     if (!component)
       throw new BadRequestException('Component not found in training');
 

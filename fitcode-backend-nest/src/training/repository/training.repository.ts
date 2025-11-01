@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { addMinutes, isAfter, isBefore, subMinutes } from 'date-fns';
+import { isAfter, isBefore } from 'date-fns';
 import {
   CollectionReference,
   DocumentReference,
@@ -20,7 +20,6 @@ import { FirestoreRepository } from '@src/common/type/firestore.type';
 import { BatchWriteOperation, Filter } from '@src/common/type/orm.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 
-import { DURATION_TRAINING_COMPONENT_WARMUP_COOLDOWN_IN_MIN } from '../constant/training-limits.constant';
 import { Training } from '../entity/training.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
 
@@ -183,12 +182,7 @@ export class TrainingRepository extends FirestoreRepository<Training> {
     componentId: string,
     input: DateRangeDto,
   ) {
-    const duration = DURATION_TRAINING_COMPONENT_WARMUP_COOLDOWN_IN_MIN;
-    const query: Update<Training> = {
-      warmup: { ...training.warmup },
-      cooldown: { ...training.cooldown },
-    };
-
+    const query: Update<Training> = {};
     const all = [...training.components].sort(
       (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime(),
     );
@@ -216,20 +210,12 @@ export class TrainingRepository extends FirestoreRepository<Training> {
       );
 
     if (i === 0) {
-      // first component → adjust warmup + next
-      const trainingFrom = subMinutes(input.from, duration);
-      query.from = trainingFrom;
-      query.warmup.from = trainingFrom;
-      query.warmup.to = input.from;
-
+      // first component → adjust next
+      query.from = input.from;
       if (next) next.from = input.to;
     } else if (i === all.length - 1) {
-      // last component → adjust cooldown + prev
-      const trainingTo = addMinutes(input.to, duration);
-      query.to = trainingTo;
-      query.cooldown.to = trainingTo;
-      query.cooldown.from = input.to;
-
+      // last component → adjust prev
+      query.to = input.to;
       if (prev) prev.to = input.from;
     } else {
       // middle → adjust only immediate neighbors
@@ -244,14 +230,7 @@ export class TrainingRepository extends FirestoreRepository<Training> {
 
   async deleteComponent(training: Training, componentId: string) {
     // delete component and adjust times
-    const duration = DURATION_TRAINING_COMPONENT_WARMUP_COOLDOWN_IN_MIN;
-    const query: Update<Training> = {
-      from: training.from,
-      to: training.to,
-      warmup: { ...training.warmup },
-      cooldown: { ...training.cooldown },
-    };
-
+    const query: Update<Training> = { from: training.from, to: training.to };
     const all = [...training.components].sort(
       (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime(),
     );
@@ -263,21 +242,11 @@ export class TrainingRepository extends FirestoreRepository<Training> {
     const next = all[i + 1];
 
     if (i === 0) {
-      // first component → adjust warmup + next
-      if (next) {
-        const trainingFrom = subMinutes(next.from, duration);
-        query.from = trainingFrom;
-        query.warmup.from = trainingFrom;
-        query.warmup.to = next.from;
-      }
+      // first component → adjust next
+      if (next) query.from = next.from;
     } else if (i === all.length - 1) {
-      // last component → adjust cooldown + prev
-      if (prev) {
-        const trainingTo = addMinutes(prev.to, duration);
-        query.to = trainingTo;
-        query.cooldown.to = trainingTo;
-        query.cooldown.from = prev.to;
-      }
+      // last component → adjust prev
+      if (prev) query.to = prev.to;
     } else if (prev && next)
       // middle → adjust only immediate neighbors
       prev.to = next.from;

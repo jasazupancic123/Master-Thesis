@@ -1,7 +1,7 @@
 import { createMock } from '@golevelup/ts-jest';
 import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
-import { addMinutes, subMinutes } from 'date-fns';
+import { addMinutes } from 'date-fns';
 
 import { AttributeService } from '@src/attribute/service/attribute.service';
 import { CacheManagerService } from '@src/cache-manager/cache-manager.service';
@@ -26,9 +26,6 @@ import { WorkloadRepository } from '@src/training/repository/workload.repository
 
 import { TrainingPlanService } from '../training-plan.service';
 import { WorkloadService } from '../workload.service';
-
-const WARMUP_ID = 'warmup';
-const COOLDOWN_ID = 'cooldown';
 
 // mock for attribute service to validate correct component roots
 jest.mock('@src/exercise/constant/components.constant', () => ({
@@ -116,9 +113,7 @@ describe('validateTrainingComponents', () => {
 
   it('should throw error if component does not exist', () => {
     const trainingComponents = [
-      generateTrainingComponent({ id: WARMUP_ID }),
       generateTrainingComponent({ id: 'invalid-component-id' }),
-      generateTrainingComponent({ id: COOLDOWN_ID }),
     ];
 
     expect(() =>
@@ -129,15 +124,7 @@ describe('validateTrainingComponents', () => {
   it('should throw error if component is not root', () => {
     const now = new Date();
     const trainingComponents = [
-      generateTrainingComponent({
-        id: WARMUP_ID,
-        from: subMinutes(now, 5),
-      }),
       generateTrainingComponent({ id: 'c1:leaf1', from: now }),
-      generateTrainingComponent({
-        id: COOLDOWN_ID,
-        from: addMinutes(now, 5),
-      }),
     ];
 
     expect(() =>
@@ -147,12 +134,10 @@ describe('validateTrainingComponents', () => {
 
   it('should throw error if there are duplicate components', () => {
     const trainingComponents = [
-      generateTrainingComponent({ id: WARMUP_ID }),
       generateTrainingComponent({ id: 'c1' }),
       generateTrainingComponent({ id: 'c2' }),
       generateTrainingComponent({ id: 'c3' }),
       generateTrainingComponent({ id: 'c1' }),
-      generateTrainingComponent({ id: COOLDOWN_ID }),
     ];
 
     expect(() =>
@@ -165,10 +150,6 @@ describe('validateTrainingComponents', () => {
     const now = new Date();
     const trainingComponents = [
       generateTrainingComponent({
-        id: WARMUP_ID,
-        from: subMinutes(now, 5),
-      }),
-      generateTrainingComponent({
         id: 'c1',
         from: now,
         subgroups: [
@@ -176,10 +157,6 @@ describe('validateTrainingComponents', () => {
           generateSubgroup({ membersIds: ['m3'] }),
           generateSubgroup({ membersIds: ['invalid-member'] }),
         ],
-      }),
-      generateTrainingComponent({
-        id: COOLDOWN_ID,
-        from: addMinutes(now, 5),
       }),
     ];
 
@@ -193,20 +170,12 @@ describe('validateTrainingComponents', () => {
     const now = new Date();
     const trainingComponents = [
       generateTrainingComponent({
-        id: WARMUP_ID,
-        from: subMinutes(now, 5),
-      }),
-      generateTrainingComponent({
         id: 'c1',
         from: now,
         subgroups: [
           generateSubgroup({ membersIds: ['m1', 'm2'] }),
           generateSubgroup({ membersIds: ['m3', 'm1'] }),
         ],
-      }),
-      generateTrainingComponent({
-        id: COOLDOWN_ID,
-        from: addMinutes(now, 5),
       }),
     ];
 
@@ -218,20 +187,12 @@ describe('validateTrainingComponents', () => {
   it('should throw error if there are more than 5 components', () => {
     const now = new Date();
     const trainingComponents = [
-      generateTrainingComponent({
-        id: WARMUP_ID,
-        from: subMinutes(now, 5),
-      }),
       generateTrainingComponent({ id: 'c1', from: now }),
       generateTrainingComponent({ id: 'c2', from: addMinutes(now, 5) }),
       generateTrainingComponent({ id: 'c3', from: addMinutes(now, 10) }),
       generateTrainingComponent({ id: 'c4', from: addMinutes(now, 15) }),
       generateTrainingComponent({ id: 'c5', from: addMinutes(now, 20) }),
       generateTrainingComponent({ id: 'c6', from: addMinutes(now, 25) }),
-      generateTrainingComponent({
-        id: COOLDOWN_ID,
-        from: addMinutes(now, 30),
-      }),
     ];
 
     expect(() =>
@@ -244,10 +205,6 @@ describe('validateTrainingComponents', () => {
   it('should not throw error for valid training components', () => {
     const now = new Date();
     const trainingComponents = [
-      generateTrainingComponent({
-        id: WARMUP_ID,
-        from: subMinutes(now, 5),
-      }),
       generateTrainingComponent({
         id: 'c1',
         from: now,
@@ -269,10 +226,6 @@ describe('validateTrainingComponents', () => {
             ],
           }),
         ],
-      }),
-      generateTrainingComponent({
-        id: COOLDOWN_ID,
-        from: addMinutes(now, 5),
       }),
     ];
 
@@ -294,10 +247,6 @@ describe('validateTrainingComponents', () => {
     const now = new Date();
     const trainingComponents = [
       generateTrainingComponent({
-        id: WARMUP_ID,
-        from: subMinutes(now, 5),
-      }),
-      generateTrainingComponent({
         id: 'c1',
         from: now,
         subgroups: [
@@ -306,10 +255,6 @@ describe('validateTrainingComponents', () => {
             parentId: MAIN_GROUP_PARENT_ID,
           }),
         ],
-      }),
-      generateTrainingComponent({
-        id: COOLDOWN_ID,
-        from: addMinutes(now, 5),
       }),
     ];
 
@@ -323,10 +268,6 @@ describe('validateTrainingComponents', () => {
     const now = new Date();
     const trainingComponents = [
       generateTrainingComponent({
-        id: WARMUP_ID,
-        from: subMinutes(now, 5),
-      }),
-      generateTrainingComponent({
         id: 'c1',
         from: now,
         subgroups: [
@@ -336,10 +277,6 @@ describe('validateTrainingComponents', () => {
           }),
           generateSubgroup({ membersIds: ['m1', 'm2'] }),
         ],
-      }),
-      generateTrainingComponent({
-        id: COOLDOWN_ID,
-        from: addMinutes(now, 5),
       }),
     ];
 
@@ -352,10 +289,6 @@ describe('validateTrainingComponents', () => {
     const memberIds = ['m1', 'm2', 'm3'];
     const now = new Date();
     const trainingComponents = [
-      generateTrainingComponent({
-        id: WARMUP_ID,
-        from: subMinutes(now, 5),
-      }),
       generateTrainingComponent({
         id: 'c1',
         from: now,
@@ -378,10 +311,6 @@ describe('validateTrainingComponents', () => {
             ],
           }),
         ],
-      }),
-      generateTrainingComponent({
-        id: COOLDOWN_ID,
-        from: addMinutes(now, 5),
       }),
     ];
 

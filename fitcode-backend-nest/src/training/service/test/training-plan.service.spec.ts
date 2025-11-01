@@ -33,10 +33,7 @@ describe('TrainingPlanService (unit)', () => {
         CommonModule,
       ],
       providers: [
-        {
-          provide: FirebaseService,
-          useValue: createMock<FirebaseService>(),
-        },
+        { provide: FirebaseService, useValue: createMock<FirebaseService>() },
         {
           provide: CacheManagerService,
           useValue: createMock<CacheManagerService>(),
@@ -46,19 +43,13 @@ describe('TrainingPlanService (unit)', () => {
           provide: InstitutionService,
           useValue: createMock<InstitutionService>(),
         },
-        {
-          provide: ExerciseService,
-          useValue: createMock<ExerciseService>(),
-        },
+        { provide: ExerciseService, useValue: createMock<ExerciseService>() },
         ExerciseAttributeService,
         {
           provide: WorkloadRepository,
           useValue: createMock<WorkloadRepository>(),
         },
-        {
-          provide: WorkloadService,
-          useValue: createMock<WorkloadService>(),
-        },
+        { provide: WorkloadService, useValue: createMock<WorkloadService>() },
         ExerciseParamService,
         TrainingPlanService,
       ],
