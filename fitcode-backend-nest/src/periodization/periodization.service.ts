@@ -70,8 +70,9 @@ export class PeriodizationService {
     trainings: Training[],
     exerciseIds?: string[], // if not provided, will use all exercises from the base training
     options?: {
-      createExerciseIfNotExistsInTrainings?: boolean; // if true, will create new exercise in upcoming trainings if not found
-      dontPeriodizeChildSubgroups?: boolean; // if true, will not periodize subgroups of the base training
+      createExerciseIfNotExistsInTrainings?: boolean; // if true, will create new exercise in upcoming trainings if not found (false by default)
+      dontPeriodizeChildSubgroups?: boolean; // if true, will not periodize subgroups of the base training (false by default)
+      includeWarmupAndCooldown?: boolean; // if true, will periodize exercises in warmup and cooldown as well (false by default)
     },
   ): Training[] {
     if (trainings.length <= 1) return trainings;
@@ -104,7 +105,10 @@ export class PeriodizationService {
       }
 
     for (const baseItem of baseItems) {
-      const baseExercises = this.getExercises(baseItem);
+      const baseExercises = this.getExercises(
+        baseItem,
+        !options?.includeWarmupAndCooldown,
+      );
 
       // if no exercises provided, use all exercises from the base training
       if (!exerciseIds || exerciseIds.length === 0)
@@ -136,7 +140,11 @@ export class PeriodizationService {
 
             if (!item) continue; // component / subgroup not found in upcoming training, skip
 
-            const exercises = this.getExercises(item);
+            const exercises = this.getExercises(
+              item,
+              !options?.includeWarmupAndCooldown,
+            );
+
             const foundExercise = exercises.find((e) => e.id === exerciseId);
             const exercise = foundExercise
               ? foundExercise
@@ -263,8 +271,15 @@ export class PeriodizationService {
     return subgroup || null;
   }
 
-  getExercises(item: TrainingComponent | Subgroup): TrainingExercise[] {
-    return item.supersets.flatMap((s) => s.exercises);
+  getExercises(
+    item: TrainingComponent | Subgroup,
+    excludeWarmupAndCooldown?: boolean,
+  ): TrainingExercise[] {
+    const supersets = excludeWarmupAndCooldown
+      ? item.supersets.filter((s) => !s.warmup && !s.cooldown)
+      : item.supersets;
+
+    return supersets.flatMap((s) => s.exercises);
   }
 
   /**
