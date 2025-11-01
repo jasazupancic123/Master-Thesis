@@ -43,8 +43,6 @@ export default function TrainingExerciseSetDoneCheckbox(
   }
 
   const handleAdvanceInSuperset = () => {
-    // go to next exercise
-
     if (!exerciseView || supersetIndex === undefined) return;
 
     const currentSuperset =
@@ -52,12 +50,22 @@ export default function TrainingExerciseSetDoneCheckbox(
 
     if (!currentSuperset) return;
 
-    const isLastExercise =
-      currentSuperset.exercises.findIndex((ex) => ex.id === exercise.id) ===
-      currentSuperset.exercises.length - 1;
+    const exercisesInCurrentSuperset = currentSuperset.exercises;
 
-    if (isLastExercise && setIndex === exercise.sets.length - 1) {
-      // move to next superset
+    // Check if every set in the current superset is completed
+    const allSetsCompleted = exercisesInCurrentSuperset.every((ex) => {
+      const exerciseSetTracking =
+        trainingInProgress.exerciseSetTrackingState.find(
+          (s) => s.exerciseId === ex.id
+        );
+
+      if (!exerciseSetTracking) return false;
+
+      return exerciseSetTracking.completedSetNumbers.length >= ex.sets.length;
+    });
+
+    if (allSetsCompleted) {
+      // Move to next superset
 
       const isLastSuperset =
         supersetIndex ===
@@ -79,36 +87,57 @@ export default function TrainingExerciseSetDoneCheckbox(
       setSupersetIndex(supersetIndex + 1);
 
       return;
-    } else if (isLastExercise) {
-      // move to next set in first exercise of superset
-      const firstExercise = currentSuperset.exercises[0];
-      if (!firstExercise) return;
+    }
 
-      if (firstExercise.sets.length < setIndex + 2) return;
+    const currentExerciseIndex = exercisesInCurrentSuperset.findIndex(
+      (ex) => ex.id === exercise.id
+    );
 
-      setSelectedExercise(firstExercise);
+    if (currentExerciseIndex === -1) return;
 
-      const newSetIndex = setIndex + 1;
-      if (firstExercise.sets.length > newSetIndex) setSetIndex(newSetIndex);
-      else setSetIndex(0);
+    let j = 0;
 
-      return;
-    } else {
-      // move to next exercise
-      const currentExerciseSupersetIndex = currentSuperset.exercises.findIndex(
-        (ex) => ex.id === exercise.id
-      );
+    for (
+      let i = currentExerciseIndex + 1;
+      j < exercisesInCurrentSuperset.length;
+      i++
+    ) {
+      j++;
 
-      const nextExercise =
-        currentExerciseSupersetIndex !== -1
-          ? currentSuperset.exercises[currentExerciseSupersetIndex + 1]
-          : undefined;
+      if (i >= exercisesInCurrentSuperset.length)
+        i -= exercisesInCurrentSuperset.length;
 
-      if (!nextExercise) return;
+      const currentExercise = exercisesInCurrentSuperset[i];
 
-      if (nextExercise.sets.length <= setIndex) setSetIndex(0);
+      if (!currentExercise) continue;
 
-      setSelectedExercise(nextExercise);
+      const exerciseSetTracking =
+        trainingInProgress.exerciseSetTrackingState.find(
+          (s) => s.exerciseId === currentExercise.id
+        );
+
+      if (!exerciseSetTracking) continue;
+
+      const hasCompletedAllSets =
+        exerciseSetTracking.completedSetNumbers.length >=
+        currentExercise.sets.length;
+
+      if (hasCompletedAllSets) continue;
+
+      let hasAdvanced = false;
+
+      currentExercise.sets.forEach((set) => {
+        if (hasAdvanced) return;
+
+        if (!exerciseSetTracking.completedSetNumbers.includes(set.setNumber)) {
+          hasAdvanced = true;
+
+          setSelectedExercise(currentExercise);
+          setSetIndex(set.setNumber - 1);
+        }
+      });
+
+      if (hasAdvanced) return;
     }
   };
 
