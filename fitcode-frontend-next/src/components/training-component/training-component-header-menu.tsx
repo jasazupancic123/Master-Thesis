@@ -37,7 +37,7 @@ export default function TrainingComponentHeaderMenu() {
     useState<PeriodizationType | null>(null);
   const [numTrainingsWithSameTarget, setNumTrainingsWithSameTarget] =
     useState(0);
-  const [openModal, setOpenModal] = useState(false);
+  const [openPeriodizationModal, setOpenPeriodizationModal] = useState(false);
 
   if (!training || !component) return null;
 
@@ -157,7 +157,7 @@ export default function TrainingComponentHeaderMenu() {
             handleSetPeriodizationType(
               {
                 periodizationType,
-                setOpenModal,
+                setOpenModal: setOpenPeriodizationModal,
                 setSelectedPeriodizationType,
                 setNumTrainingsWithSameTarget,
               },
@@ -202,8 +202,8 @@ export default function TrainingComponentHeaderMenu() {
       </Tooltip>
 
       <PeriodizeModal
-        open={openModal}
-        setOpen={setOpenModal}
+        open={openPeriodizationModal}
+        setOpen={setOpenPeriodizationModal}
         selectedPeriodizationType={selectedPeriodizationType}
         setSelectedPeriodizationType={setSelectedPeriodizationType}
         numTrainingsWithSameTarget={numTrainingsWithSameTarget}

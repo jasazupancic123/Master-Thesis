@@ -2,9 +2,9 @@
 
 import { Box, Typography, useTheme } from '@mui/material';
 
+import { ElapsedTime } from '../training-in-progress/training-in-progress-elapsed-time';
 import TrapezoidTitle from './trapezoid-title';
 import SimpleCircle from '@/ui/simple-circle';
-import { ElapsedTime } from '../training-in-progress/training-in-progress-elapsed-time';
 
 interface Props {
   items: string[];
@@ -41,7 +41,7 @@ export default function AthleteOptionsContainer({
 
       {items.map((type, i) => (
         <Box
-          key={type}
+          key={i}
           display="flex"
           alignItems="center" // center the inline-sized text inside the column
           gap={0.75}
