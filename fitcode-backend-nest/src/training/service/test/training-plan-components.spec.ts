@@ -6,15 +6,8 @@ import { addMinutes, subMinutes } from 'date-fns';
 import { AttributeService } from '@src/attribute/service/attribute.service';
 import { CacheManagerService } from '@src/cache-manager/cache-manager.service';
 import { CommonModule } from '@src/common/common.module';
-import { ComponentService } from '@src/component/component.service';
-import {
-  COOLDOWN_COMPONENT,
-  COOLDOWN_COMPONENT_ID,
-  WARMUP_COMPONENT,
-  WARMUP_COMPONENT_ID,
-} from '@src/component/constant/warmup-cooldown.constant';
-import { generateComponentStub } from '@src/component/mock/component.stub';
 import { validationSchema } from '@src/config/environment-validation-schema';
+import { generateComponentStub } from '@src/exercise/mock/component.stub';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { ExerciseAttributeService } from '@src/exercise/service/exercise-attribute.service';
@@ -22,6 +15,7 @@ import { ExerciseParamService } from '@src/exercise/service/exercise-param.servi
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { MAIN_GROUP_PARENT_ID } from '@src/training/constant/main-group-parent-id.constant';
+import { MAX_NUM_COMPONENTS_IN_TRAINING } from '@src/training/constant/training-limits.constant';
 import {
   generateSubgroup,
   generateSuperset,
@@ -33,9 +27,41 @@ import { WorkloadRepository } from '@src/training/repository/workload.repository
 import { TrainingPlanService } from '../training-plan.service';
 import { WorkloadService } from '../workload.service';
 
+const WARMUP_ID = 'warmup';
+const COOLDOWN_ID = 'cooldown';
+
+// mock for attribute service to validate correct component roots
+jest.mock('@src/exercise/constant/components.constant', () => ({
+  WARMUP_ID: 'warmup',
+  COOLDOWN_ID: 'cooldown',
+  WARMUP: generateComponentStub({ field: 'warmup', name: 'Warmup' }),
+  COOLDOWN: generateComponentStub({ field: 'cooldown', name: 'Cooldown' }),
+  Components: [
+    generateComponentStub({ field: 'warmup', name: 'Warmup' }),
+    generateComponentStub({
+      field: 'c1',
+      name: 'Component 1',
+      options: [generateComponentStub({ field: 'leaf1', name: 'Leaf 1' })],
+    }),
+    generateComponentStub({
+      field: 'c2',
+      name: 'Component 2',
+      options: [generateComponentStub({ field: 'leaf2', name: 'Leaf 2' })],
+    }),
+    generateComponentStub({
+      field: 'c3',
+      name: 'Component 3',
+      options: [generateComponentStub({ field: 'leaf3', name: 'Leaf 3' })],
+    }),
+    generateComponentStub({ field: 'c4' }),
+    generateComponentStub({ field: 'c5' }),
+    generateComponentStub({ field: 'c6' }),
+    generateComponentStub({ field: 'cooldown', name: 'Cooldown' }),
+  ],
+}));
+
 describe('validateTrainingComponents', () => {
   let service: TrainingPlanService;
-  let componentService: ComponentService;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -54,10 +80,6 @@ describe('validateTrainingComponents', () => {
         },
         AttributeService,
         {
-          provide: ComponentService,
-          useValue: createMock<ComponentService>(),
-        },
-        {
           provide: InstitutionService,
           useValue: createMock<InstitutionService>(),
         },
@@ -65,10 +87,7 @@ describe('validateTrainingComponents', () => {
           provide: ExerciseService,
           useValue: createMock<ExerciseService>(),
         },
-        {
-          provide: ExerciseAttributeService,
-          useValue: createMock<ExerciseAttributeService>(),
-        },
+        ExerciseAttributeService,
         {
           provide: WorkloadRepository,
           useValue: createMock<WorkloadRepository>(),
@@ -83,50 +102,23 @@ describe('validateTrainingComponents', () => {
     }).compile();
 
     service = moduleRef.get(TrainingPlanService);
-    componentService = moduleRef.get(ComponentService);
   });
-
-  const components = [
-    WARMUP_COMPONENT,
-    generateComponentStub({ id: 'c1', name: 'Component 1' }),
-    generateComponentStub({ id: 'c2', name: 'Component 2' }),
-    generateComponentStub({ id: 'c3', name: 'Component 3' }),
-    generateComponentStub({ id: 'c4' }),
-    generateComponentStub({ id: 'c5' }),
-    generateComponentStub({ id: 'c6' }),
-    generateComponentStub({ id: 'leaf1', parentId: 'c1', name: 'Leaf 1' }),
-    generateComponentStub({ id: 'leaf2', parentId: 'c1', name: 'Leaf 2' }),
-    generateComponentStub({ id: 'leaf3', parentId: 'c2', name: 'Leaf 3' }),
-    COOLDOWN_COMPONENT,
-  ];
 
   const exercises = [
-    generateExerciseStub({ id: 'e1', componentIds: ['leaf1'] }),
-    generateExerciseStub({ id: 'e2', componentIds: ['leaf1'] }),
-    generateExerciseStub({ id: 'e3', componentIds: ['leaf2'] }),
-    generateExerciseStub({ id: 'e4', componentIds: ['leaf3'] }),
-    generateExerciseStub({ id: 'e5', componentIds: ['leaf3'] }),
+    generateExerciseStub({ id: 'e1', components: ['c1:leaf1'] }),
+    generateExerciseStub({ id: 'e2', components: ['c1:leaf1'] }),
+    generateExerciseStub({ id: 'e3', components: ['c1:leaf2'] }),
+    generateExerciseStub({ id: 'e4', components: ['c1:leaf3'] }),
+    generateExerciseStub({ id: 'e5', components: ['c1:leaf3'] }),
   ];
 
-  const data = { exercises, components, methods: [] };
-
-  beforeEach(() => {
-    jest
-      .spyOn(componentService, 'leafsFromFlat')
-      .mockReturnValue(components.filter((c) => c.id.includes('leaf')));
-
-    jest
-      .spyOn(componentService, 'getRoot')
-      .mockImplementation((leaf, allComponents) => {
-        return allComponents.find((c) => c.id === leaf.parentId) || leaf;
-      });
-  });
+  const data = { exercises, methods: [] };
 
   it('should throw error if component does not exist', () => {
     const trainingComponents = [
-      generateTrainingComponent({ id: WARMUP_COMPONENT_ID }),
+      generateTrainingComponent({ id: WARMUP_ID }),
       generateTrainingComponent({ id: 'invalid-component-id' }),
-      generateTrainingComponent({ id: COOLDOWN_COMPONENT_ID }),
+      generateTrainingComponent({ id: COOLDOWN_ID }),
     ];
 
     expect(() =>
@@ -138,29 +130,29 @@ describe('validateTrainingComponents', () => {
     const now = new Date();
     const trainingComponents = [
       generateTrainingComponent({
-        id: WARMUP_COMPONENT_ID,
+        id: WARMUP_ID,
         from: subMinutes(now, 5),
       }),
-      generateTrainingComponent({ id: 'leaf1', from: now }),
+      generateTrainingComponent({ id: 'c1:leaf1', from: now }),
       generateTrainingComponent({
-        id: COOLDOWN_COMPONENT_ID,
+        id: COOLDOWN_ID,
         from: addMinutes(now, 5),
       }),
     ];
 
     expect(() =>
       service.validateTrainingComponents(trainingComponents, [], data),
-    ).toThrow(`Component Leaf 1 cannot be selected for training`);
+    ).toThrow(`Component cannot be selected for training`);
   });
 
   it('should throw error if there are duplicate components', () => {
     const trainingComponents = [
-      generateTrainingComponent({ id: WARMUP_COMPONENT_ID }),
+      generateTrainingComponent({ id: WARMUP_ID }),
       generateTrainingComponent({ id: 'c1' }),
       generateTrainingComponent({ id: 'c2' }),
       generateTrainingComponent({ id: 'c3' }),
       generateTrainingComponent({ id: 'c1' }),
-      generateTrainingComponent({ id: COOLDOWN_COMPONENT_ID }),
+      generateTrainingComponent({ id: COOLDOWN_ID }),
     ];
 
     expect(() =>
@@ -173,7 +165,7 @@ describe('validateTrainingComponents', () => {
     const now = new Date();
     const trainingComponents = [
       generateTrainingComponent({
-        id: WARMUP_COMPONENT_ID,
+        id: WARMUP_ID,
         from: subMinutes(now, 5),
       }),
       generateTrainingComponent({
@@ -186,7 +178,7 @@ describe('validateTrainingComponents', () => {
         ],
       }),
       generateTrainingComponent({
-        id: COOLDOWN_COMPONENT_ID,
+        id: COOLDOWN_ID,
         from: addMinutes(now, 5),
       }),
     ];
@@ -201,7 +193,7 @@ describe('validateTrainingComponents', () => {
     const now = new Date();
     const trainingComponents = [
       generateTrainingComponent({
-        id: WARMUP_COMPONENT_ID,
+        id: WARMUP_ID,
         from: subMinutes(now, 5),
       }),
       generateTrainingComponent({
@@ -213,7 +205,7 @@ describe('validateTrainingComponents', () => {
         ],
       }),
       generateTrainingComponent({
-        id: COOLDOWN_COMPONENT_ID,
+        id: COOLDOWN_ID,
         from: addMinutes(now, 5),
       }),
     ];
@@ -227,7 +219,7 @@ describe('validateTrainingComponents', () => {
     const now = new Date();
     const trainingComponents = [
       generateTrainingComponent({
-        id: WARMUP_COMPONENT_ID,
+        id: WARMUP_ID,
         from: subMinutes(now, 5),
       }),
       generateTrainingComponent({ id: 'c1', from: now }),
@@ -237,21 +229,23 @@ describe('validateTrainingComponents', () => {
       generateTrainingComponent({ id: 'c5', from: addMinutes(now, 20) }),
       generateTrainingComponent({ id: 'c6', from: addMinutes(now, 25) }),
       generateTrainingComponent({
-        id: COOLDOWN_COMPONENT_ID,
+        id: COOLDOWN_ID,
         from: addMinutes(now, 30),
       }),
     ];
 
     expect(() =>
       service.validateTrainingComponents(trainingComponents, [], data),
-    ).toThrow('You can only have up to 5 components per training');
+    ).toThrow(
+      `You can only have up to ${MAX_NUM_COMPONENTS_IN_TRAINING} components per training`,
+    );
   });
 
   it('should not throw error for valid training components', () => {
     const now = new Date();
     const trainingComponents = [
       generateTrainingComponent({
-        id: WARMUP_COMPONENT_ID,
+        id: WARMUP_ID,
         from: subMinutes(now, 5),
       }),
       generateTrainingComponent({
@@ -277,14 +271,13 @@ describe('validateTrainingComponents', () => {
         ],
       }),
       generateTrainingComponent({
-        id: COOLDOWN_COMPONENT_ID,
+        id: COOLDOWN_ID,
         from: addMinutes(now, 5),
       }),
     ];
 
     const data = {
       exercises: exercises.filter((e) => e.id !== 'e5'), // remove invalid exercise
-      components,
       methods: [],
       attributes: [],
     };
@@ -301,7 +294,7 @@ describe('validateTrainingComponents', () => {
     const now = new Date();
     const trainingComponents = [
       generateTrainingComponent({
-        id: WARMUP_COMPONENT_ID,
+        id: WARMUP_ID,
         from: subMinutes(now, 5),
       }),
       generateTrainingComponent({
@@ -315,7 +308,7 @@ describe('validateTrainingComponents', () => {
         ],
       }),
       generateTrainingComponent({
-        id: COOLDOWN_COMPONENT_ID,
+        id: COOLDOWN_ID,
         from: addMinutes(now, 5),
       }),
     ];
@@ -330,7 +323,7 @@ describe('validateTrainingComponents', () => {
     const now = new Date();
     const trainingComponents = [
       generateTrainingComponent({
-        id: WARMUP_COMPONENT_ID,
+        id: WARMUP_ID,
         from: subMinutes(now, 5),
       }),
       generateTrainingComponent({
@@ -345,7 +338,7 @@ describe('validateTrainingComponents', () => {
         ],
       }),
       generateTrainingComponent({
-        id: COOLDOWN_COMPONENT_ID,
+        id: COOLDOWN_ID,
         from: addMinutes(now, 5),
       }),
     ];
@@ -360,7 +353,7 @@ describe('validateTrainingComponents', () => {
     const now = new Date();
     const trainingComponents = [
       generateTrainingComponent({
-        id: WARMUP_COMPONENT_ID,
+        id: WARMUP_ID,
         from: subMinutes(now, 5),
       }),
       generateTrainingComponent({
@@ -387,7 +380,7 @@ describe('validateTrainingComponents', () => {
         ],
       }),
       generateTrainingComponent({
-        id: COOLDOWN_COMPONENT_ID,
+        id: COOLDOWN_ID,
         from: addMinutes(now, 5),
       }),
     ];

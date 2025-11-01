@@ -4,9 +4,9 @@ import { v4 } from 'uuid';
 import { getTime } from '@src/common/service/util/date.util';
 import { generateRandomName } from '@src/common/utils/random.util';
 import {
-  COOLDOWN_COMPONENT_ID,
-  WARMUP_COMPONENT_ID,
-} from '@src/component/constant/warmup-cooldown.constant';
+  COOLDOWN_ID,
+  WARMUP_ID,
+} from '@src/exercise/constant/components.constant';
 
 import type { ExerciseSet } from '../entity/exercise-set.entity';
 import type { Subgroup } from '../entity/subgroup.entity';
@@ -62,11 +62,8 @@ export function generateTrainingStub(
     copiedFromId: data?.copiedFromId || null,
     from,
     to,
-    warmup:
-      data?.warmup || generateTrainingComponent({ id: WARMUP_COMPONENT_ID }),
-    cooldown:
-      data?.cooldown ||
-      generateTrainingComponent({ id: COOLDOWN_COMPONENT_ID }),
+    warmup: data?.warmup || generateTrainingComponent({ id: WARMUP_ID }),
+    cooldown: data?.cooldown || generateTrainingComponent({ id: COOLDOWN_ID }),
     components,
   };
 }
@@ -80,7 +77,7 @@ export function generateTrainingComponent(
     id: data?.id ?? v4(),
     from,
     to: data?.to || addHours(from, 1),
-    target: data?.target || null,
+    targetId: data?.targetId || null,
     methodId: data?.methodId || null,
     mainSet: data?.mainSet || MainSet.BLOCK,
     supersets: data?.supersets || [],

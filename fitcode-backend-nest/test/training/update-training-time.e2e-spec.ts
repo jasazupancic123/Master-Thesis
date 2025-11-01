@@ -5,11 +5,6 @@ import { addDays, startOfDay, subDays } from 'date-fns';
 import type { DateRangeDto } from '@src/common/dto/date-range.dto';
 import { getTime } from '@src/common/service/util';
 import type { TestInstitution } from '@src/common/type/entity.type';
-import {
-  COOLDOWN_COMPONENT_ID,
-  WARMUP_COMPONENT_ID,
-} from '@src/component/constant/warmup-cooldown.constant';
-import type { Component } from '@src/component/entity/component.entity';
 import type { Group } from '@src/group/entity/group.entity';
 import { TestDbService } from '@src/test-db/test-db.service';
 import { DURATION_TRAINING_COMPONENT_WARMUP_COOLDOWN_IN_MIN } from '@src/training/constant/training-limits.constant';
@@ -18,13 +13,29 @@ import {
   generateTrainingStub,
 } from '@src/training/mock/training.stub';
 
+jest.mock('@src/exercise/constant/components.constant', () => {
+  const {
+    generateComponentStub,
+  } = require('@src/exercise/mock/component.stub');
+
+  const c1 = generateComponentStub({ field: 'c1' });
+  const c2 = generateComponentStub({ field: 'c2' });
+  const c3 = generateComponentStub({ field: 'c3' });
+  const warmup = generateComponentStub({ field: 'warmup' });
+  const cooldown = generateComponentStub({ field: 'cooldown' });
+
+  return {
+    WARMUP_ID: 'warmup',
+    COOLDOWN_ID: 'cooldown',
+    WARMUP: warmup,
+    COOLDOWN: cooldown,
+    Components: [warmup, c1, c2, c3, cooldown],
+  };
+});
+
 describe('Update Training (e2e)', () => {
   let testApp: TestApp;
   let db: TestDbService;
-
-  let c1: Component;
-  let c2: Component;
-  let c3: Component;
 
   let institution: TestInstitution;
   let group: Group;
@@ -36,10 +47,6 @@ describe('Update Training (e2e)', () => {
     testApp = await TestApp.init();
     db = testApp.module.get(TestDbService);
 
-    c1 = await db.components.create();
-    c2 = await db.components.create();
-    c3 = await db.components.create();
-
     institution = await db.institutions.createTest();
     group = await db.groups.createTest(institution);
     trainingId = await db.trainings.save(
@@ -50,7 +57,7 @@ describe('Update Training (e2e)', () => {
         ownerId: institution.trainerIds[0],
         membersIds: [],
         from: trainingDate,
-        components: [generateTrainingComponent({ id: c1.id })],
+        components: [generateTrainingComponent({ id: 'c1' })],
       }),
     );
   });
@@ -59,14 +66,13 @@ describe('Update Training (e2e)', () => {
     await db.institutions.remove(institution.id);
     await db.groups.delete(group.id);
     await db.trainings.delete(trainingId);
-    await db.components.delete(c1.id);
     await testApp.close();
   });
 
   async function req(
     body: DateRangeDto,
     _trainingId = trainingId,
-    _componentId = c1.id,
+    _componentId = 'c1',
     token: string = global.trainer.token,
   ) {
     return await testApp.http.patch(
@@ -107,7 +113,7 @@ describe('Update Training (e2e)', () => {
         membersIds: [],
         from: subDays(getTime(new Date(), 8, 0), 1),
         to: subDays(getTime(new Date(), 9, 0), 1),
-        components: [generateTrainingComponent({ id: c1.id })],
+        components: [generateTrainingComponent({ id: 'c1' })],
       }),
     );
 
@@ -147,7 +153,7 @@ describe('Update Training (e2e)', () => {
         cycleId: group.cycles[0].id,
         from: getTime(in3Days, 9, 30),
         to: getTime(in3Days, 10, 30),
-        components: [generateTrainingComponent({ id: c1.id })],
+        components: [generateTrainingComponent({ id: 'c1' })],
       }),
     );
 
@@ -159,7 +165,7 @@ describe('Update Training (e2e)', () => {
         cycleId: group.cycles[0].id,
         from: getTime(in3Days, 11, 0),
         to: getTime(in3Days, 12, 0),
-        components: [generateTrainingComponent({ id: c1.id })],
+        components: [generateTrainingComponent({ id: 'c1' })],
       }),
     );
 
@@ -188,12 +194,12 @@ describe('Update Training (e2e)', () => {
           from: trainingDate,
           components: [
             generateTrainingComponent({
-              id: c1.id,
+              id: 'c1',
               from: getTime(trainingDate, 8, 0),
               to: getTime(trainingDate, 8, 30),
             }),
             generateTrainingComponent({
-              id: c2.id,
+              id: 'c2',
               from: getTime(trainingDate, 8, 30),
               to: getTime(trainingDate, 9, 0),
             }),
@@ -206,7 +212,7 @@ describe('Update Training (e2e)', () => {
     const response = await req(
       { from: getTime(trainingDate, 8, 0), to: getTime(trainingDate, 9, 15) },
       newTrainingId,
-      c1.id,
+      'c1',
     );
 
     expect(response.status).toBe(400);
@@ -230,12 +236,12 @@ describe('Update Training (e2e)', () => {
           from: trainingDate,
           components: [
             generateTrainingComponent({
-              id: c1.id,
+              id: 'c1',
               from: getTime(trainingDate, 8, 0),
               to: getTime(trainingDate, 8, 30),
             }),
             generateTrainingComponent({
-              id: c2.id,
+              id: 'c2',
               from: getTime(trainingDate, 8, 30),
               to: getTime(trainingDate, 9, 0),
             }),
@@ -248,7 +254,7 @@ describe('Update Training (e2e)', () => {
     const response = await req(
       { from: getTime(trainingDate, 7, 45), to: getTime(trainingDate, 8, 15) },
       newTrainingId,
-      c2.id,
+      'c2',
     );
 
     expect(response.status).toBe(400);
@@ -271,24 +277,24 @@ describe('Update Training (e2e)', () => {
           membersIds: [],
           from: getTime(trainingDate, 8, 0),
           warmup: generateTrainingComponent({
-            id: WARMUP_COMPONENT_ID,
+            id: 'warmup',
             from: getTime(trainingDate, 7, 45),
             to: getTime(trainingDate, 8, 0),
           }),
           components: [
             generateTrainingComponent({
-              id: c1.id,
+              id: 'c1',
               from: getTime(trainingDate, 8, 0),
               to: getTime(trainingDate, 8, 30),
             }),
             generateTrainingComponent({
-              id: c2.id,
+              id: 'c2',
               from: getTime(trainingDate, 8, 30),
               to: getTime(trainingDate, 9, 0),
             }),
           ],
           cooldown: generateTrainingComponent({
-            id: COOLDOWN_COMPONENT_ID,
+            id: 'cooldown',
             from: getTime(trainingDate, 9, 0),
             to: getTime(trainingDate, 9, 15),
           }),
@@ -300,7 +306,7 @@ describe('Update Training (e2e)', () => {
     const response = await req(
       { from: getTime(trainingDate, 8, 15), to: getTime(trainingDate, 8, 45) },
       newTrainingId,
-      c1.id,
+      'c1',
     );
 
     expect(response.status).toBe(200);
@@ -369,24 +375,24 @@ describe('Update Training (e2e)', () => {
           membersIds: [],
           from: getTime(trainingDate, 8, 0),
           warmup: generateTrainingComponent({
-            id: WARMUP_COMPONENT_ID,
+            id: 'warmup',
             from: getTime(trainingDate, 7, 45),
             to: getTime(trainingDate, 8, 0),
           }),
           components: [
             generateTrainingComponent({
-              id: c1.id,
+              id: 'c1',
               from: getTime(trainingDate, 8, 0),
               to: getTime(trainingDate, 8, 30),
             }),
             generateTrainingComponent({
-              id: c2.id,
+              id: 'c2',
               from: getTime(trainingDate, 8, 30),
               to: getTime(trainingDate, 9, 0),
             }),
           ],
           cooldown: generateTrainingComponent({
-            id: COOLDOWN_COMPONENT_ID,
+            id: 'cooldown',
             from: getTime(trainingDate, 9, 0),
             to: getTime(trainingDate, 9, 15),
           }),
@@ -398,7 +404,7 @@ describe('Update Training (e2e)', () => {
     const response = await req(
       { from: getTime(trainingDate, 8, 15), to: getTime(trainingDate, 9, 15) },
       newTrainingId,
-      c2.id,
+      'c2',
     );
 
     expect(response.status).toBe(200);
@@ -467,29 +473,29 @@ describe('Update Training (e2e)', () => {
           membersIds: [],
           from: getTime(trainingDate, 8, 0),
           warmup: generateTrainingComponent({
-            id: WARMUP_COMPONENT_ID,
+            id: 'warmup',
             from: getTime(trainingDate, 7, 45),
             to: getTime(trainingDate, 8, 0),
           }),
           components: [
             generateTrainingComponent({
-              id: c1.id,
+              id: 'c1',
               from: getTime(trainingDate, 8, 0),
               to: getTime(trainingDate, 8, 30),
             }),
             generateTrainingComponent({
-              id: c2.id,
+              id: 'c2',
               from: getTime(trainingDate, 8, 30),
               to: getTime(trainingDate, 9, 0),
             }),
             generateTrainingComponent({
-              id: c3.id,
+              id: 'c3',
               from: getTime(trainingDate, 9, 0),
               to: getTime(trainingDate, 9, 30),
             }),
           ],
           cooldown: generateTrainingComponent({
-            id: COOLDOWN_COMPONENT_ID,
+            id: 'cooldown',
             from: getTime(trainingDate, 9, 30),
             to: getTime(trainingDate, 9, 45),
           }),
@@ -501,7 +507,7 @@ describe('Update Training (e2e)', () => {
     const response = await req(
       { from: getTime(trainingDate, 8, 45), to: getTime(trainingDate, 9, 15) },
       newTrainingId,
-      c2.id,
+      'c2',
     );
 
     expect(response.status).toBe(200);

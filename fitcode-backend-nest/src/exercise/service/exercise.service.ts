@@ -1,12 +1,9 @@
 import {
   BadRequestException,
-  forwardRef,
-  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Query } from 'firebase-admin/firestore';
 
 import { CacheManagerService } from '@src/cache-manager/cache-manager.service';
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
@@ -20,9 +17,6 @@ import {
   ValidateError,
   ValidateRowError,
 } from '@src/common/type/validate.type';
-import { Wrapper } from '@src/common/type/wrapper.type';
-import { ComponentService } from '@src/component/component.service';
-import { Component } from '@src/component/entity/component.entity';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { Institution } from '@src/institution/entity/institution.entity';
 import { InstitutionService } from '@src/institution/service/institution.service';
@@ -47,8 +41,6 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     private readonly institutionService: InstitutionService,
     private readonly exerciseAttributeService: ExerciseAttributeService,
     private readonly exerciseParamService: ExerciseParamService,
-    @Inject(forwardRef(() => ComponentService))
-    private readonly componentService: Wrapper<ComponentService>,
   ) {}
 
   async findAllGlobal(user: User, filter?: Record<string, string>) {
@@ -85,7 +77,6 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     user: User,
     filter?: Record<string, string>,
   ): Promise<Exercise[]> {
-    const components = await this.componentService.findAllFlat();
     let query = this.repository
       .collection()
       .where(key, '==', userOrInstitutionId);
@@ -94,16 +85,8 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     if (!this.firebaseService.isAdmin(user))
       query = query.where('disabled', '==', false);
 
-    if (filter && !this.commonService.object.isEmpty(filter)) {
-      if (filter.componentIds)
-        query = this.filterByComponents(
-          query,
-          filter.componentIds.split(','),
-          components,
-        );
-
+    if (filter && !this.commonService.object.isEmpty(filter))
       query = this.exerciseAttributeService.applyFilters(query, filter);
-    }
 
     const exerciseIds = await query
       .get()
@@ -142,7 +125,6 @@ export class ExerciseService implements Permission<Exercise, Institution> {
 
   @LogMethod()
   async create(user: User, data: CreateExerciseDto): Promise<Exercise> {
-    const components = await this.componentService.findAllFlat();
     const isAdmin = this.firebaseService.isAdmin(user);
     const isManager = this.firebaseService.isManager(user);
 
@@ -160,15 +142,15 @@ export class ExerciseService implements Permission<Exercise, Institution> {
       throw new UnauthorizedException('You cannot create disabled exercises');
 
     const isUnilateral = data.isUnilateral || false;
-    this.exerciseAttributeService.validate(data, { components });
+    this.exerciseAttributeService.validate(data);
 
     // create exercise
     const id = this.repository.slug(data.name, institution?.id);
-    const main = components.find((c) => c.id === data.componentIds[0]);
-    if (!main) throw new BadRequestException('Main component not found');
+    const main = this.exerciseAttributeService.getRootMainComponent(
+      data.components[0],
+    );
 
-    const root = this.componentService.getRoot(main, components);
-    if (!root) throw new BadRequestException('Root component not found');
+    if (!main) throw new BadRequestException('Main component not found');
 
     const create: Create<Exercise> = {
       ...data,
@@ -178,7 +160,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
       institutionId: institution?.id,
       params: data.params?.length
         ? data.params
-        : this.exerciseParamService.getComponentParams(root, isUnilateral),
+        : this.exerciseParamService.getComponentParams(main, isUnilateral),
     };
 
     await this.repository.save(create);
@@ -192,7 +174,6 @@ export class ExerciseService implements Permission<Exercise, Institution> {
    */
   async upsertMany(user: User, exercises: CreateExerciseDto[]) {
     // validate components
-    const components = await this.componentService.findAllFlat();
     const isAdmin = this.firebaseService.isAdmin(user);
     const isManager = this.firebaseService.isManager(user);
     const ownerId = isAdmin ? GLOBAL_EXERCISE_OWNER : user.uid;
@@ -218,28 +199,29 @@ export class ExerciseService implements Permission<Exercise, Institution> {
       const row = index + 1;
       this.exerciseAttributeService.validate(
         data,
-        { components },
         (error: ValidateError<Exercise>) => {
           const found = errors.find((e) => e.row === row);
-
           if (found) found.errors.push(error);
           else errors.push({ row, errors: [error] });
         },
       );
 
-      const isUnilateral = data.isUnilateral || false;
-      const main = components.find((c) => c.id === data.componentIds[0]);
-      if (!main) return;
+      // if there are errors, skip further validation
+      if (errors.find((e) => e.row === row)) return;
 
-      const root = this.componentService.getRoot(main, components);
-      if (!root) return;
+      const isUnilateral = data.isUnilateral || false;
+      const main = this.exerciseAttributeService.getRootMainComponent(
+        data.components[0],
+      );
+
+      if (!main) return;
 
       exercisesToCreate.push({
         ...data,
         isUnilateral,
         params: data.params?.length
           ? data.params
-          : this.exerciseParamService.getComponentParams(root, isUnilateral),
+          : this.exerciseParamService.getComponentParams(main, isUnilateral),
       });
     });
 
@@ -258,14 +240,13 @@ export class ExerciseService implements Permission<Exercise, Institution> {
         ownerId,
         name: e.name,
         institutionId: institution?.id,
-        componentIds: e.componentIds,
+        components: e.components,
         isUnilateral: e.isUnilateral,
         disabled: e.disabled || false,
         videoUrl: e.videoUrl,
         imageUrl: e.imageUrl,
         instruction: e.instruction || '',
         muscleValues: e.muscleValues || [],
-        categories: e.categories || [],
         equipment: e.equipment || [],
         prescriptions: e.prescriptions || [],
         patterns: e.patterns || [],
@@ -333,19 +314,15 @@ export class ExerciseService implements Permission<Exercise, Institution> {
         'You are not allowed to edit this exercise',
       );
 
-    if (input.componentIds?.length > 0) {
-      if (input.componentIds[0] !== exercise.componentIds[0])
+    if (input.components?.length > 0) {
+      if (input.components[0] !== exercise.components[0])
         throw new BadRequestException(
           'You cannot update the main component of an exercise',
         );
     }
 
     // validate attributes
-    const components = await this.componentService.findAllFlat();
-    this.exerciseAttributeService.validate(
-      { ...exercise, ...input },
-      { components },
-    );
+    this.exerciseAttributeService.validate({ ...exercise, ...input });
 
     await this.repository.update(exercise.id, input);
     await this.cacheManagerService.del(CACHE_KEY_EXERCISES);
@@ -362,72 +339,6 @@ export class ExerciseService implements Permission<Exercise, Institution> {
 
     await this.repository.delete(ref.exerciseId);
     await this.cacheManagerService.del(CACHE_KEY_EXERCISES);
-  }
-
-  /**
-   * Checks if provided exercises are valid for a training. It checks that all
-   * exercises' leaf components belong to the training's root components.
-   *
-   * For example, if training has components `Strength` and `Speed` selected,
-   * then exercise with component parents `Endurance` is not valid.
-   */
-  validateComponents(
-    rootComponentId: string,
-    exercises: Exercise[],
-    leafs: Component[],
-  ) {
-    // check that parents of leaf are in training's root component ids
-    for (const exercise of exercises)
-      for (const componentId of exercise.componentIds) {
-        const leaf = leafs.find((leaf) => leaf.id === componentId)!;
-        if (leaf?.id === rootComponentId) continue;
-        if (!leaf.parents.includes(rootComponentId))
-          throw new BadRequestException(
-            `Exercise ${exercise.name} cannot be part of selected component`,
-          );
-      }
-  }
-
-  private getLeafComponentIdsByRoots(
-    rootComponentIds: string[],
-    components: Component[],
-  ): string[] {
-    const leafComponentIds: string[] = [];
-
-    for (const rootComponentId of rootComponentIds) {
-      const component = components.find((c) => c.id === rootComponentId);
-      if (!component) return;
-
-      const tree = this.commonService.tree.fromArray(components, {
-        rootId: component.id,
-        idPropertyName: 'id',
-        parentIdPropertyName: 'parentId',
-        childrenPropertyName: 'children',
-      });
-
-      this.commonService.tree.forEach(tree, 'children', (item) => {
-        if (item.children?.length === 0) leafComponentIds.push(item.id);
-        return null;
-      });
-    }
-
-    return leafComponentIds;
-  }
-
-  private filterByComponents(
-    query: Query,
-    filterComponentIds: string[],
-    allComponents: Component[],
-  ): Query {
-    const leafs = this.getLeafComponentIdsByRoots(
-      filterComponentIds,
-      allComponents,
-    );
-
-    return query.where('componentIds', 'array-contains-any', [
-      ...filterComponentIds,
-      ...leafs,
-    ]);
   }
 
   canView(user: User, exercise: Exercise, institution?: Institution) {

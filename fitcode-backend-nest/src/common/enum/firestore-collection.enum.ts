@@ -15,8 +15,4 @@ export enum FirestoreCollection {
   TRAINING = 'trainings',
   TRAINING_WORKLOAD = 'training-workload',
   TRAINING_REPORT = 'training-reports',
-
-  // to be removed
-  COMPONENT = 'components',
-  METHOD = 'methods',
 }

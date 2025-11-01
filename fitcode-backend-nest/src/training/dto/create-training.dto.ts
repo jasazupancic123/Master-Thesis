@@ -8,7 +8,7 @@ import { TrainingComponent } from '../entity/training-component.entity';
 
 export class CreateTrainingComponentDto extends PickType(TrainingComponent, [
   'id',
-  'target',
+  'targetId',
   'methodId',
   'copiedFrom',
 ]) {}

@@ -1,7 +1,6 @@
 import { TestApp } from '@test/common/utils/app.util';
 
 import type { TestInstitution } from '@src/common/type/entity.type';
-import type { Component } from '@src/component/entity/component.entity';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import type { Group } from '@src/group/entity/group.entity';
@@ -19,13 +18,31 @@ import {
   generateTrainingStub,
 } from '@src/training/mock/training.stub';
 
+jest.mock('@src/exercise/constant/components.constant', () => {
+  const {
+    generateComponentStub,
+  } = require('@src/exercise/mock/component.stub');
+
+  const c1 = generateComponentStub({ field: 'c1' });
+  const c2 = generateComponentStub({ field: 'c2' });
+  const warmup = generateComponentStub({ field: 'warmup' });
+  const cooldown = generateComponentStub({ field: 'cooldown' });
+
+  return {
+    WARMUP_ID: 'warmup',
+    COOLDOWN_ID: 'cooldown',
+    WARMUP: warmup,
+    COOLDOWN: cooldown,
+    Components: [warmup, c1, c2, cooldown],
+  };
+});
+
 describe('Upsert Set (e2e)', () => {
   let testApp: TestApp;
   let db: TestDbService;
 
   let institution: TestInstitution;
   let group: Group;
-  let component1: Component;
   let trainingId: string;
 
   beforeAll(async () => {
@@ -40,15 +57,10 @@ describe('Upsert Set (e2e)', () => {
 
     group = await db.groups.createTest(institution);
 
-    [component1] = await Promise.all([
-      db.components.create({ id: 'c1' }),
-      db.components.create({ id: 'c2' }),
-    ]);
-
     await exerciseService.upsertMany(global.admin, [
-      generateExerciseStub({ name: 'squat', componentIds: ['c1'] }),
-      generateExerciseStub({ name: 'bench', componentIds: ['c1'] }),
-      generateExerciseStub({ name: 'deadlift', componentIds: ['c1'] }),
+      generateExerciseStub({ name: 'squat', components: ['c1'] }),
+      generateExerciseStub({ name: 'bench', components: ['c1'] }),
+      generateExerciseStub({ name: 'deadlift', components: ['c1'] }),
     ]);
 
     trainingId = await db.trainings.save(
@@ -118,7 +130,6 @@ describe('Upsert Set (e2e)', () => {
       db.institutions.remove(institution.id),
       db.trainings.delete(trainingId),
       db.exercises.clear(),
-      db.components.clear(),
     ]);
 
     await testApp.close();
@@ -164,7 +175,7 @@ describe('Upsert Set (e2e)', () => {
     const res = await req(
       global.trainer.token,
       trainingId,
-      component1.id,
+      'c1',
       'squat',
       10,
       1,
@@ -184,7 +195,7 @@ describe('Upsert Set (e2e)', () => {
     const res = await req(
       global.trainer.token,
       trainingId,
-      component1.id,
+      'c1',
       'bench',
       0,
       1,
@@ -204,7 +215,7 @@ describe('Upsert Set (e2e)', () => {
     const res = await req(
       global.trainer.token,
       trainingId,
-      component1.id,
+      'c1',
       'squat',
       0,
       10,
@@ -224,7 +235,7 @@ describe('Upsert Set (e2e)', () => {
     const res = await req(
       global.trainer.token,
       trainingId,
-      component1.id,
+      'c1',
       'squat',
       0,
       1,
@@ -240,7 +251,7 @@ describe('Upsert Set (e2e)', () => {
     const result = res.body as Workload;
 
     expect(result.trainingId).toBe(trainingId);
-    expect(result.componentId).toBe(component1.id);
+    expect(result.componentId).toBe('c1');
     expect(result.exerciseId).toBe('squat');
     expect(result.supersetIndex).toBe(0);
     expect(result.setNumber).toBe(1);
@@ -253,7 +264,7 @@ describe('Upsert Set (e2e)', () => {
     await db.workloads.createMany([
       {
         trainingId,
-        component: component1,
+        componentId: 'c1',
         exerciseId: 'squat',
         supersetIndex: 0,
         setNumber: 1,
@@ -271,7 +282,7 @@ describe('Upsert Set (e2e)', () => {
     const res = await req(
       global.trainer.token,
       trainingId,
-      component1.id,
+      'c1',
       'squat',
       0,
       1,
@@ -297,7 +308,7 @@ describe('Upsert Set (e2e)', () => {
     const res = await req(
       global.trainer.token,
       trainingId,
-      component1.id,
+      'c1',
       'squat',
       0,
       1,
@@ -338,7 +349,7 @@ describe('Upsert Set (e2e)', () => {
     const result = res.body as Workload;
 
     expect(result.trainingId).toBe(trainingId);
-    expect(result.componentId).toBe(component1.id);
+    expect(result.componentId).toBe('c1');
     expect(result.exerciseId).toBe('squat');
     expect(result.supersetIndex).toBe(0);
     expect(result.setNumber).toBe(1);

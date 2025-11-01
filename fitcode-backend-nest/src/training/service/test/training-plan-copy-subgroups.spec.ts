@@ -5,8 +5,6 @@ import { Test } from '@nestjs/testing';
 import { AttributeService } from '@src/attribute/service/attribute.service';
 import { CacheManagerService } from '@src/cache-manager/cache-manager.service';
 import { CommonModule } from '@src/common/common.module';
-import { ComponentService } from '@src/component/component.service';
-import { ComponentRepository } from '@src/component/repository/component.repository';
 import { validationSchema } from '@src/config/environment-validation-schema';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { ExerciseAttributeService } from '@src/exercise/service/exercise-attribute.service';
@@ -50,14 +48,6 @@ describe('copySubgroup', () => {
         {
           provide: AttributeService,
           useValue: createMock<AttributeService>(),
-        },
-        {
-          provide: ComponentRepository,
-          useValue: createMock<ComponentRepository>,
-        },
-        {
-          provide: ComponentService,
-          useValue: createMock<ComponentService>(),
         },
         {
           provide: InstitutionService,

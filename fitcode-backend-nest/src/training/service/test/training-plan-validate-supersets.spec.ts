@@ -5,9 +5,8 @@ import { Test } from '@nestjs/testing';
 import { AttributeService } from '@src/attribute/service/attribute.service';
 import { CacheManagerService } from '@src/cache-manager/cache-manager.service';
 import { CommonModule } from '@src/common/common.module';
-import { ComponentService } from '@src/component/component.service';
-import { generateComponentStub } from '@src/component/mock/component.stub';
 import { validationSchema } from '@src/config/environment-validation-schema';
+import { generateComponentStub } from '@src/exercise/mock/component.stub';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { ExerciseAttributeService } from '@src/exercise/service/exercise-attribute.service';
@@ -34,7 +33,7 @@ import { WorkloadService } from '../workload.service';
 
 describe('validateSupersets', () => {
   let service: TrainingPlanService;
-  let componentService: ComponentService;
+  let exerciseAttributeService: ExerciseAttributeService;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -52,10 +51,6 @@ describe('validateSupersets', () => {
           useValue: createMock<CacheManagerService>(),
         },
         AttributeService,
-        {
-          provide: ComponentService,
-          useValue: createMock<ComponentService>(),
-        },
         {
           provide: InstitutionService,
           useValue: createMock<InstitutionService>(),
@@ -82,32 +77,29 @@ describe('validateSupersets', () => {
     }).compile();
 
     service = moduleRef.get(TrainingPlanService);
-    componentService = moduleRef.get(ComponentService);
+    exerciseAttributeService = moduleRef.get(ExerciseAttributeService);
   });
 
-  const root = generateComponentStub({ id: 'c1' });
+  const root = generateComponentStub({ field: 'c1' });
   beforeEach(() => {
-    jest.spyOn(componentService, 'getRoot').mockImplementation(() => root);
+    jest
+      .spyOn(exerciseAttributeService, 'getRootMainComponent')
+      .mockImplementation(() => root);
   });
 
   const exercises = [
-    generateExerciseStub({ id: 'e1', componentIds: ['leaf1'] }),
-    generateExerciseStub({ id: 'e2', componentIds: ['leaf1'] }),
-    generateExerciseStub({ id: 'e3', componentIds: ['leaf2'] }),
-    generateExerciseStub({ id: 'e4', componentIds: ['leaf3'] }),
-    generateExerciseStub({ id: 'e5', componentIds: ['leaf3'] }),
-    generateExerciseStub({ id: 'e6', componentIds: ['leaf3'] }),
-    generateExerciseStub({ id: 'e7', componentIds: ['leaf3'] }),
-    generateExerciseStub({ id: 'e8', componentIds: ['leaf3'] }),
-    generateExerciseStub({ id: 'e9', componentIds: ['leaf3'] }),
+    generateExerciseStub({ id: 'e1' }),
+    generateExerciseStub({ id: 'e2' }),
+    generateExerciseStub({ id: 'e3' }),
+    generateExerciseStub({ id: 'e4' }),
+    generateExerciseStub({ id: 'e5' }),
+    generateExerciseStub({ id: 'e6' }),
+    generateExerciseStub({ id: 'e7' }),
+    generateExerciseStub({ id: 'e8' }),
+    generateExerciseStub({ id: 'e9' }),
   ];
 
-  const data = {
-    exercises,
-    components: [root],
-    methods: [],
-    attributes: [],
-  };
+  const data = { exercises, components: [root], methods: [], attributes: [] };
 
   it.each([
     [

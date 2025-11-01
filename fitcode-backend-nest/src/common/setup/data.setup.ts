@@ -4,16 +4,12 @@ import { readFile } from 'node:fs/promises';
 
 import { UserRole } from '@src/auth/enum/user-role.enum';
 import { AuthService } from '@src/auth/service/auth.service';
-import { ComponentService } from '@src/component/component.service';
-import type { Component } from '@src/component/entity/component.entity';
 import type { CreateExerciseDto } from '@src/exercise/dto/create-exercise.dto';
 import type { Exercise } from '@src/exercise/entity/exercise.entity';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { GroupService } from '@src/group/group.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
-import type { Method } from '@src/method/entity/method.entity';
-import { MethodService } from '@src/method/service/method.service';
 import { SportLevel } from '@src/profile/enum/sport-level.enum';
 import { ProfileRepository } from '@src/profile/repository/profile.repository';
 import { WellnessService } from '@src/profile/service/wellness.service';
@@ -77,9 +73,7 @@ export class DataSetup extends BaseSetup {
 
     try {
       await this.importUsers('data/users.json');
-      await this.importComponents('data/components.json');
       await this.importExercises();
-      await this.importMethods('data/methods.json');
 
       this.logger.debug(
         `Data setup took ${(performance.now() - time) / 1000}s`,
@@ -95,52 +89,30 @@ export class DataSetup extends BaseSetup {
   private async clearData() {
     await this.firebase.deleteCollection(FirestoreCollection.GROUP);
     await this.firebase.deleteCollection(FirestoreCollection.EXERCISE);
-    await this.firebase.deleteCollection(FirestoreCollection.COMPONENT);
     await this.firebase.deleteCollection(FirestoreCollection.PROFILE);
-    await this.firebase.deleteCollection(FirestoreCollection.METHOD);
     await this.firebase.deleteCollection(FirestoreCollection.TRAINING);
     await this.firebase.deleteCollection(FirestoreCollection.INSTITUTION);
-  }
-
-  private async importComponents(filename: string) {
-    const componentService = this.app.get(ComponentService);
-
-    const file = await readFile(filename, 'utf-8');
-    const data: (Omit<Component, 'children' | 'parents'> & {
-      children: Component[];
-    })[] = JSON.parse(file);
-
-    for (const c of data) await componentService.createFromTree(c);
-  }
-
-  private async importMethods(filename: string) {
-    const methodsService = this.app.get(MethodService);
-
-    const file = await readFile(filename, 'utf-8');
-    const data: Method[] = JSON.parse(file);
-
-    for (const m of data) await methodsService.create(this.admin, m);
   }
 
   private async importExercises() {
     const exerciseService = this.app.get(ExerciseService);
     const data: Update<Exercise>[] = [
-      { name: 'Squats', componentIds: ['concentric'] },
-      { name: 'Deadlifts', componentIds: ['concentric'] },
-      { name: 'Bench Press', componentIds: ['concentric'] },
-      { name: 'High Plank Reach', componentIds: ['concentric'] },
-      { name: 'Power Clean', componentIds: ['concentric'] },
-      { name: 'Sprint', componentIds: ['peak-speed'] },
-      { name: 'Sleed Acceleration', componentIds: ['resisted'] },
-      { name: 'Jogging', componentIds: ['aerobic-capacity'] },
+      { name: 'Squats', components: ['concentric'] },
+      { name: 'Deadlifts', components: ['concentric'] },
+      { name: 'Bench Press', components: ['concentric'] },
+      { name: 'High Plank Reach', components: ['concentric'] },
+      { name: 'Power Clean', components: ['concentric'] },
+      { name: 'Sprint', components: ['peak-speed'] },
+      { name: 'Sleed Acceleration', components: ['resisted'] },
+      { name: 'Jogging', components: ['aerobic-capacity'] },
       {
         name: 'Bicep Stretching',
-        componentIds: ['passive-stretching'],
+        components: ['passive-stretching'],
         isUnilateral: true,
       },
       {
         name: 'Bulgarian Split Squat',
-        componentIds: ['concentric'],
+        components: ['concentric'],
         isUnilateral: true,
       },
     ];

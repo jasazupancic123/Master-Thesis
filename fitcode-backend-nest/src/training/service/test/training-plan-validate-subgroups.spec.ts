@@ -5,10 +5,8 @@ import { Test } from '@nestjs/testing';
 import { AttributeService } from '@src/attribute/service/attribute.service';
 import { CacheManagerService } from '@src/cache-manager/cache-manager.service';
 import { CommonModule } from '@src/common/common.module';
-import { ComponentService } from '@src/component/component.service';
-import { generateComponentStub } from '@src/component/mock/component.stub';
-import { ComponentRepository } from '@src/component/repository/component.repository';
 import { validationSchema } from '@src/config/environment-validation-schema';
+import { generateComponentStub } from '@src/exercise/mock/component.stub';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { ExerciseAttributeService } from '@src/exercise/service/exercise-attribute.service';
@@ -29,6 +27,7 @@ import { WorkloadService } from '../workload.service';
 
 describe('copySubgroup', () => {
   let service: TrainingPlanService;
+  let exerciseAttributeService: ExerciseAttributeService;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -49,11 +48,6 @@ describe('copySubgroup', () => {
           provide: AttributeService,
           useValue: createMock<AttributeService>(),
         },
-        {
-          provide: ComponentRepository,
-          useValue: createMock<ComponentRepository>,
-        },
-        ComponentService,
         {
           provide: InstitutionService,
           useValue: createMock<InstitutionService>(),
@@ -80,27 +74,29 @@ describe('copySubgroup', () => {
     }).compile();
 
     service = moduleRef.get(TrainingPlanService);
+    exerciseAttributeService = moduleRef.get(ExerciseAttributeService);
   });
 
-  const root = generateComponentStub({ id: 'c1' });
+  const root = generateComponentStub({ field: 'c1' });
+  beforeEach(() => {
+    jest
+      .spyOn(exerciseAttributeService, 'getRootMainComponent')
+      .mockImplementation(() => root);
+  });
+
   const exercises = [
-    generateExerciseStub({ id: 'e1', componentIds: ['leaf1'] }),
-    generateExerciseStub({ id: 'e2', componentIds: ['leaf1'] }),
-    generateExerciseStub({ id: 'e3', componentIds: ['leaf2'] }),
-    generateExerciseStub({ id: 'e4', componentIds: ['leaf3'] }),
-    generateExerciseStub({ id: 'e5', componentIds: ['leaf3'] }),
-    generateExerciseStub({ id: 'e6', componentIds: ['leaf3'] }),
-    generateExerciseStub({ id: 'e7', componentIds: ['leaf3'] }),
-    generateExerciseStub({ id: 'e8', componentIds: ['leaf3'] }),
-    generateExerciseStub({ id: 'e9', componentIds: ['leaf3'] }),
+    generateExerciseStub({ id: 'e1', components: ['leaf1'] }),
+    generateExerciseStub({ id: 'e2', components: ['leaf1'] }),
+    generateExerciseStub({ id: 'e3', components: ['leaf2'] }),
+    generateExerciseStub({ id: 'e4', components: ['leaf3'] }),
+    generateExerciseStub({ id: 'e5', components: ['leaf3'] }),
+    generateExerciseStub({ id: 'e6', components: ['leaf3'] }),
+    generateExerciseStub({ id: 'e7', components: ['leaf3'] }),
+    generateExerciseStub({ id: 'e8', components: ['leaf3'] }),
+    generateExerciseStub({ id: 'e9', components: ['leaf3'] }),
   ];
 
-  const data = {
-    exercises,
-    components: [root],
-    methods: [],
-    attributes: [],
-  };
+  const data = { exercises, components: [root], methods: [], attributes: [] };
 
   it('should pass if training component has different mainSet than subgroup', () => {
     const trainingComponent = generateTrainingComponent({

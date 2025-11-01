@@ -13,10 +13,7 @@ export class ExerciseTestRepository extends TestRepositoryMixin<Exercise>()(
   ExerciseRepository,
 ) {
   async createTest(
-    input: Partial<Create<Exercise>> & {
-      ownerId: string;
-      componentIds: string[];
-    },
+    input: Partial<Create<Exercise>> & { ownerId: string },
   ): Promise<Exercise> {
     const data = generateExerciseStub(input);
     data.id = data.id || slugify(data.name, { lower: true, strict: true });

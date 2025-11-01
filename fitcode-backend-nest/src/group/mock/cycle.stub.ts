@@ -14,7 +14,7 @@ export function generateCycleStub(data?: Partial<Cycle>): Cycle {
     name: data?.name ?? generateRandomName(),
     from: data?.from ?? startOfMonth(new Date()),
     to: data?.to ?? endOfMonth(new Date()),
-    selectedTargets: data?.selectedTargets ?? [],
+    targets: data?.targets ?? [],
   };
 }
 

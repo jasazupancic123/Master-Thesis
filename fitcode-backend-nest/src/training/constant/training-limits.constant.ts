@@ -8,7 +8,7 @@ export const DURATION_TRAINING_COMPONENT_WARMUP_COOLDOWN_IN_MIN = 15;
 
 export const MAX_DURATION_TRAINING_IN_MIN = 240; // 4 hours
 
-export const MAX_NUM_COMPONENTS_IN_TRAINING = 5;
+export const MAX_NUM_COMPONENTS_IN_TRAINING = 3;
 
 // superset limits
 export const MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT = 4;

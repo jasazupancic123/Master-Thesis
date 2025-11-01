@@ -43,11 +43,10 @@ import {
 import { BatchUpdateOperation } from '@src/common/type/orm.type';
 import { Filter } from '@src/common/type/orm.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
-import { ComponentService } from '@src/component/component.service';
 import {
-  COOLDOWN_COMPONENT_ID,
-  WARMUP_COMPONENT_ID,
-} from '@src/component/constant/warmup-cooldown.constant';
+  COOLDOWN_ID,
+  WARMUP_ID,
+} from '@src/exercise/constant/components.constant';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { ExerciseParamService } from '@src/exercise/service/exercise-param.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
@@ -97,7 +96,6 @@ export class TrainingService implements Permission<Training, Institution> {
     private readonly authService: Wrapper<AuthService>,
     private readonly commonService: CommonService,
     private readonly repository: TrainingRepository,
-    private readonly componentService: ComponentService,
     private readonly methodService: MethodService,
     private readonly periodizationService: PeriodizationService,
     private readonly wellnessService: WellnessService,
@@ -255,7 +253,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
     const warmup: TrainingComponent = {
       ...defaultComponentData,
-      id: WARMUP_COMPONENT_ID,
+      id: WARMUP_ID,
       from: subMinutes(
         from,
         DURATION_TRAINING_COMPONENT_WARMUP_COOLDOWN_IN_MIN,
@@ -271,13 +269,13 @@ export class TrainingService implements Permission<Training, Institution> {
         id: c.id,
         from: addMinutes(from, i * step),
         to: addMinutes(from, (i + 1) * step),
-        target: c.target,
+        targetId: c.targetId,
       })),
     );
 
     const cooldown: TrainingComponent = {
       ...defaultComponentData,
-      id: COOLDOWN_COMPONENT_ID,
+      id: COOLDOWN_ID,
       from: inputComponents[inputComponents.length - 1].to,
       to: addMinutes(
         inputComponents[inputComponents.length - 1].to,
@@ -295,14 +293,13 @@ export class TrainingService implements Permission<Training, Institution> {
       cooldown.to,
     );
 
-    const components = await this.componentService.findAllFlat();
     const methods = await this.methodService.findAll();
     const membersIds = group ? group.membersIds : input.membersIds;
 
     this.trainingPlanService.validateTrainingComponents(
       inputComponents,
       membersIds,
-      { components, methods, exercises: [] },
+      { methods, exercises: [] },
     );
 
     const data: Create<Training> = {
@@ -318,14 +315,12 @@ export class TrainingService implements Permission<Training, Institution> {
       warmup,
       cooldown,
       components: inputComponents
-        .filter(
-          (c) => c.id !== WARMUP_COMPONENT_ID && c.id !== COOLDOWN_COMPONENT_ID,
-        )
+        .filter((c) => c.id !== WARMUP_ID && c.id !== COOLDOWN_ID)
         .map((c) => ({
           id: c.id,
           from: c.from,
           to: c.to,
-          target: c.target,
+          target: c.targetId,
           methodId: c.methodId,
           copiedFrom: c.copiedFrom,
           mainSet: c.mainSet,
@@ -362,7 +357,6 @@ export class TrainingService implements Permission<Training, Institution> {
     input.components.push(input.cooldown);
 
     // validate components & exercises
-    const components = await this.componentService.findAllFlat();
     const methods = await this.methodService.findAll();
     const exercises = await this.trainingPlanService.getAllTrainingExercises(
       input.components,
@@ -371,7 +365,6 @@ export class TrainingService implements Permission<Training, Institution> {
     const trainingComponents: TrainingComponent[] = this.trainingPlanService
       .validateTrainingComponents(input.components, training.membersIds, {
         exercises,
-        components,
         methods,
       })
       // override training times
@@ -384,7 +377,7 @@ export class TrainingService implements Permission<Training, Institution> {
       warmup: input.warmup,
       cooldown: input.cooldown,
       components: trainingComponents.filter(
-        (c) => c.id !== WARMUP_COMPONENT_ID && c.id !== COOLDOWN_COMPONENT_ID,
+        (c) => c.id !== WARMUP_ID && c.id !== COOLDOWN_ID,
       ),
     };
 
@@ -402,7 +395,7 @@ export class TrainingService implements Permission<Training, Institution> {
     this.validateCanEdit(user, training, training.institution);
 
     this.trainingPlanService.findComponentOrFail(training, ref.componentId);
-    if ([WARMUP_COMPONENT_ID, COOLDOWN_COMPONENT_ID].includes(ref.componentId))
+    if ([WARMUP_ID, COOLDOWN_ID].includes(ref.componentId))
       throw new BadRequestException(
         'You cannot update warmup and cooldown times',
       );
@@ -488,9 +481,7 @@ export class TrainingService implements Permission<Training, Institution> {
     this.validateIsDateInFuture(training.from);
 
     // validate components & exercises
-    const components = await this.componentService.findAllFlat();
     const methods = await this.methodService.findAll();
-
     const from = training.components[training.components.length - 1].to;
     const step = DURATION_TRAINING_COMPONENT_IN_MIN;
 
@@ -504,7 +495,7 @@ export class TrainingService implements Permission<Training, Institution> {
         to: addMinutes(from, (i + 1) * step),
         mainSet: MainSet.BLOCK,
         methodId: c.methodId,
-        target: c.target,
+        targetId: c.targetId,
         subgroups: [],
         supersets: [],
       })),
@@ -527,7 +518,6 @@ export class TrainingService implements Permission<Training, Institution> {
     const validTrainingComponents = this.trainingPlanService
       .validateTrainingComponents(trainingComponents, training.membersIds, {
         exercises,
-        components,
         methods,
       })
       .map((c) => {
@@ -583,7 +573,7 @@ export class TrainingService implements Permission<Training, Institution> {
   ) {
     const { periodizationType, exerciseIds } = input;
 
-    if ([WARMUP_COMPONENT_ID, COOLDOWN_COMPONENT_ID].includes(ref.componentId))
+    if ([WARMUP_ID, COOLDOWN_ID].includes(ref.componentId))
       throw new BadRequestException(
         'You cannot periodize warmup or cooldown components',
       );
@@ -615,8 +605,8 @@ export class TrainingService implements Permission<Training, Institution> {
       const component = t.components.find((c) => c.id === ref.componentId);
       if (!component) return false;
 
-      if (!baseComponent.target) return true; // no target, return all trainings with that component
-      return component.target?.id === baseComponent.target.id;
+      if (!baseComponent.targetId) return true; // no target, return all trainings with that component
+      return component.targetId === baseComponent.targetId;
     });
 
     // if no subgroup is selected, override all filtered trainings' components with the base component
@@ -792,7 +782,7 @@ export class TrainingService implements Permission<Training, Institution> {
         from: trainingComponent.from,
         to: trainingComponent.to,
         copiedFrom: trainingComponent.copiedFrom,
-        target: trainingComponent.target,
+        targetId: trainingComponent.targetId,
         methodId: trainingComponent.methodId,
         mainSet: trainingComponent.mainSet,
         supersets: newPrescribedSupersets,
