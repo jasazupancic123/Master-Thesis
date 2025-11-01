@@ -16,7 +16,6 @@ interface LoadingOverlayProps {
 }
 
 export default function LoadingOverlay(props: LoadingOverlayProps) {
-  console.log('LOADING OVERLAY RENDER');
   const screenSize = useScreenSize();
 
   const { title, children, showLogos, topDownCircularProgress } = props;

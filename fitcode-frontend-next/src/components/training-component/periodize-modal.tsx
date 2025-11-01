@@ -77,7 +77,6 @@ export default function PeriodizeModal(
           if (!training) return;
 
           setIsPeriodizing(true);
-          console.log('set periodizing true');
 
           handleApiRequest(
             router,

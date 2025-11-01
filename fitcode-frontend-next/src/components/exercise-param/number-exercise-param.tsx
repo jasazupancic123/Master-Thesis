@@ -1,17 +1,13 @@
-import {
-  Box,
-  FormControl,
-  MenuItem,
-  Select,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Box, FormControl, MenuItem, Select, TextField } from '@mui/material';
 import { useTheme } from '@mui/material';
+import { useEffect, useRef, useState } from 'react';
 
 import {
   disableBorder,
   exerciseCardSetAttributeSx,
 } from '../trainer-group-day-view/style/exercise-card-set-attribute.style';
+import ExerciseParamValueText from './exercise-param-value-text';
+import NumericParamInputBox from './numeric-param-input-box';
 import type { Attribute } from '@/core/attribute/type/attribute.type';
 import { core } from '@/core/core.service';
 import { KG, SETS } from '@/core/exercise/constant/exercise-param.constant';
@@ -19,10 +15,7 @@ import type { ExerciseParamField } from '@/core/training/type/exercise-set.type'
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useGroup } from '@/store/group.provider';
-import NumericParamInputBox from './numeric-param-input-box';
-import { useEffect, useRef, useState } from 'react';
 import { useScreenSize } from '@/store/screen-size.provider';
-import ExerciseParamValueText from './exercise-param-value-text';
 
 interface Props {
   exercise: TrainingExercise;
@@ -69,20 +62,20 @@ export function NumberExerciseParam(props: Props) {
       ? SETS
       : core.exercise.param.get(selected as ExerciseParamField);
 
-  if (!exerciseParam || typeof initValue !== 'number') return null;
-
   const { min, max } = exerciseParam;
 
   const [open, setOpen] = useState(false);
-  const [value, setValue] = useState<number>(initValue);
+  const [value, setValue] = useState<number>(initValue as number);
   const anchorEl = useRef<HTMLElement | null>(null);
   const valueBoxRef = useRef<HTMLDivElement | null>(null);
 
   const isFloat = typeof selected === 'string' && KG.field === selected;
 
   useEffect(() => {
-    setValue(initValue);
+    setValue(initValue as number);
   }, [initValue]);
+
+  if (!exerciseParam || typeof initValue !== 'number') return null;
 
   return (
     <Box

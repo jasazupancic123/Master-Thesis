@@ -26,7 +26,6 @@ export default function useComponentFilter() {
     string | null
   >(null); // which subcomponent tree is open
 
-  const [anchorElRoot, setAnchorElRoot] = useState<null | HTMLElement>(null);
   const [anchorElLeaf, setAnchorElLeaf] = useState<null | HTMLElement>(null);
 
   const openLeafMenu = Boolean(anchorElLeaf);
@@ -107,7 +106,6 @@ export default function useComponentFilter() {
     selectedComponentsIds,
     setSelectedComponentsIds,
     selectedRootComponentId,
-    anchorElRoot,
     anchorElLeaf,
     openLeafMenu,
     handleClickLeaf,
