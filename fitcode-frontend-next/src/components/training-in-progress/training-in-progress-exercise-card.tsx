@@ -206,7 +206,19 @@ export default function TrainingInProgressExerciseCard() {
                 >
                   Set {i + 1}
                 </Typography>
-                <Circle
+                <Box
+                  component="img"
+                  src="/blinking_dot.gif"
+                  alt="active set"
+                  sx={{
+                    width: 12,
+                    height: 12,
+                    display: 'inline-block',
+                    verticalAlign: 'middle',
+                    visibility: setIndex === i ? 'visible' : 'hidden',
+                  }}
+                />
+                {/* <Circle
                   sx={{
                     fontSize: 8,
                     verticalAlign: 'middle',
@@ -217,7 +229,7 @@ export default function TrainingInProgressExerciseCard() {
                     mr: 0.5,
                     mb: 0.2,
                   }}
-                />
+                /> */}
               </Box>
             );
           })}
