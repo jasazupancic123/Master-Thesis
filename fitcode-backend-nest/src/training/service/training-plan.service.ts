@@ -6,13 +6,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import {
-  addMinutes,
-  getHours,
-  setHours,
-  setMinutes,
-  subMinutes,
-} from 'date-fns';
+import { addMinutes, getHours, setHours, setMinutes } from 'date-fns';
 
 import { GLOBAL_EXERCISE_OWNER } from '@src//exercise/constant/global-exercise-owner.constant';
 import { Institution } from '@src//institution/entity/institution.entity';
@@ -20,10 +14,6 @@ import { DeepPick } from '@src/common/interface/deep-pick.interface';
 import { User } from '@src/common/type/firebase-auth.type';
 import { ComponentRef } from '@src/common/type/firestore.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
-import {
-  COOLDOWN_ID,
-  WARMUP_ID,
-} from '@src/exercise/constant/components.constant';
 import { Exercise } from '@src/exercise/entity/exercise.entity';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { ExerciseAttributeService } from '@src/exercise/service/exercise-attribute.service';
@@ -34,7 +24,6 @@ import { Method } from '@src/method/entity/method.entity';
 import { MAIN_GROUP_PARENT_ID } from '../constant/main-group-parent-id.constant';
 import {
   AM_PM_HOUR_DIVIDER,
-  DURATION_TRAINING_COMPONENT_WARMUP_COOLDOWN_IN_MIN,
   MAX_NUM_COMPONENTS_IN_TRAINING,
   MAX_NUM_EXERCISES_IN_BLOCK_SUPERSET,
   MAX_NUM_EXERCISES_IN_CIRCUIT_SUPERSET,
@@ -99,11 +88,6 @@ export class TrainingPlanService {
       );
   }
 
-  getTrainingComponents(training: Training): TrainingComponent[] {
-    const { warmup, cooldown, components } = training;
-    return [warmup, ...components, cooldown];
-  }
-
   getSupersetsByAthlete(
     athleteId: string,
     trainingComponent: TrainingComponent,
@@ -141,10 +125,9 @@ export class TrainingPlanService {
   }
 
   getTrainingByAthlete(athleteId: string, training: Training): Training {
-    const components = this.getTrainingComponents(training);
     const athleteComponents: TrainingComponent[] = [];
 
-    for (const component of components) {
+    for (const component of training.components) {
       const athleteComponent = structuredClone(component);
       athleteComponent.supersets = this.getSupersetsByAthlete(
         athleteId,
@@ -156,11 +139,7 @@ export class TrainingPlanService {
 
     return {
       ...training,
-      components: athleteComponents.filter(
-        (c) => c.id !== WARMUP_ID && c.id !== COOLDOWN_ID,
-      ),
-      warmup: athleteComponents.find((c) => c.id === WARMUP_ID)!,
-      cooldown: athleteComponents.find((c) => c.id === COOLDOWN_ID)!,
+      components: athleteComponents,
       membersIds: training.membersIds.filter((uid) => uid === athleteId),
     };
   }
@@ -230,13 +209,9 @@ export class TrainingPlanService {
     training: Training,
     componentId: string,
   ): TrainingComponent {
-    const trainingComponents = this.getTrainingComponents(training);
-    const foundComponent = trainingComponents.find((c) => c.id === componentId);
-
-    if (!foundComponent)
-      throw new NotFoundException(`Training component not found`);
-
-    return foundComponent;
+    const found = training.components.find((c) => c.id === componentId);
+    if (!found) throw new NotFoundException(`Training component not found`);
+    return found;
   }
 
   validateTrainingComponents(
@@ -291,8 +266,7 @@ export class TrainingPlanService {
       validTrainingComponents.push({ ...newComponent, supersets, subgroups });
     }
 
-    if (validTrainingComponents.length > MAX_NUM_COMPONENTS_IN_TRAINING + 2)
-      // warmup and cooldown are already included in the count
+    if (validTrainingComponents.length > MAX_NUM_COMPONENTS_IN_TRAINING)
       throw new ConflictException(
         `You can only have up to ${MAX_NUM_COMPONENTS_IN_TRAINING} components per training`,
       );
@@ -479,52 +453,6 @@ export class TrainingPlanService {
     }
 
     return validSubgroups;
-  }
-
-  /**
-   * Generates warmup and cooldown components based on the provided training components.
-   *
-   * @param components - Array of training components (without warmup and cooldown) to determine the warmup and cooldown times.
-   */
-  getWarmupAndCooldown(components: Pick<TrainingComponent, 'from' | 'to'>[]): {
-    warmup: TrainingComponent;
-    cooldown: TrainingComponent;
-  } {
-    const sorted = components.sort(
-      (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime(),
-    );
-
-    if (sorted.length === 0)
-      throw new BadRequestException('Training must have atleast one component');
-
-    const startTime = new Date(sorted[0].from);
-    const endTime = new Date(sorted[sorted.length - 1].to);
-
-    const warmup: TrainingComponent = {
-      id: WARMUP_ID,
-      from: subMinutes(
-        startTime,
-        DURATION_TRAINING_COMPONENT_WARMUP_COOLDOWN_IN_MIN,
-      ),
-      to: startTime,
-      mainSet: MainSet.BLOCK,
-      supersets: [],
-      subgroups: [],
-    };
-
-    const cooldown: TrainingComponent = {
-      id: COOLDOWN_ID,
-      from: endTime,
-      to: addMinutes(
-        endTime,
-        DURATION_TRAINING_COMPONENT_WARMUP_COOLDOWN_IN_MIN,
-      ),
-      mainSet: MainSet.BLOCK,
-      supersets: [],
-      subgroups: [],
-    };
-
-    return { warmup, cooldown };
   }
 
   copyOrOverrideComponent(

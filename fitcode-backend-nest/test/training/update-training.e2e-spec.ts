@@ -24,16 +24,8 @@ jest.mock('@src/exercise/constant/components.constant', () => {
     field: 'c2',
     params: ['dist', 'tempo', 'eff'],
   });
-  const warmup = generateComponentStub({ field: 'warmup' });
-  const cooldown = generateComponentStub({ field: 'cooldown' });
 
-  return {
-    WARMUP_ID: 'warmup',
-    COOLDOWN_ID: 'cooldown',
-    WARMUP: warmup,
-    COOLDOWN: cooldown,
-    Components: [warmup, c1, c2, cooldown],
-  };
+  return { Components: [c1, c2] };
 });
 
 describe('Update Training (e2e)', () => {

@@ -7,7 +7,6 @@ import { getTime } from '@src/common/service/util';
 import type { TestInstitution } from '@src/common/type/entity.type';
 import type { Group } from '@src/group/entity/group.entity';
 import { TestDbService } from '@src/test-db/test-db.service';
-import { DURATION_TRAINING_COMPONENT_WARMUP_COOLDOWN_IN_MIN } from '@src/training/constant/training-limits.constant';
 import {
   generateTrainingComponent,
   generateTrainingStub,
@@ -21,16 +20,8 @@ jest.mock('@src/exercise/constant/components.constant', () => {
   const c1 = generateComponentStub({ field: 'c1' });
   const c2 = generateComponentStub({ field: 'c2' });
   const c3 = generateComponentStub({ field: 'c3' });
-  const warmup = generateComponentStub({ field: 'warmup' });
-  const cooldown = generateComponentStub({ field: 'cooldown' });
 
-  return {
-    WARMUP_ID: 'warmup',
-    COOLDOWN_ID: 'cooldown',
-    WARMUP: warmup,
-    COOLDOWN: cooldown,
-    Components: [warmup, c1, c2, c3, cooldown],
-  };
+  return { Components: [c1, c2, c3] };
 });
 
 describe('Update Training (e2e)', () => {
@@ -91,19 +82,6 @@ describe('Update Training (e2e)', () => {
 
     expect(response.status).toBe(404);
     expect(response.body.message).toBe('Training component not found');
-  });
-
-  it('should throw error if user tries to update warmup or cooldown component', async () => {
-    const response = await req(
-      { from: trainingDate, to: trainingDate },
-      trainingId,
-      'warmup',
-    );
-
-    expect(response.status).toBe(400);
-    expect(response.body.message).toBe(
-      'You cannot update warmup and cooldown times',
-    );
   });
 
   it('should fail to update training if training is in the past', async () => {
@@ -170,7 +148,7 @@ describe('Update Training (e2e)', () => {
     );
 
     const response = await req(
-      { from: getTime(in3Days, 10, 0), to: getTime(in3Days, 11, 0) },
+      { from: getTime(in3Days, 10, 15), to: getTime(in3Days, 11, 15) },
       newTrainingId,
     );
 
@@ -265,7 +243,7 @@ describe('Update Training (e2e)', () => {
     await db.trainings.delete(newTrainingId);
   });
 
-  it('should successfully update first component and adjust training from and warmup', async () => {
+  it('should successfully update first component', async () => {
     const trainingDate = new Date();
     const newTrainingId = await db.trainings.save(
       generateTrainingStub(
@@ -276,11 +254,7 @@ describe('Update Training (e2e)', () => {
           ownerId: institution.trainerIds[0],
           membersIds: [],
           from: getTime(trainingDate, 8, 0),
-          warmup: generateTrainingComponent({
-            id: 'warmup',
-            from: getTime(trainingDate, 7, 45),
-            to: getTime(trainingDate, 8, 0),
-          }),
+          to: getTime(trainingDate, 9, 0),
           components: [
             generateTrainingComponent({
               id: 'c1',
@@ -293,11 +267,6 @@ describe('Update Training (e2e)', () => {
               to: getTime(trainingDate, 9, 0),
             }),
           ],
-          cooldown: generateTrainingComponent({
-            id: 'cooldown',
-            from: getTime(trainingDate, 9, 0),
-            to: getTime(trainingDate, 9, 15),
-          }),
         },
         { disableAutomaticallySetComponentsDates: true },
       ),
@@ -310,60 +279,35 @@ describe('Update Training (e2e)', () => {
     );
 
     expect(response.status).toBe(200);
+
+    const t = await db.trainings.findById(newTrainingId);
     expectDatesToMatchUpToMinute(
-      new Date(response.body.from),
-      getTime(
-        trainingDate,
-        8,
-        15 - DURATION_TRAINING_COMPONENT_WARMUP_COOLDOWN_IN_MIN,
-      ),
-    );
-    expectDatesToMatchUpToMinute(
-      new Date(response.body.warmup.from),
-      getTime(
-        trainingDate,
-        8,
-        15 - DURATION_TRAINING_COMPONENT_WARMUP_COOLDOWN_IN_MIN,
-      ),
-    );
-    expectDatesToMatchUpToMinute(
-      new Date(response.body.warmup.to),
+      new Date(t.from),
       getTime(trainingDate, 8, 15),
     );
-    expect(response.body.components).toHaveLength(2);
+    expect(t.components).toHaveLength(2);
     expectDatesToMatchUpToMinute(
-      new Date(response.body.components[0].from),
+      new Date(t.components[0].from),
       getTime(trainingDate, 8, 15),
     );
     expectDatesToMatchUpToMinute(
-      new Date(response.body.components[0].to),
+      new Date(t.components[0].to),
       getTime(trainingDate, 8, 45),
     );
     expectDatesToMatchUpToMinute(
-      new Date(response.body.components[1].from),
+      new Date(t.components[1].from),
       getTime(trainingDate, 8, 45),
     );
     expectDatesToMatchUpToMinute(
-      new Date(response.body.components[1].to),
+      new Date(t.components[1].to),
       getTime(trainingDate, 9, 0),
     );
-    expectDatesToMatchUpToMinute(
-      new Date(response.body.cooldown.from),
-      getTime(trainingDate, 9, 0),
-    );
-    expectDatesToMatchUpToMinute(
-      new Date(response.body.cooldown.to),
-      getTime(
-        trainingDate,
-        9,
-        0 + DURATION_TRAINING_COMPONENT_WARMUP_COOLDOWN_IN_MIN,
-      ),
-    );
+    expectDatesToMatchUpToMinute(new Date(t.to), getTime(trainingDate, 9, 0));
 
     await db.trainings.delete(newTrainingId);
   });
 
-  it('should successfully update last component and adjust training to and cooldown', async () => {
+  it('should successfully update last component', async () => {
     const trainingDate = new Date();
     const newTrainingId = await db.trainings.save(
       generateTrainingStub(
@@ -374,11 +318,7 @@ describe('Update Training (e2e)', () => {
           ownerId: institution.trainerIds[0],
           membersIds: [],
           from: getTime(trainingDate, 8, 0),
-          warmup: generateTrainingComponent({
-            id: 'warmup',
-            from: getTime(trainingDate, 7, 45),
-            to: getTime(trainingDate, 8, 0),
-          }),
+          to: getTime(trainingDate, 9, 0),
           components: [
             generateTrainingComponent({
               id: 'c1',
@@ -391,11 +331,6 @@ describe('Update Training (e2e)', () => {
               to: getTime(trainingDate, 9, 0),
             }),
           ],
-          cooldown: generateTrainingComponent({
-            id: 'cooldown',
-            from: getTime(trainingDate, 9, 0),
-            to: getTime(trainingDate, 9, 15),
-          }),
         },
         { disableAutomaticallySetComponentsDates: true },
       ),
@@ -408,55 +343,27 @@ describe('Update Training (e2e)', () => {
     );
 
     expect(response.status).toBe(200);
+
+    const t = await db.trainings.findById(newTrainingId);
+    expectDatesToMatchUpToMinute(new Date(t.to), getTime(trainingDate, 9, 15));
+    expect(t.components).toHaveLength(2);
     expectDatesToMatchUpToMinute(
-      new Date(response.body.to),
-      getTime(
-        trainingDate,
-        9,
-        15 + DURATION_TRAINING_COMPONENT_WARMUP_COOLDOWN_IN_MIN,
-      ),
-    );
-    expectDatesToMatchUpToMinute(
-      new Date(response.body.cooldown.from),
-      getTime(trainingDate, 9, 15),
-    );
-    expectDatesToMatchUpToMinute(
-      new Date(response.body.cooldown.to),
-      getTime(
-        trainingDate,
-        9,
-        15 + DURATION_TRAINING_COMPONENT_WARMUP_COOLDOWN_IN_MIN,
-      ),
-    );
-    expect(response.body.components).toHaveLength(2);
-    expectDatesToMatchUpToMinute(
-      new Date(response.body.components[0].from),
+      new Date(t.components[0].from),
       getTime(trainingDate, 8, 0),
     );
     expectDatesToMatchUpToMinute(
-      new Date(response.body.components[0].to),
+      new Date(t.components[0].to),
       getTime(trainingDate, 8, 15),
     );
     expectDatesToMatchUpToMinute(
-      new Date(response.body.components[1].from),
+      new Date(t.components[1].from),
       getTime(trainingDate, 8, 15),
     );
     expectDatesToMatchUpToMinute(
-      new Date(response.body.components[1].to),
+      new Date(t.components[1].to),
       getTime(trainingDate, 9, 15),
     );
-    expectDatesToMatchUpToMinute(
-      new Date(response.body.warmup.from),
-      getTime(
-        trainingDate,
-        8,
-        0 - DURATION_TRAINING_COMPONENT_WARMUP_COOLDOWN_IN_MIN,
-      ),
-    );
-    expectDatesToMatchUpToMinute(
-      new Date(response.body.warmup.to),
-      getTime(trainingDate, 8, 0),
-    );
+    expectDatesToMatchUpToMinute(new Date(t.from), getTime(trainingDate, 8, 0));
 
     await db.trainings.delete(newTrainingId);
   });
@@ -472,11 +379,7 @@ describe('Update Training (e2e)', () => {
           ownerId: institution.trainerIds[0],
           membersIds: [],
           from: getTime(trainingDate, 8, 0),
-          warmup: generateTrainingComponent({
-            id: 'warmup',
-            from: getTime(trainingDate, 7, 45),
-            to: getTime(trainingDate, 8, 0),
-          }),
+          to: getTime(trainingDate, 9, 30),
           components: [
             generateTrainingComponent({
               id: 'c1',
@@ -494,11 +397,6 @@ describe('Update Training (e2e)', () => {
               to: getTime(trainingDate, 9, 30),
             }),
           ],
-          cooldown: generateTrainingComponent({
-            id: 'cooldown',
-            from: getTime(trainingDate, 9, 30),
-            to: getTime(trainingDate, 9, 45),
-          }),
         },
         { disableAutomaticallySetComponentsDates: true },
       ),
@@ -511,49 +409,33 @@ describe('Update Training (e2e)', () => {
     );
 
     expect(response.status).toBe(200);
+
+    const t = await db.trainings.findById(newTrainingId);
+    expectDatesToMatchUpToMinute(new Date(t.to), getTime(trainingDate, 9, 30));
+    expectDatesToMatchUpToMinute(new Date(t.from), getTime(trainingDate, 8, 0));
+    expect(t.components).toHaveLength(3);
     expectDatesToMatchUpToMinute(
-      new Date(response.body.cooldown.from),
-      getTime(trainingDate, 9, 30),
-    );
-    expectDatesToMatchUpToMinute(
-      new Date(response.body.cooldown.to),
-      getTime(trainingDate, 9, 45),
-    );
-    expectDatesToMatchUpToMinute(
-      new Date(response.body.warmup.from),
-      getTime(
-        trainingDate,
-        8,
-        0 - DURATION_TRAINING_COMPONENT_WARMUP_COOLDOWN_IN_MIN,
-      ),
-    );
-    expectDatesToMatchUpToMinute(
-      new Date(response.body.warmup.to),
-      getTime(trainingDate, 8, 0),
-    );
-    expect(response.body.components).toHaveLength(3);
-    expectDatesToMatchUpToMinute(
-      new Date(response.body.components[0].from),
+      new Date(t.components[0].from),
       getTime(trainingDate, 8, 0),
     );
     expectDatesToMatchUpToMinute(
-      new Date(response.body.components[0].to),
+      new Date(t.components[0].to),
       getTime(trainingDate, 8, 45),
     );
     expectDatesToMatchUpToMinute(
-      new Date(response.body.components[1].from),
+      new Date(t.components[1].from),
       getTime(trainingDate, 8, 45),
     );
     expectDatesToMatchUpToMinute(
-      new Date(response.body.components[1].to),
+      new Date(t.components[1].to),
       getTime(trainingDate, 9, 15),
     );
     expectDatesToMatchUpToMinute(
-      new Date(response.body.components[2].from),
+      new Date(t.components[2].from),
       getTime(trainingDate, 9, 15),
     );
     expectDatesToMatchUpToMinute(
-      new Date(response.body.components[2].to),
+      new Date(t.components[2].to),
       getTime(trainingDate, 9, 30),
     );
 

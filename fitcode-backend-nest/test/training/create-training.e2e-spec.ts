@@ -1,6 +1,6 @@
 import { TestApp } from '@test/common/utils/app.util';
 import { expectDatesToMatchUpToMinute } from '@test/common/utils/date.util';
-import { addDays, addHours, subDays, subHours } from 'date-fns';
+import { addDays, addHours, subDays, subMinutes } from 'date-fns';
 
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import type { TestInstitution } from '@src/common/type/entity.type';
@@ -25,7 +25,6 @@ jest.mock('@src/exercise/constant/components.constant', () => {
     generateComponentStub,
   } = require('@src/exercise/mock/component.stub');
 
-  const other = generateComponentStub({ field: 'other' });
   const c1 = generateComponentStub({
     field: 'c1',
     params: ['reps'],
@@ -33,16 +32,9 @@ jest.mock('@src/exercise/constant/components.constant', () => {
   });
   const c2 = generateComponentStub({ field: 'c2' });
   const c3 = generateComponentStub({ field: 'c3' });
-  const warmup = generateComponentStub({ field: 'warmup' });
-  const cooldown = generateComponentStub({ field: 'cooldown' });
+  const other = generateComponentStub({ field: 'other' });
 
-  return {
-    WARMUP_ID: 'warmup',
-    COOLDOWN_ID: 'cooldown',
-    WARMUP: warmup,
-    COOLDOWN: cooldown,
-    Components: [warmup, cooldown, other, c1, c2, c3],
-  };
+  return { Components: [other, c1, c2, c3] };
 });
 
 describe('Create Training (e2e)', () => {
@@ -254,7 +246,7 @@ describe('Create Training (e2e)', () => {
           membersIds: [global.athlete.uid],
           groupId: group.id,
           cycleId: group.cycles[1].id,
-          from: subHours(from, 0.5),
+          from: subMinutes(from, 20),
           components: [generateTrainingComponent({ id: 'other' })],
         });
 
@@ -584,25 +576,14 @@ describe('Create Training (e2e)', () => {
       const trainingFrom = new Date(response.body.from);
       const trainingTo = new Date(response.body.to);
 
-      const warmupFrom = new Date(response.body.warmup.from);
-      const warmupTo = new Date(response.body.warmup.to);
-      const cooldownFrom = new Date(response.body.cooldown.from);
-      const cooldownTo = new Date(response.body.cooldown.to);
-
       const c1From = new Date(response.body.components[0].from);
       const c1To = new Date(response.body.components[0].to);
       const c2From = new Date(response.body.components[1].from);
       const c2To = new Date(response.body.components[1].to);
 
       // should update training times correctly
-      expectDatesToMatchUpToMinute(trainingFrom, getTime(d, 7, 45)); // 15 minutes before first component (warmup)
-      expectDatesToMatchUpToMinute(trainingTo, getTime(d, 9, 15)); // 15 minutes after last component (cooldown)
-
-      // should update warmup and cooldown times correctly
-      expectDatesToMatchUpToMinute(warmupFrom, getTime(d, 7, 45));
-      expectDatesToMatchUpToMinute(warmupTo, getTime(d, 8));
-      expectDatesToMatchUpToMinute(cooldownFrom, getTime(d, 9, 0));
-      expectDatesToMatchUpToMinute(cooldownTo, getTime(d, 9, 15));
+      expectDatesToMatchUpToMinute(trainingFrom, getTime(d, 8));
+      expectDatesToMatchUpToMinute(trainingTo, getTime(d, 9));
 
       // should update components times correctly
       expectDatesToMatchUpToMinute(c1From, getTime(d, 8, 0));

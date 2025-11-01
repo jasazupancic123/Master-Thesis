@@ -26,20 +26,12 @@ jest.mock('@src/exercise/constant/components.constant', () => {
 
   const c1 = generateComponentStub({ field: 'c1' }); // has target
   const c2 = generateComponentStub({ field: 'c2' }); // has no target
-  const warmup = generateComponentStub({ field: 'warmup' });
-  const cooldown = generateComponentStub({ field: 'cooldown' });
 
-  return {
-    WARMUP_ID: 'warmup',
-    COOLDOWN_ID: 'cooldown',
-    WARMUP: warmup,
-    COOLDOWN: cooldown,
-    Components: [warmup, c1, c2, cooldown],
-  };
+  return { Components: [c1, c2] };
 });
 
 // mock targets constant also
-jest.mock('@src/exercise/constant/targets.constant', () => {
+jest.mock('@src/exercise/constant/target.constant', () => {
   const strength: Target = {
     field: 'strength',
     name: 'Strength',
@@ -95,14 +87,6 @@ describe('Periodization functions (e2e)', () => {
       body,
     );
   }
-
-  it('should throw error if warmup / cooldown are passed as components', async () => {
-    const response = await request(baseTrainingId, 'warmup');
-    expect(response.status).toBe(400);
-    expect(response.body.message).toContain(
-      'You cannot periodize warmup or cooldown components',
-    );
-  });
 
   it('should throw error if base training in the past', async () => {
     const pastTrainingId = await db.trainings.save(

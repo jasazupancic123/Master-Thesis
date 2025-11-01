@@ -4,7 +4,6 @@ import { Expose, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 
 import { Subgroup } from '../entity/subgroup.entity';
-import { Training } from '../entity/training.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
 import {
@@ -66,10 +65,7 @@ export class UpdateTrainingComponentDto
   subgroups: UpdateSubgroupDto[];
 }
 
-export class UpdateTrainingDto
-  extends PickType(Training, ['warmup', 'cooldown'])
-  implements UpdateTraining
-{
+export class UpdateTrainingDto implements UpdateTraining {
   @ValidateNested({ each: true })
   @Type(() => UpdateTrainingComponentDto)
   @ApiProperty({ type: () => UpdateTrainingComponentDto, isArray: true })

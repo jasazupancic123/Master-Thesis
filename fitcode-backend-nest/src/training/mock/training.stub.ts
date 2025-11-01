@@ -3,10 +3,6 @@ import { v4 } from 'uuid';
 
 import { getTime } from '@src/common/service/util/date.util';
 import { generateRandomName } from '@src/common/utils/random.util';
-import {
-  COOLDOWN_ID,
-  WARMUP_ID,
-} from '@src/exercise/constant/components.constant';
 
 import type { ExerciseSet } from '../entity/exercise-set.entity';
 import type { Subgroup } from '../entity/subgroup.entity';
@@ -62,8 +58,6 @@ export function generateTrainingStub(
     copiedFromId: data?.copiedFromId || null,
     from,
     to,
-    warmup: data?.warmup || generateTrainingComponent({ id: WARMUP_ID }),
-    cooldown: data?.cooldown || generateTrainingComponent({ id: COOLDOWN_ID }),
     components,
   };
 }

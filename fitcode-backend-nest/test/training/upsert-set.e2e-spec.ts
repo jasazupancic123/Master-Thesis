@@ -25,16 +25,8 @@ jest.mock('@src/exercise/constant/components.constant', () => {
 
   const c1 = generateComponentStub({ field: 'c1' });
   const c2 = generateComponentStub({ field: 'c2' });
-  const warmup = generateComponentStub({ field: 'warmup' });
-  const cooldown = generateComponentStub({ field: 'cooldown' });
 
-  return {
-    WARMUP_ID: 'warmup',
-    COOLDOWN_ID: 'cooldown',
-    WARMUP: warmup,
-    COOLDOWN: cooldown,
-    Components: [warmup, c1, c2, cooldown],
-  };
+  return { Components: [c1, c2] };
 });
 
 describe('Upsert Set (e2e)', () => {
