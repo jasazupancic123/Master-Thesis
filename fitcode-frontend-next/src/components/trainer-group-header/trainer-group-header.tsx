@@ -4,6 +4,7 @@ import {
   CopyAllOutlined,
   KeyboardArrowDownTwoTone,
   KeyboardArrowUpTwoTone,
+  Logout,
   Menu,
   SaveOutlined,
   Settings,
@@ -39,6 +40,7 @@ import {
   LINK_DASHBOARD,
   LINK_PROFILE,
   LINK_SETTINGS,
+  LINK_SIGN_OUT,
   LINKS_SIDEBAR_GROUP_VIEW,
 } from '@/lib/common/const/nav.const';
 import type { GroupDateFilter } from '@/lib/common/type/filter.type';
@@ -187,6 +189,27 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
                     );
                   }
                 )}
+              <Tooltip title={LINK_SIGN_OUT.label} placement="right">
+                <ListItem sx={{ px: 1.5 }}>
+                  <Link href={LINK_SIGN_OUT.href} passHref>
+                    <Box
+                      display="flex"
+                      alignItems="center"
+                      ml={0.7}
+                      onClick={() => auth.logout()}
+                    >
+                      <Logout sx={{ fontSize: 20 }} />
+                      <ListItemText
+                        primary={LINK_SIGN_OUT.label}
+                        sx={{
+                          px: 2,
+                          ml: 0.6,
+                        }}
+                      />
+                    </Box>
+                  </Link>
+                </ListItem>
+              </Tooltip>
             </List>
           </Drawer>
         </>
@@ -394,8 +417,8 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
 
                 <IconButton
                   sx={{ p: 0, m: 0 }}
-                  onClick={() => {
-                    handleUpdateTraining(
+                  onClick={async () => {
+                    await handleUpdateTraining(
                       setIsUpdatingTraining,
                       mainContext,
                       groupContext,
@@ -491,7 +514,7 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
             mx: 'auto',
           }}
         >
-          {(['day', 'week', 'month', 'year'] as GroupDateFilter[]).map(
+          {(['day', 'week', 'phase', 'year'] as GroupDateFilter[]).map(
             (val) => (
               <FilterButton key={val} value={val} />
             )

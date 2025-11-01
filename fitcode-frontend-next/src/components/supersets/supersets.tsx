@@ -21,7 +21,6 @@ import Superset from './superset';
 import { core } from '@/core/core.service';
 import { ADD_SUPERSET_DROPPABLE_ID } from '@/core/training/const/add-superset-droppable-id.const';
 import { MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT } from '@/core/training/const/training-limits.const';
-import { MainSet } from '@/core/training/enum/main-set.enum';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useGroup } from '@/store/group.provider';
@@ -79,6 +78,7 @@ export default function Supersets({
     component,
     supersets,
     selectedAthlete,
+    selectedSubgroup,
     setSearch,
     setPagination,
   } = trainerDayViewContext;
@@ -187,10 +187,9 @@ export default function Supersets({
         };
       });
 
-    trainerDayViewContext.addTrainingExercises(
-      trainingExercises,
-      MainSet.BLOCK
-    );
+    const mainSet = (selectedSubgroup || component).mainSet;
+
+    trainerDayViewContext.addTrainingExercises(trainingExercises, mainSet);
 
     setNewAddedExercisesIds([]);
     setOpenAddExerciseModal(false);

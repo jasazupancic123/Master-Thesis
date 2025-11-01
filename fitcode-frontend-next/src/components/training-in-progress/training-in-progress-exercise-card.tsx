@@ -1,3 +1,4 @@
+import { Circle } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Image from 'next/image';
@@ -18,7 +19,6 @@ import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import ImageGallery from '@/ui/image-gallery';
-import { Circle } from '@mui/icons-material';
 
 export default function TrainingInProgressExerciseCard() {
   const theme = useTheme();
@@ -206,7 +206,19 @@ export default function TrainingInProgressExerciseCard() {
                 >
                   Set {i + 1}
                 </Typography>
-                <Circle
+                <Box
+                  component="img"
+                  src="/blinking_dot.gif"
+                  alt="active set"
+                  sx={{
+                    width: 12,
+                    height: 12,
+                    display: 'inline-block',
+                    verticalAlign: 'middle',
+                    visibility: setIndex === i ? 'visible' : 'hidden',
+                  }}
+                />
+                {/* <Circle
                   sx={{
                     fontSize: 8,
                     verticalAlign: 'middle',
@@ -217,7 +229,7 @@ export default function TrainingInProgressExerciseCard() {
                     mr: 0.5,
                     mb: 0.2,
                   }}
-                />
+                /> */}
               </Box>
             );
           })}
@@ -230,7 +242,7 @@ export default function TrainingInProgressExerciseCard() {
               display="flex"
               justifyContent="center"
               alignItems="center"
-              sx={{ px: 1.2, py: 2, pb: 0, position: 'relative' }}
+              sx={{ px: 1.2, py: 0.5, position: 'relative' }}
             >
               <AthleteTrainingExerciseSets
                 training={trainingInProgress?.training}

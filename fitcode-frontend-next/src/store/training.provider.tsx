@@ -139,8 +139,6 @@ export const TrainingProvider = (
       ),
     };
 
-    console.log('newTrainingInProgress', newTrainingInProgress);
-
     setTrainingInProgress(newTrainingInProgress);
   };
 
