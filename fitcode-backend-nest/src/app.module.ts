@@ -8,7 +8,6 @@ import { AttributeModule } from './attribute/attribute.module';
 import { AuthModule } from './auth/auth.module';
 import { CacheManagerModule } from './cache-manager/cache-manager.module';
 import { CommonModule } from './common/common.module';
-import { ComponentModule } from './component/component.module';
 import { validationSchema } from './config/environment-validation-schema';
 import { ExerciseModule } from './exercise/exercise.module';
 import { FirebaseModule } from './firebase/firebase.module';
@@ -29,7 +28,6 @@ import { TrainingModule } from './training/training.module';
     AuthModule,
     AttributeModule,
     ProfileModule,
-    ComponentModule,
     MethodModule,
     InstitutionModule,
     ExerciseModule,

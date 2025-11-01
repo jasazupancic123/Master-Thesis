@@ -1,6 +1,6 @@
 import type { Attribute } from '@src/attribute/entity/attribute.entity';
+import { AttributeType } from '@src/attribute/enum/attribute-type.enum';
 import { TEMPO_REGEX } from '@src/common/constant/tempo-regex.constant';
-import { AttributeType } from '@src/common/enum/attribute-type.enum';
 import type {
   ExerciseParamField,
   ExerciseSet,

@@ -4,7 +4,6 @@ import { startOfDay, subDays } from 'date-fns';
 
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
 import { DateFilterDto } from '@src/common/dto/date-filter.dto';
-import { CommonService } from '@src/common/service/common.service';
 import { User } from '@src/common/type/firebase-auth.type';
 import {
   InstitutionRef,
@@ -20,7 +19,6 @@ import { WellnessRepository } from '../repository/wellness.repository';
 @Injectable()
 export class WellnessService {
   constructor(
-    private readonly commonService: CommonService,
     private readonly repository: WellnessRepository,
     private readonly institutionService: InstitutionService,
   ) {}

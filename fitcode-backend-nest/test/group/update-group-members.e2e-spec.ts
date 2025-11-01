@@ -3,7 +3,6 @@ import { addDays, startOfDay, subDays } from 'date-fns';
 
 import { UserRole } from '@src/auth/enum/user-role.enum';
 import type { TestUser } from '@src/common/type/entity.type';
-import { FirebaseService } from '@src/firebase/firebase.service';
 import { generateGroupStub } from '@src/group/mock/group.stub';
 import { TestDbService } from '@src/test-db/test-db.service';
 import { generateTrainingStub } from '@src/training/mock/training.stub';
@@ -11,7 +10,6 @@ import { generateTrainingStub } from '@src/training/mock/training.stub';
 describe('Update Group (e2e)', () => {
   let testApp: TestApp;
   let db: TestDbService;
-  let firebase: FirebaseService;
 
   let institutionId: string;
   let groupId: string;
@@ -19,7 +17,6 @@ describe('Update Group (e2e)', () => {
 
   beforeAll(async () => {
     testApp = await TestApp.init();
-    firebase = testApp.module.get(FirebaseService);
     db = testApp.module.get(TestDbService);
 
     athletes = await Promise.all([

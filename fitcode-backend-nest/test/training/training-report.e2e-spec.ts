@@ -2,7 +2,6 @@ import { TestApp } from '@test/common/utils/app.util';
 
 import type { TestInstitution } from '@src/common/type/entity.type';
 import type { TrainingReportRef } from '@src/common/type/firestore.type';
-import type { Component } from '@src/component/entity/component.entity';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import type { Group } from '@src/group/entity/group.entity';
@@ -22,13 +21,31 @@ import {
 import { TrainingReportService } from '@src/training/service/training-report.service';
 import { WorkloadService } from '@src/training/service/workload.service';
 
+jest.mock('@src/exercise/constant/components.constant', () => {
+  const {
+    generateComponentStub,
+  } = require('@src/exercise/mock/component.stub');
+
+  const c1 = generateComponentStub({ field: 'c1' });
+  const c2 = generateComponentStub({ field: 'c2' });
+  const warmup = generateComponentStub({ field: 'warmup' });
+  const cooldown = generateComponentStub({ field: 'cooldown' });
+
+  return {
+    WARMUP_ID: 'warmup',
+    COOLDOWN_ID: 'cooldown',
+    WARMUP: warmup,
+    COOLDOWN: cooldown,
+    Components: [warmup, c1, c2, cooldown],
+  };
+});
+
 describe('Training Report (e2e)', () => {
   let testApp: TestApp;
   let db: TestDbService;
   let workloadService: WorkloadService;
   let trainingReportService: TrainingReportService;
 
-  let component: Component;
   let institution: TestInstitution;
   let group: Group;
   let training: Training;
@@ -47,15 +64,10 @@ describe('Training Report (e2e)', () => {
 
     group = await db.groups.createTest(institution);
 
-    [component] = await Promise.all([
-      db.components.create({ id: 'c1' }),
-      db.components.create({ id: 'c2' }),
-    ]);
-
     await exerciseService.upsertMany(global.admin, [
-      generateExerciseStub({ name: 'squat', componentIds: ['c1'] }),
-      generateExerciseStub({ name: 'bench', componentIds: ['c1'] }),
-      generateExerciseStub({ name: 'deadlift', componentIds: ['c1'] }),
+      generateExerciseStub({ name: 'squat', components: ['c1'] }),
+      generateExerciseStub({ name: 'bench', components: ['c1'] }),
+      generateExerciseStub({ name: 'deadlift', components: ['c1'] }),
     ]);
 
     const trainingId = await db.trainings.save(
@@ -190,7 +202,6 @@ describe('Training Report (e2e)', () => {
       db.institutions.remove(institution.id),
       db.trainings.delete(training.id),
       db.exercises.clear(),
-      db.components.clear(),
     ]);
 
     await testApp.close();
@@ -332,7 +343,7 @@ describe('Training Report (e2e)', () => {
       {
         userId: global.athlete.uid,
         trainingId: training.id,
-        component,
+        componentId: 'c1',
         supersetIndex: 0,
         exerciseId: 'squat',
         setNumber: 1,
@@ -344,7 +355,7 @@ describe('Training Report (e2e)', () => {
       {
         userId: global.athlete.uid,
         trainingId: training.id,
-        component,
+        componentId: 'c1',
         supersetIndex: 0,
         exerciseId: 'squat',
         setNumber: 2,

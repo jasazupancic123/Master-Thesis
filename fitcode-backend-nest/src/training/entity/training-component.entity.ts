@@ -10,7 +10,6 @@ import {
 } from 'class-validator';
 
 import { IdEntity } from '@src/common/entity/id.entity';
-import { Target } from '@src/target/entity/target.entity';
 
 import { MainSet } from '../enum/main-set.enum';
 import { CopiedFrom } from './copied-from.entity';
@@ -36,12 +35,12 @@ export class TrainingComponent extends IdEntity {
   @Expose()
   mainSet: MainSet; // defaults to "block"
 
-  @Type(() => Target)
-  @ValidateNested()
-  @ApiPropertyOptional({ type: () => Target })
+  @IsString()
   @IsOptional()
+  @IsNotEmpty()
+  @ApiPropertyOptional()
   @Expose()
-  target?: Target; // selected target id which the component uses
+  targetId?: string; // target id which the component trains towards
 
   @IsString()
   @IsOptional()

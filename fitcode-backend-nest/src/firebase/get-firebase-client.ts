@@ -65,13 +65,16 @@ function logQueryTimes() {
   const originalGet = Query.prototype.get;
   Query.prototype.get = async function (...args: any[]) {
     const label = `Firestore query [${this._queryOptions?.collectionId || 'unknown'}]`;
+    // eslint-disable-next-line no-console
     console.time(label);
 
     try {
       const result = await originalGet.apply(this, args);
+      // eslint-disable-next-line no-console
       console.timeEnd(label);
       return result;
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.timeEnd(label);
       throw err;
     }

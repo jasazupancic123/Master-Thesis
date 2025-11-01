@@ -5,7 +5,7 @@ import { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
 import { AttributeService } from '@src/attribute/service/attribute.service';
 import { CommonService } from '@src/common/service/common.service';
 import { ValidateError } from '@src/common/type/validate.type';
-import { Component } from '@src/component/entity/component.entity';
+import { Component } from '@src/exercise/entity/component.entity';
 import { Exercise } from '@src/exercise/entity/exercise.entity';
 import { Method } from '@src/method/entity/method.entity';
 import { MAX_NUM_SETS_IN_EXERCISE } from '@src/training/constant/training-limits.constant';
@@ -23,24 +23,45 @@ export class ExerciseParamService {
     private readonly attributeService: AttributeService,
   ) {}
 
-  getPair(field: ExerciseParamField): ExerciseParamField | null {
-    const pair = this.pairs.find((p) => p.includes(field));
-    return pair ? (pair[0] === field ? pair[1] : pair[0]) : null;
-  }
-
-  readonly pairs: [ExerciseParamField, ExerciseParamField][] = [
-    ['reps', 'repsR'],
-    ['loadKg', 'loadKgR'],
-    ['loadRm', 'loadRmR'],
-    ['loadBw', 'loadBwR'],
-    ['tempo', 'tempoR'],
-    ['vel', 'velR'],
-    ['eff', 'eff'],
-    ['time', 'time'],
-    ['dist', 'dist'],
-    ['recTime', 'recTime'],
-    ['recDist', 'recDist'],
+  readonly FIELDS: ExerciseParamField[] = [
+    'reps',
+    'repsR',
+    'loadKg',
+    'loadKgR',
+    'loadRm',
+    'loadRmR',
+    'loadBw',
+    'loadBwR',
+    'tempo',
+    'tempoR',
+    'vel',
+    'velR',
+    'eff',
+    'time',
+    'dist',
+    'recTime',
+    'recDist',
   ];
+
+  readonly PAIRS: Record<ExerciseParamField, ExerciseParamField> = {
+    reps: 'repsR',
+    repsR: 'reps',
+    loadKg: 'loadKgR',
+    loadKgR: 'loadKg',
+    loadRm: 'loadRmR',
+    loadRmR: 'loadRm',
+    loadBw: 'loadBwR',
+    loadBwR: 'loadBw',
+    tempo: 'tempoR',
+    tempoR: 'tempo',
+    vel: 'velR',
+    velR: 'vel',
+    eff: 'eff',
+    time: 'time',
+    dist: 'dist',
+    recTime: 'recTime',
+    recDist: 'recDist',
+  };
 
   getAttributes(exercise: Exercise): Attribute<ExerciseSet>[] {
     const attributes: Attribute<ExerciseSet>[] = [];
@@ -83,26 +104,12 @@ export class ExerciseParamService {
     isUnilateral: boolean,
   ): ExerciseParamField[] {
     const params: ExerciseParamField[] = [];
-    for (const param of component?.params || [])
-      if (isUnilateral) {
-        // unilateral exercise, add both main and secondary side params
-        const pair = this.pairs.find((p) => p.includes(param));
-        if (pair && pair.length === 2) params.push(pair[0], pair[1]);
-        else params.push(param);
-      } else params.push(param); // bilateral exercise
+    for (const param of component?.params || []) {
+      params.push(param);
+      if (isUnilateral) params.push(this.PAIRS[param]);
+    }
 
     return Array.from(new Set(params));
-  }
-
-  attributeValuesToSet(
-    values: AttributeValue<ExerciseSet>[],
-    setNumber: number,
-  ): ExerciseSet {
-    const set: ExerciseSet = { setNumber };
-    for (const val of values)
-      set[val.field as any] = val.value as ExerciseSet[ExerciseParamField];
-
-    return set;
   }
 
   modifyLoad(
@@ -218,19 +225,22 @@ export class ExerciseParamService {
     const errors: ValidateError<ExerciseSet>[] = [];
     if (!isUnilateral) return errors;
 
-    for (const pair of this.pairs) {
-      const isMainDefined = !this.common.object.isEmpty(set[pair[0]]);
-      const isSecondaryDefined = !this.common.object.isEmpty(set[pair[1]]);
+    for (const field of this.FIELDS) {
+      const isMainDefined = !this.common.object.isEmpty(set[field]);
+      const isSecondaryDefined = !this.common.object.isEmpty(
+        set[this.PAIRS[field]],
+      );
 
       if (
         (!isMainDefined && isSecondaryDefined) ||
         (isMainDefined && !isSecondaryDefined)
       ) {
-        const primary = ExerciseParamAttribute[pair[0]];
         errors.push({
-          field: primary.field,
-          message: `Both primary and secondary side must be defined for param ${primary.name.toLowerCase()} in unilateral exercises`,
+          field: ExerciseParamAttribute[field].field,
+          message: `Both primary and secondary side must be defined for param ${ExerciseParamAttribute[field].name.toLowerCase()} in unilateral exercises`,
         });
+
+        return errors;
       }
     }
 
@@ -244,13 +254,11 @@ export class ExerciseParamService {
     const errors: ValidateError<ExerciseSet>[] = [];
 
     for (const attr of method.attributes) {
-      const pairs = this.pairs.find((p) =>
-        p.includes(attr.field as ExerciseParamField),
-      );
+      const primary = ExerciseParamAttribute[attr.field];
+      const secondary = ExerciseParamAttribute[this.PAIRS[attr.field]];
+      if (!primary || !secondary) continue;
 
-      if (!pairs) continue;
-
-      for (const field of pairs) {
+      for (const field of [primary.field, secondary.field]) {
         const setValue = set[field];
         if (this.common.object.isEmpty(setValue)) continue;
 

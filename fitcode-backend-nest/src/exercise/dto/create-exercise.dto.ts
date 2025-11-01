@@ -9,14 +9,14 @@ export class CreateExerciseDto extends IntersectionType(
   PartialType(PickType(Exercise, ['params'] as const)), // if not provided, it takes component params
   PickType(Exercise, [
     'name',
-    'componentIds',
+    'components',
     'isUnilateral',
     'disabled',
     'imageUrl',
     'videoUrl',
     'instruction',
     'muscleValues',
-    'categories',
+    'components',
     'equipment',
     'prescriptions',
     'patterns',

@@ -1,7 +1,6 @@
 import { v4 } from 'uuid';
 
 import type { Create } from '@src/common/type/entity.type';
-import type { Component } from '@src/component/entity/component.entity';
 
 import type { ExerciseSet } from '../entity/exercise-set.entity';
 import type {
@@ -12,9 +11,8 @@ import type {
 import { SetStatus } from '../enum/set-status.enum';
 
 export function generateWorkloadStub(
-  data: Create<Omit<WorkloadMeta, 'id' | 'componentId'>> &
+  data: Create<Omit<WorkloadMeta, 'id'>> &
     Omit<WorkloadValue, 'reps' | 'recTime' | 'timestamp' | 'photoURLs'> & {
-      component: Component;
       prescribed: Partial<ExerciseSet>;
       reps?: number;
       recTime?: number;
@@ -25,15 +23,12 @@ export function generateWorkloadStub(
 ): Workload {
   const setNumber = data?.setNumber || 1;
 
-  const workloadMeta = generateWorkloadMetaStub({
-    ...data,
-    componentId: data.component.id,
-  });
-
+  const workloadMeta = generateWorkloadMetaStub(data);
   const workloadValue: WorkloadValue = {
     timestamp: data?.timestamp || new Date(),
     photoURLs: data?.photoURLs || [],
     reps: data?.reps || 10,
+    recTime: data?.recTime || 60,
     loadKg: data?.loadKg,
     loadRm: data?.loadRm,
     loadBw: data?.loadBw,
@@ -56,7 +51,6 @@ export function generateWorkloadStub(
     velocitiesR: data?.velocitiesR,
     feedbackR: data?.feedbackR,
     eff: data?.eff,
-    recTime: data?.recTime || 60,
     time: data?.time,
     dist: data?.dist,
     recDist: data?.recDist,

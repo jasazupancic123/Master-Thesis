@@ -20,7 +20,7 @@ export type UpdateSubgroup = Pick<
 
 export type UpdateTrainingComponent = Pick<
   TrainingComponent,
-  'id' | 'target' | 'methodId' | 'mainSet' | 'from' | 'to'
+  'id' | 'targetId' | 'methodId' | 'mainSet' | 'from' | 'to'
 > & {
   supersets: UpdateSuperset[];
   subgroups: UpdateSubgroup[];

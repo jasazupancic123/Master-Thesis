@@ -47,7 +47,7 @@ export class UpdateSubgroupDto
 export class UpdateTrainingComponentDto
   extends PickType(TrainingComponent, [
     'id',
-    'target',
+    'targetId',
     'methodId',
     'mainSet',
   ] as const)

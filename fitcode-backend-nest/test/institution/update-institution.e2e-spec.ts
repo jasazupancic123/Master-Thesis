@@ -3,7 +3,6 @@ import { addDays, isAfter, isBefore, startOfDay, subDays } from 'date-fns';
 
 import { UserRole } from '@src/auth/enum/user-role.enum';
 import type { TestUser } from '@src/common/type/entity.type';
-import { FirebaseService } from '@src/firebase/firebase.service';
 import { GroupService } from '@src/group/group.service';
 import { generateGroupStub } from '@src/group/mock/group.stub';
 import { TestDbService } from '@src/test-db/test-db.service';
@@ -17,7 +16,6 @@ import { TrainingService } from '@src/training/service/training.service';
 describe('Update Institution (e2e)', () => {
   let testApp: TestApp;
   let db: TestDbService;
-  let firebase: FirebaseService;
 
   let groupService: GroupService;
   let trainingService: TrainingService;
@@ -27,7 +25,6 @@ describe('Update Institution (e2e)', () => {
 
   beforeAll(async () => {
     testApp = await TestApp.init();
-    firebase = testApp.module.get(FirebaseService);
     db = testApp.module.get(TestDbService);
     groupService = testApp.module.get(GroupService);
     trainingService = testApp.module.get(TrainingService);

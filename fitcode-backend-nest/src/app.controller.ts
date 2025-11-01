@@ -7,7 +7,6 @@ import { Auth } from './common/decorator/auth.decorator';
 import { RequestUser } from './common/decorator/request-user.decorator';
 import { User } from './common/type/firebase-auth.type';
 import { measureAsync } from './common/utils/time.util';
-import { ComponentService } from './component/component.service';
 import { ExerciseService } from './exercise/service/exercise.service';
 import { GroupService } from './group/group.service';
 import { InstitutionService } from './institution/service/institution.service';
@@ -24,7 +23,6 @@ export class AppController {
     private readonly authService: AuthService,
     private readonly profileService: ProfileService,
     private readonly exerciseService: ExerciseService,
-    private readonly componentService: ComponentService,
     private readonly methodService: MethodService,
     private readonly institutionService: InstitutionService,
     private readonly groupService: GroupService,
@@ -42,7 +40,6 @@ export class AppController {
       profileRes,
       usersRes,
       exercisesRes,
-      componentsRes,
       methodsRes,
       institutionsRes,
       profilesRes,
@@ -61,11 +58,6 @@ export class AppController {
       measureAsync(
         'exerciseService.findAllGlobal()',
         () => this.exerciseService.findAllGlobal(user),
-        this.logger,
-      ),
-      measureAsync(
-        'componentService.findAllFlat()',
-        () => this.componentService.findAllFlat(),
         this.logger,
       ),
       measureAsync(
@@ -93,7 +85,6 @@ export class AppController {
     const profile = profileRes.result;
     const users = usersRes.result;
     const exercises = exercisesRes.result;
-    const components = componentsRes.result;
     const methods = methodsRes.result;
     const institutions = institutionsRes.result;
     const profiles = profilesRes.result;
@@ -112,7 +103,6 @@ export class AppController {
       profiles,
       users,
       exercises,
-      components,
       methods,
       institutions,
       groups,

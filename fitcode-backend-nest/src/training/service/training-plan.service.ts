@@ -20,14 +20,13 @@ import { DeepPick } from '@src/common/interface/deep-pick.interface';
 import { User } from '@src/common/type/firebase-auth.type';
 import { ComponentRef } from '@src/common/type/firestore.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
-import { ComponentService } from '@src/component/component.service';
 import {
-  COOLDOWN_COMPONENT_ID,
-  WARMUP_COMPONENT_ID,
-} from '@src/component/constant/warmup-cooldown.constant';
-import { Component } from '@src/component/entity/component.entity';
+  COOLDOWN_ID,
+  WARMUP_ID,
+} from '@src/exercise/constant/components.constant';
 import { Exercise } from '@src/exercise/entity/exercise.entity';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
+import { ExerciseAttributeService } from '@src/exercise/service/exercise-attribute.service';
 import { ExerciseParamService } from '@src/exercise/service/exercise-param.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { Method } from '@src/method/entity/method.entity';
@@ -62,10 +61,10 @@ import {
 export class TrainingPlanService {
   constructor(
     private readonly institutionService: InstitutionService,
-    private readonly componentService: ComponentService,
     @Inject(forwardRef(() => ExerciseService))
     private readonly exerciseService: Wrapper<ExerciseService>,
     private readonly exerciseParamService: ExerciseParamService,
+    private readonly exerciseAttributeService: ExerciseAttributeService,
   ) {}
 
   async getInstitution(exercise: Exercise): Promise<Institution | null> {
@@ -158,10 +157,10 @@ export class TrainingPlanService {
     return {
       ...training,
       components: athleteComponents.filter(
-        (c) => c.id !== WARMUP_COMPONENT_ID && c.id !== COOLDOWN_COMPONENT_ID,
+        (c) => c.id !== WARMUP_ID && c.id !== COOLDOWN_ID,
       ),
-      warmup: athleteComponents.find((c) => c.id === WARMUP_COMPONENT_ID)!,
-      cooldown: athleteComponents.find((c) => c.id === COOLDOWN_COMPONENT_ID)!,
+      warmup: athleteComponents.find((c) => c.id === WARMUP_ID)!,
+      cooldown: athleteComponents.find((c) => c.id === COOLDOWN_ID)!,
       membersIds: training.membersIds.filter((uid) => uid === athleteId),
     };
   }
@@ -243,20 +242,23 @@ export class TrainingPlanService {
   validateTrainingComponents(
     newTrainingComponents: UpdateTrainingComponentWithoutTime[], // with warmup and cooldown
     trainingMemberIds: string[],
-    data: { exercises: Exercise[]; components: Component[]; methods: Method[] },
+    data: { exercises: Exercise[]; methods: Method[] },
   ): TrainingComponentWithoutTime[] {
-    const { components, methods } = data;
+    const { methods } = data;
     const validTrainingComponents: TrainingComponentWithoutTime[] = [];
 
     const duplicates = new Set<string>();
     for (const newComponent of newTrainingComponents) {
-      const component = components.find((c) => c.id === newComponent.id);
-
       // validate components are valid
-      if (!component) throw new NotFoundException('Component does not exist');
-      if (component.parentId)
-        throw new BadRequestException(
-          `Component ${component.name} cannot be selected for training`,
+      const root = this.exerciseAttributeService.getRootMainComponent(
+        newComponent.id,
+      );
+
+      if (!root) throw new NotFoundException('Component does not exist');
+
+      if (!this.exerciseAttributeService.isRootComponent(newComponent.id))
+        throw new NotFoundException(
+          `Component cannot be selected for training`,
         );
 
       // validate method
@@ -270,8 +272,8 @@ export class TrainingPlanService {
 
       // check duplicates
       if (duplicates.has(newComponent.id))
-        throw new BadRequestException(`Duplicate component ${component.name}`);
-      duplicates.add(component.id);
+        throw new BadRequestException(`Duplicate component ${root.name}`);
+      duplicates.add(root.field);
 
       // validate supersets and subgroups
       const supersets = this.validateSupersets(
@@ -301,11 +303,11 @@ export class TrainingPlanService {
   validateSupersets(
     trainingComponent: UpdateTrainingComponentWithoutTime,
     item: { supersets: UpdateSuperset[]; mainSet: MainSet },
-    data: { components: Component[]; exercises: Exercise[]; methods: Method[] },
+    data: { exercises: Exercise[]; methods: Method[] },
   ): Superset[] {
     const newSupersets = item.supersets || [];
     const mainSet = item.mainSet || trainingComponent.mainSet;
-    const { components, exercises } = data;
+    const { exercises } = data;
 
     switch (mainSet) {
       case MainSet.BLOCK:
@@ -321,8 +323,9 @@ export class TrainingPlanService {
           );
     }
 
-    const component = components.find((c) => c.id === trainingComponent.id)!;
-    const root = this.componentService.getRoot(component, components);
+    const root = this.exerciseAttributeService.getRootMainComponent(
+      trainingComponent.id,
+    );
 
     const validSupersets: Superset[] = [];
     for (const superset of newSupersets) {
@@ -381,11 +384,7 @@ export class TrainingPlanService {
   validateSubgroups(
     trainingComponent: UpdateTrainingComponentWithoutTime,
     trainingMemberIds: string[],
-    data: {
-      components: Component[];
-      exercises: Exercise[];
-      methods: Method[];
-    },
+    data: { exercises: Exercise[]; methods: Method[] },
   ): Subgroup[] {
     // member can be in exactly:
     //   - main group -> 0 subgroups
@@ -502,7 +501,7 @@ export class TrainingPlanService {
     const endTime = new Date(sorted[sorted.length - 1].to);
 
     const warmup: TrainingComponent = {
-      id: WARMUP_COMPONENT_ID,
+      id: WARMUP_ID,
       from: subMinutes(
         startTime,
         DURATION_TRAINING_COMPONENT_WARMUP_COOLDOWN_IN_MIN,
@@ -514,7 +513,7 @@ export class TrainingPlanService {
     };
 
     const cooldown: TrainingComponent = {
-      id: COOLDOWN_COMPONENT_ID,
+      id: COOLDOWN_ID,
       from: endTime,
       to: addMinutes(
         endTime,
@@ -563,7 +562,7 @@ export class TrainingPlanService {
         id: sourceTrainingComponent.id,
         from: lastTargetTrainingComponent.from,
         to: addMinutes(lastTargetTrainingComponent.from, 30),
-        target: sourceTrainingComponent.target,
+        targetId: sourceTrainingComponent.targetId,
         methodId: sourceTrainingComponent.methodId,
         mainSet: sourceTrainingComponent.mainSet,
         supersets: [],
@@ -578,7 +577,7 @@ export class TrainingPlanService {
     };
 
     targetTrainingComponent.methodId = sourceTrainingComponent.methodId;
-    targetTrainingComponent.target = sourceTrainingComponent.target;
+    targetTrainingComponent.targetId = sourceTrainingComponent.targetId;
     targetTrainingComponent.mainSet = sourceTrainingComponent.mainSet;
 
     if (options) {

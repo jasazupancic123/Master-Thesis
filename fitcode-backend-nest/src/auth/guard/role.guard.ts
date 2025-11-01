@@ -2,8 +2,7 @@ import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
 import { UserRole } from '@src/auth/enum/user-role.enum';
-
-import { User } from '../type/firebase-auth.type';
+import { User } from '@src/common/type/firebase-auth.type';
 
 export const AUTH_ROLES_KEY = 'roles';
 

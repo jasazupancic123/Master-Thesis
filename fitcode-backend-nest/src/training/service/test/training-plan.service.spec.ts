@@ -5,8 +5,6 @@ import { Test } from '@nestjs/testing';
 import { AttributeService } from '@src/attribute/service/attribute.service';
 import { CacheManagerService } from '@src/cache-manager/cache-manager.service';
 import { CommonModule } from '@src/common/common.module';
-import { ComponentService } from '@src/component/component.service';
-import { ComponentRepository } from '@src/component/repository/component.repository';
 import { validationSchema } from '@src/config/environment-validation-schema';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
@@ -44,11 +42,6 @@ describe('TrainingPlanService (unit)', () => {
           useValue: createMock<CacheManagerService>(),
         },
         AttributeService,
-        {
-          provide: ComponentRepository,
-          useValue: createMock<ComponentRepository>,
-        },
-        ComponentService,
         {
           provide: InstitutionService,
           useValue: createMock<InstitutionService>(),

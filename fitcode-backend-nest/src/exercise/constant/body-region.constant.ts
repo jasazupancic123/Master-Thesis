@@ -5,6 +5,6 @@ export const BodyRegion: Attribute[] = [
   { field: 'lower', name: 'Lower' },
   { field: 'core', name: 'Core' },
   { field: 'total', name: 'Total' },
-];
+] as const;
 
 export const BodyRegionValues = BodyRegion.map((b) => b.field);

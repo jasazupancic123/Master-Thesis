@@ -5,14 +5,12 @@ import { addDays, addHours, subDays, subHours } from 'date-fns';
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import type { TestInstitution } from '@src/common/type/entity.type';
 import { getTime } from '@src/common/utils/date.util';
-import { ComponentService } from '@src/component/component.service';
-import type { Component } from '@src/component/entity/component.entity';
-import { generateComponentStub } from '@src/component/mock/component.stub';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import type { Group } from '@src/group/entity/group.entity';
 import { TestDbService } from '@src/test-db/test-db.service';
+import { MAX_NUM_COMPONENTS_IN_TRAINING } from '@src/training/constant/training-limits.constant';
 import type { CreateTrainingDto } from '@src/training/dto/create-training.dto';
 import {
   generateSuperset,
@@ -22,27 +20,48 @@ import {
 } from '@src/training/mock/training.stub';
 import { TrainingService } from '@src/training/service/training.service';
 
+jest.mock('@src/exercise/constant/components.constant', () => {
+  const {
+    generateComponentStub,
+  } = require('@src/exercise/mock/component.stub');
+
+  const other = generateComponentStub({ field: 'other' });
+  const c1 = generateComponentStub({
+    field: 'c1',
+    params: ['reps'],
+    options: [generateComponentStub({ field: 'leaf1' })],
+  });
+  const c2 = generateComponentStub({ field: 'c2' });
+  const c3 = generateComponentStub({ field: 'c3' });
+  const warmup = generateComponentStub({ field: 'warmup' });
+  const cooldown = generateComponentStub({ field: 'cooldown' });
+
+  return {
+    WARMUP_ID: 'warmup',
+    COOLDOWN_ID: 'cooldown',
+    WARMUP: warmup,
+    COOLDOWN: cooldown,
+    Components: [warmup, cooldown, other, c1, c2, c3],
+  };
+});
+
 describe('Create Training (e2e)', () => {
   let testApp: TestApp;
   let db: TestDbService;
   let firebase: FirebaseService;
-  let componentService: ComponentService;
   let exerciseService: ExerciseService;
   let trainingService: TrainingService;
 
   let institution: TestInstitution;
   let group: Group;
-  let component: Component;
 
   beforeAll(async () => {
     testApp = await TestApp.init();
     db = testApp.module.get(TestDbService);
     firebase = testApp.module.get(FirebaseService);
-    componentService = testApp.module.get(ComponentService);
     exerciseService = testApp.module.get(ExerciseService);
     trainingService = testApp.module.get(TrainingService);
 
-    component = await db.components.create(generateComponentStub());
     institution = await db.institutions.createTest();
     group = await db.groups.createTest(institution);
   });
@@ -168,7 +187,7 @@ describe('Create Training (e2e)', () => {
           groupId: group.id,
           cycleId: group.cycles[1].id,
           date: from,
-          components: [generateTrainingComponent({ id: component.id })],
+          components: [generateTrainingComponent({ id: 'other' })],
         }),
         generateTrainingStub({
           ownerId: global.trainer.uid,
@@ -176,7 +195,7 @@ describe('Create Training (e2e)', () => {
           groupId: group.id,
           cycleId: group.cycles[1].id,
           date: addHours(from, 1),
-          components: [generateTrainingComponent({ id: component.id })],
+          components: [generateTrainingComponent({ id: 'other' })],
         }),
       ];
 
@@ -197,7 +216,7 @@ describe('Create Training (e2e)', () => {
         groupId: group.id,
         cycleId: group.cycles[1].id,
         date: addHours(from, 2),
-        components: [generateTrainingComponent({ id: component.id })],
+        components: [generateTrainingComponent({ id: 'other' })],
       });
 
       const response = await req(global.trainer.token, training);
@@ -225,7 +244,7 @@ describe('Create Training (e2e)', () => {
               groupId: group.id,
               cycleId: group.cycles[1].id,
               from,
-              components: [generateTrainingComponent({ id: component.id })],
+              components: [generateTrainingComponent({ id: 'other' })],
             }),
           )
         ).id;
@@ -236,7 +255,7 @@ describe('Create Training (e2e)', () => {
           groupId: group.id,
           cycleId: group.cycles[1].id,
           from: subHours(from, 0.5),
-          components: [generateTrainingComponent({ id: component.id })],
+          components: [generateTrainingComponent({ id: 'other' })],
         });
 
         const response = await req(global.trainer.token, training);
@@ -263,7 +282,7 @@ describe('Create Training (e2e)', () => {
             to: addHours(from, 1),
           }),
           generateTrainingComponent({
-            id: component.id,
+            id: 'other',
             from: addHours(from, 1),
             to: addHours(from, 2),
           }),
@@ -276,14 +295,6 @@ describe('Create Training (e2e)', () => {
     });
 
     it('should fail to create new training if training has more components than the limit', async () => {
-      const components = await Promise.all([
-        componentService.create(generateComponentStub()),
-        componentService.create(generateComponentStub()),
-        componentService.create(generateComponentStub()),
-        componentService.create(generateComponentStub()),
-        componentService.create(generateComponentStub()),
-      ]);
-
       const training = generateTrainingStub({
         ownerId: global.trainer.uid,
         membersIds: [global.athlete.uid],
@@ -291,34 +302,24 @@ describe('Create Training (e2e)', () => {
         cycleId: group.cycles[1].id,
         components: [
           generateTrainingComponent({
-            id: component.id,
+            id: 'c1',
             from: getTime(addDays(new Date(), 2), 8, 0),
             to: getTime(addDays(new Date(), 2), 8, 30),
           }),
           generateTrainingComponent({
-            id: components[0].id,
+            id: 'c2',
             from: getTime(addDays(new Date(), 2), 8, 30),
             to: getTime(addDays(new Date(), 2), 9, 0),
           }),
           generateTrainingComponent({
-            id: components[1].id,
+            id: 'c3',
             from: getTime(addDays(new Date(), 2), 9, 0),
             to: getTime(addDays(new Date(), 2), 9, 30),
           }),
           generateTrainingComponent({
-            id: components[2].id,
+            id: 'other',
             from: getTime(addDays(new Date(), 2), 9, 30),
             to: getTime(addDays(new Date(), 2), 10, 0),
-          }),
-          generateTrainingComponent({
-            id: components[3].id,
-            from: getTime(addDays(new Date(), 2), 10, 0),
-            to: getTime(addDays(new Date(), 2), 10, 30),
-          }),
-          generateTrainingComponent({
-            id: components[4].id,
-            from: getTime(addDays(new Date(), 2), 10, 30),
-            to: getTime(addDays(new Date(), 2), 11, 0),
           }),
         ],
       });
@@ -326,35 +327,24 @@ describe('Create Training (e2e)', () => {
       const response = await req(global.trainer.token, training);
       expect(response.status).toBe(409);
       expect(response.body.message).toBe(
-        'You can only have up to 5 components per training',
+        `You can only have up to ${MAX_NUM_COMPONENTS_IN_TRAINING} components per training`,
       );
-
-      for (const component of components)
-        await db.components.delete(component.id);
     });
 
     it('should fail to create new training if component is not root', async () => {
-      const leaf = await componentService.create(
-        generateComponentStub({ parentId: component.id }),
-      );
-
       const training = generateTrainingStub({
         ownerId: global.trainer.uid,
         membersIds: [global.athlete.uid],
         groupId: group.id,
         cycleId: group.cycles[1].id,
-        components: [generateTrainingComponent({ id: leaf.id })],
+        components: [generateTrainingComponent({ id: 'c1:leaf1' })],
       });
 
       const response = await req(global.trainer.token, training);
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(404);
       expect(response.body.message).toBe(
-        `Component ${leaf.name} cannot be selected for training`,
+        `Component cannot be selected for training`,
       );
-
-      await db.components.delete(component.id);
-      await db.components.delete(leaf.id);
-      component = await db.components.create(generateComponentStub());
     });
 
     it('should fail to create new training if it contains duplicate components', async () => {
@@ -365,12 +355,12 @@ describe('Create Training (e2e)', () => {
         cycleId: group.cycles[1].id,
         components: [
           generateTrainingComponent({
-            id: component.id,
+            id: 'other',
             from: getTime(addDays(new Date(), 2), 8, 0),
             to: getTime(addDays(new Date(), 2), 8, 30),
           }),
           generateTrainingComponent({
-            id: component.id,
+            id: 'other',
             from: getTime(addDays(new Date(), 2), 9, 0),
             to: getTime(addDays(new Date(), 2), 9, 30),
           }),
@@ -379,9 +369,7 @@ describe('Create Training (e2e)', () => {
 
       const response = await req(global.trainer.token, training);
       expect(response.status).toBe(400);
-      expect(response.body.message).toBe(
-        `Duplicate component ${component.name}`,
-      );
+      expect(response.body.message).toContain(`Duplicate component`);
     });
 
     it.each([
@@ -391,18 +379,14 @@ describe('Create Training (e2e)', () => {
       'should successfully create institutional training if user is institution %s',
       async (_, user) => {
         // create overlapping training in another group to ensure no error is thrown
-        const component = await componentService.create(
-          generateComponentStub({ params: ['reps'] }),
-        );
-
         const globalExercise = await exerciseService.create(
           global.admin,
-          generateExerciseStub({ componentIds: [component.id] }),
+          generateExerciseStub({ components: ['c1:leaf1'] }),
         );
 
         const exercise = await exerciseService.create(
           global.manager,
-          generateExerciseStub({ componentIds: [component.id] }),
+          generateExerciseStub({ components: ['c1:leaf1'] }),
         );
 
         const from = addDays(new Date(), 1);
@@ -415,7 +399,7 @@ describe('Create Training (e2e)', () => {
           to: addHours(from, 1),
           components: [
             generateTrainingComponent({
-              id: component.id,
+              id: 'c1',
               supersets: [
                 generateSuperset({
                   exercises: [
@@ -440,7 +424,6 @@ describe('Create Training (e2e)', () => {
 
         await Promise.all([
           db.exercises.deleteByIds([globalExercise.id, exercise.id]),
-          db.components.delete(component.id),
           db.trainings.deleteByIds([response.body.id]),
         ]);
       },
@@ -481,7 +464,7 @@ describe('Create Training (e2e)', () => {
           cycleId: group.cycles[1].id,
           components: [
             generateTrainingComponent({
-              id: component.id,
+              id: 'c1',
               supersets: [generateSuperset({})],
             }),
           ],
@@ -547,7 +530,7 @@ describe('Create Training (e2e)', () => {
           cycleId: group.cycles[1].id,
           components: [
             generateTrainingComponent({
-              id: component.id,
+              id: 'c1',
               from: getTime(addDays(new Date(), 2), 8, 0),
               to: getTime(addDays(new Date(), 2), 9, 0),
             }),
@@ -560,7 +543,7 @@ describe('Create Training (e2e)', () => {
         training.id,
         [
           generateTrainingComponent({
-            id: component.id,
+            id: 'c1',
             from: getTime(addDays(new Date(), 2), 9, 0),
             to: getTime(addDays(new Date(), 2), 10, 0),
           }),
@@ -568,19 +551,13 @@ describe('Create Training (e2e)', () => {
       );
 
       expect(response.status).toBe(400);
-      expect(response.body.message).toBe(
-        `Duplicate component ${component.name}`,
-      );
+      expect(response.body.message).toContain(`Duplicate component`);
 
       await db.trainings.deleteByIds([training.id]);
     });
 
     it('should successfully add training components', async () => {
       const d = addDays(new Date(), 2);
-      const newComponent = await componentService.create(
-        generateComponentStub(),
-      );
-
       const training = await trainingService.create(
         global.trainer,
         generateTrainingStub({
@@ -589,14 +566,14 @@ describe('Create Training (e2e)', () => {
           groupId: group.id,
           cycleId: group.cycles[1].id,
           from: getTime(d, 8, 0),
-          components: [generateTrainingComponent({ id: component.id })],
+          components: [generateTrainingComponent({ id: 'c1' })],
         }),
       );
 
       const response = await addComponentReq(
         global.trainer.token,
         training.id,
-        [generateTrainingComponent({ id: newComponent.id })],
+        [generateTrainingComponent({ id: 'c2' })],
       );
 
       expect(response.status).toBe(201);
@@ -633,17 +610,10 @@ describe('Create Training (e2e)', () => {
       expectDatesToMatchUpToMinute(c2From, getTime(d, 8, 30));
       expectDatesToMatchUpToMinute(c2To, getTime(d, 9, 0));
 
-      await Promise.all([
-        db.components.delete(newComponent.id),
-        db.trainings.deleteByIds([training.id, response.body.id]),
-      ]);
+      await db.trainings.deleteByIds([training.id, response.body.id]);
     });
 
     it('should successfully delete training component', async () => {
-      const newComponent = await componentService.create(
-        generateComponentStub(),
-      );
-
       const training = await trainingService.create(
         global.trainer,
         generateTrainingStub({
@@ -653,13 +623,13 @@ describe('Create Training (e2e)', () => {
           cycleId: group.cycles[1].id,
           components: [
             generateTrainingComponent({
-              id: component.id,
+              id: 'c1',
               supersets: [generateSuperset()],
               from: getTime(addDays(new Date(), 2), 8, 0),
               to: getTime(addDays(new Date(), 2), 9, 0),
             }),
             generateTrainingComponent({
-              id: newComponent.id,
+              id: 'c2',
               supersets: [generateSuperset()],
               from: getTime(addDays(new Date(), 2), 9, 0),
               to: getTime(addDays(new Date(), 2), 10, 0),
@@ -669,7 +639,7 @@ describe('Create Training (e2e)', () => {
       );
 
       const response = await testApp.http.delete(
-        `/training/${training.id}/component/${newComponent.id}`,
+        `/training/${training.id}/component/c2`,
         global.trainer.token,
       );
 
@@ -677,10 +647,7 @@ describe('Create Training (e2e)', () => {
       expect(response.body.id).toBe(training.id);
       expect(response.body.components).toHaveLength(1);
 
-      await Promise.all([
-        db.components.delete(newComponent.id),
-        db.trainings.deleteByIds([training.id, response.body.id]),
-      ]);
+      await db.trainings.deleteByIds([training.id, response.body.id]);
     });
 
     it('should delete training when training has no more components', async () => {
@@ -693,7 +660,7 @@ describe('Create Training (e2e)', () => {
           cycleId: group.cycles[1].id,
           components: [
             generateTrainingComponent({
-              id: component.id,
+              id: 'c1',
               supersets: [generateSuperset()],
             }),
           ],
@@ -701,7 +668,7 @@ describe('Create Training (e2e)', () => {
       );
 
       const response = await testApp.http.delete(
-        `/training/${training.id}/component/${component.id}`,
+        `/training/${training.id}/component/c1`,
         global.trainer.token,
       );
 

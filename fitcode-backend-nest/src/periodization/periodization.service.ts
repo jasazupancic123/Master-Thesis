@@ -350,8 +350,8 @@ export class PeriodizationService {
             ? 'dist'
             : undefined;
 
-      const loadFieldR = this.exerciseParamService.getPair(loadField);
-      const volFieldR = this.exerciseParamService.getPair(volField);
+      const loadFieldR = this.exerciseParamService.PAIRS[loadField];
+      const volFieldR = this.exerciseParamService.PAIRS[volField];
 
       return {
         setIndex,
@@ -378,7 +378,7 @@ export class PeriodizationService {
           : undefined;
 
     if (!loadFieldL) return undefined;
-    const loadFieldR = this.exerciseParamService.getPair(loadFieldL);
+    const loadFieldR = this.exerciseParamService.PAIRS[loadFieldL];
 
     return {
       field: lr === 'L' ? loadFieldL : loadFieldR,
@@ -399,7 +399,7 @@ export class PeriodizationService {
           : undefined;
 
     if (!volFieldL) return undefined;
-    const volFieldR = this.exerciseParamService.getPair(volFieldL);
+    const volFieldR = this.exerciseParamService.PAIRS[volFieldL];
 
     return {
       field: lr === 'L' ? volFieldL : volFieldR,

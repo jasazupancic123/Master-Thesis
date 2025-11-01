@@ -8,7 +8,6 @@ import { ExerciseTestRepository } from './service/exercise-test.repository';
 import { GroupTestRepository } from './service/group-test.repository';
 import { InstitutionTestRepository } from './service/institution-test.repository';
 import { ProfileTestRepository } from './service/profile-test.repository';
-import { TestComponentService } from './service/test-component.service';
 import { TestWorkloadService } from './service/test-workload.service';
 import { TrainingReportTestRepository } from './service/training-report.test.repository';
 import { TrainingTestRepository } from './service/training-test.repository';
@@ -18,7 +17,6 @@ import { WellnessTestRepository } from './service/wellness-test.repository';
 export class TestDbService {
   constructor(
     private readonly firebase: FirebaseService,
-    readonly components: TestComponentService,
     readonly workloads: TestWorkloadService,
     readonly exercises: ExerciseTestRepository,
     readonly trainings: TrainingTestRepository,
@@ -36,9 +34,7 @@ export class TestDbService {
       this.firebase.deleteCollection(FirestoreCollection.GROUP),
       this.firebase.deleteCollection(FirestoreCollection.PROFILE),
       this.firebase.deleteCollection(FirestoreCollection.TRAINING),
-      this.firebase.deleteCollection(FirestoreCollection.COMPONENT),
       this.firebase.deleteCollection(FirestoreCollection.TRAINING),
-      this.firebase.deleteCollection(FirestoreCollection.METHOD),
     ]);
 
     // add back profiles for global manager, admin, trainer and athlete

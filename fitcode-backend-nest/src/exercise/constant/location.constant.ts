@@ -5,6 +5,6 @@ export const Location: Attribute[] = [
   { field: 'pitch', name: 'Pitch' },
   { field: 'mobile', name: 'Mobile' },
   { field: 'camp', name: 'Camp Gym' },
-];
+] as const;
 
 export const LocationValues = Location.map((l) => l.field);
