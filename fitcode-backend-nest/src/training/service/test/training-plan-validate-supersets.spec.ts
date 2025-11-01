@@ -176,6 +176,182 @@ describe('validateSupersets', () => {
     ).toThrow('Training exercise not found');
   });
 
+  describe('validateSupersets warmup/cooldown logic', () => {
+    it('should throw error if superset is both warmup and cooldown', () => {
+      const trainingComponent = generateTrainingComponent({
+        id: 'c1',
+        supersets: [
+          generateSuperset({
+            warmup: true,
+            cooldown: true,
+            exercises: [generateTrainingExercise({ id: 'e1' })],
+          }),
+        ],
+      });
+
+      expect(() =>
+        service.validateSupersets(trainingComponent, trainingComponent, data),
+      ).toThrow('Superset 1 cannot be both warmup and cooldown');
+    });
+
+    it('should throw error if warmup superset comes after non-warmup superset', () => {
+      const trainingComponent = generateTrainingComponent({
+        id: 'c1',
+        supersets: [
+          generateSuperset({
+            exercises: [generateTrainingExercise({ id: 'e1' })],
+          }),
+          generateSuperset({
+            warmup: true,
+            exercises: [generateTrainingExercise({ id: 'e2' })],
+          }),
+        ],
+      });
+
+      expect(() =>
+        service.validateSupersets(trainingComponent, trainingComponent, data),
+      ).toThrow('Warmup supersets must be at the beginning');
+    });
+
+    it('should throw error if cooldown superset comes before non-cooldown superset', () => {
+      const trainingComponent = generateTrainingComponent({
+        id: 'c1',
+        supersets: [
+          generateSuperset({
+            cooldown: true,
+            exercises: [generateTrainingExercise({ id: 'e1' })],
+          }),
+          generateSuperset({
+            exercises: [generateTrainingExercise({ id: 'e2' })],
+          }),
+        ],
+      });
+
+      expect(() =>
+        service.validateSupersets(trainingComponent, trainingComponent, data),
+      ).toThrow('Cooldown supersets must be at the end');
+    });
+
+    it('should allow warmup supersets only at the beginning', () => {
+      const trainingComponent = generateTrainingComponent({
+        id: 'c1',
+        supersets: [
+          generateSuperset({
+            warmup: true,
+            exercises: [generateTrainingExercise({ id: 'e1' })],
+          }),
+          generateSuperset({
+            warmup: true,
+            exercises: [generateTrainingExercise({ id: 'e2' })],
+          }),
+          generateSuperset({
+            exercises: [generateTrainingExercise({ id: 'e3' })],
+          }),
+        ],
+      });
+
+      expect(() =>
+        service.validateSupersets(trainingComponent, trainingComponent, data),
+      ).not.toThrow();
+    });
+
+    it('should allow cooldown supersets only at the end', () => {
+      const trainingComponent = generateTrainingComponent({
+        id: 'c1',
+        supersets: [
+          generateSuperset({
+            exercises: [generateTrainingExercise({ id: 'e1' })],
+          }),
+          generateSuperset({
+            cooldown: true,
+            exercises: [generateTrainingExercise({ id: 'e2' })],
+          }),
+          generateSuperset({
+            cooldown: true,
+            exercises: [generateTrainingExercise({ id: 'e3' })],
+          }),
+        ],
+      });
+
+      expect(() =>
+        service.validateSupersets(trainingComponent, trainingComponent, data),
+      ).not.toThrow();
+    });
+
+    it('should allow warmup, normal, then cooldown sequence', () => {
+      const trainingComponent = generateTrainingComponent({
+        id: 'c1',
+        supersets: [
+          generateSuperset({
+            warmup: true,
+            exercises: [generateTrainingExercise({ id: 'e1' })],
+          }),
+          generateSuperset({
+            exercises: [generateTrainingExercise({ id: 'e2' })],
+          }),
+          generateSuperset({
+            cooldown: true,
+            exercises: [generateTrainingExercise({ id: 'e3' })],
+          }),
+        ],
+      });
+
+      expect(() =>
+        service.validateSupersets(trainingComponent, trainingComponent, data),
+      ).not.toThrow();
+    });
+
+    it('should allow single superset to be warmup', () => {
+      const trainingComponent = generateTrainingComponent({
+        id: 'c1',
+        supersets: [
+          generateSuperset({
+            warmup: true,
+            exercises: [generateTrainingExercise({ id: 'e1' })],
+          }),
+        ],
+      });
+
+      expect(() =>
+        service.validateSupersets(trainingComponent, trainingComponent, data),
+      ).not.toThrow();
+    });
+
+    it('should allow single superset to be cooldown', () => {
+      const trainingComponent = generateTrainingComponent({
+        id: 'c1',
+        supersets: [
+          generateSuperset({
+            cooldown: true,
+            exercises: [generateTrainingExercise({ id: 'e1' })],
+          }),
+        ],
+      });
+
+      expect(() =>
+        service.validateSupersets(trainingComponent, trainingComponent, data),
+      ).not.toThrow();
+    });
+
+    it('should allow only normal supersets (no warmup or cooldown)', () => {
+      const trainingComponent = generateTrainingComponent({
+        id: 'c1',
+        supersets: [
+          generateSuperset({
+            exercises: [generateTrainingExercise({ id: 'e1' })],
+          }),
+          generateSuperset({
+            exercises: [generateTrainingExercise({ id: 'e2' })],
+          }),
+        ],
+      });
+
+      expect(() =>
+        service.validateSupersets(trainingComponent, trainingComponent, data),
+      ).not.toThrow();
+    });
+  });
+
   describe('validateSupersets with methods', () => {
     const MIN_REP = 12;
     const MAX_REP = 15;

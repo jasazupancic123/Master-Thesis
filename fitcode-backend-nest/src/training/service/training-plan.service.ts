@@ -302,7 +302,9 @@ export class TrainingPlanService {
     );
 
     const validSupersets: Superset[] = [];
-    for (const superset of newSupersets) {
+    for (let i = 0; i < newSupersets.length; i++) {
+      const superset = newSupersets[i];
+
       // validate max exercises per superset
       switch (mainSet) {
         case MainSet.BLOCK:
@@ -335,11 +337,10 @@ export class TrainingPlanService {
             ),
           ];
 
-          if (errors.length > 0) {
+          if (errors.length > 0)
             throw new BadRequestException(
               errors.map((e) => e.message).join(', '),
             );
-          }
         }
 
         validTrainingExercises.push({
@@ -350,6 +351,47 @@ export class TrainingPlanService {
       }
 
       validSupersets.push({ exercises: validTrainingExercises });
+    }
+
+    const n = newSupersets.length;
+    let state: 'start' | 'warmup' | 'normal' | 'cooldown' = 'start';
+
+    for (let i = 0; i < n; i++) {
+      const superset = newSupersets[i];
+
+      // cannot be both warmup and cooldown
+      if (superset.warmup && superset.cooldown)
+        throw new BadRequestException(
+          `Superset ${i + 1} cannot be both warmup and cooldown.`,
+        );
+
+      if (superset.warmup) {
+        // warmups must appear only at the beginning and be consecutive
+        if (state === 'normal' || state === 'cooldown')
+          throw new BadRequestException(
+            `Warmup supersets must be at the beginning`,
+          );
+
+        state = 'warmup';
+        continue;
+      }
+
+      if (superset.cooldown) {
+        state = 'cooldown';
+
+        if (i < n - 1 && !newSupersets[i + 1].cooldown)
+          throw new BadRequestException(
+            `Cooldown supersets must be at the end`,
+          );
+
+        continue;
+      }
+
+      // normal superset
+      if (state === 'cooldown')
+        throw new BadRequestException(`Cooldown supersets must be at the end`);
+
+      state = 'normal';
     }
 
     return validSupersets;
