@@ -230,7 +230,7 @@ export default function TrainingInProgressExerciseCard() {
               display="flex"
               justifyContent="center"
               alignItems="center"
-              sx={{ px: 1.2, py: 2, pb: 0, position: 'relative' }}
+              sx={{ px: 1.2, py: 0.5, position: 'relative' }}
             >
               <AthleteTrainingExerciseSets
                 training={trainingInProgress?.training}

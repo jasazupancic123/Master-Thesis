@@ -1,8 +1,7 @@
-import CloseIcon from '@mui/icons-material/Close';
 import {
+  Box,
   Button,
   FormControl,
-  IconButton,
   MenuItem,
   Popover,
   Select,
@@ -23,6 +22,7 @@ import type { ExerciseParamField } from '@/core/training/type/exercise-set.type'
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useGroup } from '@/store/group.provider';
+import ExerciseParamValueText from './exercise-param-value-text';
 
 interface Props {
   exercise: TrainingExercise;
@@ -155,17 +155,16 @@ export function TempoExerciseParam({
           '& .MuiInputBase-input': disableBorder,
         }}
       >
-        <Button
-          variant="text"
-          size="small"
-          onClick={(e) => setAnchorEl(e.currentTarget)}
-          disabled={readOnly || disableSets}
+        <Box
+          onClick={(e: React.MouseEvent<HTMLElement>) => {
+            if (readOnly || disableSets) return;
+
+            setAnchorEl(e.currentTarget);
+          }}
         >
           {/* parsed value for tempo */}
-          <Typography sx={{ textAlign: 'center', fontSize: 12 }}>
-            {value}
-          </Typography>
-        </Button>
+          <ExerciseParamValueText value={value as string} />
+        </Box>
 
         <TempoPicker
           open={open}
@@ -219,23 +218,8 @@ function TempoPicker({
       onClose={onClose}
       anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
     >
-      <Stack spacing={1} sx={{ p: 2, minWidth: 220 }}>
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-        >
-          <Typography fontWeight={600}>Set Tempo</Typography>
-          <IconButton onClick={onClose} size="small">
-            <CloseIcon fontSize="small" />
-          </IconButton>
-        </Stack>
-
-        <Stack
-          direction="row"
-          justifyContent="space-around"
-          alignItems="center"
-        >
+      <Stack spacing={1} sx={{ p: 1, minWidth: 220 }}>
+        <Stack direction="row" alignItems="start" gap={0.5}>
           {['Ecc', 'Pause', 'Con', 'Pause'].map((label, i) => (
             <Stack key={i} alignItems="center" spacing={0.5}>
               <Typography variant="caption">{label}</Typography>
@@ -246,7 +230,7 @@ function TempoPicker({
                 inputProps={{
                   min: 0,
                   max: 9,
-                  style: { width: 40, textAlign: 'center' },
+                  style: { width: 30, textAlign: 'center' },
                 }}
                 onChange={(e) => updatePart(i, Number(e.target.value))}
               />
