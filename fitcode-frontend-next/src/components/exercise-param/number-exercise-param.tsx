@@ -1,7 +1,17 @@
-import { Box, FormControl, MenuItem, Select, Typography } from '@mui/material';
+import {
+  Box,
+  FormControl,
+  MenuItem,
+  Select,
+  TextField,
+  Typography,
+} from '@mui/material';
 import { useTheme } from '@mui/material';
 
-import { exerciseCardSetAttributeSx } from '../trainer-group-day-view/style/exercise-card-set-attribute.style';
+import {
+  disableBorder,
+  exerciseCardSetAttributeSx,
+} from '../trainer-group-day-view/style/exercise-card-set-attribute.style';
 import type { Attribute } from '@/core/attribute/type/attribute.type';
 import { core } from '@/core/core.service';
 import { KG, SETS } from '@/core/exercise/constant/exercise-param.constant';
@@ -158,42 +168,107 @@ export function NumberExerciseParam(props: Props) {
         </FormControl>
       )}
 
-      <Box
-        ref={anchorEl}
-        width={screenSize.isUltraSmall ? 20 : 50}
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-        sx={{
-          px: 2,
-          zIndex: 10,
-          position: 'relative',
-          cursor: 'pointer',
-          userSelect: 'none',
-        }}
-      >
+      {trainingInProgressView ? (
         <Box
-          ref={valueBoxRef}
-          onClick={() => {
-            if (disable) return;
-
-            setOpen((o) => !o);
+          ref={anchorEl}
+          width={screenSize.isUltraSmall ? 20 : 50}
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          sx={{
+            px: 2,
+            zIndex: 10,
+            position: 'relative',
+            cursor: 'pointer',
+            userSelect: 'none',
           }}
         >
-          <ExerciseParamValueText value={value} />
-        </Box>
+          <Box
+            ref={valueBoxRef}
+            onClick={() => {
+              if (disable) return;
 
-        {open && onInputChange && (
-          <NumericParamInputBox
-            anchorEl={anchorEl.current}
+              setOpen((o) => !o);
+            }}
+          >
+            <ExerciseParamValueText value={value} />
+          </Box>
+
+          {open && onInputChange && (
+            <NumericParamInputBox
+              anchorEl={anchorEl.current}
+              value={value}
+              open={open}
+              setOpen={setOpen}
+              onSubOptionChange={onInputChange}
+              isFloat={isFloat}
+            />
+          )}
+        </Box>
+      ) : (
+        <FormControl
+          variant="filled"
+          size="small"
+          sx={{
+            ...exerciseCardSetAttributeSx,
+            '& .MuiInputBase-input': disableBorder,
+          }}
+        >
+          <TextField
+            variant="filled"
             value={value}
-            open={open}
-            setOpen={setOpen}
-            onSubOptionChange={onInputChange}
-            isFloat={isFloat}
+            type="number"
+            size="small"
+            onChange={(e) => {
+              if (readOnly) return;
+
+              let value: number = parseFloat(e.target.value);
+              if (max || min) {
+                if (max && value > max) value = max;
+                else if (min && value < min) value = min;
+              }
+
+              onInputChange?.(value.toString());
+              if (!athleteView && setDetectedChanges) setDetectedChanges(true);
+            }}
+            disabled={readOnly || disable}
+            inputProps={{
+              min,
+              max,
+              style: {
+                textAlign: 'center',
+                fontSize: trainingInProgressView ? 16 : 12,
+                fontWeight: trainingInProgressView ? 600 : undefined,
+                paddingRight: '0px !important',
+                paddingLeft: '0px !important',
+                color: theme.palette.text.primary,
+              },
+            }}
+            sx={{
+              textAlign: 'center',
+              backgroundColor: trainingInProgressView
+                ? 'transparent !important'
+                : undefined,
+              '& .MuiInputBase-input': {
+                minHeight: trainingInProgressView ? 24 : undefined,
+                p: 0.5,
+                py: trainingInProgressView ? 1 : undefined,
+                textAlign: 'center',
+                color: colorToPrimary
+                  ? `${theme.palette.primary.main} !important`
+                  : theme.palette.text.primary,
+                fontSize: 12,
+                fontWeight: 400,
+              },
+              '& .MuiInputBase-input.Mui-disabled': {
+                color: readOnly ? 'white !important' : undefined,
+                WebkitTextFillColor: readOnly ? 'white !important' : undefined,
+              },
+              '& .Mui-disabled': { color: 'rgba(255, 255, 255, 0) !important' },
+            }}
           />
-        )}
-      </Box>
+        </FormControl>
+      )}
     </Box>
   );
 }

@@ -155,16 +155,30 @@ export function TempoExerciseParam({
           '& .MuiInputBase-input': disableBorder,
         }}
       >
-        <Box
-          onClick={(e: React.MouseEvent<HTMLElement>) => {
-            if (readOnly || disableSets) return;
+        {trainingInProgressView ? (
+          <Box
+            onClick={(e: React.MouseEvent<HTMLElement>) => {
+              if (readOnly || disableSets) return;
 
-            setAnchorEl(e.currentTarget);
-          }}
-        >
-          {/* parsed value for tempo */}
-          <ExerciseParamValueText value={value as string} />
-        </Box>
+              setAnchorEl(e.currentTarget);
+            }}
+          >
+            {/* parsed value for tempo */}
+            <ExerciseParamValueText value={value as string} />
+          </Box>
+        ) : (
+          <Button
+            variant="text"
+            size="small"
+            onClick={(e) => setAnchorEl(e.currentTarget)}
+            disabled={readOnly || disableSets}
+          >
+            {/* parsed value for tempo */}
+            <Typography sx={{ textAlign: 'center', fontSize: 12 }}>
+              {value}
+            </Typography>
+          </Button>
+        )}
 
         <TempoPicker
           open={open}
