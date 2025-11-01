@@ -82,6 +82,8 @@ export function generateTrainingComponent(
 export function generateSuperset(data?: Partial<Superset>): Superset {
   return {
     exercises: data?.exercises || [],
+    warmup: data?.warmup || false,
+    cooldown: data?.cooldown || false,
   };
 }
 
