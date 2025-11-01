@@ -50,10 +50,6 @@ export default function useMuscleHeatmap() {
 
   useEffect(() => {
     if (selectedSubgroup) {
-      console.log(
-        'selectedSubgroup exercises',
-        selectedSubgroup.supersets.flatMap((s) => s.exercises)
-      );
       setExercises(selectedSubgroup.supersets.flatMap((s) => s.exercises));
     } else if (component) {
       setExercises(component.supersets.flatMap((s) => s.exercises));
@@ -99,16 +95,12 @@ export default function useMuscleHeatmap() {
       );
     }
 
-    console.log('filteredTrainings', filteredTrainings);
-
     const trainingsLoads: [string, HeatmapLoad][][] = filteredTrainings.map(
       (t) => {
         const exercises = core.training.getExercises(t, {
           componentId: component.id,
           subgroupId: selectedSubgroup?.id,
         });
-
-        console.log('exercises for heatmap', exercises);
 
         return core.exercise.muscle.generateLoads(
           exercises,
@@ -117,8 +109,6 @@ export default function useMuscleHeatmap() {
         );
       }
     );
-
-    console.log('trainingsLoads', trainingsLoads);
 
     // Combine all training loads
     let loads = trainingsLoads.reduce(

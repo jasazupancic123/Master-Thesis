@@ -21,7 +21,7 @@ export default function TrainerGroupPage() {
   const mapper: Record<GroupDateFilter, ReactNode> = {
     day: <TrainerDayView />,
     week: <TrainerWeekView />,
-    month: <TrainerCycleView />,
+    phase: <TrainerCycleView />,
     year: (
       <YearsSliderProvider>
         <SliderCycleProvider>
