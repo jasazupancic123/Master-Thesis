@@ -41,7 +41,7 @@ export default function AthleteOptionsContainer({
 
       {items.map((type, i) => (
         <Box
-          key={type}
+          key={i}
           display="flex"
           alignItems="center" // center the inline-sized text inside the column
           gap={0.75}

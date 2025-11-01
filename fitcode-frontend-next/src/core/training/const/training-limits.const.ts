@@ -11,7 +11,7 @@ export const MAX_DURATION_TRAINING_IN_MIN = 240; // 4 hours
 export const MAX_NUM_COMPONENTS_IN_TRAINING = 5;
 
 // superset limits
-export const MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT = 4;
+export const MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT = 8;
 
 export const MAX_NUM_SUPERSETS_IN_CIRCUIT_COMPONENT = 1;
 
