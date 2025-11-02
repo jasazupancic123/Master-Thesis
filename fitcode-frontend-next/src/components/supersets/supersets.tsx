@@ -33,8 +33,6 @@ import MyModal from '@/ui/modal';
 interface Props {
   openAddExerciseModal: boolean;
   setOpenAddExerciseModal: SetState<boolean>;
-  expandedExercisesView: boolean;
-  setExpandedExercisesView: SetState<boolean>;
 }
 
 // Simple droppable wrapper for areas that aren't Sortable containers
@@ -62,8 +60,6 @@ function DroppableArea({
 export default function Supersets({
   openAddExerciseModal,
   setOpenAddExerciseModal,
-  expandedExercisesView,
-  setExpandedExercisesView,
 }: Props) {
   const screenSize = useScreenSize();
   const theme = useTheme();
@@ -79,6 +75,8 @@ export default function Supersets({
     supersets,
     selectedAthlete,
     selectedSubgroup,
+    expandedExercisesView,
+    setExpandedExercisesView,
     setSearch,
     setPagination,
   } = trainerDayViewContext;
