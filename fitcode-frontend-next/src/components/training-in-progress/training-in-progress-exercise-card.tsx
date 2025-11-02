@@ -1,4 +1,3 @@
-import { Circle } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Image from 'next/image';
