@@ -1,6 +1,5 @@
 import type { INestApplication } from '@nestjs/common';
 import { subDays } from 'date-fns';
-import { readFile } from 'node:fs/promises';
 
 import { UserRole } from '@src/auth/enum/user-role.enum';
 import { AuthService } from '@src/auth/service/auth.service';
@@ -72,7 +71,7 @@ export class DataSetup extends BaseSetup {
     await this.clearData();
 
     try {
-      await this.importUsers('data/users.json');
+      await this.importUsers();
       await this.importExercises();
 
       this.logger.debug(
@@ -120,23 +119,101 @@ export class DataSetup extends BaseSetup {
     await exerciseService.upsertMany(this.admin, data as CreateExerciseDto[]);
   }
 
-  private async importUsers(filename: string) {
+  private async importUsers() {
     const userRepository = this.app.get(ProfileRepository);
     const groupService = this.app.get(GroupService);
     const institutionService = this.app.get(InstitutionService);
 
-    const file = await readFile(filename, 'utf-8');
-    const data: {
-      email: string;
-      role: UserRole;
-      level: string;
-      displayName: string;
-      weight: number;
-      groups: {
-        name: string;
-        membersIds: string[];
-      }[];
-    }[] = JSON.parse(file);
+    const data = [
+      {
+        email: 'admin@mail.com',
+        role: UserRole.ADMIN,
+        level: 'beginner',
+        displayName: 'Blindoff Admin',
+        weight: 102.3,
+        groups: [],
+      },
+      {
+        email: 'manager@mail.com',
+        role: UserRole.MANAGER,
+        level: 'beginner',
+        displayName: 'Manager',
+        weight: 80.5,
+        groups: [],
+      },
+      {
+        email: 'trainer@mail.com',
+        role: UserRole.TRAINER,
+        level: 'beginner',
+        displayName: 'Trainer',
+        weight: 90.5,
+        groups: [
+          {
+            name: 'Volleyball U23 Women',
+            membersIds: ['the.rock@mail.com', 'bruce.lee@mail.com'],
+          },
+          {
+            name: 'Football U19 Men',
+            membersIds: [
+              'john.doe@mail.com',
+              'mike.tyson@mail.com',
+              'bruce.lee@mail.com',
+              'michael.jackson@mail.com',
+              'tom.hanks@mail.com',
+              'the.rock@mail.com',
+            ],
+          },
+        ],
+      },
+      {
+        email: 'john.doe@mail.com',
+        role: UserRole.ATHLETE,
+        level: 'beginner',
+        displayName: 'John Doe',
+        weight: 70.5,
+        groups: [],
+      },
+      {
+        email: 'mike.tyson@mail.com',
+        role: UserRole.ATHLETE,
+        level: 'beginner',
+        displayName: 'Mike Tyson',
+        weight: 93.5,
+        groups: [],
+      },
+      {
+        email: 'bruce.lee@mail.com',
+        role: UserRole.ATHLETE,
+        level: 'beginner',
+        displayName: 'Bruce Lee',
+        weight: 80,
+        groups: [],
+      },
+      {
+        email: 'the.rock@mail.com',
+        role: UserRole.ATHLETE,
+        level: 'beginner',
+        displayName: 'Dwayne Johnson',
+        weight: 120,
+        groups: [],
+      },
+      {
+        email: 'michael.jackson@mail.com',
+        role: UserRole.ATHLETE,
+        level: 'beginner',
+        displayName: 'Michael Jackson',
+        weight: 75,
+        groups: [],
+      },
+      {
+        email: 'tom.hanks@mail.com',
+        role: UserRole.ATHLETE,
+        level: 'beginner',
+        displayName: 'Tom Hanks',
+        weight: 85,
+        groups: [],
+      },
+    ];
 
     const createdUsers: User[] = [];
     for (const userData of data) {
