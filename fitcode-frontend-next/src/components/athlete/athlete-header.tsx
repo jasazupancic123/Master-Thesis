@@ -8,11 +8,11 @@ import AthleteSidebar from './athlete-sidebar';
 import BottomNavigation from './bottom-navigation';
 import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
+import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import Logo from '@/ui/logo';
-import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
-import { useAuthenticatedAuth } from '@/store/auth.provider';
 
 export default function AthleteHeader() {
   const theme = useTheme();

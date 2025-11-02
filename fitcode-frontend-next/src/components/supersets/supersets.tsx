@@ -57,7 +57,10 @@ function DroppableArea({
   );
 }
 
-export default function Supersets({ openAddExerciseModal, setOpenAddExerciseModal }: Props) {
+export default function Supersets({
+  openAddExerciseModal,
+  setOpenAddExerciseModal,
+}: Props) {
   const screenSize = useScreenSize();
   const theme = useTheme();
 
