@@ -15,6 +15,8 @@ import {
 } from './actions/actions-selected-exercises';
 import { handleSelectTrainingComponent } from './actions/actions-training-component';
 import CompletedMembersGroup from './completed-members-group';
+import { Components } from '@/core/exercise/constant/components.constant';
+import { Targets } from '@/core/exercise/constant/target.constant';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
@@ -44,9 +46,12 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
     supersets,
   } = trainerDayViewContext;
 
+  const found = Components.find((c) => c.field === trainingComponent.id);
+  const target = Targets.find((t) => t.field === trainingComponent.targetId);
+
   return (
     <Box display="flex" p={0}>
-      {trainingComponent.component && (
+      {found && (
         <Box
           display="flex"
           flexDirection="column"
@@ -78,9 +83,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                 );
               }}
             >
-              {trainingComponent.target
-                ? `${trainingComponent.component.name} - ${trainingComponent.target.name}`
-                : trainingComponent.component.name}
+              {target ? `${found.name} - ${target.name}` : found.name}
             </Typography>
 
             {component?.id === trainingComponent.id && (

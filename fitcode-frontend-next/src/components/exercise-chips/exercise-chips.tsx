@@ -4,25 +4,17 @@ import Stack from '@mui/material/Stack';
 import React from 'react';
 
 import { theme } from '@/app/style';
-import type {
-  Component,
-  TreeComponent,
-} from '@/core/component/type/component.type';
-import type { Target } from '@/core/target/type/target.type';
-import type { TrainingComponent } from '@/core/training/type/training-component.type';
+import { Components } from '@/core/exercise/constant/components.constant';
+import { Targets } from '@/core/exercise/constant/target.constant';
+import type { Component } from '@/core/exercise/type/component.type';
+import type { Target } from '@/core/exercise/type/target.type';
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 interface Props {
-  components: (Component | TreeComponent)[];
   noSelectionLabel?: string; // for all / no selection
-  selected?:
-    | null
-    | Component
-    | TreeComponent
-    | TrainingComponent
-    | (Component | TreeComponent | TrainingComponent)[];
+  selected?: null | Component | Component[];
   setSelected?: SetState<Props['selected']>;
   dissableNoSelection?: boolean;
   small?: boolean;
@@ -40,7 +32,6 @@ interface Props {
 
 export default function ExerciseChips({
   selected,
-  components,
   setSelected,
   dissableNoSelection,
   direction = 'row',
@@ -58,29 +49,25 @@ export default function ExerciseChips({
       direction={direction}
       spacing={gap !== undefined ? gap : 1}
       flexWrap="wrap"
-      sx={{
-        justifyContent: 'center',
-        alignItems: 'center',
-        ...sx,
-      }}
+      sx={{ justifyContent: 'center', alignItems: 'center', ...sx }}
     >
-      {components.reverse().map((c, i) => {
+      {Components.reverse().map((c, i) => {
         const IconComponent = lib.common.component.getIcon(c.name);
-        const targets = c.targets || [];
+        const targets = Targets.filter((t) => t.componentId === c.field);
 
         const isSelected =
           (Array.isArray(selected) &&
-            selected.some((component) => component.id === c.id)) ||
-          (selected && !Array.isArray(selected) && selected.id === c.id);
+            selected.some((component) => component.field === c.field)) ||
+          (selected && !Array.isArray(selected) && selected.field === c.field);
 
         return (
           <Box
             display="flex"
             flexDirection="column"
             alignItems="center"
-            key={c.id}
+            key={c.field}
           >
-            <Box sx={{ pb: 0.5 }} key={c.id}>
+            <Box sx={{ pb: 0.5 }} key={c.field}>
               <div
                 key={i}
                 onClick={() => {
@@ -90,9 +77,15 @@ export default function ExerciseChips({
                       setSelected &&
                       selectedTargets
                     ) {
-                      if (selected.some((component) => component.id === c.id)) {
+                      if (
+                        selected.some(
+                          (component) => component.field === c.field
+                        )
+                      ) {
                         setSelected(
-                          selected.filter((component) => component.id !== c.id)
+                          selected.filter(
+                            (component) => component.field !== c.field
+                          )
                         );
                       } else {
                         setSelected([...selected, c]);
@@ -104,20 +97,26 @@ export default function ExerciseChips({
                   if (!setSelected) return;
 
                   if (Array.isArray(selected)) {
-                    if (selected.some((component) => component.id === c.id)) {
+                    if (
+                      selected.some((component) => component.field === c.field)
+                    ) {
                       setSelected(
-                        selected.filter((component) => component.id !== c.id)
+                        selected.filter(
+                          (component) => component.field !== c.field
+                        )
                       );
                       if (setSelectedTargets) {
                         setSelectedTargets((prev) => {
-                          return prev.filter((st) => st.componentId !== c.id);
+                          return prev.filter(
+                            (st) => st.componentId !== c.field
+                          );
                         });
                       }
                     } else {
                       setSelected([...selected, c]);
                     }
                   } else {
-                    if (selected?.id === c.id && !dissableNoSelection)
+                    if (selected?.field === c.field && !dissableNoSelection)
                       setSelected(null);
                     else setSelected(c);
                   }
@@ -136,10 +135,12 @@ export default function ExerciseChips({
                   cursor: 'pointer',
                   backgroundColor:
                     (Array.isArray(selected) &&
-                      selected.some((component) => component.id === c.id)) ||
+                      selected.some(
+                        (component) => component.field === c.field
+                      )) ||
                     (selected &&
                       !Array.isArray(selected) &&
-                      selected.id === c.id)
+                      selected.field === c.field)
                       ? theme.palette.primary.main
                       : 'transparent',
                 }}
@@ -168,14 +169,14 @@ export default function ExerciseChips({
               <Select
                 variant="standard"
                 value={
-                  selectedTargets?.find((st) => st.componentId === c.id)?.target
-                    .id || 'none'
+                  selectedTargets?.find((st) => st.componentId === c.field)
+                    ?.target.field || 'none'
                 }
                 onChange={(e) => {
                   if (
                     Array.isArray(selected) &&
                     setSelected &&
-                    !selected.some((component) => component.id === c.id)
+                    !selected.some((component) => component.field === c.field)
                   ) {
                     setSelected([...selected, c]);
                   }
@@ -183,24 +184,24 @@ export default function ExerciseChips({
                   const targetId = e.target.value;
                   if (targetId === 'none') {
                     setSelectedTargets?.((prev) =>
-                      prev.filter((st) => st.componentId !== c.id)
+                      prev.filter((st) => st.componentId !== c.field)
                     );
                     return;
                   }
 
-                  const target = targets.find((t) => t.id === targetId);
+                  const target = targets.find((t) => t.field === targetId);
                   if (!target) return;
 
                   setSelectedTargets?.((prev) => {
                     const existingIndex = prev.findIndex(
-                      (st) => st.componentId === c.id
+                      (st) => st.componentId === c.field
                     );
                     if (existingIndex !== -1) {
                       const updated = [...prev];
-                      updated[existingIndex] = { componentId: c.id, target };
+                      updated[existingIndex] = { componentId: c.field, target };
                       return updated;
                     }
-                    return [...prev, { componentId: c.id, target }];
+                    return [...prev, { componentId: c.field, target }];
                   });
                 }}
                 sx={{
@@ -236,7 +237,10 @@ export default function ExerciseChips({
               >
                 <MenuItem value="none">{c.name}</MenuItem>
                 {targets.map((target) => (
-                  <MenuItem key={target.id} value={target.id}>
+                  <MenuItem
+                    key={target.field as string}
+                    value={target.field as string}
+                  >
                     {target.name}
                   </MenuItem>
                 ))}

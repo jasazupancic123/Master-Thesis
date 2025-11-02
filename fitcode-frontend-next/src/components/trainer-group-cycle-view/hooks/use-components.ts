@@ -1,6 +1,7 @@
 import type { RefObject } from 'react';
 import { useEffect, useState } from 'react';
 
+import { Components } from '@/core/exercise/constant/components.constant';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 
@@ -23,19 +24,17 @@ export default function useTrainingCycleComponents(
     containerRef,
   } = props;
 
+  const component = Components.find((c) => c.field === trainingComponent?.id);
+
   const [isWrapped, setIsWrapped] = useState(false);
 
   const [components, setComponents] = useState<TrainingComponent[]>(
     (componentCalendarView || periodizationView) &&
       trainingComponent &&
-      trainingComponent.component
+      component
       ? (training.components
           .map((c) => {
-            if (
-              c.component &&
-              c.component.id === trainingComponent.component!.id
-            )
-              return c;
+            if (component && component.field === trainingComponent.id) return c;
             else return null;
           })
           .filter((c) => c !== null) as TrainingComponent[])
@@ -46,12 +45,11 @@ export default function useTrainingCycleComponents(
     if (
       (componentCalendarView || periodizationView) &&
       trainingComponent &&
-      trainingComponent.component
+      component
     ) {
       const newComponents = training.components
         .map((c) => {
-          if (c.component && c.component.id === trainingComponent.component!.id)
-            return c;
+          if (component && component.field === trainingComponent.id) return c;
           else return null;
         })
         .filter((c) => c !== null) as TrainingComponent[];
@@ -86,13 +84,10 @@ export default function useTrainingCycleComponents(
     setComponents(
       (componentCalendarView || periodizationView) &&
         trainingComponent &&
-        trainingComponent.component
+        trainingComponent.id
         ? (training.components
             .map((c) => {
-              if (
-                c.component &&
-                c.component.id === trainingComponent.component!.id
-              )
+              if (component && component.field === trainingComponent.id)
                 return c;
               else return null;
             })

@@ -1,6 +1,7 @@
 import { isBefore } from 'date-fns';
 import toast from 'react-hot-toast';
 
+import { Targets } from '@/core/exercise/constant/target.constant';
 import { PeriodizationType } from '@/core/training/enum/periodization-type.enum';
 import type { SetState } from '@/lib/common/type/state.type';
 import type { IGroupCtx } from '@/store/group.provider';
@@ -75,16 +76,19 @@ export function handleSetPeriodizationType(
   trainings.forEach((t) => {
     if (training.id === t.id || isBefore(t.from, training.from)) return;
 
-    const sameComponent = t.components.find(
-      (c) =>
-        c.id === component.id || c.component?.id === component.component?.id
-    );
+    const sameComponent = t.components.find((c) => c.id === component.id);
+
     if (!sameComponent) return;
 
-    if (!component.target && !sameComponent.target) {
+    const componentTarget = Targets.find((t) => t.field === component.targetId);
+    const sameComponentTarget = Targets.find(
+      (t) => t.field === sameComponent.targetId
+    );
+
+    if (!componentTarget && !sameComponentTarget) {
       // if no traget is selected, count the ones without a target
       numTrainingsWithSameTarget++;
-    } else if (sameComponent.target?.id === component.target?.id)
+    } else if (sameComponentTarget?.field === componentTarget?.field)
       numTrainingsWithSameTarget++;
   });
 

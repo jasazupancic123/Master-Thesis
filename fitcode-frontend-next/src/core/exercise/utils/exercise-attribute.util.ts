@@ -1,8 +1,7 @@
 import { AttributeType } from '../../attribute/enum/attribute-value.enum';
 import type { Attribute } from '../../attribute/type/attribute.type';
-import type { Component } from '../../component/type/component.type';
 import { BodyRegion } from '../constant/body-region.constant';
-import { Category } from '../constant/category.constant';
+import { Components } from '../constant/components.constant';
 import { Equipment } from '../constant/equipment.constant';
 import { LiftPriority } from '../constant/lift-priority.constant';
 import { LoadingSide } from '../constant/loading-side.constant';
@@ -10,16 +9,17 @@ import { Location } from '../constant/location.constant';
 import { MovementDirection } from '../constant/movement-direction.constant';
 import { Pattern } from '../constant/pattern.constant';
 import { PrescriptionType } from '../constant/prescription.constant';
+import type { Component } from '../type/component.type';
 import type { ExerciseAttributes } from '../type/exercise.type';
 
 export class ExerciseAttributeUtil {
   getAll(filter?: Component['attributes']): Attribute<ExerciseAttributes>[] {
     const allAttributes: Attribute<ExerciseAttributes>[] = [
       {
-        field: 'categories',
-        name: 'Categories',
+        field: 'components',
+        name: 'Components',
         type: AttributeType.Multiselect,
-        options: Category,
+        options: Components,
       },
       {
         field: 'equipment',

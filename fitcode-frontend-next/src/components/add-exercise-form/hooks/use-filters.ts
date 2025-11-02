@@ -1,12 +1,8 @@
 import { useEffect, useState } from 'react';
 
 import { handlePaginateExercises } from '@/app/(trainer)/dashboard/exercises/state';
-import type { Component } from '@/core/component/type/component.type';
+import type { Component } from '@/core/exercise/type/component.type';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
-import {
-  COOLDOWN_ID,
-  WARMUP_ID,
-} from '@/core/training/const/warmup-cooldown.const';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import type { AttributeFilters } from '@/sites/exercises.page';
 import { useMain } from '@/store/main.provider';
@@ -17,7 +13,7 @@ export default function useExerciseFormFilters(
   selectedComponentsIds: string[],
   selectedComponent: Component | null
 ) {
-  const { components, exercises: allExercises } = useMain();
+  const { exercises: allExercises } = useMain();
 
   const {
     filteredExercises: exercises,
@@ -40,8 +36,8 @@ export default function useExerciseFormFilters(
    */
   useEffect(() => {
     const filter: Partial<Exercise> = {
-      ...(selectedComponent?.id &&
-        !search.length && { componentIds: [selectedComponent.id] }),
+      ...(selectedComponent?.field &&
+        !search.length && { components: [selectedComponent.field] }),
       ...(search && { name: search }),
       ...(!search.length &&
         selectedComponentsIds.length && {
@@ -51,7 +47,6 @@ export default function useExerciseFormFilters(
     };
 
     handlePaginateExercises(filter, {
-      components,
       exercises: componentExercises,
       pagination,
       search,
@@ -59,7 +54,6 @@ export default function useExerciseFormFilters(
       setFilteredExercises,
     });
   }, [
-    components,
     componentExercises,
     exercises,
     component,
@@ -74,22 +68,18 @@ export default function useExerciseFormFilters(
   useEffect(() => {
     if (!selectedComponent) return;
 
-    if (
-      search.length ||
-      selectedComponent.id === WARMUP_ID ||
-      selectedComponent.id === COOLDOWN_ID
-    ) {
+    if (search.length) {
       setComponentExercises(allExercises);
       return;
     }
 
-    setComponentExercises(
+    /* setComponentExercises(
       allExercises.filter((exercise) =>
         exercise.components?.some((c) =>
           c.parents.includes(selectedComponent.id)
         )
       )
-    );
+    ); */
   }, [selectedComponent, search]);
 
   return {

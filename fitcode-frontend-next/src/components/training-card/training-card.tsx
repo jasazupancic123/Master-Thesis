@@ -201,22 +201,12 @@ export default function TrainingCard() {
       >
         {training && (
           <Box display="flex" flexDirection="column" gap={1} mt={1}>
-            <TrainingComponentLayout
-              key={0}
-              trainingComponent={training.warmup}
-            />
-
             {training.components.map((trainingComponent, i) => (
               <TrainingComponentLayout
                 key={i + 1}
                 trainingComponent={trainingComponent}
               />
             ))}
-
-            <TrainingComponentLayout
-              key={training.components.length + 1}
-              trainingComponent={training.cooldown}
-            />
           </Box>
         )}
       </Box>

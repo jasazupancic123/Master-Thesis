@@ -1,7 +1,7 @@
 import type { Dayjs } from 'dayjs';
 
-import type { Component } from '@/core/component/type/component.type';
-import type { Target } from '@/core/target/type/target.type';
+import type { Component } from '@/core/exercise/type/component.type';
+import type { Target } from '@/core/exercise/type/target.type';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import type { Day } from '@/lib/common/service/date.util';

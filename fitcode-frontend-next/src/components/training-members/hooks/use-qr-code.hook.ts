@@ -41,8 +41,6 @@ export function useQRCode() {
         member.uid
       );
 
-      console.log('Generated link:', link);
-
       const qr = await QRCode.toDataURL(link);
       setQrDataUrl(qr);
       setQrAnchorEl(anchorEl);

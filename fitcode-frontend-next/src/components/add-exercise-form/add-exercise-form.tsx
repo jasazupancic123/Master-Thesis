@@ -1,4 +1,3 @@
-import { KeyboardArrowDown, KeyboardArrowUp } from '@mui/icons-material';
 import { Box, Button, Pagination, Typography } from '@mui/material';
 
 import ExerciseChips from '../exercise-chips/exercise-chips';
@@ -9,15 +8,7 @@ import useComponentFilter from './hooks/use-component-filter';
 import useExerciseFormFilters from './hooks/use-filters';
 import SelectedExercisesList from './selected-exercises-list';
 import { theme } from '@/app/style';
-import type { Component } from '@/core/component/type/component.type';
-import { core } from '@/core/core.service';
-import {
-  COOLDOWN_ID,
-  WARMUP_ID,
-} from '@/core/training/const/warmup-cooldown.const';
-import { ComponentIds } from '@/core/training/enum/component-ids.enum';
-import { lib } from '@/lib';
-import { useMain } from '@/store/main.provider';
+import type { Component } from '@/core/exercise/type/component.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 import MenuItemsList from '@/ui/menu-items-list';
@@ -34,8 +25,6 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
   } = props;
 
   const screenSize = useScreenSize();
-
-  const { components } = useMain();
 
   const { pagination, setPagination } = useTrainerDayView();
 
@@ -72,14 +61,6 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
       <Box sx={{ py: 1, width: '100%', mx: 'auto', position: 'relative' }}>
         <ExerciseChips
           noSelectionLabel="All"
-          components={core.component.tree(
-            components.filter(
-              (c) =>
-                ![WARMUP_ID, COOLDOWN_ID, ComponentIds.COMPETITION].includes(
-                  c.id
-                )
-            )
-          )}
           selected={selectedComponent}
           setSelected={(component) =>
             setSelectedComponent(component as Component)
@@ -90,6 +71,7 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
           gap={screenSize.isReallySmall ? 1.5 : 3.5}
         />
       </Box>
+
       <Box
         width="100%"
         display="flex"
@@ -98,7 +80,7 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
         gap={1}
         flexWrap="wrap"
       >
-        {filterComponents.map((c) => {
+        {/* {filterComponents.map((c) => {
           const numOfSelected = selectedComponentsIds.filter((id) =>
             c.children.some((child) => child.id === id)
           ).length;
@@ -147,7 +129,7 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
               {`${c.name}${numOfSelected ? ` (${numOfSelected})` : ''}`}
             </Button>
           );
-        })}
+        })} */}
       </Box>
 
       <Box
@@ -193,8 +175,8 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
               anchorEl={anchorElLeaf}
               open={openLeafMenu}
               items={leafComponents}
-              idPropertyName="id"
-              valuePropertyName="id"
+              idPropertyName="field"
+              valuePropertyName="field"
               namePropertyName="name"
               onClose={handleCloseLeaf}
               anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}

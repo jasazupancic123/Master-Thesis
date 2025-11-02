@@ -53,6 +53,8 @@ export async function handleUpdateTrainingTimes(
             t.id === item.trainingId
               ? {
                   ...t,
+                  from: result.from || t.from,
+                  to: result.to || t.to,
                   components: result.components
                     ? result.components.map((c) => {
                         const found = t.components.find(
@@ -62,22 +64,6 @@ export async function handleUpdateTrainingTimes(
                         return { ...found, from: c.from, to: c.to };
                       })
                     : t.components,
-                  warmup: result.warmup
-                    ? {
-                        ...t.warmup,
-                        from: result.warmup.from,
-                        to: result.warmup.to,
-                      }
-                    : t.warmup,
-                  cooldown: result.cooldown
-                    ? {
-                        ...t.cooldown,
-                        from: result.cooldown.from,
-                        to: result.cooldown.to,
-                      }
-                    : t.cooldown,
-                  from: result.from || t.from,
-                  to: result.to || t.to,
                 }
               : t
           )

@@ -6,6 +6,8 @@ import type {
 
 export type Superset = {
   exercises: TrainingExercise[];
+  warmup?: boolean;
+  cooldown?: boolean;
 };
 
 export type UpdateSuperset = {

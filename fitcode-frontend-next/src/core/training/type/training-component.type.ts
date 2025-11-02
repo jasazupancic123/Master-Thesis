@@ -6,10 +6,7 @@ import type {
   SupersetRecording,
   UpdateSuperset,
 } from './superset.type';
-import type { Component } from '@/core/component/type/component.type';
 import type { IdEntity } from '@/core/entity.type';
-import type { Method } from '@/core/method/type/method.type';
-import type { Target } from '@/core/target/type/target.type';
 import type { MainSet } from '@/core/training/enum/main-set.enum';
 import type { DateRange } from '@/lib/common/type/date-range.type';
 
@@ -17,16 +14,13 @@ export type TrainingComponent = IdEntity &
   Required<DateRange> & {
     supersets: Superset[];
     subgroups: Subgroup[];
-    methodId?: string;
     mainSet: MainSet;
-    target?: Target; // selected target
+    targetId?: string;
     periodizationType?: PeriodizationType;
     copiedFrom?: CopiedFrom; // used for copying components from other trainings
     location?: string;
 
     // mapped properties
-    method?: Method;
-    component?: Component;
     color?: string;
   };
 
@@ -43,12 +37,12 @@ export type TrainingComponentRecording = Omit<
 
 export type CreateTrainingComponent = Pick<
   TrainingComponent,
-  'id' | 'target' | 'methodId'
+  'id' | 'targetId'
 >;
 
 export type UpdateTrainingComponent = Pick<
   TrainingComponent,
-  'id' | 'target' | 'methodId' | 'mainSet' | 'periodizationType'
+  'id' | 'targetId' | 'mainSet' | 'periodizationType'
 > & {
   supersets: UpdateSuperset[];
   subgroups: UpdateSubgroup[];

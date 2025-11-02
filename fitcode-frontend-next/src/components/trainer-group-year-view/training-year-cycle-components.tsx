@@ -6,15 +6,12 @@ import { updateCycleState } from './actions/actions-cycle';
 import { useMultiCycleSliderCyclesProvider } from './context/cycles.provider';
 import type { UseSliderPropertiesReturnType } from './hooks/use-slider-properties';
 import TrainingYearCycleComponentSelectItem from './training-year-cycle-component-select-item';
-import { ComponentLevel } from '@/core/group/enum/component-level.enum';
+import { Components } from '@/core/exercise/constant/components.constant';
+import { Targets } from '@/core/exercise/constant/target.constant';
+import type { Target } from '@/core/exercise/type/target.type';
+import { CycleLevel } from '@/core/group/enum/cycle-level.enum';
 import type { Cycle } from '@/core/group/type/cycle.type';
-import type { Target } from '@/core/target/type/target.type';
-import {
-  COOLDOWN_ID,
-  WARMUP_ID,
-} from '@/core/training/const/warmup-cooldown.const';
 import { useGroup } from '@/store/group.provider';
-import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import SelectInput from '@/ui/select-input/select-input';
 
@@ -28,7 +25,6 @@ export default function CycleComponents(props: CycleComponentsProps) {
 
   const groupContext = useGroup();
 
-  const { components } = useMain();
   const { setDetectedChanges } = groupContext;
 
   const sortedCyclesContext = useMultiCycleSliderCyclesProvider();
@@ -37,15 +33,11 @@ export default function CycleComponents(props: CycleComponentsProps) {
 
   const { sliderProperties } = props.useSliderProperties;
 
-  const parentComponents = components
-    .filter((component) => component.parentId === null)
-    .filter((component) => ![WARMUP_ID, COOLDOWN_ID].includes(component.id));
-
   return (
     <Box width="100%" display="flex" flexDirection="column" position="relative">
-      {parentComponents.toReversed().map((component) => {
+      {Components.toReversed().map((component) => {
         return (
-          <Box key={component.id} width="100%">
+          <Box key={component.field} width="100%">
             <Box
               display="flex"
               width="100%"
@@ -110,8 +102,10 @@ export default function CycleComponents(props: CycleComponentsProps) {
 
                   const centerPosition = sliderProperty.centerPosition;
 
-                  const selectedTarget = cycle.selectedTargets.find(
-                    (st) => st.componentId === component.id
+                  const selectedTarget = cycle.targets.find(
+                    (st) =>
+                      Targets.find((t) => st.targetId === t.field)
+                        ?.componentId === component.field
                   );
 
                   const center = parseFloat(sliderProperty.centerPosition); // e.g. "37.5%" -> 37.5
@@ -181,8 +175,8 @@ export default function CycleComponents(props: CycleComponentsProps) {
                               icon={<></>}
                               selectedItemSize={12}
                               value={selectedTarget?.targetId || ''}
-                              items={component.targets || []}
-                              itemKey={'id'}
+                              items={/* component.targets ||  */ []}
+                              itemKey={'field'}
                               itemName={'name'}
                               selectPadding={'0'}
                               maxWidth={'100%'}
@@ -204,10 +198,12 @@ export default function CycleComponents(props: CycleComponentsProps) {
                                 if (value === 'None' || !value) {
                                   const newCycle: Cycle = {
                                     ...cycle,
-                                    selectedTargets:
-                                      cycle.selectedTargets.filter(
-                                        (st) => st.componentId !== component.id
-                                      ),
+                                    targets: cycle.targets.filter(
+                                      (st) =>
+                                        Targets.find(
+                                          (t) => t.field === st.targetId
+                                        )?.componentId === component.field
+                                    ),
                                   };
 
                                   updateCycleState(
@@ -221,35 +217,38 @@ export default function CycleComponents(props: CycleComponentsProps) {
                                   return;
                                 }
 
-                                const target = component.targets?.find(
+                                const target = /* component.targets?.find(
                                   (c) => c.id === value
-                                );
+                                ); */ null;
 
                                 if (!target) return;
 
-                                const newSelectedTargets =
-                                  cycle.selectedTargets.some(
-                                    (st) => st.componentId === component.id
-                                  )
-                                    ? cycle.selectedTargets.map((st) =>
-                                        st.componentId === component.id
-                                          ? {
-                                              componentId: component.id,
-                                              targetId: target.id,
-                                            }
-                                          : st
-                                      )
-                                    : [
-                                        ...cycle.selectedTargets,
-                                        {
-                                          componentId: component.id,
-                                          targetId: target.id,
-                                        },
-                                      ];
+                                const newSelectedTargets = cycle.targets.some(
+                                  (st) =>
+                                    Targets.find((t) => t.field === st.targetId)
+                                      ?.componentId === component.field
+                                )
+                                  ? cycle.targets.map((st) =>
+                                      Targets.find(
+                                        (t) => st.targetId === t.field
+                                      )?.componentId === component.field
+                                        ? {
+                                            componentId: component.field,
+                                            targetId: /* target.id */ '',
+                                          }
+                                        : st
+                                    )
+                                  : [
+                                      ...cycle.targets,
+                                      {
+                                        componentId: component.field,
+                                        targetId: /* target.id */ '',
+                                      },
+                                    ];
 
                                 const newCycle: Cycle = {
                                   ...cycle,
-                                  selectedTargets: newSelectedTargets,
+                                  targets: newSelectedTargets,
                                 };
 
                                 updateCycleState(
@@ -265,14 +264,14 @@ export default function CycleComponents(props: CycleComponentsProps) {
 
                           {selectedTarget && (
                             <TrainingYearCycleComponentSelectItem label="Objective">
-                              <SelectInput<ComponentLevel>
+                              <SelectInput<CycleLevel>
                                 label=""
                                 placeholder="Select objective"
                                 displayEmpty
-                                value={selectedTarget?.componentLevel || ''}
+                                value={selectedTarget?.level || ''}
                                 icon={<></>}
                                 selectedItemSize={12}
-                                items={Object.values(ComponentLevel)}
+                                items={Object.values(CycleLevel)}
                                 itemKey={undefined}
                                 itemName={undefined}
                                 selectPadding={'0'}
@@ -280,7 +279,7 @@ export default function CycleComponents(props: CycleComponentsProps) {
                                 minWidth={60}
                                 alignToStart
                                 selectSx={
-                                  selectedTarget?.componentLevel
+                                  selectedTarget?.level
                                     ? {
                                         fontSize: screenSize.isMobile ? 12 : 16,
                                         fontWeight: 'bold',
@@ -293,15 +292,13 @@ export default function CycleComponents(props: CycleComponentsProps) {
                                   if (value === 'None' || !value) {
                                     const newCycle: Cycle = {
                                       ...cycle,
-                                      selectedTargets:
-                                        cycle.selectedTargets.map((st) =>
-                                          st.componentId === component.id
-                                            ? {
-                                                ...st,
-                                                componentLevel: undefined,
-                                              }
-                                            : st
-                                        ),
+                                      targets: cycle.targets.map((st) =>
+                                        Targets.find(
+                                          (t) => t.field === st.targetId
+                                        )?.componentId === component.field
+                                          ? { ...st, level: undefined }
+                                          : st
+                                      ),
                                     };
 
                                     updateCycleState(
@@ -315,32 +312,34 @@ export default function CycleComponents(props: CycleComponentsProps) {
                                     return;
                                   }
 
-                                  const newSelectedTargets =
-                                    cycle.selectedTargets.some(
-                                      (st) => st.componentId === component.id
-                                    )
-                                      ? cycle.selectedTargets.map((st) =>
-                                          st.componentId === component.id
-                                            ? {
-                                                ...st,
-                                                componentLevel:
-                                                  value as ComponentLevel,
-                                              }
-                                            : st
-                                        )
-                                      : [
-                                          ...cycle.selectedTargets,
-                                          {
-                                            componentId: component.id,
-                                            targetId: selectedTarget.targetId,
-                                            componentLevel:
-                                              value as ComponentLevel,
-                                          },
-                                        ];
+                                  const newSelectedTargets = cycle.targets.some(
+                                    (st) =>
+                                      Targets.find(
+                                        (t) => t.field === st.targetId
+                                      )?.componentId === component.field
+                                  )
+                                    ? cycle.targets.map((st) =>
+                                        Targets.find(
+                                          (t) => st.targetId === t.field
+                                        )?.componentId === component.field
+                                          ? {
+                                              ...st,
+                                              level: value as CycleLevel,
+                                            }
+                                          : st
+                                      )
+                                    : [
+                                        ...cycle.targets,
+                                        {
+                                          componentId: component.field,
+                                          targetId: selectedTarget.targetId,
+                                          componentLevel: value as CycleLevel,
+                                        },
+                                      ];
 
                                   const newCycle: Cycle = {
                                     ...cycle,
-                                    selectedTargets: newSelectedTargets,
+                                    targets: newSelectedTargets,
                                   };
 
                                   updateCycleState(

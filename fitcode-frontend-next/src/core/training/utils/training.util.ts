@@ -18,11 +18,6 @@ import { TrainingExerciseSetUtil } from './set.util';
 import { TrainingSubgroupUtil } from './subgroup.util';
 import { TrainingSupersetUtil } from './superset.util';
 import { WorkloadUtil } from './workload.util';
-import { core } from '@/core/core.service';
-import {
-  COOLDOWN_ID,
-  WARMUP_ID,
-} from '@/core/training/const/warmup-cooldown.const';
 import type { DateRange } from '@/lib/common/type/date-range.type';
 
 export class TrainingUtil {
@@ -53,8 +48,6 @@ export class TrainingUtil {
       ownerId: userId,
       membersIds: data?.membersIds || [],
       copiedFromId: data?.copiedFromId,
-      warmup: data?.warmup || core.training.component.stub(WARMUP_ID),
-      cooldown: data?.cooldown || core.training.component.stub(COOLDOWN_ID),
       components: data?.components || [],
     };
   }
@@ -106,10 +99,9 @@ export class TrainingUtil {
   }
 
   getAthleteTraining(athleteId: string, training: Training): Training {
-    const components = this.getComponents(training);
     const athleteComponents: TrainingComponent[] = [];
 
-    for (const component of components) {
+    for (const component of training.components) {
       const athleteComponent = structuredClone(component);
       athleteComponent.supersets = this.getAthleteSupersets(
         athleteId,
@@ -121,17 +113,9 @@ export class TrainingUtil {
 
     return {
       ...training,
-      warmup: athleteComponents.find((c) => c.id === WARMUP_ID)!,
-      cooldown: athleteComponents.find((c) => c.id === COOLDOWN_ID)!,
       membersIds: training.membersIds.filter((uid) => uid === athleteId),
-      components: athleteComponents.filter(
-        (c) => c.id !== WARMUP_ID && c.id !== COOLDOWN_ID
-      ),
+      components: athleteComponents,
     };
-  }
-
-  getComponents(training: Training): TrainingComponent[] {
-    return [training.warmup!, ...training.components, training.cooldown!];
   }
 
   getAthleteSupersets(
@@ -179,8 +163,7 @@ export class TrainingUtil {
   ): TrainingExercise[] {
     const exercises: TrainingExercise[] = [];
 
-    const components = this.getComponents(training);
-    for (const component of components) {
+    for (const component of training.components) {
       let supersets: Superset[] = [];
       if (selected?.componentId && component.id !== selected.componentId)
         continue;

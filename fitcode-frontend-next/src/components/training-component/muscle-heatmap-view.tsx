@@ -1,5 +1,5 @@
 import { Box, MenuItem, Select, Slider, Typography } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { HEATMAP_LEVEL_LABELS } from './constant/heatmap-level-labels.constant';
 import useMuscleHeatmap from './hooks/use-muscle-heatmap';
@@ -12,7 +12,6 @@ import type { Attribute } from '@/core/attribute/type/attribute.type';
 import { HEATMAP_COLORS } from '@/core/const/color.const';
 import { core } from '@/core/core.service';
 import { MuscleLoadType } from '@/core/exercise/enum/muscle-load-type.enum';
-import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
