@@ -6,7 +6,6 @@ import { AttributeModule } from '../attribute/attribute.module';
 import { ExerciseModule } from '../exercise/exercise.module';
 import { GroupModule } from '../group/group.module';
 import { InstitutionModule } from '../institution/institution.module';
-import { MethodModule } from '../method/method.module';
 import { TrainingRepository } from './repository/training.repository';
 import { TrainingReportRepository } from './repository/training-report.repository';
 import { WorkloadRepository } from './repository/workload.repository';
@@ -19,7 +18,6 @@ import { TrainingController } from './training.controller';
 @Module({
   imports: [
     AttributeModule,
-    MethodModule,
     InstitutionModule,
     ExerciseModule,
     GroupModule,

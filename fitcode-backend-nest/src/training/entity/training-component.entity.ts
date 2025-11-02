@@ -42,13 +42,6 @@ export class TrainingComponent extends IdEntity {
   @Expose()
   targetId?: string; // target id which the component trains towards
 
-  @IsString()
-  @IsOptional()
-  @IsNotEmpty()
-  @ApiPropertyOptional()
-  @Expose()
-  methodId?: string; // method id which the component uses
-
   @ValidateNested({ each: true })
   @Type(() => Superset)
   @ApiProperty({ type: () => Superset, isArray: true })

@@ -5,7 +5,10 @@ import type { Superset } from '../entity/superset.entity';
 import type { TrainingComponent } from '../entity/training-component.entity';
 import type { TrainingExercise } from '../entity/training-exercise.entity';
 
-export type UpdateTrainingExercise = Pick<TrainingExercise, 'id' | 'sets'>;
+export type UpdateTrainingExercise = Pick<
+  TrainingExercise,
+  'id' | 'sets' | 'methodId'
+>;
 
 export type UpdateSuperset = Pick<Superset, 'warmup' | 'cooldown'> & {
   exercises: UpdateTrainingExercise[];
@@ -20,7 +23,7 @@ export type UpdateSubgroup = Pick<
 
 export type UpdateTrainingComponent = Pick<
   TrainingComponent,
-  'id' | 'targetId' | 'methodId' | 'mainSet' | 'from' | 'to'
+  'id' | 'targetId' | 'mainSet' | 'from' | 'to'
 > & {
   supersets: UpdateSuperset[];
   subgroups: UpdateSubgroup[];

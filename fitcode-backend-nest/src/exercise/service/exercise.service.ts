@@ -36,7 +36,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
   constructor(
     private readonly cacheManagerService: CacheManagerService,
     private readonly repository: ExerciseRepository,
-    private readonly commonService: CommonService,
+    private readonly common: CommonService,
     private readonly firebaseService: FirebaseService,
     private readonly institutionService: InstitutionService,
     private readonly exerciseAttributeService: ExerciseAttributeService,
@@ -85,7 +85,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     if (!this.firebaseService.isAdmin(user))
       query = query.where('disabled', '==', false);
 
-    if (filter && !this.commonService.object.isEmpty(filter))
+    if (filter && !this.common.object.isEmpty(filter))
       query = this.exerciseAttributeService.applyFilters(query, filter);
 
     const exerciseIds = await query
@@ -293,7 +293,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
       );
 
     const operations: BatchUpdateOperation<Exercise>[] = exercises.map((e) => {
-      const id = this.commonService.string.slug(e.name);
+      const id = this.common.string.slug(e.name);
       const ref = this.repository.collection().doc(id);
       const query = this.firebaseService.buildUpdateQuery({
         id: ref.id,
@@ -326,7 +326,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
 
     await this.repository.update(exercise.id, input);
     await this.cacheManagerService.del(CACHE_KEY_EXERCISES);
-    return { ...exercise, ...this.commonService.object.clean(input) };
+    return { ...exercise, ...this.common.object.clean(input) };
   }
 
   @LogMethod()

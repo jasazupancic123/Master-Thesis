@@ -11,6 +11,7 @@ import { addMinutes, getHours, setHours, setMinutes } from 'date-fns';
 import { GLOBAL_EXERCISE_OWNER } from '@src//exercise/constant/global-exercise-owner.constant';
 import { Institution } from '@src//institution/entity/institution.entity';
 import { DeepPick } from '@src/common/interface/deep-pick.interface';
+import { CommonService } from '@src/common/service/common.service';
 import { User } from '@src/common/type/firebase-auth.type';
 import { ComponentRef } from '@src/common/type/firestore.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
@@ -19,7 +20,6 @@ import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { ExerciseAttributeService } from '@src/exercise/service/exercise-attribute.service';
 import { ExerciseParamService } from '@src/exercise/service/exercise-param.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
-import { Method } from '@src/method/entity/method.entity';
 
 import { MAIN_GROUP_PARENT_ID } from '../constant/main-group-parent-id.constant';
 import {
@@ -49,6 +49,7 @@ import {
 @Injectable()
 export class TrainingPlanService {
   constructor(
+    private readonly common: CommonService,
     private readonly institutionService: InstitutionService,
     @Inject(forwardRef(() => ExerciseService))
     private readonly exerciseService: Wrapper<ExerciseService>,
@@ -217,9 +218,8 @@ export class TrainingPlanService {
   validateTrainingComponents(
     newTrainingComponents: UpdateTrainingComponentWithoutTime[], // with warmup and cooldown
     trainingMemberIds: string[],
-    data: { exercises: Exercise[]; methods: Method[] },
+    data: { exercises: Exercise[] },
   ): TrainingComponentWithoutTime[] {
-    const { methods } = data;
     const validTrainingComponents: TrainingComponentWithoutTime[] = [];
 
     const duplicates = new Set<string>();
@@ -235,15 +235,6 @@ export class TrainingPlanService {
         throw new NotFoundException(
           `Component cannot be selected for training`,
         );
-
-      // validate method
-      if (newComponent.methodId) {
-        const method = methods.find((m) => m.id === newComponent.methodId);
-        if (!method)
-          throw new NotFoundException(
-            'Method not found for training component',
-          );
-      }
 
       // check duplicates
       if (duplicates.has(newComponent.id))
@@ -277,7 +268,7 @@ export class TrainingPlanService {
   validateSupersets(
     trainingComponent: UpdateTrainingComponentWithoutTime,
     item: { supersets: UpdateSuperset[]; mainSet: MainSet },
-    data: { exercises: Exercise[]; methods: Method[] },
+    data: { exercises: Exercise[] },
   ): Superset[] {
     const newSupersets = item.supersets || [];
     const mainSet = item.mainSet || trainingComponent.mainSet;
@@ -327,25 +318,18 @@ export class TrainingPlanService {
         if (!exercise)
           throw new NotFoundException('Training exercise not found');
 
-        for (const set of trainingExercise.sets) {
-          const errors = [
-            ...this.exerciseParamService.validateSetValues(exercise, set),
-            ...this.exerciseParamService.validateMethods(
-              set,
-              data.methods,
-              trainingComponent.methodId,
-            ),
-          ];
+        const errors = this.exerciseParamService.validateExerciseValues(
+          trainingExercise as TrainingExercise,
+          exercise,
+        );
 
-          if (errors.length > 0)
-            throw new BadRequestException(
-              errors.map((e) => e.message).join(', '),
-            );
-        }
+        if (errors.length > 0)
+          throw new BadRequestException(this.common.generic.error(errors));
 
         validTrainingExercises.push({
           id: trainingExercise.id,
           sets: trainingExercise.sets,
+          methodId: trainingExercise.methodId,
           params: root.params || [],
         });
       }
@@ -400,7 +384,7 @@ export class TrainingPlanService {
   validateSubgroups(
     trainingComponent: UpdateTrainingComponentWithoutTime,
     trainingMemberIds: string[],
-    data: { exercises: Exercise[]; methods: Method[] },
+    data: { exercises: Exercise[] },
   ): Subgroup[] {
     // member can be in exactly:
     //   - main group -> 0 subgroups
@@ -533,7 +517,6 @@ export class TrainingPlanService {
         from: lastTargetTrainingComponent.from,
         to: addMinutes(lastTargetTrainingComponent.from, 30),
         targetId: sourceTrainingComponent.targetId,
-        methodId: sourceTrainingComponent.methodId,
         mainSet: sourceTrainingComponent.mainSet,
         supersets: [],
         subgroups: [],
@@ -546,7 +529,6 @@ export class TrainingPlanService {
         : sourceTraining.id,
     };
 
-    targetTrainingComponent.methodId = sourceTrainingComponent.methodId;
     targetTrainingComponent.targetId = sourceTrainingComponent.targetId;
     targetTrainingComponent.mainSet = sourceTrainingComponent.mainSet;
 
