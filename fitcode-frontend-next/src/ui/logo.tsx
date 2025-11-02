@@ -10,11 +10,16 @@ interface Props {
   width?: number;
   height?: number;
   marginLeft?: number;
-  sx?: React.CSSProperties; // Ensure correct type for styles
+  style?: React.CSSProperties; // Ensure correct type for styles
   version?: 'dark';
 }
 
-export default function Logo({ width = 100, marginLeft, sx, version }: Props) {
+export default function Logo({
+  width = 100,
+  marginLeft,
+  style,
+  version,
+}: Props) {
   const src = version === 'dark' ? LOGO_BLACK_IMG_URL : LOGO_IMG_URL;
 
   return (
@@ -23,7 +28,7 @@ export default function Logo({ width = 100, marginLeft, sx, version }: Props) {
       alt="Logo"
       width={width}
       height={0}
-      style={{ marginLeft, ...sx }} // Correctly spread additional styles
+      style={{ marginLeft, ...style }} // Correctly spread additional styles
       layout="intrinsic"
       unoptimized={lib.common.env.unoptimizeImages()}
     />

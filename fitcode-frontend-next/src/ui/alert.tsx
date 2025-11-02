@@ -8,10 +8,11 @@ import { LINK_SIGN_IN } from '@/lib/common/const/nav.const';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 interface Props {
-  type: 'loading' | 'unauthorized';
+  type: 'loading' | 'unauthorized' | 'error';
+  errorMessage?: string;
 }
 
-export default function Alert({ type }: Props) {
+export default function Alert({ type, errorMessage }: Props) {
   const screenSize = useScreenSize();
 
   return (
@@ -32,11 +33,13 @@ export default function Alert({ type }: Props) {
           opacity: 0.75,
         }}
       >
-        <Logo width={450} />
+        <Logo width={450} style={{ paddingLeft: 20, paddingRight: 20 }} />
       </Box>
 
       <Typography fontSize={18} fontWeight={500} textAlign="center">
-        {type[0].toUpperCase() + type.slice(1)}
+        {type === 'error' && errorMessage
+          ? 'Error: ' + errorMessage[0].toUpperCase() + errorMessage.slice(1)
+          : type[0].toUpperCase() + type.slice(1)}
       </Typography>
       {type === 'unauthorized' && (
         <Button

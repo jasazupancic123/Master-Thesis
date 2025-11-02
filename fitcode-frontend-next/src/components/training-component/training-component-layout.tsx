@@ -28,8 +28,6 @@ export default function TrainingComponentLayout({
     setOpenAddExerciseModal,
     heatmapView,
     setHeatmapView,
-    expandedExercisesView,
-    setExpandedExercisesView,
   } = useTrainingComponentLayoutUtils();
 
   const getMethodsLimitsString = (method: Method): string => {
@@ -93,8 +91,6 @@ export default function TrainingComponentLayout({
               <TrainingComponentCard
                 trainingComponent={trainingComponent}
                 setOpenAddExerciseModal={setOpenAddExerciseModal}
-                expandedExercisesView={expandedExercisesView}
-                setExpandedExercisesView={setExpandedExercisesView}
               />
 
               <Box
@@ -158,8 +154,6 @@ export default function TrainingComponentLayout({
                 <Supersets
                   openAddExerciseModal={openAddExerciseModal}
                   setOpenAddExerciseModal={setOpenAddExerciseModal}
-                  expandedExercisesView={expandedExercisesView}
-                  setExpandedExercisesView={setExpandedExercisesView}
                 />
               </>
             )}

@@ -24,13 +24,10 @@ import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 interface TrainingComponentProps {
   trainingComponent: TrainingComponent;
   setOpenAddExerciseModal: SetState<boolean>;
-  expandedExercisesView: boolean;
-  setExpandedExercisesView: SetState<boolean>;
 }
 
 export default function TrainingComponentCard(props: TrainingComponentProps) {
-  const { trainingComponent, expandedExercisesView, setExpandedExercisesView } =
-    props;
+  const { trainingComponent } = props;
 
   const theme = useTheme();
   const groupContext = useGroup();
@@ -42,6 +39,8 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
     selectedExerciseIds,
     selectedAthlete,
     supersets,
+    expandedExercisesView,
+    setExpandedExercisesView,
   } = trainerDayViewContext;
 
   return (
