@@ -5,7 +5,8 @@ import { useTheme } from '@mui/material';
 import { useState } from 'react';
 import { Line, LineChart, ResponsiveContainer, Tooltip } from 'recharts';
 
-import type { Component } from '@/core/component/type/component.type';
+import { Components } from '@/core/exercise/constant/components.constant';
+import type { Component } from '@/core/exercise/type/component.type';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
@@ -28,14 +29,11 @@ export default function ChartPage() {
   const theme = useTheme();
   const screenSize = useScreenSize();
 
-  const { components, exercises } = useMain();
+  const { exercises } = useMain();
 
   const [range, setRange] = useState<number[]>([1, 10]); // Example range
 
-  const [parentComponents, setParentComponents] = useState(
-    components?.filter((component) => component.parentId === null)
-  );
-
+  const [parentComponents, setParentComponents] = useState(Components);
   const [parentComponent, setParentComponent] = useState<Component | null>(
     null
   );
@@ -70,21 +68,22 @@ export default function ChartPage() {
           Intensity and volume chart
         </Typography>
       </Box>
+
       {isOnParent ? (
         <SelectInput<Component>
           label={parentComponent ? parentComponent.name : 'Select component'}
           icon={null}
-          value={parentComponent ? parentComponent.id : ''}
+          value={parentComponent ? parentComponent.field : ''}
           items={parentComponents}
           placeholder="Select component"
           displayEmpty={!parentComponent ? true : false}
           disableInputLabel={!parentComponent ? true : false}
           useRenderValue={true}
-          itemKey="id"
+          itemKey="field"
           sx={{ mt: 2 }}
           itemName="name"
           setValue={(value) => {
-            const component = components.find((c) => c.id === value);
+            /* const component = Components.find((c) => c.field === value);
             if (!component) return;
             setParentComponent(component);
             //check if this component has got any children
@@ -105,7 +104,7 @@ export default function ChartPage() {
                 )
               );
               setIsOnParent(false);
-            }
+            } */
           }}
         />
       ) : (
@@ -129,9 +128,9 @@ export default function ChartPage() {
                 setExercise(null);
                 setFilteredExercises([]);
                 setParentComponent(null);
-                setParentComponents(
+                /* setParentComponents(
                   components.filter((component) => component.parentId === null)
-                );
+                ); */
                 setIsOnParent(true);
                 return;
               }

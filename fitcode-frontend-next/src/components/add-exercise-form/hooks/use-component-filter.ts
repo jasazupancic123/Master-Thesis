@@ -1,22 +1,17 @@
 import { useEffect, useState } from 'react';
 
-import type {
-  Component,
-  TreeComponent,
-} from '@/core/component/type/component.type';
-import { lib } from '@/lib';
-import { useMain } from '@/store/main.provider';
+import { Components } from '@/core/exercise/constant/components.constant';
+import type { Component } from '@/core/exercise/type/component.type';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 
 export default function useComponentFilter() {
-  const { components } = useMain();
   const { component } = useTrainerDayView();
 
   const [selectedComponent, setSelectedComponent] = useState<Component | null>(
-    component?.component ? component.component : null
+    Components.find((c) => c.field === component?.id) || null
   );
 
-  const [filterComponents, setFilterComponents] = useState<TreeComponent[]>([]);
+  const [filterComponents, setFilterComponents] = useState<Component[]>([]);
   const [leafComponents, setLeafComponents] = useState<Component[]>([]);
 
   const [selectedComponentsIds, setSelectedComponentsIds] = useState<string[]>(
@@ -37,15 +32,11 @@ export default function useComponentFilter() {
   ) => {
     setAnchorElLeaf(event.currentTarget);
 
-    const children = lib.common.tree.fromArray(components, {
-      rootId: componentId,
-      idPropertyName: 'id',
-      parentIdPropertyName: 'parentId',
-      childrenPropertyName: 'children',
-    });
+    const children =
+      Components.find((c) => c.field === componentId)?.options || [];
 
     const selectedChildren = children.filter((c) =>
-      selectedComponentsIds.includes(c.id)
+      selectedComponentsIds.includes(c.field)
     );
 
     if (children.length === 0) {
@@ -58,7 +49,7 @@ export default function useComponentFilter() {
       setSelectedComponentsIds((prev) => [
         ...prev,
         ...children
-          .map((c) => c.id)
+          .map((c) => c.field)
           .filter((childId) => !prev.includes(childId)),
       ]);
     }
@@ -73,30 +64,18 @@ export default function useComponentFilter() {
 
   useEffect(() => {
     if (!selectedComponent) return;
-
-    const componentTree = lib.common.tree.fromArray(components, {
-      rootId: selectedComponent.id,
-      idPropertyName: 'id',
-      parentIdPropertyName: 'parentId',
-      childrenPropertyName: 'children',
-    }) as unknown as TreeComponent[];
-
-    setFilterComponents(componentTree);
     setSelectedRootComponentId(null);
     setSelectedComponentsIds([]);
+    setFilterComponents(
+      Components.find((c) => c.field === selectedComponent.field)?.options || []
+    );
   }, [component, selectedComponent]);
 
   useEffect(() => {
     if (!selectedRootComponentId) return;
-
-    const componentTree = lib.common.tree.fromArray(components, {
-      rootId: selectedRootComponentId,
-      idPropertyName: 'id',
-      parentIdPropertyName: 'parentId',
-      childrenPropertyName: 'children',
-    });
-
-    setLeafComponents(componentTree);
+    setLeafComponents(
+      Components.find((c) => c.field === selectedRootComponentId)?.options || []
+    );
   }, [selectedRootComponentId]);
 
   return {

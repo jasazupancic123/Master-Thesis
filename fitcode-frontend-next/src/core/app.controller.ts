@@ -1,5 +1,4 @@
 import { BaseController } from './base.controller';
-import { ExerciseService } from './exercise/exercise.service';
 import type { FetchOptions } from '@/lib/common/type/api.type';
 import type { MainProviderProps } from '@/store/main.provider';
 
@@ -16,12 +15,6 @@ export class AppController extends BaseController {
   }
 
   async init(options?: FetchOptions) {
-    const data = await this.api.get<MainProviderProps>('/init', options);
-
-    data.exercises = data.exercises.map((e) =>
-      ExerciseService.mapComponents(e, data.components)
-    );
-
-    return data;
+    return await this.api.get<MainProviderProps>('/init', options);
   }
 }

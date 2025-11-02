@@ -7,6 +7,7 @@ export interface BaseAttribute<T> {
   description?: string;
   unit?: string; // kg, lbs, ...
   required?: boolean;
+  color?: string; // hex color code
   defaultValue?: string | number | boolean;
 }
 

@@ -5,24 +5,16 @@ import { handleSetMainSet } from './actions/actions-main-set';
 import { handleSetPeriodizationType } from './actions/actions-periodization-type';
 import PeriodizeModal from './periodize-modal';
 import { AFTER_SETS } from '@/components/trainer-group-day-view/constant/after-sets.constant';
-import type { AfterSet } from '@/core/component/type/after-set.type';
-import type { Method } from '@/core/method/type/method.type';
-import {
-  COOLDOWN_ID,
-  WARMUP_ID,
-} from '@/core/training/const/warmup-cooldown.const';
+import type { AfterSet } from '@/core/exercise/type/after-set.type';
 import { MainSet } from '@/core/training/enum/main-set.enum';
 import { PeriodizationType } from '@/core/training/enum/periodization-type.enum';
 import { useGroup } from '@/store/group.provider';
-import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 import SelectInput from '@/ui/select-input/select-input';
 
 export default function TrainingComponentHeaderMenu() {
   const screenSize = useScreenSize();
-
-  const { methods: allMethods } = useMain();
 
   const groupContext = useGroup();
   const trainerDayViewContext = useTrainerDayView();
@@ -142,13 +134,8 @@ export default function TrainingComponentHeaderMenu() {
           displayEmpty
           iconSize={17}
           itemName={undefined}
-          disabled={
-            selectedAthlete !== undefined ||
-            [WARMUP_ID, COOLDOWN_ID].includes(component.id)
-          }
-          sx={{
-            maxWidth: 75,
-          }}
+          disabled={selectedAthlete !== undefined}
+          sx={{ maxWidth: 75 }}
           sameValueAction
           inputLabelSize={'12px'}
           selectedItemSize={12}
@@ -170,33 +157,6 @@ export default function TrainingComponentHeaderMenu() {
                 useGroup: groupContext,
               }
             );
-          }}
-        />
-      </Tooltip>
-
-      <Tooltip title={component.method ? component.method.name : 'No method'}>
-        <SelectInput<Method>
-          label={'Method'}
-          value={component.method?.id || ''}
-          icon={null}
-          displayEmpty
-          iconSize={17}
-          items={allMethods.filter((m) => m.componentId === component.id)}
-          itemKey="id"
-          itemName="name"
-          disabled={
-            selectedAthlete !== undefined ||
-            [WARMUP_ID, COOLDOWN_ID].includes(component.id)
-          }
-          sx={{
-            maxWidth: 75,
-          }}
-          inputLabelSize={'12px'}
-          selectedItemSize={12}
-          selectSize="small"
-          setValue={(methodId) => {
-            if (typeof methodId !== 'string') return;
-            alert('Method change is currently disabled.');
           }}
         />
       </Tooltip>

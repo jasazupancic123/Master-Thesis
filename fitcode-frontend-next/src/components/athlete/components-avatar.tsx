@@ -1,6 +1,7 @@
 import { Avatar, Box } from '@mui/material';
 import React from 'react';
 
+import { Components } from '@/core/exercise/constant/components.constant';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import { lib } from '@/lib';
 
@@ -32,8 +33,9 @@ export default function ComponentsAvatarCircle({
     n === 0
       ? []
       : components.map((c, i) => {
+          const component = Components.find((comp) => comp.field === c.id);
           const Icon = lib.common.component.getIcon(
-            c.component?.name || c.id || ''
+            component?.name || c.id || ''
           );
 
           if (!Icon) return null;
@@ -73,8 +75,12 @@ export default function ComponentsAvatarCircle({
   const single =
     n === 1
       ? (() => {
+          const component = Components.find(
+            (comp) => comp.field === components[0].id
+          );
+
           const Icon = lib.common.component.getIcon(
-            components[0]?.component?.name || components[0].id || ''
+            component?.name || components[0].id || ''
           );
 
           if (!Icon) return null;

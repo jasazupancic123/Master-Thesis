@@ -29,17 +29,12 @@ import ExerciseChips from '@/components/exercise-chips/exercise-chips';
 import ExerciseModal from '@/components/exercise-modal/exercise-modal';
 import ExerciseFilter from '@/components/exercises-list/exercise-filter';
 import ExercisesList from '@/components/exercises-list/exercises-list';
-import type { Component } from '@/core/component/type/component.type';
-import { core } from '@/core/core.service';
+import type { Component } from '@/core/exercise/type/component.type';
 import type {
   CreateExerciseMuscleValues,
   Exercise,
 } from '@/core/exercise/type/exercise.type';
 import { UserRole } from '@/core/profile/enum/user-role.enum';
-import {
-  COOLDOWN_ID,
-  WARMUP_ID,
-} from '@/core/training/const/warmup-cooldown.const';
 import { lib } from '@/lib';
 import type { Pagination as PaginationType } from '@/lib/common/type/paginate.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
@@ -60,7 +55,7 @@ export type AttributeFilters = Record<string, AttributeValue | undefined>;
 
 export const DEFAULT_EXERCISE: Partial<Exercise> = {
   name: '',
-  componentIds: [],
+  components: [],
   isUnilateral: false,
   disabled: false,
 };
@@ -69,11 +64,7 @@ export const EXERCISES_PAGE_SIZE = 20;
 
 export default function ExercisesPage() {
   const { role } = useAuthenticatedAuth();
-  const {
-    components,
-    exercises: allExercises,
-    setExercises: setAllExercises,
-  } = useMain();
+  const { exercises: allExercises, setExercises: setAllExercises } = useMain();
 
   const router = useRouter();
   const theme = useTheme();
@@ -136,13 +127,14 @@ export default function ExercisesPage() {
    */
   useEffect(() => {
     const filter: Partial<Exercise> = {
-      ...(selectedComponent?.id && { componentIds: [selectedComponent.id] }),
+      ...(selectedComponent?.field && {
+        components: [selectedComponent.field],
+      }),
       ...(search && { name: search }),
       ...filters,
     };
 
     handlePaginateExercises(filter, {
-      components,
       exercises,
       pagination,
       search,
@@ -150,7 +142,6 @@ export default function ExercisesPage() {
       setFilteredExercises,
     });
   }, [
-    components,
     exercises.length,
     selectedComponent,
     filters,
@@ -175,9 +166,6 @@ export default function ExercisesPage() {
       >
         <ExerciseChips
           noSelectionLabel="All"
-          components={core.component.tree(
-            components.filter((c) => c.id !== WARMUP_ID && c.id !== COOLDOWN_ID)
-          )}
           selected={selectedComponent}
           setSelected={(component) =>
             setSelectedComponent(component as Component)
@@ -305,14 +293,12 @@ export default function ExercisesPage() {
         <ExerciseModal
           data={{ ...exercise, imageUrl: undefined, videoUrl: undefined }}
           setData={setExercise}
-          components={components}
           isOpen={modal.add}
           setIsOpen={(isOpen) => setModal({ ...modal, add: isOpen })}
           title={'Add Exercise'}
           onConfirm={async () => {
             handleAddExercise(exercise, {
               router,
-              components,
               component: selectedComponent!,
               filteredExercises,
               setFilteredExercises,
@@ -329,7 +315,6 @@ export default function ExercisesPage() {
         <ExerciseModal
           data={exercise}
           setData={setExercise}
-          components={components}
           isOpen={modal.edit}
           setIsOpen={(isOpen) => setModal({ ...modal, edit: isOpen })}
           title={
@@ -341,7 +326,6 @@ export default function ExercisesPage() {
             onConfirm: async () => {
               handleUpdateExercise(exercise!.id!, exercise, {
                 router,
-                components,
                 setFilteredExercises,
                 setExercises: setAllExercises,
                 setExercise,

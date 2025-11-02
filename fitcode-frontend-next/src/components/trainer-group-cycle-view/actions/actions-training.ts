@@ -1,10 +1,8 @@
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
 
-import type { Component } from '@/core/component/type/component.type';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
-import type { Method } from '@/core/method/type/method.type';
-import type { Target } from '@/core/target/type/target.type';
+import type { Target } from '@/core/exercise/type/target.type';
 import type { TrainingController } from '@/core/training/training.controller';
 import { TrainingService } from '@/core/training/training.service';
 import type { Training } from '@/core/training/type/training.type';
@@ -18,27 +16,20 @@ export async function handleAddTrainingComponents(
   state: {
     router: AppRouterInstance;
     setTrainings: SetState<Training[]>;
-    components: Component[];
     exercises: Exercise[];
-    methods: Method[];
     selectedTargets: { componentId: string; target: Target }[];
   }
 ) {
   const { trainingId, ...restInput } = input;
-  const {
-    router,
-    setTrainings,
-    components,
-    exercises,
-    methods,
-    selectedTargets,
-  } = state;
+  const { router, setTrainings, exercises, selectedTargets } = state;
 
   restInput.components.forEach((component) => {
     const selectedTarget = selectedTargets.find(
       (m) => m.componentId === component.id
     );
-    if (selectedTarget) component.target = selectedTarget.target;
+
+    if (selectedTarget)
+      component.targetId = selectedTarget.target?.field as string;
   });
 
   handleApiRequest(
@@ -58,11 +49,7 @@ export async function handleAddTrainingComponents(
       }
 
       // add components to training
-      TrainingService.mapData(training, {
-        components,
-        exercises,
-        methods,
-      });
+      TrainingService.mapData(training, { exercises });
 
       setTrainings((prev) =>
         prev.map((t) => (t.id === training.id ? training : t))
@@ -88,23 +75,17 @@ export async function handleDeleteTrainingComponent(
   state: {
     router: AppRouterInstance;
     setTrainings: SetState<Training[]>;
-    components: Component[];
     exercises: Exercise[];
-    methods: Method[];
   }
 ) {
   const { trainingId, componentId } = input;
-  const { router, setTrainings, components, exercises, methods } = state;
+  const { router, setTrainings, exercises } = state;
 
   handleApiRequest(
     router,
     () => controller.deleteComponent(trainingId, componentId),
     (training) => {
-      TrainingService.mapData(training, {
-        components,
-        exercises,
-        methods,
-      });
+      TrainingService.mapData(training, { exercises });
 
       if (training.components.length === 0) {
         // traning was deleted

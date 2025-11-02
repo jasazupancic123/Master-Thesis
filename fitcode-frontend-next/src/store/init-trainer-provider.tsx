@@ -20,7 +20,6 @@ export default async function InitTrainerProvider({
     const controller = Controller.getInstance();
     const profile = await controller.auth.findMe({ session });
     if (!profile) throw new Error('No profile found');
-    console.log('[TrainerProvider] profile', profile);
 
     if (lib.firebase.auth.isAthlete(profile.customClaims.role[0]))
       throw new Error('Not a trainer or manager');

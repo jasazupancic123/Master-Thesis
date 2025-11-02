@@ -1,4 +1,4 @@
-import { Checkbox, Divider, FormControlLabel, InputLabel } from '@mui/material';
+import { Checkbox, Divider, FormControlLabel } from '@mui/material';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid2';
 import Stack from '@mui/material/Stack';
@@ -7,14 +7,10 @@ import Typography from '@mui/material/Typography';
 import React, { useEffect, useState } from 'react';
 
 import FlatSelectAttribute from './flat-select-attribute';
-import SelectComponent from './select-component';
 import { AttributeType } from '@/core/attribute/enum/attribute-value.enum';
 import type { Attribute } from '@/core/attribute/type/attribute.type';
-import type {
-  Component,
-  TreeComponent,
-} from '@/core/component/type/component.type';
 import { core } from '@/core/core.service';
+import { Components } from '@/core/exercise/constant/components.constant';
 import type {
   Exercise,
   ExerciseAttributes,
@@ -31,7 +27,6 @@ const firebaseStorage = lib.firebase.storage;
 interface Props {
   data: Partial<Exercise>;
   setData: SetState<Partial<Exercise>>;
-  components: Component[];
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   title: string;
@@ -43,7 +38,6 @@ interface Props {
 export default function ExerciseModal({
   data,
   setData,
-  components,
   isOpen,
   setIsOpen,
   title,
@@ -54,13 +48,7 @@ export default function ExerciseModal({
   const { role } = useAuthenticatedAuth();
   const screenSize = useScreenSize();
 
-  const [selectedComponents, setSelectedComponents] = useState<{
-    [key: number]: string;
-  }>({});
-
   const [filteredAttributes, setFilteredAttributes] = useState<Attribute[]>([]);
-  const [hasSelectedLeafComponent, setHasSelectedLeafComponent] =
-    useState(false);
 
   function handleSelectChange(
     field: keyof Exercise,
@@ -79,59 +67,17 @@ export default function ExerciseModal({
   }
 
   useEffect(() => {
-    // set the selected components to the data's components
-    if (data.componentIds?.length === 0) {
-      setSelectedComponents({});
-      return;
-    }
-
-    // for now, only one selected component is supported
-    const component = components.find((c) => c.id === data.componentIds![0]);
-    if (!component) return;
-
-    const attributes: string[] = []; // all attributes from the component and its parents
-    const selected: { [key: number]: string } = {};
-    let level = component.parents.length;
-
-    let parentId = component.parentId;
-    while (parentId) {
-      const parent = components.find((c) => c.id === parentId);
-      if (!parent) break;
-
-      selected[--level] = parent.id;
-      parentId = parent.parentId;
-
-      if (parent.attributes)
-        for (const attribute of parent.attributes)
-          if (!attributes.find((a) => a === attribute))
-            attributes.push(attribute);
-    }
-
-    selected[component.parents.length] = component.id;
-    setSelectedComponents(selected);
-    setFilteredAttributes(core.exercise.attribute.getAll(attributes));
+    setFilteredAttributes(core.exercise.attribute.getAll([]));
   }, [data?.id]);
 
-  useEffect(() => {
-    const componentsIds = Object.values(selectedComponents);
-    if (!componentsIds.length) return;
-
-    setData((prev) => ({
-      ...prev,
-      componentIds: [
-        componentsIds[componentsIds.length - 1] || componentsIds[0],
-      ], // only the leaf component (last one) is selected
-    }));
-  }, [selectedComponents]);
-
-  useEffect(() => {
-    const componentId = data.componentIds?.[0];
+  /* useEffect(() => {
+    const componentId = data.components?.[0];
     if (!componentId) return;
 
-    const foundComponent = components.find((c) => c.id === componentId);
+    const foundComponent = components.find((c) => c.field === componentId);
     if (!foundComponent) return;
 
-    const hasSelectedLeafComponent = foundComponent.children.length === 0;
+    const hasSelectedLeafComponent = foundComponent.options?.length === 0;
     if (!hasSelectedLeafComponent) setFilteredAttributes([]);
 
     const parents = foundComponent.parents.map((parent) =>
@@ -146,12 +92,7 @@ export default function ExerciseModal({
             attributeIds.push(attribute);
 
     setFilteredAttributes(core.exercise.attribute.getAll(attributeIds));
-    setHasSelectedLeafComponent(hasSelectedLeafComponent);
-  }, [data.componentIds]);
-
-  useEffect(() => {
-    if (!isOpen) setSelectedComponents({});
-  }, [isOpen]);
+  }, [data.componentIds]); */
 
   return (
     <MyModal
@@ -184,16 +125,16 @@ export default function ExerciseModal({
 
           {/* Multi-level dropdown for components */}
           <Grid size={{ xs: 12 }}>
-            <InputLabel id="component">Component</InputLabel>
-            <SelectComponent
-              selectedComponents={selectedComponents}
-              setSelectedComponents={setSelectedComponents}
-              components={
-                lib.common.tree.fromArray(components, {
-                  idPropertyName: 'id',
-                  parentIdPropertyName: 'parentId',
-                  childrenPropertyName: 'children',
-                }) as unknown as TreeComponent[]
+            <FlatSelectAttribute
+              attribute={{
+                field: 'components',
+                name: 'Components',
+                options: Components,
+              }}
+              initialValue={data?.components}
+              label
+              onChange={(field, values) =>
+                handleSelectChange(field as keyof Exercise, values)
               }
             />
           </Grid>
@@ -269,11 +210,7 @@ export default function ExerciseModal({
             <Divider>Other</Divider>
           </Grid>
 
-          {!hasSelectedLeafComponent ? (
-            <Box width="100%" display="flex" justifyContent="center">
-              Select a leaf component to add attributes
-            </Box>
-          ) : filteredAttributes.length === 0 ? (
+          {filteredAttributes.length === 0 ? (
             <Box width="100%" display="flex" justifyContent="center">
               No attributes to set
             </Box>

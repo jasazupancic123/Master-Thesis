@@ -6,10 +6,6 @@ import { onMainSetChange } from '@/components/training-component/actions/actions
 import { removeSelectedExercisesFromSupersets } from '@/components/training-component/actions/actions-selected-exercises';
 import { ADD_SUPERSET_DROPPABLE_ID } from '@/core/training/const/add-superset-droppable-id.const';
 import { MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT } from '@/core/training/const/training-limits.const';
-import {
-  COOLDOWN_ID,
-  WARMUP_ID,
-} from '@/core/training/const/warmup-cooldown.const';
 import { MainSet } from '@/core/training/enum/main-set.enum';
 import type { Subgroup } from '@/core/training/type/subgroup.type';
 import type { Superset } from '@/core/training/type/superset.type';
@@ -162,20 +158,12 @@ export function updateGlobalStates(
   updatedComponent: TrainingComponent,
   setTraining: SetState<Training | undefined>
 ) {
-  if (component.id === WARMUP_ID || component.id === COOLDOWN_ID) {
-    const newTraining = { ...training };
-    if (component.id === WARMUP_ID) newTraining.warmup = updatedComponent;
-    else newTraining.cooldown = updatedComponent;
+  const updatedComponents = [...training.components].map((c) =>
+    c.id === component.id ? updatedComponent : c
+  );
 
-    setTraining(newTraining);
-  } else {
-    const updatedComponents = [...training.components].map((c) =>
-      c.id === component.id ? updatedComponent : c
-    );
-
-    const newTraining = { ...training, components: updatedComponents };
-    setTraining(newTraining);
-  }
+  const newTraining = { ...training, components: updatedComponents };
+  setTraining(newTraining);
 }
 
 export const onAddExerciseDrop = (

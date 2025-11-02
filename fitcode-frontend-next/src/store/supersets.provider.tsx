@@ -4,10 +4,6 @@ import { unstable_batchedUpdates } from 'react-dom';
 import { useMain } from './main.provider';
 import { useTrainerDayView } from './trainer-day-view.provider';
 import { core } from '@/core/core.service';
-import {
-  COOLDOWN_ID,
-  WARMUP_ID,
-} from '@/core/training/const/warmup-cooldown.const';
 import type {
   ExerciseParamField,
   ExerciseParamFieldExtended,
@@ -96,12 +92,9 @@ export function SupersetsProvider(props: Props) {
   ) {
     if (!component || !newTraining) return;
 
-    const newComponent =
-      component.id === WARMUP_ID
-        ? newTraining.warmup!
-        : component.id === COOLDOWN_ID
-          ? newTraining.cooldown!
-          : newTraining.components.find((c) => c.id === component.id)!;
+    const newComponent = newTraining.components.find(
+      (c) => c.id === component.id
+    )!;
 
     if (!newComponent) return;
 

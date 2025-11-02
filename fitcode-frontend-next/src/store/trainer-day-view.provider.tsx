@@ -56,7 +56,7 @@ export function TrainerDayViewProvider(props: Props) {
 
   const router = useRouter();
   const screenSize = useScreenSize();
-  const { components, exercises, methods } = useMain();
+  const { exercises } = useMain();
   const { setCycle } = useGroup();
   const controller = Controller.getInstance();
 
@@ -151,13 +151,7 @@ export function TrainerDayViewProvider(props: Props) {
     ExerciseService.paginate(
       // { componentIds: [component.id], name: search },
       { name: search },
-      {
-        pagination,
-        components,
-        exercises,
-        setFilteredExercises,
-        setPagination,
-      }
+      { pagination, exercises, setFilteredExercises, setPagination }
     );
   }, [component, pagination.page]);
 
@@ -300,7 +294,7 @@ export function TrainerDayViewProvider(props: Props) {
       return;
     }
 
-    TrainingService.mapData(training, { components, exercises, methods });
+    TrainingService.mapData(training, { exercises });
 
     const foundComponent = component?.id
       ? training.components.find((c) => c.id === component.id)

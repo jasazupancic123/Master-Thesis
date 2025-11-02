@@ -44,13 +44,10 @@ export class TreeUtil {
 
       while (nodesToEval.length) {
         const currentNode = nodesToEval.shift();
-
         if (!currentNode) continue;
 
         const childNodes = currentNode[childrenPropertyName] as T[];
-
         if (childNodes) nodesToEval.push(...childNodes);
-
         if (!roots.includes(currentNode)) roots.push(currentNode);
       }
     }
@@ -60,18 +57,15 @@ export class TreeUtil {
 
   toArray<T extends TreeItem>(roots: T[], childrenPropertyName: keyof T): T[] {
     const result: T[] = [];
-
     const nodesToEval = [...roots];
 
     while (nodesToEval.length) {
       const currentNode = nodesToEval.shift();
-
       if (!currentNode) continue;
 
       result.push(currentNode);
 
       const childNodes = currentNode[childrenPropertyName] as T[];
-
       if (childNodes) nodesToEval.push(...childNodes);
     }
 
@@ -139,22 +133,18 @@ export class TreeUtil {
     childrenPropertyName: keyof T
   ): string[] {
     const leafes: string[] = [];
-
     const nodesToEval = [...items];
 
     while (nodesToEval.length) {
       const currentNode = nodesToEval.shift();
-
       if (!currentNode) continue;
 
       const id = currentNode[idPropertyName];
-
       if (!id) continue;
 
       if (this.isLeaf(currentNode, childrenPropertyName)) leafes.push(id);
       else {
         const childNodes = currentNode[childrenPropertyName] as T[];
-
         if (childNodes) nodesToEval.push(...childNodes);
       }
     }
@@ -170,19 +160,16 @@ export class TreeUtil {
     childrenPropertyName: keyof T
   ): T[] {
     const leafes: T[] = [];
-
     const nodesToEval = [...items];
 
     while (nodesToEval.length) {
       const currentNode = nodesToEval.shift();
-
       if (!currentNode) continue;
 
       if (this.isLeaf(currentNode, childrenPropertyName))
         leafes.push(currentNode);
       else {
         const childNodes = currentNode[childrenPropertyName] as T[];
-
         if (childNodes) nodesToEval.push(...childNodes);
       }
     }
@@ -202,7 +189,6 @@ export class TreeUtil {
 
     while (itemsToEval.length) {
       const item = itemsToEval.shift();
-
       if (!item) continue;
 
       const children = item[childrenPropertyName] as T[];

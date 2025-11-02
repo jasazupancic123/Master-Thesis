@@ -84,10 +84,7 @@ export const stateUpdate = (
   setComponent(updatedComponent);
 
   const updatedComponents = training.components.map((c) => {
-    if (
-      c.id === updatedComponent.id ||
-      c.component?.id === updatedComponent.component?.id
-    ) {
+    if (c.id === updatedComponent.id) {
       return {
         ...updatedComponent,
       };

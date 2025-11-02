@@ -10,8 +10,8 @@ import {
   handleClickDateCell,
 } from './actions/actions-week-date';
 import { TrainingGridItem } from '@/components/trainer-group-cycle-view/training-cycle-view-grid-item';
-import type { Component } from '@/core/component/type/component.type';
-import type { Target } from '@/core/target/type/target.type';
+import type { Component } from '@/core/exercise/type/component.type';
+import type { Target } from '@/core/exercise/type/target.type';
 import { MainSet } from '@/core/training/enum/main-set.enum';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
@@ -55,7 +55,6 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
   const mainContext = useMain();
   const groupContext = useGroup();
 
-  const { components } = mainContext;
   const { cycle, trainings } = groupContext;
 
   const {
@@ -91,7 +90,6 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
         sx={{
           backgroundColor: theme.palette.background.default,
           cursor:
-            components.length &&
             cycle &&
             lib.common.date.isBetween(date, cycle.from, cycle.to) &&
             !dayjs(date).isBefore(dayjs(), 'day')
@@ -220,7 +218,7 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
 
                         addTrainingComponent(training_.id, {
                           components: props.selected?.map((c, i) => ({
-                            id: c.id,
+                            id: c.field,
                             subgroups: [],
                             supersets: [],
                             mainSet: MainSet.BLOCK,

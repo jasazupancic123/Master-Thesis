@@ -14,7 +14,7 @@ export async function handleUpdateTraining(
   groupCtx: IGroupCtx,
   trainerDayViewCtx: ITrainerDayViewContext
 ) {
-  const { components, exercises, methods } = mainCtx;
+  const { exercises } = mainCtx;
   const { setTrainings, setDetectedChanges } = groupCtx;
   const { training, setTraining } = trainerDayViewCtx;
 
@@ -40,14 +40,8 @@ export async function handleUpdateTraining(
     async () => TrainingController.getInstance().update(training.id, training),
     state,
     (newTraining) => {
-      TrainingService.mapData(newTraining, {
-        components,
-        exercises,
-        methods,
-      });
-
+      TrainingService.mapData(newTraining, { exercises });
       setTraining(newTraining);
-
       setTrainings((prev) =>
         prev.map((t) => {
           if (t.id === newTraining.id) return newTraining;

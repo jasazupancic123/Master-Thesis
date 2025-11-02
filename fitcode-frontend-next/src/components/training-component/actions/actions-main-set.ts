@@ -1,8 +1,4 @@
 import { updateMainSet } from '@/components/supersets/actions/actions-drag-exercise';
-import {
-  COOLDOWN_ID,
-  WARMUP_ID,
-} from '@/core/training/const/warmup-cooldown.const';
 import { MainSet } from '@/core/training/enum/main-set.enum';
 import type { Subgroup } from '@/core/training/type/subgroup.type';
 import type { Superset } from '@/core/training/type/superset.type';
@@ -80,19 +76,6 @@ export function handleSetMainSet(
 
   setTraining((prev) => {
     if (!prev) return prev;
-
-    if (updatedComponent.id === WARMUP_ID) {
-      return {
-        ...prev,
-        warmup: updatedComponent,
-      };
-    } else if (updatedComponent.id === COOLDOWN_ID) {
-      return {
-        ...prev,
-        cooldown: updatedComponent,
-      };
-    }
-
     return {
       ...prev,
       components: prev.components.map((c) =>

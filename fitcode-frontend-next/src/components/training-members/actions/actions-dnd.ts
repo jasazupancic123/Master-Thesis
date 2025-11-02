@@ -4,10 +4,6 @@ import type useTrainingMembers from '../hooks/use-members.hook';
 import type useTrainingMembersSubgroups from '../hooks/use-subgroups.hook';
 import { handleAddMembersSubgroup } from './actions-subgroups';
 import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-group-day-view/constant/subgroups.constant';
-import {
-  COOLDOWN_ID,
-  WARMUP_ID,
-} from '@/core/training/const/warmup-cooldown.const';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import type { IGroupCtx } from '@/store/group.provider';
 import type { IMainContext, useMain } from '@/store/main.provider';
@@ -159,25 +155,10 @@ const onDragEndSubgroup = (
 
   setTraining((prev) => {
     if (!prev) return prev;
-
-    if (updatedComponent.id === WARMUP_ID) {
-      return {
-        ...prev,
-        warmup: updatedComponent,
-      };
-    } else if (updatedComponent.id === COOLDOWN_ID) {
-      return {
-        ...prev,
-        cooldown: updatedComponent,
-      };
-    }
-
     return {
       ...prev,
       components: prev.components.map((c) => {
-        if (c.id === updatedComponent.id) {
-          return updatedComponent;
-        }
+        if (c.id === updatedComponent.id) return updatedComponent;
         return c;
       }),
     };

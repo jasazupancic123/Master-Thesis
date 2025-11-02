@@ -31,11 +31,7 @@ export default function PeriodizeModal(
   const groupContext = useGroup();
   const trainerDayViewContext = useTrainerDayView();
 
-  const {
-    components: allComponents,
-    exercises: allExercises,
-    methods: allMethods,
-  } = mainContext;
+  const { exercises: allExercises } = mainContext;
 
   const { setTrainings } = groupContext;
 
@@ -87,11 +83,7 @@ export default function PeriodizeModal(
               }),
             (periodizedTrainings) => {
               periodizedTrainings.map((pt) => {
-                TrainingService.mapData(pt, {
-                  components: allComponents,
-                  exercises: allExercises,
-                  methods: allMethods,
-                });
+                TrainingService.mapData(pt, { exercises: allExercises });
 
                 const currentTraining = periodizedTrainings.find(
                   (t) => t.id === training.id

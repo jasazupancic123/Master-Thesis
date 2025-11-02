@@ -6,7 +6,8 @@ import dayjs from 'dayjs';
 import React, { Fragment, useEffect, useState } from 'react';
 
 import TrainingWeek from '@/components/training-week/training-week';
-import type { Component } from '@/core/component/type/component.type';
+import { Components } from '@/core/exercise/constant/components.constant';
+import type { Component } from '@/core/exercise/type/component.type';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import { lib } from '@/lib';
@@ -49,9 +50,11 @@ export default function TrainingComponentCalendar(
     setDateTo(dayjs(cycle.to));
   }, [cycle]);
 
+  const component = Components.find((c) => c.field === trainingComponent.id);
+
   return (
     <Box>
-      {trainingComponent.component && (
+      {component && (
         <Box
           display="flex"
           width="100%"
@@ -59,8 +62,7 @@ export default function TrainingComponentCalendar(
           flexDirection="column"
         >
           <Typography variant="h6">
-            {trainingComponent.component?.name[0].toUpperCase() +
-              trainingComponent.component?.name.slice(1)}{' '}
+            {component?.name[0].toUpperCase() + component?.name.slice(1)}{' '}
             Calendar
           </Typography>
           <Typography

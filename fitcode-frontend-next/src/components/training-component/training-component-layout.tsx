@@ -1,4 +1,4 @@
-import { Box, Collapse, Stack, Typography } from '@mui/material';
+import { Box, Collapse, Stack } from '@mui/material';
 
 import Supersets from '../supersets/supersets';
 import type { TrainingComponentProps } from '../trainer-group-day-view/props/props';
@@ -7,11 +7,6 @@ import MuscleHeatmapView from './muscle-heatmap-view';
 import TrainingComponentCard from './training-component-card';
 import TrainingComponentHeaderMenu from './training-component-header-menu';
 import TrainingComponentMenu from './training-component-menu';
-import type { Method } from '@/core/method/type/method.type';
-import {
-  COOLDOWN_ID,
-  WARMUP_ID,
-} from '@/core/training/const/warmup-cooldown.const';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
@@ -32,30 +27,10 @@ export default function TrainingComponentLayout({
     setExpandedExercisesView,
   } = useTrainingComponentLayoutUtils();
 
-  const getMethodsLimitsString = (method: Method): string => {
-    let methodString = 'Method limits:';
-
-    method.attributes.forEach((a) =>
-      a.options?.forEach(
-        (o) =>
-          (methodString += ` ${o.field as string} ${o.min ?? ''}-${o.max ?? ''},`)
-      )
-    );
-
-    return methodString === 'Method limits:' ? '' : methodString.slice(0, -1);
-  };
-
   if (!training) return null;
 
   return (
-    <Box
-      sx={{
-        mb: 0,
-        pt: trainingComponent.id === WARMUP_ID ? 0 : undefined,
-        pb: trainingComponent.id === COOLDOWN_ID ? 0 : undefined,
-        px: 0,
-      }}
-    >
+    <Box sx={{ mb: 0, px: 0 }}>
       <Box>
         <Box
           sx={{
@@ -124,37 +99,13 @@ export default function TrainingComponentLayout({
             p={2}
             pt={0}
             px={0}
-            mt={
-              screenSize.isSmallerThanLaptop
-                ? 0
-                : component?.method !== undefined &&
-                    getMethodsLimitsString(component.method).length > 0
-                  ? 0
-                  : 2
-            }
+            mt={screenSize.isSmallerThanLaptop ? 0 : 2}
             key={filter}
           >
             {heatmapView ? (
               <MuscleHeatmapView />
             ) : (
               <>
-                {component?.method !== undefined && (
-                  <Box
-                    width="100%"
-                    display="flex"
-                    justifyContent={
-                      screenSize.isSmallerThanLaptop ? 'center' : 'flex-end'
-                    }
-                    sx={{
-                      py: 0.05,
-                    }}
-                  >
-                    <Typography fontSize={10}>
-                      {getMethodsLimitsString(component.method)}
-                    </Typography>
-                  </Box>
-                )}
-
                 <Supersets
                   openAddExerciseModal={openAddExerciseModal}
                   setOpenAddExerciseModal={setOpenAddExerciseModal}

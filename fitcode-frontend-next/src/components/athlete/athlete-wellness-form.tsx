@@ -33,8 +33,7 @@ export default function AthleteWellnessForm(props: Props) {
     setTipHeatmapBack,
   } = useTip();
 
-  const { disabled, state, setState, muscleLoads, setMuscleLoads, onSubmit } =
-    props;
+  const { disabled, state, setState, muscleLoads, setMuscleLoads } = props;
 
   return (
     <Box width="100%" display="flex" flexDirection="column" alignItems="center">
