@@ -8,6 +8,7 @@ import { AuthController } from '@/core/auth/auth.controller';
 import { lib } from '@/lib';
 import { SIGN_IN_REDIRECT_MAPPER } from '@/lib/common/const/nav.const';
 import { useAuth } from '@/store/auth.provider';
+import Alert from '@/ui/alert';
 
 export default function MagicAuthPage() {
   const router = useRouter();
@@ -47,6 +48,6 @@ export default function MagicAuthPage() {
     login().then();
   }, [token]);
 
-  if (error) return <div>{error}</div>;
-  return <div>Logging you in...</div>;
+  if (error) return <Alert type="error" errorMessage={error} />;
+  return <Alert type="loading" />;
 }
