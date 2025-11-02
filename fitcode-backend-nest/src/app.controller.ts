@@ -10,7 +10,6 @@ import { measureAsync } from './common/utils/time.util';
 import { ExerciseService } from './exercise/service/exercise.service';
 import { GroupService } from './group/group.service';
 import { InstitutionService } from './institution/service/institution.service';
-import { MethodService } from './method/service/method.service';
 import { ProfileService } from './profile/service/profile.service';
 
 @ApiTags('General')
@@ -23,7 +22,6 @@ export class AppController {
     private readonly authService: AuthService,
     private readonly profileService: ProfileService,
     private readonly exerciseService: ExerciseService,
-    private readonly methodService: MethodService,
     private readonly institutionService: InstitutionService,
     private readonly groupService: GroupService,
   ) {}
@@ -40,7 +38,6 @@ export class AppController {
       profileRes,
       usersRes,
       exercisesRes,
-      methodsRes,
       institutionsRes,
       profilesRes,
       groupsRes,
@@ -58,11 +55,6 @@ export class AppController {
       measureAsync(
         'exerciseService.findAllGlobal()',
         () => this.exerciseService.findAllGlobal(user),
-        this.logger,
-      ),
-      measureAsync(
-        'methodService.findAll()',
-        () => this.methodService.findAll(),
         this.logger,
       ),
       measureAsync(
@@ -85,7 +77,6 @@ export class AppController {
     const profile = profileRes.result;
     const users = usersRes.result;
     const exercises = exercisesRes.result;
-    const methods = methodsRes.result;
     const institutions = institutionsRes.result;
     const profiles = profilesRes.result;
     const groups = groupsRes.result;
@@ -98,14 +89,6 @@ export class AppController {
 
     institutionExercises.forEach((list) => exercises.push(...list));
 
-    return {
-      profile,
-      profiles,
-      users,
-      exercises,
-      methods,
-      institutions,
-      groups,
-    };
+    return { profile, profiles, users, exercises, institutions, groups };
   }
 }

@@ -13,7 +13,6 @@ import { ExerciseModule } from './exercise/exercise.module';
 import { FirebaseModule } from './firebase/firebase.module';
 import { GroupModule } from './group/group.module';
 import { InstitutionModule } from './institution/institution.module';
-import { MethodModule } from './method/method.module';
 import { ProfileModule } from './profile/profile.module';
 import { TestDbModule } from './test-db/test-db.module';
 import { TrainingModule } from './training/training.module';
@@ -28,7 +27,6 @@ import { TrainingModule } from './training/training.module';
     AuthModule,
     AttributeModule,
     ProfileModule,
-    MethodModule,
     InstitutionModule,
     ExerciseModule,
     GroupModule,

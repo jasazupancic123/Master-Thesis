@@ -54,7 +54,6 @@ import { INSTITUTION_ATHLETE_EVENT } from '@src/institution/constant/update-inst
 import { Institution } from '@src/institution/entity/institution.entity';
 import { UpdateInstitutionAthleteEvent } from '@src/institution/event/update-institution-athlete.event';
 import { InstitutionService } from '@src/institution/service/institution.service';
-import { MethodService } from '@src/method/service/method.service';
 import { PeriodizationService } from '@src/periodization/periodization.service';
 import { WellnessService } from '@src/profile/service/wellness.service';
 import { TrainingReportService } from '@src/training/service/training-report.service';
@@ -90,7 +89,6 @@ export class TrainingService implements Permission<Training, Institution> {
     private readonly authService: Wrapper<AuthService>,
     private readonly commonService: CommonService,
     private readonly repository: TrainingRepository,
-    private readonly methodService: MethodService,
     private readonly periodizationService: PeriodizationService,
     private readonly wellnessService: WellnessService,
     private readonly trainingPlanService: TrainingPlanService,
@@ -261,13 +259,12 @@ export class TrainingService implements Permission<Training, Institution> {
       to,
     );
 
-    const methods = await this.methodService.findAll();
     const membersIds = group ? group.membersIds : input.membersIds;
 
     this.trainingPlanService.validateTrainingComponents(
       inputComponents,
       membersIds,
-      { methods, exercises: [] },
+      { exercises: [] },
     );
 
     const data: Create<Training> = {
@@ -285,7 +282,6 @@ export class TrainingService implements Permission<Training, Institution> {
         from: c.from,
         to: c.to,
         target: c.targetId,
-        methodId: c.methodId,
         copiedFrom: c.copiedFrom,
         mainSet: c.mainSet,
         subgroups: [],
@@ -318,7 +314,6 @@ export class TrainingService implements Permission<Training, Institution> {
     }
 
     // validate components & exercises
-    const methods = await this.methodService.findAll();
     const exercises = await this.trainingPlanService.getAllTrainingExercises(
       input.components,
     );
@@ -326,7 +321,6 @@ export class TrainingService implements Permission<Training, Institution> {
     const trainingComponents: TrainingComponent[] = this.trainingPlanService
       .validateTrainingComponents(input.components, training.membersIds, {
         exercises,
-        methods,
       })
       // override training times
       .map((c) => {
@@ -431,7 +425,6 @@ export class TrainingService implements Permission<Training, Institution> {
     this.validateIsDateInFuture(training.from);
 
     // validate components & exercises
-    const methods = await this.methodService.findAll();
     const from = training.components[training.components.length - 1].to;
     const step = DURATION_TRAINING_COMPONENT_IN_MIN;
 
@@ -443,7 +436,6 @@ export class TrainingService implements Permission<Training, Institution> {
         from: addMinutes(from, i * step),
         to: addMinutes(from, (i + 1) * step),
         mainSet: MainSet.BLOCK,
-        methodId: c.methodId,
         targetId: c.targetId,
         subgroups: [],
         supersets: [],
@@ -458,7 +450,6 @@ export class TrainingService implements Permission<Training, Institution> {
     const validTrainingComponents = this.trainingPlanService
       .validateTrainingComponents(trainingComponents, training.membersIds, {
         exercises,
-        methods,
       })
       .map((c) => {
         const found = trainingComponents.find((tc) => tc.id === c.id)!;
@@ -600,10 +591,10 @@ export class TrainingService implements Permission<Training, Institution> {
     const athlete = await this.getAthlete(user, userId, training.institution);
     const exercise = await this.exerciseService.findOneByIdOrFail(user, ref);
 
-    const errors = this.exerciseParamService.validateSetValues(exercise, {
-      ...input,
-      setNumber: 1,
-    });
+    const errors = this.exerciseParamService.validateSetValues(
+      { ...input, setNumber: 1 },
+      exercise,
+    );
 
     if (errors.length) throw new BadRequestException(JSON.stringify(errors));
 
@@ -645,10 +636,10 @@ export class TrainingService implements Permission<Training, Institution> {
     const athlete = await this.getAthlete(user, userId, training.institution);
     const exercise = await this.exerciseService.findOneByIdOrFail(user, ref);
 
-    const errors = this.exerciseParamService.validateSetValues(exercise, {
-      ...input,
-      setNumber: ref.setNumber,
-    });
+    const errors = this.exerciseParamService.validateSetValues(
+      { ...input, setNumber: ref.setNumber },
+      exercise,
+    );
 
     if (errors.length) throw new BadRequestException(JSON.stringify(errors));
 
@@ -701,6 +692,7 @@ export class TrainingService implements Permission<Training, Institution> {
           newPrescribedExercises.push({
             id: prescribedExercise.id,
             params: prescribedExercise.params,
+            methodId: prescribedExercise.methodId,
             sets: prescribedExercise.sets.sort(
               (a, b) => a.setNumber - b.setNumber,
             ),
@@ -716,7 +708,6 @@ export class TrainingService implements Permission<Training, Institution> {
         to: trainingComponent.to,
         copiedFrom: trainingComponent.copiedFrom,
         targetId: trainingComponent.targetId,
-        methodId: trainingComponent.methodId,
         mainSet: trainingComponent.mainSet,
         supersets: newPrescribedSupersets,
         subgroups: [],

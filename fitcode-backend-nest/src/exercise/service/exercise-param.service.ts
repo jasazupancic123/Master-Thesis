@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { Attribute } from '@src/attribute/entity/attribute.entity';
 import { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
@@ -7,14 +7,15 @@ import { CommonService } from '@src/common/service/common.service';
 import { ValidateError } from '@src/common/type/validate.type';
 import { Component } from '@src/exercise/entity/component.entity';
 import { Exercise } from '@src/exercise/entity/exercise.entity';
-import { Method } from '@src/method/entity/method.entity';
 import { MAX_NUM_SETS_IN_EXERCISE } from '@src/training/constant/training-limits.constant';
 import {
   ExerciseParamField,
   ExerciseSet,
 } from '@src/training/entity/exercise-set.entity';
+import { TrainingExercise } from '@src/training/entity/training-exercise.entity';
 
 import { ExerciseParamAttribute } from '../constant/exercise-param.constant';
+import { Methods } from '../constant/method.constant';
 
 @Injectable()
 export class ExerciseParamService {
@@ -139,49 +140,44 @@ export class ExerciseParamService {
     if (prevValueR) set.loadKgR = value(prevValueR);
   }
 
-  validateSetValues(
+  validateExerciseValues(
+    trainingExercise: TrainingExercise,
     exercise: Exercise,
+    options?: {
+      skipMethodValidation?: boolean;
+      skipUnilateralityValidation?: boolean;
+    },
+  ): ValidateError<ExerciseSet>[] {
+    const errors: ValidateError<ExerciseSet>[] = options?.skipMethodValidation
+      ? []
+      : this.validateMethod(trainingExercise, exercise);
+
+    for (const set of trainingExercise.sets)
+      errors.push(...this.validateSetValues(set, exercise, options));
+
+    return errors;
+  }
+
+  validateSetValues(
     set: ExerciseSet,
+    exercise: Exercise,
+    options?: { skipUnilateralityValidation?: boolean },
   ): ValidateError<ExerciseSet>[] {
     const errors: ValidateError<ExerciseSet>[] = [];
-
     if (set.setNumber < 1 || set.setNumber > MAX_NUM_SETS_IN_EXERCISE)
       errors.push({
         field: 'setNumber',
         message: `Set number must be between 1 and ${MAX_NUM_SETS_IN_EXERCISE}`,
       });
 
-    errors.push(...this.validateUnilaterality(set, exercise.isUnilateral));
+    if (!options?.skipUnilateralityValidation)
+      errors.push(...this.validateUnilaterality(set, exercise.isUnilateral));
 
     this.attributeService.validate(
       this.getAttributeValues(exercise, set),
       this.getAttributes(exercise),
       (error) => errors.push(error),
     );
-
-    return errors;
-  }
-
-  validateMethods(
-    set: ExerciseSet,
-    methods: Method[],
-    methodId: string | undefined,
-  ): ValidateError<ExerciseSet>[] {
-    const errors: ValidateError<ExerciseSet>[] = [];
-    if (!methodId) return errors;
-
-    const method = methods.find((m) => m.id === methodId);
-    if (!method) {
-      errors.push({
-        field: 'loadKg',
-        message: `Method not found for training component`,
-      });
-
-      return errors;
-    }
-
-    if (method.attributes?.length > 0)
-      errors.push(...this.validateMethod(set, method));
 
     return errors;
   }
@@ -248,33 +244,75 @@ export class ExerciseParamService {
   }
 
   private validateMethod(
-    set: ExerciseSet,
-    method: Method,
+    trainingExercise: TrainingExercise,
+    exercise: Exercise,
   ): ValidateError<ExerciseSet>[] {
+    if (!trainingExercise.methodId) return [];
+
+    const method = Methods.find((m) => m.field === trainingExercise.methodId);
+    if (!method) throw new NotFoundException('Method not found');
+
     const errors: ValidateError<ExerciseSet>[] = [];
-
     for (const attr of method.attributes) {
-      const primary = ExerciseParamAttribute[attr.field];
-      const secondary = ExerciseParamAttribute[this.PAIRS[attr.field]];
-      if (!primary || !secondary) continue;
-
-      for (const field of [primary.field, secondary.field]) {
-        const setValue = set[field];
-        if (this.common.object.isEmpty(setValue)) continue;
+      if (attr.field === 'sets') {
+        // special case for sets
+        const sets = trainingExercise.sets.length;
 
         if (!this.common.object.isEmpty(attr.min))
-          if (typeof setValue === 'number' && setValue < attr.min)
+          if (sets < attr.min)
             errors.push({
-              field: attr.field,
-              message: `Value for ${attr.field} cannot be less than ${attr.min}`,
+              field: 'sets' as ExerciseParamField,
+              message: `Number of sets cannot be less than ${attr.min} for method ${method.name}`,
             });
 
         if (!this.common.object.isEmpty(attr.max))
-          if (typeof setValue === 'number' && setValue > attr.max)
+          if (sets > attr.max)
             errors.push({
-              field: attr.field,
-              message: `Value for ${attr.field} cannot be greater than ${attr.max}`,
+              field: 'sets' as ExerciseParamField,
+              message: `Number of sets cannot be greater than ${attr.max} for method ${method.name}`,
             });
+      } else {
+        const param = ExerciseParamAttribute[attr.field];
+
+        for (const set of trainingExercise.sets) {
+          const primary = set[attr.field];
+          const secondary = exercise.isUnilateral
+            ? set[this.PAIRS[attr.field]]
+            : undefined;
+
+          for (const value of [primary, secondary]) {
+            if (this.common.object.isEmpty(value)) continue;
+
+            if (attr.disabled)
+              errors.push({
+                field: attr.field as ExerciseParamField,
+                message: `Parameter ${param.name.toLowerCase()} is disabled for method ${method.name}`,
+              });
+
+            if (!this.common.object.isEmpty(attr.min))
+              if (typeof value === 'number' && value < attr.min)
+                errors.push({
+                  field: attr.field as ExerciseParamField,
+                  message: `Value for ${attr.field} cannot be less than ${attr.min}`,
+                });
+
+            if (!this.common.object.isEmpty(attr.max))
+              if (typeof value === 'number' && value > attr.max)
+                errors.push({
+                  field: attr.field as ExerciseParamField,
+                  message: `Value for ${attr.field} cannot be greater than ${attr.max}`,
+                });
+
+            if (!this.common.object.isEmpty(attr.pattern)) {
+              const regex = new RegExp(attr.pattern);
+              if (typeof value === 'string' && !regex.test(value))
+                errors.push({
+                  field: attr.field as ExerciseParamField,
+                  message: `Value for ${attr.field} must match pattern ${attr.pattern}`,
+                });
+            }
+          }
+        }
       }
     }
 

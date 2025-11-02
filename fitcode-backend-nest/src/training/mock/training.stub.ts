@@ -72,7 +72,6 @@ export function generateTrainingComponent(
     from,
     to: data?.to || addHours(from, 1),
     targetId: data?.targetId || null,
-    methodId: data?.methodId || null,
     mainSet: data?.mainSet || MainSet.BLOCK,
     supersets: data?.supersets || [],
     subgroups: data?.subgroups || [],
@@ -105,6 +104,7 @@ export function generateTrainingExercise(
     id: data?.id ?? v4(),
     params: data?.params || [],
     sets: data?.sets || [],
+    methodId: data?.methodId,
   };
 }
 

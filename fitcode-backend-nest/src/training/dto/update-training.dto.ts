@@ -44,12 +44,7 @@ export class UpdateSubgroupDto
 }
 
 export class UpdateTrainingComponentDto
-  extends PickType(TrainingComponent, [
-    'id',
-    'targetId',
-    'methodId',
-    'mainSet',
-  ] as const)
+  extends PickType(TrainingComponent, ['id', 'targetId', 'mainSet'] as const)
   implements Omit<UpdateTrainingComponent, 'from' | 'to'>
 {
   @ValidateNested({ each: true })
