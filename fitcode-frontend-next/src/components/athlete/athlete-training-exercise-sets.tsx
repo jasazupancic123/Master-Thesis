@@ -406,7 +406,9 @@ export default function AthleteTrainingExerciseSets({
                 exerciseSetTrackingState.find(
                   (setState) =>
                     setState.exerciseId === exercise.id &&
-                    setState.completedSetNumbers.includes(set.setNumber)
+                    setState.completedSetNumbers.some(
+                      (s) => s.setNumber === set.setNumber
+                    )
                 ) && (
                   <CheckCircle
                     fontSize="small"

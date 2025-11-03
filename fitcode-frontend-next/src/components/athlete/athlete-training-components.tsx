@@ -238,7 +238,10 @@ export default function AthleteTrainingComponents(props: Props) {
                       return {
                         exerciseId: e.id,
                         supersetIndex: sIndex,
-                        completedSetNumbers: [] as number[],
+                        completedSetNumbers: [] as {
+                          setNumber: number;
+                          timestamp: Date;
+                        }[],
                       };
                     });
                   })

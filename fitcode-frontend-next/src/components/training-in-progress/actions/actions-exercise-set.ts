@@ -105,7 +105,10 @@ export const isExerciseSetCompleted = (
 ) => {
   for (const key of Array.from(exerciseSetTrackingState)) {
     if (key.exerciseId === exerciseIdentifier.exerciseId)
-      return key.completedSetNumbers.includes(setNumber);
+      return (
+        key.completedSetNumbers.find((s) => s.setNumber === setNumber) !==
+        undefined
+      );
   }
   return false;
 };
@@ -123,14 +126,14 @@ export const markExerciseSetAsCompleted = (
 
   if (key) {
     const completedSets = key.completedSetNumbers || [];
-    if (!completedSets.includes(setNumber)) {
-      completedSets.push(setNumber);
+    if (!completedSets.find((s) => s.setNumber === setNumber)) {
+      completedSets.push({ setNumber, timestamp: new Date() });
       key.completedSetNumbers = completedSets;
     }
   } else
     exerciseSetTrackingState.push({
       ...exerciseIdentifier,
-      completedSetNumbers: [setNumber],
+      completedSetNumbers: [{ setNumber, timestamp: new Date() }],
     });
 
   setTrainingInProgress((prev) => {
@@ -157,7 +160,7 @@ export const unmarkExerciseSetAsCompleted = (
   if (!key) return;
 
   const completedSets = key.completedSetNumbers || [];
-  const index = completedSets.indexOf(setNumber);
+  const index = completedSets.findIndex((s) => s.setNumber === setNumber);
   if (index > -1) {
     completedSets.splice(index, 1);
     key.completedSetNumbers = completedSets;
