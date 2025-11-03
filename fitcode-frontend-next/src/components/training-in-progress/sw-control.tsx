@@ -64,7 +64,7 @@ export default function SWControl(props: Props) {
         <ElapsedTime startMs={dayjs(startOfTraining).valueOf()} />
       </Typography>
 
-      <Box display="flex" justifyContent="center" alignItems="center" gap={1}>
+      {/* <Box display="flex" justifyContent="center" alignItems="center" gap={1}>
         <TextField
           label="Recovery (s)"
           value={countdownTimer}
@@ -103,7 +103,7 @@ export default function SWControl(props: Props) {
         >
           Set
         </Button>
-      </Box>
+      </Box> */}
 
       <PieChart
         height={120}
@@ -126,7 +126,7 @@ export default function SWControl(props: Props) {
         <ChartsTooltip trigger="none" />
         <PieCenterLabel label={label} />
       </PieChart>
-      <Button
+      {/* <Button
         variant="contained"
         sx={{ height: '100%' }}
         onClick={() => {
@@ -141,7 +141,7 @@ export default function SWControl(props: Props) {
         }}
       >
         Clear
-      </Button>
+      </Button> */}
       <Typography fontWeight={600} fontSize={14}>
         Recovery time
       </Typography>
