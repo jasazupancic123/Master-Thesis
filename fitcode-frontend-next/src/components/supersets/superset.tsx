@@ -79,7 +79,11 @@ export default function Superset({ superset, supersetIndex }: Props) {
         sx={{
           p: '1px',
           borderRadius: '5px',
-          background: lib.common.component.getBorderGradient(theme),
+          background: superset.warmup
+            ? theme.palette.warning.light
+            : superset.cooldown
+              ? theme.palette.success.light
+              : lib.common.component.getBorderGradient(theme),
         }}
       >
         <Stack

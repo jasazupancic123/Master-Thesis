@@ -4,6 +4,7 @@ import { Expose, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 
 import { Subgroup } from '../entity/subgroup.entity';
+import { Superset } from '../entity/superset.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
 import {
@@ -15,10 +16,13 @@ import {
 } from '../interface/update-training.interface';
 
 export class UpdateTrainingExerciseDto
-  extends PickType(TrainingExercise, ['id', 'sets'] as const)
+  extends PickType(TrainingExercise, ['id', 'sets', 'methodId'] as const)
   implements UpdateTrainingExercise {}
 
-export class UpdateSupersetDto implements UpdateSuperset {
+export class UpdateSupersetDto
+  extends PickType(Superset, ['warmup', 'cooldown'] as const)
+  implements UpdateSuperset
+{
   @ValidateNested({ each: true })
   @Type(() => UpdateTrainingExerciseDto)
   @ApiProperty({ type: () => UpdateTrainingExerciseDto, isArray: true })

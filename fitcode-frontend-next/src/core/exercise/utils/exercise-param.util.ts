@@ -1,5 +1,8 @@
 import type { Attribute } from '../../attribute/type/attribute.type';
-import type { ExerciseParamField } from '../../training/type/exercise-set.type';
+import type {
+  ExerciseMainParamField,
+  ExerciseParamField,
+} from '../../training/type/exercise-set.type';
 import type { ExerciseSetParamsObj } from '../constant/exercise-param.constant';
 import {
   BW,
@@ -61,5 +64,27 @@ export class ExerciseParamUtil {
     };
 
     return mapper[field];
+  }
+
+  getOptionGroup(field: ExerciseMainParamField): ExerciseMainParamField[] {
+    switch (field) {
+      case 'reps':
+      case 'dist':
+      case 'time':
+        return ['reps', 'dist', 'time']; // volume group
+      case 'loadKg':
+      case 'loadRm':
+      case 'loadBw':
+      case 'vel':
+        return ['loadKg', 'loadRm', 'loadBw', 'vel']; // intensity group
+      case 'tempo':
+      case 'eff':
+        return ['tempo', 'eff']; // effort group
+      case 'recTime':
+      case 'recDist':
+        return ['recTime', 'recDist']; // recovery group
+      default:
+        return [];
+    }
   }
 }

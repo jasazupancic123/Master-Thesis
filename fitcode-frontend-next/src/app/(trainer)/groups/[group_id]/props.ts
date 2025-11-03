@@ -2,6 +2,7 @@ import type { Dayjs } from 'dayjs';
 
 import type { AuthUser } from '@/core/auth/type/user.type';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
+import type { Method } from '@/core/exercise/type/method.type';
 import type { Cycle } from '@/core/group/type/cycle.type';
 import type { Group } from '@/core/group/type/group.type';
 import type { Institution } from '@/core/institution/type/institution.type';
@@ -97,4 +98,7 @@ export type TrainerDayViewContextProps = {
     supersetIndex: number,
     exerciseIndex: number
   ) => void;
+  addWarmupSuperset: () => void;
+  addCooldownSuperset: () => void;
+  applyMethod: (method: Method) => void;
 };
