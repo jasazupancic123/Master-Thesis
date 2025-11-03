@@ -1,5 +1,6 @@
-import { theme } from '@/app/style';
 import { Box, Typography } from '@mui/material';
+
+import { theme } from '@/app/style';
 
 interface Props {
   tempo?: string; // example: "2.5:0:3.5:0", meaning "eccentric:isometric:concentric:idle" in seconds
@@ -49,7 +50,7 @@ export default function TempoTimes(props: Props) {
             >
               {uni && (
                 <Typography
-                  fontSize={16}
+                  fontSize={14}
                   fontWeight={600}
                   sx={{
                     position: 'absolute',

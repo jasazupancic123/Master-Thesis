@@ -1,16 +1,17 @@
-import { useTraining } from '@/store/training.provider';
+import { Box } from '@mui/material';
+
+import RomChart from '../charts/rom/rom-chart';
+import RomStatistic from '../charts/rom/rom-statistics';
 import TempoChart from '../charts/tempo/tempo-chart';
 import TempoStatistic from '../charts/tempo/tempo-statistic';
 import { TrainingInProgressExerciseControl } from './enum/exercise-controls.enum';
-import { useTrainingInProgress } from '@/store/training-in-progress.provider';
-import RomChart from '../charts/rom/rom-chart';
-import RomStatistic from '../charts/rom/rom-statistics';
-import ImageGallery from '@/ui/image-gallery';
-import { Box } from '@mui/material';
 import SWControl from './sw-contro';
 import TempoTimes from './tempo-times';
+import { useTraining } from '@/store/training.provider';
+import { useTrainingInProgress } from '@/store/training-in-progress.provider';
+import ImageGallery from '@/ui/image-gallery';
 
-export default function renderSelectedExercieseControl(
+export default function ExercieseControlSelected(
   selectedControl: TrainingInProgressExerciseControl
 ) {
   const trainingContext = useTraining();

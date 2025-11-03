@@ -1,14 +1,15 @@
+import { Box, Typography } from '@mui/material';
+import toast from 'react-hot-toast';
+
+import { TrainingInProgressExerciseControl } from './enum/exercise-controls.enum';
+import useExerciseControls from './hooks/use-exercise-controls';
+import ExercieseControlSelected from './exercise-control-selected';
 import { theme } from '@/app/style';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
 import { EXERCISE_POSES } from '@/lib/pose-detection/const/exercise-poses';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
-import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import { useTraining } from '@/store/training.provider';
-import { Box, Typography } from '@mui/material';
-import toast from 'react-hot-toast';
-import useExerciseControls from './hooks/use-exercise-controls';
-import { TrainingInProgressExerciseControl } from './enum/exercise-controls.enum';
-import renderSelectedExercieseControl from './render-selected-exercise-control';
+import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 
 export default function TrainingInProgressExerciseControls() {
   const trainingContext = useTraining();
@@ -111,7 +112,6 @@ export default function TrainingInProgressExerciseControls() {
 
             setSelectedTrackingMethod(TrackingMethod.CAMERA);
           }}
-          isSelected={false}
         />
 
         <ExerciseControlItem
@@ -170,7 +170,7 @@ export default function TrainingInProgressExerciseControls() {
         alignItems="center"
         sx={{ py: 1 }}
       >
-        {renderSelectedExercieseControl(selectedControl)}
+        {ExercieseControlSelected(selectedControl)}
       </Box>
     </Box>
   );
@@ -181,9 +181,8 @@ function ExerciseControlItem(props: {
   label: string;
   icon: React.ReactNode;
   onClick: () => void;
-  isSelected?: boolean;
 }) {
-  const { width, label, icon, onClick, isSelected } = props;
+  const { width, label, icon, onClick } = props;
 
   return (
     <Box
