@@ -41,6 +41,9 @@ export default function TrainingInProgressExerciseControls() {
   return (
     <Box width="100%" display="flex" flexDirection="column" alignItems="center">
       <Box
+        position="fixed"
+        bottom={0}
+        zIndex={1000}
         width="100%"
         display="flex"
         justifyContent="space-between"
@@ -102,8 +105,9 @@ export default function TrainingInProgressExerciseControls() {
 
             if (!setTrackingState) return;
 
-            const isCurrentSetDone =
-              setTrackingState.completedSetNumbers.includes(setIndex + 1);
+            const isCurrentSetDone = setTrackingState.completedSetNumbers.some(
+              (s) => s.setNumber === setIndex + 1
+            );
 
             if (isCurrentSetDone) {
               toast.error('This set is already marked as done');
@@ -168,7 +172,7 @@ export default function TrainingInProgressExerciseControls() {
         display="flex"
         justifyContent="center"
         alignItems="center"
-        sx={{ py: 1 }}
+        sx={{ py: 2 }}
       >
         {ExercieseControlSelected(selectedControl)}
       </Box>

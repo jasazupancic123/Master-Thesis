@@ -76,6 +76,7 @@ export default function TrainingInProgressExerciseCard() {
               display: 'block',
               filter: 'grayscale(100%)',
               padding: 12,
+              paddingTop: 6,
               borderRadius: 16,
             }}
             preload="metadata"
@@ -96,6 +97,7 @@ export default function TrainingInProgressExerciseCard() {
               height: 'auto',
               filter: 'grayscale(100%)',
               padding: 12,
+              paddingTop: 6,
               borderRadius: 16,
             }}
           />
@@ -174,7 +176,9 @@ export default function TrainingInProgressExerciseCard() {
             const isSetDone = trainingInProgress.exerciseSetTrackingState.some(
               (state) =>
                 state.exerciseId === selectedExercise.id &&
-                state.completedSetNumbers.includes(s.setNumber)
+                state.completedSetNumbers.some(
+                  (set) => set.setNumber === s.setNumber
+                )
             );
 
             return (
