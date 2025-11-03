@@ -1,4 +1,4 @@
 export type ExerciseSetTracking = {
   exerciseId: string;
-  completedSetNumbers: number[];
+  completedSetNumbers: { setNumber: number; timestamp: Date }[];
 };

@@ -1,4 +1,4 @@
-import { Box, Button, TextField, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { ChartsTooltip, PieChart } from '@mui/x-charts';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
@@ -8,24 +8,43 @@ import { ElapsedTime } from './training-in-progress-elapsed-time';
 import { theme } from '@/app/style';
 import { useTraining } from '@/store/training.provider';
 import { PieCenterLabel } from '@/ui/mui-charts';
+import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 
 interface Props {
   startOfTraining: Dayjs;
-  lastSetCompletedAt: string | number | Date | undefined;
-  lastSetRecTimeS: number | undefined;
 }
 
 export default function SWControl(props: Props) {
-  const { startOfTraining, lastSetCompletedAt, lastSetRecTimeS } = props;
+  const { startOfTraining } = props;
 
-  const { trainingInProgress, setTrainingInProgress } = useTraining();
+  const { trainingInProgress } = useTraining();
+
+  const { setIndex, selectedExercise } = useTrainingInProgress();
 
   const [now, setNow] = useState(() => Date.now());
+
+  // const [countdownTimer, setCountdownTimer] = useState<string>(
+  //   (lastSetRecTimeS || 60).toString()
+  // );
 
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, []);
+
+  const exerciseTracking = trainingInProgress?.exerciseSetTrackingState.find(
+    (est) => est.exerciseId === selectedExercise?.id
+  );
+
+  const isSetCompleted = exerciseTracking?.completedSetNumbers.some(
+    (csn) => csn.setNumber === (setIndex || 0) + 1
+  );
+
+  const lastCompletedSet = exerciseTracking?.completedSetNumbers.sort(
+    (a, b) => dayjs(b.timestamp).valueOf() - dayjs(a.timestamp).valueOf()
+  )[0];
+
+  const lastSetCompletedAt = lastCompletedSet?.timestamp;
 
   const elapsedSinceLastSet = useMemo(() => {
     return lastSetCompletedAt === undefined
@@ -36,15 +55,15 @@ export default function SWControl(props: Props) {
         );
   }, [now, lastSetCompletedAt, trainingInProgress]);
 
+  if (setIndex === undefined || !selectedExercise) return null;
+
+  const lastSetRecTimeS = selectedExercise.sets[setIndex].recTime;
+
   const remaining =
     lastSetRecTimeS === undefined
       ? 0
       : Math.max(0, lastSetRecTimeS - elapsedSinceLastSet);
   const label = remaining > 0 ? `${remaining}s` : 'DO IT';
-
-  const [countdownTimer, setCountdownTimer] = useState<string>(
-    (lastSetRecTimeS || 60).toString()
-  );
 
   const width =
     typeof window !== 'undefined'
@@ -105,27 +124,42 @@ export default function SWControl(props: Props) {
         </Button>
       </Box> */}
 
-      <PieChart
-        height={120}
-        width={width}
-        hideLegend
-        series={[
-          {
-            data: [
-              {
-                value: label === 'DO IT' ? 100 : elapsedSinceLastSet,
-                label: '',
-              },
-              { value: label === 'DO IT' ? 0 : remaining, label: '' },
-            ],
-            innerRadius: 45,
-          },
-        ]}
-        colors={[theme.palette.primary.main, theme.palette.background.light]}
-      >
-        <ChartsTooltip trigger="none" />
-        <PieCenterLabel label={label} />
-      </PieChart>
+      {lastSetCompletedAt !== undefined &&
+        lastSetRecTimeS !== undefined &&
+        lastCompletedSet &&
+        lastCompletedSet.setNumber != setIndex + 1 &&
+        !isSetCompleted && (
+          <>
+            <PieChart
+              height={120}
+              width={width}
+              hideLegend
+              series={[
+                {
+                  data: [
+                    {
+                      value: label === 'DO IT' ? 100 : elapsedSinceLastSet,
+                      label: '',
+                    },
+                    { value: label === 'DO IT' ? 0 : remaining, label: '' },
+                  ],
+                  innerRadius: 45,
+                },
+              ]}
+              colors={[
+                theme.palette.primary.main,
+                theme.palette.background.light,
+              ]}
+            >
+              <ChartsTooltip trigger="none" />
+              <PieCenterLabel label={label} />
+            </PieChart>
+            <Typography fontWeight={600} fontSize={14}>
+              Recovery time
+            </Typography>
+          </>
+        )}
+
       {/* <Button
         variant="contained"
         sx={{ height: '100%' }}
@@ -142,9 +176,6 @@ export default function SWControl(props: Props) {
       >
         Clear
       </Button> */}
-      <Typography fontWeight={600} fontSize={14}>
-        Recovery time
-      </Typography>
     </Box>
   );
 }

@@ -26,7 +26,7 @@ export default function ExercieseControlSelected(
   const isSetCompleted = trainingInProgress.exerciseSetTrackingState?.find(
     (s) =>
       s.exerciseId === selectedExercise.id &&
-      s.completedSetNumbers.includes(setIndex + 1)
+      s.completedSetNumbers.some((se) => se.setNumber === setIndex + 1)
   );
 
   switch (selectedControl) {
@@ -102,11 +102,7 @@ export default function ExercieseControlSelected(
     case TrainingInProgressExerciseControl.SW: {
       return (
         trainingInProgress.startOfTraining && (
-          <SWControl
-            startOfTraining={trainingInProgress.startOfTraining}
-            lastSetCompletedAt={trainingInProgress.lastSetCompletedAt}
-            lastSetRecTimeS={trainingInProgress.lastSetRecTimeS}
-          />
+          <SWControl startOfTraining={trainingInProgress.startOfTraining} />
         )
       );
     }
