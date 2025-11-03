@@ -280,18 +280,19 @@ export default function AthleteHeader(props: Props) {
           )}
         </Box>
 
-        {(screenSize.isLandscapeMobile || screenSize.isMobile) && (
-          <Box
-            position="fixed"
-            bottom={0}
-            width="100%"
-            display="flex"
-            justifyContent="center"
-            zIndex={1000}
-          >
-            <BottomNavigation />
-          </Box>
-        )}
+        {(screenSize.isLandscapeMobile || screenSize.isMobile) &&
+          !trainingInProgress && (
+            <Box
+              position="fixed"
+              bottom={0}
+              width="100%"
+              display="flex"
+              justifyContent="center"
+              zIndex={1000}
+            >
+              <BottomNavigation />
+            </Box>
+          )}
       </Box>
     </>
   );

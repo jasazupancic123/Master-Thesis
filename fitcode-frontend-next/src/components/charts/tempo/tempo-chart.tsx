@@ -343,62 +343,60 @@ export default function TempoChart({
               // LEFT stack (keeps your current color scheme)
               {
                 dataKey: 'concentricL',
-                label: 'Concentric (L)',
+                label: 'Con (L)',
                 stack: 'timeL',
                 valueFormatter: (v) =>
-                  !v ? '–' : `Concentric (L): ${Math.abs(v).toFixed(1)}s`,
+                  !v ? '–' : `Coc (L): ${Math.abs(v).toFixed(1)}s`,
                 color: theme.palette.primary.main,
               },
               {
                 dataKey: 'eccentricL',
-                label: 'Eccentric (L)',
+                label: 'Ecc (L)',
                 stack: 'timeL',
                 valueFormatter: (v) =>
-                  !v ? '–' : `Eccentric (L): ${Math.abs(v).toFixed(1)}s`,
+                  !v ? '–' : `Ecc (L): ${Math.abs(v).toFixed(1)}s`,
                 color: theme.palette.secondary.main,
               },
               {
                 // zero-height (transparent) segment so the tooltip can show the isometric value
                 dataKey: 'isometricFakeL',
-                label: 'Isometric (L)',
+                label: 'Iso (L)',
                 stack: 'timeL',
                 valueFormatter: (v, ctx) => {
                   const row = rows[ctx.dataIndex];
                   const iso = row?.isometricL ?? 0;
                   return iso
-                    ? `Isometric (L): ${Math.abs(iso).toFixed(1)}s`
-                    : 'Isometric (L): –';
+                    ? `Iso (L): ${Math.abs(iso).toFixed(1)}s`
+                    : 'Iso (L): –';
                 },
                 color: 'none',
               },
-
-              // RIGHT stack (blue-ish combo)
               {
                 dataKey: 'concentricR',
-                label: 'Concentric (R)',
+                label: 'Con (R)',
                 stack: 'timeR',
                 valueFormatter: (v) =>
-                  !v ? '–' : `Concentric (R): ${Math.abs(v).toFixed(1)}s`,
+                  !v ? '–' : `Con (R): ${Math.abs(v).toFixed(1)}s`,
                 color: theme.palette.info.main,
               },
               {
                 dataKey: 'eccentricR',
-                label: 'Eccentric (R)',
+                label: 'Ecc (R)',
                 stack: 'timeR',
                 valueFormatter: (v) =>
-                  !v ? '–' : `Eccentric (R): ${Math.abs(v).toFixed(1)}s`,
+                  !v ? '–' : `Ecc (R): ${Math.abs(v).toFixed(1)}s`,
                 color: theme.palette.info.light,
               },
               {
                 dataKey: 'isometricFakeR',
-                label: 'Isometric (R)',
+                label: 'Iso (R)',
                 stack: 'timeR',
                 valueFormatter: (v, ctx) => {
                   const row = rows[ctx.dataIndex];
                   const iso = row?.isometricR ?? 0;
                   return iso
-                    ? `Isometric (R): ${Math.abs(iso).toFixed(1)}s`
-                    : 'Isometric (R): –';
+                    ? `Iso (R): ${Math.abs(iso).toFixed(1)}s`
+                    : 'Iso (R): –';
                 },
                 color: 'none',
               },
@@ -406,31 +404,29 @@ export default function TempoChart({
           : [
               {
                 dataKey: 'concentricL',
-                label: 'Concentric',
+                label: 'Con',
                 stack: 'timeL',
                 valueFormatter: (v) =>
-                  !v ? '–' : `Concentric: ${Math.abs(v).toFixed(1)}s`,
+                  !v ? '–' : `Con: ${Math.abs(v).toFixed(1)}s`,
                 color: theme.palette.primary.main,
               },
               {
                 dataKey: 'eccentricL',
-                label: 'Eccentric',
+                label: 'Ecc',
                 stack: 'timeL',
                 valueFormatter: (v) =>
-                  !v ? '–' : `Eccentric: ${Math.abs(v).toFixed(1)}s`,
+                  !v ? '–' : `Ecc: ${Math.abs(v).toFixed(1)}s`,
                 color: theme.palette.secondary.main,
               },
               {
                 // zero-height (transparent) segment so the tooltip can show the isometric value
                 dataKey: 'isometricFakeL',
-                label: 'Isometric',
+                label: 'Iso',
                 stack: 'timeL',
                 valueFormatter: (v, ctx) => {
                   const row = rows[ctx.dataIndex];
                   const iso = row?.isometricL ?? 0;
-                  return iso
-                    ? `Isometric: ${Math.abs(iso).toFixed(1)}s`
-                    : 'Isometric: –';
+                  return iso ? `Iso: ${Math.abs(iso).toFixed(1)}s` : 'Iso: –';
                 },
                 color: 'none',
               },
@@ -446,6 +442,11 @@ export default function TempoChart({
         },
         '& .MuiChartsLegend-root': {
           transform: 'translateX(15px)',
+          justifyContent: 'center',
+          gap: 0.5,
+          flexWrap: 'nowrap',
+          textAlign: 'center',
+          fontSize: 10,
         },
         '& [class*="MuiChartsSurface-root"]': {
           transform: aiRecordingView

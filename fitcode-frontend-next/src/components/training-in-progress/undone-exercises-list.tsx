@@ -43,7 +43,9 @@ export default function UndoneExercisesList() {
                 trainingInProgress.exerciseSetTrackingState.find(
                   (s) =>
                     s.exerciseId === exercise.id &&
-                    s.completedSetNumbers.includes(set.setNumber)
+                    s.completedSetNumbers.some(
+                      (se) => se.setNumber === set.setNumber
+                    )
                 );
 
               if (isSetDone) return null;

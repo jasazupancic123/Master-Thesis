@@ -5,8 +5,7 @@ import RomStatistic from '../charts/rom/rom-statistics';
 import TempoChart from '../charts/tempo/tempo-chart';
 import TempoStatistic from '../charts/tempo/tempo-statistic';
 import { TrainingInProgressExerciseControl } from './enum/exercise-controls.enum';
-import SWControl from './sw-contro';
-import TempoTimes from './tempo-times';
+import SWControl from './sw-control';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import ImageGallery from '@/ui/image-gallery';
@@ -27,7 +26,7 @@ export default function ExercieseControlSelected(
   const isSetCompleted = trainingInProgress.exerciseSetTrackingState?.find(
     (s) =>
       s.exerciseId === selectedExercise.id &&
-      s.completedSetNumbers.includes(setIndex + 1)
+      s.completedSetNumbers.some((se) => se.setNumber === setIndex + 1)
   );
 
   switch (selectedControl) {
@@ -38,16 +37,16 @@ export default function ExercieseControlSelected(
           display="flex"
           flexDirection="column"
           alignItems="center"
-          gap={1}
+          gap={2}
         >
-          {isSetCompleted &&
+          {/* {isSetCompleted &&
             (selectedExercise.sets[setIndex].tempo !== undefined ||
               selectedExercise.sets[setIndex].tempoR !== undefined) && (
               <TempoTimes
                 tempo={selectedExercise.sets[setIndex].tempo}
                 tempoR={selectedExercise.sets[setIndex].tempoR}
               />
-            )}
+            )} */}
 
           <TempoChart
             selectedExercise={selectedExercise}
@@ -102,14 +101,8 @@ export default function ExercieseControlSelected(
     }
     case TrainingInProgressExerciseControl.SW: {
       return (
-        trainingInProgress.startOfTraining &&
-        trainingInProgress.lastSetCompletedAt &&
-        trainingInProgress.lastSetRecTimeS !== undefined && (
-          <SWControl
-            startOfTraining={trainingInProgress.startOfTraining}
-            lastSetCompletedAt={trainingInProgress.lastSetCompletedAt}
-            lastSetRecTimeS={trainingInProgress.lastSetRecTimeS}
-          />
+        trainingInProgress.startOfTraining && (
+          <SWControl startOfTraining={trainingInProgress.startOfTraining} />
         )
       );
     }

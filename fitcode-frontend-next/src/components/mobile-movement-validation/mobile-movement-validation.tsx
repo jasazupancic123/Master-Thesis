@@ -62,6 +62,7 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import LoadingOverlay from '@/ui/loading-overlay';
+import { handleAdvanceInSuperset } from '../training-in-progress/actions/actions-superset';
 
 const DEBUG = false;
 
@@ -676,6 +677,11 @@ export default function MobileMovementValidation(
         trainingInProgress,
         setTrainingInProgress,
         handleUpsertSet,
+      });
+
+      handleAdvanceInSuperset({
+        useTraining: { ...trainingContext, trainingInProgress },
+        useTrainingInProgress: trainingInProgressContext,
       });
 
       setSelectedTrackingMethod(TrackingMethod.MANUAL);
