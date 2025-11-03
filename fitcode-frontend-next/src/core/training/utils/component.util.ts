@@ -3,8 +3,10 @@ import { addMinutes } from 'date-fns';
 import { MainSet } from '../enum/main-set.enum';
 import type { TrainingComponent } from '../type/training-component.type';
 import { Components } from '@/core/exercise/constant/components.constant';
+import { Methods } from '@/core/exercise/constant/method.constant';
 import { Targets } from '@/core/exercise/constant/target.constant';
 import type { Component } from '@/core/exercise/type/component.type';
+import type { Method } from '@/core/exercise/type/method.type';
 import type { Target } from '@/core/exercise/type/target.type';
 import type { Cycle } from '@/core/group/type/cycle.type';
 
@@ -44,5 +46,9 @@ export class TrainingComponentUtil {
     const cycleTarget = cycle.targets.find((ct) => ct.targetId === targetId);
     if (!cycleTarget) return undefined;
     return Targets.find((t) => t.field === cycleTarget.targetId);
+  }
+
+  findMethodologies(componentId: string): Method[] {
+    return Methods.filter((m) => m.componentId === componentId);
   }
 }

@@ -334,7 +334,7 @@ export class TrainingPlanService {
         });
       }
 
-      validSupersets.push({ exercises: validTrainingExercises });
+      validSupersets.push({ ...superset, exercises: validTrainingExercises });
     }
 
     const n = newSupersets.length;

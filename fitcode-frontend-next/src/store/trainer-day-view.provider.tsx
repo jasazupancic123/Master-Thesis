@@ -16,6 +16,7 @@ import { Controller } from '@/core/controller';
 import { core } from '@/core/core.service';
 import { ExerciseService } from '@/core/exercise/exercise.service';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
+import type { Method } from '@/core/exercise/type/method.type';
 import type { Profile } from '@/core/profile/type/user.type';
 import type { WellnessZScore } from '@/core/profile/type/wellness.type';
 import type { MainSet } from '@/core/training/enum/main-set.enum';
@@ -444,6 +445,57 @@ export function TrainerDayViewProvider(props: Props) {
     updateSupersets(newSupersets, childrenSubgroups);
   }
 
+  // always add to the beginning
+  function addWarmupSuperset() {
+    if (!component || !training) return;
+
+    const childrenSubgroups = core.training.subgroup.getChildren(
+      selectedSubgroup || component,
+      component
+    );
+
+    if (supersets.some((s) => s.warmup))
+      // remove existing warmup superset first
+      updateSupersets(
+        supersets.filter((s) => !s.warmup),
+        childrenSubgroups
+      );
+    else {
+      // add warmup superset
+      const newSuperset: Superset = { exercises: [], warmup: true };
+
+      supersets.unshift(newSuperset);
+      for (const sg of childrenSubgroups) sg.supersets.unshift(newSuperset);
+
+      updateSupersets(supersets, childrenSubgroups);
+    }
+  }
+
+  function addCooldownSuperset() {
+    if (!component || !training) return;
+
+    const childrenSubgroups = core.training.subgroup.getChildren(
+      selectedSubgroup || component,
+      component
+    );
+
+    if (supersets.some((s) => s.cooldown))
+      // remove existing cooldown superset first
+      updateSupersets(
+        supersets.filter((s) => !s.cooldown),
+        childrenSubgroups
+      );
+    else {
+      // add cooldown superset
+      const newSuperset: Superset = { exercises: [], cooldown: true };
+
+      supersets.push(newSuperset);
+      for (const sg of childrenSubgroups) sg.supersets.push(newSuperset);
+
+      updateSupersets(supersets, childrenSubgroups);
+    }
+  }
+
   /**
    * Updates state after modifying supersets in component or subgroup
    */
@@ -485,6 +537,37 @@ export function TrainerDayViewProvider(props: Props) {
     );
   }
 
+  function applyNewMethod(method: Method) {
+    if (!component || !training) return;
+
+    if (selectedExerciseIds.length === 0)
+      return toast.error('Select exercises to apply the methodology');
+
+    const selectedExercises = exercises.filter((e) =>
+      selectedExerciseIds.includes(e.id)
+    );
+
+    const childrenSubgroups = core.training.subgroup.getChildren(
+      selectedSubgroup || component,
+      component
+    );
+
+    core.training.superset.applyMethodToExercises(
+      method,
+      supersets,
+      selectedExercises
+    );
+
+    for (const sg of childrenSubgroups)
+      core.training.superset.applyMethodToExercises(
+        method,
+        sg.supersets,
+        selectedExercises
+      );
+
+    updateSupersets(supersets, childrenSubgroups);
+  }
+
   const value: TrainerDayViewContextProps = {
     day,
     setDay,
@@ -523,6 +606,9 @@ export function TrainerDayViewProvider(props: Props) {
     handleRemoveMember,
     addTrainingExercises,
     deleteSupersetExercise,
+    addWarmupSuperset,
+    addCooldownSuperset,
+    applyMethod: applyNewMethod,
   };
 
   return (

@@ -6,6 +6,11 @@ import {
   MAX_NUM_SUPERSETS_IN_CIRCUIT_COMPONENT,
 } from '../const/training-limits.const';
 import { MainSet } from '../enum/main-set.enum';
+import type {
+  ExerciseMainParamField,
+  ExerciseParamField,
+  ExerciseSet,
+} from '../type/exercise-set.type';
 import type { ExerciseSetTracking } from '../type/exercise-set-tracking-state.type';
 import type { Superset } from '../type/superset.type';
 import type { Training } from '../type/training.type';
@@ -17,7 +22,9 @@ import {
   REPS,
   TEMPO,
 } from '@/core/exercise/constant/exercise-param.constant';
+import { Methods } from '@/core/exercise/constant/method.constant';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
+import type { Method } from '@/core/exercise/type/method.type';
 
 export class TrainingSupersetUtil {
   toTrainingExercise(exercise: Exercise): TrainingExercise {
@@ -119,7 +126,12 @@ export class TrainingSupersetUtil {
     for (const s of supersets)
       for (let i = 0; i < s.exercises.length; i++)
         if (s.exercises[i].id === newExercise.id) {
-          s.exercises[i] = newExercise;
+          // s.exercises[i] = newExercise;
+          const method = Methods.find((m) => m.field === newExercise.methodId);
+          if (newExercise.methodId && method)
+            s.exercises[i] = this.applyMethod(method, newExercise);
+          else s.exercises[i] = newExercise;
+
           break;
         }
 
@@ -162,5 +174,131 @@ export class TrainingSupersetUtil {
     }
 
     return true;
+  }
+
+  applyMethodToExercises(
+    method: Method,
+    supersets: Superset[],
+    selectedExercises: Exercise[]
+  ): void {
+    for (const superset of supersets) {
+      for (let i = 0; i < superset.exercises.length; i++) {
+        const exercise = superset.exercises[i];
+        const isSelected = selectedExercises.find((e) => e.id === exercise.id);
+        if (isSelected)
+          superset.exercises[i] = this.applyMethod(method, exercise);
+      }
+    }
+  }
+
+  /**
+   * Applies method constraints (min, max, disabled, pattern) to the exercise.
+   * Clamps values that exceed limits and removes invalid params.
+   */
+  applyMethod(
+    method: Method,
+    trainingExercise: TrainingExercise
+  ): TrainingExercise {
+    trainingExercise.methodId = method.field as string;
+    const updated = structuredClone(trainingExercise);
+
+    for (const attr of method.attributes) {
+      if (attr.field === 'sets') {
+        const sets = updated.sets.length;
+        if (attr.min && sets < attr.min) {
+          // add missing sets
+          for (let i = sets; i < attr.min; i++) {
+            const newSet = structuredClone(updated.sets[0]);
+            newSet.setNumber = i + 1;
+            updated.sets.push(newSet);
+          }
+        }
+
+        if (attr.max && sets > attr.max)
+          updated.sets = updated.sets.slice(0, attr.max);
+
+        continue;
+      }
+
+      const isUnilateral = trainingExercise.exercise?.isUnilateral ?? false;
+      for (const set of updated.sets) {
+        const fields = [
+          attr.field,
+          ...(isUnilateral ? [core.exercise.param.pairs[attr.field]] : []),
+        ];
+
+        for (const field of fields) {
+          let value = set[field];
+          if (value === null || value === undefined) continue;
+
+          // clamp numeric values
+          if (typeof value === 'number') {
+            const min = typeof attr.min === 'number' ? attr.min : 0;
+            const max = typeof attr.max === 'number' ? attr.max : Infinity;
+            if (value < min) value = min;
+            if (value > max) value = max;
+          }
+
+          // disable field
+          if (attr.disabled) {
+            value = undefined;
+            set[field] = value as never;
+
+            // find another param in the same "option" group to set new default value
+            const alternative = this.findAlternativeMethodParam(
+              method,
+              field as ExerciseMainParamField
+            );
+
+            if (alternative)
+              set[alternative.field as keyof ExerciseSet] =
+                alternative.value as never;
+          } else set[field] = value as never;
+        }
+      }
+    }
+
+    return updated;
+  }
+
+  findAlternativeMethodParam(
+    method: Method,
+    field: ExerciseMainParamField
+  ): { field: ExerciseMainParamField; value: number | string } | undefined {
+    // get all params in the same option group, excluding the provided field
+    // for example, if field is "reps", get ["time", "dist"], because they
+    // belong to the same option group (volume)
+    const optionGroup = core.exercise.param
+      .getOptionGroup(field)
+      .filter((p) => p !== field);
+
+    // get first non-disabled param from the method attributes
+    for (const param of optionGroup) {
+      const methodAttribute = method.attributes.find((a) => a.field === param);
+      if (methodAttribute && !methodAttribute.disabled) {
+        const attribute = core.exercise.param.get(param as ExerciseParamField);
+        if (attribute) {
+          // check if method applies any constraints to the alternative param and clap
+          // set default value accordingly
+          let value: number | string = attribute.defaultValue as
+            | number
+            | string;
+
+          if (typeof value === 'number') {
+            const min =
+              typeof methodAttribute.min === 'number' ? methodAttribute.min : 0;
+            const max =
+              typeof methodAttribute.max === 'number'
+                ? methodAttribute.max
+                : Infinity;
+
+            if (value < min) value = min;
+            if (value > max) value = max;
+          }
+
+          return { field: param as ExerciseMainParamField, value };
+        }
+      }
+    }
   }
 }
