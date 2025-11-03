@@ -50,6 +50,8 @@ export default function NumericParamInputBox({
 
     const newValue = value + valueToAddOrSubtract;
 
+    if (newValue < 0) return;
+
     onSubOptionChange(newValue.toString());
   };
 

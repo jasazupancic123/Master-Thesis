@@ -3,7 +3,9 @@ import {
   CalendarTodayOutlined,
   FitnessCenterOutlined,
   Groups,
+  Logout,
   PersonAdd,
+  Settings,
   SpaOutlined,
 } from '@mui/icons-material';
 import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
@@ -61,7 +63,12 @@ export const LINK_SIGN_IN = link(
   SIGN_IN_LINK_ID
 );
 export const SIGN_OUT_LINK_ID = 'sign-out';
-export const LINK_SIGN_OUT = link('Sign Out', '#', undefined, SIGN_OUT_LINK_ID);
+export const LINK_SIGN_OUT = link(
+  'Sign Out',
+  '#',
+  <Logout />,
+  SIGN_OUT_LINK_ID
+);
 export const LINK_PROFILE = link('Profile', '/profile', <PersonIcon />);
 export const LINK_USERS = link('Users', '/users');
 export const LINK_EXERCISES_DASHBOARD = link(
@@ -91,7 +98,7 @@ export const LINK_CALENDAR = link(
 
 export const LINK_FEEDBACK = link('Feedback', '/feedback', <SpaOutlined />);
 
-export const LINK_SETTINGS = link('Settings', '/settings');
+export const LINK_SETTINGS = link('Settings', '/settings', <Settings />);
 export const LINK_GROUP_BY_ID = (id: string) =>
   link('Group', `/groups/${id}`, <HomeIcon />);
 

@@ -1,6 +1,7 @@
 import type {
   ExerciseParamFieldExtended,
   ExerciseSet,
+  ExerciseSetWithPrescribedTempo,
 } from './exercise-set.type';
 import type { IdEntity } from '@/core/entity.type';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
@@ -31,8 +32,9 @@ export type RepImage = {
   side?: 'L' | 'R';
 };
 
-export type TrainingExerciseRecording = TrainingExercise & {
+export type TrainingExerciseRecording = Omit<TrainingExercise, 'sets'> & {
   recordedSets?: TrainingExerciseRecordedSet[];
+  sets: ExerciseSetWithPrescribedTempo[];
 };
 
 export type RepRomTimestamp = {

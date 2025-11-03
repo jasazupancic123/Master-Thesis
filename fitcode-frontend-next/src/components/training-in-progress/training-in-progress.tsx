@@ -1,22 +1,30 @@
 import { Circle } from '@mui/icons-material';
 import CloseIcon from '@mui/icons-material/Close';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import { Box, Fab, Menu, MenuItem, Typography } from '@mui/material';
+import {
+  Box,
+  Fab,
+  LinearProgress,
+  Menu,
+  MenuItem,
+  Typography,
+} from '@mui/material';
+import { linearProgressClasses } from '@mui/material';
 import { useTheme } from '@mui/material';
+import Image from 'next/image';
 import React, { useEffect } from 'react';
 
-import AthleteOptionsContainer from '../athlete/athlete-options-container';
-import { handleChangeSuperset } from './actions/actions-superset';
+import AthleteHeader from '../athlete/athlete-header';
 import { handleInitTrainingInProgressComponent } from './actions/actions-training-in-progress';
 import { useTrainingInProgressUtils } from './context/training-in.progress-utils.provider';
 import { useUndoneExercises } from './context/undone-exercises.provider';
 import CancelTrainingModal from './modals/cancel-training-modal';
 import UndoneSetsErrorModal from './modals/undone-sets-error-modal';
-import UndoneSetsWarningModal from './modals/undone-sets-warning-modal';
-import TrainingInProgressSuperset from './training-in-progress-superset';
+import TrainingInProgressExerciseContainer from './training-in-progress-exercise-container';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
-import { useHorizontalOverflow } from '@/hooks/use-horizontal-overflow.hook';
+import { lib } from '@/lib';
+import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
 import { preloadPoseLandmarker } from '@/lib/pose-detection/util/pose-landmarker-loader.util';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useTraining } from '@/store/training.provider';
@@ -27,32 +35,32 @@ export default function TrainingInProgress() {
 
   const trainingContext = useTraining();
   const trainingInProgressContext = useTrainingInProgress();
-  const trainingInProgressUndoneExercisesContext = useUndoneExercises();
   const trainingInProgressUtilsContext = useTrainingInProgressUtils();
   const athleteHeaderContext = useAthleteHeader();
+  const undoneExercisesContext = useUndoneExercises();
 
   const { trainingInProgress } = trainingContext;
 
-  const { selectedSuperset } = trainingInProgressContext;
+  const {
+    supersetIndex,
+    setSupersetIndex,
+    selectedExercise,
+    setSelectedExercise,
+  } = trainingInProgressContext;
 
   const {
-    elapsedTime,
     anchorEl,
     open,
     handleOpenMenu,
     handleCloseMenu,
     handleCancel,
-    formatTime,
     openCancelTrainingModal,
     setOpenCancelTrainingModal,
     showUndoneSetsError,
     setShowUndoneSetsError,
-    showUndoneSetsWarning,
-    setShowUndoneSetsWarning,
   } = trainingInProgressUtilsContext;
 
   const { selectedTrackingMethod } = athleteHeaderContext;
-  const { outerRef, innerRef, isOverflowing } = useHorizontalOverflow();
 
   /* Preload pose landmarker */
   useEffect(() => {
@@ -85,40 +93,39 @@ export default function TrainingInProgress() {
     >
       {selectedTrackingMethod !== TrackingMethod.CAMERA && (
         <>
-          <AthleteOptionsContainer
-            items={['', `Time: ${formatTime(elapsedTime)}`]}
-            selectedItem={'none'}
-            title={trainingInProgress.selectedComponent.id || ''}
-            onClick={() => {}}
+          <AthleteHeader
+            trainingInProgressUndoneExercisesContext={undoneExercisesContext}
+            trainingInProgressContext={trainingInProgressContext}
+            trainingInProgressUtilsContext={trainingInProgressUtilsContext}
           />
           <Box
-            ref={outerRef}
-            width="100%"
+            display="flex"
+            gap={1}
+            px={1}
+            pt={0.5}
+            pb={1}
+            maxWidth="100%"
             sx={{
               overflowX: 'auto',
-              py: 1.5,
-              pt: 0.7,
-              borderBottom: `1px solid ${theme.palette.primary.main}`,
+              mx: 'auto',
+              backgroundColor: theme.palette.background.dark,
             }}
           >
-            <Box
-              ref={innerRef}
-              display="flex"
-              gap={4}
-              p={1}
-              justifyContent={isOverflowing ? 'flex-start' : 'center'}
-              sx={{
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {trainingInProgress.supersets?.map((superset, i) => {
-                const isSelected =
-                  (trainingInProgress.supersetIndex ?? 0) === i; // <- key change
+            {(trainingInProgress.supersets || []).map((superset, i) => {
+              const isSelected = supersetIndex === i; // <- key change
 
-                return (
+              return (
+                <Box
+                  key={i}
+                  display="flex"
+                  flexDirection="column"
+                  alignItems="center"
+                  gap={1}
+                >
                   <Typography
                     key={i}
-                    fontSize={12}
+                    fontSize={14}
+                    fontWeight={isSelected ? 600 : undefined}
                     textAlign="center"
                     noWrap
                     sx={{
@@ -126,23 +133,6 @@ export default function TrainingInProgress() {
                       color: isSelected
                         ? theme.palette.primary.main
                         : undefined,
-                      fontWeight: isSelected ? 'bold' : 'normal',
-                    }}
-                    onClick={() => {
-                      handleChangeSuperset(
-                        { superset, i },
-                        {
-                          useTraining: {
-                            ...trainingContext,
-                            trainingInProgress,
-                          },
-                          useTrainingInProgress: trainingInProgressContext,
-                          useUndoneExercises:
-                            trainingInProgressUndoneExercisesContext,
-                          useTrainingInProgressUtils:
-                            trainingInProgressUtilsContext,
-                        }
-                      );
                     }}
                   >
                     {isSelected && (
@@ -155,19 +145,125 @@ export default function TrainingInProgress() {
                         }}
                       />
                     )}
-                    Superset {i + 1}
+                    Block {i + 1}
                   </Typography>
-                );
-              })}
-            </Box>
+                  <Box display="flex" justifyContent="center" gap={0.5}>
+                    {superset.exercises.map((e) => {
+                      const isSelected = selectedExercise?.id === e.id;
+
+                      const exercise = e.exercise;
+
+                      if (!exercise) return null;
+
+                      const width = 75;
+                      const height = 50;
+
+                      const completedSetsTracking =
+                        trainingInProgress.exerciseSetTrackingState.find(
+                          (s) => s.exerciseId === e.id
+                        );
+
+                      const progress =
+                        ((completedSetsTracking?.completedSetNumbers.length ||
+                          0) /
+                          e.sets.length) *
+                        100;
+
+                      return (
+                        <Box
+                          key={e.id}
+                          onClick={() => {
+                            const newSupersetIndex =
+                              trainingInProgress.supersets.indexOf(superset);
+
+                            if (newSupersetIndex === -1) return;
+
+                            if (supersetIndex !== newSupersetIndex)
+                              setSupersetIndex(newSupersetIndex);
+
+                            setSelectedExercise(e);
+                          }}
+                          sx={{
+                            border: isSelected
+                              ? `2px solid ${theme.palette.primary.main}`
+                              : '1px solid transparent',
+                            borderRadius: 2,
+                            overflow: 'hidden',
+                            width,
+                            height,
+                            flex: '0 0 auto',
+                            position: 'relative',
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              filter: 'grayscale(100%)',
+                              width: '100%',
+                              height: '100%',
+                            }}
+                          >
+                            {exercise.imageUrl || !exercise.videoUrl ? (
+                              <Image
+                                src={
+                                  exercise.imageUrl || EXERCISE_DEFAULT_IMG_URL
+                                }
+                                alt={exercise.name}
+                                width={width}
+                                height={height}
+                                unoptimized={lib.common.env.unoptimizeImages()}
+                                style={{ objectFit: 'cover', display: 'block' }}
+                              />
+                            ) : (
+                              <Box
+                                component="video"
+                                sx={{
+                                  inset: 0,
+                                  width: '100%',
+                                  height: '100%',
+                                  objectFit: 'cover',
+                                }}
+                                controls={false}
+                                src={exercise.videoUrl!}
+                                muted
+                                loop
+                                playsInline
+                              />
+                            )}
+                          </Box>
+                          <LinearProgress
+                            variant="determinate"
+                            value={progress}
+                            sx={{
+                              display: progress > 0 ? undefined : 'none',
+                              position: 'absolute',
+                              bottom: 2,
+                              left: '50%',
+                              transform: 'translateX(-50%)',
+                              width: '90%',
+                              height: 5,
+                              borderRadius: 5,
+                              border: `1px solid ${theme.palette.primary.main}`,
+                              bgcolor: 'rgba(0, 0, 0, 0.3)',
+                              [`&.${linearProgressClasses.bar}`]: {
+                                bgcolor: theme.palette.primary.main,
+                              },
+                              [`&.${linearProgressClasses.colorPrimary}`]: {
+                                bgcolor: theme.palette.background.default,
+                              },
+                            }}
+                          />
+                        </Box>
+                      );
+                    })}
+                  </Box>
+                </Box>
+              );
+            })}
           </Box>
         </>
       )}
-
-      {trainingInProgress &&
-      trainingInProgress.supersets &&
-      selectedSuperset ? (
-        <TrainingInProgressSuperset />
+      {trainingInProgress && trainingInProgress.supersets ? (
+        <TrainingInProgressExerciseContainer />
       ) : (
         <Box
           display="flex"
@@ -203,17 +299,10 @@ export default function TrainingInProgress() {
           </Menu>
         </Box>
       )}
-
       <CancelTrainingModal
         open={openCancelTrainingModal}
         setOpen={setOpenCancelTrainingModal}
       />
-
-      <UndoneSetsWarningModal
-        open={showUndoneSetsWarning}
-        setOpen={setShowUndoneSetsWarning}
-      />
-
       <UndoneSetsErrorModal
         open={showUndoneSetsError}
         setOpen={setShowUndoneSetsError}

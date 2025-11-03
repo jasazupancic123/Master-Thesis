@@ -2,6 +2,7 @@
 
 import { Box, Typography, useTheme } from '@mui/material';
 
+import { ElapsedTime } from '../training-in-progress/training-in-progress-elapsed-time';
 import TrapezoidTitle from './trapezoid-title';
 import SimpleCircle from '@/ui/simple-circle';
 
@@ -10,6 +11,7 @@ interface Props {
   title: string;
   selectedItem: string;
   onClick: (type: string) => void;
+  startMs?: number; // If this is passed, it's used to show elapsed time
 }
 
 export default function AthleteOptionsContainer({
@@ -17,6 +19,7 @@ export default function AthleteOptionsContainer({
   title,
   selectedItem,
   onClick,
+  startMs,
 }: Props) {
   const theme = useTheme();
 
@@ -38,24 +41,28 @@ export default function AthleteOptionsContainer({
 
       {items.map((type, i) => (
         <Box
-          key={type}
+          key={i}
           display="flex"
           alignItems="center" // center the inline-sized text inside the column
           gap={0.75}
         >
           {type === selectedItem && i === 0 && <SimpleCircle />}
 
-          <Typography
-            onClick={() => onClick(type)}
-            sx={{
-              display: 'inline-block', // shrink to content width
-              fontSize: 12,
-              textTransform: 'uppercase',
-              cursor: 'pointer',
-            }}
-          >
-            {type}
-          </Typography>
+          {i === 1 && startMs !== undefined ? (
+            <ElapsedTime startMs={startMs} />
+          ) : (
+            <Typography
+              onClick={() => onClick(type)}
+              sx={{
+                display: 'inline-block', // shrink to content width
+                fontSize: 12,
+                textTransform: 'uppercase',
+                cursor: 'pointer',
+              }}
+            >
+              {type}
+            </Typography>
+          )}
 
           {type === selectedItem && i === 1 && <SimpleCircle />}
         </Box>

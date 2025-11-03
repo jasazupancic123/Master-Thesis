@@ -98,6 +98,8 @@ export function TrainerDayViewProvider(props: Props) {
     setSelectedAthleteCompletedWorkloads,
   ] = useState<Workload[]>([]);
 
+  const [expandedExercisesView, setExpandedExercisesView] = useState(false);
+
   useEffect(() => {
     const cycleInDate = group.cycles.find((c) =>
       lib.common.date.isBetween(day.date, c.from, c.to)
@@ -513,6 +515,8 @@ export function TrainerDayViewProvider(props: Props) {
     setSelectedAthleteCompletedWorkloads,
     isSettingAthleteWorkloads,
     previousSelectedAthlete,
+    expandedExercisesView,
+    setExpandedExercisesView,
     loading,
     setLoading,
     handleAddMember,

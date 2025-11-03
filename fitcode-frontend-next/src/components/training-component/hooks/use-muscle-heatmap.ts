@@ -54,7 +54,7 @@ export default function useMuscleHeatmap() {
     } else if (component) {
       setExercises(component.supersets.flatMap((s) => s.exercises));
     }
-  }, [component, selectedSubgroup]);
+  }, [component, selectedSubgroup, selectedAthlete]);
 
   useEffect(() => {
     if (tipHeatmapBack.show && tipHeatmapFront.show) {

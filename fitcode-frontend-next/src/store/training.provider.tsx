@@ -61,10 +61,6 @@ export const TrainingProvider = (
   const { user } = useAuthenticatedAuth();
 
   useEffect(() => {
-    // const storedTrainingInProgress = localStorage.getItem(
-    //   STORED_TRAINING_IN_PROGRESS
-    // );
-
     const setupTrainingInProgress = async () => {
       const storedTrainingInProgress = await lib.common.indexedDb.items.get(
         STORED_TRAINING_IN_PROGRESS
@@ -95,13 +91,6 @@ export const TrainingProvider = (
 
     const storeTrainingInProgress = async () => {
       if (trainingInProgress.startOfTraining) {
-        // localStorage.setItem(
-        //   STORED_TRAINING_IN_PROGRESS,
-        //   JSON.stringify(trainingInProgress)
-        // );
-
-        // console.log('storing training in progress', trainingInProgress);
-
         await lib.common.indexedDb.items.put({
           id: STORED_TRAINING_IN_PROGRESS,
           payload: JSON.stringify(trainingInProgress),
@@ -116,7 +105,6 @@ export const TrainingProvider = (
   const clearTrainingState = async () => {
     setTrainingInProgress(null);
     setView(ExerciseTrainingView.ExerciseView);
-    // localStorage.removeItem(STORED_TRAINING_IN_PROGRESS);
     await lib.common.indexedDb.items.delete(STORED_TRAINING_IN_PROGRESS);
   };
 

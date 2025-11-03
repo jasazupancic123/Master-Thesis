@@ -13,6 +13,7 @@ import type {
   IAuthContext,
 } from '@/lib/common/type/auth-context.type';
 import { getFirebaseAuth } from '@/lib/firebase/config';
+import Alert from '@/ui/alert';
 
 const AuthContext = createContext<IAuthContext | null>(null);
 
@@ -167,7 +168,7 @@ export function withAuth<P extends object>(
     const auth = useAuth();
     const router = useRouter();
 
-    if (auth.status !== 'authenticated') return <div>Loading...</div>;
+    if (auth.status !== 'authenticated') return <Alert type="loading" />;
 
     if (allowedRoles && !allowedRoles.includes(auth.role)) {
       router.replace(LINK_SIGN_IN.href);

@@ -1,8 +1,7 @@
-import CloseIcon from '@mui/icons-material/Close';
 import {
+  Box,
   Button,
   FormControl,
-  IconButton,
   MenuItem,
   Popover,
   Select,
@@ -17,6 +16,7 @@ import {
   disableBorder,
   exerciseCardSetAttributeSx,
 } from '../trainer-group-day-view/style/exercise-card-set-attribute.style';
+import ExerciseParamValueText from './exercise-param-value-text';
 import type { Attribute } from '@/core/attribute/type/attribute.type';
 import { core } from '@/core/core.service';
 import type { ExerciseParamField } from '@/core/training/type/exercise-set.type';
@@ -32,13 +32,14 @@ interface Props {
   onSelectChange?: SetState<string>;
   onInputChange?: SetState<string>;
   athleteView?: boolean;
-  trainingInProgressView?: boolean;
+  trainingInProgressPrimaryItem?: boolean;
+  trainingInProgressSecondaryItem?: boolean;
   lOrR?: 'L' | 'R';
   showOptions?: boolean;
   readOnly?: boolean;
   disableOptions?: boolean;
   disableSets?: boolean;
-  disableSettingValue?: boolean;
+  disabled?: boolean;
 }
 
 export function TempoExerciseParam({
@@ -52,7 +53,9 @@ export function TempoExerciseParam({
   disableSets = false,
   readOnly = false,
   athleteView,
-  trainingInProgressView,
+  trainingInProgressPrimaryItem,
+  trainingInProgressSecondaryItem,
+  disabled,
 }: Props) {
   const theme = useTheme();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
@@ -66,9 +69,19 @@ export function TempoExerciseParam({
   if (!value || !exerciseParam) return null;
 
   return (
-    <Stack
-      direction="column"
-      justifyContent={trainingInProgressView ? 'flex-start' : 'center'}
+    <Box
+      width={
+        trainingInProgressPrimaryItem || trainingInProgressSecondaryItem
+          ? '50px !important'
+          : undefined
+      }
+      display="flex"
+      flexDirection="column"
+      justifyContent={
+        trainingInProgressPrimaryItem || trainingInProgressSecondaryItem
+          ? 'flex-start'
+          : 'center'
+      }
       alignItems="center"
     >
       {showOptions && (
@@ -82,6 +95,10 @@ export function TempoExerciseParam({
             variant="filled"
             sx={{
               ...exerciseCardSetAttributeSx['& .MuiSelect-select'],
+              height:
+                trainingInProgressPrimaryItem || trainingInProgressSecondaryItem
+                  ? 14
+                  : undefined,
               textAlign: 'center',
               pr: 0,
               pl: 0,
@@ -102,12 +119,19 @@ export function TempoExerciseParam({
               '&.Mui-disabled': {
                 backgroundColor: 'transparent',
               },
-              '&.Mui-disabled .MuiSelect-select': trainingInProgressView
+              '&.Mui-disabled .MuiSelect-select': trainingInProgressPrimaryItem
                 ? {
-                    color: theme.palette.text.primary,
-                    WebkitTextFillColor: theme.palette.text.primary, // <-- important for disabled text
+                    color: theme.palette.background.lightBorder,
+                    WebkitTextFillColor: theme.palette.background.lightBorder, // <-- important for disabled text
+                    fontSize: 12,
                   }
-                : {},
+                : trainingInProgressSecondaryItem
+                  ? {
+                      color: theme.palette.background.lightBorder,
+                      WebkitTextFillColor: theme.palette.background.lightBorder, // <-- important for disabled text
+                      fontSize: 10,
+                    }
+                  : {},
             }}
             disableUnderline={true}
             value={selected}
@@ -155,30 +179,48 @@ export function TempoExerciseParam({
           '& .MuiInputBase-input': disableBorder,
         }}
       >
-        <Button
-          variant="text"
-          size="small"
-          onClick={(e) => setAnchorEl(e.currentTarget)}
-          disabled={readOnly || disableSets}
-        >
-          {/* parsed value for tempo */}
-          <Typography sx={{ textAlign: 'center', fontSize: 12 }}>
-            {value}
-          </Typography>
-        </Button>
+        {trainingInProgressPrimaryItem || trainingInProgressSecondaryItem ? (
+          <Box
+            onClick={(e: React.MouseEvent<HTMLElement>) => {
+              if (readOnly || disableSets) return;
 
-        <TempoPicker
-          open={open}
-          anchorEl={anchorEl}
-          onClose={() => setAnchorEl(null)}
-          value={value as string}
-          onChange={(val) => {
-            onInputChange?.(val);
-            if (!athleteView && setDetectedChanges) setDetectedChanges(true);
-          }}
-        />
+              setAnchorEl(e.currentTarget);
+            }}
+          >
+            {/* parsed value for tempo */}
+            <ExerciseParamValueText
+              value={value as string}
+              secondary={trainingInProgressSecondaryItem}
+            />
+          </Box>
+        ) : (
+          <Button
+            variant="text"
+            size="small"
+            onClick={(e) => setAnchorEl(e.currentTarget)}
+            disabled={readOnly || disableSets}
+          >
+            {/* parsed value for tempo */}
+            <Typography sx={{ textAlign: 'center', fontSize: 12 }}>
+              {value}
+            </Typography>
+          </Button>
+        )}
+
+        {!disabled && (
+          <TempoPicker
+            open={open}
+            anchorEl={anchorEl}
+            onClose={() => setAnchorEl(null)}
+            value={value as string}
+            onChange={(val) => {
+              onInputChange?.(val);
+              if (!athleteView && setDetectedChanges) setDetectedChanges(true);
+            }}
+          />
+        )}
       </FormControl>
-    </Stack>
+    </Box>
   );
 }
 
@@ -219,23 +261,8 @@ function TempoPicker({
       onClose={onClose}
       anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
     >
-      <Stack spacing={1} sx={{ p: 2, minWidth: 220 }}>
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-        >
-          <Typography fontWeight={600}>Set Tempo</Typography>
-          <IconButton onClick={onClose} size="small">
-            <CloseIcon fontSize="small" />
-          </IconButton>
-        </Stack>
-
-        <Stack
-          direction="row"
-          justifyContent="space-around"
-          alignItems="center"
-        >
+      <Stack spacing={1} sx={{ p: 1, minWidth: 220 }}>
+        <Stack direction="row" alignItems="start" gap={0.5}>
           {['Ecc', 'Pause', 'Con', 'Pause'].map((label, i) => (
             <Stack key={i} alignItems="center" spacing={0.5}>
               <Typography variant="caption">{label}</Typography>
@@ -246,7 +273,7 @@ function TempoPicker({
                 inputProps={{
                   min: 0,
                   max: 9,
-                  style: { width: 40, textAlign: 'center' },
+                  style: { width: 30, textAlign: 'center' },
                 }}
                 onChange={(e) => updatePart(i, Number(e.target.value))}
               />

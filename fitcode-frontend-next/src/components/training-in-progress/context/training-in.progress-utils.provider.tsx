@@ -7,13 +7,8 @@ import type { TrainingInProgress } from '@/core/training/type/training-in-progre
 import type { SetState } from '@/lib/common/type/state.type';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useTraining } from '@/store/training.provider';
-import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 
 export interface ITrainingInProgressUtilsCtx {
-  elapsedTime: number;
-  setElapsedTime: SetState<number>;
-  showUndoneSetsWarning: boolean;
-  setShowUndoneSetsWarning: SetState<boolean>;
   showUndoneSetsError: boolean;
   setShowUndoneSetsError: SetState<boolean>;
   openCancelTrainingModal: boolean;
@@ -25,7 +20,6 @@ export interface ITrainingInProgressUtilsCtx {
   handleCloseMenu: () => void;
   handleCancel: () => void;
   handleCancelTraining: () => Promise<void>;
-  formatTime: (seconds: number) => string;
 }
 
 const TrainingInProgressUtilsContext =
@@ -44,11 +38,8 @@ export function TrainingInProgressUtilsProvider({
     clearTrainingState,
   } = useTraining();
 
-  const { setSelectedSuperset } = useTrainingInProgress();
   const { selectedTrackingMethod } = useAthleteHeader();
 
-  const [elapsedTime, setElapsedTime] = useState(0);
-  const [showUndoneSetsWarning, setShowUndoneSetsWarning] = useState(false);
   const [showUndoneSetsError, setShowUndoneSetsError] = useState(false);
   const [openCancelTrainingModal, setOpenCancelTrainingModal] = useState(false);
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
@@ -61,21 +52,11 @@ export function TrainingInProgressUtilsProvider({
         (prev) => ({ ...prev, startOfTraining: dayjs() }) as TrainingInProgress
       );
     }
-
-    const startTime = dayjs(trainingInProgress.startOfTraining).valueOf();
-    const interval = setInterval(() => {
-      const now = dayjs().valueOf();
-      setElapsedTime(Math.floor((now - startTime) / 1000));
-    }, 1000);
-
-    return () => clearInterval(interval);
   }, [trainingInProgress?.startOfTraining]);
 
   const handleCancelTraining = async () => {
     await clearTrainingState();
     setView(ExerciseTrainingView.ExerciseView);
-    setElapsedTime(0);
-    setSelectedSuperset(undefined);
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -94,19 +75,7 @@ export function TrainingInProgressUtilsProvider({
     setOpenCancelTrainingModal(true);
   };
 
-  const formatTime = (seconds: number) => {
-    if (isNaN(seconds)) return '00:00:00'; // Default to zero time if invalid
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = seconds % 60;
-    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-  };
-
   const value: ITrainingInProgressUtilsCtx = {
-    elapsedTime,
-    setElapsedTime,
-    showUndoneSetsWarning,
-    setShowUndoneSetsWarning,
     showUndoneSetsError,
     setShowUndoneSetsError,
     openCancelTrainingModal,
@@ -118,7 +87,6 @@ export function TrainingInProgressUtilsProvider({
     handleCloseMenu,
     handleCancel,
     handleCancelTraining,
-    formatTime,
   };
 
   return (
