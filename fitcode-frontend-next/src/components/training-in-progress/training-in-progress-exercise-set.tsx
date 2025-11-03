@@ -93,11 +93,7 @@ export default function TrainingInProgressExerciseSet(props: Props) {
                 <TempoExerciseParam
                   options={effOptions}
                   selected={effType}
-                  value={
-                    exercise.sets[setIndex]?.prescribedTempo ||
-                    exercise.sets[setIndex]?.[effType] ||
-                    ''
-                  }
+                  value={exercise.sets[setIndex]?.[effType] || ''}
                   exercise={exercise}
                   disableOptions
                   disabled
@@ -204,11 +200,9 @@ export default function TrainingInProgressExerciseSet(props: Props) {
                       options={effOptions}
                       selected={effType}
                       value={
-                        exercise.sets[setIndex]?.prescribedTempoR ||
                         exercise.sets[setIndex]?.[
                           core.exercise.param.pairs[effType]
-                        ] ||
-                        ''
+                        ] || ''
                       }
                       exercise={exercise}
                       disableOptions
