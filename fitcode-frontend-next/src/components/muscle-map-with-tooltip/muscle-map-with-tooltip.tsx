@@ -338,6 +338,10 @@ export default function MuscleMapWithTooltip(props: Props) {
                   flexDirection="column"
                   alignItems="center"
                   gap={0.5}
+                  sx={{
+                    maxHeight: 200,
+                    overflowY: 'auto',
+                  }}
                 >
                   <Typography
                     fontSize={12}
@@ -368,6 +372,10 @@ export default function MuscleMapWithTooltip(props: Props) {
                   flexDirection="column"
                   alignItems="center"
                   gap={0.5}
+                  sx={{
+                    maxHeight: 200,
+                    overflowY: 'auto',
+                  }}
                 >
                   <Typography
                     fontSize={12}
