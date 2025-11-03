@@ -32,13 +32,14 @@ interface Props {
   onSelectChange?: SetState<string>;
   onInputChange?: SetState<string>;
   athleteView?: boolean;
-  trainingInProgressView?: boolean;
+  trainingInProgressPrimaryItem?: boolean;
+  trainingInProgressSecondaryItem?: boolean;
   lOrR?: 'L' | 'R';
   showOptions?: boolean;
   readOnly?: boolean;
   disableOptions?: boolean;
   disableSets?: boolean;
-  disableSettingValue?: boolean;
+  disabled?: boolean;
 }
 
 export function TempoExerciseParam({
@@ -52,7 +53,9 @@ export function TempoExerciseParam({
   disableSets = false,
   readOnly = false,
   athleteView,
-  trainingInProgressView,
+  trainingInProgressPrimaryItem,
+  trainingInProgressSecondaryItem,
+  disabled,
 }: Props) {
   const theme = useTheme();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
@@ -66,9 +69,19 @@ export function TempoExerciseParam({
   if (!value || !exerciseParam) return null;
 
   return (
-    <Stack
-      direction="column"
-      justifyContent={trainingInProgressView ? 'flex-start' : 'center'}
+    <Box
+      width={
+        trainingInProgressPrimaryItem || trainingInProgressSecondaryItem
+          ? '50px !important'
+          : undefined
+      }
+      display="flex"
+      flexDirection="column"
+      justifyContent={
+        trainingInProgressPrimaryItem || trainingInProgressSecondaryItem
+          ? 'flex-start'
+          : 'center'
+      }
       alignItems="center"
     >
       {showOptions && (
@@ -82,6 +95,10 @@ export function TempoExerciseParam({
             variant="filled"
             sx={{
               ...exerciseCardSetAttributeSx['& .MuiSelect-select'],
+              height:
+                trainingInProgressPrimaryItem || trainingInProgressSecondaryItem
+                  ? 14
+                  : undefined,
               textAlign: 'center',
               pr: 0,
               pl: 0,
@@ -102,12 +119,19 @@ export function TempoExerciseParam({
               '&.Mui-disabled': {
                 backgroundColor: 'transparent',
               },
-              '&.Mui-disabled .MuiSelect-select': trainingInProgressView
+              '&.Mui-disabled .MuiSelect-select': trainingInProgressPrimaryItem
                 ? {
-                    color: theme.palette.text.primary,
-                    WebkitTextFillColor: theme.palette.text.primary, // <-- important for disabled text
+                    color: theme.palette.background.lightBorder,
+                    WebkitTextFillColor: theme.palette.background.lightBorder, // <-- important for disabled text
+                    fontSize: 12,
                   }
-                : {},
+                : trainingInProgressSecondaryItem
+                  ? {
+                      color: theme.palette.background.lightBorder,
+                      WebkitTextFillColor: theme.palette.background.lightBorder, // <-- important for disabled text
+                      fontSize: 10,
+                    }
+                  : {},
             }}
             disableUnderline={true}
             value={selected}
@@ -155,7 +179,7 @@ export function TempoExerciseParam({
           '& .MuiInputBase-input': disableBorder,
         }}
       >
-        {trainingInProgressView ? (
+        {trainingInProgressPrimaryItem || trainingInProgressSecondaryItem ? (
           <Box
             onClick={(e: React.MouseEvent<HTMLElement>) => {
               if (readOnly || disableSets) return;
@@ -164,7 +188,10 @@ export function TempoExerciseParam({
             }}
           >
             {/* parsed value for tempo */}
-            <ExerciseParamValueText value={value as string} />
+            <ExerciseParamValueText
+              value={value as string}
+              secondary={trainingInProgressSecondaryItem}
+            />
           </Box>
         ) : (
           <Button
@@ -180,18 +207,20 @@ export function TempoExerciseParam({
           </Button>
         )}
 
-        <TempoPicker
-          open={open}
-          anchorEl={anchorEl}
-          onClose={() => setAnchorEl(null)}
-          value={value as string}
-          onChange={(val) => {
-            onInputChange?.(val);
-            if (!athleteView && setDetectedChanges) setDetectedChanges(true);
-          }}
-        />
+        {!disabled && (
+          <TempoPicker
+            open={open}
+            anchorEl={anchorEl}
+            onClose={() => setAnchorEl(null)}
+            value={value as string}
+            onChange={(val) => {
+              onInputChange?.(val);
+              if (!athleteView && setDetectedChanges) setDetectedChanges(true);
+            }}
+          />
+        )}
       </FormControl>
-    </Stack>
+    </Box>
   );
 }
 

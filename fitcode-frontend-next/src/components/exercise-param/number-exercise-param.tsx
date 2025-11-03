@@ -26,7 +26,8 @@ interface Props {
   onInputChange?: SetState<string>;
   athleteView?: boolean;
   colorToPrimary?: boolean;
-  trainingInProgressView?: boolean;
+  trainingInProgressPrimaryItem?: boolean;
+  trainingInProgressSecondaryItem?: boolean;
   lOrR?: 'L' | 'R';
   showOptions?: boolean;
   readOnly?: boolean;
@@ -46,7 +47,8 @@ export function NumberExerciseParam(props: Props) {
     onInputChange,
     athleteView,
     colorToPrimary,
-    trainingInProgressView,
+    trainingInProgressPrimaryItem,
+    trainingInProgressSecondaryItem,
     showOptions = true,
     disableOptions = false,
     disable = false,
@@ -79,11 +81,19 @@ export function NumberExerciseParam(props: Props) {
 
   return (
     <Box
+      width={
+        trainingInProgressPrimaryItem || trainingInProgressSecondaryItem
+          ? undefined
+          : '100%'
+      }
       display="flex"
       flexDirection="column"
-      justifyContent={trainingInProgressView ? 'flex-start' : 'center'}
+      justifyContent={
+        trainingInProgressPrimaryItem || trainingInProgressSecondaryItem
+          ? 'flex-start'
+          : 'center'
+      }
       alignItems="center"
-      width="100%"
     >
       {showOptions && (
         <FormControl
@@ -96,6 +106,10 @@ export function NumberExerciseParam(props: Props) {
             variant="filled"
             sx={{
               ...exerciseCardSetAttributeSx['& .MuiSelect-select'],
+              height:
+                trainingInProgressPrimaryItem || trainingInProgressSecondaryItem
+                  ? 14
+                  : undefined,
               textAlign: 'center',
               pr: 0,
               pl: 0,
@@ -116,12 +130,19 @@ export function NumberExerciseParam(props: Props) {
               '&.Mui-disabled': {
                 backgroundColor: 'transparent',
               },
-              '&.Mui-disabled .MuiSelect-select': trainingInProgressView
+              '&.Mui-disabled .MuiSelect-select': trainingInProgressPrimaryItem
                 ? {
-                    color: theme.palette.text.primary,
-                    WebkitTextFillColor: theme.palette.text.primary, // <-- important for disabled text
+                    color: theme.palette.background.lightBorder,
+                    WebkitTextFillColor: theme.palette.background.lightBorder, // <-- important for disabled text
+                    fontSize: 12,
                   }
-                : {},
+                : trainingInProgressSecondaryItem
+                  ? {
+                      color: theme.palette.background.lightBorder,
+                      WebkitTextFillColor: theme.palette.background.lightBorder, // <-- important for disabled text
+                      fontSize: 10,
+                    }
+                  : {},
             }}
             disableUnderline={true}
             value={selected}
@@ -161,7 +182,7 @@ export function NumberExerciseParam(props: Props) {
         </FormControl>
       )}
 
-      {trainingInProgressView ? (
+      {trainingInProgressPrimaryItem || trainingInProgressSecondaryItem ? (
         <Box
           ref={anchorEl}
           width={screenSize.isUltraSmall ? 20 : 50}
@@ -184,7 +205,10 @@ export function NumberExerciseParam(props: Props) {
               setOpen((o) => !o);
             }}
           >
-            <ExerciseParamValueText value={value} />
+            <ExerciseParamValueText
+              value={value}
+              secondary={trainingInProgressSecondaryItem}
+            />
           </Box>
 
           {open && onInputChange && (
@@ -230,8 +254,8 @@ export function NumberExerciseParam(props: Props) {
               max,
               style: {
                 textAlign: 'center',
-                fontSize: trainingInProgressView ? 16 : 12,
-                fontWeight: trainingInProgressView ? 600 : undefined,
+                fontSize: trainingInProgressPrimaryItem ? 16 : 12,
+                fontWeight: trainingInProgressPrimaryItem ? 600 : undefined,
                 paddingRight: '0px !important',
                 paddingLeft: '0px !important',
                 color: theme.palette.text.primary,
@@ -239,13 +263,13 @@ export function NumberExerciseParam(props: Props) {
             }}
             sx={{
               textAlign: 'center',
-              backgroundColor: trainingInProgressView
+              backgroundColor: trainingInProgressPrimaryItem
                 ? 'transparent !important'
                 : undefined,
               '& .MuiInputBase-input': {
-                minHeight: trainingInProgressView ? 24 : undefined,
+                minHeight: trainingInProgressPrimaryItem ? 24 : undefined,
                 p: 0.5,
-                py: trainingInProgressView ? 1 : undefined,
+                py: trainingInProgressPrimaryItem ? 1 : undefined,
                 textAlign: 'center',
                 color: colorToPrimary
                   ? `${theme.palette.primary.main} !important`

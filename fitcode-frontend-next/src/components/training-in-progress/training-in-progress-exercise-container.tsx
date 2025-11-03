@@ -1,31 +1,15 @@
-import CloseIcon from '@mui/icons-material/Close';
-import DoneIcon from '@mui/icons-material/Done';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import { Box, Fab, Menu, MenuItem } from '@mui/material';
-import { useTheme } from '@mui/material';
+import { Box } from '@mui/material';
 import { useRef } from 'react';
 
-import { handleFinishSuperset } from './actions/actions-superset';
-import { useTrainingInProgressUtils } from './context/training-in.progress-utils.provider';
-import { useUndoneExercises } from './context/undone-exercises.provider';
 import TrainingInProgressExerciseCard from './training-in-progress-exercise-card';
-import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
-import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 
 export default function TrainingInProgressExerciseContainer() {
-  const theme = useTheme();
   const traininContext = useTraining();
   const trainingInProgressContext = useTrainingInProgress();
-  const trainingInProgressUtilsContext = useTrainingInProgressUtils();
-  const athleteHeaderContext = useAthleteHeader();
-  const trainingInProgressUndoneExercisesContext = useUndoneExercises();
 
   const { trainingInProgress } = traininContext;
-  const { selectedTrackingMethod } = athleteHeaderContext;
-  const { anchorEl, open, handleCancel, handleOpenMenu, handleCloseMenu } =
-    trainingInProgressUtilsContext;
 
   const { selectedExercise } = trainingInProgressContext;
 
@@ -46,50 +30,6 @@ export default function TrainingInProgressExerciseContainer() {
         {/* Training Exercise */}
         {selectedExercise && <TrainingInProgressExerciseCard />}
       </Box>
-
-      {selectedTrackingMethod !== TrackingMethod.CAMERA && (
-        <Fab
-          size="small"
-          sx={{
-            backgroundColor: theme.palette.primary.main,
-            position: 'fixed',
-            bottom: 60,
-            right: 16,
-          }}
-          onClick={handleOpenMenu}
-        >
-          <MoreVertIcon fontSize="small" />
-        </Fab>
-      )}
-
-      <Menu
-        anchorEl={anchorEl}
-        open={open}
-        onClose={handleCloseMenu}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-        transformOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        PaperProps={{ sx: { mb: 1 } }}
-      >
-        <MenuItem
-          onClick={async () =>
-            await handleFinishSuperset({
-              useTraining: { ...traininContext, trainingInProgress },
-              useUndoneExercises: trainingInProgressUndoneExercisesContext,
-              useTrainingInProgress: trainingInProgressContext,
-              useTrainingInProgressUtils: trainingInProgressUtilsContext,
-            })
-          }
-        >
-          <>
-            <DoneIcon sx={{ marginRight: 1 }} />
-            Finish Training
-          </>
-        </MenuItem>
-        <MenuItem onClick={handleCancel} sx={{ color: 'error.main' }}>
-          <CloseIcon sx={{ marginRight: 1 }} />
-          Cancel Training
-        </MenuItem>
-      </Menu>
     </Box>
   );
 }
