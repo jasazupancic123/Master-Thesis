@@ -11,8 +11,8 @@ import { PieCenterLabel } from '@/ui/mui-charts';
 
 interface Props {
   startOfTraining: Dayjs;
-  lastSetCompletedAt: string | number | Date;
-  lastSetRecTimeS: number;
+  lastSetCompletedAt: string | number | Date | undefined;
+  lastSetRecTimeS: number | undefined;
 }
 
 export default function SWControl(props: Props) {
@@ -28,13 +28,18 @@ export default function SWControl(props: Props) {
   }, []);
 
   const elapsedSinceLastSet = useMemo(() => {
-    return Math.max(
-      0,
-      Math.floor(dayjs(now).diff(dayjs(lastSetCompletedAt), 'second'))
-    );
+    return lastSetCompletedAt === undefined
+      ? 0
+      : Math.max(
+          0,
+          Math.floor(dayjs(now).diff(dayjs(lastSetCompletedAt), 'second'))
+        );
   }, [now, lastSetCompletedAt, trainingInProgress]);
 
-  const remaining = Math.max(0, lastSetRecTimeS - elapsedSinceLastSet);
+  const remaining =
+    lastSetRecTimeS === undefined
+      ? 0
+      : Math.max(0, lastSetRecTimeS - elapsedSinceLastSet);
   const label = remaining > 0 ? `${remaining}s` : 'DO IT';
 
   const [countdownTimer, setCountdownTimer] = useState<string>(
@@ -52,7 +57,7 @@ export default function SWControl(props: Props) {
       display="flex"
       flexDirection="column"
       alignItems="center"
-      gap={1}
+      gap={2}
     >
       <Typography fontWeight={600} fontSize={14} sx={{ py: 1 }}>
         Training duration:{' '}

@@ -76,6 +76,7 @@ export default function TrainingInProgressExerciseCard() {
               display: 'block',
               filter: 'grayscale(100%)',
               padding: 12,
+              paddingTop: 6,
               borderRadius: 16,
             }}
             preload="metadata"
@@ -96,6 +97,7 @@ export default function TrainingInProgressExerciseCard() {
               height: 'auto',
               filter: 'grayscale(100%)',
               padding: 12,
+              paddingTop: 6,
               borderRadius: 16,
             }}
           />

@@ -15,11 +15,6 @@ export type ExerciseSet = ExerciseSetPrimarySide &
     dist?: number; // in meters, for distance-based sets
   };
 
-export type ExerciseSetWithPrescribedTempo = ExerciseSet & {
-  prescribedTempo?: string;
-  prescribedTempoR?: string;
-};
-
 export interface ExerciseSetPrimarySide {
   reps?: number; // e.g. number of repetitions
   loadKg?: number; // e.g. weight in kg or percentage of 1RM or bodyweight
