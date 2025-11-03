@@ -10,6 +10,7 @@ import React, { useState } from 'react';
 
 import AthleteTrainingCardHeader from './athlete-training-card-header';
 import { theme } from '@/app/style';
+import { Components } from '@/core/exercise/constant/components.constant';
 import type { TrainingReport } from '@/core/training/type/training-report.type';
 import { PieCenterLabel } from '@/ui/mui-charts';
 
@@ -42,7 +43,11 @@ export default function TrainingReportCard({ report }: Props) {
       >
         {/* Group name, cycle name, date */}
         <AthleteTrainingCardHeader
-          components={report.mappedPlannedComponents || []}
+          components={report.plannedComponents
+            .map(
+              (c) => Components.find((comp) => comp.field === c.componentId)!
+            )
+            .filter((c) => c !== undefined)}
           group={report.group}
           cycle={report.cycle}
           from={report.from}

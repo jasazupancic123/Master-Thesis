@@ -190,7 +190,7 @@ export class MuscleUtil {
     maxLevel: number
   ): Attribute | undefined {
     if (level === maxLevel) {
-      const leafes = lib.common.tree.computeLeafes(MUSCLES_TREE, 'options');
+      const leafes = lib.common.tree.computeLeafs(MUSCLES_TREE, 'options');
       return leafes.find((m) => m.field === muscleId);
     }
 
@@ -260,7 +260,7 @@ export class MuscleUtil {
 
     if (!foundMuscle) return null;
 
-    const leafes = lib.common.tree.computeLeafes([foundMuscle], 'options');
+    const leafes = lib.common.tree.computeLeafs([foundMuscle], 'options');
 
     return leafes[0] || null;
   }

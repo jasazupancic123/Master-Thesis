@@ -7,8 +7,7 @@ import toast from 'react-hot-toast';
 
 import useTrainingCycleComponents from './hooks/use-components';
 import type { TrainingCycleViewGridItemProps } from './types/type';
-import { Components } from '@/core/exercise/constant/components.constant';
-import { Targets } from '@/core/exercise/constant/target.constant';
+import { core } from '@/core/core.service';
 import { lib } from '@/lib';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
@@ -70,19 +69,15 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
         }}
       >
         {components.map((trainingComponent) => {
-          const component = Components.find(
-            (c) => c.field === trainingComponent.id
+          const component = core.training.component.find(trainingComponent.id);
+          if (!component) return null;
+
+          const target = core.training.component.findTarget(
+            trainingComponent.targetId
           );
 
-          if (!component) return null;
           const IconComponent: ElementType<SvgIconProps> | null =
             lib.common.component.getIcon(component?.name);
-
-          const target = Targets.find(
-            (t) =>
-              trainingComponent.targetId &&
-              t.field === trainingComponent.targetId
-          );
 
           return (
             <Tooltip
@@ -108,20 +103,18 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
                         setSelectedTrainings &&
                         basePeriodizationTraining?.id !== training.id
                       ) {
-                        if (
-                          selectedTrainings.some((t) => t.id === training.id)
-                        ) {
+                        if (selectedTrainings.some((t) => t.id === training.id))
                           setSelectedTrainings((prev) =>
                             prev.filter((t) => t.id !== training.id)
                           );
-                        } else if (
+                        else if (
                           target &&
                           target.field !== selectedTarget?.field
-                        ) {
+                        )
                           toast.error(
                             'Cannot periodize trainings with different targets'
                           );
-                        } else if (
+                        else if (
                           target &&
                           target.field === selectedTarget?.field &&
                           cycle &&
@@ -131,9 +124,9 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
                             basePeriodizationTraining.to,
                             cycle?.to
                           )
-                        ) {
+                        )
                           setSelectedTrainings((prev) => [...prev, training]);
-                        } else if (
+                        else if (
                           cycle &&
                           basePeriodizationTraining &&
                           !lib.common.date.isBetween(
@@ -141,14 +134,16 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
                             basePeriodizationTraining.to,
                             cycle?.to
                           )
-                        ) {
+                        )
                           toast.error(
                             'Cannot periodize trainings before the base training'
                           );
-                        }
+
                         return;
                       }
+
                       e.stopPropagation();
+
                       await props.deleteTrainingComponent(
                         training.id,
                         component!.field

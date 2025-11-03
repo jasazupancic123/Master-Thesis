@@ -29,6 +29,7 @@ import ExerciseChips from '@/components/exercise-chips/exercise-chips';
 import ExerciseModal from '@/components/exercise-modal/exercise-modal';
 import ExerciseFilter from '@/components/exercises-list/exercise-filter';
 import ExercisesList from '@/components/exercises-list/exercises-list';
+import { Components } from '@/core/exercise/constant/components.constant';
 import type { Component } from '@/core/exercise/type/component.type';
 import type {
   CreateExerciseMuscleValues,
@@ -126,9 +127,18 @@ export default function ExercisesPage() {
    * Filter exercises
    */
   useEffect(() => {
+    const allComponentPaths = selectedComponent
+      ? lib.common.tree.getNestedPaths(
+          selectedComponent.field,
+          Components,
+          'field',
+          'options'
+        )
+      : [];
+
     const filter: Partial<Exercise> = {
       ...(selectedComponent?.field && {
-        components: [selectedComponent.field],
+        components: allComponentPaths,
       }),
       ...(search && { name: search }),
       ...filters,
@@ -173,6 +183,7 @@ export default function ExercisesPage() {
           bgColor={theme.palette.background.default}
           primaryColor={theme.palette.primary.main}
           gap={screenSize.isReallySmall ? 1.5 : 3.5}
+          disabledComponents={['other', 'competition']}
         />
       </Box>
 
@@ -302,7 +313,8 @@ export default function ExercisesPage() {
               component: selectedComponent!,
               filteredExercises,
               setFilteredExercises,
-              setExercises: setAllExercises,
+              setAllExercises,
+              setExercises,
               setExercise,
               setModal,
             });
@@ -327,7 +339,8 @@ export default function ExercisesPage() {
               handleUpdateExercise(exercise!.id!, exercise, {
                 router,
                 setFilteredExercises,
-                setExercises: setAllExercises,
+                setExercises,
+                setAllExercises,
                 setExercise,
                 setModal,
               });
@@ -351,7 +364,8 @@ export default function ExercisesPage() {
           await handleDeleteExercise(exercise!.id!, {
             router,
             setFilteredExercises,
-            setExercises: setAllExercises,
+            setAllExercises,
+            setExercises,
           });
           setModal((prev) => ({ ...prev, confirmDelete: false }));
         }}
@@ -391,9 +405,7 @@ export default function ExercisesPage() {
         width={screenSize.isMobile ? undefined : 500}
         onConfirm={() => {
           handleUpsertMuscleValues(
-            {
-              exercises: importedMuscleValueExercises,
-            },
+            { exercises: importedMuscleValueExercises },
             { router, setExercises: setAllExercises }
           );
 

@@ -63,6 +63,7 @@ export async function handleAddExercise(
     setFilteredExercises: SetState<Exercise[]>;
     setExercises: SetState<Exercise[]>;
     setExercise: SetState<Partial<Exercise>>;
+    setAllExercises: SetState<Exercise[]>;
     setModal: SetState<{
       add: boolean;
       edit: boolean;
@@ -78,6 +79,7 @@ export async function handleAddExercise(
     filteredExercises,
     setFilteredExercises,
     setExercises,
+    setAllExercises,
     setExercise,
     setModal,
   } = state;
@@ -108,18 +110,15 @@ export async function handleAddExercise(
         liftPriorities: input.liftPriorities || [],
       }),
     (exercise) => {
-      const id = exercise.id;
       const rootComponents = exercise.components.map(
         (cId) => cId.split(':')[0]
       );
 
       if (!component || (component && rootComponents.includes(component.field)))
-        setFilteredExercises([
-          ...filteredExercises,
-          { ...exercise, id } as Exercise,
-        ]);
+        setFilteredExercises([...filteredExercises, exercise]);
 
-      setExercises((prev) => [...prev!, { ...exercise, id } as Exercise]);
+      setExercises((prev) => [...prev!, exercise]);
+      setAllExercises((prev) => [...prev!, exercise]);
       setExercise(DEFAULT_EXERCISE);
       setModal((prev) => ({ ...prev, add: false }));
 
@@ -137,6 +136,7 @@ export async function handleUpdateExercise(
     router: AppRouterInstance;
     setFilteredExercises: SetState<Exercise[]>;
     setExercises: SetState<Exercise[]>;
+    setAllExercises: SetState<Exercise[]>;
     setExercise: SetState<Partial<Exercise>>;
     setModal: SetState<{
       add: boolean;
@@ -147,8 +147,14 @@ export async function handleUpdateExercise(
     }>;
   }
 ) {
-  const { router, setFilteredExercises, setExercises, setExercise, setModal } =
-    state;
+  const {
+    router,
+    setFilteredExercises,
+    setExercises,
+    setAllExercises,
+    setExercise,
+    setModal,
+  } = state;
 
   const controller = ExerciseController.getInstance();
 
@@ -178,16 +184,16 @@ export async function handleUpdateExercise(
     (exercise) => {
       setExercise(exercise);
 
-      setFilteredExercises((prev) =>
-        prev.map((e) => (e.id === exercise.id ? exercise : e))
-      );
+      function updateExerciseList(exercises: Exercise[]) {
+        return exercises.map((e) => (e.id === exercise.id ? exercise : e));
+      }
 
-      setExercises((prev) =>
-        prev.map((e) => (e.id === exercise.id ? exercise : e))
-      );
+      setFilteredExercises(updateExerciseList);
+      setAllExercises(updateExerciseList);
+      setExercises(updateExerciseList);
 
-      toast.success('Successfully updated exercise');
       setModal((prev) => ({ ...prev, edit: false }));
+      toast.success('Successfully updated exercise');
     },
     undefined,
     'Failed to update exercise'
@@ -200,17 +206,23 @@ export async function handleDeleteExercise(
     router: AppRouterInstance;
     setFilteredExercises: SetState<Exercise[]>;
     setExercises: SetState<Exercise[]>;
+    setAllExercises: SetState<Exercise[]>;
   }
 ) {
-  const { router, setFilteredExercises, setExercises } = state;
+  const { router, setFilteredExercises, setExercises, setAllExercises } = state;
   const controller = ExerciseController.getInstance();
 
   handleApiRequest(
     router,
     () => controller.delete(exerciseId),
     () => {
-      setFilteredExercises((prev) => prev.filter((e) => e.id !== exerciseId));
-      setExercises((prev) => prev.filter((e) => e.id !== exerciseId));
+      function removeExerciseFromList(exercises: Exercise[]) {
+        return exercises.filter((e) => e.id !== exerciseId);
+      }
+
+      setAllExercises(removeExerciseFromList);
+      setFilteredExercises(removeExerciseFromList);
+      setExercises(removeExerciseFromList);
 
       toast.success('Successfully deleted exercise');
     },
@@ -238,7 +250,7 @@ export async function handleExerciseCsvFileUpload(
         case 'videoUrl':
         case 'instruction':
           return value === '' ? undefined : value;
-        case 'componentIds':
+        case 'components':
         case 'categories':
         case 'prescriptions':
         case 'patterns':

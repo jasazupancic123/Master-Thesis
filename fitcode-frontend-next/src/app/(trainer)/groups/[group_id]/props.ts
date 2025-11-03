@@ -58,19 +58,8 @@ export type TrainerDayViewContextProps = {
   training: Training | undefined;
   setTraining: SetStateNullable<Training>;
   progress: UserProgress[];
-  selectedPeriod:
-    | {
-        key: Date;
-        value: 'AM' | 'PM';
-      }
-    | undefined; // selected period for the training
-  setSelectedPeriod: SetState<
-    | {
-        key: Date;
-        value: 'AM' | 'PM';
-      }
-    | undefined
-  >;
+  selectedPeriod: { key: Date; value: 'AM' | 'PM' } | undefined; // selected period for the training
+  setSelectedPeriod: SetState<{ key: Date; value: 'AM' | 'PM' } | undefined>;
   component: TrainingComponent | undefined; // selected training component
   setComponent: SetStateNullable<TrainingComponent>;
   wellness: WellnessZScore[];

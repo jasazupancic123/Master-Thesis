@@ -139,6 +139,7 @@ export default function TrainerCycleView() {
             selectedTargets={selectedTargets}
             setSelectedTargets={setSelectedTargets}
             gap={screenSize.isReallySmall ? 1.5 : 3.5}
+            disabledComponents={['other']}
           />
         </Box>
       </Box>
@@ -182,12 +183,9 @@ export default function TrainerCycleView() {
               </Typography>
             ))}
           </Box>
+
           {/* Training weeks */}
-          <Stack
-            sx={{
-              backgroundColor: theme.palette.background.dark,
-            }}
-          >
+          <Stack sx={{ backgroundColor: theme.palette.background.dark }}>
             {lib.common.date.weeks(cycle.from, cycle.to).map((week, i) => (
               <Fragment key={i}>
                 <TrainingWeek

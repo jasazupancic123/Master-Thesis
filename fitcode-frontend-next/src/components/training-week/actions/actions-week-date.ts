@@ -213,7 +213,8 @@ function handleAddTraining(
         mainSet: MainSet.BLOCK,
         from: addMinutes(from, i * 30),
         to: addMinutes(addMinutes(from, i * 30), 30),
-        target: selectedTargets?.find((m) => m.componentId === c.field)?.target,
+        targetId: selectedTargets?.find((m) => m.componentId === c.field)
+          ?.target?.field as string,
       })),
     },
     groupCtx,
