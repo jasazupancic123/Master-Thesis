@@ -77,7 +77,8 @@ export const finishSet = async (state: {
     { exerciseId: exercise.id },
     setIndex + 1,
     trainingInProgress.exerciseSetTrackingState,
-    setTrainingInProgress
+    setTrainingInProgress,
+    exercise.sets[setIndex].recTime
   );
 
   const supersetIndex =
@@ -113,7 +114,8 @@ export const markExerciseSetAsCompleted = (
   exerciseIdentifier: { exerciseId: string },
   setNumber: number,
   exerciseSetTrackingState: ExerciseSetTracking[],
-  setTrainingInProgress: SetState<TrainingInProgress | null>
+  setTrainingInProgress: SetState<TrainingInProgress | null>,
+  recTime?: number
 ) => {
   const key = Array.from(exerciseSetTrackingState).find(
     (k) => k.exerciseId === exerciseIdentifier.exerciseId
@@ -137,6 +139,8 @@ export const markExerciseSetAsCompleted = (
     return {
       ...prev,
       exerciseSetTrackingState,
+      lastSetCompletedAt: recTime ? new Date() : prev.lastSetCompletedAt,
+      lastSetRecTimeS: recTime ?? prev.lastSetRecTimeS,
     } as TrainingInProgress;
   });
 };

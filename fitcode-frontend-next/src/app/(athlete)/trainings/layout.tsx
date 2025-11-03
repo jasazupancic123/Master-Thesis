@@ -6,6 +6,7 @@ import Container from '@mui/material/Container';
 import AthleteHeader from '@/components/athlete/athlete-header';
 import TrainingsInitializer from '@/initializers/trainings.initializer';
 import { AthleteHeaderProvider } from '@/store/athlete-header.provider';
+import { useTraining } from '@/store/training.provider';
 
 export default function Layout({ children }: React.PropsWithChildren) {
   return (
@@ -20,9 +21,10 @@ export default function Layout({ children }: React.PropsWithChildren) {
 }
 
 function TrainingContent({ children }: React.PropsWithChildren) {
+  const { trainingInProgress } = useTraining();
   return (
     <>
-      <AthleteHeader />
+      {!trainingInProgress && <AthleteHeader />}
 
       <Container component="main" sx={{ px: '0px !important' }}>
         <Box>{children}</Box>

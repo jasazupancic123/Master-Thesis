@@ -32,12 +32,12 @@ export default function AthleteTrainingExerciseSets({
   exercise,
   borderBottomRadius,
   expanded,
-  trainingInProgressView,
   passedSet,
   setIndex,
   supersetIndex,
   exerciseSetTrackingState,
   dissableBottomPadding,
+  trainingInProgressView,
 }: Props) {
   const theme = useTheme();
   const screenSize = useScreenSize();
@@ -114,7 +114,7 @@ export default function AthleteTrainingExerciseSets({
                   key="exercise-title"
                   display="flex"
                   flexDirection="column"
-                  gap={trainingInProgressView ? 0.9 : 0.9}
+                  gap={0.9}
                 >
                   {exercise.exercise?.isUnilateral ? (
                     <>

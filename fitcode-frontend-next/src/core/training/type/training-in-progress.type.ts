@@ -12,4 +12,6 @@ export type TrainingInProgress = {
   startOfTraining: Dayjs | null;
   userId: string;
   exerciseSetTrackingState: ExerciseSetTracking[];
+  lastSetCompletedAt?: Date;
+  lastSetRecTimeS?: number;
 };
