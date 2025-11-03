@@ -1,28 +1,19 @@
+import { VideoLibrary } from '@mui/icons-material';
 import { alpha, Box, IconButton, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Image from 'next/image';
-import toast from 'react-hot-toast';
+import { useState } from 'react';
 
-import TrainingExerciseSetDoneCheckbox from './training-exercise-set-done-checkbox';
-import RomChart from '@/components/charts/rom/rom-chart';
-import RomStatistic from '@/components/charts/rom/rom-statistics';
-import TempoChart from '@/components/charts/tempo/tempo-chart';
-import TempoStatistic from '@/components/charts/tempo/tempo-statistic';
+import ExerciseVideoModal from './modals/exercise-video-modal';
+import TrainingInProgressExerciseControls from './training-in-progress-exercise-controls';
+import TrainingInProgressExerciseSet from './training-in-progress-exercise-set';
 import MobileMovementValidation from '@/components/mobile-movement-validation/mobile-movement-validation';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
 import { lib } from '@/lib';
 import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
-import { EXERCISE_POSES } from '@/lib/pose-detection/const/exercise-poses';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
-import ImageGallery from '@/ui/image-gallery';
-import { VideoLibrary } from '@mui/icons-material';
-import { useState } from 'react';
-import MyModal from '@/ui/modal';
-import ExerciseVideoModal from './modals/exercise-video-modal';
-import TrainingInProgressExerciseSet from './training-in-progress-exercise-set';
-import TrainingInProgressExerciseControls from './training-in-progress-exercise-controls';
 
 export default function TrainingInProgressExerciseCard() {
   const theme = useTheme();

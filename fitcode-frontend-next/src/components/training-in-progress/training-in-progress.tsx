@@ -14,8 +14,10 @@ import { useTheme } from '@mui/material';
 import Image from 'next/image';
 import React, { useEffect } from 'react';
 
+import AthleteHeader from '../athlete/athlete-header';
 import { handleInitTrainingInProgressComponent } from './actions/actions-training-in-progress';
 import { useTrainingInProgressUtils } from './context/training-in.progress-utils.provider';
+import { useUndoneExercises } from './context/undone-exercises.provider';
 import CancelTrainingModal from './modals/cancel-training-modal';
 import UndoneSetsErrorModal from './modals/undone-sets-error-modal';
 import TrainingInProgressExerciseContainer from './training-in-progress-exercise-container';
@@ -27,8 +29,6 @@ import { preloadPoseLandmarker } from '@/lib/pose-detection/util/pose-landmarker
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
-import AthleteHeader from '../athlete/athlete-header';
-import { useUndoneExercises } from './context/undone-exercises.provider';
 
 export default function TrainingInProgress() {
   const theme = useTheme();

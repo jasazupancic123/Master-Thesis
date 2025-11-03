@@ -1,6 +1,7 @@
 import { Box } from '@mui/material';
-import { TrainingInProgressExerciseControl } from '../enum/exercise-controls.enum';
 import { useState } from 'react';
+
+import { TrainingInProgressExerciseControl } from '../enum/exercise-controls.enum';
 
 export default function useExerciseControls(iconsDimension: number) {
   const numItems = 6;

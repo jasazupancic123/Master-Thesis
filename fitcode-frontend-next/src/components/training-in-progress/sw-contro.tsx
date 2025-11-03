@@ -1,11 +1,13 @@
 import { Box, Button, TextField, Typography } from '@mui/material';
-import dayjs, { Dayjs } from 'dayjs';
 import { ChartsTooltip, PieChart } from '@mui/x-charts';
-import { PieCenterLabel } from '@/ui/mui-charts';
-import { theme } from '@/app/style';
-import { ElapsedTime } from './training-in-progress-elapsed-time';
+import type { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import { useEffect, useMemo, useState } from 'react';
+
+import { ElapsedTime } from './training-in-progress-elapsed-time';
+import { theme } from '@/app/style';
 import { useTraining } from '@/store/training.provider';
+import { PieCenterLabel } from '@/ui/mui-charts';
 
 interface Props {
   startOfTraining: Dayjs;

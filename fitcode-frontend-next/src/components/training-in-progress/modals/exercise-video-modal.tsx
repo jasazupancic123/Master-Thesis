@@ -1,7 +1,8 @@
-import { ModalProps } from '@/lib/common/type/modal-props.type';
+import { Box } from '@mui/material';
+
+import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 import MyModal from '@/ui/modal';
-import { Box } from '@mui/material';
 
 interface Props {
   videoUrl: string;

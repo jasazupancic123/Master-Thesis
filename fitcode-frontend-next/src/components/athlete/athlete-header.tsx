@@ -1,5 +1,6 @@
 'use client';
 
+import { Close, Done, Menu as MenuIcon } from '@mui/icons-material';
 import {
   Avatar,
   Divider,
@@ -15,32 +16,27 @@ import {
   useTheme,
 } from '@mui/material';
 import Box from '@mui/material/Box';
+import Link from 'next/link';
 import * as React from 'react';
+import { useState } from 'react';
 
+import { handleFinishSuperset } from '../training-in-progress/actions/actions-superset';
+import type { ITrainingInProgressUtilsCtx } from '../training-in-progress/context/training-in.progress-utils.provider';
+import type { IUndoneExercisesCtx } from '../training-in-progress/context/undone-exercises.provider';
 import BottomNavigation from './bottom-navigation';
 import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
+import { UserRole } from '@/core/profile/enum/user-role.enum';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
+import { lib } from '@/lib';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
+import { LINKS_SIDEBAR_GROUP_VIEW } from '@/lib/common/const/nav.const';
+import { useAthlete } from '@/store/athlete.provider';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import Logo from '@/ui/logo';
-import { UserRole } from '@/core/profile/enum/user-role.enum';
-import { LINKS_SIDEBAR_GROUP_VIEW } from '@/lib/common/const/nav.const';
-import Link from 'next/link';
-import { lib } from '@/lib';
-import { useAthlete } from '@/store/athlete.provider';
-import { useState } from 'react';
-import { Close, Done, Menu as MenuIcon } from '@mui/icons-material';
-import {
-  ITrainingInProgressUtilsCtx,
-  useTrainingInProgressUtils,
-} from '../training-in-progress/context/training-in.progress-utils.provider';
-import { handleFinishSuperset } from '../training-in-progress/actions/actions-superset';
-import trainingInProgress from '../training-in-progress/training-in-progress';
 import { useTraining } from '@/store/training.provider';
-import { IUndoneExercisesCtx } from '../training-in-progress/context/undone-exercises.provider';
-import { ITrainingInProgressContext } from '@/store/training-in-progress.provider';
+import type { ITrainingInProgressContext } from '@/store/training-in-progress.provider';
+import Logo from '@/ui/logo';
 
 interface Props {
   trainingInProgressUndoneExercisesContext?: IUndoneExercisesCtx;

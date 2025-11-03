@@ -1,5 +1,6 @@
-import { theme } from '@/app/style';
 import { Typography } from '@mui/material';
+
+import { theme } from '@/app/style';
 
 interface Props {
   value: number | string | null;

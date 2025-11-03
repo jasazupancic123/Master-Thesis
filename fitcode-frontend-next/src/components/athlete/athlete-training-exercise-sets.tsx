@@ -19,6 +19,7 @@ interface Props {
   exercise: TrainingExercise;
   borderBottomRadius: boolean;
   expanded?: boolean;
+  trainingInProgressView?: boolean;
   passedSet?: ExerciseSet;
   setIndex?: number;
   supersetIndex?: number;
@@ -36,6 +37,7 @@ export default function AthleteTrainingExerciseSets({
   supersetIndex,
   exerciseSetTrackingState,
   dissableBottomPadding,
+  trainingInProgressView,
 }: Props) {
   const theme = useTheme();
   const screenSize = useScreenSize();
@@ -73,7 +75,9 @@ export default function AthleteTrainingExerciseSets({
       width="100%"
       gap={0.9}
       sx={{
-        backgroundColor: theme.palette.background.dark,
+        backgroundColor: trainingInProgressView
+          ? theme.palette.background.default
+          : theme.palette.background.dark,
         pb: !dissableBottomPadding ? 1 : undefined,
         borderBottomRightRadius: borderBottomRadius ? '5px' : 0,
         borderBottomLeftRadius: borderBottomRadius ? '5px' : 0,
@@ -90,7 +94,13 @@ export default function AthleteTrainingExerciseSets({
             container
             spacing={0.5}
             columns={11}
-            px={screenSize.isSmallerThanLaptop ? 1 : 0}
+            px={
+              trainingInProgressView
+                ? 0
+                : screenSize.isSmallerThanLaptop
+                  ? 1
+                  : 0
+            }
           >
             <Grid2 size={0.5}>
               <Box
@@ -112,7 +122,9 @@ export default function AthleteTrainingExerciseSets({
                       <LeftRightExerciseText title="R" />
                     </>
                   ) : (
-                    <LeftRightExerciseText title={'B'} />
+                    <LeftRightExerciseText
+                      title={trainingInProgressView ? '' : 'B'}
+                    />
                   )}
                 </Box>
               </Box>
