@@ -53,9 +53,9 @@ export default function PeriodizeModal(
     setNumTrainingsWithSameTarget,
   } = props;
 
-  const [isPeriodizing, setIsPeriodizing] = useState(false);
-
   const controller = TrainingController.getInstance();
+
+  const [isPeriodizing, setIsPeriodizing] = useState(false);
 
   if (!training || !component) return null;
 
@@ -71,6 +71,8 @@ export default function PeriodizeModal(
         }}
         onConfirm={() => {
           if (!training) return;
+
+          setIsPeriodizing(true);
 
           handleApiRequest(
             router,
@@ -144,6 +146,7 @@ export default function PeriodizeModal(
                   );
                 }
 
+                setIsPeriodizing(false);
                 setNumTrainingsWithSameTarget(0);
                 setSelectedPeriodizationType(null);
                 setOpen(false);

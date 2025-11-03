@@ -161,6 +161,12 @@ export default function ExercisesPage() {
     pagination.pages,
   ]);
 
+  useEffect(() => {
+    setExercises(
+      allExercises.sort((a, b) => a.name.trim().localeCompare(b.name))
+    );
+  }, [allExercises]);
+
   return (
     <Box p={2} px={screenSize.isMobile ? 0 : undefined}>
       <Box

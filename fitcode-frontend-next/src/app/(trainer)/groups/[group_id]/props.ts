@@ -82,6 +82,8 @@ export type TrainerDayViewContextProps = {
   setSelectedAthleteCompletedWorkloads: SetState<Workload[]>;
   isSettingAthleteWorkloads: React.RefObject<boolean>;
   previousSelectedAthlete: React.RefObject<AuthUser | undefined>;
+  expandedExercisesView: boolean;
+  setExpandedExercisesView: SetState<boolean>;
   loading: boolean;
   setLoading: SetState<boolean>;
   handleAddMember: (user: AuthUser) => Promise<void>;

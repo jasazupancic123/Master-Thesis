@@ -48,7 +48,8 @@ export default function DashboardInstitutionPage() {
   } = useDashboardUserEdit();
 
   const { selectedInstitution } = useDashboard();
-  const { removeUser, uploadUsers } = useInstitutionMembers();
+  const { removeUser, uploadUsers, isUploadingMembers, setIsUploadingMembers } =
+    useInstitutionMembers();
 
   const [selectedView, setSelectedView] = useState<AthletesTrainers>(
     AthletesTrainers.ATHLETES
@@ -62,7 +63,6 @@ export default function DashboardInstitutionPage() {
 
   const [loading, setLoading] = useState(true);
   const [csvUserEmails, setCsvUserEmails] = useState<string[]>([]);
-  const [isUploadingMembers, setIsUploadingMembers] = useState(false);
 
   useEffect(() => {
     const current =
@@ -399,6 +399,8 @@ export default function DashboardInstitutionPage() {
           label="CSV of users"
           input="csv"
           onFileUpload={async (file) => {
+            setIsUploadingMembers(true);
+
             const authUsers = await uploadUsers(file);
 
             setOpenAddMemberViaCsvModal(false);

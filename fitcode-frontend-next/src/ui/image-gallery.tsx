@@ -60,9 +60,6 @@ export default function ImageGallery(props: ImageGalleryProps) {
       alignItems="center"
       gap={1}
     >
-      <Typography textAlign="center" fontSize={18}>
-        Gallery
-      </Typography>
       {enableImagePickerSlider && (
         <ImagePickerSlider
           images={

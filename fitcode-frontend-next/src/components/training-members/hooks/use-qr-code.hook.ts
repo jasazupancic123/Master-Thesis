@@ -41,6 +41,8 @@ export function useQRCode() {
         member.uid
       );
 
+      await navigator.clipboard.writeText(link);
+
       const qr = await QRCode.toDataURL(link);
       setQrDataUrl(qr);
       setQrAnchorEl(anchorEl);

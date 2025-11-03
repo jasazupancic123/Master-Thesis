@@ -174,6 +174,7 @@ export class TrainingUtil {
         );
 
         if (subgroup) supersets = subgroup.supersets;
+        else supersets = component.supersets;
       } else supersets = component.supersets;
 
       exercises.push(...supersets.flatMap((s) => s.exercises));
