@@ -38,16 +38,16 @@ export default function ExercieseControlSelected(
           display="flex"
           flexDirection="column"
           alignItems="center"
-          gap={1}
+          gap={2}
         >
-          {isSetCompleted &&
+          {/* {isSetCompleted &&
             (selectedExercise.sets[setIndex].tempo !== undefined ||
               selectedExercise.sets[setIndex].tempoR !== undefined) && (
               <TempoTimes
                 tempo={selectedExercise.sets[setIndex].tempo}
                 tempoR={selectedExercise.sets[setIndex].tempoR}
               />
-            )}
+            )} */}
 
           <TempoChart
             selectedExercise={selectedExercise}
@@ -102,9 +102,7 @@ export default function ExercieseControlSelected(
     }
     case TrainingInProgressExerciseControl.SW: {
       return (
-        trainingInProgress.startOfTraining &&
-        trainingInProgress.lastSetCompletedAt &&
-        trainingInProgress.lastSetRecTimeS !== undefined && (
+        trainingInProgress.startOfTraining && (
           <SWControl
             startOfTraining={trainingInProgress.startOfTraining}
             lastSetCompletedAt={trainingInProgress.lastSetCompletedAt}

@@ -58,31 +58,6 @@ export default function AthleteTrainingComponents(props: Props) {
   const { exercises } = useMain();
   const { user } = useAuthenticatedAuth();
 
-  const convertComponentToComponentWithPrescribedTempo = (
-    trainingComponent: TrainingComponentRecording
-  ): TrainingComponentRecording => {
-    return {
-      ...trainingComponent,
-      supersets: trainingComponent.supersets.map((superset) => {
-        return {
-          ...superset,
-          exercises: superset.exercises.map((exercise) => {
-            return {
-              ...exercise,
-              sets: exercise.sets.map((set) => {
-                return {
-                  ...set,
-                  prescribedTempo: set.tempo,
-                  prescribedTempoR: set.tempoR,
-                };
-              }),
-            };
-          }),
-        };
-      }),
-    };
-  };
-
   return (
     <Box
       width="100%"
@@ -271,8 +246,7 @@ export default function AthleteTrainingComponents(props: Props) {
 
               setTrainingInProgress({
                 training,
-                selectedComponent:
-                  convertComponentToComponentWithPrescribedTempo(component),
+                selectedComponent: component,
                 userId: user.uid,
                 exerciseSetTrackingState: state,
               } as TrainingInProgress);
