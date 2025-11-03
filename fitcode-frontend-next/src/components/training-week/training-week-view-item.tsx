@@ -10,8 +10,7 @@ import { useState } from 'react';
 
 import { handleUpdateTrainingTimes } from './actions/actions-week-item';
 import TrainerWeekViewItem from './training-week-component-item';
-import { Components } from '@/core/exercise/constant/components.constant';
-import { Targets } from '@/core/exercise/constant/target.constant';
+import { core } from '@/core/core.service';
 import type { GroupEvent } from '@/core/group/type/group-event.type';
 import type { TrainingComponentWithTrainingId } from '@/core/training/type/training-component.type';
 import { useGroup } from '@/store/group.provider';
@@ -43,10 +42,11 @@ export default function WeekViewItem({ item }: WeekViewItemProps) {
 
   const isTrainingComponent = checkIsTrainingComponent(item);
   const component = isTrainingComponent
-    ? Components.find((c) => c.field === item.id)
+    ? core.training.component.find(item.id)
     : null;
+
   const target = isTrainingComponent
-    ? Targets.find((t) => t.field === item.targetId)
+    ? core.training.component.findTarget(item.targetId)
     : null;
 
   return (

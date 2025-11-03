@@ -25,9 +25,10 @@ export class CycleTarget {
   targetId: string;
 
   @IsEnum(CycleLevel)
-  @ApiProperty({ enum: CycleLevel })
+  @ApiPropertyOptional({ enum: CycleLevel })
+  @IsOptional()
   @Expose()
-  level: CycleLevel;
+  level?: CycleLevel;
 }
 
 export class Cycle extends BaseEntity {

@@ -6,6 +6,7 @@ import { updateCycleState } from './actions/actions-cycle';
 import { useMultiCycleSliderCyclesProvider } from './context/cycles.provider';
 import type { UseSliderPropertiesReturnType } from './hooks/use-slider-properties';
 import TrainingYearCycleComponentSelectItem from './training-year-cycle-component-select-item';
+import { core } from '@/core/core.service';
 import { Components } from '@/core/exercise/constant/components.constant';
 import { Targets } from '@/core/exercise/constant/target.constant';
 import type { Target } from '@/core/exercise/type/target.type';
@@ -22,15 +23,11 @@ interface CycleComponentsProps {
 export default function CycleComponents(props: CycleComponentsProps) {
   const theme = useTheme();
   const screenSize = useScreenSize();
-
   const groupContext = useGroup();
-
   const { setDetectedChanges } = groupContext;
 
   const sortedCyclesContext = useMultiCycleSliderCyclesProvider();
-
   const { sortedCycles } = sortedCyclesContext;
-
   const { sliderProperties } = props.useSliderProperties;
 
   return (
@@ -89,28 +86,25 @@ export default function CycleComponents(props: CycleComponentsProps) {
               >
                 {sortedCycles.map((cycle, i) => {
                   const sliderProperty = sliderProperties[i];
-
                   if (!sliderProperty) return null;
 
                   // parse number from string
                   let widthNumber = parseFloat(sliderProperty.width);
-
                   if (isNaN(widthNumber)) return null;
 
                   widthNumber += 0.5; // Add 0.5% for border radius
                   const width = `${widthNumber}%`;
 
                   const centerPosition = sliderProperty.centerPosition;
-
-                  const selectedTarget = cycle.targets.find(
-                    (st) =>
-                      Targets.find((t) => st.targetId === t.field)
-                        ?.componentId === component.field
+                  const selectedTarget = cycle.targets.find((st) =>
+                    core.training.component.findByTarget(
+                      st.targetId,
+                      component.field
+                    )
                   );
 
                   const center = parseFloat(sliderProperty.centerPosition); // e.g. "37.5%" -> 37.5
                   const rightEdge = center + widthNumber / 2;
-
                   const cycleZIndex = i + 2; // later items paint above earlier ones
 
                   return (
@@ -175,7 +169,9 @@ export default function CycleComponents(props: CycleComponentsProps) {
                               icon={<></>}
                               selectedItemSize={12}
                               value={selectedTarget?.targetId || ''}
-                              items={/* component.targets ||  */ []}
+                              items={Targets.filter(
+                                (t) => t.componentId === component.field
+                              )}
                               itemKey={'field'}
                               itemName={'name'}
                               selectPadding={'0'}
@@ -198,11 +194,11 @@ export default function CycleComponents(props: CycleComponentsProps) {
                                 if (value === 'None' || !value) {
                                   const newCycle: Cycle = {
                                     ...cycle,
-                                    targets: cycle.targets.filter(
-                                      (st) =>
-                                        Targets.find(
-                                          (t) => t.field === st.targetId
-                                        )?.componentId === component.field
+                                    targets: cycle.targets.filter((st) =>
+                                      core.training.component.findByTarget(
+                                        st.targetId,
+                                        component.field
+                                      )
                                     ),
                                   };
 
@@ -217,24 +213,28 @@ export default function CycleComponents(props: CycleComponentsProps) {
                                   return;
                                 }
 
-                                const target = /* component.targets?.find(
-                                  (c) => c.id === value
-                                ); */ null;
+                                const target =
+                                  core.training.component.findTarget(
+                                    value as string
+                                  );
 
                                 if (!target) return;
 
                                 const newSelectedTargets = cycle.targets.some(
                                   (st) =>
-                                    Targets.find((t) => t.field === st.targetId)
-                                      ?.componentId === component.field
+                                    core.training.component.findByTarget(
+                                      st.targetId,
+                                      component.field
+                                    )
                                 )
                                   ? cycle.targets.map((st) =>
-                                      Targets.find(
-                                        (t) => st.targetId === t.field
-                                      )?.componentId === component.field
+                                      core.training.component.findByTarget(
+                                        st.targetId,
+                                        component.field
+                                      )
                                         ? {
                                             componentId: component.field,
-                                            targetId: /* target.id */ '',
+                                            targetId: target!.field as string,
                                           }
                                         : st
                                     )
@@ -242,7 +242,7 @@ export default function CycleComponents(props: CycleComponentsProps) {
                                       ...cycle.targets,
                                       {
                                         componentId: component.field,
-                                        targetId: /* target.id */ '',
+                                        targetId: target.field as string,
                                       },
                                     ];
 
@@ -293,9 +293,10 @@ export default function CycleComponents(props: CycleComponentsProps) {
                                     const newCycle: Cycle = {
                                       ...cycle,
                                       targets: cycle.targets.map((st) =>
-                                        Targets.find(
-                                          (t) => t.field === st.targetId
-                                        )?.componentId === component.field
+                                        core.training.component.findByTarget(
+                                          st.targetId,
+                                          component.field
+                                        )
                                           ? { ...st, level: undefined }
                                           : st
                                       ),
@@ -314,14 +315,16 @@ export default function CycleComponents(props: CycleComponentsProps) {
 
                                   const newSelectedTargets = cycle.targets.some(
                                     (st) =>
-                                      Targets.find(
-                                        (t) => t.field === st.targetId
-                                      )?.componentId === component.field
+                                      core.training.component.findByTarget(
+                                        st.targetId,
+                                        component.field
+                                      )
                                   )
                                     ? cycle.targets.map((st) =>
-                                        Targets.find(
-                                          (t) => st.targetId === t.field
-                                        )?.componentId === component.field
+                                        core.training.component.findByTarget(
+                                          st.targetId,
+                                          component.field
+                                        )
                                           ? {
                                               ...st,
                                               level: value as CycleLevel,

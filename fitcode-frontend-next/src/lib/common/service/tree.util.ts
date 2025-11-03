@@ -1,60 +1,7 @@
-interface TreeOptions<T> {
-  idPropertyName: keyof T;
-  parentIdPropertyName: keyof T;
-  childrenPropertyName: keyof T;
-  rootId?: string | null;
-  getAllChildren?: boolean;
-}
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type TreeItem = Record<string, any>;
 
 export class TreeUtil {
-  fromArray<T extends TreeItem>(items: T[], options: TreeOptions<T>): T[] {
-    const {
-      idPropertyName,
-      parentIdPropertyName,
-      childrenPropertyName,
-      rootId = null,
-      getAllChildren,
-    } = options;
-
-    const map = new Map<unknown, T & TreeItem>();
-    const roots: T[] = [];
-
-    // Initialize the map and add the children array to each item
-    for (const item of items)
-      map.set(item[idPropertyName], { ...item, [childrenPropertyName]: [] });
-
-    // Populate the children arrays and identify the root nodes
-    for (const item of items) {
-      const itemId = item[idPropertyName];
-      const parentId = item[parentIdPropertyName];
-
-      if (parentId === rootId) roots.push(map.get(itemId)!);
-      else {
-        const parent = map.get(parentId);
-        if (parent) parent[childrenPropertyName].push(map.get(itemId));
-      }
-    }
-
-    // Also returns all children nodes of roots
-    if (getAllChildren) {
-      const nodesToEval = [...roots];
-
-      while (nodesToEval.length) {
-        const currentNode = nodesToEval.shift();
-        if (!currentNode) continue;
-
-        const childNodes = currentNode[childrenPropertyName] as T[];
-        if (childNodes) nodesToEval.push(...childNodes);
-        if (!roots.includes(currentNode)) roots.push(currentNode);
-      }
-    }
-
-    return roots;
-  }
-
   toArray<T extends TreeItem>(roots: T[], childrenPropertyName: keyof T): T[] {
     const result: T[] = [];
     const nodesToEval = [...roots];
@@ -72,39 +19,90 @@ export class TreeUtil {
     return result;
   }
 
-  forEach<T extends TreeItem, Result = unknown>(
+  findNode<T extends TreeItem>(
+    selected: string, // for example "category:strength:upper"
     items: T[],
-    childrenPropertyName: keyof T,
-    callback: (
-      item: T,
-      parent?: T,
-      previousResult?: Result
-    ) => Result | Promise<Result>,
-    parent?: T,
-    result?: Result
-  ) {
-    for (const item of items) {
-      const cb = callback(item, parent, result);
+    idPropertyName: keyof T,
+    childrenPropertyName: keyof T
+  ): T | null {
+    const segments = selected.split(':');
 
-      if (cb instanceof Promise)
-        cb.then((result) =>
-          this.forEach(
-            item[childrenPropertyName],
-            childrenPropertyName,
-            callback,
-            item,
-            result
-          )
-        ).catch((e) => console.error(e));
-      else
-        this.forEach(
-          item[childrenPropertyName],
-          childrenPropertyName,
-          callback,
-          item,
-          cb
-        );
+    let currentLevel = items;
+    let foundNode: T | null = null;
+
+    for (const segment of segments) {
+      const found = currentLevel.find(
+        (item) => item[idPropertyName] === segment
+      );
+
+      if (!found) {
+        foundNode = null;
+        break;
+      }
+
+      foundNode = found;
+      currentLevel = found[childrenPropertyName] as T[];
     }
+
+    return foundNode;
+  }
+
+  /**
+   * For example, if selected is "strength:upper", then all nodes that are options of "strength:upper" will be traversed.
+   */
+  traverse<T extends TreeItem>(
+    selected: string,
+    items: T[],
+    idPropertyName: keyof T,
+    childrenPropertyName: keyof T,
+    callback: (node: T, level: number) => void
+  ): void {
+    const root = this.findNode(
+      selected,
+      items,
+      idPropertyName,
+      childrenPropertyName
+    );
+
+    if (!root) return;
+
+    const traverseNode = (node: T, level: number) => {
+      callback(node, level);
+      const children = node[childrenPropertyName] as T[];
+      if (children)
+        for (const child of children) traverseNode(child, level + 1);
+    };
+
+    traverseNode(root, 0);
+  }
+
+  getNestedPaths<T extends TreeItem>(
+    selected: string,
+    items: T[],
+    idPropertyName: keyof T = 'id',
+    childrenPropertyName: keyof T = 'children'
+  ): string[] {
+    const collectPaths = (node: T, prefix: string): string[] => {
+      const id = node[idPropertyName] as string;
+      const currentPath = prefix ? `${prefix}:${id}` : id;
+      const children = node[childrenPropertyName] as T[];
+      if (!children?.length) return [currentPath];
+
+      return [
+        currentPath,
+        ...children.flatMap((child) => collectPaths(child, currentPath)),
+      ];
+    };
+
+    const root = this.findNode(
+      selected,
+      items,
+      idPropertyName,
+      childrenPropertyName
+    );
+
+    if (!root) return [];
+    return collectPaths(root, '');
   }
 
   getRoot<T extends TreeItem>(item: T, items: T[]): T {
@@ -155,7 +153,7 @@ export class TreeUtil {
   /**
    * Returns all leaf nodes in the tree
    */
-  computeLeafes<T extends TreeItem>(
+  computeLeafs<T extends TreeItem>(
     items: T[],
     childrenPropertyName: keyof T
   ): T[] {

@@ -23,6 +23,8 @@ export async function handleAddTrainingComponents(
   const { trainingId, ...restInput } = input;
   const { router, setTrainings, exercises, selectedTargets } = state;
 
+  console.log('Adding components to training:', selectedTargets);
+
   restInput.components.forEach((component) => {
     const selectedTarget = selectedTargets.find(
       (m) => m.componentId === component.id

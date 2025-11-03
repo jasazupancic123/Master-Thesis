@@ -91,9 +91,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
         }}
         onConfirm={() => {
           if (!selectedTraining) return;
-          addTrainingComponent(selectedTraining.id, {
-            components: [],
-          });
+          addTrainingComponent(selectedTraining.id, { components: [] });
           setSelectedTraining(null);
           setOpenAreYouSureModal(false);
         }}

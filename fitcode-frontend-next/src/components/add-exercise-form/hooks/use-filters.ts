@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 
 import { handlePaginateExercises } from '@/app/(trainer)/dashboard/exercises/state';
+import { Components } from '@/core/exercise/constant/components.constant';
 import type { Component } from '@/core/exercise/type/component.type';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
+import { lib } from '@/lib';
 import type { AttributeFilters } from '@/sites/exercises.page';
 import { useMain } from '@/store/main.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
@@ -28,21 +30,29 @@ export default function useExerciseFormFilters(
 
   const [filteredExercises, setFilteredExercises] =
     useState<Exercise[]>(exercises);
-
-  const [componentExercises, setComponentExercises] = useState<Exercise[]>([]);
+  const [componentExercises, setComponentExercises] =
+    useState<Exercise[]>(exercises);
 
   /**
    * Filter exercises
    */
   useEffect(() => {
+    const allComponentPaths = selectedComponent
+      ? lib.common.tree.getNestedPaths(
+          selectedComponent.field,
+          Components,
+          'field',
+          'options'
+        )
+      : [];
+
     const filter: Partial<Exercise> = {
       ...(selectedComponent?.field &&
-        !search.length && { components: [selectedComponent.field] }),
+        !search.length && { components: allComponentPaths }),
+      ...(selectedComponentsIds.length && {
+        components: selectedComponentsIds,
+      }),
       ...(search && { name: search }),
-      ...(!search.length &&
-        selectedComponentsIds.length && {
-          componentIds: selectedComponentsIds,
-        }),
       ...filters,
     };
 
@@ -73,13 +83,13 @@ export default function useExerciseFormFilters(
       return;
     }
 
-    /* setComponentExercises(
+    setComponentExercises(
       allExercises.filter((exercise) =>
-        exercise.components?.some((c) =>
-          c.parents.includes(selectedComponent.id)
+        exercise.components.some(
+          (c) => c.split(':')[0] === selectedComponent.field
         )
       )
-    ); */
+    );
   }, [selectedComponent, search]);
 
   return {

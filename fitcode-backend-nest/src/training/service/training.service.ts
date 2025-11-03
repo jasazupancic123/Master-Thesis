@@ -281,7 +281,7 @@ export class TrainingService implements Permission<Training, Institution> {
         id: c.id,
         from: c.from,
         to: c.to,
-        target: c.targetId,
+        targetId: c.targetId,
         copiedFrom: c.copiedFrom,
         mainSet: c.mainSet,
         subgroups: [],

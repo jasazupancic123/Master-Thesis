@@ -149,7 +149,7 @@ export function paintHeatmaps(
 
     if (!parent) return null;
 
-    const leafes = lib.common.tree.computeLeafes([parent], 'options');
+    const leafes = lib.common.tree.computeLeafs([parent], 'options');
 
     leafes.forEach((option) => {
       if (!muscleIds.includes(option.field as string))
@@ -218,7 +218,7 @@ export function paintHeatmaps(
       );
 
       if (parent) {
-        const leafes = lib.common.tree.computeLeafes([parent], 'options');
+        const leafes = lib.common.tree.computeLeafs([parent], 'options');
 
         leafes.forEach((option) => {
           if (!muscleIds.includes(option.field as string))

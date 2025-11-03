@@ -96,22 +96,22 @@ export class DataSetup extends BaseSetup {
   private async importExercises() {
     const exerciseService = this.app.get(ExerciseService);
     const data: Update<Exercise>[] = [
-      { name: 'Squats', components: ['concentric'] },
-      { name: 'Deadlifts', components: ['concentric'] },
-      { name: 'Bench Press', components: ['concentric'] },
-      { name: 'High Plank Reach', components: ['concentric'] },
-      { name: 'Power Clean', components: ['concentric'] },
-      { name: 'Sprint', components: ['peak-speed'] },
-      { name: 'Sleed Acceleration', components: ['resisted'] },
-      { name: 'Jogging', components: ['aerobic-capacity'] },
+      { name: 'Squats', components: ['strength:corrective:spine'] },
+      { name: 'Deadlifts', components: ['strength:corrective:spine'] },
+      { name: 'Bench Press', components: ['strength:corrective:spine'] },
+      { name: 'High Plank Reach', components: ['strength:corrective:spine'] },
+      { name: 'Power Clean', components: ['strength:corrective:spine'] },
+      { name: 'Sprint', components: ['speed:cod'] },
+      { name: 'Sleed Acceleration', components: ['speed:agility:hybrid'] },
+      { name: 'Jogging', components: ['endurance:aerobic-capacity'] },
       {
         name: 'Bicep Stretching',
-        components: ['passive-stretching'],
+        components: ['rom:flexibility:passive-stretching'],
         isUnilateral: true,
       },
       {
         name: 'Bulgarian Split Squat',
-        components: ['concentric'],
+        components: ['strength:corrective:spine'],
         isUnilateral: true,
       },
     ];

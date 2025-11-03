@@ -67,32 +67,27 @@ export default function ExerciseModal({
   }
 
   useEffect(() => {
-    setFilteredAttributes(core.exercise.attribute.getAll([]));
-  }, [data?.id]);
+    const attributes: string[] = [];
+    const mainComponent = data?.components?.[0]?.split(':')?.[0];
 
-  /* useEffect(() => {
-    const componentId = data.components?.[0];
-    if (!componentId) return;
+    if (mainComponent) {
+      lib.common.tree.traverse(
+        mainComponent,
+        Components,
+        'field',
+        'options',
+        (a) => {
+          attributes.push(...(a.attributes || []));
+        }
+      );
+    }
 
-    const foundComponent = components.find((c) => c.field === componentId);
-    if (!foundComponent) return;
-
-    const hasSelectedLeafComponent = foundComponent.options?.length === 0;
-    if (!hasSelectedLeafComponent) setFilteredAttributes([]);
-
-    const parents = foundComponent.parents.map((parent) =>
-      components.find((c) => c.id === parent)
+    setFilteredAttributes(
+      core.exercise.attribute
+        .getAll(attributes)
+        .filter((a) => a.field !== 'components')
     );
-
-    const attributeIds = foundComponent.attributes || [];
-    for (const parent of parents)
-      if (parent?.attributes)
-        for (const attribute of parent.attributes)
-          if (!attributeIds.find((a) => a === attribute))
-            attributeIds.push(attribute);
-
-    setFilteredAttributes(core.exercise.attribute.getAll(attributeIds));
-  }, [data.componentIds]); */
+  }, [data?.id, data.components]);
 
   return (
     <MyModal

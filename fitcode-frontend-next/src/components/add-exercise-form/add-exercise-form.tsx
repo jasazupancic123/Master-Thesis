@@ -8,10 +8,11 @@ import useComponentFilter from './hooks/use-component-filter';
 import useExerciseFormFilters from './hooks/use-filters';
 import SelectedExercisesList from './selected-exercises-list';
 import { theme } from '@/app/style';
+import { Components } from '@/core/exercise/constant/components.constant';
 import type { Component } from '@/core/exercise/type/component.type';
+import { lib } from '@/lib';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
-import MenuItemsList from '@/ui/menu-items-list';
 import { SearchBar } from '@/ui/search-bar/search-bar';
 
 export default function AddExerciseForm(props: AddExerciseFormProps) {
@@ -25,21 +26,13 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
   } = props;
 
   const screenSize = useScreenSize();
-
   const { pagination, setPagination } = useTrainerDayView();
 
   const {
     selectedComponent,
     setSelectedComponent,
-    filterComponents,
-    leafComponents,
     selectedComponentsIds,
     setSelectedComponentsIds,
-    selectedRootComponentId,
-    anchorElLeaf,
-    openLeafMenu,
-    handleClickLeaf,
-    handleCloseLeaf,
   } = useComponentFilter();
 
   const {
@@ -56,6 +49,15 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
     selectedComponent
   );
 
+  // root field,
+  const rootField = selectedComponent ? selectedComponent.field : component.id;
+  const root = lib.common.tree.findNode(
+    rootField,
+    Components,
+    'field',
+    'options'
+  );
+
   return (
     <Box width="100%" display="flex" flexDirection="column" alignItems="center">
       <Box sx={{ py: 1, width: '100%', mx: 'auto', position: 'relative' }}>
@@ -65,10 +67,11 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
           setSelected={(component) =>
             setSelectedComponent(component as Component)
           }
-          dissableNoSelection
+          disableNoSelection
           bgColor={theme.palette.background.default}
           primaryColor={theme.palette.primary.main}
           gap={screenSize.isReallySmall ? 1.5 : 3.5}
+          disabledComponents={['other', 'competition']}
         />
       </Box>
 
@@ -80,56 +83,64 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
         gap={1}
         flexWrap="wrap"
       >
-        {/* {filterComponents.map((c) => {
-          const numOfSelected = selectedComponentsIds.filter((id) =>
-            c.children.some((child) => child.id === id)
-          ).length;
+        {root?.options &&
+          root.options.map((child) => {
+            const nodeField = `${rootField}:${child.field}`;
+            const isSelected = selectedComponentsIds.some(
+              (id) => id === nodeField
+            );
 
-          const children = lib.common.tree.fromArray(components, {
-            rootId: c.id,
-            idPropertyName: 'id',
-            parentIdPropertyName: 'parentId',
-            childrenPropertyName: 'children',
-          });
+            if (!root) return null;
 
-          const isSelected =
-            children.length === 0
-              ? selectedComponentsIds.includes(c.id)
-              : numOfSelected === children.length;
+            // select all children of the clicked node
+            const nodeChildren = child.options || [];
+            const nodeChildrenIds = nodeChildren.map(
+              (n) => `${rootField}:${child.field}:${n.field}`
+            );
 
-          return (
-            <Button
-              key={c.id}
-              variant="contained"
-              disableElevation
-              onClick={(e) => handleClickLeaf(e, c.id)}
-              endIcon={
-                selectedRootComponentId === c.id ? (
-                  <KeyboardArrowUp />
-                ) : (
-                  <KeyboardArrowDown />
-                )
-              }
-              sx={
-                isSelected
-                  ? {
-                      py: 0.5,
-                      mx: screenSize.isMobile ? 'auto' : 0,
-                      backgroundColor: theme.palette.primary.main,
-                      color: theme.palette.text.secondary,
-                    }
-                  : {
-                      py: 0.5,
-                      mx: screenSize.isMobile ? 'auto' : 0,
-                      backgroundColor: theme.palette.background.dark,
-                      color: theme.palette.text.primary,
-                    }
-              }
-            >
-              {`${c.name}${numOfSelected ? ` (${numOfSelected})` : ''}`}
-            </Button>
-          );
-        })} */}
+            nodeChildrenIds.push(nodeField);
+
+            return (
+              <Button
+                key={child.field}
+                variant="contained"
+                disableElevation
+                onClick={() => {
+                  // first time selecting the node
+                  if (selectedComponentsIds.includes(nodeField))
+                    setSelectedComponentsIds((prev) =>
+                      prev.filter(
+                        (id) =>
+                          id !== nodeField &&
+                          !nodeChildrenIds.some((childId) => childId === id)
+                      )
+                    );
+                  else
+                    // Select node and all children
+                    setSelectedComponentsIds((prev) => [
+                      ...new Set([...prev, nodeField, ...nodeChildrenIds]),
+                    ]);
+                }}
+                sx={
+                  isSelected
+                    ? {
+                        py: 0.5,
+                        mx: screenSize.isMobile ? 'auto' : 0,
+                        backgroundColor: theme.palette.primary.main,
+                        color: theme.palette.text.secondary,
+                      }
+                    : {
+                        py: 0.5,
+                        mx: screenSize.isMobile ? 'auto' : 0,
+                        backgroundColor: theme.palette.background.dark,
+                        color: theme.palette.text.primary,
+                      }
+                }
+              >
+                {child.name}
+              </Button>
+            );
+          })}
       </Box>
 
       <Box
@@ -162,48 +173,11 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
               size="small"
               variant="contained"
               sx={{ my: 2 }}
-              onClick={() => {
-                handleAddExercises();
-              }}
+              onClick={() => handleAddExercises()}
             >
               Add
             </Button>
           </Box>
-
-          {selectedRootComponentId && (
-            <MenuItemsList<Component>
-              anchorEl={anchorElLeaf}
-              open={openLeafMenu}
-              items={leafComponents}
-              idPropertyName="field"
-              valuePropertyName="field"
-              namePropertyName="name"
-              onClose={handleCloseLeaf}
-              anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-              transformOrigin={{ vertical: 'top', horizontal: 'center' }}
-              onMenuItemClick={(e, id) => {
-                if (selectedComponentsIds.includes(id)) {
-                  setSelectedComponentsIds((prev) =>
-                    prev.filter((componentId) => componentId !== id)
-                  );
-                } else {
-                  setSelectedComponentsIds((prev) => [...prev, id]);
-                }
-              }}
-              menuItemsSx={(cId) => {
-                return selectedComponentsIds.includes(cId)
-                  ? {
-                      backgroundColor: theme.palette.primary.main,
-                      color: theme.palette.text.secondary,
-                      fontWeight: 500,
-                      '&:hover': {
-                        backgroundColor: theme.palette.primary.main,
-                      },
-                    }
-                  : {};
-              }}
-            />
-          )}
         </Box>
 
         <Box

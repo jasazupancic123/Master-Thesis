@@ -2,8 +2,7 @@ import { Event } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 
-import { Components } from '@/core/exercise/constant/components.constant';
-import { Targets } from '@/core/exercise/constant/target.constant';
+import { core } from '@/core/core.service';
 import type { GroupEvent } from '@/core/group/type/group-event.type';
 import type { TrainingComponentWithTrainingId } from '@/core/training/type/training-component.type';
 import { lib } from '@/lib';
@@ -31,12 +30,9 @@ export default function TrainerWeekViewItem(props: TrainerWeekViewItemProps) {
   };
 
   const isComponent = checkIsComponent(item);
-  const component = isComponent
-    ? Components.find((c) => c.field === item.id)
-    : null;
-
+  const component = isComponent ? core.training.component.find(item.id) : null;
   const target = isComponent
-    ? Targets.find((t) => t.field === item.targetId)
+    ? core.training.component.findTarget(item.targetId)
     : null;
 
   // MOBILE DESIGN
@@ -81,9 +77,7 @@ export default function TrainerWeekViewItem(props: TrainerWeekViewItemProps) {
       alignItems="flex-start"
       sx={{
         p: screenSize.isMobile || screenSize.isSmallTablet ? 0 : 1,
-        ':hover': {
-          backgroundColor: theme.palette.background.light,
-        },
+        ':hover': { backgroundColor: theme.palette.background.light },
         cursor: 'pointer',
       }}
       onClick={() => {

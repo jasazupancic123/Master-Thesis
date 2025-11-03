@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { Components } from '@/core/exercise/constant/components.constant';
-import { Targets } from '@/core/exercise/constant/target.constant';
+import { core } from '@/core/core.service';
 import type { Target } from '@/core/exercise/type/target.type';
 import { useGroup } from '@/store/group.provider';
 
@@ -17,7 +16,11 @@ export default function useTrainingCycleViewTargets() {
 
     setSelectedTargets(
       cycle.targets.map((st) => {
-        const target = Targets.find((t) => t.field === st.targetId);
+        const target = core.training.component.findCycleTarget(
+          st.targetId,
+          cycle
+        );
+
         return {
           componentId: target?.componentId || 'other',
           target: target || {
@@ -36,8 +39,12 @@ export default function useTrainingCycleViewTargets() {
     const newSelectedTargets = [] as { componentId: string; target: Target }[];
 
     cycle.targets.map((st) => {
-      const target = Targets.find((t) => t.field === st.targetId);
-      const component = Components.find((c) => c.field === target?.componentId);
+      const component = core.training.component.findByTarget(st.targetId);
+      const target = core.training.component.findCycleTarget(
+        st.targetId,
+        cycle
+      );
+
       if (component && target)
         newSelectedTargets.push({ componentId: target.componentId, target });
     });

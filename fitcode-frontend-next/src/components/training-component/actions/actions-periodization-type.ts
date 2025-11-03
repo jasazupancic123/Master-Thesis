@@ -1,7 +1,7 @@
 import { isBefore } from 'date-fns';
 import toast from 'react-hot-toast';
 
-import { Targets } from '@/core/exercise/constant/target.constant';
+import { core } from '@/core/core.service';
 import { PeriodizationType } from '@/core/training/enum/periodization-type.enum';
 import type { SetState } from '@/lib/common/type/state.type';
 import type { IGroupCtx } from '@/store/group.provider';
@@ -75,14 +75,15 @@ export function handleSetPeriodizationType(
   let numTrainingsWithSameTarget = 0;
   trainings.forEach((t) => {
     if (training.id === t.id || isBefore(t.from, training.from)) return;
-
     const sameComponent = t.components.find((c) => c.id === component.id);
-
     if (!sameComponent) return;
 
-    const componentTarget = Targets.find((t) => t.field === component.targetId);
-    const sameComponentTarget = Targets.find(
-      (t) => t.field === sameComponent.targetId
+    const componentTarget = core.training.component.findTarget(
+      component.targetId
+    );
+
+    const sameComponentTarget = core.training.component.findTarget(
+      sameComponent.targetId
     );
 
     if (!componentTarget && !sameComponentTarget) {
