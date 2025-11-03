@@ -63,7 +63,7 @@ export default function RomChart({
     firstRomR !== undefined &&
     Math.abs(firstRomL - firstRomR) < 0.05
   ) {
-    // if L and R starts are less than 0.05 radian difference, align it to the same value, priorizite left
+    // if L and R starts are less than 0.05 difference, align it to the same value, priorizite left
     const offset = firstRomL - firstRomR;
 
     romR = romR.map((r) => r + offset);

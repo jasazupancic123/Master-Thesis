@@ -173,6 +173,7 @@ export default function TrainingExerciseSetDoneCheckbox(
         '&.MuiCheckbox-root': {
           px: 0,
         },
+        p: 0,
         mt: applyTopMargin ? 3.5 : undefined,
       }}
       onChange={async (e) => {
