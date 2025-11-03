@@ -105,8 +105,9 @@ export default function TrainingInProgressExerciseControls() {
 
             if (!setTrackingState) return;
 
-            const isCurrentSetDone =
-              setTrackingState.completedSetNumbers.includes(setIndex + 1);
+            const isCurrentSetDone = setTrackingState.completedSetNumbers.some(
+              (s) => s.setNumber === setIndex + 1
+            );
 
             if (isCurrentSetDone) {
               toast.error('This set is already marked as done');
