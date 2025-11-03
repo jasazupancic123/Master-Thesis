@@ -137,7 +137,7 @@ export class TrainingSupersetUtil {
       for (const s of e.sets)
         if (
           !t ||
-          (!t.completedSetNumbers.includes(s.setNumber) &&
+          (!t.completedSetNumbers.some((se) => se.setNumber === s.setNumber) &&
             !undone.find((u) => u.id === e.id))
         )
           undone.push(e);

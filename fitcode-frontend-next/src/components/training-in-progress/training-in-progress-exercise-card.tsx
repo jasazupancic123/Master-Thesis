@@ -176,7 +176,9 @@ export default function TrainingInProgressExerciseCard() {
             const isSetDone = trainingInProgress.exerciseSetTrackingState.some(
               (state) =>
                 state.exerciseId === selectedExercise.id &&
-                state.completedSetNumbers.includes(s.setNumber)
+                state.completedSetNumbers.some(
+                  (set) => set.setNumber === s.setNumber
+                )
             );
 
             return (
