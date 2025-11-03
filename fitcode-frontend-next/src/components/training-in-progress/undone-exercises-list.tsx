@@ -1,7 +1,7 @@
 import { Box, Typography } from '@mui/material';
 
 import { useUndoneExercises } from './context/undone-exercises.provider';
-import TrainingInProgressExerciseSet from '@/components/training-in-progress/training-in-progress-exercise-set';
+import UndoneExerciseSet from '@/components/training-in-progress/undone-exercise-set';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 
@@ -51,7 +51,7 @@ export default function UndoneExercisesList() {
               setCounter++;
 
               return (
-                <TrainingInProgressExerciseSet
+                <UndoneExerciseSet
                   key={i}
                   setIndex={i}
                   showOptions={setCounter === 1}

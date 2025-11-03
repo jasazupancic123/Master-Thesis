@@ -12,7 +12,10 @@ import { TrainingController } from '@/core/training/training.controller';
 import { TrainingService } from '@/core/training/training.service';
 import type { ExerciseSetTracking } from '@/core/training/type/exercise-set-tracking-state.type';
 import type { Training } from '@/core/training/type/training.type';
-import type { TrainingComponent } from '@/core/training/type/training-component.type';
+import type {
+  TrainingComponent,
+  TrainingComponentRecording,
+} from '@/core/training/type/training-component.type';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
 import { TrainingComponentStatus } from '@/core/training/type/training-report.type';
 import { lib } from '@/lib';
@@ -54,6 +57,31 @@ export default function AthleteTrainingComponents(props: Props) {
   const { reports, setTrainingInProgress, setView } = useTraining();
   const { exercises } = useMain();
   const { user } = useAuthenticatedAuth();
+
+  const convertComponentToComponentWithPrescribedTempo = (
+    trainingComponent: TrainingComponentRecording
+  ): TrainingComponentRecording => {
+    return {
+      ...trainingComponent,
+      supersets: trainingComponent.supersets.map((superset) => {
+        return {
+          ...superset,
+          exercises: superset.exercises.map((exercise) => {
+            return {
+              ...exercise,
+              sets: exercise.sets.map((set) => {
+                return {
+                  ...set,
+                  prescribedTempo: set.tempo,
+                  prescribedTempoR: set.tempoR,
+                };
+              }),
+            };
+          }),
+        };
+      }),
+    };
+  };
 
   return (
     <Box
@@ -243,7 +271,8 @@ export default function AthleteTrainingComponents(props: Props) {
 
               setTrainingInProgress({
                 training,
-                selectedComponent: component,
+                selectedComponent:
+                  convertComponentToComponentWithPrescribedTempo(component),
                 userId: user.uid,
                 exerciseSetTrackingState: state,
               } as TrainingInProgress);
