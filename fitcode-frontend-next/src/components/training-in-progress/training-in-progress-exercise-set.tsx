@@ -252,7 +252,7 @@ export default function TrainingInProgressExerciseSet(props: Props) {
                     options={volOptions}
                     selected={volType}
                     value={
-                      exercise.sets[0]?.[
+                      exercise.sets[setIndex]?.[
                         core.exercise.param.pairs[volType]
                       ] as number
                     }
