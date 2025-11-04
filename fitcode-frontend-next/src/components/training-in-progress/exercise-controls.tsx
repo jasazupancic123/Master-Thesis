@@ -10,6 +10,10 @@ import { EXERCISE_POSES } from '@/lib/pose-detection/const/exercise-poses';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
+import { lib } from '@/lib';
+import { INDEXED_DB_FIELDS } from '@/lib/common/const/indexed-db-fields.const';
+import { useState } from 'react';
+import AiNoticeModal from './modals/ai-notice-modal';
 
 export default function TrainingInProgressExerciseControls() {
   const trainingContext = useTraining();
@@ -19,7 +23,10 @@ export default function TrainingInProgressExerciseControls() {
 
   const { trainingInProgress } = trainingContext;
 
-  const { selectedExercise, setIndex } = trainingInProgressContext;
+  const { selectedExercise, setIndex, audioEnabled, setAudioEnabled } =
+    trainingInProgressContext;
+
+  const [openAiNoticeModal, setOpenAiNoticeModal] = useState(false);
 
   const iconsDimension = 20;
 
@@ -82,8 +89,17 @@ export default function TrainingInProgressExerciseControls() {
               />
             </Box>
           }
-          onClick={() => {
+          onClick={async () => {
             if (!selectedExercise.exercise || setIndex === undefined) return;
+
+            const hasAgreedToTerms = await lib.common.indexedDb.items.get(
+              INDEXED_DB_FIELDS.aiNotice
+            );
+
+            if (!hasAgreedToTerms) {
+              setOpenAiNoticeModal(true);
+              return;
+            }
 
             const hasPoseLogic =
               selectedExercise.exercise !== undefined &&
@@ -165,6 +181,18 @@ export default function TrainingInProgressExerciseControls() {
             setSelectedControl(TrainingInProgressExerciseControl.SW);
           }}
         />
+
+        <ExerciseControlItem
+          label="Audio"
+          width={boxWidth}
+          icon={getExerciseControlsIcon(
+            TrainingInProgressExerciseControl.AUDIO,
+            audioEnabled
+          )}
+          onClick={async () => {
+            setAudioEnabled(!audioEnabled);
+          }}
+        />
       </Box>
 
       <Box
@@ -172,10 +200,12 @@ export default function TrainingInProgressExerciseControls() {
         display="flex"
         justifyContent="center"
         alignItems="center"
-        sx={{ py: 2 }}
+        sx={{ py: 3 }}
       >
-        {ExercieseControlSelected(selectedControl)}
+        <ExercieseControlSelected selectedControl={selectedControl} />
       </Box>
+
+      <AiNoticeModal open={openAiNoticeModal} setOpen={setOpenAiNoticeModal} />
     </Box>
   );
 }
