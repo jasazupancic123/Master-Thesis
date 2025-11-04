@@ -6,10 +6,10 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { ElapsedTime } from './training-in-progress-elapsed-time';
 import { theme } from '@/app/style';
-import { useTraining } from '@/store/training.provider';
-import { PieCenterLabel } from '@/ui/mui-charts';
-import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import { STRING_CONST } from '@/lib/common/const/string.const';
+import { useTraining } from '@/store/training.provider';
+import { useTrainingInProgress } from '@/store/training-in-progress.provider';
+import { PieCenterLabel } from '@/ui/mui-charts';
 
 interface Props {
   startOfTraining: Dayjs;
@@ -128,7 +128,7 @@ export default function SWControl(props: Props) {
       {lastSetCompletedAt !== undefined &&
         lastSetRecTimeS !== undefined &&
         lastCompletedSet &&
-        lastCompletedSet.setNumber != setIndex + 1 &&
+        lastCompletedSet.setNumber !== setIndex + 1 &&
         !isSetCompleted && (
           <>
             <PieChart

@@ -1,11 +1,12 @@
+import dayjs from 'dayjs';
+import { useEffect } from 'react';
+
 import { ExerciseParamFieldEnum } from '@/core/exercise/enum/exercise-param-field.enum';
 import { lib } from '@/lib';
 import { STRING_CONST } from '@/lib/common/const/string.const';
-import { SetState } from '@/lib/common/type/state.type';
-import { useTrainingInProgress } from '@/store/training-in-progress.provider';
+import type { SetState } from '@/lib/common/type/state.type';
 import { useTraining } from '@/store/training.provider';
-import dayjs from 'dayjs';
-import { useEffect } from 'react';
+import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 
 export default function useRecoveryTime(
   selected: string,

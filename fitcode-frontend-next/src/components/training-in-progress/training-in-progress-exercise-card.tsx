@@ -4,8 +4,8 @@ import { useTheme } from '@mui/material';
 import Image from 'next/image';
 import { useState } from 'react';
 
-import ExerciseVideoModal from './modals/exercise-video-modal';
 import TrainingInProgressExerciseControls from './exercise-controls';
+import ExerciseVideoModal from './modals/exercise-video-modal';
 import TrainingInProgressExerciseSet from './training-in-progress-exercise-set';
 import MobileMovementValidation from '@/components/mobile-movement-validation/mobile-movement-validation';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';

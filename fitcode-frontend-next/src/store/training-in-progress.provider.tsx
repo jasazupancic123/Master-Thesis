@@ -6,9 +6,9 @@ import { useTraining } from './training.provider';
 import { TrainingController } from '@/core/training/training.controller';
 import type { TrainingExerciseRecording } from '@/core/training/type/training-exercise.type';
 import type { CreateWorkload } from '@/core/training/type/workload.type';
-import { handleApiRequest, type SetState } from '@/lib/common/type/state.type';
 import { lib } from '@/lib';
 import { INDEXED_DB_FIELDS } from '@/lib/common/const/indexed-db-fields.const';
+import { handleApiRequest, type SetState } from '@/lib/common/type/state.type';
 
 export interface ITrainingInProgressContext {
   selectedExercise: TrainingExerciseRecording | undefined;

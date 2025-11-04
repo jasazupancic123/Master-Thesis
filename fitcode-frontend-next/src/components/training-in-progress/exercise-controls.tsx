@@ -1,19 +1,19 @@
 import { Box, Typography } from '@mui/material';
+import { useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { TrainingInProgressExerciseControl } from './enum/exercise-controls.enum';
-import useExerciseControls from './hooks/use-exercise-controls';
 import ExercieseControlSelected from './exercise-control-selected';
+import useExerciseControls from './hooks/use-exercise-controls';
+import AiNoticeModal from './modals/ai-notice-modal';
 import { theme } from '@/app/style';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
+import { lib } from '@/lib';
+import { INDEXED_DB_FIELDS } from '@/lib/common/const/indexed-db-fields.const';
 import { EXERCISE_POSES } from '@/lib/pose-detection/const/exercise-poses';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
-import { lib } from '@/lib';
-import { INDEXED_DB_FIELDS } from '@/lib/common/const/indexed-db-fields.const';
-import { useState } from 'react';
-import AiNoticeModal from './modals/ai-notice-modal';
 
 export default function TrainingInProgressExerciseControls() {
   const trainingContext = useTraining();
