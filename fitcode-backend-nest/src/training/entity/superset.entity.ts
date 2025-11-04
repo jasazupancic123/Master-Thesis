@@ -1,7 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
-import { IsBoolean, IsOptional, ValidateNested } from 'class-validator';
+import {
+  IsBoolean,
+  IsEnum,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 
+import { MainSet } from '../enum/main-set.enum';
 import { TrainingExercise } from './training-exercise.entity';
 
 export class Superset {
@@ -10,6 +17,12 @@ export class Superset {
   @ApiProperty({ type: () => TrainingExercise, isArray: true })
   @Expose()
   exercises: TrainingExercise[];
+
+  @IsEnum(MainSet)
+  @IsString()
+  @ApiProperty({ enum: MainSet })
+  @Expose()
+  mainSet: MainSet;
 
   @IsBoolean()
   @ApiPropertyOptional()

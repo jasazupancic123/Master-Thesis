@@ -275,7 +275,10 @@ describe('Complete Next Set (e2e)', () => {
       reps: 12,
       loadKg: 100,
       recTime: 60,
-      tempo: '2:0:2:0',
+      tempoEcc: 2,
+      tempoIso: 0,
+      tempoCon: 2,
+      tempoIdle: 0,
     });
 
     // workloads should not exist yet
@@ -310,10 +313,18 @@ describe('Complete Next Set (e2e)', () => {
     expect(result.reps).toBe(12);
     expect(result.repsR).toBeUndefined();
     expect(result.loadKg).toBe(100);
+    expect(result.loadKgR).toBeUndefined();
     // additional properties - tempo and rom
-    expect(result.tempo).toBe('2:0:2:0');
-    expect(result.tempoR).toBeUndefined();
+    expect(result.tempoEcc).toBe(2);
+    expect(result.tempoIso).toBe(0);
+    expect(result.tempoCon).toBe(2);
+    expect(result.tempoIdle).toBe(0);
+    expect(result.tempoEccR).toBeUndefined();
+    expect(result.tempoIsoR).toBeUndefined();
+    expect(result.tempoConR).toBeUndefined();
+    expect(result.tempoIdleR).toBeUndefined();
     expect(result.recTime).toBe(60);
+    expect(result.recTimeR).toBeUndefined();
 
     const workloads = await db.workloads.getAll(trainingId);
     expect(workloads).toHaveLength(1);
@@ -354,7 +365,10 @@ describe('Complete Next Set (e2e)', () => {
       reps: 10,
       loadKg: 80,
       recTime: 90,
-      tempo: '2:0:2:0',
+      tempoEcc: 2,
+      tempoIso: 0,
+      tempoCon: 2,
+      tempoIdle: 0,
     });
 
     // workloads should exist now
@@ -385,8 +399,14 @@ describe('Complete Next Set (e2e)', () => {
     expect(result.loadKg).toBe(80);
     expect(result.loadKgR).toBeUndefined();
     // additional properties - tempo and rom
-    expect(result.tempo).toBe('2:0:2:0');
-    expect(result.tempoR).toBeUndefined();
+    expect(result.tempoEcc).toBe(2);
+    expect(result.tempoIso).toBe(0);
+    expect(result.tempoCon).toBe(2);
+    expect(result.tempoIdle).toBe(0);
+    expect(result.tempoEccR).toBeUndefined();
+    expect(result.tempoIsoR).toBeUndefined();
+    expect(result.tempoConR).toBeUndefined();
+    expect(result.tempoIdleR).toBeUndefined();
     expect(result.recTime).toBe(90);
 
     const workloads = await db.workloads.getAll(trainingId);
@@ -404,6 +424,7 @@ describe('Complete Next Set (e2e)', () => {
         exerciseId: 'squat',
         userId: global.athlete.uid,
         supersetIndex: 0,
+        exerciseIndex: 0,
         setNumber: i,
         status: SetStatus.PARTIAL,
         reps: 1,
@@ -418,7 +439,10 @@ describe('Complete Next Set (e2e)', () => {
       reps: 8,
       loadKg: 60,
       recTime: 120,
-      tempo: '2:0:2:0',
+      tempoEcc: 2,
+      tempoIso: 0,
+      tempoCon: 2,
+      tempoIdle: 0,
     });
 
     expect(res.status).toBe(201);
