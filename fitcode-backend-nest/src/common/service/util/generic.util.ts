@@ -21,8 +21,6 @@ export class GenericUtil {
   }
 
   error(errors: ValidateError<any>[]): string {
-    console.log('errors:', errors);
-
     if (!errors.length) return '';
     return (
       this.upperFirstLetter(errors[0].message) +
