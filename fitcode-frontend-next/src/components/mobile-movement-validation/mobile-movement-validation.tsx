@@ -18,6 +18,7 @@ import AthleteTrainingExerciseSets from '../athlete/athlete-training-exercise-se
 import TempoChart from '../charts/tempo/tempo-chart';
 import { updateTrainingExerciseWithAI } from '../training-in-progress/actions/actions-exercise';
 import { finishSet } from '../training-in-progress/actions/actions-exercise-set';
+import { handleAdvanceInSuperset } from '../training-in-progress/actions/actions-superset';
 import FpsText from './fps-text';
 import MovementValidationHeader from './movement-validation-header';
 import {
@@ -62,7 +63,6 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import LoadingOverlay from '@/ui/loading-overlay';
-import { handleAdvanceInSuperset } from '../training-in-progress/actions/actions-superset';
 
 const DEBUG = false;
 
