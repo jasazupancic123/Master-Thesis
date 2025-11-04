@@ -9,7 +9,7 @@ interface Props<T> {
   valuePropertyName: keyof T;
   namePropertyName: keyof T;
   onClose: () => void;
-  onMenuItemClick: (e: React.MouseEvent<HTMLElement>, id: string) => void;
+  onMenuItemClick: (e: React.MouseEvent<HTMLElement>, item: T) => void;
   anchorOrigin?: {
     vertical: 'top' | 'bottom' | 'center';
     horizontal: 'left' | 'right' | 'center';
@@ -19,7 +19,7 @@ interface Props<T> {
     horizontal: 'left' | 'right' | 'center';
   };
   menuSx?: SxProps;
-  menuItemsSx?: (id: string) => SxProps;
+  menuItemsSx?: (item: T) => SxProps;
   options?: {
     sortByPropertyName?: keyof T;
   };
@@ -70,9 +70,9 @@ export default function MenuItemsList<T>(props: Props<T>) {
 
               const id = c[idPropertyName] as string;
 
-              onMenuItemClick(e, id);
+              onMenuItemClick(e, c);
             }}
-            sx={menuItemsSx ? menuItemsSx(c[idPropertyName] as string) : {}}
+            sx={menuItemsSx ? menuItemsSx(c) : {}}
           >
             {c[namePropertyName] as string}
           </MenuItem>

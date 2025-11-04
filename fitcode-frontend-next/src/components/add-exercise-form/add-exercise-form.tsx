@@ -14,6 +14,8 @@ import { lib } from '@/lib';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 import { SearchBar } from '@/ui/search-bar/search-bar';
+import { KeyboardArrowDown, KeyboardArrowUp } from '@mui/icons-material';
+import MenuItemsList from '@/ui/menu-items-list';
 
 export default function AddExerciseForm(props: AddExerciseFormProps) {
   const {
@@ -33,6 +35,14 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
     setSelectedComponent,
     selectedComponentsIds,
     setSelectedComponentsIds,
+    selectedRootComponentId,
+    anchorElLeaf,
+    openLeafMenu,
+    handleCloseLeaf,
+    leafComponents,
+    handleClickLeaf,
+    computeWholeComponentId,
+    computeWholeTree,
   } = useComponentFilter();
 
   const {
@@ -47,6 +57,11 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
     component,
     selectedComponentsIds,
     selectedComponent
+  );
+
+  const allComponents = lib.common.tree.computeAllItemsAsArray(
+    Components,
+    'options'
   );
 
   // root field,
@@ -85,44 +100,37 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
       >
         {root?.options &&
           root.options.map((child) => {
-            const nodeField = `${rootField}:${child.field}`;
-            const isSelected = selectedComponentsIds.some(
-              (id) => id === nodeField
-            );
+            const isSelected = selectedRootComponentId === child.field;
 
-            if (!root) return null;
+            const leafes = lib.common.tree.getLeafesFromRootId([child], {
+              rootId: child.field,
+              idPropertyName: 'field',
+              childrenPropertyName: 'options',
+            });
 
-            // select all children of the clicked node
-            const nodeChildren = child.options || [];
-            const nodeChildrenIds = nodeChildren.map(
-              (n) => `${rootField}:${child.field}:${n.field}`
-            );
+            const numLeafesSelected = leafes.filter((leaf) => {
+              const tree = computeWholeTree(leaf, allComponents);
 
-            nodeChildrenIds.push(nodeField);
+              const computedId = computeWholeComponentId(tree);
+
+              if (!computedId) return false;
+
+              return selectedComponentsIds.includes(computedId);
+            }).length;
+
+            const allLeafesSelected = numLeafesSelected === leafes.length;
 
             return (
               <Button
                 key={child.field}
                 variant="contained"
                 disableElevation
-                onClick={() => {
-                  // first time selecting the node
-                  if (selectedComponentsIds.includes(nodeField))
-                    setSelectedComponentsIds((prev) =>
-                      prev.filter(
-                        (id) =>
-                          id !== nodeField &&
-                          !nodeChildrenIds.some((childId) => childId === id)
-                      )
-                    );
-                  else
-                    // Select node and all children
-                    setSelectedComponentsIds((prev) => [
-                      ...new Set([...prev, nodeField, ...nodeChildrenIds]),
-                    ]);
-                }}
+                onClick={(e) => handleClickLeaf(e, child.field)}
+                endIcon={
+                  isSelected ? <KeyboardArrowUp /> : <KeyboardArrowDown />
+                }
                 sx={
-                  isSelected
+                  allLeafesSelected
                     ? {
                         py: 0.5,
                         mx: screenSize.isMobile ? 'auto' : 0,
@@ -137,7 +145,10 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
                       }
                 }
               >
-                {child.name}
+                {child.name}{' '}
+                {numLeafesSelected > 0 &&
+                  numLeafesSelected !== leafes.length &&
+                  `(${numLeafesSelected}/${leafes.length})`}
               </Button>
             );
           })}
@@ -179,6 +190,57 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
             </Button>
           </Box>
         </Box>
+
+        {selectedRootComponentId && (
+          <MenuItemsList<Component>
+            anchorEl={anchorElLeaf}
+            open={openLeafMenu}
+            items={leafComponents}
+            idPropertyName="field"
+            valuePropertyName="field"
+            namePropertyName="name"
+            onClose={handleCloseLeaf}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            transformOrigin={{ vertical: 'top', horizontal: 'center' }}
+            onMenuItemClick={(e, item) => {
+              const foundItem = allComponents.find((i) => i === item);
+
+              if (!foundItem) return;
+
+              const tree = computeWholeTree(foundItem, allComponents);
+
+              const computedId = computeWholeComponentId(tree);
+
+              if (!computedId) return;
+
+              if (selectedComponentsIds.includes(computedId)) {
+                setSelectedComponentsIds((prev) =>
+                  prev.filter((componentId) => componentId !== computedId)
+                );
+              } else {
+                setSelectedComponentsIds((prev) => [...prev, computedId]);
+              }
+            }}
+            menuItemsSx={(c) => {
+              return selectedComponentsIds.some((i) => {
+                const tree = computeWholeTree(c, allComponents);
+
+                const computedId = computeWholeComponentId(tree);
+
+                return computedId === i;
+              })
+                ? {
+                    backgroundColor: theme.palette.primary.main,
+                    color: theme.palette.text.secondary,
+                    fontWeight: 500,
+                    '&:hover': {
+                      backgroundColor: theme.palette.primary.main,
+                    },
+                  }
+                : {};
+            }}
+          />
+        )}
 
         <Box
           width="40%"
