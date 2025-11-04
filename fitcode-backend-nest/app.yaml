@@ -1,7 +1,7 @@
 runtime: nodejs20
 
 env: standard
-instance_class: F1
+instance_class: F1_1G
 
 inbound_services:
   - warmup

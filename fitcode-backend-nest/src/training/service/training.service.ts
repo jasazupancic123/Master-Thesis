@@ -283,7 +283,6 @@ export class TrainingService implements Permission<Training, Institution> {
         to: c.to,
         targetId: c.targetId,
         copiedFrom: c.copiedFrom,
-        mainSet: c.mainSet,
         subgroups: [],
         supersets: [],
       })),
@@ -686,12 +685,14 @@ export class TrainingService implements Permission<Training, Institution> {
       const newPrescribedSupersets: Superset[] = [];
       const prescribedSupersets = trainingComponent.supersets;
 
-      prescribedSupersets.forEach(({ exercises: prescribedExercises }) => {
+      prescribedSupersets.forEach((prescribedSuperset) => {
+        const { exercises: prescribedExercises, ...restPrescribedSuperset } =
+          prescribedSuperset;
+
         const newPrescribedExercises: TrainingExercise[] = [];
         prescribedExercises.forEach((prescribedExercise) =>
           newPrescribedExercises.push({
             id: prescribedExercise.id,
-            params: prescribedExercise.params,
             methodId: prescribedExercise.methodId,
             sets: prescribedExercise.sets.sort(
               (a, b) => a.setNumber - b.setNumber,
@@ -699,7 +700,10 @@ export class TrainingService implements Permission<Training, Institution> {
           }),
         );
 
-        newPrescribedSupersets.push({ exercises: newPrescribedExercises });
+        newPrescribedSupersets.push({
+          ...restPrescribedSuperset,
+          exercises: newPrescribedExercises,
+        });
       });
 
       newPrescribedTrainingComponents.push({
@@ -708,7 +712,6 @@ export class TrainingService implements Permission<Training, Institution> {
         to: trainingComponent.to,
         copiedFrom: trainingComponent.copiedFrom,
         targetId: trainingComponent.targetId,
-        mainSet: trainingComponent.mainSet,
         supersets: newPrescribedSupersets,
         subgroups: [],
       });

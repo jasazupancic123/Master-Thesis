@@ -6,8 +6,6 @@ import {
 import { Expose } from 'class-transformer';
 import { IsInt, IsNumber, IsOptional, Max, Min } from 'class-validator';
 
-import { IsTempo } from '@src/common/decorator/is-tempo.decorator';
-
 export type ExerciseParamField = Exclude<
   keyof ExerciseSet,
   'setNumber' // "meta" field
@@ -47,18 +45,80 @@ export class ExerciseSetPrimarySide {
   @Expose()
   loadBw?: number;
 
-  @IsTempo()
-  @IsOptional()
-  @ApiPropertyOptional()
-  @Expose()
-  tempo?: string; // e.g. "2.5:0:3.5:0", meaning "eccentric:isometric:concentric:isometric" in seconds
-
   @IsNumber()
   @Min(0)
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
   vel?: number; // in m/s
+
+  @IsNumber()
+  @Min(0)
+  @Max(10)
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  tempoEcc?: number;
+
+  @IsNumber()
+  @Min(0)
+  @Max(10)
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  tempoIso?: number;
+
+  @IsNumber()
+  @Min(0)
+  @Max(10)
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  tempoCon?: number;
+
+  @IsNumber()
+  @Min(0)
+  @Max(10)
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  tempoIdle?: number;
+
+  @IsInt()
+  @Min(1)
+  @Max(4)
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Expose()
+  eff?: number; // rpe (rate of perceived exertion)
+
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  time?: number; // for isometric holds, in seconds
+
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  dist?: number; // for distance-based sets, in meters
+
+  @IsInt()
+  @Min(0)
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Expose()
+  recTime?: number; // in seconds
+
+  @IsInt()
+  @IsOptional()
+  @Min(0)
+  @ApiPropertyOptional()
+  @Expose()
+  recDist?: number; // in meters, for distance-based recovery
 }
 
 export class ExerciseSetSecondarySide {
@@ -90,18 +150,80 @@ export class ExerciseSetSecondarySide {
   @Expose()
   loadBwR?: number;
 
-  @IsTempo()
-  @IsOptional()
-  @ApiPropertyOptional()
-  @Expose()
-  tempoR?: string;
-
   @IsNumber()
   @Min(0)
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
   velR?: number;
+
+  @IsNumber()
+  @Min(0)
+  @Max(10)
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  tempoEccR?: number;
+
+  @IsNumber()
+  @Min(0)
+  @Max(10)
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  tempoIsoR?: number;
+
+  @IsNumber()
+  @Min(0)
+  @Max(10)
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  tempoConR?: number;
+
+  @IsNumber()
+  @Min(0)
+  @Max(10)
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  tempoIdleR?: number;
+
+  @IsInt()
+  @Min(1)
+  @Max(4)
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Expose()
+  effR?: number;
+
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  timeR?: number;
+
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  distR?: number;
+
+  @IsInt()
+  @Min(0)
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Expose()
+  recTimeR?: number; // in seconds
+
+  @IsInt()
+  @IsOptional()
+  @Min(0)
+  @ApiPropertyOptional()
+  @Expose()
+  recDistR?: number; // in meters, for distance-based recovery
 }
 
 export class ExerciseSet extends IntersectionType(
@@ -114,40 +236,4 @@ export class ExerciseSet extends IntersectionType(
   @ApiProperty()
   @Expose()
   setNumber: number;
-
-  @IsInt()
-  @Min(1)
-  @Max(4)
-  @ApiPropertyOptional()
-  @IsOptional()
-  @Expose()
-  eff?: number; // rpe (rate of perceived exertion)
-
-  @IsInt()
-  @Min(0)
-  @ApiPropertyOptional()
-  @IsOptional()
-  @Expose()
-  recTime?: number; // in seconds
-
-  @IsInt()
-  @Min(0)
-  @IsOptional()
-  @ApiPropertyOptional()
-  @Expose()
-  time?: number; // for isometric holds, in seconds
-
-  @IsInt()
-  @Min(0)
-  @IsOptional()
-  @ApiPropertyOptional()
-  @Expose()
-  dist?: number; // for distance-based sets, in meters
-
-  @IsInt()
-  @IsOptional()
-  @Min(0)
-  @ApiPropertyOptional()
-  @Expose()
-  recDist?: number; // in meters, for distance-based recovery
 }

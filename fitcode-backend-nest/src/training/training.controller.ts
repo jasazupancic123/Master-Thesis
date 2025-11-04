@@ -25,6 +25,7 @@ import { endOfDay, startOfDay } from 'date-fns';
 import { DateFilterDto } from '@src/common/dto/date-filter.dto';
 import { DateRangeDto } from '@src/common/dto/date-range.dto';
 import { UserIdDto } from '@src/common/dto/user-id.dto';
+import { WorkloadRef } from '@src/common/type/firestore.type';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { TrainingReportService } from '@src/training/service/training-report.service';
 
@@ -281,7 +282,7 @@ export class TrainingController {
     if (setNumber < 1)
       throw new BadRequestException('Set number must be 1 or greater');
 
-    const ref = {
+    const ref: WorkloadRef = {
       trainingId,
       componentId,
       exerciseId,

@@ -1,15 +1,16 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import {
   IsNotEmpty,
   IsNumber,
-  IsOptional,
   IsString,
   Min,
   ValidateNested,
 } from 'class-validator';
 
-export class TrainingComponentStats {
+import { SetReport } from '../type/training-set.type';
+
+export class PrescribedTrainingComponentStats {
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
@@ -23,86 +24,42 @@ export class TrainingComponentStats {
   totalSets: number; // for calculating status
 }
 
-export class TrainingStats {
-  @Type(() => TrainingComponentStats)
+export class PrescribedTrainingStats extends OmitType(SetReport, [
+  'load',
+] as const) {
+  @Type(() => PrescribedTrainingComponentStats)
   @ValidateNested({ each: true })
-  @ApiProperty({ type: () => TrainingComponentStats, isArray: true })
+  @ApiProperty({ type: () => PrescribedTrainingComponentStats, isArray: true })
   @Expose()
-  plannedComponents: TrainingComponentStats[];
+  plannedComponents: PrescribedTrainingComponentStats[];
 
   @IsNumber()
   @Min(0)
   @ApiProperty()
   @Expose()
-  totalDuration: number; // in minutes
+  duration: number; // in minutes
 
   @IsNumber()
   @Min(0)
   @ApiProperty()
   @Expose()
-  totalComponents: number;
+  components: number;
 
   @IsNumber()
   @Min(0)
   @ApiProperty()
   @Expose()
-  totalSupersets: number;
+  supersets: number;
 
   @IsNumber()
   @Min(0)
   @ApiProperty()
   @Expose()
-  totalExercises: number; // unique
+  exercises: number; // unique
 
   @IsNumber()
   @Min(0)
   @ApiProperty()
   @Expose()
-  totalSets: number;
-
-  @IsNumber()
-  @Min(0)
-  @ApiProperty()
-  @Expose()
-  totalReps: number;
-
-  @IsNumber()
-  @Min(0)
-  @ApiPropertyOptional()
-  @IsOptional()
-  @Expose()
-  totalRecTime: number; // total recovery time (for all sets, in seconds)
-
-  @IsNumber()
-  @Min(0)
-  @ApiProperty()
-  @Expose()
-  totalTit: number; // time when executing the training (in seconds) - sets * reps/dist/time * tempo (sum), for example 3 * 12 * 1:0:1 tempo (2s) = 72s @IsNumber()
-
-  @IsNumber()
-  @Min(0)
-  @ApiProperty()
-  @Expose()
-  totalTonnage: number; // total weight lifted prescribed (in kg: sets * reps * weight)
-
-  @IsNumber()
-  @Min(0)
-  @ApiPropertyOptional()
-  @IsOptional()
-  @Expose()
-  totalTimeVol?: number; // total time prescribed (in seconds)
-
-  @IsNumber()
-  @Min(0)
-  @ApiPropertyOptional()
-  @IsOptional()
-  @Expose()
-  totalDistVol?: number; // total distance prescribed (in meters)
-
-  @IsNumber()
-  @Min(0)
-  @ApiPropertyOptional()
-  @IsOptional()
-  @Expose()
-  totalRecDist?: number; // total recovery distance prescribed (in meters)
+  sets: number;
 }

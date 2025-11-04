@@ -1,7 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import {
-  IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -10,7 +9,6 @@ import {
 
 import { IdEntity } from '@src/common/entity/id.entity';
 
-import { MainSet } from '../enum/main-set.enum';
 import { Superset } from './superset.entity';
 
 export class Subgroup extends IdEntity {
@@ -38,10 +36,4 @@ export class Subgroup extends IdEntity {
   @ApiProperty({ type: () => Superset, isArray: true })
   @Expose()
   supersets: Superset[];
-
-  @IsEnum(MainSet)
-  @IsString()
-  @ApiProperty({ enum: MainSet })
-  @Expose()
-  mainSet: MainSet; // defaults to "block"
 }

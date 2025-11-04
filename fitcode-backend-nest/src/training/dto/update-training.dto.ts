@@ -20,7 +20,7 @@ export class UpdateTrainingExerciseDto
   implements UpdateTrainingExercise {}
 
 export class UpdateSupersetDto
-  extends PickType(Superset, ['warmup', 'cooldown'] as const)
+  extends PickType(Superset, ['warmup', 'cooldown', 'mainSet'] as const)
   implements UpdateSuperset
 {
   @ValidateNested({ each: true })
@@ -31,13 +31,7 @@ export class UpdateSupersetDto
 }
 
 export class UpdateSubgroupDto
-  extends PickType(Subgroup, [
-    'id',
-    'parentId',
-    'name',
-    'membersIds',
-    'mainSet',
-  ] as const)
+  extends PickType(Subgroup, ['id', 'parentId', 'name', 'membersIds'] as const)
   implements UpdateSubgroup
 {
   @ValidateNested({ each: true })
@@ -48,7 +42,7 @@ export class UpdateSubgroupDto
 }
 
 export class UpdateTrainingComponentDto
-  extends PickType(TrainingComponent, ['id', 'targetId', 'mainSet'] as const)
+  extends PickType(TrainingComponent, ['id', 'targetId'] as const)
   implements Omit<UpdateTrainingComponent, 'from' | 'to'>
 {
   @ValidateNested({ each: true })

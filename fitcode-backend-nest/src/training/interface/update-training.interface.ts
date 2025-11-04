@@ -10,20 +10,23 @@ export type UpdateTrainingExercise = Pick<
   'id' | 'sets' | 'methodId'
 >;
 
-export type UpdateSuperset = Pick<Superset, 'warmup' | 'cooldown'> & {
+export type UpdateSuperset = Pick<
+  Superset,
+  'warmup' | 'cooldown' | 'mainSet'
+> & {
   exercises: UpdateTrainingExercise[];
 };
 
 export type UpdateSubgroup = Pick<
   Subgroup,
-  'id' | 'parentId' | 'name' | 'membersIds' | 'mainSet'
+  'id' | 'parentId' | 'name' | 'membersIds'
 > & {
   supersets: UpdateSuperset[];
 };
 
 export type UpdateTrainingComponent = Pick<
   TrainingComponent,
-  'id' | 'targetId' | 'mainSet' | 'from' | 'to'
+  'id' | 'targetId' | 'from' | 'to'
 > & {
   supersets: UpdateSuperset[];
   subgroups: UpdateSubgroup[];
