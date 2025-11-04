@@ -55,7 +55,7 @@ export default function AthleteHeader(props: Props) {
 
   const trainingContext = useTraining();
 
-  const { trainingInProgress } = trainingContext;
+  const { trainingInProgress } = trainingContext || {};
 
   const {
     trainingInProgressUndoneExercisesContext,
