@@ -15,7 +15,8 @@ import type { ExerciseParamField } from '@/core/training/type/exercise-set.type'
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useGroup } from '@/store/group.provider';
-import { useScreenSize } from '@/store/screen-size.provider';
+import { IMG_URLS } from '@/lib/common/const/img-urls.const';
+import useRecoveryTime from './hooks/use-recovery-time';
 
 interface Props {
   exercise: TrainingExercise;
@@ -28,6 +29,7 @@ interface Props {
   colorToPrimary?: boolean;
   trainingInProgressPrimaryItem?: boolean;
   trainingInProgressSecondaryItem?: boolean;
+  renderIconOnly?: boolean;
   lOrR?: 'L' | 'R';
   showOptions?: boolean;
   readOnly?: boolean;
@@ -37,7 +39,6 @@ interface Props {
 
 export function NumberExerciseParam(props: Props) {
   const theme = useTheme();
-  const screenSize = useScreenSize();
 
   const {
     options,
@@ -49,6 +50,7 @@ export function NumberExerciseParam(props: Props) {
     colorToPrimary,
     trainingInProgressPrimaryItem,
     trainingInProgressSecondaryItem,
+    renderIconOnly,
     showOptions = true,
     disableOptions = false,
     disable = false,
@@ -67,7 +69,16 @@ export function NumberExerciseParam(props: Props) {
   const { min, max } = exerciseParam;
 
   const [open, setOpen] = useState(false);
-  const [value, setValue] = useState<number>(initValue as number);
+  const [value, setValue] = useState<number | string>(initValue as number);
+
+  // hook to manage recovery time if param is recTime - decrease value every second if set not completed
+  const recoveryTime = useRecoveryTime(
+    selected,
+    initValue,
+    setValue,
+    trainingInProgressSecondaryItem
+  );
+
   const anchorEl = useRef<HTMLElement | null>(null);
   const valueBoxRef = useRef<HTMLDivElement | null>(null);
 
@@ -96,96 +107,115 @@ export function NumberExerciseParam(props: Props) {
       alignItems="center"
     >
       {showOptions && (
-        <FormControl
-          variant="filled"
-          size="small"
-          sx={exerciseCardSetAttributeSx}
-          disabled={disableOptions}
-        >
-          <Select
-            variant="filled"
-            sx={{
-              ...exerciseCardSetAttributeSx['& .MuiSelect-select'],
-              height:
-                trainingInProgressPrimaryItem || trainingInProgressSecondaryItem
-                  ? 14
-                  : undefined,
-              textAlign: 'center',
-              pr: 0,
-              pl: 0,
-              fontWeight: 700,
-              '& .MuiSelect-select': {
-                textAlign: 'center',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                pr: 0,
-                pl: 0,
-              },
-              '& .MuiInputBase-input': {
-                textAlign: 'center',
-                paddingRight: '0px !important',
-                paddingLeft: '0px !important',
-              },
-              '&.Mui-disabled': {
-                backgroundColor: 'transparent',
-              },
-              '&.Mui-disabled .MuiSelect-select': trainingInProgressPrimaryItem
-                ? {
-                    color: theme.palette.background.lightBorder,
-                    WebkitTextFillColor: theme.palette.background.lightBorder, // <-- important for disabled text
-                    fontSize: 12,
-                  }
-                : trainingInProgressSecondaryItem
-                  ? {
-                      color: theme.palette.background.lightBorder,
-                      WebkitTextFillColor: theme.palette.background.lightBorder, // <-- important for disabled text
-                      fontSize: 10,
-                    }
-                  : {},
-            }}
-            disableUnderline={true}
-            value={selected}
-            onChange={(e) => {
-              onSelectChange?.(e.target.value as string);
-              if (!athleteView && setDetectedChanges) setDetectedChanges(true);
-            }}
-          >
-            <MenuItem
-              disabled
-              key={selected}
-              value={selected}
+        <>
+          {renderIconOnly && selected === 'recTime' ? (
+            <Box
+              component="img"
+              width={16}
+              height={16}
+              src={IMG_URLS.recTime}
               sx={{
-                textAlign: 'center',
-                p: 2,
-                textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
+                objectFit: 'contain',
               }}
+            />
+          ) : (
+            <FormControl
+              variant="filled"
+              size="small"
+              sx={exerciseCardSetAttributeSx}
+              disabled={disableOptions}
             >
-              {exerciseParam.name[0].toUpperCase() +
-                exerciseParam.name.slice(1)}
-            </MenuItem>
-
-            {options?.map((p) => (
-              <MenuItem
-                key={p.field as string}
-                value={p.field as string}
+              <Select
+                variant="filled"
                 sx={{
-                  p: 2,
+                  ...exerciseCardSetAttributeSx['& .MuiSelect-select'],
+                  height:
+                    trainingInProgressPrimaryItem ||
+                    trainingInProgressSecondaryItem
+                      ? 14
+                      : undefined,
                   textAlign: 'center',
-                  textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
+                  pr: 0,
+                  pl: 0,
+                  fontWeight: 700,
+                  '& .MuiSelect-select': {
+                    textAlign: 'center',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    pr: 0,
+                    pl: 0,
+                  },
+                  '& .MuiInputBase-input': {
+                    textAlign: 'center',
+                    paddingRight: '0px !important',
+                    paddingLeft: '0px !important',
+                  },
+                  '&.Mui-disabled': {
+                    backgroundColor: 'transparent',
+                  },
+                  '&.Mui-disabled .MuiSelect-select':
+                    trainingInProgressPrimaryItem
+                      ? {
+                          color: theme.palette.background.lightBorder,
+                          WebkitTextFillColor:
+                            theme.palette.background.lightBorder, // <-- important for disabled text
+                          fontSize: 12,
+                        }
+                      : trainingInProgressSecondaryItem
+                        ? {
+                            color: theme.palette.background.lightBorder,
+                            WebkitTextFillColor:
+                              theme.palette.background.lightBorder, // <-- important for disabled text
+                            fontSize: 10,
+                          }
+                        : {},
+                }}
+                disableUnderline={true}
+                value={selected}
+                onChange={(e) => {
+                  onSelectChange?.(e.target.value as string);
+                  if (!athleteView && setDetectedChanges)
+                    setDetectedChanges(true);
                 }}
               >
-                {p.name[0].toUpperCase() + p.name.slice(1)}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+                <MenuItem
+                  disabled
+                  key={selected}
+                  value={selected}
+                  sx={{
+                    textAlign: 'center',
+                    p: 2,
+                    textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
+                  }}
+                >
+                  {exerciseParam.name[0].toUpperCase() +
+                    exerciseParam.name.slice(1)}
+                </MenuItem>
+
+                {options?.map((p) => (
+                  <MenuItem
+                    key={p.field as string}
+                    value={p.field as string}
+                    sx={{
+                      p: 2,
+                      textAlign: 'center',
+                      textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
+                    }}
+                  >
+                    {p.name[0].toUpperCase() + p.name.slice(1)}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
+        </>
       )}
 
       {trainingInProgressPrimaryItem || trainingInProgressSecondaryItem ? (
         <Box
           ref={anchorEl}
-          width={screenSize.isUltraSmall ? 20 : 50}
+          width={50}
           display="flex"
           alignItems="center"
           justifyContent="center"
@@ -211,7 +241,7 @@ export function NumberExerciseParam(props: Props) {
             />
           </Box>
 
-          {open && onInputChange && (
+          {open && onInputChange && typeof value === 'number' && (
             <NumericParamInputBox
               anchorEl={anchorEl.current}
               value={value}

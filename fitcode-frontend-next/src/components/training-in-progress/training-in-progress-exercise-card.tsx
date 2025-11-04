@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useState } from 'react';
 
 import ExerciseVideoModal from './modals/exercise-video-modal';
-import TrainingInProgressExerciseControls from './training-in-progress-exercise-controls';
+import TrainingInProgressExerciseControls from './exercise-controls';
 import TrainingInProgressExerciseSet from './training-in-progress-exercise-set';
 import MobileMovementValidation from '@/components/mobile-movement-validation/mobile-movement-validation';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
@@ -65,22 +65,25 @@ export default function TrainingInProgressExerciseCard() {
       <Box position="relative">
         {selectedExercise.exercise?.videoUrl ? (
           <Box
-            component={'video'}
-            muted
-            playsInline
-            controls={false}
-            src={selectedExercise.exercise.videoUrl}
-            style={{
-              width: '100%',
-              height: 'auto',
-              display: 'block',
+            sx={{
               filter: 'grayscale(100%)',
-              padding: 12,
-              paddingTop: 6,
-              borderRadius: 16,
             }}
-            preload="metadata"
-          />
+          >
+            <video
+              muted
+              playsInline
+              controls={false}
+              src={selectedExercise.exercise.videoUrl}
+              poster={selectedExercise.exercise?.imageUrl || undefined}
+              preload="metadata"
+              style={{
+                width: '100%',
+                height: 'auto',
+                padding: 12,
+                borderRadius: 16,
+              }}
+            />
+          </Box>
         ) : (
           <Image
             src={
@@ -110,7 +113,7 @@ export default function TrainingInProgressExerciseCard() {
           alignItems="center"
           sx={{
             position: 'absolute',
-            bottom: 8,
+            bottom: 16,
             left: 0,
             backgroundColor: alpha(theme.palette.background.default, 0.75),
             py: 1.5,
