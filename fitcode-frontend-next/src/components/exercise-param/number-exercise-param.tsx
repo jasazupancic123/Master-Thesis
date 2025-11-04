@@ -7,16 +7,16 @@ import {
   exerciseCardSetAttributeSx,
 } from '../trainer-group-day-view/style/exercise-card-set-attribute.style';
 import ExerciseParamValueText from './exercise-param-value-text';
+import useRecoveryTime from './hooks/use-recovery-time';
 import NumericParamInputBox from './numeric-param-input-box';
 import type { Attribute } from '@/core/attribute/type/attribute.type';
 import { core } from '@/core/core.service';
 import { KG, SETS } from '@/core/exercise/constant/exercise-param.constant';
 import type { ExerciseParamField } from '@/core/training/type/exercise-set.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import { IMG_URLS } from '@/lib/common/const/img-urls.const';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useGroup } from '@/store/group.provider';
-import { IMG_URLS } from '@/lib/common/const/img-urls.const';
-import useRecoveryTime from './hooks/use-recovery-time';
 
 interface Props {
   exercise: TrainingExercise;

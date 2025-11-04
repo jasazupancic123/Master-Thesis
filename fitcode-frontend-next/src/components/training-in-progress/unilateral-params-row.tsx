@@ -1,9 +1,10 @@
+import { Box, Divider, Typography } from '@mui/material';
+import { Fragment } from 'react';
+
 import { theme } from '@/app/style';
 import { ExerciseParamFieldEnum } from '@/core/exercise/enum/exercise-param-field.enum';
 import { IMG_URLS } from '@/lib/common/const/img-urls.const';
 import ImgIcon from '@/ui/img-icon';
-import { Box, Divider, Typography } from '@mui/material';
-import { Fragment } from 'react';
 
 interface Props {
   params: (

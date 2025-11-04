@@ -3,14 +3,14 @@ import { Box, Divider, Grid2, Typography } from '@mui/material';
 import { NumberExerciseParam } from '../exercise-param/number-exercise-param';
 import { TempoExerciseParam } from '../exercise-param/tempo-exercise-param';
 import TrainingExerciseSetDoneCheckbox from './training-exercise-set-done-checkbox';
+import UnilateralParamsRow from './unilateral-params-row';
+import { theme } from '@/app/style';
 import { core } from '@/core/core.service';
 import { KG } from '@/core/exercise/constant/exercise-param.constant';
 import type { TrainingExerciseRecording } from '@/core/training/type/training-exercise.type';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import LeftRightExerciseText from '@/ui/left-right-exercise-text';
-import { theme } from '@/app/style';
-import UnilateralParamsRow from './unilateral-params-row';
 
 interface Props {
   exercise: TrainingExerciseRecording;

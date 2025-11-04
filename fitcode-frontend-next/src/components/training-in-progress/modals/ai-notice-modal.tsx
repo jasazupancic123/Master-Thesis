@@ -1,8 +1,9 @@
+import { Box, Typography } from '@mui/material';
+
 import { lib } from '@/lib';
 import { INDEXED_DB_FIELDS } from '@/lib/common/const/indexed-db-fields.const';
-import { ModalProps } from '@/lib/common/type/modal-props.type';
+import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import MyModal from '@/ui/modal';
-import { Box, Typography } from '@mui/material';
 
 export default function AiNoticeModal(props: ModalProps) {
   const { open, setOpen } = props;

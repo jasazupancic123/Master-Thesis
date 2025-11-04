@@ -4,13 +4,13 @@ import RomChart from '../charts/rom/rom-chart';
 import RomStatistic from '../charts/rom/rom-statistics';
 import TempoChart from '../charts/tempo/tempo-chart';
 import TempoStatistic from '../charts/tempo/tempo-statistic';
+import { CONTROLS_TEXT_PLACEHOLDERS } from './constant/exercise-controls-text-placeholders';
 import { TrainingInProgressExerciseControl } from './enum/exercise-controls.enum';
 import SWControl from './sw-control';
+import { theme } from '@/app/style';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import ImageGallery from '@/ui/image-gallery';
-import { CONTROLS_TEXT_PLACEHOLDERS } from './constant/exercise-controls-text-placeholders';
-import { theme } from '@/app/style';
 
 interface Props {
   selectedControl: TrainingInProgressExerciseControl;

@@ -12,10 +12,7 @@ import { TrainingController } from '@/core/training/training.controller';
 import { TrainingService } from '@/core/training/training.service';
 import type { ExerciseSetTracking } from '@/core/training/type/exercise-set-tracking-state.type';
 import type { Training } from '@/core/training/type/training.type';
-import type {
-  TrainingComponent,
-  TrainingComponentRecording,
-} from '@/core/training/type/training-component.type';
+import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
 import { TrainingComponentStatus } from '@/core/training/type/training-report.type';
 import { lib } from '@/lib';
