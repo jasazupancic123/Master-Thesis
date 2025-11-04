@@ -1,6 +1,8 @@
 import type { Component } from '../type/component.type';
 
 export const Components: Component[] = [
+  { field: 'competition', name: 'Competition' },
+  { field: 'other', name: 'Other' },
   {
     field: 'coordination',
     name: 'Coordination',
@@ -233,6 +235,4 @@ export const Components: Component[] = [
       },
     ],
   },
-  { field: 'competition', name: 'Competition' },
-  { field: 'other', name: 'Other' },
 ] as const;

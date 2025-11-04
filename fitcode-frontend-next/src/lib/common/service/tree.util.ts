@@ -1,7 +1,33 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type TreeItem = Record<string, any>;
 
+interface TreeOptions<T> {
+  idPropertyName: keyof T;
+  childrenPropertyName: keyof T;
+  rootId: string;
+}
+
 export class TreeUtil {
+  getLeafesFromRootId<T extends TreeItem>(
+    items: T[],
+    options: TreeOptions<T>
+  ): T[] {
+    const { idPropertyName, childrenPropertyName, rootId } = options;
+
+    const allItems = [
+      ...this.computeParents(items, childrenPropertyName),
+      ...this.computeLeafs(items, childrenPropertyName),
+    ];
+
+    const root = allItems.find((item) => item[idPropertyName] === rootId);
+
+    if (!root) return [];
+
+    const leafes = this.computeLeafs([root], childrenPropertyName);
+
+    return leafes;
+  }
+
   toArray<T extends TreeItem>(roots: T[], childrenPropertyName: keyof T): T[] {
     const result: T[] = [];
     const nodesToEval = [...roots];
@@ -148,6 +174,21 @@ export class TreeUtil {
     }
 
     return leafes;
+  }
+
+  computeAllItemsAsArray<T extends TreeItem>(
+    items: T[],
+    childrenPropertyName: keyof T
+  ): T[] {
+    const result: T[] = [];
+
+    const leafes = this.computeLeafs(items, childrenPropertyName);
+    result.push(...leafes);
+
+    const parents = this.computeParents(items, childrenPropertyName);
+    result.push(...parents);
+
+    return result;
   }
 
   /**
