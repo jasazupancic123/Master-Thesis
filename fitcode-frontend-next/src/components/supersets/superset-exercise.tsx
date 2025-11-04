@@ -1,12 +1,13 @@
 'use client';
 
-import { MoreVert } from '@mui/icons-material';
+import { InfoOutlined, MoreVert } from '@mui/icons-material';
 import {
   Box,
   Grid2,
   IconButton,
   Menu,
   MenuItem,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import { useTheme } from '@mui/material';
@@ -15,6 +16,7 @@ import useSupersetExerciseMenu from './hooks/use-menu';
 import useSupersetExerciseSortable from './hooks/use-sortable';
 import TrainingExerciseCardContainer from '@/components/training-exercise-card/container';
 import ExerciseMembersInProgress from '@/components/training-exercise-card/exercise-members-in-progress';
+import { core } from '@/core/core.service';
 import { MainSet } from '@/core/training/enum/main-set.enum';
 import type { Superset } from '@/core/training/type/superset.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
@@ -126,6 +128,7 @@ export default function SupersetExercise({
                 : `${supersetIndex + 1}${String.fromCharCode(65 + exerciseIndex)}`}
             </Typography>
           </Box>
+
           {selectedExercise?.id !== exercise.id && (
             <Box
               position="absolute"
@@ -162,6 +165,18 @@ export default function SupersetExercise({
               >
                 <MoreVert fontSize="small" />
               </IconButton>
+            </Box>
+          )}
+
+          {core.training.exercise.getMethod(exercise) && (
+            <Box position="absolute" bottom={2} right={2} zIndex={100000}>
+              <Tooltip
+                title={core.training.exercise.getMethodTooltip(exercise)}
+              >
+                <IconButton size="small">
+                  <InfoOutlined sx={{ height: 12, width: 12 }} />
+                </IconButton>
+              </Tooltip>
             </Box>
           )}
 

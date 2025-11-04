@@ -263,7 +263,7 @@ function TempoPicker({
     >
       <Stack spacing={1} sx={{ p: 1, minWidth: 220 }}>
         <Stack direction="row" alignItems="start" gap={0.5}>
-          {['Ecc', 'Pause', 'Con', 'Pause'].map((label, i) => (
+          {['Ecc', 'Iso', 'Con', 'Idle'].map((label, i) => (
             <Stack key={i} alignItems="center" spacing={0.5}>
               <Typography variant="caption">{label}</Typography>
               <TextField
