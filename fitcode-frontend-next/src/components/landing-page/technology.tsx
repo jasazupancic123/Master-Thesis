@@ -12,7 +12,6 @@ import {
   TECHNOLOGY_MOBILE_FEEDBACK_IMG_URL,
   TECHNOLOGY_MOVEMENT_TRACKING_IMG_URL,
 } from '@/lib/common/const/image.const';
-import { LINK_TECHNOLOGY } from '@/lib/common/const/nav.const';
 import { HERO_NAVBAR_HEIGHT } from '@/lib/common/const/state';
 import { useScreenSize } from '@/store/screen-size.provider';
 import IndexPageTitleText from '@/ui/index-page-title-text';
@@ -20,14 +19,8 @@ import Logo from '@/ui/logo';
 
 type Item = { imageUrl: string; title: string; description: string };
 
-interface TechnologyProps {
-  activeSection: string | null;
-}
-
-export default function Technology(props: TechnologyProps) {
+export default function Technology() {
   const screenSize = useScreenSize();
-
-  const { activeSection } = props;
 
   const imageRef = useRef<HTMLImageElement | null>(null);
 
@@ -222,7 +215,6 @@ export default function Technology(props: TechnologyProps) {
         sx={{
           backgroundColor: theme.palette.background.default,
           pt: HERO_NAVBAR_HEIGHT,
-          zIndex: activeSection === LINK_TECHNOLOGY.id ? 10000 : undefined,
           px: HERO_NAVBAR_HEIGHT,
         }}
         gap={4}

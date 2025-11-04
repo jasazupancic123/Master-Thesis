@@ -52,6 +52,12 @@ export const LINK_CONTACT_US = link(
   'contact-us'
 );
 export const LINK_ABOUT_US = link('About Us', '/#about-us', null, 'about-us');
+export const LINK_METHODOLOGIES = link(
+  'Methods',
+  '/methodology',
+  null,
+  'methodology'
+);
 
 // all standalone app links
 export const LINK_INDEX = link('Home', '/#home', null, 'home');
@@ -144,6 +150,7 @@ export const LINKS_HERO_NAVBAR = {
   aboutUs: LINK_ABOUT_US,
   technology: LINK_TECHNOLOGY,
   contactUs: LINK_CONTACT_US,
+  methodology: LINK_METHODOLOGIES,
 };
 
 export const LINKS_AUTHENTICATED_HERO_NAVBAR: Record<

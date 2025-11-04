@@ -17,6 +17,7 @@ import { TrainingComponentUtil } from './component.util';
 import { TrainingExerciseSetUtil } from './set.util';
 import { TrainingSubgroupUtil } from './subgroup.util';
 import { TrainingSupersetUtil } from './superset.util';
+import { TrainingExerciseUtil } from './training-exercise.util';
 import { WorkloadUtil } from './workload.util';
 import type { DateRange } from '@/lib/common/type/date-range.type';
 
@@ -24,6 +25,7 @@ export class TrainingUtil {
   readonly component: TrainingComponentUtil;
   readonly subgroup: TrainingSubgroupUtil;
   readonly superset: TrainingSupersetUtil;
+  readonly exercise: TrainingExerciseUtil;
   readonly set: TrainingExerciseSetUtil;
   readonly workload: WorkloadUtil;
 
@@ -31,6 +33,7 @@ export class TrainingUtil {
     this.component = new TrainingComponentUtil();
     this.subgroup = new TrainingSubgroupUtil();
     this.superset = new TrainingSupersetUtil();
+    this.exercise = new TrainingExerciseUtil();
     this.set = new TrainingExerciseSetUtil();
     this.workload = new WorkloadUtil();
   }
