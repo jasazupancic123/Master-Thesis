@@ -25,8 +25,7 @@ export default function Superset({ superset, supersetIndex }: Props) {
   const theme = useTheme();
   const screenSize = useScreenSize();
   const { selectedExercise, setOpenAddExerciseModal } = useSupersets();
-  const { training, component, supersets, selectedSubgroup } =
-    useTrainerDayView();
+  const { training, component, selectedSubgroup } = useTrainerDayView();
 
   const containerId = `${component?.id}-${supersetIndex}`;
   const items = superset.exercises.map((e) => e.id);

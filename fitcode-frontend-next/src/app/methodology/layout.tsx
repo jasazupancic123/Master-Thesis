@@ -4,9 +4,6 @@ import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 
-import HeroNavbar from '@/components/hero-navbar/hero-navbar';
-import { HERO_NAVBAR_HEIGHT } from '@/lib/common/const/state';
-
 export default function Layout({ children }: React.PropsWithChildren) {
   const theme = useTheme();
 

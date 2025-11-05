@@ -10,12 +10,12 @@ import type { AfterSet } from '@/core/exercise/type/after-set.type';
 import type { Method } from '@/core/exercise/type/method.type';
 import { MainSet } from '@/core/training/enum/main-set.enum';
 import { PeriodizationType } from '@/core/training/enum/periodization-type.enum';
+import type { Superset } from '@/core/training/type/superset.type';
 import { lib } from '@/lib';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 import SelectInput from '@/ui/select-input/select-input';
-import { Superset } from '@/core/training/type/superset.type';
 
 export default function TrainingComponentHeaderMenu() {
   const screenSize = useScreenSize();
