@@ -15,9 +15,7 @@ import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 import SelectInput from '@/ui/select-input/select-input';
-
-const WarmupIcon = lib.common.component.getIcon('warmup');
-const CooldownIcon = lib.common.component.getIcon('cooldown');
+import { Superset } from '@/core/training/type/superset.type';
 
 export default function TrainingComponentHeaderMenu() {
   const screenSize = useScreenSize();
@@ -49,6 +47,17 @@ export default function TrainingComponentHeaderMenu() {
   if (!training || !component) return null;
   const methodologies = core.training.component.findMethodologies(component.id);
 
+  const warmupExists = (selectedSubgroup || component).supersets.some(
+    (s: Superset) => s.warmup
+  );
+
+  const cooldownExists = (selectedSubgroup || component).supersets.some(
+    (s: Superset) => s.cooldown
+  );
+
+  const WarmupIcon = lib.common.component.getIcon('warmup');
+  const CooldownIcon = lib.common.component.getIcon('cooldown');
+
   return (
     <>
       <Box
@@ -66,13 +75,15 @@ export default function TrainingComponentHeaderMenu() {
         flexWrap="nowrap"
         gap={screenSize.isSmallerThanLaptop ? 1 : 0}
       >
-        <Tooltip title="Add warmup set">
+        <Tooltip title={warmupExists ? 'Remove warmup set' : 'Add warmup set'}>
           <IconButton onClick={addWarmupSuperset} size="small">
             {WarmupIcon ? <WarmupIcon sx={{ width: 15, height: 15 }} /> : null}
           </IconButton>
         </Tooltip>
 
-        <Tooltip title="Add cooldown set">
+        <Tooltip
+          title={cooldownExists ? 'Remove cooldown set' : 'Add cooldown set'}
+        >
           <IconButton onClick={addCooldownSuperset} size="small">
             {CooldownIcon ? (
               <CooldownIcon sx={{ width: 15, height: 15 }} />

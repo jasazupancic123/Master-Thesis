@@ -3,6 +3,7 @@
 import { Publish } from '@mui/icons-material';
 import AddIcon from '@mui/icons-material/AddOutlined';
 import {
+  Button,
   Grid2,
   Pagination,
   SpeedDial,
@@ -44,6 +45,8 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import FileUpload from '@/ui/file-upload';
 import MyModal from '@/ui/modal';
 import { SearchBar } from '@/ui/search-bar/search-bar';
+import Link from 'next/link';
+import { LINK_METHODOLOGIES } from '@/lib/common/const/nav.const';
 
 type AttributeValue =
   | string
@@ -194,14 +197,38 @@ export default function ExercisesPage() {
       </Box>
 
       <Box
-        sx={{ py: 2, width: '50%', minWidth: 240, maxWidth: 400, mx: 'auto' }}
+        width="100%"
+        display="flex"
+        flexDirection={
+          screenSize.isSmallerThanLaptop ? 'column-reverse' : 'row'
+        }
+        justifyContent="center"
       >
-        <SearchBar
-          placeholder="Search Exercises"
-          value={search}
-          handleSearchChange={(e) => setSearch(e.target.value)}
-          maxWidth="100%"
-        />
+        <Box width="25%" />
+        <Box
+          sx={{ py: 2, width: '50%', minWidth: 240, maxWidth: 400, mx: 'auto' }}
+        >
+          <SearchBar
+            placeholder="Search Exercises"
+            value={search}
+            handleSearchChange={(e) => setSearch(e.target.value)}
+            maxWidth="100%"
+          />
+        </Box>
+        <Box
+          width={screenSize.isSmallerThanLaptop ? '100%' : '25%'}
+          display="flex"
+          justifyContent={
+            screenSize.isSmallerThanLaptop ? 'center' : 'flex-start'
+          }
+          alignItems="center"
+        >
+          <Link href={LINK_METHODOLOGIES.href} passHref>
+            <Button variant="outlined" color="primary">
+              {LINK_METHODOLOGIES.label}
+            </Button>
+          </Link>
+        </Box>
       </Box>
 
       <Grid2 container alignItems="center" spacing={2} sx={{ m: 2 }}>

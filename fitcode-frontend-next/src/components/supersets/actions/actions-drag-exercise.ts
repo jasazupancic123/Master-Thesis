@@ -56,7 +56,18 @@ export async function onDragEndExercise(
 
     let newSupersets = [..._supersets, { exercises: [draggedExercise] }];
     superset.exercises = superset.exercises.filter((e) => e.id !== draggableId);
-    newSupersets = newSupersets.filter((s) => s.exercises.length > 0);
+    newSupersets = newSupersets.filter(
+      (s) => s.cooldown || s.warmup || s.exercises.length > 0
+    );
+
+    // order newSupersets so, that first warmup if exists, then normal supersets, then cooldown if exists
+    newSupersets.sort((a, b) => {
+      if (a.warmup) return -1;
+      if (b.warmup) return 1;
+      if (a.cooldown) return 1;
+      if (b.cooldown) return -1;
+      return 0;
+    });
 
     setDetectedChanges(true);
     setSupersets(newSupersets);
@@ -296,7 +307,11 @@ export function onDragEndExerciseToExistingSuperset(
 
   let finalSupersetsCopy;
 
-  if (oldFinalSupersetExercises.length > 0) {
+  if (
+    oldFinalSupersetExercises.length > 0 ||
+    supersetWithExercise.cooldown ||
+    supersetWithExercise.warmup
+  ) {
     finalSupersetsCopy = supersetsCopy.map((superset) =>
       superset === supersetWithExercise
         ? { ...superset, exercises: oldFinalSupersetExercises }
