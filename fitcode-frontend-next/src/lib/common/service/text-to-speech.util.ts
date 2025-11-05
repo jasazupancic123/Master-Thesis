@@ -52,8 +52,9 @@ export class TextToSpeechUtil {
 
   private chooseVoice(opts: SpeakOptions): SpeechSynthesisVoice | undefined {
     const { voiceName, lang } = opts;
-    console.log('voices', this.voices);
+
     if (voiceName) return this.voices.find((v) => v.name === voiceName);
+
     if (lang) {
       // Prefer exact lang, else startsWith match (e.g., "en" matches "en-US")
       return (
@@ -64,17 +65,16 @@ export class TextToSpeechUtil {
       );
     }
     // Fallback to default voice
-    return this.voices.find((v) => v.default) || this.voices[0];
+    const voiceUri = 'Google US English Male';
+
+    return this.voices.find((v) => v.voiceURI === voiceUri) || this.voices[0];
   }
 
   /**
    * Speak text. IMPORTANT on iOS: call this from a user gesture (e.g. a button click).
    * Returns a Promise that resolves when speaking ends or rejects on error.
    */
-  async speak(
-    text: string,
-    opts: SpeakOptions = { lang: 'en-US' }
-  ): Promise<void> {
+  async speak(text: string, opts: SpeakOptions = {}): Promise<void> {
     if (!text?.trim()) return;
     if (!this.synth) return;
 
@@ -88,7 +88,7 @@ export class TextToSpeechUtil {
     utter.volume = volume;
 
     const voice = this.chooseVoice(opts);
-    console.log('chosen voice', voice);
+
     if (voice) utter.voice = voice;
     if (opts.lang) utter.lang = opts.lang;
 
@@ -128,7 +128,6 @@ export class TextToSpeechUtil {
       // Give WebKit a moment so voices/engine settle
       setTimeout(() => {
         try {
-          console.log('trying to speak', utter);
           this.synth?.speak(utter);
         } catch (err) {
           clearTimers();
