@@ -2,7 +2,6 @@ import { Check, Circle } from '@mui/icons-material';
 import { Box, Collapse, IconButton, SvgIcon } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Typography from '@mui/material/Typography';
-import { Dayjs } from 'dayjs';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
@@ -251,8 +250,6 @@ export default function AthleteTrainingComponents(props: Props) {
                 selectedComponent: component,
                 userId: user.uid,
                 exerciseSetTrackingState: state,
-                supersets: component.supersets,
-                startOfTraining: new Dayjs(training.from),
               } as TrainingInProgress);
 
               setView(ExerciseTrainingView.TrainingView);
