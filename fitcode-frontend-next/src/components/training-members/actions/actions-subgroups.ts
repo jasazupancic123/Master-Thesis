@@ -138,7 +138,6 @@ const handleAddSubgroup = (
         ...exercise,
       })),
     })),
-    mainSet: component.mainSet,
     membersIds: createSubgroup.membersIds || [],
   };
 

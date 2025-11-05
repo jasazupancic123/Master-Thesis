@@ -7,14 +7,12 @@ import type {
   UpdateSuperset,
 } from './superset.type';
 import type { IdEntity } from '@/core/entity.type';
-import type { MainSet } from '@/core/training/enum/main-set.enum';
 import type { DateRange } from '@/lib/common/type/date-range.type';
 
 export type TrainingComponent = IdEntity &
   Required<DateRange> & {
     supersets: Superset[];
     subgroups: Subgroup[];
-    mainSet: MainSet;
     targetId?: string;
     periodizationType?: PeriodizationType;
     copiedFrom?: CopiedFrom; // used for copying components from other trainings
@@ -42,7 +40,7 @@ export type CreateTrainingComponent = Pick<
 
 export type UpdateTrainingComponent = Pick<
   TrainingComponent,
-  'id' | 'targetId' | 'mainSet' | 'periodizationType'
+  'id' | 'targetId' | 'periodizationType'
 > & {
   supersets: UpdateSuperset[];
   subgroups: UpdateSubgroup[];

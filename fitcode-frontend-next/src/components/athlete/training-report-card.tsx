@@ -24,7 +24,7 @@ export default function TrainingReportCard({ report }: Props) {
   const duration = report.duration * 60; // duration in seconds
   const [realizationScore] = useState(Math.round(report.realization * 100));
   const [tonnageScore] = useState(
-    Math.round((report.tonnage / report.totalTonnage) * 100) || 0
+    Math.round((report.tonnage / report.tonnage) * 100) || 0
   );
 
   const [densityScore] = useState(

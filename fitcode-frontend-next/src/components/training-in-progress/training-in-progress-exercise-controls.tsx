@@ -2,8 +2,8 @@ import { Box, Typography } from '@mui/material';
 import toast from 'react-hot-toast';
 
 import { TrainingInProgressExerciseControl } from './enum/exercise-controls.enum';
-import useExerciseControls from './hooks/use-exercise-controls';
 import ExercieseControlSelected from './exercise-control-selected';
+import useExerciseControls from './hooks/use-exercise-controls';
 import { theme } from '@/app/style';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
 import { EXERCISE_POSES } from '@/lib/pose-detection/const/exercise-poses';

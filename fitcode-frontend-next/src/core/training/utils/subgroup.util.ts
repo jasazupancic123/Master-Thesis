@@ -1,6 +1,5 @@
 import { v4 } from 'uuid';
 
-import { MainSet } from '../enum/main-set.enum';
 import type { Subgroup } from '../type/subgroup.type';
 import type { Superset } from '../type/superset.type';
 import type { TrainingComponent } from '../type/training-component.type';
@@ -14,7 +13,6 @@ export class TrainingSubgroupUtil {
       id: data?.id || v4(),
       name: data?.name || 'New Subgroup',
       parentId: data?.parentId,
-      mainSet: data?.mainSet || MainSet.BLOCK,
       membersIds: data?.membersIds || [],
       members: data?.members || [],
       supersets: data?.supersets || [],
@@ -44,7 +42,6 @@ export class TrainingSubgroupUtil {
       name: `${athlete.displayName} Custom Subgroup`,
       parentId:
         subgroup && !subgroup.parentId ? subgroup.id : DEFAULT_SUBGROUP_ID,
-      mainSet: (subgroup || component).mainSet || MainSet.BLOCK,
       membersIds: [athlete.uid],
       members: [athlete],
       supersets: structuredClone(

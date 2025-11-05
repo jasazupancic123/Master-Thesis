@@ -23,12 +23,6 @@ export default function ExercieseControlSelected(
   if (setIndex === undefined || !selectedExercise || !trainingInProgress)
     return null;
 
-  const isSetCompleted = trainingInProgress.exerciseSetTrackingState?.find(
-    (s) =>
-      s.exerciseId === selectedExercise.id &&
-      s.completedSetNumbers.some((se) => se.setNumber === setIndex + 1)
-  );
-
   switch (selectedControl) {
     case TrainingInProgressExerciseControl.TEMPO: {
       return (

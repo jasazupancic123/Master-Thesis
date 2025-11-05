@@ -34,11 +34,9 @@ export function handleInitTrainingInProgressComponent(context: {
 
   const component =
     newTrainingInProgress.selectedComponent ||
-    [
-      newTrainingInProgress.training.warmup,
-      ...newTrainingInProgress.training.components,
-      newTrainingInProgress.training.cooldown,
-    ].find((c) => c.id === newTrainingInProgress.selectedComponent?.id);
+    newTrainingInProgress.training.components.find(
+      (c) => c.id === newTrainingInProgress.selectedComponent?.id
+    );
 
   if (!component) return;
 

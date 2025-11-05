@@ -2,8 +2,8 @@ import type { Attribute } from '../../attribute/type/attribute.type';
 import type {
   ExerciseMainParamField,
   ExerciseParamField,
+  ExerciseSet,
 } from '../../training/type/exercise-set.type';
-import type { ExerciseSetParamsObj } from '../constant/exercise-param.constant';
 import {
   BW,
   DIST,
@@ -13,7 +13,10 @@ import {
   REC_TIME,
   REPS,
   RM,
-  TEMPO,
+  TEMPO_CON,
+  TEMPO_ECC,
+  TEMPO_IDLE,
+  TEMPO_ISO,
   TIME,
   VEL,
 } from '../constant/exercise-param.constant';
@@ -28,39 +31,58 @@ export class ExerciseParamUtil {
     loadRmR: 'loadRm',
     loadBw: 'loadBwR',
     loadBwR: 'loadBw',
-    tempo: 'tempoR',
-    tempoR: 'tempo',
+    tempoEcc: 'tempoEccR',
+    tempoIso: 'tempoIsoR',
+    tempoCon: 'tempoConR',
+    tempoIdle: 'tempoIdleR',
+    tempoEccR: 'tempoEcc',
+    tempoIsoR: 'tempoIso',
+    tempoConR: 'tempoCon',
+    tempoIdleR: 'tempoIdle',
     vel: 'velR',
     velR: 'vel',
-    eff: 'eff',
-    time: 'time',
-    dist: 'dist',
-    recTime: 'recTime',
-    recDist: 'recDist',
+    eff: 'effR',
+    effR: 'eff',
+    time: 'timeR',
+    timeR: 'time',
+    dist: 'distR',
+    distR: 'dist',
+    recTime: 'recTimeR',
+    recTimeR: 'recTime',
+    recDist: 'recDistR',
+    recDistR: 'recDist',
   };
 
   get(field: ExerciseParamField) {
-    const mapper: Record<
-      ExerciseParamField,
-      Attribute<ExerciseSetParamsObj>
-    > = {
+    const mapper: Record<ExerciseParamField, Attribute<ExerciseSet>> = {
       reps: REPS,
-      repsR: { ...REPS, required: false },
+      repsR: REPS,
       loadKg: KG,
       loadKgR: KG,
       loadBw: BW,
       loadBwR: BW,
       loadRm: RM,
       loadRmR: RM,
-      tempo: TEMPO,
-      tempoR: TEMPO,
+      tempoEcc: TEMPO_ECC,
+      tempoIso: TEMPO_ISO,
+      tempoCon: TEMPO_CON,
+      tempoIdle: TEMPO_IDLE,
+      tempoEccR: TEMPO_ECC,
+      tempoIsoR: TEMPO_ISO,
+      tempoConR: TEMPO_CON,
+      tempoIdleR: TEMPO_IDLE,
       vel: VEL,
       velR: VEL,
       time: TIME,
+      timeR: TIME,
       dist: DIST,
+      distR: DIST,
       eff: EFF,
+      effR: EFF,
       recTime: REC_TIME,
+      recTimeR: REC_TIME,
       recDist: REC_DIST,
+      recDistR: REC_DIST,
     };
 
     return mapper[field];
@@ -77,9 +99,12 @@ export class ExerciseParamUtil {
       case 'loadBw':
       case 'vel':
         return ['loadKg', 'loadRm', 'loadBw', 'vel']; // intensity group
-      case 'tempo':
+      case 'tempoEcc':
+      case 'tempoIso':
+      case 'tempoCon':
+      case 'tempoIdle':
       case 'eff':
-        return ['tempo', 'eff']; // effort group
+        return ['tempoEcc', 'eff']; // effort group
       case 'recTime':
       case 'recDist':
         return ['recTime', 'recDist']; // recovery group

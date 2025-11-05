@@ -64,7 +64,6 @@ export default function MuscleMapWithTooltip(props: Props) {
     setTip,
     muscleLoads,
     setMuscleLoads,
-    selectedLoadType,
     setSelectedMuscle,
     setSelectedMuscleName,
   } = props;
@@ -425,7 +424,7 @@ export default function MuscleMapWithTooltip(props: Props) {
 
                         addTrainingExercises(
                           [trainingExercise],
-                          component.mainSet
+                          supersets[supersets.length - 1].mainSet // same main set as the last superset
                         );
                       }}
                     >

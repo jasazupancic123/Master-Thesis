@@ -20,7 +20,7 @@ import useSupersetUtils from './hooks/use-utils';
 import Superset from './superset';
 import { core } from '@/core/core.service';
 import { ADD_SUPERSET_DROPPABLE_ID } from '@/core/training/const/add-superset-droppable-id.const';
-import { MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT } from '@/core/training/const/training-limits.const';
+import { MAX_NUM_SUPERSETS } from '@/core/training/const/training-limits.const';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useGroup } from '@/store/group.provider';
@@ -98,7 +98,6 @@ export default function Supersets({
   } = useSupersetExercises();
 
   const {
-    isCircuit,
     openVideoPlayerModal,
     setOpenVideoPlayerModal,
     sensors,
@@ -185,9 +184,11 @@ export default function Supersets({
         };
       });
 
-    const mainSet = (selectedSubgroup || component).mainSet;
-
-    trainerDayViewContext.addTrainingExercises(trainingExercises, mainSet);
+    const lastSuperset = supersets[supersets.length - 1];
+    trainerDayViewContext.addTrainingExercises(
+      trainingExercises,
+      lastSuperset.mainSet
+    );
 
     setNewAddedExercisesIds([]);
     setOpenAddExerciseModal(false);
@@ -243,7 +244,7 @@ export default function Supersets({
         {selectedAthlete ||
         (supersets.length === 1 && supersets[0].exercises.length === 0)
           ? null
-          : supersets.length < MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT && (
+          : supersets.length < MAX_NUM_SUPERSETS && (
               <Grid2
                 size={{
                   xs: 12,
@@ -254,45 +255,22 @@ export default function Supersets({
                       ? 4
                       : 3,
                 }}
-                sx={{
-                  mx:
-                    isCircuit &&
-                    supersets.flatMap((s) => s.exercises).length >= 3 &&
-                    !screenSize.isSmallerThanLaptop
-                      ? 'auto'
-                      : isCircuit && screenSize.isSmallerThanLaptop
-                        ? 'auto'
-                        : undefined,
-                  my:
-                    isCircuit &&
-                    supersets.flatMap((s) => s.exercises).length < 4 &&
-                    !screenSize.isSmallerThanLaptop
-                      ? 'auto'
-                      : undefined,
-                }}
               >
-                <DroppableArea
-                  id={ADD_SUPERSET_DROPPABLE_ID}
-                  disabled={isCircuit}
-                >
+                <DroppableArea id={ADD_SUPERSET_DROPPABLE_ID}>
                   <Box
                     border="1px dashed #B2B3B7"
                     borderRadius={2}
                     sx={{
                       cursor: 'pointer',
                       backgroundColor: theme.palette.background.dark,
-                      mx:
-                        isCircuit &&
-                        supersets.flatMap((s) => s.exercises).length > 3
-                          ? 0
-                          : 1,
+                      mx: 1,
                     }}
                     p={1}
                     py={!expandedExercisesView ? 2.25 : 3}
                     onClick={() => setOpenAddExerciseModal(true)}
                   >
                     <Typography variant="body2" align="center" fontSize={12}>
-                      {isCircuit ? 'Add exercises' : 'Add/drop exercises'}
+                      {'Add/drop exercises'}
                     </Typography>
                   </Box>
                 </DroppableArea>

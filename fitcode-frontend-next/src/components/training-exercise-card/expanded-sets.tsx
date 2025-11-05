@@ -5,6 +5,7 @@ import { NumberExerciseParam } from '@/components/exercise-param/number-exercise
 import { TempoExerciseParam } from '@/components/exercise-param/tempo-exercise-param';
 import { core } from '@/core/core.service';
 import { SETS } from '@/core/exercise/constant/exercise-param.constant';
+import type { ExerciseParamField } from '@/core/training/type/exercise-set.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { SetState } from '@/lib/common/type/state.type';
@@ -167,11 +168,13 @@ export default function TrainingExerciseCardExpandedSets({
                 )}
 
                 {effType && effOptions.length > 0 ? (
-                  effType === 'tempo' ? (
+                  effType === 'tempoEcc' ? (
                     <TempoExerciseParam
                       options={effOptions}
                       selected={effType}
-                      value={exercise.sets[setIndex]?.[effType] || ''}
+                      value={core.training.set.getTempo(
+                        exercise.sets[setIndex]
+                      )}
                       exercise={exercise}
                       showOptions={setIndex === 0}
                       disableOptions
@@ -287,24 +290,38 @@ export default function TrainingExerciseCardExpandedSets({
                   )}
 
                   {effType && effOptions.length > 0 ? (
-                    effType === 'tempo' ? (
+                    effType === 'tempoEcc' ? (
                       <TempoExerciseParam
                         options={effOptions}
                         selected={effType}
-                        value={
-                          exercise.sets[setIndex]?.[
-                            core.exercise.param.pairs[effType]
-                          ] || ''
-                        }
+                        value={core.training.set.getTempo(
+                          exercise.sets[setIndex]
+                        )}
                         showOptions={false}
                         exercise={exercise}
                         disableOptions
-                        onInputChange={(value) => {
-                          supersetsContext.updateTrainingExerciseParam(
+                        onInputChange={(values) => {
+                          const tempo = values as [
+                            number,
+                            number,
+                            number,
+                            number,
+                          ];
+
+                          supersetsContext.updateTrainingExerciseParams(
                             exercise,
-                            core.exercise.param.pairs[effType],
-                            value.toString(),
-                            setIndex
+                            (
+                              [
+                                'tempoEcc',
+                                'tempoIso',
+                                'tempoCon',
+                                'tempoIdle',
+                              ] as ExerciseParamField[]
+                            ).map((field, i) => ({
+                              field,
+                              value: tempo[i],
+                              setIndex,
+                            }))
                           );
                         }}
                       />

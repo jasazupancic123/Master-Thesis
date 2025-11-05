@@ -28,9 +28,9 @@ interface Props {
   exercise: TrainingExercise;
   options: Attribute[];
   selected: string;
-  value: number | string | null;
+  value: [number, number, number, number]; // [ecc, iso, con, idle] in seconds
   onSelectChange?: SetState<string>;
-  onInputChange?: SetState<string>;
+  onInputChange?: SetState<[number, number, number, number]>;
   athleteView?: boolean;
   trainingInProgressPrimaryItem?: boolean;
   trainingInProgressSecondaryItem?: boolean;
@@ -189,7 +189,7 @@ export function TempoExerciseParam({
           >
             {/* parsed value for tempo */}
             <ExerciseParamValueText
-              value={value as string}
+              value={value.join(':')}
               secondary={trainingInProgressSecondaryItem}
             />
           </Box>
@@ -212,7 +212,7 @@ export function TempoExerciseParam({
             open={open}
             anchorEl={anchorEl}
             onClose={() => setAnchorEl(null)}
-            value={value as string}
+            value={value}
             onChange={(val) => {
               onInputChange?.(val);
               if (!athleteView && setDetectedChanges) setDetectedChanges(true);
@@ -228,8 +228,8 @@ type TempoPickerProps = {
   open: boolean;
   anchorEl: HTMLElement | null;
   onClose: () => void;
-  value: string | null;
-  onChange: (value: string) => void;
+  value: [number, number, number, number];
+  onChange: (value: [number, number, number, number]) => void;
 };
 
 function TempoPicker({
@@ -239,18 +239,18 @@ function TempoPicker({
   value,
   onChange,
 }: TempoPickerProps) {
-  const [tempoParts, setTempoParts] = useState(
-    value?.split(':').map(Number) ?? [2, 0, 1, 0]
-  );
+  const [tempoParts, setTempoParts] = useState<
+    [number, number, number, number]
+  >(value ?? [2, 0, 1, 0]);
 
   const updatePart = (index: number, newValue: number) => {
     const next = [...tempoParts];
     next[index] = newValue;
-    setTempoParts(next);
+    setTempoParts(next as [number, number, number, number]);
   };
 
   const handleSave = () => {
-    onChange(tempoParts.join(':'));
+    onChange(tempoParts);
     onClose();
   };
 

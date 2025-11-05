@@ -51,7 +51,6 @@ export default function SupersetExercise({
   const {
     training,
     component,
-    selectedSubgroup,
     selectedExerciseIds,
     selectedAthlete,
     deleteSupersetExercise,
@@ -65,12 +64,12 @@ export default function SupersetExercise({
 
   if (!component || !training) return null;
 
-  const isCircuit = (selectedSubgroup || component).mainSet === MainSet.CIRCUIT;
+  const isCircuit = superset.mainSet === MainSet.CIRCUIT;
 
   return (
     <Grid2
       size={
-        (selectedSubgroup || component).mainSet === MainSet.CIRCUIT
+        isCircuit
           ? screenSize.isDesktop
             ? 3
             : screenSize.isSmallerThanLaptop
@@ -82,12 +81,11 @@ export default function SupersetExercise({
       }
       key={exercise.id}
       sx={{
-        mb:
-          (selectedSubgroup || component).mainSet === MainSet.CIRCUIT
-            ? 0
-            : superset.exercises.length - 1 !== exerciseIndex
-              ? 0.4
-              : undefined,
+        mb: isCircuit
+          ? 0
+          : superset.exercises.length - 1 !== exerciseIndex
+            ? 0.4
+            : undefined,
       }}
     >
       <Box
