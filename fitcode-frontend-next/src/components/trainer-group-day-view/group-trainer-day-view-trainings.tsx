@@ -19,7 +19,7 @@ export default function GroupTrainerDayViewTrainings() {
   return !cycle ? (
     <Box display="flex" width="100%" p={2} justifyContent="center" sx={sx}>
       <Typography variant="h6" mb={2}>
-        Select a stage in month view
+        Select a phase in phase view.
       </Typography>
     </Box>
   ) : (
