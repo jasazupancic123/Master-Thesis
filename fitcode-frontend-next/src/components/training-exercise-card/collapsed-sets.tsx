@@ -5,10 +5,6 @@ import { NumberExerciseParam } from '@/components/exercise-param/number-exercise
 import { TempoExerciseParam } from '@/components/exercise-param/tempo-exercise-param';
 import { core } from '@/core/core.service';
 import { SETS } from '@/core/exercise/constant/exercise-param.constant';
-import type {
-  ExerciseParamField,
-  ExerciseParamFieldExtended,
-} from '@/core/training/type/exercise-set.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { SetState } from '@/lib/common/type/state.type';
@@ -159,10 +155,10 @@ export default function TrainingExerciseCardCollapsedSets(
                         ? [{ field: pair, value, setIndex: undefined }]
                         : []),
                       // clear other vol params
-                      ...['reps', 'dist', 'time', 'repsR']
-                        .filter((f) => f !== field && f !== pair)
-                        .map((f) => ({
-                          field: f as ExerciseParamFieldExtended,
+                      ...core.exercise.param
+                        .getVolFields('lr', { exclude: [field, pair] })
+                        .map((field) => ({
+                          field,
                           value: undefined,
                           setIndex: undefined,
                         })),
@@ -205,17 +201,10 @@ export default function TrainingExerciseCardCollapsedSets(
                         ? [{ field: pair, value, setIndex: undefined }]
                         : []),
                       // clear other load params
-                      ...[
-                        'loadKg',
-                        'loadRm',
-                        'loadBw',
-                        'loadKgR',
-                        'loadRmR',
-                        'loadBwR',
-                      ]
-                        .filter((f) => f !== field && pair !== f)
-                        .map((f) => ({
-                          field: f as ExerciseParamFieldExtended,
+                      ...core.exercise.param
+                        .getIntFields('lr', { exclude: [field, pair] })
+                        .map((field) => ({
+                          field,
                           value: undefined,
                           setIndex: undefined,
                         })),
@@ -259,23 +248,15 @@ export default function TrainingExerciseCardCollapsedSets(
                           ? [{ field: pair, value, setIndex: undefined }]
                           : []),
                         // clear other eff params
-                        ...(
-                          [
-                            'eff',
-                            'effR',
-                            'tempoEcc',
-                            'tempoEccR',
-                            'tempoIso',
-                            'tempoIsoR',
-                            'tempoCon',
-                            'tempoConR',
-                            'tempoIdle',
-                            'tempoIdleR',
-                          ] as ExerciseParamField[]
-                        )
-                          .filter((f) => f !== field && f !== pair)
-                          .map((f) => ({
-                            field: f as ExerciseParamFieldExtended,
+                        ...core.exercise.param
+                          .getEffFields('lr', { exclude: [field, pair] })
+                          .concat(
+                            core.exercise.param.getTempoFields('lr', {
+                              exclude: [field, pair],
+                            })
+                          )
+                          .map((field) => ({
+                            field,
                             value: undefined,
                             setIndex: undefined,
                           })),
@@ -283,11 +264,17 @@ export default function TrainingExerciseCardCollapsedSets(
                       { updateSubgroups: true, updateWholePair: true }
                     );
                   }}
-                  onInputChange={(value) => {
-                    supersetsContext.updateTrainingExerciseParam(
+                  onInputChange={(values) => {
+                    const tempo = values as [number, number, number, number];
+                    supersetsContext.updateTrainingExerciseParams(
                       exercise,
-                      effType,
-                      value.toString()
+                      core.exercise.param
+                        .getTempoFields('l')
+                        .map((field, i) => ({
+                          field,
+                          value: tempo[i],
+                          setIndex: undefined,
+                        }))
                     );
                   }}
                 />
@@ -300,14 +287,8 @@ export default function TrainingExerciseCardCollapsedSets(
                   exercise={exercise}
                   disableOptions={!!selectedAthlete}
                   onSelectChange={(_selected) => {
-                    // update eff type
-                    const fields: ExerciseParamField[] = [
-                      'tempoEcc',
-                      'tempoIso',
-                      'tempoCon',
-                      'tempoIdle',
-                    ];
-
+                    // update eff type to tempo
+                    const fields = core.exercise.param.getTempoFields('l');
                     const pairs = fields.map(
                       (f) => core.exercise.param.pairs[f]
                     );
@@ -333,25 +314,14 @@ export default function TrainingExerciseCardCollapsedSets(
                             }))
                           : []),
                         // clear other eff params
-                        ...(
-                          [
-                            'eff',
-                            'effR',
-                            'tempoEcc',
-                            'tempoEccR',
-                            'tempoIso',
-                            'tempoIsoR',
-                            'tempoCon',
-                            'tempoConR',
-                            'tempoIdle',
-                            'tempoIdleR',
-                          ] as ExerciseParamField[]
-                        )
+                        ...core.exercise.param
+                          .getEffFields('lr')
+                          .concat(core.exercise.param.getTempoFields('lr'))
                           .filter(
                             (f) => !fields.includes(f) && !pairs.includes(f)
                           )
-                          .map((f) => ({
-                            field: f as ExerciseParamFieldExtended,
+                          .map((field) => ({
+                            field,
                             value: undefined,
                             setIndex: undefined,
                           })),
@@ -395,10 +365,10 @@ export default function TrainingExerciseCardCollapsedSets(
                         ? [{ field: pair, value, setIndex: undefined }]
                         : []),
                       // clear other rec params
-                      ...['recTime', 'recDist']
-                        .filter((f) => f !== field && f !== pair)
-                        .map((f) => ({
-                          field: f as ExerciseParamFieldExtended,
+                      ...core.exercise.param
+                        .getRecFields('lr', { exclude: [field, pair] })
+                        .map((field) => ({
+                          field,
                           value: undefined,
                           setIndex: undefined,
                         })),
@@ -494,21 +464,15 @@ export default function TrainingExerciseCardCollapsedSets(
                     disableOptions={!!selectedAthlete}
                     onInputChange={(values) => {
                       const tempo = values as [number, number, number, number];
-
                       supersetsContext.updateTrainingExerciseParams(
                         exercise,
-                        (
-                          [
-                            'tempoEccR',
-                            'tempoIsoR',
-                            'tempoConR',
-                            'tempoIdleR',
-                          ] as ExerciseParamField[]
-                        ).map((field, i) => ({
-                          field,
-                          value: tempo[i],
-                          setIndex: undefined,
-                        }))
+                        core.exercise.param
+                          .getTempoFields('r')
+                          .map((field, i) => ({
+                            field,
+                            value: tempo[i],
+                            setIndex: undefined,
+                          }))
                       );
                     }}
                   />

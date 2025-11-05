@@ -172,7 +172,6 @@ export default function AthleteTrainingExerciseSets({
                       disableOptions
                       onInputChange={(value) => {
                         exercise.sets[index][KG.field] = +value as never;
-
                         updateTrainingInProgress(exercise, supersetIndex || 0);
                       }}
                     />
@@ -308,7 +307,6 @@ export default function AthleteTrainingExerciseSets({
                         onInputChange={(value) => {
                           const field = core.exercise.param.pairs['loadKg'];
                           exercise.sets[index][field] = +value as never;
-
                           updateTrainingInProgress(
                             exercise,
                             supersetIndex || 0
@@ -334,10 +332,10 @@ export default function AthleteTrainingExerciseSets({
                           exercise={exercise}
                           showOptions={false}
                           disableOptions
-                          onInputChange={(value) => {
+                          onInputChange={(values) => {
                             core.training.set.setTempo(
                               exercise.sets[index],
-                              value as [number, number, number, number]
+                              values as [number, number, number, number]
                             );
 
                             updateTrainingInProgress(
