@@ -14,6 +14,7 @@ import { lib } from '@/lib';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
+import { core } from '@/core/core.service';
 
 const WarmupIcon = lib.common.component.getIcon('warmup');
 const CooldownIcon = lib.common.component.getIcon('cooldown');
@@ -27,12 +28,16 @@ export default function Superset({ superset, supersetIndex }: Props) {
   const theme = useTheme();
   const screenSize = useScreenSize();
   const { selectedExercise, setOpenAddExerciseModal } = useSupersets();
-  const { training, component, changeSupersetMainSet } = useTrainerDayView();
+  const { training, component, selectedSubgroup, changeSupersetMainSet } =
+    useTrainerDayView();
 
   const containerId = `${component?.id}-${supersetIndex}`;
   const items = superset.exercises.map((e) => e.id);
   const { setNodeRef } = useDroppable({ id: containerId });
+
   if (!component || !training) return null;
+
+  const isVirtualSubgroup = core.training.subgroup.isVirtual(selectedSubgroup);
 
   return (
     <Grid2
@@ -76,6 +81,7 @@ export default function Superset({ superset, supersetIndex }: Props) {
               ? theme.palette.success.light
               : lib.common.component.getBorderGradient(theme),
           position: 'relative',
+          zIndex: 100,
         }}
       >
         {superset.warmup && WarmupIcon ? (
@@ -111,21 +117,25 @@ export default function Superset({ superset, supersetIndex }: Props) {
         ) : null}
 
         {superset.mainSet === MainSet.BLOCK && (
-          <Tooltip title="Change to circuit set">
+          <Tooltip
+            title={!isVirtualSubgroup ? 'Change to circuit set' : 'Circuit set'}
+          >
             <Box
               sx={{
                 height: 15,
                 position: 'absolute',
                 top: -8,
-                right: 24,
+                right: 4,
                 borderRadius: '50%',
                 zIndex: 10,
                 backgroundColor: theme.palette.background.dark,
-                cursor: 'pointer',
+                cursor: !isVirtualSubgroup ? 'pointer' : undefined,
               }}
-              onClick={() =>
-                changeSupersetMainSet(supersetIndex, MainSet.CIRCUIT)
-              }
+              onClick={() => {
+                if (isVirtualSubgroup) return;
+
+                changeSupersetMainSet(supersetIndex, MainSet.CIRCUIT);
+              }}
             >
               <SwapVertIcon sx={{ width: 15, height: 15 }} />
             </Box>
@@ -133,21 +143,25 @@ export default function Superset({ superset, supersetIndex }: Props) {
         )}
 
         {superset.mainSet === MainSet.CIRCUIT && (
-          <Tooltip title="Change to block set">
+          <Tooltip
+            title={!isVirtualSubgroup ? 'Change to block set' : 'Block set'}
+          >
             <Box
               sx={{
                 height: 15,
                 position: 'absolute',
                 top: -8,
-                right: 24,
+                right: 4,
                 borderRadius: '50%',
                 zIndex: 10,
                 backgroundColor: theme.palette.background.dark,
-                cursor: 'pointer',
+                cursor: !isVirtualSubgroup ? 'pointer' : undefined,
               }}
-              onClick={() =>
-                changeSupersetMainSet(supersetIndex, MainSet.BLOCK)
-              }
+              onClick={() => {
+                if (isVirtualSubgroup) return;
+
+                changeSupersetMainSet(supersetIndex, MainSet.BLOCK);
+              }}
             >
               <RotateLeftIcon sx={{ width: 15, height: 15 }} />
             </Box>
@@ -173,7 +187,7 @@ export default function Superset({ superset, supersetIndex }: Props) {
                 <Box
                   borderRadius={2}
                   py={3}
-                  width="100%"
+                  width="99.5%"
                   height="100%"
                   textAlign="center"
                   sx={{

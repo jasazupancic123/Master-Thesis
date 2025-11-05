@@ -88,11 +88,11 @@ export default function TrainingExerciseSetDoneCheckbox(
             handleUpsertSet,
           });
 
-          if (exerciseView)
-            handleAdvanceInSuperset({
-              useTraining: { ...trainingContext, trainingInProgress },
-              useTrainingInProgress: trainingInProgressContext,
-            });
+          // if (exerciseView)
+          //   handleAdvanceInSuperset({
+          //     useTraining: { ...trainingContext, trainingInProgress },
+          //     useTrainingInProgress: trainingInProgressContext,
+          //   });
         } else {
           unmarkExerciseSetAsCompleted(
             { exerciseId: exercise.id },

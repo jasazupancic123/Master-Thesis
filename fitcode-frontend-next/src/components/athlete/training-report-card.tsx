@@ -39,12 +39,6 @@ export default function TrainingReportCard({ report }: Props) {
       total: report.prescribed.reps,
     },
     {
-      label: 'Tonnage',
-      completed: report.tonnage,
-      total: report.prescribed.tonnage,
-      unit: 'kg',
-    },
-    {
       label: 'TUT',
       completed: report.tut,
       total: report.prescribed.tut,
@@ -55,6 +49,12 @@ export default function TrainingReportCard({ report }: Props) {
       completed: report.recTime,
       total: report.prescribed.recTime,
       unit: 's',
+    },
+    {
+      label: 'Tonnage',
+      completed: report.tonnage,
+      total: report.prescribed.tonnage,
+      unit: 'kg',
     },
   ];
 
@@ -83,88 +83,28 @@ export default function TrainingReportCard({ report }: Props) {
 
         {/* Report charts */}
         <Box width="100%" display="flex" alignItems="flex-start" gap={'1%'}>
-          <Box>
-            <CustomChartContainer label="Realization">
-              <PieChart
-                height={120}
-                hideLegend
-                series={[
-                  {
-                    data: [
-                      { value: realizationScore, label: '' },
-                      { value: 100 - realizationScore, label: '' },
-                    ],
-                    innerRadius: 35,
-                  },
-                ]}
-                colors={[
-                  theme.palette.primary.main,
-                  theme.palette.background.light,
-                ]}
-              >
-                <ChartsTooltip trigger="none" />
-                <PieCenterLabel label={`${realizationScore}%`} />
-              </PieChart>
-            </CustomChartContainer>
-
-            {/* Bar charts for remaining metrics */}
-            <Box
-              flex={1}
-              display="grid"
-              gridTemplateColumns="1fr 1fr"
-              gap={1.5}
+          <CustomChartContainer label="Realization">
+            <PieChart
+              height={120}
+              hideLegend
+              series={[
+                {
+                  data: [
+                    { value: realizationScore, label: '' },
+                    { value: 100 - realizationScore, label: '' },
+                  ],
+                  innerRadius: 35,
+                },
+              ]}
+              colors={[
+                theme.palette.primary.main,
+                theme.palette.background.light,
+              ]}
             >
-              {metrics.map((metric) => {
-                const score =
-                  metric.total > 0
-                    ? Math.round((metric.completed / metric.total) * 100)
-                    : 0;
-                return (
-                  <CustomChartContainer key={metric.label} label={metric.label}>
-                    <Box
-                      display="flex"
-                      flexDirection="column"
-                      alignItems="center"
-                    >
-                      <ChartContainer
-                        height={18}
-                        series={[
-                          {
-                            type: 'bar',
-                            data: [score],
-                            layout: 'horizontal',
-                          },
-                        ]}
-                        margin={0}
-                        xAxis={[{ position: 'none', min: 0, max: 100 }]}
-                        yAxis={[
-                          { position: 'none', scaleType: 'band', data: [''] },
-                        ]}
-                        colors={[theme.palette.primary.main]}
-                        sx={{
-                          backgroundColor: theme.palette.background.light,
-                          borderRadius: 2,
-                          width: '100%',
-                        }}
-                      >
-                        <BarPlot />
-                      </ChartContainer>
-
-                      <Typography
-                        fontSize={11}
-                        color={theme.palette.text.primary}
-                        mt={0.5}
-                      >
-                        {metric.completed}
-                        {metric.unit || ''} / {metric.total}
-                        {metric.unit || ''}
-                      </Typography>
-                    </Box>
-                  </CustomChartContainer>
-                );
-              })}
-            </Box>
-          </Box>
+              <ChartsTooltip trigger="none" />
+              <PieCenterLabel label={`${realizationScore}%`} />
+            </PieChart>
+          </CustomChartContainer>
 
           <CustomChartContainer label="Tonnage">
             <Box
@@ -242,6 +182,60 @@ export default function TrainingReportCard({ report }: Props) {
             <CustomValueBox value={`${report.duration}’`} title="Duration" />
             <CustomValueBox value={`72%`} title="Intensity" />
           </Box>
+        </Box>
+        {/* Bar charts for remaining metrics */}
+        <Box
+          width="100%"
+          display="flex"
+          justifyContent="space-around"
+          flexWrap="wrap"
+          gap={1}
+        >
+          {metrics.map((metric) => {
+            const score =
+              metric.total > 0
+                ? Math.round((metric.completed / metric.total) * 100)
+                : 0;
+            return (
+              <CustomChartContainer key={metric.label} label={metric.label}>
+                <Box display="flex" flexDirection="column" alignItems="center">
+                  <ChartContainer
+                    height={18}
+                    series={[
+                      {
+                        type: 'bar',
+                        data: [score],
+                        layout: 'horizontal',
+                      },
+                    ]}
+                    margin={0}
+                    xAxis={[{ position: 'none', min: 0, max: 100 }]}
+                    yAxis={[
+                      { position: 'none', scaleType: 'band', data: [''] },
+                    ]}
+                    colors={[theme.palette.primary.main]}
+                    sx={{
+                      backgroundColor: theme.palette.background.light,
+                      borderRadius: 2,
+                      width: '100%',
+                    }}
+                  >
+                    <BarPlot />
+                  </ChartContainer>
+
+                  <Typography
+                    fontSize={11}
+                    color={theme.palette.text.primary}
+                    mt={0.5}
+                  >
+                    {metric.completed}
+                    {metric.unit || ''} / {metric.total}
+                    {metric.unit || ''}
+                  </Typography>
+                </Box>
+              </CustomChartContainer>
+            );
+          })}
         </Box>
       </Box>
 

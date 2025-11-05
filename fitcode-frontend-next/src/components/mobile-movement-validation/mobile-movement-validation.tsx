@@ -520,6 +520,8 @@ export default function MobileMovementValidation(
         recordedRepsRef.current.right,
       ].filter((r) => r !== undefined) as Rep[][];
 
+      console.log('sides', sides);
+
       const updatedExercise = {
         ...selectedExercise,
       } as TrainingExerciseRecording;
@@ -592,8 +594,10 @@ export default function MobileMovementValidation(
 
         if (i === 0) {
           tempoL = getTempoString({ recordedReps: side });
+          console.log('tempoL', tempoL);
         } else if (i === 1) {
           tempoR = getTempoString({ recordedReps: side });
+          console.log('tempoR', tempoR);
         }
 
         i++;
@@ -679,10 +683,10 @@ export default function MobileMovementValidation(
         handleUpsertSet,
       });
 
-      handleAdvanceInSuperset({
-        useTraining: { ...trainingContext, trainingInProgress },
-        useTrainingInProgress: trainingInProgressContext,
-      });
+      // handleAdvanceInSuperset({
+      //   useTraining: { ...trainingContext, trainingInProgress },
+      //   useTrainingInProgress: trainingInProgressContext,
+      // });
 
       setSelectedTrackingMethod(TrackingMethod.MANUAL);
     }

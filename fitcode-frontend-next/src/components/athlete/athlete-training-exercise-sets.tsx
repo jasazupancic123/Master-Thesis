@@ -326,7 +326,7 @@ export default function AthleteTrainingExerciseSets({
                         <TempoExerciseParam
                           options={effOptions}
                           selected={effType}
-                          value={core.training.set.getTempo(
+                          value={core.training.set.getTempoR(
                             exercise.sets[index]
                           )}
                           exercise={exercise}
