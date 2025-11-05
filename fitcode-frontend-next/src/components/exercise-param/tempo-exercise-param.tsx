@@ -183,13 +183,12 @@ export function TempoExerciseParam({
           <Box
             onClick={(e: React.MouseEvent<HTMLElement>) => {
               if (readOnly || disableSets) return;
-
               setAnchorEl(e.currentTarget);
             }}
           >
             {/* parsed value for tempo */}
             <ExerciseParamValueText
-              value={value.join(':')}
+              value={`${value[0]}:${value[1]}:${value[2]}:${value[3]}`}
               secondary={trainingInProgressSecondaryItem}
             />
           </Box>
@@ -202,7 +201,7 @@ export function TempoExerciseParam({
           >
             {/* parsed value for tempo */}
             <Typography sx={{ textAlign: 'center', fontSize: 12 }}>
-              {value}
+              {`${value[0]}:${value[1]}:${value[2]}:${value[3]}`}
             </Typography>
           </Button>
         )}
@@ -241,7 +240,7 @@ function TempoPicker({
 }: TempoPickerProps) {
   const [tempoParts, setTempoParts] = useState<
     [number, number, number, number]
-  >(value ?? [2, 0, 1, 0]);
+  >(() => value ?? [2, 0, 1, 0]);
 
   const updatePart = (index: number, newValue: number) => {
     const next = [...tempoParts];

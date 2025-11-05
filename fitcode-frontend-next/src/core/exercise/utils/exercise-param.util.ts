@@ -21,6 +21,12 @@ import {
   VEL,
 } from '../constant/exercise-param.constant';
 
+type LateralitySide = 'l' | 'r' | 'lr';
+
+type GroupOptions = {
+  exclude?: ExerciseParamField[];
+};
+
 export class ExerciseParamUtil {
   readonly pairs: Record<ExerciseParamField, ExerciseParamField> = {
     reps: 'repsR',
@@ -111,5 +117,72 @@ export class ExerciseParamUtil {
       default:
         return [];
     }
+  }
+
+  getVolFields(
+    side: LateralitySide,
+    options?: GroupOptions
+  ): ExerciseParamField[] {
+    return this.getGroupFields(['reps', 'dist', 'time'], side, options);
+  }
+
+  getIntFields(
+    side: LateralitySide,
+    options?: GroupOptions
+  ): ExerciseParamField[] {
+    return this.getGroupFields(
+      ['loadKg', 'loadRm', 'loadBw', 'vel'],
+      side,
+      options
+    );
+  }
+
+  getTempoFields(
+    side: LateralitySide,
+    options?: GroupOptions
+  ): ExerciseParamField[] {
+    return this.getGroupFields(
+      ['tempoEcc', 'tempoIso', 'tempoCon', 'tempoIdle'],
+      side,
+      options
+    );
+  }
+
+  getEffFields(
+    side: LateralitySide,
+    options?: GroupOptions
+  ): ExerciseParamField[] {
+    return this.getGroupFields(['eff'], side, options);
+  }
+
+  getRecFields(
+    side: LateralitySide,
+    options?: GroupOptions
+  ): ExerciseParamField[] {
+    return this.getGroupFields(['recTime', 'recDist'], side, options);
+  }
+
+  private getGroupFields(
+    mainParams: ExerciseParamField[],
+    side: LateralitySide,
+    options?: GroupOptions
+  ): ExerciseParamField[] {
+    const secondaryParams = mainParams.map((f) => this.pairs[f]);
+
+    function filterExcluded(params: ExerciseParamField[]) {
+      if (options?.exclude && options.exclude.length > 0)
+        return params.filter((p) => !options.exclude?.includes(p));
+      return params;
+    }
+
+    if (side === 'lr')
+      return [
+        ...filterExcluded(mainParams),
+        ...filterExcluded(secondaryParams),
+      ];
+
+    if (side === 'l') return filterExcluded(mainParams);
+    if (side === 'r') return filterExcluded(secondaryParams);
+    return [];
   }
 }

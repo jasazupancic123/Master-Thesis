@@ -79,8 +79,8 @@ export const RM: Attribute<ExerciseSet> = {
 
 export const TEMPO_ECC: Attribute<ExerciseSet> = {
   field: 'tempoEcc',
-  name: 'Tempo (Eccentric)',
-  description: 'tempo ecc',
+  name: 'Tempo',
+  description: 'tempo',
   type: AttributeType.Number,
   defaultValue: 2,
 };

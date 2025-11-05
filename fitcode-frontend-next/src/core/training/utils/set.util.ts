@@ -28,70 +28,16 @@ export class TrainingExerciseSetUtil {
     exercise: Exercise,
     data?: Partial<ExerciseSet>
   ): ExerciseSet {
-    const uni = exercise.isUnilateral;
-
     const set: ExerciseSet = { setNumber };
     const volOptions = this.getVolOptions(exercise);
     const intOptions = this.getIntOptions(exercise);
     const effOptions = this.getEffOptions(exercise);
     const recOptions = this.getRecOptions(exercise);
 
-    if (volOptions.length > 0) {
-      const vol = volOptions.find((v) => v.field === 'reps') || volOptions[0];
-      const field = vol.field as ExerciseParamNoSets;
-      const value = (data?.[field] || vol.defaultValue) as number;
-      set[field] = value as never;
-
-      if (uni) {
-        const pair = core.exercise.param.pairs[field] as ExerciseParamNoSets;
-        if (pair) {
-          const valueR = (data?.[pair] || vol.defaultValue) as number;
-          set[pair] = valueR as never;
-        }
-      }
-    }
-
-    if (intOptions.length > 0) {
-      const int = intOptions.find((i) => i.field === 'loadKg') || intOptions[0];
-      const field = int.field as ExerciseParamNoSets;
-      const value = (data?.[field] || int.defaultValue) as number;
-      set[field] = value as never;
-
-      if (uni) {
-        const pair = core.exercise.param.pairs[field] as ExerciseParamNoSets;
-        if (pair) {
-          const valueR = (data?.[pair] || int.defaultValue) as number;
-          set[pair] = valueR as never;
-        }
-      }
-    }
-
-    if (effOptions.length > 0) {
-      const eff =
-        effOptions.find((e) => e.field === 'tempoEcc') || effOptions[0];
-
-      const field = eff.field as ExerciseParamNoSets;
-      const value = (data?.[field] || eff.defaultValue) as number | string;
-      set[field] = value as never;
-
-      if (uni) {
-        const pair = core.exercise.param.pairs[field] as ExerciseParamNoSets;
-        if (pair) {
-          const valueR = (data?.[pair] || eff.defaultValue) as number | string;
-          set[pair] = valueR as never;
-        }
-      }
-    }
-
-    if (recOptions.length > 0) {
-      const rec =
-        recOptions.find((r) => r.field === 'recTime') || recOptions[0];
-
-      const field = rec.field as ExerciseParamNoSets;
-      const value = (data?.[field] || rec.defaultValue) as number;
-      set[field] = value as never;
-    }
-
+    this.assignParamOption(set, exercise, volOptions, 'reps', data);
+    this.assignParamOption(set, exercise, intOptions, 'loadKg', data);
+    this.assignParamOption(set, exercise, effOptions, 'tempoEcc', data);
+    this.assignParamOption(set, exercise, recOptions, 'recTime', data);
     return set;
   }
 
@@ -238,5 +184,29 @@ export class TrainingExerciseSetUtil {
     param: ExerciseParamFieldExtended
   ): boolean {
     return exercise.params.includes(param);
+  }
+
+  private assignParamOption<T extends keyof ExerciseSet>(
+    set: ExerciseSet,
+    exercise: Exercise,
+    options: Attribute<ExerciseSet>[],
+    preferredField: T,
+    data?: Partial<ExerciseSet>
+  ) {
+    if (options.length === 0) return;
+
+    const option =
+      options.find((o) => o.field === preferredField) || options[0];
+    const field = option.field as ExerciseParamNoSets;
+    const value = (data?.[field] ?? option.defaultValue) as ExerciseSet[T];
+    set[field] = value as never;
+
+    if (exercise.isUnilateral) {
+      const pair = core.exercise.param.pairs[field] as ExerciseParamNoSets;
+      if (pair) {
+        const valueR = (data?.[pair] ?? option.defaultValue) as ExerciseSet[T];
+        set[pair] = valueR as never;
+      }
+    }
   }
 }

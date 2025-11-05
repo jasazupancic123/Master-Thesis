@@ -5,7 +5,6 @@ import { NumberExerciseParam } from '@/components/exercise-param/number-exercise
 import { TempoExerciseParam } from '@/components/exercise-param/tempo-exercise-param';
 import { core } from '@/core/core.service';
 import { SETS } from '@/core/exercise/constant/exercise-param.constant';
-import type { ExerciseParamField } from '@/core/training/type/exercise-set.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { SetState } from '@/lib/common/type/state.type';
@@ -178,12 +177,23 @@ export default function TrainingExerciseCardExpandedSets({
                       exercise={exercise}
                       showOptions={setIndex === 0}
                       disableOptions
-                      onInputChange={(value) => {
-                        supersetsContext.updateTrainingExerciseParam(
+                      onInputChange={(values) => {
+                        const tempo = values as [
+                          number,
+                          number,
+                          number,
+                          number,
+                        ];
+
+                        supersetsContext.updateTrainingExerciseParams(
                           exercise,
-                          effType,
-                          value.toString(),
-                          setIndex
+                          core.exercise.param
+                            .getTempoFields('l')
+                            .map((field, i) => ({
+                              field,
+                              value: tempo[i],
+                              setIndex,
+                            }))
                         );
                       }}
                     />
@@ -294,7 +304,7 @@ export default function TrainingExerciseCardExpandedSets({
                       <TempoExerciseParam
                         options={effOptions}
                         selected={effType}
-                        value={core.training.set.getTempo(
+                        value={core.training.set.getTempoR(
                           exercise.sets[setIndex]
                         )}
                         showOptions={false}
@@ -310,18 +320,13 @@ export default function TrainingExerciseCardExpandedSets({
 
                           supersetsContext.updateTrainingExerciseParams(
                             exercise,
-                            (
-                              [
-                                'tempoEcc',
-                                'tempoIso',
-                                'tempoCon',
-                                'tempoIdle',
-                              ] as ExerciseParamField[]
-                            ).map((field, i) => ({
-                              field,
-                              value: tempo[i],
-                              setIndex,
-                            }))
+                            core.exercise.param
+                              .getTempoFields('r')
+                              .map((field, i) => ({
+                                field,
+                                value: tempo[i],
+                                setIndex,
+                              }))
                           );
                         }}
                       />
