@@ -1,3 +1,4 @@
+import { KeyboardArrowDown, KeyboardArrowUp } from '@mui/icons-material';
 import { Box, Button, Pagination, Typography } from '@mui/material';
 
 import ExerciseChips from '../exercise-chips/exercise-chips';
@@ -13,9 +14,8 @@ import type { Component } from '@/core/exercise/type/component.type';
 import { lib } from '@/lib';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
-import { SearchBar } from '@/ui/search-bar/search-bar';
-import { KeyboardArrowDown, KeyboardArrowUp } from '@mui/icons-material';
 import MenuItemsList from '@/ui/menu-items-list';
+import { SearchBar } from '@/ui/search-bar/search-bar';
 
 export default function AddExerciseForm(props: AddExerciseFormProps) {
   const {

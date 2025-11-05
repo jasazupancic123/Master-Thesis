@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { Components } from '@/core/exercise/constant/components.constant';
 import type { Component } from '@/core/exercise/type/component.type';
-import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 import { lib } from '@/lib';
+import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 
 export default function useComponentFilter() {
   const { component } = useTrainerDayView();

@@ -68,8 +68,6 @@ export default function MenuItemsList<T>(props: Props<T>) {
             onClick={(e) => {
               e.stopPropagation();
 
-              const id = c[idPropertyName] as string;
-
               onMenuItemClick(e, c);
             }}
             sx={menuItemsSx ? menuItemsSx(c) : {}}

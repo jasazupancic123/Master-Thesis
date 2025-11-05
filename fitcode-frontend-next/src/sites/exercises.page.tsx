@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 
@@ -38,6 +39,7 @@ import type {
 } from '@/core/exercise/type/exercise.type';
 import { UserRole } from '@/core/profile/enum/user-role.enum';
 import { lib } from '@/lib';
+import { LINK_METHODOLOGIES } from '@/lib/common/const/nav.const';
 import type { Pagination as PaginationType } from '@/lib/common/type/paginate.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
@@ -45,8 +47,6 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import FileUpload from '@/ui/file-upload';
 import MyModal from '@/ui/modal';
 import { SearchBar } from '@/ui/search-bar/search-bar';
-import Link from 'next/link';
-import { LINK_METHODOLOGIES } from '@/lib/common/const/nav.const';
 
 type AttributeValue =
   | string

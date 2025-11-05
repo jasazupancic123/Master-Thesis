@@ -50,9 +50,7 @@ export default function useRecoveryTime(
     const lastSetCompletedAt = lastCompletedSet.timestamp;
 
     // here update every second and every second decrease value by 1 until 0
-    let intervalId: NodeJS.Timeout;
-
-    intervalId = setInterval(() => {
+    const intervalId: NodeJS.Timeout = setInterval(() => {
       setValue(() => {
         const elapsedSinceLastSet = Math.max(
           0,
