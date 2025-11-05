@@ -3,4 +3,5 @@ export enum TrainingInProgressExerciseControl {
   ROM = 'rom',
   GALLERY = 'gallery',
   SW = 'sw',
+  AUDIO = 'audio',
 }

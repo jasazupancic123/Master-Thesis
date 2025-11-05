@@ -1,0 +1,20 @@
+export enum ExerciseParamFieldEnum {
+  //"reps" | "loadKg" | "loadRm" | "loadBw" | "tempo" | "vel" | "repsR" | "loadKgR" | "loadRmR" | "loadBwR" | "tempoR" | "velR" | "recTime" | "recDist" | "eff" | "time" | "dist"
+  REPS = 'reps',
+  LOAD_KG = 'loadKg',
+  LOAD_RM = 'loadRm',
+  LOAD_BW = 'loadBw',
+  TEMPO = 'tempo',
+  VEL = 'vel',
+  REPS_R = 'repsR',
+  LOAD_KG_R = 'loadKgR',
+  LOAD_RM_R = 'loadRmR',
+  LOAD_BW_R = 'loadBwR',
+  TEMPO_R = 'tempoR',
+  VEL_R = 'velR',
+  REC_TIME = 'recTime',
+  REC_DIST = 'recDist',
+  EFF = 'eff',
+  TIME = 'time',
+  DIST = 'dist',
+}

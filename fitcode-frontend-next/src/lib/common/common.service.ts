@@ -6,6 +6,7 @@ import { IndexedDbUtil } from './service/indexed-db.util';
 import { NavigationUtil } from './service/navigation.util';
 import { NumberUtil } from './service/number.util';
 import { ObjectUtil } from './service/object.util';
+import { TextToSpeechUtil } from './service/text-to-speech.util';
 import { TreeUtil } from './service/tree.util';
 
 export class CommonService {
@@ -18,6 +19,7 @@ export class CommonService {
   readonly number: NumberUtil;
   readonly component: ComponentUtil;
   readonly indexedDb: IndexedDbUtil;
+  readonly textToSpeech: TextToSpeechUtil;
 
   constructor() {
     this.env = new EnvUtil();
@@ -29,5 +31,6 @@ export class CommonService {
     this.number = new NumberUtil();
     this.component = new ComponentUtil();
     this.indexedDb = new IndexedDbUtil();
+    this.textToSpeech = new TextToSpeechUtil();
   }
 }

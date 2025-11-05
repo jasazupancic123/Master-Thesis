@@ -6,9 +6,10 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { ElapsedTime } from './training-in-progress-elapsed-time';
 import { theme } from '@/app/style';
+import { STRING_CONST } from '@/lib/common/const/string.const';
 import { useTraining } from '@/store/training.provider';
-import { PieCenterLabel } from '@/ui/mui-charts';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
+import { PieCenterLabel } from '@/ui/mui-charts';
 
 interface Props {
   startOfTraining: Dayjs;
@@ -63,7 +64,7 @@ export default function SWControl(props: Props) {
     lastSetRecTimeS === undefined
       ? 0
       : Math.max(0, lastSetRecTimeS - elapsedSinceLastSet);
-  const label = remaining > 0 ? `${remaining}s` : 'DO IT';
+  const label = remaining > 0 ? `${remaining}s` : STRING_CONST.doIt;
 
   const width =
     typeof window !== 'undefined'
@@ -127,7 +128,7 @@ export default function SWControl(props: Props) {
       {lastSetCompletedAt !== undefined &&
         lastSetRecTimeS !== undefined &&
         lastCompletedSet &&
-        lastCompletedSet.setNumber != setIndex + 1 &&
+        lastCompletedSet.setNumber !== setIndex + 1 &&
         !isSetCompleted && (
           <>
             <PieChart
@@ -138,10 +139,14 @@ export default function SWControl(props: Props) {
                 {
                   data: [
                     {
-                      value: label === 'DO IT' ? 100 : elapsedSinceLastSet,
+                      value:
+                        label === STRING_CONST.doIt ? 100 : elapsedSinceLastSet,
                       label: '',
                     },
-                    { value: label === 'DO IT' ? 0 : remaining, label: '' },
+                    {
+                      value: label === STRING_CONST.doIt ? 0 : remaining,
+                      label: '',
+                    },
                   ],
                   innerRadius: 45,
                 },
