@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 
 import useTrainingCycleComponents from './hooks/use-components';
 import type { TrainingCycleViewGridItemProps } from './types/type';
+import { core } from '@/core/core.service';
 import { lib } from '@/lib';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
@@ -68,26 +69,29 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
         }}
       >
         {components.map((trainingComponent) => {
-          const component = trainingComponent.component;
+          const component = core.training.component.find(trainingComponent.id);
           if (!component) return null;
+
+          const target = core.training.component.findTarget(
+            trainingComponent.targetId
+          );
+
           const IconComponent: ElementType<SvgIconProps> | null =
             lib.common.component.getIcon(component?.name);
 
           return (
             <Tooltip
+              key={component!.field}
               title={
-                (cycleView || periodizationView) && trainingComponent.target ? (
+                (cycleView || periodizationView) && target ? (
                   <>
                     <Box sx={{ textAlign: 'center' }}>{component.name}</Box>
-                    <Box sx={{ textAlign: 'center' }}>
-                      {trainingComponent.target?.name}
-                    </Box>
+                    <Box sx={{ textAlign: 'center' }}>{target?.name}</Box>
                   </>
                 ) : (
                   component.name
                 )
               }
-              key={component!.id}
             >
               <div>
                 {IconComponent && (
@@ -99,22 +103,20 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
                         setSelectedTrainings &&
                         basePeriodizationTraining?.id !== training.id
                       ) {
-                        if (
-                          selectedTrainings.some((t) => t.id === training.id)
-                        ) {
+                        if (selectedTrainings.some((t) => t.id === training.id))
                           setSelectedTrainings((prev) =>
                             prev.filter((t) => t.id !== training.id)
                           );
-                        } else if (
-                          trainingComponent.target &&
-                          trainingComponent.target.id !== selectedTarget?.id
-                        ) {
+                        else if (
+                          target &&
+                          target.field !== selectedTarget?.field
+                        )
                           toast.error(
                             'Cannot periodize trainings with different targets'
                           );
-                        } else if (
-                          trainingComponent.target &&
-                          trainingComponent.target.id === selectedTarget?.id &&
+                        else if (
+                          target &&
+                          target.field === selectedTarget?.field &&
                           cycle &&
                           basePeriodizationTraining &&
                           lib.common.date.isBetween(
@@ -122,9 +124,9 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
                             basePeriodizationTraining.to,
                             cycle?.to
                           )
-                        ) {
+                        )
                           setSelectedTrainings((prev) => [...prev, training]);
-                        } else if (
+                        else if (
                           cycle &&
                           basePeriodizationTraining &&
                           !lib.common.date.isBetween(
@@ -132,17 +134,19 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
                             basePeriodizationTraining.to,
                             cycle?.to
                           )
-                        ) {
+                        )
                           toast.error(
                             'Cannot periodize trainings before the base training'
                           );
-                        }
+
                         return;
                       }
+
                       e.stopPropagation();
+
                       await props.deleteTrainingComponent(
                         training.id,
-                        component!.id
+                        component!.field
                       );
                     }}
                     style={{
@@ -151,7 +155,7 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
                     }}
                     sx={{
                       color: cycleView
-                        ? trainingComponent.target?.color
+                        ? target?.color
                         : componentCalendarView
                           ? trainingComponent.color
                           : selected && selectedTarget
@@ -202,26 +206,25 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
                   />
                 )}
 
-                {(periodizationView || componentCalendarView) &&
-                  trainingComponent.target && (
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: 'grey.400',
-                        fontSize: 10,
-                        maxWidth: screenSize.isMobile
-                          ? 30
-                          : screenSize.isSmallerThanLaptop
-                            ? 60
-                            : 120,
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                      }}
-                    >
-                      {trainingComponent.target.name}
-                    </Typography>
-                  )}
+                {(periodizationView || componentCalendarView) && target && (
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: 'grey.400',
+                      fontSize: 10,
+                      maxWidth: screenSize.isMobile
+                        ? 30
+                        : screenSize.isSmallerThanLaptop
+                          ? 60
+                          : 120,
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
+                  >
+                    {target.name}
+                  </Typography>
+                )}
               </div>
             </Tooltip>
           );

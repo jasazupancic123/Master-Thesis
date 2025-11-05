@@ -2,12 +2,9 @@ import { TestApp } from '@test/common/utils/app.util';
 import { TestPeriodizationUtil } from '@test/common/utils/periodization.util';
 import { addDays } from 'date-fns';
 
-import type { Component } from '@src/component/entity/component.entity';
-import { generateComponentStub } from '@src/component/mock/component.stub';
+import type { Target } from '@src/exercise/entity/target.entity';
 import { generateCyclesStub } from '@src/group/mock/cycle.stub';
 import { generateGroupStub } from '@src/group/mock/group.stub';
-import type { Target } from '@src/target/entity/target.entity';
-import { generateTargetStub } from '@src/target/mock/target.stub';
 import { TestDbService } from '@src/test-db/test-db.service';
 import { MAIN_GROUP_PARENT_ID } from '@src/training/constant/main-group-parent-id.constant';
 import type { PeriodizeTrainingsDto } from '@src/training/dto/periodize-training.dto';
@@ -22,31 +19,44 @@ import {
   generateTrainingStub,
 } from '@src/training/mock/training.stub';
 
+jest.mock('@src/exercise/constant/components.constant', () => {
+  const {
+    generateComponentStub,
+  } = require('@src/exercise/mock/component.stub');
+
+  const c1 = generateComponentStub({ field: 'c1' }); // has target
+  const c2 = generateComponentStub({ field: 'c2' }); // has no target
+
+  return { Components: [c1, c2] };
+});
+
+// mock targets constant also
+jest.mock('@src/exercise/constant/target.constant', () => {
+  const strength: Target = {
+    field: 'strength',
+    name: 'Strength',
+    componentId: 'c1',
+  };
+
+  return { Targets: [strength] };
+});
+
 describe('Periodization functions (e2e)', () => {
   let testApp: TestApp;
   let db: TestDbService;
 
   let institutionId: string;
   let groupId: string;
-  let target: Target;
-  let component: Component;
   let baseTrainingId: string;
 
   beforeAll(async () => {
     testApp = await TestApp.init();
     db = testApp.module.get(TestDbService);
 
-    target = generateTargetStub({ id: 'strength', componentId: 'strength' });
     const institution = await db.institutions.createTest();
-    // const group = await db.groups.createTest(institution)
     institutionId = institution.id;
-
     groupId = await db.groups.save(
       generateGroupStub({ institutionId, cycles: generateCyclesStub(3) }),
-    );
-
-    component = await db.components.create(
-      generateComponentStub({ id: 'c1', targets: [target] }),
     );
 
     baseTrainingId = await db.trainings.save(
@@ -78,14 +88,6 @@ describe('Periodization functions (e2e)', () => {
     );
   }
 
-  it('should throw error if warmup / cooldown are passed as components', async () => {
-    const response = await request(baseTrainingId, 'warmup');
-    expect(response.status).toBe(400);
-    expect(response.body.message).toContain(
-      'You cannot periodize warmup or cooldown components',
-    );
-  });
-
   it('should throw error if base training in the past', async () => {
     const pastTrainingId = await db.trainings.save(
       TestPeriodizationUtil.generateTraining(-10, {
@@ -95,7 +97,7 @@ describe('Periodization functions (e2e)', () => {
       }),
     );
 
-    const response = await request(pastTrainingId, component.id);
+    const response = await request(pastTrainingId, 'c1');
     expect(response.status).toBe(400);
     expect(response.body.message).toContain(
       'You can only periodize upcoming trainings',
@@ -152,7 +154,7 @@ describe('Periodization functions (e2e)', () => {
 
     await Promise.all(trainings.map((t) => db.trainings.save(t)));
 
-    const response = await request(baseTrainingId, component.id, {
+    const response = await request(baseTrainingId, 'c1', {
       exerciseIds: ['e1', 'e2'],
       periodizationType: PeriodizationType.REPLICATE,
     });
@@ -167,7 +169,7 @@ describe('Periodization functions (e2e)', () => {
     expect(baseTraining.components).toHaveLength(1);
 
     const baseComponent = baseTraining.components[0];
-    expect(baseComponent.id).toBe(component.id);
+    expect(baseComponent.id).toBe('c1');
     expect(baseComponent.supersets).toHaveLength(1);
     expect(baseComponent.supersets[0].exercises).toHaveLength(5);
 
@@ -745,7 +747,6 @@ describe('Periodization functions (e2e)', () => {
   });
 
   describe('Periodization with targets', () => {
-    let componentWithoutTarget: Component;
     let dataWithTarget: Partial<Training> & {
       date: Date;
       ownerId: string;
@@ -759,10 +760,6 @@ describe('Periodization functions (e2e)', () => {
     };
 
     beforeAll(async () => {
-      componentWithoutTarget = await db.components.create(
-        generateComponentStub({ id: 'c-no-target', targets: [] }),
-      );
-
       dataWithTarget = {
         date: addDays(new Date(), 1),
         ownerId: global.trainer.id,
@@ -773,6 +770,7 @@ describe('Periodization functions (e2e)', () => {
         components: [
           generateTrainingComponent({
             id: 'c1',
+            targetId: 'strength',
             supersets: [
               generateSuperset({
                 exercises: [generateTrainingExercise({ id: 'e1' })],
@@ -791,7 +789,7 @@ describe('Periodization functions (e2e)', () => {
         membersIds: [],
         components: [
           generateTrainingComponent({
-            id: 'c-no-target',
+            id: 'c2',
             supersets: [
               generateSuperset({
                 exercises: [generateTrainingExercise({ id: 'e1' })],
@@ -800,10 +798,6 @@ describe('Periodization functions (e2e)', () => {
           }),
         ],
       };
-    });
-
-    afterAll(async () => {
-      await db.components.delete(componentWithoutTarget.id);
     });
 
     it('should periodize only trainings with selected target', async () => {
@@ -821,7 +815,7 @@ describe('Periodization functions (e2e)', () => {
       const ids = await Promise.all(trainings.map((t) => db.trainings.save(t)));
       expect(ids).toHaveLength(5);
 
-      const response = await request(ids[0], component.id, {
+      const response = await request(ids[0], 'c1', {
         exerciseIds: ['e1'],
         periodizationType: PeriodizationType.REPLICATE,
       });
@@ -839,7 +833,7 @@ describe('Periodization functions (e2e)', () => {
         .filter((t) => t.id !== ids[0]); // filter out base training
 
       const trainingsWithoutTarget = resultTrainings.filter((t) =>
-        t.components.some((c) => c.id === 'c-no-target'),
+        t.components.some((c) => c.id === 'c2'),
       );
 
       expect(trainingsWithTarget).toHaveLength(2); // without base training
@@ -855,7 +849,7 @@ describe('Periodization functions (e2e)', () => {
       expect(trainingsWithoutTarget).toHaveLength(2);
       for (const training of trainingsWithoutTarget) {
         const componentCNoTarget = training.components.find(
-          (c) => c.id === 'c-no-target',
+          (c) => c.id === 'c2',
         );
         expect(componentCNoTarget).toBeDefined();
         expect(componentCNoTarget.copiedFrom).toBeUndefined();
@@ -876,7 +870,7 @@ describe('Periodization functions (e2e)', () => {
       const ids = await Promise.all(trainings.map((t) => db.trainings.save(t)));
       expect(ids).toHaveLength(4);
 
-      const response = await request(ids[0], componentWithoutTarget.id, {
+      const response = await request(ids[0], 'c2', {
         exerciseIds: ['e1'],
         periodizationType: PeriodizationType.REPLICATE,
       });
@@ -890,7 +884,7 @@ describe('Periodization functions (e2e)', () => {
       );
 
       const trainingsWithoutTarget = resultTrainings
-        .filter((t) => t.components.some((c) => c.id === 'c-no-target'))
+        .filter((t) => t.components.some((c) => c.id === 'c2'))
         .filter((t) => t.id !== ids[0]); // filter out base training
 
       const trainingsWithTarget = resultTrainings.filter((t) =>
@@ -900,7 +894,7 @@ describe('Periodization functions (e2e)', () => {
       expect(trainingsWithoutTarget).toHaveLength(1); // without base training
       for (const training of trainingsWithoutTarget) {
         const componentCNoTarget = training.components.find(
-          (c) => c.id === 'c-no-target',
+          (c) => c.id === 'c2',
         );
         expect(componentCNoTarget).toBeDefined();
         expect(componentCNoTarget.copiedFrom).toEqual({

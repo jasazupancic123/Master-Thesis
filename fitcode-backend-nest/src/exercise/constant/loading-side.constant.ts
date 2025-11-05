@@ -6,6 +6,6 @@ export const LoadingSide: Attribute[] = [
   { field: 'monopedal', name: 'Monopedal' },
   { field: 'bipedal', name: 'Bipedal' },
   { field: 'quadruped', name: 'Quadruped' },
-];
+] as const;
 
 export const LoadingSideValues = LoadingSide.map((l) => l.field);

@@ -19,6 +19,13 @@ export class TrainingExercise extends IdEntity {
   @Expose()
   params: string[]; // inferred from root component
 
+  @IsString()
+  @IsOptional()
+  @IsNotEmpty()
+  @ApiPropertyOptional()
+  @Expose()
+  methodId?: string;
+
   @ValidateNested({ each: true })
   @Type(() => ExerciseSet)
   @ApiProperty({ type: () => ExerciseSet, isArray: true })

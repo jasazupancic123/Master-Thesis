@@ -6,10 +6,6 @@ import { onMainSetChange } from '@/components/training-component/actions/actions
 import { removeSelectedExercisesFromSupersets } from '@/components/training-component/actions/actions-selected-exercises';
 import { ADD_SUPERSET_DROPPABLE_ID } from '@/core/training/const/add-superset-droppable-id.const';
 import { MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT } from '@/core/training/const/training-limits.const';
-import {
-  COOLDOWN_ID,
-  WARMUP_ID,
-} from '@/core/training/const/warmup-cooldown.const';
 import { MainSet } from '@/core/training/enum/main-set.enum';
 import type { Subgroup } from '@/core/training/type/subgroup.type';
 import type { Superset } from '@/core/training/type/superset.type';
@@ -60,7 +56,18 @@ export async function onDragEndExercise(
 
     let newSupersets = [..._supersets, { exercises: [draggedExercise] }];
     superset.exercises = superset.exercises.filter((e) => e.id !== draggableId);
-    newSupersets = newSupersets.filter((s) => s.exercises.length > 0);
+    newSupersets = newSupersets.filter(
+      (s) => s.cooldown || s.warmup || s.exercises.length > 0
+    );
+
+    // order newSupersets so, that first warmup if exists, then normal supersets, then cooldown if exists
+    newSupersets.sort((a, b) => {
+      if (a.warmup) return -1;
+      if (b.warmup) return 1;
+      if (a.cooldown) return 1;
+      if (b.cooldown) return -1;
+      return 0;
+    });
 
     setDetectedChanges(true);
     setSupersets(newSupersets);
@@ -162,20 +169,12 @@ export function updateGlobalStates(
   updatedComponent: TrainingComponent,
   setTraining: SetState<Training | undefined>
 ) {
-  if (component.id === WARMUP_ID || component.id === COOLDOWN_ID) {
-    const newTraining = { ...training };
-    if (component.id === WARMUP_ID) newTraining.warmup = updatedComponent;
-    else newTraining.cooldown = updatedComponent;
+  const updatedComponents = [...training.components].map((c) =>
+    c.id === component.id ? updatedComponent : c
+  );
 
-    setTraining(newTraining);
-  } else {
-    const updatedComponents = [...training.components].map((c) =>
-      c.id === component.id ? updatedComponent : c
-    );
-
-    const newTraining = { ...training, components: updatedComponents };
-    setTraining(newTraining);
-  }
+  const newTraining = { ...training, components: updatedComponents };
+  setTraining(newTraining);
 }
 
 export const onAddExerciseDrop = (
@@ -308,7 +307,11 @@ export function onDragEndExerciseToExistingSuperset(
 
   let finalSupersetsCopy;
 
-  if (oldFinalSupersetExercises.length > 0) {
+  if (
+    oldFinalSupersetExercises.length > 0 ||
+    supersetWithExercise.cooldown ||
+    supersetWithExercise.warmup
+  ) {
     finalSupersetsCopy = supersetsCopy.map((superset) =>
       superset === supersetWithExercise
         ? { ...superset, exercises: oldFinalSupersetExercises }

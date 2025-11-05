@@ -1,7 +1,6 @@
 import { TestApp } from '@test/common/utils/app.util';
 import { addMonths } from 'date-fns';
 
-import { FirebaseService } from '@src/firebase/firebase.service';
 import { generateCycleStub } from '@src/group/mock/cycle.stub';
 import { generateGroupStub } from '@src/group/mock/group.stub';
 import { TestDbService } from '@src/test-db/test-db.service';
@@ -10,13 +9,11 @@ import { generateTrainingStub } from '@src/training/mock/training.stub';
 describe('Add / Remove Group Cycle (e2e)', () => {
   let testApp: TestApp;
   let db: TestDbService;
-  let firebase: FirebaseService;
   let groupId: string;
 
   beforeAll(async () => {
     testApp = await TestApp.init();
     db = testApp.module.get(TestDbService);
-    firebase = testApp.module.get(FirebaseService);
 
     const institution = await db.institutions.createTest();
     groupId = await db.groups.save(

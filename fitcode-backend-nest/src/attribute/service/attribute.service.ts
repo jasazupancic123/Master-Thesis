@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 
-import { AttributeType } from '@src/common/enum/attribute-type.enum';
+import { AttributeType } from '@src/attribute/enum/attribute-type.enum';
 import { CommonService } from '@src/common/service/common.service';
 import { ValidateError } from '@src/common/type/validate.type';
 
@@ -218,6 +218,24 @@ export class AttributeService {
     }
 
     return vals;
+  }
+
+  /**
+   * For example, for component 'strength:general:corrective' it will return found attribute
+   * option representing 'corrective' in the tree.
+   */
+  getLeaf(selectedPath: string, tree: Attribute[]): Attribute | null {
+    return this.validateSelection(selectedPath, tree);
+  }
+
+  /**
+   * For example, for component 'strength:general:corrective' it will return found attribute
+   * option representing 'strength' in the tree.
+   */
+  getRoot(selectedPath: string, tree: Attribute[]): Attribute | null {
+    const pathParts = selectedPath.split(':');
+    const rootPart = pathParts[0];
+    return tree.find((opt) => opt.field === rootPart) || null;
   }
 
   private validateSelection(

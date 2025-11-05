@@ -1,13 +1,11 @@
 import { useEffect, useState } from 'react';
 
 import { handlePaginateExercises } from '@/app/(trainer)/dashboard/exercises/state';
-import type { Component } from '@/core/component/type/component.type';
+import { Components } from '@/core/exercise/constant/components.constant';
+import type { Component } from '@/core/exercise/type/component.type';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
-import {
-  COOLDOWN_ID,
-  WARMUP_ID,
-} from '@/core/training/const/warmup-cooldown.const';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
+import { lib } from '@/lib';
 import type { AttributeFilters } from '@/sites/exercises.page';
 import { useMain } from '@/store/main.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
@@ -17,7 +15,7 @@ export default function useExerciseFormFilters(
   selectedComponentsIds: string[],
   selectedComponent: Component | null
 ) {
-  const { components, exercises: allExercises } = useMain();
+  const { exercises: allExercises } = useMain();
 
   const {
     filteredExercises: exercises,
@@ -32,26 +30,33 @@ export default function useExerciseFormFilters(
 
   const [filteredExercises, setFilteredExercises] =
     useState<Exercise[]>(exercises);
-
-  const [componentExercises, setComponentExercises] = useState<Exercise[]>([]);
+  const [componentExercises, setComponentExercises] =
+    useState<Exercise[]>(exercises);
 
   /**
    * Filter exercises
    */
   useEffect(() => {
+    const allComponentPaths = selectedComponent
+      ? lib.common.tree.getNestedPaths(
+          selectedComponent.field,
+          Components,
+          'field',
+          'options'
+        )
+      : [];
+
     const filter: Partial<Exercise> = {
-      ...(selectedComponent?.id &&
-        !search.length && { componentIds: [selectedComponent.id] }),
+      ...(selectedComponent?.field &&
+        !search.length && { components: allComponentPaths }),
+      ...(selectedComponentsIds.length && {
+        components: selectedComponentsIds,
+      }),
       ...(search && { name: search }),
-      ...(!search.length &&
-        selectedComponentsIds.length && {
-          componentIds: selectedComponentsIds,
-        }),
       ...filters,
     };
 
     handlePaginateExercises(filter, {
-      components,
       exercises: componentExercises,
       pagination,
       search,
@@ -59,7 +64,6 @@ export default function useExerciseFormFilters(
       setFilteredExercises,
     });
   }, [
-    components,
     componentExercises,
     exercises,
     component,
@@ -74,19 +78,15 @@ export default function useExerciseFormFilters(
   useEffect(() => {
     if (!selectedComponent) return;
 
-    if (
-      search.length ||
-      selectedComponent.id === WARMUP_ID ||
-      selectedComponent.id === COOLDOWN_ID
-    ) {
+    if (search.length) {
       setComponentExercises(allExercises);
       return;
     }
 
     setComponentExercises(
       allExercises.filter((exercise) =>
-        exercise.components?.some((c) =>
-          c.parents.includes(selectedComponent.id)
+        exercise.components.some(
+          (c) => c.split(':')[0] === selectedComponent.field
         )
       )
     );

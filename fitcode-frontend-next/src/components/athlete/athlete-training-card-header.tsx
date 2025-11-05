@@ -2,7 +2,7 @@ import { MoreVert } from '@mui/icons-material';
 import { Box, IconButton, Typography } from '@mui/material';
 
 import ComponentsAvatar from './components-avatar';
-import type { Component } from '@/core/component/type/component.type';
+import type { Component } from '@/core/exercise/type/component.type';
 import type { Cycle } from '@/core/group/type/cycle.type';
 import type { Group } from '@/core/group/type/group.type';
 import { MainSet } from '@/core/training/enum/main-set.enum';
@@ -46,7 +46,7 @@ export default function AthleteTrainingCardHeader({
             isTrainingComponentArray(components)
               ? components
               : (components || []).map((c) => ({
-                  id: c.id,
+                  id: c.field,
                   completedMembersIds: [],
                   from: new Date(),
                   to: new Date(),

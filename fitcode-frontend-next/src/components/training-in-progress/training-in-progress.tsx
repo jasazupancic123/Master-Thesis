@@ -46,8 +46,6 @@ export default function TrainingInProgress() {
     setSupersetIndex,
     selectedExercise,
     setSelectedExercise,
-    audioEnabled,
-    initedAudioEnabled,
   } = trainingInProgressContext;
 
   const {
@@ -63,18 +61,6 @@ export default function TrainingInProgress() {
   } = trainingInProgressUtilsContext;
 
   const { selectedTrackingMethod } = athleteHeaderContext;
-
-  useEffect(() => {
-    console.log('initedAudioEnabled', initedAudioEnabled);
-    console.log('audioEnabled', audioEnabled);
-    if (!initedAudioEnabled || !audioEnabled) return;
-
-    const componentName = trainingInProgress?.selectedComponent.id;
-
-    lib.common.textToSpeech.speak(
-      `Hey, welcome to today's ${componentName} training. Let's get started!`
-    );
-  }, [initedAudioEnabled]);
 
   /* Preload pose landmarker */
   useEffect(() => {

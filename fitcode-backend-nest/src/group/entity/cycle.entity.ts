@@ -1,12 +1,34 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Transform, Type } from 'class-transformer';
-import { IsDate, IsOptional, IsString, ValidateNested } from 'class-validator';
+import {
+  IsDate,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 
 import { BaseEntity } from '@src/common/entity/base.entity';
-import { PartialTarget } from '@src/target/entity/partial-target.dto';
+
+import { CycleLevel } from '../enum/cycle-level.enum';
 
 export interface Week {
   date: Date;
+}
+
+export class CycleTarget {
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  @Expose()
+  targetId: string;
+
+  @IsEnum(CycleLevel)
+  @ApiPropertyOptional({ enum: CycleLevel })
+  @IsOptional()
+  @Expose()
+  level?: CycleLevel;
 }
 
 export class Cycle extends BaseEntity {
@@ -34,8 +56,8 @@ export class Cycle extends BaseEntity {
   to: Date;
 
   @ValidateNested({ each: true })
-  @Type(() => PartialTarget)
-  @ApiProperty({ type: () => PartialTarget, isArray: true })
+  @Type(() => CycleTarget)
+  @ApiProperty({ type: () => CycleTarget, isArray: true })
   @Expose()
-  selectedTargets: PartialTarget[];
+  targets: CycleTarget[];
 }

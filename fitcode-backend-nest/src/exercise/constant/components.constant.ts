@@ -1,0 +1,238 @@
+import type { Component } from '../entity/component.entity';
+
+export const Components: Component[] = [
+  { field: 'other', name: 'Other' },
+  { field: 'competition', name: 'Competition' },
+  {
+    field: 'coordination',
+    name: 'Coordination',
+    params: ['reps', 'time', 'dist'],
+    options: [
+      { field: 'balance', name: 'Balance' },
+      { field: 'breathing', name: 'Breathing' },
+      { field: 'dissociation', name: 'Dissociation' },
+      { field: 'foot-alignment', name: 'Foot Alignment' },
+      { field: 'jumping-landing', name: 'Jumping / Landing' },
+      { field: 'orientation', name: 'Orientation' },
+      { field: 'reaction', name: 'Reaction' },
+      { field: 'running-mechanics', name: 'Running Mechanics' },
+      { field: 'technical-work', name: 'Technical Work' },
+    ],
+  },
+  {
+    field: 'endurance',
+    name: 'Endurance',
+    params: ['time', 'dist', 'eff', 'recTime', 'recDist'],
+    options: [
+      { field: 'aerobic-capacity', name: 'Aerobic Capacity' },
+      { field: 'aerobic-power', name: 'Aerobic Power' },
+      { field: 'anaerobic-capacity', name: 'Anaerobic Capacity' },
+      { field: 'anaerobic-power', name: 'Anaerobic Power' },
+    ],
+  },
+  {
+    field: 'rom',
+    name: 'ROM',
+    params: ['reps', 'time'],
+    options: [
+      {
+        field: 'flexibility',
+        name: 'Flexibility',
+        attributes: ['locations'],
+        options: [
+          { field: 'active-stretching', name: 'Active Stretching' },
+          { field: 'ballistic-stretching', name: 'Ballistic Stretching' },
+          { field: 'dynamic-stretching', name: 'Dynamic Stretching' },
+          { field: 'isometric-stretching', name: 'Isometric Stretching' },
+          { field: 'passive-stretching', name: 'Passive Stretching' },
+          { field: 'pnf-stretching', name: 'PNF Stretching' },
+          { field: 'static-stretching', name: 'Static Stretching' },
+        ],
+      },
+      {
+        field: 'mobility',
+        name: 'Mobility',
+        attributes: ['locations'],
+        options: [
+          { field: 'dynamic-wu', name: 'Dynamic WU' },
+          { field: 'exercise-rom', name: 'Exercise ROM' },
+          { field: 'use-of-load', name: 'Use Of Load' },
+          { field: 'wod', name: 'WOD' },
+        ],
+      },
+    ],
+  },
+  {
+    field: 'speed',
+    name: 'Speed',
+    params: ['reps', 'time', 'dist', 'eff'],
+    options: [
+      {
+        field: 'acceleration',
+        name: 'Acceleration',
+        attributes: [
+          'locations',
+          'patterns',
+          'loadingSides',
+          'movementDirections',
+          'prescriptions',
+        ],
+        options: [
+          { field: 'game-specific', name: 'Game Specific' },
+          { field: 'hybrid', name: 'Hybrid' },
+          {
+            field: 'generic',
+            name: 'Generic',
+            options: [
+              { field: 'assisted', name: 'Assisted' },
+              { field: 'resisted', name: 'Resisted' },
+            ],
+          },
+        ],
+      },
+      {
+        field: 'agility',
+        name: 'Agility',
+        attributes: [
+          'locations',
+          'patterns',
+          'loadingSides',
+          'movementDirections',
+          'prescriptions',
+        ],
+        options: [
+          { field: 'hybrid', name: 'Hybrid' },
+          { field: 'game-specific', name: 'Game Specific' },
+          {
+            field: 'generic',
+            name: 'Generic',
+            options: [
+              { field: 'assisted', name: 'Assisted' },
+              { field: 'resisted', name: 'Resisted' },
+            ],
+          },
+        ],
+      },
+      {
+        field: 'cod',
+        name: 'COD',
+        attributes: [
+          'locations',
+          'patterns',
+          'loadingSides',
+          'movementDirections',
+          'prescriptions',
+        ],
+      },
+      {
+        field: 'deceleration',
+        name: 'Deceleration',
+        attributes: [
+          'locations',
+          'patterns',
+          'loadingSides',
+          'movementDirections',
+          'prescriptions',
+        ],
+      },
+      {
+        field: 'peak-speed',
+        name: 'Peak Speed',
+        attributes: [
+          'locations',
+          'patterns',
+          'loadingSides',
+          'movementDirections',
+          'prescriptions',
+        ],
+      },
+    ],
+  },
+  {
+    field: 'strength',
+    name: 'Strength',
+    params: [
+      'reps',
+      'time',
+      'dist',
+      'loadKg',
+      'loadRm',
+      'loadBw',
+      'tempo',
+      'eff',
+      'recTime',
+    ],
+    options: [
+      {
+        field: 'corrective',
+        name: 'Corrective',
+        attributes: [
+          'locations',
+          'equipment',
+          'patterns',
+          'loadingSides',
+          'prescriptions',
+        ],
+        options: [
+          { field: 'ankle', name: 'Ankle' },
+          { field: 'hip', name: 'Hip' },
+          { field: 'knee', name: 'Knee' },
+          { field: 'shoulder', name: 'Shoulder' },
+          { field: 'spine', name: 'Spine' },
+        ],
+      },
+      {
+        field: 'general',
+        name: 'General',
+        attributes: [
+          'locations',
+          'equipment',
+          'patterns',
+          'loadingSides',
+          'movementDirections',
+          'prescriptions',
+        ],
+        options: [
+          { field: 'con-ecc', name: 'Con-Ecc' },
+          { field: 'concentric', name: 'Concentric' },
+          { field: 'eccentric', name: 'Eccentric' },
+          { field: 'isometric', name: 'Isometric' },
+        ],
+      },
+      {
+        field: 'other',
+        name: 'Other',
+        attributes: [
+          'locations',
+          'equipment',
+          'patterns',
+          'loadingSides',
+          'movementDirections',
+          'prescriptions',
+        ],
+      },
+      {
+        field: 'power',
+        name: 'Power',
+        attributes: [
+          'locations',
+          'equipment',
+          'patterns',
+          'loadingSides',
+          'movementDirections',
+          'prescriptions',
+        ],
+        options: [
+          { field: 'braking', name: 'Braking' },
+          { field: 'explosive', name: 'Explosive' },
+          { field: 'fast-general', name: 'Fast General' },
+          { field: 'jumping', name: 'Jumping' },
+          { field: 'olympic-lifts', name: 'Olympic Lifts' },
+          { field: 'reactive', name: 'Reactive' },
+          { field: 'running-based', name: 'Running Based' },
+          { field: 'throwing', name: 'Throwing' },
+        ],
+      },
+    ],
+  },
+] as const;

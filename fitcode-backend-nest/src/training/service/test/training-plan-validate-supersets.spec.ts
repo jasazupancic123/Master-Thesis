@@ -5,16 +5,15 @@ import { Test } from '@nestjs/testing';
 import { AttributeService } from '@src/attribute/service/attribute.service';
 import { CacheManagerService } from '@src/cache-manager/cache-manager.service';
 import { CommonModule } from '@src/common/common.module';
-import { ComponentService } from '@src/component/component.service';
-import { generateComponentStub } from '@src/component/mock/component.stub';
 import { validationSchema } from '@src/config/environment-validation-schema';
+import type { Method } from '@src/exercise/entity/method.entity';
+import { generateComponentStub } from '@src/exercise/mock/component.stub';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { ExerciseAttributeService } from '@src/exercise/service/exercise-attribute.service';
 import { ExerciseParamService } from '@src/exercise/service/exercise-param.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
-import type { Method } from '@src/method/entity/method.entity';
 import {
   MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT,
   MAX_NUM_SUPERSETS_IN_CIRCUIT_COMPONENT,
@@ -32,9 +31,25 @@ import { WorkloadRepository } from '@src/training/repository/workload.repository
 import { TrainingPlanService } from '../training-plan.service';
 import { WorkloadService } from '../workload.service';
 
+jest.mock('@src/exercise/constant/method.constant', () => {
+  const method: Method = {
+    field: 'm1',
+    name: 'Method1',
+    componentId: 'strength',
+    attributes: [
+      { field: 'sets', min: 3, max: 10 },
+      { field: 'reps', min: 5, max: 12 },
+      { field: 'tempo', pattern: '^(?:[1-3]):(?:[1-2]):(?:[1-3]):(?:[0-4])$' }, // 1-3:1-2:1-3:0-4
+      { field: 'recTime', min: 60, max: 60 },
+    ],
+  };
+
+  return { Methods: [method] };
+});
+
 describe('validateSupersets', () => {
   let service: TrainingPlanService;
-  let componentService: ComponentService;
+  let exerciseAttributeService: ExerciseAttributeService;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -52,10 +67,6 @@ describe('validateSupersets', () => {
           useValue: createMock<CacheManagerService>(),
         },
         AttributeService,
-        {
-          provide: ComponentService,
-          useValue: createMock<ComponentService>(),
-        },
         {
           provide: InstitutionService,
           useValue: createMock<InstitutionService>(),
@@ -82,32 +93,29 @@ describe('validateSupersets', () => {
     }).compile();
 
     service = moduleRef.get(TrainingPlanService);
-    componentService = moduleRef.get(ComponentService);
+    exerciseAttributeService = moduleRef.get(ExerciseAttributeService);
   });
 
-  const root = generateComponentStub({ id: 'c1' });
+  const root = generateComponentStub({ field: 'c1' });
   beforeEach(() => {
-    jest.spyOn(componentService, 'getRoot').mockImplementation(() => root);
+    jest
+      .spyOn(exerciseAttributeService, 'getRootMainComponent')
+      .mockImplementation(() => root);
   });
 
   const exercises = [
-    generateExerciseStub({ id: 'e1', componentIds: ['leaf1'] }),
-    generateExerciseStub({ id: 'e2', componentIds: ['leaf1'] }),
-    generateExerciseStub({ id: 'e3', componentIds: ['leaf2'] }),
-    generateExerciseStub({ id: 'e4', componentIds: ['leaf3'] }),
-    generateExerciseStub({ id: 'e5', componentIds: ['leaf3'] }),
-    generateExerciseStub({ id: 'e6', componentIds: ['leaf3'] }),
-    generateExerciseStub({ id: 'e7', componentIds: ['leaf3'] }),
-    generateExerciseStub({ id: 'e8', componentIds: ['leaf3'] }),
-    generateExerciseStub({ id: 'e9', componentIds: ['leaf3'] }),
+    generateExerciseStub({ id: 'e1' }),
+    generateExerciseStub({ id: 'e2' }),
+    generateExerciseStub({ id: 'e3' }),
+    generateExerciseStub({ id: 'e4' }),
+    generateExerciseStub({ id: 'e5' }),
+    generateExerciseStub({ id: 'e6' }),
+    generateExerciseStub({ id: 'e7' }),
+    generateExerciseStub({ id: 'e8' }),
+    generateExerciseStub({ id: 'e9' }),
   ];
 
-  const data = {
-    exercises,
-    components: [root],
-    methods: [],
-    attributes: [],
-  };
+  const data = { exercises, components: [root], methods: [], attributes: [] };
 
   it.each([
     [
@@ -184,98 +192,238 @@ describe('validateSupersets', () => {
     ).toThrow('Training exercise not found');
   });
 
-  describe('validateSupersets with methods', () => {
-    const MIN_REP = 12;
-    const MAX_REP = 15;
+  describe('validateSupersets warmup/cooldown logic', () => {
+    it('should throw error if superset is both warmup and cooldown', () => {
+      const trainingComponent = generateTrainingComponent({
+        id: 'c1',
+        supersets: [
+          generateSuperset({
+            warmup: true,
+            cooldown: true,
+            exercises: [generateTrainingExercise({ id: 'e1' })],
+          }),
+        ],
+      });
 
+      expect(() =>
+        service.validateSupersets(trainingComponent, trainingComponent, data),
+      ).toThrow('Superset 1 cannot be both warmup and cooldown');
+    });
+
+    it('should throw error if warmup superset comes after non-warmup superset', () => {
+      const trainingComponent = generateTrainingComponent({
+        id: 'c1',
+        supersets: [
+          generateSuperset({
+            exercises: [generateTrainingExercise({ id: 'e1' })],
+          }),
+          generateSuperset({
+            warmup: true,
+            exercises: [generateTrainingExercise({ id: 'e2' })],
+          }),
+        ],
+      });
+
+      expect(() =>
+        service.validateSupersets(trainingComponent, trainingComponent, data),
+      ).toThrow('Warmup supersets must be at the beginning');
+    });
+
+    it('should throw error if cooldown superset comes before non-cooldown superset', () => {
+      const trainingComponent = generateTrainingComponent({
+        id: 'c1',
+        supersets: [
+          generateSuperset({
+            cooldown: true,
+            exercises: [generateTrainingExercise({ id: 'e1' })],
+          }),
+          generateSuperset({
+            exercises: [generateTrainingExercise({ id: 'e2' })],
+          }),
+        ],
+      });
+
+      expect(() =>
+        service.validateSupersets(trainingComponent, trainingComponent, data),
+      ).toThrow('Cooldown supersets must be at the end');
+    });
+
+    it('should allow warmup supersets only at the beginning', () => {
+      const trainingComponent = generateTrainingComponent({
+        id: 'c1',
+        supersets: [
+          generateSuperset({
+            warmup: true,
+            exercises: [generateTrainingExercise({ id: 'e1' })],
+          }),
+          generateSuperset({
+            warmup: true,
+            exercises: [generateTrainingExercise({ id: 'e2' })],
+          }),
+          generateSuperset({
+            exercises: [generateTrainingExercise({ id: 'e3' })],
+          }),
+        ],
+      });
+
+      expect(() =>
+        service.validateSupersets(trainingComponent, trainingComponent, data),
+      ).not.toThrow();
+    });
+
+    it('should allow cooldown supersets only at the end', () => {
+      const trainingComponent = generateTrainingComponent({
+        id: 'c1',
+        supersets: [
+          generateSuperset({
+            exercises: [generateTrainingExercise({ id: 'e1' })],
+          }),
+          generateSuperset({
+            cooldown: true,
+            exercises: [generateTrainingExercise({ id: 'e2' })],
+          }),
+          generateSuperset({
+            cooldown: true,
+            exercises: [generateTrainingExercise({ id: 'e3' })],
+          }),
+        ],
+      });
+
+      expect(() =>
+        service.validateSupersets(trainingComponent, trainingComponent, data),
+      ).not.toThrow();
+    });
+
+    it('should allow warmup, normal, then cooldown sequence', () => {
+      const trainingComponent = generateTrainingComponent({
+        id: 'c1',
+        supersets: [
+          generateSuperset({
+            warmup: true,
+            exercises: [generateTrainingExercise({ id: 'e1' })],
+          }),
+          generateSuperset({
+            exercises: [generateTrainingExercise({ id: 'e2' })],
+          }),
+          generateSuperset({
+            cooldown: true,
+            exercises: [generateTrainingExercise({ id: 'e3' })],
+          }),
+        ],
+      });
+
+      expect(() =>
+        service.validateSupersets(trainingComponent, trainingComponent, data),
+      ).not.toThrow();
+    });
+
+    it('should allow single superset to be warmup', () => {
+      const trainingComponent = generateTrainingComponent({
+        id: 'c1',
+        supersets: [
+          generateSuperset({
+            warmup: true,
+            exercises: [generateTrainingExercise({ id: 'e1' })],
+          }),
+        ],
+      });
+
+      expect(() =>
+        service.validateSupersets(trainingComponent, trainingComponent, data),
+      ).not.toThrow();
+    });
+
+    it('should allow single superset to be cooldown', () => {
+      const trainingComponent = generateTrainingComponent({
+        id: 'c1',
+        supersets: [
+          generateSuperset({
+            cooldown: true,
+            exercises: [generateTrainingExercise({ id: 'e1' })],
+          }),
+        ],
+      });
+
+      expect(() =>
+        service.validateSupersets(trainingComponent, trainingComponent, data),
+      ).not.toThrow();
+    });
+
+    it('should allow only normal supersets (no warmup or cooldown)', () => {
+      const trainingComponent = generateTrainingComponent({
+        id: 'c1',
+        supersets: [
+          generateSuperset({
+            exercises: [generateTrainingExercise({ id: 'e1' })],
+          }),
+          generateSuperset({
+            exercises: [generateTrainingExercise({ id: 'e2' })],
+          }),
+        ],
+      });
+
+      expect(() =>
+        service.validateSupersets(trainingComponent, trainingComponent, data),
+      ).not.toThrow();
+    });
+  });
+
+  describe('validateSupersets with methods', () => {
     const trainingComponent = generateTrainingComponent({
       id: 'c1',
-      methodId: 'm1',
       supersets: [
         generateSuperset({
           exercises: [
             generateTrainingExercise({
               id: 'e1',
-              sets: [generateExerciseSet(1, { reps: 10, loadKg: 50 })],
+              methodId: 'm1',
+              sets: [
+                generateExerciseSet(1, {
+                  reps: 4,
+                  loadKg: 50,
+                  tempo: '4:1:3:0',
+                  recTime: 50,
+                }),
+              ],
             }),
           ],
         }),
       ],
     });
 
-    const methods: Method[] = [
-      {
-        id: 'm1',
-        name: 'Method1',
-        ability: 'Ability1',
-        attributes: [{ field: 'reps', name: '', min: MIN_REP, max: MAX_REP }],
-        componentId: 'strength',
-        intensity: '100%',
-        tempo: '1',
-        recovery: '60',
-        repetition: '10',
-        set: '3',
-      },
-      {
-        id: 'm2',
-        name: 'Method2',
-        ability: 'Ability2',
-        attributes: [{ field: 'reps', name: '', min: 5, max: 12 }],
-        componentId: 'strength',
-        intensity: '100%',
-        tempo: '1',
-        recovery: '60',
-        repetition: '10',
-        set: '3',
-      },
-    ];
-
-    it('should not throw error if no method is on training component', () => {
-      const copyTrainingComponent = { ...trainingComponent };
-      copyTrainingComponent.methodId = undefined;
+    it('should not throw error if no method is on training exercise', () => {
+      const copyTrainingComponent = structuredClone(trainingComponent);
+      copyTrainingComponent.supersets[0].exercises[0].methodId = undefined;
 
       expect(() =>
         service.validateSupersets(
           copyTrainingComponent,
           copyTrainingComponent,
-          { ...data, methods },
+          data,
         ),
       ).not.toThrow(); // If no error is thrown, the test passes
     });
 
     it('should throw error if invalid method is provided', () => {
-      const copyTrainingComponent = { ...trainingComponent };
-      copyTrainingComponent.methodId = 'invalidMethodId';
+      const copyTrainingComponent = structuredClone(trainingComponent);
+      copyTrainingComponent.supersets[0].exercises[0].methodId =
+        'invalidMethodId';
 
       expect(() => {
         service.validateSupersets(
           copyTrainingComponent,
           copyTrainingComponent,
-          { ...data, methods },
+          data,
         );
-      }).toThrow('Method not found for training component');
+      }).toThrow('Method not found');
     });
 
     it('should throw error if attribute value is out of range', () => {
       expect(() => {
-        service.validateSupersets(trainingComponent, trainingComponent, {
-          ...data,
-          methods,
-        });
-      }).toThrow(`Value for reps cannot be less than ${MIN_REP}`);
-    });
-
-    it('should successfully validate exercise values', () => {
-      const copyTrainingComponent = { ...trainingComponent };
-      copyTrainingComponent.methodId = 'm2';
-
-      expect(() =>
-        service.validateSupersets(
-          copyTrainingComponent,
-          copyTrainingComponent,
-          { ...data, methods },
-        ),
-      ).not.toThrow(); // If no error is thrown, the test passes
+        service.validateSupersets(trainingComponent, trainingComponent, data);
+      }).toThrow(
+        'Number of sets cannot be less than 3 for method Method1 (and 3 more errors)',
+      );
     });
   });
 

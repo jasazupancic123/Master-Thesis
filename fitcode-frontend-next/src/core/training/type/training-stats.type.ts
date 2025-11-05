@@ -1,4 +1,4 @@
-import type { Component } from '@/core/component/type/component.type';
+import type { Component } from '@/core/exercise/type/component.type';
 
 export type TrainingComponentStats = {
   componentId: string;

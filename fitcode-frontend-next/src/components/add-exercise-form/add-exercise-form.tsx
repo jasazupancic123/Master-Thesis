@@ -9,15 +9,9 @@ import useComponentFilter from './hooks/use-component-filter';
 import useExerciseFormFilters from './hooks/use-filters';
 import SelectedExercisesList from './selected-exercises-list';
 import { theme } from '@/app/style';
-import type { Component } from '@/core/component/type/component.type';
-import { core } from '@/core/core.service';
-import {
-  COOLDOWN_ID,
-  WARMUP_ID,
-} from '@/core/training/const/warmup-cooldown.const';
-import { ComponentIds } from '@/core/training/enum/component-ids.enum';
+import { Components } from '@/core/exercise/constant/components.constant';
+import type { Component } from '@/core/exercise/type/component.type';
 import { lib } from '@/lib';
-import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 import MenuItemsList from '@/ui/menu-items-list';
@@ -34,23 +28,21 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
   } = props;
 
   const screenSize = useScreenSize();
-
-  const { components } = useMain();
-
   const { pagination, setPagination } = useTrainerDayView();
 
   const {
     selectedComponent,
     setSelectedComponent,
-    filterComponents,
-    leafComponents,
     selectedComponentsIds,
     setSelectedComponentsIds,
     selectedRootComponentId,
     anchorElLeaf,
     openLeafMenu,
-    handleClickLeaf,
     handleCloseLeaf,
+    leafComponents,
+    handleClickLeaf,
+    computeWholeComponentId,
+    computeWholeTree,
   } = useComponentFilter();
 
   const {
@@ -67,29 +59,37 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
     selectedComponent
   );
 
+  const allComponents = lib.common.tree.computeAllItemsAsArray(
+    Components,
+    'options'
+  );
+
+  // root field,
+  const rootField = selectedComponent ? selectedComponent.field : component.id;
+  const root = lib.common.tree.findNode(
+    rootField,
+    Components,
+    'field',
+    'options'
+  );
+
   return (
     <Box width="100%" display="flex" flexDirection="column" alignItems="center">
       <Box sx={{ py: 1, width: '100%', mx: 'auto', position: 'relative' }}>
         <ExerciseChips
           noSelectionLabel="All"
-          components={core.component.tree(
-            components.filter(
-              (c) =>
-                ![WARMUP_ID, COOLDOWN_ID, ComponentIds.COMPETITION].includes(
-                  c.id
-                )
-            )
-          )}
           selected={selectedComponent}
           setSelected={(component) =>
             setSelectedComponent(component as Component)
           }
-          dissableNoSelection
+          disableNoSelection
           bgColor={theme.palette.background.default}
           primaryColor={theme.palette.primary.main}
           gap={screenSize.isReallySmall ? 1.5 : 3.5}
+          disabledComponents={['other', 'competition']}
         />
       </Box>
+
       <Box
         width="100%"
         display="flex"
@@ -98,56 +98,60 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
         gap={1}
         flexWrap="wrap"
       >
-        {filterComponents.map((c) => {
-          const numOfSelected = selectedComponentsIds.filter((id) =>
-            c.children.some((child) => child.id === id)
-          ).length;
+        {root?.options &&
+          root.options.map((child) => {
+            const isSelected = selectedRootComponentId === child.field;
 
-          const children = lib.common.tree.fromArray(components, {
-            rootId: c.id,
-            idPropertyName: 'id',
-            parentIdPropertyName: 'parentId',
-            childrenPropertyName: 'children',
-          });
+            const leafes = lib.common.tree.getLeafesFromRootId([child], {
+              rootId: child.field,
+              idPropertyName: 'field',
+              childrenPropertyName: 'options',
+            });
 
-          const isSelected =
-            children.length === 0
-              ? selectedComponentsIds.includes(c.id)
-              : numOfSelected === children.length;
+            const numLeafesSelected = leafes.filter((leaf) => {
+              const tree = computeWholeTree(leaf, allComponents);
 
-          return (
-            <Button
-              key={c.id}
-              variant="contained"
-              disableElevation
-              onClick={(e) => handleClickLeaf(e, c.id)}
-              endIcon={
-                selectedRootComponentId === c.id ? (
-                  <KeyboardArrowUp />
-                ) : (
-                  <KeyboardArrowDown />
-                )
-              }
-              sx={
-                isSelected
-                  ? {
-                      py: 0.5,
-                      mx: screenSize.isMobile ? 'auto' : 0,
-                      backgroundColor: theme.palette.primary.main,
-                      color: theme.palette.text.secondary,
-                    }
-                  : {
-                      py: 0.5,
-                      mx: screenSize.isMobile ? 'auto' : 0,
-                      backgroundColor: theme.palette.background.dark,
-                      color: theme.palette.text.primary,
-                    }
-              }
-            >
-              {`${c.name}${numOfSelected ? ` (${numOfSelected})` : ''}`}
-            </Button>
-          );
-        })}
+              const computedId = computeWholeComponentId(tree);
+
+              if (!computedId) return false;
+
+              return selectedComponentsIds.includes(computedId);
+            }).length;
+
+            const allLeafesSelected = numLeafesSelected === leafes.length;
+
+            return (
+              <Button
+                key={child.field}
+                variant="contained"
+                disableElevation
+                onClick={(e) => handleClickLeaf(e, child.field)}
+                endIcon={
+                  isSelected ? <KeyboardArrowUp /> : <KeyboardArrowDown />
+                }
+                sx={
+                  allLeafesSelected
+                    ? {
+                        py: 0.5,
+                        mx: screenSize.isMobile ? 'auto' : 0,
+                        backgroundColor: theme.palette.primary.main,
+                        color: theme.palette.text.secondary,
+                      }
+                    : {
+                        py: 0.5,
+                        mx: screenSize.isMobile ? 'auto' : 0,
+                        backgroundColor: theme.palette.background.dark,
+                        color: theme.palette.text.primary,
+                      }
+                }
+              >
+                {child.name}{' '}
+                {numLeafesSelected > 0 &&
+                  numLeafesSelected !== leafes.length &&
+                  `(${numLeafesSelected}/${leafes.length})`}
+              </Button>
+            );
+          })}
       </Box>
 
       <Box
@@ -180,49 +184,63 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
               size="small"
               variant="contained"
               sx={{ my: 2 }}
-              onClick={() => {
-                handleAddExercises();
-              }}
+              onClick={() => handleAddExercises()}
             >
               Add
             </Button>
           </Box>
-
-          {selectedRootComponentId && (
-            <MenuItemsList<Component>
-              anchorEl={anchorElLeaf}
-              open={openLeafMenu}
-              items={leafComponents}
-              idPropertyName="id"
-              valuePropertyName="id"
-              namePropertyName="name"
-              onClose={handleCloseLeaf}
-              anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-              transformOrigin={{ vertical: 'top', horizontal: 'center' }}
-              onMenuItemClick={(e, id) => {
-                if (selectedComponentsIds.includes(id)) {
-                  setSelectedComponentsIds((prev) =>
-                    prev.filter((componentId) => componentId !== id)
-                  );
-                } else {
-                  setSelectedComponentsIds((prev) => [...prev, id]);
-                }
-              }}
-              menuItemsSx={(cId) => {
-                return selectedComponentsIds.includes(cId)
-                  ? {
-                      backgroundColor: theme.palette.primary.main,
-                      color: theme.palette.text.secondary,
-                      fontWeight: 500,
-                      '&:hover': {
-                        backgroundColor: theme.palette.primary.main,
-                      },
-                    }
-                  : {};
-              }}
-            />
-          )}
         </Box>
+
+        {selectedRootComponentId && (
+          <MenuItemsList<Component>
+            anchorEl={anchorElLeaf}
+            open={openLeafMenu}
+            items={leafComponents}
+            idPropertyName="field"
+            valuePropertyName="field"
+            namePropertyName="name"
+            onClose={handleCloseLeaf}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            transformOrigin={{ vertical: 'top', horizontal: 'center' }}
+            onMenuItemClick={(e, item) => {
+              const foundItem = allComponents.find((i) => i === item);
+
+              if (!foundItem) return;
+
+              const tree = computeWholeTree(foundItem, allComponents);
+
+              const computedId = computeWholeComponentId(tree);
+
+              if (!computedId) return;
+
+              if (selectedComponentsIds.includes(computedId)) {
+                setSelectedComponentsIds((prev) =>
+                  prev.filter((componentId) => componentId !== computedId)
+                );
+              } else {
+                setSelectedComponentsIds((prev) => [...prev, computedId]);
+              }
+            }}
+            menuItemsSx={(c) => {
+              return selectedComponentsIds.some((i) => {
+                const tree = computeWholeTree(c, allComponents);
+
+                const computedId = computeWholeComponentId(tree);
+
+                return computedId === i;
+              })
+                ? {
+                    backgroundColor: theme.palette.primary.main,
+                    color: theme.palette.text.secondary,
+                    fontWeight: 500,
+                    '&:hover': {
+                      backgroundColor: theme.palette.primary.main,
+                    },
+                  }
+                : {};
+            }}
+          />
+        )}
 
         <Box
           width="40%"

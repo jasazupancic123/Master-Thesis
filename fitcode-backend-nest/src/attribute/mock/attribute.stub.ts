@@ -1,4 +1,4 @@
-import { AttributeType } from '@src/common/enum/attribute-type.enum';
+import { AttributeType } from '@src/attribute/enum/attribute-type.enum';
 import {
   generateRandomName,
   generateRandomString,

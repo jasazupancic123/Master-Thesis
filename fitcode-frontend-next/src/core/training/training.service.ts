@@ -1,38 +1,16 @@
 import type { AuthUser } from '../auth/type/user.type';
-import type { Component } from '../component/type/component.type';
+import type { Component } from '../exercise/type/component.type';
 import type { Exercise } from '../exercise/type/exercise.type';
 import type { Group } from '../group/type/group.type';
 import type { Institution } from '../institution/type/institution.type';
-import type { Method } from '../method/type/method.type';
 import type { Training } from './type/training.type';
 import type { TrainingReport } from './type/training-report.type';
 
 export class TrainingService {
   static mapData<T extends Training>(
     item: T,
-    data: {
-      components?: Component[];
-      exercises?: Exercise[];
-      methods?: Method[];
-    }
+    data: { exercises?: Exercise[] }
   ) {
-    if (data.methods)
-      for (const tc of item.components)
-        tc.method = data.methods.find((m) => m.id === tc.methodId);
-
-    if (data.components) {
-      for (const tc of item.components)
-        tc.component = data.components.find((c) => c.id === tc.id);
-
-      item.warmup.component = data.components.find(
-        (c) => c.id === item.warmup.id
-      );
-
-      item.cooldown.component = data.components.find(
-        (c) => c.id === item.cooldown.id
-      );
-    }
-
     if (data.exercises) {
       for (const tc of item.components) {
         for (const s of tc.supersets)
@@ -44,14 +22,6 @@ export class TrainingService {
             for (const e of s.exercises)
               e.exercise = data.exercises.find(({ id }) => id === e.id);
       }
-
-      for (const s of item.warmup.supersets)
-        for (const e of s.exercises)
-          e.exercise = data.exercises.find(({ id }) => id === e.id);
-
-      for (const s of item.cooldown.supersets)
-        for (const e of s.exercises)
-          e.exercise = data.exercises.find(({ id }) => id === e.id);
     }
 
     return item;
@@ -85,7 +55,7 @@ export class TrainingService {
 
     if (data.components) {
       item.mappedPlannedComponents = item.plannedComponents.map(
-        (pc) => data.components!.find((c) => c.id === pc.componentId)!
+        (pc) => data.components!.find((c) => c.field === pc.componentId)!
       );
     }
 

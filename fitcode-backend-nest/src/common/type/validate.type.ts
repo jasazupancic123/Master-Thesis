@@ -1,9 +1,3 @@
-export type Validate<Response = unknown> = {
-  error: boolean;
-  message?: string;
-  data?: Response;
-};
-
 export type ValidateError<T = unknown> = {
   field: keyof T;
   message: string;

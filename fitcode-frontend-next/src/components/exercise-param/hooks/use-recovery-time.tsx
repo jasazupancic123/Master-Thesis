@@ -2,7 +2,6 @@ import dayjs from 'dayjs';
 import { useEffect } from 'react';
 
 import { ExerciseParamFieldEnum } from '@/core/exercise/enum/exercise-param-field.enum';
-import { lib } from '@/lib';
 import { STRING_CONST } from '@/lib/common/const/string.const';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useTraining } from '@/store/training.provider';
@@ -15,8 +14,7 @@ export default function useRecoveryTime(
   trainingInProgressSecondaryItem?: boolean
 ) {
   const { trainingInProgress } = useTraining() || {};
-  const { selectedExercise, setIndex, audioEnabled } =
-    useTrainingInProgress() || {};
+  const { selectedExercise, setIndex } = useTrainingInProgress() || {};
 
   const isRecTime = selected === ExerciseParamFieldEnum.REC_TIME;
 
@@ -52,9 +50,7 @@ export default function useRecoveryTime(
     const lastSetCompletedAt = lastCompletedSet.timestamp;
 
     // here update every second and every second decrease value by 1 until 0
-    let intervalId: NodeJS.Timeout;
-
-    intervalId = setInterval(() => {
+    const intervalId: NodeJS.Timeout = setInterval(() => {
       setValue(() => {
         const elapsedSinceLastSet = Math.max(
           0,
@@ -66,21 +62,6 @@ export default function useRecoveryTime(
           (initValue as number) - elapsedSinceLastSet
         );
 
-        if (audioEnabled) {
-          if (remaining === 22) {
-            const indexOfMinus =
-              selectedExercise.exercise?.name.indexOf('-') || -1;
-
-            const exerciseName = selectedExercise.exercise?.name
-              ? selectedExercise.exercise?.name.substring(0, indexOfMinus)
-              : 'the exercise';
-
-            const text = '20 seconds remaining for ' + exerciseName;
-
-            lib.common.textToSpeech.speak(text);
-          }
-        }
-
         if (remaining <= 0) return STRING_CONST.doIt;
 
         return remaining;
@@ -90,5 +71,5 @@ export default function useRecoveryTime(
     return () => {
       clearInterval(intervalId);
     };
-  }, [isRecTime, selectedExercise, setIndex, audioEnabled]);
+  }, [isRecTime, selectedExercise, setIndex]);
 }

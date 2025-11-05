@@ -32,7 +32,6 @@ export default function AthleteTrainingCard({ training }: Props) {
   const { selectedComponent, setSelectedComponent } =
     useAthleteTrainingCardComponents(training);
 
-  const components = core.training.getComponents(training);
   const isActive = core.training.isActive(training);
 
   return (
@@ -131,7 +130,7 @@ export default function AthleteTrainingCard({ training }: Props) {
         {/* Training components */}
         <AthleteTrainingComponents
           training={training}
-          components={components}
+          components={training.components}
           selectedComponent={selectedComponent}
           setSelectedComponent={setSelectedComponent}
           showSupersets={showSupersets}
@@ -154,9 +153,9 @@ export default function AthleteTrainingCard({ training }: Props) {
             <IconButton
               sx={{ p: 0, m: 0 }}
               onClick={() => {
-                if (!selectedComponent && components.length) {
+                if (!selectedComponent && training.components.length) {
                   setShowSupersets(true);
-                  setSelectedComponent(components[0]);
+                  setSelectedComponent(training.components[0]);
                 } else {
                   setShowSupersets(false);
                   setTimeout(() => {

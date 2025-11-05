@@ -21,12 +21,7 @@ import useTrainerCycleViewCycles from './hooks/use-cycles';
 import useTrainerCycleViewSticky from './hooks/use-sticky';
 import useTrainingCycleViewTargets from './hooks/use-targets';
 import TrainingWeek from '@/components/training-week/training-week';
-import type { Component } from '@/core/component/type/component.type';
-import { core } from '@/core/core.service';
-import {
-  COOLDOWN_ID,
-  WARMUP_ID,
-} from '@/core/training/const/warmup-cooldown.const';
+import type { Component } from '@/core/exercise/type/component.type';
 import { TrainingController } from '@/core/training/training.controller';
 import { lib } from '@/lib';
 import { useGroup } from '@/store/group.provider';
@@ -34,7 +29,7 @@ import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 export default function TrainerCycleView() {
-  const { components, exercises: allExercises, methods } = useMain();
+  const { exercises: allExercises } = useMain();
 
   const { group, cycle, setCycle, setTrainings } = useGroup();
 
@@ -134,11 +129,6 @@ export default function TrainerCycleView() {
           }}
         >
           <ExerciseChips
-            components={core.component.tree(
-              components.filter(
-                (c) => c.id !== WARMUP_ID && c.id !== COOLDOWN_ID
-              )
-            )}
             selected={selectedComponents}
             bgColor={theme.palette.background.default}
             primaryColor={theme.palette.primary.main}
@@ -149,6 +139,7 @@ export default function TrainerCycleView() {
             selectedTargets={selectedTargets}
             setSelectedTargets={setSelectedTargets}
             gap={screenSize.isReallySmall ? 1.5 : 3.5}
+            disabledComponents={['other']}
           />
         </Box>
       </Box>
@@ -192,12 +183,9 @@ export default function TrainerCycleView() {
               </Typography>
             ))}
           </Box>
+
           {/* Training weeks */}
-          <Stack
-            sx={{
-              backgroundColor: theme.palette.background.dark,
-            }}
-          >
+          <Stack sx={{ backgroundColor: theme.palette.background.dark }}>
             {lib.common.date.weeks(cycle.from, cycle.to).map((week, i) => (
               <Fragment key={i}>
                 <TrainingWeek
@@ -213,11 +201,9 @@ export default function TrainerCycleView() {
                       { trainingId, ...input },
                       {
                         router,
-                        components,
                         setTrainings,
                         exercises: allExercises,
                         selectedTargets,
-                        methods,
                       }
                     );
                   }}
@@ -225,13 +211,7 @@ export default function TrainerCycleView() {
                     handleDeleteTrainingComponent(
                       controller,
                       { trainingId, componentId },
-                      {
-                        router,
-                        setTrainings,
-                        components,
-                        exercises: allExercises,
-                        methods,
-                      }
+                      { router, setTrainings, exercises: allExercises }
                     )
                   }
                   selectedTargets={selectedTargets}

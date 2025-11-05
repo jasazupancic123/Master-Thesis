@@ -2,9 +2,9 @@ import { BadRequestException } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 
+import { AttributeType } from '@src/attribute/enum/attribute-type.enum';
 import { CacheManagerModule } from '@src/cache-manager/cache-manager.module';
 import { CommonModule } from '@src/common/common.module';
-import { AttributeType } from '@src/common/enum/attribute-type.enum';
 import { validationSchema } from '@src/config/environment-validation-schema';
 import { FirebaseModule } from '@src/firebase/firebase.module';
 

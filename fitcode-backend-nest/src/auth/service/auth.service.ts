@@ -100,8 +100,7 @@ export class AuthService {
       const jwtSecret = this.common.env.getKey('JWT_SECRET');
       const payload = jwt.verify(token, jwtSecret) as { token: string };
       return payload.token;
-    } catch (e) {
-      this.logger.error('Magic link verification failed', e);
+    } catch {
       throw new BadRequestException('Link expired');
     }
   }

@@ -1,7 +1,33 @@
 import { BadRequestException } from '@nestjs/common';
 import type { WhereFilterOp } from 'firebase-admin/firestore';
 
-export class GenericUtil {}
+import type { ValidateError } from '@src/common/type/validate.type';
+
+export class GenericUtil {
+  /**
+   * Converts the first letter of a string to lowercase.
+   */
+  lowerFirstLetter(str: string): string {
+    if (!str) return str;
+    return str[0].toLowerCase() + str.slice(1);
+  }
+
+  /**
+   * Converts the first letter of a string to uppercase.
+   */
+  upperFirstLetter(str: string): string {
+    if (!str) return str;
+    return str[0].toUpperCase() + str.slice(1);
+  }
+
+  error(errors: ValidateError<any>[]): string {
+    if (!errors.length) return '';
+    return (
+      this.upperFirstLetter(errors[0].message) +
+      (errors.length > 1 ? ` (and ${errors.length - 1} more errors)` : '')
+    );
+  }
+}
 
 export function parseQueryArray(value: string): string[] {
   if (!value) return [];

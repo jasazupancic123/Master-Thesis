@@ -2,36 +2,47 @@ import { TestApp } from '@test/common/utils/app.util';
 import type * as request from 'supertest';
 
 import type { Update } from '@src/common/type/entity.type';
-import type { Component } from '@src/component/entity/component.entity';
-import { generateComponentStub } from '@src/component/mock/component.stub';
 import type { Exercise } from '@src/exercise/entity/exercise.entity';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
-import { FirebaseService } from '@src/firebase/firebase.service';
 import type { Institution } from '@src/institution/entity/institution.entity';
 import { TestDbService } from '@src/test-db/test-db.service';
+
+jest.mock('@src/exercise/constant/components.constant', () => {
+  const {
+    generateComponentStub,
+  } = require('@src/exercise/mock/component.stub');
+
+  const c1 = generateComponentStub({ field: 'c1' });
+  const warmup = generateComponentStub({ field: 'warmup' });
+  const cooldown = generateComponentStub({ field: 'cooldown' });
+
+  return {
+    WARMUP_ID: 'warmup',
+    COOLDOWN_ID: 'cooldown',
+    WARMUP: warmup,
+    COOLDOWN: cooldown,
+    Components: [warmup, c1, cooldown],
+  };
+});
 
 describe('Update Exercise (e2e)', () => {
   let testApp: TestApp;
   let db: TestDbService;
-  let firebase: FirebaseService;
   let exerciseService: ExerciseService;
 
   let exercise: Exercise;
-  let component: Component;
   let institution: Institution;
 
   beforeAll(async () => {
     testApp = await TestApp.init();
     db = testApp.module.get(TestDbService);
-    firebase = testApp.module.get(FirebaseService);
     exerciseService = testApp.module.get(ExerciseService);
 
     institution = await db.institutions.createTest();
-    component = await db.components.create(generateComponentStub());
     exercise = await exerciseService.create(
       global.manager,
-      generateExerciseStub({ componentIds: [component.id] }),
+      generateExerciseStub({ components: ['c1'] }),
     );
   });
 
@@ -77,7 +88,7 @@ describe('Update Exercise (e2e)', () => {
       institution = await db.institutions.createTest();
       exercise = await exerciseService.create(
         global.manager,
-        generateExerciseStub({ componentIds: [component.id] }),
+        generateExerciseStub({ components: ['c1'] }),
       );
     });
 
@@ -130,7 +141,7 @@ describe('Update Exercise (e2e)', () => {
     });
 
     it('should not allow updating componentId', async () => {
-      const updateData = { componentIds: ['new-component-id'] };
+      const updateData = { components: ['new-component-id'] };
       const response = await req(exercise.id, updateData, global.manager.token);
 
       expect(response.status).toBe(400);
@@ -221,7 +232,7 @@ describe('Update Exercise (e2e)', () => {
       await db.exercises.delete(exercise.id);
       exercise = await exerciseService.create(
         global.manager,
-        generateExerciseStub({ componentIds: [component.id] }),
+        generateExerciseStub({ components: ['c1'] }),
       );
     });
 

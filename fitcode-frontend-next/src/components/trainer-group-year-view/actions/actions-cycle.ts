@@ -47,7 +47,7 @@ export async function handleAddCycle(
     from,
     to,
     description,
-    selectedTargets: [],
+    targets: [],
     createdAt: new Date(),
     updatedAt: new Date(),
   };

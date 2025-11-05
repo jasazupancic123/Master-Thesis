@@ -15,7 +15,6 @@ import {
   isBefore,
   isSameDay,
   startOfDay,
-  subMinutes,
 } from 'date-fns';
 import { Timestamp } from 'firebase-admin/firestore';
 
@@ -43,11 +42,6 @@ import {
 import { BatchUpdateOperation } from '@src/common/type/orm.type';
 import { Filter } from '@src/common/type/orm.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
-import { ComponentService } from '@src/component/component.service';
-import {
-  COOLDOWN_COMPONENT_ID,
-  WARMUP_COMPONENT_ID,
-} from '@src/component/constant/warmup-cooldown.constant';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { ExerciseParamService } from '@src/exercise/service/exercise-param.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
@@ -60,7 +54,6 @@ import { INSTITUTION_ATHLETE_EVENT } from '@src/institution/constant/update-inst
 import { Institution } from '@src/institution/entity/institution.entity';
 import { UpdateInstitutionAthleteEvent } from '@src/institution/event/update-institution-athlete.event';
 import { InstitutionService } from '@src/institution/service/institution.service';
-import { MethodService } from '@src/method/service/method.service';
 import { PeriodizationService } from '@src/periodization/periodization.service';
 import { WellnessService } from '@src/profile/service/wellness.service';
 import { TrainingReportService } from '@src/training/service/training-report.service';
@@ -68,7 +61,6 @@ import { WorkloadService } from '@src/training/service/workload.service';
 
 import {
   DURATION_TRAINING_COMPONENT_IN_MIN,
-  DURATION_TRAINING_COMPONENT_WARMUP_COOLDOWN_IN_MIN,
   MAX_NUM_TRAININGS_PER_DAY,
 } from '../constant/training-limits.constant';
 import {
@@ -97,8 +89,6 @@ export class TrainingService implements Permission<Training, Institution> {
     private readonly authService: Wrapper<AuthService>,
     private readonly commonService: CommonService,
     private readonly repository: TrainingRepository,
-    private readonly componentService: ComponentService,
-    private readonly methodService: MethodService,
     private readonly periodizationService: PeriodizationService,
     private readonly wellnessService: WellnessService,
     private readonly trainingPlanService: TrainingPlanService,
@@ -246,63 +236,35 @@ export class TrainingService implements Permission<Training, Institution> {
     // update training times
     let from = input.from;
     const step = DURATION_TRAINING_COMPONENT_IN_MIN;
-
-    const defaultComponentData = {
-      mainSet: MainSet.BLOCK,
-      supersets: [],
-      subgroups: [],
-    };
-
-    const warmup: TrainingComponent = {
-      ...defaultComponentData,
-      id: WARMUP_COMPONENT_ID,
-      from: subMinutes(
-        from,
-        DURATION_TRAINING_COMPONENT_WARMUP_COOLDOWN_IN_MIN,
-      ),
-      to: from,
-    };
-
-    // input components
-    const inputComponents: TrainingComponent[] = [warmup];
-    inputComponents.push(
-      ...input.components.map((c, i) => ({
-        ...defaultComponentData,
+    const inputComponents: TrainingComponent[] = input.components.map(
+      (c, i) => ({
+        mainSet: MainSet.BLOCK,
+        supersets: [],
+        subgroups: [],
         id: c.id,
         from: addMinutes(from, i * step),
         to: addMinutes(from, (i + 1) * step),
-        target: c.target,
-      })),
+        targetId: c.targetId,
+      }),
     );
 
-    const cooldown: TrainingComponent = {
-      ...defaultComponentData,
-      id: COOLDOWN_COMPONENT_ID,
-      from: inputComponents[inputComponents.length - 1].to,
-      to: addMinutes(
-        inputComponents[inputComponents.length - 1].to,
-        DURATION_TRAINING_COMPONENT_WARMUP_COOLDOWN_IN_MIN,
-      ),
-    };
+    const to = inputComponents[inputComponents.length - 1].to;
 
-    inputComponents.push(cooldown);
-    this.validateIsDateInCycle(warmup.from, cycle);
-    this.validateIsDateInFuture(warmup.from);
+    this.validateIsDateInCycle(from, cycle);
+    this.validateIsDateInFuture(from);
     await this.validateOverlapAndMaxLimit(
       user,
       { groupId, cycleId, trainingId: null }, // no trainingId for new training
-      warmup.from,
-      cooldown.to,
+      from,
+      to,
     );
 
-    const components = await this.componentService.findAllFlat();
-    const methods = await this.methodService.findAll();
     const membersIds = group ? group.membersIds : input.membersIds;
 
     this.trainingPlanService.validateTrainingComponents(
       inputComponents,
       membersIds,
-      { components, methods, exercises: [] },
+      { exercises: [] },
     );
 
     const data: Create<Training> = {
@@ -312,26 +274,19 @@ export class TrainingService implements Permission<Training, Institution> {
       cycleId: input.cycleId,
       ownerId: user.uid,
       copiedFromId: input.copiedFromId || null,
-      from: warmup.from,
-      to: cooldown.to,
+      from,
+      to,
       membersIds,
-      warmup,
-      cooldown,
-      components: inputComponents
-        .filter(
-          (c) => c.id !== WARMUP_COMPONENT_ID && c.id !== COOLDOWN_COMPONENT_ID,
-        )
-        .map((c) => ({
-          id: c.id,
-          from: c.from,
-          to: c.to,
-          target: c.target,
-          methodId: c.methodId,
-          copiedFrom: c.copiedFrom,
-          mainSet: c.mainSet,
-          subgroups: [],
-          supersets: [],
-        })),
+      components: inputComponents.map((c) => ({
+        id: c.id,
+        from: c.from,
+        to: c.to,
+        targetId: c.targetId,
+        copiedFrom: c.copiedFrom,
+        mainSet: c.mainSet,
+        subgroups: [],
+        supersets: [],
+      })),
     };
 
     const id = await this.repository.save(data);
@@ -358,12 +313,7 @@ export class TrainingService implements Permission<Training, Institution> {
       return training;
     }
 
-    input.components.unshift(input.warmup);
-    input.components.push(input.cooldown);
-
     // validate components & exercises
-    const components = await this.componentService.findAllFlat();
-    const methods = await this.methodService.findAll();
     const exercises = await this.trainingPlanService.getAllTrainingExercises(
       input.components,
     );
@@ -371,8 +321,6 @@ export class TrainingService implements Permission<Training, Institution> {
     const trainingComponents: TrainingComponent[] = this.trainingPlanService
       .validateTrainingComponents(input.components, training.membersIds, {
         exercises,
-        components,
-        methods,
       })
       // override training times
       .map((c) => {
@@ -380,14 +328,7 @@ export class TrainingService implements Permission<Training, Institution> {
         return { ...c, from: found?.from, to: found?.to };
       });
 
-    const updateTraining: Update<Training> = {
-      warmup: input.warmup,
-      cooldown: input.cooldown,
-      components: trainingComponents.filter(
-        (c) => c.id !== WARMUP_COMPONENT_ID && c.id !== COOLDOWN_COMPONENT_ID,
-      ),
-    };
-
+    const updateTraining: Update<Training> = { components: trainingComponents };
     await this.repository.update(ref.trainingId, updateTraining);
     return { ...training, ...updateTraining };
   }
@@ -399,14 +340,10 @@ export class TrainingService implements Permission<Training, Institution> {
     input: DateRangeDto,
   ) {
     const training = await this.findOneByIdOrFail(user, ref);
+
+    // validate
     this.validateCanEdit(user, training, training.institution);
-
     this.trainingPlanService.findComponentOrFail(training, ref.componentId);
-    if ([WARMUP_COMPONENT_ID, COOLDOWN_COMPONENT_ID].includes(ref.componentId))
-      throw new BadRequestException(
-        'You cannot update warmup and cooldown times',
-      );
-
     this.validateIsDateInFuture(training.from);
     if (isBefore(input.to, input.from))
       throw new BadRequestException('Invalid date range');
@@ -488,14 +425,10 @@ export class TrainingService implements Permission<Training, Institution> {
     this.validateIsDateInFuture(training.from);
 
     // validate components & exercises
-    const components = await this.componentService.findAllFlat();
-    const methods = await this.methodService.findAll();
-
     const from = training.components[training.components.length - 1].to;
     const step = DURATION_TRAINING_COMPONENT_IN_MIN;
 
     const trainingComponents: TrainingComponent[] = [
-      training.warmup,
       ...training.components,
       ...input.map((c, i) => ({
         ...c,
@@ -503,20 +436,10 @@ export class TrainingService implements Permission<Training, Institution> {
         from: addMinutes(from, i * step),
         to: addMinutes(from, (i + 1) * step),
         mainSet: MainSet.BLOCK,
-        methodId: c.methodId,
-        target: c.target,
+        targetId: c.targetId,
         subgroups: [],
         supersets: [],
       })),
-      {
-        ...training.cooldown,
-        from: addMinutes(from, input.length * step),
-        to: addMinutes(
-          from,
-          input.length * step +
-            DURATION_TRAINING_COMPONENT_WARMUP_COOLDOWN_IN_MIN,
-        ),
-      },
     ];
 
     const exercises =
@@ -527,8 +450,6 @@ export class TrainingService implements Permission<Training, Institution> {
     const validTrainingComponents = this.trainingPlanService
       .validateTrainingComponents(trainingComponents, training.membersIds, {
         exercises,
-        components,
-        methods,
       })
       .map((c) => {
         const found = trainingComponents.find((tc) => tc.id === c.id)!;
@@ -537,9 +458,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
     const last = validTrainingComponents[validTrainingComponents.length - 1];
     const query: Update<Training> = {
-      warmup: validTrainingComponents[0],
-      cooldown: last,
-      components: validTrainingComponents.slice(1, -1),
+      components: validTrainingComponents,
       to: last.to,
     };
 
@@ -583,11 +502,6 @@ export class TrainingService implements Permission<Training, Institution> {
   ) {
     const { periodizationType, exerciseIds } = input;
 
-    if ([WARMUP_COMPONENT_ID, COOLDOWN_COMPONENT_ID].includes(ref.componentId))
-      throw new BadRequestException(
-        'You cannot periodize warmup or cooldown components',
-      );
-
     // if base training in the past, throw error
     const baseTraining = await this.findOneByIdOrFail(user, ref);
     if (this.isInPast(startOfDay(baseTraining.from)))
@@ -615,8 +529,8 @@ export class TrainingService implements Permission<Training, Institution> {
       const component = t.components.find((c) => c.id === ref.componentId);
       if (!component) return false;
 
-      if (!baseComponent.target) return true; // no target, return all trainings with that component
-      return component.target?.id === baseComponent.target.id;
+      if (!baseComponent.targetId) return true; // no target, return all trainings with that component
+      return component.targetId === baseComponent.targetId;
     });
 
     // if no subgroup is selected, override all filtered trainings' components with the base component
@@ -677,10 +591,10 @@ export class TrainingService implements Permission<Training, Institution> {
     const athlete = await this.getAthlete(user, userId, training.institution);
     const exercise = await this.exerciseService.findOneByIdOrFail(user, ref);
 
-    const errors = this.exerciseParamService.validateSetValues(exercise, {
-      ...input,
-      setNumber: 1,
-    });
+    const errors = this.exerciseParamService.validateSetValues(
+      { ...input, setNumber: 1 },
+      exercise,
+    );
 
     if (errors.length) throw new BadRequestException(JSON.stringify(errors));
 
@@ -722,10 +636,10 @@ export class TrainingService implements Permission<Training, Institution> {
     const athlete = await this.getAthlete(user, userId, training.institution);
     const exercise = await this.exerciseService.findOneByIdOrFail(user, ref);
 
-    const errors = this.exerciseParamService.validateSetValues(exercise, {
-      ...input,
-      setNumber: ref.setNumber,
-    });
+    const errors = this.exerciseParamService.validateSetValues(
+      { ...input, setNumber: ref.setNumber },
+      exercise,
+    );
 
     if (errors.length) throw new BadRequestException(JSON.stringify(errors));
 
@@ -778,6 +692,7 @@ export class TrainingService implements Permission<Training, Institution> {
           newPrescribedExercises.push({
             id: prescribedExercise.id,
             params: prescribedExercise.params,
+            methodId: prescribedExercise.methodId,
             sets: prescribedExercise.sets.sort(
               (a, b) => a.setNumber - b.setNumber,
             ),
@@ -792,8 +707,7 @@ export class TrainingService implements Permission<Training, Institution> {
         from: trainingComponent.from,
         to: trainingComponent.to,
         copiedFrom: trainingComponent.copiedFrom,
-        target: trainingComponent.target,
-        methodId: trainingComponent.methodId,
+        targetId: trainingComponent.targetId,
         mainSet: trainingComponent.mainSet,
         supersets: newPrescribedSupersets,
         subgroups: [],

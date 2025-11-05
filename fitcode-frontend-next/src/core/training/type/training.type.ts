@@ -20,8 +20,6 @@ export type Training = BaseEntity &
     ownerId: string;
     membersIds: string[];
     copiedFromId?: string;
-    warmup: TrainingComponent;
-    cooldown: TrainingComponent;
     components: TrainingComponent[];
 
     // mapped properties
@@ -38,7 +36,7 @@ export type CreateTraining = Pick<
   components: CreateTrainingComponent[];
 };
 
-export type UpdateTraining = Pick<Training, 'warmup' | 'cooldown'> & {
+export type UpdateTraining = {
   components: UpdateTrainingComponent[];
 };
 

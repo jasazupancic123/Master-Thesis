@@ -1,8 +1,6 @@
 import { TestApp } from '@test/common/utils/app.util';
 
 import type { TestInstitution } from '@src/common/type/entity.type';
-import type { Component } from '@src/component/entity/component.entity';
-import { generateComponentStub } from '@src/component/mock/component.stub';
 import type { Group } from '@src/group/entity/group.entity';
 import { TestDbService } from '@src/test-db/test-db.service';
 import type { Training } from '@src/training/entity/training.entity';
@@ -16,14 +14,24 @@ import {
 } from '@src/training/mock/training.stub';
 import { TrainingService } from '@src/training/service/training.service';
 
+jest.mock('@src/exercise/constant/components.constant', () => {
+  const {
+    generateComponentStub,
+  } = require('@src/exercise/mock/component.stub');
+
+  const c1 = generateComponentStub({ field: 'c1', params: ['reps', 'loadKg'] });
+  const c2 = generateComponentStub({
+    field: 'c2',
+    params: ['dist', 'tempo', 'eff'],
+  });
+
+  return { Components: [c1, c2] };
+});
+
 describe('Update Training (e2e)', () => {
   let testApp: TestApp;
   let db: TestDbService;
-
   let trainingService: TrainingService;
-
-  let component1: Component;
-  let component2: Component;
 
   // first institution
   let institution: TestInstitution;
@@ -32,20 +40,11 @@ describe('Update Training (e2e)', () => {
 
   // other institution
   let otherInstitution: TestInstitution;
-  let otherGroup: Group;
 
   beforeAll(async () => {
     testApp = await TestApp.init();
     db = testApp.module.get(TestDbService);
     trainingService = testApp.module.get(TrainingService);
-
-    component1 = await db.components.create(
-      generateComponentStub({ params: ['reps', 'loadKg'] }),
-    );
-
-    component2 = await db.components.create(
-      generateComponentStub({ params: ['dist', 'tempo', 'eff'] }),
-    );
 
     institution = await db.institutions.createTest();
     group = await db.groups.createTest(institution);
@@ -57,7 +56,7 @@ describe('Update Training (e2e)', () => {
       createRandomManager: true,
     });
 
-    otherGroup = await db.groups.createTest(otherInstitution);
+    await db.groups.createTest(otherInstitution);
   });
 
   afterAll(async () => {
@@ -75,7 +74,7 @@ describe('Update Training (e2e)', () => {
         institutionId: institution.id,
         groupId: group.id,
         cycleId: group.cycles[1].id,
-        components: [generateTrainingComponent({ id: component1.id })],
+        components: [generateTrainingComponent({ id: 'c1' })],
         ...data,
       }),
     );
@@ -141,7 +140,7 @@ describe('Update Training (e2e)', () => {
       const exercise = await db.exercises.createTest({
         name: 'Bilateral Exercise',
         ownerId: global.trainer.uid,
-        componentIds: [component1.id],
+        components: ['c1'],
         isUnilateral: true,
       });
 
@@ -158,7 +157,7 @@ describe('Update Training (e2e)', () => {
         ...training,
         components: [
           generateTrainingComponent({
-            id: component1.id,
+            id: 'c1',
             supersets: [
               generateSuperset({
                 exercises: [

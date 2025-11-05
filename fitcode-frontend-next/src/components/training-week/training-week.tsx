@@ -7,12 +7,9 @@ import React, { useState } from 'react';
 import type { TrainingCycleViewWeekProps } from '../trainer-group-cycle-view/types/type';
 import TrainingWeekDates from './training-week-date';
 import type { Training } from '@/core/training/type/training.type';
-import { useMain } from '@/store/main.provider';
 import MyModal from '@/ui/modal';
 
 export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
-  const { components } = useMain();
-
   const {
     week,
     selected,
@@ -52,7 +49,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
             borderColor: 'background.default',
             backgroundColor: 'background.paper',
             height: '100%',
-            cursor: components.length ? 'pointer' : 'default',
+            cursor: 'pointer',
             borderTopLeftRadius: 8,
             borderBottomLeftRadius: 8,
           }}
@@ -94,9 +91,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
         }}
         onConfirm={() => {
           if (!selectedTraining) return;
-          addTrainingComponent(selectedTraining.id, {
-            components: [],
-          });
+          addTrainingComponent(selectedTraining.id, { components: [] });
           setSelectedTraining(null);
           setOpenAreYouSureModal(false);
         }}

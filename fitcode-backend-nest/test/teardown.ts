@@ -29,8 +29,6 @@ export default async function () {
 
   await Promise.all([
     firebase.deleteCollection(FirestoreCollection.LOCAL_DEV),
-    firebase.deleteCollection(FirestoreCollection.COMPONENT),
-    firebase.deleteCollection(FirestoreCollection.METHOD),
     firebase.deleteCollection(FirestoreCollection.EXERCISE),
     firebase.deleteCollection(FirestoreCollection.INSTITUTION),
     firebase.deleteCollection(FirestoreCollection.WELLNESS),

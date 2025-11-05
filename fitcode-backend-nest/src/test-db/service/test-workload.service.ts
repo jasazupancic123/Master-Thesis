@@ -8,7 +8,6 @@ import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum'
 import { Create, FirestoreEntity, Update } from '@src/common/type/entity.type';
 import { WorkloadRef } from '@src/common/type/firestore.type';
 import { BatchWriteOperation } from '@src/common/type/orm.type';
-import { Component } from '@src/component/entity/component.entity';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import {
   ExerciseParamField,
@@ -50,9 +49,8 @@ export class TestWorkloadService {
   }
 
   async createMany(
-    input: (Create<Omit<WorkloadMeta, 'id' | 'componentId'>> &
+    input: (Create<Omit<WorkloadMeta, 'id'>> &
       Omit<WorkloadValue, 'reps' | 'recTime' | 'timestamp' | 'photoURLs'> & {
-        component: Component;
         prescribed: Partial<ExerciseSet>;
         params?: ExerciseParamField[];
         reps?: number;

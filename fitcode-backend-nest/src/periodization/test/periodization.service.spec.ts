@@ -1,7 +1,7 @@
 import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import { TestPeriodizationUtil } from '@test/common/utils/periodization.util';
-import { addDays } from 'date-fns';
+import { addDays, nextWednesday } from 'date-fns';
 
 import { AttributeModule } from '@src/attribute/attribute.module';
 import { CommonModule } from '@src/common/common.module';
@@ -9,6 +9,7 @@ import type { TrainingComponentRef } from '@src/common/type/firestore.type';
 import { validationSchema } from '@src/config/environment-validation-schema';
 import { ExerciseParamService } from '@src/exercise/service/exercise-param.service';
 import { MAIN_GROUP_PARENT_ID } from '@src/training/constant/main-group-parent-id.constant';
+import type { Training } from '@src/training/entity/training.entity';
 import type { TrainingExercise } from '@src/training/entity/training-exercise.entity';
 import { PeriodizationType } from '@src/training/enum/periodization-type.enum';
 import {
@@ -1114,6 +1115,166 @@ describe('periodize', () => {
             (sg) => sg.id === 'child-sg-1',
           ),
         );
+      }
+    });
+  });
+
+  describe('Warmup / cooldown sets', () => {
+    const baseDay = nextWednesday(new Date());
+
+    const warmup = generateSuperset({
+      warmup: true,
+      exercises: [
+        generateTrainingExercise({
+          id: 'e-wu-cd',
+          sets: [
+            generateExerciseSet(1, { reps: 15, loadKg: 40 }),
+            generateExerciseSet(2, { reps: 15, loadKg: 40 }),
+            generateExerciseSet(3, { reps: 15, loadKg: 40 }),
+          ],
+        }),
+      ],
+    });
+
+    const cooldown = generateSuperset({
+      cooldown: true,
+      exercises: [
+        generateTrainingExercise({
+          id: 'e-wu-cd',
+          sets: [
+            generateExerciseSet(1, { reps: 15, loadKg: 10 }),
+            generateExerciseSet(2, { reps: 15, loadKg: 10 }),
+            generateExerciseSet(3, { reps: 15, loadKg: 10 }),
+          ],
+        }),
+      ],
+    });
+
+    // 3 trainings, each 1 week apart
+    const TRAININGS: Training[] = [
+      generateTrainingStub({
+        ownerId: 'owner',
+        membersIds: [],
+        date: baseDay,
+        components: [
+          generateTrainingComponent({
+            id: 'c1',
+            supersets: [
+              warmup,
+              generateSuperset({
+                exercises: [
+                  generateTrainingExercise({
+                    id: 'e-wu-cd',
+                    sets: [
+                      generateExerciseSet(1, { reps: 10, loadKg: 20 }),
+                      generateExerciseSet(2, { reps: 8, loadKg: 40 }),
+                      generateExerciseSet(3, { reps: 6, loadKg: 60 }),
+                      generateExerciseSet(4, { reps: 12, loadKg: 15 }),
+                    ],
+                  }),
+                ],
+              }),
+              cooldown,
+            ],
+          }),
+        ],
+      }),
+      generateTrainingStub({
+        ownerId: 'owner',
+        membersIds: [],
+        date: addDays(baseDay, 7),
+        components: [
+          generateTrainingComponent({
+            id: 'c1',
+            supersets: [
+              warmup,
+              generateSuperset({
+                exercises: [
+                  generateTrainingExercise({
+                    id: 'e-wu-cd',
+                    sets: [
+                      generateExerciseSet(1, { reps: 10, loadKg: 20 }),
+                      generateExerciseSet(2, { reps: 8, loadKg: 40 }),
+                      generateExerciseSet(3, { reps: 6, loadKg: 60 }),
+                      generateExerciseSet(4, { reps: 12, loadKg: 15 }),
+                    ],
+                  }),
+                ],
+              }),
+              cooldown,
+            ],
+          }),
+        ],
+      }),
+      generateTrainingStub({
+        ownerId: 'owner',
+        membersIds: [],
+        date: addDays(baseDay, 14),
+        components: [
+          generateTrainingComponent({
+            id: 'c1',
+            supersets: [
+              warmup,
+              generateSuperset({
+                exercises: [
+                  generateTrainingExercise({
+                    id: 'e-wu-cd',
+                    sets: [
+                      generateExerciseSet(1, { reps: 10, loadKg: 20 }),
+                      generateExerciseSet(2, { reps: 8, loadKg: 40 }),
+                      generateExerciseSet(3, { reps: 6, loadKg: 60 }),
+                      generateExerciseSet(4, { reps: 12, loadKg: 15 }),
+                    ],
+                  }),
+                ],
+              }),
+              cooldown,
+            ],
+          }),
+        ],
+      }),
+    ];
+
+    it('should not periodize warmup and cooldown sets by default', () => {
+      const periodizationType = PeriodizationType.LINEAR;
+      const strategy = service.getStrategy(periodizationType);
+
+      const periodizeSpy = jest.spyOn(strategy, 'periodize');
+      const result = service.periodize(periodizationType, ref, TRAININGS, [
+        'e-wu-cd',
+      ]);
+
+      expect(periodizeSpy).toHaveBeenCalled();
+      periodizeSpy.mockClear();
+
+      const training = result[0];
+      const supersets = training.components[0].supersets;
+
+      const warmupSets = supersets[0].exercises[0].sets;
+      const mainSets = supersets[1].exercises[0].sets;
+      const cooldownSets = supersets[2].exercises[0].sets;
+
+      for (const set of warmupSets) {
+        expect(set.reps).toBe(15);
+        expect(set.loadKg).toBe(40);
+      }
+
+      for (let i = 0; i < mainSets.length; i++) {
+        const set = mainSets[i];
+        // intensity and volume should be defined for main sets
+        expect(set.reps).toBeDefined();
+        expect(set.loadKg).toBeDefined();
+
+        // should be same as in original training since only one training
+        const originalSet =
+          TRAININGS[0].components[0].supersets[1].exercises[0].sets[i];
+        expect(set.reps).toBe(originalSet.reps);
+        expect(set.loadKg).toBe(originalSet.loadKg);
+      }
+
+      for (const set of cooldownSets) {
+        expect(set.reps).toBe(15);
+        expect(set.loadKg).toBe(10);
       }
     });
   });

@@ -2,9 +2,9 @@ import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.
 import Papa from 'papaparse';
 import toast from 'react-hot-toast';
 
-import type { Component } from '@/core/component/type/component.type';
 import { ExerciseController } from '@/core/exercise/exercise.controller';
 import { ExerciseService } from '@/core/exercise/exercise.service';
+import type { Component } from '@/core/exercise/type/component.type';
 import type {
   CreateExerciseMuscleValues,
   Exercise,
@@ -21,7 +21,6 @@ export function handlePaginateExercises(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   filter: Partial<Record<keyof Exercise, any>>,
   state: {
-    components: Component[];
     exercises: Exercise[];
     pagination: Pagination;
     setFilteredExercises: SetState<Exercise[]>;
@@ -29,20 +28,13 @@ export function handlePaginateExercises(
     search?: string;
   }
 ) {
-  const {
-    components,
-    exercises,
-    pagination,
-    search,
-    setFilteredExercises,
-    setPagination,
-  } = state;
+  const { exercises, pagination, search, setFilteredExercises, setPagination } =
+    state;
 
-  let filtered = ExerciseService.filter(exercises, filter, components);
-
-  const total = filtered.length;
+  let filtered = ExerciseService.filter(exercises, filter);
 
   // paginate
+  const total = filtered.length;
   const pages = Math.max(1, Math.ceil(total / pagination.pageSize));
   const page = Math.min(Math.max(1, pagination.page), pages);
 
@@ -51,11 +43,6 @@ export function handlePaginateExercises(
     pageSize: pagination.pageSize,
     orderBy: { field: 'name', value: 'asc' },
   });
-
-  // populate exercises
-  filtered.map((exercise) =>
-    ExerciseService.mapComponents(exercise, components)
-  );
 
   setFilteredExercises(filtered);
   setPagination((prev) => ({
@@ -71,12 +58,12 @@ export async function handleAddExercise(
   input: Partial<Exercise>,
   state: {
     router: AppRouterInstance;
-    components: Component[];
     component?: Component;
     filteredExercises: Exercise[];
     setFilteredExercises: SetState<Exercise[]>;
     setExercises: SetState<Exercise[]>;
     setExercise: SetState<Partial<Exercise>>;
+    setAllExercises: SetState<Exercise[]>;
     setModal: SetState<{
       add: boolean;
       edit: boolean;
@@ -88,18 +75,18 @@ export async function handleAddExercise(
 ) {
   const {
     router,
-    components,
     component,
     filteredExercises,
     setFilteredExercises,
     setExercises,
+    setAllExercises,
     setExercise,
     setModal,
   } = state;
 
   const controller = ExerciseController.getInstance();
   if (!input.name) return toast.error('Name is required');
-  if (!input.componentIds?.length)
+  if (!input.components?.length)
     return toast.error('Select at least one component to add');
 
   handleApiRequest(
@@ -107,13 +94,12 @@ export async function handleAddExercise(
     () =>
       controller.create({
         name: input.name!,
-        componentIds: input.componentIds!,
+        components: input.components!,
         isUnilateral: input.isUnilateral || false,
         disabled: input.disabled || false,
         imageUrl: input.imageUrl,
         videoUrl: input.videoUrl,
         instruction: input.instruction,
-        categories: input.categories || [],
         equipment: input.equipment || [],
         prescriptions: input.prescriptions || [],
         patterns: input.patterns || [],
@@ -124,26 +110,19 @@ export async function handleAddExercise(
         liftPriorities: input.liftPriorities || [],
       }),
     (exercise) => {
-      const id = exercise.id;
+      const rootComponents = exercise.components.map(
+        (cId) => cId.split(':')[0]
+      );
 
-      const rootComponents = exercise.componentIds!.map((cId) => {
-        const component = components.find((c) => c.id === cId)!;
-        return lib.common.tree.getRoot(component, components);
-      });
+      if (!component || (component && rootComponents.includes(component.field)))
+        setFilteredExercises([...filteredExercises, exercise]);
 
-      if (
-        !component ||
-        (component && rootComponents.map((c) => c.id).includes(component.id))
-      )
-        setFilteredExercises([
-          ...filteredExercises,
-          { ...exercise, id } as Exercise,
-        ]);
-
-      setExercises((prev) => [...prev!, { ...exercise, id } as Exercise]);
-      toast.success('Successfully added exercise');
+      setExercises((prev) => [...prev!, exercise]);
+      setAllExercises((prev) => [...prev!, exercise]);
       setExercise(DEFAULT_EXERCISE);
       setModal((prev) => ({ ...prev, add: false }));
+
+      toast.success('Successfully added exercise');
     },
     undefined,
     'Failed to create exercise'
@@ -155,9 +134,9 @@ export async function handleUpdateExercise(
   input: Partial<Exercise>,
   state: {
     router: AppRouterInstance;
-    components: Component[];
     setFilteredExercises: SetState<Exercise[]>;
     setExercises: SetState<Exercise[]>;
+    setAllExercises: SetState<Exercise[]>;
     setExercise: SetState<Partial<Exercise>>;
     setModal: SetState<{
       add: boolean;
@@ -170,9 +149,9 @@ export async function handleUpdateExercise(
 ) {
   const {
     router,
-    components,
     setFilteredExercises,
     setExercises,
+    setAllExercises,
     setExercise,
     setModal,
   } = state;
@@ -180,7 +159,7 @@ export async function handleUpdateExercise(
   const controller = ExerciseController.getInstance();
 
   if (!input.name) return toast.error('Name is required');
-  if (!input.componentIds?.length)
+  if (!input.components?.length)
     return toast.error('Select at least one component to add');
 
   handleApiRequest(
@@ -188,12 +167,11 @@ export async function handleUpdateExercise(
     () =>
       controller.update(exerciseId, {
         name: input.name!,
-        componentIds: input.componentIds!,
+        components: input.components!,
         imageUrl: input.imageUrl,
         videoUrl: input.videoUrl,
         instruction: input.instruction,
         disabled: input.disabled || false,
-        categories: input.categories || [],
         equipment: input.equipment || [],
         prescriptions: input.prescriptions || [],
         patterns: input.patterns || [],
@@ -204,19 +182,18 @@ export async function handleUpdateExercise(
         liftPriorities: input.liftPriorities || [],
       }),
     (exercise) => {
-      exercise = ExerciseService.mapComponents(exercise, components);
       setExercise(exercise);
 
-      setFilteredExercises((prev) =>
-        prev.map((e) => (e.id === exercise.id ? exercise : e))
-      );
+      function updateExerciseList(exercises: Exercise[]) {
+        return exercises.map((e) => (e.id === exercise.id ? exercise : e));
+      }
 
-      setExercises((prev) =>
-        prev.map((e) => (e.id === exercise.id ? exercise : e))
-      );
+      setFilteredExercises(updateExerciseList);
+      setAllExercises(updateExerciseList);
+      setExercises(updateExerciseList);
 
-      toast.success('Successfully updated exercise');
       setModal((prev) => ({ ...prev, edit: false }));
+      toast.success('Successfully updated exercise');
     },
     undefined,
     'Failed to update exercise'
@@ -229,17 +206,23 @@ export async function handleDeleteExercise(
     router: AppRouterInstance;
     setFilteredExercises: SetState<Exercise[]>;
     setExercises: SetState<Exercise[]>;
+    setAllExercises: SetState<Exercise[]>;
   }
 ) {
-  const { router, setFilteredExercises, setExercises } = state;
+  const { router, setFilteredExercises, setExercises, setAllExercises } = state;
   const controller = ExerciseController.getInstance();
 
   handleApiRequest(
     router,
     () => controller.delete(exerciseId),
     () => {
-      setFilteredExercises((prev) => prev.filter((e) => e.id !== exerciseId));
-      setExercises((prev) => prev.filter((e) => e.id !== exerciseId));
+      function removeExerciseFromList(exercises: Exercise[]) {
+        return exercises.filter((e) => e.id !== exerciseId);
+      }
+
+      setAllExercises(removeExerciseFromList);
+      setFilteredExercises(removeExerciseFromList);
+      setExercises(removeExerciseFromList);
 
       toast.success('Successfully deleted exercise');
     },
@@ -267,7 +250,7 @@ export async function handleExerciseCsvFileUpload(
         case 'videoUrl':
         case 'instruction':
           return value === '' ? undefined : value;
-        case 'componentIds':
+        case 'components':
         case 'categories':
         case 'prescriptions':
         case 'patterns':
@@ -291,11 +274,7 @@ export async function handleExerciseCsvFileUpload(
           updatedAt: new Date(),
           ownerId: '',
           name: e.name || '',
-          componentIds: e.componentIds.map((id) => {
-            // component ids are separated by :, we need only last part
-            const parts = id.split(':').map((p) => p.trim());
-            return parts[parts.length - 1];
-          }),
+          components: e.components || [],
           isUnilateral: e.prescriptions.some((p) =>
             p.toLowerCase().includes('uni')
           )
@@ -305,7 +284,6 @@ export async function handleExerciseCsvFileUpload(
           imageUrl: e.imageUrl,
           videoUrl: e.videoUrl,
           instruction: e.instruction,
-          categories: e.categories || [],
           equipment: e.equipment || [],
           prescriptions: e.prescriptions || [],
           patterns: e.patterns || [],

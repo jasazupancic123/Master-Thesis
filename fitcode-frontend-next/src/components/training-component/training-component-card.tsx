@@ -15,6 +15,7 @@ import {
 } from './actions/actions-selected-exercises';
 import { handleSelectTrainingComponent } from './actions/actions-training-component';
 import CompletedMembersGroup from './completed-members-group';
+import { core } from '@/core/core.service';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
@@ -43,9 +44,12 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
     setExpandedExercisesView,
   } = trainerDayViewContext;
 
+  const selectedComponent = core.training.component.find(trainingComponent.id);
+  const target = core.training.component.findTarget(trainingComponent.targetId);
+
   return (
     <Box display="flex" p={0}>
-      {trainingComponent.component && (
+      {selectedComponent && (
         <Box
           display="flex"
           flexDirection="column"
@@ -77,9 +81,9 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                 );
               }}
             >
-              {trainingComponent.target
-                ? `${trainingComponent.component.name} - ${trainingComponent.target.name}`
-                : trainingComponent.component.name}
+              {target
+                ? `${selectedComponent.name} - ${target.name}`
+                : selectedComponent.name}
             </Typography>
 
             {component?.id === trainingComponent.id && (

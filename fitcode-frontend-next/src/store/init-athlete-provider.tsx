@@ -23,7 +23,6 @@ export default async function InitAthleteProvider({
     const controller = Controller.getInstance();
     const profile = await controller.auth.findMe({ session });
     if (!profile) throw new Error('No profile found');
-    console.log('[AthleteProvider] profile', profile);
 
     if (!lib.firebase.auth.isAthlete(profile.customClaims.role[0]))
       throw new Error('Not an athlete');

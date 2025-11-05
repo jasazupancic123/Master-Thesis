@@ -5,6 +5,6 @@ export const LiftPriority: Attribute[] = [
   { field: 'assistance', name: 'Assistance' },
   { field: 'supplemental', name: 'Supplemental' },
   { field: 'corrective', name: 'Corrective' },
-];
+] as const;
 
 export const LiftPriorityValues = LiftPriority.map((l) => l.field);
