@@ -8,13 +8,13 @@ import { Box, Grid2, Stack, Tooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 
 import SupersetExercise from './superset-exercise';
+import { core } from '@/core/core.service';
 import { MainSet } from '@/core/training/enum/main-set.enum';
 import type { Superset as SupersetClass } from '@/core/training/type/superset.type';
 import { lib } from '@/lib';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
-import { core } from '@/core/core.service';
 
 const WarmupIcon = lib.common.component.getIcon('warmup');
 const CooldownIcon = lib.common.component.getIcon('cooldown');

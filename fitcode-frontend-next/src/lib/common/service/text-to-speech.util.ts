@@ -52,7 +52,6 @@ export class TextToSpeechUtil {
 
   private chooseVoice(opts: SpeakOptions): SpeechSynthesisVoice | undefined {
     const { voiceName, lang } = opts;
-    console.log('voices', this.voices);
     if (voiceName) return this.voices.find((v) => v.name === voiceName);
     if (lang) {
       // Prefer exact lang, else startsWith match (e.g., "en" matches "en-US")
@@ -85,7 +84,6 @@ export class TextToSpeechUtil {
     utter.volume = volume;
 
     const voice = this.chooseVoice(opts);
-    console.log('chosen voice', voice);
     if (voice) utter.voice = voice;
     if (opts.lang) utter.lang = opts.lang;
 
@@ -125,7 +123,6 @@ export class TextToSpeechUtil {
       // Give WebKit a moment so voices/engine settle
       setTimeout(() => {
         try {
-          console.log('trying to speak', utter);
           this.synth?.speak(utter);
         } catch (err) {
           clearTimers();

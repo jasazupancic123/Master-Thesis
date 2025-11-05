@@ -18,7 +18,6 @@ import AthleteTrainingExerciseSets from '../athlete/athlete-training-exercise-se
 import TempoChart from '../charts/tempo/tempo-chart';
 import { updateTrainingExerciseWithAI } from '../training-in-progress/actions/actions-exercise';
 import { finishSet } from '../training-in-progress/actions/actions-exercise-set';
-import { handleAdvanceInSuperset } from '../training-in-progress/actions/actions-superset';
 import FpsText from './fps-text';
 import MovementValidationHeader from './movement-validation-header';
 import {
@@ -520,8 +519,6 @@ export default function MobileMovementValidation(
         recordedRepsRef.current.right,
       ].filter((r) => r !== undefined) as Rep[][];
 
-      console.log('sides', sides);
-
       const updatedExercise = {
         ...selectedExercise,
       } as TrainingExerciseRecording;
@@ -594,10 +591,8 @@ export default function MobileMovementValidation(
 
         if (i === 0) {
           tempoL = getTempoString({ recordedReps: side });
-          console.log('tempoL', tempoL);
         } else if (i === 1) {
           tempoR = getTempoString({ recordedReps: side });
-          console.log('tempoR', tempoR);
         }
 
         i++;
