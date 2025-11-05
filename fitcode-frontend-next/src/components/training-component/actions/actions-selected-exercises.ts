@@ -95,5 +95,7 @@ export const removeSelectedExercisesFromSupersets = (
     ),
   }));
 
-  return supersets.filter((s) => s.exercises.length > 0);
+  return supersets.filter(
+    (s) => s.cooldown || s.warmup || s.exercises.length > 0
+  );
 };
