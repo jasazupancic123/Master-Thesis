@@ -65,9 +65,9 @@ export class TextToSpeechUtil {
       );
     }
     // Fallback to default voice
-    const voiceUri = 'Google US English Male';
+    const voiceLang = 'en-US';
 
-    return this.voices.find((v) => v.voiceURI === voiceUri) || this.voices[0];
+    return this.voices.find((v) => v.lang === voiceLang) || this.voices[0];
   }
 
   /**
