@@ -1,6 +1,5 @@
 import { addMinutes } from 'date-fns';
 
-import { MainSet } from '../enum/main-set.enum';
 import type { TrainingComponent } from '../type/training-component.type';
 import { Components } from '@/core/exercise/constant/components.constant';
 import { Methods } from '@/core/exercise/constant/method.constant';
@@ -18,7 +17,6 @@ export class TrainingComponentUtil {
       to: data?.to || addMinutes(new Date(), 30),
       supersets: data?.supersets || [],
       subgroups: data?.subgroups || [],
-      mainSet: data?.mainSet || MainSet.BLOCK,
       targetId: data?.targetId,
       periodizationType: data?.periodizationType,
       copiedFrom: data?.copiedFrom,

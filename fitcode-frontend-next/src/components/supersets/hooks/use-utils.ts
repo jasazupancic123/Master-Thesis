@@ -6,17 +6,13 @@ import {
 } from '@dnd-kit/core';
 import { useMemo, useState } from 'react';
 
-import { MainSet } from '@/core/training/enum/main-set.enum';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 
 export type SupersetUtilsHook = ReturnType<typeof useSupersetUtils>;
 
 export default function useSupersetUtils() {
-  const { component, selectedSubgroup, supersets } = useTrainerDayView();
+  const { component, supersets } = useTrainerDayView();
   const [openVideoPlayerModal, setOpenVideoPlayerModal] = useState(false);
-
-  const isCircuit =
-    (selectedSubgroup || component)?.mainSet === MainSet.CIRCUIT;
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -44,7 +40,6 @@ export default function useSupersetUtils() {
   }, [supersets, component]);
 
   return {
-    isCircuit,
     openVideoPlayerModal,
     setOpenVideoPlayerModal,
     sensors,

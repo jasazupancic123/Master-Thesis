@@ -1,10 +1,5 @@
 import { IntersectionType } from '@nestjs/mapped-types';
-import {
-  ApiProperty,
-  ApiPropertyOptional,
-  OmitType,
-  PickType,
-} from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, OmitType } from '@nestjs/swagger';
 import { Expose, Transform, Type } from 'class-transformer';
 import {
   IsEnum,
@@ -17,7 +12,6 @@ import {
   ValidateNested,
 } from 'class-validator';
 
-import { IsTempo } from '@src/common/decorator/is-tempo.decorator';
 import { IdEntity } from '@src/common/entity/id.entity';
 
 import { SetStatus } from '../enum/set-status.enum';
@@ -67,6 +61,12 @@ export class WorkloadMeta extends IdEntity {
   @Expose()
   componentId: string;
 
+  @IsInt()
+  @Min(0)
+  @ApiProperty()
+  @Expose()
+  supersetIndex: number;
+
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
@@ -78,12 +78,6 @@ export class WorkloadMeta extends IdEntity {
   @ApiProperty()
   @Expose()
   setNumber: number;
-
-  @IsInt()
-  @Min(0)
-  @ApiProperty()
-  @Expose()
-  supersetIndex: number;
 
   @IsEnum(SetStatus)
   @ApiProperty({ enum: SetStatus })
@@ -111,33 +105,6 @@ export class WorkloadPrimarySide extends ExerciseSetPrimarySide {
   @ApiPropertyOptional()
   @Expose()
   rom?: number; // in cm
-
-  // the following fields are AI diagnostics
-  @IsTempo({ each: true })
-  @IsOptional()
-  @ApiPropertyOptional()
-  @Expose()
-  tempos?: string[]; // tempo for each rep
-
-  @IsNumber({}, { each: true })
-  @Min(0, { each: true })
-  @IsOptional()
-  @ApiPropertyOptional({ type: [Number] })
-  @Expose()
-  roms?: number[]; // range of motion for each rep
-
-  @IsNumber({}, { each: true })
-  @Min(0, { each: true })
-  @IsOptional()
-  @ApiPropertyOptional({ type: [Number] })
-  @Expose()
-  velocities?: number[]; // velocity for each rep
-
-  @IsString({ each: true })
-  @IsOptional()
-  @ApiPropertyOptional({ type: [String] })
-  @Expose()
-  feedback?: string[]; // feedback for each rep
 }
 
 export class WorkloadSecondarySide extends ExerciseSetSecondarySide {
@@ -154,39 +121,11 @@ export class WorkloadSecondarySide extends ExerciseSetSecondarySide {
   @ApiPropertyOptional()
   @Expose()
   romR?: number;
-
-  // the following fields are AI diagnostics
-  @IsTempo({ each: true })
-  @IsOptional()
-  @ApiPropertyOptional()
-  @Expose()
-  temposR?: string[];
-
-  @IsNumber({}, { each: true })
-  @Min(0, { each: true })
-  @IsOptional()
-  @ApiPropertyOptional({ type: Number, isArray: true })
-  @Expose()
-  romsR?: number[];
-
-  @IsNumber({}, { each: true })
-  @Min(0, { each: true })
-  @IsOptional()
-  @ApiPropertyOptional({ type: Number, isArray: true })
-  @Expose()
-  velocitiesR?: number[];
-
-  @IsString({ each: true })
-  @IsOptional()
-  @ApiPropertyOptional({ type: String, isArray: true })
-  @Expose()
-  feedbackR?: string[];
 }
 
 export class WorkloadValue extends IntersectionType(
   WorkloadPrimarySide,
   WorkloadSecondarySide,
-  PickType(ExerciseSet, ['eff', 'recTime', 'recDist', 'time', 'dist'] as const),
 ) {
   @ApiPropertyOptional()
   @IsOptional()

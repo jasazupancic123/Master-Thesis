@@ -101,4 +101,5 @@ export type TrainerDayViewContextProps = {
   addWarmupSuperset: () => void;
   addCooldownSuperset: () => void;
   applyMethod: (method: Method) => void;
+  changeSupersetMainSet: (supersetIndex: number, mainSet: MainSet) => void;
 };

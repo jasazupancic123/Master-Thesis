@@ -2,6 +2,7 @@ import { isSameDay } from 'date-fns';
 import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { unstable_batchedUpdates } from 'react-dom';
 import toast from 'react-hot-toast';
 
 import { useGroup } from './group.provider';
@@ -19,7 +20,7 @@ import type { Exercise } from '@/core/exercise/type/exercise.type';
 import type { Method } from '@/core/exercise/type/method.type';
 import type { Profile } from '@/core/profile/type/user.type';
 import type { WellnessZScore } from '@/core/profile/type/wellness.type';
-import type { MainSet } from '@/core/training/enum/main-set.enum';
+import { MainSet } from '@/core/training/enum/main-set.enum';
 import { TrainingController } from '@/core/training/training.controller';
 import { TrainingService } from '@/core/training/training.service';
 import type { Subgroup } from '@/core/training/type/subgroup.type';
@@ -462,7 +463,11 @@ export function TrainerDayViewProvider(props: Props) {
       );
     else {
       // add warmup superset
-      const newSuperset: Superset = { exercises: [], warmup: true };
+      const newSuperset: Superset = {
+        exercises: [],
+        warmup: true,
+        mainSet: MainSet.CIRCUIT,
+      };
 
       supersets.unshift(newSuperset);
       for (const sg of childrenSubgroups) sg.supersets.unshift(newSuperset);
@@ -487,54 +492,17 @@ export function TrainerDayViewProvider(props: Props) {
       );
     else {
       // add cooldown superset
-      const newSuperset: Superset = { exercises: [], cooldown: true };
+      const newSuperset: Superset = {
+        exercises: [],
+        cooldown: true,
+        mainSet: MainSet.CIRCUIT,
+      };
 
       supersets.push(newSuperset);
       for (const sg of childrenSubgroups) sg.supersets.push(newSuperset);
 
       updateSupersets(supersets, childrenSubgroups);
     }
-  }
-
-  /**
-   * Updates state after modifying supersets in component or subgroup
-   */
-  function updateSupersets(
-    newSupersets: Superset[], // treat as immutable input
-    childrenSubgroups: Subgroup[]
-  ) {
-    if (!component || !training) return;
-
-    // 1) Update the target component (not in place)
-    const nextSubgroups = component.subgroups.map((sg) => {
-      // If this subgroup is the selected one, replace its supersets
-      if (selectedSubgroup && sg.id === selectedSubgroup.id) {
-        return { ...sg, supersets: [...newSupersets] };
-      }
-      // If this subgroup is one of the children we adjusted, replace it by id
-      const child = childrenSubgroups.find((c) => c.id === sg.id);
-      return child ? { ...child, supersets: [...child.supersets] } : sg;
-    });
-
-    const nextComponent: TrainingComponent = !selectedSubgroup
-      ? { ...component, supersets: [...newSupersets], subgroups: nextSubgroups }
-      : { ...component, subgroups: nextSubgroups };
-
-    // 2) Update training.components immutably
-    const nextTraining: Training = {
-      ...training,
-      components: training.components.map((c) =>
-        c.id === nextComponent.id ? nextComponent : c
-      ),
-    };
-
-    // 3) Push all-new references into state
-    setSupersets([...newSupersets]); // new array ref
-    setComponent(nextComponent); // new object ref
-    setTraining(nextTraining); // new object ref
-    setSelectedSubgroup((prev) =>
-      prev ? { ...prev, supersets: [...newSupersets] } : null
-    );
   }
 
   function applyNewMethod(method: Method) {
@@ -566,6 +534,67 @@ export function TrainerDayViewProvider(props: Props) {
       );
 
     updateSupersets(supersets, childrenSubgroups);
+  }
+
+  function changeSupersetMainSet(supersetIndex: number, mainSet: MainSet) {
+    if (!component || !training) return;
+
+    const childrenSubgroups = core.training.subgroup.getChildren(
+      selectedSubgroup || component,
+      component
+    );
+
+    const supersetsCopy = structuredClone(supersets);
+    supersetsCopy[supersetIndex].mainSet = mainSet;
+
+    for (const sg of childrenSubgroups)
+      sg.supersets[supersetIndex].mainSet = mainSet;
+
+    updateSupersets(supersetsCopy, childrenSubgroups);
+  }
+
+  /**
+   * Updates state after modifying supersets in component or subgroup
+   */
+  function updateSupersets(
+    newSupersets: Superset[], // treat as immutable input
+    childrenSubgroups: Subgroup[]
+  ) {
+    if (!component || !training) return;
+
+    const supersets = structuredClone(newSupersets);
+    const newSubgroups = component.subgroups.map((sg) => {
+      // If this subgroup is the selected one, replace its supersets
+      if (selectedSubgroup && sg.id === selectedSubgroup.id)
+        return { ...sg, supersets };
+
+      // If this subgroup is one of the children we adjusted, replace it by id
+      const child = childrenSubgroups.find((c) => c.id === sg.id);
+      return child
+        ? { ...child, supersets: structuredClone(child.supersets) }
+        : sg;
+    });
+
+    const newComponent: TrainingComponent = {
+      ...structuredClone(component),
+      supersets,
+    };
+
+    if (selectedSubgroup) newComponent.subgroups = newSubgroups;
+
+    const newTraining: Training = {
+      ...structuredClone(training),
+      components: training.components.map((c) =>
+        c.id === newComponent.id ? newComponent : c
+      ),
+    };
+
+    unstable_batchedUpdates(() => {
+      setSupersets(supersets);
+      setComponent(newComponent);
+      setTraining(newTraining);
+      setSelectedSubgroup((prev) => (prev ? { ...prev, supersets } : null));
+    });
   }
 
   const value: TrainerDayViewContextProps = {
@@ -609,6 +638,7 @@ export function TrainerDayViewProvider(props: Props) {
     addWarmupSuperset,
     addCooldownSuperset,
     applyMethod: applyNewMethod,
+    changeSupersetMainSet,
   };
 
   return (

@@ -33,8 +33,14 @@ export class ExerciseParamService {
     'loadRmR',
     'loadBw',
     'loadBwR',
-    'tempo',
-    'tempoR',
+    'tempoEcc',
+    'tempoIso',
+    'tempoCon',
+    'tempoIdle',
+    'tempoEccR',
+    'tempoIsoR',
+    'tempoConR',
+    'tempoIdleR',
     'vel',
     'velR',
     'eff',
@@ -53,15 +59,26 @@ export class ExerciseParamService {
     loadRmR: 'loadRm',
     loadBw: 'loadBwR',
     loadBwR: 'loadBw',
-    tempo: 'tempoR',
-    tempoR: 'tempo',
+    tempoEcc: 'tempoEccR',
+    tempoIso: 'tempoIsoR',
+    tempoCon: 'tempoConR',
+    tempoIdle: 'tempoIdleR',
+    tempoEccR: 'tempoEcc',
+    tempoIsoR: 'tempoIso',
+    tempoConR: 'tempoCon',
+    tempoIdleR: 'tempoIdle',
     vel: 'velR',
     velR: 'vel',
-    eff: 'eff',
-    time: 'time',
-    dist: 'dist',
-    recTime: 'recTime',
-    recDist: 'recDist',
+    eff: 'effR',
+    effR: 'eff',
+    time: 'timeR',
+    timeR: 'time',
+    dist: 'distR',
+    distR: 'dist',
+    recTime: 'recTimeR',
+    recTimeR: 'recTime',
+    recDist: 'recDistR',
+    recDistR: 'recDist',
   };
 
   getAttributes(exercise: Exercise): Attribute<ExerciseSet>[] {
@@ -180,24 +197,6 @@ export class ExerciseParamService {
     );
 
     return errors;
-  }
-
-  tempoToSeconds(tempo: number | string | undefined): number {
-    if (tempo === undefined || tempo === null) return 0;
-
-    if (typeof tempo === 'number') {
-      // e.g. 4210 → 4 + 2 + 1 + 0 = 7
-      const digits = tempo.toString().split('').map(Number);
-      return digits.reduce((sum, n) => sum + (isNaN(n) ? 0 : n), 0);
-    }
-
-    if (typeof tempo === 'string') {
-      // e.g. "4.2:1.0:3.5:0.5" → sum = 9.2
-      const parts = tempo.split(':').map((p) => parseFloat(p));
-      return parts.reduce((sum, n) => sum + (isNaN(n) ? 0 : n), 0);
-    }
-
-    return 0;
   }
 
   getLoadField(set: ExerciseSet): ExerciseParamField | null {

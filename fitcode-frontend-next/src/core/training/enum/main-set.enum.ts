@@ -1,4 +1,4 @@
 export enum MainSet {
-  BLOCK = 'Block',
-  CIRCUIT = 'Circuit',
+  BLOCK = 'Block', // complete 1st set of 1st exercise, 1st set of 2nd exercise, ...
+  CIRCUIT = 'Circuit', // complete all sets of 1st exercise, all sets of 2nd exercise, ...
 }

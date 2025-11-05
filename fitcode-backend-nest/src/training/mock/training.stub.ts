@@ -72,7 +72,6 @@ export function generateTrainingComponent(
     from,
     to: data?.to || addHours(from, 1),
     targetId: data?.targetId || null,
-    mainSet: data?.mainSet || MainSet.BLOCK,
     supersets: data?.supersets || [],
     subgroups: data?.subgroups || [],
   };
@@ -83,6 +82,7 @@ export function generateSuperset(data?: Partial<Superset>): Superset {
     exercises: data?.exercises || [],
     warmup: data?.warmup || false,
     cooldown: data?.cooldown || false,
+    mainSet: data?.mainSet || MainSet.BLOCK,
   };
 }
 
@@ -92,7 +92,6 @@ export function generateSubgroup(data?: Partial<Subgroup>): Subgroup {
     name: data?.name || generateRandomName(),
     membersIds: data?.membersIds || [],
     supersets: data?.supersets || [],
-    mainSet: data?.mainSet || MainSet.BLOCK,
     parentId: data?.parentId || null,
   };
 }
@@ -102,7 +101,6 @@ export function generateTrainingExercise(
 ): TrainingExercise {
   return {
     id: data?.id ?? v4(),
-    params: data?.params || [],
     sets: data?.sets || [],
     methodId: data?.methodId,
   };

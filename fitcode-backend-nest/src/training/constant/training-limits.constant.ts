@@ -4,21 +4,15 @@ export const MAX_NUM_TRAININGS_PER_DAY = 2;
 // component limits
 export const DURATION_TRAINING_COMPONENT_IN_MIN = 30;
 
-export const MAX_DURATION_TRAINING_IN_MIN = 240; // 4 hours
-
 export const MAX_NUM_COMPONENTS_IN_TRAINING = 3;
 
 // superset limits
-export const MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT = 4;
-
-export const MAX_NUM_SUPERSETS_IN_CIRCUIT_COMPONENT = 1;
+export const MAX_NUM_SUPERSETS = 8;
 
 // exercise limits
 export const MAX_NUM_EXERCISES_IN_BLOCK_SUPERSET = 4;
 
-export const MAX_NUM_EXERCISES_IN_CIRCUIT_SUPERSET = 16;
-
-export const DEFAULT_NUM_SETS_IN_EXERCISE = 3;
+export const MAX_NUM_EXERCISES_IN_CIRCUIT_SUPERSET = 12;
 
 export const MAX_NUM_SETS_IN_EXERCISE = 10;
 

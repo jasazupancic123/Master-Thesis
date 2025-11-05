@@ -17,7 +17,6 @@ import useSupersetExerciseSortable from './hooks/use-sortable';
 import TrainingExerciseCardContainer from '@/components/training-exercise-card/container';
 import ExerciseMembersInProgress from '@/components/training-exercise-card/exercise-members-in-progress';
 import { core } from '@/core/core.service';
-import { MainSet } from '@/core/training/enum/main-set.enum';
 import type { Superset } from '@/core/training/type/superset.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import { useScreenSize } from '@/store/screen-size.provider';
@@ -51,7 +50,6 @@ export default function SupersetExercise({
   const {
     training,
     component,
-    selectedSubgroup,
     selectedExerciseIds,
     selectedAthlete,
     deleteSupersetExercise,
@@ -65,29 +63,14 @@ export default function SupersetExercise({
 
   if (!component || !training) return null;
 
-  const isCircuit = (selectedSubgroup || component).mainSet === MainSet.CIRCUIT;
-
   return (
     <Grid2
-      size={
-        (selectedSubgroup || component).mainSet === MainSet.CIRCUIT
-          ? screenSize.isDesktop
-            ? 3
-            : screenSize.isSmallerThanLaptop
-              ? 12
-              : 4
-          : screenSize.isSmallerThanLaptop
-            ? 12
-            : { xs: 12 }
-      }
+      id={exercise.id}
+      size={screenSize.isSmallerThanLaptop ? 12 : { xs: 12 }}
       key={exercise.id}
       sx={{
-        mb:
-          (selectedSubgroup || component).mainSet === MainSet.CIRCUIT
-            ? 0
-            : superset.exercises.length - 1 !== exerciseIndex
-              ? 0.4
-              : undefined,
+        width: '99.5%',
+        mb: superset.exercises.length - 1 !== exerciseIndex ? 0.4 : undefined,
       }}
     >
       <Box
@@ -123,9 +106,7 @@ export default function SupersetExercise({
               color={theme.palette.background.lightBorder}
               sx={{ zIndex: 1 }}
             >
-              {isCircuit
-                ? `${exerciseIndex + 1}`
-                : `${supersetIndex + 1}${String.fromCharCode(65 + exerciseIndex)}`}
+              {`${supersetIndex + 1}${String.fromCharCode(65 + exerciseIndex)}`}
             </Typography>
           </Box>
 

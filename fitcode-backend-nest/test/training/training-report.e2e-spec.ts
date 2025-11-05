@@ -8,8 +8,7 @@ import type { Group } from '@src/group/entity/group.entity';
 import { TestDbService } from '@src/test-db/test-db.service';
 import type { ExerciseSet } from '@src/training/entity/exercise-set.entity';
 import type { Training } from '@src/training/entity/training.entity';
-import type { TrainingReport } from '@src/training/entity/training-report.entity';
-import type { TrainingStats } from '@src/training/entity/training-stats.entity';
+import type { PrescribedTrainingStats } from '@src/training/entity/training-stats.entity';
 import { SetStatus } from '@src/training/enum/set-status.enum';
 import {
   generateExerciseSet,
@@ -115,19 +114,28 @@ describe('Training Report (e2e)', () => {
                       generateExerciseSet(1, {
                         reps: 1,
                         dist: 30,
-                        tempo: '2:0:1:0',
+                        tempoEcc: 2,
+                        tempoIso: 2,
+                        tempoCon: 1,
+                        tempoIdle: 0,
                         recTime: 0,
                       }),
                       generateExerciseSet(2, {
                         reps: 1,
                         dist: 30,
-                        tempo: '2:0:1:0',
+                        tempoEcc: 2,
+                        tempoIso: 2,
+                        tempoCon: 1,
+                        tempoIdle: 0,
                         recTime: 0,
                       }),
                       generateExerciseSet(3, {
                         reps: 1,
                         dist: 30,
-                        tempo: '2:0:1:0',
+                        tempoEcc: 2,
+                        tempoIso: 2,
+                        tempoCon: 1,
+                        tempoIdle: 0,
                         recTime: 0,
                       }),
                     ],
@@ -208,16 +216,19 @@ describe('Training Report (e2e)', () => {
     const stats = trainingReportService.getTrainingStats(dummy);
     expect(stats).toEqual({
       plannedComponents: [],
-      totalDuration: 120,
-      totalComponents: 0,
-      totalSupersets: 0,
-      totalExercises: 0,
-      totalSets: 0,
-      totalReps: 0,
-      totalRecTime: 0,
-      totalTit: 0,
-      totalTonnage: 0,
-    } as TrainingReport);
+      duration: 120,
+      components: 0,
+      supersets: 0,
+      exercises: 0,
+      sets: 0,
+      reps: 0,
+      recTime: 0,
+      tut: 0,
+      tonnage: 0,
+      dist: 0,
+      recDist: 0,
+      time: 0,
+    } as PrescribedTrainingStats);
   });
 
   it('should return correct training stats for training with empty exercises', () => {
@@ -273,39 +284,44 @@ describe('Training Report (e2e)', () => {
         { componentId: 'c1', totalSets: 3 },
         { componentId: 'c2', totalSets: 3 },
       ],
-      totalDuration: 120,
-      totalComponents: 2,
-      totalSupersets: 2,
-      totalExercises: 3, // unique
-      totalSets: 6,
-      totalReps: 6,
-      totalRecTime: 0,
-      totalTit: 18, // 6 sets with default 3 seconds per rep tempo
-      totalTonnage: 0,
-    } as TrainingStats);
+      duration: 120,
+      components: 2,
+      supersets: 2,
+      exercises: 3, // unique
+      sets: 6,
+      reps: 6,
+      recTime: 0,
+      tut: 18, // 6 sets with default 3 seconds per rep tempo
+      tonnage: 0,
+      dist: 0,
+      recDist: 0,
+      time: 0,
+    } as PrescribedTrainingStats);
   });
 
   it('should return correct training stats for provided training', () => {
     const stats = trainingReportService.getTrainingStats(training);
-    const totalTonnage = 10 * 10 * 50; // 5000 -> 8 sets of 10 reps with 50 kg
-    const totalActiveTime = 10 * 10 * 3 + 3 * 30 * 1; // 300 + 90 = 390 -> 10 sets of 10 reps with 2010 (3 second) tempo, 3 sets of 30 m distance with 1 second per meter
+    const tonnage = 10 * 10 * 50; // 5000 -> 8 sets of 10 reps with 50 kg
+    const tut = 10 * 10 * 3 + 3 * 1 * 5; // 10 sets of 10 reps with 2010 (3 second) tempo and 3 sets of 1 rep with 5 second tempo
 
     expect(stats).toEqual({
       plannedComponents: [
         { componentId: 'c1', totalSets: 8 },
         { componentId: 'c2', totalSets: 3 },
       ],
-      totalDuration: 120,
-      totalComponents: 2,
-      totalSupersets: 3,
-      totalExercises: 3, // unique
-      totalSets: 11,
-      totalReps: 10 * 10 + 3 * 1, // 99 -> (8 + 2 unilateral) sets of 10 reps, 3 sets of 1 rep (defaults to 1 rep if no `reps` specified)
-      totalRecTime: 8 * 60, // 480 -> 8 sets with 60 sec recovery, 3 sets with 0 sec recovery (only effort based recovery)
-      totalTit: totalActiveTime,
-      totalTonnage,
-      totalDistVol: 3 * 30, // 90 -> 3 sets of 30 m distance
-    } as TrainingStats);
+      duration: 120,
+      components: 2,
+      supersets: 3,
+      exercises: 3, // unique
+      sets: 11,
+      reps: 10 * 10 + 3 * 1, // 99 -> (8 + 2 unilateral) sets of 10 reps, 3 sets of 1 rep (defaults to 1 rep if no `reps` specified)
+      recTime: 8 * 60, // 480 -> 8 sets with 60 sec recovery, 3 sets with 0 sec recovery (only effort based recovery)
+      tut,
+      tonnage,
+      dist: 3 * 30, // 90 -> 3 sets of 30 m distance
+      recDist: 0,
+      time: 0,
+    } as PrescribedTrainingStats);
   });
 
   it('should create new report if it does not exist yet for user in training', async () => {

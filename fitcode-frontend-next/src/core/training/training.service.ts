@@ -1,5 +1,4 @@
 import type { AuthUser } from '../auth/type/user.type';
-import type { Component } from '../exercise/type/component.type';
 import type { Exercise } from '../exercise/type/exercise.type';
 import type { Group } from '../group/type/group.type';
 import type { Institution } from '../institution/type/institution.type';
@@ -37,11 +36,7 @@ export class TrainingService {
 
   static mapReport<T extends TrainingReport>(
     item: T,
-    data: {
-      institutions?: Institution[];
-      groups?: Group[];
-      components?: Component[];
-    }
+    data: { institutions?: Institution[]; groups?: Group[] }
   ): T {
     if (data.institutions)
       item.institution = data.institutions.find(
@@ -51,12 +46,6 @@ export class TrainingService {
     if (data.groups) {
       item.group = data.groups.find((g) => g.id === item.groupId);
       item.cycle = item.group?.cycles.find((c) => c.id === item.cycleId);
-    }
-
-    if (data.components) {
-      item.mappedPlannedComponents = item.plannedComponents.map(
-        (pc) => data.components!.find((c) => c.field === pc.componentId)!
-      );
     }
 
     return item;
