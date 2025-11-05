@@ -10,7 +10,7 @@ import { MAIN_GROUP_PARENT_ID } from '@src/training/constant/main-group-parent-i
 import {
   MAX_NUM_EXERCISES_IN_BLOCK_SUPERSET,
   MAX_NUM_EXERCISES_IN_CIRCUIT_SUPERSET,
-  MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT,
+  MAX_NUM_SUPERSETS,
 } from '@src/training/constant/training-limits.constant';
 import {
   ExerciseParamField,
@@ -223,32 +223,28 @@ export class PeriodizationService {
   }
 
   getAvailableSuperset(item: TrainingComponent | Subgroup): number {
-    // circuit can have max 1 superset and max 32 exercises in it
-    if (item.mainSet === MainSet.CIRCUIT) {
-      if (
-        item.supersets.length &&
-        item.supersets[0].exercises.length <
-          MAX_NUM_EXERCISES_IN_CIRCUIT_SUPERSET
-      )
-        return 0;
+    // find the first superset that still has room for exercises
+    for (let i = 0; i < item.supersets.length; i++) {
+      const superset = item.supersets[i];
+      const maxExercises =
+        superset.mainSet === MainSet.CIRCUIT
+          ? MAX_NUM_EXERCISES_IN_CIRCUIT_SUPERSET
+          : MAX_NUM_EXERCISES_IN_BLOCK_SUPERSET;
 
-      return -1;
+      if (superset.exercises.length < maxExercises) return i;
     }
 
-    // each superset can have max 4 exercises, so find first superset with less than 4 exercises
-    for (let i = 0; i < item.supersets.length; i++)
-      if (
-        item.supersets[i].exercises.length < MAX_NUM_EXERCISES_IN_BLOCK_SUPERSET
-      )
-        return i;
+    // all existing supersets are full — can we create a new one?
+    if (item.supersets.length < MAX_NUM_SUPERSETS) {
+      // use the same mainSet as the last one if available, or default to BLOCK
+      const mainSet =
+        item.supersets[item.supersets.length - 1]?.mainSet ?? MainSet.BLOCK;
 
-    // if all supersets are full, check if we can create a new one (max 8 supersets) and create it
-    if (item.supersets.length < MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT) {
-      item.supersets = [...item.supersets, { exercises: [] }];
-      return item.supersets.length - 1; // return index of the newly created superset
+      item.supersets = [...item.supersets, { mainSet, exercises: [] }];
+      return item.supersets.length - 1;
     }
 
-    // no available superset found, do not create a new one
+    // no available slot found
     return -1;
   }
 

@@ -6,7 +6,7 @@ import {
   ChartsTooltip,
   PieChart,
 } from '@mui/x-charts';
-import React, { useState } from 'react';
+import React from 'react';
 
 import AthleteTrainingCardHeader from './athlete-training-card-header';
 import { theme } from '@/app/style';
@@ -22,14 +22,41 @@ export default function TrainingReportCard({ report }: Props) {
   const theme = useTheme();
 
   const duration = report.duration * 60; // duration in seconds
-  const [realizationScore] = useState(Math.round(report.realization * 100));
-  const [tonnageScore] = useState(
-    Math.round((report.tonnage / report.totalTonnage) * 100) || 0
-  );
+  const realizationScore = Math.round(report.realization * 100);
+  const tonnageScore = Math.round((report.tonnage / report.tonnage) * 100) || 0;
+  const densityScore =
+    Math.round((report.tut / (duration - report.tut)) * 100) || 0;
 
-  const [densityScore] = useState(
-    Math.round((report.tut / (duration - report.tut)) * 100) || 0
-  );
+  const metrics = [
+    {
+      label: 'Sets',
+      completed: report.sets,
+      total: report.prescribed.sets,
+    },
+    {
+      label: 'Reps',
+      completed: report.reps,
+      total: report.prescribed.reps,
+    },
+    {
+      label: 'TUT',
+      completed: report.tut,
+      total: report.prescribed.tut,
+      unit: 's',
+    },
+    {
+      label: 'Recovery',
+      completed: report.recTime,
+      total: report.prescribed.recTime,
+      unit: 's',
+    },
+    {
+      label: 'Tonnage',
+      completed: report.tonnage,
+      total: report.prescribed.tonnage,
+      unit: 'kg',
+    },
+  ];
 
   return (
     <>
@@ -43,7 +70,7 @@ export default function TrainingReportCard({ report }: Props) {
       >
         {/* Group name, cycle name, date */}
         <AthleteTrainingCardHeader
-          components={report.plannedComponents
+          components={report.prescribed.plannedComponents
             .map(
               (c) => Components.find((comp) => comp.field === c.componentId)!
             )
@@ -78,6 +105,7 @@ export default function TrainingReportCard({ report }: Props) {
               <PieCenterLabel label={`${realizationScore}%`} />
             </PieChart>
           </CustomChartContainer>
+
           <CustomChartContainer label="Tonnage">
             <Box
               display="flex"
@@ -154,6 +182,60 @@ export default function TrainingReportCard({ report }: Props) {
             <CustomValueBox value={`${report.duration}’`} title="Duration" />
             <CustomValueBox value={`72%`} title="Intensity" />
           </Box>
+        </Box>
+        {/* Bar charts for remaining metrics */}
+        <Box
+          width="100%"
+          display="flex"
+          justifyContent="space-around"
+          flexWrap="wrap"
+          gap={1}
+        >
+          {metrics.map((metric) => {
+            const score =
+              metric.total > 0
+                ? Math.round((metric.completed / metric.total) * 100)
+                : 0;
+            return (
+              <CustomChartContainer key={metric.label} label={metric.label}>
+                <Box display="flex" flexDirection="column" alignItems="center">
+                  <ChartContainer
+                    height={18}
+                    series={[
+                      {
+                        type: 'bar',
+                        data: [score],
+                        layout: 'horizontal',
+                      },
+                    ]}
+                    margin={0}
+                    xAxis={[{ position: 'none', min: 0, max: 100 }]}
+                    yAxis={[
+                      { position: 'none', scaleType: 'band', data: [''] },
+                    ]}
+                    colors={[theme.palette.primary.main]}
+                    sx={{
+                      backgroundColor: theme.palette.background.light,
+                      borderRadius: 2,
+                      width: '100%',
+                    }}
+                  >
+                    <BarPlot />
+                  </ChartContainer>
+
+                  <Typography
+                    fontSize={11}
+                    color={theme.palette.text.primary}
+                    mt={0.5}
+                  >
+                    {metric.completed}
+                    {metric.unit || ''} / {metric.total}
+                    {metric.unit || ''}
+                  </Typography>
+                </Box>
+              </CustomChartContainer>
+            );
+          })}
         </Box>
       </Box>
 

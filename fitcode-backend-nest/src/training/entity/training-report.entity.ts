@@ -1,5 +1,5 @@
 import { IntersectionType } from '@nestjs/mapped-types';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, OmitType } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import {
   IsBoolean,
@@ -16,13 +16,19 @@ import {
 import { DateRangeDto } from '@src/common/dto/date-range.dto';
 import { ExerciseMuscleValue } from '@src/exercise/entity/exercise-muscle-value.entity';
 
-import { TrainingStats } from './training-stats.entity';
+import { PrescribedTrainingStats } from './training-stats.entity';
 
 // id: <training-id>-<user-id>
 export class TrainingReport extends IntersectionType(
-  TrainingStats,
   DateRangeDto,
+  OmitType(PrescribedTrainingStats, ['plannedComponents'] as const),
 ) {
+  @ValidateNested()
+  @Type(() => PrescribedTrainingStats)
+  @ApiProperty({ type: () => PrescribedTrainingStats })
+  @Expose()
+  prescribed: PrescribedTrainingStats;
+
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
@@ -60,54 +66,6 @@ export class TrainingReport extends IntersectionType(
 
   @IsNumber()
   @Min(0)
-  @ApiProperty()
-  @Expose()
-  duration: number; // in minutes
-
-  @IsNumber()
-  @Min(0)
-  @ApiProperty()
-  @Expose()
-  components: number;
-
-  @IsNumber()
-  @Min(0)
-  @ApiProperty()
-  @Expose()
-  exercises: number;
-
-  @IsNumber()
-  @Min(0)
-  @ApiProperty()
-  @Expose()
-  sets: number;
-
-  @IsNumber()
-  @Min(0)
-  @ApiProperty()
-  @Expose()
-  reps: number;
-
-  @IsNumber()
-  @Min(0)
-  @ApiProperty()
-  @Expose()
-  recTime: number;
-
-  @IsNumber()
-  @Min(0)
-  @ApiProperty()
-  @Expose()
-  tut: number; // total time under tension
-
-  @IsNumber()
-  @Min(0)
-  @ApiProperty()
-  @Expose()
-  tonnage: number;
-
-  @IsNumber()
-  @Min(0)
   @Max(100)
   @ApiProperty()
   @Expose()
@@ -131,27 +89,6 @@ export class TrainingReport extends IntersectionType(
   @IsOptional()
   @Expose()
   photoURLs?: string[]; // "best" photo(s) of the training session
-
-  @IsNumber()
-  @Min(0)
-  @ApiPropertyOptional()
-  @IsOptional()
-  @Expose()
-  timeVol?: number; // total time prescribed (in seconds)
-
-  @IsNumber()
-  @Min(0)
-  @ApiPropertyOptional()
-  @IsOptional()
-  @Expose()
-  distVol?: number; // total distance prescribed (in meters)
-
-  @IsNumber()
-  @Min(0)
-  @ApiPropertyOptional()
-  @IsOptional()
-  @Expose()
-  recDist?: number; // total recovery distance prescribed (in meters)
 }
 
 export class TrainingReportComponentStatus {

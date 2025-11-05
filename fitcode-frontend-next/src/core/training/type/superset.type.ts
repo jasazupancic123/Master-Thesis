@@ -1,3 +1,4 @@
+import type { MainSet } from '../enum/main-set.enum';
 import type {
   TrainingExercise,
   TrainingExerciseRecording,
@@ -6,14 +7,18 @@ import type {
 
 export type Superset = {
   exercises: TrainingExercise[];
+  mainSet: MainSet;
   warmup?: boolean;
   cooldown?: boolean;
 };
 
-export type UpdateSuperset = {
+export type UpdateSuperset = Pick<
+  Superset,
+  'mainSet' | 'warmup' | 'cooldown'
+> & {
   exercises: UpdateTrainingExercise[];
 };
 
-export type SupersetRecording = {
+export type SupersetRecording = Omit<Superset, 'exercises'> & {
   exercises: TrainingExerciseRecording[];
 };

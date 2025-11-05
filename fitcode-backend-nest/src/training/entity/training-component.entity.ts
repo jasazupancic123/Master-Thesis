@@ -2,7 +2,6 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Transform, Type } from 'class-transformer';
 import {
   IsDate,
-  IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -11,7 +10,6 @@ import {
 
 import { IdEntity } from '@src/common/entity/id.entity';
 
-import { MainSet } from '../enum/main-set.enum';
 import { CopiedFrom } from './copied-from.entity';
 import { Subgroup } from './subgroup.entity';
 import { Superset } from './superset.entity';
@@ -28,12 +26,6 @@ export class TrainingComponent extends IdEntity {
   @Expose()
   @Transform(({ value }) => new Date(value))
   to: Date;
-
-  @IsEnum(MainSet)
-  @IsString()
-  @ApiProperty({ enum: MainSet })
-  @Expose()
-  mainSet: MainSet; // defaults to "block"
 
   @IsString()
   @IsOptional()

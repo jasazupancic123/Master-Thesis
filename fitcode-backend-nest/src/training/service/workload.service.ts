@@ -12,7 +12,6 @@ import {
   WorkloadRef,
 } from '@src/common/type/firestore.type';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
-import { ExerciseParamService } from '@src/exercise/service/exercise-param.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { CreatePrescribedWorkloadDto } from '@src/training/dto/create-workload.dto';
 import { ExerciseSet } from '@src/training/entity/exercise-set.entity';
@@ -34,7 +33,6 @@ export class WorkloadService {
     private readonly common: CommonService,
     private readonly firebaseService: FirebaseService,
     private readonly repository: WorkloadRepository,
-    private readonly exerciseParamService: ExerciseParamService,
     private readonly exerciseService: ExerciseService,
   ) {}
 
@@ -113,28 +111,6 @@ export class WorkloadService {
       );
   }
 
-  /**
-   * Finds all workloads for training (normally training to be planned,
-   * in the future). It will return all workloads that have been
-   * created for athletes as custom workload values that must be
-   * completed separately, not depending on the main group or
-   * subgroup prescribed training.
-   */
-  async findAllCustomByTraining(trainingId: string): Promise<Workload[]> {
-    const query = this.collection(trainingId).where(
-      'status',
-      '==',
-      SetStatus.NOT_STARTED,
-    );
-
-    const snapshot = await query.get();
-    if (snapshot.empty) return [];
-
-    return snapshot.docs.map((doc) =>
-      this.firebaseService.serialize(doc.data() as FirestoreEntity<Workload>),
-    );
-  }
-
   async upsert(
     ref: WorkloadRef & CycleRef & InstitutionRef,
     prescribed: ExerciseSet,
@@ -176,15 +152,21 @@ export class WorkloadService {
     // determine in which superset the exercise is being completed and its set number
     let componentId: string;
     let supersetIndex = -1;
+    let exerciseIndex = -1;
     let setNumber = -1;
     let prescribedSet: ExerciseSet;
 
     let remaining = existingExerciseWorkloads.length;
     outer: for (const component of training.components) {
       for (const [i, superset] of component.supersets.entries()) {
-        const found = superset.exercises.find((e) => e.id === ref.exerciseId);
-        if (!found) continue;
+        // const found = superset.exercises.find((e) => e.id === ref.exerciseId);
+        exerciseIndex = superset.exercises.findIndex(
+          (e) => e.id === ref.exerciseId,
+        );
 
+        if (exerciseIndex === -1) continue;
+
+        const found = superset.exercises[exerciseIndex];
         for (let j = 0; j < found.sets.length; j++) {
           if (remaining === 0) {
             supersetIndex = i;
@@ -267,19 +249,6 @@ export class WorkloadService {
       prescribedSet,
       input,
     );
-  }
-
-  async deleteWorkloads(workloads: WorkloadMeta[]): Promise<void> {
-    const refs = workloads.map((w) => ({
-      trainingId: w.trainingId,
-      componentId: w.componentId,
-      exerciseId: w.exerciseId,
-      supersetIndex: w.supersetIndex,
-      setNumber: w.setNumber,
-      userId: w.userId,
-    }));
-
-    await this.repository.deleteDocs(refs);
   }
 
   async validateWorkloads(
@@ -370,23 +339,60 @@ export class WorkloadService {
       completed.loadKgR,
     );
 
-    const tempoStatus = this.getStatusByField(
-      this.exerciseParamService.tempoToSeconds(prescribed.tempo),
-      this.exerciseParamService.tempoToSeconds(completed.tempo),
+    const tempoEccStatus = this.getStatusByField(
+      prescribed.tempoEcc,
+      completed.tempoEcc,
     );
 
-    const tempoRStatus = this.getStatusByField(
-      this.exerciseParamService.tempoToSeconds(prescribed.tempoR),
-      this.exerciseParamService.tempoToSeconds(completed.tempoR),
+    const tempoIsoStatus = this.getStatusByField(
+      prescribed.tempoIso,
+      completed.tempoIso,
+    );
+
+    const tempoConStatus = this.getStatusByField(
+      prescribed.tempoCon,
+      completed.tempoCon,
+    );
+
+    const tempoIdleStatus = this.getStatusByField(
+      prescribed.tempoIdle,
+      completed.tempoIdle,
+    );
+
+    const tempoEccRStatus = this.getStatusByField(
+      prescribed.tempoEccR,
+      completed.tempoEccR,
+    );
+
+    const tempoIsoRStatus = this.getStatusByField(
+      prescribed.tempoIsoR,
+      completed.tempoIsoR,
+    );
+
+    const tempoConRStatus = this.getStatusByField(
+      prescribed.tempoConR,
+      completed.tempoConR,
+    );
+
+    const tempoIdleRStatus = this.getStatusByField(
+      prescribed.tempoIdleR,
+      completed.tempoIdleR,
     );
 
     const velStatus = this.getStatusByField(prescribed.vel, completed.vel);
     const velRStatus = this.getStatusByField(prescribed.velR, completed.velR);
+
     const effStatus = this.getStatusByField(prescribed.eff, completed.eff);
+    const effRStatus = this.getStatusByField(prescribed.effR, completed.effR);
 
     const recTimeStatus = this.getStatusByField(
       prescribed.recTime,
       completed.recTime,
+    );
+
+    const recTimeRStatus = this.getStatusByField(
+      prescribed.recTimeR,
+      completed.recTimeR,
     );
 
     const recDistStatus = this.getStatusByField(
@@ -394,23 +400,48 @@ export class WorkloadService {
       completed.recDist,
     );
 
+    const recDistRStatus = this.getStatusByField(
+      prescribed.recDistR,
+      completed.recDistR,
+    );
+
     const timeStatus = this.getStatusByField(prescribed.time, completed.time);
+    const timeRStatus = this.getStatusByField(
+      prescribed.timeR,
+      completed.timeR,
+    );
+
     const distStatus = this.getStatusByField(prescribed.dist, completed.dist);
+    const distRStatus = this.getStatusByField(
+      prescribed.distR,
+      completed.distR,
+    );
 
     let fieldStatus = [
       repsStatus,
       repsRStatus,
       loadKgStatus,
       loadKgRStatus,
-      tempoStatus,
-      tempoRStatus,
+      tempoEccStatus,
+      tempoIsoStatus,
+      tempoConStatus,
+      tempoIdleStatus,
+      tempoEccRStatus,
+      tempoIsoRStatus,
+      tempoConRStatus,
+      tempoIdleRStatus,
       velStatus,
       velRStatus,
       effStatus,
+      effRStatus,
       recTimeStatus,
+      recTimeRStatus,
       recDistStatus,
+      recDistRStatus,
       timeStatus,
+      timeRStatus,
       distStatus,
+      distRStatus,
     ];
 
     // edge case - no value is prescribed

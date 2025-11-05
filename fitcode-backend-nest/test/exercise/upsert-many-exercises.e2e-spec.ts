@@ -262,7 +262,9 @@ describe('Upsert Many Exercises (e2e)', () => {
         'reps',
         'repsR',
         'time',
+        'timeR',
         'dist',
+        'distR',
         'loadKg', // additional params for unilateral exercise
         'loadKgR',
       ]);

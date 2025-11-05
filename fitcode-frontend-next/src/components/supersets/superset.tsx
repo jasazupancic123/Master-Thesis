@@ -2,10 +2,13 @@
 
 import { useDroppable } from '@dnd-kit/core';
 import { rectSortingStrategy, SortableContext } from '@dnd-kit/sortable';
-import { Box, Grid2, Stack, Typography } from '@mui/material';
+import RotateLeftIcon from '@mui/icons-material/RotateLeft';
+import SwapVertIcon from '@mui/icons-material/SwapVert';
+import { Box, Grid2, Stack, Tooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 
 import SupersetExercise from './superset-exercise';
+import { core } from '@/core/core.service';
 import { MainSet } from '@/core/training/enum/main-set.enum';
 import type { Superset as SupersetClass } from '@/core/training/type/superset.type';
 import { lib } from '@/lib';
@@ -25,55 +28,43 @@ export default function Superset({ superset, supersetIndex }: Props) {
   const theme = useTheme();
   const screenSize = useScreenSize();
   const { selectedExercise, setOpenAddExerciseModal } = useSupersets();
-  const { training, component, selectedSubgroup } = useTrainerDayView();
+  const { training, component, selectedSubgroup, changeSupersetMainSet } =
+    useTrainerDayView();
 
   const containerId = `${component?.id}-${supersetIndex}`;
   const items = superset.exercises.map((e) => e.id);
   const { setNodeRef } = useDroppable({ id: containerId });
+
   if (!component || !training) return null;
 
-  const numExercises = (selectedSubgroup || component).supersets.flatMap(
-    (s) => s.exercises
-  ).length;
+  const isVirtualSubgroup = core.training.subgroup.isVirtual(selectedSubgroup);
 
   return (
     <Grid2
       key={`${component.id}-${supersetIndex}`}
-      size={
-        (selectedSubgroup || component).mainSet === MainSet.CIRCUIT
-          ? screenSize.isSmallerThanLaptop
+      size={{
+        xs: 12,
+        sm:
+          selectedExercise &&
+          superset.exercises.some((e) => e.id === selectedExercise.id)
             ? 12
-            : numExercises === 1
-              ? 3
-              : numExercises === 2
+            : screenSize.isLandscapeMobile
+              ? 4
+              : 12,
+        md:
+          selectedExercise &&
+          superset.exercises.some((e) => e.id === selectedExercise.id)
+            ? screenSize.isLandscapeMobile
+              ? 4
+              : 6
+            : screenSize.isLandscapeMobile
+              ? 4
+              : screenSize.isSmallerThanLaptop
                 ? 6
-                : numExercises === 3
-                  ? 9
-                  : 12
-          : {
-              xs: 12,
-              sm:
-                selectedExercise &&
-                superset.exercises.some((e) => e.id === selectedExercise.id)
-                  ? 12
-                  : screenSize.isLandscapeMobile
-                    ? 4
-                    : 12,
-              md:
-                selectedExercise &&
-                superset.exercises.some((e) => e.id === selectedExercise.id)
-                  ? screenSize.isLandscapeMobile
-                    ? 4
-                    : 6
-                  : screenSize.isLandscapeMobile
-                    ? 4
-                    : screenSize.isSmallerThanLaptop
-                      ? 6
-                      : screenSize.isLaptop
-                        ? 4
-                        : 3,
-            }
-      }
+                : screenSize.isLaptop
+                  ? 4
+                  : 3,
+      }}
       sx={{ px: 0.5 }}
     >
       <Box
@@ -90,6 +81,7 @@ export default function Superset({ superset, supersetIndex }: Props) {
               ? theme.palette.success.light
               : lib.common.component.getBorderGradient(theme),
           position: 'relative',
+          zIndex: 100,
         }}
       >
         {superset.warmup && WarmupIcon ? (
@@ -104,12 +96,7 @@ export default function Superset({ superset, supersetIndex }: Props) {
               backgroundColor: theme.palette.background.dark,
             }}
           >
-            <WarmupIcon
-              sx={{
-                width: 18,
-                height: 18,
-              }}
-            />
+            <WarmupIcon sx={{ width: 18, height: 18 }} />
           </Box>
         ) : null}
 
@@ -125,14 +112,62 @@ export default function Superset({ superset, supersetIndex }: Props) {
               backgroundColor: theme.palette.background.dark,
             }}
           >
-            <CooldownIcon
-              sx={{
-                width: 18,
-                height: 18,
-              }}
-            />
+            <CooldownIcon sx={{ width: 18, height: 18 }} />
           </Box>
         ) : null}
+
+        {superset.mainSet === MainSet.BLOCK && (
+          <Tooltip
+            title={!isVirtualSubgroup ? 'Change to circuit set' : 'Circuit set'}
+          >
+            <Box
+              sx={{
+                height: 15,
+                position: 'absolute',
+                top: -8,
+                right: 4,
+                borderRadius: '50%',
+                zIndex: 10,
+                backgroundColor: theme.palette.background.dark,
+                cursor: !isVirtualSubgroup ? 'pointer' : undefined,
+              }}
+              onClick={() => {
+                if (isVirtualSubgroup) return;
+
+                changeSupersetMainSet(supersetIndex, MainSet.CIRCUIT);
+              }}
+            >
+              <SwapVertIcon sx={{ width: 15, height: 15 }} />
+            </Box>
+          </Tooltip>
+        )}
+
+        {superset.mainSet === MainSet.CIRCUIT && (
+          <Tooltip
+            title={!isVirtualSubgroup ? 'Change to block set' : 'Block set'}
+          >
+            <Box
+              sx={{
+                height: 15,
+                position: 'absolute',
+                top: -8,
+                right: 4,
+                borderRadius: '50%',
+                zIndex: 10,
+                backgroundColor: theme.palette.background.dark,
+                cursor: !isVirtualSubgroup ? 'pointer' : undefined,
+              }}
+              onClick={() => {
+                if (isVirtualSubgroup) return;
+
+                changeSupersetMainSet(supersetIndex, MainSet.BLOCK);
+              }}
+            >
+              <RotateLeftIcon sx={{ width: 15, height: 15 }} />
+            </Box>
+          </Tooltip>
+        )}
+
         <Stack
           p={screenSize.isLandscapeMobile ? 0.5 : 0}
           pt={0}
@@ -146,26 +181,13 @@ export default function Superset({ superset, supersetIndex }: Props) {
             items={items}
             strategy={rectSortingStrategy}
           >
-            <Grid2
-              id="exercises-container"
-              container
-              columnSpacing={
-                (selectedSubgroup || component).mainSet === MainSet.CIRCUIT
-                  ? 0.4
-                  : undefined
-              }
-              rowSpacing={
-                (selectedSubgroup || component).mainSet === MainSet.CIRCUIT
-                  ? 0.4
-                  : undefined
-              }
-            >
+            <Grid2 id="exercises-container" container>
               {(superset.warmup || superset.cooldown) &&
               superset.exercises.length === 0 ? (
                 <Box
                   borderRadius={2}
                   py={3}
-                  width="100%"
+                  width="99.5%"
                   height="100%"
                   textAlign="center"
                   sx={{

@@ -13,7 +13,7 @@ interface Props {
     | 'time'
     | 'reps'
     | 'eff'
-    | 'tempo'
+    | 'tempoEcc'
     | 'recDist'
     | 'recTime'
   )[];
@@ -70,7 +70,7 @@ export default function UnilateralParamsRow(props: Props) {
             );
           case ExerciseParamFieldEnum.EFF:
             return <ParamText key={index} text={'Eff'} />;
-          case ExerciseParamFieldEnum.TEMPO:
+          case ExerciseParamFieldEnum.TEMPO_ECC:
             return (
               <Box
                 key={index}

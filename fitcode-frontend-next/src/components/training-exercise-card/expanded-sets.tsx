@@ -167,20 +167,33 @@ export default function TrainingExerciseCardExpandedSets({
                 )}
 
                 {effType && effOptions.length > 0 ? (
-                  effType === 'tempo' ? (
+                  effType === 'tempoEcc' ? (
                     <TempoExerciseParam
                       options={effOptions}
                       selected={effType}
-                      value={exercise.sets[setIndex]?.[effType] || ''}
+                      value={core.training.set.getTempo(
+                        exercise.sets[setIndex]
+                      )}
                       exercise={exercise}
                       showOptions={setIndex === 0}
                       disableOptions
-                      onInputChange={(value) => {
-                        supersetsContext.updateTrainingExerciseParam(
+                      onInputChange={(values) => {
+                        const tempo = values as [
+                          number,
+                          number,
+                          number,
+                          number,
+                        ];
+
+                        supersetsContext.updateTrainingExerciseParams(
                           exercise,
-                          effType,
-                          value.toString(),
-                          setIndex
+                          core.exercise.param
+                            .getTempoFields('l')
+                            .map((field, i) => ({
+                              field,
+                              value: tempo[i],
+                              setIndex,
+                            }))
                         );
                       }}
                     />
@@ -287,24 +300,33 @@ export default function TrainingExerciseCardExpandedSets({
                   )}
 
                   {effType && effOptions.length > 0 ? (
-                    effType === 'tempo' ? (
+                    effType === 'tempoEcc' ? (
                       <TempoExerciseParam
                         options={effOptions}
                         selected={effType}
-                        value={
-                          exercise.sets[setIndex]?.[
-                            core.exercise.param.pairs[effType]
-                          ] || ''
-                        }
+                        value={core.training.set.getTempoR(
+                          exercise.sets[setIndex]
+                        )}
                         showOptions={false}
                         exercise={exercise}
                         disableOptions
-                        onInputChange={(value) => {
-                          supersetsContext.updateTrainingExerciseParam(
+                        onInputChange={(values) => {
+                          const tempo = values as [
+                            number,
+                            number,
+                            number,
+                            number,
+                          ];
+
+                          supersetsContext.updateTrainingExerciseParams(
                             exercise,
-                            core.exercise.param.pairs[effType],
-                            value.toString(),
-                            setIndex
+                            core.exercise.param
+                              .getTempoFields('r')
+                              .map((field, i) => ({
+                                field,
+                                value: tempo[i],
+                                setIndex,
+                              }))
                           );
                         }}
                       />

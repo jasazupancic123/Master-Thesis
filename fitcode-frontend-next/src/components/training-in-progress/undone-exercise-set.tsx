@@ -129,16 +129,20 @@ export default function UndoneExerciseSet(props: Props) {
             )}
 
             {effType && effOptions.length > 0 ? (
-              effType === 'tempo' ? (
+              effType === 'tempoEcc' ? (
                 <TempoExerciseParam
                   options={effOptions}
                   selected={effType}
-                  value={exercise.sets[index]?.[effType] || ''}
+                  value={core.training.set.getTempo(exercise.sets[index])}
                   exercise={exercise}
                   showOptions={showOptions}
                   disableOptions
-                  onInputChange={(value) => {
-                    exercise.sets[index][effType] = value.toString();
+                  onInputChange={(values) => {
+                    core.training.set.setTempo(
+                      exercise.sets[index],
+                      values as [number, number, number, number]
+                    );
+
                     updateTrainingInProgress(exercise, supersetIndex || 0);
                   }}
                 />
@@ -216,36 +220,35 @@ export default function UndoneExerciseSet(props: Props) {
                   selected={KG.field}
                   value={
                     exercise.sets[index]?.[
-                      core.exercise.param.pairs[KG.field]
+                      core.exercise.param.pairs['loadKg']
                     ] || 0
                   }
                   exercise={exercise}
                   showOptions={false}
                   disableOptions
                   onInputChange={(value) => {
-                    const field = core.exercise.param.pairs[KG.field];
-                    exercise.sets[index][field] = +value as never;
+                    const field = core.exercise.param.pairs['loadKg'];
+                    exercise.sets[index][field] = +value;
                     updateTrainingInProgress(exercise, supersetIndex || 0);
                   }}
                 />
               )}
 
               {effOptions.length > 0 &&
-                (effType === 'tempo' ? (
+                (effType === 'tempoEcc' ? (
                   <TempoExerciseParam
                     options={effOptions}
                     selected={effType}
-                    value={
-                      exercise.sets[index]?.[
-                        core.exercise.param.pairs[effType]
-                      ] || ''
-                    }
+                    value={core.training.set.getTempoR(exercise.sets[index])}
                     exercise={exercise}
                     showOptions={false}
                     disableOptions
-                    onInputChange={(value) => {
-                      const field = core.exercise.param.pairs[effType];
-                      exercise.sets[index][field] = value.toString() as never;
+                    onInputChange={(values) => {
+                      core.training.set.setTempoR(
+                        exercise.sets[index],
+                        values as [number, number, number, number]
+                      );
+
                       updateTrainingInProgress(exercise, supersetIndex || 0);
                     }}
                   />

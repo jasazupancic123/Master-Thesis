@@ -1,14 +1,12 @@
 import { Box, IconButton, Tooltip } from '@mui/material';
 import { useState } from 'react';
 
-import { handleSetMainSet } from './actions/actions-main-set';
 import { handleSetPeriodizationType } from './actions/actions-periodization-type';
 import PeriodizeModal from './periodize-modal';
 import { AFTER_SETS } from '@/components/trainer-group-day-view/constant/after-sets.constant';
 import { core } from '@/core/core.service';
 import type { AfterSet } from '@/core/exercise/type/after-set.type';
 import type { Method } from '@/core/exercise/type/method.type';
-import { MainSet } from '@/core/training/enum/main-set.enum';
 import { PeriodizationType } from '@/core/training/enum/periodization-type.enum';
 import type { Superset } from '@/core/training/type/superset.type';
 import { lib } from '@/lib';
@@ -89,41 +87,6 @@ export default function TrainingComponentHeaderMenu() {
               <CooldownIcon sx={{ width: 15, height: 15 }} />
             ) : null}
           </IconButton>
-        </Tooltip>
-
-        <Tooltip title="Main Set">
-          <SelectInput<MainSet>
-            label={'Main Set'}
-            value={selectedSubgroup?.mainSet || component.mainSet}
-            icon={null}
-            disabled={selectedAthlete !== undefined}
-            displayEmpty
-            disableNoneChoice
-            iconSize={17}
-            items={Object.values(MainSet)}
-            itemKey={undefined}
-            itemName={undefined}
-            selectSize="small"
-            inputLabelSize={'12px'}
-            selectedItemSize={12}
-            sx={{
-              maxWidth: 75,
-            }}
-            disableInputLabel={false}
-            setValue={(newMainSet) => {
-              handleSetMainSet(
-                { newMainSet },
-                {
-                  useGroup: groupContext,
-                  useTrainerDayViewContext: {
-                    ...trainerDayViewContext,
-                    training,
-                    component,
-                  },
-                }
-              );
-            }}
-          />
         </Tooltip>
 
         {methodologies.length > 0 && (

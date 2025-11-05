@@ -1,12 +1,9 @@
 import type { Attribute } from '@src/attribute/entity/attribute.entity';
 import { AttributeType } from '@src/attribute/enum/attribute-type.enum';
-import { TEMPO_REGEX } from '@src/common/constant/tempo-regex.constant';
 import type {
   ExerciseParamField,
   ExerciseSet,
 } from '@src/training/entity/exercise-set.entity';
-
-export const DEFAULT_PARAMS_KEY = 'default';
 
 const REPS: Attribute<ExerciseSet> = {
   field: 'reps',
@@ -14,7 +11,6 @@ const REPS: Attribute<ExerciseSet> = {
   description: 'repetitions',
   type: AttributeType.Number,
   defaultValue: 10,
-  required: true,
 };
 
 const REC_TIME: Attribute<ExerciseSet> = {
@@ -61,13 +57,36 @@ const RM: Attribute<ExerciseSet> = {
   defaultValue: 75,
 };
 
-const TEMPO: Attribute<ExerciseSet> = {
-  field: 'tempo',
-  name: 'Tempo',
-  description: 'tempo',
-  type: AttributeType.String,
-  defaultValue: '2:0:1:0',
-  pattern: TEMPO_REGEX, // e.g. "2:0:1:0", meaning "eccentric:isometric:concentric:isometric" in seconds
+const TEMPO_ECC: Attribute<ExerciseSet> = {
+  field: 'tempoEcc',
+  name: 'Tempo (Eccentric)',
+  description: 'tempo ecc',
+  type: AttributeType.Number,
+  defaultValue: 2,
+};
+
+const TEMPO_ISO: Attribute<ExerciseSet> = {
+  field: 'tempoIso',
+  name: 'Tempo (Isometric)',
+  description: 'tempo iso',
+  type: AttributeType.Number,
+  defaultValue: 0,
+};
+
+const TEMPO_CON: Attribute<ExerciseSet> = {
+  field: 'tempoCon',
+  name: 'Tempo (Concentric)',
+  description: 'tempo con',
+  type: AttributeType.Number,
+  defaultValue: 1,
+};
+
+const TEMPO_IDLE: Attribute<ExerciseSet> = {
+  field: 'tempoIdle',
+  name: 'Tempo (Idle)',
+  description: 'tempo idle',
+  type: AttributeType.Number,
+  defaultValue: 0,
 };
 
 const TIME: Attribute<ExerciseSet> = {
@@ -112,20 +131,31 @@ export const ExerciseParamAttribute: Record<
   Attribute<ExerciseSet>
 > = {
   reps: REPS,
-  repsR: { ...REPS, required: false },
+  repsR: REPS,
   loadKg: KG,
   loadKgR: KG,
   loadBw: BW,
   loadBwR: BW,
   loadRm: RM,
   loadRmR: RM,
-  tempo: TEMPO,
-  tempoR: TEMPO,
+  tempoEcc: TEMPO_ECC,
+  tempoIso: TEMPO_ISO,
+  tempoCon: TEMPO_CON,
+  tempoIdle: TEMPO_IDLE,
+  tempoEccR: TEMPO_ECC,
+  tempoIsoR: TEMPO_ISO,
+  tempoConR: TEMPO_CON,
+  tempoIdleR: TEMPO_IDLE,
   vel: VEL,
   velR: VEL,
   time: TIME,
+  timeR: TIME,
   dist: DIST,
+  distR: DIST,
   eff: EFF,
+  effR: EFF,
   recTime: REC_TIME,
+  recTimeR: REC_TIME,
   recDist: REC_DIST,
+  recDistR: REC_DIST,
 };

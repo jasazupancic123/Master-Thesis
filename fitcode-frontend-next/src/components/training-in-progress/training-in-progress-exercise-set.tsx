@@ -85,19 +85,22 @@ export default function TrainingInProgressExerciseSet(props: Props) {
             )}
 
             {effTempoParam ? (
-              effType === 'tempo' ? (
+              effType === 'tempoEcc' ? (
                 <TempoExerciseParam
                   options={effOptions}
                   selected={effType}
-                  value={exercise.sets[setIndex]?.[effType] || ''}
+                  value={core.training.set.getTempo(exercise.sets[setIndex])}
                   exercise={exercise}
                   disableOptions
                   disabled
                   trainingInProgressSecondaryItem
-                  renderIconOnly={!uni}
                   showOptions={!uni}
-                  onInputChange={(value) => {
-                    exercise.sets[setIndex][effType] = value.toString();
+                  onInputChange={(values) => {
+                    core.training.set.setTempo(
+                      exercise.sets[setIndex],
+                      values as [number, number, number, number]
+                    );
+
                     updateTrainingInProgress(exercise, supersetIndex || 0);
                   }}
                 />
@@ -217,28 +220,27 @@ export default function TrainingInProgressExerciseSet(props: Props) {
                     <LeftRightExerciseText title="R" />
                   </Box>
                 )}
+
                 {effTempoParam ? (
                   <>
-                    {effType === 'tempo' ? (
+                    {effType === 'tempoEcc' ? (
                       <TempoExerciseParam
                         options={effOptions}
                         selected={effType}
-                        value={
-                          exercise.sets[setIndex]?.[
-                            core.exercise.param.pairs[effType]
-                          ] || ''
-                        }
+                        value={core.training.set.getTempoR(
+                          exercise.sets[setIndex]
+                        )}
                         exercise={exercise}
                         disableOptions
                         disabled
                         trainingInProgressSecondaryItem
                         showOptions={false}
-                        onInputChange={(value) => {
-                          const field = core.exercise.param.pairs[
-                            effType
-                          ] as typeof effType;
+                        onInputChange={(values) => {
+                          core.training.set.setTempo(
+                            exercise.sets[setIndex],
+                            values as [number, number, number, number]
+                          );
 
-                          exercise.sets[setIndex][field] = value.toString();
                           updateTrainingInProgress(
                             exercise,
                             supersetIndex || 0
@@ -316,7 +318,7 @@ export default function TrainingInProgressExerciseSet(props: Props) {
                       selected={KG.field}
                       value={
                         exercise.sets[setIndex]?.[
-                          core.exercise.param.pairs[KG.field]
+                          core.exercise.param.pairs['loadKg']
                         ] || 0
                       }
                       exercise={exercise}
@@ -324,9 +326,8 @@ export default function TrainingInProgressExerciseSet(props: Props) {
                       trainingInProgressPrimaryItem
                       disableOptions
                       onInputChange={(value) => {
-                        const field = core.exercise.param.pairs[KG.field];
-                        exercise.sets[setIndex][field] = +value as never;
-
+                        const field = core.exercise.param.pairs['loadKg'];
+                        exercise.sets[setIndex][field] = +value;
                         updateTrainingInProgress(exercise, supersetIndex || 0);
                       }}
                     />
@@ -349,7 +350,7 @@ export default function TrainingInProgressExerciseSet(props: Props) {
                     trainingInProgressSecondaryItem
                     onInputChange={(value) => {
                       const field = core.exercise.param.pairs[recType];
-                      exercise.sets[setIndex][field] = +value as never;
+                      exercise.sets[setIndex][field] = +value;
                       updateTrainingInProgress(exercise, supersetIndex || 0);
                     }}
                   />

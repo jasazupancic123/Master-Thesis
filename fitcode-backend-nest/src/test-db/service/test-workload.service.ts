@@ -50,11 +50,9 @@ export class TestWorkloadService {
 
   async createMany(
     input: (Create<Omit<WorkloadMeta, 'id'>> &
-      Omit<WorkloadValue, 'reps' | 'recTime' | 'timestamp' | 'photoURLs'> & {
+      Omit<WorkloadValue, 'timestamp' | 'photoURLs'> & {
         prescribed: Partial<ExerciseSet>;
         params?: ExerciseParamField[];
-        reps?: number;
-        recTime?: number;
         timestamp?: Date;
         photoURLs?: string[];
         random?: boolean;

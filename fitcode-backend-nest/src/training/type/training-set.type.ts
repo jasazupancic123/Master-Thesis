@@ -1,19 +1,57 @@
+import { ApiProperty } from '@nestjs/swagger';
+import { Expose } from 'class-transformer';
+import { IsNumber, Min } from 'class-validator';
+
 import type { ExerciseSet } from '../entity/exercise-set.entity';
 
-export type DefinedExerciseSet = Required<
-  Omit<ExerciseSet, 'setNumber' | 'loadType' | 'tempo' | 'tempoR'>
-> & {
-  tempo: number; // in seconds
-  tempoR: number; // in seconds
-};
+export type DefinedExerciseSet = Required<Omit<ExerciseSet, 'setNumber'>> & {};
 
-export interface SetReport {
+export class SetReport {
+  @IsNumber()
+  @Min(0)
+  @ApiProperty()
+  @Expose()
   reps: number;
-  load: number;
+
+  @IsNumber()
+  @Min(0)
+  @ApiProperty()
+  @Expose()
+  load: number; // in kg
+
+  @IsNumber()
+  @Min(0)
+  @ApiProperty()
+  @Expose()
+  tut: number; // total time under tension
+
+  @IsNumber()
+  @Min(0)
+  @ApiProperty()
+  @Expose()
   tonnage: number;
-  tit: number; // time under tension
+
+  @IsNumber()
+  @Min(0)
+  @ApiProperty()
+  @Expose()
   time: number;
+
+  @IsNumber()
+  @Min(0)
+  @ApiProperty()
+  @Expose()
   dist: number;
+
+  @IsNumber()
+  @Min(0)
+  @ApiProperty()
+  @Expose()
   recTime: number;
+
+  @IsNumber()
+  @Min(0)
+  @ApiProperty()
+  @Expose()
   recDist: number;
 }

@@ -40,9 +40,7 @@ export const ScreenSizeProvider = ({ children }: React.PropsWithChildren) => {
   const isSmallLaptop = useMediaQuery(
     '(min-width:1024px) and (max-width:1240px)'
   );
-  const isLaptop = useMediaQuery(
-    '(min-width:1024px) and (max-width:1700px) and (max-height:1100px) and (min-aspect-ratio:4/3)'
-  );
+  const isLaptop = useMediaQuery('(min-width:1024px) and (max-width:1700px)');
 
   return (
     <ScreenSizeContext.Provider

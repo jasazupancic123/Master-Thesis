@@ -119,11 +119,11 @@ export default function StubTrainingExerciseCardCollapsedSets(
           )}
 
           {effType && effOptions.length > 0 ? (
-            effType === 'tempo' ? (
+            effType === 'tempoEcc' ? (
               <TempoExerciseParam
                 options={effOptions}
                 selected={effType}
-                value={exercise.sets[0]?.[effType] || ''}
+                value={core.training.set.getTempo(exercise.sets[0])}
                 exercise={exercise}
                 showOptions
               />
@@ -193,13 +193,11 @@ export default function StubTrainingExerciseCardCollapsedSets(
             )}
 
             {effType && effOptions.length > 0 ? (
-              effType === 'tempo' ? (
+              effType === 'tempoEcc' ? (
                 <TempoExerciseParam
                   options={effOptions}
                   selected={effType}
-                  value={
-                    exercise.sets[0]?.[core.exercise.param.pairs[effType]] || ''
-                  }
+                  value={core.training.set.getTempoR(exercise.sets[0])}
                   showOptions={false}
                   exercise={exercise}
                 />

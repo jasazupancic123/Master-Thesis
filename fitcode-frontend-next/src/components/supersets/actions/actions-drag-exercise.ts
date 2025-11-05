@@ -2,10 +2,9 @@ import type { DraggableLocation } from 'react-beautiful-dnd';
 import toast from 'react-hot-toast';
 
 import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-group-day-view/constant/subgroups.constant';
-import { onMainSetChange } from '@/components/training-component/actions/actions-main-set';
 import { removeSelectedExercisesFromSupersets } from '@/components/training-component/actions/actions-selected-exercises';
 import { ADD_SUPERSET_DROPPABLE_ID } from '@/core/training/const/add-superset-droppable-id.const';
-import { MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT } from '@/core/training/const/training-limits.const';
+import { MAX_NUM_SUPERSETS } from '@/core/training/const/training-limits.const';
 import { MainSet } from '@/core/training/enum/main-set.enum';
 import type { Subgroup } from '@/core/training/type/subgroup.type';
 import type { Superset } from '@/core/training/type/superset.type';
@@ -37,10 +36,8 @@ export async function onDragEndExercise(
     return; // if virtual subgroup, then disable
 
   if (destination.droppableId === ADD_SUPERSET_DROPPABLE_ID) {
-    if (supersets.length >= MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT)
-      toast.error(
-        `Only ${MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT} supersets per component allowed`
-      );
+    if (supersets.length >= MAX_NUM_SUPERSETS)
+      toast.error(`Only ${MAX_NUM_SUPERSETS} supersets per component allowed`);
 
     const _supersets = structuredClone(supersets);
     const superset = _supersets.find((s) =>
@@ -54,7 +51,11 @@ export async function onDragEndExercise(
 
     if (!draggedExercise) return;
 
-    let newSupersets = [..._supersets, { exercises: [draggedExercise] }];
+    let newSupersets: Superset[] = [
+      ..._supersets,
+      { exercises: [draggedExercise], mainSet: MainSet.BLOCK },
+    ];
+
     superset.exercises = superset.exercises.filter((e) => e.id !== draggableId);
     newSupersets = newSupersets.filter(
       (s) => s.cooldown || s.warmup || s.exercises.length > 0
@@ -181,10 +182,8 @@ export const onAddExerciseDrop = (
   supersets: Superset[],
   draggableId: string
 ): Superset[] | undefined => {
-  if (supersets.length >= MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT) {
-    toast.error(
-      `Only ${MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT} supersets per component allowed`
-    );
+  if (supersets.length >= MAX_NUM_SUPERSETS) {
+    toast.error(`Only ${MAX_NUM_SUPERSETS} supersets per component allowed`);
     return;
   }
 
@@ -200,7 +199,11 @@ export const onAddExerciseDrop = (
 
   if (!draggedExercise) return;
 
-  const newSupersets = [...supersetsCopy, { exercises: [draggedExercise] }];
+  const newSupersets: Superset[] = [
+    ...supersetsCopy,
+    { exercises: [draggedExercise], mainSet: MainSet.BLOCK },
+  ];
+
   supersetWithExercise.exercises = supersetWithExercise.exercises.filter(
     (e) => e.id !== draggableId
   );
@@ -217,7 +220,7 @@ export function onDragEndExerciseToExistingSuperset(
     supersets: Superset[];
   }
 ): Superset[] | undefined {
-  const { component, selectedSubgroup, supersets } = state;
+  const { supersets } = state;
 
   const supersetIndex = parseInt(destination.droppableId.split('-')[1]);
   const supersetWithNewExercise = supersets[supersetIndex];
@@ -231,37 +234,15 @@ export function onDragEndExerciseToExistingSuperset(
   // onDragEnd inside the same superset
   if (supersetWithExercise === supersetWithNewExercise) {
     // Get y coordinates of all exercises in the superset
-    const sortedExercises =
-      (selectedSubgroup || component).mainSet === MainSet.BLOCK
-        ? supersetWithExercise.exercises
-            .map((e) => ({
-              exercise: e,
-              y:
-                document.getElementById(e.id)?.getBoundingClientRect().top ??
-                Infinity, // Default to Infinity if not found
-            }))
-            .sort((a, b) => a.y - b.y) // Sort by y coordinate
-            .map((item) => item.exercise) // Extract only exercises
-        : supersetWithExercise.exercises
-            .map((e) => {
-              const rect = document
-                .getElementById(e.id)
-                ?.getBoundingClientRect();
-              const top = rect?.top ?? Infinity;
-              const left = rect?.left ?? Infinity;
-              const height = rect?.height ?? 0;
-              const yCenter = isFinite(top) ? top + height / 2 : Infinity;
-              return { exercise: e, top, left, height, yCenter };
-            })
-            .sort((a, b) => {
-              // Treat items as same row if their vertical centers are close
-              const tol = Math.min(a.height, b.height) * 0.5; // adjust 0.4–0.7 if needed
-              if (Math.abs(a.yCenter - b.yCenter) > tol) {
-                return a.yCenter - b.yCenter; // different rows → sort by Y
-              }
-              return a.left - b.left; // same row    → sort by X
-            })
-            .map((i) => i.exercise);
+    const sortedExercises = supersetWithExercise.exercises
+      .map((e) => ({
+        exercise: e,
+        y:
+          document.getElementById(e.id)?.getBoundingClientRect().top ??
+          Infinity, // Default to Infinity if not found
+      }))
+      .sort((a, b) => a.y - b.y) // Sort by y coordinate
+      .map((item) => item.exercise); // Extract only exercises
 
     return supersetsCopy.map((superset) =>
       superset === supersetWithExercise
@@ -271,13 +252,8 @@ export function onDragEndExerciseToExistingSuperset(
   }
 
   // onDragEnd exercise to another existing superset
-  if (
-    supersetWithNewExercise.exercises.length >=
-    MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT
-  ) {
-    toast.error(
-      `Only ${MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT} exercises per superset allowed`
-    );
+  if (supersetWithNewExercise.exercises.length >= MAX_NUM_SUPERSETS) {
+    toast.error(`Only ${MAX_NUM_SUPERSETS} exercises per superset allowed`);
 
     return;
   }
@@ -372,32 +348,6 @@ function updateOnDragEndExerciseToExistingSuperset(
     }
     return sg;
   });
-  return component.subgroups;
-}
-
-export function updateMainSet(input: {
-  component: TrainingComponent;
-  selectedSubgroup: Subgroup | null;
-  mainSet: MainSet;
-}): Subgroup[] {
-  const { component, selectedSubgroup, mainSet } = input;
-
-  const parentId = selectedSubgroup?.id || DEFAULT_SUBGROUP_ID;
-
-  component.subgroups = component.subgroups.map((sg) => {
-    if (sg.parentId && sg.parentId === parentId) {
-      const newSupersets = onMainSetChange({
-        mainSet,
-        updatedComponent: component,
-        updatedSubgroup: selectedSubgroup,
-      });
-
-      return { ...sg, supersets: newSupersets, mainSet };
-    }
-
-    return sg;
-  });
-
   return component.subgroups;
 }
 

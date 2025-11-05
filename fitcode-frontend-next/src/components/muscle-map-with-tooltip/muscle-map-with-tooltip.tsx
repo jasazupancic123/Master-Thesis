@@ -16,6 +16,7 @@ import { core } from '@/core/core.service';
 import type { MuscleLoadType } from '@/core/exercise/enum/muscle-load-type.enum';
 import type { HeatmapLoad } from '@/core/exercise/type/heatmap-load.entity';
 import type { MuscleTip } from '@/core/exercise/type/muscle-tip.type';
+import { MainSet } from '@/core/training/enum/main-set.enum';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useMain } from '@/store/main.provider';
@@ -64,7 +65,6 @@ export default function MuscleMapWithTooltip(props: Props) {
     setTip,
     muscleLoads,
     setMuscleLoads,
-    selectedLoadType,
     setSelectedMuscle,
     setSelectedMuscleName,
   } = props;
@@ -425,7 +425,8 @@ export default function MuscleMapWithTooltip(props: Props) {
 
                         addTrainingExercises(
                           [trainingExercise],
-                          component.mainSet
+                          supersets[supersets.length - 1]?.mainSet ||
+                            MainSet.BLOCK // same main set as the last superset
                         );
                       }}
                     >
