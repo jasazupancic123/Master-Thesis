@@ -17,19 +17,13 @@ export default function Layout({ children }: React.PropsWithChildren) {
       flexDirection="column"
       alignItems="center"
       sx={{
-        backgroundColor: theme.palette.primary.main,
+        backgroundColor: theme.palette.background.default,
         overflowX: 'hidden',
         overflowY: 'auto',
       }}
     >
       <Container component="main" maxWidth="lg">
-        <HeroNavbar
-          height={HERO_NAVBAR_HEIGHT}
-          disableLogo
-          activeSection={'methodology'}
-        />
-
-        <Box mt={10}>{children}</Box>
+        <Box mt={4}>{children}</Box>
       </Container>
     </Box>
   );

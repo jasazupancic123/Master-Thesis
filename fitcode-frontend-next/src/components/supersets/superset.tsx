@@ -13,6 +13,9 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 
+const WarmupIcon = lib.common.component.getIcon('warmup');
+const CooldownIcon = lib.common.component.getIcon('cooldown');
+
 interface Props {
   superset: SupersetClass;
   supersetIndex: number;
@@ -77,15 +80,60 @@ export default function Superset({ superset, supersetIndex }: Props) {
       <Box
         ref={setNodeRef}
         sx={{
-          p: '1px',
+          p:
+            superset.exercises.length > 0 && superset.exercises.length % 2 === 0
+              ? '1.1px'
+              : '1px',
           borderRadius: '5px',
           background: superset.warmup
             ? theme.palette.warning.light
             : superset.cooldown
               ? theme.palette.success.light
               : lib.common.component.getBorderGradient(theme),
+          position: 'relative',
         }}
       >
+        {superset.warmup && WarmupIcon ? (
+          <Box
+            sx={{
+              height: 18,
+              position: 'absolute',
+              top: -8,
+              left: 4,
+              borderRadius: '50%',
+              zIndex: 10,
+              backgroundColor: theme.palette.background.dark,
+            }}
+          >
+            <WarmupIcon
+              sx={{
+                width: 18,
+                height: 18,
+              }}
+            />
+          </Box>
+        ) : null}
+
+        {superset.cooldown && CooldownIcon ? (
+          <Box
+            sx={{
+              height: 18,
+              position: 'absolute',
+              top: -8,
+              left: 4,
+              borderRadius: '50%',
+              zIndex: 10,
+              backgroundColor: theme.palette.background.dark,
+            }}
+          >
+            <CooldownIcon
+              sx={{
+                width: 18,
+                height: 18,
+              }}
+            />
+          </Box>
+        ) : null}
         <Stack
           p={screenSize.isLandscapeMobile ? 0.5 : 0}
           pt={0}
@@ -113,16 +161,18 @@ export default function Superset({ superset, supersetIndex }: Props) {
                   : undefined
               }
             >
-              {supersets.length === 1 && superset.exercises.length === 0 ? (
+              {(superset.warmup || superset.cooldown) &&
+              superset.exercises.length === 0 ? (
                 <Box
-                  border="1px dashed #B2B3B7"
                   borderRadius={2}
-                  sx={{ cursor: 'pointer' }}
-                  p={1}
                   py={3}
                   width="100%"
                   height="100%"
                   textAlign="center"
+                  sx={{
+                    cursor: 'pointer',
+                    backgroundColor: theme.palette.background.light,
+                  }}
                   onClick={() => setOpenAddExerciseModal(true)}
                 >
                   <Typography variant="body2" align="center">

@@ -53,7 +53,7 @@ export const LINK_CONTACT_US = link(
 );
 export const LINK_ABOUT_US = link('About Us', '/#about-us', null, 'about-us');
 export const LINK_METHODOLOGIES = link(
-  'Methods',
+  'Methodology',
   '/methodology',
   null,
   'methodology'
@@ -150,7 +150,6 @@ export const LINKS_HERO_NAVBAR = {
   aboutUs: LINK_ABOUT_US,
   technology: LINK_TECHNOLOGY,
   contactUs: LINK_CONTACT_US,
-  methodology: LINK_METHODOLOGIES,
 };
 
 export const LINKS_AUTHENTICATED_HERO_NAVBAR: Record<

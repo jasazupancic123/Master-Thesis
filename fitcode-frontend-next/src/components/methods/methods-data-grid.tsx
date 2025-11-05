@@ -204,6 +204,14 @@ export default function MethodsDataGrid({
         sx={{
           m: -3,
           '& .selected-row': { backgroundColor: 'rgba(25, 118, 210, 0.1)' },
+          '& .MuiDataGrid-cell': {
+            display: 'flex',
+            alignItems: 'center',
+          },
+          '& .MuiDataGrid-columnHeader': {
+            display: 'flex',
+            alignItems: 'center',
+          },
         }}
       />
     </Box>
