@@ -65,9 +65,11 @@ export default function SupersetExercise({
 
   return (
     <Grid2
+      id={exercise.id}
       size={screenSize.isSmallerThanLaptop ? 12 : { xs: 12 }}
       key={exercise.id}
       sx={{
+        width: '99.5%',
         mb: superset.exercises.length - 1 !== exerciseIndex ? 0.4 : undefined,
       }}
     >
