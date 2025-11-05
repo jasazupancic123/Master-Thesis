@@ -539,14 +539,10 @@ export function TrainerDayViewProvider(props: Props) {
   function changeSupersetMainSet(supersetIndex: number, mainSet: MainSet) {
     if (!component || !training) return;
 
-    console.log('component', component);
-
     const childrenSubgroups = core.training.subgroup.getChildren(
       selectedSubgroup || component,
       component
     );
-
-    console.log('childrenSubgroups', childrenSubgroups);
 
     const supersetsCopy = structuredClone(supersets);
     supersetsCopy[supersetIndex].mainSet = mainSet;
