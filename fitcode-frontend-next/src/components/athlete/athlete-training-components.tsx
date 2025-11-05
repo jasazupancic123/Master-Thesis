@@ -252,6 +252,10 @@ export default function AthleteTrainingComponents(props: Props) {
                 exerciseSetTrackingState: state,
               } as TrainingInProgress);
 
+              const text = `Welcome to today's ${selectedComponent.id} training. Let's get started!`;
+
+              lib.common.textToSpeech.speak(text);
+
               setView(ExerciseTrainingView.TrainingView);
               setModal(false);
             },

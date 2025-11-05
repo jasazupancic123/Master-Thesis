@@ -1,11 +1,13 @@
 import { useRouter } from 'next/navigation';
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { useTraining } from './training.provider';
 import { TrainingController } from '@/core/training/training.controller';
 import type { TrainingExerciseRecording } from '@/core/training/type/training-exercise.type';
 import type { CreateWorkload } from '@/core/training/type/workload.type';
+import { lib } from '@/lib';
+import { INDEXED_DB_FIELDS } from '@/lib/common/const/indexed-db-fields.const';
 import { handleApiRequest, type SetState } from '@/lib/common/type/state.type';
 
 export interface ITrainingInProgressContext {
@@ -14,6 +16,10 @@ export interface ITrainingInProgressContext {
   supersetIndex: number | undefined;
   setSupersetIndex: SetState<number | undefined>;
   setIndex: number | undefined;
+  audioEnabled: boolean;
+  setAudioEnabled: SetState<boolean>;
+  initedAudioEnabled: boolean;
+  setInitedAudioEnabled: SetState<boolean>;
   setSetIndex: SetState<number | undefined>;
   handleUpsertSet: (
     body: Omit<CreateWorkload, 'userId'>,
@@ -43,6 +49,35 @@ export const TrainingInProgressProvider = ({
   );
 
   const [setIndex, setSetIndex] = useState<number | undefined>(undefined);
+
+  const [audioEnabled, setAudioEnabled] = useState<boolean>(true);
+  const [initedAudioEnabled, setInitedAudioEnabled] = useState<boolean>(false);
+
+  useEffect(() => {
+    const fetchAudioSetting = async () => {
+      const item = await lib.common.indexedDb.items.get(
+        INDEXED_DB_FIELDS.trainingInProgressAudio
+      );
+      if (item && typeof item.payload === 'boolean') {
+        setAudioEnabled(item.payload);
+      }
+      setInitedAudioEnabled(true);
+    };
+
+    fetchAudioSetting();
+  }, []);
+
+  useEffect(() => {
+    const updateIndexedDbAudioSetting = async () => {
+      await lib.common.indexedDb.items.put({
+        id: INDEXED_DB_FIELDS.trainingInProgressAudio,
+        payload: audioEnabled,
+        updatedAt: Date.now(),
+      });
+    };
+
+    updateIndexedDbAudioSetting();
+  }, [audioEnabled]);
 
   async function handleUpsertSet(
     body: Omit<CreateWorkload, 'userId'>,
@@ -89,6 +124,10 @@ export const TrainingInProgressProvider = ({
         setIndex,
         setSetIndex,
         handleUpsertSet,
+        audioEnabled,
+        setAudioEnabled,
+        initedAudioEnabled,
+        setInitedAudioEnabled,
       }}
     >
       {children}

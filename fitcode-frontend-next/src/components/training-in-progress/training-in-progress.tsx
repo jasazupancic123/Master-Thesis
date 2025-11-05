@@ -102,13 +102,12 @@ export default function TrainingInProgress() {
             display="flex"
             gap={1}
             px={1}
-            pt={0.5}
             pb={1}
+            mt={2}
             maxWidth="100%"
             sx={{
               overflowX: 'auto',
               mx: 'auto',
-              backgroundColor: theme.palette.background.dark,
             }}
           >
             {(trainingInProgress.supersets || []).map((superset, i) => {
@@ -120,7 +119,7 @@ export default function TrainingInProgress() {
                   display="flex"
                   flexDirection="column"
                   alignItems="center"
-                  gap={1}
+                  gap={0.5}
                 >
                   <Typography
                     key={i}

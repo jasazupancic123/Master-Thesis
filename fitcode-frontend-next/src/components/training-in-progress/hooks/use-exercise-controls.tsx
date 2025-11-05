@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { TrainingInProgressExerciseControl } from '../enum/exercise-controls.enum';
 
 export default function useExerciseControls(iconsDimension: number) {
-  const numItems = 6;
+  const numItems = 7;
   const boxWidth = `${100 / numItems}%`;
 
   const [selectedControl, setSelectedControl] =
