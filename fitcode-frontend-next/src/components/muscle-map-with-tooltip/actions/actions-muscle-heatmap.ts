@@ -90,7 +90,7 @@ export const computeCurrentAndPossibleExercises = (
       )
     );
   } else {
-    const leafes = lib.common.tree.computeLeafes([currentMuscle], 'options');
+    const leafes = lib.common.tree.computeLeafs([currentMuscle], 'options');
 
     componentExercises = exercisesInComponent.filter((exercise) =>
       exercise.exercise?.muscleValues?.some((muscleValue) =>

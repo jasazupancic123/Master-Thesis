@@ -1,5 +1,5 @@
 import type { Attribute } from '@src/attribute/entity/attribute.entity';
-import { AttributeType } from '@src/common/enum/attribute-type.enum';
+import { AttributeType } from '@src/attribute/enum/attribute-type.enum';
 
 export const MUSCLES_FRONT: Attribute[] = [
   {
@@ -1659,4 +1659,4 @@ export const MUSCLES_BACK: Attribute[] = [
       },
     ],
   },
-];
+] as const;

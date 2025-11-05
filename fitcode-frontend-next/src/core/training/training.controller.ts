@@ -119,9 +119,11 @@ export class TrainingController extends BaseController {
     body: Required<DateRange>,
     options?: FetchOptions
   ) {
-    return this.api.patch<
-      Pick<Training, 'components' | 'warmup' | 'cooldown' | 'from' | 'to'>
-    >(`/${trainingId}/component/${componentId}/time`, body, options);
+    return this.api.patch<Pick<Training, 'components' | 'from' | 'to'>>(
+      `/${trainingId}/component/${componentId}/time`,
+      body,
+      options
+    );
   }
 
   async delete(trainingId: string, options?: FetchOptions) {

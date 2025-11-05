@@ -2,6 +2,7 @@ import type { Dayjs } from 'dayjs';
 
 import type { AuthUser } from '@/core/auth/type/user.type';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
+import type { Method } from '@/core/exercise/type/method.type';
 import type { Cycle } from '@/core/group/type/cycle.type';
 import type { Group } from '@/core/group/type/group.type';
 import type { Institution } from '@/core/institution/type/institution.type';
@@ -58,19 +59,8 @@ export type TrainerDayViewContextProps = {
   training: Training | undefined;
   setTraining: SetStateNullable<Training>;
   progress: UserProgress[];
-  selectedPeriod:
-    | {
-        key: Date;
-        value: 'AM' | 'PM';
-      }
-    | undefined; // selected period for the training
-  setSelectedPeriod: SetState<
-    | {
-        key: Date;
-        value: 'AM' | 'PM';
-      }
-    | undefined
-  >;
+  selectedPeriod: { key: Date; value: 'AM' | 'PM' } | undefined; // selected period for the training
+  setSelectedPeriod: SetState<{ key: Date; value: 'AM' | 'PM' } | undefined>;
   component: TrainingComponent | undefined; // selected training component
   setComponent: SetStateNullable<TrainingComponent>;
   wellness: WellnessZScore[];
@@ -108,4 +98,7 @@ export type TrainerDayViewContextProps = {
     supersetIndex: number,
     exerciseIndex: number
   ) => void;
+  addWarmupSuperset: () => void;
+  addCooldownSuperset: () => void;
+  applyMethod: (method: Method) => void;
 };

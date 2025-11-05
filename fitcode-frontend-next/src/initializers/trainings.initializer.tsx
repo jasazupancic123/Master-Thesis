@@ -11,7 +11,7 @@ import { TrainingProvider } from '@/store/training.provider';
 export default function TrainingsInitializer(props: React.PropsWithChildren) {
   const { children } = props;
   const { trainings, reports } = useAthlete();
-  const { components, exercises, methods, institutions, groups } = useMain();
+  const { exercises, institutions, groups } = useMain();
   const [state, setState] = useState({ trainings, reports });
 
   const controller = TrainingController.getInstance();
@@ -20,15 +20,12 @@ export default function TrainingsInitializer(props: React.PropsWithChildren) {
       await controller.findOneById(trainingId);
 
     const training = TrainingService.mapData(fetchedTraining, {
-      components,
       exercises,
-      methods,
     });
 
     const report = TrainingService.mapReport(fetchedReport, {
       institutions,
       groups,
-      components,
     });
 
     setState((prev) => ({

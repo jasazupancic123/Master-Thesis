@@ -4,11 +4,9 @@ import { createContext, useContext, useState } from 'react';
 
 import { withAuth } from './auth.provider';
 import type { AuthUser } from '@/core/auth/type/user.type';
-import type { Component } from '@/core/component/type/component.type';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
 import type { Group } from '@/core/group/type/group.type';
 import type { Institution } from '@/core/institution/type/institution.type';
-import type { Method } from '@/core/method/type/method.type';
 import { UserRole } from '@/core/profile/enum/user-role.enum';
 import type { Profile } from '@/core/profile/type/user.type';
 import type { SetState, SetStateNullable } from '@/lib/common/type/state.type';
@@ -17,9 +15,7 @@ export interface MainProviderProps extends React.PropsWithChildren {
   profile: Profile;
   profiles: Profile[];
   users: AuthUser[];
-  components: Component[];
   exercises: Exercise[];
-  methods: Method[];
   institutions: Institution[];
   groups: Group[];
 }
@@ -28,9 +24,7 @@ export interface IMainContext extends MainProviderProps {
   setProfile: SetStateNullable<Profile>;
   setProfiles: SetState<Profile[]>;
   setUsers: SetState<AuthUser[]>;
-  setComponents: SetState<Component[]>;
   setExercises: SetState<Exercise[]>;
-  setMethods: SetState<Method[]>;
   setGroups: SetState<Group[]>;
 }
 
@@ -52,8 +46,6 @@ export default function MainProvider(props: MainProviderProps) {
   const [profile, setProfile] = useState<Profile | undefined>(props.profile);
   const [users, setUsers] = useState<AuthUser[]>(props.users);
   const [exercises, setExercises] = useState<Exercise[]>(props.exercises);
-  const [components, setComponents] = useState<Component[]>(props.components);
-  const [methods, setMethods] = useState<Method[]>(props.methods);
   const [groups, setGroups] = useState<Group[]>(props.groups);
 
   const value: IMainContext = {
@@ -63,12 +55,8 @@ export default function MainProvider(props: MainProviderProps) {
     setProfiles,
     users,
     setUsers,
-    components,
-    setComponents,
     exercises,
     setExercises,
-    methods,
-    setMethods,
     institutions: props.institutions,
     groups,
     setGroups,

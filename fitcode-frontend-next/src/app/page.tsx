@@ -35,7 +35,7 @@ export default function Home() {
     <>
       <HeroNavbar
         height={HERO_NAVBAR_HEIGHT}
-        dissableLogo
+        disableLogo
         activeSection={active}
       />
 
@@ -52,7 +52,7 @@ export default function Home() {
       >
         <Hero />
         <AboutUs />
-        <Technology activeSection={active} />
+        <Technology />
         <ContactUs />
       </Box>
     </>

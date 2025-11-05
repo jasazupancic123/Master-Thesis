@@ -3,10 +3,10 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import toast from 'react-hot-toast';
 
-import type { Component } from '@/core/component/type/component.type';
 import { COLOR } from '@/core/const/color.const';
 import { core } from '@/core/core.service';
-import type { Target } from '@/core/target/type/target.type';
+import type { Component } from '@/core/exercise/type/component.type';
+import type { Target } from '@/core/exercise/type/target.type';
 import { MainSet } from '@/core/training/enum/main-set.enum';
 import { TrainingController } from '@/core/training/training.controller';
 import { TrainingService } from '@/core/training/training.service';
@@ -55,8 +55,9 @@ export async function handleClickDateCell(
         trainingDate.isSame(date, 'day') && trainingDate.format('A') === period
       );
     });
+
     const trainingInPeriodIncludesComponent = trainingInPeriod?.components.find(
-      (c) => c.component?.id === trainingComponent?.component?.id
+      (c) => c.id === trainingComponent?.id
     );
 
     if (trainingInPeriod && !trainingInPeriodIncludesComponent) {
@@ -149,7 +150,7 @@ export function getFilteredTrainings(
         });
 
         const rootTrainingComponent = copiedFromTraining.components.find(
-          (c) => trainingComponent?.component?.id === c.component?.id
+          (c) => trainingComponent?.id === c.id
         );
 
         if (!rootTrainingComponent) continue;
@@ -206,13 +207,14 @@ function handleAddTraining(
       period,
       from,
       selectedComponents: selected.map((c, i) => ({
-        id: c.id,
+        id: c.field,
         subgroups: [],
         supersets: [],
         mainSet: MainSet.BLOCK,
         from: addMinutes(from, i * 30),
         to: addMinutes(addMinutes(from, i * 30), 30),
-        target: selectedTargets?.find((m) => m.componentId === c.id)?.target,
+        targetId: selectedTargets?.find((m) => m.componentId === c.field)
+          ?.target?.field as string,
       })),
     },
     groupCtx,
@@ -232,7 +234,7 @@ async function handleCreateTraining(
   mainCtx: IMainContext
 ) {
   const { date, from, period, selectedComponents } = input;
-  const { components, exercises, methods } = mainCtx;
+  const { exercises } = mainCtx;
   const { group, cycle, trainings, setTrainings } = groupCtx;
 
   if (!selectedComponents.length) return; // toast.error('Select at least one component to add');
@@ -296,11 +298,7 @@ async function handleCreateTraining(
       }),
     state,
     (training) => {
-      TrainingService.mapData(training, {
-        components,
-        exercises,
-        methods,
-      });
+      TrainingService.mapData(training, { exercises });
 
       // update the training with the response from the server
       setTrainings((prev) =>

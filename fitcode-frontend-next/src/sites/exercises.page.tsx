@@ -3,6 +3,7 @@
 import { Publish } from '@mui/icons-material';
 import AddIcon from '@mui/icons-material/AddOutlined';
 import {
+  Button,
   Grid2,
   Pagination,
   SpeedDial,
@@ -12,6 +13,7 @@ import {
 } from '@mui/material';
 import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 
@@ -29,18 +31,15 @@ import ExerciseChips from '@/components/exercise-chips/exercise-chips';
 import ExerciseModal from '@/components/exercise-modal/exercise-modal';
 import ExerciseFilter from '@/components/exercises-list/exercise-filter';
 import ExercisesList from '@/components/exercises-list/exercises-list';
-import type { Component } from '@/core/component/type/component.type';
-import { core } from '@/core/core.service';
+import { Components } from '@/core/exercise/constant/components.constant';
+import type { Component } from '@/core/exercise/type/component.type';
 import type {
   CreateExerciseMuscleValues,
   Exercise,
 } from '@/core/exercise/type/exercise.type';
 import { UserRole } from '@/core/profile/enum/user-role.enum';
-import {
-  COOLDOWN_ID,
-  WARMUP_ID,
-} from '@/core/training/const/warmup-cooldown.const';
 import { lib } from '@/lib';
+import { LINK_METHODOLOGIES } from '@/lib/common/const/nav.const';
 import type { Pagination as PaginationType } from '@/lib/common/type/paginate.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
@@ -60,7 +59,7 @@ export type AttributeFilters = Record<string, AttributeValue | undefined>;
 
 export const DEFAULT_EXERCISE: Partial<Exercise> = {
   name: '',
-  componentIds: [],
+  components: [],
   isUnilateral: false,
   disabled: false,
 };
@@ -69,11 +68,7 @@ export const EXERCISES_PAGE_SIZE = 20;
 
 export default function ExercisesPage() {
   const { role } = useAuthenticatedAuth();
-  const {
-    components,
-    exercises: allExercises,
-    setExercises: setAllExercises,
-  } = useMain();
+  const { exercises: allExercises, setExercises: setAllExercises } = useMain();
 
   const router = useRouter();
   const theme = useTheme();
@@ -135,14 +130,24 @@ export default function ExercisesPage() {
    * Filter exercises
    */
   useEffect(() => {
+    const allComponentPaths = selectedComponent
+      ? lib.common.tree.getNestedPaths(
+          selectedComponent.field,
+          Components,
+          'field',
+          'options'
+        )
+      : [];
+
     const filter: Partial<Exercise> = {
-      ...(selectedComponent?.id && { componentIds: [selectedComponent.id] }),
+      ...(selectedComponent?.field && {
+        components: allComponentPaths,
+      }),
       ...(search && { name: search }),
       ...filters,
     };
 
     handlePaginateExercises(filter, {
-      components,
       exercises,
       pagination,
       search,
@@ -150,7 +155,6 @@ export default function ExercisesPage() {
       setFilteredExercises,
     });
   }, [
-    components,
     exercises.length,
     selectedComponent,
     filters,
@@ -181,9 +185,6 @@ export default function ExercisesPage() {
       >
         <ExerciseChips
           noSelectionLabel="All"
-          components={core.component.tree(
-            components.filter((c) => c.id !== WARMUP_ID && c.id !== COOLDOWN_ID)
-          )}
           selected={selectedComponent}
           setSelected={(component) =>
             setSelectedComponent(component as Component)
@@ -191,18 +192,43 @@ export default function ExercisesPage() {
           bgColor={theme.palette.background.default}
           primaryColor={theme.palette.primary.main}
           gap={screenSize.isReallySmall ? 1.5 : 3.5}
+          disabledComponents={['other', 'competition']}
         />
       </Box>
 
       <Box
-        sx={{ py: 2, width: '50%', minWidth: 240, maxWidth: 400, mx: 'auto' }}
+        width="100%"
+        display="flex"
+        flexDirection={
+          screenSize.isSmallerThanLaptop ? 'column-reverse' : 'row'
+        }
+        justifyContent="center"
       >
-        <SearchBar
-          placeholder="Search Exercises"
-          value={search}
-          handleSearchChange={(e) => setSearch(e.target.value)}
-          maxWidth="100%"
-        />
+        <Box width="25%" />
+        <Box
+          sx={{ py: 2, width: '50%', minWidth: 240, maxWidth: 400, mx: 'auto' }}
+        >
+          <SearchBar
+            placeholder="Search Exercises"
+            value={search}
+            handleSearchChange={(e) => setSearch(e.target.value)}
+            maxWidth="100%"
+          />
+        </Box>
+        <Box
+          width={screenSize.isSmallerThanLaptop ? '100%' : '25%'}
+          display="flex"
+          justifyContent={
+            screenSize.isSmallerThanLaptop ? 'center' : 'flex-start'
+          }
+          alignItems="center"
+        >
+          <Link href={LINK_METHODOLOGIES.href} passHref>
+            <Button variant="outlined" color="primary">
+              {LINK_METHODOLOGIES.label}
+            </Button>
+          </Link>
+        </Box>
       </Box>
 
       <Grid2 container alignItems="center" spacing={2} sx={{ m: 2 }}>
@@ -311,18 +337,17 @@ export default function ExercisesPage() {
         <ExerciseModal
           data={{ ...exercise, imageUrl: undefined, videoUrl: undefined }}
           setData={setExercise}
-          components={components}
           isOpen={modal.add}
           setIsOpen={(isOpen) => setModal({ ...modal, add: isOpen })}
           title={'Add Exercise'}
           onConfirm={async () => {
             handleAddExercise(exercise, {
               router,
-              components,
               component: selectedComponent!,
               filteredExercises,
               setFilteredExercises,
-              setExercises: setAllExercises,
+              setAllExercises,
+              setExercises,
               setExercise,
               setModal,
             });
@@ -335,7 +360,6 @@ export default function ExercisesPage() {
         <ExerciseModal
           data={exercise}
           setData={setExercise}
-          components={components}
           isOpen={modal.edit}
           setIsOpen={(isOpen) => setModal({ ...modal, edit: isOpen })}
           title={
@@ -347,9 +371,9 @@ export default function ExercisesPage() {
             onConfirm: async () => {
               handleUpdateExercise(exercise!.id!, exercise, {
                 router,
-                components,
                 setFilteredExercises,
-                setExercises: setAllExercises,
+                setExercises,
+                setAllExercises,
                 setExercise,
                 setModal,
               });
@@ -373,7 +397,8 @@ export default function ExercisesPage() {
           await handleDeleteExercise(exercise!.id!, {
             router,
             setFilteredExercises,
-            setExercises: setAllExercises,
+            setAllExercises,
+            setExercises,
           });
           setModal((prev) => ({ ...prev, confirmDelete: false }));
         }}
@@ -413,9 +438,7 @@ export default function ExercisesPage() {
         width={screenSize.isMobile ? undefined : 500}
         onConfirm={() => {
           handleUpsertMuscleValues(
-            {
-              exercises: importedMuscleValueExercises,
-            },
+            { exercises: importedMuscleValueExercises },
             { router, setExercises: setAllExercises }
           );
 

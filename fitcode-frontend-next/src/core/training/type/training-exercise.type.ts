@@ -9,6 +9,7 @@ import type { RepInfo } from '@/lib/pose-detection/type/rep.type';
 export type TrainingExercise = IdEntity & {
   params: ExerciseParamFieldExtended[];
   sets: ExerciseSet[];
+  methodId?: string;
 
   // mapped properties
   exercise?: Exercise;
@@ -19,7 +20,10 @@ export type TrainingExerciseExtended = TrainingExercise & {
   supersetIndex: number;
 };
 
-export type UpdateTrainingExercise = Pick<TrainingExercise, 'id' | 'sets'>;
+export type UpdateTrainingExercise = Pick<
+  TrainingExercise,
+  'id' | 'sets' | 'methodId'
+>;
 
 export type RepImage = {
   repNumber: number;

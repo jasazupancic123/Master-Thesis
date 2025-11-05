@@ -45,7 +45,7 @@ export class InstitutionService implements Permission<Institution> {
     private readonly authService: Wrapper<AuthService>,
     private readonly repository: InstitutionRepository,
     private readonly profileService: ProfileService,
-    private readonly institutionMembersRepository: InstitutionMembersRepository,
+    private readonly membersRepository: InstitutionMembersRepository,
   ) {}
 
   async findById(ref: InstitutionRef): Promise<Institution | null> {
@@ -162,21 +162,19 @@ export class InstitutionService implements Permission<Institution> {
         );
 
       // updating trainer
-      if (!add) await this.institutionMembersRepository.removeMember(memberRef);
+      if (!add) await this.membersRepository.removeMember(memberRef);
       else
-        await this.institutionMembersRepository.addMember(
+        await this.membersRepository.addMember(
           { role: UserRole.TRAINER },
           memberRef,
         );
     } else {
       // updating athlete
       const operations: BatchOperation<InstitutionMember>[] = add
-        ? this.institutionMembersRepository.getAddMembersOperation(ref, [
+        ? this.membersRepository.getAddMembersOperation(ref, [
             { id: member.uid, role: UserRole.ATHLETE },
           ])
-        : this.institutionMembersRepository.getRemoveMembersOperation(ref, [
-            member.uid,
-          ]);
+        : this.membersRepository.getRemoveMembersOperation(ref, [member.uid]);
 
       // remove athlete in all groups & trainings
       if (!add)
@@ -198,14 +196,14 @@ export class InstitutionService implements Permission<Institution> {
     data: Pick<InstitutionMember, 'role'>,
     ref: InstitutionMemberRef,
   ) {
-    await this.institutionMembersRepository.addMember(data, ref);
+    await this.membersRepository.addMember(data, ref);
   }
 
   buildAddMembersOperation(
     ref: InstitutionRef,
     data: Create<Omit<InstitutionMember, 'institutionId'>>[],
   ): BatchWriteOperation<InstitutionMember>[] {
-    return this.institutionMembersRepository.getAddMembersOperation(ref, data);
+    return this.membersRepository.getAddMembersOperation(ref, data);
   }
 
   canView(user: User, institution: Institution) {

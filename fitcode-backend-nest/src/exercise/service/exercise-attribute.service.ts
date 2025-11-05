@@ -1,19 +1,14 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { Query } from 'firebase-admin/firestore';
 
 import { Attribute } from '@src/attribute/entity/attribute.entity';
 import { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
+import { AttributeType } from '@src/attribute/enum/attribute-type.enum';
 import { AttributeService } from '@src/attribute/service/attribute.service';
-import { AttributeType } from '@src/common/enum/attribute-type.enum';
 import { ValidateError } from '@src/common/type/validate.type';
-import { Component } from '@src/component/entity/component.entity';
 
 import { BodyRegion } from '../constant/body-region.constant';
-import { Category } from '../constant/category.constant';
+import { Components } from '../constant/components.constant';
 import { Equipment } from '../constant/equipment.constant';
 import { LiftPriority } from '../constant/lift-priority.constant';
 import { LoadingSide } from '../constant/loading-side.constant';
@@ -22,6 +17,7 @@ import { MovementDirection } from '../constant/movement-direction.constant';
 import { Pattern } from '../constant/patterns.constant';
 import { PrescriptionType } from '../constant/prescription-type.constant';
 import { CreateExerciseDto } from '../dto/create-exercise.dto';
+import { Component } from '../entity/component.entity';
 import { Exercise } from '../entity/exercise.entity';
 import { ExerciseAttributes } from '../entity/exercise-attributes.entity';
 
@@ -31,52 +27,8 @@ export class ExerciseAttributeService {
 
   validate(
     input: CreateExerciseDto,
-    data: { components: Component[] },
     onError?: (error: ValidateError<Exercise>) => void,
-  ) {
-    const field: keyof CreateExerciseDto = 'componentIds';
-
-    // validate components
-    if (input.componentIds.length < 1) {
-      const message = 'Exercise must have at least one component';
-      if (onError) {
-        onError({ field, message });
-        return [];
-      }
-
-      throw new BadRequestException(message);
-    }
-
-    for (const componentId of input.componentIds) {
-      const component = data.components.find((c) => c.id === componentId);
-      if (!component) {
-        // check that component exists
-        const message = `Component ${componentId} does not exist`;
-        if (onError) {
-          onError({ field, message });
-          return [];
-        }
-
-        throw new NotFoundException(message);
-      }
-    }
-
-    // check that component is leaf
-    const mainComponent = data.components.find(
-      (c) => c.id === input.componentIds[0],
-    )!;
-
-    if (mainComponent.children?.length > 0) {
-      // main component must be leaf
-      const message = `Main component ${mainComponent.name.toLowerCase()} is not valid for an exercise`;
-      if (onError) {
-        onError({ field, message });
-        return [];
-      }
-
-      throw new BadRequestException(message);
-    }
-
+  ): AttributeValue<ExerciseAttributes>[] {
     const attributes = this.getAttributes();
     const values = this.getValues(input as Exercise);
 
@@ -97,10 +49,11 @@ export class ExerciseAttributeService {
   getAttributes(): Attribute<ExerciseAttributes>[] {
     return [
       {
-        field: 'categories',
-        name: 'Categories',
+        field: 'components',
+        name: 'Components',
         type: AttributeType.Multiselect,
-        options: Category,
+        options: Components,
+        required: true,
       },
       {
         field: 'equipment',
@@ -156,9 +109,9 @@ export class ExerciseAttributeService {
   getValues(
     exercise: Partial<ExerciseAttributes>,
   ): AttributeValue<ExerciseAttributes>[] {
-    const categoryValues: AttributeValue<ExerciseAttributes>[] =
-      exercise.categories?.map((c) => ({
-        field: 'categories',
+    const componentValues: AttributeValue<ExerciseAttributes>[] =
+      exercise.components?.map((c) => ({
+        field: 'components',
         ...this.attributeService.parseSelectedValue(c),
       })) || [];
 
@@ -211,7 +164,7 @@ export class ExerciseAttributeService {
       })) || [];
 
     return this.attributeService.uniqueValues([
-      ...categoryValues,
+      ...componentValues,
       ...prescriptionValues,
       ...patternValues,
       ...bodyRegionValues,
@@ -232,37 +185,57 @@ export class ExerciseAttributeService {
       throw new BadRequestException('Only one filter can be applied at a time');
 
     for (const [key, value] of filters) {
+      const parsed = value.split(',').map((v) => v.trim());
       switch (key) {
-        case 'category':
-          query = query.where('categories', 'array-contains', value);
+        case 'component':
+          query = query.where('components', 'array-contains-any', parsed);
           break;
         case 'equipment':
-          query = query.where('equipment', 'array-contains', value);
+          query = query.where('equipment', 'array-contains-any', parsed);
           break;
         case 'prescription':
-          query = query.where('prescriptions', 'array-contains', value);
+          query = query.where('prescriptions', 'array-contains-any', parsed);
           break;
         case 'pattern':
-          query = query.where('patterns', 'array-contains', value);
+          query = query.where('patterns', 'array-contains-any', parsed);
           break;
         case 'bodyRegion':
-          query = query.where('bodyRegions', 'array-contains', value);
+          query = query.where('bodyRegions', 'array-contains-any', parsed);
           break;
         case 'loadingSide':
-          query = query.where('loadingSides', 'array-contains', value);
+          query = query.where('loadingSides', 'array-contains-any', parsed);
           break;
         case 'location':
-          query = query.where('locations', 'array-contains', value);
+          query = query.where('locations', 'array-contains-any', parsed);
           break;
         case 'liftPriority':
-          query = query.where('liftPriorities', 'array-contains', value);
+          query = query.where('liftPriorities', 'array-contains-any', parsed);
           break;
         case 'movementDirection':
-          query = query.where('movementDirections', 'array-contains', value);
+          query = query.where(
+            'movementDirections',
+            'array-contains-any',
+            parsed,
+          );
           break;
       }
     }
 
     return query;
+  }
+
+  /**
+   * Get the root main component of an exercise. For example, if the component is
+   * 'strength:corrective:spine', it will return the 'strength' component attribute.
+   */
+  getRootMainComponent(component: string): Component | null {
+    return this.attributeService.getRoot(
+      component,
+      Components,
+    ) as Component | null;
+  }
+
+  isRootComponent(component: string): boolean {
+    return Components.some((c) => c.field === component);
   }
 }

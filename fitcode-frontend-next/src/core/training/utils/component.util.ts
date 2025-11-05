@@ -2,6 +2,13 @@ import { addMinutes } from 'date-fns';
 
 import { MainSet } from '../enum/main-set.enum';
 import type { TrainingComponent } from '../type/training-component.type';
+import { Components } from '@/core/exercise/constant/components.constant';
+import { Methods } from '@/core/exercise/constant/method.constant';
+import { Targets } from '@/core/exercise/constant/target.constant';
+import type { Component } from '@/core/exercise/type/component.type';
+import type { Method } from '@/core/exercise/type/method.type';
+import type { Target } from '@/core/exercise/type/target.type';
+import type { Cycle } from '@/core/group/type/cycle.type';
 
 export class TrainingComponentUtil {
   stub(id: string, data?: Partial<TrainingComponent>): TrainingComponent {
@@ -11,12 +18,37 @@ export class TrainingComponentUtil {
       to: data?.to || addMinutes(new Date(), 30),
       supersets: data?.supersets || [],
       subgroups: data?.subgroups || [],
-      methodId: data?.methodId,
       mainSet: data?.mainSet || MainSet.BLOCK,
-      target: data?.target || undefined,
+      targetId: data?.targetId,
       periodizationType: data?.periodizationType,
       copiedFrom: data?.copiedFrom,
       location: data?.location,
     };
+  }
+
+  find(componentId: string): Component | undefined {
+    return Components.find((c) => c.field === componentId);
+  }
+
+  findByTarget(targetId: string, componentId?: string): Component | undefined {
+    const target = Targets.find((t) => t.field === targetId);
+    if (!target) return undefined;
+    if (componentId && target.componentId !== componentId) return undefined;
+    return Components.find((c) => c.field === target.componentId);
+  }
+
+  findTarget(targetId?: string): Target | undefined {
+    if (!targetId) return undefined;
+    return Targets.find((t) => t.field === targetId);
+  }
+
+  findCycleTarget(targetId: string, cycle: Cycle): Target | undefined {
+    const cycleTarget = cycle.targets.find((ct) => ct.targetId === targetId);
+    if (!cycleTarget) return undefined;
+    return Targets.find((t) => t.field === cycleTarget.targetId);
+  }
+
+  findMethodologies(componentId: string): Method[] {
+    return Methods.filter((m) => m.componentId === componentId);
   }
 }

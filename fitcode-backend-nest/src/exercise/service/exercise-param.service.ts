@@ -1,20 +1,21 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { Attribute } from '@src/attribute/entity/attribute.entity';
 import { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
 import { AttributeService } from '@src/attribute/service/attribute.service';
 import { CommonService } from '@src/common/service/common.service';
 import { ValidateError } from '@src/common/type/validate.type';
-import { Component } from '@src/component/entity/component.entity';
+import { Component } from '@src/exercise/entity/component.entity';
 import { Exercise } from '@src/exercise/entity/exercise.entity';
-import { Method } from '@src/method/entity/method.entity';
 import { MAX_NUM_SETS_IN_EXERCISE } from '@src/training/constant/training-limits.constant';
 import {
   ExerciseParamField,
   ExerciseSet,
 } from '@src/training/entity/exercise-set.entity';
+import { TrainingExercise } from '@src/training/entity/training-exercise.entity';
 
 import { ExerciseParamAttribute } from '../constant/exercise-param.constant';
+import { Methods } from '../constant/method.constant';
 
 @Injectable()
 export class ExerciseParamService {
@@ -23,24 +24,45 @@ export class ExerciseParamService {
     private readonly attributeService: AttributeService,
   ) {}
 
-  getPair(field: ExerciseParamField): ExerciseParamField | null {
-    const pair = this.pairs.find((p) => p.includes(field));
-    return pair ? (pair[0] === field ? pair[1] : pair[0]) : null;
-  }
-
-  readonly pairs: [ExerciseParamField, ExerciseParamField][] = [
-    ['reps', 'repsR'],
-    ['loadKg', 'loadKgR'],
-    ['loadRm', 'loadRmR'],
-    ['loadBw', 'loadBwR'],
-    ['tempo', 'tempoR'],
-    ['vel', 'velR'],
-    ['eff', 'eff'],
-    ['time', 'time'],
-    ['dist', 'dist'],
-    ['recTime', 'recTime'],
-    ['recDist', 'recDist'],
+  readonly FIELDS: ExerciseParamField[] = [
+    'reps',
+    'repsR',
+    'loadKg',
+    'loadKgR',
+    'loadRm',
+    'loadRmR',
+    'loadBw',
+    'loadBwR',
+    'tempo',
+    'tempoR',
+    'vel',
+    'velR',
+    'eff',
+    'time',
+    'dist',
+    'recTime',
+    'recDist',
   ];
+
+  readonly PAIRS: Record<ExerciseParamField, ExerciseParamField> = {
+    reps: 'repsR',
+    repsR: 'reps',
+    loadKg: 'loadKgR',
+    loadKgR: 'loadKg',
+    loadRm: 'loadRmR',
+    loadRmR: 'loadRm',
+    loadBw: 'loadBwR',
+    loadBwR: 'loadBw',
+    tempo: 'tempoR',
+    tempoR: 'tempo',
+    vel: 'velR',
+    velR: 'vel',
+    eff: 'eff',
+    time: 'time',
+    dist: 'dist',
+    recTime: 'recTime',
+    recDist: 'recDist',
+  };
 
   getAttributes(exercise: Exercise): Attribute<ExerciseSet>[] {
     const attributes: Attribute<ExerciseSet>[] = [];
@@ -83,26 +105,12 @@ export class ExerciseParamService {
     isUnilateral: boolean,
   ): ExerciseParamField[] {
     const params: ExerciseParamField[] = [];
-    for (const param of component?.params || [])
-      if (isUnilateral) {
-        // unilateral exercise, add both main and secondary side params
-        const pair = this.pairs.find((p) => p.includes(param));
-        if (pair && pair.length === 2) params.push(pair[0], pair[1]);
-        else params.push(param);
-      } else params.push(param); // bilateral exercise
+    for (const param of component?.params || []) {
+      params.push(param);
+      if (isUnilateral) params.push(this.PAIRS[param]);
+    }
 
     return Array.from(new Set(params));
-  }
-
-  attributeValuesToSet(
-    values: AttributeValue<ExerciseSet>[],
-    setNumber: number,
-  ): ExerciseSet {
-    const set: ExerciseSet = { setNumber };
-    for (const val of values)
-      set[val.field as any] = val.value as ExerciseSet[ExerciseParamField];
-
-    return set;
   }
 
   modifyLoad(
@@ -132,49 +140,44 @@ export class ExerciseParamService {
     if (prevValueR) set.loadKgR = value(prevValueR);
   }
 
-  validateSetValues(
+  validateExerciseValues(
+    trainingExercise: TrainingExercise,
     exercise: Exercise,
+    options?: {
+      skipMethodValidation?: boolean;
+      skipUnilateralityValidation?: boolean;
+    },
+  ): ValidateError<ExerciseSet>[] {
+    const errors: ValidateError<ExerciseSet>[] = options?.skipMethodValidation
+      ? []
+      : this.validateMethod(trainingExercise, exercise);
+
+    for (const set of trainingExercise.sets)
+      errors.push(...this.validateSetValues(set, exercise, options));
+
+    return errors;
+  }
+
+  validateSetValues(
     set: ExerciseSet,
+    exercise: Exercise,
+    options?: { skipUnilateralityValidation?: boolean },
   ): ValidateError<ExerciseSet>[] {
     const errors: ValidateError<ExerciseSet>[] = [];
-
     if (set.setNumber < 1 || set.setNumber > MAX_NUM_SETS_IN_EXERCISE)
       errors.push({
         field: 'setNumber',
         message: `Set number must be between 1 and ${MAX_NUM_SETS_IN_EXERCISE}`,
       });
 
-    errors.push(...this.validateUnilaterality(set, exercise.isUnilateral));
+    if (!options?.skipUnilateralityValidation)
+      errors.push(...this.validateUnilaterality(set, exercise.isUnilateral));
 
     this.attributeService.validate(
       this.getAttributeValues(exercise, set),
       this.getAttributes(exercise),
       (error) => errors.push(error),
     );
-
-    return errors;
-  }
-
-  validateMethods(
-    set: ExerciseSet,
-    methods: Method[],
-    methodId: string | undefined,
-  ): ValidateError<ExerciseSet>[] {
-    const errors: ValidateError<ExerciseSet>[] = [];
-    if (!methodId) return errors;
-
-    const method = methods.find((m) => m.id === methodId);
-    if (!method) {
-      errors.push({
-        field: 'loadKg',
-        message: `Method not found for training component`,
-      });
-
-      return errors;
-    }
-
-    if (method.attributes?.length > 0)
-      errors.push(...this.validateMethod(set, method));
 
     return errors;
   }
@@ -218,19 +221,22 @@ export class ExerciseParamService {
     const errors: ValidateError<ExerciseSet>[] = [];
     if (!isUnilateral) return errors;
 
-    for (const pair of this.pairs) {
-      const isMainDefined = !this.common.object.isEmpty(set[pair[0]]);
-      const isSecondaryDefined = !this.common.object.isEmpty(set[pair[1]]);
+    for (const field of this.FIELDS) {
+      const isMainDefined = !this.common.object.isEmpty(set[field]);
+      const isSecondaryDefined = !this.common.object.isEmpty(
+        set[this.PAIRS[field]],
+      );
 
       if (
         (!isMainDefined && isSecondaryDefined) ||
         (isMainDefined && !isSecondaryDefined)
       ) {
-        const primary = ExerciseParamAttribute[pair[0]];
         errors.push({
-          field: primary.field,
-          message: `Both primary and secondary side must be defined for param ${primary.name.toLowerCase()} in unilateral exercises`,
+          field: ExerciseParamAttribute[field].field,
+          message: `Both primary and secondary side must be defined for param ${ExerciseParamAttribute[field].name.toLowerCase()} in unilateral exercises`,
         });
+
+        return errors;
       }
     }
 
@@ -238,35 +244,75 @@ export class ExerciseParamService {
   }
 
   private validateMethod(
-    set: ExerciseSet,
-    method: Method,
+    trainingExercise: TrainingExercise,
+    exercise: Exercise,
   ): ValidateError<ExerciseSet>[] {
+    if (!trainingExercise.methodId) return [];
+
+    const method = Methods.find((m) => m.field === trainingExercise.methodId);
+    if (!method) throw new NotFoundException('Method not found');
+
     const errors: ValidateError<ExerciseSet>[] = [];
-
     for (const attr of method.attributes) {
-      const pairs = this.pairs.find((p) =>
-        p.includes(attr.field as ExerciseParamField),
-      );
-
-      if (!pairs) continue;
-
-      for (const field of pairs) {
-        const setValue = set[field];
-        if (this.common.object.isEmpty(setValue)) continue;
+      if (attr.field === 'sets') {
+        // special case for sets
+        const sets = trainingExercise.sets.length;
 
         if (!this.common.object.isEmpty(attr.min))
-          if (typeof setValue === 'number' && setValue < attr.min)
+          if (sets < attr.min)
             errors.push({
-              field: attr.field,
-              message: `Value for ${attr.field} cannot be less than ${attr.min}`,
+              field: 'sets' as ExerciseParamField,
+              message: `Number of sets cannot be less than ${attr.min} for method ${method.name}`,
             });
 
         if (!this.common.object.isEmpty(attr.max))
-          if (typeof setValue === 'number' && setValue > attr.max)
+          if (sets > attr.max)
             errors.push({
-              field: attr.field,
-              message: `Value for ${attr.field} cannot be greater than ${attr.max}`,
+              field: 'sets' as ExerciseParamField,
+              message: `Number of sets cannot be greater than ${attr.max} for method ${method.name}`,
             });
+      } else {
+        const param = ExerciseParamAttribute[attr.field];
+
+        for (const set of trainingExercise.sets) {
+          const primary = set[attr.field];
+          const secondary = exercise.isUnilateral
+            ? set[this.PAIRS[attr.field]]
+            : undefined;
+
+          for (const value of [primary, secondary]) {
+            if (this.common.object.isEmpty(value)) continue;
+
+            if (attr.disabled)
+              errors.push({
+                field: attr.field as ExerciseParamField,
+                message: `Parameter ${param.name.toLowerCase()} is disabled for method ${method.name}`,
+              });
+
+            if (!this.common.object.isEmpty(attr.min))
+              if (typeof value === 'number' && value < attr.min)
+                errors.push({
+                  field: attr.field as ExerciseParamField,
+                  message: `Value for ${attr.field} cannot be less than ${attr.min}`,
+                });
+
+            if (!this.common.object.isEmpty(attr.max))
+              if (typeof value === 'number' && value > attr.max)
+                errors.push({
+                  field: attr.field as ExerciseParamField,
+                  message: `Value for ${attr.field} cannot be greater than ${attr.max}`,
+                });
+
+            if (!this.common.object.isEmpty(attr.pattern)) {
+              const regex = new RegExp(attr.pattern);
+              if (typeof value === 'string' && !regex.test(value))
+                errors.push({
+                  field: attr.field as ExerciseParamField,
+                  message: `Value for ${attr.field} must match pattern ${attr.pattern}`,
+                });
+            }
+          }
+        }
       }
     }
 

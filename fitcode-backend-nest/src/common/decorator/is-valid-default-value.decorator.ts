@@ -1,7 +1,7 @@
 import type { ValidationArguments, ValidationOptions } from 'class-validator';
 import { registerDecorator } from 'class-validator';
 
-import { AttributeType } from '@src/common/enum/attribute-type.enum';
+import { AttributeType } from '@src/attribute/enum/attribute-type.enum';
 
 export function IsValidDefaultValue(validationOptions?: ValidationOptions) {
   return function (object: Object, propertyName: string) {

@@ -1,9 +1,4 @@
-import type { Component } from '../component/type/component.type';
 import type { Exercise } from './type/exercise.type';
-import {
-  COOLDOWN_ID,
-  WARMUP_ID,
-} from '@/core/training/const/warmup-cooldown.const';
 import { lib } from '@/lib';
 import type { Pagination } from '@/lib/common/type/paginate.type';
 import type { SetState } from '@/lib/common/type/state.type';
@@ -12,47 +7,10 @@ export class ExerciseService {
   /**
    * Frontend filter for exercises (this will be moved )
    */
-  static filter(
-    data: Exercise[],
-    filter: Partial<Exercise>,
-    components: Component[]
-  ): Exercise[] {
-    const { componentIds, ...rest } = filter;
+  static filter(data: Exercise[], filter: Partial<Exercise>): Exercise[] {
     let filtered = data;
 
-    // filter by components
-    if (
-      componentIds?.length &&
-      !componentIds.some((id) => id === WARMUP_ID || id === COOLDOWN_ID)
-    ) {
-      const allComponentsIds: string[] = [];
-
-      for (const componentId of componentIds) {
-        const component = components.find((c) => c.id === componentId);
-        if (!component) continue;
-
-        // filter by root node & filter by all its children
-        allComponentsIds.push(component.id);
-        const tree = lib.common.tree.fromArray(components, {
-          rootId: component.id,
-          idPropertyName: 'id',
-          parentIdPropertyName: 'parentId',
-          childrenPropertyName: 'children',
-        });
-
-        lib.common.tree.forEach(tree, 'children', (item) => {
-          allComponentsIds.push(item.id);
-          return null;
-        });
-      }
-
-      if (allComponentsIds.length)
-        filtered = filtered.filter((exercise) =>
-          allComponentsIds.some((id) => exercise.componentIds.includes(id))
-        );
-    }
-
-    Object.entries(rest).forEach(([key, value]) => {
+    Object.entries(filter).forEach(([key, value]) => {
       if (value === undefined) return;
 
       filtered = filtered.filter((exercise) => {
@@ -103,20 +61,14 @@ export class ExerciseService {
     state: {
       pagination: Pagination;
       exercises: Exercise[];
-      components: Component[];
       setFilteredExercises: SetState<Exercise[]>;
       setPagination: SetState<Pagination>;
     }
   ) {
-    const {
-      pagination,
-      exercises,
-      components,
-      setFilteredExercises,
-      setPagination,
-    } = state;
+    const { pagination, exercises, setFilteredExercises, setPagination } =
+      state;
 
-    let filtered = ExerciseService.filter(exercises, filter, components);
+    let filtered = ExerciseService.filter(exercises, filter);
     const total = filtered.length;
 
     // paginate
@@ -129,28 +81,11 @@ export class ExerciseService {
       orderBy: { field: 'name', value: 'asc' },
     });
 
-    // populate exercises
-    filtered.map((exercise) => {
-      ExerciseService.mapComponents(exercise, components);
-    });
-
     setFilteredExercises(filtered);
     setPagination((prev) => ({
       ...prev,
       total,
       pages: Math.ceil(total / pagination.pageSize),
     }));
-  }
-
-  static mapComponents(item: Exercise, components: Component[]): Exercise {
-    item.components = components.filter(({ id }) =>
-      item.componentIds.includes(id)
-    );
-
-    item.rootComponents = components.map((component) =>
-      lib.common.tree.getRoot(component, components)
-    );
-
-    return item;
   }
 }

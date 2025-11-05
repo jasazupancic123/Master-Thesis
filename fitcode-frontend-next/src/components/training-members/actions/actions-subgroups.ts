@@ -4,10 +4,6 @@ import { updateGlobalStates } from '@/components/supersets/actions/actions-drag-
 import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-group-day-view/constant/subgroups.constant';
 import type { AuthUser } from '@/core/auth/type/user.type';
 import { core } from '@/core/core.service';
-import {
-  COOLDOWN_ID,
-  WARMUP_ID,
-} from '@/core/training/const/warmup-cooldown.const';
 import type { Subgroup } from '@/core/training/type/subgroup.type';
 import type { Training } from '@/core/training/type/training.type';
 import type { SetState } from '@/lib/common/type/state.type';
@@ -268,15 +264,7 @@ export function handleDeleteSubgroup(
     c.id === component.id ? newComponent : c
   );
 
-  const newTraining: Training =
-    newComponent.id === WARMUP_ID
-      ? { ...training, warmup: newComponent }
-      : newComponent.id === COOLDOWN_ID
-        ? { ...training, cooldown: newComponent }
-        : {
-            ...training,
-            components: updatedComponents,
-          };
+  const newTraining: Training = { ...training, components: updatedComponents };
 
   setDetectedChanges(true);
   setSelectedSubgroup(null);

@@ -2,34 +2,54 @@ import { TestApp } from '@test/common/utils/app.util';
 import type * as request from 'supertest';
 
 import type { ValidateRows } from '@src/common/type/validate.type';
-import type { Component } from '@src/component/entity/component.entity';
-import { generateComponentStub } from '@src/component/mock/component.stub';
 import { GLOBAL_EXERCISE_OWNER } from '@src/exercise/constant/global-exercise-owner.constant';
 import type { Exercise } from '@src/exercise/entity/exercise.entity';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { generateInstitutionStub } from '@src/institution/mock/institution.mock';
 import { TestDbService } from '@src/test-db/test-db.service';
 
+jest.mock('@src/exercise/constant/components.constant', () => {
+  const {
+    generateComponentStub,
+  } = require('@src/exercise/mock/component.stub');
+
+  const warmup = generateComponentStub({ field: 'warmup' });
+  const cooldown = generateComponentStub({ field: 'cooldown' });
+
+  const c1 = generateComponentStub({
+    field: 'c1',
+    name: 'C1',
+    params: ['reps', 'time', 'dist', 'loadKg'],
+    options: [generateComponentStub({ field: 'leaf1', name: 'Leaf 1' })],
+  });
+
+  const c2 = generateComponentStub({
+    field: 'c2',
+    name: 'C2',
+    params: ['loadKg', 'time'],
+    options: [generateComponentStub({ field: 'leaf2', name: 'Leaf 2' })],
+  });
+
+  return {
+    WARMUP_ID: 'warmup',
+    COOLDOWN_ID: 'cooldown',
+    WARMUP: warmup,
+    COOLDOWN: cooldown,
+    Components: [warmup, c1, c2, cooldown],
+  };
+});
+
 describe('Upsert Many Exercises (e2e)', () => {
   let testApp: TestApp;
   let db: TestDbService;
 
   let institutionId: string;
-  let component: Component;
-  let root: Component;
 
   beforeAll(async () => {
     testApp = await TestApp.init();
     db = testApp.module.get(TestDbService);
+
     institutionId = await db.institutions.save(generateInstitutionStub());
-
-    root = await db.components.create(
-      generateComponentStub({ params: ['reps', 'time', 'dist', 'loadKg'] }),
-    );
-
-    component = await db.components.create(
-      generateComponentStub({ parentId: root.id }),
-    );
   });
 
   afterEach(async () => db.exercises.clear());
@@ -48,7 +68,7 @@ describe('Upsert Many Exercises (e2e)', () => {
   describe('General Tests', () => {
     it('should fail if exercise does not have any components', async () => {
       const exercises = [
-        generateExerciseStub({ name: 'deadlift', componentIds: [] }),
+        generateExerciseStub({ name: 'deadlift', components: [] }),
       ];
 
       const response = await req(exercises, global.admin.token);
@@ -59,8 +79,8 @@ describe('Upsert Many Exercises (e2e)', () => {
             row: 1,
             errors: [
               {
-                field: 'componentIds',
-                message: 'Exercise must have at least one component',
+                field: 'components',
+                message: 'Attribute "Components" is required',
               },
             ],
           },
@@ -70,9 +90,9 @@ describe('Upsert Many Exercises (e2e)', () => {
 
     it('should fail if component does not exist', async () => {
       const exercises = [
-        generateExerciseStub({ componentIds: ['non-existing-component-1'] }),
-        generateExerciseStub({ componentIds: [component.id] }),
-        generateExerciseStub({ componentIds: ['non-existing-component-2'] }),
+        generateExerciseStub({ components: ['non-existing-component-1'] }),
+        generateExerciseStub({ components: ['c1:leaf1'] }),
+        generateExerciseStub({ components: ['non-existing-component-2'] }),
       ];
 
       const response = await req(exercises, global.admin.token);
@@ -83,8 +103,9 @@ describe('Upsert Many Exercises (e2e)', () => {
             row: 1,
             errors: [
               {
-                field: 'componentIds',
-                message: 'Component non-existing-component-1 does not exist',
+                field: 'components',
+                message:
+                  'Value "non-existing-component-1" for attribute "Components" is not a valid option. Valid options are: warmup, c1, c2, cooldown',
               },
             ],
           },
@@ -92,8 +113,9 @@ describe('Upsert Many Exercises (e2e)', () => {
             row: 3,
             errors: [
               {
-                field: 'componentIds',
-                message: 'Component non-existing-component-2 does not exist',
+                field: 'components',
+                message:
+                  'Value "non-existing-component-2" for attribute "Components" is not a valid option. Valid options are: warmup, c1, c2, cooldown',
               },
             ],
           },
@@ -102,11 +124,8 @@ describe('Upsert Many Exercises (e2e)', () => {
     });
 
     it('should fail if main component is not leaf', async () => {
-      const root = await db.components.create();
-      await db.components.create({ parentId: root.id });
-
       const exercises = [
-        generateExerciseStub({ name: 'deadlift', componentIds: [root.id] }),
+        generateExerciseStub({ name: 'deadlift', components: ['c1'] }),
       ];
 
       const response = await req(exercises, global.admin.token);
@@ -117,8 +136,9 @@ describe('Upsert Many Exercises (e2e)', () => {
             row: 1,
             errors: [
               {
-                field: 'componentIds',
-                message: `Main component ${root.name.toLowerCase()} is not valid for an exercise`,
+                field: 'components',
+                message:
+                  'Option "c1" has nested options, please select one of the following: leaf1',
               },
             ],
           },
@@ -130,7 +150,7 @@ describe('Upsert Many Exercises (e2e)', () => {
       const exercises = [
         generateExerciseStub({
           name: 'deadlift',
-          componentIds: [component.id],
+          components: ['c1:leaf1'],
           equipment: ['invalid-value'],
         }),
       ];
@@ -158,35 +178,45 @@ describe('Upsert Many Exercises (e2e)', () => {
       const exercises = [
         generateExerciseStub({
           name: 'deadlift',
-          componentIds: ['non-existing-component'],
+          components: ['non-existing-component'],
           equipment: ['invalid-value'],
         }),
         generateExerciseStub({
           name: 'deadlift',
-          componentIds: [component.id],
+          components: ['c1:leaf1'],
         }), // will overwrite the previous one
         generateExerciseStub({
           name: 'squat',
-          componentIds: [component.id],
+          components: ['c1:leaf1'],
           equipment: ['cardio:invalid'],
         }),
       ];
 
       const response = await req(exercises, global.admin.token);
       expect(response.status).toBe(400);
-      expect(JSON.parse(response.body.message)).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            row: 1,
-            errors: expect.arrayContaining([
-              expect.objectContaining({
-                field: 'componentIds',
-                message: 'Component non-existing-component does not exist',
-              }),
-            ]),
-          }),
-        ]),
-      );
+
+      expect(JSON.parse(response.body.message)).toEqual([
+        {
+          row: 1,
+          errors: [
+            {
+              field: 'components',
+              message:
+                'Value "non-existing-component" for attribute "Components" is not a valid option. Valid options are: warmup, c1, c2, cooldown',
+            },
+          ],
+        },
+        {
+          row: 3,
+          errors: [
+            {
+              field: 'equipment',
+              message:
+                'Value "invalid" for attribute "Equipment" is not a valid option. Valid options are: treadmill, elliptical-trainer, stationary-bike, rowing-machine, stair-climber-stepper, spin-bike, air-bike, arc-trainer',
+            },
+          ],
+        },
+      ]);
     });
   });
 
@@ -195,18 +225,18 @@ describe('Upsert Many Exercises (e2e)', () => {
       const exercises = [
         generateExerciseStub({
           name: 'deadlift',
-          componentIds: [component.id],
+          components: ['c1:leaf1'],
           equipment: ['cardio:treadmill', 'strength:barbells:olympic'],
           isUnilateral: true,
         }),
         generateExerciseStub({
           name: 'squat',
-          componentIds: [component.id],
+          components: ['c1:leaf1'],
           equipment: ['cardio:elliptical-trainer', 'strength:barbells:ez-bar'],
         }),
         generateExerciseStub({
           name: 'bench press',
-          componentIds: [component.id],
+          components: ['c1:leaf1'],
           equipment: [
             'cardio:air-bike',
             'strength:barbells:olympic',
@@ -215,7 +245,7 @@ describe('Upsert Many Exercises (e2e)', () => {
         }),
         generateExerciseStub({
           name: 'disabled exercise',
-          componentIds: [component.id],
+          components: ['c1:leaf1'],
           disabled: true,
         }),
       ];
@@ -263,18 +293,10 @@ describe('Upsert Many Exercises (e2e)', () => {
     });
 
     it('should update existing exercises', async () => {
-      const newRoot = await db.components.create(
-        generateComponentStub({ params: ['loadKg', 'time'] }),
-      );
-
-      const newLeaf = await db.components.create(
-        generateComponentStub({ parentId: newRoot.id }),
-      );
-
       const exercise = await db.exercises.createTest({
         ownerId: global.admin.uid,
         name: 'existing',
-        componentIds: [component.id],
+        components: ['c1:leaf1'],
         equipment: ['strength:barbells:olympic'],
         locations: ['gym'],
       });
@@ -282,13 +304,13 @@ describe('Upsert Many Exercises (e2e)', () => {
       const exercises = [
         generateExerciseStub({
           name: exercise.name,
-          componentIds: [newLeaf.id],
+          components: ['c2:leaf2'],
           equipment: ['strength:dumbbells:regular'],
           locations: ['pitch'],
         }),
         generateExerciseStub({
           name: 'new exercise',
-          componentIds: [component.id],
+          components: ['c1:leaf1'],
           equipment: [],
         }),
       ];
@@ -320,7 +342,7 @@ describe('Upsert Many Exercises (e2e)', () => {
       const exercises = [
         generateExerciseStub({
           name: 'disabled exercise',
-          componentIds: [component.id],
+          components: ['c1:leaf1'],
           disabled: true,
         }),
       ];
@@ -336,7 +358,7 @@ describe('Upsert Many Exercises (e2e)', () => {
       const exercises = [
         generateExerciseStub({
           name: 'manager exercise',
-          componentIds: [component.id],
+          components: ['c1:leaf1'],
           equipment: ['strength:dumbbells:regular'],
         }),
       ];
@@ -359,14 +381,11 @@ describe('Upsert Many Exercises (e2e)', () => {
       await db.exercises.createTest({
         name: 'squat',
         ownerId: global.GLOBAL_EXERCISE_OWNER,
-        componentIds: [component.id],
+        components: ['c1:leaf1'],
       });
 
       const exercises = [
-        generateExerciseStub({
-          name: 'squat',
-          componentIds: [component.id],
-        }),
+        generateExerciseStub({ name: 'squat', components: ['c1:leaf1'] }),
       ];
 
       const response = await req(exercises, global.manager.token);

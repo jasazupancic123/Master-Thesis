@@ -2,15 +2,12 @@ import { TestApp } from '@test/common/utils/app.util';
 import { subDays } from 'date-fns';
 
 import type { TestInstitution, TestUser } from '@src/common/type/entity.type';
-import type { Component } from '@src/component/entity/component.entity';
-import { generateComponentStub } from '@src/component/mock/component.stub';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import type { Group } from '@src/group/entity/group.entity';
 import type { Wellness } from '@src/profile/entity/wellness.entity';
 import { WellnessService } from '@src/profile/service/wellness.service';
 import { TestDbService } from '@src/test-db/test-db.service';
-import type { ExerciseMainParamField } from '@src/training/entity/exercise-set.entity';
 import type { Training } from '@src/training/entity/training.entity';
 import type { TrainingComponent } from '@src/training/entity/training-component.entity';
 import type { Workload } from '@src/training/entity/workload.entity';
@@ -26,6 +23,19 @@ import {
 import { generateWorkloadStub } from '@src/training/mock/workload.stub';
 import { WorkloadRepository } from '@src/training/repository/workload.repository';
 
+jest.mock('@src/exercise/constant/components.constant', () => {
+  const {
+    generateComponentStub,
+  } = require('@src/exercise/mock/component.stub');
+
+  const c1 = generateComponentStub({
+    field: 'c1',
+    params: ['reps', 'loadKg', 'loadRm', 'loadBw'],
+  });
+
+  return { Components: [c1] };
+});
+
 describe('Get prescribed training (e2e)', () => {
   let testApp: TestApp;
   let db: TestDbService;
@@ -34,19 +44,11 @@ describe('Get prescribed training (e2e)', () => {
   let wellnessService: WellnessService;
   let workloadRepository: WorkloadRepository;
 
-  let component: Component;
   let institution: TestInstitution;
   let group: Group;
   let trainingId: string;
   let a: TestUser;
   let b: TestUser;
-
-  const componentParams: ExerciseMainParamField[] = [
-    'reps',
-    'loadKg',
-    'loadRm',
-    'loadBw',
-  ];
 
   beforeAll(async () => {
     testApp = await TestApp.init();
@@ -55,14 +57,10 @@ describe('Get prescribed training (e2e)', () => {
     wellnessService = testApp.module.get(WellnessService);
     workloadRepository = testApp.module.get(WorkloadRepository);
 
-    component = await db.components.create(
-      generateComponentStub({ params: componentParams }),
-    );
-
     await exerciseService.upsertMany(global.admin, [
-      generateExerciseStub({ name: 'Squat', componentIds: [component.id] }),
-      generateExerciseStub({ name: 'Bench', componentIds: [component.id] }),
-      generateExerciseStub({ name: 'Deadlift', componentIds: [component.id] }),
+      generateExerciseStub({ name: 'Squat', components: ['c1'] }),
+      generateExerciseStub({ name: 'Bench', components: ['c1'] }),
+      generateExerciseStub({ name: 'Deadlift', components: ['c1'] }),
     ]);
 
     a = await testApp.auth.createAthlete();
@@ -82,7 +80,7 @@ describe('Get prescribed training (e2e)', () => {
         date: new Date(),
         components: [
           generateTrainingComponent({
-            id: component.id,
+            id: 'c1',
             from: new Date(),
             supersets: [
               // main group only 1 superset and 1 exercise with 3 sets
@@ -356,7 +354,7 @@ describe('Get prescribed training (e2e)', () => {
         date: new Date(),
         components: [
           generateTrainingComponent({
-            id: component.id,
+            id: 'c1',
             from: new Date(),
             supersets: [
               generateSuperset({
@@ -451,7 +449,7 @@ describe('Get prescribed training (e2e)', () => {
         date: new Date(),
         components: [
           generateTrainingComponent({
-            id: component.id,
+            id: 'c1',
             from: new Date(),
             supersets: [
               generateSuperset({
@@ -493,7 +491,7 @@ describe('Get prescribed training (e2e)', () => {
       weight: number,
     ) {
       return generateWorkloadStub({
-        component,
+        componentId: 'c1',
         trainingId: date.toISOString(),
         userId: global.athlete.uid,
         supersetIndex: 0,
@@ -516,7 +514,7 @@ describe('Get prescribed training (e2e)', () => {
         date: new Date(),
         components: [
           generateTrainingComponent({
-            id: component.id,
+            id: 'c1',
             from: new Date(),
             supersets: [
               generateSuperset({
@@ -559,7 +557,7 @@ describe('Get prescribed training (e2e)', () => {
       generateWorkload('bench', subDays(new Date(), 10), 6, 70),
     ];
 
-    await db.workloads.createMany(workloads.map((w) => ({ ...w, component })));
+    await db.workloads.createMany(workloads);
     const allWorkloads = (await db.workloads.collectionGroup.get()).docs.map(
       (doc) => doc.data(),
     );

@@ -10,8 +10,8 @@ import {
   ValidateNested,
 } from 'class-validator';
 
+import { AttributeType } from '@src/attribute/enum/attribute-type.enum';
 import { IsValidDefaultValue } from '@src/common/decorator/is-valid-default-value.decorator';
-import { AttributeType } from '@src/common/enum/attribute-type.enum';
 
 export class BaseAttribute<T> {
   @IsString()
@@ -50,6 +50,13 @@ export class BaseAttribute<T> {
   @ApiPropertyOptional()
   @Expose()
   unit?: string; // kg, lbs, ...
+
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  color?: string; // hex color code
 
   @IsValidDefaultValue()
   @ApiPropertyOptional()

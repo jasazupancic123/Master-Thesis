@@ -1,8 +1,4 @@
 import { removeSelectedExercises } from '@/components/supersets/actions/actions-drag-exercise';
-import {
-  COOLDOWN_ID,
-  WARMUP_ID,
-} from '@/core/training/const/warmup-cooldown.const';
 import type { Superset } from '@/core/training/type/superset.type';
 import type { IGroupCtx } from '@/store/group.provider';
 import type { ITrainerDayViewContext } from '@/store/trainer-day-view.provider';
@@ -78,13 +74,9 @@ export function deleteSelectedExercises(
   );
 
   const newTraining = { ...training };
-
-  if (newComponent.id === WARMUP_ID) newTraining.warmup = newComponent;
-  else if (newComponent.id === COOLDOWN_ID) newTraining.cooldown = newComponent;
-  else
-    newTraining.components = newTraining.components.map((c) =>
-      c.id === component.id ? newComponent : c
-    );
+  newTraining.components = newTraining.components.map((c) =>
+    c.id === component.id ? newComponent : c
+  );
 
   setComponent(newComponent);
   setTraining(newTraining);
@@ -103,5 +95,7 @@ export const removeSelectedExercisesFromSupersets = (
     ),
   }));
 
-  return supersets.filter((s) => s.exercises.length > 0);
+  return supersets.filter(
+    (s) => s.cooldown || s.warmup || s.exercises.length > 0
+  );
 };

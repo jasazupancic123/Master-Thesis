@@ -2,6 +2,7 @@ import { Event } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 
+import { core } from '@/core/core.service';
 import type { GroupEvent } from '@/core/group/type/group-event.type';
 import type { TrainingComponentWithTrainingId } from '@/core/training/type/training-component.type';
 import { lib } from '@/lib';
@@ -29,11 +30,15 @@ export default function TrainerWeekViewItem(props: TrainerWeekViewItemProps) {
   };
 
   const isComponent = checkIsComponent(item);
+  const component = isComponent ? core.training.component.find(item.id) : null;
+  const target = isComponent
+    ? core.training.component.findTarget(item.targetId)
+    : null;
 
   // MOBILE DESIGN
   if (screenSize.isMobile || screenSize.isSmallTablet) {
     const IconComponent = isComponent
-      ? lib.common.component.getIcon(item.component?.name || '')
+      ? lib.common.component.getIcon(component?.name || '')
       : undefined;
     return (
       <Box
@@ -72,9 +77,7 @@ export default function TrainerWeekViewItem(props: TrainerWeekViewItemProps) {
       alignItems="flex-start"
       sx={{
         p: screenSize.isMobile || screenSize.isSmallTablet ? 0 : 1,
-        ':hover': {
-          backgroundColor: theme.palette.background.light,
-        },
+        ':hover': { backgroundColor: theme.palette.background.light },
         cursor: 'pointer',
       }}
       onClick={() => {
@@ -118,9 +121,9 @@ export default function TrainerWeekViewItem(props: TrainerWeekViewItemProps) {
           }}
         >
           {isComponent
-            ? item.target
-              ? `${item.component?.name} - ${item.target.name}`
-              : item.component?.name
+            ? target
+              ? `${component?.name} - ${target.name}`
+              : component?.name
             : item.title.length
               ? item.title[0].toUpperCase() + item.title.slice(1)
               : ''}

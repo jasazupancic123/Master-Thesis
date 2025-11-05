@@ -16,7 +16,7 @@ export default function GroupInitializer({
   const pathname = usePathname();
   const [state, setState] = useState<GroupIdPageProps | null>(null);
 
-  const { components, exercises, methods, groups, institutions } = useMain();
+  const { exercises, groups, institutions } = useMain();
   const controller = Controller.getInstance();
 
   useEffect(() => {
@@ -33,11 +33,7 @@ export default function GroupInitializer({
 
       const trainings = await controller.training.findAll({ groupId });
       const mapped = trainings.map((t) =>
-        TrainingService.mapData(t, {
-          components,
-          exercises,
-          methods,
-        })
+        TrainingService.mapData(t, { exercises })
       );
 
       const context: GroupIdPageProps = {

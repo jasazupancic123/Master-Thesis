@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 
 import AthleteSuperset from './athlete-superset';
 import { core } from '@/core/core.service';
+import { Components } from '@/core/exercise/constant/components.constant';
 import { ExerciseTrainingView } from '@/core/training/enum/exercise-training-view.enum';
 import { TrainingController } from '@/core/training/training.controller';
 import { TrainingService } from '@/core/training/training.service';
@@ -251,6 +252,10 @@ export default function AthleteTrainingComponents(props: Props) {
                 exerciseSetTrackingState: state,
               } as TrainingInProgress);
 
+              const text = `Welcome to today's ${selectedComponent.id} training. Let's get started!`;
+
+              lib.common.textToSpeech.speak(text);
+
               setView(ExerciseTrainingView.TrainingView);
               setModal(false);
             },
@@ -260,7 +265,12 @@ export default function AthleteTrainingComponents(props: Props) {
         }}
       >
         <Typography variant="h6" sx={{ width: '100%', textAlign: 'center' }}>
-          Start <b>{selectedComponent?.component?.name || 'training'}</b>?
+          Start{' '}
+          <b>
+            {Components.find((c) => c.field === selectedComponent?.id)?.name ||
+              'training'}
+          </b>
+          ?
         </Typography>
       </MyModal>
     </Box>

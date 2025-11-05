@@ -1,64 +1,98 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
-import type {
-  Component,
-  TreeComponent,
-} from '@/core/component/type/component.type';
+import { Components } from '@/core/exercise/constant/components.constant';
+import type { Component } from '@/core/exercise/type/component.type';
 import { lib } from '@/lib';
-import { useMain } from '@/store/main.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 
 export default function useComponentFilter() {
-  const { components } = useMain();
   const { component } = useTrainerDayView();
 
   const [selectedComponent, setSelectedComponent] = useState<Component | null>(
-    component?.component ? component.component : null
+    Components.find((c) => c.field === component?.id) || null
   );
-
-  const [filterComponents, setFilterComponents] = useState<TreeComponent[]>([]);
-  const [leafComponents, setLeafComponents] = useState<Component[]>([]);
-
-  const [selectedComponentsIds, setSelectedComponentsIds] = useState<string[]>(
-    []
-  );
-  const [selectedRootComponentId, setSelectedRootComponentId] = useState<
-    string | null
-  >(null); // which subcomponent tree is open
 
   const [anchorElLeaf, setAnchorElLeaf] = useState<null | HTMLElement>(null);
 
   const openLeafMenu = Boolean(anchorElLeaf);
 
+  const [leafComponents, setLeafComponents] = useState<Component[]>([]);
+
+  const [selectedComponentsIds, setSelectedComponentsIds] = useState<string[]>(
+    []
+  );
+
+  const [selectedRootComponentId, setSelectedRootComponentId] = useState<
+    string | null
+  >(null); // which subcomponent tree is open
+
+  const computeWholeComponentId = (
+    tree: Component[] // goes from [leaf, parent1, parent2, ..., root]
+  ): string | null => {
+    const wholeComponentId = tree
+      .map((c) => c.field)
+      .reverse()
+      .join(':');
+
+    return wholeComponentId;
+  };
+
+  const computeWholeTree = (
+    component: Component,
+    allComponents: Component[]
+  ): Component[] => {
+    let parent = allComponents.find((i) =>
+      i.options?.some((o) => o === component)
+    );
+
+    if (!parent) return [];
+
+    const tree = [component, parent];
+
+    while (parent) {
+      const newParent = allComponents.find((i) =>
+        i.options?.some((o) => o === parent)
+      );
+
+      if (newParent) {
+        tree.push(newParent);
+      }
+
+      parent = newParent;
+    }
+
+    return tree;
+  };
+
   const handleClickLeaf = (
     event: React.MouseEvent<HTMLElement>,
     componentId: string
   ) => {
-    setAnchorElLeaf(event.currentTarget);
-
-    const children = lib.common.tree.fromArray(components, {
-      rootId: componentId,
-      idPropertyName: 'id',
-      parentIdPropertyName: 'parentId',
-      childrenPropertyName: 'children',
-    });
-
-    const selectedChildren = children.filter((c) =>
-      selectedComponentsIds.includes(c.id)
+    const allItems = lib.common.tree.computeAllItemsAsArray(
+      Components,
+      'options'
     );
 
-    if (children.length === 0) {
-      if (selectedComponentsIds.includes(componentId))
-        setSelectedComponentsIds((prev) =>
-          prev.filter((id) => id !== componentId)
-        );
-      else setSelectedComponentsIds((prev) => [...prev, componentId]);
-    } else if (!selectedChildren.length) {
+    setAnchorElLeaf(event.currentTarget);
+
+    const leafes = lib.common.tree.getLeafesFromRootId(Components, {
+      rootId: componentId,
+      idPropertyName: 'field',
+      childrenPropertyName: 'options',
+    });
+
+    setLeafComponents(leafes);
+
+    if (!selectedComponentsIds.includes(componentId)) {
       setSelectedComponentsIds((prev) => [
         ...prev,
-        ...children
-          .map((c) => c.id)
-          .filter((childId) => !prev.includes(childId)),
+        ...leafes
+          .map((c) => {
+            const tree = computeWholeTree(c, allItems);
+
+            return computeWholeComponentId(tree);
+          })
+          .filter((v) => v !== null),
       ]);
     }
 
@@ -70,45 +104,19 @@ export default function useComponentFilter() {
     setSelectedRootComponentId(null);
   };
 
-  useEffect(() => {
-    if (!selectedComponent) return;
-
-    const componentTree = lib.common.tree.fromArray(components, {
-      rootId: selectedComponent.id,
-      idPropertyName: 'id',
-      parentIdPropertyName: 'parentId',
-      childrenPropertyName: 'children',
-    }) as unknown as TreeComponent[];
-
-    setFilterComponents(componentTree);
-    setSelectedRootComponentId(null);
-    setSelectedComponentsIds([]);
-  }, [component, selectedComponent]);
-
-  useEffect(() => {
-    if (!selectedRootComponentId) return;
-
-    const componentTree = lib.common.tree.fromArray(components, {
-      rootId: selectedRootComponentId,
-      idPropertyName: 'id',
-      parentIdPropertyName: 'parentId',
-      childrenPropertyName: 'children',
-    });
-
-    setLeafComponents(componentTree);
-  }, [selectedRootComponentId]);
-
   return {
     selectedComponent,
     setSelectedComponent,
-    filterComponents,
-    leafComponents,
     selectedComponentsIds,
     setSelectedComponentsIds,
     selectedRootComponentId,
+    setSelectedRootComponentId,
     anchorElLeaf,
     openLeafMenu,
-    handleClickLeaf,
+    leafComponents,
     handleCloseLeaf,
+    handleClickLeaf,
+    computeWholeComponentId,
+    computeWholeTree,
   };
 }

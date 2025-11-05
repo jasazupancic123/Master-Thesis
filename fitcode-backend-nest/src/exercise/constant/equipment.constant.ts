@@ -160,4 +160,4 @@ export const Equipment: Attribute[] = [
       { field: 'mannequins', name: 'Mannequins' },
     ],
   },
-];
+] as const;

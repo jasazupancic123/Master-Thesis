@@ -1,11 +1,19 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
-import { IsIn, IsString, ValidateNested } from 'class-validator';
+import {
+  IsBoolean,
+  IsIn,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 
 import { IsValidSelectPath } from '@src/common/decorator/is-valid-select-path.decorator';
+import { ExerciseParamField } from '@src/training/entity/exercise-set.entity';
 
 import { BodyRegionValues } from '../constant/body-region.constant';
-import { Category } from '../constant/category.constant';
+import { Components } from '../constant/components.constant';
 import { Equipment } from '../constant/equipment.constant';
 import { LiftPriorityValues } from '../constant/lift-priority.constant';
 import { LoadingSideValues } from '../constant/loading-side.constant';
@@ -16,11 +24,23 @@ import { PrescriptionTypeValues } from '../constant/prescription-type.constant';
 import { ExerciseMuscleValue } from './exercise-muscle-value.entity';
 
 export class ExerciseAttributes {
+  @IsBoolean()
+  @IsOptional()
+  @Expose()
+  @ApiPropertyOptional()
+  isUnilateral: boolean; // exercise can be performed with both sides of the body separately, like a single arm row
+
+  @IsString({ each: true })
+  @IsNotEmpty({ each: true })
+  @Expose()
+  @ApiProperty()
+  params: ExerciseParamField[];
+
   @IsString({ each: true })
   @ApiProperty()
   @Expose()
-  @IsValidSelectPath(Category, { each: true })
-  categories: string[];
+  @IsValidSelectPath(Components, { each: true })
+  components: string[];
 
   @IsString({ each: true })
   @ApiProperty()

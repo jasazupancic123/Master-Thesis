@@ -1,44 +1,56 @@
 import { TestApp } from '@test/common/utils/app.util';
 
 import type { Attribute } from '@src/attribute/entity/attribute.entity';
+import { AttributeType } from '@src/attribute/enum/attribute-type.enum';
 import { generateAttributeStub } from '@src/attribute/mock/attribute.stub';
 import { generateAttributeValueStub } from '@src/attribute/mock/attribute-value.stub';
-import { AttributeType } from '@src/common/enum/attribute-type.enum';
 import type { TestInstitution } from '@src/common/type/entity.type';
-import type { Component } from '@src/component/entity/component.entity';
-import { generateComponentStub } from '@src/component/mock/component.stub';
 import { GLOBAL_EXERCISE_OWNER } from '@src/exercise/constant/global-exercise-owner.constant';
 import type { CreateExerciseDto } from '@src/exercise/dto/create-exercise.dto';
+import { generateComponentStub } from '@src/exercise/mock/component.stub';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseAttributeService } from '@src/exercise/service/exercise-attribute.service';
-import { FirebaseService } from '@src/firebase/firebase.service';
 import { TestDbService } from '@src/test-db/test-db.service';
+
+jest.mock('@src/exercise/constant/components.constant', () => {
+  const {
+    generateComponentStub,
+  } = require('@src/exercise/mock/component.stub');
+  const {
+    generateAttributeStub,
+  } = require('@src/attribute/mock/attribute.stub');
+
+  const attribute = generateAttributeStub();
+  const root = generateComponentStub({
+    field: 'c1',
+    attributes: [attribute.field as string],
+    params: ['reps', 'loadKg'],
+    options: [generateComponentStub({ field: 'leaf1' })],
+  });
+
+  const warmup = generateComponentStub({ field: 'warmup' });
+  const cooldown = generateComponentStub({ field: 'cooldown' });
+
+  return {
+    WARMUP_ID: 'warmup',
+    COOLDOWN_ID: 'cooldown',
+    WARMUP: warmup,
+    COOLDOWN: cooldown,
+    Components: [warmup, root, cooldown],
+  };
+});
 
 describe('Create Exercise (e2e)', () => {
   let testApp: TestApp;
   let db: TestDbService;
-  let firebase: FirebaseService;
   let exerciseAttributeService: ExerciseAttributeService;
 
-  let root: Component;
-  let leaf: Component;
   let institution: TestInstitution;
 
   beforeAll(async () => {
     testApp = await TestApp.init();
     db = testApp.module.get(TestDbService);
-    firebase = testApp.module.get(FirebaseService);
     exerciseAttributeService = testApp.module.get(ExerciseAttributeService);
-
-    const attribute = generateAttributeStub();
-    root = await db.components.create(
-      generateComponentStub({ attributes: [attribute.field as string] }),
-    );
-
-    leaf = await db.components.create(
-      generateComponentStub({ parentId: root.id }),
-    );
-
     institution = await db.institutions.createTest();
   });
 
@@ -54,7 +66,7 @@ describe('Create Exercise (e2e)', () => {
   it('should create a new exercise for a valid institution', async () => {
     const exercise = generateExerciseStub({
       name: 'New Exercise',
-      componentIds: [leaf.id],
+      components: ['c1:leaf1'],
       videoUrl: 'http://example.com/video',
       imageUrl: 'http://example.com/image',
       instruction: 'This is an exercise.',
@@ -75,16 +87,16 @@ describe('Create Exercise (e2e)', () => {
   it('should fail if the component does not exist', async () => {
     const exercise = generateExerciseStub({
       name: 'Invalid Exercise',
-      componentIds: ['non-existent-component-id'],
+      components: ['non-existent-component-id'],
       videoUrl: 'http://example.com/video',
       imageUrl: 'http://example.com/image',
       instruction: 'This is an exercise.',
     });
 
     const response = await req(exercise, global.manager.token);
-    expect(response.status).toBe(404); // Should return 404 if component doesn't exist
-    expect(response.body.message).toBe(
-      'Component non-existent-component-id does not exist',
+    expect(response.status).toBe(400);
+    expect(response.body.message).toContain(
+      'Value "non-existent-component-id" for attribute "Components" is not a valid option',
     );
   });
 
@@ -92,7 +104,7 @@ describe('Create Exercise (e2e)', () => {
     // Assuming `component` is not a leaf in this test scenario
     const exercise = generateExerciseStub({
       name: 'Invalid Leaf Exercise',
-      componentIds: [root.id],
+      components: ['c1'],
       videoUrl: 'http://example.com/video',
       imageUrl: 'http://example.com/image',
       instruction: 'This is an exercise.',
@@ -101,14 +113,14 @@ describe('Create Exercise (e2e)', () => {
     const response = await req(exercise, global.manager.token);
     expect(response.status).toBe(400); // Should return 400 if the component is not a leaf
     expect(response.body.message).toBe(
-      `Main component ${root.name.toLowerCase()} is not valid for an exercise`,
+      `Option "c1" has nested options, please select one of the following: leaf1`,
     );
   });
 
   it('should create a global exercise for an admin user', async () => {
     const exercise = generateExerciseStub({
       name: 'Global Exercise',
-      componentIds: [leaf.id],
+      components: ['c1:leaf1'],
       videoUrl: 'http://example.com/video',
       imageUrl: 'http://example.com/image',
       instruction: 'This is a global exercise.',
@@ -132,7 +144,7 @@ describe('Create Exercise (e2e)', () => {
 
     const exercise = generateExerciseStub({
       name: 'Invalid Attribute Exercise',
-      componentIds: [leaf.id],
+      components: ['c1:leaf1'],
       videoUrl: 'http://example.com/video',
       imageUrl: 'http://example.com/image',
       instruction: 'This is an exercise.',
@@ -230,30 +242,23 @@ describe('Create Exercise (e2e)', () => {
       }),
     ]);
 
-    const component = await db.components.create(
-      generateComponentStub({
-        attributes: attributes.map((attr) => attr.field) as string[],
-      }),
-    );
+    const component = generateComponentStub({
+      attributes: attributes.map((attr) => attr.field) as string[],
+    });
 
-    const exercise = generateExerciseStub({ componentIds: [component.id] });
+    jest
+      .spyOn(exerciseAttributeService, 'getRootMainComponent')
+      .mockImplementationOnce(() => component);
+
+    const exercise = generateExerciseStub({ components: [component.field] });
     exerciseAttributeService.getAttributes = jest
       .fn()
       .mockReturnValue(attributes);
 
     exerciseAttributeService.getValues = jest.fn().mockReturnValue([
-      generateAttributeValueStub({
-        field: 'str',
-        value: 'string-value',
-      }),
-      generateAttributeValueStub({
-        field: 'num',
-        value: '10',
-      }),
-      generateAttributeValueStub({
-        field: 'bool',
-        value: 'true',
-      }),
+      generateAttributeValueStub({ field: 'str', value: 'string-value' }),
+      generateAttributeValueStub({ field: 'num', value: '10' }),
+      generateAttributeValueStub({ field: 'bool', value: 'true' }),
       generateAttributeValueStub({
         field: 'select',
         value: 'opt1',
@@ -284,10 +289,7 @@ describe('Create Exercise (e2e)', () => {
     const response = await req(exercise, global.manager.token);
     expect(response.status).toBe(201);
 
-    await Promise.all([
-      db.exercises.delete(response.body.id),
-      db.components.delete(component.id),
-    ]);
+    await db.exercises.delete(response.body.id);
   });
 
   it('should fail if a required attribute is missing', async () => {
@@ -297,11 +299,15 @@ describe('Create Exercise (e2e)', () => {
       name: 'is-required',
     });
 
-    const component = await db.components.create(
-      generateComponentStub({ attributes: [attribute.field as string] }),
-    );
+    const component = generateComponentStub({
+      attributes: [attribute.field as string],
+    });
 
-    const exercise = generateExerciseStub({ componentIds: [component.id] });
+    jest
+      .spyOn(exerciseAttributeService, 'getRootMainComponent')
+      .mockImplementationOnce(() => component);
+
+    const exercise = generateExerciseStub({ components: [component.field] });
     exerciseAttributeService.getValues = jest.fn().mockReturnValueOnce([]);
     exerciseAttributeService.getAttributes = jest
       .fn()
@@ -312,14 +318,12 @@ describe('Create Exercise (e2e)', () => {
     expect(response.body.message).toContain(
       `Attribute "${attribute.name}" is required`,
     );
-
-    await Promise.all([db.components.delete(component.id)]);
   });
 
   it('should create disabled exercise for an admin user', async () => {
     const exercise = generateExerciseStub({
       name: 'Disabled Exercise',
-      componentIds: [leaf.id],
+      components: ['c1:leaf1'],
       videoUrl: 'http://example.com/video',
       imageUrl: 'http://example.com/image',
       instruction: 'This is a disabled exercise.',
@@ -347,7 +351,7 @@ describe('Create Exercise (e2e)', () => {
     async (_role, token) => {
       const exercise = generateExerciseStub({
         name: 'Disabled Exercise',
-        componentIds: [leaf.id],
+        components: ['c1:leaf1'],
         videoUrl: 'http://example.com/video',
         imageUrl: 'http://example.com/image',
         instruction: 'This is a disabled exercise.',
@@ -380,13 +384,9 @@ describe('Create Exercise (e2e)', () => {
   }); */
 
   it('should create bilateral exercise and populate correct params', async () => {
-    const component = await db.components.create(
-      generateComponentStub({ params: ['reps', 'loadKg'] }),
-    );
-
     const exercise = generateExerciseStub({
       name: 'Bilateral Exercise',
-      componentIds: [component.id],
+      components: ['c1:leaf1'],
       isUnilateral: false,
     });
 
@@ -402,17 +402,12 @@ describe('Create Exercise (e2e)', () => {
     expect(found?.params).toEqual(expect.arrayContaining(['reps', 'loadKg']));
 
     await db.exercises.delete(response.body.id);
-    await db.components.delete(component.id);
   });
 
   it('should create unilateral exercise and populate correct params', async () => {
-    const component = await db.components.create(
-      generateComponentStub({ params: ['reps', 'loadKg'] }),
-    );
-
     const exercise = generateExerciseStub({
       name: 'Unilateral Exercise',
-      componentIds: [component.id],
+      components: ['c1:leaf1'],
       isUnilateral: true,
     });
 
@@ -430,6 +425,5 @@ describe('Create Exercise (e2e)', () => {
     );
 
     await db.exercises.delete(response.body.id);
-    await db.components.delete(component.id);
   });
 });

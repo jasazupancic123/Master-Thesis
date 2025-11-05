@@ -2,7 +2,6 @@ import { TestApp } from '@test/common/utils/app.util';
 import { addHours, subDays } from 'date-fns';
 
 import type { TestInstitution } from '@src/common/type/entity.type';
-import type { Component } from '@src/component/entity/component.entity';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import type { Group } from '@src/group/entity/group.entity';
@@ -23,6 +22,17 @@ import {
 import { TrainingService } from '@src/training/service/training.service';
 import { WorkloadService } from '@src/training/service/workload.service';
 
+jest.mock('@src/exercise/constant/components.constant', () => {
+  const {
+    generateComponentStub,
+  } = require('@src/exercise/mock/component.stub');
+
+  const c1 = generateComponentStub({ field: 'c1' });
+  const c2 = generateComponentStub({ field: 'c2' });
+
+  return { Components: [c1, c2] };
+});
+
 describe('Complete Next Set (e2e)', () => {
   let testApp: TestApp;
   let db: TestDbService;
@@ -30,7 +40,6 @@ describe('Complete Next Set (e2e)', () => {
 
   let institution: TestInstitution;
   let group: Group;
-  let component1: Component;
   let trainingId: string;
 
   beforeAll(async () => {
@@ -46,15 +55,10 @@ describe('Complete Next Set (e2e)', () => {
 
     group = await db.groups.createTest(institution);
 
-    [component1] = await Promise.all([
-      db.components.create({ id: 'c1' }),
-      db.components.create({ id: 'c2' }),
-    ]);
-
     await exerciseService.upsertMany(global.admin, [
-      generateExerciseStub({ name: 'squat', componentIds: ['c1'] }),
-      generateExerciseStub({ name: 'bench', componentIds: ['c1'] }),
-      generateExerciseStub({ name: 'deadlift', componentIds: ['c1'] }),
+      generateExerciseStub({ name: 'squat', components: ['c1'] }),
+      generateExerciseStub({ name: 'bench', components: ['c1'] }),
+      generateExerciseStub({ name: 'deadlift', components: ['c1'] }),
     ]);
 
     trainingId = await db.trainings.save(
@@ -134,7 +138,6 @@ describe('Complete Next Set (e2e)', () => {
       db.institutions.remove(institution.id),
       db.trainings.delete(trainingId),
       db.exercises.clear(),
-      db.components.clear(),
     ]);
 
     await testApp.close();
@@ -331,7 +334,7 @@ describe('Complete Next Set (e2e)', () => {
     await db.workloads.createMany([
       {
         trainingId,
-        component: component1,
+        componentId: 'c1',
         exerciseId: 'squat',
         userId: global.athlete.uid,
         supersetIndex: 0,
@@ -397,7 +400,7 @@ describe('Complete Next Set (e2e)', () => {
     await db.workloads.createMany(
       Array.from({ length: 8 }).map((_, i) => ({
         trainingId,
-        component: component1,
+        componentId: 'c1',
         exerciseId: 'squat',
         userId: global.athlete.uid,
         supersetIndex: 0,
@@ -475,7 +478,7 @@ describe('Complete Next Set (e2e)', () => {
     await db.workloads.createMany([
       {
         trainingId,
-        component: component1,
+        componentId: 'c1',
         exerciseId: 'squat',
         userId: global.athlete.uid,
         supersetIndex: 0,
@@ -540,7 +543,7 @@ describe('Complete Next Set (e2e)', () => {
     const exercise = await db.exercises.createTest(
       generateExerciseStub({
         name: 'unilateral-exercise',
-        componentIds: ['c1'],
+        components: ['c1'],
         isUnilateral: true,
       }),
     );

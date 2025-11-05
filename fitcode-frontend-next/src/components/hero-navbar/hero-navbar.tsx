@@ -26,7 +26,7 @@ import Logo from '@/ui/logo';
 interface HeroNavbarProps {
   height: string;
   activeSection: string | null;
-  dissableLogo?: boolean;
+  disableLogo?: boolean;
   position?: 'absolute' | 'fixed' | 'relative' | 'static' | 'sticky';
   currentView?: 'contact-us' | 'about-us' | 'home';
 }
@@ -38,7 +38,7 @@ export default function HeroNavbar(props: HeroNavbarProps) {
   const pathname = usePathname();
   const screenSize = useScreenSize();
 
-  const { height, dissableLogo, position, activeSection } = props;
+  const { height, disableLogo: dissableLogo, position, activeSection } = props;
 
   const [open, setOpen] = useState(false);
 
