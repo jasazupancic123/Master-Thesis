@@ -80,11 +80,10 @@ export default function AthleteTrainingComponents(props: Props) {
               (r) => r.trainingId === training.id
             );
 
-            if (trainingReport) {
+            if (trainingReport)
               componentStatus = trainingReport.componentStatuses.find(
                 (cs) => cs.componentId === component.id
               )?.status;
-            }
 
             return (
               <Box key={component.id} minWidth="48px">

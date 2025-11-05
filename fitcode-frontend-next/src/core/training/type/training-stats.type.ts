@@ -1,5 +1,3 @@
-import type { Component } from '@/core/exercise/type/component.type';
-
 export type PrescribedTrainingComponentStats = {
   componentId: string;
   totalSets: number; // for calculating status
@@ -7,7 +5,6 @@ export type PrescribedTrainingComponentStats = {
 
 export type PrescribedTrainingStats = Omit<SetReport, 'load'> & {
   plannedComponents: PrescribedTrainingComponentStats[];
-  mappedPlannedComponents?: Component[];
   duration: number; // in minutes
   components: number;
   supersets: number;

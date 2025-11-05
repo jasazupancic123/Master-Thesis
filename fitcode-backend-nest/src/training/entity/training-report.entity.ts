@@ -1,5 +1,5 @@
 import { IntersectionType } from '@nestjs/mapped-types';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, OmitType } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import {
   IsBoolean,
@@ -20,9 +20,15 @@ import { PrescribedTrainingStats } from './training-stats.entity';
 
 // id: <training-id>-<user-id>
 export class TrainingReport extends IntersectionType(
-  PrescribedTrainingStats,
   DateRangeDto,
+  OmitType(PrescribedTrainingStats, ['plannedComponents'] as const),
 ) {
+  @ValidateNested()
+  @Type(() => PrescribedTrainingStats)
+  @ApiProperty({ type: () => PrescribedTrainingStats })
+  @Expose()
+  prescribed: PrescribedTrainingStats;
+
   @IsString()
   @IsNotEmpty()
   @ApiProperty()

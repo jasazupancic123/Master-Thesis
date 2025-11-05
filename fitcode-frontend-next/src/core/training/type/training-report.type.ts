@@ -5,7 +5,10 @@ import type { Group } from '@/core/group/type/group.type';
 import type { Institution } from '@/core/institution/type/institution.type';
 import type { DateRange } from '@/lib/common/type/date-range.type';
 
-export type TrainingReport = PrescribedTrainingStats &
+export type TrainingReport = Omit<
+  PrescribedTrainingStats,
+  'plannedComponents'
+> &
   Required<DateRange> & {
     // meta
     institutionId?: string;
@@ -18,6 +21,7 @@ export type TrainingReport = PrescribedTrainingStats &
     userId: string;
 
     // report data
+    prescribed: PrescribedTrainingStats;
     completed: boolean;
     realization: number;
     muscleValues: ExerciseMuscleValue[];

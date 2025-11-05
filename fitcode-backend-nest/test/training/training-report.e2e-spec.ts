@@ -8,7 +8,6 @@ import type { Group } from '@src/group/entity/group.entity';
 import { TestDbService } from '@src/test-db/test-db.service';
 import type { ExerciseSet } from '@src/training/entity/exercise-set.entity';
 import type { Training } from '@src/training/entity/training.entity';
-import type { TrainingReport } from '@src/training/entity/training-report.entity';
 import type { PrescribedTrainingStats } from '@src/training/entity/training-stats.entity';
 import { SetStatus } from '@src/training/enum/set-status.enum';
 import {
@@ -229,7 +228,7 @@ describe('Training Report (e2e)', () => {
       dist: 0,
       recDist: 0,
       time: 0,
-    } as TrainingReport);
+    } as PrescribedTrainingStats);
   });
 
   it('should return correct training stats for training with empty exercises', () => {

@@ -58,17 +58,22 @@ export class TrainingReportService {
     const exercises = new Set(workloads.map((w) => w.exerciseId));
 
     const report: TrainingReport = {
+      trainingId: training.id,
       institutionId: training.institutionId,
       groupId: training.groupId,
       cycleId: training.cycleId,
+      prescribed: stats,
       userId,
-      ...stats,
       ...ref,
       from,
       to,
       completed: workloads.length >= stats.sets,
       duration: differenceInMinutes(to, from),
       components: components.size,
+      supersets: training.components.reduce(
+        (sum, c) => sum + c.supersets.length,
+        0,
+      ),
       exercises: exercises.size,
       sets: workloads.length,
       reps: 0,
