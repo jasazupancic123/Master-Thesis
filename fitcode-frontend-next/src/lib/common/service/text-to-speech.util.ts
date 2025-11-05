@@ -71,7 +71,10 @@ export class TextToSpeechUtil {
    * Speak text. IMPORTANT on iOS: call this from a user gesture (e.g. a button click).
    * Returns a Promise that resolves when speaking ends or rejects on error.
    */
-  async speak(text: string, opts: SpeakOptions = {}): Promise<void> {
+  async speak(
+    text: string,
+    opts: SpeakOptions = { lang: 'en-US' }
+  ): Promise<void> {
     if (!text?.trim()) return;
     if (!this.synth) return;
 
