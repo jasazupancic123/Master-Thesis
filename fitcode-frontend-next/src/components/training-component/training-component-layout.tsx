@@ -28,7 +28,7 @@ export default function TrainingComponentLayout({
   if (!training) return null;
 
   return (
-    <Box sx={{ mb: 0, px: 0 }}>
+    <Box>
       <Box>
         <Box
           sx={{
@@ -38,11 +38,15 @@ export default function TrainingComponentLayout({
           }}
           position="relative"
         >
-          <TrainingComponentMenu
-            trainingComponent={trainingComponent}
-            heatmapView={heatmapView}
-            setHeatmapView={setHeatmapView}
-          />
+          {trainingComponent &&
+            component &&
+            trainingComponent.id === component.id && (
+              <TrainingComponentMenu
+                trainingComponent={trainingComponent}
+                heatmapView={heatmapView}
+                setHeatmapView={setHeatmapView}
+              />
+            )}
           <Stack
             direction={
               screenSize.isSmallerThanLaptop ||

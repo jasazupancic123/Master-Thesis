@@ -4,9 +4,6 @@ import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 
-import HeroNavbar from '@/components/hero-navbar/hero-navbar';
-import { HERO_NAVBAR_HEIGHT } from '@/lib/common/const/state';
-
 export default function Layout({ children }: React.PropsWithChildren) {
   const theme = useTheme();
 
@@ -17,19 +14,13 @@ export default function Layout({ children }: React.PropsWithChildren) {
       flexDirection="column"
       alignItems="center"
       sx={{
-        backgroundColor: theme.palette.primary.main,
+        backgroundColor: theme.palette.background.default,
         overflowX: 'hidden',
         overflowY: 'auto',
       }}
     >
       <Container component="main" maxWidth="lg">
-        <HeroNavbar
-          height={HERO_NAVBAR_HEIGHT}
-          disableLogo
-          activeSection={'methodology'}
-        />
-
-        <Box mt={10}>{children}</Box>
+        <Box mt={4}>{children}</Box>
       </Container>
     </Box>
   );

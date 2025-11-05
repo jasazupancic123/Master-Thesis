@@ -53,8 +53,9 @@ export default function ExerciseChips({
       flexWrap="wrap"
       sx={{ justifyContent: 'center', alignItems: 'center', ...sx }}
     >
-      {Components.filter((c) => !disabledComponents?.includes(c.field)).map(
-        (c, i) => {
+      {Components.toReversed()
+        .filter((c) => !disabledComponents?.includes(c.field))
+        .map((c, i) => {
           const IconComponent = lib.common.component.getIcon(c.name);
           const targets = Targets.filter((t) => t.componentId === c.field);
 
@@ -268,8 +269,7 @@ export default function ExerciseChips({
               )}
             </Box>
           );
-        }
-      )}
+        })}
     </Stack>
   );
 }

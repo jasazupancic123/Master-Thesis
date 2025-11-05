@@ -34,65 +34,57 @@ export default function TrainingComponentMenu(
           alignItems="center"
           flexDirection={screenSize.isSmallerThanLaptop ? 'column' : 'row'}
         >
-          {trainingComponent &&
-            component &&
-            trainingComponent.id === component.id && (
-              <TrainingComponentHeaderMenu />
-            )}
+          <TrainingComponentHeaderMenu />
         </Box>
       )}
 
-      {component?.id === trainingComponent.id &&
-        trainingComponent.id === 'strength' && (
-          <Box
-            id="strength-menu"
-            display="flex"
-            alignItems="center"
-            sx={{
-              cursor: 'pointer',
-              px: 1,
-              position: screenSize.isSmallerThanLaptop ? 'absolute' : undefined,
-              right: screenSize.isSmallerThanLaptop ? 0 : undefined,
-              top: screenSize.isSmallerThanLaptop ? -36 : undefined,
-            }}
-            onClick={() => {
-              if (
-                trainingComponent &&
-                component &&
-                trainingComponent.id === component.id &&
-                heatmapView
-              ) {
-                setHeatmapView(false);
-                return;
-              }
-              if (!component || trainingComponent.id !== component.id) {
-                setTraining(training);
-                setComponent(trainingComponent);
-              }
+      {trainingComponent.id === 'strength' && (
+        <Box
+          id="strength-menu"
+          display="flex"
+          alignItems="center"
+          sx={{
+            cursor: 'pointer',
+            px: 1,
+            position: screenSize.isSmallerThanLaptop ? 'absolute' : undefined,
+            right: screenSize.isSmallerThanLaptop ? 0 : undefined,
+            top: screenSize.isSmallerThanLaptop ? -36 : undefined,
+          }}
+          onClick={() => {
+            if (
+              trainingComponent &&
+              component &&
+              trainingComponent.id === component.id &&
+              heatmapView
+            ) {
+              setHeatmapView(false);
+              return;
+            }
+            if (!component || trainingComponent.id !== component.id) {
+              setTraining(training);
+              setComponent(trainingComponent);
+            }
 
-              setHeatmapView(true);
-            }}
-          >
-            {trainingComponent &&
-            component &&
-            trainingComponent.id === component.id &&
-            heatmapView ? (
-              <>
-                <DoNotDisturb
-                  sx={{
-                    position: 'absolute',
-                    fontSize: 20,
-                  }}
-                />
-                <MonitorHeart sx={{ fontSize: 20, opacity: 0.5 }} />
-              </>
-            ) : (
-              <>
-                <MonitorHeart sx={{ fontSize: 20 }} />
-              </>
-            )}
-          </Box>
-        )}
+            setHeatmapView(true);
+          }}
+        >
+          {heatmapView ? (
+            <>
+              <DoNotDisturb
+                sx={{
+                  position: 'absolute',
+                  fontSize: 20,
+                }}
+              />
+              <MonitorHeart sx={{ fontSize: 20, opacity: 0.5 }} />
+            </>
+          ) : (
+            <>
+              <MonitorHeart sx={{ fontSize: 20 }} />
+            </>
+          )}
+        </Box>
+      )}
     </Box>
   );
 }
