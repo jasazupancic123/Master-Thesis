@@ -55,11 +55,6 @@ export type PeriodizeTrainings = {
 export type CopyTraining = Pick<DateRange, 'from'> &
   Partial<Pick<Training, 'membersIds'>>;
 
-export type TrainingRecording = Omit<
-  Training,
-  'components' | 'warmup' | 'cooldown'
-> & {
+export type TrainingRecording = Omit<Training, 'components'> & {
   components: TrainingComponentRecording[];
-  warmup: TrainingComponentRecording;
-  cooldown: TrainingComponentRecording;
 };

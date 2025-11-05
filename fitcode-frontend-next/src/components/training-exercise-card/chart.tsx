@@ -37,24 +37,35 @@ import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 
 export const graphColorMap: Record<ExerciseParamFieldExtended, string> = {
+  sets: GRAPH_COLORS[2],
+  reps: GRAPH_COLORS[1],
+  repsR: GRAPH_COLORS[1],
+  time: GRAPH_COLORS[6],
+  timeR: GRAPH_COLORS[6],
+  dist: GRAPH_COLORS[6],
+  distR: GRAPH_COLORS[6],
   loadKg: GRAPH_COLORS[0],
   loadKgR: GRAPH_COLORS[0],
   loadRm: GRAPH_COLORS[0],
   loadRmR: GRAPH_COLORS[0],
   loadBw: GRAPH_COLORS[0],
   loadBwR: GRAPH_COLORS[0],
-  reps: GRAPH_COLORS[1],
-  repsR: GRAPH_COLORS[1],
-  sets: GRAPH_COLORS[2],
-  tempo: GRAPH_COLORS[4],
-  tempoR: GRAPH_COLORS[4],
   vel: GRAPH_COLORS[5],
   velR: GRAPH_COLORS[5],
-  time: GRAPH_COLORS[6],
-  dist: GRAPH_COLORS[6],
-  recTime: GRAPH_COLORS[7],
-  recDist: GRAPH_COLORS[7],
   eff: GRAPH_COLORS[7],
+  effR: GRAPH_COLORS[7],
+  tempoEcc: GRAPH_COLORS[4],
+  tempoEccR: GRAPH_COLORS[4],
+  tempoIso: GRAPH_COLORS[4],
+  tempoIsoR: GRAPH_COLORS[4],
+  tempoCon: GRAPH_COLORS[4],
+  tempoConR: GRAPH_COLORS[4],
+  tempoIdle: GRAPH_COLORS[4],
+  tempoIdleR: GRAPH_COLORS[4],
+  recTime: GRAPH_COLORS[7],
+  recTimeR: GRAPH_COLORS[7],
+  recDist: GRAPH_COLORS[7],
+  recDistR: GRAPH_COLORS[7],
 } as const;
 
 export const DEFAULT_CHART_PARAMS: ExerciseParamField[] = ['loadKg', 'reps'];
@@ -84,7 +95,6 @@ export default function TrainingExerciseChart(
     setRange,
     max,
     paddingForChartBackground,
-    percentageForChartBackground,
   } = useTrainingExerciseCardChart({ exercise });
 
   const handleChange = (_event: Event, newValue: number | number[]) => {
@@ -255,8 +265,12 @@ export default function TrainingExerciseChart(
                     }} // your handler
                     sx={{
                       p: 0.5,
-                      color: graphColorMap[p.field], // unchecked color
-                      '&.Mui-checked': { color: graphColorMap[p.field] }, // checked color
+                      color:
+                        graphColorMap[p.field as ExerciseParamFieldExtended], // unchecked color
+                      '&.Mui-checked': {
+                        color:
+                          graphColorMap[p.field as ExerciseParamFieldExtended],
+                      }, // checked color
                     }}
                   />
                   <Typography variant="body2">

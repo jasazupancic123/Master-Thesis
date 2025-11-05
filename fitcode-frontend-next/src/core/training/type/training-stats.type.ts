@@ -1,23 +1,27 @@
 import type { Component } from '@/core/exercise/type/component.type';
 
-export type TrainingComponentStats = {
+export type PrescribedTrainingComponentStats = {
   componentId: string;
   totalSets: number; // for calculating status
 };
 
-export type TrainingStats = {
-  plannedComponents: TrainingComponentStats[];
+export type PrescribedTrainingStats = Omit<SetReport, 'load'> & {
+  plannedComponents: PrescribedTrainingComponentStats[];
   mappedPlannedComponents?: Component[];
-  totalDuration: number; // in minutes
-  totalComponents: number;
-  totalSupersets: number;
-  totalExercises: number; // unique
-  totalSets: number;
-  totalReps: number;
-  totalRecTime: number; // total recovery time (for all sets, in seconds)
-  totalTit: number; // time when executing the training (in seconds) - sets * reps/dist/time * tempo (sum), for example 3 * 12 * 1:0:1 tempo (2s) = 72s
-  totalTonnage: number; // total weight lifted prescribed (in kg: sets * reps * weight)
-  totalTimeVol?: number; // total time prescribed (in seconds)
-  totalDistVol?: number; // total distance prescribed (in meters)
-  totalRecDist?: number; // total recovery distance prescribed (in meters)
+  duration: number; // in minutes
+  components: number;
+  supersets: number;
+  exercises: number; // unique
+  sets: number;
+};
+
+export type SetReport = {
+  reps: number;
+  load: number; // in kg
+  tut: number; // time under tension in seconds
+  tonnage: number; // in kg
+  time: number; // in seconds
+  dist: number; // in meters
+  recTime: number; // in seconds
+  recDist: number; // in meters
 };

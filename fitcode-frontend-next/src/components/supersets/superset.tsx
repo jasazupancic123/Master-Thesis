@@ -34,11 +34,13 @@ export default function Superset({ superset, supersetIndex }: Props) {
     (s) => s.exercises
   ).length;
 
+  const isCircuit = superset.mainSet === MainSet.CIRCUIT;
+
   return (
     <Grid2
       key={`${component.id}-${supersetIndex}`}
       size={
-        (selectedSubgroup || component).mainSet === MainSet.CIRCUIT
+        isCircuit
           ? screenSize.isSmallerThanLaptop
             ? 12
             : numExercises === 1
@@ -102,16 +104,8 @@ export default function Superset({ superset, supersetIndex }: Props) {
             <Grid2
               id="exercises-container"
               container
-              columnSpacing={
-                (selectedSubgroup || component).mainSet === MainSet.CIRCUIT
-                  ? 0.4
-                  : undefined
-              }
-              rowSpacing={
-                (selectedSubgroup || component).mainSet === MainSet.CIRCUIT
-                  ? 0.4
-                  : undefined
-              }
+              columnSpacing={isCircuit ? 0.4 : undefined}
+              rowSpacing={isCircuit ? 0.4 : undefined}
             >
               {supersets.length === 1 && superset.exercises.length === 0 ? (
                 <Box

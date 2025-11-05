@@ -2,8 +2,7 @@ import {
   DEFAULT_NUM_SETS_IN_EXERCISE,
   MAX_NUM_EXERCISES_IN_BLOCK_SUPERSET,
   MAX_NUM_EXERCISES_IN_CIRCUIT_SUPERSET,
-  MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT,
-  MAX_NUM_SUPERSETS_IN_CIRCUIT_COMPONENT,
+  MAX_NUM_SUPERSETS,
 } from '../const/training-limits.const';
 import { MainSet } from '../enum/main-set.enum';
 import type {
@@ -20,7 +19,10 @@ import {
   KG,
   REC_TIME,
   REPS,
-  TEMPO,
+  TEMPO_CON,
+  TEMPO_ECC,
+  TEMPO_IDLE,
+  TEMPO_ISO,
 } from '@/core/exercise/constant/exercise-param.constant';
 import { Methods } from '@/core/exercise/constant/method.constant';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
@@ -33,16 +35,22 @@ export class TrainingSupersetUtil {
     return {
       exercise,
       id: exercise.id,
-      params: [],
       sets: Array.from({ length: DEFAULT_NUM_SETS_IN_EXERCISE }, (_, i) => ({
         setNumber: i + 1,
         reps: REPS.defaultValue as number,
         ...(uni && { repsR: REPS.defaultValue as number }),
         loadKg: KG.defaultValue as number,
         ...(uni && { loadKgR: KG.defaultValue as number }),
-        tempo: TEMPO.defaultValue as string,
-        ...(uni && { tempoR: TEMPO.defaultValue as string }),
+        tempoEcc: TEMPO_ECC.defaultValue as number,
+        ...(uni && { tempoEccR: TEMPO_ECC.defaultValue as number }),
+        tempoIso: TEMPO_ISO.defaultValue as number,
+        ...(uni && { tempoIsoR: TEMPO_ECC.defaultValue as number }),
+        tempoCon: TEMPO_CON.defaultValue as number,
+        ...(uni && { tempoConR: TEMPO_ECC.defaultValue as number }),
+        tempoIdle: TEMPO_IDLE.defaultValue as number,
+        ...(uni && { tempoIdleR: TEMPO_ECC.defaultValue as number }),
         recTime: REC_TIME.defaultValue as number,
+        ...(uni && { recTimeR: REC_TIME.defaultValue as number }),
       })),
     };
   }
@@ -55,12 +63,7 @@ export class TrainingSupersetUtil {
     exercises: TrainingExercise[],
     mainSet: MainSet
   ): void {
-    if (supersets.length === 0) supersets.push({ exercises: [] });
-
-    const maxSupersets =
-      mainSet === MainSet.CIRCUIT
-        ? MAX_NUM_SUPERSETS_IN_CIRCUIT_COMPONENT
-        : MAX_NUM_SUPERSETS_IN_BLOCK_COMPONENT;
+    if (supersets.length === 0) supersets.push({ exercises: [], mainSet });
 
     const maxExercisesPerSuperset =
       mainSet === MainSet.CIRCUIT
@@ -81,8 +84,8 @@ export class TrainingSupersetUtil {
         break; // stop if no exercises left
       else if (supersets.indexOf(superset) === supersets.length - 1) {
         // if this is the last superset, add a new one if there are still exercises to add
-        if (supersets.length === maxSupersets) return;
-        if (mainSet === MainSet.BLOCK) supersets.push({ exercises: [] });
+        if (supersets.length === MAX_NUM_SUPERSETS) return;
+        supersets.push({ exercises: [], mainSet });
       }
     }
   }

@@ -60,30 +60,6 @@ export class TrainingReport extends IntersectionType(
 
   @IsNumber()
   @Min(0)
-  @ApiProperty()
-  @Expose()
-  duration: number; // in minutes
-
-  @IsNumber()
-  @Min(0)
-  @ApiProperty()
-  @Expose()
-  components: number;
-
-  @IsNumber()
-  @Min(0)
-  @ApiProperty()
-  @Expose()
-  exercises: number;
-
-  @IsNumber()
-  @Min(0)
-  @ApiProperty()
-  @Expose()
-  sets: number;
-
-  @IsNumber()
-  @Min(0)
   @Max(100)
   @ApiProperty()
   @Expose()

@@ -180,7 +180,7 @@ export default function AthleteTrainingExerciseSets({
                 )}
 
                 {effTempoParam ? (
-                  effType === 'tempo' ? (
+                  effType === 'tempoEcc' ? (
                     <Box
                       width={widthParam}
                       display="flex"
@@ -189,11 +189,15 @@ export default function AthleteTrainingExerciseSets({
                       <TempoExerciseParam
                         options={effOptions}
                         selected={effType}
-                        value={exercise.sets[index]?.[effType] || ''}
+                        value={core.training.set.getTempo(exercise.sets[index])}
                         exercise={exercise}
                         disableOptions
                         onInputChange={(value) => {
-                          exercise.sets[index][effType] = value.toString();
+                          core.training.set.setTempo(
+                            exercise.sets[index],
+                            value as [number, number, number, number]
+                          );
+
                           updateTrainingInProgress(
                             exercise,
                             supersetIndex || 0
@@ -295,14 +299,14 @@ export default function AthleteTrainingExerciseSets({
                         selected={KG.field}
                         value={
                           exercise.sets[index]?.[
-                            core.exercise.param.pairs[KG.field]
+                            core.exercise.param.pairs['loadKg']
                           ] || 0
                         }
                         exercise={exercise}
                         showOptions={false}
                         disableOptions
                         onInputChange={(value) => {
-                          const field = core.exercise.param.pairs[KG.field];
+                          const field = core.exercise.param.pairs['loadKg'];
                           exercise.sets[index][field] = +value as never;
 
                           updateTrainingInProgress(
@@ -320,24 +324,22 @@ export default function AthleteTrainingExerciseSets({
                       display="flex"
                       justifyContent="center"
                     >
-                      {effType === 'tempo' ? (
+                      {effType === 'tempoEcc' ? (
                         <TempoExerciseParam
                           options={effOptions}
                           selected={effType}
-                          value={
-                            exercise.sets[index]?.[
-                              core.exercise.param.pairs[effType]
-                            ] || ''
-                          }
+                          value={core.training.set.getTempo(
+                            exercise.sets[index]
+                          )}
                           exercise={exercise}
                           showOptions={false}
                           disableOptions
                           onInputChange={(value) => {
-                            const field = core.exercise.param.pairs[
-                              effType
-                            ] as typeof effType;
+                            core.training.set.setTempo(
+                              exercise.sets[index],
+                              value as [number, number, number, number]
+                            );
 
-                            exercise.sets[index][field] = value.toString();
                             updateTrainingInProgress(
                               exercise,
                               supersetIndex || 0

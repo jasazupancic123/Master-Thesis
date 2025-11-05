@@ -19,7 +19,7 @@ import type { Exercise } from '@/core/exercise/type/exercise.type';
 import type { Method } from '@/core/exercise/type/method.type';
 import type { Profile } from '@/core/profile/type/user.type';
 import type { WellnessZScore } from '@/core/profile/type/wellness.type';
-import type { MainSet } from '@/core/training/enum/main-set.enum';
+import { MainSet } from '@/core/training/enum/main-set.enum';
 import { TrainingController } from '@/core/training/training.controller';
 import { TrainingService } from '@/core/training/training.service';
 import type { Subgroup } from '@/core/training/type/subgroup.type';
@@ -462,7 +462,11 @@ export function TrainerDayViewProvider(props: Props) {
       );
     else {
       // add warmup superset
-      const newSuperset: Superset = { exercises: [], warmup: true };
+      const newSuperset: Superset = {
+        exercises: [],
+        warmup: true,
+        mainSet: MainSet.CIRCUIT,
+      };
 
       supersets.unshift(newSuperset);
       for (const sg of childrenSubgroups) sg.supersets.unshift(newSuperset);
@@ -487,7 +491,11 @@ export function TrainerDayViewProvider(props: Props) {
       );
     else {
       // add cooldown superset
-      const newSuperset: Superset = { exercises: [], cooldown: true };
+      const newSuperset: Superset = {
+        exercises: [],
+        cooldown: true,
+        mainSet: MainSet.CIRCUIT,
+      };
 
       supersets.push(newSuperset);
       for (const sg of childrenSubgroups) sg.supersets.push(newSuperset);

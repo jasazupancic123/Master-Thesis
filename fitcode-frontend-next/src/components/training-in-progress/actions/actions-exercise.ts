@@ -23,15 +23,28 @@ export function updateTrainingExerciseWithAI(
   if (!updatableExercise) return;
 
   const selectedSet = updatableExercise.sets[setIndex];
-
   if (!selectedSet) return;
+
+  const tempoAIValuesL = tempoL
+    ? tempoL.split(':').map((t) => parseFloat(t))
+    : null;
+
+  const tempoAIValuesR = tempoR
+    ? tempoR.split(':').map((t) => parseFloat(t))
+    : null;
 
   updatableExercise.sets[setIndex] = {
     ...selectedSet,
     reps: repsCountL,
     repsR: repsCountR,
-    tempo: tempoL || selectedSet.tempo,
-    tempoR: tempoR || undefined,
+    tempoEcc: tempoAIValuesL ? tempoAIValuesL[0] : selectedSet.tempoEcc,
+    tempoIso: tempoAIValuesL ? tempoAIValuesL[1] : selectedSet.tempoIso,
+    tempoCon: tempoAIValuesL ? tempoAIValuesL[2] : selectedSet.tempoCon,
+    tempoIdle: tempoAIValuesL ? tempoAIValuesL[3] : selectedSet.tempoIdle,
+    tempoEccR: tempoAIValuesR ? tempoAIValuesR[0] : selectedSet.tempoEccR,
+    tempoIsoR: tempoAIValuesR ? tempoAIValuesR[1] : selectedSet.tempoIsoR,
+    tempoConR: tempoAIValuesR ? tempoAIValuesR[2] : selectedSet.tempoConR,
+    tempoIdleR: tempoAIValuesR ? tempoAIValuesR[3] : selectedSet.tempoIdleR,
   };
 
   if (updateSelectedExercise) setSelectedExercise(updatableExercise);

@@ -1,9 +1,6 @@
-import { TEMPO_REGEX } from './tempo-regex.constant';
 import { AttributeType } from '@/core/attribute/enum/attribute-value.enum';
 import type { Attribute } from '@/core/attribute/type/attribute.type';
 import type { ExerciseSet } from '@/core/training/type/exercise-set.type';
-
-export type ExerciseSetParamsObj = Omit<ExerciseSet, 'setNumber' | 'loadType'>;
 
 export const SETS: Attribute = {
   field: 'sets',
@@ -14,7 +11,7 @@ export const SETS: Attribute = {
   max: 10,
 };
 
-export const REPS: Attribute<ExerciseSetParamsObj> = {
+export const REPS: Attribute<ExerciseSet> = {
   field: 'reps',
   name: 'Rep',
   description: 'repetitions',
@@ -25,7 +22,7 @@ export const REPS: Attribute<ExerciseSetParamsObj> = {
   required: true,
 };
 
-export const REC_TIME: Attribute<ExerciseSetParamsObj> = {
+export const REC_TIME: Attribute<ExerciseSet> = {
   field: 'recTime',
   name: 'Rec',
   description: 'recovery time between sets',
@@ -36,7 +33,7 @@ export const REC_TIME: Attribute<ExerciseSetParamsObj> = {
   max: 600, // 10 minutes
 };
 
-export const REC_DIST: Attribute<ExerciseSetParamsObj> = {
+export const REC_DIST: Attribute<ExerciseSet> = {
   field: 'recDist',
   name: 'Dist',
   description: 'recovery distance between intervals',
@@ -47,7 +44,7 @@ export const REC_DIST: Attribute<ExerciseSetParamsObj> = {
   max: 100000, // 100 km
 };
 
-export const KG: Attribute<ExerciseSetParamsObj> = {
+export const KG: Attribute<ExerciseSet> = {
   field: 'loadKg',
   name: 'KG',
   description: 'load',
@@ -59,7 +56,7 @@ export const KG: Attribute<ExerciseSetParamsObj> = {
   max: 999,
 };
 
-export const BW: Attribute<ExerciseSetParamsObj> = {
+export const BW: Attribute<ExerciseSet> = {
   field: 'loadBw',
   name: 'BW',
   description: 'load',
@@ -70,7 +67,7 @@ export const BW: Attribute<ExerciseSetParamsObj> = {
   max: 500,
 };
 
-export const RM: Attribute<ExerciseSetParamsObj> = {
+export const RM: Attribute<ExerciseSet> = {
   field: 'loadRm',
   name: 'RM',
   description: 'load',
@@ -80,16 +77,39 @@ export const RM: Attribute<ExerciseSetParamsObj> = {
   max: 500,
 };
 
-export const TEMPO: Attribute<ExerciseSetParamsObj> = {
-  field: 'tempo',
-  name: 'Tempo',
-  description: 'tempo',
-  type: AttributeType.String,
-  defaultValue: '2:0:1:0',
-  pattern: TEMPO_REGEX, // e.g. "2:0:1:0", meaning "eccentric:isometric:concentric:isometric" in seconds
+export const TEMPO_ECC: Attribute<ExerciseSet> = {
+  field: 'tempoEcc',
+  name: 'Tempo (Eccentric)',
+  description: 'tempo ecc',
+  type: AttributeType.Number,
+  defaultValue: 2,
 };
 
-export const TIME: Attribute<ExerciseSetParamsObj> = {
+export const TEMPO_ISO: Attribute<ExerciseSet> = {
+  field: 'tempoIso',
+  name: 'Tempo (Isometric)',
+  description: 'tempo iso',
+  type: AttributeType.Number,
+  defaultValue: 0,
+};
+
+export const TEMPO_CON: Attribute<ExerciseSet> = {
+  field: 'tempoCon',
+  name: 'Tempo (Concentric)',
+  description: 'tempo con',
+  type: AttributeType.Number,
+  defaultValue: 1,
+};
+
+export const TEMPO_IDLE: Attribute<ExerciseSet> = {
+  field: 'tempoIdle',
+  name: 'Tempo (Idle)',
+  description: 'tempo idle',
+  type: AttributeType.Number,
+  defaultValue: 0,
+};
+
+export const TIME: Attribute<ExerciseSet> = {
   field: 'time',
   name: 'Time',
   description: 'time',
@@ -100,7 +120,7 @@ export const TIME: Attribute<ExerciseSetParamsObj> = {
   max: 600, // 10 minutes
 };
 
-export const DIST: Attribute<ExerciseSetParamsObj> = {
+export const DIST: Attribute<ExerciseSet> = {
   field: 'dist',
   type: AttributeType.Number,
   name: 'Dist',
@@ -111,7 +131,7 @@ export const DIST: Attribute<ExerciseSetParamsObj> = {
   max: 100000, // 100 km
 };
 
-export const EFF: Attribute<ExerciseSetParamsObj> = {
+export const EFF: Attribute<ExerciseSet> = {
   field: 'eff',
   name: 'Effort',
   description: 'effort',
@@ -121,7 +141,7 @@ export const EFF: Attribute<ExerciseSetParamsObj> = {
   max: 4, // max
 };
 
-export const VEL: Attribute<ExerciseSetParamsObj> = {
+export const VEL: Attribute<ExerciseSet> = {
   field: 'vel',
   name: 'VBT',
   description: 'velocity based training',
