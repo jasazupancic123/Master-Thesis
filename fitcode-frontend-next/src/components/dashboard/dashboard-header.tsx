@@ -6,7 +6,6 @@ import {
   Settings,
 } from '@mui/icons-material';
 import {
-  AppBar,
   Avatar,
   Box,
   IconButton,
@@ -21,18 +20,15 @@ import { useTheme } from '@mui/material';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-import DashboardMenuMobile from './dashboard-menu-mobile';
 import EditInstitutionModal from './edit-institution-modal';
 import useDashboardHeaderUtils from './hooks/use-utils';
 import ProfileHeaderMenu from '@/components/profile-header-menu/profile-header-menu';
 import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
-import { core } from '@/core/core.service';
 import { lib } from '@/lib';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import type { ILink } from '@/lib/common/type/link.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
-import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import Logo from '@/ui/logo';
 import {
@@ -46,14 +42,12 @@ export default function DashboardHeader() {
   const router = useRouter();
   const screenSize = useScreenSize();
 
-  const { users } = useMain();
   const {
     filter,
     setFilter,
     institutions,
     selectedInstitution,
     setSelectedInstitution,
-    setSelectedGroup,
   } = useDashboard();
 
   const {
@@ -69,16 +63,22 @@ export default function DashboardHeader() {
     setOpenEditInstitutionModal,
   } = useDashboardHeaderUtils();
 
+  const isSmallSize = screenSize.isMobile;
+
   return (
     <Box
       display="flex"
+      flexDirection="column"
       justifyContent="center"
       alignItems="center"
       width="100%"
-      height={70}
+      height={!isSmallSize ? 70 : undefined}
       maxWidth={MAX_WIDTH}
       position="relative"
-      sx={{ mx: 'auto', backgroundColor: theme.palette.background.default }}
+      sx={{
+        mx: 'auto',
+        backgroundColor: theme.palette.background.default,
+      }}
     >
       <Box
         width="100%"
@@ -86,7 +86,12 @@ export default function DashboardHeader() {
         display="flex"
         justifyContent="space-between"
         alignItems="center"
-        sx={{ position: 'absolute', right: 0, top: 0, px: 2 }}
+        sx={{
+          position: isSmallSize ? undefined : 'absolute',
+          right: 0,
+          top: 0,
+          px: 2,
+        }}
         gap={3}
       >
         <Logo width={101.25} />
@@ -186,7 +191,13 @@ export default function DashboardHeader() {
         </Box>
       </Box>
 
-      <Box sx={{ width: '100%', mx: 'auto' }}>
+      <Box
+        sx={{
+          width: '100%',
+          mx: 'auto',
+          py: isSmallSize ? 1 : undefined,
+        }}
+      >
         <ToggleButtonGroup
           value={filter}
           exclusive
@@ -282,14 +293,6 @@ export default function DashboardHeader() {
             key={institution.id}
             onClick={() => {
               setSelectedInstitution(institution);
-              if (institution.groups && institution.groups.length) {
-                const mapped = core.group.mapMembers(
-                  institution.groups[0],
-                  users
-                );
-
-                setSelectedGroup(mapped);
-              } else setSelectedGroup(null);
 
               setOpenInstitutionsMenu(false);
               setAnchorInstitutionsEl(null);

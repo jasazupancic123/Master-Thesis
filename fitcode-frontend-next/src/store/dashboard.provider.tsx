@@ -25,9 +25,11 @@ import {
 } from '@/lib/common/const/nav.const';
 import type { ILink } from '@/lib/common/type/link.type';
 import type { SetState } from '@/lib/common/type/state.type';
+import { Training } from '@/core/training/type/training.type';
 
 interface Props extends React.PropsWithChildren {
   institutionId: string;
+  trainings: Training[];
 }
 
 export interface IDashboardContext {
@@ -37,10 +39,10 @@ export interface IDashboardContext {
   setInstitutions: SetState<Institution[]>;
   selectedInstitution: Institution | null;
   setSelectedInstitution: SetState<Institution | null>;
+  trainings: Training[];
+  setTrainings: SetState<Training[]>;
   detectedChanges: boolean;
   setDetectedChanges: SetState<boolean>;
-  selectedGroup: Group | null;
-  setSelectedGroup: SetState<Group | null>;
   setUsers: SetState<AuthUser[]>;
   updateInstitution: (
     institutionId: string,
@@ -62,7 +64,7 @@ const DashboardContext = createContext<IDashboardContext | null>(null);
 export const useDashboard = () => useContext(DashboardContext)!;
 
 export function DashboardProvider(props: Props) {
-  const { children, institutionId } = props;
+  const { children, institutionId, trainings: propsTrainings } = props;
 
   const { role, user } = useAuthenticatedAuth();
   const {
@@ -97,9 +99,11 @@ export function DashboardProvider(props: Props) {
       return institution;
     });
 
-  const [selectedGroup, setSelectedGroup] = useState<Group | null>(
-    selectedInstitution?.groups?.length ? selectedInstitution.groups[0] : null
-  );
+  const [trainings, setTrainings] = useState<Training[]>([]);
+
+  useEffect(() => {
+    setTrainings(propsTrainings);
+  }, [propsTrainings]);
 
   // update filter based on url
   useEffect(() => {
@@ -125,8 +129,6 @@ export function DashboardProvider(props: Props) {
     setSelectedInstitution(
       (prev) => ({ ...prev, groups: filtered }) as Institution
     );
-
-    if (filtered.length) setSelectedGroup(filtered[0]);
   }, [selectedInstitution]);
 
   const value: IDashboardContext = {
@@ -136,10 +138,10 @@ export function DashboardProvider(props: Props) {
     setInstitutions,
     selectedInstitution,
     setSelectedInstitution,
+    trainings,
+    setTrainings,
     detectedChanges,
     setDetectedChanges,
-    selectedGroup,
-    setSelectedGroup,
     setUsers,
     updateInstitution: async (institutionId, input) => {
       const prevState = {
@@ -176,7 +178,6 @@ export function DashboardProvider(props: Props) {
 
       const prevState = {
         institution: structuredClone(selectedInstitution),
-        group: selectedGroup ? { ...selectedGroup } : null,
       };
 
       function mapper(group: Group): Group {
@@ -188,25 +189,26 @@ export function DashboardProvider(props: Props) {
         };
       }
 
-      await lib.common.generic.optimisticUpdate(
-        () => {
-          // apply optimistic update
-          setSelectedInstitution((prev) =>
-            prev ? { ...prev, groups: prev.groups.map(mapper) } : prev
-          );
+      const apply = () => {
+        // apply optimistic update
+        setSelectedInstitution((prev) =>
+          prev ? { ...prev, groups: prev.groups.map(mapper) } : prev
+        );
+      };
 
-          if (groupId === selectedGroup?.id)
-            setSelectedGroup((prev) => (prev ? mapper(prev) : prev));
-        },
-        (snapshot) => {
-          // rollback
-          setSelectedInstitution(snapshot.institution);
-          setSelectedGroup(snapshot.group);
-          toast.error('Failed to update group name');
-        },
-        // perform the actual update
-        () => GroupController.getInstance().update(groupId, input),
-        prevState // snapshot for rollback
+      const rollback = (snapshot: any) => {
+        // rollback
+        setSelectedInstitution(snapshot.institution);
+        toast.error('Failed to update group name');
+      };
+
+      const action = () => GroupController.getInstance().update(groupId, input);
+
+      await lib.common.generic.optimisticUpdate(
+        apply,
+        rollback,
+        action,
+        prevState
       );
     },
     updateUser: async (userId, input) => {
@@ -219,7 +221,6 @@ export function DashboardProvider(props: Props) {
       const prevState = {
         users: structuredClone(users),
         institution: structuredClone(selectedInstitution),
-        selectedGroup: selectedGroup ? { ...selectedGroup } : null,
       };
 
       function mapper(user: AuthUser): AuthUser {
@@ -234,45 +235,48 @@ export function DashboardProvider(props: Props) {
         };
       }
 
+      const apply = () => {
+        setUsers((prev) => prev.map(mapper));
+        setSelectedInstitution((prev) =>
+          prev
+            ? {
+                ...prev,
+                athletes: prev.athletes.map(mapper),
+                trainers: prev.trainers.map(mapper),
+                owner: mapper(prev.owner),
+              }
+            : prev
+        );
+      };
+
+      const rollback = (snapshot: any, e: Error) => {
+        console.error(e);
+        setUsers(snapshot.users);
+        setSelectedInstitution(snapshot.institution);
+        toast.error('Failed to update user');
+      };
+
+      const action = async () => {
+        const controller = AuthController.getInstance();
+
+        if (input.displayName || input.photoURL) {
+          await controller.updateUser(userId, {
+            displayName: input.displayName,
+            photoURL: input.photoURL,
+          });
+        }
+
+        if (input.role) {
+          await controller.updateCustomClaims(userId, {
+            role: [input.role],
+          });
+        }
+      };
+
       await lib.common.generic.optimisticUpdate(
-        () => {
-          setUsers((prev) => prev.map(mapper));
-          setSelectedInstitution((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  athletes: prev.athletes.map(mapper),
-                  trainers: prev.trainers.map(mapper),
-                  owner: mapper(prev.owner),
-                }
-              : prev
-          );
-
-          if (selectedGroup?.members?.find((m) => m.uid === userId))
-            setSelectedGroup((prev) =>
-              prev
-                ? { ...prev, members: prev?.members?.map(mapper) ?? [] }
-                : prev
-            );
-        },
-        (snapshot) => {
-          setUsers(snapshot.users);
-          setSelectedInstitution(snapshot.institution);
-          setSelectedGroup(snapshot.selectedGroup);
-          toast.error('Failed to update user');
-        },
-        async () => {
-          const controller = AuthController.getInstance();
-
-          if (input.displayName || input.photoURL)
-            await controller.updateUser(userId, {
-              displayName: input.displayName,
-              photoURL: input.photoURL,
-            });
-
-          if (input.role)
-            await controller.updateCustomClaims(userId, { role: [input.role] });
-        },
+        apply,
+        rollback,
+        action,
         prevState
       );
     },
@@ -281,28 +285,30 @@ export function DashboardProvider(props: Props) {
 
       const prevState = {
         institution: structuredClone(selectedInstitution),
-        group: selectedGroup ? { ...selectedGroup } : null,
       };
 
-      await lib.common.generic.optimisticUpdate(
-        () => {
-          setSelectedInstitution((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  groups: prev.groups.filter((group) => group.id !== groupId),
-                }
-              : prev
-          );
+      const apply = () => {
+        setSelectedInstitution((prev) =>
+          prev
+            ? {
+                ...prev,
+                groups: prev.groups.filter((group) => group.id !== groupId),
+              }
+            : prev
+        );
+      };
 
-          if (groupId === selectedGroup?.id) setSelectedGroup(null);
-        },
-        (snapshot) => {
-          setSelectedInstitution(snapshot.institution);
-          setSelectedGroup(snapshot.group);
-          toast.error('Failed to delete group');
-        },
-        () => GroupController.getInstance().delete(groupId),
+      const rollback = (snapshot: any) => {
+        setSelectedInstitution(snapshot.institution);
+        toast.error('Failed to delete group');
+      };
+
+      const action = () => GroupController.getInstance().delete(groupId);
+
+      await lib.common.generic.optimisticUpdate(
+        apply,
+        rollback,
+        action,
         prevState
       );
     },
@@ -311,39 +317,26 @@ export function DashboardProvider(props: Props) {
 
       const prevState = {
         institution: structuredClone(selectedInstitution),
-        group: selectedGroup ? { ...selectedGroup } : null,
       };
 
-      return await lib.common.generic.optimisticUpdate(
-        () => {
-          setSelectedGroup(data);
-          setSelectedInstitution((prev) =>
-            prev ? { ...prev, groups: [...prev.groups, data] } : prev
-          );
-        },
-        (snapshot) => {
-          setSelectedInstitution(snapshot.institution);
-          setSelectedGroup(snapshot.group);
-          toast.error('Failed to add group');
-        },
-        () => GroupController.getInstance().create(data),
-        prevState,
-        (created) => {
-          // post action on success - set the new id from backend
-          if (!created) return;
-          setSelectedInstitution((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  groups: prev.groups.map((r) =>
-                    r.id === data.id ? created : r
-                  ),
-                }
-              : prev
-          );
+      const apply = () => {
+        setSelectedInstitution((prev) =>
+          prev ? { ...prev, groups: [...prev.groups, data] } : prev
+        );
+      };
 
-          setSelectedGroup(created);
-        }
+      const rollback = (snapshot: any) => {
+        setSelectedInstitution(snapshot.institution);
+        toast.error('Failed to add group');
+      };
+
+      const action = () => GroupController.getInstance().create(data);
+
+      return await lib.common.generic.optimisticUpdate(
+        apply,
+        rollback,
+        action,
+        prevState
       );
     },
     addGroupMember: async (user: AuthUser, groupId: string) => {
@@ -355,34 +348,38 @@ export function DashboardProvider(props: Props) {
         group: structuredClone(group),
       };
 
-      await lib.common.generic.optimisticUpdate(
-        () => {
-          const newGroup: Group = {
-            ...group,
-            members: group.members ? [...group.members, user] : [user],
-            membersIds: group.membersIds
-              ? [...group.membersIds, user.uid]
-              : [user.uid],
-          };
+      const apply = () => {
+        const newGroup: Group = {
+          ...group,
+          members: group.members ? [...group.members, user] : [user],
+          membersIds: group.membersIds
+            ? [...group.membersIds, user.uid]
+            : [user.uid],
+        };
 
-          setProfiles((prev) => [...prev, core.profile.userToProfile(user)]);
-          if (selectedGroup?.id === group.id) setSelectedGroup(newGroup);
-          setSelectedInstitution((prev) => ({
-            ...prev!,
-            groups: prev!.groups.map((g) =>
-              g.id === newGroup.id ? newGroup : g
-            ),
-          }));
-        },
-        (snapshot) => {
-          setSelectedInstitution(snapshot.institution);
-          if (selectedGroup?.id === group.id) setSelectedGroup(snapshot.group);
-          toast.error('Failed to add member to group');
-        },
-        () =>
-          GroupController.getInstance().addMember(group.id, {
-            userId: user.uid,
-          }),
+        setProfiles((prev) => [...prev, core.profile.userToProfile(user)]);
+        setSelectedInstitution((prev) => ({
+          ...prev!,
+          groups: prev!.groups.map((g) =>
+            g.id === newGroup.id ? newGroup : g
+          ),
+        }));
+      };
+
+      const rollback = (snapshot: any) => {
+        setSelectedInstitution(snapshot.institution);
+        toast.error('Failed to add member to group');
+      };
+
+      const action = () =>
+        GroupController.getInstance().addMember(group.id, {
+          userId: user.uid,
+        });
+
+      await lib.common.generic.optimisticUpdate(
+        apply,
+        rollback,
+        action,
         prevState
       );
     },
@@ -395,32 +392,36 @@ export function DashboardProvider(props: Props) {
         group: structuredClone(group),
       };
 
-      await lib.common.generic.optimisticUpdate(
-        () => {
-          const newGroup: Group = {
-            ...group,
-            members: group.members?.filter((m) => m.uid !== userId),
-            membersIds: group.membersIds?.filter((id) => id !== userId),
-          };
+      const apply = () => {
+        const newGroup: Group = {
+          ...group,
+          members: group.members?.filter((m) => m.uid !== userId),
+          membersIds: group.membersIds?.filter((id) => id !== userId),
+        };
 
-          setProfiles((prev) => prev.filter((m) => m.uid !== userId));
-          if (selectedGroup?.id === group.id) setSelectedGroup(newGroup);
-          setSelectedInstitution((prev) => ({
-            ...prev!,
-            groups: prev!.groups.map((g) =>
-              g.id === newGroup.id ? newGroup : g
-            ),
-          }));
-        },
-        (snapshot) => {
-          setSelectedInstitution(snapshot.institution);
-          if (selectedGroup?.id === group.id) setSelectedGroup(snapshot.group);
-          toast.error('Failed to remove member from group');
-        },
-        () =>
-          GroupController.getInstance().removeMember(group.id, {
-            userId,
-          }),
+        setProfiles((prev) => prev.filter((m) => m.uid !== userId));
+        setSelectedInstitution((prev) => ({
+          ...prev!,
+          groups: prev!.groups.map((g) =>
+            g.id === newGroup.id ? newGroup : g
+          ),
+        }));
+      };
+
+      const rollback = (snapshot: any) => {
+        setSelectedInstitution(snapshot.institution);
+        toast.error('Failed to remove member from group');
+      };
+
+      const action = () =>
+        GroupController.getInstance().removeMember(group.id, {
+          userId,
+        });
+
+      await lib.common.generic.optimisticUpdate(
+        apply,
+        rollback,
+        action,
         prevState
       );
     },
