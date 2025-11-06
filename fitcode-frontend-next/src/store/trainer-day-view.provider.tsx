@@ -544,12 +544,13 @@ export function TrainerDayViewProvider(props: Props) {
       component
     );
 
-    supersets[supersetIndex].mainSet = mainSet;
+    const supersetsCopy = structuredClone(supersets);
+    supersetsCopy[supersetIndex].mainSet = mainSet;
 
     for (const sg of childrenSubgroups)
       sg.supersets[supersetIndex].mainSet = mainSet;
 
-    updateSupersets(supersets, childrenSubgroups);
+    updateSupersets(supersetsCopy, childrenSubgroups);
   }
 
   /**

@@ -94,6 +94,7 @@ export default function TrainingInProgressExerciseSet(props: Props) {
                   disableOptions
                   disabled
                   trainingInProgressSecondaryItem
+                  showOptions={!uni}
                   onInputChange={(values) => {
                     core.training.set.setTempo(
                       exercise.sets[setIndex],
@@ -226,7 +227,7 @@ export default function TrainingInProgressExerciseSet(props: Props) {
                       <TempoExerciseParam
                         options={effOptions}
                         selected={effType}
-                        value={core.training.set.getTempo(
+                        value={core.training.set.getTempoR(
                           exercise.sets[setIndex]
                         )}
                         exercise={exercise}

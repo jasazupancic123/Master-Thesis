@@ -18,7 +18,6 @@ import AthleteTrainingExerciseSets from '../athlete/athlete-training-exercise-se
 import TempoChart from '../charts/tempo/tempo-chart';
 import { updateTrainingExerciseWithAI } from '../training-in-progress/actions/actions-exercise';
 import { finishSet } from '../training-in-progress/actions/actions-exercise-set';
-import { handleAdvanceInSuperset } from '../training-in-progress/actions/actions-superset';
 import FpsText from './fps-text';
 import MovementValidationHeader from './movement-validation-header';
 import {
@@ -679,10 +678,10 @@ export default function MobileMovementValidation(
         handleUpsertSet,
       });
 
-      handleAdvanceInSuperset({
-        useTraining: { ...trainingContext, trainingInProgress },
-        useTrainingInProgress: trainingInProgressContext,
-      });
+      // handleAdvanceInSuperset({
+      //   useTraining: { ...trainingContext, trainingInProgress },
+      //   useTrainingInProgress: trainingInProgressContext,
+      // });
 
       setSelectedTrackingMethod(TrackingMethod.MANUAL);
     }
