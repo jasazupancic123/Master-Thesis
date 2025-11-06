@@ -68,10 +68,8 @@ import {
   CreateTrainingDto,
 } from '../dto/create-training.dto';
 import { PeriodizeTrainingsDto } from '../dto/periodize-training.dto';
-import { Superset } from '../entity/superset.entity';
 import { Training } from '../entity/training.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
-import { TrainingExercise } from '../entity/training-exercise.entity';
 import { TrainingReport } from '../entity/training-report.entity';
 import { CreateWorkload, Workload } from '../entity/workload.entity';
 import { MainSet } from '../enum/main-set.enum';
@@ -621,7 +619,7 @@ export class TrainingService implements Permission<Training, Institution> {
     );
 
     // update report
-    await this.trainingReportService.updateReport(userId, training, {
+    await this.trainingReportService.update(userId, training, {
       photoURLs: input.photoURLs,
     });
 
@@ -656,11 +654,46 @@ export class TrainingService implements Permission<Training, Institution> {
       input,
     );
 
-    await this.trainingReportService.updateReport(userId, training, {
+    await this.trainingReportService.update(userId, training, {
       photoURLs: input.photoURLs,
     });
 
     return workload;
+  }
+
+  @LogMethod()
+  async startTrainingComponent(
+    user: User,
+    ref: TrainingComponentRef,
+  ): Promise<void> {
+    const training = await this.findOneByIdOrFail(user, ref);
+
+    // initialize training reports
+    //   - if user is manager/trainer, then for all members
+    //   - if user is athlete, then only for himself
+    const memberIds: string[] = this.firebase.isAthlete(user)
+      ? [user.uid]
+      : training.membersIds;
+
+    // get prescribed training for each member
+    const start = performance.now();
+    const input = await Promise.all(
+      memberIds.map(async (userId) => {
+        return {
+          userId,
+          training: await this.getPrescribedTrainingNoChecks(userId, training),
+        };
+      }),
+    );
+
+    const duration = performance.now() - start;
+    this.logger.debug(
+      `startTrainingComponent: Preparing training reports took ${this.commonService.number.round(
+        duration,
+      )}ms`,
+    );
+
+    await this.trainingReportService.initTrainingReports(input);
   }
 
   @LogMethod()
@@ -671,53 +704,19 @@ export class TrainingService implements Permission<Training, Institution> {
     if (this.firebase.isTrainer(user) || this.firebase.isManager(user))
       this.validateCanView(user, training, training.institution);
 
+    return await this.getPrescribedTrainingNoChecks(athlete.uid, training);
+  }
+
+  async getPrescribedTrainingNoChecks(athleteId: string, training: Training) {
     const athleteTraining = this.trainingPlanService.getTrainingByAthlete(
-      athlete.uid,
+      athleteId,
       training,
     );
 
     // calculate param based sets
-    await this.updateBodyweightSets(athlete.uid, athleteTraining);
-    await this.updateRepMaxSets(athlete.uid, athleteTraining);
-
-    const newPrescribedTrainingComponents: TrainingComponent[] = [];
-    for (const trainingComponent of athleteTraining.components) {
-      const newPrescribedSupersets: Superset[] = [];
-      const prescribedSupersets = trainingComponent.supersets;
-
-      prescribedSupersets.forEach((prescribedSuperset) => {
-        const { exercises: prescribedExercises, ...restPrescribedSuperset } =
-          prescribedSuperset;
-
-        const newPrescribedExercises: TrainingExercise[] = [];
-        prescribedExercises.forEach((prescribedExercise) =>
-          newPrescribedExercises.push({
-            id: prescribedExercise.id,
-            methodId: prescribedExercise.methodId,
-            sets: prescribedExercise.sets.sort(
-              (a, b) => a.setNumber - b.setNumber,
-            ),
-          }),
-        );
-
-        newPrescribedSupersets.push({
-          ...restPrescribedSuperset,
-          exercises: newPrescribedExercises,
-        });
-      });
-
-      newPrescribedTrainingComponents.push({
-        id: trainingComponent.id,
-        from: trainingComponent.from,
-        to: trainingComponent.to,
-        copiedFrom: trainingComponent.copiedFrom,
-        targetId: trainingComponent.targetId,
-        supersets: newPrescribedSupersets,
-        subgroups: [],
-      });
-    }
-
-    return { ...training, components: newPrescribedTrainingComponents };
+    await this.updateBodyweightSets(athleteId, athleteTraining);
+    await this.updateRepMaxSets(athleteId, athleteTraining);
+    return athleteTraining;
   }
 
   async updateBodyweightSets(athleteId: string, training: Training) {

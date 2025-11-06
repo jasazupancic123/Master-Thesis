@@ -16,6 +16,7 @@ import {
 import { DateRangeDto } from '@src/common/dto/date-range.dto';
 import { ExerciseMuscleValue } from '@src/exercise/entity/exercise-muscle-value.entity';
 
+import { TrainingStatus } from '../enum/training-status.enum';
 import { PrescribedTrainingStats } from './training-stats.entity';
 
 // id: <training-id>-<user-id>
@@ -23,6 +24,11 @@ export class TrainingReport extends IntersectionType(
   DateRangeDto,
   OmitType(PrescribedTrainingStats, ['plannedComponents'] as const),
 ) {
+  @IsEnum(TrainingStatus)
+  @ApiProperty({ enum: TrainingStatus })
+  @Expose()
+  status: TrainingStatus;
+
   @ValidateNested()
   @Type(() => PrescribedTrainingStats)
   @ApiProperty({ type: () => PrescribedTrainingStats })
