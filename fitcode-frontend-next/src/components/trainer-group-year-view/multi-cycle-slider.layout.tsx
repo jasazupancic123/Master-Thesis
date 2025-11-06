@@ -18,6 +18,7 @@ import { GroupController } from '@/core/group/group.controller';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import HorizontalItemsList from '@/ui/horizontal-items-list';
+import { useMain } from '@/store/main.provider';
 
 dayjs.extend(dayOfYear);
 
@@ -32,6 +33,7 @@ export default function MultiCycleSliderLayout(
   const router = useRouter();
   const screenSize = useScreenSize();
 
+  const mainContext = useMain();
   const groupContext = useGroup();
 
   const { selectedGroup, group } = groupContext;
@@ -209,6 +211,7 @@ export default function MultiCycleSliderLayout(
                 },
               },
               {
+                useMain: mainContext,
                 useGroup: groupContext,
                 useSliderCycles: sliderCyclesContext,
               }

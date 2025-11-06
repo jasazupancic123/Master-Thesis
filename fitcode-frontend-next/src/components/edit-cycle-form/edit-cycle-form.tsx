@@ -12,10 +12,12 @@ import { handleDeleteCycle } from '../trainer-group-year-view/actions/actions-cy
 import { useMultiCycleSliderCyclesProvider } from '../trainer-group-year-view/context/cycles.provider';
 import { GroupController } from '@/core/group/group.controller';
 import { useGroup } from '@/store/group.provider';
+import { useMain } from '@/store/main.provider';
 
 export default function EditCycleForm() {
   const router = useRouter();
 
+  const mainContext = useMain();
   const groupContext = useGroup();
   const sliderCyclesContext = useMultiCycleSliderCyclesProvider();
 
@@ -87,6 +89,7 @@ export default function EditCycleForm() {
                 controller,
               },
               {
+                useMain: mainContext,
                 useGroup: groupContext,
                 useSliderCycles: sliderCyclesContext,
               }

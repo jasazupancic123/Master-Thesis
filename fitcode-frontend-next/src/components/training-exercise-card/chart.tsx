@@ -35,6 +35,7 @@ import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
+import { EMPTY_STRING } from '@/lib/common/const/string.const';
 
 export const graphColorMap: Record<ExerciseParamFieldExtended, string> = {
   sets: GRAPH_COLORS[2],
@@ -293,7 +294,7 @@ export default function TrainingExerciseChart(
 
                   return dayjs(data.timestamp).isSame(new Date(), 'day')
                     ? dayjs(data.timestamp).format('DD.MM.')
-                    : '\u200B';
+                    : EMPTY_STRING;
                 }}
               />
 

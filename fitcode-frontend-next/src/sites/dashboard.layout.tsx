@@ -28,21 +28,7 @@ export default function DashboardLayout({ children }: React.PropsWithChildren) {
         }}
       >
         <Box width="100%" display="flex" flexDirection="column">
-          {screenSize.isMobile ? (
-            <AppBar
-              position="fixed"
-              sx={{
-                width: '100%',
-                transition: 'margin-left 0.3s ease-in-out',
-                boxShadow: 'none',
-                backgroundColor: theme.palette.background.default,
-              }}
-            >
-              <DashboardMenuMobile />
-            </AppBar>
-          ) : (
-            <DashboardHeader />
-          )}
+          <DashboardHeader />
 
           <Box
             width="100%"
