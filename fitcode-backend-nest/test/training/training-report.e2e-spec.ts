@@ -326,7 +326,7 @@ describe('Training Report (e2e)', () => {
 
   it('should create new report if it does not exist yet for user in training', async () => {
     const spy = jest.spyOn(workloadService, 'findAllByUserTraining');
-    await trainingReportService.updateReport(global.athlete.uid, training);
+    await trainingReportService.update(global.athlete.uid, training);
 
     // no workloads should be found
     expect(await spy.mock.results[0].value).toHaveLength(0);
@@ -375,7 +375,7 @@ describe('Training Report (e2e)', () => {
     ]);
 
     const spy = jest.spyOn(workloadService, 'findAllByUserTraining');
-    await trainingReportService.updateReport(global.athlete.uid, training);
+    await trainingReportService.update(global.athlete.uid, training);
 
     // workloads should be found
     expect((await spy.mock.results[0].value).length).toBe(2);
@@ -398,7 +398,7 @@ describe('Training Report (e2e)', () => {
 
   it('should add photos to report', async () => {
     const photoURLs = ['photo1', 'photo2'];
-    await trainingReportService.updateReport(global.athlete.uid, training, {
+    await trainingReportService.update(global.athlete.uid, training, {
       photoURLs,
     });
 
@@ -413,7 +413,7 @@ describe('Training Report (e2e)', () => {
 
     // add more photos
     const newPhotoURLs = ['photo3', 'photo4'];
-    await trainingReportService.updateReport(global.athlete.uid, training, {
+    await trainingReportService.update(global.athlete.uid, training, {
       photoURLs: newPhotoURLs,
     });
 

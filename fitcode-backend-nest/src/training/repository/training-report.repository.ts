@@ -48,6 +48,12 @@ export class TrainingReportRepository extends FirestoreRepository<
     return this.collection(ref).doc(this.getKey(ref));
   }
 
+  getCreateQuery(data: Create<TrainingReport>) {
+    return this.firebase.buildCreateQuery<TrainingReport>(data, {
+      timestamps: true,
+    });
+  }
+
   async getAllDocs(
     query: (ref: Query) => Query = (ref) => ref,
   ): Promise<TrainingReport[]> {

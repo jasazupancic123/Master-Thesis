@@ -25,7 +25,10 @@ import { endOfDay, startOfDay } from 'date-fns';
 import { DateFilterDto } from '@src/common/dto/date-filter.dto';
 import { DateRangeDto } from '@src/common/dto/date-range.dto';
 import { UserIdDto } from '@src/common/dto/user-id.dto';
-import { WorkloadRef } from '@src/common/type/firestore.type';
+import {
+  TrainingComponentRef,
+  WorkloadRef,
+} from '@src/common/type/firestore.type';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { TrainingReportService } from '@src/training/service/training-report.service';
 
@@ -292,6 +295,17 @@ export class TrainingController {
     };
 
     return await this.trainingService.upsertSet(user, ref, body);
+  }
+
+  @Post(':trainingId/component/:cId/start')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
+  async startTrainingComponent(
+    @RequestUser() user: User,
+    @Param('trainingId') trainingId: string,
+    @Param('cId') componentId: string,
+  ) {
+    const ref: TrainingComponentRef = { trainingId, componentId };
+    return await this.trainingService.startTrainingComponent(user, ref);
   }
 
   @Post(':trainingId/component')

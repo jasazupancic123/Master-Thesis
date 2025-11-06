@@ -3,6 +3,8 @@ import { compareAsc, differenceInMinutes } from 'date-fns';
 
 import { DateFilterDto } from '@src/common/dto/date-filter.dto';
 import { TrainingReportRef } from '@src/common/type/firestore.type';
+import { BatchSetOperation } from '@src/common/type/orm.type';
+import { FirebaseService } from '@src/firebase/firebase.service';
 import { ExerciseSet } from '@src/training/entity/exercise-set.entity';
 import { Training } from '@src/training/entity/training.entity';
 import { TrainingReport } from '@src/training/entity/training-report.entity';
@@ -14,11 +16,13 @@ import {
 } from '@src/training/type/training-set.type';
 
 import { REP_TEMPO_TIME_IN_S } from '../constant/training-limits.constant';
+import { TrainingStatus } from '../enum/training-status.enum';
 import { TrainingReportRepository } from '../repository/training-report.repository';
 
 @Injectable()
 export class TrainingReportService {
   constructor(
+    private readonly firebase: FirebaseService,
     private readonly repository: TrainingReportRepository,
     private readonly workloadService: WorkloadService,
   ) {}
@@ -40,7 +44,21 @@ export class TrainingReportService {
     return report;
   }
 
-  async updateReport(
+  async initTrainingReports(
+    input: { userId: string; training: Training }[],
+  ): Promise<void> {
+    const operations: BatchSetOperation<TrainingReport>[] = input.map(
+      ({ userId, training }) => ({
+        operation: 'set',
+        ref: this.repository.doc({ trainingId: training.id, userId }),
+        data: this.getInitQuery(userId, training),
+      }),
+    );
+
+    await this.firebase.paginateBatches(operations);
+  }
+
+  async update(
     userId: string,
     training: Training,
     input?: { photoURLs?: string[] },
@@ -58,6 +76,7 @@ export class TrainingReportService {
     const exercises = new Set(workloads.map((w) => w.exerciseId));
 
     const report: TrainingReport = {
+      status: TrainingStatus.IN_PROGRESS,
       trainingId: training.id,
       institutionId: training.institutionId,
       groupId: training.groupId,
@@ -194,14 +213,6 @@ export class TrainingReportService {
     await this.repository.save(ref, report);
   }
 
-  private div(
-    field: keyof ExerciseSet,
-    prescribed: DefinedExerciseSet,
-    completed: DefinedExerciseSet,
-  ): number {
-    return prescribed[field] > 0 ? completed[field] / prescribed[field] : 1;
-  }
-
   getTrainingStats(training: Training): PrescribedTrainingStats {
     const stats: PrescribedTrainingStats = {
       plannedComponents: training.components.map((c) => ({
@@ -252,6 +263,48 @@ export class TrainingReportService {
       }
 
     return stats;
+  }
+
+  private getInitQuery(userId: string, training: Training) {
+    return this.repository.getCreateQuery({
+      status: TrainingStatus.IN_PROGRESS,
+      from: new Date(),
+      to: new Date(),
+      prescribed: this.getTrainingStats(training),
+      institutionId: training.institutionId,
+      groupId: training.groupId,
+      cycleId: training.cycleId,
+      trainingId: training.id,
+      userId,
+      completed: false,
+      realization: 0,
+      muscleValues: [],
+      componentStatuses: training.components.map((c) => ({
+        componentId: c.id,
+        status: 'not_started',
+      })),
+      photoURLs: [],
+      duration: 0,
+      components: 0,
+      supersets: 0,
+      exercises: 0,
+      sets: 0,
+      reps: 0,
+      tut: 0,
+      tonnage: 0,
+      time: 0,
+      dist: 0,
+      recTime: 0,
+      recDist: 0,
+    });
+  }
+
+  private div(
+    field: keyof ExerciseSet,
+    prescribed: DefinedExerciseSet,
+    completed: DefinedExerciseSet,
+  ): number {
+    return prescribed[field] > 0 ? completed[field] / prescribed[field] : 1;
   }
 
   private getSetReport(set: ExerciseSet): SetReport {
