@@ -179,6 +179,7 @@ export default function AthleteHeader(props: Props) {
           justifyContent: 'space-between',
           position: 'relative',
           alignItems: 'center',
+          mx: 'auto',
         }}
       >
         <Box

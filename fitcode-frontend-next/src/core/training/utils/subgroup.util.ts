@@ -21,6 +21,12 @@ export class TrainingSubgroupUtil {
     };
   }
 
+  isVirtual(subgroup: Subgroup | null): boolean {
+    if (!subgroup) return false;
+
+    return subgroup.parentId !== undefined;
+  }
+
   getVirtual(athleteId: string, component: TrainingComponent): Subgroup | null {
     return (
       component.subgroups.find(
