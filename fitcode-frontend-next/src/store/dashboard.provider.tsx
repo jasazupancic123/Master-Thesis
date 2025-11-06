@@ -19,8 +19,9 @@ import type {
 import type { UserRole } from '@/core/profile/enum/user-role.enum';
 import { lib } from '@/lib';
 import {
+  DASHBOARD_VIEWS,
   LINK_DASHBOARD_GROUPS,
-  LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS,
+  LINK_DASHBOARD_TRAINING_PLAN,
 } from '@/lib/common/const/nav.const';
 import type { ILink } from '@/lib/common/type/link.type';
 import type { SetState } from '@/lib/common/type/state.type';
@@ -105,11 +106,11 @@ export function DashboardProvider(props: Props) {
     if (!pathname || !role) return;
 
     const lastItemInUrl = pathname.split('/').pop();
-    const links = Object.values(LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS(role));
+    const links = DASHBOARD_VIEWS(role);
     const matched =
       lastItemInUrl && links.find((link) => link?.href.endsWith(lastItemInUrl));
 
-    setFilter(matched || LINK_DASHBOARD_GROUPS);
+    setFilter(matched || LINK_DASHBOARD_TRAINING_PLAN);
   }, [pathname, role]);
 
   // reset selected group when institution changes
