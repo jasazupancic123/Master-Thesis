@@ -5,9 +5,12 @@ import { useTheme } from '@mui/material';
 
 import DashboardHeader from '@/components/dashboard/dashboard-header';
 import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
+import { useScreenSize } from '@/store/screen-size.provider';
+import DashboardMenuMobile from '@/components/dashboard/dashboard-menu-mobile';
 
 export default function DashboardLayout({ children }: React.PropsWithChildren) {
   const theme = useTheme();
+  const screenSize = useScreenSize();
 
   return (
     <Box>
@@ -25,23 +28,27 @@ export default function DashboardLayout({ children }: React.PropsWithChildren) {
         }}
       >
         <Box width="100%" display="flex" flexDirection="column">
-          <AppBar
-            position="fixed"
-            sx={{
-              width: '100%',
-              transition: 'margin-left 0.3s ease-in-out',
-              boxShadow: 'none',
-              backgroundColor: theme.palette.background.default,
-            }}
-          >
+          {screenSize.isMobile ? (
+            <AppBar
+              position="fixed"
+              sx={{
+                width: '100%',
+                transition: 'margin-left 0.3s ease-in-out',
+                boxShadow: 'none',
+                backgroundColor: theme.palette.background.default,
+              }}
+            >
+              <DashboardMenuMobile />
+            </AppBar>
+          ) : (
             <DashboardHeader />
-          </AppBar>
+          )}
 
           <Box
             width="100%"
             display="flex"
             maxWidth={MAX_WIDTH}
-            sx={{ mt: '50px', mx: 'auto' }}
+            sx={{ mx: 'auto' }}
           >
             <Box sx={{ flex: 1, overflow: 'hidden' }}>{children}</Box>
           </Box>
