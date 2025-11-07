@@ -73,6 +73,7 @@ import { TrainingComponent } from '../entity/training-component.entity';
 import { TrainingReport } from '../entity/training-report.entity';
 import { CreateWorkload, Workload } from '../entity/workload.entity';
 import { MainSet } from '../enum/main-set.enum';
+import { TrainingStatus } from '../enum/training-status.enum';
 import { UpdateTraining } from '../interface/update-training.interface';
 import { TrainingRepository } from '../repository/training.repository';
 import { TrainingPlanService } from './training-plan.service';
@@ -85,7 +86,7 @@ export class TrainingService implements Permission<Training, Institution> {
     private readonly firebase: FirebaseService,
     @Inject(forwardRef(() => AuthService))
     private readonly authService: Wrapper<AuthService>,
-    private readonly commonService: CommonService,
+    private readonly common: CommonService,
     private readonly repository: TrainingRepository,
     private readonly periodizationService: PeriodizationService,
     private readonly wellnessService: WellnessService,
@@ -180,9 +181,7 @@ export class TrainingService implements Permission<Training, Institution> {
           t.cycle = this.groupService.findCycleOrFail(t.cycleId, t.group);
       }
 
-      const duration = this.commonService.number.round(
-        performance.now() - start,
-      );
+      const duration = this.common.number.round(performance.now() - start);
 
       this.logger.debug(`findAll(populate=true): Took ${duration}ms`);
     }
@@ -596,7 +595,7 @@ export class TrainingService implements Permission<Training, Institution> {
     if (errors.length) throw new BadRequestException(JSON.stringify(errors));
 
     if (
-      !this.commonService.date.isBetween(
+      !this.common.date.isBetween(
         training.from,
         startOfDay(new Date()),
         endOfDay(new Date()),
@@ -604,13 +603,10 @@ export class TrainingService implements Permission<Training, Institution> {
     )
       throw new ConflictException('Training is not scheduled for today');
 
-    const prescribedTraining = this.trainingPlanService.getTrainingByAthlete(
+    const prescribedTraining = await this.getPrescribedTrainingNoChecks(
       athlete.uid,
       training,
     );
-
-    await this.updateBodyweightSets(athlete.uid, prescribedTraining);
-    await this.updateRepMaxSets(athlete.uid, prescribedTraining);
 
     const workload = await this.workloadService.completeNextSet(
       ref,
@@ -640,13 +636,10 @@ export class TrainingService implements Permission<Training, Institution> {
 
     if (errors.length) throw new BadRequestException(JSON.stringify(errors));
 
-    const prescribedTraining = this.trainingPlanService.getTrainingByAthlete(
+    const prescribedTraining = await this.getPrescribedTrainingNoChecks(
       athlete.uid,
       training,
     );
-
-    await this.updateBodyweightSets(athlete.uid, prescribedTraining);
-    await this.updateRepMaxSets(athlete.uid, prescribedTraining);
 
     const workload = await this.workloadService.upsertSet(
       ref,
@@ -667,6 +660,8 @@ export class TrainingService implements Permission<Training, Institution> {
     ref: TrainingComponentRef,
   ): Promise<void> {
     const training = await this.findOneByIdOrFail(user, ref);
+    const component = training.components.find((c) => c.id === ref.componentId);
+    if (!component) throw new NotFoundException('Component not found');
 
     // initialize training reports
     //   - if user is manager/trainer, then for all members
@@ -675,25 +670,86 @@ export class TrainingService implements Permission<Training, Institution> {
       ? [user.uid]
       : training.membersIds;
 
-    // get prescribed training for each member
-    const start = performance.now();
-    const input = await Promise.all(
-      memberIds.map(async (userId) => {
-        return {
-          userId,
-          training: await this.getPrescribedTrainingNoChecks(userId, training),
-        };
-      }),
+    await this.common.generic.measure(
+      `startTrainingComponent [${training.id}]`,
+      async () => {
+        // get prescribed training for each member
+        const input = await Promise.all(
+          memberIds.map(async (userId) => {
+            return {
+              userId,
+              componentId: component.id,
+              training: await this.getPrescribedTrainingNoChecks(
+                userId,
+                training,
+              ),
+            };
+          }),
+        );
+
+        await this.trainingReportService.initForComponent(input);
+      },
+    );
+  }
+
+  @LogMethod()
+  async finalizeTrainingComponent(
+    user: User,
+    ref: TrainingComponentRef,
+    status: TrainingStatus,
+  ): Promise<void> {
+    if (![TrainingStatus.COMPLETED, TrainingStatus.CANCELLED].includes(status))
+      throw new BadRequestException(
+        'You can only complete or cancel training component',
+      );
+
+    const training = await this.findOneByIdOrFail(user, ref);
+    const component = training.components.find((c) => c.id === ref.componentId);
+    if (!component) throw new NotFoundException('Component not found');
+
+    // finalize training reports
+    const memberIds: string[] = this.firebase.isAthlete(user)
+      ? [user.uid]
+      : training.membersIds;
+
+    await this.common.generic.measure(
+      `finalizeTrainingComponent [${training.id}]`,
+      async () => {
+        await this.trainingReportService.finalizeForComponent(
+          ref,
+          memberIds.map((userId) => ({ userId, status })),
+        );
+      },
+    );
+  }
+
+  @LogMethod()
+  async updateStatus(
+    user: User,
+    ref: TrainingComponentRef,
+    input: { status: TrainingStatus; uid: string },
+  ): Promise<void> {
+    if (
+      ![TrainingStatus.COMPLETED, TrainingStatus.CANCELLED].includes(
+        input.status,
+      )
+    )
+      throw new BadRequestException(
+        'You can only complete or cancel training component',
+      );
+
+    const training = await this.findOneByIdOrFail(user, ref);
+    const athlete = await this.getAthlete(
+      user,
+      input.uid,
+      training.institution,
     );
 
-    const duration = performance.now() - start;
-    this.logger.debug(
-      `startTrainingComponent: Preparing training reports took ${this.commonService.number.round(
-        duration,
-      )}ms`,
-    );
+    const component = training.components.find((c) => c.id === ref.componentId);
+    if (!component) throw new NotFoundException('Component not found');
 
-    await this.trainingReportService.initTrainingReports(input);
+    // update training reports
+    await this.trainingReportService.updateStatus(athlete.uid, ref);
   }
 
   @LogMethod()
@@ -734,8 +790,7 @@ export class TrainingService implements Permission<Training, Institution> {
     this.trainingPlanService.modifyPrescribedParamValuesByType(
       training,
       'loadBw',
-      (value) =>
-        this.commonService.number.roundIntensity((value * bw) / 100, bw), // convert % value to kg and round to 2 decimals
+      (value) => this.common.number.roundIntensity((value * bw) / 100, bw), // convert % value to kg and round to 2 decimals
     );
   }
 
@@ -763,11 +818,8 @@ export class TrainingService implements Permission<Training, Institution> {
         const best = maxes.find((max) => max.exerciseId === exerciseId);
         if (!best || !best.loadKg || !best.reps) return DEFAULT_WEIGHT_KG;
 
-        const oneRM = this.commonService.number.rm(best.loadKg, best.reps);
-        return this.commonService.number.roundIntensity(
-          (value * oneRM) / 100,
-          oneRM,
-        );
+        const oneRM = this.common.number.rm(best.loadKg, best.reps);
+        return this.common.number.roundIntensity((value * oneRM) / 100, oneRM);
       },
     );
   }
@@ -857,12 +909,7 @@ export class TrainingService implements Permission<Training, Institution> {
       );
 
     const isOverlap = trainings.some((training) =>
-      this.commonService.date.doRangesOverlap(
-        from,
-        to,
-        training.from,
-        training.to,
-      ),
+      this.common.date.doRangesOverlap(from, to, training.from, training.to),
     );
 
     if (isOverlap)
@@ -889,12 +936,7 @@ export class TrainingService implements Permission<Training, Institution> {
     ).filter((t) => t.id !== ref.trainingId); // filter out the training being added/updated
 
     const isOverlap = trainings.some((training) =>
-      this.commonService.date.doRangesOverlap(
-        from,
-        to,
-        training.from,
-        training.to,
-      ),
+      this.common.date.doRangesOverlap(from, to, training.from, training.to),
     );
 
     if (isOverlap)
@@ -902,7 +944,7 @@ export class TrainingService implements Permission<Training, Institution> {
   }
 
   private validateIsDateInCycle(from: Date, cycle: Cycle) {
-    if (!this.commonService.date.isBetween(from, cycle.from, cycle.to))
+    if (!this.common.date.isBetween(from, cycle.from, cycle.to))
       throw new BadRequestException(
         'Training falls outside of the selected cycle',
       );
@@ -944,7 +986,11 @@ export class TrainingService implements Permission<Training, Institution> {
     if (institution) {
       if (institution.ownerId === user.uid) return true;
       if (institution.trainerIds.includes(user.uid)) return true;
-      if (institution.athleteIds.includes(user.uid)) return true;
+      if (
+        institution.athleteIds.includes(user.uid) &&
+        training.membersIds.includes(user.uid)
+      )
+        return true;
     }
 
     return false;

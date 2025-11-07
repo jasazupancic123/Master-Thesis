@@ -2,10 +2,6 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 import { IsNumber, Min } from 'class-validator';
 
-import type { ExerciseSet } from '../entity/exercise-set.entity';
-
-export type DefinedExerciseSet = Required<Omit<ExerciseSet, 'setNumber'>> & {};
-
 export class SetReport {
   @IsNumber()
   @Min(0)

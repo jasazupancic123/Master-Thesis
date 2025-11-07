@@ -40,6 +40,7 @@ import { User } from '../common/type/firebase-auth.type';
 import { AddTrainingComponentsDto } from './dto/add-training-components.dto';
 import { CreateTrainingDto } from './dto/create-training.dto';
 import { FilterTrainingQueryDto } from './dto/filter-training-query.dto';
+import { FinishTrainingComponentDto } from './dto/finish-training-component.dto';
 import { PeriodizeTrainingsDto } from './dto/periodize-training.dto';
 import { UpdateTrainingDto } from './dto/update-training.dto';
 import { Training } from './entity/training.entity';
@@ -306,6 +307,22 @@ export class TrainingController {
   ) {
     const ref: TrainingComponentRef = { trainingId, componentId };
     return await this.trainingService.startTrainingComponent(user, ref);
+  }
+
+  @Post(':trainingId/component/:cId/finalize')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
+  async finalizeTrainingComponent(
+    @RequestUser() user: User,
+    @Param('trainingId') trainingId: string,
+    @Param('cId') componentId: string,
+    @Body() { status }: FinishTrainingComponentDto,
+  ) {
+    const ref: TrainingComponentRef = { trainingId, componentId };
+    return await this.trainingService.finalizeTrainingComponent(
+      user,
+      ref,
+      status,
+    );
   }
 
   @Post(':trainingId/component')

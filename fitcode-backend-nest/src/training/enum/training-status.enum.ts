@@ -1,5 +1,6 @@
 export enum TrainingStatus {
-  IN_PROGRESS = 'In Progress',
-  COMPLETED = 'Completed',
-  CANCELLED = 'Cancelled',
+  NOT_STARTED = 'not_started',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled',
 }

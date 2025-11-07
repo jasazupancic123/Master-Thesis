@@ -63,6 +63,13 @@ export class TrainingReportRepository extends FirestoreRepository<
     );
   }
 
+  async getAllByTraining(trainingId: string): Promise<TrainingReport[]> {
+    const snapshot = await this.collection({ trainingId }).get();
+    return snapshot.docs.map((doc) =>
+      this.firebase.serialize(doc.data() as FirestoreEntity<TrainingReport>),
+    );
+  }
+
   async getAllByUser(
     userId: string,
     filter: { institutionId?: string; from?: Date; to?: Date },
