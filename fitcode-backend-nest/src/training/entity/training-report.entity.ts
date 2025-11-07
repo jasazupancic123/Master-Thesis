@@ -104,8 +104,8 @@ export class TrainingReportComponentStatus {
   @Expose()
   componentId: string;
 
-  @IsEnum(['not_started', 'in_progress', 'completed'] as const)
-  @ApiProperty({ enum: ['not_started', 'in_progress', 'completed'] })
+  @IsEnum(TrainingStatus)
+  @ApiProperty({ enum: TrainingStatus })
   @Expose()
-  status: 'not_started' | 'in_progress' | 'completed';
+  status: TrainingStatus;
 }

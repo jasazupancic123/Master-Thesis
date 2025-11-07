@@ -1,4 +1,10 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  forwardRef,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { CollectionGroup, Query } from 'firebase-admin/firestore';
 
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
@@ -9,8 +15,10 @@ import {
   ExerciseRef,
   InstitutionRef,
   TrainingRef,
+  TrainingReportRef,
   WorkloadRef,
 } from '@src/common/type/firestore.type';
+import { Wrapper } from '@src/common/type/wrapper.type';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { CreatePrescribedWorkloadDto } from '@src/training/dto/create-workload.dto';
@@ -25,7 +33,9 @@ import {
 } from '@src/training/entity/workload.entity';
 import { SetStatus } from '@src/training/enum/set-status.enum';
 
+import { TrainingStatus } from '../enum/training-status.enum';
 import { WorkloadRepository } from '../repository/workload.repository';
+import { TrainingReportService } from './training-report.service';
 
 @Injectable()
 export class WorkloadService {
@@ -34,6 +44,8 @@ export class WorkloadService {
     private readonly firebaseService: FirebaseService,
     private readonly repository: WorkloadRepository,
     private readonly exerciseService: ExerciseService,
+    @Inject(forwardRef(() => TrainingReportService))
+    private readonly trainingReportService: Wrapper<TrainingReportService>,
   ) {}
 
   getDoc(id: WorkloadRef) {
@@ -193,6 +205,9 @@ export class WorkloadService {
       };
     }
 
+    if (componentId !== 'other')
+      await this.checkTrainingStatus(ref, componentId);
+
     return await this.upsert(
       {
         institutionId: training.institutionId,
@@ -221,6 +236,8 @@ export class WorkloadService {
     if (!component)
       throw new BadRequestException('Component not found in training');
 
+    await this.checkTrainingStatus(ref, ref.componentId);
+
     const superset = component.supersets[ref.supersetIndex];
     if (!superset) throw new BadRequestException('Superset not found');
 
@@ -229,7 +246,7 @@ export class WorkloadService {
     );
 
     if (!prescribedExercise)
-      throw new BadRequestException('Exercise not found in training');
+      throw new BadRequestException('Exercise not found in superset');
 
     const prescribedSet = prescribedExercise?.sets.find(
       (s) => s.setNumber === ref.setNumber,
@@ -249,6 +266,27 @@ export class WorkloadService {
       prescribedSet,
       input,
     );
+  }
+
+  async checkTrainingStatus(ref: TrainingReportRef, componentId: string) {
+    const report = await this.trainingReportService.findById({
+      trainingId: ref.trainingId,
+      userId: ref.userId,
+    });
+
+    const componentStatus = report?.componentStatuses?.find(
+      (s) => s.componentId === componentId,
+    )?.status;
+
+    if (!report || !componentStatus)
+      throw new ConflictException(
+        'Training component has not been started yet',
+      );
+
+    if (componentStatus === TrainingStatus.COMPLETED)
+      throw new ConflictException(
+        'Training component has already been completed',
+      );
   }
 
   async validateWorkloads(

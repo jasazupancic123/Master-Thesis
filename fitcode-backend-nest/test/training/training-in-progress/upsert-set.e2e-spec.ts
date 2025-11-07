@@ -10,6 +10,7 @@ import type {
   Workload,
 } from '@src/training/entity/workload.entity';
 import { SetStatus } from '@src/training/enum/set-status.enum';
+import { TrainingStatus } from '@src/training/enum/training-status.enum';
 import {
   generateExerciseSet,
   generateSuperset,
@@ -143,7 +144,75 @@ describe('Upsert Set (e2e)', () => {
     );
   }
 
+  async function startTrainingComponentReq(
+    token: string,
+    trainingId: string,
+    componentId: string,
+  ) {
+    return await testApp.http.post(
+      `/training/${trainingId}/component/${componentId}/start`,
+      token,
+      {},
+    );
+  }
+
+  it('should fail if component has not been started yet', async () => {
+    const res = await req(
+      global.trainer.token,
+      trainingId,
+      'c2',
+      'squat',
+      0,
+      1,
+      {
+        userId: global.athlete.uid,
+        timestamp: new Date(),
+        recTime: 0,
+        reps: 1,
+      },
+    );
+
+    expect(res.status).toBe(409);
+    expect(res.body.message).toBe(
+      'Training component has not been started yet',
+    );
+  });
+
+  it('should fail if report has been completed', async () => {
+    // start component
+    await startTrainingComponentReq(global.trainer.token, trainingId, 'c1');
+
+    // mark as completed
+    await db.trainingReports.updateStatus(
+      { trainingId, userId: global.athlete.uid },
+      'c1',
+      TrainingStatus.COMPLETED,
+    );
+
+    const res = await req(
+      global.trainer.token,
+      trainingId,
+      'c1',
+      'squat',
+      0,
+      1,
+      {
+        userId: global.athlete.uid,
+        timestamp: new Date(),
+        recTime: 0,
+        reps: 1,
+      },
+    );
+
+    expect(res.status).toBe(409);
+    expect(res.body.message).toBe(
+      'Training component has already been completed',
+    );
+  });
+
   it('should fail if component does not exist', async () => {
+    await startTrainingComponentReq(global.trainer.token, trainingId, 'c1');
+
     const res = await req(
       global.trainer.token,
       trainingId,
@@ -161,9 +230,14 @@ describe('Upsert Set (e2e)', () => {
 
     expect(res.status).toBe(400);
     expect(res.body.message).toBe('Component not found in training');
+
+    await db.trainingReports.deleteAllByTraining(trainingId);
   });
 
   it('should fail if superset does not exist', async () => {
+    // start component
+    await startTrainingComponentReq(global.trainer.token, trainingId, 'c1');
+
     const res = await req(
       global.trainer.token,
       trainingId,
@@ -181,9 +255,14 @@ describe('Upsert Set (e2e)', () => {
 
     expect(res.status).toBe(400);
     expect(res.body.message).toBe('Superset not found');
+
+    await db.trainingReports.deleteAllByTraining(trainingId);
   });
 
   it('should fail if exercise not found in training', async () => {
+    // start component
+    await startTrainingComponentReq(global.trainer.token, trainingId, 'c1');
+
     const res = await req(
       global.trainer.token,
       trainingId,
@@ -200,10 +279,15 @@ describe('Upsert Set (e2e)', () => {
     );
 
     expect(res.status).toBe(400);
-    expect(res.body.message).toBe('Exercise not found in training');
+    expect(res.body.message).toBe('Exercise not found in superset');
+
+    await db.trainingReports.deleteAllByTraining(trainingId);
   });
 
   it('should fail if set number not found in exercise', async () => {
+    // start component
+    await startTrainingComponentReq(global.trainer.token, trainingId, 'c1');
+
     const res = await req(
       global.trainer.token,
       trainingId,
@@ -221,9 +305,14 @@ describe('Upsert Set (e2e)', () => {
 
     expect(res.status).toBe(400);
     expect(res.body.message).toBe('Set number not found in exercise');
+
+    await db.trainingReports.deleteAllByTraining(trainingId);
   });
 
   it('should successfully create a set', async () => {
+    // start component
+    await startTrainingComponentReq(global.trainer.token, trainingId, 'c1');
+
     const res = await req(
       global.trainer.token,
       trainingId,
@@ -250,9 +339,13 @@ describe('Upsert Set (e2e)', () => {
     expect(result.reps).toBe(6);
 
     await db.workloads.deleteAll(trainingId);
+    await db.trainingReports.deleteAllByTraining(trainingId);
   });
 
   it('should successfully update a set', async () => {
+    // start component
+    await startTrainingComponentReq(global.trainer.token, trainingId, 'c1');
+
     await db.workloads.createMany([
       {
         trainingId,
@@ -294,9 +387,13 @@ describe('Upsert Set (e2e)', () => {
     expect(workloadsAfter).toHaveLength(1);
 
     await db.workloads.deleteAll(trainingId);
+    await db.trainingReports.deleteAllByTraining(trainingId);
   });
 
   it('should be able to insert all possible properties', async () => {
+    // start component
+    await startTrainingComponentReq(global.trainer.token, trainingId, 'c1');
+
     const res = await req(
       global.trainer.token,
       trainingId,
@@ -381,5 +478,6 @@ describe('Upsert Set (e2e)', () => {
     expect(result.timeR).toBe(298);
 
     await db.workloads.deleteAll(trainingId);
+    await db.trainingReports.deleteAllByTraining(trainingId);
   });
 });

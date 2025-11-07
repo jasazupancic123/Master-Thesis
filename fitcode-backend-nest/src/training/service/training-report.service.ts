@@ -1,30 +1,37 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { compareAsc, differenceInMinutes } from 'date-fns';
 
 import { DateFilterDto } from '@src/common/dto/date-filter.dto';
-import { TrainingReportRef } from '@src/common/type/firestore.type';
-import { BatchSetOperation } from '@src/common/type/orm.type';
-import { FirebaseService } from '@src/firebase/firebase.service';
+import { Create } from '@src/common/type/entity.type';
+import {
+  TrainingComponentRef,
+  TrainingReportRef,
+} from '@src/common/type/firestore.type';
+import { Wrapper } from '@src/common/type/wrapper.type';
 import { ExerciseSet } from '@src/training/entity/exercise-set.entity';
 import { Training } from '@src/training/entity/training.entity';
 import { TrainingReport } from '@src/training/entity/training-report.entity';
 import { PrescribedTrainingStats } from '@src/training/entity/training-stats.entity';
 import { WorkloadService } from '@src/training/service/workload.service';
-import {
-  DefinedExerciseSet,
-  SetReport,
-} from '@src/training/type/training-set.type';
+import { SetReport } from '@src/training/type/training-set.type';
 
 import { REP_TEMPO_TIME_IN_S } from '../constant/training-limits.constant';
+import { Workload } from '../entity/workload.entity';
 import { TrainingStatus } from '../enum/training-status.enum';
 import { TrainingReportRepository } from '../repository/training-report.repository';
 
 @Injectable()
 export class TrainingReportService {
   constructor(
-    private readonly firebase: FirebaseService,
     private readonly repository: TrainingReportRepository,
-    private readonly workloadService: WorkloadService,
+    @Inject(forwardRef(() => WorkloadService))
+    private readonly workloadService: Wrapper<WorkloadService>,
   ) {}
 
   async findAllByUser(
@@ -44,18 +51,71 @@ export class TrainingReportService {
     return report;
   }
 
-  async initTrainingReports(
-    input: { userId: string; training: Training }[],
+  async initForComponent(
+    input: { userId: string; componentId: string; training: Training }[],
   ): Promise<void> {
-    const operations: BatchSetOperation<TrainingReport>[] = input.map(
-      ({ userId, training }) => ({
-        operation: 'set',
-        ref: this.repository.doc({ trainingId: training.id, userId }),
-        data: this.getInitQuery(userId, training),
-      }),
-    );
+    // if training report exists, then just update the correct component status to in_progress, else create new report
+    for (const { userId, training, componentId } of input) {
+      const ref: TrainingReportRef = { trainingId: training.id, userId };
+      const existing = await this.repository.findById(ref);
+      if (existing) {
+        // update component status
+        const componentStatus = existing.componentStatuses.find(
+          (cs) => cs.componentId === componentId,
+        );
 
-    await this.firebase.paginateBatches(operations);
+        if (!componentStatus) continue;
+        if (componentStatus.status === TrainingStatus.IN_PROGRESS) continue;
+        if (componentStatus.status === TrainingStatus.COMPLETED)
+          throw new BadRequestException('Training component already completed');
+
+        componentStatus.status = TrainingStatus.IN_PROGRESS;
+        await this.repository.update(ref, {
+          componentStatuses: existing.componentStatuses,
+        });
+      } else
+        // create new report
+        await this.repository.save(
+          { trainingId: training.id, userId },
+          this.getInitQuery(userId, training, componentId),
+        );
+    }
+  }
+
+  async finalizeForComponent(
+    ref: TrainingComponentRef,
+    input: { userId: string; status: TrainingStatus }[],
+  ): Promise<void> {
+    for (const { userId, status } of input) {
+      const reportRef: TrainingReportRef = { ...ref, userId };
+      const report = await this.findById(reportRef);
+      const componentStatus = report?.componentStatuses?.find(
+        (cs) => cs.componentId === ref.componentId,
+      );
+
+      if (
+        !report ||
+        !componentStatus ||
+        componentStatus.status === TrainingStatus.NOT_STARTED
+      )
+        throw new BadRequestException('Training component not started yet');
+
+      if (componentStatus.status === TrainingStatus.COMPLETED)
+        throw new BadRequestException('Training component already completed');
+
+      componentStatus.status = status;
+      await this.repository.update(reportRef, {
+        componentStatuses: report.componentStatuses,
+        completed: report.componentStatuses.every(
+          (cs) => cs.status === TrainingStatus.COMPLETED,
+        ),
+      });
+    }
+  }
+
+  async updateStatus(userId: string, ref: TrainingComponentRef) {
+    const reportRef: TrainingReportRef = { ...ref, userId };
+    const report = await this.findByIdOrFail(reportRef);
   }
 
   async update(
@@ -64,6 +124,9 @@ export class TrainingReportService {
     input?: { photoURLs?: string[] },
   ): Promise<void> {
     const ref: TrainingReportRef = { trainingId: training.id, userId };
+    const existing = await this.repository.findById(ref);
+    if (!existing) throw new BadRequestException('Training not started yet');
+
     const workloads = (
       await this.workloadService.findAllByUserTraining(userId, ref)
     ).sort((a, b) => compareAsc(new Date(a.timestamp), new Date(b.timestamp)));
@@ -74,7 +137,6 @@ export class TrainingReportService {
 
     const components = new Set(workloads.map((w) => w.componentId));
     const exercises = new Set(workloads.map((w) => w.exerciseId));
-
     const report: TrainingReport = {
       status: TrainingStatus.IN_PROGRESS,
       trainingId: training.id,
@@ -94,7 +156,7 @@ export class TrainingReportService {
         0,
       ),
       exercises: exercises.size,
-      sets: workloads.length,
+      sets: this.getNumberOfSets(workloads),
       reps: 0,
       recTime: 0,
       tut: 0,
@@ -105,26 +167,12 @@ export class TrainingReportService {
       realization: 0,
       muscleValues: [], // to be calculated
       photoURLs: input?.photoURLs || [],
-      componentStatuses: stats.plannedComponents.map((pc) => {
-        const completedSets = workloads.filter(
-          (w) => w.componentId === pc.componentId,
-        ).length;
-
-        return {
-          componentId: pc.componentId,
-          status:
-            completedSets === 0
-              ? 'not_started'
-              : completedSets < pc.totalSets
-                ? 'in_progress'
-                : 'completed',
-        };
-      }),
+      componentStatuses: existing.componentStatuses,
     };
 
     for (const workload of workloads) {
-      const prescribed = this.getDefinedSet(workload.prescribed);
-      const completed = this.getDefinedSet(workload);
+      const prescribed = workload.prescribed;
+      const completed = workload;
       const setReport = this.getSetReport(workload);
 
       report.reps += setReport.reps;
@@ -140,7 +188,7 @@ export class TrainingReportService {
         (100/100*1/4) * (2/3*1/4) * (60/100*1/4), note that recovery is reversed, more is worse */
 
       // volume
-      const repsDiv = this.div('reps', prescribed, completed);
+      const repsDiv = this.div('reps', workload.prescribed, completed);
       const distDiv = this.div('dist', prescribed, completed);
       const timeDiv = this.div('time', prescribed, completed);
       const loadDiv = this.div('loadKg', prescribed, completed);
@@ -265,8 +313,12 @@ export class TrainingReportService {
     return stats;
   }
 
-  private getInitQuery(userId: string, training: Training) {
-    return this.repository.getCreateQuery({
+  private getInitQuery(
+    userId: string,
+    training: Training,
+    componentId: string,
+  ): Create<TrainingReport> {
+    return {
       status: TrainingStatus.IN_PROGRESS,
       from: new Date(),
       to: new Date(),
@@ -279,10 +331,11 @@ export class TrainingReportService {
       completed: false,
       realization: 0,
       muscleValues: [],
-      componentStatuses: training.components.map((c) => ({
-        componentId: c.id,
-        status: 'not_started',
-      })),
+      componentStatuses: training.components.map((c) =>
+        c.id === componentId
+          ? { componentId: c.id, status: TrainingStatus.IN_PROGRESS }
+          : { componentId: c.id, status: TrainingStatus.NOT_STARTED },
+      ),
       photoURLs: [],
       duration: 0,
       components: 0,
@@ -296,82 +349,91 @@ export class TrainingReportService {
       dist: 0,
       recTime: 0,
       recDist: 0,
-    });
+    };
   }
 
   private div(
     field: keyof ExerciseSet,
-    prescribed: DefinedExerciseSet,
-    completed: DefinedExerciseSet,
+    prescribed: ExerciseSet,
+    completed: ExerciseSet,
   ): number {
+    if (!prescribed[field]) return;
+
     return prescribed[field] > 0 ? completed[field] / prescribed[field] : 1;
   }
 
   private getSetReport(set: ExerciseSet): SetReport {
-    const defined = this.getDefinedSet(set);
+    const tonnageL = set.reps && set.loadKg ? set.reps * set.loadKg : 0;
+    const tonnageR = set.repsR && set.loadKgR ? set.repsR * set.loadKgR : 0;
 
-    let tut =
-      defined.reps *
-        (defined.tempoEcc > 0
-          ? this.getTempoTime(defined)
-          : REP_TEMPO_TIME_IN_S) +
-      defined.repsR *
-        (defined.tempoEccR > 0
-          ? this.getTempoRTime(defined)
-          : REP_TEMPO_TIME_IN_S);
+    let tutL = set.reps
+      ? set.reps * (this.getTempoTime(set) || REP_TEMPO_TIME_IN_S)
+      : 0;
 
-    if (defined.time > 0) tut = defined.time; // override if time based work is specified
+    if (set.time > 0) tutL = set.time; // override if time based work is specified
+
+    let tutR = set.repsR
+      ? set.repsR * (this.getTempoRTime(set) || REP_TEMPO_TIME_IN_S)
+      : 0;
+
+    if (set.time > 0) tutR = set.time;
 
     return {
-      reps: defined.reps + defined.repsR,
-      load: defined.loadKg + defined.loadKgR,
-      tonnage: defined.reps * defined.loadKg + defined.repsR * defined.loadKgR,
-      tut: tut,
-      time: defined.time,
-      dist: defined.dist,
-      recTime: defined.recTime,
-      recDist: defined.recDist,
+      reps:
+        set.reps && set.repsR
+          ? set.reps + set.repsR
+          : set.reps
+            ? set.reps
+            : set.repsR
+              ? set.repsR
+              : 0,
+      load:
+        set.loadKg && set.loadKgR
+          ? set.loadKg + set.loadKgR
+          : set.loadKg
+            ? set.loadKg
+            : set.loadKgR
+              ? set.loadKgR
+              : 0,
+      tonnage: tonnageL + tonnageR,
+      tut: tutL + tutR,
+      time: set.time,
+      dist: set.dist,
+      recTime: set.recTime,
+      recDist: set.recDist,
     };
   }
 
-  private getTempoTime(set: DefinedExerciseSet): number {
-    return set.tempoEcc + set.tempoIso + set.tempoCon + set.tempoIdle;
+  private getTempoTime(set: ExerciseSet): number {
+    return (
+      set.tempoEcc ||
+      0 + set.tempoIso ||
+      0 + set.tempoCon ||
+      0 + set.tempoIdle ||
+      0
+    );
   }
 
-  private getTempoRTime(set: DefinedExerciseSet): number {
-    return set.tempoEccR + set.tempoIsoR + set.tempoConR + set.tempoIdleR;
+  private getTempoRTime(set: ExerciseSet): number {
+    return (
+      set.tempoEccR ||
+      0 + set.tempoIsoR ||
+      0 + set.tempoConR ||
+      0 + set.tempoIdleR ||
+      0
+    );
   }
 
-  private getDefinedSet(set: ExerciseSet): DefinedExerciseSet {
-    return {
-      reps: set.reps || 1,
-      repsR: set.repsR || 0,
-      loadKg: set.loadKg || 0,
-      loadKgR: set.loadKgR || 0,
-      loadRm: 0,
-      loadRmR: 0,
-      loadBw: 0,
-      loadBwR: 0,
-      tempoEcc: set.tempoEcc || 2,
-      tempoIso: set.tempoIso || 0,
-      tempoCon: set.tempoCon || 1,
-      tempoIdle: set.tempoIdle || 0,
-      tempoEccR: set.tempoEccR || 0,
-      tempoIsoR: set.tempoIsoR || 0,
-      tempoConR: set.tempoConR || 0,
-      tempoIdleR: set.tempoIdleR || 0,
-      vel: set.vel || 0,
-      velR: set.velR || 0,
-      eff: set.eff || 1,
-      effR: set.effR || 0,
-      recTime: set.recTime || 0,
-      recTimeR: set.recTimeR || 0,
-      recDist: set.recDist || 0,
-      recDistR: set.recDistR || 0,
-      time: set.time || 0,
-      timeR: set.timeR || 0,
-      dist: set.dist || 0,
-      distR: set.distR || 0,
-    };
+  private getNumberOfSets(workloads: Workload[]): number {
+    // only count a set if it has any of the following params more than 0:
+    //   - reps
+    //   - time
+    //   - dist
+
+    return workloads.reduce((count, workload) => {
+      if (workload.reps > 0 || workload.time > 0 || workload.dist > 0)
+        count += 1;
+      return count;
+    }, 0);
   }
 }

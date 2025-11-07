@@ -31,6 +31,12 @@ export class AppController {
     return this.appService.getHello();
   }
 
+  /**
+   * Warmup handler for App Engine to keep instances warm.
+   */
+  @Get('_ah/warmup')
+  warmup(): void {}
+
   @Auth()
   @Get('init')
   async init(@RequestUser() user: User) {
@@ -54,7 +60,7 @@ export class AppController {
       ),
       measureAsync(
         'exerciseService.findAllGlobal()',
-        () => this.exerciseService.findAllGlobal(user),
+        () => this.exerciseService.findAllGlobalCached(user),
         this.logger,
       ),
       measureAsync(
