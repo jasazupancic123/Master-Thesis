@@ -1,5 +1,6 @@
 import { BaseController } from '../base.controller';
 import type { UserId } from '../institution/type/institution.type';
+import type { TrainingStatus } from './enum/training-status.enum';
 import type {
   CreateTraining,
   FilterTrainings,
@@ -29,9 +30,33 @@ export class TrainingController extends BaseController {
     return this.api.get<Training[]>('/', { query, ...options });
   }
 
+  async findAllIndividual(trainingId: string, options?: FetchOptions) {
+    return this.api.get<Record<string, Training>>(
+      `/${trainingId}/individual`,
+      options
+    );
+  }
+
   async findOneById(trainingId: string, options?: FetchOptions) {
     return this.api.get<{ training: Training; report: TrainingReport }>(
       `/${trainingId}`,
+      options
+    );
+  }
+
+  async getActiveForAthlete(options?: FetchOptions) {
+    return this.api.get<{ training: Training | null }>(`/get/active`, options);
+  }
+
+  async generateQRCode(
+    trainingId: string,
+    componentId: string,
+    athleteId: string,
+    options?: FetchOptions
+  ) {
+    return this.api.post<string>(
+      `/${trainingId}/component/${componentId}/generate-qr-code`,
+      { userId: athleteId },
       options
     );
   }
@@ -45,17 +70,6 @@ export class TrainingController extends BaseController {
 
   async findAllByInstitutionToday(options?: FetchOptions) {
     return this.api.get<Training[]>('/institution/today', options);
-  }
-
-  async getPrescribedTraining(
-    trainingId: string,
-    userId: string,
-    options?: FetchOptions
-  ): Promise<Training | null> {
-    return this.api.get<Training | null>(
-      `/${trainingId}/athlete/${userId}/prescribed`,
-      options
-    );
   }
 
   async completeNextSet(
@@ -83,6 +97,44 @@ export class TrainingController extends BaseController {
     return this.api.post<Workload>(
       `/${trainingId}/component/${componentId}/exercise/${exerciseId}/superset/${supersetIndex}/set/${setNumber}`,
       body,
+      options
+    );
+  }
+
+  async startTrainingComponent(
+    trainingId: string,
+    componentId: string,
+    options?: FetchOptions
+  ) {
+    return this.api.post<Record<string, Training>>(
+      `/${trainingId}/component/${componentId}/start`,
+      {},
+      options
+    );
+  }
+
+  async finalizeTrainingComponent(
+    trainingId: string,
+    componentId: string,
+    status: TrainingStatus.CANCELLED | TrainingStatus.COMPLETED,
+    options?: FetchOptions
+  ) {
+    return this.api.post<void>(
+      `/${trainingId}/component/${componentId}/finalize`,
+      { status },
+      options
+    );
+  }
+
+  async updateTrainingComponentStatus(
+    trainingId: string,
+    componentId: string,
+    input: { status: TrainingStatus; userId?: string },
+    options?: FetchOptions
+  ) {
+    return this.api.post<void>(
+      `/${trainingId}/component/${componentId}/status`,
+      input,
       options
     );
   }

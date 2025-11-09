@@ -1,3 +1,4 @@
+import type { TrainingStatus } from '../enum/training-status.enum';
 import type { PrescribedTrainingStats } from './training-stats.type';
 import type { ExerciseMuscleValue } from '@/core/exercise/type/exercise-muscle-value.entity';
 import type { Cycle } from '@/core/group/type/cycle.type';
@@ -21,21 +22,15 @@ export type TrainingReport = Omit<
     userId: string;
 
     // report data
+    status: TrainingStatus;
     prescribed: PrescribedTrainingStats;
-    completed: boolean;
     realization: number;
     muscleValues: ExerciseMuscleValue[];
     componentStatuses: TrainingReportComponentStatus[]; // list of completed component ids, just for frontend display
     photoURLs?: string[]; // "best" photo(s) of the training session
   };
 
-export enum TrainingComponentStatus {
-  NOT_STARTED = 'not_started',
-  IN_PROGRESS = 'in_progress',
-  COMPLETED = 'completed',
-}
-
 export type TrainingReportComponentStatus = {
   componentId: string;
-  status: TrainingComponentStatus;
+  status: TrainingStatus;
 };
