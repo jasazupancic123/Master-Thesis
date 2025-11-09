@@ -11,10 +11,29 @@ import { redirect } from 'next/navigation';
 import { LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS } from '@/lib/common/const/nav.const';
 import { lib } from '@/lib';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useEffect, useState } from 'react';
+import { Group } from '@/core/group/type/group.type';
+import { DASHBOARD_MIDDLE_HEADER_HEIGHT } from './constant/dashboard.const';
+import { SearchBar } from '@/ui/search-bar/search-bar';
 
 export default function DashboardGroups() {
   const { role } = useAuthenticatedAuth();
   const { groups } = useMain();
+
+  const [filteredGroups, setFilteredGroups] = useState<Group[]>(groups);
+  const [search, setSearch] = useState<string>('');
+
+  useEffect(() => {
+    if (search.trim() === '') {
+      setFilteredGroups(groups);
+      return;
+    }
+    const lowerSearch = search.toLowerCase();
+    const filtered = groups.filter((group) =>
+      group.name.toLowerCase().includes(lowerSearch)
+    );
+    setFilteredGroups(filtered);
+  }, [search, groups]);
 
   const permissionOk =
     lib.firebase.auth.isTrainer(role) || lib.firebase.auth.isManager(role);
@@ -25,8 +44,23 @@ export default function DashboardGroups() {
       display="flex"
       flexDirection="column"
       alignItems="center"
-      sx={{ px: 2 }}
+      sx={{ px: 2, py: 1 }}
+      gap={2}
     >
+      {/* Dashboard Middle Header */}
+      <Box
+        height={DASHBOARD_MIDDLE_HEADER_HEIGHT}
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+      >
+        <SearchBar
+          placeholder="Search Groups"
+          value={search}
+          handleSearchChange={(e) => setSearch(e.target.value)}
+          maxWidth="100%"
+        />
+      </Box>
       <AthleteOptionsContainer
         items={[EMPTY_STRING, EMPTY_STRING]}
         selectedItem={'none'}
@@ -42,7 +76,7 @@ export default function DashboardGroups() {
         maxWidth={MAX_WIDTH}
         gap={4}
       >
-        {groups.map((group) => {
+        {filteredGroups.map((group) => {
           const shortGroupName = group.name.substring(0, 3);
 
           return (

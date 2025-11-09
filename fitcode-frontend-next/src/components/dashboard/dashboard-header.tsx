@@ -63,7 +63,7 @@ export default function DashboardHeader() {
     setOpenEditInstitutionModal,
   } = useDashboardHeaderUtils();
 
-  const isSmallSize = screenSize.isMobile;
+  const isSmallSize = screenSize.isMobile || screenSize.isUltraSmallTablet;
 
   return (
     <Box
@@ -72,7 +72,7 @@ export default function DashboardHeader() {
       justifyContent="center"
       alignItems="center"
       width="100%"
-      height={!isSmallSize ? 70 : undefined}
+      height={!isSmallSize ? 90 : undefined}
       maxWidth={MAX_WIDTH}
       position="relative"
       sx={{
@@ -193,7 +193,6 @@ export default function DashboardHeader() {
 
       <Box
         sx={{
-          width: '100%',
           mx: 'auto',
           py: isSmallSize ? 1 : undefined,
         }}
@@ -208,13 +207,12 @@ export default function DashboardHeader() {
           sx={{
             display: 'flex',
             alignItems: 'center',
-            height: '50px',
-            justifyContent: 'center',
+            maxWidth: '100vw',
+            overflowX: isSmallSize ? 'auto' : undefined,
+            height: isSmallSize ? '60px' : '50px',
+            justifyContent: !isSmallSize ? 'center' : undefined,
+            px: isSmallSize ? 1 : undefined,
             gap: 1,
-            width:
-              screenSize.isMobile || screenSize.isTablet
-                ? '50% !important'
-                : '33% !important',
             mx: 'auto',
           }}
         >
@@ -243,7 +241,7 @@ export default function DashboardHeader() {
                     router.push(val.href);
                   }}
                   sx={{
-                    p: 2,
+                    p: isSmallSize ? 1.5 : 2.5,
                     backgroundColor: isSelected
                       ? theme.palette.primary.main
                       : theme.palette.background.default,

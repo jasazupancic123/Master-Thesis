@@ -10,6 +10,7 @@ import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import AthleteOptionsContainer from '../athlete/athlete-options-container';
 import DashboardTrainingsList from './dashboard-trainings-list';
 import useTrainingPlan from './hooks/use-training-plan-trainings';
+import { DASHBOARD_MIDDLE_HEADER_HEIGHT } from './constant/dashboard.const';
 
 export default function DashboardTrainingPlan() {
   const theme = useTheme();
@@ -35,7 +36,9 @@ export default function DashboardTrainingPlan() {
       sx={{ py: 1 }}
       gap={2}
     >
+      {/* Dashboard Middle Header */}
       <Box
+        height={DASHBOARD_MIDDLE_HEADER_HEIGHT}
         display="flex"
         alignItems="center"
         gap={1.5}
@@ -65,7 +68,7 @@ export default function DashboardTrainingPlan() {
                 }}
                 sx={{
                   px: 2,
-                  py: 1,
+                  py: 0.5,
                   backgroundColor: isSelected
                     ? theme.palette.primary.main
                     : theme.palette.background.default,
@@ -77,7 +80,7 @@ export default function DashboardTrainingPlan() {
                 <Typography
                   textAlign="center"
                   fontWeight={600}
-                  width={100}
+                  width={80}
                   sx={{
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
