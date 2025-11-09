@@ -14,9 +14,9 @@ import toast from 'react-hot-toast';
 
 import { theme } from '@/app/style';
 import { useDashboardUserEdit } from '@/components/dashboard/context/user-edit.context';
+import useInstitutionMembers from '@/components/dashboard/hooks/use-institution-members.hook';
 import DashboardEditAthleteModal from '@/components/dashboard/modals/dashboard-edit-athlete-modal';
 import RegisterUsersDashboard from '@/components/dashboard/modals/dashboard-register-users-modal';
-import useInstitutionMembers from '@/components/dashboard/hooks/use-institution-members.hook';
 import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
 import type { AuthUser } from '@/core/auth/type/user.type';
 import { AthletesTrainers } from '@/core/institution/enum/athletes-trainer.enum';
@@ -27,10 +27,10 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
+import AddButton from '@/ui/add-button';
 import FileUpload from '@/ui/file-upload';
 import MyModal from '@/ui/modal';
 import { SearchBar } from '@/ui/search-bar/search-bar';
-import AddButton from '@/ui/add-button';
 
 interface Props {
   selectedView: AthletesTrainers;

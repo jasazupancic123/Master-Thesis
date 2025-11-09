@@ -10,11 +10,11 @@ import { useEffect, useState } from 'react';
 
 import { theme } from '@/app/style';
 import type { AuthUser } from '@/core/auth/type/user.type';
+import type { Group } from '@/core/group/type/group.type';
 import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import MyModal from '@/ui/modal';
 import { SearchBar } from '@/ui/search-bar/search-bar';
-import { Group } from '@/core/group/type/group.type';
 
 interface Props extends ModalProps {
   title?: string;

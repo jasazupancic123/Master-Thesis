@@ -1,16 +1,11 @@
 'use client';
 
 import { Box, Container } from '@mui/material';
-import { useTheme } from '@mui/material';
 
 import DashboardHeader from '@/components/dashboard/dashboard-header';
 import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
-import { useScreenSize } from '@/store/screen-size.provider';
 
 export default function DashboardLayout({ children }: React.PropsWithChildren) {
-  const theme = useTheme();
-  const screenSize = useScreenSize();
-
   return (
     <Box>
       <Container

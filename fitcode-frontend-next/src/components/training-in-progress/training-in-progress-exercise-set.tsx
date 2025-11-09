@@ -1,4 +1,4 @@
-import { Box, Divider, Grid2, Typography } from '@mui/material';
+import { Box, Divider, Grid2 } from '@mui/material';
 
 import { NumberExerciseParam } from '../exercise-param/number-exercise-param';
 import { TempoExerciseParam } from '../exercise-param/tempo-exercise-param';

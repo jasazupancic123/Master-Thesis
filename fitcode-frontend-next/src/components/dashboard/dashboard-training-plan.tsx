@@ -1,20 +1,20 @@
 'use client';
 
+import { Circle } from '@mui/icons-material';
 import { Tooltip, Typography, useTheme } from '@mui/material';
 import { Box } from '@mui/material';
+import { useState } from 'react';
 
-import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
-import { useDashboard } from '@/store/dashboard.provider';
-import { useMain } from '@/store/main.provider';
-import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import AthleteOptionsContainer from '../athlete/athlete-options-container';
-import DashboardTrainingsList from './dashboard-trainings-list';
-import useTrainingPlan from './hooks/use-training-plan-trainings';
 import { DASHBOARD_MIDDLE_HEADER_HEIGHT } from './constant/dashboard.const';
 import DashboardPageContainer from './dashboard-page-container';
+import DashboardTrainingsList from './dashboard-trainings-list';
 import { DashboardTrainingPlanFilter } from './enum/dashboard-training-plan-filter.enum';
-import { useState } from 'react';
-import { Circle } from '@mui/icons-material';
+import useTrainingPlan from './hooks/use-training-plan-trainings';
+import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
+import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
+import { useDashboard } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
 
 export default function DashboardTrainingPlan() {
   const theme = useTheme();

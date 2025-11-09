@@ -1,7 +1,8 @@
-import { Group } from '@/core/group/type/group.type';
-import { Training } from '@/core/training/type/training.type';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
+
+import type { Group } from '@/core/group/type/group.type';
+import type { Training } from '@/core/training/type/training.type';
 
 export default function useTrainingPlan(
   trainings: Training[],

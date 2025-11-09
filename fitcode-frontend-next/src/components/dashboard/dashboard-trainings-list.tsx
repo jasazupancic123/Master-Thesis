@@ -1,9 +1,3 @@
-import { theme } from '@/app/style';
-import { Targets } from '@/core/exercise/constant/target.constant';
-import { Group } from '@/core/group/type/group.type';
-import { Training } from '@/core/training/type/training.type';
-import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
-import { useMain } from '@/store/main.provider';
 import {
   Circle,
   EditOutlined,
@@ -13,11 +7,18 @@ import {
 import { Box, Typography } from '@mui/material';
 import dayjs from 'dayjs';
 import { Fragment } from 'react';
-import useFilteredTrainingsList from './hooks/use-filtered-trainings-list';
-import { useScreenSize } from '@/store/screen-size.provider';
+
 import { DashboardTrainingPlanFilter } from './enum/dashboard-training-plan-filter.enum';
+import useFilteredTrainingsList from './hooks/use-filtered-trainings-list';
+import { theme } from '@/app/style';
 import { Components } from '@/core/exercise/constant/components.constant';
-import { Component } from '@/core/exercise/type/component.type';
+import { Targets } from '@/core/exercise/constant/target.constant';
+import type { Component } from '@/core/exercise/type/component.type';
+import type { Group } from '@/core/group/type/group.type';
+import type { Training } from '@/core/training/type/training.type';
+import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
+import { useMain } from '@/store/main.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 interface Props {
   trainings: Training[];

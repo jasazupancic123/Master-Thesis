@@ -1,21 +1,22 @@
 'use client';
 
+import { Circle } from '@mui/icons-material';
+import { Box, Tooltip, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
+
+import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
+import { DASHBOARD_MIDDLE_HEADER_HEIGHT } from './constant/dashboard.const';
+import DashboardGroupsMembers from './dashboard-groups-members';
+import DashboardInstitution from './dashboard-institution';
 import DashboardPageContainer from './dashboard-page-container';
 import { DashboardMembersFilter } from './enum/dashboard-members-filter.enum';
-import { Box, Tooltip, Typography } from '@mui/material';
-import { DASHBOARD_MIDDLE_HEADER_HEIGHT } from './constant/dashboard.const';
-import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
-import { theme } from '@/app/style';
-import { Circle } from '@mui/icons-material';
-import { useMain } from '@/store/main.provider';
-import { Group } from '@/core/group/type/group.type';
-import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
-import DashboardGroupsMembers from './dashboard-groups-members';
 import AddGroupModal from './modals/dashboard-add-group-modal';
-import { useScreenSize } from '@/store/screen-size.provider';
-import DashboardInstitution from './dashboard-institution';
+import { theme } from '@/app/style';
+import type { Group } from '@/core/group/type/group.type';
 import { AthletesTrainers } from '@/core/institution/enum/athletes-trainer.enum';
+import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
+import { useMain } from '@/store/main.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 import AddButton from '@/ui/add-button';
 
 export default function DashboardMembers() {
@@ -147,6 +148,7 @@ export default function DashboardMembers() {
 
               return (
                 <Box
+                  key={type}
                   display="flex"
                   justifyContent="center"
                   alignItems="center"
