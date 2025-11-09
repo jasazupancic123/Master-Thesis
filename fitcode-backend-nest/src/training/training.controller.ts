@@ -40,9 +40,12 @@ import { User } from '../common/type/firebase-auth.type';
 import { AddTrainingComponentsDto } from './dto/add-training-components.dto';
 import { CreateTrainingDto } from './dto/create-training.dto';
 import { FilterTrainingQueryDto } from './dto/filter-training-query.dto';
-import { FinishTrainingComponentDto } from './dto/finish-training-component.dto';
 import { PeriodizeTrainingsDto } from './dto/periodize-training.dto';
 import { UpdateTrainingDto } from './dto/update-training.dto';
+import {
+  UpdateTrainingStatusDto,
+  UpdateTrainingStatusForUserDto,
+} from './dto/update-training-status.dto';
 import { Training } from './entity/training.entity';
 import { CreateWorkload, Workload } from './entity/workload.entity';
 import { TrainingService } from './service/training.service';
@@ -309,13 +312,16 @@ export class TrainingController {
     return await this.trainingService.startTrainingComponent(user, ref);
   }
 
+  /**
+   * Finalize a training component by updating the training reports' statuses.
+   */
   @Post(':trainingId/component/:cId/finalize')
   @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
   async finalizeTrainingComponent(
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
     @Param('cId') componentId: string,
-    @Body() { status }: FinishTrainingComponentDto,
+    @Body() { status }: UpdateTrainingStatusDto,
   ) {
     const ref: TrainingComponentRef = { trainingId, componentId };
     return await this.trainingService.finalizeTrainingComponent(
@@ -323,6 +329,24 @@ export class TrainingController {
       ref,
       status,
     );
+  }
+
+  /**
+   * Only allows updating training component status, does not finalize reports.
+   */
+  @Post(':trainingId/component/:cId/status')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
+  async updateTrainingComponentStatus(
+    @RequestUser() user: User,
+    @Param('trainingId') trainingId: string,
+    @Param('cId') componentId: string,
+    @Body() body: UpdateTrainingStatusForUserDto,
+  ) {
+    const ref: TrainingComponentRef = { trainingId, componentId };
+    return await this.trainingService.updateStatus(user, ref, {
+      status: body.status,
+      uid: body.userId,
+    });
   }
 
   @Post(':trainingId/component')

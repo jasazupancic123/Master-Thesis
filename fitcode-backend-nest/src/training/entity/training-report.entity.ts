@@ -2,7 +2,6 @@ import { IntersectionType } from '@nestjs/mapped-types';
 import { ApiProperty, ApiPropertyOptional, OmitType } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import {
-  IsBoolean,
   IsEnum,
   IsNotEmpty,
   IsNumber,
@@ -64,11 +63,6 @@ export class TrainingReport extends IntersectionType(
   @ApiProperty()
   @Expose()
   userId: string;
-
-  @IsBoolean()
-  @ApiProperty()
-  @Expose()
-  completed: boolean;
 
   @IsNumber()
   @Min(0)
