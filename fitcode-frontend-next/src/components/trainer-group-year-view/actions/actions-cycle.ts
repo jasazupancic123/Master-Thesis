@@ -7,7 +7,7 @@ import type { GroupController } from '@/core/group/group.controller';
 import type { Cycle } from '@/core/group/type/cycle.type';
 import { handleApiRequest } from '@/lib/common/type/state.type';
 import type { IGroupCtx } from '@/store/group.provider';
-import { IMainContext } from '@/store/main.provider';
+import type { IMainContext } from '@/store/main.provider';
 
 type AddCycleInput = Pick<Cycle, 'name' | 'from' | 'to' | 'description'>;
 

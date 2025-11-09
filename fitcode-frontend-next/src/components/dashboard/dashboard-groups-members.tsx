@@ -3,9 +3,12 @@ import { Avatar, Box, IconButton, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import { useEffect, useState } from 'react';
 
+import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
 import { useDashboardUserEdit } from './context/user-edit.context';
 import DashboardEditAthleteModal from './modals/dashboard-edit-athlete-modal';
 import { AddMembersModal } from '@/components/dashboard/modals/add-members-modal';
+import type { AuthUser } from '@/core/auth/type/user.type';
+import type { Group } from '@/core/group/type/group.type';
 import { lib } from '@/lib';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
@@ -13,10 +16,6 @@ import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { SearchBar } from '@/ui/search-bar/search-bar';
-import { Group } from '@/core/group/type/group.type';
-import AthleteOptionsContainer from '../athlete/athlete-options-container';
-import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
-import { AuthUser } from '@/core/auth/type/user.type';
 
 interface Props {
   group: Group | null;

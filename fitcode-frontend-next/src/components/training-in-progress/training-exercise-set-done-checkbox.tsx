@@ -5,13 +5,13 @@ import {
   isExerciseSetCompleted,
   unmarkExerciseSetAsCompleted,
 } from './actions/actions-exercise-set';
+import { handleAdvanceInSuperset } from './actions/actions-superset';
 import type {
   TrainingExercise,
   TrainingExerciseRecording,
 } from '@/core/training/type/training-exercise.type';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
-import { handleAdvanceInSuperset } from './actions/actions-superset';
 
 interface TrainingExerciseSetDoneCheckboxProps {
   exercise: TrainingExercise | TrainingExerciseRecording;

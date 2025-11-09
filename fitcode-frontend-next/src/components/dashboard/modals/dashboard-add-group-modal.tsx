@@ -3,16 +3,15 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
-import { AddMembersModal } from '@/components/dashboard/modals/add-members-modal';
+import { core } from '@/core/core.service';
 import { GroupController } from '@/core/group/group.controller';
+import type { Group } from '@/core/group/type/group.type';
 import type { ModalProps } from '@/lib/common/type/modal-props.type';
-import { handleApiRequest, SetState } from '@/lib/common/type/state.type';
+import type { SetState } from '@/lib/common/type/state.type';
+import { handleApiRequest } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import MyModal from '@/ui/modal';
-import { Group } from '@/core/group/type/group.type';
-import { GroupUtil } from '@/core/group/group.util';
-import { core } from '@/core/core.service';
 
 interface Props extends ModalProps {
   setSelectedGroup: SetState<Group | null>;

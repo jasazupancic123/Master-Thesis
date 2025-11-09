@@ -31,11 +31,11 @@ import type {
   ExerciseParamFieldExtended,
 } from '@/core/training/type/exercise-set.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import { EMPTY_STRING } from '@/lib/common/const/string.const';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
-import { EMPTY_STRING } from '@/lib/common/const/string.const';
 
 export const graphColorMap: Record<ExerciseParamFieldExtended, string> = {
   sets: GRAPH_COLORS[2],

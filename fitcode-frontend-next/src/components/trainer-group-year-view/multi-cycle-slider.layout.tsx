@@ -16,9 +16,9 @@ import { useMultiCycleSliderYearProvider } from '@/components/trainer-group-year
 import MobileDoubleTextItems from '@/components/trainer-group-year-view/mobile-double-text-items';
 import { GroupController } from '@/core/group/group.controller';
 import { useGroup } from '@/store/group.provider';
+import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import HorizontalItemsList from '@/ui/horizontal-items-list';
-import { useMain } from '@/store/main.provider';
 
 dayjs.extend(dayOfYear);
 

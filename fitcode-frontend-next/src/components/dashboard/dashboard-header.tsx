@@ -20,21 +20,21 @@ import { useTheme } from '@mui/material';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-import EditInstitutionModal from './modals/edit-institution-modal';
 import useDashboardHeaderUtils from './hooks/use-utils';
+import EditInstitutionModal from './modals/edit-institution-modal';
 import ProfileHeaderMenu from '@/components/profile-header-menu/profile-header-menu';
 import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
 import { lib } from '@/lib';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
+import {
+  DASHBOARD_VIEWS,
+  LINK_DASHBOARD_TRAINING_PLAN,
+} from '@/lib/common/const/nav.const';
 import type { ILink } from '@/lib/common/type/link.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import Logo from '@/ui/logo';
-import {
-  DASHBOARD_VIEWS,
-  LINK_DASHBOARD_TRAINING_PLAN,
-} from '@/lib/common/const/nav.const';
 
 export default function DashboardHeader() {
   const { user, role } = useAuthenticatedAuth();

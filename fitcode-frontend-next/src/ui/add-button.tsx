@@ -1,6 +1,8 @@
-import { theme } from '@/app/style';
 import { Add } from '@mui/icons-material';
-import { IconButton, SxProps, Tooltip } from '@mui/material';
+import type { SxProps } from '@mui/material';
+import { IconButton, Tooltip } from '@mui/material';
+
+import { theme } from '@/app/style';
 
 interface Props {
   onClick: () => void;

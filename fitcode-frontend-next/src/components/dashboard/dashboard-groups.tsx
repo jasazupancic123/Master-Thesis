@@ -1,20 +1,21 @@
 'use client';
 
 import { Box, Typography } from '@mui/material';
-import AthleteOptionsContainer from '../athlete/athlete-options-container';
-import { EMPTY_STRING } from '@/lib/common/const/string.const';
-import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
-import { theme } from '@/app/style';
-import { useMain } from '@/store/main.provider';
 import { redirect } from 'next/navigation';
-import { LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS } from '@/lib/common/const/nav.const';
-import { lib } from '@/lib';
-import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useEffect, useState } from 'react';
-import { Group } from '@/core/group/type/group.type';
+
+import AthleteOptionsContainer from '../athlete/athlete-options-container';
+import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
 import { DASHBOARD_MIDDLE_HEADER_HEIGHT } from './constant/dashboard.const';
-import { SearchBar } from '@/ui/search-bar/search-bar';
 import DashboardPageContainer from './dashboard-page-container';
+import { theme } from '@/app/style';
+import type { Group } from '@/core/group/type/group.type';
+import { lib } from '@/lib';
+import { LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS } from '@/lib/common/const/nav.const';
+import { EMPTY_STRING } from '@/lib/common/const/string.const';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useMain } from '@/store/main.provider';
+import { SearchBar } from '@/ui/search-bar/search-bar';
 
 export default function DashboardGroups() {
   const { role } = useAuthenticatedAuth();
@@ -70,8 +71,6 @@ export default function DashboardGroups() {
         gap={4}
       >
         {filteredGroups.map((group) => {
-          const shortGroupName = group.name.substring(0, 3);
-
           return (
             <Box
               width={100}

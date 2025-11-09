@@ -9,12 +9,12 @@ import {
 import HomeIcon from '@mui/icons-material/Home';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PersonIcon from '@mui/icons-material/Person';
+import { Box } from '@mui/material';
 import type { ReactNode } from 'react';
 import slugify from 'slugify';
 
 import { UserRole } from '@/core/profile/enum/user-role.enum';
 import type { ILink } from '@/lib/common/type/link.type';
-import { Box } from '@mui/material';
 
 export function linkPngIcon(
   label: string,
@@ -149,7 +149,6 @@ export const DASHBOARD_MAIN = '/dashboard';
 
 const DASHBOARD_ICONS_FOLDER = '/dashboard-icons';
 const DASHBOARD_ICONS_DIMENSION = 28;
-const DASHBOARD_ICONS_DIMENSION_SMALL = 20;
 
 export const LINK_DASHBOARD_TRAINING_PLAN = linkPngIcon(
   'Training Plan',

@@ -17,6 +17,7 @@ import type {
   UpdateInstitution,
 } from '@/core/institution/type/institution.type';
 import type { UserRole } from '@/core/profile/enum/user-role.enum';
+import type { Training } from '@/core/training/type/training.type';
 import { lib } from '@/lib';
 import {
   DASHBOARD_VIEWS,
@@ -25,7 +26,6 @@ import {
 } from '@/lib/common/const/nav.const';
 import type { ILink } from '@/lib/common/type/link.type';
 import type { SetState } from '@/lib/common/type/state.type';
-import { Training } from '@/core/training/type/training.type';
 
 interface Props extends React.PropsWithChildren {
   institutionId: string;
@@ -197,8 +197,8 @@ export function DashboardProvider(props: Props) {
         );
       };
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const rollback = (snapshot: any) => {
-        // rollback
         setSelectedInstitution(snapshot.institution);
         toast.error('Failed to update group name');
       };
@@ -250,6 +250,7 @@ export function DashboardProvider(props: Props) {
         );
       };
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const rollback = (snapshot: any, e: Error) => {
         console.error(e);
         setUsers(snapshot.users);
@@ -299,6 +300,7 @@ export function DashboardProvider(props: Props) {
         );
       };
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const rollback = (snapshot: any) => {
         setSelectedInstitution(snapshot.institution);
         toast.error('Failed to delete group');
@@ -326,6 +328,7 @@ export function DashboardProvider(props: Props) {
         );
       };
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const rollback = (snapshot: any) => {
         setSelectedInstitution(snapshot.institution);
         toast.error('Failed to add group');
@@ -370,6 +373,7 @@ export function DashboardProvider(props: Props) {
         );
       };
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const rollback = (snapshot: any) => {
         setSelectedInstitution(snapshot.institution);
         toast.error('Failed to add member to group');
@@ -415,6 +419,7 @@ export function DashboardProvider(props: Props) {
         );
       };
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const rollback = (snapshot: any) => {
         setSelectedInstitution(snapshot.institution);
         toast.error('Failed to remove member from group');
