@@ -368,20 +368,9 @@ export default function TrainingInProgressExerciseSet(props: Props) {
             alignItems="center"
             justifyContent="flex-start"
           >
-            <Typography
-              fontSize={10}
-              fontWeight={600}
-              lineHeight={1.4}
-              sx={{
-                color: theme.palette.background.lightBorder,
-              }}
-            >
-              Done
-            </Typography>
             <TrainingExerciseSetDoneCheckbox
               exercise={exercise}
               setIndex={setIndex}
-              exerciseView
             />
           </Box>
         </Grid2>
