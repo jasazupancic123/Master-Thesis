@@ -603,7 +603,7 @@ export class TrainingService implements Permission<Training, Institution> {
     )
       throw new ConflictException('Training is not scheduled for today');
 
-    const prescribedTraining = await this.getPrescribedTrainingNoChecks(
+    const prescribedTraining = await this.getTrainingByAthlete(
       athlete.uid,
       training,
     );
@@ -636,7 +636,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
     if (errors.length) throw new BadRequestException(JSON.stringify(errors));
 
-    const prescribedTraining = await this.getPrescribedTrainingNoChecks(
+    const prescribedTraining = await this.getTrainingByAthlete(
       athlete.uid,
       training,
     );
@@ -658,7 +658,7 @@ export class TrainingService implements Permission<Training, Institution> {
   async startTrainingComponent(
     user: User,
     ref: TrainingComponentRef,
-  ): Promise<void> {
+  ): Promise<Record<string, Training>> {
     const training = await this.findOneByIdOrFail(user, ref);
     this.checkComponentExists(training, ref.componentId);
 
@@ -669,26 +669,31 @@ export class TrainingService implements Permission<Training, Institution> {
       ? [user.uid]
       : training.membersIds;
 
+    let trainings: Record<string, Training> = {}; // <userId, training>
     await this.common.generic.measure(
       `startTrainingComponent [${training.id}]`,
       async () => {
         // get prescribed training for each member
-        const input = await Promise.all(
-          memberIds.map(async (userId) => {
-            return {
-              userId,
-              componentId: ref.componentId,
-              training: await this.getPrescribedTrainingNoChecks(
-                userId,
-                training,
-              ),
-            };
-          }),
+        trainings = Object.fromEntries(
+          await Promise.all(
+            memberIds.map(async (userId) => {
+              const t = await this.getTrainingByAthlete(userId, training);
+              return [userId, t];
+            }),
+          ),
         );
 
-        await this.trainingReportService.initForComponent(input);
+        await this.trainingReportService.initForComponent(
+          memberIds.map((userId) => ({
+            userId,
+            componentId: ref.componentId,
+            training: trainings[userId],
+          })),
+        );
       },
     );
+
+    return trainings;
   }
 
   @LogMethod()
@@ -743,18 +748,7 @@ export class TrainingService implements Permission<Training, Institution> {
     );
   }
 
-  @LogMethod()
-  async getPrescribedTraining(user: User, ref: TrainingRef & UserRef) {
-    const training = await this.findOneByIdOrFail(user, ref);
-    const athlete = await this.getAthlete(user, ref.uid, training.institution);
-
-    if (this.firebase.isTrainer(user) || this.firebase.isManager(user))
-      this.validateCanView(user, training, training.institution);
-
-    return await this.getPrescribedTrainingNoChecks(athlete.uid, training);
-  }
-
-  async getPrescribedTrainingNoChecks(athleteId: string, training: Training) {
+  async getTrainingByAthlete(athleteId: string, training: Training) {
     const athleteTraining = this.trainingPlanService.getTrainingByAthlete(
       athleteId,
       training,
