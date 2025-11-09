@@ -17,7 +17,7 @@ import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import AddButton from '@/ui/add-button';
-import useDashboardSelectedGroup from './hooks/use-selected-group';
+import useDashboardGroupView from './hooks/use-group-view';
 
 export default function DashboardMembers() {
   const screenSize = useScreenSize();
@@ -29,8 +29,12 @@ export default function DashboardMembers() {
   );
 
   // for group view
-  const { selectedGroup, setSelectedGroup } = useDashboardSelectedGroup();
-  const [openAddGroupModal, setOpenAddGroupModal] = useState(false);
+  const {
+    selectedGroup,
+    setSelectedGroup,
+    openAddGroupModal,
+    setOpenAddGroupModal,
+  } = useDashboardGroupView();
 
   // for institution view
   const [athletesOrTrainers, setAthletesOrTrainers] =
