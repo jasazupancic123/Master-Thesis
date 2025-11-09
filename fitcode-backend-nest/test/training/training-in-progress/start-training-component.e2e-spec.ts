@@ -123,6 +123,9 @@ describe('Start Training Component (e2e)', () => {
     const athlete = institution1.athletes[0];
     const res = await req(athlete.token, training1.id, 'c1');
     expect(res.status).toBe(201);
+    expect(res.body).toEqual({
+      [athlete.uid]: expect.objectContaining({ id: training1.id }),
+    });
 
     const reports = await db.trainingReports.getAllByTraining(training1.id);
     expect(reports).toHaveLength(1);
@@ -146,6 +149,17 @@ describe('Start Training Component (e2e)', () => {
     const trainer = institution2.trainers[0];
     const res = await req(trainer.token, training2.id, 'c1');
     expect(res.status).toBe(201);
+    expect(res.body).toEqual({
+      [institution2.athletes[0].uid]: expect.objectContaining({
+        id: training2.id,
+      }),
+      [institution2.athletes[1].uid]: expect.objectContaining({
+        id: training2.id,
+      }),
+      [institution2.athletes[2].uid]: expect.objectContaining({
+        id: training2.id,
+      }),
+    });
 
     const reports = await db.trainingReports.getAllByTraining(training2.id);
     expect(reports).toHaveLength(3);
