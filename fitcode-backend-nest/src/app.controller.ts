@@ -35,7 +35,9 @@ export class AppController {
    * Warmup handler for App Engine to keep instances warm.
    */
   @Get('_ah/warmup')
-  warmup(): void {}
+  warmup(): void {
+    this.logger.log('Warming up instance ...');
+  }
 
   @Auth()
   @Get('init')

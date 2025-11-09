@@ -276,7 +276,7 @@ describe('Finalize Training Component (e2e)', () => {
     expect(res.status).toBe(201);
     const reports = await db.trainingReports.getAllByTraining(training1.id);
     expect(reports).toHaveLength(1);
-    expect(reports[0].completed).toBe(true);
+    expect(reports[0].status).toBe(TrainingStatus.COMPLETED);
 
     const c1Status = reports[0].componentStatuses.find(
       (c) => c.componentId === 'c1',

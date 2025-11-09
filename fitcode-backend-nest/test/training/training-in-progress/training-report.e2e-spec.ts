@@ -207,6 +207,18 @@ describe('Training Report (e2e)', () => {
     await testApp.close();
   });
 
+  async function startReq(
+    token: string,
+    trainingId: string,
+    componentId: string,
+  ) {
+    return await testApp.http.post(
+      `/training/${trainingId}/component/${componentId}/start`,
+      token,
+      {},
+    );
+  }
+
   it('should return default stats for training without any components', () => {
     const dummy = generateTrainingStub({
       ownerId: global.trainer.uid,
@@ -324,29 +336,15 @@ describe('Training Report (e2e)', () => {
     } as PrescribedTrainingStats);
   });
 
-  it('should create new report if it does not exist yet for user in training', async () => {
-    const spy = jest.spyOn(workloadService, 'findAllByUserTraining');
-    await trainingReportService.update(global.athlete.uid, training);
-
-    // no workloads should be found
-    expect(await spy.mock.results[0].value).toHaveLength(0);
-    spy.mockRestore();
-
-    // report should be created
-    const ref: TrainingReportRef = {
-      trainingId: training.id,
-      userId: global.athlete.uid,
-    };
-
-    const report = await db.trainingReports.findById(ref);
-    expect(report).toBeDefined();
-    expect(report.sets).toBe(0);
-
-    await db.workloads.deleteAll(training.id);
-    await db.trainingReports.delete(ref);
+  it('should not create new report if training component not started yet', async () => {
+    await expect(
+      trainingReportService.update(global.athlete.uid, training),
+    ).rejects.toThrow('Training not started yet');
   });
 
   it('should update existing report for user in training', async () => {
+    await startReq(global.athlete.token, training.id, 'c1');
+
     await db.workloads.createMany([
       {
         userId: global.athlete.uid,
@@ -397,6 +395,8 @@ describe('Training Report (e2e)', () => {
   });
 
   it('should add photos to report', async () => {
+    await startReq(global.athlete.token, training.id, 'c1');
+
     const photoURLs = ['photo1', 'photo2'];
     await trainingReportService.update(global.athlete.uid, training, {
       photoURLs,

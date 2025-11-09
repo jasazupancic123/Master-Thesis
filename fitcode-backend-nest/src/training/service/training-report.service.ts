@@ -16,7 +16,10 @@ import {
 import { Wrapper } from '@src/common/type/wrapper.type';
 import { ExerciseSet } from '@src/training/entity/exercise-set.entity';
 import { Training } from '@src/training/entity/training.entity';
-import { TrainingReport } from '@src/training/entity/training-report.entity';
+import {
+  TrainingReport,
+  TrainingReportComponentStatus,
+} from '@src/training/entity/training-report.entity';
 import { PrescribedTrainingStats } from '@src/training/entity/training-stats.entity';
 import { WorkloadService } from '@src/training/service/workload.service';
 import { SetReport } from '@src/training/type/training-set.type';
@@ -106,16 +109,31 @@ export class TrainingReportService {
       componentStatus.status = status;
       await this.repository.update(reportRef, {
         componentStatuses: report.componentStatuses,
-        completed: report.componentStatuses.every(
-          (cs) => cs.status === TrainingStatus.COMPLETED,
-        ),
+        status: this.getTrainingReportStatus(report.componentStatuses),
       });
     }
   }
 
-  async updateStatus(userId: string, ref: TrainingComponentRef) {
+  async updateStatus(
+    userId: string,
+    ref: TrainingComponentRef,
+    status: TrainingStatus,
+  ): Promise<void> {
     const reportRef: TrainingReportRef = { ...ref, userId };
     const report = await this.findByIdOrFail(reportRef);
+
+    const componentStatus = report.componentStatuses.find(
+      (cs) => cs.componentId === ref.componentId,
+    );
+
+    if (!componentStatus)
+      throw new BadRequestException('Training component not found in report');
+
+    componentStatus.status = status;
+    await this.repository.update(reportRef, {
+      componentStatuses: report.componentStatuses,
+      status: this.getTrainingReportStatus(report.componentStatuses),
+    });
   }
 
   async update(
@@ -148,7 +166,6 @@ export class TrainingReportService {
       ...ref,
       from,
       to,
-      completed: workloads.length >= stats.sets,
       duration: differenceInMinutes(to, from),
       components: components.size,
       supersets: training.components.reduce(
@@ -299,18 +316,42 @@ export class TrainingReportService {
 
           for (const set of exercise.sets) {
             const setReport = this.getSetReport(set);
-            stats.reps += setReport.reps;
-            stats.tut += setReport.tut;
-            stats.tonnage += setReport.tonnage;
-            stats.time += setReport.time;
-            stats.dist += setReport.dist;
-            stats.recTime += setReport.recTime;
-            stats.recDist += setReport.recDist;
+            if (setReport.reps) stats.reps += setReport.reps;
+            if (setReport.tut) stats.tut += setReport.tut;
+            if (setReport.tonnage) stats.tonnage += setReport.tonnage;
+            if (setReport.time) stats.time += setReport.time;
+            if (setReport.dist) stats.dist += setReport.dist;
+            if (setReport.recTime) stats.recTime += setReport.recTime;
+            if (setReport.recDist) stats.recDist += setReport.recDist;
           }
         }
       }
 
     return stats;
+  }
+
+  getTrainingReportStatus(
+    componentStatuses: TrainingReportComponentStatus[],
+  ): TrainingStatus {
+    // if all components are completed/cancelled/expired, then report is completed
+    if (
+      componentStatuses.every(
+        (cs) =>
+          cs.status === TrainingStatus.COMPLETED ||
+          cs.status === TrainingStatus.CANCELLED ||
+          cs.status === TrainingStatus.EXPIRED,
+      )
+    )
+      return TrainingStatus.COMPLETED;
+
+    // if all components are not started, then report is not started
+    if (
+      componentStatuses.every((cs) => cs.status === TrainingStatus.NOT_STARTED)
+    )
+      return TrainingStatus.NOT_STARTED;
+
+    // else report is not started
+    return TrainingStatus.IN_PROGRESS;
   }
 
   private getInitQuery(
@@ -328,7 +369,6 @@ export class TrainingReportService {
       cycleId: training.cycleId,
       trainingId: training.id,
       userId,
-      completed: false,
       realization: 0,
       muscleValues: [],
       componentStatuses: training.components.map((c) =>
@@ -406,21 +446,19 @@ export class TrainingReportService {
 
   private getTempoTime(set: ExerciseSet): number {
     return (
-      set.tempoEcc ||
-      0 + set.tempoIso ||
-      0 + set.tempoCon ||
-      0 + set.tempoIdle ||
-      0
+      (set.tempoEcc || 0) +
+      (set.tempoIso || 0) +
+      (set.tempoCon || 0) +
+      (set.tempoIdle || 0)
     );
   }
 
   private getTempoRTime(set: ExerciseSet): number {
     return (
-      set.tempoEccR ||
-      0 + set.tempoIsoR ||
-      0 + set.tempoConR ||
-      0 + set.tempoIdleR ||
-      0
+      (set.tempoEccR || 0) +
+      (set.tempoIsoR || 0) +
+      (set.tempoConR || 0) +
+      (set.tempoIdleR || 0)
     );
   }
 

@@ -660,8 +660,7 @@ export class TrainingService implements Permission<Training, Institution> {
     ref: TrainingComponentRef,
   ): Promise<void> {
     const training = await this.findOneByIdOrFail(user, ref);
-    const component = training.components.find((c) => c.id === ref.componentId);
-    if (!component) throw new NotFoundException('Component not found');
+    this.checkComponentExists(training, ref.componentId);
 
     // initialize training reports
     //   - if user is manager/trainer, then for all members
@@ -678,7 +677,7 @@ export class TrainingService implements Permission<Training, Institution> {
           memberIds.map(async (userId) => {
             return {
               userId,
-              componentId: component.id,
+              componentId: ref.componentId,
               training: await this.getPrescribedTrainingNoChecks(
                 userId,
                 training,
@@ -698,14 +697,10 @@ export class TrainingService implements Permission<Training, Institution> {
     ref: TrainingComponentRef,
     status: TrainingStatus,
   ): Promise<void> {
-    if (![TrainingStatus.COMPLETED, TrainingStatus.CANCELLED].includes(status))
-      throw new BadRequestException(
-        'You can only complete or cancel training component',
-      );
+    this.checkCompleteOrCancelledStatus(status);
 
     const training = await this.findOneByIdOrFail(user, ref);
-    const component = training.components.find((c) => c.id === ref.componentId);
-    if (!component) throw new NotFoundException('Component not found');
+    this.checkComponentExists(training, ref.componentId);
 
     // finalize training reports
     const memberIds: string[] = this.firebase.isAthlete(user)
@@ -727,29 +722,25 @@ export class TrainingService implements Permission<Training, Institution> {
   async updateStatus(
     user: User,
     ref: TrainingComponentRef,
-    input: { status: TrainingStatus; uid: string },
+    input: { status: TrainingStatus; uid?: string },
   ): Promise<void> {
-    if (
-      ![TrainingStatus.COMPLETED, TrainingStatus.CANCELLED].includes(
-        input.status,
-      )
-    )
-      throw new BadRequestException(
-        'You can only complete or cancel training component',
-      );
+    this.checkCompleteOrCancelledStatus(input.status);
 
     const training = await this.findOneByIdOrFail(user, ref);
+    this.checkComponentExists(training, ref.componentId);
+
     const athlete = await this.getAthlete(
       user,
       input.uid,
       training.institution,
     );
 
-    const component = training.components.find((c) => c.id === ref.componentId);
-    if (!component) throw new NotFoundException('Component not found');
-
-    // update training reports
-    await this.trainingReportService.updateStatus(athlete.uid, ref);
+    // update training report status
+    await this.trainingReportService.updateStatus(
+      athlete.uid,
+      ref,
+      input.status,
+    );
   }
 
   @LogMethod()
@@ -857,6 +848,22 @@ export class TrainingService implements Permission<Training, Institution> {
         operation: 'delete',
         ref: this.repository.doc(training.id),
       });
+  }
+
+  private checkCompleteOrCancelledStatus(status: TrainingStatus) {
+    if (![TrainingStatus.COMPLETED, TrainingStatus.CANCELLED].includes(status))
+      throw new BadRequestException(
+        'You can only complete or cancel training component',
+      );
+  }
+
+  private checkComponentExists(
+    training: Training,
+    componentId: string,
+  ): TrainingComponent {
+    const component = training.components.find((c) => c.id === componentId);
+    if (!component) throw new NotFoundException('Component not found');
+    return component;
   }
 
   /**
