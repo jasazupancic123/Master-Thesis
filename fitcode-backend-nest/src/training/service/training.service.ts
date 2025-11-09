@@ -741,6 +741,21 @@ export class TrainingService implements Permission<Training, Institution> {
     );
   }
 
+  async generateQRCodeForAthlete(
+    user: User,
+    ref: TrainingComponentRef & UserRef,
+  ): Promise<string> {
+    const athlete = await this.getAthlete(user, ref.uid);
+    const trainings = await this.startTrainingComponent(athlete, ref);
+    const training = trainings[athlete.uid];
+
+    return await this.authService.createMagicLink(
+      user,
+      athlete.uid,
+      `/trainings/${training.id}/components/${ref.componentId}`,
+    );
+  }
+
   /**
    * Special method for trainers and managers, for a prescribed training it
    * will fetch individualized trainings for each athlete. So, if training

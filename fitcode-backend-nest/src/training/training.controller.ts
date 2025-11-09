@@ -29,7 +29,6 @@ import {
   TrainingComponentRef,
   WorkloadRef,
 } from '@src/common/type/firestore.type';
-import { FirebaseService } from '@src/firebase/firebase.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { TrainingReportService } from '@src/training/service/training-report.service';
 
@@ -55,7 +54,6 @@ import { TrainingService } from './service/training.service';
 @Controller('training')
 export class TrainingController {
   constructor(
-    private readonly firebase: FirebaseService,
     private readonly commonService: CommonService,
     private readonly trainingService: TrainingService,
     private readonly trainingReportService: TrainingReportService,
@@ -124,6 +122,21 @@ export class TrainingController {
     return { training };
   }
 
+  @Post(':trainingId/component/:cId/generate-qr-code')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER])
+  async generateQRCode(
+    @RequestUser() user: User,
+    @Param('trainingId') trainingId: string,
+    @Param('cId') componentId: string,
+    @Body() { userId }: UserIdDto,
+  ) {
+    return await this.trainingService.generateQRCodeForAthlete(user, {
+      trainingId,
+      componentId,
+      uid: userId,
+    });
+  }
+
   @Get('report/athlete')
   @Auth()
   async findReports(@RequestUser() user: User, @Query() filter: DateFilterDto) {
@@ -138,7 +151,7 @@ export class TrainingController {
    * Endpoint for Smart Wall service to get all trainings for institution
    * for today
    */
-  @Get('/institution/today')
+  @Get('institution/today')
   @Auth([UserRole.MANAGER])
   @ApiBearerAuth()
   @ApiOperation({
