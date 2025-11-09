@@ -9,11 +9,6 @@ export default function useFilteredTrainingsList(
   const [filteredTrainings, setFilteredTrainings] = useState<Training[]>([]);
 
   useEffect(() => {
-    if (selectedGroups.length === 0) {
-      setFilteredTrainings(trainings);
-      return;
-    }
-
     const filtered = trainings.filter((training) =>
       selectedGroups.some((group) => group.id === training.groupId)
     );

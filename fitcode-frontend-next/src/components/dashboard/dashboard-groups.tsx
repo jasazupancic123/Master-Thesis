@@ -4,7 +4,6 @@ import { Box, Typography } from '@mui/material';
 import AthleteOptionsContainer from '../athlete/athlete-options-container';
 import { EMPTY_STRING } from '@/lib/common/const/string.const';
 import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
-import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import { theme } from '@/app/style';
 import { useMain } from '@/store/main.provider';
 import { redirect } from 'next/navigation';
@@ -15,6 +14,7 @@ import { useEffect, useState } from 'react';
 import { Group } from '@/core/group/type/group.type';
 import { DASHBOARD_MIDDLE_HEADER_HEIGHT } from './constant/dashboard.const';
 import { SearchBar } from '@/ui/search-bar/search-bar';
+import DashboardPageContainer from './dashboard-page-container';
 
 export default function DashboardGroups() {
   const { role } = useAuthenticatedAuth();
@@ -39,14 +39,7 @@ export default function DashboardGroups() {
     lib.firebase.auth.isTrainer(role) || lib.firebase.auth.isManager(role);
 
   return (
-    <Box
-      width="100%"
-      display="flex"
-      flexDirection="column"
-      alignItems="center"
-      sx={{ px: 2, py: 1 }}
-      gap={2}
-    >
+    <DashboardPageContainer>
       {/* Dashboard Middle Header */}
       <Box
         height={DASHBOARD_MIDDLE_HEADER_HEIGHT}
@@ -81,7 +74,8 @@ export default function DashboardGroups() {
 
           return (
             <Box
-              height="100%"
+              width={100}
+              height={100}
               key={group.id}
               display="flex"
               justifyContent="center"
@@ -94,9 +88,8 @@ export default function DashboardGroups() {
                 );
               }}
               sx={{
-                p: 5,
-                borderRadius: '50%',
-                backgroundColor: theme.palette.primary.main,
+                borderRadius: 2,
+                border: `1px solid ${theme.palette.primary.main}`,
                 my: 'auto',
                 cursor: permissionOk ? 'pointer' : undefined,
               }}
@@ -105,21 +98,20 @@ export default function DashboardGroups() {
                 fontWeight={600}
                 textAlign="center"
                 sx={{
-                  color: theme.palette.text.secondary,
+                  color: theme.palette.text.primary,
                   textTransform: 'uppercase',
-                  whiteSpace: 'nowrap',
                   overflow: 'hidden',
-                  textOverflow: 'ellipsis',
+                  wordBreak: 'break-word',
                   my: 'auto',
                   userSelect: 'none',
                 }}
               >
-                {shortGroupName}
+                {group.name}
               </Typography>
             </Box>
           );
         })}
       </Box>
-    </Box>
+    </DashboardPageContainer>
   );
 }

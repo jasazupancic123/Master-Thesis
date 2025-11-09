@@ -71,6 +71,7 @@ export function DashboardProvider(props: Props) {
     users,
     setUsers,
     setProfiles,
+    setGroups,
     institutions: propsInstitutions,
   } = useMain();
   const pathname = usePathname();
@@ -364,6 +365,9 @@ export function DashboardProvider(props: Props) {
             g.id === newGroup.id ? newGroup : g
           ),
         }));
+        setGroups((prev) =>
+          prev.map((g) => (g.id === newGroup.id ? newGroup : g))
+        );
       };
 
       const rollback = (snapshot: any) => {
@@ -406,6 +410,9 @@ export function DashboardProvider(props: Props) {
             g.id === newGroup.id ? newGroup : g
           ),
         }));
+        setGroups((prev) =>
+          prev.map((g) => (g.id === newGroup.id ? newGroup : g))
+        );
       };
 
       const rollback = (snapshot: any) => {

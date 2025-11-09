@@ -1,49 +1,92 @@
-import { Add, Remove } from '@mui/icons-material';
-import { Avatar, Box, IconButton, Tooltip, Typography } from '@mui/material';
+import { PersonAdd, Remove } from '@mui/icons-material';
+import { Avatar, Box, IconButton, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useDashboardUserEdit } from './context/user-edit.context';
-import DashboardEditAthleteModal from './dashboard-edit-athlete-modal';
-import { AddMembersModal } from '@/components/dashboard/add-members-modal';
+import DashboardEditAthleteModal from './modals/dashboard-edit-athlete-modal';
+import { AddMembersModal } from '@/components/dashboard/modals/add-members-modal';
 import { lib } from '@/lib';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import CustomDivider from '@/ui/custom-divider';
 import { SearchBar } from '@/ui/search-bar/search-bar';
+import { Group } from '@/core/group/type/group.type';
+import AthleteOptionsContainer from '../athlete/athlete-options-container';
+import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
+import { AuthUser } from '@/core/auth/type/user.type';
 
-export default function DashboardGroupsMembers() {
+interface Props {
+  group: Group | null;
+}
+
+export default function DashboardGroupsMembers(props: Props) {
   const theme = useTheme();
   const screenSize = useScreenSize();
 
   const { users } = useMain();
   const { role } = useAuthenticatedAuth();
-  const { selectedInstitution, selectedGroup, removeGroupMember } =
-    useDashboard();
+  const { selectedInstitution, removeGroupMember } = useDashboard();
   const { setFilteredUsers, hoveredUser, toggleUser, onHoverUser } =
     useDashboardUserEdit();
 
+  const { group } = props;
+
+  const [filteredMembers, setFilteredMembers] = useState<AuthUser[]>([]);
   const [search, setSearch] = useState('');
   const [openEditAthleteModal, setOpenEditAthleteModal] = useState(false);
   const [openAddMemberModal, setOpenAddMemberModal] = useState(false);
 
+  useEffect(() => {
+    if (!group || !group.members) {
+      setFilteredMembers([]);
+      return;
+    }
+
+    if (!search) {
+      setFilteredMembers(group.members);
+      return;
+    }
+
+    const filtered = (group.members || []).filter((user) => {
+      if (!user.displayName) return false;
+      return user.displayName.toLowerCase().includes(search.toLowerCase());
+    });
+
+    setFilteredMembers(filtered);
+  }, [group, search]);
+
+  useEffect(() => {
+    setSearch('');
+  }, [group]);
+
+  const owner = users.find((u) => u.uid === group?.ownerId);
+  const ownerNames = owner?.displayName ? owner.displayName.split(' ') : [];
+
   return (
-    <>
+    <Box
+      width="100%"
+      maxWidth={MAX_WIDTH}
+      display="flex"
+      flexDirection="column"
+      alignItems="center"
+      gap={2}
+    >
       <Box
         width="100%"
         display="flex"
         gap={1}
-        sx={{ justifyContent: 'center', alignItems: 'center' }}
+        justifyContent="center"
+        alignItems="center"
       >
         <SearchBar
           placeholder={'Search members'}
           value={search}
           handleSearchChange={(e) => {
-            if (!selectedGroup) return;
-            const filtered = (selectedGroup.members || []).filter((user) => {
+            if (!group) return;
+            const filtered = (group.members || []).filter((user) => {
               if (!user.displayName) return false;
               return user.displayName
                 .toLowerCase()
@@ -61,10 +104,19 @@ export default function DashboardGroupsMembers() {
               : '33% !important',
           }}
         />
+        {role &&
+          (lib.firebase.auth.isTrainer(role) ||
+            lib.firebase.auth.isManager(role)) && (
+            <IconButton
+              onClick={() => setOpenAddMemberModal(true)}
+              sx={{ p: 0, m: 0 }}
+            >
+              <PersonAdd />
+            </IconButton>
+          )}
       </Box>
 
       <Box width="100%" display="flex" flexDirection="column">
-        <CustomDivider />
         <Box
           width="100%"
           display="flex"
@@ -74,15 +126,73 @@ export default function DashboardGroupsMembers() {
             justifyContent: 'center',
             alignItems: 'flex-start',
             position: 'relative',
-            mt: 2,
             px: 2,
           }}
         >
-          {!selectedGroup ? (
-            <Typography>Select a group</Typography>
+          {!group ? (
+            <Typography>No groups yet</Typography>
           ) : (
             <>
-              {(selectedGroup.members || []).map((user) => {
+              <Box
+                key={owner?.uid}
+                display="flex"
+                flexDirection="column"
+                gap={1}
+                sx={{ position: 'relative' }}
+              >
+                <Avatar
+                  className="avatar-border"
+                  src={
+                    users.find((m) => m.uid === group?.ownerId)?.photoURL ||
+                    USER_AVATAR_IMG_URL
+                  }
+                  sx={{
+                    width: screenSize.isMobile ? 70 : 80,
+                    height: screenSize.isMobile ? 70 : 80,
+                  }}
+                  onClick={() => {
+                    setOpenEditAthleteModal(true);
+                  }}
+                />
+                <Typography
+                  variant="body2"
+                  sx={{
+                    textAlign: 'center',
+                    fontWeight: 400,
+                    fontSize: screenSize.isMobile ? 12 : 14,
+                  }}
+                >
+                  {ownerNames.length > 1 ? (
+                    <>
+                      {ownerNames[0]}
+                      <br />
+                      {ownerNames[1].toUpperCase()}
+                    </>
+                  ) : (
+                    <>{(owner?.displayName || '').toUpperCase()}</>
+                  )}
+                </Typography>
+                <Typography
+                  fontWeight={600}
+                  sx={{
+                    position: 'absolute',
+                    top: 0,
+                    right: 0,
+                    backgroundColor: theme.palette.primary.main,
+                    borderRadius: '50%',
+                    width: 16,
+                    height: 16,
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    fontSize: 10,
+                    color: theme.palette.background.default,
+                  }}
+                >
+                  T
+                </Typography>
+              </Box>
+              {(filteredMembers || []).map((user) => {
                 if (!user || !user.displayName) return;
                 const names = user.displayName.split(' ');
 
@@ -105,7 +215,7 @@ export default function DashboardGroupsMembers() {
                           size="small"
                           onClick={async (e) => {
                             e.stopPropagation();
-                            await removeGroupMember(user.uid, selectedGroup.id);
+                            await removeGroupMember(user.uid, group.id);
                           }}
                           sx={{
                             position: 'absolute',
@@ -156,24 +266,6 @@ export default function DashboardGroupsMembers() {
                   </Box>
                 );
               })}
-
-              {role &&
-                (lib.firebase.auth.isTrainer(role) ||
-                  lib.firebase.auth.isManager(role)) && (
-                  <Tooltip title="Add member" placement="bottom">
-                    <IconButton
-                      onClick={() => setOpenAddMemberModal(true)}
-                      sx={{
-                        width: screenSize.isMobile ? 70 : 80,
-                        height: screenSize.isMobile ? 70 : 80,
-                        m: 0,
-                        backgroundColor: theme.palette.background.light,
-                      }}
-                    >
-                      <Add />
-                    </IconButton>
-                  </Tooltip>
-                )}
             </>
           )}
         </Box>
@@ -181,6 +273,7 @@ export default function DashboardGroupsMembers() {
 
       <AddMembersModal
         users={selectedInstitution?.athletes || []}
+        group={group}
         enableFirstShowUsers
         enableScroll
         open={openAddMemberModal}
@@ -191,6 +284,6 @@ export default function DashboardGroupsMembers() {
         open={openEditAthleteModal}
         setOpen={setOpenEditAthleteModal}
       />
-    </>
+    </Box>
   );
 }

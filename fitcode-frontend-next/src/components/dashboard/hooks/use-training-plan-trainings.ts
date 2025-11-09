@@ -3,8 +3,11 @@ import { Training } from '@/core/training/type/training.type';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 
-export default function useTrainingPlan(trainings: Training[]) {
-  const [selectedGroups, setSelectedGroups] = useState<Group[]>([]);
+export default function useTrainingPlan(
+  trainings: Training[],
+  groups: Group[]
+) {
+  const [selectedGroups, setSelectedGroups] = useState<Group[]>(groups);
 
   const [completedTrainings, setCompletedTrainings] = useState<Training[]>([]);
   const [upcomingTrainings, setUpcomingTrainings] = useState<Training[]>([]);

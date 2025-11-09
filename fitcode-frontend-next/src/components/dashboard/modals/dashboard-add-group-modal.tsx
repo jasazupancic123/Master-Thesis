@@ -3,27 +3,31 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
-import { AddMembersModal } from '@/components/dashboard/add-members-modal';
+import { AddMembersModal } from '@/components/dashboard/modals/add-members-modal';
 import { GroupController } from '@/core/group/group.controller';
 import type { ModalProps } from '@/lib/common/type/modal-props.type';
-import { handleApiRequest } from '@/lib/common/type/state.type';
+import { handleApiRequest, SetState } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import MyModal from '@/ui/modal';
+import { Group } from '@/core/group/type/group.type';
+import { GroupUtil } from '@/core/group/group.util';
+import { core } from '@/core/core.service';
 
-export default function AddGroupModal({ open, setOpen }: ModalProps) {
+interface Props extends ModalProps {
+  setSelectedGroup: SetState<Group | null>;
+}
+
+export default function AddGroupModal(props: Props) {
   const router = useRouter();
 
-  const { users } = useMain();
-  const {
-    selectedInstitution,
-    setSelectedInstitution,
-    setSelectedGroup,
-    setDetectedChanges,
-  } = useDashboard();
+  const { users, setGroups } = useMain();
+  const { selectedInstitution, setSelectedInstitution, setDetectedChanges } =
+    useDashboard();
+
+  const { open, setOpen, setSelectedGroup } = props;
 
   const [groupName, setGroupName] = useState('');
-  const [openModal, setOpenModal] = useState(false);
   const [allTrainers, _setAllTrainers] = useState(
     (users || []).filter((user) =>
       selectedInstitution?.trainerIds.includes(user.uid)
@@ -59,10 +63,14 @@ export default function AddGroupModal({ open, setOpen }: ModalProps) {
           router,
           () => GroupController.getInstance().create(input),
           (group) => {
+            group = core.group.mapMembers(group, users);
+
             setSelectedInstitution({
               ...selectedInstitution,
               groups: [...selectedInstitution.groups, group],
             });
+
+            setGroups((prev) => [...prev, group]);
 
             setSelectedGroup(group);
             setOpen(false);
@@ -86,22 +94,6 @@ export default function AddGroupModal({ open, setOpen }: ModalProps) {
         value={groupName}
         onChange={(e) => setGroupName(e.target.value)}
       />
-
-      <MyModal
-        isOpen={openModal}
-        setIsOpen={(open) => setOpenModal(open)}
-        onCancel={() => setOpenModal(false)}
-        onConfirm={() => setOpenModal(false)}
-        cancelText="Close"
-      >
-        <AddMembersModal
-          users={allTrainers}
-          enableFirstShowUsers
-          enableScroll
-          open={openModal}
-          setOpen={setOpenModal}
-        />
-      </MyModal>
     </MyModal>
   );
 }

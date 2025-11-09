@@ -1,11 +1,12 @@
 'use client';
 
-import { Add, FileUploadOutlined, MoreVert, Remove } from '@mui/icons-material';
+import { FileUploadOutlined, Remove } from '@mui/icons-material';
 import {
   Avatar,
   Box,
   CircularProgress,
   IconButton,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
@@ -13,8 +14,8 @@ import toast from 'react-hot-toast';
 
 import { theme } from '@/app/style';
 import { useDashboardUserEdit } from '@/components/dashboard/context/user-edit.context';
-import DashboardEditAthleteModal from '@/components/dashboard/dashboard-edit-athlete-modal';
-import RegisterUsersDashboard from '@/components/dashboard/dashboard-register-users-modal';
+import DashboardEditAthleteModal from '@/components/dashboard/modals/dashboard-edit-athlete-modal';
+import RegisterUsersDashboard from '@/components/dashboard/modals/dashboard-register-users-modal';
 import useInstitutionMembers from '@/components/dashboard/hooks/use-institution-members.hook';
 import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
 import type { AuthUser } from '@/core/auth/type/user.type';
@@ -27,12 +28,15 @@ import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import FileUpload from '@/ui/file-upload';
-import HorizontalItemsList from '@/ui/horizontal-items-list';
 import MyModal from '@/ui/modal';
 import { SearchBar } from '@/ui/search-bar/search-bar';
-import SimpleCircle from '@/ui/simple-circle';
+import AddButton from '@/ui/add-button';
 
-export default function DashboardInstitutionPage() {
+interface Props {
+  selectedView: AthletesTrainers;
+}
+
+export default function DashboardInstitution(props: Props) {
   const screenSize = useScreenSize();
   const { role } = useAuthenticatedAuth();
   const { users } = useMain();
@@ -51,9 +55,7 @@ export default function DashboardInstitutionPage() {
   const { removeUser, uploadUsers, isUploadingMembers, setIsUploadingMembers } =
     useInstitutionMembers();
 
-  const [selectedView, setSelectedView] = useState<AthletesTrainers>(
-    AthletesTrainers.ATHLETES
-  );
+  const { selectedView } = props;
 
   const [search, setSearch] = useState('');
   const [openAddMemberModal, setOpenAddMemberModal] = useState(false);
@@ -110,24 +112,6 @@ export default function DashboardInstitutionPage() {
     setIsUploadingMembers(false);
   }, [users]);
 
-  function HorizontalItems() {
-    return (
-      <HorizontalItemsList
-        dashboardInstitutionsView
-        value={selectedView}
-        setValue={(value) => setSelectedView(value as AthletesTrainers)}
-        checkIsSameValue={(value: string) => selectedView === value}
-        alertOnChange
-        items={
-          Object.values(AthletesTrainers).map((item) => ({
-            label: item,
-            value: item,
-          })) || []
-        }
-      />
-    );
-  }
-
   return (
     <Box
       display="flex"
@@ -135,78 +119,9 @@ export default function DashboardInstitutionPage() {
       justifyContent="center"
       width="100%"
       maxWidth={MAX_WIDTH}
-      gap={screenSize.isSmallTablet || screenSize.isMobile ? 0 : 5}
-      sx={{ backgroundColor: theme.palette.background.default, pb: 2 }}
+      sx={{ backgroundColor: theme.palette.background.default }}
+      gap={4}
     >
-      {screenSize.isSmallTablet || screenSize.isMobile ? (
-        <>
-          <HorizontalItems />
-          <Box width="100%" sx={{ position: 'relative' }}>
-            <Box
-              width="80%"
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              mt={2}
-              gap={0.75}
-              sx={{ mx: 'auto' }}
-            >
-              <SimpleCircle />
-
-              <Typography
-                fontWeight={600}
-                fontSize={16}
-                textAlign="center"
-                sx={{ textTransform: 'uppercase' }}
-              >
-                {selectedInstitution?.name || 'Select A Group'}
-              </Typography>
-
-              <IconButton
-                sx={{ position: 'absolute', right: 0, top: 0, zIndex: 1 }}
-              >
-                <MoreVert fontSize="medium" />
-              </IconButton>
-            </Box>
-          </Box>
-        </>
-      ) : (
-        <Box
-          display="flex"
-          width="100%"
-          justifyContent="space-around"
-          alignItems="flex-start"
-        >
-          <Box
-            width="25%"
-            display="flex"
-            justifyContent="flex-start"
-            alignItems="center"
-            gap={1}
-            sx={{ mt: 1 }}
-          >
-            <SimpleCircle />
-
-            <Typography
-              fontWeight={600}
-              fontSize={16}
-              sx={{ textTransform: 'uppercase' }}
-            >
-              {selectedInstitution?.name || 'Select A Group'}
-            </Typography>
-          </Box>
-
-          <Box width="50%">
-            <HorizontalItems />
-          </Box>
-
-          <Box width="25%" display="flex" justifyContent="flex-end" mt={1}>
-            <IconButton sx={{ m: 0, p: 0 }}>
-              <MoreVert fontSize="large" />
-            </IconButton>
-          </Box>
-        </Box>
-      )}
       <Box
         width="100%"
         display="flex"
@@ -246,130 +161,119 @@ export default function DashboardInstitutionPage() {
                 transform: 'translateY(-50%)',
               }}
             >
-              <IconButton
-                sx={{
-                  m: 0,
-                  p: 0.5,
-                  backgroundColor: theme.palette.background.light,
-                  borderRadius: 1,
-                }}
+              <AddButton
                 onClick={() => setOpenAddMemberModal(true)}
-              >
-                <Add fontSize="small" />
-              </IconButton>
-              <IconButton
-                sx={{
-                  m: 0,
-                  p: 0.5,
-                  backgroundColor: theme.palette.background.light,
-                  borderRadius: 1,
-                }}
-                onClick={() => setOpenAddMemberViaCsvModal(true)}
-              >
-                <FileUploadOutlined fontSize="small" />
-              </IconButton>
+                tooltip="Add members"
+              />
+              <Tooltip title="Upload Members via CSV">
+                <IconButton
+                  sx={{
+                    m: 0,
+                    p: 0.5,
+                    backgroundColor: theme.palette.background.light,
+                    borderRadius: 1,
+                  }}
+                  onClick={() => setOpenAddMemberViaCsvModal(true)}
+                >
+                  <FileUploadOutlined fontSize="small" />
+                </IconButton>
+              </Tooltip>
             </Box>
           )}
         </SearchBar>
       </Box>
-      <Box width="100%" display="flex" flexDirection="column">
-        <Box
-          width="100%"
-          sx={{ height: 7, backgroundColor: theme.palette.background.paper }}
-        />
-        <Box
-          width="100%"
-          display="flex"
-          flexWrap="wrap"
-          gap={screenSize.isMobile ? 4 : 6}
-          sx={{
-            justifyContent: 'center',
-            alignItems: 'flex-start',
-            position: 'relative',
-            mt: 2,
-            px: 2,
-          }}
-        >
-          {loading ? (
-            <></>
-          ) : !currentUsers.length ? (
-            <Typography>No {selectedView.toLowerCase()} found</Typography>
-          ) : (
-            filteredUsers.map((user) => {
-              if (!user || !user.displayName) return;
-              const names = user.displayName.split(' ');
 
-              return (
-                <Box
-                  key={user.uid}
-                  display="flex"
-                  flexDirection="column"
-                  gap={1}
-                  sx={{ position: 'relative' }}
-                  onMouseEnter={() => onHoverUser(user)}
-                  onMouseLeave={() => onHoverUser(null)}
+      <Box
+        width="100%"
+        display="flex"
+        flexWrap="wrap"
+        gap={screenSize.isMobile ? 4 : 6}
+        sx={{
+          justifyContent: 'center',
+          alignItems: 'flex-start',
+          position: 'relative',
+          px: 2,
+        }}
+      >
+        {loading ? (
+          <></>
+        ) : !currentUsers.length ? (
+          <Typography>No {selectedView.toLowerCase()} found</Typography>
+        ) : (
+          filteredUsers.map((user) => {
+            if (!user || !user.displayName) return;
+            const names = user.displayName.split(' ');
+
+            return (
+              <Box
+                key={user.uid}
+                display="flex"
+                flexDirection="column"
+                gap={1}
+                sx={{ position: 'relative' }}
+                onMouseEnter={() => onHoverUser(user)}
+                onMouseLeave={() => onHoverUser(null)}
+              >
+                {lib.firebase.auth.isManager(role) &&
+                  user.uid === hoveredUser?.uid && (
+                    <IconButton
+                      className="remove-icon"
+                      size="small"
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        await removeUser(user.uid);
+                      }}
+                      sx={{
+                        position: 'absolute',
+                        top: -8,
+                        right: -8,
+                        backgroundColor: theme.palette.error.main,
+                        zIndex: 1,
+                      }}
+                    >
+                      <Remove sx={{ fontSize: 10 }} />
+                    </IconButton>
+                  )}
+
+                <Avatar
+                  className="avatar-border"
+                  src={
+                    users.find((m) => m.uid === user.uid)?.photoURL ||
+                    USER_AVATAR_IMG_URL
+                  }
+                  sx={{
+                    width: screenSize.isMobile ? 70 : 80,
+                    height: screenSize.isMobile ? 70 : 80,
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => {
+                    toggleUser(user);
+                    setOpenEditAthleteModal(true);
+                  }}
+                />
+
+                <Typography
+                  variant="body2"
+                  sx={{
+                    textAlign: 'center',
+                    fontWeight: 400,
+                    fontSize: screenSize.isMobile ? 12 : 14,
+                  }}
                 >
-                  {lib.firebase.auth.isManager(role) &&
-                    user.uid === hoveredUser?.uid && (
-                      <IconButton
-                        className="remove-icon"
-                        size="small"
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          await removeUser(user.uid);
-                        }}
-                        sx={{
-                          position: 'absolute',
-                          top: -8,
-                          right: -8,
-                          backgroundColor: theme.palette.error.main,
-                          zIndex: 1,
-                        }}
-                      >
-                        <Remove sx={{ fontSize: 10 }} />
-                      </IconButton>
-                    )}
-
-                  <Avatar
-                    className="avatar-border"
-                    src={
-                      users.find((m) => m.uid === user.uid)?.photoURL ||
-                      USER_AVATAR_IMG_URL
-                    }
-                    sx={{
-                      width: screenSize.isMobile ? 70 : 80,
-                      height: screenSize.isMobile ? 70 : 80,
-                      cursor: 'pointer',
-                    }}
-                    onClick={() => {
-                      toggleUser(user);
-                      setOpenEditAthleteModal(true);
-                    }}
-                  />
-
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      textAlign: 'center',
-                      fontWeight: 400,
-                      fontSize: screenSize.isMobile ? 12 : 14,
-                    }}
-                  >
-                    {names.length > 1 ? (
-                      <>
-                        {names[0]}
-                        <br />
-                        {names[1].toUpperCase()}
-                      </>
-                    ) : (
-                      <>{user.displayName.toUpperCase()}</>
-                    )}
-                  </Typography>
-                </Box>
-              );
-            })
-          )}
-        </Box>
+                  {names.length > 1 ? (
+                    <>
+                      {names[0]}
+                      <br />
+                      {names[1].toUpperCase()}
+                    </>
+                  ) : (
+                    <>{user.displayName.toUpperCase()}</>
+                  )}
+                </Typography>
+              </Box>
+            );
+          })
+        )}
       </Box>
 
       <MyModal

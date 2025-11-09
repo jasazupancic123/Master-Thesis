@@ -14,7 +14,7 @@ import {
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
-import GroupsDataGrid from './groups-data-grid';
+import GroupsDataGrid from '../groups-data-grid';
 import UsersDataGrid from '@/components/users-data-grid/users-data-grid';
 import type { Institution } from '@/core/institution/type/institution.type';
 import { lib } from '@/lib';

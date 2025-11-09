@@ -94,7 +94,12 @@ export const LINK_METHODOLOGIES = link(
 // all standalone app links
 export const LINK_INDEX = link('Home', '/#home', null, 'home');
 export const SIGN_IN_LINK_ID = 'sign-in';
-export const LINK_SIGN_IN = link('Login', '/sign-in', undefined, SIGN_IN_LINK_ID);
+export const LINK_SIGN_IN = link(
+  'Login',
+  '/sign-in',
+  undefined,
+  SIGN_IN_LINK_ID
+);
 export const SIGN_OUT_LINK_ID = 'sign-out';
 export const LINK_SIGN_OUT = link(
   'Sign Out',
@@ -186,11 +191,21 @@ export const LINK_DASHBOARD_GROUPS = linkPngIcon(
   DASHBOARD_ICONS_DIMENSION
 );
 
+export const LINK_DASHBOARD_EXERCISES = linkPngIcon(
+  'Exercises',
+  '/dashboard/exercises',
+  'dashboard-exercises',
+  `${DASHBOARD_ICONS_FOLDER}/exercises.png`,
+  DASHBOARD_ICONS_DIMENSION
+);
+
 export const LINK_DASHBOARD_ADD_INSTITUTION = link(
   'Add Institution',
   '/dashboard/add-institution',
   <Add sx={{ fontSize: DASHBOARD_ICONS_DIMENSION }} />,
-  <Add sx={{ color: 'background.default' }} />
+  <Add
+    sx={{ fontSize: DASHBOARD_ICONS_DIMENSION, color: 'background.default' }}
+  />
 );
 
 export const DASHBOARD_VIEWS = (role: UserRole): ILink[] => {
@@ -198,6 +213,7 @@ export const DASHBOARD_VIEWS = (role: UserRole): ILink[] => {
     LINK_DASHBOARD_TRAINING_PLAN,
     LINK_DASHBOARD_REPORTS,
     LINK_DASHBOARD_MEMBERS,
+    LINK_DASHBOARD_EXERCISES,
     LINK_DASHBOARD_SETTINGS,
     LINK_DASHBOARD_GROUPS,
   ];
