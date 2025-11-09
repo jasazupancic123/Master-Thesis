@@ -674,14 +674,7 @@ export class TrainingService implements Permission<Training, Institution> {
       `startTrainingComponent [${training.id}]`,
       async () => {
         // get prescribed training for each member
-        trainings = Object.fromEntries(
-          await Promise.all(
-            memberIds.map(async (userId) => {
-              const t = await this.getTrainingByAthlete(userId, training);
-              return [userId, t];
-            }),
-          ),
-        );
+        trainings = await this.findAllIndividual(training);
 
         await this.trainingReportService.initForComponent(
           memberIds.map((userId) => ({
@@ -748,7 +741,50 @@ export class TrainingService implements Permission<Training, Institution> {
     );
   }
 
-  async getTrainingByAthlete(athleteId: string, training: Training) {
+  /**
+   * Special method for trainers and managers, for a prescribed training it
+   * will fetch individualized trainings for each athlete. So, if training
+   * has 20 members, it will return 20 trainings with individualized parameters.
+   */
+  async findAllIndividual(
+    training: Training,
+  ): Promise<Record<string, Training>> {
+    return await Object.fromEntries(
+      await Promise.all(
+        training.membersIds.map(async (userId) => {
+          const t = await this.getTrainingByAthlete(userId, training);
+          return [userId, t];
+        }),
+      ),
+    );
+  }
+
+  /**
+   * Returns all trainings that are currently in progress for today.
+   * Each user can only have one active training at a time. If `user`
+   * is athlete, only 1 training is returned. If user is coach, 1
+   * training for each of the athletes is returned.
+   */
+  async getActiveTrainingByAthlete(
+    user: User,
+    athleteId: string,
+  ): Promise<Training> {
+    const athlete = await this.getAthlete(user, athleteId);
+    const trainingId = await this.trainingReportService.getActiveTrainingId(
+      athlete.uid,
+    );
+
+    if (!trainingId) return null;
+    const training = await this.findOneById(user, { trainingId });
+    if (!training) return null;
+
+    return await this.getTrainingByAthlete(athlete.uid, training);
+  }
+
+  async getTrainingByAthlete(
+    athleteId: string,
+    training: Training,
+  ): Promise<Training & { workloads: Workload[] }> {
     const athleteTraining = this.trainingPlanService.getTrainingByAthlete(
       athleteId,
       training,
@@ -757,7 +793,12 @@ export class TrainingService implements Permission<Training, Institution> {
     // calculate param based sets
     await this.updateBodyweightSets(athleteId, athleteTraining);
     await this.updateRepMaxSets(athleteId, athleteTraining);
-    return athleteTraining;
+    const workloads = await this.updateTrainingWithWorkloads(
+      athleteId,
+      athleteTraining,
+    );
+
+    return { ...athleteTraining, workloads };
   }
 
   async updateBodyweightSets(athleteId: string, training: Training) {
@@ -807,6 +848,21 @@ export class TrainingService implements Permission<Training, Institution> {
         return this.common.number.roundIntensity((value * oneRM) / 100, oneRM);
       },
     );
+  }
+
+  async updateTrainingWithWorkloads(
+    athleteId: string,
+    training: Training,
+  ): Promise<Workload[]> {
+    const workloads = await this.workloadService.findAllByUserTraining(
+      athleteId,
+      { trainingId: training.id },
+    );
+
+    if (workloads.length)
+      this.trainingPlanService.applyWorkloadsToTraining(training, workloads);
+
+    return workloads;
   }
 
   @OnEvent(INSTITUTION_ATHLETE_EVENT, { async: true, promisify: true })

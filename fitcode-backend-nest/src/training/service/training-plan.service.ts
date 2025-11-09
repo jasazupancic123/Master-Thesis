@@ -29,7 +29,7 @@ import {
   MAX_NUM_EXERCISES_IN_CIRCUIT_SUPERSET,
   MAX_NUM_SUPERSETS,
 } from '../constant/training-limits.constant';
-import { ExerciseParamField } from '../entity/exercise-set.entity';
+import { ExerciseParamField, ExerciseSet } from '../entity/exercise-set.entity';
 import { Subgroup } from '../entity/subgroup.entity';
 import { Superset } from '../entity/superset.entity';
 import { Training } from '../entity/training.entity';
@@ -38,6 +38,7 @@ import {
   TrainingComponentWithoutTime,
 } from '../entity/training-component.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
+import { Workload } from '../entity/workload.entity';
 import { MainSet } from '../enum/main-set.enum';
 import { TrainingPeriod } from '../enum/training-period.enum';
 import {
@@ -168,6 +169,37 @@ export class TrainingPlanService {
         for (const superset of subgroup.supersets)
           this.modifySupersetValuesByLoadType(superset, loadType, modify);
     }
+  }
+
+  applyWorkloadsToTraining(training: Training, workloads: Workload[]) {
+    for (const component of training.components)
+      for (
+        let supersetIndex = 0;
+        supersetIndex < component.supersets.length;
+        supersetIndex++
+      ) {
+        const superset = component.supersets[supersetIndex];
+        for (const exercise of superset.exercises)
+          for (
+            let setNumber = 1;
+            setNumber <= exercise.sets.length;
+            setNumber++
+          ) {
+            const workload = workloads.find(
+              (w) =>
+                w.trainingId === training.id &&
+                w.componentId === component.id &&
+                w.supersetIndex === supersetIndex &&
+                w.exerciseId === exercise.id &&
+                w.setNumber === setNumber,
+            );
+
+            if (!workload) continue;
+
+            const set = exercise.sets[setNumber - 1];
+            this.applyWorkloadToSet(set, workload);
+          }
+      }
   }
 
   findExercisesByLoadType(
@@ -690,5 +722,32 @@ export class TrainingPlanService {
           this.exerciseParamService.modifyLoad(set, loadType, (current) =>
             modify(current, exercise.id),
           );
+  }
+
+  private applyWorkloadToSet(set: ExerciseSet, w: Workload) {
+    function isDefined(value: number | undefined): value is number {
+      return value !== undefined;
+    }
+
+    if (isDefined(w.reps)) set.reps = w.reps;
+    if (isDefined(w.repsR)) set.repsR = w.repsR;
+    if (isDefined(w.loadKg)) set.loadKg = w.loadKg;
+    if (isDefined(w.loadKgR)) set.loadKgR = w.loadKgR;
+    if (isDefined(w.vel)) set.vel = w.vel;
+    if (isDefined(w.velR)) set.velR = w.velR;
+    if (isDefined(w.tempoEcc)) set.tempoEcc = w.tempoEcc;
+    if (isDefined(w.tempoIso)) set.tempoIso = w.tempoIso;
+    if (isDefined(w.tempoCon)) set.tempoCon = w.tempoCon;
+    if (isDefined(w.tempoIdle)) set.tempoIdle = w.tempoIdle;
+    if (isDefined(w.eff)) set.eff = w.eff;
+    if (isDefined(w.effR)) set.effR = w.effR;
+    if (isDefined(w.time)) set.time = w.time;
+    if (isDefined(w.timeR)) set.timeR = w.timeR;
+    if (isDefined(w.dist)) set.dist = w.dist;
+    if (isDefined(w.distR)) set.distR = w.distR;
+    if (isDefined(w.recTime)) set.recTime = w.recTime;
+    if (isDefined(w.recTimeR)) set.recTimeR = w.recTimeR;
+    if (isDefined(w.recDist)) set.recDist = w.recDist;
+    if (isDefined(w.recDistR)) set.recDistR = w.recDistR;
   }
 }

@@ -136,6 +136,20 @@ export class TrainingReportService {
     });
   }
 
+  /**
+   * Athlete can have multiple active trainings in database. Valid active trainings
+   * are only those that are on the current day. If there are multiple active
+   * trainings for the current day, return the one that was started the earliest.
+   */
+  async getActiveTrainingId(athleteId: string): Promise<string | null> {
+    const activeReports = await this.repository.getActiveByAthlete(athleteId);
+    if (!activeReports.length) return null;
+
+    return activeReports
+      .sort((a, b) => new Date(a.from).getTime() - new Date(b.from).getTime())
+      .map((r) => r.trainingId)[0];
+  }
+
   async update(
     userId: string,
     training: Training,

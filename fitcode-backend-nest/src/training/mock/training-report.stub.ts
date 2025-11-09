@@ -11,7 +11,6 @@ export function generateTrainingReportStub(
   return {
     trainingId,
     userId,
-    completed: data?.completed || false,
     realization: data?.realization || 0,
     muscleValues: data?.muscleValues || [],
     componentStatuses: data?.componentStatuses || [],

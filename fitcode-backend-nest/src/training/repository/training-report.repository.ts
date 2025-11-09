@@ -1,9 +1,11 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { startOfDay } from 'date-fns';
 import {
   CollectionGroup,
   CollectionReference,
   DocumentReference,
   FieldValue,
+  Timestamp,
 } from 'firebase-admin/firestore';
 import { Query } from 'firebase-admin/lib/firestore';
 
@@ -18,6 +20,8 @@ import { Wrapper } from '@src/common/type/wrapper.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { TrainingReport } from '@src/training/entity/training-report.entity';
 import { TrainingRepository } from '@src/training/repository/training.repository';
+
+import { TrainingStatus } from '../enum/training-status.enum';
 
 @Injectable()
 export class TrainingReportRepository extends FirestoreRepository<
@@ -82,6 +86,22 @@ export class TrainingReportRepository extends FirestoreRepository<
     if (filter?.to) q = q.where('createdAt', '<=', filter.to);
 
     const snapshot = await q.get();
+    return snapshot.docs.map((doc) =>
+      this.firebase.serialize(doc.data() as FirestoreEntity<TrainingReport>),
+    );
+  }
+
+  /**
+   * Returns all active trainings for athlete for the current day.
+   */
+  async getActiveByAthlete(athleteId: string): Promise<TrainingReport[]> {
+    const snapshot = await this.collectionGroup()
+      .where('userId', '==', athleteId)
+      .where('status', '==', TrainingStatus.IN_PROGRESS)
+      .where('from', '>=', Timestamp.fromDate(startOfDay(new Date())))
+      .get();
+
+    if (snapshot.empty) return [];
     return snapshot.docs.map((doc) =>
       this.firebase.serialize(doc.data() as FirestoreEntity<TrainingReport>),
     );
