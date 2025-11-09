@@ -1,14 +1,11 @@
 'use client';
 
-import { AppBar, Box, Container } from '@mui/material';
-import { useTheme } from '@mui/material';
+import { Box, Container } from '@mui/material';
 
 import DashboardHeader from '@/components/dashboard/dashboard-header';
 import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
 
 export default function DashboardLayout({ children }: React.PropsWithChildren) {
-  const theme = useTheme();
-
   return (
     <Box>
       <Container
@@ -25,23 +22,13 @@ export default function DashboardLayout({ children }: React.PropsWithChildren) {
         }}
       >
         <Box width="100%" display="flex" flexDirection="column">
-          <AppBar
-            position="fixed"
-            sx={{
-              width: '100%',
-              transition: 'margin-left 0.3s ease-in-out',
-              boxShadow: 'none',
-              backgroundColor: theme.palette.background.default,
-            }}
-          >
-            <DashboardHeader />
-          </AppBar>
+          <DashboardHeader />
 
           <Box
             width="100%"
             display="flex"
             maxWidth={MAX_WIDTH}
-            sx={{ mt: '50px', mx: 'auto' }}
+            sx={{ mx: 'auto' }}
           >
             <Box sx={{ flex: 1, overflow: 'hidden' }}>{children}</Box>
           </Box>

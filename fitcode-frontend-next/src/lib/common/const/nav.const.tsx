@@ -2,38 +2,70 @@ import {
   Add,
   CalendarTodayOutlined,
   FitnessCenterOutlined,
-  Groups,
   Logout,
-  PersonAdd,
   Settings,
   SpaOutlined,
 } from '@mui/icons-material';
-import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
 import HomeIcon from '@mui/icons-material/Home';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PersonIcon from '@mui/icons-material/Person';
+import { Box } from '@mui/material';
 import type { ReactNode } from 'react';
 import slugify from 'slugify';
 
 import { UserRole } from '@/core/profile/enum/user-role.enum';
-import {
-  DASHBOARD_ADD_INSTITUTION,
-  DASHBOARD_EXERCISES,
-  DASHBOARD_INSTITUTION,
-  DASHBOARD_MAIN,
-} from '@/lib/common/const/dashboard.const';
 import type { ILink } from '@/lib/common/type/link.type';
+
+export function linkPngIcon(
+  label: string,
+  href: string,
+  id?: string,
+  src?: string,
+  dimension: number = 24
+): ILink {
+  const icon = (
+    <Box
+      component="img"
+      width={dimension}
+      height={dimension}
+      src={src}
+      sx={{ objectFit: 'contain' }}
+    />
+  );
+
+  const selectedUrl = `${src?.substring(0, src.lastIndexOf('.'))}-selected.${src?.substring(src.lastIndexOf('.') + 1)}`;
+
+  const selectedIcon = (
+    <Box
+      component="img"
+      width={dimension}
+      height={dimension}
+      src={selectedUrl}
+      sx={{ objectFit: 'contain' }}
+    />
+  );
+
+  return {
+    label,
+    href,
+    icon,
+    selectedIcon,
+    id: id ? id : slugify(label),
+  };
+}
 
 export function link(
   label: string,
   href: string,
   icon?: ReactNode,
+  selectedIcon?: ReactNode,
   id?: string
 ): ILink {
   return {
     label,
     href,
     icon,
+    selectedIcon,
     id: id ? id : slugify(label),
   };
 }
@@ -63,7 +95,7 @@ export const LINK_METHODOLOGIES = link(
 export const LINK_INDEX = link('Home', '/#home', null, 'home');
 export const SIGN_IN_LINK_ID = 'sign-in';
 export const LINK_SIGN_IN = link(
-  'Do it right',
+  'Login',
   '/sign-in',
   undefined,
   SIGN_IN_LINK_ID
@@ -113,31 +145,82 @@ export const LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS = (groupId: string) => ({
   dashboard: LINK_DASHBOARD,
 });
 
-export const LINK_DASHBOARD_GROUPS = link('Groups', DASHBOARD_MAIN, <Groups />);
-export const LINK_DASHBOARD_INSTITUTION = link(
+export const DASHBOARD_MAIN = '/dashboard';
+
+const DASHBOARD_ICONS_FOLDER = '/dashboard-icons';
+const DASHBOARD_ICONS_DIMENSION = 28;
+
+export const LINK_DASHBOARD_TRAINING_PLAN = linkPngIcon(
+  'Training Plan',
+  '/dashboard',
+  'dashboard-training-plan',
+  `${DASHBOARD_ICONS_FOLDER}/training-plan.png`,
+  DASHBOARD_ICONS_DIMENSION
+);
+
+export const LINK_DASHBOARD_REPORTS = linkPngIcon(
+  'Reports',
+  '/dashboard/reports',
+  'dashboard-reports',
+  `${DASHBOARD_ICONS_FOLDER}/reports.png`,
+  DASHBOARD_ICONS_DIMENSION
+);
+
+export const LINK_DASHBOARD_MEMBERS = linkPngIcon(
   'Members',
-  DASHBOARD_INSTITUTION,
-  <PersonAdd />
+  '/dashboard/members',
+  'dashboard-members',
+  `${DASHBOARD_ICONS_FOLDER}/members.png`,
+  DASHBOARD_ICONS_DIMENSION
 );
 
-export const LINK_EXERCISES_DASHBOARD_NAVIGATION = link(
+export const LINK_DASHBOARD_SETTINGS = linkPngIcon(
+  'Settings',
+  '/dashboard/settings',
+  'dashboard-settings',
+  `${DASHBOARD_ICONS_FOLDER}/settings.png`,
+  DASHBOARD_ICONS_DIMENSION
+);
+
+export const LINK_DASHBOARD_GROUPS = linkPngIcon(
+  'Groups',
+  '/dashboard/groups',
+  'dashboard-groups',
+  `${DASHBOARD_ICONS_FOLDER}/groups.png`,
+  DASHBOARD_ICONS_DIMENSION
+);
+
+export const LINK_DASHBOARD_EXERCISES = linkPngIcon(
   'Exercises',
-  DASHBOARD_EXERCISES,
-  <FitnessCenterIcon />
+  '/dashboard/exercises',
+  'dashboard-exercises',
+  `${DASHBOARD_ICONS_FOLDER}/exercises.png`,
+  DASHBOARD_ICONS_DIMENSION
 );
 
-export const LINK_ADD_INSTITUTION = link(
-  'Add',
-  DASHBOARD_ADD_INSTITUTION,
-  <Add />
+export const LINK_DASHBOARD_ADD_INSTITUTION = link(
+  'Add Institution',
+  '/dashboard/add-institution',
+  <Add sx={{ fontSize: DASHBOARD_ICONS_DIMENSION }} />,
+  <Add
+    sx={{ fontSize: DASHBOARD_ICONS_DIMENSION, color: 'background.default' }}
+  />
 );
 
-export const LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS = (role: UserRole) => ({
-  home: LINK_DASHBOARD_GROUPS,
-  institution: LINK_DASHBOARD_INSTITUTION,
-  exercises: LINK_EXERCISES_DASHBOARD_NAVIGATION,
-  addInstitution: role === UserRole.ADMIN ? LINK_ADD_INSTITUTION : undefined,
-});
+export const DASHBOARD_VIEWS = (role: UserRole): ILink[] => {
+  const links = [
+    LINK_DASHBOARD_TRAINING_PLAN,
+    LINK_DASHBOARD_REPORTS,
+    LINK_DASHBOARD_MEMBERS,
+    LINK_DASHBOARD_EXERCISES,
+    LINK_DASHBOARD_SETTINGS,
+    LINK_DASHBOARD_GROUPS,
+  ];
+
+  if (role === UserRole.ADMIN) links.push(LINK_DASHBOARD_ADD_INSTITUTION);
+
+  return links;
+};
 
 export const LINKS_DASHBOARD_SIDEBAR_SUB_ITEMS = {
   signout: link('Sign out', '#', <LogoutIcon />),

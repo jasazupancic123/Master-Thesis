@@ -14,6 +14,7 @@ interface Props {
   isDesktop: boolean;
   isTablet: boolean;
   isSmallLaptop: boolean;
+  isUltraSmallTablet: boolean;
   isSmallTablet: boolean;
   isSmallerThanLaptop: boolean;
 }
@@ -29,6 +30,9 @@ export const ScreenSizeProvider = ({ children }: React.PropsWithChildren) => {
   const isMobile = useMediaQuery('(max-width:600px)');
   const isLandscape = useMediaQuery('(orientation: landscape)');
   const isLandscapeMobile = isSmallHeight && isLandscape;
+  const isUltraSmallTablet = useMediaQuery(
+    '(min-width:600px) and (max-width:700px)'
+  );
   const isSmallTablet = useMediaQuery(
     '(min-width:600px) and (max-width:800px)'
   );
@@ -55,6 +59,7 @@ export const ScreenSizeProvider = ({ children }: React.PropsWithChildren) => {
         isTablet,
         isSmallTablet,
         isSmallLaptop,
+        isUltraSmallTablet,
         isSmallerThanLaptop,
         isSmallMobile,
       }}

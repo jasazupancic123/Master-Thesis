@@ -1,31 +1,16 @@
 'use client';
 
-import { ArrowForward } from '@mui/icons-material';
-import { Fab, Tooltip, Typography } from '@mui/material';
+import { Typography } from '@mui/material';
 import { Box } from '@mui/material';
-import { redirect } from 'next/navigation';
-import { useState } from 'react';
 
-import DashboardGroups from '@/components/dashboard/dashboard-groups';
-import RegisterUsersDashboard from '@/components/dashboard/dashboard-register-users-modal';
-import { UserRole } from '@/core/profile/enum/user-role.enum';
-import { lib } from '@/lib';
-import { LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS } from '@/lib/common/const/nav.const';
-import { useAuthenticatedAuth } from '@/store/auth.provider';
+import DashboardTrainingPlan from '@/components/dashboard/dashboard-training-plan';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
-import { useScreenSize } from '@/store/screen-size.provider';
-import MyModal from '@/ui/modal';
 
 export default function DashboardPage() {
-  const screenSize = useScreenSize();
-
   const { profile } = useMain();
-  const { role } = useAuthenticatedAuth();
 
-  const { institutions, selectedInstitution, selectedGroup } = useDashboard();
-
-  const [openAddTrainerModal, setOpenAddTrainerModal] = useState(false);
+  const { institutions, selectedInstitution } = useDashboard();
 
   if (!profile) return null;
 
@@ -70,53 +55,8 @@ export default function DashboardPage() {
           mb: 5,
         }}
       >
-        <Box
-          display="flex"
-          justifyContent="flex-end"
-          alignItems="center"
-          width="100%"
-          sx={{
-            position: 'fixed',
-            bottom: screenSize.isMobile ? 70 : 20,
-            right: 20,
-            zIndex: 100,
-          }}
-          gap={1}
-        >
-          {role &&
-            (lib.firebase.auth.isTrainer(role) ||
-              lib.firebase.auth.isManager(role)) && (
-              <Tooltip title="Go to group" placement="top">
-                <Fab
-                  color="primary"
-                  aria-label="go"
-                  onClick={() => {
-                    if (selectedGroup)
-                      redirect(
-                        LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS(selectedGroup.id)
-                          .home.href
-                      );
-                  }}
-                >
-                  <ArrowForward />
-                </Fab>
-              </Tooltip>
-            )}
-        </Box>
-
-        <DashboardGroups />
+        <DashboardTrainingPlan />
       </Box>
-
-      {/* Add Trainer Modal */}
-      <MyModal
-        isOpen={openAddTrainerModal}
-        setIsOpen={(open) => setOpenAddTrainerModal(open)}
-        onConfirm={undefined}
-        onCancel={() => setOpenAddTrainerModal(false)}
-        cancelText="Close"
-      >
-        <RegisterUsersDashboard registerRole={UserRole.TRAINER} />
-      </MyModal>
     </>
   );
 }

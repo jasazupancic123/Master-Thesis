@@ -12,6 +12,7 @@ interface Props {
   selectedItem: string;
   onClick: (type: string) => void;
   startMs?: number; // If this is passed, it's used to show elapsed time
+  disabled?: boolean;
 }
 
 export default function AthleteOptionsContainer({
@@ -20,6 +21,7 @@ export default function AthleteOptionsContainer({
   selectedItem,
   onClick,
   startMs,
+  disabled,
 }: Props) {
   const theme = useTheme();
 
@@ -52,12 +54,16 @@ export default function AthleteOptionsContainer({
             <ElapsedTime startMs={startMs} />
           ) : (
             <Typography
-              onClick={() => onClick(type)}
+              onClick={() => {
+                if (disabled) return;
+
+                onClick(type);
+              }}
               sx={{
                 display: 'inline-block', // shrink to content width
                 fontSize: 12,
                 textTransform: 'uppercase',
-                cursor: 'pointer',
+                cursor: !disabled ? 'pointer' : undefined,
               }}
             >
               {type}

@@ -41,7 +41,7 @@ export default function DashboardMenuMobile() {
 
   return (
     <>
-      <div style={{ position: 'fixed', top: 4, left: 5, zIndex: 1300 }}>
+      <div style={{ position: 'absolute', top: 0, right: 14, zIndex: 1300 }}>
         <IconButton
           onClick={() => setOpen(!open)}
           edge="end"
@@ -53,7 +53,7 @@ export default function DashboardMenuMobile() {
       </div>
 
       {/* Side drawer from the right */}
-      <Drawer anchor="left" open={open} onClose={() => setOpen(false)}>
+      <Drawer anchor="right" open={open} onClose={() => setOpen(false)}>
         <List sx={{ mt: 5 }}>
           {lib.firebase.auth.isAdmin(role!) && (
             <Box ml={screenSize.isMobile ? 2 : 0}>

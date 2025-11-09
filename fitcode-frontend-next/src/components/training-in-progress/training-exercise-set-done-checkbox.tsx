@@ -1,24 +1,21 @@
-import {
-  CheckBox as CheckBoxIcon,
-  CheckBoxOutlineBlank,
-} from '@mui/icons-material';
-import { Checkbox, useTheme } from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material';
 
 import {
   finishSet,
   isExerciseSetCompleted,
   unmarkExerciseSetAsCompleted,
 } from './actions/actions-exercise-set';
-import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import { handleAdvanceInSuperset } from './actions/actions-superset';
+import type {
+  TrainingExercise,
+  TrainingExerciseRecording,
+} from '@/core/training/type/training-exercise.type';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 
 interface TrainingExerciseSetDoneCheckboxProps {
-  exercise: TrainingExercise;
+  exercise: TrainingExercise | TrainingExerciseRecording;
   setIndex: number;
-  exerciseView?: boolean; // if we clicked this from the exercise, or the "undone sets" list
-  small?: boolean;
-  applyTopMargin?: boolean;
 }
 
 export default function TrainingExerciseSetDoneCheckbox(
@@ -33,74 +30,151 @@ export default function TrainingExerciseSetDoneCheckbox(
 
   const { handleUpsertSet } = trainingInProgressContext;
 
-  const { exercise, applyTopMargin, exerciseView, small, setIndex } = props;
+  const { exercise, setIndex } = props;
 
   if (!exercise || !trainingInProgress) {
     return null;
   }
 
+  const isExerciseRecording = (
+    exercise: TrainingExercise | TrainingExerciseRecording
+  ): exercise is TrainingExerciseRecording => {
+    return (exercise as TrainingExerciseRecording).recordedSets !== undefined;
+  };
+
+  const trainingExerciseRecording = isExerciseRecording(exercise)
+    ? exercise.recordedSets?.find((set) => set.setIndex === setIndex)
+    : undefined;
+
+  const setTrackingState = trainingInProgress.exerciseSetTrackingState.find(
+    (state) => state.exerciseId === exercise.id
+  );
+
+  const foundCompletedSet = setTrackingState?.completedSetNumbers.find(
+    (completedSet) => completedSet.setNumber === setIndex + 1
+  );
+
+  const isRecorded =
+    trainingExerciseRecording &&
+    foundCompletedSet &&
+    !foundCompletedSet.isBeenSetToCompleted;
+
+  const isCompleted =
+    setIndex !== undefined &&
+    isExerciseSetCompleted(
+      { exerciseId: exercise.id },
+      setIndex + 1,
+      trainingInProgress.exerciseSetTrackingState
+    );
+
   return (
-    <Checkbox
-      icon={
-        <CheckBoxOutlineBlank
-          sx={{
-            color: theme.palette.primary.main,
-            fontSize: small ? 14 : undefined,
-          }}
-        />
-      }
-      checkedIcon={
-        <CheckBoxIcon
-          sx={{
-            color: theme.palette.primary.main,
-            fontSize: small ? 14 : undefined,
-          }}
-        />
-      }
-      size="small"
-      checked={
-        setIndex !== undefined &&
-        isExerciseSetCompleted(
-          { exerciseId: exercise.id },
-          setIndex + 1,
-          trainingInProgress.exerciseSetTrackingState
-        )
-      }
+    <Box
       sx={{
-        zIndex: 10,
-        '&.MuiCheckbox-root': {
-          px: 0,
-        },
-        p: 0,
-        mt: applyTopMargin ? 3.5 : undefined,
+        p: 0.1,
+        borderRadius: '50%',
+        cursor: 'pointer',
+        border: isRecorded
+          ? `1px solid ${theme.palette.secondary.main}`
+          : isCompleted
+            ? `1px solid ${theme.palette.primary.main}`
+            : `1px solid ${theme.palette.text.primary}`,
+        mr: 3,
       }}
-      onChange={async (e) => {
-        if (setIndex === undefined) return;
+    >
+      <Box
+        width={38}
+        height={38}
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        sx={{
+          borderRadius: '50%',
+          backgroundColor: isRecorded
+            ? theme.palette.secondary.main
+            : isCompleted
+              ? theme.palette.primary.main
+              : theme.palette.background.default,
+          border: isRecorded
+            ? `1px solid ${theme.palette.secondary.main}`
+            : isCompleted
+              ? `1px solid ${theme.palette.primary.main}`
+              : `1px solid transparent`,
+        }}
+        onClick={async (e) => {
+          if (setIndex === undefined) return;
 
-        const isCompleted = e.target.checked;
-        if (isCompleted) {
-          await finishSet({
-            exercise,
-            setIndex,
-            trainingInProgress,
-            setTrainingInProgress,
-            handleUpsertSet,
-          });
+          if (isRecorded) {
+            // if it's recorded, then it was already saved, just advance
+            setTrainingInProgress((prev) =>
+              !prev
+                ? prev
+                : {
+                    ...prev,
+                    exerciseSetTrackingState: prev.exerciseSetTrackingState.map(
+                      (state) => {
+                        if (state.exerciseId !== exercise.id) return state;
+                        return {
+                          ...state,
+                          completedSetNumbers: state.completedSetNumbers.map(
+                            (completedSet) => {
+                              if (completedSet.setNumber !== setIndex + 1)
+                                return completedSet;
+                              return {
+                                ...completedSet,
+                                isBeenSetToCompleted: true,
+                              };
+                            }
+                          ),
+                        };
+                      }
+                    ),
+                  }
+            );
 
-          // if (exerciseView)
-          //   handleAdvanceInSuperset({
-          //     useTraining: { ...trainingContext, trainingInProgress },
-          //     useTrainingInProgress: trainingInProgressContext,
-          //   });
-        } else {
-          unmarkExerciseSetAsCompleted(
-            { exerciseId: exercise.id },
-            setIndex + 1,
-            trainingInProgress.exerciseSetTrackingState,
-            setTrainingInProgress
-          );
-        }
-      }}
-    />
+            handleAdvanceInSuperset({
+              useTraining: { ...trainingContext, trainingInProgress },
+              useTrainingInProgress: trainingInProgressContext,
+            });
+            return;
+          }
+
+          if (!isCompleted) {
+            await finishSet({
+              exercise,
+              setIndex,
+              trainingInProgress,
+              setTrainingInProgress,
+              handleUpsertSet,
+            });
+
+            handleAdvanceInSuperset({
+              useTraining: { ...trainingContext, trainingInProgress },
+              useTrainingInProgress: trainingInProgressContext,
+            });
+          } else {
+            unmarkExerciseSetAsCompleted(
+              { exerciseId: exercise.id },
+              setIndex + 1,
+              trainingInProgress.exerciseSetTrackingState,
+              setTrainingInProgress
+            );
+          }
+        }}
+      >
+        <Typography
+          fontSize={10}
+          fontWeight={500}
+          textAlign="center"
+          sx={{
+            color:
+              isCompleted || isRecorded
+                ? theme.palette.text.secondary
+                : theme.palette.text.primary,
+          }}
+        >
+          {isRecorded ? 'Saved' : isCompleted ? 'Done' : 'Not\nDone'}
+        </Typography>
+      </Box>
+    </Box>
   );
 }
