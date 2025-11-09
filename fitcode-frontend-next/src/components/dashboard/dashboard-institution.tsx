@@ -31,9 +31,13 @@ import AddButton from '@/ui/add-button';
 import FileUpload from '@/ui/file-upload';
 import MyModal from '@/ui/modal';
 import { SearchBar } from '@/ui/search-bar/search-bar';
+import { SetState } from '@/lib/common/type/state.type';
+import { Group } from '@/core/group/type/group.type';
 
 interface Props {
   selectedView: AthletesTrainers;
+  group: Group | null;
+  setGroup: SetState<Group | null>;
 }
 
 export default function DashboardInstitution(props: Props) {
@@ -51,11 +55,11 @@ export default function DashboardInstitution(props: Props) {
     onHoverUser,
   } = useDashboardUserEdit();
 
+  const { selectedView, group, setGroup } = props;
+
   const { selectedInstitution } = useDashboard();
   const { removeUser, uploadUsers, isUploadingMembers, setIsUploadingMembers } =
-    useInstitutionMembers();
-
-  const { selectedView } = props;
+    useInstitutionMembers(group, setGroup);
 
   const [search, setSearch] = useState('');
   const [openAddMemberModal, setOpenAddMemberModal] = useState(false);
@@ -289,6 +293,8 @@ export default function DashboardInstitution(props: Props) {
               ? UserRole.ATHLETE
               : UserRole.TRAINER
           }
+          group={group}
+          setGroup={setGroup}
         />
       </MyModal>
 
