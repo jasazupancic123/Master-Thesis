@@ -14,6 +14,7 @@ import { Box, Typography } from '@mui/material';
 import dayjs from 'dayjs';
 import { Fragment } from 'react';
 import useFilteredTrainingsList from './hooks/use-filtered-trainings-list';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 interface Props {
   trainings: Training[];
@@ -22,6 +23,7 @@ interface Props {
 }
 
 export default function DashboardTrainingsList(props: Props) {
+  const screenSize = useScreenSize();
   const { groups } = useMain();
 
   const { trainings, selectedGroups, upcoming } = props;
@@ -34,7 +36,7 @@ export default function DashboardTrainingsList(props: Props) {
   return (
     <Box
       width="100%"
-      maxHeight="60vh"
+      height={screenSize.isMobile ? '70vh' : '60vh'}
       display="flex"
       flexDirection="column"
       sx={{

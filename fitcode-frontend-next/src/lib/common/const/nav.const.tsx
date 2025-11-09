@@ -2,7 +2,6 @@ import {
   Add,
   CalendarTodayOutlined,
   FitnessCenterOutlined,
-  Groups,
   Logout,
   Settings,
   SpaOutlined,
@@ -95,12 +94,7 @@ export const LINK_METHODOLOGIES = link(
 // all standalone app links
 export const LINK_INDEX = link('Home', '/#home', null, 'home');
 export const SIGN_IN_LINK_ID = 'sign-in';
-export const LINK_SIGN_IN = link(
-  'Do it right',
-  '/sign-in',
-  undefined,
-  SIGN_IN_LINK_ID
-);
+export const LINK_SIGN_IN = link('Login', '/sign-in', undefined, SIGN_IN_LINK_ID);
 export const SIGN_OUT_LINK_ID = 'sign-out';
 export const LINK_SIGN_OUT = link(
   'Sign Out',
@@ -149,7 +143,8 @@ export const LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS = (groupId: string) => ({
 export const DASHBOARD_MAIN = '/dashboard';
 
 const DASHBOARD_ICONS_FOLDER = '/dashboard-icons';
-const DASHBOARD_ICONS_DIMENSION = 20;
+const DASHBOARD_ICONS_DIMENSION = 28;
+const DASHBOARD_ICONS_DIMENSION_SMALL = 20;
 
 export const LINK_DASHBOARD_TRAINING_PLAN = linkPngIcon(
   'Training Plan',
@@ -194,7 +189,7 @@ export const LINK_DASHBOARD_GROUPS = linkPngIcon(
 export const LINK_DASHBOARD_ADD_INSTITUTION = link(
   'Add Institution',
   '/dashboard/add-institution',
-  <Add />,
+  <Add sx={{ fontSize: DASHBOARD_ICONS_DIMENSION }} />,
   <Add sx={{ color: 'background.default' }} />
 );
 
