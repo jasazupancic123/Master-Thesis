@@ -10,7 +10,7 @@ import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 
-import { useDashboardUserEdit } from './context/user-edit.context';
+import { useDashboardUserEdit } from '../context/user-edit.context';
 import { Gender } from '@/core/profile/enum/gender.enum';
 import { SportLevel } from '@/core/profile/enum/sport-level.enum';
 import { lib } from '@/lib';

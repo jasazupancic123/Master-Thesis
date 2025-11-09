@@ -3,7 +3,7 @@ import { SxProps, Theme } from '@mui/material';
 export const styledScrollbarSx = (theme: Theme): SxProps<Theme> => ({
   /* Firefox */
   scrollbarWidth: 'thin',
-  scrollbarColor: `${theme.palette.primary.main} ${theme.palette.action.hover}`,
+  scrollbarColor: `${theme.palette.text.primary} ${theme.palette.action.hover}`,
 
   /* WebKit (Chrome/Edge/Safari) */
   '&::-webkit-scrollbar': {

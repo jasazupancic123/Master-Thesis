@@ -20,7 +20,7 @@ import { useTheme } from '@mui/material';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-import EditInstitutionModal from './edit-institution-modal';
+import EditInstitutionModal from './modals/edit-institution-modal';
 import useDashboardHeaderUtils from './hooks/use-utils';
 import ProfileHeaderMenu from '@/components/profile-header-menu/profile-header-menu';
 import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
@@ -246,7 +246,7 @@ export default function DashboardHeader() {
                       ? theme.palette.primary.main
                       : theme.palette.background.default,
                     border: isSelected
-                      ? 'none'
+                      ? `1px solid ${theme.palette.primary.main}`
                       : `1px solid ${theme.palette.text.primary}`,
                     borderRadius: 1,
                   }}
