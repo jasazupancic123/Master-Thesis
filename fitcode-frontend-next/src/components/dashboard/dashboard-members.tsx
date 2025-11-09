@@ -2,7 +2,7 @@
 
 import { Circle } from '@mui/icons-material';
 import { Box, Tooltip, Typography } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
 import { DASHBOARD_MIDDLE_HEADER_HEIGHT } from './constant/dashboard.const';
@@ -12,12 +12,12 @@ import DashboardPageContainer from './dashboard-page-container';
 import { DashboardMembersFilter } from './enum/dashboard-members-filter.enum';
 import AddGroupModal from './modals/dashboard-add-group-modal';
 import { theme } from '@/app/style';
-import type { Group } from '@/core/group/type/group.type';
 import { AthletesTrainers } from '@/core/institution/enum/athletes-trainer.enum';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import AddButton from '@/ui/add-button';
+import useDashboardSelectedGroup from './hooks/use-selected-group';
 
 export default function DashboardMembers() {
   const screenSize = useScreenSize();
@@ -29,22 +29,12 @@ export default function DashboardMembers() {
   );
 
   // for group view
-  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
+  const { selectedGroup, setSelectedGroup } = useDashboardSelectedGroup();
+  const [openAddGroupModal, setOpenAddGroupModal] = useState(false);
 
   // for institution view
   const [athletesOrTrainers, setAthletesOrTrainers] =
     useState<AthletesTrainers>(AthletesTrainers.ATHLETES);
-
-  useEffect(() => {
-    if (!selectedGroup && groups.length > 0) {
-      setSelectedGroup(groups[0]);
-      return;
-    }
-
-    setSelectedGroup(
-      groups.find((group) => group.id === selectedGroup?.id) || null
-    );
-  }, [groups, selectedGroup]);
 
   function renderFilterHeaderContent() {
     switch (filter) {
@@ -200,13 +190,17 @@ export default function DashboardMembers() {
       case DashboardMembersFilter.GROUP:
         return <DashboardGroupsMembers group={selectedGroup} />;
       case DashboardMembersFilter.MEMBERS:
-        return <DashboardInstitution selectedView={athletesOrTrainers} />;
+        return (
+          <DashboardInstitution
+            selectedView={athletesOrTrainers}
+            group={selectedGroup}
+            setGroup={setSelectedGroup}
+          />
+        );
       default:
         return null;
     }
   }
-
-  const [openAddGroupModal, setOpenAddGroupModal] = useState(false);
 
   return (
     <DashboardPageContainer>
