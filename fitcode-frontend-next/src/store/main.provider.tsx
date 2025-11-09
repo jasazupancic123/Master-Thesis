@@ -9,6 +9,7 @@ import type { Group } from '@/core/group/type/group.type';
 import type { Institution } from '@/core/institution/type/institution.type';
 import { UserRole } from '@/core/profile/enum/user-role.enum';
 import type { Profile } from '@/core/profile/type/user.type';
+import type { Training } from '@/core/training/type/training.type';
 import type { SetState, SetStateNullable } from '@/lib/common/type/state.type';
 
 export interface MainProviderProps extends React.PropsWithChildren {
@@ -18,6 +19,7 @@ export interface MainProviderProps extends React.PropsWithChildren {
   exercises: Exercise[];
   institutions: Institution[];
   groups: Group[];
+  activeTraining: Training | null;
 }
 
 export interface IMainContext extends MainProviderProps {
@@ -26,6 +28,7 @@ export interface IMainContext extends MainProviderProps {
   setUsers: SetState<AuthUser[]>;
   setExercises: SetState<Exercise[]>;
   setGroups: SetState<Group[]>;
+  setActiveTraining: SetState<Training | null>;
 }
 
 const MainContext = createContext<IMainContext | null>(null);
@@ -47,6 +50,9 @@ export default function MainProvider(props: MainProviderProps) {
   const [users, setUsers] = useState<AuthUser[]>(props.users);
   const [exercises, setExercises] = useState<Exercise[]>(props.exercises);
   const [groups, setGroups] = useState<Group[]>(props.groups);
+  const [activeTraining, setActiveTraining] = useState<Training | null>(
+    props.activeTraining
+  );
 
   const value: IMainContext = {
     profile: profile!,
@@ -60,6 +66,8 @@ export default function MainProvider(props: MainProviderProps) {
     institutions: props.institutions,
     groups,
     setGroups,
+    activeTraining,
+    setActiveTraining,
   };
 
   return <MainContext.Provider value={value}>{children}</MainContext.Provider>;

@@ -9,13 +9,13 @@ import AthleteSuperset from './athlete-superset';
 import { core } from '@/core/core.service';
 import { Components } from '@/core/exercise/constant/components.constant';
 import { ExerciseTrainingView } from '@/core/training/enum/exercise-training-view.enum';
+import { TrainingStatus } from '@/core/training/enum/training-status.enum';
 import { TrainingController } from '@/core/training/training.controller';
 import { TrainingService } from '@/core/training/training.service';
 import type { ExerciseSetTracking } from '@/core/training/type/exercise-set-tracking-state.type';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
-import { TrainingComponentStatus } from '@/core/training/type/training-report.type';
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
 import { handleApiRequest } from '@/lib/common/type/state.type';
@@ -75,7 +75,7 @@ export default function AthleteTrainingComponents(props: Props) {
           {components.map((component) => {
             const IconComponent = lib.common.component.getIcon(component.id);
 
-            let componentStatus: TrainingComponentStatus | undefined;
+            let componentStatus: TrainingStatus | undefined;
             const trainingReport = reports.find(
               (r) => r.trainingId === training.id
             );
@@ -128,7 +128,7 @@ export default function AthleteTrainingComponents(props: Props) {
                     />
                   )}
 
-                  {componentStatus === TrainingComponentStatus.IN_PROGRESS && (
+                  {componentStatus === TrainingStatus.IN_PROGRESS && (
                     <Circle
                       sx={{
                         position: 'absolute',
@@ -140,7 +140,7 @@ export default function AthleteTrainingComponents(props: Props) {
                     />
                   )}
 
-                  {componentStatus === TrainingComponentStatus.COMPLETED && (
+                  {componentStatus === TrainingStatus.COMPLETED && (
                     <Check
                       sx={{
                         position: 'absolute',
@@ -186,6 +186,7 @@ export default function AthleteTrainingComponents(props: Props) {
           )}
         </Box>
       </Collapse>
+
       <MyModal
         isOpen={modal}
         setIsOpen={(open) => setModal(open)}
@@ -205,15 +206,17 @@ export default function AthleteTrainingComponents(props: Props) {
           handleApiRequest(
             router,
             () =>
-              TrainingController.getInstance().getPrescribedTraining(
+              TrainingController.getInstance().startTrainingComponent(
                 training.id,
-                user.uid
+                selectedComponent.id
               ),
-            (training) => {
+            (response) => {
+              const training = response[user.uid];
               if (!training) {
                 toast.error('Failed to start training. Please try again.');
                 return;
               }
+
               TrainingService.mapData(training, { exercises });
 
               const component = training.components.find(
