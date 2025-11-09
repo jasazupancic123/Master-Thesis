@@ -11,6 +11,7 @@ import { ExerciseService } from './exercise/service/exercise.service';
 import { GroupService } from './group/group.service';
 import { InstitutionService } from './institution/service/institution.service';
 import { ProfileService } from './profile/service/profile.service';
+import { TrainingService } from './training/service/training.service';
 
 @ApiTags('General')
 @Controller()
@@ -24,6 +25,7 @@ export class AppController {
     private readonly exerciseService: ExerciseService,
     private readonly institutionService: InstitutionService,
     private readonly groupService: GroupService,
+    private readonly trainingService: TrainingService,
   ) {}
 
   @Get()
@@ -49,6 +51,7 @@ export class AppController {
       institutionsRes,
       profilesRes,
       groupsRes,
+      trainingRes,
     ] = await Promise.all([
       measureAsync(
         'profileService.findOneById()',
@@ -80,6 +83,11 @@ export class AppController {
         () => this.groupService.findAll(user),
         this.logger,
       ),
+      measureAsync(
+        'trainingService.getActiveTraining()',
+        () => this.trainingService.getActiveTrainingByAthlete(user, user.uid),
+        this.logger,
+      ),
     ]);
 
     const profile = profileRes.result;
@@ -88,6 +96,7 @@ export class AppController {
     const institutions = institutionsRes.result;
     const profiles = profilesRes.result;
     const groups = groupsRes.result;
+    const activeTraining = trainingRes.result;
 
     const institutionExercises = await Promise.all(
       institutions.map((inst) =>
@@ -97,6 +106,14 @@ export class AppController {
 
     institutionExercises.forEach((list) => exercises.push(...list));
 
-    return { profile, profiles, users, exercises, institutions, groups };
+    return {
+      profile,
+      profiles,
+      users,
+      exercises,
+      institutions,
+      groups,
+      activeTraining,
+    };
   }
 }

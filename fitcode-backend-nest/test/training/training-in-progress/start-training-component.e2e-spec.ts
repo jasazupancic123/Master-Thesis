@@ -5,8 +5,14 @@ import type { TestInstitution, TestUser } from '@src/common/type/entity.type';
 import type { Group } from '@src/group/entity/group.entity';
 import { TestDbService } from '@src/test-db/test-db.service';
 import type { Training } from '@src/training/entity/training.entity';
+import { SetStatus } from '@src/training/enum/set-status.enum';
 import { TrainingStatus } from '@src/training/enum/training-status.enum';
-import { generateTrainingComponent } from '@src/training/mock/training.stub';
+import {
+  generateExerciseSet,
+  generateSuperset,
+  generateTrainingComponent,
+  generateTrainingExercise,
+} from '@src/training/mock/training.stub';
 import { TrainingReportRepository } from '@src/training/repository/training-report.repository';
 
 describe('Start Training Component (e2e)', () => {
@@ -48,7 +54,19 @@ describe('Start Training Component (e2e)', () => {
     group2 = await db.groups.createTest(institution2);
     training2 = await db.trainings.createTest(group2, {
       components: [
-        generateTrainingComponent({ id: 'c1' }),
+        generateTrainingComponent({
+          id: 'c1',
+          supersets: [
+            generateSuperset({
+              exercises: [
+                generateTrainingExercise({
+                  id: 'e1',
+                  sets: [generateExerciseSet(1)],
+                }),
+              ],
+            }),
+          ],
+        }),
         generateTrainingComponent({ id: 'c3' }),
       ],
     });
@@ -265,5 +283,97 @@ describe('Start Training Component (e2e)', () => {
 
     expect(c1Status.status).toBe(TrainingStatus.IN_PROGRESS);
     await db.trainingReports.deleteAllByTraining(training1.id);
+  });
+
+  it('should not override athlete trainings in progress when trainer starts the same training component', async () => {
+    // in institution2, lets say that first athlete has already started c1 and has some workloads and reports already
+    const athlete = institution2.athletes[0];
+    await req(athlete.token, training2.id, 'c1');
+
+    let reports = await db.trainingReports.getAllByTraining(training2.id);
+    expect(reports).toHaveLength(1); // athlete started c1
+
+    // create some workloads
+    await db.workloads.createMany([
+      {
+        trainingId: training2.id,
+        userId: athlete.uid,
+        componentId: 'c1',
+        exerciseId: 'e1',
+        setNumber: 1,
+        status: SetStatus.PARTIAL,
+        supersetIndex: 0,
+        prescribed: { reps: 10, loadKg: 50 },
+        reps: 13,
+        loadKg: 37.5,
+      },
+    ]);
+
+    const trainer = institution2.trainers[0];
+    const res = await req(trainer.token, training2.id, 'c1');
+    expect(res.status).toBe(201);
+
+    reports = await db.trainingReports.getAllByTraining(training2.id);
+    expect(reports).toHaveLength(3);
+
+    const trainings = res.body as Record<string, Training>;
+    expect(trainings[athlete.uid].id).toBe(training2.id);
+
+    const firstSet =
+      trainings[athlete.uid].components[0].supersets[0].exercises[0].sets[0];
+
+    expect(firstSet.reps).toBe(13);
+    expect(firstSet.loadKg).toBe(37.5);
+
+    // also check in db that workload is still the same
+    const workloads = await db.workloads.getAll(training2.id);
+    expect(workloads).toHaveLength(1);
+    expect(workloads[0].setNumber).toBe(1);
+    expect(workloads[0].status).toBe(SetStatus.PARTIAL);
+
+    // clean up
+    await db.workloads.deleteAll(training2.id);
+    await db.trainingReports.deleteAllByTraining(training2.id);
+  });
+
+  it('should make multiple components in progress if athlete starts different component and then trainer starts another component', async () => {
+    const athlete = institution2.athletes[1];
+    let res = await req(athlete.token, training2.id, 'c1');
+    expect(res.status).toBe(201);
+
+    let reports = await db.trainingReports.getAllByTraining(training2.id);
+    expect(reports).toHaveLength(1);
+
+    let athleteReport = reports.find((r) => r.userId === athlete.uid);
+    let c1Status = athleteReport.componentStatuses.find(
+      (c) => c.componentId === 'c1',
+    );
+    let c3Status = athleteReport.componentStatuses.find(
+      (c) => c.componentId === 'c3',
+    );
+
+    expect(c1Status.status).toBe(TrainingStatus.IN_PROGRESS);
+    expect(c3Status.status).toBe(TrainingStatus.NOT_STARTED);
+
+    const trainer = institution2.trainers[0];
+    res = await req(trainer.token, training2.id, 'c3');
+    expect(res.status).toBe(201);
+
+    reports = await db.trainingReports.getAllByTraining(training2.id);
+    expect(reports).toHaveLength(3);
+
+    athleteReport = reports.find((r) => r.userId === athlete.uid);
+    c1Status = athleteReport.componentStatuses.find(
+      (c) => c.componentId === 'c1',
+    );
+    c3Status = athleteReport.componentStatuses.find(
+      (c) => c.componentId === 'c3',
+    );
+
+    expect(c1Status.status).toBe(TrainingStatus.IN_PROGRESS);
+    expect(c3Status.status).toBe(TrainingStatus.IN_PROGRESS);
+
+    // clean up
+    await db.trainingReports.deleteAllByTraining(training2.id);
   });
 });

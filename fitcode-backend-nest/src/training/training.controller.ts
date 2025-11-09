@@ -29,6 +29,7 @@ import {
   TrainingComponentRef,
   WorkloadRef,
 } from '@src/common/type/firestore.type';
+import { FirebaseService } from '@src/firebase/firebase.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { TrainingReportService } from '@src/training/service/training-report.service';
 
@@ -54,6 +55,7 @@ import { TrainingService } from './service/training.service';
 @Controller('training')
 export class TrainingController {
   constructor(
+    private readonly firebase: FirebaseService,
     private readonly commonService: CommonService,
     private readonly trainingService: TrainingService,
     private readonly trainingReportService: TrainingReportService,
@@ -81,6 +83,19 @@ export class TrainingController {
     );
   }
 
+  @Get(':trainingId/individual')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER])
+  async findAllIndividual(
+    @RequestUser() user: User,
+    @Param('trainingId') trainingId: string,
+  ): Promise<Record<string, Training>> {
+    const training = await this.trainingService.findOneByIdOrFail(user, {
+      trainingId,
+    });
+
+    return await this.trainingService.findAllIndividual(training);
+  }
+
   @Get(':trainingId')
   @Auth()
   async findOneById(
@@ -94,6 +109,19 @@ export class TrainingController {
 
     const report = await this.trainingReportService.findById(ref);
     return { training, report };
+  }
+
+  @Get('get/active')
+  @Auth([UserRole.ATHLETE])
+  async getActiveTraining(
+    @RequestUser() user: User,
+  ): Promise<{ training: Training | null }> {
+    const training = await this.trainingService.getActiveTrainingByAthlete(
+      user,
+      user.uid,
+    );
+
+    return { training };
   }
 
   @Get('report/athlete')
