@@ -2,10 +2,11 @@ import { Group } from '@/core/group/type/group.type';
 import { useMain } from '@/store/main.provider';
 import { useEffect, useState } from 'react';
 
-export default function useDashboardSelectedGroup() {
+export default function useDashboardGroupView() {
   const { groups } = useMain();
 
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
+  const [openAddGroupModal, setOpenAddGroupModal] = useState(false);
 
   useEffect(() => {
     if (!selectedGroup && groups.length > 0) {
@@ -21,5 +22,7 @@ export default function useDashboardSelectedGroup() {
   return {
     selectedGroup,
     setSelectedGroup,
+    openAddGroupModal,
+    setOpenAddGroupModal,
   };
 }
