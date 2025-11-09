@@ -1,162 +1,116 @@
 'use client';
 
-import { MoreVert } from '@mui/icons-material';
-import { IconButton, Typography, useTheme } from '@mui/material';
-import { Box } from '@mui/material';
-import { useRef, useState } from 'react';
+import { Box, Typography } from '@mui/material';
+import { redirect } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
-import AddGroupModal from './dashboard-add-group-modal';
-import DashboardGroupsMembers from './dashboard-groups-members';
-import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
-import { core } from '@/core/core.service';
-import { ADD_GROUP } from '@/core/group/const/add-group.const';
+import AthleteOptionsContainer from '../athlete/athlete-options-container';
+import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
+import { DASHBOARD_MIDDLE_HEADER_HEIGHT } from './constant/dashboard.const';
+import DashboardPageContainer from './dashboard-page-container';
+import { theme } from '@/app/style';
+import type { Group } from '@/core/group/type/group.type';
 import { lib } from '@/lib';
+import { LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS } from '@/lib/common/const/nav.const';
+import { EMPTY_STRING } from '@/lib/common/const/string.const';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
-import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
-import { useScreenSize } from '@/store/screen-size.provider';
-import EditableTextField from '@/ui/editable-text-field';
-import HorizontalItemsList from '@/ui/horizontal-items-list';
-import SimpleCircle from '@/ui/simple-circle';
+import { SearchBar } from '@/ui/search-bar/search-bar';
 
 export default function DashboardGroups() {
-  const theme = useTheme();
-  const screenSize = useScreenSize();
   const { role } = useAuthenticatedAuth();
-  const { users } = useMain();
-  const { selectedInstitution, selectedGroup, setSelectedGroup, updateGroup } =
-    useDashboard();
+  const { groups } = useMain();
 
-  const [openAddGroupModal, setOpenAddGroupModal] = useState(false);
-  const scrollHorizontalListLeftRef = useRef(0);
+  const [filteredGroups, setFilteredGroups] = useState<Group[]>(groups);
+  const [search, setSearch] = useState<string>('');
 
-  if (!selectedInstitution) return null;
-
-  const HorizontalInput = () => {
-    return (
-      <HorizontalItemsList
-        dashboardView
-        addButtonOnEnd={lib.firebase.auth.isManager(role)}
-        onButtonClick={() => {
-          setOpenAddGroupModal(true);
-        }}
-        items={
-          (selectedInstitution?.groups || []).map((group) => ({
-            label: group.name,
-            value: group.id,
-          })) || []
-        }
-        scrollHorizontalListLeftRef={scrollHorizontalListLeftRef}
-        value={selectedGroup?.id || ''}
-        setValue={(value) => {
-          if (value === ADD_GROUP.id) {
-            setOpenAddGroupModal(true);
-            return;
-          }
-
-          const group = selectedInstitution?.groups?.find(
-            (g) => g.id === value
-          );
-
-          if (group) {
-            const mapped = core.group.mapMembers(group, users);
-            setSelectedGroup(mapped);
-          } else {
-            setSelectedGroup(null);
-          }
-        }}
-        checkIsSameValue={(value: string) => {
-          return selectedGroup?.id === value;
-        }}
-        onArrowClick={() => {}}
-      />
+  useEffect(() => {
+    if (search.trim() === '') {
+      setFilteredGroups(groups);
+      return;
+    }
+    const lowerSearch = search.toLowerCase();
+    const filtered = groups.filter((group) =>
+      group.name.toLowerCase().includes(lowerSearch)
     );
-  };
+    setFilteredGroups(filtered);
+  }, [search, groups]);
+
+  const permissionOk =
+    lib.firebase.auth.isTrainer(role) || lib.firebase.auth.isManager(role);
 
   return (
-    <Box
-      display="flex"
-      flexDirection="column"
-      justifyContent="center"
-      width="100%"
-      maxWidth={MAX_WIDTH}
-      gap={screenSize.isSmallTablet || screenSize.isMobile ? 0 : 5}
-      sx={{
-        backgroundColor: theme.palette.background.default,
-        mx: 'auto',
-      }}
-    >
-      {screenSize.isSmallTablet || screenSize.isMobile ? (
-        <>
-          <HorizontalInput />
-          <Box width="100%" sx={{ position: 'relative' }}>
+    <DashboardPageContainer>
+      {/* Dashboard Middle Header */}
+      <Box
+        height={DASHBOARD_MIDDLE_HEADER_HEIGHT}
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+      >
+        <SearchBar
+          placeholder="Search Groups"
+          value={search}
+          handleSearchChange={(e) => setSearch(e.target.value)}
+          maxWidth="100%"
+        />
+      </Box>
+      <AthleteOptionsContainer
+        items={[EMPTY_STRING, EMPTY_STRING]}
+        selectedItem={'none'}
+        onClick={(type) => {}}
+        title="Groups"
+        disabled
+      />
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        flexWrap="wrap"
+        maxWidth={MAX_WIDTH}
+        gap={4}
+      >
+        {filteredGroups.map((group) => {
+          return (
             <Box
-              width="80%"
+              width={100}
+              height={100}
+              key={group.id}
               display="flex"
               justifyContent="center"
               alignItems="center"
-              mt={1}
-              sx={{ mx: 'auto', mb: 1 }}
+              onClick={() => {
+                if (!permissionOk) return;
+
+                redirect(
+                  LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS(group.id).home.href
+                );
+              }}
+              sx={{
+                borderRadius: 2,
+                border: `1px solid ${theme.palette.primary.main}`,
+                my: 'auto',
+                cursor: permissionOk ? 'pointer' : undefined,
+              }}
             >
               <Typography
                 fontWeight={600}
-                fontSize={16}
                 textAlign="center"
-                sx={{ textTransform: 'uppercase' }}
+                sx={{
+                  color: theme.palette.text.primary,
+                  textTransform: 'uppercase',
+                  overflow: 'hidden',
+                  wordBreak: 'break-word',
+                  my: 'auto',
+                  userSelect: 'none',
+                }}
               >
-                {selectedGroup?.name || 'Select A Group'}
+                {group.name}
               </Typography>
-
-              <IconButton
-                sx={{ position: 'absolute', right: 0, top: 0, zIndex: 1 }}
-              >
-                <MoreVert fontSize="medium" />
-              </IconButton>
             </Box>
-          </Box>
-        </>
-      ) : (
-        <Box
-          display="flex"
-          width="100%"
-          justifyContent="space-around"
-          alignItems="flex-start"
-        >
-          <Box
-            width="25%"
-            display="flex"
-            justifyContent="flex-start"
-            alignItems="center"
-            gap={1}
-            sx={{ mt: 1 }}
-          >
-            <SimpleCircle />
-
-            {selectedGroup && (
-              <EditableTextField
-                value={selectedGroup.name}
-                onChange={async (name) =>
-                  await updateGroup(selectedGroup.id, { name })
-                }
-              />
-            )}
-          </Box>
-
-          <Box width="50%">
-            <HorizontalInput />
-          </Box>
-
-          <Box width="25%" display="flex" justifyContent="flex-end" mt={1}>
-            <IconButton sx={{ m: 0, p: 0 }}>
-              <MoreVert fontSize="large" />
-            </IconButton>
-          </Box>
-        </Box>
-      )}
-
-      <DashboardGroupsMembers />
-
-      <AddGroupModal open={openAddGroupModal} setOpen={setOpenAddGroupModal} />
-    </Box>
+          );
+        })}
+      </Box>
+    </DashboardPageContainer>
   );
 }

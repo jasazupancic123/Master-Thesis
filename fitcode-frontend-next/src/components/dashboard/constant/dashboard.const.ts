@@ -1,0 +1,1 @@
+export const DASHBOARD_MIDDLE_HEADER_HEIGHT = 80;

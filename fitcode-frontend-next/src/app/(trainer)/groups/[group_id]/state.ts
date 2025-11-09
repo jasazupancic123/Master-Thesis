@@ -15,7 +15,8 @@ export async function handleSaveGroup(
   setCycle: SetState<Cycle | undefined>,
   setDetectedChanges: SetState<boolean>,
   router: AppRouterInstance,
-  setGroup: SetState<Group>
+  setGroup: SetState<Group>,
+  setGroups: SetState<Group[]>
 ) {
   for (const cycle of selectedGroup.cycles) {
     if (cycle.from >= cycle.to) {
@@ -39,6 +40,7 @@ export async function handleSaveGroup(
       }
 
       setGroup(group);
+      setGroups((prev) => prev.map((g) => (g.id === group.id ? group : g)));
       setSelectedGroup(group);
       setDetectedChanges(false);
 

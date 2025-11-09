@@ -1,6 +1,11 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+
 import { DashboardUserEditProvider } from '@/components/dashboard/context/user-edit.context';
+import { Controller } from '@/core/controller';
+import { TrainingService } from '@/core/training/training.service';
+import type { Training } from '@/core/training/type/training.type';
 import DashboardLayout from '@/sites/dashboard.layout';
 import { DashboardProvider } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
@@ -25,8 +30,29 @@ function DashboardInitializer({
   children,
   institutionId,
 }: React.PropsWithChildren & WithInstitutionProps) {
+  const { exercises, groups } = useMain();
+
+  const [trainings, setTrainings] = useState<Training[]>([]);
+
+  const controller = Controller.getInstance();
+
+  useEffect(() => {
+    async function init() {
+      const trainings = await controller.training.findAll({
+        groupId: groups[0]?.id,
+      });
+      const mapped = trainings.map((t) =>
+        TrainingService.mapData(t, { exercises })
+      );
+
+      setTrainings(mapped);
+    }
+
+    init();
+  }, []);
+
   return (
-    <DashboardProvider institutionId={institutionId}>
+    <DashboardProvider institutionId={institutionId} trainings={trainings}>
       <DashboardUserEditProvider>
         <DashboardLayout>{children}</DashboardLayout>
       </DashboardUserEditProvider>

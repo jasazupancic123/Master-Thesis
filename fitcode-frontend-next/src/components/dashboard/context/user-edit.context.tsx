@@ -39,7 +39,7 @@ export function DashboardUserEditProvider({
   children,
 }: React.PropsWithChildren) {
   const { profiles, setProfiles } = useMain();
-  const { setUsers, setSelectedInstitution, setSelectedGroup } = useDashboard();
+  const { setUsers, setSelectedInstitution } = useDashboard();
 
   const [hoveredUser, setHoveredUser] = useState<AuthUser | null>(null);
   const [userToEdit, setUserToEdit] = useState<AuthUser | null>(null);
@@ -113,10 +113,6 @@ export function DashboardUserEditProvider({
               athletes: mapUsers(prev.athletes),
               trainers: mapUsers(prev.trainers),
             }
-      );
-
-      setSelectedGroup((prev) =>
-        !prev ? null : { ...prev, members: mapUsers(prev.members) }
       );
 
       toast.success('Successfully updated user profile');
