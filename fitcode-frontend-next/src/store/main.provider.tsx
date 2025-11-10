@@ -15,8 +15,8 @@ import type { Workload } from '@/core/training/type/workload.type';
 import type { SetState, SetStateNullable } from '@/lib/common/type/state.type';
 
 type ActiveTraining = {
-  training: Training & { workloads: Workload[] };
-  report: TrainingReport;
+  training?: Training & { workloads: Workload[] };
+  report?: TrainingReport;
 };
 
 export interface MainProviderProps extends React.PropsWithChildren {
@@ -26,7 +26,7 @@ export interface MainProviderProps extends React.PropsWithChildren {
   exercises: Exercise[];
   institutions: Institution[];
   groups: Group[];
-  activeTraining: ActiveTraining | null;
+  activeTraining: ActiveTraining;
 }
 
 export interface IMainContext extends MainProviderProps {
@@ -35,7 +35,7 @@ export interface IMainContext extends MainProviderProps {
   setUsers: SetState<AuthUser[]>;
   setExercises: SetState<Exercise[]>;
   setGroups: SetState<Group[]>;
-  setActiveTraining: SetState<ActiveTraining | null>;
+  setActiveTraining: SetState<ActiveTraining>;
 }
 
 const MainContext = createContext<IMainContext | null>(null);
@@ -57,7 +57,7 @@ export default function MainProvider(props: MainProviderProps) {
   const [users, setUsers] = useState<AuthUser[]>(props.users);
   const [exercises, setExercises] = useState<Exercise[]>(props.exercises);
   const [groups, setGroups] = useState<Group[]>(props.groups);
-  const [activeTraining, setActiveTraining] = useState<ActiveTraining | null>(
+  const [activeTraining, setActiveTraining] = useState<ActiveTraining>(
     props.activeTraining
   );
 
