@@ -742,14 +742,18 @@ export class TrainingService implements Permission<Training, Institution> {
     return [user.uid];
   }
 
-  async generateQRCodeForAthlete(
+  async generateQRCode(
     user: User,
     ref: TrainingComponentRef & UserRef,
   ): Promise<string> {
     const athlete = await this.getAthlete(user, ref.uid);
-    const trainings = await this.startTrainingComponent(athlete, ref, ref.uid);
-    const training = trainings[athlete.uid];
+    const { trainings } = await this.startTrainingComponent(
+      athlete,
+      ref,
+      ref.uid,
+    );
 
+    const training = trainings[athlete.uid];
     return await this.authService.createMagicLink(
       user,
       athlete.uid,

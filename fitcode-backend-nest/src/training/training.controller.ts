@@ -129,7 +129,7 @@ export class TrainingController {
     @Param('cId') componentId: string,
     @Body() { userId }: UserIdDto,
   ) {
-    return await this.trainingService.generateQRCodeForAthlete(user, {
+    return await this.trainingService.generateQRCode(user, {
       trainingId,
       componentId,
       uid: userId,

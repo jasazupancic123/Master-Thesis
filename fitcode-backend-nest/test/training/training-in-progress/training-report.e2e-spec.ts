@@ -10,6 +10,7 @@ import type { ExerciseSet } from '@src/training/entity/exercise-set.entity';
 import type { Training } from '@src/training/entity/training.entity';
 import type { PrescribedTrainingStats } from '@src/training/entity/training-stats.entity';
 import { SetStatus } from '@src/training/enum/set-status.enum';
+import { TrainingStatus } from '@src/training/enum/training-status.enum';
 import {
   generateExerciseSet,
   generateSuperset,
@@ -17,6 +18,7 @@ import {
   generateTrainingExercise,
   generateTrainingStub,
 } from '@src/training/mock/training.stub';
+import { generateTrainingReportStub } from '@src/training/mock/training-report.stub';
 import { TrainingReportService } from '@src/training/service/training-report.service';
 import { WorkloadService } from '@src/training/service/workload.service';
 
@@ -112,7 +114,6 @@ describe('Training Report (e2e)', () => {
                     id: 'deadlift',
                     sets: [
                       generateExerciseSet(1, {
-                        reps: 1,
                         dist: 30,
                         tempoEcc: 2,
                         tempoIso: 2,
@@ -121,7 +122,6 @@ describe('Training Report (e2e)', () => {
                         recTime: 0,
                       }),
                       generateExerciseSet(2, {
-                        reps: 1,
                         dist: 30,
                         tempoEcc: 2,
                         tempoIso: 2,
@@ -130,7 +130,6 @@ describe('Training Report (e2e)', () => {
                         recTime: 0,
                       }),
                       generateExerciseSet(3, {
-                        reps: 1,
                         dist: 30,
                         tempoEcc: 2,
                         tempoIso: 2,
@@ -314,7 +313,7 @@ describe('Training Report (e2e)', () => {
   it('should return correct training stats for provided training', () => {
     const stats = trainingReportService.getTrainingStats(training);
     const tonnage = 10 * 10 * 50; // 5000 -> 8 sets of 10 reps with 50 kg
-    const tut = 10 * 10 * 3 + 3 * 1 * 5; // 10 sets of 10 reps with 2010 (3 second) tempo and 3 sets of 1 rep with 5 second tempo
+    const tut = 10 * 10 * 3; // 10 sets of 10 reps with 2010 (3 second) tempo and 3 sets of 1 rep with 5 second tempo
 
     expect(stats).toEqual({
       plannedComponents: [
@@ -326,7 +325,7 @@ describe('Training Report (e2e)', () => {
       supersets: 3,
       exercises: 3, // unique
       sets: 11,
-      reps: 10 * 10 + 3 * 1, // 99 -> (8 + 2 unilateral) sets of 10 reps, 3 sets of 1 rep (defaults to 1 rep if no `reps` specified)
+      reps: 10 * 10, // 99 -> (8 + 2 unilateral) sets of 10 reps, 3 sets of 1 rep (defaults to 1 rep if no `reps` specified)
       recTime: 8 * 60, // 480 -> 8 sets with 60 sec recovery, 3 sets with 0 sec recovery (only effort based recovery)
       tut,
       tonnage,
@@ -427,68 +426,303 @@ describe('Training Report (e2e)', () => {
     await db.trainingReports.delete(ref);
   });
 
-  /* it('should calculate realization correctly', async () => {
-    // 3 sets 10 reps, 50 kg, 60 second recovery
-    //   - 1st set 100% completed
-    //   - 2nd set 80% completed
-    //   - 3rd set 50% completed
-    // => total realization: (100 + 80 + 50) / 300 = 76.67%
+  it('should calculate realization correctly', async () => {
+    // c1.0 squat - 1st set 10 reps 50 kg 60 rec time
+    // c1.0 bench - 1st set 10 reps each 50 kg each 60 rec time
+    // bench - 2nd set 10 reps each 50 kg each 60 rec time
+    // c1.1 deadlift - 1st set 1 rep 30 m 0 rec time tempo 2210
+    // deadlift - 2nd set 1 rep 30 m 0 rec time tempo 2210
+    // deadlift - 3rd set 1 rep 30 m 0 rec time tempo 2210
+    // c1.1 squat - 1st set 10 reps 50 kg 60 rec time
+    // squat - 2nd set 10 reps 50 kg 60 rec time
+    // c2.0 squat - 1st set 10 reps 50 kg 60 rec time
+    // squat - 2nd set 10 reps 50 kg 60 rec time
+    // squat - 3rd set 10 reps 50 kg 60 rec time
+    const userId = global.athlete.uid;
 
     await db.workloads.createMany([
       {
-        // first set fully completed
-        userId: global.athlete.uid,
+        userId,
         trainingId: training.id,
-        component: component2,
+        componentId: 'c1',
         supersetIndex: 0,
-        exerciseId: 'pullup',
+        exerciseId: 'squat',
         setNumber: 1,
         status: SetStatus.COMPLETED,
-        volWork1ValueL: 10,
-        intWork1ValueL: 50,
-        volRecValueL: 60,
-      },
-      {
-        // second set 80% completed
-        userId: global.athlete.uid,
-        trainingId: training.id,
-        component: component2,
-        supersetIndex: 0,
-        exerciseId: 'pullup',
-        setNumber: 2,
-        status: SetStatus.COMPLETED,
-        volWork1ValueL: 8,
-        intWork1ValueL: 40,
-        volRecValueL: 72,
-      },
-      {
-        // third set 50% completed
-        userId: global.athlete.uid,
-        trainingId: training.id,
-        component: component2,
-        supersetIndex: 0,
-        exerciseId: 'pullup',
-        setNumber: 3,
-        status: SetStatus.COMPLETED,
-        volWork1ValueL: 5,
-        intWork1ValueL: 25,
-        volRecValueL: 90,
+        reps: 10, // 25 %
+        loadKg: 50, // 25 %
+        recTime: 60, // 25 %
+        prescribed: { reps: 10, loadKg: 50, recTime: 60 },
       },
     ]);
 
-    await trainingReportService.updateReport(global.athlete.uid, training);
+    await db.trainingReports.save(
+      { trainingId: training.id, userId },
+      generateTrainingReportStub(training.id, userId),
+    );
 
-    const ref: TrainingReportRef = {
-      trainingId: training.id,
-      userId: global.athlete.uid,
-    };
+    let report = await trainingReportService.update(userId, training, {
+      componentInProgress: 'c1',
+    });
 
-    const report = await db.trainingReports.findById(ref);
-    expect(report).toBeDefined();
-    expect(report.sets).toBe(3);
-    expect(report.realization).toBeCloseTo(76.67, 1);
+    const totalSets = 11;
+    expect(report.realization).toBeCloseTo(1 / totalSets); // because "set realization" is 100%
 
+    await db.workloads.createMany([
+      {
+        userId,
+        trainingId: training.id,
+        componentId: 'c1',
+        supersetIndex: 0,
+        exerciseId: 'bench',
+        setNumber: 1,
+        status: SetStatus.COMPLETED,
+        reps: 5, // 12.5 %
+        loadKg: 50, // 25 %
+        recTime: 60, // 25 %
+        prescribed: { reps: 10, loadKg: 50, recTime: 60 },
+      },
+    ]);
+
+    report = await trainingReportService.update(userId, training, {
+      componentInProgress: 'c1',
+    });
+
+    expect(report.realization).toBeCloseTo(1.875 / totalSets);
+
+    await db.workloads.createMany([
+      {
+        userId,
+        trainingId: training.id,
+        componentId: 'c1',
+        supersetIndex: 0,
+        exerciseId: 'bench',
+        setNumber: 2,
+        status: SetStatus.COMPLETED,
+        reps: 10, // 25%
+        loadKg: 75, // 1.5 * 0.25 = 37.5%
+        recTime: 60, // 25 %
+        prescribed: { reps: 10, loadKg: 50, recTime: 60 },
+      },
+    ]); // 112.5 %
+
+    report = await trainingReportService.update(userId, training, {
+      componentInProgress: 'c1',
+    });
+
+    expect(report.realization).toBeCloseTo(3 / totalSets);
+
+    // c1.1 deadlift - 1st set 1 rep 30 m 0 rec time tempo 2210
+    await db.workloads.createMany([
+      {
+        userId,
+        trainingId: training.id,
+        componentId: 'c1',
+        supersetIndex: 1,
+        exerciseId: 'deadlift',
+        setNumber: 1,
+        status: SetStatus.COMPLETED,
+        reps: 0,
+        dist: 30, // 25 %
+        recTime: 0, // 25 %
+        tempoEcc: 2, // 25 %
+        tempoIso: 2,
+        tempoCon: 1,
+        tempoIdle: 0,
+        prescribed: {
+          reps: 0,
+          dist: 30,
+          recTime: 0,
+          tempoEcc: 2,
+          tempoIso: 2,
+          tempoCon: 1,
+          tempoIdle: 0,
+        },
+      },
+    ]); // 100%
+
+    report = await trainingReportService.update(userId, training, {
+      componentInProgress: 'c1',
+    });
+
+    expect(report.realization).toBeCloseTo(4 / totalSets);
+
+    // deadlift - 2nd set 1 rep 30 m 0 rec time tempo 2210
+    await db.workloads.createMany([
+      {
+        userId,
+        trainingId: training.id,
+        componentId: 'c1',
+        supersetIndex: 1,
+        exerciseId: 'deadlift',
+        setNumber: 2,
+        status: SetStatus.COMPLETED,
+        reps: 0,
+        dist: 30, // 50 %
+        recTime: 0, // not prescribed (it's 0) so it wont count as weight
+        tempoEcc: 2, // 100 %
+        tempoIso: 2,
+        tempoCon: 1,
+        tempoIdle: 5,
+        prescribed: {
+          reps: 0,
+          dist: 30,
+          recTime: 0,
+          tempoEcc: 2,
+          tempoIso: 2,
+          tempoCon: 1,
+          tempoIdle: 0,
+        },
+      },
+    ]); // 150%
+
+    report = await trainingReportService.update(userId, training, {
+      componentInProgress: 'c1',
+    });
+
+    expect(report.realization).toBeCloseTo(5.5 / totalSets);
+
+    // deadlift - 3rd set 1 rep 30 m 0 rec time tempo 2210
+    await db.workloads.createMany([
+      {
+        userId,
+        trainingId: training.id,
+        componentId: 'c1',
+        supersetIndex: 1,
+        exerciseId: 'deadlift',
+        setNumber: 3,
+        status: SetStatus.COMPLETED,
+        reps: 0,
+        dist: 15, // 25 %
+        recTime: 0, // not prescribed (it's 0) so it wont count as weight
+        tempoEcc: 1, // 10 %
+        tempoIso: 0,
+        tempoCon: 0,
+        tempoIdle: 0,
+        prescribed: {
+          reps: 0,
+          dist: 30,
+          recTime: 0,
+          tempoEcc: 2,
+          tempoIso: 2,
+          tempoCon: 1,
+          tempoIdle: 0,
+        },
+      },
+    ]); // 35%
+
+    report = await trainingReportService.update(userId, training, {
+      componentInProgress: 'c1',
+    });
+
+    expect(report.realization).toBeCloseTo(5.85 / totalSets);
+
+    // c1.1 squat - 1st set 10 reps 50 kg 60 rec time
+    await db.workloads.createMany([
+      {
+        userId,
+        trainingId: training.id,
+        componentId: 'c1',
+        supersetIndex: 1,
+        exerciseId: 'squat',
+        setNumber: 1,
+        status: SetStatus.COMPLETED,
+        reps: 10,
+        loadKg: 50,
+        recTime: 60,
+        prescribed: { reps: 10, loadKg: 50, recTime: 60 },
+      },
+    ]); // 100 %
+
+    report = await trainingReportService.update(userId, training, {
+      componentInProgress: 'c1',
+    });
+
+    expect(report.realization).toBeCloseTo(6.85 / totalSets);
+
+    // squat - 2nd set 10 reps 50 kg 60 rec time
+    // check that more recovery time is worse
+    await db.workloads.createMany([
+      {
+        userId,
+        trainingId: training.id,
+        componentId: 'c1',
+        supersetIndex: 1,
+        exerciseId: 'squat',
+        setNumber: 2,
+        status: SetStatus.COMPLETED,
+        reps: 10, // 25 %
+        loadKg: 50, // 25 %
+        recTime: 120, // 12.5 %
+        prescribed: { reps: 10, loadKg: 50, recTime: 60 },
+      },
+    ]); // 87.5 %
+
+    report = await trainingReportService.update(userId, training, {
+      componentInProgress: 'c1',
+    });
+
+    expect(report.realization).toBeCloseTo(7.725 / totalSets);
+
+    // c2.0 squat - 1st set 10 reps 50 kg 60 rec time
+    // squat - 2nd set 10 reps 50 kg 60 rec time
+    // squat - 3rd set 10 reps 50 kg 60 rec time
+    await db.trainingReports.updateStatus(
+      { trainingId: training.id, userId },
+      'c2',
+      TrainingStatus.IN_PROGRESS,
+    );
+
+    await db.workloads.createMany([
+      {
+        userId,
+        trainingId: training.id,
+        componentId: 'c2',
+        supersetIndex: 0,
+        exerciseId: 'squat',
+        setNumber: 1,
+        status: SetStatus.COMPLETED,
+        reps: 10,
+        repsR: 12,
+        loadKg: 50,
+        recTime: 60,
+        prescribed: { reps: 10, repsR: 10, loadKg: 50, recTime: 60 },
+      }, // 105 %
+      {
+        userId,
+        trainingId: training.id,
+        componentId: 'c2',
+        supersetIndex: 0,
+        exerciseId: 'squat',
+        setNumber: 2,
+        status: SetStatus.COMPLETED,
+        reps: 10,
+        loadKg: 50,
+        recTime: 60,
+        prescribed: { reps: 10, loadKg: 50, recTime: 60 },
+      }, // 100 %
+      {
+        userId,
+        trainingId: training.id,
+        componentId: 'c2',
+        supersetIndex: 0,
+        exerciseId: 'squat',
+        setNumber: 3,
+        status: SetStatus.COMPLETED,
+        reps: 10,
+        loadKg: 50,
+        recTime: 60,
+        prescribed: { reps: 10, loadKg: 50, recTime: 60 },
+      }, // 100 %
+    ]);
+
+    report = await trainingReportService.update(userId, training, {
+      componentInProgress: 'c2',
+    });
+
+    expect(report.realization).toBeCloseTo(10.73 / totalSets);
+
+    // delete all workloads
     await db.workloads.deleteAll(training.id);
-    await db.trainingReports.delete(ref);
-  }); */
+  });
 });
