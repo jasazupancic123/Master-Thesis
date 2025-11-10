@@ -1,4 +1,4 @@
-import { Check, Circle } from '@mui/icons-material';
+import { Check, Circle, Pause } from '@mui/icons-material';
 import { Box, Collapse, IconButton, SvgIcon } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Typography from '@mui/material/Typography';
@@ -8,7 +8,6 @@ import toast from 'react-hot-toast';
 import AthleteSuperset from './athlete-superset';
 import { core } from '@/core/core.service';
 import { Components } from '@/core/exercise/constant/components.constant';
-import { ExerciseTrainingView } from '@/core/training/enum/exercise-training-view.enum';
 import { TrainingStatus } from '@/core/training/enum/training-status.enum';
 import { TrainingController } from '@/core/training/training.controller';
 import { TrainingService } from '@/core/training/training.service';
@@ -18,7 +17,6 @@ import type { TrainingComponent } from '@/core/training/type/training-component.
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
-import { handleApiRequest } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import { useTraining } from '@/store/training.provider';
@@ -52,9 +50,17 @@ export default function AthleteTrainingComponents(props: Props) {
     timeout,
   } = props;
 
-  const { reports, setTrainingInProgress, setView } = useTraining();
-  const { exercises } = useMain();
+  const { reports, setTrainingInProgress } = useTraining();
+  const { exercises, activeTraining, setActiveTraining } = useMain();
   const { user } = useAuthenticatedAuth();
+
+  const activeTrainingReport = reports.find(
+    (r) => r.trainingId === activeTraining?.training?.id
+  );
+
+  const activeComponentStatus = activeTrainingReport?.componentStatuses.find(
+    (cs) => cs.componentId === selectedComponent?.id
+  )?.status;
 
   return (
     <Box
@@ -128,6 +134,18 @@ export default function AthleteTrainingComponents(props: Props) {
                     />
                   )}
 
+                  {componentStatus === TrainingStatus.PAUSED && (
+                    <Pause
+                      sx={{
+                        position: 'absolute',
+                        bottom: 2,
+                        right: 0,
+                        color: theme.palette.error.main,
+                        fontSize: 12,
+                      }}
+                    />
+                  )}
+
                   {componentStatus === TrainingStatus.IN_PROGRESS && (
                     <Circle
                       sx={{
@@ -192,77 +210,96 @@ export default function AthleteTrainingComponents(props: Props) {
         setIsOpen={(open) => setModal(open)}
         cancelText="Cancel"
         onCancel={() => setModal(false)}
-        onConfirm={() => {
-          if (!user) {
-            toast.error('Authentication error.');
-            return;
-          }
-
+        onConfirm={async () => {
           if (!selectedComponent) {
             toast.error('No component selected.');
             return;
           }
 
-          handleApiRequest(
-            router,
-            () =>
-              TrainingController.getInstance().startTrainingComponent(
+          let trainingToStart: Training | null = null;
+          const controller = TrainingController.getInstance();
+
+          try {
+            if (!activeTraining) {
+              // start new training
+              const result = await controller.startTrainingComponent(
                 training.id,
                 selectedComponent.id
-              ),
-            (response) => {
-              const training = response[user.uid];
-              if (!training) {
-                toast.error('Failed to start training. Please try again.');
-                return;
-              }
-
-              TrainingService.mapData(training, { exercises });
-
-              const component = training.components.find(
-                (c) => c.id === selectedComponent.id
               );
 
-              if (!component) {
-                toast.error(
-                  'Selected component not found in training. Please try again.'
-                );
+              trainingToStart = result.trainings[user.uid];
+            } else if (
+              activeTraining &&
+              activeComponentStatus === TrainingStatus.IN_PROGRESS
+            ) {
+              // training is already in progress
+              trainingToStart = activeTraining.training;
+            } else {
+              // restart training with new component‚
+              const result = await controller.startTrainingComponent(
+                training.id,
+                selectedComponent.id
+              );
 
-                return;
-              }
+              trainingToStart = result.trainings[user.uid];
+            }
+          } catch (e) {
+            console.error(e);
+            toast.error((e as Error).message || 'An error occurred.');
+            return;
+          }
 
-              const state: ExerciseSetTracking[] =
-                component.supersets
-                  .map((s, sIndex) => {
-                    return s.exercises.map((e) => {
-                      return {
-                        exerciseId: e.id,
-                        supersetIndex: sIndex,
-                        completedSetNumbers: [] as {
-                          setNumber: number;
-                          timestamp: Date;
-                        }[],
-                      };
-                    });
-                  })
-                  .flat() || [];
+          if (!trainingToStart) {
+            toast.error('Failed to start training. Please try again.');
+            return;
+          }
 
-              setTrainingInProgress({
-                training,
-                selectedComponent: component,
-                userId: user.uid,
-                exerciseSetTrackingState: state,
-              } as TrainingInProgress);
+          trainingToStart = TrainingService.mapData(trainingToStart, {
+            exercises,
+          });
 
-              const text = `Welcome to today's ${selectedComponent.id} training. Let's get started!`;
+          const component = training.components.find(
+            (c) => c.id === selectedComponent.id
+          );
 
-              lib.common.textToSpeech.speak(text);
+          if (!component) {
+            toast.error(
+              'Selected component not found in training. Please try again.'
+            );
 
-              setView(ExerciseTrainingView.TrainingView);
-              setModal(false);
-            },
-            undefined,
-            'Failed to start training'
+            return;
+          }
+
+          const state: ExerciseSetTracking[] =
+            component.supersets
+              .map((s, sIndex) => {
+                return s.exercises.map((e) => {
+                  return {
+                    exerciseId: e.id,
+                    supersetIndex: sIndex,
+                    completedSetNumbers: [] as {
+                      setNumber: number;
+                      timestamp: Date;
+                    }[],
+                  };
+                });
+              })
+              .flat() || [];
+
+          setActiveTraining(activeTraining);
+          setTrainingInProgress({
+            training: trainingToStart,
+            selectedComponent: component,
+            userId: user.uid,
+            exerciseSetTrackingState: state,
+          } as TrainingInProgress);
+
+          const text = `Welcome to today's ${selectedComponent.id} training. Let's get started!`;
+          lib.common.textToSpeech.speak(text);
+          setModal(false);
+
+          router.push(
+            `/trainings/${training.id}/components/${selectedComponent.id}`
           );
         }}
       >

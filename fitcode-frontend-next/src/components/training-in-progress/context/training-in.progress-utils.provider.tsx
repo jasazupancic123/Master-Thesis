@@ -1,9 +1,14 @@
-import dayjs from 'dayjs';
-import { createContext, useContext, useEffect, useState } from 'react';
+'use client';
 
-import { ExerciseTrainingView } from '@/core/training/enum/exercise-training-view.enum';
+import dayjs from 'dayjs';
+import { useRouter } from 'next/navigation';
+import { createContext, useContext, useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
+
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
+import { TrainingController } from '@/core/training/training.controller';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
+import { LINK_TRAININGS } from '@/lib/common/const/nav.const';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useTraining } from '@/store/training.provider';
@@ -20,6 +25,7 @@ export interface ITrainingInProgressUtilsCtx {
   handleCloseMenu: () => void;
   handleCancel: () => void;
   handleCancelTraining: () => Promise<void>;
+  handleCompleteTraining: () => Promise<void>;
 }
 
 const TrainingInProgressUtilsContext =
@@ -31,12 +37,9 @@ export const useTrainingInProgressUtils = () =>
 export function TrainingInProgressUtilsProvider({
   children,
 }: React.PropsWithChildren) {
-  const {
-    trainingInProgress,
-    setTrainingInProgress,
-    setView,
-    clearTrainingState,
-  } = useTraining();
+  const router = useRouter();
+  const { trainingInProgress, setTrainingInProgress, clearTrainingState } =
+    useTraining();
 
   const { selectedTrackingMethod } = useAthleteHeader();
 
@@ -54,15 +57,47 @@ export function TrainingInProgressUtilsProvider({
     }
   }, [trainingInProgress?.startOfTraining]);
 
-  const handleCancelTraining = async () => {
+  const handlePauseTraining = async () => {
+    const training = trainingInProgress?.training;
+    const component = trainingInProgress?.selectedComponent;
+    if (!training || !component) return;
+
+    try {
+      await TrainingController.getInstance().pauseTrainingComponent(
+        training.id,
+        component.id
+      );
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to pause training');
+    }
+
+    router.push(LINK_TRAININGS.href);
     await clearTrainingState();
-    setView(ExerciseTrainingView.ExerciseView);
+  };
+
+  const handleCompleteTraining = async () => {
+    const training = trainingInProgress?.training;
+    const component = trainingInProgress?.selectedComponent;
+    if (!training || !component) return;
+
+    try {
+      await TrainingController.getInstance().completeTrainingComponent(
+        training.id,
+        component.id
+      );
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to complete training');
+    }
+
+    router.push(LINK_TRAININGS.href);
+    await clearTrainingState();
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleOpenMenu = (event: any) => {
     if (selectedTrackingMethod === TrackingMethod.CAMERA) return;
-
     setAnchorEl(event.currentTarget);
   };
 
@@ -86,7 +121,8 @@ export function TrainingInProgressUtilsProvider({
     handleOpenMenu,
     handleCloseMenu,
     handleCancel,
-    handleCancelTraining,
+    handleCancelTraining: handlePauseTraining,
+    handleCompleteTraining,
   };
 
   return (

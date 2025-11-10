@@ -67,8 +67,8 @@ export class TrainingReportService {
 
     // check if any other training is already active
     for (const { userId } of input) {
-      const activeTrainingId = await this.getActiveTrainingId(userId);
-      if (activeTrainingId && activeTrainingId !== input[0].training.id) {
+      const active = await this.getActive(userId);
+      if (active && active.trainingId !== input[0].training.id) {
         errors.push({ field: userId, message: 'ACTIVE_TRAINING_EXISTS' });
         continue;
       }
@@ -194,13 +194,13 @@ export class TrainingReportService {
    * are only those that are on the current day. If there are multiple active
    * trainings for the current day, return the one that was started the earliest.
    */
-  async getActiveTrainingId(athleteId: string): Promise<string | null> {
+  async getActive(athleteId: string): Promise<TrainingReport | null> {
     const activeReports = await this.repository.getActiveByAthlete(athleteId);
     if (!activeReports.length) return null;
 
-    return activeReports
-      .sort((a, b) => new Date(a.from).getTime() - new Date(b.from).getTime())
-      .map((r) => r.trainingId)[0];
+    return activeReports.sort(
+      (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime(),
+    )[0];
   }
 
   async update(

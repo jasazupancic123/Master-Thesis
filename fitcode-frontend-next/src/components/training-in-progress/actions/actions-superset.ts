@@ -64,7 +64,7 @@ export const handleFinishSuperset = async (context: {
 
   const { supersetIndex } = useTrainingInProgress;
 
-  const { handleCloseMenu, handleCancelTraining, setShowUndoneSetsError } =
+  const { handleCloseMenu, handleCompleteTraining, setShowUndoneSetsError } =
     useTrainingInProgressUtils;
 
   const { setUndoneExercises } = useUndoneExercises;
@@ -101,7 +101,7 @@ export const handleFinishSuperset = async (context: {
     return;
   }
 
-  await handleCancelTraining();
+  await handleCompleteTraining();
 };
 
 export const handleAdvanceInSuperset = (context: {

@@ -69,17 +69,20 @@ export default function TrainingReportCard({ report }: Props) {
         gap={2}
       >
         {/* Group name, cycle name, date */}
-        <AthleteTrainingCardHeader
-          components={report.prescribed.plannedComponents
-            .map(
-              (c) => Components.find((comp) => comp.field === c.componentId)!
-            )
-            .filter((c) => c !== undefined)}
-          group={report.group}
-          cycle={report.cycle}
-          from={report.from}
-          to={report.to}
-        />
+        {report && (
+          <AthleteTrainingCardHeader
+            report={report}
+            components={report.prescribed.plannedComponents
+              .map(
+                (c) => Components.find((comp) => comp.field === c.componentId)!
+              )
+              .filter((c) => c !== undefined)}
+            group={report.group}
+            cycle={report.cycle}
+            from={report.from}
+            to={report.to}
+          />
+        )}
 
         {/* Report charts */}
         <Box width="100%" display="flex" alignItems="flex-start" gap={'1%'}>

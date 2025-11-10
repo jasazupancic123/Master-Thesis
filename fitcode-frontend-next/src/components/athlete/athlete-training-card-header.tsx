@@ -1,14 +1,17 @@
-import { MoreVert } from '@mui/icons-material';
-import { Box, IconButton, Typography } from '@mui/material';
+import { Check, Circle, MoreVert } from '@mui/icons-material';
+import { Box, IconButton, Typography, useTheme } from '@mui/material';
 
 import ComponentsAvatar from './components-avatar';
 import type { Component } from '@/core/exercise/type/component.type';
 import type { Cycle } from '@/core/group/type/cycle.type';
 import type { Group } from '@/core/group/type/group.type';
 import { MainSet } from '@/core/training/enum/main-set.enum';
+import { TrainingStatus } from '@/core/training/enum/training-status.enum';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
+import type { TrainingReport } from '@/core/training/type/training-report.type';
 
 interface Props {
+  report?: TrainingReport;
   components: TrainingComponent[] | Component[];
   group?: Group;
   cycle?: Cycle;
@@ -17,11 +20,14 @@ interface Props {
 }
 
 export default function AthleteTrainingCardHeader({
+  report,
   components,
   group,
   cycle,
   from,
 }: Props) {
+  const theme = useTheme();
+
   const isTrainingComponentArray = (
     components: TrainingComponent[] | Component[]
   ): components is TrainingComponent[] => {
@@ -81,9 +87,25 @@ export default function AthleteTrainingCardHeader({
         </Box>
       </Box>
 
-      <IconButton sx={{ p: 0, m: 0 }}>
-        <MoreVert />
-      </IconButton>
+      <Box>
+        {report && (
+          <>
+            {report.status === TrainingStatus.IN_PROGRESS && (
+              <Circle
+                sx={{ color: theme.palette.primary.main, fontSize: 12 }}
+              />
+            )}
+
+            {report.status === TrainingStatus.COMPLETED && (
+              <Check sx={{ color: theme.palette.success.main, fontSize: 16 }} />
+            )}
+          </>
+        )}
+
+        <IconButton sx={{ p: 0, m: 0 }}>
+          <MoreVert />
+        </IconButton>
+      </Box>
     </Box>
   );
 }

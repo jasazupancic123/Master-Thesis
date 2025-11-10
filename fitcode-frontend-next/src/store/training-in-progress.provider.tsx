@@ -1,3 +1,5 @@
+'use client';
+
 import { useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
@@ -58,9 +60,9 @@ export const TrainingInProgressProvider = ({
       const item = await lib.common.indexedDb.items.get(
         INDEXED_DB_FIELDS.trainingInProgressAudio
       );
-      if (item && typeof item.payload === 'boolean') {
+
+      if (item && typeof item.payload === 'boolean')
         setAudioEnabled(item.payload);
-      }
       setInitedAudioEnabled(true);
     };
 
