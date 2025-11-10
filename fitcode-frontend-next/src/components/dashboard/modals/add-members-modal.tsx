@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react';
 
 import { theme } from '@/app/style';
 import type { AuthUser } from '@/core/auth/type/user.type';
+import type { Group } from '@/core/group/type/group.type';
 import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import MyModal from '@/ui/modal';
@@ -18,6 +19,7 @@ import { SearchBar } from '@/ui/search-bar/search-bar';
 interface Props extends ModalProps {
   title?: string;
   placeholder?: string;
+  group: Group | null;
   users: AuthUser[];
   disableMaxWidth?: boolean;
   enableFirstShowUsers?: boolean; // to show first 5 users when search is empty
@@ -25,6 +27,7 @@ interface Props extends ModalProps {
 }
 
 export function AddMembersModal({
+  group,
   users,
   title,
   placeholder,
@@ -34,13 +37,13 @@ export function AddMembersModal({
   open,
   setOpen,
 }: Props) {
-  const { selectedGroup, addGroupMember, removeGroupMember } = useDashboard();
+  const { addGroupMember, removeGroupMember } = useDashboard();
 
   const [searchQueryAddPlayer, setSearchQueryAddPlayer] = useState('');
   const [filteredUsers, setFilteredUsers] = useState<AuthUser[] | null>(null);
 
   const isUserIncluded = (user: AuthUser) => {
-    return selectedGroup?.members?.some((m) => m.uid === user.uid);
+    return group?.membersIds.includes(user.uid);
   };
 
   useEffect(() => {
@@ -57,10 +60,22 @@ export function AddMembersModal({
     if (!enableScroll) filteredUsers.length = 5; // limit to 5
 
     setFilteredUsers(
-      filteredUsers.filter(
-        (user, index, self) =>
-          index === self.findIndex((t) => t.uid === user.uid)
-      )
+      filteredUsers
+        .filter(
+          (user, index, self) =>
+            index === self.findIndex((t) => t.uid === user.uid)
+        )
+        .sort((a, b) => {
+          const included = isUserIncluded;
+
+          if (included(b) && !included(a)) return 1;
+          if (included(a) && !included(b)) return -1;
+
+          if (a.displayName && b.displayName) {
+            return a.displayName.localeCompare(b.displayName);
+          }
+          return 0;
+        })
     );
   }, [searchQueryAddPlayer]);
 
@@ -132,9 +147,11 @@ export function AddMembersModal({
                             backgroundColor: theme.palette.grey[700],
                           },
                         }}
-                        onClick={async () =>
-                          await removeGroupMember(user.uid, selectedGroup!.id)
-                        }
+                        onClick={async () => {
+                          if (!group) return;
+
+                          await removeGroupMember(user.uid, group.id);
+                        }}
                       >
                         <Typography variant="body2" color="white">
                           Added
@@ -150,7 +167,10 @@ export function AddMembersModal({
                             backgroundColor: theme.palette.primary.dark,
                           },
                         }}
-                        onClick={() => addGroupMember(user, selectedGroup!.id)}
+                        onClick={() => {
+                          if (!group) return;
+                          addGroupMember(user, group.id);
+                        }}
                       >
                         <Typography
                           variant="body2"

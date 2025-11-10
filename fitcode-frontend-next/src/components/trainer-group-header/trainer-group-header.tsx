@@ -70,6 +70,8 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
   const groupContext = useGroup();
   const trainerDayViewContext = useTrainerDayView();
 
+  const { setGroups } = mainContext;
+
   const {
     institution,
     setGroup,
@@ -229,7 +231,9 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
           gap={3}
         >
           <Box
-            onClick={() => router.push(LINK_DASHBOARD.href)}
+            onClick={() => {
+              router.push(LINK_DASHBOARD.href);
+            }}
             sx={{
               display: 'flex',
               alignItems: 'center',
@@ -318,7 +322,8 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
                             setCycle,
                             setDetectedChanges,
                             router,
-                            setGroup
+                            setGroup,
+                            setGroups
                           )
                         }
                       >
@@ -452,7 +457,8 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
                   setCycle,
                   setDetectedChanges,
                   router,
-                  setGroup
+                  setGroup,
+                  setGroups
                 )
               }
               sx={{

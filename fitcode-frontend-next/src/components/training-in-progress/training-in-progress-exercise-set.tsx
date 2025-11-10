@@ -1,4 +1,4 @@
-import { Box, Divider, Grid2, Typography } from '@mui/material';
+import { Box, Divider, Grid2 } from '@mui/material';
 
 import { NumberExerciseParam } from '../exercise-param/number-exercise-param';
 import { TempoExerciseParam } from '../exercise-param/tempo-exercise-param';
@@ -368,20 +368,9 @@ export default function TrainingInProgressExerciseSet(props: Props) {
             alignItems="center"
             justifyContent="flex-start"
           >
-            <Typography
-              fontSize={10}
-              fontWeight={600}
-              lineHeight={1.4}
-              sx={{
-                color: theme.palette.background.lightBorder,
-              }}
-            >
-              Done
-            </Typography>
             <TrainingExerciseSetDoneCheckbox
               exercise={exercise}
               setIndex={setIndex}
-              exerciseView
             />
           </Box>
         </Grid2>

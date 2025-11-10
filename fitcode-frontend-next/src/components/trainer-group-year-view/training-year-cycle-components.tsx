@@ -13,6 +13,7 @@ import type { Target } from '@/core/exercise/type/target.type';
 import { CycleLevel } from '@/core/group/enum/cycle-level.enum';
 import type { Cycle } from '@/core/group/type/cycle.type';
 import { useGroup } from '@/store/group.provider';
+import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import SelectInput from '@/ui/select-input/select-input';
 
@@ -23,7 +24,10 @@ interface CycleComponentsProps {
 export default function CycleComponents(props: CycleComponentsProps) {
   const theme = useTheme();
   const screenSize = useScreenSize();
+
+  const mainContext = useMain();
   const groupContext = useGroup();
+
   const { setDetectedChanges } = groupContext;
 
   const sortedCyclesContext = useMultiCycleSliderCyclesProvider();
@@ -205,6 +209,7 @@ export default function CycleComponents(props: CycleComponentsProps) {
                                   updateCycleState(
                                     { newCycle },
                                     {
+                                      useMain: mainContext,
                                       useGroup: groupContext,
                                       useSliderCycles: sortedCyclesContext,
                                     }
@@ -254,6 +259,7 @@ export default function CycleComponents(props: CycleComponentsProps) {
                                 updateCycleState(
                                   { newCycle },
                                   {
+                                    useMain: mainContext,
                                     useGroup: groupContext,
                                     useSliderCycles: sortedCyclesContext,
                                   }
@@ -261,101 +267,107 @@ export default function CycleComponents(props: CycleComponentsProps) {
                               }}
                             />
                           </TrainingYearCycleComponentSelectItem>
+                          <>
+                            {selectedTarget && (
+                              <TrainingYearCycleComponentSelectItem label="Objective">
+                                <SelectInput<CycleLevel>
+                                  label=""
+                                  placeholder="Select objective"
+                                  displayEmpty
+                                  value={selectedTarget?.level || ''}
+                                  icon={<></>}
+                                  selectedItemSize={12}
+                                  items={Object.values(CycleLevel)}
+                                  itemKey={undefined}
+                                  itemName={undefined}
+                                  selectPadding={'0'}
+                                  maxWidth={'100%'}
+                                  minWidth={60}
+                                  alignToStart
+                                  selectSx={
+                                    selectedTarget?.level
+                                      ? {
+                                          fontSize: screenSize.isMobile
+                                            ? 12
+                                            : 16,
+                                          fontWeight: 'bold',
+                                        }
+                                      : {}
+                                  }
+                                  setValue={(value) => {
+                                    setDetectedChanges(true);
 
-                          {selectedTarget && (
-                            <TrainingYearCycleComponentSelectItem label="Objective">
-                              <SelectInput<CycleLevel>
-                                label=""
-                                placeholder="Select objective"
-                                displayEmpty
-                                value={selectedTarget?.level || ''}
-                                icon={<></>}
-                                selectedItemSize={12}
-                                items={Object.values(CycleLevel)}
-                                itemKey={undefined}
-                                itemName={undefined}
-                                selectPadding={'0'}
-                                maxWidth={'100%'}
-                                minWidth={60}
-                                alignToStart
-                                selectSx={
-                                  selectedTarget?.level
-                                    ? {
-                                        fontSize: screenSize.isMobile ? 12 : 16,
-                                        fontWeight: 'bold',
-                                      }
-                                    : {}
-                                }
-                                setValue={(value) => {
-                                  setDetectedChanges(true);
+                                    if (value === 'None' || !value) {
+                                      const newCycle: Cycle = {
+                                        ...cycle,
+                                        targets: cycle.targets.map((st) =>
+                                          core.training.component.findByTarget(
+                                            st.targetId,
+                                            component.field
+                                          )
+                                            ? { ...st, level: undefined }
+                                            : st
+                                        ),
+                                      };
 
-                                  if (value === 'None' || !value) {
-                                    const newCycle: Cycle = {
-                                      ...cycle,
-                                      targets: cycle.targets.map((st) =>
+                                      updateCycleState(
+                                        { newCycle },
+                                        {
+                                          useMain: mainContext,
+                                          useGroup: groupContext,
+                                          useSliderCycles: sortedCyclesContext,
+                                        }
+                                      );
+
+                                      return;
+                                    }
+
+                                    const newSelectedTargets =
+                                      cycle.targets.some((st) =>
                                         core.training.component.findByTarget(
                                           st.targetId,
                                           component.field
                                         )
-                                          ? { ...st, level: undefined }
-                                          : st
-                                      ),
+                                      )
+                                        ? cycle.targets.map((st) =>
+                                            core.training.component.findByTarget(
+                                              st.targetId,
+                                              component.field
+                                            )
+                                              ? {
+                                                  ...st,
+                                                  level: value as CycleLevel,
+                                                }
+                                              : st
+                                          )
+                                        : [
+                                            ...cycle.targets,
+                                            {
+                                              componentId: component.field,
+                                              targetId: selectedTarget.targetId,
+                                              componentLevel:
+                                                value as CycleLevel,
+                                            },
+                                          ];
+
+                                    const newCycle: Cycle = {
+                                      ...cycle,
+                                      targets: newSelectedTargets,
                                     };
 
                                     updateCycleState(
                                       { newCycle },
                                       {
+                                        useMain: mainContext,
                                         useGroup: groupContext,
                                         useSliderCycles: sortedCyclesContext,
                                       }
                                     );
-
-                                    return;
-                                  }
-
-                                  const newSelectedTargets = cycle.targets.some(
-                                    (st) =>
-                                      core.training.component.findByTarget(
-                                        st.targetId,
-                                        component.field
-                                      )
-                                  )
-                                    ? cycle.targets.map((st) =>
-                                        core.training.component.findByTarget(
-                                          st.targetId,
-                                          component.field
-                                        )
-                                          ? {
-                                              ...st,
-                                              level: value as CycleLevel,
-                                            }
-                                          : st
-                                      )
-                                    : [
-                                        ...cycle.targets,
-                                        {
-                                          componentId: component.field,
-                                          targetId: selectedTarget.targetId,
-                                          componentLevel: value as CycleLevel,
-                                        },
-                                      ];
-
-                                  const newCycle: Cycle = {
-                                    ...cycle,
-                                    targets: newSelectedTargets,
-                                  };
-
-                                  updateCycleState(
-                                    { newCycle },
-                                    {
-                                      useGroup: groupContext,
-                                      useSliderCycles: sortedCyclesContext,
-                                    }
-                                  );
-                                }}
-                              />
-                            </TrainingYearCycleComponentSelectItem>
-                          )}
+                                  }}
+                                />
+                              </TrainingYearCycleComponentSelectItem>
+                            )}
+                          </>
                         </Box>
                       </Box>
                       {(() => {

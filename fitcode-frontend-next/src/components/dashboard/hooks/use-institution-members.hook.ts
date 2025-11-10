@@ -16,21 +16,21 @@ import type { ImportProfile } from '@/core/profile/type/user.type';
 import { lib } from '@/lib';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
+import { Group } from '@/core/group/type/group.type';
+import { SetState } from '@/lib/common/type/state.type';
 
 export type IInstitutionMembersHook = ReturnType<typeof useInstitutionMembers>;
 
-export default function useInstitutionMembers() {
+export default function useInstitutionMembers(
+  group: Group | null,
+  setGroup: SetState<Group | null>
+) {
   const { users, profiles, setProfiles } = useMain();
   const { isFormEmpty, setFormData, formData, resetForm } =
     useRegisterMemberForm();
 
-  const {
-    selectedInstitution,
-    selectedGroup,
-    setSelectedGroup,
-    setSelectedInstitution,
-    setUsers,
-  } = useDashboard();
+  const { selectedInstitution, setSelectedInstitution, setUsers } =
+    useDashboard();
 
   const [existingUser, setExistingUser] = useState<AuthUser | null>(null);
   const [isUploadingMembers, setIsUploadingMembers] = useState(false);
@@ -99,7 +99,7 @@ export default function useInstitutionMembers() {
 
     const prevState = {
       institution: structuredClone(selectedInstitution),
-      group: selectedGroup ? structuredClone(selectedGroup) : null,
+      group: group ? structuredClone(group) : null,
       users: structuredClone(users || []),
       profiles: structuredClone(profiles || []),
     };
@@ -136,7 +136,7 @@ export default function useInstitutionMembers() {
             athleteIds: prev!.athleteIds?.filter((id) => id !== userId),
           }));
 
-        setSelectedGroup((prev) =>
+        setGroup((prev) =>
           !prev
             ? prev
             : {
@@ -150,7 +150,7 @@ export default function useInstitutionMembers() {
       },
       (snapshot) => {
         setSelectedInstitution(snapshot.institution);
-        setSelectedGroup(snapshot.group);
+        setGroup(snapshot.group);
         setUsers(snapshot.users);
         setProfiles(snapshot.profiles);
       },

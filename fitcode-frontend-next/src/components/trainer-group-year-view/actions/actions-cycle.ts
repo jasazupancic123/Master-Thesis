@@ -7,6 +7,7 @@ import type { GroupController } from '@/core/group/group.controller';
 import type { Cycle } from '@/core/group/type/cycle.type';
 import { handleApiRequest } from '@/lib/common/type/state.type';
 import type { IGroupCtx } from '@/store/group.provider';
+import type { IMainContext } from '@/store/main.provider';
 
 type AddCycleInput = Pick<Cycle, 'name' | 'from' | 'to' | 'description'>;
 
@@ -17,13 +18,16 @@ export async function handleAddCycle(
     addCycleInput: AddCycleInput;
   },
   context: {
+    useMain: IMainContext;
     useGroup: IGroupCtx;
     useSliderCycles: SliderCyclesProviderReturnType;
   }
 ) {
   const { controller, router, addCycleInput } = input;
 
-  const { useGroup, useSliderCycles } = context;
+  const { useMain, useGroup, useSliderCycles } = context;
+
+  const { setGroups } = useMain;
 
   const { selectedGroup, setSelectedGroup, setGroup, setCycle } = useGroup;
 
@@ -64,6 +68,9 @@ export async function handleAddCycle(
 
       const newGroup = { ...selectedGroup, cycles: newCycles };
       setGroup(newGroup);
+      setGroups((prev) =>
+        prev.map((g) => (g.id === newGroup.id ? newGroup : g))
+      );
       setSelectedGroup(newGroup);
       toast.success('Cycle added successfully.');
     },
@@ -78,13 +85,16 @@ export async function handleDeleteCycle(
     controller: GroupController;
   },
   context: {
+    useMain: IMainContext;
     useGroup: IGroupCtx;
     useSliderCycles: SliderCyclesProviderReturnType;
   }
 ) {
   const { router, controller } = input;
 
-  const { useGroup, useSliderCycles } = context;
+  const { useMain, useGroup, useSliderCycles } = context;
+
+  const { setGroups } = useMain;
 
   const { selectedGroup, setSelectedGroup, setGroup, cycle, setCycle } =
     useGroup;
@@ -107,6 +117,16 @@ export async function handleDeleteCycle(
         ...prev,
         cycles: prev.cycles.filter((c) => c.id !== editCycle.id),
       }));
+      setGroups((prev) =>
+        prev.map((g) =>
+          g.id === selectedGroup.id
+            ? {
+                ...g,
+                cycles: g.cycles.filter((c) => c.id !== editCycle.id),
+              }
+            : g
+        )
+      );
 
       setEditCycle(null);
 
@@ -123,15 +143,18 @@ export const updateCycleState = (
     newCycle: Cycle;
   },
   context: {
+    useMain: IMainContext;
     useGroup: IGroupCtx;
     useSliderCycles: SliderCyclesProviderReturnType;
   }
 ) => {
   const { newCycle } = input;
 
-  const { useGroup, useSliderCycles } = context;
+  const { useMain, useGroup, useSliderCycles } = context;
 
-  const { setGroup } = useGroup;
+  const { setGroups } = useMain;
+
+  const { group, setGroup } = useGroup;
 
   const { sortedCycles, setSortedCycles } = useSliderCycles;
 
@@ -141,20 +164,31 @@ export const updateCycleState = (
 
   setSortedCycles(newCycles);
 
+  const newStateCycles = group.cycles.map(
+    (c) => newCycles.find((nc) => nc.id === c.id) || c
+  );
+
+  newCycles.forEach((nc) => {
+    if (!newStateCycles.some((c) => c.id === nc.id)) {
+      newStateCycles.push(nc);
+    }
+  });
+
   setGroup((prevGroup) => {
-    const newStateCycles = prevGroup.cycles.map(
-      (c) => newCycles.find((nc) => nc.id === c.id) || c
-    );
-
-    newCycles.forEach((nc) => {
-      if (!newStateCycles.some((c) => c.id === nc.id)) {
-        newStateCycles.push(nc);
-      }
-    });
-
     return {
       ...prevGroup,
       cycles: newStateCycles,
     };
   });
+
+  setGroups((prev) =>
+    prev.map((g) =>
+      g.id === group.id
+        ? {
+            ...g,
+            cycles: newStateCycles,
+          }
+        : g
+    )
+  );
 };

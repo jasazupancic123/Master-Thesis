@@ -31,6 +31,7 @@ import type {
   ExerciseParamFieldExtended,
 } from '@/core/training/type/exercise-set.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import { EMPTY_STRING } from '@/lib/common/const/string.const';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useSupersets } from '@/store/supersets.provider';
@@ -293,7 +294,7 @@ export default function TrainingExerciseChart(
 
                   return dayjs(data.timestamp).isSame(new Date(), 'day')
                     ? dayjs(data.timestamp).format('DD.MM.')
-                    : '\u200B';
+                    : EMPTY_STRING;
                 }}
               />
 

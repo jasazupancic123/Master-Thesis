@@ -171,7 +171,7 @@ export default function ExercisesPage() {
   }, [allExercises]);
 
   return (
-    <Box p={2} px={screenSize.isMobile ? 0 : undefined}>
+    <Box p={2} pt={0} px={screenSize.isMobile ? 0 : undefined}>
       <Box
         width="100%"
         display="flex"

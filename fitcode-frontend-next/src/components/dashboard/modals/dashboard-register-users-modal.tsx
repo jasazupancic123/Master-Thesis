@@ -9,17 +9,24 @@ import {
   Typography,
 } from '@mui/material';
 
-import useInstitutionMembers from './hooks/use-institution-members.hook';
-import useRegisterMemberForm from './hooks/use-register-member-form.hook';
+import useInstitutionMembers from '../hooks/use-institution-members.hook';
+import useRegisterMemberForm from '../hooks/use-register-member-form.hook';
 import type { UserRole } from '@/core/profile/enum/user-role.enum';
 import MyModal from '@/ui/modal';
+import { Group } from '@/core/group/type/group.type';
+import { SetState } from '@/lib/common/type/state.type';
 
 interface Props {
   registerRole: UserRole;
+  group: Group | null;
+  setGroup: SetState<Group | null>;
 }
 
-export default function RegisterUsersDashboard({ registerRole }: Props) {
+export default function RegisterUsersDashboard(props: Props) {
   const { formData, setFormField } = useRegisterMemberForm();
+
+  const { registerRole, group, setGroup } = props;
+
   const {
     openModal,
     setOpenModal,
@@ -28,7 +35,7 @@ export default function RegisterUsersDashboard({ registerRole }: Props) {
     isUploadingMembers,
     registerUser,
     addUser,
-  } = useInstitutionMembers();
+  } = useInstitutionMembers(group, setGroup);
 
   return (
     <>
