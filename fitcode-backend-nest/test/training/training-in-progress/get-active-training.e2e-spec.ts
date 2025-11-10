@@ -1,5 +1,4 @@
 import { TestApp } from '@test/common/utils/app.util';
-import { subHours } from 'date-fns';
 
 import type { TestInstitution } from '@src/common/type/entity.type';
 import { getTime } from '@src/common/utils/date.util';
@@ -199,12 +198,6 @@ describe('Get Active Training (e2e)', () => {
 
     const reports2 = await db.trainingReports.getAllByTraining(training.id);
     expect(reports2).toHaveLength(1);
-
-    // update `from` date for earliestTraining report
-    await db.trainingReports.update(
-      { trainingId: earliestTraining.id, userId: global.athlete.uid },
-      { from: subHours(new Date(), 2), to: subHours(new Date(), 1) },
-    );
 
     const res = await req(global.athlete.token);
     expect(res.status).toBe(200);
