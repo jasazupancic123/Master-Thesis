@@ -5,4 +5,5 @@ export type ILink = {
   href: string;
   label: string;
   icon?: ReactNode;
+  selectedIcon?: ReactNode;
 };
