@@ -8,7 +8,7 @@ import type { Training } from '@src/training/entity/training.entity';
 import { TrainingStatus } from '@src/training/enum/training-status.enum';
 import { generateTrainingComponent } from '@src/training/mock/training.stub';
 
-describe('Finalize Training Component (e2e)', () => {
+describe('Complete Training Component (e2e)', () => {
   let testApp: TestApp;
   let db: TestDbService;
 
@@ -71,52 +71,29 @@ describe('Finalize Training Component (e2e)', () => {
     );
   }
 
-  async function req(
-    token: string,
-    trainingId: string,
-    componentId: string,
-    status: TrainingStatus,
-  ) {
+  async function req(token: string, trainingId: string, componentId: string) {
     return await testApp.http.post(
-      `/training/${trainingId}/component/${componentId}/finalize`,
+      `/training/${trainingId}/component/${componentId}/complete`,
       token,
-      { status },
     );
   }
 
   it('should throw error if training not found', async () => {
     const athlete = institution1.athletes[0];
-    const res = await req(
-      athlete.token,
-      'non-existing-training-id',
-      'c1',
-      TrainingStatus.COMPLETED,
-    );
+    const res = await req(athlete.token, 'non-existing-training-id', 'c1');
 
     expect(res.status).toBe(400);
     expect(res.body.message).toBe('Training not found');
   });
 
   it('should throw error if manager cannot access this training', async () => {
-    const res = await req(
-      institution2.manager.token,
-      training1.id,
-      'c1',
-      TrainingStatus.COMPLETED,
-    );
-
+    const res = await req(institution2.manager.token, training1.id, 'c1');
     expect(res.status).toBe(401);
     expect(res.body.message).toBe('You cannot view this training');
   });
 
   it('should throw error if trainer cannot access this training', async () => {
-    const res = await req(
-      institution2.trainers[0].token,
-      training1.id,
-      'c1',
-      TrainingStatus.COMPLETED,
-    );
-
+    const res = await req(institution2.trainers[0].token, training1.id, 'c1');
     expect(res.status).toBe(401);
     expect(res.body.message).toBe('You cannot view this training');
   });
@@ -128,13 +105,7 @@ describe('Finalize Training Component (e2e)', () => {
       { institutionId: institution1.id, uid: newAthlete.uid },
     );
 
-    const res = await req(
-      newAthlete.token,
-      training1.id,
-      'c1',
-      TrainingStatus.COMPLETED,
-    );
-
+    const res = await req(newAthlete.token, training1.id, 'c1');
     expect(res.status).toBe(401);
     expect(res.body.message).toBe('You cannot view this training');
 
@@ -152,7 +123,6 @@ describe('Finalize Training Component (e2e)', () => {
       athlete.token,
       training1.id,
       'non-existing-component',
-      TrainingStatus.COMPLETED,
     );
 
     expect(res.status).toBe(404);
@@ -166,13 +136,7 @@ describe('Finalize Training Component (e2e)', () => {
     await startReq(athlete.token, training1.id, 'c1');
 
     // complete it
-    const res = await req(
-      athlete.token,
-      training1.id,
-      'c1',
-      TrainingStatus.COMPLETED,
-    );
-
+    const res = await req(athlete.token, training1.id, 'c1');
     expect(res.status).toBe(201);
     const reports = await db.trainingReports.getAllByTraining(training1.id);
     expect(reports).toHaveLength(1);
@@ -196,13 +160,7 @@ describe('Finalize Training Component (e2e)', () => {
     await startReq(trainer.token, training2.id, 'c1');
 
     // complete it
-    const res = await req(
-      trainer.token,
-      training2.id,
-      'c1',
-      TrainingStatus.COMPLETED,
-    );
-
+    const res = await req(trainer.token, training2.id, 'c1');
     expect(res.status).toBe(201);
     const reports = await db.trainingReports.getAllByTraining(training2.id);
     expect(reports).toHaveLength(3);
@@ -225,17 +183,33 @@ describe('Finalize Training Component (e2e)', () => {
     await db.trainingReports.deleteAllByTraining(training2.id);
   });
 
+  it('should throw error if component is not created yet', async () => {
+    const athlete = institution1.athletes[0];
+    const res = await req(athlete.token, training1.id, 'c1');
+
+    expect(res.status).toBe(201);
+    expect(res.body.errors).toEqual([
+      { field: athlete.uid, message: 'REPORT_NOT_FOUND' },
+    ]);
+  });
+
   it('should throw error if component is not started yet', async () => {
     const athlete = institution1.athletes[0];
-    const res = await req(
-      athlete.token,
-      training1.id,
-      'c1',
-      TrainingStatus.COMPLETED,
-    );
+    await startReq(athlete.token, training1.id, 'c2');
+    const report = await db.trainingReports.findById({
+      trainingId: training1.id,
+      userId: athlete.uid,
+    });
 
-    expect(res.status).toBe(400);
-    expect(res.body.message).toBe('Training component not started yet');
+    expect(report).toBeDefined();
+
+    const res = await req(athlete.token, training1.id, 'c1');
+    expect(res.status).toBe(201);
+    expect(res.body.errors).toEqual([
+      { field: athlete.uid, message: 'COMPONENT_NOT_STARTED' },
+    ]);
+
+    await db.trainingReports.deleteAllByTraining(training1.id);
   });
 
   it('should throw error if component is already completed', async () => {
@@ -244,17 +218,14 @@ describe('Finalize Training Component (e2e)', () => {
     // start component first
     await startReq(athlete.token, training1.id, 'c1');
     // complete it
-    await req(athlete.token, training1.id, 'c1', TrainingStatus.COMPLETED);
+    await req(athlete.token, training1.id, 'c1');
     // try to complete again
-    const res = await req(
-      athlete.token,
-      training1.id,
-      'c1',
-      TrainingStatus.COMPLETED,
-    );
+    const res = await req(athlete.token, training1.id, 'c1');
 
-    expect(res.status).toBe(400);
-    expect(res.body.message).toBe('Training component already completed');
+    expect(res.status).toBe(201);
+    expect(res.body.errors).toEqual([
+      { field: athlete.uid, message: 'COMPONENT_COMPLETED' },
+    ]);
   });
 
   it('should complete all components and training itself', async () => {
@@ -262,16 +233,11 @@ describe('Finalize Training Component (e2e)', () => {
 
     // start and complete c1
     await startReq(athlete.token, training1.id, 'c1');
-    await req(athlete.token, training1.id, 'c1', TrainingStatus.COMPLETED);
+    await req(athlete.token, training1.id, 'c1');
 
     // start and complete c2
     await startReq(athlete.token, training1.id, 'c2');
-    const res = await req(
-      athlete.token,
-      training1.id,
-      'c2',
-      TrainingStatus.COMPLETED,
-    );
+    const res = await req(athlete.token, training1.id, 'c2');
 
     expect(res.status).toBe(201);
     const reports = await db.trainingReports.getAllByTraining(training1.id);

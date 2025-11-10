@@ -480,4 +480,63 @@ describe('Upsert Set (e2e)', () => {
     await db.workloads.deleteAll(trainingId);
     await db.trainingReports.deleteAllByTraining(trainingId);
   });
+
+  it('should successfully create new workload if status is PAUSED', async () => {
+    await startTrainingComponentReq(global.trainer.token, trainingId, 'c1');
+
+    await db.trainingReports.updateStatus(
+      { trainingId, userId: global.athlete.uid },
+      'c1',
+      TrainingStatus.PAUSED,
+    );
+
+    const existing = await db.workloads.getAll(trainingId);
+    expect(existing).toHaveLength(0);
+
+    const from = new Date();
+    const res = await req(
+      global.trainer.token,
+      trainingId,
+      'c1',
+      'squat',
+      0,
+      1,
+      {
+        userId: global.athlete.uid,
+        timestamp: from,
+        reps: 8,
+        loadKg: 70,
+        recTime: 90,
+        tempoEcc: 2,
+        tempoIso: 0,
+        tempoCon: 2,
+        tempoIdle: 0,
+      },
+    );
+
+    expect(res.status).toBe(201);
+    const result = res.body as Workload;
+    expect(result.trainingId).toBe(trainingId);
+    expect(result.componentId).toBe('c1');
+    expect(result.exerciseId).toBe('squat');
+    expect(result.userId).toBe(global.athlete.uid);
+    expect(result.setNumber).toBe(1);
+
+    const workloads = await db.workloads.getAll(trainingId);
+    expect(workloads).toHaveLength(1);
+
+    // 7. Verify that the training component status is now IN_PROGRESS again
+    const report = await db.trainingReports.findById({
+      trainingId,
+      userId: global.athlete.uid,
+    });
+
+    expect(
+      report?.componentStatuses?.find((c) => c.componentId === 'c1')?.status,
+    ).toBe(TrainingStatus.IN_PROGRESS);
+
+    // cleanup
+    await db.workloads.deleteAll(trainingId);
+    await db.trainingReports.deleteAllByTraining(trainingId);
+  });
 });

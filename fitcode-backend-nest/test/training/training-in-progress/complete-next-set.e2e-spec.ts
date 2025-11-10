@@ -11,6 +11,7 @@ import type {
   Workload,
 } from '@src/training/entity/workload.entity';
 import { SetStatus } from '@src/training/enum/set-status.enum';
+import { TrainingStatus } from '@src/training/enum/training-status.enum';
 import {
   generateExerciseSet,
   generateSubgroup,
@@ -132,14 +133,8 @@ describe('Complete Next Set (e2e)', () => {
   });
 
   afterAll(async () => {
-    await Promise.all([
-      db.trainings.clear(),
-      db.groups.delete(group.id),
-      db.institutions.remove(institution.id),
-      db.trainings.delete(trainingId),
-      db.exercises.clear(),
-    ]);
-
+    await db.institutions.remove(institution.id);
+    await db.clear();
     await testApp.close();
   });
 
@@ -289,6 +284,30 @@ describe('Complete Next Set (e2e)', () => {
     expect(res.body.message).toBe(
       'Training component has not been started yet',
     );
+  });
+
+  it('should fail if component is already completed', async () => {
+    await startTrainingComponentReq(global.trainer.token, trainingId, 'c1');
+
+    await db.trainingReports.updateStatus(
+      { trainingId, userId: global.athlete.uid },
+      'c1',
+      TrainingStatus.COMPLETED,
+    );
+
+    const res = await req(global.trainer.token, trainingId, 'squat', {
+      userId: global.athlete.uid,
+      timestamp: new Date(),
+      recTime: 0,
+      reps: 1,
+    });
+
+    expect(res.status).toBe(409);
+    expect(res.body.message).toBe(
+      'Training component has already been completed',
+    );
+
+    await db.trainingReports.deleteAllByTraining(trainingId);
   });
 
   it('should complete first set of exercise (when no workloads are in the database)', async () => {
@@ -596,6 +615,7 @@ describe('Complete Next Set (e2e)', () => {
 
     const workloads = await db.workloads.getAll(trainingId2);
     expect(workloads).toHaveLength(2);
+    await db.workloads.deleteAll(trainingId);
     await db.workloads.deleteAll(trainingId2);
     await db.trainings.delete(trainingId2);
     await db.trainingReports.deleteAllByTraining(trainingId2);
@@ -662,5 +682,56 @@ describe('Complete Next Set (e2e)', () => {
     await db.trainings.delete(trainingId3);
     await db.exercises.delete(exercise.id);
     await db.trainingReports.deleteAllByTraining(trainingId3);
+  });
+
+  it('should successfully create new workload if status of the component is PAUSED and put component into IN_PROGRESS state', async () => {
+    await startTrainingComponentReq(global.trainer.token, trainingId, 'c1');
+
+    await db.trainingReports.updateStatus(
+      { trainingId, userId: global.athlete.uid },
+      'c1',
+      TrainingStatus.PAUSED,
+    );
+
+    const existing = await db.workloads.getAll(trainingId);
+    expect(existing).toHaveLength(0);
+
+    const from = new Date();
+    const res = await req(global.trainer.token, trainingId, 'squat', {
+      userId: global.athlete.uid,
+      timestamp: from,
+      reps: 8,
+      loadKg: 70,
+      recTime: 90,
+      tempoEcc: 2,
+      tempoIso: 0,
+      tempoCon: 2,
+      tempoIdle: 0,
+    });
+
+    expect(res.status).toBe(201);
+    const result = res.body as Workload;
+    expect(result.trainingId).toBe(trainingId);
+    expect(result.componentId).toBe('c1');
+    expect(result.exerciseId).toBe('squat');
+    expect(result.userId).toBe(global.athlete.uid);
+    expect(result.setNumber).toBe(1);
+
+    const workloads = await db.workloads.getAll(trainingId);
+    expect(workloads).toHaveLength(1);
+
+    // 7. Verify that the training component status is now IN_PROGRESS again
+    const report = await db.trainingReports.findById({
+      trainingId,
+      userId: global.athlete.uid,
+    });
+
+    expect(
+      report?.componentStatuses?.find((c) => c.componentId === 'c1')?.status,
+    ).toBe(TrainingStatus.IN_PROGRESS);
+
+    // cleanup
+    await db.workloads.deleteAll(trainingId);
+    await db.trainingReports.deleteAllByTraining(trainingId);
   });
 });

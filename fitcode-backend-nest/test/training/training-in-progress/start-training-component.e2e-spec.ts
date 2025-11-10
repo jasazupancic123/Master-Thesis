@@ -5,6 +5,7 @@ import type { TestInstitution, TestUser } from '@src/common/type/entity.type';
 import type { Group } from '@src/group/entity/group.entity';
 import { TestDbService } from '@src/test-db/test-db.service';
 import type { Training } from '@src/training/entity/training.entity';
+import type { TrainingReport } from '@src/training/entity/training-report.entity';
 import { SetStatus } from '@src/training/enum/set-status.enum';
 import { TrainingStatus } from '@src/training/enum/training-status.enum';
 import {
@@ -14,6 +15,14 @@ import {
   generateTrainingExercise,
 } from '@src/training/mock/training.stub';
 import { TrainingReportRepository } from '@src/training/repository/training-report.repository';
+
+function findStatus(
+  report: TrainingReport,
+  componentId: string,
+): TrainingStatus {
+  return report.componentStatuses.find((c) => c.componentId === componentId)
+    ?.status;
+}
 
 describe('Start Training Component (e2e)', () => {
   let testApp: TestApp;
@@ -78,30 +87,52 @@ describe('Start Training Component (e2e)', () => {
     await db.clear();
   });
 
-  async function req(token: string, trainingId: string, componentId: string) {
+  async function req(
+    token: string,
+    trainingId: string,
+    componentId: string,
+    userId?: string,
+  ) {
     return await testApp.http.post(
       `/training/${trainingId}/component/${componentId}/start`,
       token,
-      {},
+      { userId },
     );
   }
 
   it('should throw error if training not found', async () => {
     const athlete = institution1.athletes[0];
-    const res = await req(athlete.token, 'non-existing-training-id', 'c1');
+    const res = await req(
+      athlete.token,
+      'non-existing-training-id',
+      'c1',
+      athlete.uid,
+    );
 
     expect(res.status).toBe(400);
     expect(res.body.message).toBe('Training not found');
   });
 
   it('should throw error if manager cannot access this training', async () => {
-    const res = await req(institution2.manager.token, training1.id, 'c1');
+    const res = await req(
+      institution2.manager.token,
+      training1.id,
+      'c1',
+      global.athlete.uid,
+    );
+
     expect(res.status).toBe(401);
     expect(res.body.message).toBe('You cannot view this training');
   });
 
   it('should throw error if trainer cannot access this training', async () => {
-    const res = await req(institution2.trainers[0].token, training1.id, 'c1');
+    const res = await req(
+      institution2.trainers[0].token,
+      training1.id,
+      'c1',
+      global.athlete.uid,
+    );
+
     expect(res.status).toBe(401);
     expect(res.body.message).toBe('You cannot view this training');
   });
@@ -113,7 +144,7 @@ describe('Start Training Component (e2e)', () => {
       { institutionId: institution1.id, uid: newAthlete.uid },
     );
 
-    const res = await req(newAthlete.token, training1.id, 'c1');
+    const res = await req(newAthlete.token, training1.id, 'c1', newAthlete.uid);
     expect(res.status).toBe(401);
     expect(res.body.message).toBe('You cannot view this training');
 
@@ -131,34 +162,57 @@ describe('Start Training Component (e2e)', () => {
       athlete.token,
       training1.id,
       'non-existing-component',
+      athlete.uid,
     );
 
     expect(res.status).toBe(404);
     expect(res.body.message).toBe('Component not found');
   });
 
-  it('should successfully start training component for athlete', async () => {
+  it('should successfully start training component for athlete (by himself)', async () => {
     const athlete = institution1.athletes[0];
-    const res = await req(athlete.token, training1.id, 'c1');
+    const res = await req(athlete.token, training1.id, 'c1', athlete.uid);
     expect(res.status).toBe(201);
     expect(res.body).toEqual({
-      [athlete.uid]: expect.objectContaining({ id: training1.id }),
+      errors: [],
+      trainings: {
+        [athlete.uid]: expect.objectContaining({ id: training1.id }),
+      },
     });
 
     const reports = await db.trainingReports.getAllByTraining(training1.id);
     expect(reports).toHaveLength(1);
 
-    const c1Status = reports[0].componentStatuses.find(
-      (c) => c.componentId === 'c1',
-    );
+    const c1Status = findStatus(reports[0], 'c1');
+    const c2Status = findStatus(reports[0], 'c2');
+    expect(c1Status).toBe(TrainingStatus.IN_PROGRESS);
+    expect(c2Status).toBe(TrainingStatus.NOT_STARTED);
+    expect(reports[0].status).toBe(TrainingStatus.IN_PROGRESS);
 
-    expect(c1Status.status).toBe(TrainingStatus.IN_PROGRESS);
+    await db.trainingReports.deleteAllByTraining(training1.id);
+  });
 
-    const c2Status = reports[0].componentStatuses.find(
-      (c) => c.componentId === 'c2',
-    );
+  it('should successfully start training component for athlete (by trainer)', async () => {
+    const athlete = institution1.athletes[0];
+    const trainer = institution1.trainers[0];
 
-    expect(c2Status.status).toBe(TrainingStatus.NOT_STARTED);
+    const res = await req(trainer.token, training1.id, 'c1', athlete.uid);
+    expect(res.status).toBe(201);
+    expect(res.body).toEqual({
+      errors: [],
+      trainings: {
+        [athlete.uid]: expect.objectContaining({ id: training1.id }),
+      },
+    });
+
+    const reports = await db.trainingReports.getAllByTraining(training1.id);
+    expect(reports).toHaveLength(1);
+
+    const c1Status = findStatus(reports[0], 'c1');
+    const c2Status = findStatus(reports[0], 'c2');
+    expect(c1Status).toBe(TrainingStatus.IN_PROGRESS);
+    expect(c2Status).toBe(TrainingStatus.NOT_STARTED);
+    expect(reports[0].status).toBe(TrainingStatus.IN_PROGRESS);
 
     await db.trainingReports.deleteAllByTraining(training1.id);
   });
@@ -168,15 +222,18 @@ describe('Start Training Component (e2e)', () => {
     const res = await req(trainer.token, training2.id, 'c1');
     expect(res.status).toBe(201);
     expect(res.body).toEqual({
-      [institution2.athletes[0].uid]: expect.objectContaining({
-        id: training2.id,
-      }),
-      [institution2.athletes[1].uid]: expect.objectContaining({
-        id: training2.id,
-      }),
-      [institution2.athletes[2].uid]: expect.objectContaining({
-        id: training2.id,
-      }),
+      errors: [],
+      trainings: {
+        [institution2.athletes[0].uid]: expect.objectContaining({
+          id: training2.id,
+        }),
+        [institution2.athletes[1].uid]: expect.objectContaining({
+          id: training2.id,
+        }),
+        [institution2.athletes[2].uid]: expect.objectContaining({
+          id: training2.id,
+        }),
+      },
     });
 
     const reports = await db.trainingReports.getAllByTraining(training2.id);
@@ -186,15 +243,11 @@ describe('Start Training Component (e2e)', () => {
       const report = reports.find((r) => r.userId === athlete.uid);
       expect(report).toBeDefined();
 
-      const c1Status = report.componentStatuses.find(
-        (c) => c.componentId === 'c1',
-      );
-      expect(c1Status.status).toBe(TrainingStatus.IN_PROGRESS);
-
-      const c3Status = report.componentStatuses.find(
-        (c) => c.componentId === 'c3',
-      );
-      expect(c3Status.status).toBe(TrainingStatus.NOT_STARTED);
+      const c1Status = findStatus(report, 'c1');
+      const c3Status = findStatus(report, 'c3');
+      expect(c1Status).toBe(TrainingStatus.IN_PROGRESS);
+      expect(c3Status).toBe(TrainingStatus.NOT_STARTED);
+      expect(report.status).toBe(TrainingStatus.IN_PROGRESS);
     }
 
     await db.trainingReports.deleteAllByTraining(training2.id);
@@ -235,8 +288,11 @@ describe('Start Training Component (e2e)', () => {
     );
 
     const res = await req(athlete.token, training1.id, 'c1');
-    expect(res.status).toBe(400);
-    expect(res.body.message).toBe('Training component already completed');
+    expect(res.status).toBe(201);
+    expect(res.body.errors).toEqual([
+      { field: athlete.uid, message: 'COMPONENT_COMPLETED' },
+    ]);
+
     await db.trainingReports.deleteAllByTraining(training1.id);
   });
 
@@ -249,26 +305,22 @@ describe('Start Training Component (e2e)', () => {
     const reports = await db.trainingReports.getAllByTraining(training1.id);
     expect(reports).toHaveLength(1);
 
-    const c1Status = reports[0].componentStatuses.find(
-      (c) => c.componentId === 'c1',
-    );
-    const c2Status = reports[0].componentStatuses.find(
-      (c) => c.componentId === 'c2',
-    );
+    const c1Status = findStatus(reports[0], 'c1');
+    const c2Status = findStatus(reports[0], 'c2');
+    expect(c1Status).toBe(TrainingStatus.IN_PROGRESS);
+    expect(c2Status).toBe(TrainingStatus.IN_PROGRESS);
 
-    expect(c1Status.status).toBe(TrainingStatus.IN_PROGRESS);
-    expect(c2Status.status).toBe(TrainingStatus.IN_PROGRESS);
     await db.trainingReports.deleteAllByTraining(training1.id);
   });
 
-  it('should successfully go into training in progress if training component was cancelled', async () => {
+  it('should successfully go into training in progress if training component was paused', async () => {
     const athlete = institution1.athletes[0];
     await req(athlete.token, training1.id, 'c1');
 
     await db.trainingReports.updateStatus(
       { trainingId: training1.id, userId: athlete.uid },
       'c1',
-      TrainingStatus.CANCELLED,
+      TrainingStatus.PAUSED,
     );
 
     const res = await req(athlete.token, training1.id, 'c1');
@@ -277,11 +329,8 @@ describe('Start Training Component (e2e)', () => {
     const reports = await db.trainingReports.getAllByTraining(training1.id);
     expect(reports).toHaveLength(1);
 
-    const c1Status = reports[0].componentStatuses.find(
-      (c) => c.componentId === 'c1',
-    );
-
-    expect(c1Status.status).toBe(TrainingStatus.IN_PROGRESS);
+    const c1Status = findStatus(reports[0], 'c1');
+    expect(c1Status).toBe(TrainingStatus.IN_PROGRESS);
     await db.trainingReports.deleteAllByTraining(training1.id);
   });
 
@@ -316,7 +365,7 @@ describe('Start Training Component (e2e)', () => {
     reports = await db.trainingReports.getAllByTraining(training2.id);
     expect(reports).toHaveLength(3);
 
-    const trainings = res.body as Record<string, Training>;
+    const trainings = res.body.trainings as Record<string, Training>;
     expect(trainings[athlete.uid].id).toBe(training2.id);
 
     const firstSet =
@@ -329,7 +378,6 @@ describe('Start Training Component (e2e)', () => {
     const workloads = await db.workloads.getAll(training2.id);
     expect(workloads).toHaveLength(1);
     expect(workloads[0].setNumber).toBe(1);
-    expect(workloads[0].status).toBe(SetStatus.PARTIAL);
 
     // clean up
     await db.workloads.deleteAll(training2.id);
@@ -345,15 +393,11 @@ describe('Start Training Component (e2e)', () => {
     expect(reports).toHaveLength(1);
 
     let athleteReport = reports.find((r) => r.userId === athlete.uid);
-    let c1Status = athleteReport.componentStatuses.find(
-      (c) => c.componentId === 'c1',
-    );
-    let c3Status = athleteReport.componentStatuses.find(
-      (c) => c.componentId === 'c3',
-    );
-
-    expect(c1Status.status).toBe(TrainingStatus.IN_PROGRESS);
-    expect(c3Status.status).toBe(TrainingStatus.NOT_STARTED);
+    let c1Status = findStatus(athleteReport, 'c1');
+    let c3Status = findStatus(athleteReport, 'c3');
+    expect(c1Status).toBe(TrainingStatus.IN_PROGRESS);
+    expect(c3Status).toBe(TrainingStatus.NOT_STARTED);
+    expect(athleteReport.status).toBe(TrainingStatus.IN_PROGRESS);
 
     const trainer = institution2.trainers[0];
     res = await req(trainer.token, training2.id, 'c3');
@@ -363,17 +407,127 @@ describe('Start Training Component (e2e)', () => {
     expect(reports).toHaveLength(3);
 
     athleteReport = reports.find((r) => r.userId === athlete.uid);
-    c1Status = athleteReport.componentStatuses.find(
-      (c) => c.componentId === 'c1',
-    );
-    c3Status = athleteReport.componentStatuses.find(
-      (c) => c.componentId === 'c3',
-    );
-
-    expect(c1Status.status).toBe(TrainingStatus.IN_PROGRESS);
-    expect(c3Status.status).toBe(TrainingStatus.IN_PROGRESS);
+    c1Status = findStatus(athleteReport, 'c1');
+    c3Status = findStatus(athleteReport, 'c3');
+    expect(c1Status).toBe(TrainingStatus.IN_PROGRESS);
+    expect(c3Status).toBe(TrainingStatus.IN_PROGRESS);
+    expect(athleteReport.status).toBe(TrainingStatus.IN_PROGRESS);
 
     // clean up
     await db.trainingReports.deleteAllByTraining(training2.id);
+  });
+
+  it('should not start component for athlete if another training is active (by athlete)', async () => {
+    const athlete = institution1.athletes[0];
+    // first, start a training to make it active
+    await req(athlete.token, training1.id, 'c1');
+
+    // now, try to start component in different training
+    const newTraining = await db.trainings.createTest(group1, {
+      components: [generateTrainingComponent({ id: 'newComp' })],
+    });
+
+    const res = await req(
+      athlete.token,
+      newTraining.id,
+      'newComp',
+      athlete.uid,
+    );
+
+    expect(res.status).toBe(201);
+    expect(res.body.errors).toEqual([
+      { field: athlete.uid, message: 'ACTIVE_TRAINING_EXISTS' },
+    ]);
+
+    await db.trainingReports.deleteAllByTraining(training1.id);
+    await db.trainings.delete(newTraining.id);
+  });
+
+  it('should not start component for athlete if another training is active (by trainer)', async () => {
+    const newTraining = await db.trainings.createTest(group2, {
+      components: [generateTrainingComponent({ id: 'c1' })],
+    });
+
+    // create 2 athlete trainings that are active, and 3rd athlete with no active training
+    const athletes = institution2.athletes;
+    await req(athletes[0].token, newTraining.id, 'c1');
+    await req(athletes[1].token, newTraining.id, 'c1');
+
+    const trainer = institution2.trainers[0];
+    const res = await req(trainer.token, training2.id, 'c1');
+
+    expect(res.status).toBe(201);
+    expect(res.body.errors).toEqual([
+      { field: athletes[0].uid, message: 'ACTIVE_TRAINING_EXISTS' },
+      { field: athletes[1].uid, message: 'ACTIVE_TRAINING_EXISTS' },
+    ]);
+
+    const trainings = res.body.trainings as Record<string, Training>;
+    expect(trainings[athletes[2].uid].id).toBe(training2.id);
+
+    await db.trainings.delete(newTraining.id);
+    await db.trainingReports.deleteAllByTraining(training1.id);
+    await db.trainingReports.deleteAllByTraining(training2.id);
+  });
+
+  it('should not start component for athlete if another training is paused (by trainer)', async () => {
+    const newTraining = await db.trainings.createTest(group2, {
+      components: [generateTrainingComponent({ id: 'c1' })],
+    });
+
+    // create 2 athlete trainings that are active, and 3rd athlete with no active training
+    const athletes = institution2.athletes;
+    await req(athletes[0].token, newTraining.id, 'c1');
+    await req(athletes[1].token, newTraining.id, 'c1');
+
+    // update status to paused
+    await db.trainingReports.updateStatus(
+      { trainingId: newTraining.id, userId: athletes[0].uid },
+      'c1',
+      TrainingStatus.PAUSED,
+    );
+
+    await db.trainingReports.updateStatus(
+      { trainingId: newTraining.id, userId: athletes[1].uid },
+      'c1',
+      TrainingStatus.PAUSED,
+    );
+
+    const trainer = institution2.trainers[0];
+    const res = await req(trainer.token, training2.id, 'c1');
+
+    expect(res.status).toBe(201);
+    expect(res.body.errors).toEqual([
+      { field: athletes[0].uid, message: 'ACTIVE_TRAINING_EXISTS' },
+      { field: athletes[1].uid, message: 'ACTIVE_TRAINING_EXISTS' },
+    ]);
+
+    const trainings = res.body.trainings as Record<string, Training>;
+    expect(trainings[athletes[2].uid].id).toBe(training2.id);
+
+    await db.trainings.delete(newTraining.id);
+    await db.trainingReports.deleteAllByTraining(training1.id);
+    await db.trainingReports.deleteAllByTraining(training2.id);
+  });
+
+  it('should not start component if athlete already completed component and trainer tries to start for all athletes', async () => {
+    const athlete = institution1.athletes[0];
+    await req(athlete.token, training1.id, 'c1');
+
+    await db.trainingReports.updateStatus(
+      { trainingId: training1.id, userId: athlete.uid },
+      'c1',
+      TrainingStatus.COMPLETED,
+    );
+
+    const trainer = institution1.trainers[0];
+    const res = await req(trainer.token, training1.id, 'c1');
+
+    expect(res.status).toBe(201);
+    expect(res.body.errors).toEqual([
+      { field: athlete.uid, message: 'COMPONENT_COMPLETED' },
+    ]);
+
+    await db.trainingReports.deleteAllByTraining(training1.id);
   });
 });

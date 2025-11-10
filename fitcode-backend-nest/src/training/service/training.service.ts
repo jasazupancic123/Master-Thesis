@@ -41,7 +41,9 @@ import {
 } from '@src/common/type/firestore.type';
 import { BatchUpdateOperation } from '@src/common/type/orm.type';
 import { Filter } from '@src/common/type/orm.type';
+import { ValidateError } from '@src/common/type/validate.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
+import { Components } from '@src/exercise/constant/components.constant';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { ExerciseParamService } from '@src/exercise/service/exercise-param.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
@@ -73,7 +75,6 @@ import { TrainingComponent } from '../entity/training-component.entity';
 import { TrainingReport } from '../entity/training-report.entity';
 import { CreateWorkload, Workload } from '../entity/workload.entity';
 import { MainSet } from '../enum/main-set.enum';
-import { TrainingStatus } from '../enum/training-status.enum';
 import { UpdateTraining } from '../interface/update-training.interface';
 import { TrainingRepository } from '../repository/training.repository';
 import { TrainingPlanService } from './training-plan.service';
@@ -617,6 +618,7 @@ export class TrainingService implements Permission<Training, Institution> {
     // update report
     await this.trainingReportService.update(userId, training, {
       photoURLs: input.photoURLs,
+      componentInProgress: workload.componentId,
     });
 
     return workload;
@@ -636,19 +638,20 @@ export class TrainingService implements Permission<Training, Institution> {
 
     if (errors.length) throw new BadRequestException(JSON.stringify(errors));
 
-    const prescribedTraining = await this.getTrainingByAthlete(
+    const individualTraining = await this.getTrainingByAthlete(
       athlete.uid,
       training,
     );
 
     const workload = await this.workloadService.upsertSet(
       ref,
-      prescribedTraining,
+      individualTraining,
       input,
     );
 
     await this.trainingReportService.update(userId, training, {
       photoURLs: input.photoURLs,
+      componentInProgress: ref.componentId,
     });
 
     return workload;
@@ -658,87 +661,85 @@ export class TrainingService implements Permission<Training, Institution> {
   async startTrainingComponent(
     user: User,
     ref: TrainingComponentRef,
-  ): Promise<Record<string, Training>> {
+    uid?: string,
+  ): Promise<{
+    trainings: Record<string, Training>;
+    errors: ValidateError<Record<string, unknown>>[];
+  }> {
     const training = await this.findOneByIdOrFail(user, ref);
     this.checkComponentExists(training, ref.componentId);
 
-    // initialize training reports
-    //   - if user is manager/trainer, then for all members
-    //   - if user is athlete, then only for himself
-    const memberIds: string[] = this.firebase.isAthlete(user)
-      ? [user.uid]
-      : training.membersIds;
-
-    let trainings: Record<string, Training> = {}; // <userId, training>
-    await this.common.generic.measure(
-      `startTrainingComponent [${training.id}]`,
-      async () => {
-        // get prescribed training for each member
-        trainings = await this.findAllIndividual(training);
-
-        await this.trainingReportService.initForComponent(
-          memberIds.map((userId) => ({
-            userId,
-            componentId: ref.componentId,
-            training: trainings[userId],
-          })),
-        );
-      },
+    const memberIds = await this.getMemberIdsForTrainingReport(
+      user,
+      training,
+      uid,
     );
 
-    return trainings;
+    // get individual training for each member
+    const trainings = await this.findAllIndividual(training, memberIds); // <userId, training>
+    const errors = await this.trainingReportService.startComponent(
+      memberIds.map((userId) => ({
+        userId,
+        componentId: ref.componentId,
+        training: trainings[userId],
+      })),
+    );
+
+    return { trainings, errors };
   }
 
   @LogMethod()
-  async finalizeTrainingComponent(
+  async completeTrainingComponent(
     user: User,
     ref: TrainingComponentRef,
-    status: TrainingStatus,
-  ): Promise<void> {
-    this.checkCompleteOrCancelledStatus(status);
-
+    uid?: string,
+  ): Promise<{
+    errors: ValidateError<Record<string, unknown>>[];
+  }> {
     const training = await this.findOneByIdOrFail(user, ref);
     this.checkComponentExists(training, ref.componentId);
 
     // finalize training reports
-    const memberIds: string[] = this.firebase.isAthlete(user)
-      ? [user.uid]
-      : training.membersIds;
-
-    await this.common.generic.measure(
-      `finalizeTrainingComponent [${training.id}]`,
-      async () => {
-        await this.trainingReportService.finalizeForComponent(
-          ref,
-          memberIds.map((userId) => ({ userId, status })),
-        );
-      },
+    const memberIds = await this.getMemberIdsForTrainingReport(
+      user,
+      training,
+      uid,
     );
+
+    const errors = await this.trainingReportService.completeComponent(
+      ref,
+      memberIds,
+    );
+
+    return { errors };
   }
 
   @LogMethod()
-  async updateStatus(
-    user: User,
-    ref: TrainingComponentRef,
-    input: { status: TrainingStatus; uid?: string },
-  ): Promise<void> {
-    this.checkCompleteOrCancelledStatus(input.status);
-
+  async pauseComponent(user: User, ref: TrainingComponentRef): Promise<void> {
     const training = await this.findOneByIdOrFail(user, ref);
     this.checkComponentExists(training, ref.componentId);
+    await this.trainingReportService.pauseComponent(user.uid, ref);
+  }
 
-    const athlete = await this.getAthlete(
-      user,
-      input.uid,
-      training.institution,
-    );
+  private async getMemberIdsForTrainingReport(
+    user: User, // trainer or athlete
+    training: Training,
+    uid?: string, // trainer can also provide only 1 athlete
+  ): Promise<string[]> {
+    // initialize training reports
+    //   - if user is manager/trainer, then for all members OR for the specified athlete
+    //   - if user is athlete, then only for himself
 
-    // update training report status
-    await this.trainingReportService.updateStatus(
-      athlete.uid,
-      ref,
-      input.status,
-    );
+    if (this.firebase.isTrainer(user) || this.firebase.isManager(user)) {
+      if (uid) {
+        const athlete = await this.getAthlete(user, uid, training.institution);
+        return [athlete.uid];
+      }
+
+      return training.membersIds;
+    }
+
+    return [user.uid];
   }
 
   async generateQRCodeForAthlete(
@@ -746,7 +747,7 @@ export class TrainingService implements Permission<Training, Institution> {
     ref: TrainingComponentRef & UserRef,
   ): Promise<string> {
     const athlete = await this.getAthlete(user, ref.uid);
-    const trainings = await this.startTrainingComponent(athlete, ref);
+    const trainings = await this.startTrainingComponent(athlete, ref, ref.uid);
     const training = trainings[athlete.uid];
 
     return await this.authService.createMagicLink(
@@ -763,10 +764,11 @@ export class TrainingService implements Permission<Training, Institution> {
    */
   async findAllIndividual(
     training: Training,
+    memberIds: string[],
   ): Promise<Record<string, Training>> {
     return await Object.fromEntries(
       await Promise.all(
-        training.membersIds.map(async (userId) => {
+        memberIds.map(async (userId) => {
           const t = await this.getTrainingByAthlete(userId, training);
           return [userId, t];
         }),
@@ -806,12 +808,17 @@ export class TrainingService implements Permission<Training, Institution> {
     );
 
     // calculate param based sets
-    await this.updateBodyweightSets(athleteId, athleteTraining);
-    await this.updateRepMaxSets(athleteId, athleteTraining);
-    const workloads = await this.updateTrainingWithWorkloads(
-      athleteId,
-      athleteTraining,
-    );
+    let workloads: Workload[] = [];
+    try {
+      await this.updateBodyweightSets(athleteId, athleteTraining);
+      await this.updateRepMaxSets(athleteId, athleteTraining);
+      workloads = await this.updateTrainingWithWorkloads(
+        athleteId,
+        athleteTraining,
+      );
+    } catch (e) {
+      this.logger.error(e);
+    }
 
     return { ...athleteTraining, workloads };
   }
@@ -915,19 +922,17 @@ export class TrainingService implements Permission<Training, Institution> {
       });
   }
 
-  private checkCompleteOrCancelledStatus(status: TrainingStatus) {
-    if (![TrainingStatus.COMPLETED, TrainingStatus.CANCELLED].includes(status))
-      throw new BadRequestException(
-        'You can only complete or cancel training component',
-      );
-  }
-
   private checkComponentExists(
     training: Training,
     componentId: string,
   ): TrainingComponent {
     const component = training.components.find((c) => c.id === componentId);
-    if (!component) throw new NotFoundException('Component not found');
+    if (!component) {
+      const name =
+        Components.find((c) => c.field === componentId)?.name || 'Component';
+      throw new NotFoundException(`${name} not found`);
+    }
+
     return component;
   }
 

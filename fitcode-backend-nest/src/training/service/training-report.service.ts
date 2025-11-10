@@ -13,6 +13,7 @@ import {
   TrainingComponentRef,
   TrainingReportRef,
 } from '@src/common/type/firestore.type';
+import { ValidateError } from '@src/common/type/validate.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
 import { ExerciseSet } from '@src/training/entity/exercise-set.entity';
 import { Training } from '@src/training/entity/training.entity';
@@ -54,9 +55,32 @@ export class TrainingReportService {
     return report;
   }
 
-  async initForComponent(
+  /**
+   * This method will initialize training reports for specified users.
+   * If the provided component has status NOT_STARTED or PAUSED, it will
+   * put it into IN_PROGRESS mode.
+   */
+  async startComponent(
     input: { userId: string; componentId: string; training: Training }[],
-  ): Promise<void> {
+  ): Promise<ValidateError<Record<string, unknown>>[]> {
+    const errors: ValidateError<Record<string, unknown>>[] = [];
+
+    // check if any other training is already active
+    for (const { userId } of input) {
+      const activeTrainingId = await this.getActiveTrainingId(userId);
+      if (activeTrainingId && activeTrainingId !== input[0].training.id) {
+        errors.push({ field: userId, message: 'ACTIVE_TRAINING_EXISTS' });
+        continue;
+      }
+    }
+
+    if (errors.length) return errors;
+
+    // remove user ids from input that are in error state
+    input = input.filter(
+      ({ userId }) => !errors.find((e) => e.field === userId),
+    );
+
     // if training report exists, then just update the correct component status to in_progress, else create new report
     for (const { userId, training, componentId } of input) {
       const ref: TrainingReportRef = { trainingId: training.id, userId };
@@ -69,11 +93,14 @@ export class TrainingReportService {
 
         if (!componentStatus) continue;
         if (componentStatus.status === TrainingStatus.IN_PROGRESS) continue;
-        if (componentStatus.status === TrainingStatus.COMPLETED)
-          throw new BadRequestException('Training component already completed');
+        if (componentStatus.status === TrainingStatus.COMPLETED) {
+          errors.push({ field: userId, message: 'COMPONENT_COMPLETED' });
+          continue;
+        }
 
         componentStatus.status = TrainingStatus.IN_PROGRESS;
         await this.repository.update(ref, {
+          status: TrainingStatus.IN_PROGRESS,
           componentStatuses: existing.componentStatuses,
         });
       } else
@@ -83,53 +110,79 @@ export class TrainingReportService {
           this.getInitQuery(userId, training, componentId),
         );
     }
+
+    return errors;
   }
 
-  async finalizeForComponent(
+  /**
+   * Completes training component for specified users. It only finalizes
+   * components that are in IN_PROGRESS or PAUSED status.
+   */
+  async completeComponent(
     ref: TrainingComponentRef,
-    input: { userId: string; status: TrainingStatus }[],
-  ): Promise<void> {
-    for (const { userId, status } of input) {
+    input: string[], // array of user ids
+  ): Promise<ValidateError<Record<string, unknown>>[]> {
+    const errors: ValidateError<Record<string, unknown>>[] = [];
+
+    for (const userId of input) {
       const reportRef: TrainingReportRef = { ...ref, userId };
       const report = await this.findById(reportRef);
-      const componentStatus = report?.componentStatuses?.find(
+
+      if (!report) {
+        errors.push({ field: userId, message: 'REPORT_NOT_FOUND' });
+        continue;
+      }
+
+      const cs = report.componentStatuses.find(
         (cs) => cs.componentId === ref.componentId,
       );
 
-      if (
-        !report ||
-        !componentStatus ||
-        componentStatus.status === TrainingStatus.NOT_STARTED
-      )
-        throw new BadRequestException('Training component not started yet');
+      if (!cs || cs.status === TrainingStatus.NOT_STARTED) {
+        errors.push({ field: userId, message: 'COMPONENT_NOT_STARTED' });
+        continue;
+      }
 
-      if (componentStatus.status === TrainingStatus.COMPLETED)
-        throw new BadRequestException('Training component already completed');
+      if (cs.status === TrainingStatus.COMPLETED) {
+        errors.push({ field: userId, message: 'COMPONENT_COMPLETED' });
+        continue;
+      }
 
-      componentStatus.status = status;
+      cs.status = TrainingStatus.COMPLETED;
       await this.repository.update(reportRef, {
         componentStatuses: report.componentStatuses,
         status: this.getTrainingReportStatus(report.componentStatuses),
       });
     }
+
+    return errors;
   }
 
-  async updateStatus(
+  /**
+   * Pauses training component. Only components that are in IN_PROGRESS status
+   * can be paused. Note that trainer will not be able to pause training reports
+   * for all athletes. He cannot pause training at all, only athlete can for himself.
+   */
+  async pauseComponent(
     userId: string,
     ref: TrainingComponentRef,
-    status: TrainingStatus,
   ): Promise<void> {
     const reportRef: TrainingReportRef = { ...ref, userId };
     const report = await this.findByIdOrFail(reportRef);
 
-    const componentStatus = report.componentStatuses.find(
+    const cs = report.componentStatuses.find(
       (cs) => cs.componentId === ref.componentId,
     );
 
-    if (!componentStatus)
+    if (!cs)
       throw new BadRequestException('Training component not found in report');
 
-    componentStatus.status = status;
+    // can only pause component that is in IN_PROGRESS status
+    if (cs.status !== TrainingStatus.IN_PROGRESS)
+      throw new BadRequestException(
+        'You can only pause training that is currently in progress',
+      );
+
+    cs.status = TrainingStatus.PAUSED;
     await this.repository.update(reportRef, {
       componentStatuses: report.componentStatuses,
       status: this.getTrainingReportStatus(report.componentStatuses),
@@ -153,7 +206,7 @@ export class TrainingReportService {
   async update(
     userId: string,
     training: Training,
-    input?: { photoURLs?: string[] },
+    input?: { photoURLs?: string[]; componentInProgress: string },
   ): Promise<void> {
     const ref: TrainingReportRef = { trainingId: training.id, userId };
     const existing = await this.repository.findById(ref);
@@ -198,7 +251,13 @@ export class TrainingReportService {
       realization: 0,
       muscleValues: [], // to be calculated
       photoURLs: input?.photoURLs || [],
-      componentStatuses: existing.componentStatuses,
+      componentStatuses: existing.componentStatuses.map((cs) => ({
+        ...cs,
+        status:
+          cs.componentId === input?.componentInProgress
+            ? TrainingStatus.IN_PROGRESS
+            : cs.status,
+      })),
     };
 
     for (const workload of workloads) {
@@ -347,15 +406,8 @@ export class TrainingReportService {
   getTrainingReportStatus(
     componentStatuses: TrainingReportComponentStatus[],
   ): TrainingStatus {
-    // if all components are completed/cancelled/expired, then report is completed
-    if (
-      componentStatuses.every(
-        (cs) =>
-          cs.status === TrainingStatus.COMPLETED ||
-          cs.status === TrainingStatus.CANCELLED ||
-          cs.status === TrainingStatus.EXPIRED,
-      )
-    )
+    // if all components are completed, then report is completed
+    if (componentStatuses.every((cs) => cs.status === TrainingStatus.COMPLETED))
       return TrainingStatus.COMPLETED;
 
     // if all components are not started, then report is not started
@@ -385,11 +437,13 @@ export class TrainingReportService {
       userId,
       realization: 0,
       muscleValues: [],
-      componentStatuses: training.components.map((c) =>
-        c.id === componentId
-          ? { componentId: c.id, status: TrainingStatus.IN_PROGRESS }
-          : { componentId: c.id, status: TrainingStatus.NOT_STARTED },
-      ),
+      componentStatuses: training.components.map((c) => ({
+        componentId: c.id,
+        status:
+          c.id === componentId
+            ? TrainingStatus.IN_PROGRESS
+            : TrainingStatus.NOT_STARTED,
+      })),
       photoURLs: [],
       duration: 0,
       components: 0,
@@ -451,10 +505,10 @@ export class TrainingReportService {
               : 0,
       tonnage: tonnageL + tonnageR,
       tut: tutL + tutR,
-      time: set.time,
-      dist: set.dist,
-      recTime: set.recTime,
-      recDist: set.recDist,
+      time: (set.time || 0) + (set.timeR || 0),
+      dist: (set.dist || 0) + (set.distR || 0),
+      recTime: (set.recTime || 0) + (set.recTimeR || 0),
+      recDist: (set.recDist || 0) + (set.recDistR || 0),
     };
   }
 
