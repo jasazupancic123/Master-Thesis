@@ -93,9 +93,8 @@ export class AuthService {
     const customToken = await this.firebase.auth.createCustomToken(found.uid);
     const payload: { token: string; redirect?: string } = {
       token: customToken,
+      redirect: redirectPath,
     };
-
-    if (redirectPath) payload.redirect = redirectPath;
 
     const magicJwt = jwt.sign(payload, jwtSecret, { expiresIn: '15m' });
     return this.common.env.getFrontendUrl(`/auth/magic?token=${magicJwt}`);
