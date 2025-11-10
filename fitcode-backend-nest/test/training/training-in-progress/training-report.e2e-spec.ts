@@ -400,6 +400,7 @@ describe('Training Report (e2e)', () => {
     const photoURLs = ['photo1', 'photo2'];
     await trainingReportService.update(global.athlete.uid, training, {
       photoURLs,
+      componentInProgress: 'c1',
     });
 
     const ref: TrainingReportRef = {
@@ -415,6 +416,7 @@ describe('Training Report (e2e)', () => {
     const newPhotoURLs = ['photo3', 'photo4'];
     await trainingReportService.update(global.athlete.uid, training, {
       photoURLs: newPhotoURLs,
+      componentInProgress: 'c1',
     });
 
     const updatedReport = await db.trainingReports.findById(ref);

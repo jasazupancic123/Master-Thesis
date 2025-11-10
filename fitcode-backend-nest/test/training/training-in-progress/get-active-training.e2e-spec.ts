@@ -2,17 +2,20 @@ import { TestApp } from '@test/common/utils/app.util';
 import { subHours } from 'date-fns';
 
 import type { TestInstitution } from '@src/common/type/entity.type';
+import { getTime } from '@src/common/utils/date.util';
 import type { Group } from '@src/group/entity/group.entity';
 import { TestDbService } from '@src/test-db/test-db.service';
 import type { Training } from '@src/training/entity/training.entity';
 import type { Workload } from '@src/training/entity/workload.entity';
 import { SetStatus } from '@src/training/enum/set-status.enum';
+import { TrainingStatus } from '@src/training/enum/training-status.enum';
 import {
   generateExerciseSet,
   generateSuperset,
   generateTrainingComponent,
   generateTrainingExercise,
 } from '@src/training/mock/training.stub';
+import { generateTrainingReportStub } from '@src/training/mock/training-report.stub';
 
 describe('Get Active Training (e2e)', () => {
   let testApp: TestApp;
@@ -171,8 +174,22 @@ describe('Get Active Training (e2e)', () => {
       components: [generateTrainingComponent({ id: 'c1' })],
     });
 
-    await startReq(global.athlete.token, earliestTraining.id, 'c1');
-    await startReq(global.athlete.token, training.id, 'c1');
+    // create 2 reports in db
+    await db.trainingReports.save(
+      { trainingId: earliestTraining.id, userId: global.athlete.uid },
+      generateTrainingReportStub(earliestTraining.id, global.athlete.uid, {
+        from: getTime(new Date(), 8, 0),
+        status: TrainingStatus.IN_PROGRESS,
+      }),
+    );
+
+    await db.trainingReports.save(
+      { trainingId: training.id, userId: global.athlete.uid },
+      generateTrainingReportStub(training.id, global.athlete.uid, {
+        from: getTime(new Date(), 10, 0),
+        status: TrainingStatus.IN_PROGRESS,
+      }),
+    );
 
     // 2 reports should be in db
     const reports = await db.trainingReports.getAllByTraining(

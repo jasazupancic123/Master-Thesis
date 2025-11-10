@@ -24,7 +24,7 @@ import { endOfDay, startOfDay } from 'date-fns';
 
 import { DateFilterDto } from '@src/common/dto/date-filter.dto';
 import { DateRangeDto } from '@src/common/dto/date-range.dto';
-import { UserIdDto } from '@src/common/dto/user-id.dto';
+import { OptionalUserIdDto, UserIdDto } from '@src/common/dto/user-id.dto';
 import {
   TrainingComponentRef,
   WorkloadRef,
@@ -42,10 +42,6 @@ import { CreateTrainingDto } from './dto/create-training.dto';
 import { FilterTrainingQueryDto } from './dto/filter-training-query.dto';
 import { PeriodizeTrainingsDto } from './dto/periodize-training.dto';
 import { UpdateTrainingDto } from './dto/update-training.dto';
-import {
-  UpdateTrainingStatusDto,
-  UpdateTrainingStatusForUserDto,
-} from './dto/update-training-status.dto';
 import { Training } from './entity/training.entity';
 import { CreateWorkload, Workload } from './entity/workload.entity';
 import { TrainingService } from './service/training.service';
@@ -91,7 +87,10 @@ export class TrainingController {
       trainingId,
     });
 
-    return await this.trainingService.findAllIndividual(training);
+    return await this.trainingService.findAllIndividual(
+      training,
+      training.membersIds,
+    );
   }
 
   @Get(':trainingId')
@@ -337,46 +336,43 @@ export class TrainingController {
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
     @Param('cId') componentId: string,
+    @Body() { userId }: OptionalUserIdDto,
   ) {
     const ref: TrainingComponentRef = { trainingId, componentId };
-    return await this.trainingService.startTrainingComponent(user, ref);
+    return await this.trainingService.startTrainingComponent(user, ref, userId);
   }
 
   /**
    * Finalize a training component by updating the training reports' statuses.
    */
-  @Post(':trainingId/component/:cId/finalize')
+  @Post(':trainingId/component/:cId/complete')
   @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
-  async finalizeTrainingComponent(
+  async completeTrainingComponent(
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
     @Param('cId') componentId: string,
-    @Body() { status }: UpdateTrainingStatusDto,
+    @Body() { userId }: OptionalUserIdDto,
   ) {
     const ref: TrainingComponentRef = { trainingId, componentId };
-    return await this.trainingService.finalizeTrainingComponent(
+    return await this.trainingService.completeTrainingComponent(
       user,
       ref,
-      status,
+      userId,
     );
   }
 
   /**
    * Only allows updating training component status, does not finalize reports.
    */
-  @Post(':trainingId/component/:cId/status')
+  @Patch(':trainingId/component/:cId/pause')
   @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
-  async updateTrainingComponentStatus(
+  async pauseTrainingComponent(
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
     @Param('cId') componentId: string,
-    @Body() body: UpdateTrainingStatusForUserDto,
   ) {
     const ref: TrainingComponentRef = { trainingId, componentId };
-    return await this.trainingService.updateStatus(user, ref, {
-      status: body.status,
-      uid: body.userId,
-    });
+    return await this.trainingService.pauseComponent(user, ref);
   }
 
   @Post(':trainingId/component')
