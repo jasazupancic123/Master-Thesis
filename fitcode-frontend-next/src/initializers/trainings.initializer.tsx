@@ -11,18 +11,16 @@ import { TrainingProvider } from '@/store/training.provider';
 export default function TrainingsInitializer(props: React.PropsWithChildren) {
   const { children } = props;
   const { trainings, reports } = useAthlete();
-  const { exercises, institutions, groups } = useMain();
-  const [state, setState] = useState({ trainings, reports });
+  const { exercises, institutions, groups, activeTraining } = useMain();
+  const [state, setState] = useState({ trainings, reports, activeTraining });
 
   const controller = TrainingController.getInstance();
+
   async function refetchTraining(trainingId: string) {
     const { training: fetchedTraining, report: fetchedReport } =
       await controller.findOneById(trainingId);
 
-    const training = TrainingService.mapData(fetchedTraining, {
-      exercises,
-    });
-
+    const training = TrainingService.mapData(fetchedTraining, { exercises });
     const report = TrainingService.mapReport(fetchedReport, {
       institutions,
       groups,

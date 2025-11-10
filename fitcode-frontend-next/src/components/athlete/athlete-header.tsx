@@ -199,10 +199,7 @@ export default function AthleteHeader(props: Props) {
         >
           <Avatar
             src={user?.photoURL || USER_AVATAR_IMG_URL}
-            sx={{
-              width: 32,
-              height: 32,
-            }}
+            sx={{ width: 32, height: 32 }}
           />
 
           {!screenSize.isLandscapeMobile && !screenSize.isMobile ? (
@@ -230,6 +227,7 @@ export default function AthleteHeader(props: Props) {
                     <IconButton sx={{ p: 0, m: 0 }} onClick={handleOpenMenu}>
                       <MenuIcon style={{ cursor: 'pointer' }} />
                     </IconButton>
+
                     <Menu
                       anchorEl={anchorEl}
                       open={openTrainingControls}
@@ -261,6 +259,7 @@ export default function AthleteHeader(props: Props) {
                           Finish Training
                         </>
                       </MenuItem>
+
                       <MenuItem
                         onClick={handleCancel}
                         sx={{ color: 'error.main' }}

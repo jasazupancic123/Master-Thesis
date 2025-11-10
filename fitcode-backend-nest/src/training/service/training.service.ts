@@ -785,17 +785,25 @@ export class TrainingService implements Permission<Training, Institution> {
   async getActiveTrainingByAthlete(
     user: User,
     athleteId: string,
-  ): Promise<Training> {
+  ): Promise<{
+    training: Training & { workloads: Workload[] };
+    report: TrainingReport;
+  } | null> {
     const athlete = await this.getAthlete(user, athleteId);
-    const trainingId = await this.trainingReportService.getActiveTrainingId(
+    const report = await this.trainingReportService.getActive(athlete.uid);
+
+    if (!report) return null;
+    const training = await this.findOneById(user, {
+      trainingId: report.trainingId,
+    });
+
+    if (!training) return null;
+    const individualTraining = await this.getTrainingByAthlete(
       athlete.uid,
+      training,
     );
 
-    if (!trainingId) return null;
-    const training = await this.findOneById(user, { trainingId });
-    if (!training) return null;
-
-    return await this.getTrainingByAthlete(athlete.uid, training);
+    return { training: individualTraining, report };
   }
 
   async getTrainingByAthlete(

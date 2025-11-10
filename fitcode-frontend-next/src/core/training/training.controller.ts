@@ -1,6 +1,5 @@
 import { BaseController } from '../base.controller';
 import type { UserId } from '../institution/type/institution.type';
-import type { TrainingStatus } from './enum/training-status.enum';
 import type {
   CreateTraining,
   FilterTrainings,
@@ -13,6 +12,7 @@ import type { TrainingReport } from './type/training-report.type';
 import type { CreateWorkload, Workload } from './type/workload.type';
 import type { FetchOptions } from '@/lib/common/type/api.type';
 import type { DateRange } from '@/lib/common/type/date-range.type';
+import type { ValidateError } from '@/lib/common/type/validate-row-error.type';
 
 export class TrainingController extends BaseController {
   private static instance: TrainingController;
@@ -104,37 +104,42 @@ export class TrainingController extends BaseController {
   async startTrainingComponent(
     trainingId: string,
     componentId: string,
+    athleteId?: string,
     options?: FetchOptions
   ) {
-    return this.api.post<Record<string, Training>>(
+    return this.api.post<{
+      errors: ValidateError<Record<string, unknown>>;
+      trainings: Record<string, Training>;
+    }>(
       `/${trainingId}/component/${componentId}/start`,
+      { userId: athleteId },
+      options
+    );
+  }
+
+  async completeTrainingComponent(
+    trainingId: string,
+    componentId: string,
+    athleteId?: string,
+    options?: FetchOptions
+  ) {
+    return this.api.post<{
+      errors: ValidateError<Record<string, unknown>>;
+    }>(
+      `/${trainingId}/component/${componentId}/complete`,
+      { userId: athleteId },
+      options
+    );
+  }
+
+  async pauseTrainingComponent(
+    trainingId: string,
+    componentId: string,
+    options?: FetchOptions
+  ) {
+    return this.api.patch<void>(
+      `/${trainingId}/component/${componentId}/pause`,
       {},
-      options
-    );
-  }
-
-  async finalizeTrainingComponent(
-    trainingId: string,
-    componentId: string,
-    status: TrainingStatus.CANCELLED | TrainingStatus.COMPLETED,
-    options?: FetchOptions
-  ) {
-    return this.api.post<void>(
-      `/${trainingId}/component/${componentId}/finalize`,
-      { status },
-      options
-    );
-  }
-
-  async updateTrainingComponentStatus(
-    trainingId: string,
-    componentId: string,
-    input: { status: TrainingStatus; userId?: string },
-    options?: FetchOptions
-  ) {
-    return this.api.post<void>(
-      `/${trainingId}/component/${componentId}/status`,
-      input,
       options
     );
   }

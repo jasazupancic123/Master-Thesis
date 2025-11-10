@@ -43,6 +43,7 @@ import { FilterTrainingQueryDto } from './dto/filter-training-query.dto';
 import { PeriodizeTrainingsDto } from './dto/periodize-training.dto';
 import { UpdateTrainingDto } from './dto/update-training.dto';
 import { Training } from './entity/training.entity';
+import { TrainingReport } from './entity/training-report.entity';
 import { CreateWorkload, Workload } from './entity/workload.entity';
 import { TrainingService } from './service/training.service';
 
@@ -110,15 +111,14 @@ export class TrainingController {
 
   @Get('get/active')
   @Auth([UserRole.ATHLETE])
-  async getActiveTraining(
-    @RequestUser() user: User,
-  ): Promise<{ training: Training | null }> {
-    const training = await this.trainingService.getActiveTrainingByAthlete(
+  async getActiveTraining(@RequestUser() user: User): Promise<{
+    training: Training & { workloads: Workload[] };
+    report: TrainingReport;
+  } | null> {
+    return await this.trainingService.getActiveTrainingByAthlete(
       user,
       user.uid,
     );
-
-    return { training };
   }
 
   @Post(':trainingId/component/:cId/generate-qr-code')

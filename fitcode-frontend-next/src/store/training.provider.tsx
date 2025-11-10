@@ -3,7 +3,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 
 import { useAuthenticatedAuth } from './auth.provider';
-import { ExerciseTrainingView } from '@/core/training/enum/exercise-training-view.enum';
 import type { Training } from '@/core/training/type/training.type';
 import type {
   TrainingExercise,
@@ -13,9 +12,6 @@ import type { TrainingInProgress } from '@/core/training/type/training-in-progre
 import type { TrainingReport } from '@/core/training/type/training-report.type';
 import { lib } from '@/lib';
 import { type SetState } from '@/lib/common/type/state.type';
-
-type ExerciseOrTraining =
-  (typeof ExerciseTrainingView)[keyof typeof ExerciseTrainingView];
 
 export interface TrainingProviderProps {
   trainings: Training[];
@@ -27,8 +23,6 @@ interface ITrainingContext extends TrainingProviderProps {
   clearTrainingState: () => Promise<void>;
   trainingInProgress: TrainingInProgress | null;
   setTrainingInProgress: SetState<TrainingInProgress | null>;
-  view: ExerciseOrTraining;
-  setView: SetState<ExerciseOrTraining>;
   isLoaded: boolean;
   updateTrainingInProgress: (
     exercise: TrainingExercise,
@@ -54,9 +48,6 @@ export const TrainingProvider = (
   const [trainingInProgress, setTrainingInProgress] =
     useState<TrainingInProgress | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [view, setView] = useState<ExerciseOrTraining>(
-    ExerciseTrainingView.ExerciseView
-  );
 
   const { user } = useAuthenticatedAuth();
 
@@ -104,7 +95,6 @@ export const TrainingProvider = (
 
   const clearTrainingState = async () => {
     setTrainingInProgress(null);
-    setView(ExerciseTrainingView.ExerciseView);
     await lib.common.indexedDb.items.delete(STORED_TRAINING_IN_PROGRESS);
   };
 
@@ -150,8 +140,6 @@ export const TrainingProvider = (
         clearTrainingState,
         trainingInProgress,
         setTrainingInProgress,
-        view,
-        setView,
         isLoaded,
         updateTrainingInProgress,
         refetchTraining,
