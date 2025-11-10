@@ -207,7 +207,7 @@ export class TrainingReportService {
     userId: string,
     training: Training,
     input?: { photoURLs?: string[]; componentInProgress: string },
-  ): Promise<void> {
+  ): Promise<TrainingReport> {
     const ref: TrainingReportRef = { trainingId: training.id, userId };
     const existing = await this.repository.findById(ref);
     if (!existing) throw new BadRequestException('Training not started yet');
@@ -278,18 +278,32 @@ export class TrainingReportService {
         (100/100*1/4) * (2/3*1/4) * (60/100*1/4), note that recovery is reversed, more is worse */
 
       // volume
-      const repsDiv = this.div('reps', workload.prescribed, completed);
+      const repsDiv = this.div('reps', prescribed, completed);
+      const repsRDiv = this.div('repsR', prescribed, completed);
       const distDiv = this.div('dist', prescribed, completed);
+      const distRDiv = this.div('distR', prescribed, completed);
       const timeDiv = this.div('time', prescribed, completed);
+      const timeRDiv = this.div('timeR', prescribed, completed);
       const loadDiv = this.div('loadKg', prescribed, completed);
+      const loadRDiv = this.div('loadKgR', prescribed, completed);
       const recTimeDiv = this.div('recTime', prescribed, completed); // less is better
+      const recTimeRDiv = this.div('recTimeR', prescribed, completed);
       const recDistDiv = this.div('recDist', prescribed, completed);
+      const recDistRDiv = this.div('recDistR', prescribed, completed);
+
       const tempoDiv =
         this.getTempoTime(prescribed) > 0
           ? this.getTempoTime(completed) / this.getTempoTime(prescribed)
-          : 1;
+          : 0;
+
+      const tempoRDiv =
+        this.getTempoRTime(prescribed) > 0
+          ? this.getTempoRTime(completed) / this.getTempoRTime(prescribed)
+          : 0;
 
       const int = prescribed.loadKg ? loadDiv : 0;
+      const intR = prescribed.loadKgR ? loadRDiv : 0;
+
       const vol = prescribed.reps
         ? repsDiv
         : prescribed.time
@@ -298,57 +312,46 @@ export class TrainingReportService {
             ? distDiv
             : 0;
 
+      const volR = prescribed.repsR
+        ? repsRDiv
+        : prescribed.timeR
+          ? timeRDiv
+          : prescribed.distR
+            ? distRDiv
+            : 0;
+
       const rec = prescribed.recTime
-        ? recTimeDiv
+        ? 1 / recTimeDiv
         : prescribed.recDist
           ? recDistDiv
           : 0;
 
-      if (prescribed.reps > 0) {
-        // unilateral exercise
-        const repsRDiv = this.div('repsR', prescribed, completed);
-        const distRDiv = this.div('distR', prescribed, completed);
-        const timeRDiv = this.div('timeR', prescribed, completed);
-        const loadRDiv = this.div('loadKgR', prescribed, completed);
-        const recTimeRDiv = this.div('recTimeR', prescribed, completed);
-        const recDistRDiv = this.div('recDistR', prescribed, completed);
-        const tempoRDiv =
-          this.getTempoRTime(prescribed) > 0
-            ? this.getTempoRTime(completed) / this.getTempoRTime(prescribed)
-            : 1;
+      const recR = prescribed.recTimeR
+        ? 1 / recTimeRDiv
+        : prescribed.recDistR
+          ? recDistRDiv
+          : 0;
 
-        const intR = prescribed.loadKgR ? loadRDiv : 0;
-        const volR = prescribed.repsR
-          ? repsRDiv
-          : prescribed.timeR
-            ? timeRDiv
-            : prescribed.distR
-              ? distRDiv
-              : 0;
+      const w = // weight for averaging
+        1 /
+        [vol, volR, int, intR, tempoDiv, tempoRDiv, rec, recR]
+          .map((w) => w > 0)
+          .filter(Boolean).length;
 
-        const recR = prescribed.recTimeR
-          ? recTimeRDiv
-          : prescribed.recDistR
-            ? recDistRDiv
-            : 0;
-
-        report.realization +=
-          (1 / stats.sets) *
-          (0.125 * vol +
-            0.125 * volR +
-            0.125 * int +
-            0.125 * intR +
-            0.125 * tempoDiv +
-            0.125 * tempoRDiv +
-            0.125 * rec +
-            0.125 * recR);
-      } else
-        report.realization +=
-          (1 / stats.sets) *
-          (0.25 * vol + 0.25 * int + 0.25 * tempoDiv + 0.25 * rec);
+      report.realization +=
+        (1 / stats.sets) *
+        (w * vol +
+          w * volR +
+          w * int +
+          w * intR +
+          w * tempoDiv +
+          w * tempoRDiv +
+          w * rec +
+          w * recR);
     }
 
     await this.repository.save(ref, report);
+    return report;
   }
 
   getTrainingStats(training: Training): PrescribedTrainingStats {
@@ -465,8 +468,7 @@ export class TrainingReportService {
     prescribed: ExerciseSet,
     completed: ExerciseSet,
   ): number {
-    if (!prescribed[field]) return;
-
+    if (!prescribed[field]) return 1;
     return prescribed[field] > 0 ? completed[field] / prescribed[field] : 1;
   }
 
