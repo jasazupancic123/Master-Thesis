@@ -1,11 +1,23 @@
-import { Avatar, Box, Tooltip as MuiTooltip, Typography } from '@mui/material';
+import { QrCode } from '@mui/icons-material';
+import {
+  Avatar,
+  Box,
+  IconButton,
+  Tooltip as MuiTooltip,
+  Typography,
+} from '@mui/material';
+import QRCode from 'qrcode';
+import { useState } from 'react';
+import toast from 'react-hot-toast';
 
 import { deselectAthlete } from './actions/actions-selected-athlete';
 import useSelectedMemberWeight from './hooks/use-weight';
+import { TrainingController } from '@/core/training/training.controller';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
+import MyModal from '@/ui/modal';
 
 export default function SelectedMemberReport() {
   const screenSize = useScreenSize();
@@ -14,7 +26,35 @@ export default function SelectedMemberReport() {
   const trainerDayViewContext = useTrainerDayView();
   const { component, training, selectedAthlete } = trainerDayViewContext;
 
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [qrOpen, setQrOpen] = useState(false);
+
   if (!selectedAthlete) return null;
+
+  async function generateQRCode(userId: string) {
+    if (!training || !component) {
+      return toast.error('Select training component');
+    }
+
+    try {
+      const { link } = await TrainingController.getInstance().generateQRCode(
+        training.id,
+        component.id,
+        userId
+      );
+
+      await navigator.clipboard.writeText(link);
+      const qr = await QRCode.toDataURL(link);
+
+      setQrDataUrl(qr);
+      setQrOpen(true);
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to generate QR code');
+    }
+  }
+
+  const qrCodeSize = screenSize.isMobile ? 200 : 500;
 
   return (
     <Box
@@ -27,10 +67,14 @@ export default function SelectedMemberReport() {
       my={screenSize.isMobile ? 1 : 0}
       flexDirection={screenSize.isMobile ? 'column' : 'row'}
     >
-      <Box
-        width={screenSize.isMobile ? '100%' : `${100 / 3}%`}
-        display="flex"
-      ></Box>
+      <Box width={screenSize.isMobile ? '100%' : `${100 / 3}%`} display="flex">
+        {training && component && (
+          <IconButton onClick={() => generateQRCode(selectedAthlete.uid)}>
+            <QrCode sx={{ fontSize: 30, mx: 'auto' }} />
+          </IconButton>
+        )}
+      </Box>
+
       <Box
         width={screenSize.isMobile ? '100%' : `${100 / 3}%`}
         display="flex"
@@ -81,7 +125,23 @@ export default function SelectedMemberReport() {
       <Box
         width={screenSize.isMobile ? '100%' : `${100 / 3}%`}
         textAlign="center"
-      ></Box>
+      />
+
+      <MyModal
+        isOpen={qrOpen}
+        onCancel={() => setQrOpen(false)}
+        setIsOpen={(open) => setQrOpen(open)}
+      >
+        <Box p={2} display="flex" flexDirection="column" alignItems="center">
+          {qrDataUrl && (
+            <img
+              src={qrDataUrl}
+              alt="QR Code"
+              style={{ width: qrCodeSize, height: qrCodeSize }}
+            />
+          )}
+        </Box>
+      </MyModal>
     </Box>
   );
 }

@@ -54,7 +54,7 @@ export class TrainingController extends BaseController {
     athleteId: string,
     options?: FetchOptions
   ) {
-    return this.api.post<string>(
+    return this.api.post<{ link: string }>(
       `/${trainingId}/component/${componentId}/generate-qr-code`,
       { userId: athleteId },
       options

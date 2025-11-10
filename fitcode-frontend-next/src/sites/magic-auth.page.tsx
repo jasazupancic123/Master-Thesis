@@ -26,9 +26,8 @@ export default function MagicAuthPage() {
 
     async function login() {
       try {
-        const { firebaseToken } = await AuthController.getInstance().verifyLink(
-          token!
-        );
+        const { token: firebaseToken, redirect } =
+          await AuthController.getInstance().verifyLink(token!);
 
         const result =
           await lib.firebase.auth.signInWithCustomToken(firebaseToken);
@@ -38,7 +37,7 @@ export default function MagicAuthPage() {
         const { role } = handleUserChange(user);
         if (role) {
           toast.success('Signed in successfully');
-          router.push(SIGN_IN_REDIRECT_MAPPER[role]?.href);
+          router.push(redirect || SIGN_IN_REDIRECT_MAPPER[role]?.href);
         }
       } catch (e) {
         toast.error((e as Error).message);

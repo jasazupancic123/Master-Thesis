@@ -22,17 +22,24 @@ import CancelTrainingModal from './modals/cancel-training-modal';
 import UndoneSetsErrorModal from './modals/undone-sets-error-modal';
 import TrainingInProgressExerciseContainer from './training-in-progress-exercise-container';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
+import { TrainingStatus } from '@/core/training/enum/training-status.enum';
+import { TrainingService } from '@/core/training/training.service';
+import type { ExerciseSetTracking } from '@/core/training/type/exercise-set-tracking-state.type';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
 import { lib } from '@/lib';
 import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
 import { preloadPoseLandmarker } from '@/lib/pose-detection/util/pose-landmarker-loader.util';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useMain } from '@/store/main.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 
 export default function TrainingInProgress() {
   const theme = useTheme();
 
+  const { user } = useAuthenticatedAuth();
+  const { activeTraining, exercises } = useMain();
   const trainingContext = useTraining();
   const trainingInProgressContext = useTrainingInProgress();
   const trainingInProgressUtilsContext = useTrainingInProgressUtils();
@@ -77,6 +84,47 @@ export default function TrainingInProgress() {
       useTrainingInProgressContext: trainingInProgressContext,
     });
   }, [trainingInProgress?.selectedComponent]);
+
+  useEffect(() => {
+    if (!activeTraining.training || !activeTraining.report) return;
+
+    TrainingService.mapData(activeTraining.training, { exercises });
+
+    const componentId = activeTraining.report.componentStatuses.find(
+      (cs) => cs.status === TrainingStatus.IN_PROGRESS
+    )?.componentId;
+
+    if (!componentId) return;
+
+    const component = activeTraining.training.components.find(
+      (c) => c.id === componentId
+    );
+
+    if (!component) return;
+
+    const state: ExerciseSetTracking[] =
+      component.supersets
+        .map((s, sIndex) => {
+          return s.exercises.map((e) => {
+            return {
+              exerciseId: e.id,
+              supersetIndex: sIndex,
+              completedSetNumbers: [] as {
+                setNumber: number;
+                timestamp: Date;
+              }[],
+            };
+          });
+        })
+        .flat() || [];
+
+    trainingContext.setTrainingInProgress({
+      training: activeTraining,
+      selectedComponent: component,
+      userId: user.uid,
+      exerciseSetTrackingState: state,
+    } as TrainingInProgress);
+  }, []);
 
   if (!trainingInProgress) return null;
 
