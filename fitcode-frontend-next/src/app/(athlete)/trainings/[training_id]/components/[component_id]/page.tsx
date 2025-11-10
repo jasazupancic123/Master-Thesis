@@ -12,7 +12,7 @@ export default function Page() {
   if (
     !activeTraining ||
     !trainingInProgress ||
-    activeTraining.training.id !== trainingInProgress.training?.id
+    activeTraining?.training?.id !== trainingInProgress.training?.id
   )
     return <Alert type="error" errorMessage="You cannot view this training" />;
 

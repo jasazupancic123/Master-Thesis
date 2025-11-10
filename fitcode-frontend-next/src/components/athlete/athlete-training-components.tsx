@@ -54,10 +54,7 @@ export default function AthleteTrainingComponents(props: Props) {
   const { exercises, activeTraining, setActiveTraining } = useMain();
   const { user } = useAuthenticatedAuth();
 
-  const activeTrainingReport = reports.find(
-    (r) => r.trainingId === activeTraining?.training?.id
-  );
-
+  const activeTrainingReport = activeTraining?.report;
   const activeComponentStatus = activeTrainingReport?.componentStatuses.find(
     (cs) => cs.componentId === selectedComponent?.id
   )?.status;
@@ -229,7 +226,7 @@ export default function AthleteTrainingComponents(props: Props) {
 
               trainingToStart = result.trainings[user.uid];
             } else if (
-              activeTraining &&
+              activeTraining?.training &&
               activeComponentStatus === TrainingStatus.IN_PROGRESS
             ) {
               // training is already in progress

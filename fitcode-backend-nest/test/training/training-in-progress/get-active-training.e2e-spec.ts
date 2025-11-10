@@ -94,7 +94,7 @@ describe('Get Active Training (e2e)', () => {
   it('should return null if there is no active training for athlete', async () => {
     const res = await req(global.athlete.token);
     expect(res.status).toBe(200);
-    expect(res.body.training).toBeNull();
+    expect(res.body).toEqual({});
   });
 
   it('should return active training for athlete', async () => {
