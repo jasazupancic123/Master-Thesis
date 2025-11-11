@@ -6,5 +6,5 @@ export class CreateGroupDto extends PickType(Group, [
   'name',
   'membersIds',
   'institutionId',
-  'ownerId',
+  'trainerIds',
 ]) {}

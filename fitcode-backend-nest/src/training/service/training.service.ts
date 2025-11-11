@@ -131,16 +131,11 @@ export class TrainingService implements Permission<Training, Institution> {
 
   async findAll(
     user: User,
+    institutionId: string,
     filter?: Filter<Training>,
     options?: { limit?: number },
     populate?: boolean,
   ): Promise<Training[]> {
-    let institutionId: string | undefined;
-    if (this.firebase.isManager(user))
-      institutionId = await this.institutionService
-        .findByOwnerId(user.uid)
-        .then((i) => i?.id);
-
     const trainings = await this.repository.findAll((_) =>
       this.repository.buildGetQuery(
         { uid: user.uid, role: this.firebase.getRole(user), institutionId },
@@ -252,6 +247,7 @@ export class TrainingService implements Permission<Training, Institution> {
     this.validateIsDateInFuture(from);
     await this.validateOverlapAndMaxLimit(
       user,
+      group?.institutionId,
       { groupId, cycleId, trainingId: null }, // no trainingId for new training
       from,
       to,
@@ -357,6 +353,7 @@ export class TrainingService implements Permission<Training, Institution> {
     // validate overlap
     await this.validateOverlap(
       user,
+      training.institutionId,
       {
         groupId: training.groupId,
         cycleId: training.cycleId,
@@ -513,6 +510,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
     const futureTrainings = await this.findAll(
       user,
+      baseTraining.institutionId,
       {
         groupId: baseTraining.groupId,
         cycleId: baseTraining.cycleId,
@@ -975,6 +973,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
   private async validateOverlapAndMaxLimit(
     user: User,
+    institutionId: string,
     ref: CycleRef & Partial<TrainingRef>,
     from: Date,
     to: Date,
@@ -982,6 +981,7 @@ export class TrainingService implements Permission<Training, Institution> {
     const trainings = (
       await this.findAll(
         user,
+        institutionId,
         {
           groupId: ref.groupId,
           cycleId: ref.cycleId,
@@ -1007,6 +1007,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
   private async validateOverlap(
     user: User,
+    institutionId: string,
     ref: CycleRef & Partial<TrainingRef>,
     from: Date,
     to: Date,
@@ -1014,6 +1015,7 @@ export class TrainingService implements Permission<Training, Institution> {
     const trainings = (
       await this.findAll(
         user,
+        institutionId,
         {
           groupId: ref.groupId,
           cycleId: ref.cycleId,

@@ -198,6 +198,7 @@ describe('Periodization functions (e2e)', () => {
       ownerId: global.trainer.id,
       membersIds: ['a', 'b', 'c'],
       date: new Date(),
+      institutionId,
       groupId,
       components: [
         generateTrainingComponent({
@@ -286,6 +287,7 @@ describe('Periodization functions (e2e)', () => {
         ownerId: global.trainer.id,
         membersIds: ['a', 'b', 'c'],
         date: addDays(new Date(), 1),
+        institutionId,
         groupId,
         components: [
           generateTrainingComponent({
@@ -306,6 +308,7 @@ describe('Periodization functions (e2e)', () => {
         ownerId: global.trainer.id,
         membersIds: ['a', 'b', 'c'],
         date: addDays(new Date(), 2),
+        institutionId,
         groupId,
         components: [
           generateTrainingComponent({
@@ -348,6 +351,7 @@ describe('Periodization functions (e2e)', () => {
         ownerId: global.trainer.id,
         membersIds: ['a', 'b', 'c'],
         date: addDays(new Date(), 3),
+        institutionId,
         groupId,
         components: [
           generateTrainingComponent({
@@ -399,6 +403,7 @@ describe('Periodization functions (e2e)', () => {
         ownerId: global.trainer.id,
         membersIds: ['a', 'b', 'c'],
         date: addDays(new Date(), 4),
+        institutionId,
         groupId,
         components: [
           generateTrainingComponent({
@@ -431,6 +436,7 @@ describe('Periodization functions (e2e)', () => {
         ownerId: global.trainer.id,
         membersIds: ['a', 'b', 'c'],
         date: addDays(new Date(), 5),
+        institutionId,
         groupId,
         components: [
           generateTrainingComponent({
@@ -598,6 +604,7 @@ describe('Periodization functions (e2e)', () => {
       ownerId: global.trainer.id,
       membersIds: ['a', 'b', 'c'],
       date: new Date(),
+      institutionId,
       groupId,
       components: [
         generateTrainingComponent({
@@ -650,6 +657,7 @@ describe('Periodization functions (e2e)', () => {
         ownerId: global.trainer.id,
         membersIds: ['a', 'b', 'c'],
         date: addDays(new Date(), n),
+        institutionId,
         groupId,
         components: [
           generateTrainingComponent({
