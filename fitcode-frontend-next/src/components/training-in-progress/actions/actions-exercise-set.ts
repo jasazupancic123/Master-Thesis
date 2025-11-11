@@ -17,6 +17,7 @@ export const finishSet = async (state: {
     body: CreateWorkload,
     state: { exerciseId: string; supersetIndex: number; setIndex: number }
   ) => Promise<void>;
+  setManually?: boolean;
 }) => {
   const {
     exercise,
@@ -24,6 +25,7 @@ export const finishSet = async (state: {
     trainingInProgress,
     setTrainingInProgress,
     handleUpsertSet,
+    setManually,
   } = state;
 
   const set = exercise.sets[setIndex];
@@ -81,7 +83,8 @@ export const finishSet = async (state: {
     setIndex + 1,
     trainingInProgress.exerciseSetTrackingState,
     setTrainingInProgress,
-    exercise.sets[setIndex].recTime
+    exercise.sets[setIndex].recTime,
+    setManually
   );
 
   const supersetIndex =
@@ -121,7 +124,8 @@ export const markExerciseSetAsCompleted = (
   setNumber: number,
   exerciseSetTrackingState: ExerciseSetTracking[],
   setTrainingInProgress: SetState<TrainingInProgress | null>,
-  recTime?: number
+  recTime?: number,
+  setManually?: boolean // not by ai
 ) => {
   const key = Array.from(exerciseSetTrackingState).find(
     (k) => k.exerciseId === exerciseIdentifier.exerciseId
@@ -130,13 +134,28 @@ export const markExerciseSetAsCompleted = (
   if (key) {
     const completedSets = key.completedSetNumbers || [];
     if (!completedSets.find((s) => s.setNumber === setNumber)) {
-      completedSets.push({ setNumber, timestamp: new Date() });
+      completedSets.push(
+        setManually
+          ? {
+              setNumber,
+              timestamp: new Date(),
+              isBeenSetToCompleted: true,
+            }
+          : {
+              setNumber,
+              timestamp: new Date(),
+            }
+      );
       key.completedSetNumbers = completedSets;
     }
   } else
     exerciseSetTrackingState.push({
       ...exerciseIdentifier,
-      completedSetNumbers: [{ setNumber, timestamp: new Date() }],
+      completedSetNumbers: [
+        setManually
+          ? { setNumber, timestamp: new Date(), isBeenSetToCompleted: true }
+          : { setNumber, timestamp: new Date() },
+      ],
     });
 
   setTrainingInProgress((prev) => {

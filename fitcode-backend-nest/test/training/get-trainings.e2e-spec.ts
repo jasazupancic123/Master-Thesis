@@ -149,7 +149,7 @@ describe('Get Trainings (e2e)', () => {
     await testApp.close();
   });
 
-  function url(query: FilterTrainingQueryDto = {}) {
+  function url(query: FilterTrainingQueryDto) {
     const q = stringify(query, {
       addQueryPrefix: true,
       skipNulls: true,
@@ -158,7 +158,7 @@ describe('Get Trainings (e2e)', () => {
     return `/training${q}`;
   }
 
-  async function req(query: FilterTrainingQueryDto, token: string) {
+  async function req(query: Partial<FilterTrainingQueryDto>, token: string) {
     return testApp.http.get(
       url({ institutionId: institution.id, ...query }),
       token,

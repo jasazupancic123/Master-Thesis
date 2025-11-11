@@ -48,7 +48,11 @@ import { RepStatus } from '@/lib/pose-detection/enum/rep-state';
 import { RepDetectionService } from '@/lib/pose-detection/rep-detection.service';
 import type { AvgFps } from '@/lib/pose-detection/type/avg-fps.type';
 import type { CurrentSideMutex } from '@/lib/pose-detection/type/current-side-mutex.type';
-import type { ExerciseDetectionData } from '@/lib/pose-detection/type/exercise-start-condition.type';
+import type {
+  ExerciseAngleCondition,
+  ExerciseDetectionData,
+} from '@/lib/pose-detection/type/exercise-start-condition.type';
+import type { Point2D } from '@/lib/pose-detection/type/point.type';
 import type {
   RecordedReps,
   Rep,
@@ -209,14 +213,17 @@ export default function MobileMovementValidation(
   const [fps, setFps] = useState<number | null>(null);
   const avgFps = useRef<AvgFps>(null);
   const [error, setError] = useState<string | null>(null);
+  const [startedExitTimeout, setStartedExitTimeout] = useState(false);
 
-  const centerPosRef = useRef<{ x: number; y: number } | null>(null);
+  const centerPosRef = useRef<Point2D | null>(null);
+
+  const currentInvalidAnglesRef = useRef<ExerciseAngleCondition[]>([]);
 
   // Helper Refs
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const drawingUtilsRef = useRef<DrawingUtils>(null);
   const canvasCtxRef = useRef<CanvasRenderingContext2D | null>(null);
+  const drawingUtilsRef = useRef<DrawingUtils>(null);
   const prevFrameTimeRef = useRef<number | null>(null);
   const lastVideoTimeRef = useRef(-1);
   const frameCountRef = useRef(0);
@@ -226,7 +233,10 @@ export default function MobileMovementValidation(
   const recordingTimestampRef = useRef<Date | null>(null);
   const isCurrentlySavingImageRef = useRef(false);
   const canExitWhenImageIsDoneSavingRef = useRef(false);
-  const [startedExitTimeout, setStartedExitTimeout] = useState(false);
+  const doItTimestamp = useRef<Date | null>(null); // When the user gets into do it state
+  const mapRef = useRef<HTMLDivElement | null>(null); // map (main) container
+  const reloadingModelRef = useRef(false);
+  const loadedPoseLandmarkerTimestampRef = useRef<Date | null>(null);
 
   useEffect(() => {
     if (!sandboxExerciseId) return;
@@ -425,6 +435,7 @@ export default function MobileMovementValidation(
         await predictWebcam({
           statusRef,
           statusMessage,
+          doItTimestamp,
           stillnessCountdownRef,
           canProceedIntoReadyStateRef,
           repStateRefL,
@@ -439,10 +450,11 @@ export default function MobileMovementValidation(
           currentRepRefR,
           recordedRepsRef,
           lastRecordedRepRef,
+          currentInvalidAnglesRef,
           videoRef,
           canvasRef,
-          drawingUtilsRef,
           canvasCtxRef,
+          drawingUtilsRef,
           prevFrameTimeRef,
           lastVideoTimeRef,
           frameCountRef,
@@ -455,10 +467,12 @@ export default function MobileMovementValidation(
           recordingTimestampRef,
           isCurrentlySavingImageRef,
           canExitWhenImageIsDoneSavingRef,
+          reloadingModelRef,
           setFps,
           finishAiDetection,
           setRepCount,
           setStartedExitTimeout,
+          reloadModel,
         }),
     });
   }, [poseLandmarker]);
@@ -508,7 +522,7 @@ export default function MobileMovementValidation(
         ) {
           setSelectedTrackingMethod(TrackingMethod.MANUAL);
           return;
-        } else {
+        } else if (!recordedRepsRef.current.right) {
           setSelectedTrackingMethod(TrackingMethod.MANUAL);
           return;
         }
@@ -703,7 +717,7 @@ export default function MobileMovementValidation(
       canvasCtxRef.current = canvasRef.current.getContext('2d');
 
     const loadModel = async () => {
-      const lm = await getPoseLandmarker();
+      const lm = await getPoseLandmarker(loadedPoseLandmarkerTimestampRef);
       setPoseLandmarker(lm);
     };
 
@@ -715,6 +729,33 @@ export default function MobileMovementValidation(
       drawingUtilsRef,
     });
   }, [canvasRef]);
+
+  const reloadModel = async () => {
+    if (reloadingModelRef.current === true) return;
+
+    if (
+      loadedPoseLandmarkerTimestampRef.current &&
+      Math.abs(
+        dayjs().diff(loadedPoseLandmarkerTimestampRef.current, 'seconds')
+      ) < POSE_DETECTION_CONSTRAINTS.TIME_BETWEEN_MODEL_RELOAD_S
+    ) {
+      return;
+    }
+
+    setPoseLandmarker(null);
+
+    reloadingModelRef.current = true;
+
+    await lib.common.generic.sleep(2); // wait for 2 secodns before reloading
+
+    const lm = await getPoseLandmarker(loadedPoseLandmarkerTimestampRef, true);
+
+    keypointHistoryRef.current.clear();
+
+    setPoseLandmarker(lm);
+
+    reloadingModelRef.current = false;
+  };
 
   useEffect(() => {
     // Post save images to firestore
@@ -808,6 +849,7 @@ export default function MobileMovementValidation(
 
   return (
     <Box
+      ref={mapRef}
       width="100%"
       display="flex"
       flexDirection="column"
@@ -828,7 +870,13 @@ export default function MobileMovementValidation(
             position: 'relative',
           }}
         >
-          <LoadingOverlay title="Loading model...">
+          <LoadingOverlay
+            title={
+              reloadingModelRef.current === true
+                ? 'Reloading model...'
+                : 'Loading model...'
+            }
+          >
             <Button
               variant="contained"
               sx={{
@@ -918,11 +966,15 @@ export default function MobileMovementValidation(
       >
         <video
           ref={videoRef}
-          width="100vw"
-          height="100vh"
           autoPlay
           playsInline
-          style={{ transform: 'scaleX(-1)', objectFit: 'cover' }}
+          muted // helps autoplay on iOS
+          style={{
+            width: '100%',
+            height: '100%',
+            transform: 'scaleX(-1)',
+            objectFit: 'cover', // fills; will crop a bit by design
+          }}
         />
 
         <canvas
@@ -1031,6 +1083,43 @@ export default function MobileMovementValidation(
                       : '- : -'}
                   </Typography>
                 </Box>
+                {exerciseDetectionDataRef.current?.leftSide.extremumAngles !==
+                  undefined && (
+                  <Box
+                    width="100%"
+                    height="50%"
+                    display="flex"
+                    flexDirection="column"
+                    justifyContent="center"
+                    alignItems="center"
+                    sx={{
+                      backgroundColor: theme.palette.background.dark,
+                    }}
+                  >
+                    <Typography
+                      fontSize={8}
+                      lineHeight={1.2}
+                      textAlign="center"
+                      sx={{
+                        color: theme.palette.background.lightBorder,
+                      }}
+                    >
+                      {lastRecordedRepRef.current?.extremumAngles
+                        ? lastRecordedRepRef.current?.extremumAngles[0].name
+                        : 'Angle'}
+                    </Typography>
+                    <Typography
+                      fontSize={32}
+                      lineHeight={1.2}
+                      fontWeight="bold"
+                      textAlign="center"
+                    >
+                      {lastRecordedRepRef.current?.extremumAngles
+                        ? lastRecordedRepRef.current?.extremumAngles[0].value
+                        : '-'}
+                    </Typography>
+                  </Box>
+                )}
               </Box>
 
               {recordedRepsRef.current.left.length ||

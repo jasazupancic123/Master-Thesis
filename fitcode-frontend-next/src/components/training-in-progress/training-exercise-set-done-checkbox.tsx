@@ -71,31 +71,32 @@ export default function TrainingExerciseSetDoneCheckbox(
     <Box
       sx={{
         p: 0.1,
-        borderRadius: '50%',
+        borderRadius: 2,
         cursor: 'pointer',
         border: isRecorded
-          ? `1px solid ${theme.palette.secondary.main}`
+          ? `1px solid ${theme.palette.text.primary}`
           : isCompleted
             ? `1px solid ${theme.palette.primary.main}`
             : `1px solid ${theme.palette.text.primary}`,
-        mr: 3,
+        mr: 5,
+        my: 'auto',
       }}
     >
       <Box
-        width={38}
-        height={38}
+        width={50}
+        height={50}
         display="flex"
         justifyContent="center"
         alignItems="center"
         sx={{
-          borderRadius: '50%',
+          borderRadius: 2,
           backgroundColor: isRecorded
-            ? theme.palette.secondary.main
+            ? theme.palette.background.default
             : isCompleted
               ? theme.palette.primary.main
               : theme.palette.background.default,
           border: isRecorded
-            ? `1px solid ${theme.palette.secondary.main}`
+            ? `1px solid transparent`
             : isCompleted
               ? `1px solid ${theme.palette.primary.main}`
               : `1px solid transparent`,
@@ -145,6 +146,7 @@ export default function TrainingExerciseSetDoneCheckbox(
               trainingInProgress,
               setTrainingInProgress,
               handleUpsertSet,
+              setManually: true,
             });
 
             handleAdvanceInSuperset({
@@ -166,13 +168,14 @@ export default function TrainingExerciseSetDoneCheckbox(
           fontWeight={500}
           textAlign="center"
           sx={{
-            color:
-              isCompleted || isRecorded
+            color: isRecorded
+              ? theme.palette.text.primary
+              : isCompleted
                 ? theme.palette.text.secondary
                 : theme.palette.text.primary,
           }}
         >
-          {isRecorded ? 'Saved' : isCompleted ? 'Done' : 'Not\nDone'}
+          {isRecorded ? 'Confirm' : isCompleted ? 'Done' : 'Confirm'}
         </Typography>
       </Box>
     </Box>

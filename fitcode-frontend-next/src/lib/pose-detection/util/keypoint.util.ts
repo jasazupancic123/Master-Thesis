@@ -8,6 +8,7 @@ import { MetricConversionType } from '../enum/metric-conversion-type.enum';
 import { PoseModel } from '../enum/pose-model.enum';
 import type { Keypoint } from '../type/keypoint.type';
 import type { NumericValueFrameNum } from '../type/numeric-value-frame-num';
+import type { Point2D } from '../type/point.type';
 import { lib } from '@/lib';
 
 export class KeypointUtil {
@@ -50,12 +51,10 @@ export class KeypointUtil {
               y: kp2D!.y,
               z: kp.z,
             },
-            pixelPosition: kp2D
-              ? {
-                  x: kp2D.x,
-                  y: kp2D.y,
-                }
-              : undefined,
+            pixelPosition: {
+              x: kp2D!.x,
+              y: kp2D!.y,
+            },
             velocity: 0,
             isValid: true,
             frameNum,
@@ -132,6 +131,23 @@ export class KeypointUtil {
     return (keypoints || []).find((kp) => kp.id === keypointId);
   }
 
+  /**
+   *
+   * @param keypoints Ussually keypoints with same id
+   * @param valueType
+   * @param pixelPosition
+   * @returns Ordered values of the provided value of keypoints
+   */
+  getValuesByType(
+    keypoints: Keypoint[],
+    valueType: KeypointValueType,
+    pixelPosition?: boolean
+  ): number[] {
+    return keypoints
+      .map((k) => this.getKeypointValueByType(k, valueType, pixelPosition))
+      .filter((x) => x !== undefined);
+  }
+
   getKeypointsValuesByType(
     keypoint1: Keypoint,
     keypoint2: Keypoint,
@@ -153,14 +169,17 @@ export class KeypointUtil {
 
   getKeypointValueByType(
     keypoint: Keypoint,
-    type: KeypointValueType
+    type: KeypointValueType,
+    pixelPosition?: boolean
   ): number | undefined {
     if (!keypoint) return undefined;
 
     switch (type) {
       case KeypointValueType.POSITION_X:
+        if (pixelPosition) return keypoint.pixelPosition.x;
         return keypoint.position.x;
       case KeypointValueType.POSITION_Y:
+        if (pixelPosition) return keypoint.pixelPosition.y;
         return -keypoint.position.y; // invert Y to have +Y as up
       case KeypointValueType.POSITION_Z:
         return keypoint.position.z;
@@ -169,6 +188,53 @@ export class KeypointUtil {
       default:
         return undefined;
     }
+  }
+
+  getAvgPointCoordinates(
+    keypoints: Keypoint[],
+    pixelPosition?: boolean
+  ): Point2D | null {
+    if (keypoints.length === 0) return null;
+    else if (keypoints.length === 1) {
+      return {
+        x: pixelPosition
+          ? keypoints[0].pixelPosition.x
+          : keypoints[0].position.x,
+        y: pixelPosition
+          ? keypoints[0].pixelPosition.y
+          : keypoints[0].position.y,
+      };
+    }
+
+    const xs = this.getValuesByType(
+      keypoints,
+      KeypointValueType.POSITION_X,
+      pixelPosition
+    );
+    const ys = this.getValuesByType(
+      keypoints,
+      KeypointValueType.POSITION_Y,
+      pixelPosition
+    );
+
+    if (xs.length !== keypoints.length || ys.length !== keypoints.length)
+      return null;
+
+    if (
+      !lib.common.typeChecker.isNumberArray(xs) ||
+      !lib.common.typeChecker.isNumberArray(ys)
+    )
+      return null;
+
+    const avgX =
+      xs.reduce((prev, current) => (prev += current), 0) / keypoints.length;
+    const avgY =
+      ys.reduce((prev, current) => (prev += current), 0) / keypoints.length;
+
+    return {
+      x: avgX,
+      y: avgY,
+    };
   }
 
   smoothKeypointValues(
