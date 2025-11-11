@@ -48,7 +48,10 @@ import { RepStatus } from '@/lib/pose-detection/enum/rep-state';
 import { RepDetectionService } from '@/lib/pose-detection/rep-detection.service';
 import type { AvgFps } from '@/lib/pose-detection/type/avg-fps.type';
 import type { CurrentSideMutex } from '@/lib/pose-detection/type/current-side-mutex.type';
-import type { ExerciseDetectionData } from '@/lib/pose-detection/type/exercise-start-condition.type';
+import type {
+  ExerciseAngleCondition,
+  ExerciseDetectionData,
+} from '@/lib/pose-detection/type/exercise-start-condition.type';
 import type {
   RecordedReps,
   Rep,
@@ -62,6 +65,7 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import LoadingOverlay from '@/ui/loading-overlay';
+import { Point2D } from '@/lib/pose-detection/type/point.type';
 
 const DEBUG = false;
 
@@ -209,14 +213,17 @@ export default function MobileMovementValidation(
   const [fps, setFps] = useState<number | null>(null);
   const avgFps = useRef<AvgFps>(null);
   const [error, setError] = useState<string | null>(null);
+  const [startedExitTimeout, setStartedExitTimeout] = useState(false);
 
-  const centerPosRef = useRef<{ x: number; y: number } | null>(null);
+  const centerPosRef = useRef<Point2D | null>(null);
+
+  const currentInvalidAnglesRef = useRef<ExerciseAngleCondition[]>([]);
 
   // Helper Refs
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const drawingUtilsRef = useRef<DrawingUtils>(null);
   const canvasCtxRef = useRef<CanvasRenderingContext2D | null>(null);
+  const drawingUtilsRef = useRef<DrawingUtils>(null);
   const prevFrameTimeRef = useRef<number | null>(null);
   const lastVideoTimeRef = useRef(-1);
   const frameCountRef = useRef(0);
@@ -226,7 +233,6 @@ export default function MobileMovementValidation(
   const recordingTimestampRef = useRef<Date | null>(null);
   const isCurrentlySavingImageRef = useRef(false);
   const canExitWhenImageIsDoneSavingRef = useRef(false);
-  const [startedExitTimeout, setStartedExitTimeout] = useState(false);
 
   useEffect(() => {
     if (!sandboxExerciseId) return;
@@ -439,10 +445,11 @@ export default function MobileMovementValidation(
           currentRepRefR,
           recordedRepsRef,
           lastRecordedRepRef,
+          currentInvalidAnglesRef,
           videoRef,
           canvasRef,
-          drawingUtilsRef,
           canvasCtxRef,
+          drawingUtilsRef,
           prevFrameTimeRef,
           lastVideoTimeRef,
           frameCountRef,
@@ -1031,6 +1038,43 @@ export default function MobileMovementValidation(
                       : '- : -'}
                   </Typography>
                 </Box>
+                {exerciseDetectionDataRef.current?.leftSide.extremumAngles !==
+                  undefined && (
+                  <Box
+                    width="100%"
+                    height="50%"
+                    display="flex"
+                    flexDirection="column"
+                    justifyContent="center"
+                    alignItems="center"
+                    sx={{
+                      backgroundColor: theme.palette.background.dark,
+                    }}
+                  >
+                    <Typography
+                      fontSize={8}
+                      lineHeight={1.2}
+                      textAlign="center"
+                      sx={{
+                        color: theme.palette.background.lightBorder,
+                      }}
+                    >
+                      {lastRecordedRepRef.current?.extremumAngles
+                        ? lastRecordedRepRef.current?.extremumAngles[0].name
+                        : 'Angle'}
+                    </Typography>
+                    <Typography
+                      fontSize={32}
+                      lineHeight={1.2}
+                      fontWeight="bold"
+                      textAlign="center"
+                    >
+                      {lastRecordedRepRef.current?.extremumAngles
+                        ? lastRecordedRepRef.current?.extremumAngles[0].value
+                        : '-'}
+                    </Typography>
+                  </Box>
+                )}
               </Box>
 
               {recordedRepsRef.current.left.length ||
