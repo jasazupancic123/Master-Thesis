@@ -1,6 +1,8 @@
 import { ConditionDirection } from '../enum/condition-detection.enum';
+import { HorizontalVertical } from '../enum/horizontal-vertical.enum';
 import { KeypointId } from '../enum/keypoint-id';
 import { KeypointValueType } from '../enum/keypoint-value-type';
+import { MoreLess } from '../enum/more-less.enum';
 import type { ExerciseDetectionDataWithExerciseIds } from '../type/exercise-start-condition.type';
 
 // Smaller the duration, more accurate will the rep cuting be
@@ -868,6 +870,126 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
             direction: ConditionDirection.POSITIVE,
             duration: 1200, // ms
             distance: 0.03, // meters
+          },
+        ],
+      },
+    },
+  },
+  {
+    exerciseIds: ['mummy-plank'],
+    data: {
+      romValueType: KeypointValueType.POSITION_X,
+      cannotDoBothSidesSimultaneously: true,
+      drawLines: [
+        [
+          [KeypointId.NOSE],
+          [KeypointId.LEFT_SHOULDER, KeypointId.RIGHT_SHOULDER],
+          [KeypointId.LEFT_HIP, KeypointId.RIGHT_HIP],
+          [KeypointId.LEFT_ANKLE, KeypointId.RIGHT_ANKLE],
+        ],
+      ],
+      drawRadars: [
+        {
+          startKeypointOrigin: [KeypointId.LEFT_ANKLE, KeypointId.RIGHT_ANKLE],
+          alignStartPoint: HorizontalVertical.VERTICAL,
+          dynamicKeypoint: KeypointId.NOSE, // the dynamic keypoint, which will be updating during the rep
+        },
+      ],
+      leftSide: {
+        romKeypointId: KeypointId.NOSE,
+        conditions: [
+          {
+            keypointId: KeypointId.NOSE,
+            type: KeypointValueType.POSITION_X,
+            direction: ConditionDirection.POSITIVE,
+            duration: 3000, // ms
+            distance: 0.02, // meters
+          },
+          {
+            keypointId: KeypointId.LEFT_SHOULDER,
+            type: KeypointValueType.POSITION_X,
+            direction: ConditionDirection.POSITIVE,
+            duration: 3000, // ms
+            distance: 0.02, // meters
+          },
+        ],
+        feedbackAngles: [
+          {
+            id: 'nose-shoulders-hip-left',
+            name: 'NOSE - SHOULDERS - HIP',
+            point1: [KeypointId.NOSE],
+            point2: [KeypointId.LEFT_HIP, KeypointId.RIGHT_HIP],
+            origin: [KeypointId.LEFT_SHOULDER, KeypointId.RIGHT_SHOULDER],
+            threshold: 175, // degrees
+            moreLess: MoreLess.LESS,
+          },
+          {
+            id: 'shoulders-hip-ankle-left',
+            name: 'SHOULDERS - HIP - ANKLE',
+            point1: [KeypointId.LEFT_SHOULDER, KeypointId.RIGHT_SHOULDER],
+            point2: [KeypointId.LEFT_ANKLE],
+            origin: [KeypointId.LEFT_HIP, KeypointId.RIGHT_HIP],
+            threshold: 175, // degrees
+            moreLess: MoreLess.LESS,
+          },
+        ],
+        extremumAngles: [
+          {
+            id: 'peak-angle-l',
+            name: 'Peak angle L',
+            point1: [KeypointId.NOSE],
+            point2: HorizontalVertical.VERTICAL,
+            origin: [KeypointId.LEFT_ANKLE],
+            attachOriginToStartValue: true,
+          },
+        ],
+      },
+      rightSide: {
+        romKeypointId: KeypointId.NOSE,
+        conditions: [
+          {
+            keypointId: KeypointId.NOSE,
+            type: KeypointValueType.POSITION_X,
+            direction: ConditionDirection.NEGATIVE,
+            duration: 3000, // ms
+            distance: 0.02, // meters
+          },
+          {
+            keypointId: KeypointId.RIGHT_SHOULDER,
+            type: KeypointValueType.POSITION_X,
+            direction: ConditionDirection.NEGATIVE,
+            duration: 3000, // ms
+            distance: 0.02, // meters
+          },
+        ],
+        feedbackAngles: [
+          {
+            id: 'nose-shoulders-hip-right',
+            name: 'NOSE - SHOULDERS - HIP',
+            point1: [KeypointId.NOSE],
+            point2: [KeypointId.LEFT_HIP, KeypointId.RIGHT_HIP],
+            origin: [KeypointId.LEFT_SHOULDER, KeypointId.RIGHT_SHOULDER],
+            threshold: 175, // degrees
+            moreLess: MoreLess.LESS,
+          },
+          {
+            id: 'shoulders-hip-ankle-right',
+            name: 'SHOULDERS - HIP - ANKLE',
+            point1: [KeypointId.LEFT_SHOULDER, KeypointId.RIGHT_SHOULDER],
+            point2: [KeypointId.RIGHT_ANKLE],
+            origin: [KeypointId.LEFT_HIP, KeypointId.RIGHT_HIP],
+            threshold: 175, // degrees
+            moreLess: MoreLess.LESS,
+          },
+        ],
+        extremumAngles: [
+          {
+            id: 'peak-angle-r',
+            name: 'Peak angle R',
+            point1: [KeypointId.NOSE],
+            point2: HorizontalVertical.VERTICAL,
+            origin: [KeypointId.RIGHT_ANKLE],
+            attachOriginToStartValue: true,
           },
         ],
       },

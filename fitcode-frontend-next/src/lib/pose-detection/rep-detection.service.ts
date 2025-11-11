@@ -5,6 +5,7 @@ import { KeypointHistory } from './class/keypoint-history';
 import { POSE_DETECTION_CONSTRAINTS } from './const/pose-detection-constrains.const';
 import { ConditionDirection } from './enum/condition-detection.enum';
 import { CurrentSideMutexValues } from './enum/current-side-mutex-values.enum';
+import { HorizontalVertical } from './enum/horizontal-vertical.enum';
 import type { KeypointId } from './enum/keypoint-id';
 import { KeypointValueType } from './enum/keypoint-value-type';
 import { RepStatus } from './enum/rep-state';
@@ -12,6 +13,7 @@ import { StatusDetectionService } from './status-detection.service';
 import type { AvgFps } from './type/avg-fps.type';
 import type { CurrentSideMutex } from './type/current-side-mutex.type';
 import type {
+  ExerciseAngleCondition,
   ExerciseDetectionData,
   ExerciseRepStartCondition,
   RequiredPoseCondition,
@@ -19,8 +21,10 @@ import type {
 } from './type/exercise-start-condition.type';
 import type { Keypoint } from './type/keypoint.type';
 import type { NumericValueFrameNum } from './type/numeric-value-frame-num';
+import type { Point2D } from './type/point.type';
 import type { RecordedReps, Rep, RepsCount } from './type/rep.type';
 import type { RepSideDetectionData } from './type/rep-side-detection-data';
+import { AngleUtil } from './util/angle-util';
 import { KeypointUtil } from './util/keypoint.util';
 import { RepPostProcessingUtil } from './util/rep-post-processing.util';
 import { EXERCISE_TIMES_ROUNDING_STEP_S } from '@/components/mobile-movement-validation/mobile-movement-validation';
@@ -33,11 +37,13 @@ export class RepDetectionService {
   private readonly keypoint: KeypointUtil;
   private readonly status: StatusDetectionService;
   private readonly repPostProcessing: RepPostProcessingUtil;
+  private readonly angle: AngleUtil;
 
   private constructor() {
     this.keypoint = KeypointUtil.instance;
     this.status = StatusDetectionService.instance;
     this.repPostProcessing = RepPostProcessingUtil.instance;
+    this.angle = AngleUtil.instance;
   }
 
   static get instance(): RepDetectionService {
@@ -74,6 +80,7 @@ export class RepDetectionService {
     lastRecordedRepRef: RefObject<Rep | null>;
     exerciseDetectionData: ExerciseDetectionData;
     currentSideMutexRef: RefObject<CurrentSideMutex>;
+    currentInvalidAnglesRef: RefObject<ExerciseAngleCondition[]>;
     valueType: KeypointValueType;
     avgFps: AvgFps;
     initedFirstFrameInRecordingMode: RefObject<boolean>;
@@ -88,6 +95,7 @@ export class RepDetectionService {
       lastRecordedRepRef,
       exerciseDetectionData,
       currentSideMutexRef,
+      currentInvalidAnglesRef,
       valueType,
       avgFps,
       initedFirstFrameInRecordingMode,
@@ -103,6 +111,7 @@ export class RepDetectionService {
       i++;
 
       const {
+        side,
         repStateRef,
         currentRepRef,
         recordedReps,
@@ -111,7 +120,8 @@ export class RepDetectionService {
         exerciseStartConditions,
         requiredPoseConditions,
         recordingStillnesses,
-        side,
+        feedbackAngles,
+        extremumAngles,
       } = lOrR;
 
       if (repStateRef.current.status === RepStatus.NONE) continue;
@@ -141,8 +151,118 @@ export class RepDetectionService {
           //   direction,
           // });
 
+          // Check angle feedbacks
+          lib.ai.angle.checkAngleFeedbacks({
+            angles: feedbackAngles,
+            currentFrameKeypoints,
+            currentInvalidAnglesRef,
+          });
+
+          // Check extreme angles
+          (extremumAngles || []).forEach((extremumAngle) => {
+            if (!currentRepRef.current) return;
+
+            const point1Keypoints = extremumAngle.point1.map((kId) =>
+              this.keypoint.getDesiredKeypointFromArray(
+                currentFrameKeypoints,
+                kId
+              )
+            );
+
+            const originKeypointsIds = extremumAngle.attachOriginToStartValue
+              ? currentRepRef.current.startFrameKeypoints
+              : currentFrameKeypoints;
+
+            const originKeypoints = extremumAngle.origin.map((kId) =>
+              this.keypoint.getDesiredKeypointFromArray(originKeypointsIds, kId)
+            );
+
+            if (
+              !lib.common.typeChecker.isKeypointArray(point1Keypoints) ||
+              !lib.common.typeChecker.isKeypointArray(originKeypoints)
+            )
+              return;
+
+            const extremumAnglePoint2: KeypointId[] | HorizontalVertical =
+              extremumAngle.point2;
+
+            const isPoint2KeypointIdArray =
+              lib.common.typeChecker.isKeypointIdArray(extremumAnglePoint2);
+
+            const point2Keypoints: (Keypoint | undefined)[] | null =
+              isPoint2KeypointIdArray
+                ? extremumAnglePoint2.map((kId) =>
+                    this.keypoint.getDesiredKeypointFromArray(
+                      currentFrameKeypoints,
+                      kId
+                    )
+                  )
+                : null;
+
+            if (
+              isPoint2KeypointIdArray &&
+              !lib.common.typeChecker.isKeypointArray(point2Keypoints)
+            )
+              return;
+
+            const point1: Point2D | null = this.keypoint.getAvgPointCoordinates(
+              point1Keypoints,
+              true
+            );
+            const origin: Point2D | null = this.keypoint.getAvgPointCoordinates(
+              originKeypoints,
+              true
+            );
+
+            if (!point1 || !origin) return;
+
+            const point2: Point2D | null = isPoint2KeypointIdArray
+              ? this.keypoint.getAvgPointCoordinates(
+                  point2Keypoints as Keypoint[],
+                  true
+                )
+              : extremumAnglePoint2 === HorizontalVertical.VERTICAL
+                ? {
+                    x: origin.x,
+                    y: point1.y,
+                  }
+                : { x: point1.x, y: origin.y };
+
+            if (!point2) return;
+
+            let deg = this.angle.calculateAngle(point1, point2, origin);
+
+            if (deg === null) return;
+
+            deg = Math.round(deg * 10) / 10;
+
+            if (!currentRepRef.current.extremumAngles) {
+              currentRepRef.current.extremumAngles = [
+                {
+                  ...extremumAngle,
+                  value: deg,
+                },
+              ];
+
+              return;
+            }
+
+            const found = currentRepRef.current.extremumAngles.find(
+              (ea) => ea.id === extremumAngle.id
+            );
+
+            if (found && deg > found.value) {
+              found.value = deg;
+            } else if (!found)
+              currentRepRef.current.extremumAngles.push({
+                ...extremumAngle,
+                value: deg,
+              });
+          });
+
           // Check for rep end
           const { isRepDone, endKeypoint } = this.checkHasRepEnded({
+            currentFrameKeypoints,
             currentRepRef,
             recordedReps,
             keypointHistory,
@@ -156,6 +276,7 @@ export class RepDetectionService {
           if (isRepDone && endKeypoint !== undefined && currentRepRef.current) {
             // Save rep
             currentRepRef.current.endValueTimestamp = endKeypoint.capturedAt;
+            currentInvalidAnglesRef.current = []; // clear invalid anglesF
 
             // Set all the times
             this.postProcessRep({
@@ -302,6 +423,7 @@ export class RepDetectionService {
   }
 
   private checkHasRepEnded(state: {
+    currentFrameKeypoints: Keypoint[];
     currentRepRef: RefObject<Rep | null>;
     recordedReps: Rep[];
     keypointHistory: KeypointHistory;
@@ -312,6 +434,7 @@ export class RepDetectionService {
     avgFps: AvgFps;
   }): { isRepDone: boolean; endKeypoint?: Keypoint } {
     const {
+      currentFrameKeypoints,
       currentRepRef,
       recordedReps,
       keypointHistory,
@@ -377,7 +500,7 @@ export class RepDetectionService {
     });
 
     if (slope === undefined) {
-      console.log('SLOPE UNDEFINED');
+      // console.log('SLOPE UNDEFINED');
       return { isRepDone: false };
     }
 
@@ -390,7 +513,7 @@ export class RepDetectionService {
         conditionDirection
       )
     ) {
-      console.log('NOT CLOSE ENOUGH TO START VALUE');
+      // console.log('NOT CLOSE ENOUGH TO START VALUE');
       return { isRepDone: false };
     }
 
@@ -1135,6 +1258,8 @@ export class RepDetectionService {
       return keypoint.frameNum === startValueFrameNum;
     });
 
+    const startRepKeypoints = constantKeypointHistory.history[cutAtIndex] || [];
+
     const bufferHistory =
       cutAtIndex !== -1
         ? new KeypointHistory(constantKeypointHistory.history.slice(cutAtIndex))
@@ -1149,6 +1274,7 @@ export class RepDetectionService {
       detectedExtremum: false,
       currentlyInExtremumRange: false,
       timeAtExtremeMs: 0,
+      startFrameKeypoints: startRepKeypoints,
     };
   }
 
