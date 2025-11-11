@@ -167,6 +167,8 @@ describe('Upsert Set (e2e)', () => {
       {
         userId: global.athlete.uid,
         timestamp: new Date(),
+        from: new Date(),
+        to: new Date(),
         recTime: 0,
         reps: 1,
       },
@@ -199,6 +201,8 @@ describe('Upsert Set (e2e)', () => {
       {
         userId: global.athlete.uid,
         timestamp: new Date(),
+        from: new Date(),
+        to: new Date(),
         recTime: 0,
         reps: 1,
       },
@@ -223,6 +227,8 @@ describe('Upsert Set (e2e)', () => {
       {
         userId: global.athlete.uid,
         timestamp: new Date(),
+        from: new Date(),
+        to: new Date(),
         reps: 1,
         recTime: 0,
       },
@@ -248,6 +254,8 @@ describe('Upsert Set (e2e)', () => {
       {
         userId: global.athlete.uid,
         timestamp: new Date(),
+        from: new Date(),
+        to: new Date(),
         reps: 1,
         recTime: 0,
       },
@@ -273,6 +281,8 @@ describe('Upsert Set (e2e)', () => {
       {
         userId: global.athlete.uid,
         timestamp: new Date(),
+        from: new Date(),
+        to: new Date(),
         reps: 1,
         recTime: 0,
       },
@@ -298,6 +308,8 @@ describe('Upsert Set (e2e)', () => {
       {
         userId: global.athlete.uid,
         timestamp: new Date(),
+        from: new Date(),
+        to: new Date(),
         recTime: 0,
         reps: 1,
       },
@@ -305,6 +317,33 @@ describe('Upsert Set (e2e)', () => {
 
     expect(res.status).toBe(400);
     expect(res.body.message).toBe('Set number not found in exercise');
+
+    await db.trainingReports.deleteAllByTraining(trainingId);
+  });
+
+  it('should fail if on workload creation from and to times are not provided', async () => {
+    // start component
+    await startTrainingComponentReq(global.trainer.token, trainingId, 'c1');
+
+    const res = await req(
+      global.trainer.token,
+      trainingId,
+      'c1',
+      'squat',
+      0,
+      1,
+      {
+        userId: global.athlete.uid,
+        timestamp: new Date(),
+        recTime: 0,
+        reps: 1,
+      },
+    );
+
+    expect(res.status).toBe(409);
+    expect(res.body.message).toBe(
+      'You must provide workload times (from and to)',
+    );
 
     await db.trainingReports.deleteAllByTraining(trainingId);
   });
@@ -323,6 +362,8 @@ describe('Upsert Set (e2e)', () => {
       {
         userId: global.athlete.uid,
         timestamp: new Date(),
+        from: new Date(),
+        to: new Date(),
         reps: 6,
         recTime: 0,
       },
@@ -404,6 +445,8 @@ describe('Upsert Set (e2e)', () => {
       {
         userId: global.athlete.uid,
         timestamp: new Date(),
+        from: new Date(),
+        to: new Date(),
         reps: 6,
         repsR: 5,
         loadKg: 60,
@@ -504,6 +547,8 @@ describe('Upsert Set (e2e)', () => {
       {
         userId: global.athlete.uid,
         timestamp: from,
+        from: from,
+        to: from,
         reps: 8,
         loadKg: 70,
         recTime: 90,
@@ -536,6 +581,49 @@ describe('Upsert Set (e2e)', () => {
     ).toBe(TrainingStatus.IN_PROGRESS);
 
     // cleanup
+    await db.workloads.deleteAll(trainingId);
+    await db.trainingReports.deleteAllByTraining(trainingId);
+  });
+
+  it('should not allow updating from and to on existing workload', async () => {
+    // start component
+    await startTrainingComponentReq(global.trainer.token, trainingId, 'c1');
+
+    const from = new Date();
+    const to = new Date();
+
+    // create workload
+    await req(global.trainer.token, trainingId, 'c1', 'squat', 0, 1, {
+      userId: global.athlete.uid,
+      timestamp: new Date(),
+      from,
+      to,
+      reps: 6,
+      recTime: 0,
+    });
+
+    // try to update from and to
+    const res = await req(
+      global.trainer.token,
+      trainingId,
+      'c1',
+      'squat',
+      0,
+      1,
+      {
+        userId: global.athlete.uid,
+        timestamp: new Date(),
+        from: new Date(from.getTime() + 1000 * 60),
+        to: new Date(to.getTime() + 1000 * 60),
+        reps: 6,
+        recTime: 0,
+      },
+    );
+
+    expect(res.status).toBe(409);
+    expect(res.body.message).toBe('You cannot update existing workload times');
+
+    // clean up
     await db.workloads.deleteAll(trainingId);
     await db.trainingReports.deleteAllByTraining(trainingId);
   });

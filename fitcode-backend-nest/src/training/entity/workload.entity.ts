@@ -1,5 +1,10 @@
 import { IntersectionType } from '@nestjs/mapped-types';
-import { ApiProperty, ApiPropertyOptional, OmitType } from '@nestjs/swagger';
+import {
+  ApiProperty,
+  ApiPropertyOptional,
+  OmitType,
+  PartialType,
+} from '@nestjs/swagger';
 import { Expose, Transform, Type } from 'class-transformer';
 import {
   IsEnum,
@@ -12,6 +17,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 
+import { DateRangeDto } from '@src/common/dto/date-range.dto';
 import { IdEntity } from '@src/common/entity/id.entity';
 
 import { SetStatus } from '../enum/set-status.enum';
@@ -144,7 +150,11 @@ export class WorkloadValue extends IntersectionType(
   photoURLs?: string[];
 }
 
-export class Workload extends IntersectionType(WorkloadMeta, WorkloadValue) {
+export class Workload extends IntersectionType(
+  WorkloadMeta,
+  WorkloadValue,
+  PartialType(DateRangeDto),
+) {
   @ValidateNested()
   @Type(() => ExerciseSet)
   @ApiProperty({ type: ExerciseSet })

@@ -48,10 +48,7 @@ export class WorkloadRepository extends FirestoreRepository<
   }
 
   async save(ref: WorkloadRef, data: Create<Workload>) {
-    const query = this.firebase.buildCreateQuery<Workload>(data, {
-      timestamps: true,
-    });
-
+    const query = this.firebase.buildCreateQuery<Workload>(data);
     await this.doc(ref).set(query);
     return this.getKey(ref);
   }
