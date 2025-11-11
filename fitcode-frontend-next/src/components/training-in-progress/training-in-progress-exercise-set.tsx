@@ -89,7 +89,10 @@ export default function TrainingInProgressExerciseSet(props: Props) {
                 <TempoExerciseParam
                   options={effOptions}
                   selected={effType}
-                  value={core.training.set.getTempo(exercise.sets[setIndex])}
+                  value={core.training.set.getTempo(
+                    exercise.sets[setIndex],
+                    true
+                  )}
                   exercise={exercise}
                   disableOptions
                   disabled
@@ -228,7 +231,8 @@ export default function TrainingInProgressExerciseSet(props: Props) {
                         options={effOptions}
                         selected={effType}
                         value={core.training.set.getTempoR(
-                          exercise.sets[setIndex]
+                          exercise.sets[setIndex],
+                          true
                         )}
                         exercise={exercise}
                         disableOptions

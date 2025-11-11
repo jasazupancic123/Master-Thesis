@@ -26,8 +26,8 @@ import type {
 } from '@/lib/pose-detection/type/rep.type';
 import type { RepState } from '@/lib/pose-detection/type/rep-state.type';
 import { theme } from '@/app/style';
-import { KeypointId } from '@/lib/pose-detection/enum/keypoint-id';
 import { Point2D } from '@/lib/pose-detection/type/point.type';
+import dayjs from 'dayjs';
 
 export async function setupVideoAndContex(state: {
   videoRef: RefObject<HTMLVideoElement | null>;
@@ -58,7 +58,7 @@ export async function setupVideoAndContex(state: {
   drawingUtilsRef.current = new DrawingUtils(canvas.getContext('2d')!);
 }
 
-export function enableCam(state: {
+export async function enableCam(state: {
   poseLandmarker: PoseLandmarker | null;
   videoRef: RefObject<HTMLVideoElement | null>;
   setError: SetState<string | null>;
@@ -70,9 +70,13 @@ export function enableCam(state: {
 
   // Activate the webcam stream.
   if (videoRef !== null && videoRef.current !== null) {
-    navigator.mediaDevices
+    await navigator.mediaDevices
       .getUserMedia({
         video: {
+          facingMode: { exact: 'user' }, // front cam
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          aspectRatio: { ideal: 9 / 16 }, // you want portrait
           frameRate: { ideal: 30, max: 60 },
         },
         audio: false,
@@ -90,6 +94,7 @@ export function enableCam(state: {
 export const predictWebcam = async (state: {
   statusRef: RefObject<DetectionStatus>;
   statusMessage: RefObject<string>;
+  doItTimestamp: RefObject<Date | null>;
   stillnessCountdownRef: RefObject<Date | null>;
   canProceedIntoReadyStateRef: RefObject<boolean>;
   repStateRefL: RefObject<RepState>;
@@ -121,14 +126,17 @@ export const predictWebcam = async (state: {
   recordingTimestampRef: RefObject<Date | null>;
   isCurrentlySavingImageRef: RefObject<boolean>;
   canExitWhenImageIsDoneSavingRef: RefObject<boolean>;
+  reloadingModelRef: RefObject<boolean>;
   setFps: SetState<number | null>;
   finishAiDetection: () => Promise<void>;
   setRepCount: SetState<RepsCount>;
   setStartedExitTimeout: SetState<boolean>;
+  reloadModel: () => Promise<void>;
 }) => {
   const {
     statusRef,
     statusMessage,
+    doItTimestamp,
     stillnessCountdownRef,
     canProceedIntoReadyStateRef,
     repStateRefL,
@@ -160,10 +168,12 @@ export const predictWebcam = async (state: {
     recordingTimestampRef,
     isCurrentlySavingImageRef,
     canExitWhenImageIsDoneSavingRef,
+    reloadingModelRef,
     setFps,
     finishAiDetection,
     setRepCount,
     setStartedExitTimeout,
+    reloadModel,
   } = state;
 
   if (statusRef.current === DetectionStatus.STOPPED) {
@@ -239,16 +249,11 @@ export const predictWebcam = async (state: {
     if (
       ![DetectionStatus.READY, DetectionStatus.RECORDING].includes(
         statusRef.current
-      ) &&
-      [recordedRepsRef.current.left, recordedRepsRef.current.right]
-        .filter((r) => r !== undefined)
-        .flat().length === 0 &&
-      [repStateRefL.current.status, repStateRefR.current?.status]
-        .filter((s) => s !== undefined)
-        .flat()
-        .includes(RepStatus.NONE)
+      ) ||
+      (statusRef.current === DetectionStatus.RECORDING &&
+        dayjs(dayjs()).diff(doItTimestamp.current, 'second') < 1)
     ) {
-      // to re-render ui every frame when not in ready or recording state
+      // to re-render ui every frame when not in ready or recording state, or in the first second of recording
       setFps(instFps);
     } else {
       // only update fps every 0.5 seconds when in ready or recording state to save performance
@@ -312,7 +317,7 @@ export const predictWebcam = async (state: {
     lastVideoTimeRef.current = video.currentTime;
     prevFrameTimeRef.current = startTimeMs;
 
-    poseLandmarker.detectForVideo(video, startTimeMs, (result) => {
+    poseLandmarker.detectForVideo(video, startTimeMs, async (result) => {
       frameCountRef.current += 1;
 
       frameBitmapBufferRef.current.insertFrame(
@@ -355,7 +360,7 @@ export const predictWebcam = async (state: {
         avgFps,
       });
 
-      lib.ai.pose.checkStatus({
+      await lib.ai.pose.checkStatus({
         statusRef,
         canProceedIntoReadyStateRef,
         repStateRefL,
@@ -369,6 +374,9 @@ export const predictWebcam = async (state: {
         statusMessage,
         stillnessCountdownRef,
         videoHeight: video.videoHeight,
+        doItTimestamp,
+        reloadingModelRef,
+        reloadModel,
       });
 
       if (statusRef.current === DetectionStatus.RECORDING) {
@@ -425,6 +433,7 @@ export const predictWebcam = async (state: {
         });
       }
 
+      // DRAWING
       ctx.setTransform(1, 0, 0, 1, 0, 0); // reset to identity
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -456,7 +465,6 @@ export const predictWebcam = async (state: {
         );
 
       // Draw radars
-
       if (drawRadars && drawRadars.length)
         lib.ai.draw.drawRadars({
           currentRepRefL,

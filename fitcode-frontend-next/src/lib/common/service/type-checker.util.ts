@@ -53,4 +53,13 @@ export class TypeCheckerUtil {
 
     return false;
   }
+
+  isFourNumberArray(array: unknown): array is [number, number, number, number] {
+    if (!Array.isArray(array)) return false;
+
+    if (array.length !== 4) return false;
+
+    if (array.every((v) => typeof v === 'number')) return true;
+    return false;
+  }
 }

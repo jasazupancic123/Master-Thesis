@@ -113,7 +113,13 @@ export class TrainingExerciseSetUtil {
     return undefined;
   }
 
-  getTempo(set: ExerciseSet): [number, number, number, number] {
+  getTempo(
+    set: ExerciseSet,
+    removeIdle?: boolean
+  ): [number, number, number, number] | [number, number, number] {
+    if (removeIdle)
+      return [set.tempoEcc || 2, set.tempoIso || 0, set.tempoCon || 1];
+
     return [
       set.tempoEcc || 2,
       set.tempoIso || 0,
@@ -122,7 +128,13 @@ export class TrainingExerciseSetUtil {
     ];
   }
 
-  getTempoR(set: ExerciseSet): [number, number, number, number] {
+  getTempoR(
+    set: ExerciseSet,
+    removeIdle?: boolean
+  ): [number, number, number, number] | [number, number, number] {
+    if (removeIdle)
+      return [set.tempoEccR || 2, set.tempoIsoR || 0, set.tempoConR || 1];
+
     return [
       set.tempoEccR || 2,
       set.tempoIsoR || 0,

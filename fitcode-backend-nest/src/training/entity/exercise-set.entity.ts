@@ -54,7 +54,6 @@ export class ExerciseSetPrimarySide {
 
   @IsNumber()
   @Min(0)
-  @Max(10)
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
@@ -62,7 +61,6 @@ export class ExerciseSetPrimarySide {
 
   @IsNumber()
   @Min(0)
-  @Max(10)
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
@@ -70,7 +68,6 @@ export class ExerciseSetPrimarySide {
 
   @IsNumber()
   @Min(0)
-  @Max(10)
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
@@ -78,7 +75,6 @@ export class ExerciseSetPrimarySide {
 
   @IsNumber()
   @Min(0)
-  @Max(10)
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
@@ -159,7 +155,6 @@ export class ExerciseSetSecondarySide {
 
   @IsNumber()
   @Min(0)
-  @Max(10)
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
@@ -167,7 +162,6 @@ export class ExerciseSetSecondarySide {
 
   @IsNumber()
   @Min(0)
-  @Max(10)
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
@@ -175,7 +169,6 @@ export class ExerciseSetSecondarySide {
 
   @IsNumber()
   @Min(0)
-  @Max(10)
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
@@ -183,7 +176,6 @@ export class ExerciseSetSecondarySide {
 
   @IsNumber()
   @Min(0)
-  @Max(10)
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()

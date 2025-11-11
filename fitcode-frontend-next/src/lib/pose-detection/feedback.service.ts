@@ -7,8 +7,8 @@ import { Keypoint } from './type/keypoint.type';
 import { KeypointUtil } from './util/keypoint.util';
 import { AngleUtil } from './util/angle-util';
 
-export class AngleService {
-  private static _instance: AngleService;
+export class FeedbackService {
+  private static _instance: FeedbackService;
   private readonly keypoint: KeypointUtil;
   private readonly angle: AngleUtil;
 
@@ -17,9 +17,10 @@ export class AngleService {
     this.angle = AngleUtil.instance;
   }
 
-  static get instance(): AngleService {
-    if (!AngleService._instance) AngleService._instance = new AngleService();
-    return AngleService._instance;
+  static get instance(): FeedbackService {
+    if (!FeedbackService._instance)
+      FeedbackService._instance = new FeedbackService();
+    return FeedbackService._instance;
   }
 
   /**
@@ -104,7 +105,7 @@ export class AngleService {
     return false;
   }
 
-  private getAnglePointKeypoints(
+  getAnglePointKeypoints(
     anglePoints: KeypointId[],
     keypoints: Keypoint[]
   ): Keypoint[] {

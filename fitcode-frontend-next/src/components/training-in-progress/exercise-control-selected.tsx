@@ -151,7 +151,7 @@ function ControlsTextPlaceholder({
         maxWidth={200}
         fontSize={14}
         textAlign="center"
-        sx={{ mx: 'auto' }}
+        sx={{ mx: 'auto', color: theme.palette.background.lightBorder }}
       >
         {text}
       </Typography>

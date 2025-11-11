@@ -66,6 +66,10 @@ export class KeypointHistory {
     return frameNum ?? this.history.length - 1;
   }
 
+  getFromIndex(index: number): Keypoint[][] {
+    return this.history.slice(index);
+  }
+
   cutAtIndex(index: number, clearBufferLength?: boolean) {
     if (index !== -1) {
       this.history = this.history.slice(index);

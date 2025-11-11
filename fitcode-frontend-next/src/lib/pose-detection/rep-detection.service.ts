@@ -236,8 +236,6 @@ export class RepDetectionService {
 
             deg = Math.round(deg * 10) / 10;
 
-            console.log(deg);
-
             if (!currentRepRef.current.extremumAngles) {
               currentRepRef.current.extremumAngles = [
                 {

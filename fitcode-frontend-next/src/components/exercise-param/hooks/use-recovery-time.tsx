@@ -62,7 +62,7 @@ export default function useRecoveryTime(
           (initValue as number) - elapsedSinceLastSet
         );
 
-        if (remaining <= 0) return STRING_CONST.doIt;
+        if (remaining <= 0) return 0;
 
         return remaining;
       });
