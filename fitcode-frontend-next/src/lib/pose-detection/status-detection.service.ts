@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import type { RefObject } from 'react';
 
-import type { KeypointHistory } from './class/keypoint-history';
+import { KeypointHistory } from './class/keypoint-history';
 import { POSE_DETECTION_CONSTRAINTS } from './const/pose-detection-constrains.const';
 import { ConditionDirection } from './enum/condition-detection.enum';
 import { DetectionStatus } from './enum/detection-status';
@@ -9,6 +9,7 @@ import { KeypointId } from './enum/keypoint-id';
 import { KeypointValueType } from './enum/keypoint-value-type';
 import { RepStatus } from './enum/rep-state';
 import type {
+  ExerciseAngleCondition,
   ExerciseDetectionData,
   ExerciseRepStartCondition,
 } from './type/exercise-start-condition.type';
@@ -17,13 +18,24 @@ import type { Rep } from './type/rep.type';
 import type { RepState } from './type/rep-state.type';
 import { KeypointUtil } from './util/keypoint.util';
 import { getStatusMessage } from '@/components/mobile-movement-validation/state';
+import { DEFAULT_STILLNESS_KEYPOINTS } from './const/ai.const';
+import { AvgFps } from './type/avg-fps.type';
+import { MoreLess } from './enum/more-less.enum';
+import { FeedbackService } from './feedback.service';
+import { AngleUtil } from './util/angle-util';
+import { frame, Point } from 'framer-motion';
+import { Point2D } from './type/point.type';
 
 export class StatusDetectionService {
   private static _instance: StatusDetectionService;
   private readonly keypoint: KeypointUtil;
+  private readonly feedback: FeedbackService;
+  private readonly angle: AngleUtil;
 
   private constructor() {
     this.keypoint = KeypointUtil.instance;
+    this.feedback = FeedbackService.instance;
+    this.angle = AngleUtil.instance;
   }
 
   static get instance(): StatusDetectionService {
@@ -33,7 +45,7 @@ export class StatusDetectionService {
   }
 
   // if it returns false, it means we need to return in main loop
-  checkAndValidateStatus(
+  async checkAndValidateStatus(
     detectionStatus: DetectionStatus,
     state: {
       repStateRefL: RefObject<RepState>;
@@ -42,14 +54,18 @@ export class StatusDetectionService {
       statusRef: RefObject<DetectionStatus>;
       canProceedIntoReadyStateRef: RefObject<boolean>;
       keypointBuffer: KeypointHistory;
+      keypointHistory: KeypointHistory;
       exerciseDetectionData: ExerciseDetectionData;
       avgFps: { value: number; count: number } | null;
       recordingTimestampRef: RefObject<Date | null>;
       statusMessage: RefObject<string>;
       stillnessCountdownRef: RefObject<Date | null>;
       videoHeight: number;
+      doItTimestamp: RefObject<Date | null>;
+      reloadingModelRef: RefObject<boolean>;
+      reloadModel: () => Promise<void>;
     }
-  ): boolean {
+  ): Promise<boolean> {
     const {
       repStateRefL,
       repStateRefR,
@@ -57,16 +73,32 @@ export class StatusDetectionService {
       statusRef,
       canProceedIntoReadyStateRef,
       keypointBuffer,
+      keypointHistory,
       exerciseDetectionData,
       avgFps,
       recordingTimestampRef,
       statusMessage,
       stillnessCountdownRef,
       videoHeight,
+      doItTimestamp,
+      reloadingModelRef,
+      reloadModel,
     } = state;
+
+    let detectedJitterThisFrame = false;
+
+    if (reloadingModelRef.current === true) return false;
 
     switch (detectionStatus) {
       case DetectionStatus.NOT_FULLY_IN_FRAME: {
+        if (!detectedJitterThisFrame) {
+          detectedJitterThisFrame = await this.checkJitter({
+            keypointHistory,
+            avgFps,
+            reloadModel,
+            reloadingModelRef,
+          });
+        }
         const isFullyInFrame = this.checkIsFullyInFrame(keypoints);
 
         const canProceedIntoNotFacingCamera = isFullyInFrame;
@@ -85,6 +117,14 @@ export class StatusDetectionService {
         );
       }
       case DetectionStatus.NOT_FACING_CAMERA: {
+        if (!detectedJitterThisFrame) {
+          detectedJitterThisFrame = await this.checkJitter({
+            keypointHistory,
+            avgFps,
+            reloadModel,
+            reloadingModelRef,
+          });
+        }
         const isFacingCamera = this.checkIsFacingCamera(
           keypoints,
           exerciseDetectionData.stillnessEvaluationKeypoints
@@ -112,7 +152,16 @@ export class StatusDetectionService {
         );
       }
       case DetectionStatus.NOT_STILL: {
-        const bufferCutOf = this.keypoint.getFramesCountFromSeconds(
+        if (!detectedJitterThisFrame) {
+          detectedJitterThisFrame = await this.checkJitter({
+            keypointHistory,
+            avgFps,
+            reloadModel,
+            reloadingModelRef,
+          });
+        }
+
+        const bufferCutOff = this.keypoint.getFramesCountFromSeconds(
           1,
           avgFps?.value || 30
         );
@@ -122,7 +171,7 @@ export class StatusDetectionService {
           buffer: keypointBuffer,
           avgFps,
           stillnessCountdownRef,
-          bufferCutOf,
+          bufferCutOff,
           videoHeight,
           stillnessEvaluationKeypoints:
             exerciseDetectionData.stillnessEvaluationKeypoints,
@@ -174,6 +223,9 @@ export class StatusDetectionService {
             };
         }
 
+        if (canStartRecording && !doItTimestamp.current)
+          doItTimestamp.current = new Date();
+
         return this.updateStatus(
           statusRef,
           canStartRecording,
@@ -201,7 +253,7 @@ export class StatusDetectionService {
           keypoints,
           buffer: keypointBuffer,
           avgFps,
-          bufferCutOf,
+          bufferCutOff: bufferCutOf,
           videoHeight,
         });
 
@@ -305,7 +357,7 @@ export class StatusDetectionService {
     buffer: KeypointHistory;
     avgFps: { value: number; count: number } | null;
     videoHeight: number;
-    bufferCutOf?: number;
+    bufferCutOff?: number;
     stillnessCountdownRef?: RefObject<Date | null>;
     stillnessEvaluationKeypoints?: KeypointId[];
   }): boolean {
@@ -314,7 +366,7 @@ export class StatusDetectionService {
       buffer,
       avgFps,
       videoHeight,
-      bufferCutOf: bufferCutOff,
+      bufferCutOff,
       stillnessCountdownRef,
       stillnessEvaluationKeypoints,
     } = state;
@@ -327,18 +379,8 @@ export class StatusDetectionService {
         avgFps.value // at least this much second of data
     );
 
-    const stillnessKeypointIds = stillnessEvaluationKeypoints || [
-      KeypointId.LEFT_SHOULDER,
-      KeypointId.RIGHT_SHOULDER,
-      KeypointId.LEFT_WRIST,
-      KeypointId.RIGHT_WRIST,
-      KeypointId.LEFT_HIP,
-      KeypointId.RIGHT_HIP,
-      KeypointId.LEFT_KNEE,
-      KeypointId.RIGHT_KNEE,
-      KeypointId.LEFT_ANKLE,
-      KeypointId.RIGHT_ANKLE,
-    ];
+    const stillnessKeypointIds =
+      stillnessEvaluationKeypoints || DEFAULT_STILLNESS_KEYPOINTS;
 
     const stillnessKeypoints = stillnessKeypointIds.map((id) =>
       this.keypoint.getDesiredKeypointFromArray(keypoints, id)
@@ -459,19 +501,137 @@ export class StatusDetectionService {
 
   private calculateStandardDeviation = (keypoints: Keypoint[]) => {
     if (keypoints.length === 0) return 0;
+
     const meanX =
       keypoints.reduce((acc, pos) => acc + pos.position.x, 0) /
       keypoints.length;
+
     const meanY =
       keypoints.reduce((acc, pos) => acc + pos.position.y, 0) /
       keypoints.length;
+
     const variances = keypoints.map(
       (pos) =>
         ((pos.position.x - meanX) ** 2 + (pos.position.y - meanY) ** 2) / 2
     );
     const variance =
       variances.reduce((acc, varian) => acc + varian, 0) / keypoints.length;
+
     return Math.sqrt(variance);
+  };
+
+  private async checkJitter(state: {
+    keypointHistory: KeypointHistory;
+    avgFps: AvgFps;
+    reloadModel: () => Promise<void>;
+    reloadingModelRef: RefObject<boolean>;
+  }): Promise<boolean> {
+    const { keypointHistory, avgFps, reloadModel, reloadingModelRef } = state;
+
+    if (reloadingModelRef.current) return false;
+
+    const detectedJitter = this.detectJitter(keypointHistory);
+
+    if (detectedJitter) {
+      await reloadModel();
+    }
+
+    return detectedJitter;
+  }
+
+  private detectJitter = (keypointHistory: KeypointHistory): boolean => {
+    if (!keypointHistory || keypointHistory.history.length < 2) return false;
+
+    let isJittering = false;
+
+    const anglesToCheckForJittering: ExerciseAngleCondition[] = [
+      {
+        id: 'nose-shoulders-hip-left',
+        name: 'NOSE - SHOULDERS - HIP',
+        point1: [KeypointId.NOSE],
+        point2: [KeypointId.LEFT_HIP, KeypointId.RIGHT_HIP],
+        origin: [KeypointId.LEFT_SHOULDER, KeypointId.RIGHT_SHOULDER],
+        threshold: 40, // degrees
+        moreLess: MoreLess.LESS,
+      },
+      {
+        id: 'shoulders-hip-ankle-left',
+        name: 'SHOULDERS - HIP - ANKLE',
+        point1: [KeypointId.LEFT_SHOULDER, KeypointId.RIGHT_SHOULDER],
+        point2: [KeypointId.LEFT_ANKLE],
+        origin: [KeypointId.LEFT_HIP, KeypointId.RIGHT_HIP],
+        threshold: 40, // degrees
+        moreLess: MoreLess.LESS,
+      },
+    ];
+
+    const currentFrame =
+      keypointHistory.history[keypointHistory.history.length - 1];
+    const previousFrame =
+      keypointHistory.history[keypointHistory.history.length - 2];
+
+    const consecutiveFrames = [previousFrame, currentFrame];
+
+    anglesToCheckForJittering.forEach((angle) => {
+      let currentAndPrevAngle = [];
+
+      for (const frame of consecutiveFrames) {
+        const point1Keypoints = this.feedback.getAnglePointKeypoints(
+          angle.point1,
+          frame
+        );
+        const point2Keypoints = this.feedback.getAnglePointKeypoints(
+          angle.point2,
+          frame
+        );
+        const originKeypoints = this.feedback.getAnglePointKeypoints(
+          angle.origin,
+          frame
+        );
+
+        if (
+          angle.point1.length !== point1Keypoints.length ||
+          angle.point2.length !== point2Keypoints.length ||
+          angle.origin.length !== originKeypoints.length
+        ) {
+          // some keypoints are missing, cannot calculate angle
+          return;
+        }
+
+        const point1 = this.keypoint.getAvgPointCoordinates(
+          point1Keypoints,
+          true
+        );
+        const point2 = this.keypoint.getAvgPointCoordinates(
+          point2Keypoints,
+          true
+        );
+        const origin = this.keypoint.getAvgPointCoordinates(
+          originKeypoints,
+          true
+        );
+
+        if (!point1 || !point2 || !origin) return;
+
+        const deg = this.angle.calculateAngle(point1, point2, origin);
+
+        if (deg === null) return;
+
+        currentAndPrevAngle.push(deg);
+      }
+
+      if (!currentAndPrevAngle || currentAndPrevAngle.length < 2) return;
+
+      const angleDiff = Math.abs(
+        currentAndPrevAngle[1] - currentAndPrevAngle[0]
+      );
+
+      const isAngleJittering = angleDiff > angle.threshold;
+
+      if (isAngleJittering) isJittering = true;
+    });
+
+    return isJittering;
   };
 
   checkExerciseRepStartConditions(
@@ -552,54 +712,10 @@ export class StatusDetectionService {
 
     const frames = keypointBuffer.history.slice(-numFrames);
 
-    const startLeftShoulder = this.keypoint.getDesiredKeypointFromArray(
-      frames[0],
-      KeypointId.LEFT_SHOULDER
-    );
-
-    const startRightShoulder = this.keypoint.getDesiredKeypointFromArray(
-      frames[0],
-      KeypointId.RIGHT_SHOULDER
-    );
-
-    const startNose = this.keypoint.getDesiredKeypointFromArray(
-      frames[0],
-      KeypointId.NOSE
-    );
-
-    if (!startNose || !startLeftShoulder || !startRightShoulder) return false;
-
-    const startNoseX = this.keypoint.getKeypointValueByType(
-      startNose,
-      KeypointValueType.POSITION_X
-    );
-
-    const startLeftShoulderX = this.keypoint.getKeypointValueByType(
-      startLeftShoulder,
-      KeypointValueType.POSITION_X
-    );
-
-    const startRightShoulderX = this.keypoint.getKeypointValueByType(
-      startRightShoulder,
-      KeypointValueType.POSITION_X
-    );
-
-    if (
-      startNoseX === undefined ||
-      startLeftShoulderX === undefined ||
-      startRightShoulderX === undefined
-    )
-      return false;
-
-    const startNoseLeftShoulderDist = startLeftShoulderX - startNoseX; // left shoulderX is bigger than right shoulderX
-    const startNoseRightShoulderDist = startNoseX - startRightShoulderX;
-
-    const hasMovedLeft = false,
-      hasMovedRight = false;
     let hasRotatedLeft = false,
       hasRotatedRight = false;
 
-    for (const frame of frames) {
+    frames.forEach((frame) => {
       const nose = this.keypoint.getDesiredKeypointFromArray(
         frame,
         KeypointId.NOSE
@@ -615,54 +731,125 @@ export class StatusDetectionService {
         KeypointId.RIGHT_SHOULDER
       );
 
-      if (nose && leftShoulder && !hasMovedLeft) {
-        const noseX = this.keypoint.getKeypointValueByType(
-          nose,
-          KeypointValueType.POSITION_X
-        );
+      const leftHip = this.keypoint.getDesiredKeypointFromArray(
+        frame,
+        KeypointId.LEFT_HIP
+      );
 
-        const leftShoulderX = this.keypoint.getKeypointValueByType(
-          leftShoulder,
-          KeypointValueType.POSITION_X
-        );
+      const rightHip = this.keypoint.getDesiredKeypointFromArray(
+        frame,
+        KeypointId.RIGHT_HIP
+      );
 
-        if (noseX !== undefined && leftShoulderX !== undefined) {
-          const noseLeftShoulderDist = leftShoulderX - noseX;
+      if (!nose || !leftShoulder || !rightShoulder || !leftHip || !rightHip)
+        return;
 
-          if (
-            startNoseLeftShoulderDist - noseLeftShoulderDist >
-            POSE_DETECTION_CONSTRAINTS.MIN_NOSE_X_MOVEMENT_M
-          ) {
-            // console.log('HAS ROTATED LEFT');
-            hasRotatedLeft = true;
-          }
-        }
+      const noseX = this.keypoint.getKeypointValueByType(
+        nose,
+        KeypointValueType.POSITION_X,
+        true
+      );
+      const noseY = this.keypoint.getKeypointValueByType(
+        nose,
+        KeypointValueType.POSITION_Y,
+        true
+      );
+
+      const leftShoulderX = this.keypoint.getKeypointValueByType(
+        leftShoulder,
+        KeypointValueType.POSITION_X,
+        true
+      );
+      const leftShoulderY = this.keypoint.getKeypointValueByType(
+        leftShoulder,
+        KeypointValueType.POSITION_Y,
+        true
+      );
+
+      const rightShoulderX = this.keypoint.getKeypointValueByType(
+        rightShoulder,
+        KeypointValueType.POSITION_X,
+        true
+      );
+      const rightShoulderY = this.keypoint.getKeypointValueByType(
+        rightShoulder,
+        KeypointValueType.POSITION_Y,
+        true
+      );
+
+      const leftHipX = this.keypoint.getKeypointValueByType(
+        leftHip,
+        KeypointValueType.POSITION_X,
+        true
+      );
+      const leftHipY = this.keypoint.getKeypointValueByType(
+        leftHip,
+        KeypointValueType.POSITION_Y,
+        true
+      );
+
+      const rightHipX = this.keypoint.getKeypointValueByType(
+        rightHip,
+        KeypointValueType.POSITION_X,
+        true
+      );
+      const rightHipY = this.keypoint.getKeypointValueByType(
+        rightHip,
+        KeypointValueType.POSITION_Y,
+        true
+      );
+
+      if (
+        noseX === undefined ||
+        noseY === undefined ||
+        leftShoulderX === undefined ||
+        leftShoulderY === undefined ||
+        rightShoulderX === undefined ||
+        rightShoulderY === undefined ||
+        leftHipX === undefined ||
+        leftHipY === undefined ||
+        rightHipX === undefined ||
+        rightHipY === undefined
+      )
+        return;
+
+      const middleShoulderX = (leftShoulderX + rightShoulderX) / 2;
+      const middleShoulderY = (leftShoulderY + rightShoulderY) / 2;
+
+      const middleHipX = (leftHipX + rightHipX) / 2;
+      const middleHipY = (leftHipY + rightHipY) / 2;
+
+      const nosePoint: Point2D = { x: noseX, y: noseY };
+      const middleShoulderPoint: Point2D = {
+        x: middleShoulderX,
+        y: middleShoulderY,
+      };
+      const middleHipPoint: Point2D = { x: middleHipX, y: middleHipY };
+
+      const angle = this.angle.calculateAngle(
+        nosePoint,
+        middleHipPoint,
+        middleShoulderPoint
+      );
+
+      if (angle === null) return;
+
+      const isLeftAngle = nosePoint.x < middleShoulderPoint.x;
+
+      if (
+        isLeftAngle &&
+        !hasRotatedLeft &&
+        angle < POSE_DETECTION_CONSTRAINTS.HEAD_SHAKE_ANGLE_THRESHOLD_DEGREES
+      ) {
+        hasRotatedLeft = true;
+      } else if (
+        !isLeftAngle &&
+        !hasRotatedRight &&
+        angle < POSE_DETECTION_CONSTRAINTS.HEAD_SHAKE_ANGLE_THRESHOLD_DEGREES
+      ) {
+        hasRotatedRight = true;
       }
-
-      if (nose && rightShoulder && !hasMovedRight) {
-        const rightShoulderX = this.keypoint.getKeypointValueByType(
-          rightShoulder,
-          KeypointValueType.POSITION_X
-        );
-
-        const noseX = this.keypoint.getKeypointValueByType(
-          nose,
-          KeypointValueType.POSITION_X
-        );
-
-        if (noseX !== undefined && rightShoulderX !== undefined) {
-          const noseRightShoulderDist = noseX - rightShoulderX;
-
-          if (
-            startNoseRightShoulderDist - noseRightShoulderDist >
-            POSE_DETECTION_CONSTRAINTS.MIN_NOSE_X_MOVEMENT_M
-          ) {
-            // console.log('HAS ROTATED RIGHT');
-            hasRotatedRight = true;
-          }
-        }
-      }
-    }
+    });
 
     return hasRotatedLeft && hasRotatedRight;
   }

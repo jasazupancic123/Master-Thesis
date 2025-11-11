@@ -4,7 +4,6 @@ import { KeypointId } from '../enum/keypoint-id';
 import { KeypointValueType } from '../enum/keypoint-value-type';
 import { MoreLess } from '../enum/more-less.enum';
 import type { ExerciseDetectionDataWithExerciseIds } from '../type/exercise-start-condition.type';
-import { DEFAULT_STILLNESS_KEYPOINTS } from './ai.const';
 
 // Smaller the duration, more accurate will the rep cuting be
 export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
@@ -968,7 +967,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
             id: 'nose-shoulders-hip-right',
             name: 'NOSE - SHOULDERS - HIP',
             point1: [KeypointId.NOSE],
-            point2: [KeypointId.LEFT_KNEE, KeypointId.RIGHT_KNEE],
+            point2: [KeypointId.LEFT_HIP, KeypointId.RIGHT_HIP],
             origin: [KeypointId.LEFT_SHOULDER, KeypointId.RIGHT_SHOULDER],
             threshold: 175, // degrees
             moreLess: MoreLess.LESS,

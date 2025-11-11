@@ -131,6 +131,13 @@ export class KeypointUtil {
     return (keypoints || []).find((kp) => kp.id === keypointId);
   }
 
+  /**
+   * 
+   * @param keypoints Ussually keypoints with same id
+   * @param valueType 
+   * @param pixelPosition 
+   * @returns Ordered values of the provided value of keypoints
+   */
   getValuesByType(
     keypoints: Keypoint[],
     valueType: KeypointValueType,

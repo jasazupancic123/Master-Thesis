@@ -1,4 +1,4 @@
-import { VideoLibrary } from '@mui/icons-material';
+import { Check, VideoLibrary } from '@mui/icons-material';
 import { alpha, Box, IconButton, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Image from 'next/image';
@@ -184,6 +184,8 @@ export default function TrainingInProgressExerciseCard() {
                 )
             );
 
+            const isSetSelected = setIndex === i;
+
             return (
               <Box
                 key={i}
@@ -228,10 +230,10 @@ export default function TrainingInProgressExerciseCard() {
                       py: 0.25,
                       lineHeight: 1,
                       cursor: 'pointer',
-                      color: isSetDone
+                      color: isSetSelected
                         ? theme.palette.text.secondary
                         : undefined,
-                      backgroundColor: isSetDone
+                      backgroundColor: isSetSelected
                         ? theme.palette.primary.main
                         : undefined,
                       borderTopLeftRadius: i === 0 ? '2px' : 0,
@@ -249,18 +251,29 @@ export default function TrainingInProgressExerciseCard() {
                     Set {i + 1}
                   </Typography>
                 </Box>
-                <Box
-                  component="img"
-                  src="/blinking_dot.gif"
-                  alt="active set"
-                  sx={{
-                    width: 12,
-                    height: 12,
-                    display: 'inline-block',
-                    verticalAlign: 'middle',
-                    visibility: setIndex === i ? 'visible' : 'hidden',
-                  }}
-                />
+                {isSetDone ? (
+                  <Check
+                    fontSize="small"
+                    sx={{
+                      width: 12,
+                      height: 12,
+                      color: theme.palette.text.primary,
+                    }}
+                  />
+                ) : (
+                  <Box
+                    component="img"
+                    src="/blinking_dot.gif"
+                    alt="active set"
+                    sx={{
+                      width: 12,
+                      height: 12,
+                      display: 'inline-block',
+                      verticalAlign: 'middle',
+                      visibility: isSetSelected ? 'visible' : 'hidden',
+                    }}
+                  />
+                )}
               </Box>
             );
           })}

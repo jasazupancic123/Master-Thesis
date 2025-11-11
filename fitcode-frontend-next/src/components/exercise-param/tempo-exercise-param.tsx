@@ -24,12 +24,13 @@ import type { TrainingExercise } from '@/core/training/type/training-exercise.ty
 import { IMG_URLS } from '@/lib/common/const/img-urls.const';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useGroup } from '@/store/group.provider';
+import { lib } from '@/lib';
 
 interface Props {
   exercise: TrainingExercise;
   options: Attribute[];
   selected: string;
-  value: [number, number, number, number]; // [ecc, iso, con, idle] in seconds
+  value: [number, number, number, number] | [number, number, number]; // [ecc, iso, con, idle] in seconds
   onSelectChange?: SetState<string>;
   onInputChange?: SetState<[number, number, number, number]>;
   athleteView?: boolean;
@@ -210,7 +211,11 @@ export function TempoExerciseParam({
           >
             {/* parsed value for tempo */}
             <ExerciseParamValueText
-              value={`${value[0]}:${value[1]}:${value[2]}:${value[3]}`}
+              value={
+                lib.common.typeChecker.isFourNumberArray(value)
+                  ? `${value[0]}:${value[1]}:${value[2]}:${value[3]}`
+                  : `${value[0]}:${value[1]}:${value[2]}`
+              }
               secondary={trainingInProgressSecondaryItem}
             />
           </Box>
@@ -228,7 +233,7 @@ export function TempoExerciseParam({
           </Button>
         )}
 
-        {!disabled && (
+        {!disabled && lib.common.typeChecker.isFourNumberArray(value) && (
           <TempoPicker
             open={open}
             anchorEl={anchorEl}

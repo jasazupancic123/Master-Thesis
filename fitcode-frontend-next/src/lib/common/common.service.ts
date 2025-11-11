@@ -1,3 +1,4 @@
+import { AudioUtil } from './service/audio.util';
 import { CanvasUtil } from './service/canvas.util';
 import { DateUtil } from './service/date.util';
 import { EnvUtil } from './service/env.util';
@@ -24,6 +25,7 @@ export class CommonService {
   readonly textToSpeech: TextToSpeechUtil;
   readonly typeChecker: TypeCheckerUtil;
   readonly canvas: CanvasUtil;
+  readonly audio: AudioUtil;
 
   constructor() {
     this.env = new EnvUtil();
@@ -38,5 +40,6 @@ export class CommonService {
     this.textToSpeech = new TextToSpeechUtil();
     this.typeChecker = new TypeCheckerUtil();
     this.canvas = new CanvasUtil();
+    this.audio = new AudioUtil();
   }
 }

@@ -233,6 +233,10 @@ export default function MobileMovementValidation(
   const recordingTimestampRef = useRef<Date | null>(null);
   const isCurrentlySavingImageRef = useRef(false);
   const canExitWhenImageIsDoneSavingRef = useRef(false);
+  const doItTimestamp = useRef<Date | null>(null); // When the user gets into do it state
+  const mapRef = useRef<HTMLDivElement | null>(null); // map (main) container
+  const reloadingModelRef = useRef(false);
+  const loadedPoseLandmarkerTimestampRef = useRef<Date | null>(null);
 
   useEffect(() => {
     if (!sandboxExerciseId) return;
@@ -431,6 +435,7 @@ export default function MobileMovementValidation(
         await predictWebcam({
           statusRef,
           statusMessage,
+          doItTimestamp,
           stillnessCountdownRef,
           canProceedIntoReadyStateRef,
           repStateRefL,
@@ -462,10 +467,12 @@ export default function MobileMovementValidation(
           recordingTimestampRef,
           isCurrentlySavingImageRef,
           canExitWhenImageIsDoneSavingRef,
+          reloadingModelRef,
           setFps,
           finishAiDetection,
           setRepCount,
           setStartedExitTimeout,
+          reloadModel,
         }),
     });
   }, [poseLandmarker]);
@@ -515,7 +522,7 @@ export default function MobileMovementValidation(
         ) {
           setSelectedTrackingMethod(TrackingMethod.MANUAL);
           return;
-        } else {
+        } else if (!recordedRepsRef.current.right) {
           setSelectedTrackingMethod(TrackingMethod.MANUAL);
           return;
         }
@@ -710,7 +717,7 @@ export default function MobileMovementValidation(
       canvasCtxRef.current = canvasRef.current.getContext('2d');
 
     const loadModel = async () => {
-      const lm = await getPoseLandmarker();
+      const lm = await getPoseLandmarker(loadedPoseLandmarkerTimestampRef);
       setPoseLandmarker(lm);
     };
 
@@ -722,6 +729,33 @@ export default function MobileMovementValidation(
       drawingUtilsRef,
     });
   }, [canvasRef]);
+
+  const reloadModel = async () => {
+    if (reloadingModelRef.current === true) return;
+
+    if (
+      loadedPoseLandmarkerTimestampRef.current &&
+      Math.abs(
+        dayjs().diff(loadedPoseLandmarkerTimestampRef.current, 'seconds')
+      ) < POSE_DETECTION_CONSTRAINTS.TIME_BETWEEN_MODEL_RELOAD_S
+    ) {
+      return;
+    }
+
+    setPoseLandmarker(null);
+
+    reloadingModelRef.current = true;
+
+    await lib.common.generic.sleep(2); // wait for 2 secodns before reloading
+
+    const lm = await getPoseLandmarker(loadedPoseLandmarkerTimestampRef, true);
+
+    keypointHistoryRef.current.clear();
+
+    setPoseLandmarker(lm);
+
+    reloadingModelRef.current = false;
+  };
 
   useEffect(() => {
     // Post save images to firestore
@@ -815,6 +849,7 @@ export default function MobileMovementValidation(
 
   return (
     <Box
+      ref={mapRef}
       width="100%"
       display="flex"
       flexDirection="column"
@@ -835,7 +870,13 @@ export default function MobileMovementValidation(
             position: 'relative',
           }}
         >
-          <LoadingOverlay title="Loading model...">
+          <LoadingOverlay
+            title={
+              reloadingModelRef.current === true
+                ? 'Reloading model...'
+                : 'Loading model...'
+            }
+          >
             <Button
               variant="contained"
               sx={{
@@ -925,11 +966,15 @@ export default function MobileMovementValidation(
       >
         <video
           ref={videoRef}
-          width="100vw"
-          height="100vh"
           autoPlay
           playsInline
-          style={{ transform: 'scaleX(-1)', objectFit: 'cover' }}
+          muted // helps autoplay on iOS
+          style={{
+            width: '100%',
+            height: '100%',
+            transform: 'scaleX(-1)',
+            objectFit: 'cover', // fills; will crop a bit by design
+          }}
         />
 
         <canvas
