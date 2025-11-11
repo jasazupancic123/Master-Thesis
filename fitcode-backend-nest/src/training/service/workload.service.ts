@@ -142,6 +142,20 @@ export class WorkloadService {
       prescribed,
     };
 
+    const existing = await this.repository.findById(ref);
+    if (!existing) {
+      if (!completed.from && !completed.to)
+        throw new ConflictException(
+          'You must provide workload times (from and to)',
+        );
+    } else {
+      // workload exists, don't allow updating `from` and `to`
+      if (completed.from || completed.to)
+        throw new ConflictException(
+          'You cannot update existing workload times',
+        );
+    }
+
     await this.repository.save(ref, workload);
     return { ...workload, createdAt: new Date(), updatedAt: new Date() };
   }

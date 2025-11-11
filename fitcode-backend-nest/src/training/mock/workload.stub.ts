@@ -64,6 +64,8 @@ export function generateWorkloadStub(
   return {
     ...workloadMeta,
     ...workloadValue,
+    from: new Date(),
+    to: new Date(),
     prescribed: { setNumber, reps: 10, recTime: 60, ...data.prescribed },
   };
 }
