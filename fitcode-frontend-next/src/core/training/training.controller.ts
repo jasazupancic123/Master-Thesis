@@ -26,7 +26,7 @@ export class TrainingController extends BaseController {
     return this.instance;
   }
 
-  async findAll(query?: FilterTrainings, options?: FetchOptions) {
+  async findAll(query: FilterTrainings, options?: FetchOptions) {
     return this.api.get<Training[]>('/', { query, ...options });
   }
 

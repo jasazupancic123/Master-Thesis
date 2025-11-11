@@ -5,6 +5,7 @@ import type {
   ExerciseSetSecondarySide,
 } from './exercise-set.type';
 import type { IdEntity } from '@/core/entity.type';
+import type { DateRange } from '@/lib/common/type/date-range.type';
 
 export type WorkloadMeta = IdEntity & {
   institutionId?: string;
@@ -31,7 +32,8 @@ export type WorkloadSecondarySide = ExerciseSetSecondarySide & {
 };
 
 export type WorkloadValue = WorkloadPrimarySide &
-  WorkloadSecondarySide & {
+  WorkloadSecondarySide &
+  DateRange & {
     timestamp: Date;
     photoURLs?: string[];
   };

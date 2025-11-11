@@ -10,6 +10,7 @@ import DashboardGroupsMembers from './dashboard-groups-members';
 import DashboardInstitution from './dashboard-institution';
 import DashboardPageContainer from './dashboard-page-container';
 import { DashboardMembersFilter } from './enum/dashboard-members-filter.enum';
+import useDashboardGroupView from './hooks/use-group-view';
 import AddGroupModal from './modals/dashboard-add-group-modal';
 import { theme } from '@/app/style';
 import { AthletesTrainers } from '@/core/institution/enum/athletes-trainer.enum';
@@ -17,7 +18,6 @@ import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import AddButton from '@/ui/add-button';
-import useDashboardGroupView from './hooks/use-group-view';
 
 export default function DashboardMembers() {
   const screenSize = useScreenSize();

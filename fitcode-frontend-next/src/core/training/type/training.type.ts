@@ -42,6 +42,7 @@ export type UpdateTraining = {
 
 export type FilterTrainings = DateRange &
   Partial<Pick<Training, 'groupId' | 'cycleId'>> & {
+    institutionId: string;
     populate?: boolean;
     limit?: number;
   };

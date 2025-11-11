@@ -6,6 +6,7 @@ import {
 } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
 import dayjs from 'dayjs';
+import { redirect } from 'next/navigation';
 import { Fragment } from 'react';
 
 import { DashboardTrainingPlanFilter } from './enum/dashboard-training-plan-filter.enum';
@@ -17,6 +18,7 @@ import type { Component } from '@/core/exercise/type/component.type';
 import type { Group } from '@/core/group/type/group.type';
 import type { Training } from '@/core/training/type/training.type';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 
@@ -29,10 +31,10 @@ interface Props {
 
 export default function DashboardTrainingsList(props: Props) {
   const screenSize = useScreenSize();
+  const { user } = useAuthenticatedAuth();
   const { groups } = useMain();
 
   const { trainings, selectedGroups, filter, upcoming } = props;
-
   const { filteredTrainings } = useFilteredTrainingsList(
     trainings,
     selectedGroups
@@ -62,9 +64,9 @@ export default function DashboardTrainingsList(props: Props) {
     >
       {filteredTrainings.map((training) => {
         const group = groups.find((g) => g.id === training.groupId);
-
         if (!group) return null;
 
+        const isGroupTrainer = group.trainerIds.includes(user.uid);
         const shortGroupName = group.name.substring(0, 3);
 
         return (
@@ -100,6 +102,21 @@ export default function DashboardTrainingsList(props: Props) {
                     display="flex"
                     alignItems="center"
                     gap={1}
+                    // if group owner, gray background
+                    sx={{
+                      backgroundColor: isGroupTrainer
+                        ? theme.palette.background.dark
+                        : 'transparent',
+                      borderRadius: 1,
+                      p: 1,
+                      cursor: 'pointer',
+                      '&:hover': {
+                        backgroundColor: theme.palette.background.light,
+                      },
+                    }}
+                    onClick={() => {
+                      redirect(`/groups/${group.id}/training/${training.id}`);
+                    }}
                   >
                     <Circle
                       sx={{
@@ -119,6 +136,7 @@ export default function DashboardTrainingsList(props: Props) {
                       <Typography fontSize={12} lineHeight={1}>
                         {timeLabel}
                       </Typography>
+
                       <Typography
                         fontSize={16}
                         fontWeight={600}
@@ -129,13 +147,12 @@ export default function DashboardTrainingsList(props: Props) {
                       >
                         {trainingName}
                       </Typography>
+
                       {upcoming && (
                         <Typography
                           fontSize={12}
                           lineHeight={1}
-                          sx={{
-                            textTransform: 'uppercase',
-                          }}
+                          sx={{ textTransform: 'uppercase' }}
                         >
                           {dateLabel}
                         </Typography>
