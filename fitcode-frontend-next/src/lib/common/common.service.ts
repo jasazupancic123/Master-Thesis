@@ -1,3 +1,4 @@
+import { CanvasUtil } from './service/canvas.util';
 import { DateUtil } from './service/date.util';
 import { EnvUtil } from './service/env.util';
 import { GenericUtil } from './service/generic.util';
@@ -8,6 +9,7 @@ import { NumberUtil } from './service/number.util';
 import { ObjectUtil } from './service/object.util';
 import { TextToSpeechUtil } from './service/text-to-speech.util';
 import { TreeUtil } from './service/tree.util';
+import { TypeCheckerUtil } from './service/type-checker.util';
 
 export class CommonService {
   readonly env: EnvUtil;
@@ -20,6 +22,8 @@ export class CommonService {
   readonly component: ComponentUtil;
   readonly indexedDb: IndexedDbUtil;
   readonly textToSpeech: TextToSpeechUtil;
+  readonly typeChecker: TypeCheckerUtil;
+  readonly canvas: CanvasUtil;
 
   constructor() {
     this.env = new EnvUtil();
@@ -32,5 +36,7 @@ export class CommonService {
     this.component = new ComponentUtil();
     this.indexedDb = new IndexedDbUtil();
     this.textToSpeech = new TextToSpeechUtil();
+    this.typeChecker = new TypeCheckerUtil();
+    this.canvas = new CanvasUtil();
   }
 }
