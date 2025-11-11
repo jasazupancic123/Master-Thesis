@@ -30,17 +30,16 @@ function DashboardInitializer({
   children,
   institutionId,
 }: React.PropsWithChildren & WithInstitutionProps) {
-  const { exercises, groups } = useMain();
-
+  const { institutions, exercises } = useMain();
   const [trainings, setTrainings] = useState<Training[]>([]);
-
   const controller = Controller.getInstance();
 
   useEffect(() => {
     async function init() {
       const trainings = await controller.training.findAll({
-        groupId: groups[0]?.id,
+        institutionId: institutions[0].id,
       });
+
       const mapped = trainings.map((t) =>
         TrainingService.mapData(t, { exercises })
       );

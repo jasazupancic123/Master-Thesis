@@ -32,9 +32,16 @@ export default async function InitAthleteProvider({
       sleep(LOADING_ANIMATION_MIN_DURATION_MS),
     ]);
 
+    const institutionId = data.institutions?.[0]?.id;
+
     let [trainings, reports] = await Promise.all([
       controller.training.findAll(
-        { from: startOfDay(new Date()), populate: true, limit: 100 },
+        {
+          institutionId,
+          from: startOfDay(new Date()),
+          populate: true,
+          limit: 100,
+        },
         { session }
       ),
       controller.training.findReports(

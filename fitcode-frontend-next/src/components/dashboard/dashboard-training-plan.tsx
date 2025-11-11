@@ -96,10 +96,7 @@ export default function DashboardTrainingPlan() {
           alignItems="center"
           gap={1.5}
           maxWidth={MAX_WIDTH}
-          sx={{
-            overflowX: 'auto',
-            ...styledScrollbarSx(theme),
-          }}
+          sx={{ overflowX: 'auto', ...styledScrollbarSx(theme) }}
         >
           {groups.map((group) => {
             const isSelected = selectedGroups.some((g) => g.id === group.id);
@@ -158,7 +155,7 @@ export default function DashboardTrainingPlan() {
       <AthleteOptionsContainer
         items={['Completed', 'Upcoming']}
         selectedItem={''}
-        onClick={(type) => {}}
+        onClick={(_) => {}}
         title="Sessions"
         disabled
       />
@@ -173,6 +170,7 @@ export default function DashboardTrainingPlan() {
             />
           </Box>
         </Box>
+
         <Box width="50%" display="flex" justifyContent="center">
           <Box width="70%">
             <DashboardTrainingsList

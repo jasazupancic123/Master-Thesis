@@ -13,6 +13,7 @@ export default function useFilteredTrainingsList(
     const filtered = trainings.filter((training) =>
       selectedGroups.some((group) => group.id === training.groupId)
     );
+
     setFilteredTrainings(filtered);
   }, [trainings, selectedGroups]);
 
