@@ -267,6 +267,8 @@ export default function AthleteTrainingComponents(props: Props) {
             return;
           }
 
+          lib.common.audio.playSound('/sounds/training-in-progress-start.mp3');
+
           const state: ExerciseSetTracking[] =
             component.supersets
               .map((s, sIndex) => {
