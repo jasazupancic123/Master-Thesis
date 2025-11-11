@@ -28,7 +28,7 @@ export class PoseDetectionService {
     return PoseDetectionService._instance;
   }
 
-  checkStatus(state: {
+  async checkStatus(state: {
     statusRef: RefObject<DetectionStatus>;
     canProceedIntoReadyStateRef: RefObject<boolean>;
     repStateRefL: RefObject<RepState>;
@@ -42,6 +42,9 @@ export class PoseDetectionService {
     statusMessage: RefObject<string>;
     stillnessCountdownRef: RefObject<Date | null>;
     videoHeight: number;
+    doItTimestamp: RefObject<Date | null>;
+    reloadingModelRef: RefObject<boolean>;
+    reloadModel: () => Promise<void>;
   }) {
     const {
       statusRef,
@@ -50,12 +53,16 @@ export class PoseDetectionService {
       repStateRefR,
       keypoints,
       keypointBuffer,
+      keypointHistory,
       exerciseDetectionData,
       avgFps,
       recordingTimestampRef,
       statusMessage,
       stillnessCountdownRef,
       videoHeight,
+      doItTimestamp,
+      reloadingModelRef,
+      reloadModel,
     } = state;
 
     const initStatuses =
@@ -69,19 +76,23 @@ export class PoseDetectionService {
           ];
 
     for (const status of initStatuses) {
-      const validStatus = this.status.checkAndValidateStatus(status, {
+      const validStatus = await this.status.checkAndValidateStatus(status, {
         repStateRefL,
         repStateRefR,
         keypoints,
         statusRef,
         canProceedIntoReadyStateRef,
         keypointBuffer: keypointBuffer,
+        keypointHistory,
         exerciseDetectionData,
         avgFps,
         recordingTimestampRef,
         statusMessage,
         stillnessCountdownRef,
         videoHeight,
+        doItTimestamp,
+        reloadingModelRef,
+        reloadModel,
       });
 
       if (!validStatus) return;
@@ -110,134 +121,6 @@ export class PoseDetectionService {
       if (Math.abs(value1 - value2) > condition.threshold)
         return condition.errorMessage;
     }
-  }
-
-  checkHasShakedHead(state: {
-    keypointBuffer: KeypointHistory;
-    avgFps: { value: number; count: number } | null;
-  }): boolean {
-    const { keypointBuffer, avgFps } = state;
-
-    const numFrames = this.keypoint.getFramesCountFromSeconds(
-      POSE_DETECTION_CONSTRAINTS.HEAD_SHAKE_DETECTION_BUFFER_DURATION_S,
-      avgFps?.value || 30
-    );
-
-    const frames = keypointBuffer.history.slice(-numFrames);
-
-    const startLeftShoulder = this.keypoint.getDesiredKeypointFromArray(
-      frames[0],
-      KeypointId.LEFT_SHOULDER
-    );
-
-    const startRightShoulder = this.keypoint.getDesiredKeypointFromArray(
-      frames[0],
-      KeypointId.RIGHT_SHOULDER
-    );
-
-    const startNose = this.keypoint.getDesiredKeypointFromArray(
-      frames[0],
-      KeypointId.NOSE
-    );
-
-    if (!startNose || !startLeftShoulder || !startRightShoulder) return false;
-
-    const startNoseX = this.keypoint.getKeypointValueByType(
-      startNose,
-      KeypointValueType.POSITION_X
-    );
-
-    const startLeftShoulderX = this.keypoint.getKeypointValueByType(
-      startLeftShoulder,
-      KeypointValueType.POSITION_X
-    );
-
-    const startRightShoulderX = this.keypoint.getKeypointValueByType(
-      startRightShoulder,
-      KeypointValueType.POSITION_X
-    );
-
-    if (
-      startNoseX === undefined ||
-      startLeftShoulderX === undefined ||
-      startRightShoulderX === undefined
-    )
-      return false;
-
-    const startNoseLeftShoulderDist = startLeftShoulderX - startNoseX; // left shoulderX is bigger than right shoulderX
-    const startNoseRightShoulderDist = startNoseX - startRightShoulderX;
-
-    const hasMovedLeft = false;
-    const hasMovedRight = false;
-    let hasRotatedLeft = false,
-      hasRotatedRight = false;
-
-    for (const frame of frames) {
-      const nose = this.keypoint.getDesiredKeypointFromArray(
-        frame,
-        KeypointId.NOSE
-      );
-
-      const leftShoulder = this.keypoint.getDesiredKeypointFromArray(
-        frame,
-        KeypointId.LEFT_SHOULDER
-      );
-
-      const rightShoulder = this.keypoint.getDesiredKeypointFromArray(
-        frame,
-        KeypointId.RIGHT_SHOULDER
-      );
-
-      if (nose && leftShoulder && !hasMovedLeft) {
-        const noseX = this.keypoint.getKeypointValueByType(
-          nose,
-          KeypointValueType.POSITION_X
-        );
-
-        const leftShoulderX = this.keypoint.getKeypointValueByType(
-          leftShoulder,
-          KeypointValueType.POSITION_X
-        );
-
-        if (noseX !== undefined && leftShoulderX !== undefined) {
-          const noseLeftShoulderDist = leftShoulderX - noseX;
-
-          if (
-            startNoseLeftShoulderDist - noseLeftShoulderDist >
-            POSE_DETECTION_CONSTRAINTS.MIN_NOSE_X_MOVEMENT_M
-          ) {
-            // console.log('HAS ROTATED LEFT');
-            hasRotatedLeft = true;
-          }
-        }
-      }
-
-      if (nose && rightShoulder && !hasMovedRight) {
-        const rightShoulderX = this.keypoint.getKeypointValueByType(
-          rightShoulder,
-          KeypointValueType.POSITION_X
-        );
-
-        const noseX = this.keypoint.getKeypointValueByType(
-          nose,
-          KeypointValueType.POSITION_X
-        );
-
-        if (noseX !== undefined && rightShoulderX !== undefined) {
-          const noseRightShoulderDist = noseX - rightShoulderX;
-
-          if (
-            startNoseRightShoulderDist - noseRightShoulderDist >
-            POSE_DETECTION_CONSTRAINTS.MIN_NOSE_X_MOVEMENT_M
-          ) {
-            // console.log('HAS ROTATED RIGHT');
-            hasRotatedRight = true;
-          }
-        }
-      }
-    }
-
-    return hasRotatedLeft && hasRotatedRight;
   }
 
   checkHasNodded(state: {

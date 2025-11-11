@@ -1,3 +1,5 @@
+import { AIDrawingService } from './ai-drawing.service';
+import { FeedbackService } from './feedback.service';
 import { PoseDetectionService } from './pose-detection.service';
 import { RepDetectionService } from './rep-detection.service';
 import { RepsGraphService } from './rep-graph.service';
@@ -12,6 +14,8 @@ export class AIService {
   readonly pose: PoseDetectionService;
   readonly repPostProcessing: RepPostProcessingUtil;
   readonly rep: RepDetectionService;
+  readonly angle: FeedbackService;
+  readonly draw: AIDrawingService;
 
   constructor() {
     this.keypoint = KeypointUtil.instance;
@@ -20,5 +24,7 @@ export class AIService {
     this.pose = PoseDetectionService.instance;
     this.repPostProcessing = RepPostProcessingUtil.instance;
     this.rep = RepDetectionService.instance;
+    this.angle = FeedbackService.instance;
+    this.draw = AIDrawingService.instance;
   }
 }

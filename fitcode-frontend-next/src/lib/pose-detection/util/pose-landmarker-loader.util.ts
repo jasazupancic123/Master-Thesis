@@ -1,11 +1,12 @@
 import { FilesetResolver, PoseLandmarker } from '@mediapipe/tasks-vision';
+import type { RefObject } from 'react';
 
 import { lib } from '@/lib';
 
 let poseLandmarkerPromise: Promise<PoseLandmarker> | null = null;
 
-export async function preloadPoseLandmarker() {
-  if (!poseLandmarkerPromise) {
+export async function preloadPoseLandmarker(forceReload?: boolean) {
+  if (!poseLandmarkerPromise || forceReload) {
     poseLandmarkerPromise = (async () => {
       const modelAssetPath = lib.common.env.getPoseLandmarkerModelPath();
 
@@ -30,7 +31,13 @@ export async function preloadPoseLandmarker() {
   return poseLandmarkerPromise;
 }
 
-export async function getPoseLandmarker() {
-  // ensures a single instance; call this where you need it
-  return await preloadPoseLandmarker();
+export async function getPoseLandmarker(
+  loadedPoseLandmarkerTimestampRef: RefObject<Date | null>,
+  forceReload?: boolean
+) {
+  const lm = await preloadPoseLandmarker(forceReload);
+
+  loadedPoseLandmarkerTimestampRef.current = new Date();
+
+  return lm;
 }

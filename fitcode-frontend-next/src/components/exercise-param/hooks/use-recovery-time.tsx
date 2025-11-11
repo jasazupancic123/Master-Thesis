@@ -2,7 +2,6 @@ import dayjs from 'dayjs';
 import { useEffect } from 'react';
 
 import { ExerciseParamFieldEnum } from '@/core/exercise/enum/exercise-param-field.enum';
-import { STRING_CONST } from '@/lib/common/const/string.const';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
@@ -62,7 +61,7 @@ export default function useRecoveryTime(
           (initValue as number) - elapsedSinceLastSet
         );
 
-        if (remaining <= 0) return STRING_CONST.doIt;
+        if (remaining <= 0) return 0;
 
         return remaining;
       });

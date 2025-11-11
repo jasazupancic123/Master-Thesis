@@ -1,4 +1,5 @@
 import type { KeypointHistory } from '../class/keypoint-history';
+import type { ExtremumAngleWithValue } from './exercise-start-condition.type';
 import type { Keypoint } from './keypoint.type';
 
 export type Rep = {
@@ -9,6 +10,7 @@ export type Rep = {
   startValue: number; // the value when the rep started
   startValueFrameNum: number; // the frame number when the rep started
   startTimestamp: Date; // when the value starts decending/ascending
+  startFrameKeypoints: Keypoint[];
 
   // Keypoint buffer
   buffer: KeypointHistory; // the buffer of keypoints during the rep
@@ -30,6 +32,9 @@ export type Rep = {
   extremeToEndTimestamp?: Date; // when going from extreme value to end
   extremumImage?: Blob;
   extremumImageUrl?: string;
+
+  // angles
+  extremumAngles?: ExtremumAngleWithValue[];
 
   // timeAtExtremum
   timeAtExtremumStartKeypoint?: Keypoint;

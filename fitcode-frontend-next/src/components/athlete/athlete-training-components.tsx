@@ -253,7 +253,11 @@ export default function AthleteTrainingComponents(props: Props) {
 
               const text = `Welcome to today's ${selectedComponent.id} training. Let's get started!`;
 
-              lib.common.textToSpeech.speak(text);
+              // lib.common.textToSpeech.speak(text);
+
+              lib.common.audio.playSound(
+                '/sounds/training-in-progress-start.mp3'
+              );
 
               setView(ExerciseTrainingView.TrainingView);
               setModal(false);

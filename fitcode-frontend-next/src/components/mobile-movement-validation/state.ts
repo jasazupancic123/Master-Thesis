@@ -1,8 +1,10 @@
 import type { PoseLandmarker } from '@mediapipe/tasks-vision';
 import { DrawingUtils } from '@mediapipe/tasks-vision';
+import dayjs from 'dayjs';
 import type { RefObject } from 'react';
 
 import { EXERCISE_TIMES_ROUNDING_STEP_S } from './mobile-movement-validation';
+import { theme } from '@/app/style';
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
 import type { FrameBitmapBuffer } from '@/lib/pose-detection/class/frame-bitmap-buffer';
@@ -14,8 +16,12 @@ import type { PoseModel } from '@/lib/pose-detection/enum/pose-model.enum';
 import { RepStatus } from '@/lib/pose-detection/enum/rep-state';
 import type { AvgFps } from '@/lib/pose-detection/type/avg-fps.type';
 import type { CurrentSideMutex } from '@/lib/pose-detection/type/current-side-mutex.type';
-import type { ExerciseDetectionData } from '@/lib/pose-detection/type/exercise-start-condition.type';
+import type {
+  ExerciseAngleCondition,
+  ExerciseDetectionData,
+} from '@/lib/pose-detection/type/exercise-start-condition.type';
 import type { Keypoint } from '@/lib/pose-detection/type/keypoint.type';
+import type { Point2D } from '@/lib/pose-detection/type/point.type';
 import type {
   RecordedReps,
   Rep,
@@ -52,7 +58,7 @@ export async function setupVideoAndContex(state: {
   drawingUtilsRef.current = new DrawingUtils(canvas.getContext('2d')!);
 }
 
-export function enableCam(state: {
+export async function enableCam(state: {
   poseLandmarker: PoseLandmarker | null;
   videoRef: RefObject<HTMLVideoElement | null>;
   setError: SetState<string | null>;
@@ -64,9 +70,13 @@ export function enableCam(state: {
 
   // Activate the webcam stream.
   if (videoRef !== null && videoRef.current !== null) {
-    navigator.mediaDevices
+    await navigator.mediaDevices
       .getUserMedia({
         video: {
+          facingMode: { exact: 'user' }, // front cam
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          aspectRatio: { ideal: 9 / 16 }, // you want portrait
           frameRate: { ideal: 30, max: 60 },
         },
         audio: false,
@@ -84,6 +94,7 @@ export function enableCam(state: {
 export const predictWebcam = async (state: {
   statusRef: RefObject<DetectionStatus>;
   statusMessage: RefObject<string>;
+  doItTimestamp: RefObject<Date | null>;
   stillnessCountdownRef: RefObject<Date | null>;
   canProceedIntoReadyStateRef: RefObject<boolean>;
   repStateRefL: RefObject<RepState>;
@@ -98,30 +109,34 @@ export const predictWebcam = async (state: {
   currentRepRefR: RefObject<Rep | null>;
   recordedRepsRef: RefObject<RecordedReps>;
   lastRecordedRepRef: RefObject<Rep | null>;
+  currentInvalidAnglesRef: RefObject<ExerciseAngleCondition[]>;
   exerciseDetectionDataRef: RefObject<ExerciseDetectionData | undefined>;
   currentSideMutexRef: RefObject<CurrentSideMutex>;
   videoRef: RefObject<HTMLVideoElement | null>;
   canvasRef: RefObject<HTMLCanvasElement | null>;
-  drawingUtilsRef: RefObject<DrawingUtils | null>;
   canvasCtxRef: RefObject<CanvasRenderingContext2D | null>;
+  drawingUtilsRef: RefObject<DrawingUtils | null>;
   prevFrameTimeRef: RefObject<number | null>;
   lastVideoTimeRef: RefObject<number>;
   isMobile: boolean;
   frameCountRef: RefObject<number>;
   initedFirstFrameInRecordingMode: RefObject<boolean>;
   avgFps: RefObject<AvgFps>;
-  centerPosRef: RefObject<{ x: number; y: number } | null>;
+  centerPosRef: RefObject<Point2D | null>;
   recordingTimestampRef: RefObject<Date | null>;
   isCurrentlySavingImageRef: RefObject<boolean>;
   canExitWhenImageIsDoneSavingRef: RefObject<boolean>;
+  reloadingModelRef: RefObject<boolean>;
   setFps: SetState<number | null>;
   finishAiDetection: () => Promise<void>;
   setRepCount: SetState<RepsCount>;
   setStartedExitTimeout: SetState<boolean>;
+  reloadModel: () => Promise<void>;
 }) => {
   const {
     statusRef,
     statusMessage,
+    doItTimestamp,
     stillnessCountdownRef,
     canProceedIntoReadyStateRef,
     repStateRefL,
@@ -136,12 +151,13 @@ export const predictWebcam = async (state: {
     currentRepRefR,
     recordedRepsRef,
     lastRecordedRepRef,
+    currentInvalidAnglesRef,
     exerciseDetectionDataRef,
     currentSideMutexRef,
     videoRef,
     canvasRef,
-    drawingUtilsRef,
     canvasCtxRef,
+    drawingUtilsRef,
     prevFrameTimeRef,
     lastVideoTimeRef,
     isMobile,
@@ -152,10 +168,12 @@ export const predictWebcam = async (state: {
     recordingTimestampRef,
     isCurrentlySavingImageRef,
     canExitWhenImageIsDoneSavingRef,
+    reloadingModelRef,
     setFps,
     finishAiDetection,
     setRepCount,
     setStartedExitTimeout,
+    reloadModel,
   } = state;
 
   if (statusRef.current === DetectionStatus.STOPPED) {
@@ -184,6 +202,8 @@ export const predictWebcam = async (state: {
     return;
 
   const exerciseDetectionData = exerciseDetectionDataRef.current;
+  const drawLines = exerciseDetectionData.drawLines;
+  const drawRadars = exerciseDetectionData.drawRadars;
 
   if (
     !frameBitmapBufferRef.current.canvas ||
@@ -229,16 +249,11 @@ export const predictWebcam = async (state: {
     if (
       ![DetectionStatus.READY, DetectionStatus.RECORDING].includes(
         statusRef.current
-      ) &&
-      [recordedRepsRef.current.left, recordedRepsRef.current.right]
-        .filter((r) => r !== undefined)
-        .flat().length === 0 &&
-      [repStateRefL.current.status, repStateRefR.current?.status]
-        .filter((s) => s !== undefined)
-        .flat()
-        .includes(RepStatus.NONE)
+      ) ||
+      (statusRef.current === DetectionStatus.RECORDING &&
+        dayjs(dayjs()).diff(doItTimestamp.current, 'second') < 1)
     ) {
-      // to re-render ui every frame when not in ready or recording state
+      // to re-render ui every frame when not in ready or recording state, or in the first second of recording
       setFps(instFps);
     } else {
       // only update fps every 0.5 seconds when in ready or recording state to save performance
@@ -302,7 +317,7 @@ export const predictWebcam = async (state: {
     lastVideoTimeRef.current = video.currentTime;
     prevFrameTimeRef.current = startTimeMs;
 
-    poseLandmarker.detectForVideo(video, startTimeMs, (result) => {
+    poseLandmarker.detectForVideo(video, startTimeMs, async (result) => {
       frameCountRef.current += 1;
 
       frameBitmapBufferRef.current.insertFrame(
@@ -345,7 +360,7 @@ export const predictWebcam = async (state: {
         avgFps,
       });
 
-      lib.ai.pose.checkStatus({
+      await lib.ai.pose.checkStatus({
         statusRef,
         canProceedIntoReadyStateRef,
         repStateRefL,
@@ -359,6 +374,9 @@ export const predictWebcam = async (state: {
         statusMessage,
         stillnessCountdownRef,
         videoHeight: video.videoHeight,
+        doItTimestamp,
+        reloadingModelRef,
+        reloadModel,
       });
 
       if (statusRef.current === DetectionStatus.RECORDING) {
@@ -373,7 +391,9 @@ export const predictWebcam = async (state: {
           initedFirstFrameInRecordingMode, // this is used to track if no rep was detected yet
           exerciseDetectionData,
           currentSideMutexRef,
+          currentInvalidAnglesRef,
           leftData: {
+            side: 'L',
             repStateRef: repStateRefL,
             currentRepRef: currentRepRefL,
             recordedReps: recordedRepsRef.current.left,
@@ -384,11 +404,13 @@ export const predictWebcam = async (state: {
               exerciseDetectionData.leftSide.recordingStillnesses,
             requiredPoseConditions:
               exerciseDetectionData.leftSide.requiredPoseConditions,
-            side: 'L',
+            feedbackAngles: exerciseDetectionData.leftSide.feedbackAngles,
+            extremumAngles: exerciseDetectionData.leftSide.extremumAngles,
           },
           rightData:
             recordedRepsRef.current.right && exerciseDetectionData.rightSide
               ? {
+                  side: 'R',
                   repStateRef: repStateRefR,
                   currentRepRef: currentRepRefR,
                   recordedReps: recordedRepsRef.current.right,
@@ -401,145 +423,61 @@ export const predictWebcam = async (state: {
                     exerciseDetectionData.rightSide.recordingStillnesses,
                   requiredPoseConditions:
                     exerciseDetectionData.rightSide.requiredPoseConditions,
-                  side: 'R',
+                  feedbackAngles:
+                    exerciseDetectionData.rightSide.feedbackAngles,
+                  extremumAngles:
+                    exerciseDetectionData.rightSide.extremumAngles,
                 }
               : undefined,
           setRepCount,
         });
       }
 
+      // DRAWING
+      ctx.setTransform(1, 0, 0, 1, 0, 0); // reset to identity
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       // Flip horizontally to mirror webcam
+      ctx.save();
       ctx.translate(canvas.width, 0);
       ctx.scale(-1, 1);
 
-      let smoothedCenter: {
-        x: number;
-        y: number;
-        z: number;
-        visibility: number;
-      } | null = null;
+      // Set center for the yellow person indicator
+      lib.ai.draw.setSmoothedCenter(result, centerPosRef);
 
-      for (const landmark of result.landmarks) {
-        const keepKeypointsIndexes = [11, 12, 23, 24]; // shoulder & hip indices
-
-        // pick only those 4
-        const kept = landmark.filter((_, i) =>
-          keepKeypointsIndexes.includes(i)
+      // Draw lines between keypoints if provided
+      if (drawLines && drawLines.length)
+        lib.ai.draw.drawLines(
+          drawLines,
+          keypoints,
+          canvas,
+          ctx,
+          theme.palette.primary.main
         );
 
-        if (kept.length > 0) {
-          const cx = kept.reduce((s, k) => s + k.x, 0) / kept.length;
-          const cy = kept.reduce((s, k) => s + k.y, 0) / kept.length;
-          const cz = kept.reduce((s, k) => s + (k.z ?? 0), 0) / kept.length;
-          const cv =
-            kept.reduce((s, k) => s + (k.visibility ?? 0), 0) / kept.length;
+      // Invalid angles indicators
+      if (currentInvalidAnglesRef.current.length)
+        lib.ai.draw.drawInvalidAngles(
+          currentInvalidAnglesRef,
+          keypoints,
+          canvas,
+          ctx
+        );
 
-          const current = { x: cx, y: cy, z: cz, visibility: cv };
+      // Draw radars
+      if (drawRadars && drawRadars.length)
+        lib.ai.draw.drawRadars({
+          currentRepRefL,
+          currentRepRefR,
+          repStateRefL,
+          repStateRefR,
+          keypoints,
+          canvas,
+          ctx,
+          drawRadars,
+        });
 
-          // smoothing factor (0.2 = 20% new, 80% old)
-          const alpha = 10;
-          if (smoothedCenter) {
-            smoothedCenter = {
-              x: smoothedCenter.x * (1 - alpha) + current.x * alpha,
-              y: smoothedCenter.y * (1 - alpha) + current.y * alpha,
-              z: smoothedCenter.z * (1 - alpha) + current.z * alpha,
-              visibility:
-                smoothedCenter.visibility * (1 - alpha) +
-                current.visibility * alpha,
-            };
-          } else {
-            smoothedCenter = current;
-          }
-
-          centerPosRef.current = { x: smoothedCenter.x, y: smoothedCenter.y };
-
-          // drawingUtils.drawLandmarks([smoothedCenter]);
-        }
-
-        // try {
-        //   const mask = result?.segmentationMasks?.[0];
-        //   const utils = drawingUtilsRef.current;
-        //   const segCanvas = canvasSegmentationMaskRef.current;
-        //   const vid = videoRef.current;
-
-        //   if (!mask || !utils || !segCanvas || !vid) {
-        //     console.log(
-        //       'Missing mask or utils or segCanvas or video',
-        //       mask,
-        //       utils,
-        //       segCanvas,
-        //       vid
-        //     );
-        //     return;
-        //   }
-
-        //   const segCtx = segCanvas.getContext('2d');
-        //   if (!segCtx) {
-        //     console.log('Missing segCtx');
-        //     return;
-        //   }
-
-        //   const W = vid.videoWidth,
-        //     H = vid.videoHeight;
-        //   if (!W || !H) {
-        //     console.log('Invalid video width or height', W, H);
-        //     return;
-        //   }
-
-        //   if (segCanvas.width !== W || segCanvas.height !== H) {
-        //     segCanvas.width = W;
-        //     segCanvas.height = H;
-        //   }
-
-        //   // 1) Draw the video frame
-        //   segCtx.clearRect(0, 0, W, H);
-        //   segCtx.drawImage(vid, 0, 0, W, H);
-
-        //   // 2) Convert MPMask -> Uint8 categories (0=bg, 1=person)
-        //   //    This returns an array of length mask.width*mask.height
-        //   const cats = mask.getAsUint8Array(); // CPU-side view
-        //   const mw = mask.width,
-        //     mh = mask.height;
-
-        //   // 3) Build an RGBA ImageData (tinted green @ ~50% opacity for person)
-        //   const rgba = new Uint8ClampedArray(mw * mh * 4);
-        //   for (let i = 0; i < mw * mh; i++) {
-        //     const c = cats[i];
-        //     const j = i * 4;
-        //     if (c === 0) {
-        //       // person
-        //       rgba[j + 0] = 0; // R
-        //       rgba[j + 1] = 255; // G
-        //       rgba[j + 2] = 0; // B
-        //       rgba[j + 3] = 128; // A (0..255)
-        //     } else {
-        //       rgba[j + 3] = 0; // fully transparent bg
-        //     }
-        //   }
-        //   const imgData = new ImageData(rgba, mw, mh);
-
-        //   // 4) Paint the mask over the video (scale if mask size != video size)
-        //   if (mw === W && mh === H) {
-        //     segCtx.putImageData(imgData, 0, 0);
-        //   } else {
-        //     // putImageData can't scale; use a temp canvas then drawImage it
-        //     const tmp = document.createElement('canvas');
-        //     tmp.width = mw;
-        //     tmp.height = mh;
-        //     tmp.getContext('2d')!.putImageData(imgData, 0, 0);
-        //     segCtx.drawImage(tmp, 0, 0, W, H);
-        //   }
-        // } catch (e) {
-        //   console.error('Error drawing segmentation mask:', e);
-        // }
-
-        // drawingUtils.drawLandmarks(landmark);
-        // drawingUtils.drawConnectors(landmark, PoseLandmarker.POSE_CONNECTIONS);
-      }
-
-      ctx?.restore();
+      ctx.restore();
     });
   }
 

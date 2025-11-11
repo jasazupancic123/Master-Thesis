@@ -7,6 +7,7 @@ import useRegisterMemberForm from './use-register-member-form.hook';
 import { AuthController } from '@/core/auth/auth.controller';
 import type { AuthUser } from '@/core/auth/type/user.type';
 import { core } from '@/core/core.service';
+import type { Group } from '@/core/group/type/group.type';
 import { InstitutionController } from '@/core/institution/institution.controller';
 import { Gender } from '@/core/profile/enum/gender.enum';
 import { SportLevel } from '@/core/profile/enum/sport-level.enum';
@@ -14,10 +15,9 @@ import { UserRole } from '@/core/profile/enum/user-role.enum';
 import { ProfileController } from '@/core/profile/profile.controller';
 import type { ImportProfile } from '@/core/profile/type/user.type';
 import { lib } from '@/lib';
+import type { SetState } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
-import { Group } from '@/core/group/type/group.type';
-import { SetState } from '@/lib/common/type/state.type';
 
 export type IInstitutionMembersHook = ReturnType<typeof useInstitutionMembers>;
 

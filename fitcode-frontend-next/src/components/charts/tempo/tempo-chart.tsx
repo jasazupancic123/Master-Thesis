@@ -53,7 +53,10 @@ function IsoOverlayDual({
         const groupCount = isoVals.length;
         const groupWidth = bw / groupCount;
 
-        const centers = [xBase + groupWidth * 0.5, xBase + groupWidth * 1.5];
+        const centers =
+          groupCount === 1
+            ? [xBase + groupWidth * (r.isometricL !== undefined ? 0.25 : 0.75)]
+            : [xBase + groupWidth * 0.5, xBase + groupWidth * 1.5];
 
         return (
           <g key={r.label}>
@@ -171,6 +174,8 @@ export default function TempoChart({
     currentRepsRef.current.right !== undefined &&
     currentRepsRef.current.right.length > currentRepsRef.current.left.length
   )
+    sideWithMoreReps = 'R';
+  else if (!currentRepsRef.current.left && currentRepsRef.current.right)
     sideWithMoreReps = 'R';
 
   const mainSide =
