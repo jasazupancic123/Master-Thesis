@@ -37,7 +37,7 @@ jest.mock('@src/exercise/constant/components.constant', () => {
   return { Components: [c1] };
 });
 
-describe('Get prescribed training (e2e)', () => {
+describe('Get Training By Athlete (e2e)', () => {
   let testApp: TestApp;
   let db: TestDbService;
 

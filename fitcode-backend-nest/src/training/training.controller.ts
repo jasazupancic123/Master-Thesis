@@ -63,18 +63,20 @@ export class TrainingController {
     @RequestUser() user: User,
     @Query() filter: FilterTrainingQueryDto,
   ) {
-    filter = this.commonService.object.clean(filter);
+    let { institutionId, ...rest } = filter;
+    rest = this.commonService.object.clean(rest);
 
     return await this.trainingService.findAll(
       user,
+      institutionId,
       {
-        groupId: filter.groupId,
-        ...(filter.cycleId && { cycleId: filter.cycleId }),
-        ...(filter.from && { from: filter.from }),
-        ...(filter.to && { to: filter.to }),
+        groupId: rest.groupId,
+        ...(rest.cycleId && { cycleId: rest.cycleId }),
+        ...(rest.from && { from: rest.from }),
+        ...(rest.to && { to: rest.to }),
       },
-      { limit: filter?.limit },
-      filter?.populate,
+      { limit: rest?.limit },
+      rest?.populate,
     );
   }
 
@@ -174,6 +176,7 @@ export class TrainingController {
 
     return await this.trainingService.findAll(
       user,
+      institution.id,
       {
         institutionId: institution.id,
         from: startOfDay(new Date()),

@@ -18,7 +18,7 @@ export class TrainingTestRepository extends TestRepositoryMixin<Training>()(
         institutionId: group.institutionId,
         groupId: group.id,
         cycleId: input?.cycleId || group.cycles[0].id,
-        ownerId: group.ownerId,
+        ownerId: group.trainerIds[0],
         membersIds: group.membersIds,
         from: input?.from || getTime(new Date(), 8, 0),
         to: input?.to || getTime(new Date(), 9, 0),
