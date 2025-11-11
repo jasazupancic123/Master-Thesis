@@ -1,30 +1,29 @@
 import dayjs from 'dayjs';
 import type { RefObject } from 'react';
 
-import { KeypointHistory } from './class/keypoint-history';
+import type { KeypointHistory } from './class/keypoint-history';
+import { DEFAULT_STILLNESS_KEYPOINTS } from './const/ai.const';
 import { POSE_DETECTION_CONSTRAINTS } from './const/pose-detection-constrains.const';
 import { ConditionDirection } from './enum/condition-detection.enum';
 import { DetectionStatus } from './enum/detection-status';
 import { KeypointId } from './enum/keypoint-id';
 import { KeypointValueType } from './enum/keypoint-value-type';
+import { MoreLess } from './enum/more-less.enum';
 import { RepStatus } from './enum/rep-state';
+import { FeedbackService } from './feedback.service';
+import type { AvgFps } from './type/avg-fps.type';
 import type {
   ExerciseAngleCondition,
   ExerciseDetectionData,
   ExerciseRepStartCondition,
 } from './type/exercise-start-condition.type';
 import type { Keypoint } from './type/keypoint.type';
+import type { Point2D } from './type/point.type';
 import type { Rep } from './type/rep.type';
 import type { RepState } from './type/rep-state.type';
+import { AngleUtil } from './util/angle-util';
 import { KeypointUtil } from './util/keypoint.util';
 import { getStatusMessage } from '@/components/mobile-movement-validation/state';
-import { DEFAULT_STILLNESS_KEYPOINTS } from './const/ai.const';
-import { AvgFps } from './type/avg-fps.type';
-import { MoreLess } from './enum/more-less.enum';
-import { FeedbackService } from './feedback.service';
-import { AngleUtil } from './util/angle-util';
-import { frame, Point } from 'framer-motion';
-import { Point2D } from './type/point.type';
 
 export class StatusDetectionService {
   private static _instance: StatusDetectionService;
@@ -94,7 +93,6 @@ export class StatusDetectionService {
         if (!detectedJitterThisFrame) {
           detectedJitterThisFrame = await this.checkJitter({
             keypointHistory,
-            avgFps,
             reloadModel,
             reloadingModelRef,
           });
@@ -120,7 +118,6 @@ export class StatusDetectionService {
         if (!detectedJitterThisFrame) {
           detectedJitterThisFrame = await this.checkJitter({
             keypointHistory,
-            avgFps,
             reloadModel,
             reloadingModelRef,
           });
@@ -155,7 +152,6 @@ export class StatusDetectionService {
         if (!detectedJitterThisFrame) {
           detectedJitterThisFrame = await this.checkJitter({
             keypointHistory,
-            avgFps,
             reloadModel,
             reloadingModelRef,
           });
@@ -522,11 +518,10 @@ export class StatusDetectionService {
 
   private async checkJitter(state: {
     keypointHistory: KeypointHistory;
-    avgFps: AvgFps;
     reloadModel: () => Promise<void>;
     reloadingModelRef: RefObject<boolean>;
   }): Promise<boolean> {
-    const { keypointHistory, avgFps, reloadModel, reloadingModelRef } = state;
+    const { keypointHistory, reloadModel, reloadingModelRef } = state;
 
     if (reloadingModelRef.current) return false;
 
@@ -573,7 +568,7 @@ export class StatusDetectionService {
     const consecutiveFrames = [previousFrame, currentFrame];
 
     anglesToCheckForJittering.forEach((angle) => {
-      let currentAndPrevAngle = [];
+      const currentAndPrevAngle = [];
 
       for (const frame of consecutiveFrames) {
         const point1Keypoints = this.feedback.getAnglePointKeypoints(

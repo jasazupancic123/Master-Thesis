@@ -52,6 +52,7 @@ import type {
   ExerciseAngleCondition,
   ExerciseDetectionData,
 } from '@/lib/pose-detection/type/exercise-start-condition.type';
+import type { Point2D } from '@/lib/pose-detection/type/point.type';
 import type {
   RecordedReps,
   Rep,
@@ -65,7 +66,6 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import LoadingOverlay from '@/ui/loading-overlay';
-import { Point2D } from '@/lib/pose-detection/type/point.type';
 
 const DEBUG = false;
 

@@ -1,4 +1,4 @@
-import { Point2D } from '../type/point.type';
+import type { Point2D } from '../type/point.type';
 
 export class AngleUtil {
   private static _instance: AngleUtil;

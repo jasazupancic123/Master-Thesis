@@ -8,8 +8,8 @@ import { MetricConversionType } from '../enum/metric-conversion-type.enum';
 import { PoseModel } from '../enum/pose-model.enum';
 import type { Keypoint } from '../type/keypoint.type';
 import type { NumericValueFrameNum } from '../type/numeric-value-frame-num';
+import type { Point2D } from '../type/point.type';
 import { lib } from '@/lib';
-import { Point2D } from '../type/point.type';
 
 export class KeypointUtil {
   private static _instance: KeypointUtil;
@@ -132,10 +132,10 @@ export class KeypointUtil {
   }
 
   /**
-   * 
+   *
    * @param keypoints Ussually keypoints with same id
-   * @param valueType 
-   * @param pixelPosition 
+   * @param valueType
+   * @param pixelPosition
    * @returns Ordered values of the provided value of keypoints
    */
   getValuesByType(

@@ -1,11 +1,12 @@
-import { RefObject } from 'react';
+import type { RefObject } from 'react';
+
 import { lib } from '..';
-import { KeypointId } from './enum/keypoint-id';
+import type { KeypointId } from './enum/keypoint-id';
 import { MoreLess } from './enum/more-less.enum';
-import { ExerciseAngleCondition } from './type/exercise-start-condition.type';
-import { Keypoint } from './type/keypoint.type';
-import { KeypointUtil } from './util/keypoint.util';
+import type { ExerciseAngleCondition } from './type/exercise-start-condition.type';
+import type { Keypoint } from './type/keypoint.type';
 import { AngleUtil } from './util/angle-util';
+import { KeypointUtil } from './util/keypoint.util';
 
 export class FeedbackService {
   private static _instance: FeedbackService;

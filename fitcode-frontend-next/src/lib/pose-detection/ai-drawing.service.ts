@@ -1,19 +1,20 @@
-import { RefObject } from 'react';
+import type { PoseLandmarkerResult } from '@mediapipe/tasks-vision';
+import type { RefObject } from 'react';
+
 import { lib } from '..';
-import { KeypointId } from './enum/keypoint-id';
-import { Keypoint } from './type/keypoint.type';
-import { Point2D } from './type/point.type';
-import {
+import { HorizontalVertical } from './enum/horizontal-vertical.enum';
+import type { KeypointId } from './enum/keypoint-id';
+import { RepStatus } from './enum/rep-state';
+import type {
   DrawRadar,
   ExerciseAngleCondition,
 } from './type/exercise-start-condition.type';
-import { theme } from '@/app/style';
-import { Rep } from './type/rep.type';
-import { PoseLandmarkerResult } from '@mediapipe/tasks-vision';
-import { RepStatus } from './enum/rep-state';
-import { RepState } from './type/rep-state.type';
+import type { Keypoint } from './type/keypoint.type';
+import type { Point2D } from './type/point.type';
+import type { Rep } from './type/rep.type';
+import type { RepState } from './type/rep-state.type';
 import { KeypointUtil } from './util/keypoint.util';
-import { HorizontalVertical } from './enum/horizontal-vertical.enum';
+import { theme } from '@/app/style';
 
 export class AIDrawingService {
   private static _instance: AIDrawingService;
