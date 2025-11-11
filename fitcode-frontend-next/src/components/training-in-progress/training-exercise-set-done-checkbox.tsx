@@ -100,7 +100,7 @@ export default function TrainingExerciseSetDoneCheckbox(
               ? `1px solid ${theme.palette.primary.main}`
               : `1px solid transparent`,
         }}
-        onClick={async (e) => {
+        onClick={async () => {
           if (setIndex === undefined) return;
 
           if (isRecorded) {
