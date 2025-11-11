@@ -1,8 +1,8 @@
 import type { ConditionDirection } from '../enum/condition-detection.enum';
-import { HorizontalVertical } from '../enum/horizontal-vertical.enum';
+import type { HorizontalVertical } from '../enum/horizontal-vertical.enum';
 import type { KeypointId } from '../enum/keypoint-id';
 import type { KeypointValueType } from '../enum/keypoint-value-type';
-import { MoreLess } from '../enum/more-less.enum';
+import type { MoreLess } from '../enum/more-less.enum';
 
 export type ExerciseDetectionDataWithExerciseIds = {
   exerciseIds: string[];

@@ -1,7 +1,7 @@
 import { FilesetResolver, PoseLandmarker } from '@mediapipe/tasks-vision';
+import type { RefObject } from 'react';
 
 import { lib } from '@/lib';
-import { RefObject } from 'react';
 
 let poseLandmarkerPromise: Promise<PoseLandmarker> | null = null;
 
@@ -38,6 +38,6 @@ export async function getPoseLandmarker(
   const lm = await preloadPoseLandmarker(forceReload);
 
   loadedPoseLandmarkerTimestampRef.current = new Date();
-  
+
   return lm;
 }

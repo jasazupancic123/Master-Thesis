@@ -21,10 +21,10 @@ import type { Attribute } from '@/core/attribute/type/attribute.type';
 import { core } from '@/core/core.service';
 import type { ExerciseParamField } from '@/core/training/type/exercise-set.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import { lib } from '@/lib';
 import { IMG_URLS } from '@/lib/common/const/img-urls.const';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useGroup } from '@/store/group.provider';
-import { lib } from '@/lib';
 
 interface Props {
   exercise: TrainingExercise;

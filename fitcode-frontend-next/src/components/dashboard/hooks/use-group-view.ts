@@ -1,6 +1,7 @@
-import { Group } from '@/core/group/type/group.type';
-import { useMain } from '@/store/main.provider';
 import { useEffect, useState } from 'react';
+
+import type { Group } from '@/core/group/type/group.type';
+import { useMain } from '@/store/main.provider';
 
 export default function useDashboardGroupView() {
   const { groups } = useMain();

@@ -1,8 +1,10 @@
 import type { PoseLandmarker } from '@mediapipe/tasks-vision';
 import { DrawingUtils } from '@mediapipe/tasks-vision';
+import dayjs from 'dayjs';
 import type { RefObject } from 'react';
 
 import { EXERCISE_TIMES_ROUNDING_STEP_S } from './mobile-movement-validation';
+import { theme } from '@/app/style';
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
 import type { FrameBitmapBuffer } from '@/lib/pose-detection/class/frame-bitmap-buffer';
@@ -19,15 +21,13 @@ import type {
   ExerciseDetectionData,
 } from '@/lib/pose-detection/type/exercise-start-condition.type';
 import type { Keypoint } from '@/lib/pose-detection/type/keypoint.type';
+import type { Point2D } from '@/lib/pose-detection/type/point.type';
 import type {
   RecordedReps,
   Rep,
   RepsCount,
 } from '@/lib/pose-detection/type/rep.type';
 import type { RepState } from '@/lib/pose-detection/type/rep-state.type';
-import { theme } from '@/app/style';
-import { Point2D } from '@/lib/pose-detection/type/point.type';
-import dayjs from 'dayjs';
 
 export async function setupVideoAndContex(state: {
   videoRef: RefObject<HTMLVideoElement | null>;

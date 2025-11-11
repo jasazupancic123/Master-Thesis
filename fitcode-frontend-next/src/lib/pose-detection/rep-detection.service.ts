@@ -5,6 +5,7 @@ import { KeypointHistory } from './class/keypoint-history';
 import { POSE_DETECTION_CONSTRAINTS } from './const/pose-detection-constrains.const';
 import { ConditionDirection } from './enum/condition-detection.enum';
 import { CurrentSideMutexValues } from './enum/current-side-mutex-values.enum';
+import { HorizontalVertical } from './enum/horizontal-vertical.enum';
 import type { KeypointId } from './enum/keypoint-id';
 import { KeypointValueType } from './enum/keypoint-value-type';
 import { RepStatus } from './enum/rep-state';
@@ -20,17 +21,16 @@ import type {
 } from './type/exercise-start-condition.type';
 import type { Keypoint } from './type/keypoint.type';
 import type { NumericValueFrameNum } from './type/numeric-value-frame-num';
+import type { Point2D } from './type/point.type';
 import type { RecordedReps, Rep, RepsCount } from './type/rep.type';
 import type { RepSideDetectionData } from './type/rep-side-detection-data';
+import { AngleUtil } from './util/angle-util';
 import { KeypointUtil } from './util/keypoint.util';
 import { RepPostProcessingUtil } from './util/rep-post-processing.util';
 import { EXERCISE_TIMES_ROUNDING_STEP_S } from '@/components/mobile-movement-validation/mobile-movement-validation';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
-import { HorizontalVertical } from './enum/horizontal-vertical.enum';
-import { Point2D } from './type/point.type';
-import { AngleUtil } from './util/angle-util';
 
 export class RepDetectionService {
   private static _instance: RepDetectionService;

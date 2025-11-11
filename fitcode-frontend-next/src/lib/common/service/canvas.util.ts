@@ -1,6 +1,6 @@
-import { theme } from '@/app/style';
-import { Point2D } from '@/lib/pose-detection/type/point.type';
 import { alpha } from '@mui/material';
+
+import type { Point2D } from '@/lib/pose-detection/type/point.type';
 
 export class CanvasUtil {
   // ---- draw torso guide lines ----
