@@ -25,6 +25,7 @@ import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
 import { TrainingStatus } from '@/core/training/enum/training-status.enum';
 import { TrainingService } from '@/core/training/training.service';
 import type { ExerciseSetTracking } from '@/core/training/type/exercise-set-tracking-state.type';
+import type { Training } from '@/core/training/type/training.type';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
 import { lib } from '@/lib';
 import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
@@ -119,7 +120,7 @@ export default function TrainingInProgress() {
         .flat() || [];
 
     trainingContext.setTrainingInProgress({
-      training: activeTraining,
+      training: activeTraining.training as Training,
       selectedComponent: component,
       userId: user.uid,
       exerciseSetTrackingState: state,
