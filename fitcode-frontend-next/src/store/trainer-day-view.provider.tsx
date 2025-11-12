@@ -53,8 +53,16 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
   const router = useRouter();
   const screenSize = useScreenSize();
   const { exercises } = useMain();
-  const { cycle, setCycle, dateFrom, dateTo, group, trainings, setTrainings } =
-    useGroup();
+  const {
+    cycle,
+    setCycle,
+    dateFrom,
+    dateTo,
+    group,
+    trainings,
+    setTrainings,
+    filter,
+  } = useGroup();
 
   const params = useSearchParams();
   const controller = Controller.getInstance();
@@ -100,10 +108,14 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
   const [expandedExercisesView, setExpandedExercisesView] = useState(false);
 
   useEffect(() => {
+    console.log('SETTING DAY VIEW FILTER', filter);
+    if (filter !== 'day') return;
+
     const trainingId = params.get('training');
     const componentId = params.get('component');
 
     const training = trainings.find((t) => t.id === trainingId);
+    console.log('trainings', trainings, 'training', training);
     if (!training) return;
 
     const day = lib.common.date.getDay(training.from);
@@ -118,7 +130,7 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
       setComponent(mapped.components.find((c) => c.id === componentId));
       setExpandedExercisesView(true);
     }
-  }, []);
+  }, [filter]);
 
   useEffect(() => {
     const cycleInDate = group.cycles.find((c) =>
@@ -335,7 +347,7 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
     const url = `/groups/${group.id}?training=${training.id}`;
     if (component) url.concat(`&component=${component.id}`);
     window.history.replaceState(null, '', url);
-  }, [selectedPeriod]);
+  }, [selectedPeriod, trainings]);
 
   useEffect(() => {
     // if there's only one training on day, always first show the period with the training
