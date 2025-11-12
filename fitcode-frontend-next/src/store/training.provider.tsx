@@ -9,14 +9,13 @@ import type {
   TrainingExerciseRecording,
 } from '@/core/training/type/training-exercise.type';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
-import type { TrainingReport } from '@/core/training/type/training-report.type';
+import type { TrainingStats } from '@/core/training/type/training-stats.type';
 import { lib } from '@/lib';
 import { type SetState } from '@/lib/common/type/state.type';
 
 export interface TrainingProviderProps {
   trainings: Training[];
-  reports: TrainingReport[];
-  refetchTraining: (trainingId: string) => Promise<void>;
+  reports: TrainingStats[];
 }
 
 interface ITrainingContext extends TrainingProviderProps {
@@ -42,7 +41,7 @@ export type ITrainingContextDefined = Omit<
 export const TrainingProvider = (
   props: TrainingProviderProps & React.PropsWithChildren
 ) => {
-  const { children, trainings, reports, refetchTraining } = props;
+  const { children, trainings, reports } = props;
 
   const STORED_TRAINING_IN_PROGRESS = 'blindoffTrainingInProgress';
   const [trainingInProgress, setTrainingInProgress] =
@@ -142,7 +141,6 @@ export const TrainingProvider = (
         setTrainingInProgress,
         isLoaded,
         updateTrainingInProgress,
-        refetchTraining,
       }}
     >
       {children}

@@ -9,15 +9,8 @@ import type { Group } from '@/core/group/type/group.type';
 import type { Institution } from '@/core/institution/type/institution.type';
 import { UserRole } from '@/core/profile/enum/user-role.enum';
 import type { Profile } from '@/core/profile/type/user.type';
-import type { Training } from '@/core/training/type/training.type';
-import type { TrainingReport } from '@/core/training/type/training-report.type';
-import type { Workload } from '@/core/training/type/workload.type';
+import type { ActiveTraining } from '@/core/training/type/training.type';
 import type { SetState, SetStateNullable } from '@/lib/common/type/state.type';
-
-type ActiveTraining = {
-  training?: Training & { workloads: Workload[] };
-  report?: TrainingReport;
-};
 
 export interface MainProviderProps extends React.PropsWithChildren {
   profile: Profile;

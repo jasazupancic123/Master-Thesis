@@ -1,6 +1,7 @@
 import { BaseController } from '../base.controller';
 import type { UserId } from '../institution/type/institution.type';
 import type {
+  ActiveTraining,
   CreateTraining,
   FilterTrainings,
   PeriodizeTrainings,
@@ -8,7 +9,7 @@ import type {
   UpdateTraining,
 } from './type/training.type';
 import type { TrainingComponent } from './type/training-component.type';
-import type { TrainingReport } from './type/training-report.type';
+import type { TrainingStats } from './type/training-stats.type';
 import type { CreateWorkload, Workload } from './type/workload.type';
 import type { FetchOptions } from '@/lib/common/type/api.type';
 import type { DateRange } from '@/lib/common/type/date-range.type';
@@ -37,15 +38,8 @@ export class TrainingController extends BaseController {
     );
   }
 
-  async findOneById(trainingId: string, options?: FetchOptions) {
-    return this.api.get<{ training: Training; report: TrainingReport }>(
-      `/${trainingId}`,
-      options
-    );
-  }
-
   async getActiveForAthlete(options?: FetchOptions) {
-    return this.api.get<{ training: Training | null }>(`/get/active`, options);
+    return this.api.get<ActiveTraining | null>(`/get/active`, options);
   }
 
   async generateQRCode(
@@ -61,9 +55,9 @@ export class TrainingController extends BaseController {
     );
   }
 
-  async findReports(query?: DateRange, options?: FetchOptions) {
-    return this.api.get<TrainingReport[]>('/report/athlete', {
-      query,
+  async findReports(institutionId: string, options?: FetchOptions) {
+    return this.api.get<TrainingStats[]>('/report/athlete', {
+      query: { institutionId },
       ...options,
     });
   }

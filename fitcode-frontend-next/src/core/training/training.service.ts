@@ -3,7 +3,7 @@ import type { Exercise } from '../exercise/type/exercise.type';
 import type { Group } from '../group/type/group.type';
 import type { Institution } from '../institution/type/institution.type';
 import type { Training } from './type/training.type';
-import type { TrainingReport } from './type/training-report.type';
+import type { TrainingStats } from './type/training-stats.type';
 
 export class TrainingService {
   static mapData<T extends Training>(
@@ -34,10 +34,10 @@ export class TrainingService {
     return item;
   }
 
-  static mapReport<T extends TrainingReport>(
-    item: T,
+  static mapReport(
+    item: TrainingStats,
     data: { institutions?: Institution[]; groups?: Group[] }
-  ): T {
+  ): TrainingStats {
     if (data.institutions)
       item.institution = data.institutions.find(
         (inst) => inst.id === item.institutionId

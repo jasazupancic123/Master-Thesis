@@ -5,6 +5,8 @@ import type {
   TrainingComponentRecording,
   UpdateTrainingComponent,
 } from './training-component.type';
+import type { TrainingComponentUserStatus } from './training-component-user-status.type';
+import type { Workload } from './workload.type';
 import type { AuthUser } from '@/core/auth/type/user.type';
 import type { BaseEntity } from '@/core/entity.type';
 import type { Cycle } from '@/core/group/type/cycle.type';
@@ -58,4 +60,9 @@ export type CopyTraining = Pick<DateRange, 'from'> &
 
 export type TrainingRecording = Omit<Training, 'components'> & {
   components: TrainingComponentRecording[];
+};
+
+export type ActiveTraining = Training & {
+  workloads: Workload[];
+  statuses: TrainingComponentUserStatus[];
 };

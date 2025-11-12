@@ -8,10 +8,10 @@ import type { Group } from '@/core/group/type/group.type';
 import { MainSet } from '@/core/training/enum/main-set.enum';
 import { TrainingStatus } from '@/core/training/enum/training-status.enum';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
-import type { TrainingReport } from '@/core/training/type/training-report.type';
+import type { TrainingStats } from '@/core/training/type/training-stats.type';
 
 interface Props {
-  report?: TrainingReport;
+  report?: TrainingStats;
   components: TrainingComponent[] | Component[];
   group?: Group;
   cycle?: Cycle;

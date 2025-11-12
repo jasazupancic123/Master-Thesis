@@ -38,7 +38,7 @@ export const useTrainingInProgress = () =>
 export const TrainingInProgressProvider = ({
   children,
 }: React.PropsWithChildren) => {
-  const { trainingInProgress, refetchTraining } = useTraining();
+  const { trainingInProgress } = useTraining();
 
   const router = useRouter();
 
@@ -111,7 +111,6 @@ export const TrainingInProgressProvider = ({
         ),
       (_workload) => {
         toast.success('Saved');
-        refetchTraining(trainingInProgress.training.id);
       }
     );
   }
