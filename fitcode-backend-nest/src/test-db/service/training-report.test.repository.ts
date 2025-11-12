@@ -1,41 +1,30 @@
 import { Injectable } from '@nestjs/common';
 
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
-import { TrainingReportRef } from '@src/common/type/firestore.type';
-import { TrainingReport } from '@src/training/entity/training-report.entity';
+import { TrainingComponentUserStatusRef } from '@src/common/type/firestore.type';
+import { TrainingComponentUserStatus } from '@src/training/entity/training-component-user-status.entity';
 import { TrainingStatus } from '@src/training/enum/training-status.enum';
-import { TrainingReportRepository } from '@src/training/repository/training-report.repository';
+import { TrainingComponentUserStatusRepository } from '@src/training/repository/training-user-status.repository';
 
 import { TestRepositoryMixin } from '../test-repository.mixin';
 
 @Injectable()
-export class TrainingReportTestRepository extends TestRepositoryMixin<
-  TrainingReport,
-  TrainingReportRef
->()(TrainingReportRepository) {
+export class TrainingComponentUserStatusTestRepository extends TestRepositoryMixin<
+  TrainingComponentUserStatus,
+  TrainingComponentUserStatusRef
+>()(TrainingComponentUserStatusRepository) {
   async deleteAllByTraining(trainingId: string): Promise<void> {
     await this.firebase.deleteCollection(
-      `${FirestoreCollection.TRAINING}/${trainingId}/${FirestoreCollection.TRAINING_REPORT}`,
+      `${FirestoreCollection.TRAINING}/${trainingId}/${FirestoreCollection.TRAINING_COMPONENT_USER_STATUS}`,
     );
   }
 
   async updateStatus(
-    ref: TrainingReportRef,
-    componentId: string,
+    ref: TrainingComponentUserStatusRef,
     status: TrainingStatus,
   ): Promise<void> {
-    const trainingReport = await this.findById(ref);
-    if (!trainingReport) return;
-
-    const componentStatus = trainingReport.componentStatuses.find(
-      (cs) => cs.componentId === componentId,
-    );
-
+    const componentStatus = await this.findById(ref);
     if (!componentStatus) return;
-
-    componentStatus.status = status;
-    await this.update(ref, {
-      componentStatuses: trainingReport.componentStatuses,
-    });
+    await this.update(ref, { status });
   }
 }

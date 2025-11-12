@@ -1,228 +1,30 @@
-import {
-  BadRequestException,
-  forwardRef,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { compareAsc, differenceInMinutes } from 'date-fns';
+import { Injectable } from '@nestjs/common';
+import { differenceInMinutes } from 'date-fns';
 
-import { DateFilterDto } from '@src/common/dto/date-filter.dto';
-import { Create } from '@src/common/type/entity.type';
-import {
-  TrainingComponentRef,
-  TrainingReportRef,
-} from '@src/common/type/firestore.type';
-import { ValidateError } from '@src/common/type/validate.type';
-import { Wrapper } from '@src/common/type/wrapper.type';
 import { ExerciseSet } from '@src/training/entity/exercise-set.entity';
 import { Training } from '@src/training/entity/training.entity';
-import {
-  TrainingReport,
-  TrainingReportComponentStatus,
-} from '@src/training/entity/training-report.entity';
 import { PrescribedTrainingStats } from '@src/training/entity/training-stats.entity';
-import { WorkloadService } from '@src/training/service/workload.service';
 import { SetReport } from '@src/training/type/training-set.type';
 
 import { REP_TEMPO_TIME_IN_S } from '../constant/training-limits.constant';
 import { Workload } from '../entity/workload.entity';
 import { TrainingStatus } from '../enum/training-status.enum';
-import { TrainingReportRepository } from '../repository/training-report.repository';
+import { TrainingStats } from '../type/training-stats.type';
 
 @Injectable()
 export class TrainingReportService {
-  constructor(
-    private readonly repository: TrainingReportRepository,
-    @Inject(forwardRef(() => WorkloadService))
-    private readonly workloadService: Wrapper<WorkloadService>,
-  ) {}
-
-  async findAllByUser(
-    userId: string,
-    filter?: DateFilterDto & { institutionId?: string },
-  ): Promise<TrainingReport[]> {
-    return await this.repository.getAllByUser(userId, filter);
-  }
-
-  async findById(ref: TrainingReportRef): Promise<TrainingReport | null> {
-    return await this.repository.findById(ref);
-  }
-
-  async findByIdOrFail(ref: TrainingReportRef): Promise<TrainingReport> {
-    const report = await this.repository.findById(ref);
-    if (!report) throw new NotFoundException('Training report not found');
-    return report;
-  }
-
-  /**
-   * This method will initialize training reports for specified users.
-   * If the provided component has status NOT_STARTED or PAUSED, it will
-   * put it into IN_PROGRESS mode.
-   */
-  async startComponent(
-    input: { userId: string; componentId: string; training: Training }[],
-  ): Promise<ValidateError<Record<string, unknown>>[]> {
-    const errors: ValidateError<Record<string, unknown>>[] = [];
-
-    // check if any other training is already active
-    for (const { userId } of input) {
-      const active = await this.getActive(userId);
-      if (active && active.trainingId !== input[0].training.id) {
-        errors.push({ field: userId, message: 'ACTIVE_TRAINING_EXISTS' });
-        continue;
-      }
-    }
-
-    if (errors.length) return errors;
-
-    // remove user ids from input that are in error state
-    input = input.filter(
-      ({ userId }) => !errors.find((e) => e.field === userId),
-    );
-
-    // if training report exists, then just update the correct component status to in_progress, else create new report
-    for (const { userId, training, componentId } of input) {
-      const ref: TrainingReportRef = { trainingId: training.id, userId };
-      const existing = await this.repository.findById(ref);
-      if (existing) {
-        // update component status
-        const componentStatus = existing.componentStatuses.find(
-          (cs) => cs.componentId === componentId,
-        );
-
-        if (!componentStatus) continue;
-        if (componentStatus.status === TrainingStatus.IN_PROGRESS) continue;
-        if (componentStatus.status === TrainingStatus.COMPLETED) {
-          errors.push({ field: userId, message: 'COMPONENT_COMPLETED' });
-          continue;
-        }
-
-        componentStatus.status = TrainingStatus.IN_PROGRESS;
-        await this.repository.update(ref, {
-          status: TrainingStatus.IN_PROGRESS,
-          componentStatuses: existing.componentStatuses,
-        });
-      } else
-        // create new report
-        await this.repository.save(
-          { trainingId: training.id, userId },
-          this.getInitQuery(userId, training, componentId),
-        );
-    }
-
-    return errors;
-  }
-
-  /**
-   * Completes training component for specified users. It only finalizes
-   * components that are in IN_PROGRESS or PAUSED status.
-   */
-  async completeComponent(
-    ref: TrainingComponentRef,
-    input: string[], // array of user ids
-  ): Promise<ValidateError<Record<string, unknown>>[]> {
-    const errors: ValidateError<Record<string, unknown>>[] = [];
-
-    for (const userId of input) {
-      const reportRef: TrainingReportRef = { ...ref, userId };
-      const report = await this.findById(reportRef);
-
-      if (!report) {
-        errors.push({ field: userId, message: 'REPORT_NOT_FOUND' });
-        continue;
-      }
-
-      const cs = report.componentStatuses.find(
-        (cs) => cs.componentId === ref.componentId,
-      );
-
-      if (!cs || cs.status === TrainingStatus.NOT_STARTED) {
-        errors.push({ field: userId, message: 'COMPONENT_NOT_STARTED' });
-        continue;
-      }
-
-      if (cs.status === TrainingStatus.COMPLETED) {
-        errors.push({ field: userId, message: 'COMPONENT_COMPLETED' });
-        continue;
-      }
-
-      cs.status = TrainingStatus.COMPLETED;
-      await this.repository.update(reportRef, {
-        componentStatuses: report.componentStatuses,
-        status: this.getTrainingReportStatus(report.componentStatuses),
-      });
-    }
-
-    return errors;
-  }
-
-  /**
-   * Pauses training component. Only components that are in IN_PROGRESS status
-   * can be paused. Note that trainer will not be able to pause training reports
-   * for all athletes. He cannot pause training at all, only athlete can for himself.
-   */
-  async pauseComponent(
-    userId: string,
-    ref: TrainingComponentRef,
-  ): Promise<void> {
-    const reportRef: TrainingReportRef = { ...ref, userId };
-    const report = await this.findByIdOrFail(reportRef);
-
-    const cs = report.componentStatuses.find(
-      (cs) => cs.componentId === ref.componentId,
-    );
-
-    if (!cs)
-      throw new BadRequestException('Training component not found in report');
-
-    // can only pause component that is in IN_PROGRESS status
-    if (cs.status !== TrainingStatus.IN_PROGRESS)
-      throw new BadRequestException(
-        'You can only pause training that is currently in progress',
-      );
-
-    cs.status = TrainingStatus.PAUSED;
-    await this.repository.update(reportRef, {
-      componentStatuses: report.componentStatuses,
-      status: this.getTrainingReportStatus(report.componentStatuses),
-    });
-  }
-
-  /**
-   * Athlete can have multiple active trainings in database. Valid active trainings
-   * are only those that are on the current day. If there are multiple active
-   * trainings for the current day, return the one that was started the earliest.
-   */
-  async getActive(athleteId: string): Promise<TrainingReport | null> {
-    const activeReports = await this.repository.getActiveByAthlete(athleteId);
-    if (!activeReports.length) return null;
-
-    return activeReports.sort(
-      (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime(),
-    )[0];
-  }
-
-  async update(
+  getReportByUser(
     userId: string,
     training: Training,
-    input?: { photoURLs?: string[]; componentInProgress: string },
-  ): Promise<TrainingReport> {
-    const ref: TrainingReportRef = { trainingId: training.id, userId };
-    const existing = await this.repository.findById(ref);
-    if (!existing) throw new BadRequestException('Training not started yet');
-
-    const workloads = (
-      await this.workloadService.findAllByUserTraining(userId, ref)
-    ).sort((a, b) => compareAsc(new Date(a.timestamp), new Date(b.timestamp)));
-
+    workloads: Workload[],
+  ): TrainingStats {
     const stats = this.getTrainingStats(training);
-    const from = workloads[0]?.timestamp || new Date();
-    const to = workloads[workloads.length - 1]?.timestamp || from;
+    const from = new Date(workloads[0]?.timestamp) || new Date();
+    const to = new Date(workloads[workloads.length - 1]?.timestamp) || from;
 
     const components = new Set(workloads.map((w) => w.componentId));
     const exercises = new Set(workloads.map((w) => w.exerciseId));
-    const report: TrainingReport = {
+    const report = {
       status: TrainingStatus.IN_PROGRESS,
       trainingId: training.id,
       institutionId: training.institutionId,
@@ -230,7 +32,6 @@ export class TrainingReportService {
       cycleId: training.cycleId,
       prescribed: stats,
       userId,
-      ...ref,
       from,
       to,
       duration: differenceInMinutes(to, from),
@@ -249,15 +50,6 @@ export class TrainingReportService {
       recDist: 0,
       time: 0,
       realization: 0,
-      muscleValues: [], // to be calculated
-      photoURLs: input?.photoURLs || [],
-      componentStatuses: existing.componentStatuses.map((cs) => ({
-        ...cs,
-        status:
-          cs.componentId === input?.componentInProgress
-            ? TrainingStatus.IN_PROGRESS
-            : cs.status,
-      })),
     };
 
     for (const workload of workloads) {
@@ -350,7 +142,6 @@ export class TrainingReportService {
           w * recR);
     }
 
-    await this.repository.save(ref, report);
     return report;
   }
 
@@ -404,63 +195,6 @@ export class TrainingReportService {
       }
 
     return stats;
-  }
-
-  getTrainingReportStatus(
-    componentStatuses: TrainingReportComponentStatus[],
-  ): TrainingStatus {
-    // if all components are completed, then report is completed
-    if (componentStatuses.every((cs) => cs.status === TrainingStatus.COMPLETED))
-      return TrainingStatus.COMPLETED;
-
-    // if all components are not started, then report is not started
-    if (
-      componentStatuses.every((cs) => cs.status === TrainingStatus.NOT_STARTED)
-    )
-      return TrainingStatus.NOT_STARTED;
-
-    // else report is not started
-    return TrainingStatus.IN_PROGRESS;
-  }
-
-  private getInitQuery(
-    userId: string,
-    training: Training,
-    componentId: string,
-  ): Create<TrainingReport> {
-    return {
-      status: TrainingStatus.IN_PROGRESS,
-      from: new Date(),
-      to: new Date(),
-      prescribed: this.getTrainingStats(training),
-      institutionId: training.institutionId,
-      groupId: training.groupId,
-      cycleId: training.cycleId,
-      trainingId: training.id,
-      userId,
-      realization: 0,
-      muscleValues: [],
-      componentStatuses: training.components.map((c) => ({
-        componentId: c.id,
-        status:
-          c.id === componentId
-            ? TrainingStatus.IN_PROGRESS
-            : TrainingStatus.NOT_STARTED,
-      })),
-      photoURLs: [],
-      duration: 0,
-      components: 0,
-      supersets: 0,
-      exercises: 0,
-      sets: 0,
-      reps: 0,
-      tut: 0,
-      tonnage: 0,
-      time: 0,
-      dist: 0,
-      recTime: 0,
-      recDist: 0,
-    };
   }
 
   private div(

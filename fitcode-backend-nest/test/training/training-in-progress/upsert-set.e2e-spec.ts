@@ -185,9 +185,8 @@ describe('Upsert Set (e2e)', () => {
     await startTrainingComponentReq(global.trainer.token, trainingId, 'c1');
 
     // mark as completed
-    await db.trainingReports.updateStatus(
-      { trainingId, userId: global.athlete.uid },
-      'c1',
+    await db.trainingComponentUserStatus.updateStatus(
+      { trainingId, uid: global.athlete.uid, componentId: 'c1' },
       TrainingStatus.COMPLETED,
     );
 
@@ -237,7 +236,7 @@ describe('Upsert Set (e2e)', () => {
     expect(res.status).toBe(400);
     expect(res.body.message).toBe('Component not found in training');
 
-    await db.trainingReports.deleteAllByTraining(trainingId);
+    await db.trainingComponentUserStatus.deleteAllByTraining(trainingId);
   });
 
   it('should fail if superset does not exist', async () => {
@@ -264,7 +263,7 @@ describe('Upsert Set (e2e)', () => {
     expect(res.status).toBe(400);
     expect(res.body.message).toBe('Superset not found');
 
-    await db.trainingReports.deleteAllByTraining(trainingId);
+    await db.trainingComponentUserStatus.deleteAllByTraining(trainingId);
   });
 
   it('should fail if exercise not found in training', async () => {
@@ -291,7 +290,7 @@ describe('Upsert Set (e2e)', () => {
     expect(res.status).toBe(400);
     expect(res.body.message).toBe('Exercise not found in superset');
 
-    await db.trainingReports.deleteAllByTraining(trainingId);
+    await db.trainingComponentUserStatus.deleteAllByTraining(trainingId);
   });
 
   it('should fail if set number not found in exercise', async () => {
@@ -318,7 +317,7 @@ describe('Upsert Set (e2e)', () => {
     expect(res.status).toBe(400);
     expect(res.body.message).toBe('Set number not found in exercise');
 
-    await db.trainingReports.deleteAllByTraining(trainingId);
+    await db.trainingComponentUserStatus.deleteAllByTraining(trainingId);
   });
 
   it('should fail if on workload creation from and to times are not provided', async () => {
@@ -345,7 +344,7 @@ describe('Upsert Set (e2e)', () => {
       'You must provide workload times (from and to)',
     );
 
-    await db.trainingReports.deleteAllByTraining(trainingId);
+    await db.trainingComponentUserStatus.deleteAllByTraining(trainingId);
   });
 
   it('should successfully create a set', async () => {
@@ -380,7 +379,7 @@ describe('Upsert Set (e2e)', () => {
     expect(result.reps).toBe(6);
 
     await db.workloads.deleteAll(trainingId);
-    await db.trainingReports.deleteAllByTraining(trainingId);
+    await db.trainingComponentUserStatus.deleteAllByTraining(trainingId);
   });
 
   it('should successfully update a set', async () => {
@@ -428,7 +427,7 @@ describe('Upsert Set (e2e)', () => {
     expect(workloadsAfter).toHaveLength(1);
 
     await db.workloads.deleteAll(trainingId);
-    await db.trainingReports.deleteAllByTraining(trainingId);
+    await db.trainingComponentUserStatus.deleteAllByTraining(trainingId);
   });
 
   it('should be able to insert all possible properties', async () => {
@@ -521,15 +520,14 @@ describe('Upsert Set (e2e)', () => {
     expect(result.timeR).toBe(298);
 
     await db.workloads.deleteAll(trainingId);
-    await db.trainingReports.deleteAllByTraining(trainingId);
+    await db.trainingComponentUserStatus.deleteAllByTraining(trainingId);
   });
 
-  it('should successfully create new workload if status is PAUSED', async () => {
+  it('should throw error if component is paused', async () => {
     await startTrainingComponentReq(global.trainer.token, trainingId, 'c1');
 
-    await db.trainingReports.updateStatus(
-      { trainingId, userId: global.athlete.uid },
-      'c1',
+    await db.trainingComponentUserStatus.updateStatus(
+      { trainingId, uid: global.athlete.uid, componentId: 'c1' },
       TrainingStatus.PAUSED,
     );
 
@@ -559,30 +557,8 @@ describe('Upsert Set (e2e)', () => {
       },
     );
 
-    expect(res.status).toBe(201);
-    const result = res.body as Workload;
-    expect(result.trainingId).toBe(trainingId);
-    expect(result.componentId).toBe('c1');
-    expect(result.exerciseId).toBe('squat');
-    expect(result.userId).toBe(global.athlete.uid);
-    expect(result.setNumber).toBe(1);
-
-    const workloads = await db.workloads.getAll(trainingId);
-    expect(workloads).toHaveLength(1);
-
-    // 7. Verify that the training component status is now IN_PROGRESS again
-    const report = await db.trainingReports.findById({
-      trainingId,
-      userId: global.athlete.uid,
-    });
-
-    expect(
-      report?.componentStatuses?.find((c) => c.componentId === 'c1')?.status,
-    ).toBe(TrainingStatus.IN_PROGRESS);
-
-    // cleanup
-    await db.workloads.deleteAll(trainingId);
-    await db.trainingReports.deleteAllByTraining(trainingId);
+    expect(res.status).toBe(409);
+    expect(res.body.message).toBe('Training component has been paused');
   });
 
   it('should not allow updating from and to on existing workload', async () => {
@@ -625,6 +601,6 @@ describe('Upsert Set (e2e)', () => {
 
     // clean up
     await db.workloads.deleteAll(trainingId);
-    await db.trainingReports.deleteAllByTraining(trainingId);
+    await db.trainingComponentUserStatus.deleteAllByTraining(trainingId);
   });
 });
