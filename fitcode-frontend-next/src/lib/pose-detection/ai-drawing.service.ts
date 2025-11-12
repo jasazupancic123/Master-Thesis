@@ -121,7 +121,7 @@ export class AIDrawingService {
           x: avgOriginPoint.x * canvas.width,
           y: avgOriginPoint.y * canvas.height,
         },
-        8,
+        20,
         theme.palette.error.main,
         theme.palette.common.white
       );

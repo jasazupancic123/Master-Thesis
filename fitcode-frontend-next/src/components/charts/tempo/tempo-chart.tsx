@@ -225,11 +225,11 @@ export default function TempoChart({
       // left
 
       if (directionLeft === ConditionDirection.POSITIVE) {
-        ((row.concentricL = (r.timeToExtremeMs || 0) / 1000),
-          (row.eccentricL =
-            r.timeFromExtremeToEndMs !== undefined
-              ? (-1 * r.timeFromExtremeToEndMs) / 1000
-              : 0));
+        row.concentricL = (r.timeToExtremeMs || 0) / 1000;
+        row.eccentricL =
+          r.timeFromExtremeToEndMs !== undefined
+            ? (-1 * r.timeFromExtremeToEndMs) / 1000
+            : 0;
         row.isometricL = (r.timeAtExtremeMs || 0) / 1000;
         row.isometricFakeL = 0;
       } else {
@@ -245,11 +245,11 @@ export default function TempoChart({
       if (secondarySideRep) {
         // update right side
         if (directionRight === ConditionDirection.POSITIVE) {
-          ((row.concentricR = (secondarySideRep.timeToExtremeMs || 0) / 1000),
-            (row.eccentricR =
-              secondarySideRep.timeFromExtremeToEndMs !== undefined
-                ? (-1 * secondarySideRep.timeFromExtremeToEndMs) / 1000
-                : 0));
+          row.concentricR = (secondarySideRep.timeToExtremeMs || 0) / 1000;
+          row.eccentricR =
+            secondarySideRep.timeFromExtremeToEndMs !== undefined
+              ? (-1 * secondarySideRep.timeFromExtremeToEndMs) / 1000
+              : 0;
           row.isometricR = (secondarySideRep.timeAtExtremeMs || 0) / 1000;
           row.isometricFakeR = 0;
         } else {
@@ -266,11 +266,11 @@ export default function TempoChart({
     } else {
       // right
       if (directionRight === ConditionDirection.POSITIVE) {
-        ((row.concentricR = (r.timeToExtremeMs || 0) / 1000),
-          (row.eccentricR =
-            r.timeFromExtremeToEndMs !== undefined
-              ? (-1 * r.timeFromExtremeToEndMs) / 1000
-              : 0));
+        row.concentricR = (r.timeToExtremeMs || 0) / 1000;
+        row.eccentricR =
+          r.timeFromExtremeToEndMs !== undefined
+            ? (-1 * r.timeFromExtremeToEndMs) / 1000
+            : 0;
         row.isometricR = (r.timeAtExtremeMs || 0) / 1000;
         row.isometricFakeR = 0;
       } else {
@@ -286,11 +286,11 @@ export default function TempoChart({
       if (secondarySideRep) {
         // update left side
         if (directionLeft === ConditionDirection.POSITIVE) {
-          ((row.concentricL = (secondarySideRep.timeToExtremeMs || 0) / 1000),
-            (row.eccentricL =
-              secondarySideRep.timeFromExtremeToEndMs !== undefined
-                ? (-1 * secondarySideRep.timeFromExtremeToEndMs) / 1000
-                : 0));
+          row.concentricL = (secondarySideRep.timeToExtremeMs || 0) / 1000;
+          row.eccentricL =
+            secondarySideRep.timeFromExtremeToEndMs !== undefined
+              ? (-1 * secondarySideRep.timeFromExtremeToEndMs) / 1000
+              : 0;
           row.isometricL = (secondarySideRep.timeAtExtremeMs || 0) / 1000;
           row.isometricFakeL = 0;
         } else {
