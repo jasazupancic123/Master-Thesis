@@ -7,17 +7,15 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import { useRouter } from 'next/navigation';
 import type { FormEvent } from 'react';
-import React from 'react';
+import React, { useRef } from 'react';
 import toast from 'react-hot-toast';
 
 import HeroNavbar from '@/components/hero-navbar/hero-navbar';
 import { AuthController } from '@/core/auth/auth.controller';
 import { lib } from '@/lib';
-import {
-  LINKS_AUTH,
-  SIGN_IN_REDIRECT_MAPPER,
-} from '@/lib/common/const/nav.const';
+import { SIGN_IN_REDIRECT_MAPPER } from '@/lib/common/const/nav.const';
 import { HERO_NAVBAR_HEIGHT } from '@/lib/common/const/state';
+import { STRING_CONST } from '@/lib/common/const/string.const';
 import { useAuth } from '@/store/auth.provider';
 
 export default function SignInPage() {
@@ -27,6 +25,8 @@ export default function SignInPage() {
 
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
+
+  const hasToastedRef = useRef(false);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -38,7 +38,10 @@ export default function SignInPage() {
 
       const { role } = handleUserChange(user);
       if (role) {
-        toast.success('Signed in successfully');
+        if (!hasToastedRef.current) {
+          toast.success('Signed in successfully');
+          hasToastedRef.current = true;
+        }
         router.push(SIGN_IN_REDIRECT_MAPPER[role]?.href);
       }
     } catch (e) {
@@ -77,7 +80,7 @@ export default function SignInPage() {
               textTransform: 'uppercase',
             }}
           >
-            {LINKS_AUTH.login.label}
+            {STRING_CONST.doItRight}
           </Typography>
 
           <Box component="form" onSubmit={handleSubmit} noValidate>

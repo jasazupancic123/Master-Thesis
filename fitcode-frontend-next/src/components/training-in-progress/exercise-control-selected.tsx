@@ -48,7 +48,11 @@ export default function ExercieseControlSelected(props: Props) {
               <TempoChart
                 selectedExercise={selectedExercise}
                 setIndex={setIndex}
-                width={Math.min(window.innerWidth * 0.95, 620)} // max 620px
+                width={
+                  window !== undefined
+                    ? Math.min(window.innerWidth * 0.95, 360) // max 360px
+                    : 320
+                }
                 isUnilateral={selectedExercise.exercise?.isUnilateral || false}
               />
               <TempoStatistic

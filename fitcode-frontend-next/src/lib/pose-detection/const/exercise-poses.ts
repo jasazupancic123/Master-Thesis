@@ -903,14 +903,14 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
             type: KeypointValueType.POSITION_X,
             direction: ConditionDirection.POSITIVE,
             duration: 3000, // ms
-            distance: 0.02, // meters
+            distance: 0.04, // meters
           },
           {
             keypointId: KeypointId.LEFT_SHOULDER,
             type: KeypointValueType.POSITION_X,
             direction: ConditionDirection.POSITIVE,
             duration: 3000, // ms
-            distance: 0.02, // meters
+            distance: 0.04, // meters
           },
         ],
         feedbackAngles: [
@@ -920,7 +920,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
             point1: [KeypointId.NOSE],
             point2: [KeypointId.LEFT_HIP, KeypointId.RIGHT_HIP],
             origin: [KeypointId.LEFT_SHOULDER, KeypointId.RIGHT_SHOULDER],
-            threshold: 175, // degrees
+            threshold: 160, // degrees
             moreLess: MoreLess.LESS,
           },
           {
@@ -929,7 +929,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
             point1: [KeypointId.LEFT_SHOULDER, KeypointId.RIGHT_SHOULDER],
             point2: [KeypointId.LEFT_ANKLE],
             origin: [KeypointId.LEFT_HIP, KeypointId.RIGHT_HIP],
-            threshold: 175, // degrees
+            threshold: 160, // degrees
             moreLess: MoreLess.LESS,
           },
         ],
@@ -952,14 +952,14 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
             type: KeypointValueType.POSITION_X,
             direction: ConditionDirection.NEGATIVE,
             duration: 3000, // ms
-            distance: 0.02, // meters
+            distance: 0.04, // meters
           },
           {
             keypointId: KeypointId.RIGHT_SHOULDER,
             type: KeypointValueType.POSITION_X,
             direction: ConditionDirection.NEGATIVE,
             duration: 3000, // ms
-            distance: 0.02, // meters
+            distance: 0.04, // meters
           },
         ],
         feedbackAngles: [
@@ -969,7 +969,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
             point1: [KeypointId.NOSE],
             point2: [KeypointId.LEFT_HIP, KeypointId.RIGHT_HIP],
             origin: [KeypointId.LEFT_SHOULDER, KeypointId.RIGHT_SHOULDER],
-            threshold: 175, // degrees
+            threshold: 160, // degrees
             moreLess: MoreLess.LESS,
           },
           {
@@ -978,7 +978,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
             point1: [KeypointId.LEFT_SHOULDER, KeypointId.RIGHT_SHOULDER],
             point2: [KeypointId.RIGHT_ANKLE],
             origin: [KeypointId.LEFT_HIP, KeypointId.RIGHT_HIP],
-            threshold: 175, // degrees
+            threshold: 160, // degrees
             moreLess: MoreLess.LESS,
           },
         ],
