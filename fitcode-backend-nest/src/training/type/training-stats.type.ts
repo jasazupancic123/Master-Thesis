@@ -2,15 +2,18 @@ import type { PrescribedTrainingStats } from '../entity/training-stats.entity';
 import type { TrainingStatus } from '../enum/training-status.enum';
 
 export type TrainingStats = {
-  status: TrainingStatus;
-  trainingId: string;
+  // meta
   institutionId?: string;
   groupId?: string;
   cycleId?: string;
-  prescribed: PrescribedTrainingStats;
+  trainingId: string;
   userId: string;
+
+  // stats data
   from: Date;
   to: Date;
+  status: TrainingStatus;
+  prescribed: PrescribedTrainingStats;
   duration: number;
   components: number;
   supersets: number;

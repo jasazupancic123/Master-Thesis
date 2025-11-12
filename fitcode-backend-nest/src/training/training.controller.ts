@@ -29,7 +29,6 @@ import {
   WorkloadRef,
 } from '@src/common/type/firestore.type';
 import { InstitutionService } from '@src/institution/service/institution.service';
-import { TrainingReportService } from '@src/training/service/training-report.service';
 
 import { UserRole } from '../auth/enum/user-role.enum';
 import { Auth } from '../common/decorator/auth.decorator';
@@ -52,7 +51,6 @@ export class TrainingController {
   constructor(
     private readonly commonService: CommonService,
     private readonly trainingService: TrainingService,
-    private readonly trainingReportService: TrainingReportService,
     private readonly institutionService: InstitutionService,
   ) {}
 
