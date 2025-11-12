@@ -1,7 +1,13 @@
 'use client';
 
 import { Circle } from '@mui/icons-material';
-import { Tooltip, Typography, useTheme } from '@mui/material';
+import {
+  Checkbox,
+  FormControlLabel,
+  Tooltip,
+  Typography,
+  useTheme,
+} from '@mui/material';
 import { Box } from '@mui/material';
 import { useState } from 'react';
 
@@ -27,6 +33,8 @@ export default function DashboardTrainingPlan() {
     setSelectedGroups,
     completedTrainings,
     upcomingTrainings,
+    onlyMySessions,
+    setOnlyMySessions,
   } = useTrainingPlan(trainings, groups);
 
   const [filter, setFilter] = useState<DashboardTrainingPlanFilter>(
@@ -91,6 +99,7 @@ export default function DashboardTrainingPlan() {
             );
           })}
         </Box>
+
         <Box
           display="flex"
           alignItems="center"
@@ -159,6 +168,18 @@ export default function DashboardTrainingPlan() {
         title="Sessions"
         disabled
       />
+
+      <Box width="100%" display="flex" justifyContent="center" mt={-3}>
+        <FormControlLabel
+          label="Only my sessions"
+          control={
+            <Checkbox
+              checked={onlyMySessions}
+              onChange={(e) => setOnlyMySessions(e.target.checked)}
+            />
+          }
+        />
+      </Box>
 
       <Box width="100%" display="flex" justifyContent="space-between">
         <Box width="50%" display="flex" justifyContent="center">

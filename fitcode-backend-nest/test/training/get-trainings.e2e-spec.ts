@@ -150,11 +150,7 @@ describe('Get Trainings (e2e)', () => {
   });
 
   function url(query: FilterTrainingQueryDto) {
-    const q = stringify(query, {
-      addQueryPrefix: true,
-      skipNulls: true,
-    });
-
+    const q = stringify(query, { addQueryPrefix: true, skipNulls: true });
     return `/training${q}`;
   }
 

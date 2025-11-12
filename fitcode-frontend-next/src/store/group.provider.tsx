@@ -51,7 +51,6 @@ export function GroupProvider(
 
   // state for arrays
   const [trainings, setTrainings] = useState(allTrainings);
-
   const [filteredUsers, setFilteredUsers] = useState(allUsers);
 
   // filter trainings by cycle

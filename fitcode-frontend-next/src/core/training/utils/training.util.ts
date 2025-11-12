@@ -206,6 +206,11 @@ export class TrainingUtil {
     return durationText;
   }
 
+  getPeriod(training: Training): { key: Date; value: 'AM' | 'PM' } {
+    const hour = new Date(training.from).getHours();
+    return { key: new Date(), value: hour >= 12 ? 'PM' : 'AM' };
+  }
+
   getPeriodDateRange(date: Dayjs, period: 'AM' | 'PM'): Required<DateRange> {
     switch (period) {
       case 'AM':
