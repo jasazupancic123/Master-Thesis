@@ -54,10 +54,9 @@ export default function AthleteTrainingComponents(props: Props) {
   const { exercises, activeTraining, setActiveTraining } = useMain();
   const { user } = useAuthenticatedAuth();
 
-  const activeTrainingReport = activeTraining?.report;
-  const activeComponentStatus = activeTrainingReport?.componentStatuses.find(
-    (cs) => cs.componentId === selectedComponent?.id
-  )?.status;
+  const activeTrainingComponentStatus = activeTraining?.statuses?.find(
+    (s) => s.componentId === selectedComponent?.id
+  );
 
   return (
     <Box
@@ -84,9 +83,7 @@ export default function AthleteTrainingComponents(props: Props) {
             );
 
             if (trainingReport)
-              componentStatus = trainingReport.componentStatuses.find(
-                (cs) => cs.componentId === component.id
-              )?.status;
+              componentStatus = activeTrainingComponentStatus?.status;
 
             return (
               <Box key={component.id} minWidth="48px">
@@ -226,11 +223,12 @@ export default function AthleteTrainingComponents(props: Props) {
 
               trainingToStart = result.trainings[user.uid];
             } else if (
-              activeTraining?.training &&
-              activeComponentStatus === TrainingStatus.IN_PROGRESS
+              activeTraining &&
+              activeTrainingComponentStatus?.status ===
+                TrainingStatus.IN_PROGRESS
             ) {
               // training is already in progress
-              trainingToStart = activeTraining.training;
+              trainingToStart = activeTraining;
             } else {
               // restart training with new component‚
               const result = await controller.startTrainingComponent(

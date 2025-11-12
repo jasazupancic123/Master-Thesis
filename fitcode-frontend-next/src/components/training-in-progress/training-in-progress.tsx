@@ -87,17 +87,17 @@ export default function TrainingInProgress() {
   }, [trainingInProgress?.selectedComponent]);
 
   useEffect(() => {
-    if (!activeTraining.training || !activeTraining.report) return;
+    if (!activeTraining) return;
 
-    TrainingService.mapData(activeTraining.training, { exercises });
+    TrainingService.mapData(activeTraining, { exercises });
 
-    const componentId = activeTraining.report.componentStatuses.find(
+    const componentId = activeTraining.statuses.find(
       (cs) => cs.status === TrainingStatus.IN_PROGRESS
     )?.componentId;
 
     if (!componentId) return;
 
-    const component = activeTraining.training.components.find(
+    const component = activeTraining.components.find(
       (c) => c.id === componentId
     );
 
@@ -120,7 +120,7 @@ export default function TrainingInProgress() {
         .flat() || [];
 
     trainingContext.setTrainingInProgress({
-      training: activeTraining.training as Training,
+      training: activeTraining as Training,
       selectedComponent: component,
       userId: user.uid,
       exerciseSetTrackingState: state,

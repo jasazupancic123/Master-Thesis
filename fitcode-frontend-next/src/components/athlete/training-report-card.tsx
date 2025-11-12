@@ -10,12 +10,11 @@ import React from 'react';
 
 import AthleteTrainingCardHeader from './athlete-training-card-header';
 import { theme } from '@/app/style';
-import { Components } from '@/core/exercise/constant/components.constant';
-import type { TrainingReport } from '@/core/training/type/training-report.type';
+import type { TrainingStats } from '@/core/training/type/training-stats.type';
 import { PieCenterLabel } from '@/ui/mui-charts';
 
 interface Props {
-  report: TrainingReport;
+  report: TrainingStats;
 }
 
 export default function TrainingReportCard({ report }: Props) {
@@ -72,11 +71,7 @@ export default function TrainingReportCard({ report }: Props) {
         {report && (
           <AthleteTrainingCardHeader
             report={report}
-            components={report.prescribed.plannedComponents
-              .map(
-                (c) => Components.find((comp) => comp.field === c.componentId)!
-              )
-              .filter((c) => c !== undefined)}
+            components={[]}
             group={report.group}
             cycle={report.cycle}
             from={report.from}

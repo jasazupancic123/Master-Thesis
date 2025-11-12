@@ -1,4 +1,4 @@
-import { endOfDay, startOfDay, subDays } from 'date-fns';
+import { startOfDay } from 'date-fns';
 import { cookies } from 'next/headers';
 
 import { AthleteProvider } from './athlete.provider';
@@ -44,10 +44,7 @@ export default async function InitAthleteProvider({
         },
         { session }
       ),
-      controller.training.findReports(
-        { from: subDays(new Date(), 30), to: endOfDay(new Date()) },
-        { session }
-      ),
+      controller.training.findReports(institutionId!, { session }),
     ]);
 
     trainings = trainings

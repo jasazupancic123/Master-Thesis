@@ -6,7 +6,7 @@ import { createContext, useContext, useState } from 'react';
 
 import { UserRole } from '@/core/profile/enum/user-role.enum';
 import type { Training } from '@/core/training/type/training.type';
-import type { TrainingReport } from '@/core/training/type/training-report.type';
+import type { TrainingStats } from '@/core/training/type/training-stats.type';
 import {
   LINK_TRAININGS,
   LINKS_SIDEBAR_GROUP_VIEW,
@@ -16,7 +16,7 @@ import type { SetState } from '@/lib/common/type/state.type';
 
 interface Props extends React.PropsWithChildren {
   trainings: Training[];
-  reports: TrainingReport[];
+  reports: TrainingStats[];
 }
 
 interface IAthleteContext extends Props {
