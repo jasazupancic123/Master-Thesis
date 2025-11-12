@@ -12,11 +12,7 @@ export default function GroupSidebar() {
   const theme = useTheme();
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-      }}
-    >
+    <Box sx={{ display: 'flex' }}>
       <AppBar
         position="fixed"
         sx={{

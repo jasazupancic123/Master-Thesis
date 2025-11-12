@@ -96,6 +96,13 @@ export class DateUtil {
     };
   }
 
+  getDay(date: Date): Day {
+    return {
+      label: dayjs(date).format('ddd'),
+      date: dayjs(date),
+    };
+  }
+
   getMsDiff(start: Date, end: Date): number {
     return end.getTime() - start.getTime();
   }

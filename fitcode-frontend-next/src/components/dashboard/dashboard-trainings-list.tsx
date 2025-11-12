@@ -115,7 +115,9 @@ export default function DashboardTrainingsList(props: Props) {
                       },
                     }}
                     onClick={() => {
-                      redirect(`/groups/${group.id}/training/${training.id}`);
+                      redirect(
+                        `/groups/${group.id}?training=${training.id}&component=${component.id}`
+                      );
                     }}
                   >
                     <Circle
