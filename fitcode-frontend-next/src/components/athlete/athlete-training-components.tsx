@@ -267,8 +267,6 @@ export default function AthleteTrainingComponents(props: Props) {
             return;
           }
 
-          lib.common.audio.playSound('/sounds/training-in-progress-start.mp3');
-
           const state: ExerciseSetTracking[] =
             component.supersets
               .map((s, sIndex) => {
@@ -293,9 +291,9 @@ export default function AthleteTrainingComponents(props: Props) {
             exerciseSetTrackingState: state,
           } as TrainingInProgress);
 
-          const text = `Welcome to today's ${selectedComponent.id} training. Let's get started!`;
-          lib.common.textToSpeech.speak(text);
           setModal(false);
+
+          lib.common.audio.playSound('/sounds/training-in-progress-start.mp3');
 
           router.push(
             `/trainings/${training.id}/components/${selectedComponent.id}`
