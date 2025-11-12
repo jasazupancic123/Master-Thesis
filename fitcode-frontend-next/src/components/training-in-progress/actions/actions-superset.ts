@@ -55,19 +55,19 @@ export const handleFinishSuperset = async (context: {
 }) => {
   const {
     useTraining,
-    useTrainingInProgress,
+    // useTrainingInProgress,
     useTrainingInProgressUtils,
-    useUndoneExercises,
+    // useUndoneExercises,
   } = context;
 
   const { trainingInProgress } = useTraining;
 
-  const { supersetIndex } = useTrainingInProgress;
+  // const { supersetIndex } = useTrainingInProgress;
 
-  const { handleCloseMenu, handleCompleteTraining, setShowUndoneSetsError } =
+  const { handleCloseMenu, handleCompleteTraining } =
     useTrainingInProgressUtils;
 
-  const { setUndoneExercises } = useUndoneExercises;
+  // const { setUndoneExercises } = useUndoneExercises;
 
   if (!trainingInProgress?.supersets) return;
 
@@ -88,18 +88,18 @@ export const handleFinishSuperset = async (context: {
     });
   });
 
-  const extendedUndoneExercises: TrainingExerciseExtended[] =
-    undoneExercises.map((exercise) => ({
-      ...exercise,
-      componentId: trainingInProgress.selectedComponent.id,
-      supersetIndex: supersetIndex || 0,
-    }));
+  // const extendedUndoneExercises: TrainingExerciseExtended[] =
+  //   undoneExercises.map((exercise) => ({
+  //     ...exercise,
+  //     componentId: trainingInProgress.selectedComponent.id,
+  //     supersetIndex: supersetIndex || 0,
+  //   }));
 
-  if (undoneExercises.length > 0) {
-    setUndoneExercises(extendedUndoneExercises);
-    setShowUndoneSetsError(true);
-    return;
-  }
+  // if (undoneExercises.length > 0) {
+  //   setUndoneExercises(extendedUndoneExercises);
+  //   setShowUndoneSetsError(true);
+  //   return;
+  // }
 
   await handleCompleteTraining();
 };

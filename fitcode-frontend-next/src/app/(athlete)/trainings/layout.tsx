@@ -7,6 +7,10 @@ import AthleteHeader from '@/components/athlete/athlete-header';
 import TrainingsInitializer from '@/initializers/trainings.initializer';
 import { AthleteHeaderProvider } from '@/store/athlete-header.provider';
 import { useTraining } from '@/store/training.provider';
+import { useMain } from '@/store/main.provider';
+import { TrainingStatus } from '@/core/training/enum/training-status.enum';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function Layout({ children }: React.PropsWithChildren) {
   return (
@@ -21,7 +25,26 @@ export default function Layout({ children }: React.PropsWithChildren) {
 }
 
 function TrainingContent({ children }: React.PropsWithChildren) {
+  const router = useRouter();
+
+  const { activeTraining } = useMain();
   const { trainingInProgress } = useTraining();
+
+  useEffect(() => {
+    if (!activeTraining?.report?.componentStatuses?.length) return;
+
+    const inProgress = activeTraining.report.componentStatuses.find(
+      (s) => s.status === TrainingStatus.IN_PROGRESS
+    );
+
+    if (inProgress?.componentId && activeTraining.training?.id) {
+      // Use replace so the user can't "back" into the pre-redirect state
+      router.replace(
+        `/trainings/${activeTraining.training.id}/components/${inProgress.componentId}`
+      );
+    }
+  }, [router, activeTraining]); // run when activeTraining changes
+
   return (
     <>
       {!trainingInProgress && <AthleteHeader />}
