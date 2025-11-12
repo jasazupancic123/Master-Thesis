@@ -1,6 +1,6 @@
 'use client';
 
-import { Close, Done, Menu as MenuIcon } from '@mui/icons-material';
+import { Close, Done, Menu as MenuIcon, Pause } from '@mui/icons-material';
 import {
   Avatar,
   Divider,
@@ -67,6 +67,7 @@ export default function AthleteHeader(props: Props) {
     anchorEl,
     open: openTrainingControls,
     handleCancel,
+    handleFinish,
     handleOpenMenu,
     handleCloseMenu,
   } = trainingInProgressUtilsContext || {};
@@ -118,18 +119,7 @@ export default function AthleteHeader(props: Props) {
           trainingInProgressContext && (
             <>
               <ListItem
-                onClick={async () =>
-                  await handleFinishSuperset({
-                    useTraining: {
-                      ...trainingContext,
-                      trainingInProgress,
-                    },
-                    useUndoneExercises:
-                      trainingInProgressUndoneExercisesContext,
-                    useTrainingInProgress: trainingInProgressContext,
-                    useTrainingInProgressUtils: trainingInProgressUtilsContext,
-                  })
-                }
+                onClick={handleFinish}
                 sx={{
                   cursor: 'pointer',
                 }}
@@ -142,12 +132,12 @@ export default function AthleteHeader(props: Props) {
               <ListItem
                 onClick={handleCancel}
                 sx={{
-                  color: 'error.main',
+                  color: 'warning.main',
                   cursor: 'pointer',
                 }}
               >
-                <Close sx={{ marginRight: 1 }} />
-                Cancel Training
+                <Pause sx={{ marginRight: 1 }} />
+                Pause Training
               </ListItem>
             </>
           )}
@@ -239,21 +229,7 @@ export default function AthleteHeader(props: Props) {
                       }}
                       PaperProps={{ sx: { mb: 1 } }}
                     >
-                      <MenuItem
-                        onClick={async () =>
-                          await handleFinishSuperset({
-                            useTraining: {
-                              ...trainingContext,
-                              trainingInProgress,
-                            },
-                            useUndoneExercises:
-                              trainingInProgressUndoneExercisesContext,
-                            useTrainingInProgress: trainingInProgressContext,
-                            useTrainingInProgressUtils:
-                              trainingInProgressUtilsContext,
-                          })
-                        }
-                      >
+                      <MenuItem onClick={handleFinish}>
                         <>
                           <Done sx={{ marginRight: 1 }} />
                           Finish Training
@@ -262,10 +238,10 @@ export default function AthleteHeader(props: Props) {
 
                       <MenuItem
                         onClick={handleCancel}
-                        sx={{ color: 'error.main' }}
+                        sx={{ color: 'warning.main' }}
                       >
-                        <Close sx={{ marginRight: 1 }} />
-                        Cancel Training
+                        <Pause sx={{ marginRight: 1 }} />
+                        Pause Training
                       </MenuItem>
                     </Menu>
                   </>

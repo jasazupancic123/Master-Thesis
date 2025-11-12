@@ -12,17 +12,21 @@ import { LINK_TRAININGS } from '@/lib/common/const/nav.const';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useTraining } from '@/store/training.provider';
+import { useMain } from '@/store/main.provider';
 
 export interface ITrainingInProgressUtilsCtx {
   showUndoneSetsError: boolean;
   setShowUndoneSetsError: SetState<boolean>;
   openCancelTrainingModal: boolean;
   setOpenCancelTrainingModal: SetState<boolean>;
+  openFinishTrainingModal: boolean;
+  setOpenFinishTrainingModal: SetState<boolean>;
   anchorEl: HTMLElement | null;
   setAnchorEl: SetState<HTMLElement | null>;
   open: boolean;
   handleOpenMenu: (event: React.MouseEvent<HTMLElement>) => void;
   handleCloseMenu: () => void;
+  handleFinish: () => void;
   handleCancel: () => void;
   handleCancelTraining: () => Promise<void>;
   handleCompleteTraining: () => Promise<void>;
@@ -38,6 +42,8 @@ export function TrainingInProgressUtilsProvider({
   children,
 }: React.PropsWithChildren) {
   const router = useRouter();
+
+  const { setActiveTraining } = useMain();
   const { trainingInProgress, setTrainingInProgress, clearTrainingState } =
     useTraining();
 
@@ -45,6 +51,7 @@ export function TrainingInProgressUtilsProvider({
 
   const [showUndoneSetsError, setShowUndoneSetsError] = useState(false);
   const [openCancelTrainingModal, setOpenCancelTrainingModal] = useState(false);
+  const [openFinishTrainingModal, setOpenFinishTrainingModal] = useState(false);
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const open = Boolean(anchorEl);
 
@@ -92,6 +99,8 @@ export function TrainingInProgressUtilsProvider({
     }
 
     router.push(LINK_TRAININGS.href);
+
+    setActiveTraining({});
     await clearTrainingState();
   };
 
@@ -105,6 +114,11 @@ export function TrainingInProgressUtilsProvider({
     setAnchorEl(null);
   };
 
+  const handleFinish = () => {
+    handleCloseMenu();
+    setOpenFinishTrainingModal(true);
+  };
+
   const handleCancel = () => {
     handleCloseMenu();
     setOpenCancelTrainingModal(true);
@@ -115,11 +129,14 @@ export function TrainingInProgressUtilsProvider({
     setShowUndoneSetsError,
     openCancelTrainingModal,
     setOpenCancelTrainingModal,
+    openFinishTrainingModal,
+    setOpenFinishTrainingModal,
     anchorEl,
     setAnchorEl,
     open,
     handleOpenMenu,
     handleCloseMenu,
+    handleFinish,
     handleCancel,
     handleCancelTraining: handlePauseTraining,
     handleCompleteTraining,

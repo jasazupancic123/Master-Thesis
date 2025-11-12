@@ -12,6 +12,7 @@ import type { TrainingInProgress } from '@/core/training/type/training-in-progre
 import type { TrainingReport } from '@/core/training/type/training-report.type';
 import { lib } from '@/lib';
 import { type SetState } from '@/lib/common/type/state.type';
+import { useMain } from './main.provider';
 
 export interface TrainingProviderProps {
   trainings: Training[];
@@ -42,6 +43,8 @@ export type ITrainingContextDefined = Omit<
 export const TrainingProvider = (
   props: TrainingProviderProps & React.PropsWithChildren
 ) => {
+  const { setActiveTraining } = useMain();
+
   const { children, trainings, reports, refetchTraining } = props;
 
   const STORED_TRAINING_IN_PROGRESS = 'blindoffTrainingInProgress';

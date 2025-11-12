@@ -1,4 +1,4 @@
-import { Circle } from '@mui/icons-material';
+import { Circle, Pause } from '@mui/icons-material';
 import CloseIcon from '@mui/icons-material/Close';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import {
@@ -18,7 +18,7 @@ import AthleteHeader from '../athlete/athlete-header';
 import { handleInitTrainingInProgressComponent } from './actions/actions-training-in-progress';
 import { useTrainingInProgressUtils } from './context/training-in.progress-utils.provider';
 import { useUndoneExercises } from './context/undone-exercises.provider';
-import CancelTrainingModal from './modals/cancel-training-modal';
+import FinishPauseTrainingModal from './modals/finish-pause-training-modal';
 import UndoneSetsErrorModal from './modals/undone-sets-error-modal';
 import TrainingInProgressExerciseContainer from './training-in-progress-exercise-container';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
@@ -57,13 +57,10 @@ export default function TrainingInProgress() {
   } = trainingInProgressContext;
 
   const {
-    anchorEl,
-    open,
-    handleOpenMenu,
-    handleCloseMenu,
-    handleCancel,
     openCancelTrainingModal,
     setOpenCancelTrainingModal,
+    openFinishTrainingModal,
+    setOpenFinishTrainingModal,
     showUndoneSetsError,
     setShowUndoneSetsError,
   } = trainingInProgressUtilsContext;
@@ -100,7 +97,8 @@ export default function TrainingInProgress() {
   }, [trainingInProgress?.selectedComponent]);
 
   useEffect(() => {
-    if (!activeTraining.training || !activeTraining.report) return;
+    if (!activeTraining || !activeTraining.training || !activeTraining.report)
+      return;
 
     TrainingService.mapData(activeTraining.training, { exercises });
 
@@ -356,7 +354,9 @@ export default function TrainingInProgress() {
           </Box>
         </>
       )}
-      {trainingInProgress && trainingInProgress.supersets ? (
+      {trainingInProgress &&
+      trainingInProgress.supersets &&
+      trainingInProgress.supersets.length ? (
         <TrainingInProgressExerciseContainer />
       ) : (
         <Box
@@ -367,35 +367,17 @@ export default function TrainingInProgress() {
           justifyContent="center"
         >
           <Typography variant="h6">No exercises</Typography>
-          <Fab
-            sx={{
-              backgroundColor: theme.palette.primary.main,
-              position: 'absolute',
-              bottom: 60,
-              left: 16,
-            }}
-            onClick={handleOpenMenu}
-          >
-            <MoreVertIcon />
-          </Fab>
-          <Menu
-            anchorEl={anchorEl}
-            open={open}
-            onClose={handleCloseMenu}
-            anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-            transformOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-            PaperProps={{ sx: { mb: 1 } }}
-          >
-            <MenuItem onClick={handleCancel} sx={{ color: 'error.main' }}>
-              <CloseIcon sx={{ marginRight: 1 }} />
-              Cancel Training
-            </MenuItem>
-          </Menu>
         </Box>
       )}
-      <CancelTrainingModal
+      <FinishPauseTrainingModal
         open={openCancelTrainingModal}
         setOpen={setOpenCancelTrainingModal}
+        finish={false}
+      />
+      <FinishPauseTrainingModal
+        open={openFinishTrainingModal}
+        setOpen={setOpenFinishTrainingModal}
+        finish={true}
       />
       <UndoneSetsErrorModal
         open={showUndoneSetsError}

@@ -21,6 +21,9 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import { useTraining } from '@/store/training.provider';
 import MyModal from '@/ui/modal';
+import { useEffect } from 'react';
+import { TrainingReport } from '@/core/training/type/training-report.type';
+import { TrainingReportService } from '@/core/training/training.report.service';
 
 interface Props {
   training: Training;
@@ -217,6 +220,46 @@ export default function AthleteTrainingComponents(props: Props) {
           const controller = TrainingController.getInstance();
 
           try {
+            const foundReport = reports.find(
+              (r) => r.trainingId === training.id
+            );
+
+            const foundReportComponentStatus =
+              foundReport?.componentStatuses.find(
+                (cs) => cs.componentId === selectedComponent.id
+              );
+
+            if (
+              foundReportComponentStatus &&
+              foundReportComponentStatus.status === TrainingStatus.COMPLETED
+            ) {
+              toast.error(
+                'This training component has already been completed.'
+              );
+
+              setModal(false);
+              return;
+            }
+
+            if (activeTraining && activeTraining.report) {
+              const foundComponentStatus =
+                activeTraining.report.componentStatuses.find(
+                  (cs) => cs.componentId === selectedComponent.id
+                );
+
+              if (
+                foundComponentStatus &&
+                foundComponentStatus.status === TrainingStatus.COMPLETED
+              ) {
+                toast.error(
+                  'This training component has already been completed.'
+                );
+
+                setModal(false);
+                return;
+              }
+            }
+
             if (!activeTraining) {
               // start new training
               const result = await controller.startTrainingComponent(
@@ -226,13 +269,21 @@ export default function AthleteTrainingComponents(props: Props) {
 
               trainingToStart = result.trainings[user.uid];
             } else if (
-              activeTraining?.training &&
-              activeComponentStatus === TrainingStatus.IN_PROGRESS
+              activeTraining.report &&
+              training.id !== activeTraining.report.trainingId
             ) {
-              // training is already in progress
-              trainingToStart = activeTraining.training;
+              toast.error(
+                'Another training is already in progress. Please finish it before starting a new one.'
+              );
+
+              setModal(false);
+
+              return;
             } else {
               // restart training with new component‚
+
+              console.log('selectedComponent.id', selectedComponent.id);
+              console.log('training.id', training.id);
               const result = await controller.startTrainingComponent(
                 training.id,
                 selectedComponent.id
@@ -283,7 +334,19 @@ export default function AthleteTrainingComponents(props: Props) {
               })
               .flat() || [];
 
-          setActiveTraining(activeTraining);
+          console.log('component', component);
+
+          const report = TrainingReportService.initEmptyTrainingReport(
+            trainingToStart,
+            component,
+            user
+          );
+
+          setActiveTraining({
+            training: { ...trainingToStart, workloads: [] },
+            report: report,
+          });
+
           setTrainingInProgress({
             training: trainingToStart,
             selectedComponent: component,
