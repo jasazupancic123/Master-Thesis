@@ -253,10 +253,9 @@ export default function TrainingInProgressExerciseCard() {
                 </Box>
                 {isSetDone ? (
                   <Check
-                    fontSize="small"
                     sx={{
-                      width: 12,
-                      height: 12,
+                      width: 16,
+                      height: 16,
                       color: theme.palette.text.primary,
                     }}
                   />
@@ -266,8 +265,8 @@ export default function TrainingInProgressExerciseCard() {
                     src="/blinking_dot.gif"
                     alt="active set"
                     sx={{
-                      width: 12,
-                      height: 12,
+                      width: 16,
+                      height: 16,
                       display: 'inline-block',
                       verticalAlign: 'middle',
                       visibility: isSetSelected ? 'visible' : 'hidden',

@@ -16,12 +16,12 @@ export const POSE_DETECTION_CONSTRAINTS = {
 
   // Head shake
   HEAD_SHAKE_DETECTION_BUFFER_DURATION_S: 1.5, // how many ms to track for head shake detection
-  HEAD_SHAKE_ANGLE_THRESHOLD_DEGREES: 164, // read as 180 - this_value; min angle to consider head shake
+  HEAD_SHAKE_ANGLE_THRESHOLD_DEGREES: 155, // read as 180 - this_value; min angle to consider head shake
 
   // Jitter detection
   MIN_KEYPOINTS_FOR_JITTER_DETECTION: 3, // min % number of keypoints that need to be jittering to consider the whole pose as jittering
   JITTER_DETECTION_WINDOW_S: 0.5,
-  TIME_BETWEEN_MODEL_RELOAD_S: 5,
+  TIME_BETWEEN_MODEL_RELOAD_S: 10, // to prevent reloading the model too often
 
   KEYPOINT_BUFFER_DURATION_MS: 1000, // how many ms to track
   CLOSE_ENOUGH_TO_START_VALUE_RATIO: 0.2, // how close to the start value the rep needs to be to be considered finished
