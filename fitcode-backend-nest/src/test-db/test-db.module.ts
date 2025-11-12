@@ -10,7 +10,7 @@ import { GroupTestRepository } from './service/group-test.repository';
 import { InstitutionTestRepository } from './service/institution-test.repository';
 import { ProfileTestRepository } from './service/profile-test.repository';
 import { TestWorkloadService } from './service/test-workload.service';
-import { TrainingReportTestRepository } from './service/training-report.test.repository';
+import { TrainingComponentUserStatusTestRepository } from './service/training-report.test.repository';
 import { TrainingTestRepository } from './service/training-test.repository';
 import { WellnessTestRepository } from './service/wellness-test.repository';
 import { TestDbService } from './test-db.service';
@@ -21,7 +21,7 @@ import { TestDbService } from './test-db.service';
     TestDbService,
     TestWorkloadService,
     ExerciseTestRepository,
-    TrainingReportTestRepository,
+    TrainingComponentUserStatusTestRepository,
     InstitutionMembersRepository,
     InstitutionTestRepository,
     GroupTestRepository,

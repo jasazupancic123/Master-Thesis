@@ -15,6 +15,7 @@ import {
   isBefore,
   isSameDay,
   startOfDay,
+  subDays,
 } from 'date-fns';
 import { Timestamp } from 'firebase-admin/firestore';
 
@@ -24,7 +25,6 @@ import {
   MIN_BODYWEIGHT_KG,
 } from '@src/common/constant/weight.constant';
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
-import { DateFilterDto } from '@src/common/dto/date-filter.dto';
 import { DateRangeDto } from '@src/common/dto/date-range.dto';
 import { UpdateMemberDto } from '@src/common/dto/user-id.dto';
 import { Permission } from '@src/common/interface/permission.interface';
@@ -35,6 +35,7 @@ import {
   CycleRef,
   SubgroupRef,
   TrainingComponentRef,
+  TrainingComponentUserStatusRef,
   TrainingRef,
   UserRef,
   WorkloadRef,
@@ -58,7 +59,6 @@ import { UpdateInstitutionAthleteEvent } from '@src/institution/event/update-ins
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { PeriodizationService } from '@src/periodization/periodization.service';
 import { WellnessService } from '@src/profile/service/wellness.service';
-import { TrainingReportService } from '@src/training/service/training-report.service';
 import { WorkloadService } from '@src/training/service/workload.service';
 
 import {
@@ -72,12 +72,16 @@ import {
 import { PeriodizeTrainingsDto } from '../dto/periodize-training.dto';
 import { Training } from '../entity/training.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
-import { TrainingReport } from '../entity/training-report.entity';
+import { TrainingComponentUserStatus } from '../entity/training-component-user-status.entity';
 import { CreateWorkload, Workload } from '../entity/workload.entity';
 import { MainSet } from '../enum/main-set.enum';
+import { TrainingStatus } from '../enum/training-status.enum';
 import { UpdateTraining } from '../interface/update-training.interface';
 import { TrainingRepository } from '../repository/training.repository';
+import { TrainingComponentUserStatusRepository } from '../repository/training-user-status.repository';
+import { TrainingStats } from '../type/training-stats.type';
 import { TrainingPlanService } from './training-plan.service';
+import { TrainingReportService } from './training-report.service';
 
 @Injectable()
 export class TrainingService implements Permission<Training, Institution> {
@@ -89,15 +93,16 @@ export class TrainingService implements Permission<Training, Institution> {
     private readonly authService: Wrapper<AuthService>,
     private readonly common: CommonService,
     private readonly repository: TrainingRepository,
+    private readonly trainingComponentUserStatusRepository: TrainingComponentUserStatusRepository,
     private readonly periodizationService: PeriodizationService,
     private readonly wellnessService: WellnessService,
     private readonly trainingPlanService: TrainingPlanService,
     private readonly workloadService: WorkloadService,
-    private readonly trainingReportService: TrainingReportService,
     private readonly groupService: GroupService,
     private readonly institutionService: InstitutionService,
     private readonly exerciseService: ExerciseService,
     private readonly exerciseParamService: ExerciseParamService,
+    private readonly trainingReportService: TrainingReportService,
   ) {}
 
   async findOneById(
@@ -185,12 +190,39 @@ export class TrainingService implements Permission<Training, Institution> {
     return trainings;
   }
 
-  @LogMethod()
   async findReportsByUser(
     user: User,
-    filter?: DateFilterDto,
-  ): Promise<TrainingReport[]> {
-    return await this.trainingReportService.findAllByUser(user.uid, filter);
+    institutionId: string,
+  ): Promise<TrainingStats[]> {
+    // find workloads for last 10 trainings of the user and calculate reports
+    const trainings = await this.findAll(
+      user,
+      institutionId,
+      { from: subDays(new Date(), 7), to: endOfDay(new Date()) },
+      { limit: 10 },
+    );
+
+    const workloads = await this.workloadService.findAllByUserTrainingIds(
+      user.uid,
+      trainings.map((t) => t.id),
+    );
+
+    const reports: TrainingStats[] = [];
+    for (const training of trainings) {
+      const filtered = workloads.filter(
+        (w) => w.trainingId === training.id && w.userId === user.uid,
+      );
+
+      reports.push(
+        this.trainingReportService.getReportByUser(
+          user.uid,
+          training,
+          filtered,
+        ),
+      );
+    }
+
+    return reports;
   }
 
   @LogMethod()
@@ -607,19 +639,11 @@ export class TrainingService implements Permission<Training, Institution> {
       training,
     );
 
-    const workload = await this.workloadService.completeNextSet(
+    return await this.workloadService.completeNextSet(
       ref,
       prescribedTraining,
       input,
     );
-
-    // update report
-    await this.trainingReportService.update(userId, training, {
-      photoURLs: input.photoURLs,
-      componentInProgress: workload.componentId,
-    });
-
-    return workload;
   }
 
   @LogMethod()
@@ -641,20 +665,14 @@ export class TrainingService implements Permission<Training, Institution> {
       training,
     );
 
-    const workload = await this.workloadService.upsertSet(
-      ref,
-      individualTraining,
-      input,
-    );
-
-    await this.trainingReportService.update(userId, training, {
-      photoURLs: input.photoURLs,
-      componentInProgress: ref.componentId,
-    });
-
-    return workload;
+    return await this.workloadService.upsertSet(ref, individualTraining, input);
   }
 
+  /**
+   * This method will initialize training reports for specified users.
+   * If the provided component has status NOT_STARTED or PAUSED, it will
+   * put it into IN_PROGRESS mode.
+   */
   @LogMethod()
   async startTrainingComponent(
     user: User,
@@ -675,17 +693,73 @@ export class TrainingService implements Permission<Training, Institution> {
 
     // get individual training for each member
     const trainings = await this.findAllIndividual(training, memberIds); // <userId, training>
-    const errors = await this.trainingReportService.startComponent(
-      memberIds.map((userId) => ({
-        userId,
-        componentId: ref.componentId,
-        training: trainings[userId],
-      })),
-    );
+    const errors: ValidateError<Record<string, unknown>>[] = [];
+    let input = memberIds.map((userId) => ({
+      uid: userId,
+      componentId: ref.componentId,
+      training: trainings[userId],
+    }));
+
+    // check if any other training is already active
+    for (const { uid } of input) {
+      const active =
+        await this.trainingComponentUserStatusRepository.getActiveComponents(
+          uid,
+        );
+
+      if (active.length > 0 && active[0].trainingId !== input[0].training.id) {
+        errors.push({ field: uid, message: 'ACTIVE_TRAINING_EXISTS' });
+        continue;
+      }
+    }
+
+    // remove user ids from input that are in error state
+    input = input.filter(({ uid }) => !errors.find((e) => e.field === uid));
+
+    // if training report exists, then just update the correct component status to in_progress, else create new report
+    for (const { uid, training, componentId } of input) {
+      const ref: TrainingComponentUserStatusRef = {
+        trainingId: training.id,
+        componentId,
+        uid,
+      };
+
+      let existing =
+        await this.trainingComponentUserStatusRepository.findById(ref);
+
+      if (existing) {
+        if (existing.status === TrainingStatus.IN_PROGRESS) continue;
+        if (existing.status === TrainingStatus.COMPLETED) {
+          errors.push({ field: uid, message: 'COMPONENT_COMPLETED' });
+          continue;
+        }
+
+        await this.trainingComponentUserStatusRepository.update(ref, {
+          status: TrainingStatus.IN_PROGRESS,
+        });
+      } else
+        await this.trainingComponentUserStatusRepository.save(
+          {
+            id: null,
+            institutionId: training.institutionId,
+            groupId: training.groupId,
+            cycleId: training.cycleId,
+            trainingId: training.id,
+            componentId,
+            userId: uid,
+            status: TrainingStatus.IN_PROGRESS,
+          },
+          { trainingId: training.id, componentId, uid },
+        );
+    }
 
     return { trainings, errors };
   }
 
+  /**
+   * Completes training component for specified users. It only finalizes
+   * components that are in IN_PROGRESS or PAUSED status.
+   */
   @LogMethod()
   async completeTrainingComponent(
     user: User,
@@ -704,19 +778,56 @@ export class TrainingService implements Permission<Training, Institution> {
       uid,
     );
 
-    const errors = await this.trainingReportService.completeComponent(
-      ref,
-      memberIds,
-    );
+    const errors: ValidateError<Record<string, unknown>>[] = [];
+    for (const userId of memberIds) {
+      const statusRef: TrainingComponentUserStatusRef = { ...ref, uid: userId };
+      const status =
+        await this.trainingComponentUserStatusRepository.findById(statusRef);
+
+      if (!status || status.status === TrainingStatus.NOT_STARTED) {
+        errors.push({ field: userId, message: 'COMPONENT_NOT_STARTED' });
+        continue;
+      }
+
+      if (status.status === TrainingStatus.COMPLETED) {
+        errors.push({ field: userId, message: 'COMPONENT_COMPLETED' });
+        continue;
+      }
+
+      await this.trainingComponentUserStatusRepository.update(statusRef, {
+        status: TrainingStatus.COMPLETED,
+      });
+    }
 
     return { errors };
   }
 
+  /**
+   * Pauses training component. Only components that are in IN_PROGRESS status
+   * can be paused. Note that trainer will not be able to pause training reports
+   * for all athletes. He cannot pause training at all, only athlete can for himself.
+   */
   @LogMethod()
   async pauseComponent(user: User, ref: TrainingComponentRef): Promise<void> {
     const training = await this.findOneByIdOrFail(user, ref);
     this.checkComponentExists(training, ref.componentId);
-    await this.trainingReportService.pauseComponent(user.uid, ref);
+
+    const statusRef: TrainingComponentUserStatusRef = { ...ref, uid: user.uid };
+    const status =
+      await this.trainingComponentUserStatusRepository.findById(statusRef);
+
+    if (!status)
+      throw new BadRequestException('Training component not started');
+
+    // can only pause component that is in IN_PROGRESS status
+    if (status.status !== TrainingStatus.IN_PROGRESS)
+      throw new BadRequestException(
+        'You can only pause training that is currently in progress',
+      );
+
+    await this.trainingComponentUserStatusRepository.update(statusRef, {
+      status: TrainingStatus.PAUSED,
+    });
   }
 
   private async getMemberIdsForTrainingReport(
@@ -787,16 +898,22 @@ export class TrainingService implements Permission<Training, Institution> {
   async getActiveTrainingByAthlete(
     user: User,
     athleteId: string,
-  ): Promise<{
-    training: Training & { workloads: Workload[] };
-    report: TrainingReport;
-  } | null> {
+  ): Promise<
+    | (Training & {
+        workloads: Workload[];
+        statuses: TrainingComponentUserStatus[];
+      })
+    | null
+  > {
     const athlete = await this.getAthlete(user, athleteId);
-    const report = await this.trainingReportService.getActive(athlete.uid);
+    const statuses =
+      await this.trainingComponentUserStatusRepository.getActiveComponents(
+        athlete.uid,
+      );
 
-    if (!report) return null;
+    if (!statuses.length) return null;
     const training = await this.findOneById(user, {
-      trainingId: report.trainingId,
+      trainingId: statuses[0].trainingId,
     });
 
     if (!training) return null;
@@ -805,7 +922,7 @@ export class TrainingService implements Permission<Training, Institution> {
       training,
     );
 
-    return { training: individualTraining, report };
+    return { ...individualTraining, statuses };
   }
 
   async getTrainingByAthlete(

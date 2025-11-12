@@ -13,22 +13,22 @@ import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum'
 import { Create, FirestoreEntity, Update } from '@src/common/type/entity.type';
 import {
   FirestoreRepository,
+  TrainingComponentUserStatusRef,
   TrainingRef,
-  TrainingReportRef,
 } from '@src/common/type/firestore.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
-import { TrainingReport } from '@src/training/entity/training-report.entity';
 import { TrainingRepository } from '@src/training/repository/training.repository';
 
+import { TrainingComponentUserStatus } from '../entity/training-component-user-status.entity';
 import { TrainingStatus } from '../enum/training-status.enum';
 
 @Injectable()
-export class TrainingReportRepository extends FirestoreRepository<
-  TrainingReport,
-  TrainingReportRef
+export class TrainingComponentUserStatusRepository extends FirestoreRepository<
+  TrainingComponentUserStatus,
+  TrainingComponentUserStatusRef
 > {
-  collectionName = FirestoreCollection.TRAINING_REPORT;
+  collectionName = FirestoreCollection.TRAINING_COMPONENT_USER_STATUS;
 
   constructor(
     readonly firebase: FirebaseService,
@@ -48,36 +48,42 @@ export class TrainingReportRepository extends FirestoreRepository<
     return this.firebase.firestore.collectionGroup(this.collectionName);
   }
 
-  doc(ref: TrainingReportRef): DocumentReference {
+  doc(ref: TrainingComponentUserStatusRef): DocumentReference {
     return this.collection(ref).doc(this.getKey(ref));
   }
 
-  getCreateQuery(data: Create<TrainingReport>) {
-    return this.firebase.buildCreateQuery<TrainingReport>(data, {
+  getCreateQuery(data: Create<TrainingComponentUserStatus>) {
+    return this.firebase.buildCreateQuery<TrainingComponentUserStatus>(data, {
       timestamps: true,
     });
   }
 
   async getAllDocs(
     query: (ref: Query) => Query = (ref) => ref,
-  ): Promise<TrainingReport[]> {
+  ): Promise<TrainingComponentUserStatus[]> {
     const snapshot = await query(this.collectionGroup()).get();
     return snapshot.docs.map((doc) =>
-      this.firebase.serialize(doc.data() as FirestoreEntity<TrainingReport>),
+      this.firebase.serialize(
+        doc.data() as FirestoreEntity<TrainingComponentUserStatus>,
+      ),
     );
   }
 
-  async getAllByTraining(trainingId: string): Promise<TrainingReport[]> {
+  async getAllByTraining(
+    trainingId: string,
+  ): Promise<TrainingComponentUserStatus[]> {
     const snapshot = await this.collection({ trainingId }).get();
     return snapshot.docs.map((doc) =>
-      this.firebase.serialize(doc.data() as FirestoreEntity<TrainingReport>),
+      this.firebase.serialize(
+        doc.data() as FirestoreEntity<TrainingComponentUserStatus>,
+      ),
     );
   }
 
   async getAllByUser(
     userId: string,
     filter: { institutionId?: string; from?: Date; to?: Date },
-  ): Promise<TrainingReport[]> {
+  ): Promise<TrainingComponentUserStatus[]> {
     let q = this.collectionGroup().where('userId', '==', userId);
     if (filter?.institutionId)
       q = q.where('institutionId', '==', filter.institutionId);
@@ -87,52 +93,73 @@ export class TrainingReportRepository extends FirestoreRepository<
 
     const snapshot = await q.get();
     return snapshot.docs.map((doc) =>
-      this.firebase.serialize(doc.data() as FirestoreEntity<TrainingReport>),
+      this.firebase.serialize(
+        doc.data() as FirestoreEntity<TrainingComponentUserStatus>,
+      ),
     );
   }
 
   /**
-   * Returns all active trainings for athlete for the current day.
+   * Athlete can have multiple active trainings in database. Valid active trainings
+   * are only those that are on the current day. If there are multiple active
+   * trainings for the current day, return the one that was started the earliest.
    */
-  async getActiveByAthlete(athleteId: string): Promise<TrainingReport[]> {
+  async getActiveComponents(
+    athleteId: string,
+  ): Promise<TrainingComponentUserStatus[]> {
     const snapshot = await this.collectionGroup()
       .where('userId', '==', athleteId)
       .where('status', '==', TrainingStatus.IN_PROGRESS)
-      .where('from', '>=', Timestamp.fromDate(startOfDay(new Date())))
+      .where('createdAt', '>=', Timestamp.fromDate(startOfDay(new Date())))
       .get();
 
     if (snapshot.empty) return [];
-    return snapshot.docs.map((doc) =>
-      this.firebase.serialize(doc.data() as FirestoreEntity<TrainingReport>),
+
+    const active = snapshot.docs.map((doc) =>
+      this.firebase.serialize(
+        doc.data() as FirestoreEntity<TrainingComponentUserStatus>,
+      ),
+    );
+
+    return active.sort(
+      (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     );
   }
 
-  async save(ref: TrainingReportRef, data: Create<TrainingReport>) {
-    const query = this.firebase.buildCreateQuery<TrainingReport>(data, {
-      timestamps: true,
-    });
+  async save(
+    data: Create<TrainingComponentUserStatus>,
+    ref: TrainingComponentUserStatusRef,
+  ) {
+    const query = this.firebase.buildCreateQuery<TrainingComponentUserStatus>(
+      data,
+      { timestamps: true },
+    );
 
     await this.doc(ref).set(query);
     return this.getKey(ref);
   }
 
-  async update(ref: TrainingReportRef, data: Update<TrainingReport>) {
+  async update(
+    ref: TrainingComponentUserStatusRef,
+    data: Update<TrainingComponentUserStatus>,
+  ) {
     const query = this.firebase.buildUpdateQuery(data);
     await this.doc(ref).update(query);
   }
 
-  async addPhotos(ref: TrainingReportRef, photoURLs: string[]) {
+  async addPhotos(ref: TrainingComponentUserStatusRef, photoURLs: string[]) {
     if (!photoURLs?.length) return;
     await this.doc(ref).update({
       photoURLs: FieldValue.arrayUnion(...photoURLs) as unknown as string[],
     });
   }
 
-  async delete(ref: TrainingReportRef) {
+  async delete(ref: TrainingComponentUserStatusRef) {
     await this.doc(ref).delete();
   }
 
-  getKey(ref: TrainingReportRef) {
-    return `${ref.trainingId}-${ref.userId}`;
+  getKey(ref: TrainingComponentUserStatusRef) {
+    return `${ref.trainingId}-${ref.componentId}-${ref.uid}`;
   }
 }

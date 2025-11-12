@@ -9,7 +9,7 @@ import { GroupTestRepository } from './service/group-test.repository';
 import { InstitutionTestRepository } from './service/institution-test.repository';
 import { ProfileTestRepository } from './service/profile-test.repository';
 import { TestWorkloadService } from './service/test-workload.service';
-import { TrainingReportTestRepository } from './service/training-report.test.repository';
+import { TrainingComponentUserStatusTestRepository } from './service/training-report.test.repository';
 import { TrainingTestRepository } from './service/training-test.repository';
 import { WellnessTestRepository } from './service/wellness-test.repository';
 
@@ -20,7 +20,7 @@ export class TestDbService {
     readonly workloads: TestWorkloadService,
     readonly exercises: ExerciseTestRepository,
     readonly trainings: TrainingTestRepository,
-    readonly trainingReports: TrainingReportTestRepository,
+    readonly trainingComponentUserStatus: TrainingComponentUserStatusTestRepository,
     readonly institutions: InstitutionTestRepository,
     readonly groups: GroupTestRepository,
     readonly wellness: WellnessTestRepository,

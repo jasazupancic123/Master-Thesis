@@ -22,7 +22,6 @@ import {
 } from '@nestjs/swagger';
 import { endOfDay, startOfDay } from 'date-fns';
 
-import { DateFilterDto } from '@src/common/dto/date-filter.dto';
 import { DateRangeDto } from '@src/common/dto/date-range.dto';
 import { OptionalUserIdDto, UserIdDto } from '@src/common/dto/user-id.dto';
 import {
@@ -43,7 +42,7 @@ import { FilterTrainingQueryDto } from './dto/filter-training-query.dto';
 import { PeriodizeTrainingsDto } from './dto/periodize-training.dto';
 import { UpdateTrainingDto } from './dto/update-training.dto';
 import { Training } from './entity/training.entity';
-import { TrainingReport } from './entity/training-report.entity';
+import { TrainingComponentUserStatus } from './entity/training-component-user-status.entity';
 import { CreateWorkload, Workload } from './entity/workload.entity';
 import { TrainingService } from './service/training.service';
 
@@ -96,27 +95,15 @@ export class TrainingController {
     );
   }
 
-  @Get(':trainingId')
-  @Auth()
-  async findOneById(
-    @RequestUser() user: User,
-    @Param('trainingId') trainingId: string,
-  ) {
-    const ref = { trainingId, userId: user.uid };
-    const training = await this.trainingService.findOneByIdOrFail(user, ref, {
-      skipInstitution: true,
-    });
-
-    const report = await this.trainingReportService.findById(ref);
-    return { training, report };
-  }
-
   @Get('get/active')
   @Auth([UserRole.ATHLETE])
-  async getActiveTraining(@RequestUser() user: User): Promise<{
-    training: Training & { workloads: Workload[] };
-    report: TrainingReport;
-  } | null> {
+  async getActiveTraining(@RequestUser() user: User): Promise<
+    | (Training & {
+        workloads: Workload[];
+        statuses: TrainingComponentUserStatus[];
+      })
+    | null
+  > {
     return await this.trainingService.getActiveTrainingByAthlete(
       user,
       user.uid,
@@ -142,12 +129,14 @@ export class TrainingController {
 
   @Get('report/athlete')
   @Auth()
-  async findReports(@RequestUser() user: User, @Query() filter: DateFilterDto) {
-    filter = this.commonService.object.clean(filter);
-    return await this.trainingService.findReportsByUser(user, {
-      ...(filter.from && { from: filter.from }),
-      ...(filter.to && { to: filter.to }),
-    });
+  async findReports(
+    @RequestUser() user: User,
+    @Query() filter: FilterTrainingQueryDto,
+  ) {
+    return await this.trainingService.findReportsByUser(
+      user,
+      filter.institutionId,
+    );
   }
 
   /**

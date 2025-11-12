@@ -7,7 +7,7 @@ import { ExerciseModule } from '../exercise/exercise.module';
 import { GroupModule } from '../group/group.module';
 import { InstitutionModule } from '../institution/institution.module';
 import { TrainingRepository } from './repository/training.repository';
-import { TrainingReportRepository } from './repository/training-report.repository';
+import { TrainingComponentUserStatusRepository } from './repository/training-user-status.repository';
 import { WorkloadRepository } from './repository/workload.repository';
 import { TrainingService } from './service/training.service';
 import { TrainingPlanService } from './service/training-plan.service';
@@ -27,7 +27,7 @@ import { TrainingController } from './training.controller';
   providers: [
     WorkloadRepository,
     TrainingService,
-    TrainingReportRepository,
+    TrainingComponentUserStatusRepository,
     TrainingRepository,
     WorkloadService,
     TrainingReportService,
