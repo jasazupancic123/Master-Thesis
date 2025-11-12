@@ -12,7 +12,7 @@ export default function EditCycleModal(props: ModalProps) {
 
   return (
     <MyModal
-      isOpen={open}
+      isOpen={open && editCycle !== null}
       setIsOpen={setOpen}
       onCancel={() => setOpen(false)}
       cancelText="Close"
