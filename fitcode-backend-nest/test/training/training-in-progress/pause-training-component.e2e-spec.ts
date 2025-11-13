@@ -77,8 +77,8 @@ describe('Pause Training Status (e2e)', () => {
     const athlete = institution1.athletes[0];
     const res = await req(athlete.token, training1.id, 'c1');
 
-    expect(res.status).toBe(404);
-    expect(res.body.message).toBe('Training report not found');
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe('Training component not started');
   });
 
   it('should throw error if component is not in progress', async () => {
@@ -107,48 +107,15 @@ describe('Pause Training Status (e2e)', () => {
     const res = await req(athlete.token, training1.id, 'c2');
     expect(res.status).toBe(200);
 
-    const report = await db.trainingReports.findById({
+    const report = await db.trainingComponentUserStatus.findById({
       trainingId: training1.id,
-      userId: athlete.uid,
+      componentId: 'c2',
+      uid: athlete.uid,
     });
 
-    expect(report.status).toBe(TrainingStatus.IN_PROGRESS);
-    expect(
-      report.componentStatuses.find((cs) => cs.componentId === 'c2')?.status,
-    ).toBe(TrainingStatus.PAUSED);
+    expect(report.status).toBe(TrainingStatus.PAUSED);
 
     // delete report for next tests
-    await db.trainingReports.deleteAllByTraining(training1.id);
-  });
-
-  it('should keep training in progress if all components are paused', async () => {
-    const athlete = institution1.athletes[0];
-
-    // start first component
-    await startReq(athlete.token, training1.id, 'c1');
-    // pause first component
-    await req(athlete.token, training1.id, 'c1');
-
-    // start second component
-    await startReq(athlete.token, training1.id, 'c2');
-    // pause second component
-    const res = await req(athlete.token, training1.id, 'c2');
-    expect(res.status).toBe(200);
-
-    const report = await db.trainingReports.findById({
-      trainingId: training1.id,
-      userId: athlete.uid,
-    });
-
-    expect(report.status).toBe(TrainingStatus.IN_PROGRESS);
-    expect(
-      report.componentStatuses.find((cs) => cs.componentId === 'c1')?.status,
-    ).toBe(TrainingStatus.PAUSED);
-    expect(
-      report.componentStatuses.find((cs) => cs.componentId === 'c2')?.status,
-    ).toBe(TrainingStatus.PAUSED);
-
-    // delete report for next tests
-    await db.trainingReports.deleteAllByTraining(training1.id);
+    await db.trainingComponentUserStatus.deleteAllByTraining(training1.id);
   });
 });

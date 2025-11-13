@@ -1,5 +1,12 @@
 import type { SxProps } from '@mui/material';
-import { Box, MenuItem, Select, SvgIcon, Typography } from '@mui/material';
+import {
+  Box,
+  MenuItem,
+  Select,
+  SvgIcon,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 import Stack from '@mui/material/Stack';
 import React from 'react';
 
@@ -29,6 +36,8 @@ interface Props {
   setSelectedTargets?: SetState<{ componentId: string; target: Target }[]>;
   gap?: number; // gap between chips
   disabledComponents?: string[]; // list of component fields to disable
+  tooltip?: boolean; // if true, show tooltip on hover with component name and don't show names
+  iconSize?: number; // size of the icon
 }
 
 export default function ExerciseChips({
@@ -43,6 +52,8 @@ export default function ExerciseChips({
   setSelectedTargets,
   disabledComponents,
   sx,
+  tooltip,
+  iconSize,
 }: Props) {
   const screenSize = useScreenSize();
 
@@ -65,6 +76,28 @@ export default function ExerciseChips({
             (selected &&
               !Array.isArray(selected) &&
               selected.field === c.field);
+
+          const IconSvg = (
+            <SvgIcon
+              component={IconComponent as React.ElementType} // handles SvgIconComponent or your SvgC
+              inheritViewBox
+              sx={{
+                ...(iconSize !== undefined
+                  ? { width: iconSize, height: iconSize }
+                  : {}),
+                fontSize: screenSize.isMobile ? 20 : 26,
+                color: isSelected
+                  ? theme.palette.background.default
+                  : undefined,
+                // force shapes inside the svg to use currentColor
+                '& path, & rect, & circle, & polygon, & ellipse, & line, & polyline':
+                  {
+                    fill: 'currentColor',
+                    stroke: 'currentColor',
+                  },
+              }}
+            />
+          );
 
           return (
             <Box
@@ -146,26 +179,15 @@ export default function ExerciseChips({
                         : 'transparent',
                   }}
                 >
-                  {IconComponent && (
-                    <SvgIcon
-                      component={IconComponent as React.ElementType} // handles SvgIconComponent or your SvgC
-                      inheritViewBox
-                      sx={{
-                        fontSize: screenSize.isMobile ? 20 : 26,
-                        color: isSelected
-                          ? theme.palette.background.default
-                          : undefined,
-                        // force shapes inside the svg to use currentColor
-                        '& path, & rect, & circle, & polygon, & ellipse, & line, & polyline':
-                          {
-                            fill: 'currentColor',
-                            stroke: 'currentColor',
-                          },
-                      }}
-                    />
-                  )}
+                  {IconComponent &&
+                    (tooltip ? (
+                      <Tooltip title={c.name}>{IconSvg}</Tooltip>
+                    ) : (
+                      IconSvg
+                    ))}
                 </div>
               </Box>
+
               {cycleView && selectedTargets && setSelectedTargets ? (
                 <Select
                   variant="standard"
@@ -225,20 +247,11 @@ export default function ExerciseChips({
                       '&.MuiInput-underline': {
                         border: 'none', // hide underline
                       },
-                      'div.MuiSelect-select': {
-                        p: '0px',
-                        pr: 1.5,
-                      },
+                      'div.MuiSelect-select': { p: '0px', pr: 1.5 },
                     },
-                    '&.MuiInputBase-root::before': {
-                      borderBottom: 'none',
-                    },
-                    '&.MuiInputBase-root::after': {
-                      borderBottom: 'none',
-                    },
-                    '&:hover': {
-                      borderBottom: 'none',
-                    },
+                    '&.MuiInputBase-root::before': { borderBottom: 'none' },
+                    '&.MuiInputBase-root::after': { borderBottom: 'none' },
+                    '&:hover': { borderBottom: 'none' },
                   }}
                 >
                   <MenuItem value="none">{c.name}</MenuItem>
@@ -252,7 +265,7 @@ export default function ExerciseChips({
                     </MenuItem>
                   ))}
                 </Select>
-              ) : (
+              ) : tooltip ? null : (
                 <Typography
                   variant="caption"
                   sx={{

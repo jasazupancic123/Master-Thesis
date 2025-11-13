@@ -102,7 +102,7 @@ export default function TrainingInProgressExerciseControls() {
               !selectedExercise.exercise ||
               setIndex === undefined ||
               supersetIndex === undefined ||
-              !activeTraining.training
+              !activeTraining
             )
               return;
 
@@ -135,7 +135,7 @@ export default function TrainingInProgressExerciseControls() {
                 supersetIndex: supersetIndex,
                 setIndex: setIndex,
               },
-              activeTraining.training.workloads
+              activeTraining.workloads
             );
 
             if (isCurrentSetDone) {

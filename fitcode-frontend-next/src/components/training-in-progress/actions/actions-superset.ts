@@ -36,7 +36,7 @@ export function handleChangeSuperset(
     superset,
     supersetIndex,
     trainingInProgress.selectedComponent.id,
-    activeTraining.training?.workloads || []
+    activeTraining?.workloads || []
   );
 
   const extendedUndoneExercises: TrainingExerciseExtended[] =
@@ -93,7 +93,7 @@ export const handleFinishSuperset = async (context: {
         superset,
         supersetIndex,
         trainingInProgress.selectedComponent.id,
-        activeTraining.training?.workloads || []
+        activeTraining?.workloads || []
       );
 
     undoneExercisesForSuperset.forEach((exercise) => {
@@ -168,7 +168,7 @@ export const handleAdvanceInSuperset = (
           supersetIndex,
           setIndex: set.setNumber - 1,
         },
-        activeTraining.training?.workloads || []
+        activeTraining?.workloads || []
       );
 
       return isSetCompleted;
@@ -226,7 +226,7 @@ export const handleAdvanceInSuperset = (
       currentExercise,
       supersetIndex,
       trainingInProgress.selectedComponent.id,
-      activeTraining.training?.workloads || []
+      activeTraining?.workloads || []
     );
 
     if (hasCompletedAllSets) continue;
@@ -243,7 +243,7 @@ export const handleAdvanceInSuperset = (
           supersetIndex,
           setIndex: set.setNumber - 1,
         },
-        activeTraining.training?.workloads || []
+        activeTraining?.workloads || []
       );
 
       if (!completed) {

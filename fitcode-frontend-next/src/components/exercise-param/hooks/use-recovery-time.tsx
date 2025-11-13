@@ -30,7 +30,7 @@ export default function useRecoveryTime(
       !selectedExercise ||
       setIndex === undefined ||
       supersetIndex === undefined ||
-      activeTraining.training === undefined
+      !activeTraining
     )
       return;
 
@@ -41,7 +41,7 @@ export default function useRecoveryTime(
         supersetIndex: supersetIndex,
         setIndex: setIndex,
       },
-      activeTraining.training.workloads
+      activeTraining.workloads
     );
 
     if (isSetCompleted) {
@@ -49,11 +49,11 @@ export default function useRecoveryTime(
       return;
     }
 
-    if (!activeTraining.training) return;
+    if (!activeTraining) return;
 
     const lastCompletedWorkload = ExerciseSetService.findLastCompletedWorkload(
       trainingInProgress.selectedComponent.id,
-      activeTraining.training.workloads
+      activeTraining.workloads
     );
 
     const lastSetCompletedAt = lastCompletedWorkload?.timestamp;

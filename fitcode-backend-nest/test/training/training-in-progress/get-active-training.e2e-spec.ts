@@ -1,20 +1,18 @@
 import { TestApp } from '@test/common/utils/app.util';
 
 import type { TestInstitution } from '@src/common/type/entity.type';
-import { getTime } from '@src/common/utils/date.util';
 import type { Group } from '@src/group/entity/group.entity';
 import { TestDbService } from '@src/test-db/test-db.service';
 import type { Training } from '@src/training/entity/training.entity';
 import type { Workload } from '@src/training/entity/workload.entity';
 import { SetStatus } from '@src/training/enum/set-status.enum';
-import { TrainingStatus } from '@src/training/enum/training-status.enum';
 import {
   generateExerciseSet,
   generateSuperset,
   generateTrainingComponent,
   generateTrainingExercise,
 } from '@src/training/mock/training.stub';
-import { generateTrainingReportStub } from '@src/training/mock/training-report.stub';
+import { generateTrainingComponentUserStatusStub } from '@src/training/mock/training-component-user-status.stub';
 
 describe('Get Active Training (e2e)', () => {
   let testApp: TestApp;
@@ -102,11 +100,12 @@ describe('Get Active Training (e2e)', () => {
 
     const res = await req(global.athlete.token);
     expect(res.status).toBe(200);
-    expect(res.body.training).toBeDefined();
-    expect(res.body.training.id).toBe(training.id);
+    expect(res.body.id).toBe(training.id);
+    expect(res.body.workloads).toBeDefined();
+    expect(res.body.statuses).toBeDefined();
 
     // clean up
-    await db.trainingReports.deleteAllByTraining(training.id);
+    await db.trainingComponentUserStatus.deleteAllByTraining(training.id);
   });
 
   it('should return active training for athlete with populated workloads', async () => {
@@ -114,8 +113,9 @@ describe('Get Active Training (e2e)', () => {
 
     const res = await req(global.athlete.token);
     expect(res.status).toBe(200);
-    expect(res.body.training).toBeDefined();
-    expect(res.body.training.id).toBe(training.id);
+    expect(res.body.id).toBe(training.id);
+    expect(res.body.workloads).toBeDefined();
+    expect(res.body.statuses).toBeDefined();
 
     await db.workloads.createMany([
       {
@@ -136,10 +136,11 @@ describe('Get Active Training (e2e)', () => {
 
     const resWithWorkloads = await req(global.athlete.token);
     expect(resWithWorkloads.status).toBe(200);
-    expect(resWithWorkloads.body.training).toBeDefined();
-    expect(resWithWorkloads.body.training.id).toBe(training.id);
+    expect(resWithWorkloads.body.id).toBe(training.id);
+    expect(resWithWorkloads.body.workloads).toBeDefined();
+    expect(resWithWorkloads.body.statuses).toBeDefined();
 
-    const resTraining = resWithWorkloads.body.training as Training & {
+    const resTraining = resWithWorkloads.body as Training & {
       workloads: Workload[];
     };
 
@@ -151,7 +152,7 @@ describe('Get Active Training (e2e)', () => {
     expect(firstSet.loadKg).toBe(37.5);
 
     // clean up
-    await db.trainingReports.deleteAllByTraining(training.id);
+    await db.trainingComponentUserStatus.deleteAllByTraining(training.id);
     await db.workloads.deleteAll(training.id);
   });
 
@@ -161,11 +162,12 @@ describe('Get Active Training (e2e)', () => {
 
     const res = await req(global.athlete.token);
     expect(res.status).toBe(200);
-    expect(res.body.training).toBeDefined();
-    expect(res.body.training.id).toBe(training.id);
+    expect(res.body.id).toBe(training.id);
+    expect(res.body.workloads).toBeDefined();
+    expect(res.body.statuses).toBeDefined();
 
     // clean up
-    await db.trainingReports.deleteAllByTraining(training.id);
+    await db.trainingComponentUserStatus.deleteAllByTraining(training.id);
   });
 
   it('should return first active training if multiple trainings are in progress', async () => {
@@ -174,39 +176,44 @@ describe('Get Active Training (e2e)', () => {
     });
 
     // create 2 reports in db
-    await db.trainingReports.save(
-      { trainingId: earliestTraining.id, userId: global.athlete.uid },
-      generateTrainingReportStub(earliestTraining.id, global.athlete.uid, {
-        from: getTime(new Date(), 8, 0),
-        status: TrainingStatus.IN_PROGRESS,
-      }),
+    await db.trainingComponentUserStatus.save(
+      generateTrainingComponentUserStatusStub(
+        earliestTraining.id,
+        'c1',
+        global.athlete.uid,
+      ),
     );
 
-    await db.trainingReports.save(
-      { trainingId: training.id, userId: global.athlete.uid },
-      generateTrainingReportStub(training.id, global.athlete.uid, {
-        from: getTime(new Date(), 10, 0),
-        status: TrainingStatus.IN_PROGRESS,
-      }),
+    await db.trainingComponentUserStatus.save(
+      generateTrainingComponentUserStatusStub(
+        training.id,
+        'c1',
+        global.athlete.uid,
+      ),
     );
 
     // 2 reports should be in db
-    const reports = await db.trainingReports.getAllByTraining(
+    const reports = await db.trainingComponentUserStatus.getAllByTraining(
       earliestTraining.id,
     );
     expect(reports).toHaveLength(1);
 
-    const reports2 = await db.trainingReports.getAllByTraining(training.id);
+    const reports2 = await db.trainingComponentUserStatus.getAllByTraining(
+      training.id,
+    );
     expect(reports2).toHaveLength(1);
 
     const res = await req(global.athlete.token);
     expect(res.status).toBe(200);
-    expect(res.body.training).toBeDefined();
-    expect(res.body.training.id).toBe(earliestTraining.id);
+    expect(res.body.id).toBe(earliestTraining.id);
+    expect(res.body.workloads).toBeDefined();
+    expect(res.body.statuses).toBeDefined();
 
     // clean up
-    await db.trainingReports.deleteAllByTraining(training.id);
-    await db.trainingReports.deleteAllByTraining(earliestTraining.id);
+    await db.trainingComponentUserStatus.deleteAllByTraining(training.id);
+    await db.trainingComponentUserStatus.deleteAllByTraining(
+      earliestTraining.id,
+    );
     await db.trainings.delete(earliestTraining.id);
   });
 });

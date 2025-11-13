@@ -49,7 +49,7 @@ export default function UndoneExercisesList() {
                   supersetIndex: supersetIndex,
                   setIndex: i,
                 },
-                activeTraining.training?.workloads || []
+                activeTraining?.workloads || []
               );
 
               if (isSetDone) return null;

@@ -9,7 +9,7 @@ import type { Training } from '@/core/training/type/training.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
 import type { TrainingInProgressIndexDB } from '@/core/training/type/training-in-progress-indexdb';
-import type { TrainingReport } from '@/core/training/type/training-report.type';
+import type { TrainingReport } from '@/core/training/type/training-stats.type';
 import { lib } from '@/lib';
 import { type SetState } from '@/lib/common/type/state.type';
 
@@ -65,7 +65,7 @@ export const TrainingProvider = (
 
   useEffect(() => {
     const setupTrainingInProgress = async () => {
-      if (!activeTraining || !activeTraining.training || !user) {
+      if (!activeTraining || !user) {
         return;
       }
 
@@ -74,7 +74,7 @@ export const TrainingProvider = (
 
       if (!trainingId || !componentId) return;
 
-      const component = activeTraining.training.components.find(
+      const component = activeTraining.components.find(
         (comp) => comp.id === componentId
       );
 
@@ -94,7 +94,7 @@ export const TrainingProvider = (
 
       if (storedTrainingInProgress) {
         setTrainingInProgress({
-          training: activeTraining.training,
+          training: activeTraining,
           selectedComponent: component,
           userId: user.uid,
           supersets: component.supersets,

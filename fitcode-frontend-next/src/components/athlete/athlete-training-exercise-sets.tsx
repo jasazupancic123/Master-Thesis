@@ -408,7 +408,7 @@ export default function AthleteTrainingExerciseSets({
               {supersetIndex !== undefined &&
                 setIndex !== undefined &&
                 componentId &&
-                activeTraining.training &&
+                activeTraining &&
                 ExerciseSetService.isSetCompleted(
                   {
                     exerciseId: exercise.id,
@@ -416,7 +416,7 @@ export default function AthleteTrainingExerciseSets({
                     setIndex: setIndex,
                     componentId,
                   },
-                  activeTraining.training.workloads
+                  activeTraining.workloads
                 ) && (
                   <CheckCircle
                     fontSize="small"

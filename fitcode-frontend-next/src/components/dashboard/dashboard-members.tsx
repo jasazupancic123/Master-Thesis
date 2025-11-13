@@ -221,9 +221,7 @@ export default function DashboardMembers() {
           alignItems="center"
           gap={1.5}
           maxWidth={MAX_WIDTH}
-          sx={{
-            overflowX: 'auto',
-          }}
+          sx={{ overflowX: 'auto' }}
         >
           {Object.values(DashboardMembersFilter).map((f) => {
             const isSelected = filter === f;
@@ -233,9 +231,7 @@ export default function DashboardMembers() {
                 key={f}
                 display="flex"
                 alignItems="center"
-                sx={{
-                  cursor: 'pointer',
-                }}
+                sx={{ cursor: 'pointer' }}
                 onClick={() => setFilter(f)}
                 gap={0.5}
               >
@@ -244,6 +240,7 @@ export default function DashboardMembers() {
                     sx={{ color: theme.palette.primary.main, fontSize: 12 }}
                   />
                 )}
+
                 <Typography
                   fontSize={14}
                   fontWeight={600}
@@ -260,6 +257,7 @@ export default function DashboardMembers() {
             );
           })}
         </Box>
+
         {renderFilterHeaderContent()}
       </Box>
 

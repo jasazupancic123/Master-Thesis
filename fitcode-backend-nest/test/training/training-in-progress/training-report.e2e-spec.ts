@@ -1,16 +1,13 @@
 import { TestApp } from '@test/common/utils/app.util';
 
 import type { TestInstitution } from '@src/common/type/entity.type';
-import type { TrainingReportRef } from '@src/common/type/firestore.type';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import type { Group } from '@src/group/entity/group.entity';
 import { TestDbService } from '@src/test-db/test-db.service';
 import type { ExerciseSet } from '@src/training/entity/exercise-set.entity';
 import type { Training } from '@src/training/entity/training.entity';
-import type { PrescribedTrainingStats } from '@src/training/entity/training-stats.entity';
 import { SetStatus } from '@src/training/enum/set-status.enum';
-import { TrainingStatus } from '@src/training/enum/training-status.enum';
 import {
   generateExerciseSet,
   generateSuperset,
@@ -18,9 +15,8 @@ import {
   generateTrainingExercise,
   generateTrainingStub,
 } from '@src/training/mock/training.stub';
-import { generateTrainingReportStub } from '@src/training/mock/training-report.stub';
 import { TrainingReportService } from '@src/training/service/training-report.service';
-import { WorkloadService } from '@src/training/service/workload.service';
+import type { PrescribedTrainingStats } from '@src/training/type/training-stats.type';
 
 jest.mock('@src/exercise/constant/components.constant', () => {
   const {
@@ -36,7 +32,6 @@ jest.mock('@src/exercise/constant/components.constant', () => {
 describe('Training Report (e2e)', () => {
   let testApp: TestApp;
   let db: TestDbService;
-  let workloadService: WorkloadService;
   let trainingReportService: TrainingReportService;
 
   let institution: TestInstitution;
@@ -45,7 +40,6 @@ describe('Training Report (e2e)', () => {
 
   beforeAll(async () => {
     testApp = await TestApp.init();
-    workloadService = testApp.module.get(WorkloadService);
     trainingReportService = testApp.module.get(TrainingReportService);
     const exerciseService = testApp.module.get(ExerciseService);
 
@@ -224,12 +218,10 @@ describe('Training Report (e2e)', () => {
       membersIds: [global.athlete.uid],
     });
 
-    const stats = trainingReportService.getTrainingStats(dummy);
+    const stats = trainingReportService.getPrescribedTrainingStats(dummy);
     expect(stats).toEqual({
-      plannedComponents: [],
-      duration: 120,
+      realization: 100,
       components: 0,
-      supersets: 0,
       exercises: 0,
       sets: 0,
       reps: 0,
@@ -289,15 +281,10 @@ describe('Training Report (e2e)', () => {
       ],
     });
 
-    const stats = trainingReportService.getTrainingStats(dummy);
+    const stats = trainingReportService.getPrescribedTrainingStats(dummy);
     expect(stats).toEqual({
-      plannedComponents: [
-        { componentId: 'c1', totalSets: 3 },
-        { componentId: 'c2', totalSets: 3 },
-      ],
-      duration: 120,
+      realization: 100,
       components: 2,
-      supersets: 2,
       exercises: 3, // unique
       sets: 6,
       reps: 6,
@@ -311,19 +298,14 @@ describe('Training Report (e2e)', () => {
   });
 
   it('should return correct training stats for provided training', () => {
-    const stats = trainingReportService.getTrainingStats(training);
+    const stats = trainingReportService.getPrescribedTrainingStats(training);
     const tonnage = 10 * 10 * 50; // 5000 -> 8 sets of 10 reps with 50 kg
     const tut = 10 * 10 * 3; // 10 sets of 10 reps with 2010 (3 second) tempo and 3 sets of 1 rep with 5 second tempo
 
     expect(stats).toEqual({
-      plannedComponents: [
-        { componentId: 'c1', totalSets: 8 },
-        { componentId: 'c2', totalSets: 3 },
-      ],
-      duration: 120,
+      realization: 100,
       components: 2,
-      supersets: 3,
-      exercises: 3, // unique
+      exercises: 5,
       sets: 11,
       reps: 10 * 10, // 99 -> (8 + 2 unilateral) sets of 10 reps, 3 sets of 1 rep (defaults to 1 rep if no `reps` specified)
       recTime: 8 * 60, // 480 -> 8 sets with 60 sec recovery, 3 sets with 0 sec recovery (only effort based recovery)
@@ -333,12 +315,6 @@ describe('Training Report (e2e)', () => {
       recDist: 0,
       time: 0,
     } as PrescribedTrainingStats);
-  });
-
-  it('should not create new report if training component not started yet', async () => {
-    await expect(
-      trainingReportService.update(global.athlete.uid, training),
-    ).rejects.toThrow('Training not started yet');
   });
 
   it('should update existing report for user in training', async () => {
@@ -371,59 +347,16 @@ describe('Training Report (e2e)', () => {
       },
     ]);
 
-    const spy = jest.spyOn(workloadService, 'findAllByUserTraining');
-    await trainingReportService.update(global.athlete.uid, training);
-
-    // workloads should be found
-    expect((await spy.mock.results[0].value).length).toBe(2);
-    spy.mockRestore();
-
-    // report should be updated
-    const ref: TrainingReportRef = {
-      trainingId: training.id,
-      userId: global.athlete.uid,
-    };
-
-    const report = await db.trainingReports.findById(ref);
+    const workloads = await db.workloads.getAll(training.id);
+    const report = trainingReportService.getTrainingReportByUser(
+      global.athlete.uid,
+      training,
+      workloads,
+    );
 
     expect(report).toBeDefined();
     expect(report.sets).toBe(2);
-
     await db.workloads.deleteAll(training.id);
-    await db.trainingReports.delete(ref);
-  });
-
-  it('should add photos to report', async () => {
-    await startReq(global.athlete.token, training.id, 'c1');
-
-    const photoURLs = ['photo1', 'photo2'];
-    await trainingReportService.update(global.athlete.uid, training, {
-      photoURLs,
-      componentInProgress: 'c1',
-    });
-
-    const ref: TrainingReportRef = {
-      trainingId: training.id,
-      userId: global.athlete.uid,
-    };
-
-    const report = await db.trainingReports.findById(ref);
-    expect(report).toBeDefined();
-    expect(report.photoURLs).toEqual(photoURLs);
-
-    // add more photos
-    const newPhotoURLs = ['photo3', 'photo4'];
-    await trainingReportService.update(global.athlete.uid, training, {
-      photoURLs: newPhotoURLs,
-      componentInProgress: 'c1',
-    });
-
-    const updatedReport = await db.trainingReports.findById(ref);
-    expect(updatedReport).toBeDefined();
-    expect(updatedReport.photoURLs).toEqual(newPhotoURLs);
-
-    await db.workloads.deleteAll(training.id);
-    await db.trainingReports.delete(ref);
   });
 
   it('should calculate realization correctly', async () => {
@@ -456,14 +389,12 @@ describe('Training Report (e2e)', () => {
       },
     ]);
 
-    await db.trainingReports.save(
-      { trainingId: training.id, userId },
-      generateTrainingReportStub(training.id, userId),
+    let workloads = await db.workloads.getAll(training.id);
+    let report = trainingReportService.getTrainingReportByUser(
+      userId,
+      training,
+      workloads,
     );
-
-    let report = await trainingReportService.update(userId, training, {
-      componentInProgress: 'c1',
-    });
 
     const totalSets = 11;
     expect(report.realization).toBeCloseTo(1 / totalSets); // because "set realization" is 100%
@@ -484,10 +415,12 @@ describe('Training Report (e2e)', () => {
       },
     ]);
 
-    report = await trainingReportService.update(userId, training, {
-      componentInProgress: 'c1',
-    });
-
+    workloads = await db.workloads.getAll(training.id);
+    report = trainingReportService.getTrainingReportByUser(
+      userId,
+      training,
+      workloads,
+    );
     expect(report.realization).toBeCloseTo(1.875 / totalSets);
 
     await db.workloads.createMany([
@@ -506,10 +439,12 @@ describe('Training Report (e2e)', () => {
       },
     ]); // 112.5 %
 
-    report = await trainingReportService.update(userId, training, {
-      componentInProgress: 'c1',
-    });
-
+    workloads = await db.workloads.getAll(training.id);
+    report = trainingReportService.getTrainingReportByUser(
+      userId,
+      training,
+      workloads,
+    );
     expect(report.realization).toBeCloseTo(3 / totalSets);
 
     // c1.1 deadlift - 1st set 1 rep 30 m 0 rec time tempo 2210
@@ -541,10 +476,12 @@ describe('Training Report (e2e)', () => {
       },
     ]); // 100%
 
-    report = await trainingReportService.update(userId, training, {
-      componentInProgress: 'c1',
-    });
-
+    workloads = await db.workloads.getAll(training.id);
+    report = trainingReportService.getTrainingReportByUser(
+      userId,
+      training,
+      workloads,
+    );
     expect(report.realization).toBeCloseTo(4 / totalSets);
 
     // deadlift - 2nd set 1 rep 30 m 0 rec time tempo 2210
@@ -576,10 +513,12 @@ describe('Training Report (e2e)', () => {
       },
     ]); // 150%
 
-    report = await trainingReportService.update(userId, training, {
-      componentInProgress: 'c1',
-    });
-
+    workloads = await db.workloads.getAll(training.id);
+    report = trainingReportService.getTrainingReportByUser(
+      userId,
+      training,
+      workloads,
+    );
     expect(report.realization).toBeCloseTo(5.5 / totalSets);
 
     // deadlift - 3rd set 1 rep 30 m 0 rec time tempo 2210
@@ -611,10 +550,12 @@ describe('Training Report (e2e)', () => {
       },
     ]); // 35%
 
-    report = await trainingReportService.update(userId, training, {
-      componentInProgress: 'c1',
-    });
-
+    workloads = await db.workloads.getAll(training.id);
+    report = trainingReportService.getTrainingReportByUser(
+      userId,
+      training,
+      workloads,
+    );
     expect(report.realization).toBeCloseTo(5.85 / totalSets);
 
     // c1.1 squat - 1st set 10 reps 50 kg 60 rec time
@@ -634,10 +575,12 @@ describe('Training Report (e2e)', () => {
       },
     ]); // 100 %
 
-    report = await trainingReportService.update(userId, training, {
-      componentInProgress: 'c1',
-    });
-
+    workloads = await db.workloads.getAll(training.id);
+    report = trainingReportService.getTrainingReportByUser(
+      userId,
+      training,
+      workloads,
+    );
     expect(report.realization).toBeCloseTo(6.85 / totalSets);
 
     // squat - 2nd set 10 reps 50 kg 60 rec time
@@ -658,20 +601,17 @@ describe('Training Report (e2e)', () => {
       },
     ]); // 87.5 %
 
-    report = await trainingReportService.update(userId, training, {
-      componentInProgress: 'c1',
-    });
-
+    workloads = await db.workloads.getAll(training.id);
+    report = trainingReportService.getTrainingReportByUser(
+      userId,
+      training,
+      workloads,
+    );
     expect(report.realization).toBeCloseTo(7.725 / totalSets);
 
     // c2.0 squat - 1st set 10 reps 50 kg 60 rec time
     // squat - 2nd set 10 reps 50 kg 60 rec time
     // squat - 3rd set 10 reps 50 kg 60 rec time
-    await db.trainingReports.updateStatus(
-      { trainingId: training.id, userId },
-      'c2',
-      TrainingStatus.IN_PROGRESS,
-    );
 
     await db.workloads.createMany([
       {
@@ -716,10 +656,12 @@ describe('Training Report (e2e)', () => {
       }, // 100 %
     ]);
 
-    report = await trainingReportService.update(userId, training, {
-      componentInProgress: 'c2',
-    });
-
+    workloads = await db.workloads.getAll(training.id);
+    report = trainingReportService.getTrainingReportByUser(
+      userId,
+      training,
+      workloads,
+    );
     expect(report.realization).toBeCloseTo(10.73 / totalSets);
 
     // delete all workloads

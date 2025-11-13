@@ -138,19 +138,18 @@ describe('Complete Training Component (e2e)', () => {
     // complete it
     const res = await req(athlete.token, training1.id, 'c1');
     expect(res.status).toBe(201);
-    const reports = await db.trainingReports.getAllByTraining(training1.id);
+    const reports = await db.trainingComponentUserStatus.getAllByTraining(
+      training1.id,
+    );
+
     expect(reports).toHaveLength(1);
 
-    const c1Status = reports[0].componentStatuses.find(
-      (c) => c.componentId === 'c1',
-    );
-    const c2Status = reports[0].componentStatuses.find(
-      (c) => c.componentId === 'c2',
-    );
+    const c1Status = reports.find((c) => c.componentId === 'c1');
+    const c2Status = reports.find((c) => c.componentId === 'c2');
 
     expect(c1Status.status).toBe(TrainingStatus.COMPLETED);
-    expect(c2Status.status).toBe(TrainingStatus.NOT_STARTED);
-    await db.trainingReports.deleteAllByTraining(training1.id);
+    expect(c2Status).toBeUndefined();
+    await db.trainingComponentUserStatus.deleteAllByTraining(training1.id);
   });
 
   it('should successfully finalize training component for trainer and all athletes in training', async () => {
@@ -162,25 +161,24 @@ describe('Complete Training Component (e2e)', () => {
     // complete it
     const res = await req(trainer.token, training2.id, 'c1');
     expect(res.status).toBe(201);
-    const reports = await db.trainingReports.getAllByTraining(training2.id);
+    const reports = await db.trainingComponentUserStatus.getAllByTraining(
+      training2.id,
+    );
+
     expect(reports).toHaveLength(3);
 
     for (const athlete of institution2.athletes) {
-      const report = reports.find((r) => r.userId === athlete.uid);
+      const report = reports.filter((r) => r.userId === athlete.uid);
       expect(report).toBeDefined();
 
-      const c1Status = report.componentStatuses.find(
-        (c) => c.componentId === 'c1',
-      );
+      const c1Status = report.find((c) => c.componentId === 'c1');
       expect(c1Status.status).toBe(TrainingStatus.COMPLETED);
 
-      const c3Status = report.componentStatuses.find(
-        (c) => c.componentId === 'c3',
-      );
-      expect(c3Status.status).toBe(TrainingStatus.NOT_STARTED);
+      const c3Status = report.find((c) => c.componentId === 'c3');
+      expect(c3Status).toBeUndefined();
     }
 
-    await db.trainingReports.deleteAllByTraining(training2.id);
+    await db.trainingComponentUserStatus.deleteAllByTraining(training2.id);
   });
 
   it('should throw error if component is not created yet', async () => {
@@ -189,16 +187,17 @@ describe('Complete Training Component (e2e)', () => {
 
     expect(res.status).toBe(201);
     expect(res.body.errors).toEqual([
-      { field: athlete.uid, message: 'REPORT_NOT_FOUND' },
+      { field: athlete.uid, message: 'COMPONENT_NOT_STARTED' },
     ]);
   });
 
   it('should throw error if component is not started yet', async () => {
     const athlete = institution1.athletes[0];
     await startReq(athlete.token, training1.id, 'c2');
-    const report = await db.trainingReports.findById({
+    const report = await db.trainingComponentUserStatus.findById({
       trainingId: training1.id,
-      userId: athlete.uid,
+      componentId: 'c2',
+      uid: athlete.uid,
     });
 
     expect(report).toBeDefined();
@@ -209,7 +208,7 @@ describe('Complete Training Component (e2e)', () => {
       { field: athlete.uid, message: 'COMPONENT_NOT_STARTED' },
     ]);
 
-    await db.trainingReports.deleteAllByTraining(training1.id);
+    await db.trainingComponentUserStatus.deleteAllByTraining(training1.id);
   });
 
   it('should throw error if component is already completed', async () => {
@@ -240,19 +239,40 @@ describe('Complete Training Component (e2e)', () => {
     const res = await req(athlete.token, training1.id, 'c2');
 
     expect(res.status).toBe(201);
-    const reports = await db.trainingReports.getAllByTraining(training1.id);
-    expect(reports).toHaveLength(1);
-    expect(reports[0].status).toBe(TrainingStatus.COMPLETED);
+    const reports = await db.trainingComponentUserStatus.getAllByTraining(
+      training1.id,
+    );
 
-    const c1Status = reports[0].componentStatuses.find(
-      (c) => c.componentId === 'c1',
-    );
-    const c2Status = reports[0].componentStatuses.find(
-      (c) => c.componentId === 'c2',
-    );
+    expect(reports).toHaveLength(2);
+
+    const c1Status = reports.find((c) => c.componentId === 'c1');
+    const c2Status = reports.find((c) => c.componentId === 'c2');
 
     expect(c1Status.status).toBe(TrainingStatus.COMPLETED);
     expect(c2Status.status).toBe(TrainingStatus.COMPLETED);
-    await db.trainingReports.deleteAllByTraining(training1.id);
+    await db.trainingComponentUserStatus.deleteAllByTraining(training1.id);
+  });
+
+  it('should complete component and populate realization', async () => {
+    const athlete = institution1.athletes[0];
+
+    // start component first
+    await startReq(athlete.token, training1.id, 'c1');
+
+    // complete it
+    const res = await req(athlete.token, training1.id, 'c1');
+    expect(res.status).toBe(201);
+    const reports = await db.trainingComponentUserStatus.getAllByTraining(
+      training1.id,
+    );
+
+    expect(reports).toHaveLength(1);
+
+    const c1Status = reports.find((c) => c.componentId === 'c1');
+    expect(c1Status.status).toBe(TrainingStatus.COMPLETED);
+    expect(c1Status.realization).toBeDefined();
+    expect(c1Status.from).toBeInstanceOf(Date);
+    expect(c1Status.to).toBeInstanceOf(Date);
+    await db.trainingComponentUserStatus.deleteAllByTraining(training1.id);
   });
 });

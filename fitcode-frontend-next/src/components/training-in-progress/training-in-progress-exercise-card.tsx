@@ -183,7 +183,7 @@ export default function TrainingInProgressExerciseCard() {
             const isSetDone =
               supersetIndex !== undefined &&
               setIndex !== undefined &&
-              activeTraining.training
+              activeTraining
                 ? ExerciseSetService.isSetCompleted(
                     {
                       exerciseId: selectedExercise.id,
@@ -191,7 +191,7 @@ export default function TrainingInProgressExerciseCard() {
                       supersetIndex: supersetIndex,
                       setIndex: s.setNumber - 1,
                     },
-                    activeTraining.training.workloads
+                    activeTraining.workloads
                   )
                 : false;
 

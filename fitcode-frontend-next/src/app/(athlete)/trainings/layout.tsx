@@ -33,16 +33,16 @@ function TrainingContent({ children }: React.PropsWithChildren) {
   const includeHeader = !pathname.includes('/components/');
 
   useEffect(() => {
-    if (!activeTraining?.report?.componentStatuses?.length) return;
+    if (!activeTraining?.statuses?.length) return;
 
-    const inProgress = activeTraining.report.componentStatuses.find(
+    const inProgress = activeTraining.statuses.find(
       (s) => s.status === TrainingStatus.IN_PROGRESS
     );
 
-    if (inProgress?.componentId && activeTraining.training?.id) {
+    if (inProgress?.componentId && activeTraining?.id) {
       // Use replace so the user can't "back" into the pre-redirect state
       router.replace(
-        `/trainings/${activeTraining.training.id}/components/${inProgress.componentId}`
+        `/trainings/${activeTraining.id}/components/${inProgress.componentId}`
       );
     }
   }, [router, activeTraining]); // run when activeTraining changes

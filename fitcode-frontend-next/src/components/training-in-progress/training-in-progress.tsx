@@ -72,7 +72,7 @@ export default function TrainingInProgress() {
       window.location.href = '/trainings';
     };
 
-    if (!activeTraining || !activeTraining.training || !activeTraining.report)
+    if (!activeTraining || !activeTraining.statuses?.length)
       redirectToTrainings();
   }, [activeTraining]);
 
@@ -91,31 +91,6 @@ export default function TrainingInProgress() {
       useTrainingInProgressContext: trainingInProgressContext,
     });
   }, [trainingInProgress?.selectedComponent]);
-
-  // useEffect(() => {
-  //   if (!activeTraining || !activeTraining.training || !activeTraining.report)
-  //     return;
-
-  //   TrainingService.mapData(activeTraining.training, { exercises });
-
-  //   const componentId = activeTraining.report.componentStatuses.find(
-  //     (cs) => cs.status === TrainingStatus.IN_PROGRESS
-  //   )?.componentId;
-
-  //   if (!componentId) return;
-
-  //   const component = activeTraining.training.components.find(
-  //     (c) => c.id === componentId
-  //   );
-
-  //   if (!component) return;
-
-  //   trainingContext.setTrainingInProgress({
-  //     training: activeTraining.training as Training,
-  //     selectedComponent: component,
-  //     userId: user.uid,
-  //   } as TrainingInProgress);
-  // }, []);
 
   // keep scroll position in case the whole list remounts
   useEffect(() => {
@@ -234,7 +209,7 @@ export default function TrainingInProgress() {
                       if (
                         !exercise ||
                         supersetIndex === undefined ||
-                        !activeTraining.training
+                        !activeTraining
                       )
                         return null;
 
@@ -249,7 +224,7 @@ export default function TrainingInProgress() {
                               trainingInProgress.selectedComponent.id,
                             supersetIndex: i,
                           },
-                          activeTraining.training.workloads
+                          activeTraining.workloads
                         );
 
                       const progress = (completedSets / e.sets.length) * 100;
