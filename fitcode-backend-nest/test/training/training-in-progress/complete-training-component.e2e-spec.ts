@@ -252,4 +252,27 @@ describe('Complete Training Component (e2e)', () => {
     expect(c2Status.status).toBe(TrainingStatus.COMPLETED);
     await db.trainingComponentUserStatus.deleteAllByTraining(training1.id);
   });
+
+  it('should complete component and populate realization', async () => {
+    const athlete = institution1.athletes[0];
+
+    // start component first
+    await startReq(athlete.token, training1.id, 'c1');
+
+    // complete it
+    const res = await req(athlete.token, training1.id, 'c1');
+    expect(res.status).toBe(201);
+    const reports = await db.trainingComponentUserStatus.getAllByTraining(
+      training1.id,
+    );
+
+    expect(reports).toHaveLength(1);
+
+    const c1Status = reports.find((c) => c.componentId === 'c1');
+    expect(c1Status.status).toBe(TrainingStatus.COMPLETED);
+    expect(c1Status.realization).toBeDefined();
+    expect(c1Status.from).toBeInstanceOf(Date);
+    expect(c1Status.to).toBeInstanceOf(Date);
+    await db.trainingComponentUserStatus.deleteAllByTraining(training1.id);
+  });
 });

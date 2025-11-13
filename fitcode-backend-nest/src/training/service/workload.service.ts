@@ -88,7 +88,7 @@ export class WorkloadService {
    * so on.
    */
   async findAllByUserTraining(
-    userId: string,
+    userId: string | undefined,
     ref: Partial<
       Pick<WorkloadRef, 'trainingId' | 'componentId' | 'exerciseId'>
     >,

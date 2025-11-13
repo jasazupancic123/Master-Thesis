@@ -1,30 +1,29 @@
-import type { PrescribedTrainingStats } from '../entity/training-stats.entity';
-import type { TrainingStatus } from '../enum/training-status.enum';
+import type { BaseAggregatedReport } from './training-set.type';
 
-export type TrainingStats = {
-  // meta
+type Meta = {
   institutionId?: string;
   groupId?: string;
   cycleId?: string;
   trainingId: string;
   userId: string;
-
-  // stats data
   from: Date;
   to: Date;
-  status: TrainingStatus;
-  prescribed: PrescribedTrainingStats;
-  duration: number;
-  components: number;
-  supersets: number;
-  exercises: number;
-  sets: number;
-  reps: number;
-  recTime: number;
-  recDist: number;
-  tut: number;
-  tonnage: number;
-  dist: number;
-  time: number;
-  realization: number;
 };
+
+export type PrescribedTrainingComponentStats = BaseAggregatedReport & {
+  componentId: string;
+};
+
+export type PrescribedTrainingStats = BaseAggregatedReport & {
+  components: number;
+};
+
+export type TrainingComponentReport = Meta &
+  PrescribedTrainingComponentStats & {
+    prescribed: PrescribedTrainingComponentStats;
+  };
+
+export type TrainingReport = Meta &
+  PrescribedTrainingStats & {
+    prescribed: PrescribedTrainingStats;
+  };

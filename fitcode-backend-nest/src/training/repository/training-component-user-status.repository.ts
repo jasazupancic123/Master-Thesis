@@ -110,7 +110,7 @@ export class TrainingComponentUserStatusRepository extends FirestoreRepository<
     const snapshot = await this.collectionGroup()
       .where('userId', '==', athleteId)
       .where('status', '==', TrainingStatus.IN_PROGRESS)
-      .where('createdAt', '>=', Timestamp.fromDate(startOfDay(new Date())))
+      .where('from', '>=', Timestamp.fromDate(startOfDay(new Date())))
       .get();
 
     if (snapshot.empty) return [];
@@ -122,8 +122,7 @@ export class TrainingComponentUserStatusRepository extends FirestoreRepository<
     );
 
     return active.sort(
-      (a, b) =>
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime(),
     );
   }
 
@@ -134,10 +133,8 @@ export class TrainingComponentUserStatusRepository extends FirestoreRepository<
       uid: data.userId,
     };
 
-    const query = this.firebase.buildCreateQuery<TrainingComponentUserStatus>(
-      data,
-      { timestamps: true },
-    );
+    const query =
+      this.firebase.buildCreateQuery<TrainingComponentUserStatus>(data);
 
     await this.doc(ref).set(query);
     return this.getKey(ref);
@@ -162,11 +159,20 @@ export class TrainingComponentUserStatusRepository extends FirestoreRepository<
     await this.doc(ref).delete();
   }
 
-  async getGroupAttendance(groupId: string): Promise<Record<string, number>> {
-    const snapshot = await this.collectionGroup()
-      .where('groupId', '==', groupId)
-      .get();
+  async deleteAllByTraining(trainingId: string) {
+    await this.firebase.firestore.recursiveDelete(
+      this.collection({ trainingId }),
+    );
+  }
 
+  async getGroupAttendance(
+    groupId: string,
+    componentId?: string,
+  ): Promise<Record<string, number>> {
+    let query = this.collectionGroup().where('groupId', '==', groupId);
+    if (componentId) query = query.where('componentId', '==', componentId);
+
+    const snapshot = await query.get();
     const statuses = snapshot.docs.map((doc) =>
       this.firebase.serialize(
         doc.data() as FirestoreEntity<TrainingComponentUserStatus>,
