@@ -35,7 +35,7 @@ export class CanvasUtil {
 
     // then stroke on top
     if (borderColor) {
-      ctx.lineWidth = 2;
+      ctx.lineWidth = Math.floor(r / 4);
       ctx.strokeStyle = borderColor;
       ctx.stroke();
     }

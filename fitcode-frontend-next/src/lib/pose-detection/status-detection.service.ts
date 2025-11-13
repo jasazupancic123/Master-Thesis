@@ -11,7 +11,6 @@ import { KeypointValueType } from './enum/keypoint-value-type';
 import { MoreLess } from './enum/more-less.enum';
 import { RepStatus } from './enum/rep-state';
 import { FeedbackService } from './feedback.service';
-import type { AvgFps } from './type/avg-fps.type';
 import type {
   ExerciseAngleCondition,
   ExerciseDetectionData,

@@ -12,7 +12,7 @@ import {
 import { linearProgressClasses } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Image from 'next/image';
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 
 import AthleteHeader from '../athlete/athlete-header';
 import { handleInitTrainingInProgressComponent } from './actions/actions-training-in-progress';
@@ -69,6 +69,19 @@ export default function TrainingInProgress() {
   } = trainingInProgressUtilsContext;
 
   const { selectedTrackingMethod } = athleteHeaderContext;
+
+  const exerciseRefs = useRef(new Map<string, HTMLDivElement>());
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const lastScrollLeft = useRef<number>(0);
+
+  const getExerciseRef = useCallback(
+    (id: string): React.RefCallback<HTMLDivElement> =>
+      (node) => {
+        if (node) exerciseRefs.current.set(id, node);
+        else exerciseRefs.current.delete(id);
+      },
+    []
+  );
 
   /* Preload pose landmarker */
   useEffect(() => {
@@ -127,6 +140,36 @@ export default function TrainingInProgress() {
     } as TrainingInProgress);
   }, []);
 
+  // keep scroll position in case the whole list remounts
+  useEffect(() => {
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+    const onScroll = () => (lastScrollLeft.current = scroller.scrollLeft);
+    scroller.addEventListener('scroll', onScroll);
+    return () => scroller.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useLayoutEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const scroller = scrollerRef.current;
+    if (!scroller || !selectedExercise?.id) return;
+
+    const el = exerciseRefs.current.get(selectedExercise.id);
+    if (!el) {
+      // If we don't have the element yet, at least restore previous scroll
+      scroller.scrollLeft = lastScrollLeft.current;
+      return;
+    }
+
+    // Center the selected exercise in the horizontal scroller
+    const elCenter = el.offsetLeft + el.offsetWidth / 2;
+    const target = elCenter - scroller.clientWidth / 2;
+
+    scroller.scrollLeft = Math.max(0, target);
+    lastScrollLeft.current = scroller.scrollLeft;
+  }, [selectedExercise, trainingInProgress, supersetIndex]);
+
   if (!trainingInProgress) return null;
 
   return (
@@ -148,6 +191,8 @@ export default function TrainingInProgress() {
             trainingInProgressUtilsContext={trainingInProgressUtilsContext}
           />
           <Box
+            component={'div'}
+            ref={scrollerRef}
             display="flex"
             gap={1}
             px={1}
@@ -219,7 +264,9 @@ export default function TrainingInProgress() {
 
                       return (
                         <Box
+                          component="div"
                           key={e.id}
+                          ref={getExerciseRef(e.id)}
                           onClick={() => {
                             const newSupersetIndex =
                               trainingInProgress.supersets.indexOf(superset);
