@@ -958,6 +958,7 @@ export class TrainingService implements Permission<Training, Institution> {
     | null
   > {
     const athlete = await this.getAthlete(user, athleteId);
+
     const activeStatuses =
       await this.trainingComponentUserStatusRepository.getActiveComponents(
         athlete.uid,
@@ -969,15 +970,15 @@ export class TrainingService implements Permission<Training, Institution> {
         athlete.uid,
       );
 
-    const training = await this.findOneById(user, {
-      trainingId: activeStatuses[0].trainingId,
-    });
+    const training = activeStatuses.length
+      ? await this.findOneById(user, {
+          trainingId: activeStatuses[0].trainingId,
+        })
+      : null;
 
-    if (!training) return null;
-    const individualTraining = await this.getTrainingByAthlete(
-      athlete.uid,
-      training,
-    );
+    const individualTraining = training
+      ? await this.getTrainingByAthlete(athlete.uid, training)
+      : null;
 
     return { ...individualTraining, activeStatuses, statuses };
   }
