@@ -84,4 +84,4 @@ export type WorkloadRef = TrainingExerciseRef & {
   supersetIndex: number;
   setNumber: number;
 };
-export type TrainingReportRef = TrainingRef & { userId: string };
+export type TrainingComponentUserStatusRef = TrainingComponentRef & UserRef;

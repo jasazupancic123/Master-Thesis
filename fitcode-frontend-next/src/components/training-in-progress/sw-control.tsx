@@ -38,10 +38,10 @@ export default function SWControl(props: Props) {
   }, []);
 
   const lastCompletedWorkload =
-    trainingInProgress && activeTraining && activeTraining.training
+    trainingInProgress && activeTraining
       ? ExerciseSetService.findLastCompletedWorkload(
           trainingInProgress.selectedComponent.id,
-          activeTraining.training.workloads
+          activeTraining.workloads
         )
       : undefined;
 
@@ -57,7 +57,7 @@ export default function SWControl(props: Props) {
   }, [now, lastSetCompletedAt, trainingInProgress]);
 
   if (
-    !activeTraining.training ||
+    !activeTraining ||
     !selectedExercise ||
     supersetIndex === undefined ||
     setIndex === undefined ||
@@ -72,7 +72,7 @@ export default function SWControl(props: Props) {
       supersetIndex: supersetIndex,
       setIndex: setIndex,
     },
-    activeTraining.training.workloads
+    activeTraining.workloads
   );
 
   const lastSetRecTimeS = selectedExercise.sets[setIndex].recTime;

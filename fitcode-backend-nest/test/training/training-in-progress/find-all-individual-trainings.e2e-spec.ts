@@ -121,7 +121,7 @@ describe('Find All Individual Trainings (e2e)', () => {
     expect(user2Training.components[0].subgroups).toHaveLength(0);
 
     // clean up
-    await db.trainingReports.deleteAllByTraining(training.id);
+    await db.trainingComponentUserStatus.deleteAllByTraining(training.id);
   });
 
   it('should return individual training for athletes with populated workloads', async () => {
@@ -182,7 +182,7 @@ describe('Find All Individual Trainings (e2e)', () => {
     expect(user2FirstSet.loadKg).toBe(40);
 
     // clean up
-    await db.trainingReports.deleteAllByTraining(training.id);
+    await db.trainingComponentUserStatus.deleteAllByTraining(training.id);
     await db.workloads.deleteAll(training.id);
   });
 });

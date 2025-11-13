@@ -154,22 +154,22 @@ export const TrainingInProgressProvider = ({
         setActiveTraining((prev) => {
           if (!prev) return prev;
 
-          const workloadExists = prev.training?.workloads.find(
+          const workloadExists = prev.workloads.find(
             (w) => w.id === workload.id
           );
 
           return {
             ...prev,
-            training: prev.training
+            training: prev
               ? {
-                  ...prev.training,
+                  ...prev,
                   workloads: workloadExists
-                    ? prev.training.workloads.map((w) =>
+                    ? prev.workloads.map((w) =>
                         w.id === workload.id ? workload : w
                       )
-                    : [...prev.training.workloads, workload],
+                    : [...prev.workloads, workload],
                 }
-              : prev.training,
+              : prev,
           };
         });
 

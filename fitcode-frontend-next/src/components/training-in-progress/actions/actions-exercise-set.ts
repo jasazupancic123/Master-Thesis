@@ -3,11 +3,11 @@ import type {
   TrainingExerciseRecordedSet,
 } from '@/core/training/type/training-exercise.type';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
+import { ActiveTraining } from '@/core/training/type/training.type';
 import type { CreateWorkload } from '@/core/training/type/workload.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { KeypointHistory } from '@/lib/pose-detection/class/keypoint-history';
 import type { Rep } from '@/lib/pose-detection/type/rep.type';
-import type { ActiveTraining } from '@/store/main.provider';
 
 export const finishSet = async (state: {
   exercise: TrainingExercise;
@@ -114,15 +114,17 @@ export const unmarkExerciseSetAsCompleted = (
     supersetIndex: number;
     setIndex: number;
   },
-  setActiveTraining: SetState<ActiveTraining>
+  setActiveTraining: SetState<ActiveTraining | null>
 ) => {
   setActiveTraining((prev) => {
+    if (!prev) return prev;
+
     return {
       ...prev,
-      training: prev.training
+      training: prev
         ? {
-            ...prev.training,
-            workloads: prev.training.workloads.filter((workload) => {
+            ...prev,
+            workloads: prev.workloads.filter((workload) => {
               return !(
                 workload.exerciseId === id.exerciseId &&
                 workload.supersetIndex === id.supersetIndex &&
@@ -130,7 +132,7 @@ export const unmarkExerciseSetAsCompleted = (
               );
             }),
           }
-        : prev.training,
+        : prev,
     };
   });
 };

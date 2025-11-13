@@ -44,7 +44,7 @@ export function UndoneExercisesProvider({ children }: React.PropsWithChildren) {
         undoneExercise,
         supersetIndex,
         trainingInProgress.selectedComponent.id,
-        activeTraining.training?.workloads || []
+        activeTraining?.workloads || []
       );
 
       if (!hasUndoneSets) {

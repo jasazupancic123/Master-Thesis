@@ -52,7 +52,7 @@ export default function TrainingExerciseSetDoneCheckbox(props: Props) {
         supersetIndex,
         setIndex,
       },
-      activeTraining.training?.workloads || []
+      activeTraining?.workloads || []
     );
 
     setIsCompleted(completed);
@@ -67,7 +67,7 @@ export default function TrainingExerciseSetDoneCheckbox(props: Props) {
             supersetIndex,
             setIndex,
           },
-          activeTraining.training?.workloads || []
+          activeTraining?.workloads || []
         )
       : false
   );

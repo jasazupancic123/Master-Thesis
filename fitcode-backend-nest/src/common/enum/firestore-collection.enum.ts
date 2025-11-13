@@ -14,5 +14,5 @@ export enum FirestoreCollection {
   // training
   TRAINING = 'trainings',
   TRAINING_WORKLOAD = 'training-workload',
-  TRAINING_REPORT = 'training-reports',
+  TRAINING_COMPONENT_USER_STATUS = 'training-component-user-status',
 }

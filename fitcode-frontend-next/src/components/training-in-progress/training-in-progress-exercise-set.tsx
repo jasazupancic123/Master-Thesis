@@ -28,11 +28,7 @@ export default function TrainingInProgressExerciseSet(props: Props) {
 
   const { exercise, setIndex } = props;
 
-  if (
-    !selectedExercise ||
-    supersetIndex === undefined ||
-    !activeTraining.training
-  )
+  if (!selectedExercise || supersetIndex === undefined || !activeTraining)
     return null;
 
   const uni = exercise.exercise?.isUnilateral;
@@ -64,7 +60,7 @@ export default function TrainingInProgressExerciseSet(props: Props) {
       supersetIndex: supersetIndex,
       setIndex: setIndex,
     },
-    activeTraining.training.workloads
+    activeTraining.workloads
   );
 
   return (

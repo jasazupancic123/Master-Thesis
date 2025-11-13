@@ -1,246 +1,105 @@
-import {
-  BadRequestException,
-  forwardRef,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { compareAsc, differenceInMinutes } from 'date-fns';
+import { Injectable } from '@nestjs/common';
 
-import { DateFilterDto } from '@src/common/dto/date-filter.dto';
-import { Create } from '@src/common/type/entity.type';
-import {
-  TrainingComponentRef,
-  TrainingReportRef,
-} from '@src/common/type/firestore.type';
-import { ValidateError } from '@src/common/type/validate.type';
-import { Wrapper } from '@src/common/type/wrapper.type';
 import { ExerciseSet } from '@src/training/entity/exercise-set.entity';
 import { Training } from '@src/training/entity/training.entity';
 import {
-  TrainingReport,
-  TrainingReportComponentStatus,
-} from '@src/training/entity/training-report.entity';
-import { PrescribedTrainingStats } from '@src/training/entity/training-stats.entity';
-import { WorkloadService } from '@src/training/service/workload.service';
-import { SetReport } from '@src/training/type/training-set.type';
+  BaseAggregatedReport,
+  SetReport,
+} from '@src/training/type/training-set.type';
 
 import { REP_TEMPO_TIME_IN_S } from '../constant/training-limits.constant';
+import { TrainingComponent } from '../entity/training-component.entity';
 import { Workload } from '../entity/workload.entity';
-import { TrainingStatus } from '../enum/training-status.enum';
-import { TrainingReportRepository } from '../repository/training-report.repository';
+import {
+  PrescribedTrainingComponentStats,
+  PrescribedTrainingStats,
+  TrainingComponentReport,
+  TrainingReport,
+} from '../type/training-stats.type';
 
 @Injectable()
 export class TrainingReportService {
-  constructor(
-    private readonly repository: TrainingReportRepository,
-    @Inject(forwardRef(() => WorkloadService))
-    private readonly workloadService: Wrapper<WorkloadService>,
-  ) {}
-
-  async findAllByUser(
-    userId: string,
-    filter?: DateFilterDto & { institutionId?: string },
-  ): Promise<TrainingReport[]> {
-    return await this.repository.getAllByUser(userId, filter);
-  }
-
-  async findById(ref: TrainingReportRef): Promise<TrainingReport | null> {
-    return await this.repository.findById(ref);
-  }
-
-  async findByIdOrFail(ref: TrainingReportRef): Promise<TrainingReport> {
-    const report = await this.repository.findById(ref);
-    if (!report) throw new NotFoundException('Training report not found');
-    return report;
-  }
-
-  /**
-   * This method will initialize training reports for specified users.
-   * If the provided component has status NOT_STARTED or PAUSED, it will
-   * put it into IN_PROGRESS mode.
-   */
-  async startComponent(
-    input: { userId: string; componentId: string; training: Training }[],
-  ): Promise<ValidateError<Record<string, unknown>>[]> {
-    const errors: ValidateError<Record<string, unknown>>[] = [];
-
-    // check if any other training is already active
-    for (const { userId } of input) {
-      const active = await this.getActive(userId);
-      if (active && active.trainingId !== input[0].training.id) {
-        errors.push({ field: userId, message: 'ACTIVE_TRAINING_EXISTS' });
-        continue;
-      }
-    }
-
-    if (errors.length) return errors;
-
-    // remove user ids from input that are in error state
-    input = input.filter(
-      ({ userId }) => !errors.find((e) => e.field === userId),
-    );
-
-    // if training report exists, then just update the correct component status to in_progress, else create new report
-    for (const { userId, training, componentId } of input) {
-      const ref: TrainingReportRef = { trainingId: training.id, userId };
-      const existing = await this.repository.findById(ref);
-      if (existing) {
-        // update component status
-        const componentStatus = existing.componentStatuses.find(
-          (cs) => cs.componentId === componentId,
-        );
-
-        if (!componentStatus) continue;
-        if (componentStatus.status === TrainingStatus.IN_PROGRESS) continue;
-        if (componentStatus.status === TrainingStatus.COMPLETED) {
-          errors.push({ field: userId, message: 'COMPONENT_COMPLETED' });
-          continue;
-        }
-
-        componentStatus.status = TrainingStatus.IN_PROGRESS;
-        await this.repository.update(ref, {
-          status: TrainingStatus.IN_PROGRESS,
-          componentStatuses: existing.componentStatuses,
-        });
-      } else
-        // create new report
-        await this.repository.save(
-          { trainingId: training.id, userId },
-          this.getInitQuery(userId, training, componentId),
-        );
-    }
-
-    return errors;
-  }
-
-  /**
-   * Completes training component for specified users. It only finalizes
-   * components that are in IN_PROGRESS or PAUSED status.
-   */
-  async completeComponent(
-    ref: TrainingComponentRef,
-    input: string[], // array of user ids
-  ): Promise<ValidateError<Record<string, unknown>>[]> {
-    const errors: ValidateError<Record<string, unknown>>[] = [];
-
-    for (const userId of input) {
-      const reportRef: TrainingReportRef = { ...ref, userId };
-      const report = await this.findById(reportRef);
-
-      if (!report) {
-        errors.push({ field: userId, message: 'REPORT_NOT_FOUND' });
-        continue;
-      }
-
-      const cs = report.componentStatuses.find(
-        (cs) => cs.componentId === ref.componentId,
-      );
-
-      if (!cs || cs.status === TrainingStatus.NOT_STARTED) {
-        errors.push({ field: userId, message: 'COMPONENT_NOT_STARTED' });
-        continue;
-      }
-
-      if (cs.status === TrainingStatus.COMPLETED) {
-        errors.push({ field: userId, message: 'COMPONENT_COMPLETED' });
-        continue;
-      }
-
-      cs.status = TrainingStatus.COMPLETED;
-      await this.repository.update(reportRef, {
-        componentStatuses: report.componentStatuses,
-        status: this.getTrainingReportStatus(report.componentStatuses),
-      });
-    }
-
-    return errors;
-  }
-
-  /**
-   * Pauses training component. Only components that are in IN_PROGRESS status
-   * can be paused. Note that trainer will not be able to pause training reports
-   * for all athletes. He cannot pause training at all, only athlete can for himself.
-   */
-  async pauseComponent(
-    userId: string,
-    ref: TrainingComponentRef,
-  ): Promise<void> {
-    const reportRef: TrainingReportRef = { ...ref, userId };
-    const report = await this.findByIdOrFail(reportRef);
-
-    const cs = report.componentStatuses.find(
-      (cs) => cs.componentId === ref.componentId,
-    );
-
-    if (!cs)
-      throw new BadRequestException('Training component not found in report');
-
-    // can only pause component that is in IN_PROGRESS status
-    if (cs.status !== TrainingStatus.IN_PROGRESS)
-      throw new BadRequestException(
-        'You can only pause training that is currently in progress',
-      );
-
-    cs.status = TrainingStatus.PAUSED;
-    await this.repository.update(reportRef, {
-      componentStatuses: report.componentStatuses,
-      status: this.getTrainingReportStatus(report.componentStatuses),
-    });
-  }
-
-  /**
-   * Athlete can have multiple active trainings in database. Valid active trainings
-   * are only those that are on the current day. If there are multiple active
-   * trainings for the current day, return the one that was started the earliest.
-   */
-  async getActive(athleteId: string): Promise<TrainingReport | null> {
-    const activeReports = await this.repository.getActiveByAthlete(athleteId);
-    if (!activeReports.length) return null;
-
-    return activeReports.sort(
-      (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime(),
-    )[0];
-  }
-
-  async update(
+  getTrainingReportByUser(
     userId: string,
     training: Training,
-    input?: { photoURLs?: string[]; componentInProgress: string },
-  ): Promise<TrainingReport> {
-    const ref: TrainingReportRef = { trainingId: training.id, userId };
-    const existing = await this.repository.findById(ref);
-    if (!existing) throw new BadRequestException('Training not started yet');
-
-    const workloads = (
-      await this.workloadService.findAllByUserTraining(userId, ref)
-    ).sort((a, b) => compareAsc(new Date(a.timestamp), new Date(b.timestamp)));
-
-    const stats = this.getTrainingStats(training);
-    const from = workloads[0]?.timestamp || new Date();
-    const to = workloads[workloads.length - 1]?.timestamp || from;
+    workloads: Workload[], // for the whole training
+  ): TrainingReport {
+    const prescribed = this.getPrescribedTrainingStats(training);
+    const from = new Date(workloads[0]?.timestamp) || new Date();
+    const to = new Date(workloads[workloads.length - 1]?.timestamp) || from;
 
     const components = new Set(workloads.map((w) => w.componentId));
     const exercises = new Set(workloads.map((w) => w.exerciseId));
     const report: TrainingReport = {
-      status: TrainingStatus.IN_PROGRESS,
-      trainingId: training.id,
       institutionId: training.institutionId,
       groupId: training.groupId,
       cycleId: training.cycleId,
-      prescribed: stats,
+      trainingId: training.id,
       userId,
-      ...ref,
       from,
       to,
-      duration: differenceInMinutes(to, from),
+      prescribed,
       components: components.size,
-      supersets: training.components.reduce(
-        (sum, c) => sum + c.supersets.length,
-        0,
-      ),
       exercises: exercises.size,
-      sets: this.getNumberOfSets(workloads),
+      sets: 0,
+      reps: 0,
+      dist: 0,
+      time: 0,
+      recTime: 0,
+      recDist: 0,
+      tut: 0,
+      tonnage: 0,
+      realization: 0,
+    };
+
+    for (const workload of workloads) {
+      const w = this.getWorkloadReport(workload);
+      report.sets += w.sets;
+      report.reps += w.reps;
+      report.tonnage += w.tonnage;
+      report.tut += w.tut;
+      report.time += w.time;
+      report.dist += w.dist;
+      report.recTime += w.recTime;
+      report.recDist += w.recDist;
+      report.realization += w.realization / prescribed.sets;
+    }
+
+    return report;
+  }
+
+  getTrainingComponentReport(
+    userId: string,
+    componentId: string,
+    training: Training,
+    workloads: Workload[],
+  ): TrainingComponentReport {
+    const prescribed = this.getPrescribedTrainingComponentStats(
+      training.components.find((c) => c.id === componentId),
+    );
+
+    workloads = workloads
+      .filter((w) => w.componentId === prescribed.componentId)
+      .sort(
+        (a, b) =>
+          new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+      );
+
+    const from = new Date(workloads[0]?.timestamp) || new Date();
+    const to = new Date(workloads[workloads.length - 1]?.timestamp) || from;
+    const report: TrainingComponentReport = {
+      institutionId: workloads[0]?.institutionId,
+      groupId: workloads[0]?.groupId,
+      cycleId: workloads[0]?.cycleId,
+      trainingId: workloads[0]?.trainingId,
+      componentId: prescribed.componentId,
+      userId,
+      from,
+      to,
+      prescribed,
+      realization: 0,
+      exercises: 0,
+      sets: 0,
       reps: 0,
       recTime: 0,
       tut: 0,
@@ -248,130 +107,30 @@ export class TrainingReportService {
       dist: 0,
       recDist: 0,
       time: 0,
-      realization: 0,
-      muscleValues: [], // to be calculated
-      photoURLs: input?.photoURLs || [],
-      componentStatuses: existing.componentStatuses.map((cs) => ({
-        ...cs,
-        status:
-          cs.componentId === input?.componentInProgress
-            ? TrainingStatus.IN_PROGRESS
-            : cs.status,
-      })),
     };
 
     for (const workload of workloads) {
-      const prescribed = workload.prescribed;
-      const completed = workload;
-      const setReport = this.getSetReport(workload);
-
-      report.reps += setReport.reps;
-      report.recTime += setReport.recTime;
-      report.tut += setReport.tut;
-      report.tonnage += setReport.tonnage;
-      report.time += setReport.time;
-      report.dist += setReport.dist;
-      report.recDist += setReport.recDist;
-
-      /* Example for realization: prescribed 3 sets * 10 reps * 100 kg * 201 tempo * 60 s rec, 
-        completed 1 set of 9 reps * 100 kg * 101 tempo * 100 s rec, this means 1/3 * (9/10*1/4) *
-        (100/100*1/4) * (2/3*1/4) * (60/100*1/4), note that recovery is reversed, more is worse */
-
-      // volume
-      const repsDiv = this.div('reps', prescribed, completed);
-      const repsRDiv = this.div('repsR', prescribed, completed);
-      const distDiv = this.div('dist', prescribed, completed);
-      const distRDiv = this.div('distR', prescribed, completed);
-      const timeDiv = this.div('time', prescribed, completed);
-      const timeRDiv = this.div('timeR', prescribed, completed);
-      const loadDiv = this.div('loadKg', prescribed, completed);
-      const loadRDiv = this.div('loadKgR', prescribed, completed);
-      const recTimeDiv = this.div('recTime', prescribed, completed); // less is better
-      const recTimeRDiv = this.div('recTimeR', prescribed, completed);
-      const recDistDiv = this.div('recDist', prescribed, completed);
-      const recDistRDiv = this.div('recDistR', prescribed, completed);
-
-      const tempoDiv =
-        this.getTempoTime(prescribed) > 0
-          ? this.getTempoTime(completed) / this.getTempoTime(prescribed)
-          : 0;
-
-      const tempoRDiv =
-        this.getTempoRTime(prescribed) > 0
-          ? this.getTempoRTime(completed) / this.getTempoRTime(prescribed)
-          : 0;
-
-      const int = prescribed.loadKg ? loadDiv : 0;
-      const intR = prescribed.loadKgR ? loadRDiv : 0;
-
-      const vol = prescribed.reps
-        ? repsDiv
-        : prescribed.time
-          ? timeDiv
-          : prescribed.dist
-            ? distDiv
-            : 0;
-
-      const volR = prescribed.repsR
-        ? repsRDiv
-        : prescribed.timeR
-          ? timeRDiv
-          : prescribed.distR
-            ? distRDiv
-            : 0;
-
-      const rec = prescribed.recTime
-        ? 1 / recTimeDiv
-        : prescribed.recDist
-          ? recDistDiv
-          : 0;
-
-      const recR = prescribed.recTimeR
-        ? 1 / recTimeRDiv
-        : prescribed.recDistR
-          ? recDistRDiv
-          : 0;
-
-      const w = // weight for averaging
-        1 /
-        [vol, volR, int, intR, tempoDiv, tempoRDiv, rec, recR]
-          .map((w) => w > 0)
-          .filter(Boolean).length;
-
-      report.realization +=
-        (1 / stats.sets) *
-        (w * vol +
-          w * volR +
-          w * int +
-          w * intR +
-          w * tempoDiv +
-          w * tempoRDiv +
-          w * rec +
-          w * recR);
+      const w = this.getWorkloadReport(workload);
+      report.exercises += w.exercises;
+      report.sets += w.sets;
+      report.reps += w.reps;
+      report.tonnage += w.tonnage;
+      report.tut += w.tut;
+      report.time += w.time;
+      report.dist += w.dist;
+      report.recTime += w.recTime;
+      report.recDist += w.recDist;
+      report.realization += w.realization / prescribed.sets;
     }
 
-    await this.repository.save(ref, report);
     return report;
   }
 
-  getTrainingStats(training: Training): PrescribedTrainingStats {
+  getPrescribedTrainingStats(training: Training): PrescribedTrainingStats {
     const stats: PrescribedTrainingStats = {
-      plannedComponents: training.components.map((c) => ({
-        componentId: c.id,
-        totalSets: c.supersets.reduce(
-          (sum, s) =>
-            sum + s.exercises.reduce((s2, e) => s2 + e.sets.length, 0),
-          0,
-        ),
-      })),
-      duration: differenceInMinutes(training.to, training.from),
-      components: training.components.length,
-      supersets: 0,
-      exercises: new Set<string>(
-        training.components.flatMap((c) =>
-          c.supersets.flatMap((s) => s.exercises.map((e) => e.id)),
-        ),
-      ).size,
+      realization: 100,
+      components: 0,
+      exercises: 0,
       sets: 0,
       reps: 0,
       tonnage: 0,
@@ -382,85 +141,61 @@ export class TrainingReportService {
       recDist: 0,
     };
 
-    for (const component of training.components)
-      for (const superset of component.supersets) {
-        stats.supersets += 1;
+    for (const component of training.components) {
+      const componentStats =
+        this.getPrescribedTrainingComponentStats(component);
 
-        for (const exercise of superset.exercises) {
-          const sets = exercise.sets.length;
-          stats.sets += sets;
-
-          for (const set of exercise.sets) {
-            const setReport = this.getSetReport(set);
-            if (setReport.reps) stats.reps += setReport.reps;
-            if (setReport.tut) stats.tut += setReport.tut;
-            if (setReport.tonnage) stats.tonnage += setReport.tonnage;
-            if (setReport.time) stats.time += setReport.time;
-            if (setReport.dist) stats.dist += setReport.dist;
-            if (setReport.recTime) stats.recTime += setReport.recTime;
-            if (setReport.recDist) stats.recDist += setReport.recDist;
-          }
-        }
-      }
+      stats.components += 1;
+      stats.exercises += componentStats.exercises;
+      stats.sets += componentStats.sets;
+      stats.reps += componentStats.reps;
+      stats.tonnage += componentStats.tonnage;
+      stats.tut += componentStats.tut;
+      stats.time += componentStats.time;
+      stats.dist += componentStats.dist;
+      stats.recTime += componentStats.recTime;
+      stats.recDist += componentStats.recDist;
+    }
 
     return stats;
   }
 
-  getTrainingReportStatus(
-    componentStatuses: TrainingReportComponentStatus[],
-  ): TrainingStatus {
-    // if all components are completed, then report is completed
-    if (componentStatuses.every((cs) => cs.status === TrainingStatus.COMPLETED))
-      return TrainingStatus.COMPLETED;
-
-    // if all components are not started, then report is not started
-    if (
-      componentStatuses.every((cs) => cs.status === TrainingStatus.NOT_STARTED)
-    )
-      return TrainingStatus.NOT_STARTED;
-
-    // else report is not started
-    return TrainingStatus.IN_PROGRESS;
-  }
-
-  private getInitQuery(
-    userId: string,
-    training: Training,
-    componentId: string,
-  ): Create<TrainingReport> {
-    return {
-      status: TrainingStatus.IN_PROGRESS,
-      from: new Date(),
-      to: new Date(),
-      prescribed: this.getTrainingStats(training),
-      institutionId: training.institutionId,
-      groupId: training.groupId,
-      cycleId: training.cycleId,
-      trainingId: training.id,
-      userId,
-      realization: 0,
-      muscleValues: [],
-      componentStatuses: training.components.map((c) => ({
-        componentId: c.id,
-        status:
-          c.id === componentId
-            ? TrainingStatus.IN_PROGRESS
-            : TrainingStatus.NOT_STARTED,
-      })),
-      photoURLs: [],
-      duration: 0,
-      components: 0,
-      supersets: 0,
+  getPrescribedTrainingComponentStats(
+    component: TrainingComponent,
+  ): PrescribedTrainingComponentStats {
+    const stats: PrescribedTrainingComponentStats = {
+      realization: 100,
+      componentId: component.id,
       exercises: 0,
       sets: 0,
       reps: 0,
-      tut: 0,
       tonnage: 0,
+      tut: 0,
       time: 0,
       dist: 0,
       recTime: 0,
       recDist: 0,
     };
+
+    for (const superset of component.supersets)
+      for (const exercise of superset.exercises) {
+        stats.exercises += 1;
+
+        for (const set of exercise.sets) {
+          const setReport = this.getSetReport(set);
+
+          stats.sets += 1;
+          if (setReport.reps) stats.reps += setReport.reps;
+          if (setReport.tut) stats.tut += setReport.tut;
+          if (setReport.tonnage) stats.tonnage += setReport.tonnage;
+          if (setReport.time) stats.time += setReport.time;
+          if (setReport.dist) stats.dist += setReport.dist;
+          if (setReport.recTime) stats.recTime += setReport.recTime;
+          if (setReport.recDist) stats.recDist += setReport.recDist;
+        }
+      }
+
+    return stats;
   }
 
   private div(
@@ -514,6 +249,82 @@ export class TrainingReportService {
     };
   }
 
+  private getWorkloadReport(workload: Workload): BaseAggregatedReport {
+    const p = workload.prescribed; // prescribed
+    const c = workload; // completed
+
+    /* Example for realization: prescribed 3 sets * 10 reps * 100 kg * 201 tempo * 60 s rec, 
+        completed 1 set of 9 reps * 100 kg * 101 tempo * 100 s rec, this means 1/3 * (9/10*1/4) *
+        (100/100*1/4) * (2/3*1/4) * (60/100*1/4), note that recovery is reversed, more is worse */
+
+    // volume
+    const repsDiv = this.div('reps', p, c);
+    const repsRDiv = this.div('repsR', p, c);
+    const distDiv = this.div('dist', p, c);
+    const distRDiv = this.div('distR', p, c);
+    const timeDiv = this.div('time', p, c);
+    const timeRDiv = this.div('timeR', p, c);
+    const loadDiv = this.div('loadKg', p, c);
+    const loadRDiv = this.div('loadKgR', p, c);
+    const recTimeDiv = this.div('recTime', p, c); // less is better
+    const recTimeRDiv = this.div('recTimeR', p, c);
+    const recDistDiv = this.div('recDist', p, c);
+    const recDistRDiv = this.div('recDistR', p, c);
+
+    const tempoDiv =
+      this.getTempoTime(p) > 0
+        ? this.getTempoTime(c) / this.getTempoTime(p)
+        : 0;
+
+    const tempoRDiv =
+      this.getTempoRTime(p) > 0
+        ? this.getTempoRTime(c) / this.getTempoRTime(p)
+        : 0;
+
+    const int = p.loadKg ? loadDiv : 0;
+    const intR = p.loadKgR ? loadRDiv : 0;
+
+    const vol = p.reps ? repsDiv : p.time ? timeDiv : p.dist ? distDiv : 0;
+    const volR = p.repsR
+      ? repsRDiv
+      : p.timeR
+        ? timeRDiv
+        : p.distR
+          ? distRDiv
+          : 0;
+
+    const rec = p.recTime ? 1 / recTimeDiv : p.recDist ? recDistDiv : 0;
+    const recR = p.recTimeR ? 1 / recTimeRDiv : p.recDistR ? recDistRDiv : 0;
+
+    const w = // weight for averaging
+      1 /
+      [vol, volR, int, intR, tempoDiv, tempoRDiv, rec, recR]
+        .map((w) => w > 0)
+        .filter(Boolean).length;
+
+    const setReport = this.getSetReport(workload);
+    return {
+      sets: workload.reps > 0 || workload.time > 0 || workload.dist > 0 ? 1 : 0,
+      exercises: 0,
+      reps: setReport.reps,
+      tonnage: setReport.tonnage,
+      tut: setReport.tut,
+      time: setReport.time,
+      dist: setReport.dist,
+      recTime: setReport.recTime,
+      recDist: setReport.recDist,
+      realization:
+        w * vol +
+        w * volR +
+        w * int +
+        w * intR +
+        w * tempoDiv +
+        w * tempoRDiv +
+        w * rec +
+        w * recR,
+    };
+  }
+
   private getTempoTime(set: ExerciseSet): number {
     return (
       (set.tempoEcc || 0) +
@@ -530,18 +341,5 @@ export class TrainingReportService {
       (set.tempoConR || 0) +
       (set.tempoIdleR || 0)
     );
-  }
-
-  private getNumberOfSets(workloads: Workload[]): number {
-    // only count a set if it has any of the following params more than 0:
-    //   - reps
-    //   - time
-    //   - dist
-
-    return workloads.reduce((count, workload) => {
-      if (workload.reps > 0 || workload.time > 0 || workload.dist > 0)
-        count += 1;
-      return count;
-    }, 0);
   }
 }

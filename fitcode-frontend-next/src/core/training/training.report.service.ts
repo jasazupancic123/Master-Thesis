@@ -5,10 +5,10 @@ import { TrainingStatus } from './enum/training-status.enum';
 import type { ExerciseSet } from './type/exercise-set.type';
 import type { Training } from './type/training.type';
 import type { TrainingComponent } from './type/training-component.type';
-import type { TrainingReport } from './type/training-report.type';
 import type {
   PrescribedTrainingStats,
   SetReport,
+  TrainingReport,
 } from './type/training-stats.type';
 
 const REP_TEMPO_TIME_IN_S = 3; // 3 seconds per rep tempo if not specified
@@ -28,17 +28,8 @@ export class TrainingReportService {
       cycle: training.cycle,
       trainingId: training.id,
       userId: user.uid,
-      status: TrainingStatus.IN_PROGRESS,
       prescribed: TrainingReportService.getTrainingStats(training),
       components: training.components.length,
-      supersets: training.components.reduce((acc, component) => {
-        return (
-          acc +
-          component.supersets.reduce((supAcc, superset) => {
-            return supAcc + superset.exercises.length;
-          }, 0)
-        );
-      }, 0),
       reps: 0,
       tonnage: 0,
       tut: 0,
@@ -46,7 +37,6 @@ export class TrainingReportService {
       dist: 0,
       recTime: 0,
       recDist: 0,
-      duration: 0,
       exercises: training.components.reduce(
         (acc, component) =>
           component.supersets.reduce((acc, superset) => {
@@ -73,13 +63,6 @@ export class TrainingReportService {
         0
       ),
       realization: 0,
-      muscleValues: [],
-      componentStatuses: [
-        {
-          componentId: component.id,
-          status: TrainingStatus.IN_PROGRESS,
-        },
-      ],
       from: training.from,
       to: training.to,
     };
@@ -87,19 +70,7 @@ export class TrainingReportService {
 
   private static getTrainingStats(training: Training): PrescribedTrainingStats {
     const stats: PrescribedTrainingStats = {
-      plannedComponents: training.components.map((c) => ({
-        componentId: c.id,
-        totalSets: c.supersets.reduce(
-          (sum, s) =>
-            sum + s.exercises.reduce((s2, e) => s2 + e.sets.length, 0),
-          0
-        ),
-      })),
-      duration: Math.abs(
-        dayjs(training.to).diff(dayjs(training.from), 'minute')
-      ),
       components: training.components.length,
-      supersets: 0,
       exercises: new Set<string>(
         training.components.flatMap((c) =>
           c.supersets.flatMap((s) => s.exercises.map((e) => e.id))
@@ -113,12 +84,11 @@ export class TrainingReportService {
       dist: 0,
       recTime: 0,
       recDist: 0,
+      realization: 0,
     };
 
     for (const component of training.components)
       for (const superset of component.supersets) {
-        stats.supersets += 1;
-
         for (const exercise of superset.exercises) {
           const sets = exercise.sets.length;
           stats.sets += sets;

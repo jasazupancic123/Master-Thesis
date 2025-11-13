@@ -4,6 +4,8 @@ import type {
   TrainingComponent,
   UpdateTrainingComponent,
 } from './training-component.type';
+import type { TrainingComponentUserStatus } from './training-component-user-status.type';
+import type { Workload } from './workload.type';
 import type { AuthUser } from '@/core/auth/type/user.type';
 import type { BaseEntity } from '@/core/entity.type';
 import type { Cycle } from '@/core/group/type/cycle.type';
@@ -54,3 +56,8 @@ export type PeriodizeTrainings = {
 
 export type CopyTraining = Pick<DateRange, 'from'> &
   Partial<Pick<Training, 'membersIds'>>;
+
+export type ActiveTraining = Training & {
+  workloads: Workload[];
+  statuses: TrainingComponentUserStatus[];
+};

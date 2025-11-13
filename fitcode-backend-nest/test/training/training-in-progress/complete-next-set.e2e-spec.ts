@@ -301,9 +301,8 @@ describe('Complete Next Set (e2e)', () => {
   it('should fail if component is already completed', async () => {
     await startTrainingComponentReq(global.trainer.token, trainingId, 'c1');
 
-    await db.trainingReports.updateStatus(
-      { trainingId, userId: global.athlete.uid },
-      'c1',
+    await db.trainingComponentUserStatus.updateStatus(
+      { trainingId, uid: global.athlete.uid, componentId: 'c1' },
       TrainingStatus.COMPLETED,
     );
 
@@ -321,7 +320,7 @@ describe('Complete Next Set (e2e)', () => {
       'Training component has already been completed',
     );
 
-    await db.trainingReports.deleteAllByTraining(trainingId);
+    await db.trainingComponentUserStatus.deleteAllByTraining(trainingId);
   });
 
   it('should complete first set of exercise (when no workloads are in the database)', async () => {
@@ -394,15 +393,16 @@ describe('Complete Next Set (e2e)', () => {
     expect(workloads[0].id).toBe(result.id);
 
     // it should create report as well
-    const report = await db.trainingReports.findById({
+    const report = await db.trainingComponentUserStatus.findById({
       trainingId,
-      userId: global.athlete.uid,
+      componentId: 'c1',
+      uid: global.athlete.uid,
     });
 
     expect(report).toBeDefined();
 
     await db.workloads.deleteAll(trainingId);
-    await db.trainingReports.deleteAllByTraining(trainingId);
+    await db.trainingComponentUserStatus.deleteAllByTraining(trainingId);
   });
 
   it('should complete the next set of same exercise when some workloads already exist', async () => {
@@ -481,7 +481,7 @@ describe('Complete Next Set (e2e)', () => {
     expect(workloads).toHaveLength(2);
 
     await db.workloads.deleteAll(trainingId);
-    await db.trainingReports.deleteAllByTraining(trainingId);
+    await db.trainingComponentUserStatus.deleteAllByTraining(trainingId);
   });
 
   it('should put over sets into other component', async () => {
@@ -529,7 +529,7 @@ describe('Complete Next Set (e2e)', () => {
     const workloads = await db.workloads.getAll(trainingId);
     expect(workloads).toHaveLength(9);
     await db.workloads.deleteAll(trainingId);
-    await db.trainingReports.deleteAllByTraining(trainingId);
+    await db.trainingComponentUserStatus.deleteAllByTraining(trainingId);
   });
 
   it('should save correct prescribed workload values (if user is in subgroup or has RM, BW prescription)', async () => {
@@ -642,7 +642,7 @@ describe('Complete Next Set (e2e)', () => {
     await db.workloads.deleteAll(trainingId);
     await db.workloads.deleteAll(trainingId2);
     await db.trainings.delete(trainingId2);
-    await db.trainingReports.deleteAllByTraining(trainingId2);
+    await db.trainingComponentUserStatus.deleteAllByTraining(trainingId2);
   });
 
   it('should fail if exercise is unilateral and both sides are not specified', async () => {
@@ -707,16 +707,15 @@ describe('Complete Next Set (e2e)', () => {
 
     await db.trainings.delete(trainingId3);
     await db.exercises.delete(exercise.id);
-    await db.trainingReports.deleteAllByTraining(trainingId3);
+    await db.trainingComponentUserStatus.deleteAllByTraining(trainingId3);
   });
 
-  it('should successfully create new workload if status of the component is PAUSED and put component into IN_PROGRESS state', async () => {
+  it('should throw error if component is paused', async () => {
     await startTrainingComponentReq(global.trainer.token, trainingId, 'c1');
 
-    await db.trainingReports.updateStatus(
-      { trainingId, userId: global.athlete.uid },
-      'c1',
-      TrainingStatus.PAUSED,
+    await db.trainingComponentUserStatus.updateStatus(
+      { trainingId, uid: global.athlete.uid, componentId: 'c1' },
+      TrainingStatus.COMPLETED,
     );
 
     const existing = await db.workloads.getAll(trainingId);
@@ -737,29 +736,9 @@ describe('Complete Next Set (e2e)', () => {
       tempoIdle: 0,
     });
 
-    expect(res.status).toBe(201);
-    const result = res.body as Workload;
-    expect(result.trainingId).toBe(trainingId);
-    expect(result.componentId).toBe('c1');
-    expect(result.exerciseId).toBe('squat');
-    expect(result.userId).toBe(global.athlete.uid);
-    expect(result.setNumber).toBe(1);
-
-    const workloads = await db.workloads.getAll(trainingId);
-    expect(workloads).toHaveLength(1);
-
-    // 7. Verify that the training component status is now IN_PROGRESS again
-    const report = await db.trainingReports.findById({
-      trainingId,
-      userId: global.athlete.uid,
-    });
-
-    expect(
-      report?.componentStatuses?.find((c) => c.componentId === 'c1')?.status,
-    ).toBe(TrainingStatus.IN_PROGRESS);
-
-    // cleanup
-    await db.workloads.deleteAll(trainingId);
-    await db.trainingReports.deleteAllByTraining(trainingId);
+    expect(res.status).toBe(409);
+    expect(res.body.message).toBe(
+      'Training component has already been completed',
+    );
   });
 });

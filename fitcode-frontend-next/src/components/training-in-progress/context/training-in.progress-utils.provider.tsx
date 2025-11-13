@@ -100,7 +100,7 @@ export function TrainingInProgressUtilsProvider({
 
     router.push(LINK_TRAININGS.href);
 
-    setActiveTraining({});
+    setActiveTraining(null);
     await clearTrainingState();
   };
 
