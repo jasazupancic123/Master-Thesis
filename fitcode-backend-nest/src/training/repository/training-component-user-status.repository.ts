@@ -106,10 +106,15 @@ export class TrainingComponentUserStatusRepository extends FirestoreRepository<
    */
   async getActiveComponents(
     athleteId: string,
+    getActiveOnly?: boolean,
   ): Promise<TrainingComponentUserStatus[]> {
+    const statuses = [TrainingStatus.IN_PROGRESS, TrainingStatus.PAUSED].concat(
+      getActiveOnly ? [] : [TrainingStatus.COMPLETED],
+    );
+
     const snapshot = await this.collectionGroup()
       .where('userId', '==', athleteId)
-      .where('status', '==', TrainingStatus.IN_PROGRESS)
+      .where('status', 'in', statuses)
       .where('from', '>=', Timestamp.fromDate(startOfDay(new Date())))
       .get();
 

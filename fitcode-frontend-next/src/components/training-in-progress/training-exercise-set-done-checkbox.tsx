@@ -47,8 +47,9 @@ export default function TrainingExerciseSetDoneCheckbox(props: Props) {
 
     const completed = ExerciseSetService.isSetCompleted(
       {
-        exerciseId: exercise.id,
+        trainingId: trainingInProgress.training.id,
         componentId: trainingInProgress.selectedComponent.id,
+        exerciseId: exercise.id,
         supersetIndex,
         setIndex,
       },
@@ -62,8 +63,9 @@ export default function TrainingExerciseSetDoneCheckbox(props: Props) {
     trainingInProgress
       ? ExerciseSetService.isSetCompleted(
           {
-            exerciseId: exercise.id,
+            trainingId: trainingInProgress.training.id,
             componentId: trainingInProgress.selectedComponent.id,
+            exerciseId: exercise.id,
             supersetIndex,
             setIndex,
           },

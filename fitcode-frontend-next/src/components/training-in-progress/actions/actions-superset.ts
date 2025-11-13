@@ -34,8 +34,11 @@ export function handleChangeSuperset(
 
   const undoneExercises = ExerciseSetService.getUndoneExercisesFromSuperset(
     superset,
-    supersetIndex,
-    trainingInProgress.selectedComponent.id,
+    {
+      trainingId: trainingInProgress.training.id,
+      supersetIndex,
+      componentId: trainingInProgress.selectedComponent.id,
+    },
     activeTraining?.workloads || []
   );
 
@@ -91,8 +94,11 @@ export const handleFinishSuperset = async (context: {
     const undoneExercisesForSuperset =
       ExerciseSetService.getUndoneExercisesFromSuperset(
         superset,
-        supersetIndex,
-        trainingInProgress.selectedComponent.id,
+        {
+          trainingId: trainingInProgress.training.id,
+          supersetIndex,
+          componentId: trainingInProgress.selectedComponent.id,
+        },
         activeTraining?.workloads || []
       );
 
@@ -163,8 +169,9 @@ export const handleAdvanceInSuperset = (
 
       const isSetCompleted = ExerciseSetService.isSetCompleted(
         {
-          exerciseId: ex.id,
+          trainingId: trainingInProgress.training.id,
           componentId: trainingInProgress.selectedComponent.id,
+          exerciseId: ex.id,
           supersetIndex,
           setIndex: set.setNumber - 1,
         },
@@ -224,8 +231,11 @@ export const handleAdvanceInSuperset = (
 
     const hasCompletedAllSets = !ExerciseSetService.hasExerciseGotUndoneSets(
       currentExercise,
-      supersetIndex,
-      trainingInProgress.selectedComponent.id,
+      {
+        trainingId: trainingInProgress.training.id,
+        supersetIndex,
+        componentId: trainingInProgress.selectedComponent.id,
+      },
       activeTraining?.workloads || []
     );
 
@@ -238,8 +248,9 @@ export const handleAdvanceInSuperset = (
 
       const completed = ExerciseSetService.isSetCompleted(
         {
-          exerciseId: currentExercise.id,
+          trainingId: trainingInProgress.training.id,
           componentId: trainingInProgress.selectedComponent.id,
+          exerciseId: currentExercise.id,
           supersetIndex,
           setIndex: set.setNumber - 1,
         },

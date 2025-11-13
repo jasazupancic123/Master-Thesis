@@ -160,16 +160,9 @@ export const TrainingInProgressProvider = ({
 
           return {
             ...prev,
-            training: prev
-              ? {
-                  ...prev,
-                  workloads: workloadExists
-                    ? prev.workloads.map((w) =>
-                        w.id === workload.id ? workload : w
-                      )
-                    : [...prev.workloads, workload],
-                }
-              : prev,
+            workloads: workloadExists
+              ? prev.workloads.map((w) => (w.id === workload.id ? workload : w))
+              : [...prev.workloads, workload],
           };
         });
 

@@ -1,4 +1,4 @@
-import { Check, Circle, Pause } from '@mui/icons-material';
+import { Check, Circle, Pause, Preview } from '@mui/icons-material';
 import { Box, Collapse, IconButton, SvgIcon } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Typography from '@mui/material/Typography';
@@ -58,10 +58,6 @@ export default function AthleteTrainingComponents(props: Props) {
   const { exercises, activeTraining, setActiveTraining } = useMain();
   const { user } = useAuthenticatedAuth();
 
-  const activeTrainingComponentStatus = activeTraining?.statuses?.find(
-    (s) => s.componentId === selectedComponent?.id
-  );
-
   return (
     <Box
       width="100%"
@@ -81,13 +77,10 @@ export default function AthleteTrainingComponents(props: Props) {
           {components.map((component) => {
             const IconComponent = lib.common.component.getIcon(component.id);
 
-            let componentStatus: TrainingStatus | undefined;
-            const trainingReport = reports.find(
-              (r) => r.trainingId === training.id
-            );
-
-            if (trainingReport)
-              componentStatus = activeTrainingComponentStatus?.status;
+            const componentStatus = activeTraining?.statuses?.find(
+              (s) =>
+                s.componentId === component.id && s.trainingId === training.id
+            )?.status;
 
             return (
               <Box key={component.id} minWidth="48px">
@@ -221,7 +214,9 @@ export default function AthleteTrainingComponents(props: Props) {
             if (activeTraining && activeTraining.id === training.id) {
               const isCompleted =
                 activeTraining.statuses?.find(
-                  (s) => s.componentId === selectedComponent.id
+                  (s) =>
+                    s.componentId === selectedComponent.id &&
+                    s.trainingId === training.id
                 )?.status === TrainingStatus.COMPLETED;
 
               if (isCompleted) {
@@ -234,27 +229,12 @@ export default function AthleteTrainingComponents(props: Props) {
               }
             }
 
-            if (!activeTraining) {
-              // start new training
-              const result = await controller.startTrainingComponent(
-                training.id,
-                selectedComponent.id
+            const isDifferentActiveTraining =
+              activeTraining?.activeStatuses.some(
+                (a) => a.trainingId !== training.id
               );
 
-              trainingToStart = result.trainings[user.uid];
-
-              const errors = result.errors as unknown as {
-                field: string;
-                message: string;
-              }[];
-
-              if (errors && errors.length > 0) {
-                toast.error(`Error: ${errors[0].message}`);
-                setModal(false);
-
-                return;
-              }
-            } else if (activeTraining && activeTraining.id !== training.id) {
+            if (isDifferentActiveTraining) {
               toast.error(
                 'Another training is already in progress. Please finish it before starting a new one.'
               );
@@ -262,35 +242,26 @@ export default function AthleteTrainingComponents(props: Props) {
               setModal(false);
 
               return;
-            } else if (
-              activeTraining &&
-              activeTraining.id === training.id &&
-              activeTraining.statuses?.find(
-                (s) => s.componentId === selectedComponent.id
-              )?.status === TrainingStatus.IN_PROGRESS
-            ) {
-              // training is already in progress
-              trainingToStart = activeTraining;
-            } else {
-              // restart training with new component
-              const result = await controller.startTrainingComponent(
-                training.id,
-                selectedComponent.id
-              );
+            }
 
-              trainingToStart = result.trainings[user.uid];
+            // restart training with new component
+            const result = await controller.startTrainingComponent(
+              training.id,
+              selectedComponent.id
+            );
 
-              const errors = result.errors as unknown as {
-                field: string;
-                message: string;
-              }[];
+            trainingToStart = result.trainings[user.uid];
 
-              if (errors && errors.length > 0) {
-                toast.error(`Error: ${errors[0].message}`);
-                setModal(false);
+            const errors = result.errors as unknown as {
+              field: string;
+              message: string;
+            }[];
 
-                return;
-              }
+            if (errors && errors.length > 0) {
+              toast.error(`Error: ${errors[0].message}`);
+              setModal(false);
+
+              return;
             }
           } catch (e) {
             console.error(e);
@@ -320,11 +291,65 @@ export default function AthleteTrainingComponents(props: Props) {
           }
 
           setActiveTraining((prev) => {
-            if (!prev) return prev;
+            if (!prev)
+              return {
+                ...trainingToStart,
+                workloads: [],
+                activeStatuses: [],
+                statuses: [
+                  {
+                    id: `${trainingToStart.id}-${component.id}-${user.uid}`,
+                    trainingId: trainingToStart.id,
+                    componentId: component.id,
+                    status: TrainingStatus.IN_PROGRESS,
+                    userId: user.uid,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                  },
+                ],
+              };
 
             return {
               ...prev,
-              workloads: prev ? prev.workloads : [],
+              statuses: prev.statuses
+                ? prev.statuses.map((s) =>
+                    s.componentId === component.id &&
+                    s.trainingId === trainingToStart.id
+                      ? {
+                          ...s,
+                          status: TrainingStatus.IN_PROGRESS,
+                          updatedAt: new Date(),
+                        }
+                      : s
+                  )
+                : [],
+              activeStatuses: prev.activeStatuses.some(
+                (s) =>
+                  s.componentId === component.id &&
+                  s.trainingId === trainingToStart.id
+              )
+                ? prev.activeStatuses.map((s) =>
+                    s.componentId === component.id &&
+                    s.trainingId === trainingToStart.id
+                      ? {
+                          ...s,
+                          status: TrainingStatus.IN_PROGRESS,
+                          updatedAt: new Date(),
+                        }
+                      : s
+                  )
+                : [
+                    ...(prev.activeStatuses || []),
+                    {
+                      id: `${trainingToStart.id}-${component.id}-${user.uid}`,
+                      trainingId: trainingToStart.id,
+                      componentId: component.id,
+                      status: TrainingStatus.IN_PROGRESS,
+                      userId: user.uid,
+                      createdAt: new Date(),
+                      updatedAt: new Date(),
+                    },
+                  ],
             };
           });
 
@@ -336,7 +361,6 @@ export default function AthleteTrainingComponents(props: Props) {
           const foundTrainingInProgress = foundTrainingInProgressObject
             ? JSON.parse(foundTrainingInProgressObject.payload)
             : null;
-          lib.common.audio.playSound('/sounds/training-in-progress-start.mp3');
 
           setTrainingInProgress({
             training: trainingToStart,
@@ -353,6 +377,11 @@ export default function AthleteTrainingComponents(props: Props) {
           setModal(false);
 
           lib.common.audio.playSound('/sounds/training-in-progress-start.mp3');
+
+          console.log(
+            'pushing to',
+            `/trainings/${training.id}/components/${selectedComponent.id}`
+          );
 
           router.push(
             `/trainings/${training.id}/components/${selectedComponent.id}`

@@ -20,11 +20,18 @@ import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
 import { preloadPoseLandmarker } from '@/lib/pose-detection/util/pose-landmarker-loader.util';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useMain } from '@/store/main.provider';
-import { useTraining } from '@/store/training.provider';
+import {
+  TRAINING_IN_PROGRESS_STORAGE_KEY,
+  useTraining,
+} from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
+import { TrainingService } from '@/core/training/training.service';
+import { TrainingStatus } from '@/core/training/enum/training-status.enum';
+import { usePathname } from 'next/navigation';
 
 export default function TrainingInProgress() {
   const theme = useTheme();
+  const pathname = usePathname();
 
   const { activeTraining } = useMain();
   const trainingContext = useTraining();
@@ -33,7 +40,8 @@ export default function TrainingInProgress() {
   const athleteHeaderContext = useAthleteHeader();
   const undoneExercisesContext = useUndoneExercises();
 
-  const { trainingInProgress, clearTrainingState } = trainingContext;
+  const { trainingInProgress, clearTrainingState, setTrainingInProgress } =
+    trainingContext;
 
   const {
     supersetIndex,
@@ -72,7 +80,7 @@ export default function TrainingInProgress() {
       window.location.href = '/trainings';
     };
 
-    if (!activeTraining || !activeTraining.statuses?.length)
+    if (!activeTraining || !activeTraining.activeStatuses?.length)
       redirectToTrainings();
   }, [activeTraining]);
 
@@ -219,9 +227,10 @@ export default function TrainingInProgress() {
                       const completedSets =
                         ExerciseSetService.getCompletedExerciseSetsCount(
                           {
-                            exerciseId: e.id,
+                            trainingId: trainingInProgress.training.id,
                             componentId:
                               trainingInProgress.selectedComponent.id,
+                            exerciseId: e.id,
                             supersetIndex: i,
                           },
                           activeTraining.workloads

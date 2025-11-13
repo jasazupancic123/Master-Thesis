@@ -55,8 +55,9 @@ export default function TrainingInProgressExerciseSet(props: Props) {
 
   const isSetCompleted = ExerciseSetService.isSetCompleted(
     {
-      exerciseId: selectedExercise.id,
+      trainingId: trainingInProgress.training.id,
       componentId: trainingInProgress.selectedComponent.id,
+      exerciseId: selectedExercise.id,
       supersetIndex: supersetIndex,
       setIndex: setIndex,
     },

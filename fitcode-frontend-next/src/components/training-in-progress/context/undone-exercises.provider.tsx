@@ -42,8 +42,11 @@ export function UndoneExercisesProvider({ children }: React.PropsWithChildren) {
 
       const hasUndoneSets = ExerciseSetService.hasExerciseGotUndoneSets(
         undoneExercise,
-        supersetIndex,
-        trainingInProgress.selectedComponent.id,
+        {
+          trainingId: trainingInProgress.training.id,
+          supersetIndex,
+          componentId: trainingInProgress.selectedComponent.id,
+        },
         activeTraining?.workloads || []
       );
 
