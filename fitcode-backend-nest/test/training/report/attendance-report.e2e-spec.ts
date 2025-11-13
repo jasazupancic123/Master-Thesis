@@ -44,11 +44,12 @@ describe('Attendance Report', () => {
     await db.trainingComponentUserStatus.deleteAllByTraining(trainings[2].id);
   });
 
-  async function req(token: string, groupId: string) {
-    return testApp.http.get(
-      `/training/report/attendance?groupId=${groupId}`,
-      token,
-    );
+  async function req(token: string, groupId: string, componentId?: string) {
+    const url = componentId
+      ? `/training/report/attendance?groupId=${groupId}&componentId=${componentId}`
+      : `/training/report/attendance?groupId=${groupId}`;
+
+    return testApp.http.get(url, token);
   }
 
   it.each([
@@ -163,5 +164,66 @@ describe('Attendance Report', () => {
       [athlete1Id]: 2,
       [athlete2Id]: 3,
     });
+  });
+
+  it('should fetch attendance for specific component', async () => {
+    const athlete1Id = institution.athleteIds[0];
+    const athlete2Id = institution.athleteIds[1];
+    const data = { groupId: group.id, status: TrainingStatus.COMPLETED };
+
+    // component c1
+    await db.trainingComponentUserStatus.save(
+      generateTrainingComponentUserStatusStub(
+        trainings[0].id,
+        'c1',
+        athlete1Id,
+        data,
+      ),
+    );
+
+    await db.trainingComponentUserStatus.save(
+      generateTrainingComponentUserStatusStub(
+        trainings[1].id,
+        'c1',
+        athlete2Id,
+        data,
+      ),
+    );
+
+    // component c2
+    await db.trainingComponentUserStatus.save(
+      generateTrainingComponentUserStatusStub(
+        trainings[0].id,
+        'c2',
+        athlete1Id,
+        data,
+      ),
+    );
+
+    await db.trainingComponentUserStatus.save(
+      generateTrainingComponentUserStatusStub(
+        trainings[1].id,
+        'c2',
+        athlete2Id,
+        data,
+      ),
+    );
+
+    await db.trainingComponentUserStatus.save(
+      generateTrainingComponentUserStatusStub(
+        trainings[2].id,
+        'c2',
+        athlete2Id,
+        data,
+      ),
+    );
+
+    const resC1 = await req(global.trainer.token, group.id, 'c1');
+    expect(resC1.status).toBe(200);
+    expect(resC1.body).toEqual({ [athlete1Id]: 1, [athlete2Id]: 1 });
+
+    const resC2 = await req(global.trainer.token, group.id, 'c2');
+    expect(resC2.status).toBe(200);
+    expect(resC2.body).toEqual({ [athlete1Id]: 1, [athlete2Id]: 2 });
   });
 });

@@ -79,7 +79,7 @@ import { TrainingStatus } from '../enum/training-status.enum';
 import { UpdateTraining } from '../interface/update-training.interface';
 import { TrainingRepository } from '../repository/training.repository';
 import { TrainingComponentUserStatusRepository } from '../repository/training-component-user-status.repository';
-import { TrainingStats } from '../type/training-stats.type';
+import { TrainingReport } from '../type/training-stats.type';
 import { TrainingPlanService } from './training-plan.service';
 import { TrainingReportService } from './training-report.service';
 
@@ -193,7 +193,7 @@ export class TrainingService implements Permission<Training, Institution> {
   async findReportsByUser(
     user: User,
     institutionId: string,
-  ): Promise<TrainingStats[]> {
+  ): Promise<TrainingReport[]> {
     // find workloads for last 10 trainings of the user and calculate reports
     const trainings = await this.findAll(
       user,
@@ -207,14 +207,14 @@ export class TrainingService implements Permission<Training, Institution> {
       trainings.map((t) => t.id),
     );
 
-    const reports: TrainingStats[] = [];
+    const reports: TrainingReport[] = [];
     for (const training of trainings) {
       const filtered = workloads.filter(
         (w) => w.trainingId === training.id && w.userId === user.uid,
       );
 
       reports.push(
-        this.trainingReportService.getReportByUser(
+        this.trainingReportService.getTrainingReportByUser(
           user.uid,
           training,
           filtered,
@@ -334,6 +334,10 @@ export class TrainingService implements Permission<Training, Institution> {
 
     // if no components, delete training
     if (input.components.length === 0) {
+      await this.trainingComponentUserStatusRepository.deleteAllByTraining(
+        ref.trainingId,
+      );
+
       await this.repository.delete(ref.trainingId);
       return training;
     }
@@ -437,6 +441,10 @@ export class TrainingService implements Permission<Training, Institution> {
     this.validateCanEdit(user, training, training.institution);
     this.validateIsDateInFuture(training.from);
 
+    await this.trainingComponentUserStatusRepository.deleteAllByTraining(
+      ref.trainingId,
+    );
+
     await this.repository.delete(ref.trainingId);
   }
 
@@ -508,6 +516,10 @@ export class TrainingService implements Permission<Training, Institution> {
     );
 
     if (filtered.length === 0) {
+      await this.trainingComponentUserStatusRepository.deleteAllByTraining(
+        ref.trainingId,
+      );
+
       await this.repository.delete(ref.trainingId);
       return { ...training, components: [] };
     }
@@ -740,6 +752,8 @@ export class TrainingService implements Permission<Training, Institution> {
       } else
         await this.trainingComponentUserStatusRepository.save({
           id: null,
+          from: new Date(),
+          to: new Date(),
           institutionId: training.institutionId,
           groupId: training.groupId,
           cycleId: training.cycleId,
@@ -747,6 +761,16 @@ export class TrainingService implements Permission<Training, Institution> {
           componentId,
           userId: uid,
           status: TrainingStatus.IN_PROGRESS,
+          realization: 0,
+          reps: 0,
+          dist: 0,
+          time: 0,
+          exercises: 0,
+          sets: 0,
+          tonnage: 0,
+          tut: 0,
+          recTime: 0,
+          recDist: 0,
         });
     }
 
@@ -775,6 +799,11 @@ export class TrainingService implements Permission<Training, Institution> {
       uid,
     );
 
+    const workloads = await this.workloadService.findAllByUserTraining(
+      undefined,
+      { trainingId: training.id },
+    );
+
     const errors: ValidateError<Record<string, unknown>>[] = [];
     for (const userId of memberIds) {
       const statusRef: TrainingComponentUserStatusRef = { ...ref, uid: userId };
@@ -791,8 +820,16 @@ export class TrainingService implements Permission<Training, Institution> {
         continue;
       }
 
+      const report = this.trainingReportService.getTrainingComponentReport(
+        userId,
+        ref.componentId,
+        training,
+        workloads.filter((w) => w.userId === userId),
+      );
+
       await this.trainingComponentUserStatusRepository.update(statusRef, {
         status: TrainingStatus.COMPLETED,
+        realization: report.realization,
       });
     }
 
@@ -831,10 +868,12 @@ export class TrainingService implements Permission<Training, Institution> {
   async getGroupAttendance(
     user: User,
     groupId: string,
+    componentId?: string,
   ): Promise<Record<string, number>> {
     const group = await this.groupService.findOneByIdOrFail(user, { groupId });
     return await this.trainingComponentUserStatusRepository.getGroupAttendance(
       group.id,
+      componentId,
     );
   }
 

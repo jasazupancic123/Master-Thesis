@@ -113,8 +113,13 @@ export class TrainingController {
   async getAttendanceReport(
     @RequestUser() user: User,
     @Query('groupId') groupId: string,
+    @Query('componentId') componentId: string,
   ) {
-    return await this.trainingService.getGroupAttendance(user, groupId);
+    return await this.trainingService.getGroupAttendance(
+      user,
+      groupId,
+      componentId,
+    );
   }
 
   @Post(':trainingId/component/:cId/generate-qr-code')

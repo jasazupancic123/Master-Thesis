@@ -9,7 +9,7 @@ import type {
   UpdateTraining,
 } from './type/training.type';
 import type { TrainingComponent } from './type/training-component.type';
-import type { TrainingStats } from './type/training-stats.type';
+import type { TrainingReport } from './type/training-stats.type';
 import type { CreateWorkload, Workload } from './type/workload.type';
 import type { FetchOptions } from '@/lib/common/type/api.type';
 import type { DateRange } from '@/lib/common/type/date-range.type';
@@ -42,6 +42,12 @@ export class TrainingController extends BaseController {
     return this.api.get<ActiveTraining | null>(`/get/active`, options);
   }
 
+  async getGroupAttendance(groupId: string, componentId?: string) {
+    return await this.api.get<Record<string, number>>(`/report/attendance`, {
+      query: { groupId, ...(componentId ? { componentId } : {}) },
+    });
+  }
+
   async generateQRCode(
     trainingId: string,
     componentId: string,
@@ -56,7 +62,7 @@ export class TrainingController extends BaseController {
   }
 
   async findReports(institutionId: string, options?: FetchOptions) {
-    return this.api.get<TrainingStats[]>('/report/athlete', {
+    return this.api.get<TrainingReport[]>('/report/athlete', {
       query: { institutionId },
       ...options,
     });

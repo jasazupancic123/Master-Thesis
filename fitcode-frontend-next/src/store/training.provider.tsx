@@ -9,13 +9,13 @@ import type {
   TrainingExerciseRecording,
 } from '@/core/training/type/training-exercise.type';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
-import type { TrainingStats } from '@/core/training/type/training-stats.type';
+import type { TrainingReport } from '@/core/training/type/training-stats.type';
 import { lib } from '@/lib';
 import { type SetState } from '@/lib/common/type/state.type';
 
 export interface TrainingProviderProps {
   trainings: Training[];
-  reports: TrainingStats[];
+  reports: TrainingReport[];
 }
 
 interface ITrainingContext extends TrainingProviderProps {
