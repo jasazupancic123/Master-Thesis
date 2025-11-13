@@ -7,12 +7,14 @@ import { handleFinishSuperset } from '../actions/actions-superset';
 import { useTraining } from '@/store/training.provider';
 import { useUndoneExercises } from '../context/undone-exercises.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
+import { useMain } from '@/store/main.provider';
 
 export default function FinishPauseTrainingModal(
   props: ModalProps & { finish: boolean }
 ) {
   const { open, setOpen, finish } = props;
 
+  const mainContext = useMain();
   const trainingInProgressUtilsContext = useTrainingInProgressUtils();
 
   const trainingContext = useTraining();
@@ -35,6 +37,7 @@ export default function FinishPauseTrainingModal(
         if (finish) {
           // finish
           await handleFinishSuperset({
+            useMain: mainContext,
             useTraining: {
               ...trainingContext,
               trainingInProgress,

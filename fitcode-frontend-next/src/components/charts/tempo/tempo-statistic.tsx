@@ -1,29 +1,20 @@
 import { Typography } from '@mui/material';
 
-import type { TrainingExerciseRecording } from '@/core/training/type/training-exercise.type';
+import type { TrainingExerciseRecordedSet } from '@/core/training/type/training-exercise.type';
 
 interface Props {
-  selectedExercise: TrainingExerciseRecording;
-  setIndex: number;
+  recordedSet: TrainingExerciseRecordedSet;
 }
 
-export default function TempoStatistic({ selectedExercise, setIndex }: Props) {
-  const currentSet = selectedExercise.recordedSets?.find(
-    (s) => s.setIndex === setIndex
-  );
-
-  if (!currentSet) return null;
-
-  if (!currentSet.repsL.length && !currentSet.repsR?.length) return null;
-
+export default function TempoStatistic({ recordedSet }: Props) {
   // Make comparison statisctic between L and R
   if (
-    currentSet.repsL &&
-    currentSet.repsR &&
-    currentSet.repsL.length &&
-    currentSet.repsR.length
+    recordedSet.repsL &&
+    recordedSet.repsR &&
+    recordedSet.repsL.length &&
+    recordedSet.repsR.length
   ) {
-    const totalRepTimesL = currentSet.repsL
+    const totalRepTimesL = recordedSet.repsL
       .map((rep) =>
         rep.endTimestamp
           ? new Date(rep.endTimestamp).getTime() -
@@ -32,7 +23,7 @@ export default function TempoStatistic({ selectedExercise, setIndex }: Props) {
       )
       .filter((val) => val !== undefined);
 
-    const totalRepTimesR = currentSet.repsR
+    const totalRepTimesR = recordedSet.repsR
       .map((rep) =>
         rep.endTimestamp
           ? new Date(rep.endTimestamp).getTime() -
@@ -78,7 +69,7 @@ export default function TempoStatistic({ selectedExercise, setIndex }: Props) {
   }
 
   // Make statistic for the only present side
-  const currentReps = currentSet.repsL || currentSet.repsR;
+  const currentReps = recordedSet.repsL || recordedSet.repsR;
 
   if (!currentReps || currentReps.length < 2) return null;
 

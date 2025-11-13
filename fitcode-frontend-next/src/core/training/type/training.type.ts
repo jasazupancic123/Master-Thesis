@@ -2,7 +2,6 @@ import type { PeriodizationType } from '../enum/periodization-type.enum';
 import type {
   CreateTrainingComponent,
   TrainingComponent,
-  TrainingComponentRecording,
   UpdateTrainingComponent,
 } from './training-component.type';
 import type { AuthUser } from '@/core/auth/type/user.type';
@@ -55,7 +54,3 @@ export type PeriodizeTrainings = {
 
 export type CopyTraining = Pick<DateRange, 'from'> &
   Partial<Pick<Training, 'membersIds'>>;
-
-export type TrainingRecording = Omit<Training, 'components'> & {
-  components: TrainingComponentRecording[];
-};

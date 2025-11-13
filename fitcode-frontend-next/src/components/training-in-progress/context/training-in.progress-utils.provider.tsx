@@ -80,7 +80,7 @@ export function TrainingInProgressUtilsProvider({
     }
 
     router.push(LINK_TRAININGS.href);
-    await clearTrainingState();
+    // await clearTrainingState();
   };
 
   const handleCompleteTraining = async () => {

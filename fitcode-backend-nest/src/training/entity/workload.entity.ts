@@ -1,10 +1,5 @@
 import { IntersectionType } from '@nestjs/mapped-types';
-import {
-  ApiProperty,
-  ApiPropertyOptional,
-  OmitType,
-  PartialType,
-} from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, OmitType } from '@nestjs/swagger';
 import { Expose, Transform, Type } from 'class-transformer';
 import {
   IsEnum,
@@ -153,7 +148,7 @@ export class WorkloadValue extends IntersectionType(
 export class Workload extends IntersectionType(
   WorkloadMeta,
   WorkloadValue,
-  PartialType(DateRangeDto),
+  DateRangeDto,
 ) {
   @ValidateNested()
   @Type(() => ExerciseSet)

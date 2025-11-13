@@ -108,14 +108,12 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
   const [expandedExercisesView, setExpandedExercisesView] = useState(false);
 
   useEffect(() => {
-    console.log('SETTING DAY VIEW FILTER', filter);
     if (filter !== 'day') return;
 
     const trainingId = params.get('training');
     const componentId = params.get('component');
 
     const training = trainings.find((t) => t.id === trainingId);
-    console.log('trainings', trainings, 'training', training);
     if (!training) return;
 
     const day = lib.common.date.getDay(training.from);

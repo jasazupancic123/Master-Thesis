@@ -14,7 +14,7 @@ import type { TrainingReport } from '@/core/training/type/training-report.type';
 import type { Workload } from '@/core/training/type/workload.type';
 import type { SetState, SetStateNullable } from '@/lib/common/type/state.type';
 
-type ActiveTraining = {
+export type ActiveTraining = {
   training?: Training & { workloads: Workload[] };
   report?: TrainingReport;
 };
