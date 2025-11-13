@@ -7,7 +7,7 @@ import { ExerciseModule } from '../exercise/exercise.module';
 import { GroupModule } from '../group/group.module';
 import { InstitutionModule } from '../institution/institution.module';
 import { TrainingRepository } from './repository/training.repository';
-import { TrainingComponentUserStatusRepository } from './repository/training-user-status.repository';
+import { TrainingComponentUserStatusRepository } from './repository/training-component-user-status.repository';
 import { WorkloadRepository } from './repository/workload.repository';
 import { TrainingService } from './service/training.service';
 import { TrainingPlanService } from './service/training-plan.service';

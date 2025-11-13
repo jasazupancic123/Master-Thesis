@@ -1,19 +1,18 @@
 import { TestApp } from '@test/common/utils/app.util';
 
 import type { TestInstitution } from '@src/common/type/entity.type';
-import { getTime } from '@src/common/utils/date.util';
 import type { Group } from '@src/group/entity/group.entity';
 import { TestDbService } from '@src/test-db/test-db.service';
 import type { Training } from '@src/training/entity/training.entity';
 import type { Workload } from '@src/training/entity/workload.entity';
 import { SetStatus } from '@src/training/enum/set-status.enum';
-import { TrainingStatus } from '@src/training/enum/training-status.enum';
 import {
   generateExerciseSet,
   generateSuperset,
   generateTrainingComponent,
   generateTrainingExercise,
 } from '@src/training/mock/training.stub';
+import { generateTrainingComponentUserStatusStub } from '@src/training/mock/training-component-user-status.stub';
 
 describe('Get Active Training (e2e)', () => {
   let testApp: TestApp;
@@ -178,35 +177,19 @@ describe('Get Active Training (e2e)', () => {
 
     // create 2 reports in db
     await db.trainingComponentUserStatus.save(
-      {
-        id: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        trainingId: earliestTraining.id,
-        componentId: 'c1',
-        userId: global.athlete.uid,
-        status: TrainingStatus.IN_PROGRESS,
-        from: getTime(new Date(), 5, 0),
-      },
-      {
-        trainingId: earliestTraining.id,
-        uid: global.athlete.uid,
-        componentId: 'c1',
-      },
+      generateTrainingComponentUserStatusStub(
+        earliestTraining.id,
+        'c1',
+        global.athlete.uid,
+      ),
     );
 
     await db.trainingComponentUserStatus.save(
-      {
-        id: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        trainingId: earliestTraining.id,
-        componentId: 'c1',
-        userId: global.athlete.uid,
-        status: TrainingStatus.IN_PROGRESS,
-        from: getTime(new Date(), 10, 0),
-      },
-      { trainingId: training.id, uid: global.athlete.uid, componentId: 'c1' },
+      generateTrainingComponentUserStatusStub(
+        training.id,
+        'c1',
+        global.athlete.uid,
+      ),
     );
 
     // 2 reports should be in db

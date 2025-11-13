@@ -108,6 +108,15 @@ export class TrainingController {
     );
   }
 
+  @Get('report/attendance')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER])
+  async getAttendanceReport(
+    @RequestUser() user: User,
+    @Query('groupId') groupId: string,
+  ) {
+    return await this.trainingService.getGroupAttendance(user, groupId);
+  }
+
   @Post(':trainingId/component/:cId/generate-qr-code')
   @Auth([UserRole.MANAGER, UserRole.TRAINER])
   async generateQRCode(

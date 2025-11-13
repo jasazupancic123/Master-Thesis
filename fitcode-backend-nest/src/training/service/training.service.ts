@@ -78,7 +78,7 @@ import { MainSet } from '../enum/main-set.enum';
 import { TrainingStatus } from '../enum/training-status.enum';
 import { UpdateTraining } from '../interface/update-training.interface';
 import { TrainingRepository } from '../repository/training.repository';
-import { TrainingComponentUserStatusRepository } from '../repository/training-user-status.repository';
+import { TrainingComponentUserStatusRepository } from '../repository/training-component-user-status.repository';
 import { TrainingStats } from '../type/training-stats.type';
 import { TrainingPlanService } from './training-plan.service';
 import { TrainingReportService } from './training-report.service';
@@ -738,19 +738,16 @@ export class TrainingService implements Permission<Training, Institution> {
           status: TrainingStatus.IN_PROGRESS,
         });
       } else
-        await this.trainingComponentUserStatusRepository.save(
-          {
-            id: null,
-            institutionId: training.institutionId,
-            groupId: training.groupId,
-            cycleId: training.cycleId,
-            trainingId: training.id,
-            componentId,
-            userId: uid,
-            status: TrainingStatus.IN_PROGRESS,
-          },
-          { trainingId: training.id, componentId, uid },
-        );
+        await this.trainingComponentUserStatusRepository.save({
+          id: null,
+          institutionId: training.institutionId,
+          groupId: training.groupId,
+          cycleId: training.cycleId,
+          trainingId: training.id,
+          componentId,
+          userId: uid,
+          status: TrainingStatus.IN_PROGRESS,
+        });
     }
 
     return { trainings, errors };
@@ -828,6 +825,17 @@ export class TrainingService implements Permission<Training, Institution> {
     await this.trainingComponentUserStatusRepository.update(statusRef, {
       status: TrainingStatus.PAUSED,
     });
+  }
+
+  @LogMethod()
+  async getGroupAttendance(
+    user: User,
+    groupId: string,
+  ): Promise<Record<string, number>> {
+    const group = await this.groupService.findOneByIdOrFail(user, { groupId });
+    return await this.trainingComponentUserStatusRepository.getGroupAttendance(
+      group.id,
+    );
   }
 
   private async getMemberIdsForTrainingReport(

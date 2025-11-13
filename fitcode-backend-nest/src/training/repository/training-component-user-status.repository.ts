@@ -127,10 +127,13 @@ export class TrainingComponentUserStatusRepository extends FirestoreRepository<
     );
   }
 
-  async save(
-    data: Create<TrainingComponentUserStatus>,
-    ref: TrainingComponentUserStatusRef,
-  ) {
+  async save(data: Create<TrainingComponentUserStatus>) {
+    const ref: TrainingComponentUserStatusRef = {
+      trainingId: data.trainingId,
+      componentId: data.componentId,
+      uid: data.userId,
+    };
+
     const query = this.firebase.buildCreateQuery<TrainingComponentUserStatus>(
       data,
       { timestamps: true },
@@ -157,6 +160,33 @@ export class TrainingComponentUserStatusRepository extends FirestoreRepository<
 
   async delete(ref: TrainingComponentUserStatusRef) {
     await this.doc(ref).delete();
+  }
+
+  async getGroupAttendance(groupId: string): Promise<Record<string, number>> {
+    const snapshot = await this.collectionGroup()
+      .where('groupId', '==', groupId)
+      .get();
+
+    const statuses = snapshot.docs.map((doc) =>
+      this.firebase.serialize(
+        doc.data() as FirestoreEntity<TrainingComponentUserStatus>,
+      ),
+    );
+
+    // group by userId and the number of unique trainingIds they have
+    const attendance: Record<string, Set<string>> = {};
+    for (const status of statuses) {
+      if (status.status !== TrainingStatus.COMPLETED) continue;
+      if (!attendance[status.userId]) attendance[status.userId] = new Set();
+      attendance[status.userId].add(status.trainingId);
+    }
+
+    // convert sets to counts
+    const counts: Record<string, number> = {};
+    for (const [userId, trainingIds] of Object.entries(attendance))
+      counts[userId] = trainingIds.size;
+
+    return counts;
   }
 
   getKey(ref: TrainingComponentUserStatusRef) {

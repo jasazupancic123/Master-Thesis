@@ -31,7 +31,7 @@ import {
 import { SetStatus } from '@src/training/enum/set-status.enum';
 
 import { TrainingStatus } from '../enum/training-status.enum';
-import { TrainingComponentUserStatusRepository } from '../repository/training-user-status.repository';
+import { TrainingComponentUserStatusRepository } from '../repository/training-component-user-status.repository';
 import { WorkloadRepository } from '../repository/workload.repository';
 
 @Injectable()

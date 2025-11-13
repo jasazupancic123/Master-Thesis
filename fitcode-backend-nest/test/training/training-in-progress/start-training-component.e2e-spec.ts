@@ -13,7 +13,7 @@ import {
   generateTrainingComponent,
   generateTrainingExercise,
 } from '@src/training/mock/training.stub';
-import { TrainingComponentUserStatusRepository } from '@src/training/repository/training-user-status.repository';
+import { TrainingComponentUserStatusRepository } from '@src/training/repository/training-component-user-status.repository';
 
 describe('Start Training Component (e2e)', () => {
   let testApp: TestApp;
