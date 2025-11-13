@@ -1,6 +1,6 @@
+import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { ITrainingContextDefined } from '@/store/training.provider';
 import type { ITrainingInProgressContext } from '@/store/training-in-progress.provider';
-import { TrainingExercise } from '@/core/training/type/training-exercise.type';
 
 export function updateTrainingExerciseWithAI(
   repsCountL: number,

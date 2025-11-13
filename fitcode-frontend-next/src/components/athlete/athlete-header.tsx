@@ -1,6 +1,6 @@
 'use client';
 
-import { Close, Done, Menu as MenuIcon, Pause } from '@mui/icons-material';
+import { Done, Menu as MenuIcon, Pause } from '@mui/icons-material';
 import {
   Avatar,
   Divider,
@@ -20,7 +20,6 @@ import Link from 'next/link';
 import * as React from 'react';
 import { useState } from 'react';
 
-import { handleFinishSuperset } from '../training-in-progress/actions/actions-superset';
 import type { ITrainingInProgressUtilsCtx } from '../training-in-progress/context/training-in.progress-utils.provider';
 import type { IUndoneExercisesCtx } from '../training-in-progress/context/undone-exercises.provider';
 import BottomNavigation from './bottom-navigation';

@@ -8,14 +8,14 @@ import TrainingInProgressExerciseControls from './exercise-controls';
 import ExerciseVideoModal from './modals/exercise-video-modal';
 import TrainingInProgressExerciseSet from './training-in-progress-exercise-set';
 import MobileMovementValidation from '@/components/mobile-movement-validation/mobile-movement-validation';
+import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
 import { lib } from '@/lib';
 import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
+import { useMain } from '@/store/main.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
-import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
-import { useMain } from '@/store/main.provider';
 
 export default function TrainingInProgressExerciseCard() {
   const { activeTraining } = useMain();

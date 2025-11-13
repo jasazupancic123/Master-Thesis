@@ -1,5 +1,6 @@
-import { Dayjs } from 'dayjs';
-import { TrainingExerciseRecordedSet } from './training-exercise.type';
+import type { Dayjs } from 'dayjs';
+
+import type { TrainingExerciseRecordedSet } from './training-exercise.type';
 
 export type TrainingInProgressIndexDB = {
   startOfTraining: Dayjs | null;

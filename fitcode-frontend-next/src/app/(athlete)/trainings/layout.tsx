@@ -2,14 +2,14 @@
 
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 import AthleteHeader from '@/components/athlete/athlete-header';
+import { TrainingStatus } from '@/core/training/enum/training-status.enum';
 import TrainingsInitializer from '@/initializers/trainings.initializer';
 import { AthleteHeaderProvider } from '@/store/athlete-header.provider';
 import { useMain } from '@/store/main.provider';
-import { TrainingStatus } from '@/core/training/enum/training-status.enum';
-import { useEffect } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
 
 export default function Layout({ children }: React.PropsWithChildren) {
   return (

@@ -3,11 +3,11 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 
 import { useTrainingInProgressUtils } from './training-in.progress-utils.provider';
+import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
 import type { TrainingExerciseExtended } from '@/core/training/type/training-exercise.type';
 import type { SetState } from '@/lib/common/type/state.type';
-import { useTraining } from '@/store/training.provider';
-import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
 import { useMain } from '@/store/main.provider';
+import { useTraining } from '@/store/training.provider';
 
 export interface IUndoneExercisesCtx {
   undoneExercises: TrainingExerciseExtended[];

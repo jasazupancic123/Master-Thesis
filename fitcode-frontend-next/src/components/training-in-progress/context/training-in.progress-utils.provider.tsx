@@ -11,8 +11,8 @@ import type { TrainingInProgress } from '@/core/training/type/training-in-progre
 import { LINK_TRAININGS } from '@/lib/common/const/nav.const';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
-import { useTraining } from '@/store/training.provider';
 import { useMain } from '@/store/main.provider';
+import { useTraining } from '@/store/training.provider';
 
 export interface ITrainingInProgressUtilsCtx {
   showUndoneSetsError: boolean;

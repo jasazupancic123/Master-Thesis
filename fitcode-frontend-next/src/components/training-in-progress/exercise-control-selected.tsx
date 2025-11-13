@@ -1,6 +1,7 @@
 'use client';
 
 import { Box, Divider, Typography } from '@mui/material';
+import { useEffect, useState } from 'react';
 
 import RomChart from '../charts/rom/rom-chart';
 import RomStatistic from '../charts/rom/rom-statistics';
@@ -10,11 +11,10 @@ import { CONTROLS_TEXT_PLACEHOLDERS } from './constant/exercise-controls-text-pl
 import { TrainingInProgressExerciseControl } from './enum/exercise-controls.enum';
 import SWControl from './sw-control';
 import { theme } from '@/app/style';
+import type { TrainingExerciseRecordedSet } from '@/core/training/type/training-exercise.type';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import ImageGallery from '@/ui/image-gallery';
-import { TrainingExerciseRecordedSet } from '@/core/training/type/training-exercise.type';
-import { useEffect, useState } from 'react';
 
 interface Props {
   selectedControl: TrainingInProgressExerciseControl;
@@ -31,31 +31,20 @@ export default function ExercieseControlSelected(props: Props) {
 
   const { trainingInProgress } = trainingContext;
 
-  if (
-    setIndex === undefined ||
-    supersetIndex === undefined ||
-    !selectedExercise ||
-    !trainingInProgress
-  )
-    return null;
-
-  console.log(
-    'trainingInProgress.recordedSets',
-    trainingInProgress.recordedSets
-  );
-
   const [completedSet, setCompletedSet] = useState<
     TrainingExerciseRecordedSet | undefined
   >(
-    trainingInProgress.recordedSets?.find(
+    trainingInProgress?.recordedSets?.find(
       (set) =>
         set.setIndex === setIndex &&
-        set.exerciseId === selectedExercise.id &&
+        set.exerciseId === selectedExercise?.id &&
         set.supersetIndex === supersetIndex
     )
   );
 
   useEffect(() => {
+    if (!trainingInProgress || !selectedExercise) return;
+
     const foundSet = trainingInProgress.recordedSets?.find(
       (set) =>
         set.setIndex === setIndex &&
@@ -65,13 +54,19 @@ export default function ExercieseControlSelected(props: Props) {
 
     setCompletedSet(foundSet);
   }, [
-    trainingInProgress.recordedSets,
+    trainingInProgress?.recordedSets,
     setIndex,
     supersetIndex,
     selectedExercise,
   ]);
 
-  console.log('completedSet', completedSet);
+  if (
+    setIndex === undefined ||
+    supersetIndex === undefined ||
+    !selectedExercise ||
+    !trainingInProgress
+  )
+    return null;
 
   switch (selectedControl) {
     case TrainingInProgressExerciseControl.TEMPO: {

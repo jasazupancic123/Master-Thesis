@@ -1,17 +1,17 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
 import { createContext, useContext, useEffect, useState } from 'react';
 
 import { useAuthenticatedAuth } from './auth.provider';
+import { useMain } from './main.provider';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
+import type { TrainingInProgressIndexDB } from '@/core/training/type/training-in-progress-indexdb';
 import type { TrainingReport } from '@/core/training/type/training-report.type';
 import { lib } from '@/lib';
 import { type SetState } from '@/lib/common/type/state.type';
-import { useMain } from './main.provider';
-import { usePathname } from 'next/navigation';
-import { TrainingInProgressIndexDB } from '@/core/training/type/training-in-progress-indexdb';
 
 export const TRAINING_IN_PROGRESS_STORAGE_KEY = 'blindoff_training_in_progress';
 
@@ -92,8 +92,6 @@ export const TrainingProvider = (
         storedTrainingInProgressObject.payload
       ) as TrainingInProgressIndexDB;
 
-      console.log('storedTrainingInProgress', storedTrainingInProgress);
-
       if (storedTrainingInProgress) {
         setTrainingInProgress({
           training: activeTraining.training,
@@ -120,8 +118,6 @@ export const TrainingProvider = (
         startOfTraining: trainingInProgress.startOfTraining,
         recordedSets: trainingInProgress.recordedSets,
       };
-
-      console.log('object to store', objectToStore);
 
       if (trainingInProgress.startOfTraining) {
         await lib.common.indexedDb.items.put({

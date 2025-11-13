@@ -2,6 +2,7 @@ import { Check, Circle, Pause } from '@mui/icons-material';
 import { Box, Collapse, IconButton, SvgIcon } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Typography from '@mui/material/Typography';
+import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
@@ -10,8 +11,8 @@ import { core } from '@/core/core.service';
 import { Components } from '@/core/exercise/constant/components.constant';
 import { TrainingStatus } from '@/core/training/enum/training-status.enum';
 import { TrainingController } from '@/core/training/training.controller';
+import { TrainingReportService } from '@/core/training/training.report.service';
 import { TrainingService } from '@/core/training/training.service';
-import type { ExerciseSetTracking } from '@/core/training/type/exercise-set-tracking-state.type';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
@@ -24,10 +25,6 @@ import {
   useTraining,
 } from '@/store/training.provider';
 import MyModal from '@/ui/modal';
-import { useEffect } from 'react';
-import { TrainingReport } from '@/core/training/type/training-report.type';
-import { TrainingReportService } from '@/core/training/training.report.service';
-import dayjs from 'dayjs';
 
 interface Props {
   training: Training;

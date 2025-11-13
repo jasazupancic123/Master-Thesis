@@ -7,7 +7,7 @@ import type { CreateWorkload } from '@/core/training/type/workload.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { KeypointHistory } from '@/lib/pose-detection/class/keypoint-history';
 import type { Rep } from '@/lib/pose-detection/type/rep.type';
-import { ActiveTraining } from '@/store/main.provider';
+import type { ActiveTraining } from '@/store/main.provider';
 
 export const finishSet = async (state: {
   exercise: TrainingExercise;

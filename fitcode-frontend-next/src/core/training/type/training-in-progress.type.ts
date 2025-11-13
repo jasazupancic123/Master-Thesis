@@ -1,9 +1,9 @@
 import type { Dayjs } from 'dayjs';
 
+import type { Superset } from './superset.type';
+import type { Training } from './training.type';
 import type { TrainingComponent } from './training-component.type';
-import { TrainingExerciseRecordedSet } from './training-exercise.type';
-import { Superset } from './superset.type';
-import { Training } from './training.type';
+import type { TrainingExerciseRecordedSet } from './training-exercise.type';
 
 export type TrainingInProgress = {
   training: Training;

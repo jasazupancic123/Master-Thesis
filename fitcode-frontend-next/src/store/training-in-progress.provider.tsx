@@ -4,8 +4,10 @@ import { useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
+import { useMain } from './main.provider';
 import { useTraining } from './training.provider';
 import { TrainingController } from '@/core/training/training.controller';
+import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type {
   CreateWorkload,
   Workload,
@@ -13,8 +15,6 @@ import type {
 import { lib } from '@/lib';
 import { INDEXED_DB_FIELDS } from '@/lib/common/const/indexed-db-fields.const';
 import { handleApiRequest, type SetState } from '@/lib/common/type/state.type';
-import { useMain } from './main.provider';
-import { TrainingExercise } from '@/core/training/type/training-exercise.type';
 
 export interface ITrainingInProgressContext {
   selectedExercise: TrainingExercise | undefined;

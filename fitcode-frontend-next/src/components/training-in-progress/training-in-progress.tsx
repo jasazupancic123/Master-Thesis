@@ -12,21 +12,16 @@ import { useUndoneExercises } from './context/undone-exercises.provider';
 import FinishPauseTrainingModal from './modals/finish-pause-training-modal';
 import UndoneSetsErrorModal from './modals/undone-sets-error-modal';
 import TrainingInProgressExerciseContainer from './training-in-progress-exercise-container';
+import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
-import { TrainingStatus } from '@/core/training/enum/training-status.enum';
-import { TrainingService } from '@/core/training/training.service';
-import type { ExerciseSetTracking } from '@/core/training/type/exercise-set-tracking-state.type';
-import type { Training } from '@/core/training/type/training.type';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
 import { lib } from '@/lib';
 import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
 import { preloadPoseLandmarker } from '@/lib/pose-detection/util/pose-landmarker-loader.util';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
-import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
-import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
 
 export default function TrainingInProgress() {
   const theme = useTheme();

@@ -93,8 +93,7 @@ export default function MobileMovementValidation(
   const { trainingInProgress, setTrainingInProgress } = trainingContext || {};
 
   const trainingInProgressContext = useTrainingInProgress();
-  const { handleUpsertSet, setCurrentAiRecordedWorkload } =
-    trainingInProgressContext || {};
+  const { handleUpsertSet } = trainingInProgressContext || {};
 
   const authenticatedAuthContext = useAuthenticatedAuth();
   const { user } = authenticatedAuthContext || { user: null };

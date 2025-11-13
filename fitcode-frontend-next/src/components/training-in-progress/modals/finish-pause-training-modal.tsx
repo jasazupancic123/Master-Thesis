@@ -1,13 +1,13 @@
 import { Typography } from '@mui/material';
 
-import { useTrainingInProgressUtils } from '../context/training-in.progress-utils.provider';
-import type { ModalProps } from '@/lib/common/type/modal-props.type';
-import MyModal from '@/ui/modal';
 import { handleFinishSuperset } from '../actions/actions-superset';
-import { useTraining } from '@/store/training.provider';
+import { useTrainingInProgressUtils } from '../context/training-in.progress-utils.provider';
 import { useUndoneExercises } from '../context/undone-exercises.provider';
-import { useTrainingInProgress } from '@/store/training-in-progress.provider';
+import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import { useMain } from '@/store/main.provider';
+import { useTraining } from '@/store/training.provider';
+import { useTrainingInProgress } from '@/store/training-in-progress.provider';
+import MyModal from '@/ui/modal';
 
 export default function FinishPauseTrainingModal(
   props: ModalProps & { finish: boolean }
