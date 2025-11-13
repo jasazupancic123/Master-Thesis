@@ -4,7 +4,7 @@ import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum'
 import { TrainingComponentUserStatusRef } from '@src/common/type/firestore.type';
 import { TrainingComponentUserStatus } from '@src/training/entity/training-component-user-status.entity';
 import { TrainingStatus } from '@src/training/enum/training-status.enum';
-import { TrainingComponentUserStatusRepository } from '@src/training/repository/training-user-status.repository';
+import { TrainingComponentUserStatusRepository } from '@src/training/repository/training-component-user-status.repository';
 
 import { TestRepositoryMixin } from '../test-repository.mixin';
 
