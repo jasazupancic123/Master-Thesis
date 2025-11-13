@@ -25,6 +25,7 @@ interface Props {
   setIndex?: number;
   supersetIndex?: number;
   componentId?: string;
+  trainingId?: string;
   dissableBottomPadding?: boolean;
   aiDetectionView?: boolean;
 }
@@ -37,6 +38,7 @@ export default function AthleteTrainingExerciseSets({
   setIndex,
   supersetIndex,
   componentId,
+  trainingId,
   dissableBottomPadding,
   trainingInProgressView,
 }: Props) {
@@ -408,13 +410,15 @@ export default function AthleteTrainingExerciseSets({
               {supersetIndex !== undefined &&
                 setIndex !== undefined &&
                 componentId &&
+                trainingId &&
                 activeTraining &&
                 ExerciseSetService.isSetCompleted(
                   {
+                    trainingId,
+                    componentId,
                     exerciseId: exercise.id,
                     supersetIndex: supersetIndex,
                     setIndex: setIndex,
-                    componentId,
                   },
                   activeTraining.workloads
                 ) && (

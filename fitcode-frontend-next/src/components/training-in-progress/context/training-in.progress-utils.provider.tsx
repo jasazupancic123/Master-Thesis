@@ -13,6 +13,7 @@ import type { SetState } from '@/lib/common/type/state.type';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useMain } from '@/store/main.provider';
 import { useTraining } from '@/store/training.provider';
+import { TrainingStatus } from '@/core/training/enum/training-status.enum';
 
 export interface ITrainingInProgressUtilsCtx {
   showUndoneSetsError: boolean;
@@ -28,7 +29,7 @@ export interface ITrainingInProgressUtilsCtx {
   handleCloseMenu: () => void;
   handleFinish: () => void;
   handleCancel: () => void;
-  handleCancelTraining: () => Promise<void>;
+  handlePauseTraining: () => Promise<void>;
   handleCompleteTraining: () => Promise<void>;
 }
 
@@ -78,6 +79,32 @@ export function TrainingInProgressUtilsProvider({
       console.error(e);
       toast.error('Failed to pause training');
     }
+
+    setActiveTraining((prev) => {
+      if (!prev) return prev;
+
+      return {
+        ...prev,
+        activeStatuses: prev.activeStatuses.map((s) => {
+          if (s.componentId === component.id && s.trainingId === training.id) {
+            return {
+              ...s,
+              status: TrainingStatus.PAUSED,
+            };
+          }
+          return s;
+        }),
+        statuses: prev.statuses.map((s) => {
+          if (s.componentId === component.id && s.trainingId === training.id) {
+            return {
+              ...s,
+              status: TrainingStatus.PAUSED,
+            };
+          }
+          return s;
+        }),
+      };
+    });
 
     router.push(LINK_TRAININGS.href);
     // await clearTrainingState();
@@ -138,7 +165,7 @@ export function TrainingInProgressUtilsProvider({
     handleCloseMenu,
     handleFinish,
     handleCancel,
-    handleCancelTraining: handlePauseTraining,
+    handlePauseTraining,
     handleCompleteTraining,
   };
 

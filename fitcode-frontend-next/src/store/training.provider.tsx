@@ -45,6 +45,8 @@ export const TrainingProvider = (
 ) => {
   const { activeTraining } = useMain();
 
+  console.log('activeTraining in training provider', activeTraining);
+
   const { children, trainings, reports } = props;
 
   const [trainingInProgress, setTrainingInProgress] =
@@ -107,7 +109,7 @@ export const TrainingProvider = (
     };
 
     setupTrainingInProgress();
-  }, [user]);
+  }, [activeTraining, user, pathname]);
 
   useEffect(() => {
     const saveTrainingInProgress = async () => {
@@ -119,13 +121,11 @@ export const TrainingProvider = (
         recordedSets: trainingInProgress.recordedSets,
       };
 
-      if (trainingInProgress.startOfTraining) {
-        await lib.common.indexedDb.items.put({
-          id: STORED_TRAINING_IN_PROGRESS,
-          payload: JSON.stringify(objectToStore),
-          updatedAt: Date.now(),
-        });
-      }
+      await lib.common.indexedDb.items.put({
+        id: STORED_TRAINING_IN_PROGRESS,
+        payload: JSON.stringify(objectToStore),
+        updatedAt: Date.now(),
+      });
     };
 
     saveTrainingInProgress();

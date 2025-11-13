@@ -186,8 +186,9 @@ export default function TrainingInProgressExerciseCard() {
               activeTraining
                 ? ExerciseSetService.isSetCompleted(
                     {
-                      exerciseId: selectedExercise.id,
+                      trainingId: trainingInProgress.training.id,
                       componentId: trainingInProgress.selectedComponent.id,
+                      exerciseId: selectedExercise.id,
                       supersetIndex: supersetIndex,
                       setIndex: s.setNumber - 1,
                     },

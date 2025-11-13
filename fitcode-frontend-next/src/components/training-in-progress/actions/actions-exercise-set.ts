@@ -120,20 +120,14 @@ export const unmarkExerciseSetAsCompleted = (
     if (!prev) return prev;
 
     return {
-      ...prev,
-      training: prev
-        ? {
-            ...prev,
-            workloads: prev.workloads.filter((workload) => {
-              return !(
-                workload.exerciseId === id.exerciseId &&
-                workload.supersetIndex === id.supersetIndex &&
-                workload.setNumber === id.setIndex + 1
-              );
-            }),
-          }
-        : prev,
-    };
+      workloads: prev.workloads.filter((workload) => {
+        return !(
+          workload.exerciseId === id.exerciseId &&
+          workload.supersetIndex === id.supersetIndex &&
+          workload.setNumber === id.setIndex + 1
+        );
+      }),
+    } as ActiveTraining;
   });
 };
 

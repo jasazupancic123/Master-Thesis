@@ -717,7 +717,11 @@ export class TrainingService implements Permission<Training, Institution> {
       const active =
         await this.trainingComponentUserStatusRepository.getActiveComponents(
           uid,
+          true,
         );
+
+      console.log('active', active);
+      console.log('input training id', input[0].training.id);
 
       if (active.length > 0 && active[0].trainingId !== input[0].training.id) {
         errors.push({ field: uid, message: 'ACTIVE_TRAINING_EXISTS' });
@@ -948,19 +952,25 @@ export class TrainingService implements Permission<Training, Institution> {
   ): Promise<
     | (Training & {
         workloads: Workload[];
+        activeStatuses: TrainingComponentUserStatus[];
         statuses: TrainingComponentUserStatus[];
       })
     | null
   > {
     const athlete = await this.getAthlete(user, athleteId);
+    const activeStatuses =
+      await this.trainingComponentUserStatusRepository.getActiveComponents(
+        athlete.uid,
+        true,
+      );
+
     const statuses =
       await this.trainingComponentUserStatusRepository.getActiveComponents(
         athlete.uid,
       );
 
-    if (!statuses.length) return null;
     const training = await this.findOneById(user, {
-      trainingId: statuses[0].trainingId,
+      trainingId: activeStatuses[0].trainingId,
     });
 
     if (!training) return null;
@@ -969,7 +979,7 @@ export class TrainingService implements Permission<Training, Institution> {
       training,
     );
 
-    return { ...individualTraining, statuses };
+    return { ...individualTraining, activeStatuses, statuses };
   }
 
   async getTrainingByAthlete(

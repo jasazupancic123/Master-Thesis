@@ -130,8 +130,9 @@ export default function TrainingInProgressExerciseControls() {
 
             const isCurrentSetDone = ExerciseSetService.isSetCompleted(
               {
-                exerciseId: selectedExercise.id,
+                trainingId: trainingInProgress.training.id,
                 componentId: trainingInProgress.selectedComponent.id,
+                exerciseId: selectedExercise.id,
                 supersetIndex: supersetIndex,
                 setIndex: setIndex,
               },

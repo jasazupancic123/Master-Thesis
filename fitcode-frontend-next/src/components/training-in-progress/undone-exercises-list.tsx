@@ -44,8 +44,9 @@ export default function UndoneExercisesList() {
             {exercise.sets.map((set, i) => {
               const isSetDone = ExerciseSetService.isSetCompleted(
                 {
-                  exerciseId: exercise.id,
+                  trainingId: trainingInProgress.training.id,
                   componentId: trainingInProgress.selectedComponent.id,
+                  exerciseId: exercise.id,
                   supersetIndex: supersetIndex,
                   setIndex: i,
                 },

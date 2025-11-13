@@ -23,7 +23,8 @@ export default function FinishPauseTrainingModal(
 
   const { trainingInProgress } = trainingContext;
 
-  const { handleCancelTraining } = trainingInProgressUtilsContext;
+  const { handlePauseTraining: handleCancelTraining } =
+    trainingInProgressUtilsContext;
 
   return (
     <MyModal

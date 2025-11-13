@@ -1220,6 +1220,7 @@ export default function MobileMovementValidation(
                       supersetIndex={supersetIndex}
                       setIndex={setIndex}
                       componentId={componentId}
+                      trainingId={trainingId}
                       aiDetectionView
                     />
                   )}

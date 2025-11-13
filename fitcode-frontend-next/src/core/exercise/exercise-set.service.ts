@@ -6,8 +6,9 @@ import type { Workload } from '../training/type/workload.type';
 export class ExerciseSetService {
   static isSetCompleted(
     id: {
-      exerciseId: string;
+      trainingId: string;
       componentId: string;
+      exerciseId: string;
       supersetIndex: number;
       setIndex: number;
     },
@@ -15,6 +16,7 @@ export class ExerciseSetService {
   ): boolean {
     const workload = workloads.find(
       (w) =>
+        w.trainingId === id.trainingId &&
         w.componentId === id.componentId &&
         w.exerciseId === id.exerciseId &&
         w.supersetIndex === id.supersetIndex &&
@@ -29,11 +31,17 @@ export class ExerciseSetService {
   }
 
   static findLastCompletedWorkload(
-    componentId: string,
+    id: {
+      trainingId: string;
+      componentId: string;
+    },
     workloads: Workload[]
   ): Workload | undefined {
     const lastCompletedWorkload = workloads
-      .filter((w) => w.componentId === componentId)
+      .filter(
+        (w) =>
+          w.trainingId === id.trainingId && w.componentId === id.componentId
+      )
       .sort(
         (a, b) =>
           new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
@@ -43,11 +51,17 @@ export class ExerciseSetService {
   }
 
   static getCompletedExerciseSetsCount(
-    id: { exerciseId: string; componentId: string; supersetIndex: number },
+    id: {
+      trainingId: string;
+      componentId: string;
+      exerciseId: string;
+      supersetIndex: number;
+    },
     workloads: Workload[]
   ): number {
     return workloads.filter(
       (w) =>
+        w.trainingId === id.trainingId &&
         w.componentId === id.componentId &&
         w.exerciseId === id.exerciseId &&
         w.supersetIndex === id.supersetIndex &&
@@ -57,16 +71,20 @@ export class ExerciseSetService {
 
   static hasExerciseGotUndoneSets(
     exercise: TrainingExercise,
-    supersetIndex: number,
-    componentId: string,
+    id: {
+      trainingId: string;
+      componentId: string;
+      supersetIndex: number;
+    },
     workloads: Workload[]
   ): boolean {
     return exercise.sets.some((set) => {
       const workload = workloads.find(
         (w) =>
-          w.componentId === componentId &&
+          w.trainingId === id.trainingId &&
+          w.componentId === id.componentId &&
           w.exerciseId === exercise.id &&
-          w.supersetIndex === supersetIndex &&
+          w.supersetIndex === id.supersetIndex &&
           w.setNumber === set.setNumber
       );
 
@@ -80,17 +98,21 @@ export class ExerciseSetService {
 
   static getUndoneExercisesFromSuperset(
     superset: Superset,
-    supersetIndex: number,
-    componentId: string,
+    id: {
+      trainingId: string;
+      componentId: string;
+      supersetIndex: number;
+    },
     workloads: Workload[]
   ) {
     const exercises = superset.exercises.flat();
 
+    const { supersetIndex, componentId, trainingId } = id;
+
     return exercises.filter((exercise) => {
       return this.hasExerciseGotUndoneSets(
         exercise,
-        supersetIndex,
-        componentId,
+        { trainingId, componentId, supersetIndex },
         workloads
       );
     });
