@@ -1,15 +1,14 @@
 import type { ITrainingInProgressUtilsCtx } from '../context/training-in.progress-utils.provider';
 import type { IUndoneExercisesCtx } from '../context/undone-exercises.provider';
-import { core } from '@/core/core.service';
+import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
 import type { Superset } from '@/core/training/type/superset.type';
 import type {
   TrainingExercise,
   TrainingExerciseExtended,
 } from '@/core/training/type/training-exercise.type';
+import type { IMainContext } from '@/store/main.provider';
 import type { ITrainingContextDefined } from '@/store/training.provider';
 import type { ITrainingInProgressContext } from '@/store/training-in-progress.provider';
-import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
-import { IMainContext } from '@/store/main.provider';
 
 export function handleChangeSuperset(
   input: { superset: Superset; i: number },

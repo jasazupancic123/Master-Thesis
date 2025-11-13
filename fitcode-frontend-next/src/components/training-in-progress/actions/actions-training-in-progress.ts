@@ -1,9 +1,9 @@
 import dayjs from 'dayjs';
 
+import type { Superset } from '@/core/training/type/superset.type';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
 import type { ITrainingContextDefined } from '@/store/training.provider';
 import type { ITrainingInProgressContext } from '@/store/training-in-progress.provider';
-import { Superset } from '@/core/training/type/superset.type';
 
 export function handleInitTrainingInProgressComponent(context: {
   useTraining: ITrainingContextDefined;

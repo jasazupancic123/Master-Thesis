@@ -6,12 +6,12 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { ElapsedTime } from './training-in-progress-elapsed-time';
 import { theme } from '@/app/style';
+import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
 import { STRING_CONST } from '@/lib/common/const/string.const';
+import { useMain } from '@/store/main.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import { PieCenterLabel } from '@/ui/mui-charts';
-import { useMain } from '@/store/main.provider';
-import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
 
 interface Props {
   startOfTraining: Dayjs;
@@ -28,15 +28,6 @@ export default function SWControl(props: Props) {
 
   const [now, setNow] = useState(() => Date.now());
 
-  if (
-    !activeTraining.training ||
-    !selectedExercise ||
-    supersetIndex === undefined ||
-    setIndex === undefined ||
-    !trainingInProgress
-  )
-    return;
-
   // const [countdownTimer, setCountdownTimer] = useState<string>(
   //   (lastSetRecTimeS || 60).toString()
   // );
@@ -46,20 +37,13 @@ export default function SWControl(props: Props) {
     return () => clearInterval(id);
   }, []);
 
-  const isSetCompleted = ExerciseSetService.isSetCompleted(
-    {
-      exerciseId: selectedExercise.id,
-      componentId: trainingInProgress.selectedComponent.id,
-      supersetIndex: supersetIndex,
-      setIndex: setIndex,
-    },
-    activeTraining.training.workloads
-  );
-
-  const lastCompletedWorkload = ExerciseSetService.findLastCompletedWorkload(
-    trainingInProgress.selectedComponent.id,
-    activeTraining.training.workloads
-  );
+  const lastCompletedWorkload =
+    trainingInProgress && activeTraining && activeTraining.training
+      ? ExerciseSetService.findLastCompletedWorkload(
+          trainingInProgress.selectedComponent.id,
+          activeTraining.training.workloads
+        )
+      : undefined;
 
   const lastSetCompletedAt = lastCompletedWorkload?.timestamp;
 
@@ -72,7 +56,24 @@ export default function SWControl(props: Props) {
         );
   }, [now, lastSetCompletedAt, trainingInProgress]);
 
-  if (setIndex === undefined || !selectedExercise) return null;
+  if (
+    !activeTraining.training ||
+    !selectedExercise ||
+    supersetIndex === undefined ||
+    setIndex === undefined ||
+    !trainingInProgress
+  )
+    return null;
+
+  const isSetCompleted = ExerciseSetService.isSetCompleted(
+    {
+      exerciseId: selectedExercise.id,
+      componentId: trainingInProgress.selectedComponent.id,
+      supersetIndex: supersetIndex,
+      setIndex: setIndex,
+    },
+    activeTraining.training.workloads
+  );
 
   const lastSetRecTimeS = selectedExercise.sets[setIndex].recTime;
 

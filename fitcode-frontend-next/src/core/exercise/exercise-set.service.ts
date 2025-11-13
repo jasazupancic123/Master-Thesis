@@ -1,7 +1,7 @@
 import { SetStatus } from '../training/enum/set-status.enum';
-import { Superset } from '../training/type/superset.type';
-import { TrainingExercise } from '../training/type/training-exercise.type';
-import { Workload } from '../training/type/workload.type';
+import type { Superset } from '../training/type/superset.type';
+import type { TrainingExercise } from '../training/type/training-exercise.type';
+import type { Workload } from '../training/type/workload.type';
 
 export class ExerciseSetService {
   static isSetCompleted(

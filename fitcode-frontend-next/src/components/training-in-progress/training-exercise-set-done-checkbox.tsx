@@ -1,16 +1,16 @@
 import { Box, Typography, useTheme } from '@mui/material';
+import { useEffect, useState } from 'react';
 
 import {
   finishSet,
   unmarkExerciseSetAsCompleted,
 } from './actions/actions-exercise-set';
 import { handleAdvanceInSuperset } from './actions/actions-superset';
+import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import { useMain } from '@/store/main.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
-import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
-import { useMain } from '@/store/main.provider';
-import { useEffect, useState } from 'react';
 
 interface Props {
   exercise: TrainingExercise;
@@ -33,31 +33,18 @@ export default function TrainingExerciseSetDoneCheckbox(props: Props) {
 
   const { exercise, setIndex, supersetIndex } = props;
 
-  if (!exercise || !trainingInProgress) {
-    return null;
-  }
-
   const isRecorded =
     currentAiRecordedWorkload &&
+    trainingInProgress &&
     currentAiRecordedWorkload.componentId ===
       trainingInProgress.selectedComponent.id &&
     currentAiRecordedWorkload.exerciseId === exercise.id &&
     currentAiRecordedWorkload.supersetIndex === supersetIndex &&
     currentAiRecordedWorkload.setNumber === setIndex + 1;
 
-  const [isCompleted, setIsCompleted] = useState<boolean>(
-    ExerciseSetService.isSetCompleted(
-      {
-        exerciseId: exercise.id,
-        componentId: trainingInProgress.selectedComponent.id,
-        supersetIndex,
-        setIndex,
-      },
-      activeTraining.training?.workloads || []
-    )
-  );
-
   useEffect(() => {
+    if (!trainingInProgress) return;
+
     const completed = ExerciseSetService.isSetCompleted(
       {
         exerciseId: exercise.id,
@@ -70,6 +57,24 @@ export default function TrainingExerciseSetDoneCheckbox(props: Props) {
 
     setIsCompleted(completed);
   }, [activeTraining, exercise, supersetIndex, setIndex]);
+
+  const [isCompleted, setIsCompleted] = useState<boolean>(
+    trainingInProgress
+      ? ExerciseSetService.isSetCompleted(
+          {
+            exerciseId: exercise.id,
+            componentId: trainingInProgress.selectedComponent.id,
+            supersetIndex,
+            setIndex,
+          },
+          activeTraining.training?.workloads || []
+        )
+      : false
+  );
+
+  if (!exercise || !trainingInProgress) {
+    return null;
+  }
 
   return (
     <Box

@@ -7,12 +7,12 @@ import UnilateralParamsRow from './unilateral-params-row';
 import { theme } from '@/app/style';
 import { core } from '@/core/core.service';
 import { KG } from '@/core/exercise/constant/exercise-param.constant';
+import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
+import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import { useMain } from '@/store/main.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import LeftRightExerciseText from '@/ui/left-right-exercise-text';
-import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
-import { useMain } from '@/store/main.provider';
-import { TrainingExercise } from '@/core/training/type/training-exercise.type';
 
 interface Props {
   exercise: TrainingExercise;

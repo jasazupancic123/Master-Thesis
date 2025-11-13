@@ -1,11 +1,15 @@
 import dayjs from 'dayjs';
-import { PrescribedTrainingStats, SetReport } from './type/training-stats.type';
-import { Training } from './type/training.type';
-import { ExerciseSet } from './type/exercise-set.type';
-import { TrainingReport } from './type/training-report.type';
-import { AuthUser } from '../auth/type/user.type';
+
+import type { AuthUser } from '../auth/type/user.type';
 import { TrainingStatus } from './enum/training-status.enum';
-import { TrainingComponent } from './type/training-component.type';
+import type { ExerciseSet } from './type/exercise-set.type';
+import type { Training } from './type/training.type';
+import type { TrainingComponent } from './type/training-component.type';
+import type { TrainingReport } from './type/training-report.type';
+import type {
+  PrescribedTrainingStats,
+  SetReport,
+} from './type/training-stats.type';
 
 const REP_TEMPO_TIME_IN_S = 3; // 3 seconds per rep tempo if not specified
 
@@ -49,7 +53,7 @@ export class TrainingReportService {
             return (
               acc +
               superset.exercises.filter(
-                (ex, index, self) =>
+                (ex, index) =>
                   index === superset.exercises.findIndex((e) => e.id === ex.id)
               ).length
             );

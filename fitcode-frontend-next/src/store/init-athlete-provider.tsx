@@ -9,7 +9,6 @@ import { TrainingService } from '@/core/training/training.service';
 import { lib } from '@/lib';
 import { LOADING_ANIMATION_MIN_DURATION_MS } from '@/lib/common/const/animation.const';
 import Alert from '@/ui/alert';
-import { ComponentUtil } from '@/lib/common/service/icons.util';
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
