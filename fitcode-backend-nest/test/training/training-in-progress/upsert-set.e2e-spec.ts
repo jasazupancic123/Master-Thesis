@@ -335,6 +335,8 @@ describe('Upsert Set (e2e)', () => {
       {
         userId: global.athlete.uid,
         timestamp: new Date(),
+        from: new Date(),
+        to: new Date(),
         recTime: 0,
         reps: 1,
       },
@@ -415,6 +417,8 @@ describe('Upsert Set (e2e)', () => {
       {
         userId: global.athlete.uid,
         timestamp: new Date(),
+        from: new Date(),
+        to: new Date(),
         reps: 6,
         recTime: 0,
       },

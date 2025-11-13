@@ -13,6 +13,8 @@ import type { TrainingExercise } from '@/core/training/type/training-exercise.ty
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import LeftRightExerciseText from '@/ui/left-right-exercise-text';
+import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
+import { useMain } from '@/store/main.provider';
 
 interface Props {
   training: Training;
@@ -23,7 +25,7 @@ interface Props {
   passedSet?: ExerciseSet;
   setIndex?: number;
   supersetIndex?: number;
-  exerciseSetTrackingState?: ExerciseSetTracking[];
+  componentId?: string;
   dissableBottomPadding?: boolean;
   aiDetectionView?: boolean;
 }
@@ -35,10 +37,12 @@ export default function AthleteTrainingExerciseSets({
   passedSet,
   setIndex,
   supersetIndex,
-  exerciseSetTrackingState,
+  componentId,
   dissableBottomPadding,
   trainingInProgressView,
 }: Props) {
+  const { activeTraining } = useMain();
+
   const theme = useTheme();
   const screenSize = useScreenSize();
   const { updateTrainingInProgress } = useTraining();
@@ -402,13 +406,18 @@ export default function AthleteTrainingExerciseSets({
             </Grid2>
 
             <Grid2 size={0.5} display="flex" alignItems="flex-end">
-              {exerciseSetTrackingState &&
-                exerciseSetTrackingState.find(
-                  (setState) =>
-                    setState.exerciseId === exercise.id &&
-                    setState.completedSetNumbers.some(
-                      (s) => s.setNumber === set.setNumber
-                    )
+              {supersetIndex !== undefined &&
+                setIndex !== undefined &&
+                componentId &&
+                activeTraining.training &&
+                ExerciseSetService.isSetCompleted(
+                  {
+                    exerciseId: exercise.id,
+                    supersetIndex: supersetIndex,
+                    setIndex: setIndex,
+                    componentId,
+                  },
+                  activeTraining.training.workloads
                 ) && (
                   <CheckCircle
                     fontSize="small"

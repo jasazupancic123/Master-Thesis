@@ -2,70 +2,74 @@ import { Box, Typography, useTheme } from '@mui/material';
 
 import {
   finishSet,
-  isExerciseSetCompleted,
   unmarkExerciseSetAsCompleted,
 } from './actions/actions-exercise-set';
 import { handleAdvanceInSuperset } from './actions/actions-superset';
-import type {
-  TrainingExercise,
-  TrainingExerciseRecording,
-} from '@/core/training/type/training-exercise.type';
+import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
+import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
+import { useMain } from '@/store/main.provider';
+import { useEffect, useState } from 'react';
 
-interface TrainingExerciseSetDoneCheckboxProps {
-  exercise: TrainingExercise | TrainingExerciseRecording;
+interface Props {
+  exercise: TrainingExercise;
+  supersetIndex: number;
   setIndex: number;
 }
 
-export default function TrainingExerciseSetDoneCheckbox(
-  props: TrainingExerciseSetDoneCheckboxProps
-) {
+export default function TrainingExerciseSetDoneCheckbox(props: Props) {
   const theme = useTheme();
 
+  const mainContext = useMain();
+  const { activeTraining, setActiveTraining } = mainContext;
   const trainingContext = useTraining();
   const trainingInProgressContext = useTrainingInProgress();
 
   const { trainingInProgress, setTrainingInProgress } = trainingContext;
 
-  const { handleUpsertSet } = trainingInProgressContext;
+  const { currentAiRecordedWorkload, handleUpsertSet } =
+    trainingInProgressContext;
 
-  const { exercise, setIndex } = props;
+  const { exercise, setIndex, supersetIndex } = props;
 
   if (!exercise || !trainingInProgress) {
     return null;
   }
 
-  const isExerciseRecording = (
-    exercise: TrainingExercise | TrainingExerciseRecording
-  ): exercise is TrainingExerciseRecording => {
-    return (exercise as TrainingExerciseRecording).recordedSets !== undefined;
-  };
-
-  const trainingExerciseRecording = isExerciseRecording(exercise)
-    ? exercise.recordedSets?.find((set) => set.setIndex === setIndex)
-    : undefined;
-
-  const setTrackingState = trainingInProgress.exerciseSetTrackingState.find(
-    (state) => state.exerciseId === exercise.id
-  );
-
-  const foundCompletedSet = setTrackingState?.completedSetNumbers.find(
-    (completedSet) => completedSet.setNumber === setIndex + 1
-  );
-
   const isRecorded =
-    trainingExerciseRecording &&
-    foundCompletedSet &&
-    !foundCompletedSet.isBeenSetToCompleted;
+    currentAiRecordedWorkload &&
+    currentAiRecordedWorkload.componentId ===
+      trainingInProgress.selectedComponent.id &&
+    currentAiRecordedWorkload.exerciseId === exercise.id &&
+    currentAiRecordedWorkload.supersetIndex === supersetIndex &&
+    currentAiRecordedWorkload.setNumber === setIndex + 1;
 
-  const isCompleted =
-    setIndex !== undefined &&
-    isExerciseSetCompleted(
-      { exerciseId: exercise.id },
-      setIndex + 1,
-      trainingInProgress.exerciseSetTrackingState
+  const [isCompleted, setIsCompleted] = useState<boolean>(
+    ExerciseSetService.isSetCompleted(
+      {
+        exerciseId: exercise.id,
+        componentId: trainingInProgress.selectedComponent.id,
+        supersetIndex,
+        setIndex,
+      },
+      activeTraining.training?.workloads || []
+    )
+  );
+
+  useEffect(() => {
+    const completed = ExerciseSetService.isSetCompleted(
+      {
+        exerciseId: exercise.id,
+        componentId: trainingInProgress.selectedComponent.id,
+        supersetIndex,
+        setIndex,
+      },
+      activeTraining.training?.workloads || []
     );
+
+    setIsCompleted(completed);
+  }, [activeTraining, exercise, supersetIndex, setIndex]);
 
   return (
     <Box
@@ -106,33 +110,8 @@ export default function TrainingExerciseSetDoneCheckbox(
 
           if (isRecorded) {
             // if it's recorded, then it was already saved, just advance
-            setTrainingInProgress((prev) =>
-              !prev
-                ? prev
-                : {
-                    ...prev,
-                    exerciseSetTrackingState: prev.exerciseSetTrackingState.map(
-                      (state) => {
-                        if (state.exerciseId !== exercise.id) return state;
-                        return {
-                          ...state,
-                          completedSetNumbers: state.completedSetNumbers.map(
-                            (completedSet) => {
-                              if (completedSet.setNumber !== setIndex + 1)
-                                return completedSet;
-                              return {
-                                ...completedSet,
-                                isBeenSetToCompleted: true,
-                              };
-                            }
-                          ),
-                        };
-                      }
-                    ),
-                  }
-            );
-
             handleAdvanceInSuperset({
+              useMain: mainContext,
               useTraining: { ...trainingContext, trainingInProgress },
               useTrainingInProgress: trainingInProgressContext,
             });
@@ -142,23 +121,25 @@ export default function TrainingExerciseSetDoneCheckbox(
           if (!isCompleted) {
             await finishSet({
               exercise,
+              supersetIndex,
               setIndex,
               trainingInProgress,
               setTrainingInProgress,
               handleUpsertSet,
-              setManually: true,
             });
 
-            handleAdvanceInSuperset({
-              useTraining: { ...trainingContext, trainingInProgress },
-              useTrainingInProgress: trainingInProgressContext,
-            });
+            handleAdvanceInSuperset(
+              {
+                useMain: mainContext,
+                useTraining: { ...trainingContext, trainingInProgress },
+                useTrainingInProgress: trainingInProgressContext,
+              },
+              true
+            );
           } else {
             unmarkExerciseSetAsCompleted(
-              { exerciseId: exercise.id },
-              setIndex + 1,
-              trainingInProgress.exerciseSetTrackingState,
-              setTrainingInProgress
+              { exerciseId: exercise.id, setIndex, supersetIndex },
+              setActiveTraining
             );
           }
         }}

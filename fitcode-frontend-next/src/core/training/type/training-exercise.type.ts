@@ -27,10 +27,6 @@ export type RepImage = {
   side?: 'L' | 'R';
 };
 
-export type TrainingExerciseRecording = TrainingExercise & {
-  recordedSets?: TrainingExerciseRecordedSet[];
-};
-
 export type RepRomTimestamp = {
   value: number;
   timestamp: Date;
@@ -38,6 +34,8 @@ export type RepRomTimestamp = {
 
 export type TrainingExerciseRecordedSet = {
   setIndex: number;
+  exerciseId: string;
+  supersetIndex: number;
   repsL: RepInfo[];
   imagesL: RepImage[];
   repsR?: RepInfo[];

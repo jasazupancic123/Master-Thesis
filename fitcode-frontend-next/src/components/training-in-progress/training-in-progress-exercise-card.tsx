@@ -14,8 +14,12 @@ import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
+import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
+import { useMain } from '@/store/main.provider';
 
 export default function TrainingInProgressExerciseCard() {
+  const { activeTraining } = useMain();
+
   const theme = useTheme();
 
   const trainingContext = useTraining();
@@ -176,13 +180,20 @@ export default function TrainingInProgressExerciseCard() {
           }}
         >
           {selectedExercise.sets.map((s, i) => {
-            const isSetDone = trainingInProgress.exerciseSetTrackingState.some(
-              (state) =>
-                state.exerciseId === selectedExercise.id &&
-                state.completedSetNumbers.some(
-                  (set) => set.setNumber === s.setNumber
-                )
-            );
+            const isSetDone =
+              supersetIndex !== undefined &&
+              setIndex !== undefined &&
+              activeTraining.training
+                ? ExerciseSetService.isSetCompleted(
+                    {
+                      exerciseId: selectedExercise.id,
+                      componentId: trainingInProgress.selectedComponent.id,
+                      supersetIndex: supersetIndex,
+                      setIndex: s.setNumber - 1,
+                    },
+                    activeTraining.training.workloads
+                  )
+                : false;
 
             const isSetSelected = setIndex === i;
 

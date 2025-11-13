@@ -171,6 +171,8 @@ describe('Complete Next Set (e2e)', () => {
       {
         userId: global.athlete.uid,
         timestamp: new Date(),
+        from: new Date(),
+        to: new Date(),
         reps: 1,
         recTime: 0,
         photoURLs: [],
@@ -194,6 +196,8 @@ describe('Complete Next Set (e2e)', () => {
       await req(token, trainingId, 'invalid-exercise-id', {
         userId: global.athlete.uid,
         timestamp: new Date(),
+        from: new Date(),
+        to: new Date(),
         reps: 1,
         recTime: 0,
         photoURLs: [],
@@ -217,6 +221,8 @@ describe('Complete Next Set (e2e)', () => {
       {
         userId: global.athlete.uid,
         timestamp: new Date(),
+        from: new Date(),
+        to: new Date(),
         reps: 1,
         recTime: 0,
         photoURLs: [],
@@ -237,6 +243,8 @@ describe('Complete Next Set (e2e)', () => {
     const res = await req(global.trainer.token, trainingId, exercise.id, {
       userId: global.athlete.uid,
       timestamp: new Date(),
+      from: new Date(),
+      to: new Date(),
       reps: 1,
       recTime: 0,
       photoURLs: [],
@@ -263,6 +271,8 @@ describe('Complete Next Set (e2e)', () => {
     const res = await req(global.trainer.token, pastTrainingId, 'squat', {
       userId: global.athlete.uid,
       timestamp: new Date(),
+      from: new Date(),
+      to: new Date(),
       reps: 1,
       recTime: 0,
       photoURLs: [],
@@ -276,6 +286,8 @@ describe('Complete Next Set (e2e)', () => {
     const res = await req(global.trainer.token, trainingId, 'squat', {
       userId: global.athlete.uid,
       timestamp: new Date(),
+      from: new Date(),
+      to: new Date(),
       recTime: 0,
       reps: 1,
     });
@@ -298,6 +310,8 @@ describe('Complete Next Set (e2e)', () => {
     const res = await req(global.trainer.token, trainingId, 'squat', {
       userId: global.athlete.uid,
       timestamp: new Date(),
+      from: new Date(),
+      to: new Date(),
       recTime: 0,
       reps: 1,
     });
@@ -671,6 +685,8 @@ describe('Complete Next Set (e2e)', () => {
     const res = await req(global.trainer.token, trainingId3, exercise.id, {
       userId: global.athlete.uid,
       timestamp: addHours(new Date(), 1),
+      from: addHours(new Date(), 1),
+      to: addHours(new Date(), 1),
       reps: 12,
       repsR: 11,
       loadKg: 60,

@@ -1,9 +1,9 @@
 import dayjs from 'dayjs';
 
-import type { SupersetRecording } from '@/core/training/type/superset.type';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
 import type { ITrainingContextDefined } from '@/store/training.provider';
 import type { ITrainingInProgressContext } from '@/store/training-in-progress.provider';
+import { Superset } from '@/core/training/type/superset.type';
 
 export function handleInitTrainingInProgressComponent(context: {
   useTraining: ITrainingContextDefined;
@@ -40,7 +40,7 @@ export function handleInitTrainingInProgressComponent(context: {
 
   if (!component) return;
 
-  let newSelectedSuperset: SupersetRecording | undefined = undefined;
+  let newSelectedSuperset: Superset | undefined = undefined;
 
   if (supersetIndex === undefined) {
     newSelectedSuperset = component.supersets[0];

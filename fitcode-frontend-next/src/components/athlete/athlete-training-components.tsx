@@ -19,11 +19,15 @@ import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
-import { useTraining } from '@/store/training.provider';
+import {
+  TRAINING_IN_PROGRESS_STORAGE_KEY,
+  useTraining,
+} from '@/store/training.provider';
 import MyModal from '@/ui/modal';
 import { useEffect } from 'react';
 import { TrainingReport } from '@/core/training/type/training-report.type';
 import { TrainingReportService } from '@/core/training/training.report.service';
+import dayjs from 'dayjs';
 
 interface Props {
   training: Training;
@@ -268,6 +272,18 @@ export default function AthleteTrainingComponents(props: Props) {
               );
 
               trainingToStart = result.trainings[user.uid];
+
+              const errors = result.errors as unknown as {
+                field: string;
+                message: string;
+              }[];
+
+              if (errors && errors.length > 0) {
+                toast.error(`Error: ${errors[0].message}`);
+                setModal(false);
+
+                return;
+              }
             } else if (
               activeTraining.report &&
               training.id !== activeTraining.report.trainingId
@@ -280,16 +296,25 @@ export default function AthleteTrainingComponents(props: Props) {
 
               return;
             } else {
-              // restart training with new component‚
-
-              console.log('selectedComponent.id', selectedComponent.id);
-              console.log('training.id', training.id);
+              // restart training with new component
               const result = await controller.startTrainingComponent(
                 training.id,
                 selectedComponent.id
               );
 
               trainingToStart = result.trainings[user.uid];
+
+              const errors = result.errors as unknown as {
+                field: string;
+                message: string;
+              }[];
+
+              if (errors && errors.length > 0) {
+                toast.error(`Error: ${errors[0].message}`);
+                setModal(false);
+
+                return;
+              }
             }
           } catch (e) {
             console.error(e);
@@ -306,7 +331,7 @@ export default function AthleteTrainingComponents(props: Props) {
             exercises,
           });
 
-          const component = training.components.find(
+          const component = trainingToStart.components.find(
             (c) => c.id === selectedComponent.id
           );
 
@@ -318,40 +343,39 @@ export default function AthleteTrainingComponents(props: Props) {
             return;
           }
 
-          const state: ExerciseSetTracking[] =
-            component.supersets
-              .map((s, sIndex) => {
-                return s.exercises.map((e) => {
-                  return {
-                    exerciseId: e.id,
-                    supersetIndex: sIndex,
-                    completedSetNumbers: [] as {
-                      setNumber: number;
-                      timestamp: Date;
-                    }[],
-                  };
-                });
-              })
-              .flat() || [];
-
-          console.log('component', component);
-
           const report = TrainingReportService.initEmptyTrainingReport(
             trainingToStart,
             component,
             user
           );
 
-          setActiveTraining({
-            training: { ...trainingToStart, workloads: [] },
+          setActiveTraining((prev) => ({
+            training: {
+              ...trainingToStart,
+              workloads: prev && prev.training ? prev.training.workloads : [],
+            },
             report: report,
-          });
+          }));
+
+          const foundTrainingInProgressObject =
+            await lib.common.indexedDb.items.get(
+              `${TRAINING_IN_PROGRESS_STORAGE_KEY}_${trainingToStart.id}_${component.id}`
+            );
+
+          const foundTrainingInProgress = foundTrainingInProgressObject
+            ? JSON.parse(foundTrainingInProgressObject.payload)
+            : null;
 
           setTrainingInProgress({
             training: trainingToStart,
             selectedComponent: component,
+            supersets: component.supersets,
             userId: user.uid,
-            exerciseSetTrackingState: state,
+            recordedSets: foundTrainingInProgress
+              ? foundTrainingInProgress.recordedSets
+              : [],
+            startOfTraining:
+              foundTrainingInProgress?.startOfTraining || dayjs(),
           } as TrainingInProgress);
 
           setModal(false);

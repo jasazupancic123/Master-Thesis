@@ -31,8 +31,8 @@ import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
 import type {
   RepImage,
   RepRomTimestamp,
+  TrainingExercise,
   TrainingExerciseRecordedSet,
-  TrainingExerciseRecording,
 } from '@/core/training/type/training-exercise.type';
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
@@ -72,10 +72,8 @@ const DEBUG = false;
 export const EXERCISE_TIMES_ROUNDING_STEP_S = 0.1; // round to 0.1
 
 interface MobileMovementValidationProps {
-  selectedExercise: TrainingExerciseRecording | undefined;
-  setSelectedExercise:
-    | SetState<TrainingExerciseRecording | undefined>
-    | undefined;
+  selectedExercise: TrainingExercise | undefined;
+  setSelectedExercise: SetState<TrainingExercise | undefined> | undefined;
   selectedTrackingMethod: TrackingMethod | undefined;
   setSelectedTrackingMethod: SetState<TrackingMethod> | undefined;
   trainingId: string;
@@ -95,7 +93,8 @@ export default function MobileMovementValidation(
   const { trainingInProgress, setTrainingInProgress } = trainingContext || {};
 
   const trainingInProgressContext = useTrainingInProgress();
-  const { handleUpsertSet } = trainingInProgressContext || {};
+  const { handleUpsertSet, setCurrentAiRecordedWorkload } =
+    trainingInProgressContext || {};
 
   const authenticatedAuthContext = useAuthenticatedAuth();
   const { user } = authenticatedAuthContext || { user: null };
@@ -512,6 +511,7 @@ export default function MobileMovementValidation(
       handleUpsertSet !== undefined &&
       selectedExercise !== undefined &&
       setIndex !== undefined &&
+      supersetIndex !== undefined &&
       user !== null &&
       user !== undefined
     ) {
@@ -528,93 +528,16 @@ export default function MobileMovementValidation(
         }
       }
 
-      const sides = [
-        recordedRepsRef.current.left,
-        recordedRepsRef.current.right,
-      ].filter((r) => r !== undefined) as Rep[][];
-
-      const updatedExercise = {
-        ...selectedExercise,
-      } as TrainingExerciseRecording;
-
-      let recordedSets: TrainingExerciseRecordedSet[] | undefined =
-        updatedExercise.recordedSets;
-
-      let tempoL: string | null = null;
-      let tempoR: string | null = null;
-
-      let i = 0; // 0 for left side, 1 for right
-
-      for (const side of sides) {
-        const images = side
-          .map((rep) => {
-            if (!rep.extremumImageUrl) return null;
-
-            return {
-              repNumber: rep.repNumber,
-              url: rep.extremumImageUrl || '',
-            };
+      const tempoL = getTempoString({
+        recordedReps: recordedRepsRef.current.left,
+      });
+      const tempoR = recordedRepsRef.current.right
+        ? getTempoString({
+            recordedReps: recordedRepsRef.current.right,
           })
-          .filter((i) => i !== null) as RepImage[];
+        : null;
 
-        const reps = side.map((rep) => {
-          return {
-            repNumber: rep.repNumber,
-            startTimestamp: rep.startTimestamp,
-            endTimestamp: rep.endValueTimestamp,
-            idleTimeMs: rep.idleTimeMs,
-            timeToExtremeMs: rep.timeToExtremeMs,
-            timeAtExtremeMs: rep.timeAtExtremeMs,
-            timeFromExtremeToEndMs: rep.timeFromExtremeToEndMs,
-            durationMs: rep.durationMs,
-            minRomValue: rep.minRomValue,
-            maxRomValue: rep.maxRomValue,
-            startRomValue: rep.startRomValue,
-            extremumRomValue: rep.extremeValue,
-          } as RepInfo;
-        });
-
-        if (!recordedSets) {
-          // can only happen for left side
-          recordedSets = [{ setIndex, imagesL: images, repsL: reps }];
-        } else {
-          if (recordedSets.find((rs) => rs.setIndex === setIndex)) {
-            // already recorded for this set, update it
-            recordedSets = recordedSets.map((rs) => {
-              if (rs.setIndex !== setIndex) return rs;
-
-              if (i === 0) {
-                // left side
-                return { ...rs, repsL: reps, imagesL: images };
-              } else if (i === 1) {
-                // right side
-                return { ...rs, repsR: reps, imagesR: images };
-              }
-
-              return rs;
-            });
-          } else {
-            // did not yet record for this set, insert only, can only happen for left side
-            recordedSets.push({
-              setIndex,
-              imagesL: images,
-              repsL: reps,
-            });
-          }
-        }
-
-        if (i === 0) {
-          tempoL = getTempoString({ recordedReps: side });
-        } else if (i === 1) {
-          tempoR = getTempoString({ recordedReps: side });
-        }
-
-        i++;
-      }
-
-      // const romLKeypoints = constantKeypointHistoryRef.current.getHistoryById(
-      //   exercisePose.leftSide.romKeypointId
-      // );
+      let currentRecordedSets = trainingInProgress.recordedSets || [];
 
       const romLKeypoints = recordedRepsRef.current.left
         .map((r) =>
@@ -631,12 +554,6 @@ export default function MobileMovementValidation(
           timestamp: r.capturedAt,
         }))
         .filter((v) => v !== undefined) as RepRomTimestamp[];
-
-      // const romRKeypoints: Keypoint[] | undefined = exercisePose.rightSide
-      //   ? constantKeypointHistoryRef.current.getHistoryById(
-      //       exercisePose.rightSide.romKeypointId
-      //     )
-      //   : undefined;
 
       const romRKeypoints =
         recordedRepsRef.current.right && exercisePose.rightSide
@@ -659,37 +576,114 @@ export default function MobileMovementValidation(
             .filter((v) => v !== undefined) as RepRomTimestamp[])
         : undefined;
 
-      recordedSets = recordedSets
-        ? recordedSets.map((rs) => {
-            if (rs.setIndex !== setIndex) return rs;
+      const recordedSet: TrainingExerciseRecordedSet = {
+        setIndex: setIndex,
+        exerciseId: selectedExercise.id,
+        supersetIndex: supersetIndex,
+        repsL: recordedRepsRef.current.left.map((rep) => {
+          return {
+            repNumber: rep.repNumber,
+            startTimestamp: rep.startTimestamp,
+            endTimestamp: rep.endValueTimestamp,
+            idleTimeMs: rep.idleTimeMs,
+            timeToExtremeMs: rep.timeToExtremeMs,
+            timeAtExtremeMs: rep.timeAtExtremeMs,
+            timeFromExtremeToEndMs: rep.timeFromExtremeToEndMs,
+            durationMs: rep.durationMs,
+            minRomValue: rep.minRomValue,
+            maxRomValue: rep.maxRomValue,
+            startRomValue: rep.startRomValue,
+            extremumRomValue: rep.extremeValue,
+          } as RepInfo;
+        }),
+        repsR: recordedRepsRef.current.right
+          ? recordedRepsRef.current.right.map((rep) => {
+              return {
+                repNumber: rep.repNumber,
+                startTimestamp: rep.startTimestamp,
+                endTimestamp: rep.endValueTimestamp,
+                idleTimeMs: rep.idleTimeMs,
+                timeToExtremeMs: rep.timeToExtremeMs,
+                timeAtExtremeMs: rep.timeAtExtremeMs,
+                timeFromExtremeToEndMs: rep.timeFromExtremeToEndMs,
+                durationMs: rep.durationMs,
+                minRomValue: rep.minRomValue,
+                maxRomValue: rep.maxRomValue,
+                startRomValue: rep.startRomValue,
+                extremumRomValue: rep.extremeValue,
+              } as RepInfo;
+            })
+          : undefined,
+        romL,
+        romR,
+        imagesL: recordedRepsRef.current.left
+          .map((rep) => {
+            if (!rep.extremumImageUrl) return null;
 
             return {
-              ...rs,
-              romL: romL.length ? romL : undefined,
-              romR: romR && romR.length ? romR : undefined,
+              repNumber: rep.repNumber,
+              url: rep.extremumImageUrl || '',
             };
           })
-        : undefined;
+          .filter((i) => i !== null) as RepImage[],
+        imagesR: recordedRepsRef.current.right
+          ? (recordedRepsRef.current.right
+              .map((rep) => {
+                if (!rep.extremumImageUrl) return null;
 
-      updatedExercise.recordedSets = recordedSets;
+                return {
+                  repNumber: rep.repNumber,
+                  url: rep.extremumImageUrl || '',
+                };
+              })
+              .filter((i) => i !== null) as RepImage[])
+          : undefined,
+      };
+
+      if (
+        currentRecordedSets.some(
+          (s) =>
+            s.setIndex === setIndex &&
+            s.supersetIndex === supersetIndex &&
+            s.exerciseId === selectedExercise.id
+        )
+      ) {
+        // replace existing set
+        currentRecordedSets = currentRecordedSets.map((s) => {
+          if (
+            s.setIndex === setIndex &&
+            s.supersetIndex === supersetIndex &&
+            s.exerciseId === selectedExercise!.id
+          ) {
+            return recordedSet;
+          }
+          return s;
+        });
+      } else {
+        // add new set
+        currentRecordedSets.push(recordedSet);
+      }
 
       updateTrainingExerciseWithAI(
         recordedRepsRef.current.left.length,
         recordedRepsRef.current.right?.length,
         tempoL,
         tempoR,
-        updatedExercise,
+        selectedExercise,
         true,
         { ...trainingContext, trainingInProgress },
         trainingInProgressContext
       );
 
       await finishSet({
-        exercise: updatedExercise,
+        exercise: selectedExercise,
         setIndex,
+        supersetIndex,
         trainingInProgress,
+        newRecordedSets: currentRecordedSets,
         setTrainingInProgress,
         handleUpsertSet,
+        isAiRecorded: true,
       });
 
       // handleAdvanceInSuperset({
@@ -1126,7 +1120,6 @@ export default function MobileMovementValidation(
               recordedRepsRef.current.right?.length ? (
                 <TempoChart
                   selectedExercise={selectedExercise}
-                  setIndex={-1}
                   width={
                     typeof window !== 'undefined'
                       ? window.innerWidth - 160
@@ -1227,6 +1220,7 @@ export default function MobileMovementValidation(
                       passedSet={selectedExercise.sets[setIndex]}
                       supersetIndex={supersetIndex}
                       setIndex={setIndex}
+                      componentId={componentId}
                       aiDetectionView
                     />
                   )}

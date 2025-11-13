@@ -11,7 +11,10 @@ import {
 import { useRef } from 'react';
 
 import { theme } from '@/app/style';
-import type { TrainingExerciseRecording } from '@/core/training/type/training-exercise.type';
+import type {
+  TrainingExercise,
+  TrainingExerciseRecordedSet,
+} from '@/core/training/type/training-exercise.type';
 import { EXERCISE_POSES } from '@/lib/pose-detection/const/exercise-poses';
 import { ConditionDirection } from '@/lib/pose-detection/enum/condition-detection.enum';
 import type {
@@ -25,8 +28,10 @@ import type {
 
 function IsoOverlayDual({
   rows,
+  uni,
 }: {
   rows: { label: string; isometricL?: number; isometricR?: number }[];
+  uni: boolean;
 }) {
   const xScale = useXScale(); // band scale
   const yScale = useYScale(); // linear scale [-1, 1]
@@ -55,7 +60,12 @@ function IsoOverlayDual({
 
         const centers =
           groupCount === 1
-            ? [xBase + groupWidth * (r.isometricL !== undefined ? 0.25 : 0.75)]
+            ? uni
+              ? [
+                  xBase +
+                    groupWidth * (r.isometricL !== undefined ? 0.25 : 0.75),
+                ]
+              : [xBase + groupWidth * 0.5]
             : [xBase + groupWidth * 0.5, xBase + groupWidth * 1.5];
 
         return (
@@ -102,8 +112,8 @@ function IsoOverlayDual({
 }
 
 interface Props {
-  selectedExercise: TrainingExerciseRecording | undefined;
-  setIndex: number;
+  selectedExercise: TrainingExercise | undefined;
+  completedSet?: TrainingExerciseRecordedSet;
   width: number;
   height?: number;
   passedReps?: RecordedReps;
@@ -116,7 +126,7 @@ interface Props {
 
 export default function TempoChart({
   selectedExercise,
-  setIndex,
+  completedSet,
   width,
   height = 300,
   passedReps,
@@ -130,24 +140,16 @@ export default function TempoChart({
 
   const currentRepsRef = useRef<RecordedRepsInfo | null>(passedReps || null);
 
-  if (!selectedExercise?.recordedSets && !passedReps) return null;
-
   const exercisePose: ExerciseDetectionDataWithExerciseIds | undefined =
     selectedExercise
       ? EXERCISE_POSES.find((e) => e.exerciseIds.includes(selectedExercise.id))
       : undefined;
 
-  if (!passedReps) {
-    if (selectedExercise && selectedExercise.recordedSets) {
-      const set = selectedExercise.recordedSets.find(
-        (s) => s.setIndex === setIndex
-      );
-
-      if (set) {
-        currentRepsRef.current = { left: set.repsL, right: set.repsR };
-      } else currentRepsRef.current = null;
-    }
-  }
+  if (!passedReps && completedSet)
+    currentRepsRef.current = {
+      left: completedSet.repsL,
+      right: completedSet.repsR,
+    };
 
   if (!currentRepsRef.current) return null;
 
@@ -476,6 +478,7 @@ export default function TempoChart({
           isometricL: r.isometricL,
           isometricR: r.isometricR,
         }))}
+        uni={isUnilateral}
       />
     </BarChart>
   );

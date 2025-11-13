@@ -10,19 +10,32 @@ import { STRING_CONST } from '@/lib/common/const/string.const';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import { PieCenterLabel } from '@/ui/mui-charts';
+import { useMain } from '@/store/main.provider';
+import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
 
 interface Props {
   startOfTraining: Dayjs;
 }
 
 export default function SWControl(props: Props) {
+  const { activeTraining } = useMain();
+
   const { startOfTraining } = props;
 
   const { trainingInProgress } = useTraining();
 
-  const { setIndex, selectedExercise } = useTrainingInProgress();
+  const { setIndex, selectedExercise, supersetIndex } = useTrainingInProgress();
 
   const [now, setNow] = useState(() => Date.now());
+
+  if (
+    !activeTraining.training ||
+    !selectedExercise ||
+    supersetIndex === undefined ||
+    setIndex === undefined ||
+    !trainingInProgress
+  )
+    return;
 
   // const [countdownTimer, setCountdownTimer] = useState<string>(
   //   (lastSetRecTimeS || 60).toString()
@@ -33,19 +46,22 @@ export default function SWControl(props: Props) {
     return () => clearInterval(id);
   }, []);
 
-  const exerciseTracking = trainingInProgress?.exerciseSetTrackingState.find(
-    (est) => est.exerciseId === selectedExercise?.id
+  const isSetCompleted = ExerciseSetService.isSetCompleted(
+    {
+      exerciseId: selectedExercise.id,
+      componentId: trainingInProgress.selectedComponent.id,
+      supersetIndex: supersetIndex,
+      setIndex: setIndex,
+    },
+    activeTraining.training.workloads
   );
 
-  const isSetCompleted = exerciseTracking?.completedSetNumbers.some(
-    (csn) => csn.setNumber === (setIndex || 0) + 1
+  const lastCompletedWorkload = ExerciseSetService.findLastCompletedWorkload(
+    trainingInProgress.selectedComponent.id,
+    activeTraining.training.workloads
   );
 
-  const lastCompletedSet = exerciseTracking?.completedSetNumbers.sort(
-    (a, b) => dayjs(b.timestamp).valueOf() - dayjs(a.timestamp).valueOf()
-  )[0];
-
-  const lastSetCompletedAt = lastCompletedSet?.timestamp;
+  const lastSetCompletedAt = lastCompletedWorkload?.timestamp;
 
   const elapsedSinceLastSet = useMemo(() => {
     return lastSetCompletedAt === undefined
@@ -127,8 +143,8 @@ export default function SWControl(props: Props) {
 
       {lastSetCompletedAt !== undefined &&
         lastSetRecTimeS !== undefined &&
-        lastCompletedSet &&
-        lastCompletedSet.setNumber !== setIndex + 1 &&
+        lastCompletedWorkload &&
+        lastCompletedWorkload.setNumber !== setIndex + 1 &&
         !isSetCompleted && (
           <>
             <PieChart

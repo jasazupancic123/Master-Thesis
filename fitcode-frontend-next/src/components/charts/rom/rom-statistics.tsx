@@ -1,29 +1,20 @@
 import { Typography } from '@mui/material';
 
-import type { TrainingExerciseRecording } from '@/core/training/type/training-exercise.type';
+import type { TrainingExerciseRecordedSet } from '@/core/training/type/training-exercise.type';
 
 interface Props {
-  selectedExercise: TrainingExerciseRecording;
-  setIndex: number;
+  completedSet: TrainingExerciseRecordedSet;
 }
 
-export default function RomStatistic({ selectedExercise, setIndex }: Props) {
-  const currentSet = selectedExercise.recordedSets?.find(
-    (s) => s.setIndex === setIndex
-  );
-
-  if (!currentSet) return null;
-
-  if (!currentSet.romL && !currentSet.romR) return null;
-
+export default function RomStatistic({ completedSet }: Props) {
   // Make comparison statisctic between L and R
   if (
-    currentSet.repsL &&
-    currentSet.repsR &&
-    currentSet.repsL.length &&
-    currentSet.repsR.length
+    completedSet.repsL &&
+    completedSet.repsR &&
+    completedSet.repsL.length &&
+    completedSet.repsR.length
   ) {
-    const maxDiffsRomL = currentSet.repsL
+    const maxDiffsRomL = completedSet.repsL
       .map((rep) =>
         rep.startRomValue !== undefined && rep.extremumRomValue !== undefined
           ? Math.abs(rep.startRomValue - rep.extremumRomValue)
@@ -31,7 +22,7 @@ export default function RomStatistic({ selectedExercise, setIndex }: Props) {
       )
       .filter((val) => val !== undefined);
 
-    const maxDiffsRomR = currentSet.repsR
+    const maxDiffsRomR = completedSet.repsR
       .map((rep) =>
         rep.startRomValue !== undefined && rep.extremumRomValue !== undefined
           ? Math.abs(rep.startRomValue - rep.extremumRomValue)
@@ -72,7 +63,7 @@ export default function RomStatistic({ selectedExercise, setIndex }: Props) {
   }
 
   // Make statistic for the only present side
-  const currentReps = currentSet.repsL || currentSet.repsR;
+  const currentReps = completedSet.repsL || completedSet.repsR;
 
   if (!currentReps || currentReps.length < 3) return null;
 

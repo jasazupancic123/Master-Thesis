@@ -6,11 +6,10 @@ import Container from '@mui/material/Container';
 import AthleteHeader from '@/components/athlete/athlete-header';
 import TrainingsInitializer from '@/initializers/trainings.initializer';
 import { AthleteHeaderProvider } from '@/store/athlete-header.provider';
-import { useTraining } from '@/store/training.provider';
 import { useMain } from '@/store/main.provider';
 import { TrainingStatus } from '@/core/training/enum/training-status.enum';
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 export default function Layout({ children }: React.PropsWithChildren) {
   return (
@@ -28,7 +27,10 @@ function TrainingContent({ children }: React.PropsWithChildren) {
   const router = useRouter();
 
   const { activeTraining } = useMain();
-  const { trainingInProgress } = useTraining();
+
+  const pathname = usePathname();
+
+  const includeHeader = !pathname.includes('/components/');
 
   useEffect(() => {
     if (!activeTraining?.report?.componentStatuses?.length) return;
@@ -47,7 +49,7 @@ function TrainingContent({ children }: React.PropsWithChildren) {
 
   return (
     <>
-      {!trainingInProgress && <AthleteHeader />}
+      {includeHeader && <AthleteHeader />}
 
       <Container component="main" sx={{ px: '0px !important' }}>
         <Box>{children}</Box>

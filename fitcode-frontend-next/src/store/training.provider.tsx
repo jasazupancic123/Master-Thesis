@@ -4,20 +4,20 @@ import { createContext, useContext, useEffect, useState } from 'react';
 
 import { useAuthenticatedAuth } from './auth.provider';
 import type { Training } from '@/core/training/type/training.type';
-import type {
-  TrainingExercise,
-  TrainingExerciseRecording,
-} from '@/core/training/type/training-exercise.type';
+import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
 import type { TrainingReport } from '@/core/training/type/training-report.type';
 import { lib } from '@/lib';
 import { type SetState } from '@/lib/common/type/state.type';
 import { useMain } from './main.provider';
+import { usePathname } from 'next/navigation';
+import { TrainingInProgressIndexDB } from '@/core/training/type/training-in-progress-indexdb';
+
+export const TRAINING_IN_PROGRESS_STORAGE_KEY = 'blindoff_training_in_progress';
 
 export interface TrainingProviderProps {
   trainings: Training[];
   reports: TrainingReport[];
-  refetchTraining: (trainingId: string) => Promise<void>;
 }
 
 interface ITrainingContext extends TrainingProviderProps {
@@ -43,35 +43,66 @@ export type ITrainingContextDefined = Omit<
 export const TrainingProvider = (
   props: TrainingProviderProps & React.PropsWithChildren
 ) => {
-  const { setActiveTraining } = useMain();
+  const { activeTraining } = useMain();
 
-  const { children, trainings, reports, refetchTraining } = props;
+  const { children, trainings, reports } = props;
 
-  const STORED_TRAINING_IN_PROGRESS = 'blindoffTrainingInProgress';
   const [trainingInProgress, setTrainingInProgress] =
     useState<TrainingInProgress | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
   const { user } = useAuthenticatedAuth();
 
+  const pathname = usePathname();
+
+  const trainingId = pathname.split('/')[2];
+  const componentId = pathname.split('/').pop() || '';
+
+  const STORED_TRAINING_IN_PROGRESS =
+    trainingId && componentId
+      ? `${TRAINING_IN_PROGRESS_STORAGE_KEY}_${trainingId}_${componentId}`
+      : TRAINING_IN_PROGRESS_STORAGE_KEY;
+
   useEffect(() => {
     const setupTrainingInProgress = async () => {
-      const storedTrainingInProgress = await lib.common.indexedDb.items.get(
-        STORED_TRAINING_IN_PROGRESS
+      if (!activeTraining || !activeTraining.training || !user) {
+        return;
+      }
+
+      const trainingId = pathname.split('/')[2];
+      const componentId = pathname.split('/').pop() || '';
+
+      if (!trainingId || !componentId) return;
+
+      const component = activeTraining.training.components.find(
+        (comp) => comp.id === componentId
       );
 
+      if (!component) return;
+
+      const storedTrainingInProgressObject =
+        await lib.common.indexedDb.items.get(STORED_TRAINING_IN_PROGRESS); // LOAD FROM INDEX_DB
+
+      if (!storedTrainingInProgressObject) {
+        setIsLoaded(true);
+        return;
+      }
+
+      const storedTrainingInProgress = JSON.parse(
+        storedTrainingInProgressObject.payload
+      ) as TrainingInProgressIndexDB;
+
+      console.log('storedTrainingInProgress', storedTrainingInProgress);
+
       if (storedTrainingInProgress) {
-        const parsedTrainingInProgress = JSON.parse(
-          storedTrainingInProgress.payload
-        ) as TrainingInProgress;
-
-        if (parsedTrainingInProgress.userId !== user?.uid) {
-          await clearTrainingState();
-          setIsLoaded(true);
-          return;
-        }
-
-        setTrainingInProgress({ ...parsedTrainingInProgress });
+        setTrainingInProgress({
+          training: activeTraining.training,
+          selectedComponent: component,
+          userId: user.uid,
+          supersets: component.supersets,
+          startOfTraining: storedTrainingInProgress?.startOfTraining || null,
+          recordedSets: storedTrainingInProgress?.recordedSets || [],
+        } as TrainingInProgress);
       }
 
       setIsLoaded(true);
@@ -81,19 +112,27 @@ export const TrainingProvider = (
   }, [user]);
 
   useEffect(() => {
-    if (!trainingInProgress) return;
+    const saveTrainingInProgress = async () => {
+      if (!trainingInProgress) return;
 
-    const storeTrainingInProgress = async () => {
+      // Here also store
+      const objectToStore: TrainingInProgressIndexDB = {
+        startOfTraining: trainingInProgress.startOfTraining,
+        recordedSets: trainingInProgress.recordedSets,
+      };
+
+      console.log('object to store', objectToStore);
+
       if (trainingInProgress.startOfTraining) {
         await lib.common.indexedDb.items.put({
           id: STORED_TRAINING_IN_PROGRESS,
-          payload: JSON.stringify(trainingInProgress),
+          payload: JSON.stringify(objectToStore),
           updatedAt: Date.now(),
         });
       }
     };
 
-    storeTrainingInProgress();
+    saveTrainingInProgress();
   }, [trainingInProgress, isLoaded]);
 
   const clearTrainingState = async () => {
@@ -102,7 +141,7 @@ export const TrainingProvider = (
   };
 
   const updateTrainingInProgress = (
-    exercise: TrainingExerciseRecording,
+    exercise: TrainingExercise,
     supersetIndex: number
   ) => {
     if (!trainingInProgress) return;
@@ -145,7 +184,6 @@ export const TrainingProvider = (
         setTrainingInProgress,
         isLoaded,
         updateTrainingInProgress,
-        refetchTraining,
       }}
     >
       {children}
