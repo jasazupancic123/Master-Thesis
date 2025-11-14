@@ -85,7 +85,7 @@ export class GroupService implements Permission<Group, Institution> {
 
   @LogMethod()
   async create(user: User, input: CreateGroupDto): Promise<Group> {
-    const { name, membersIds, institutionId, ownerId } = input;
+    const { name, membersIds, institutionId, trainerIds } = input;
 
     // validate
     const institution = await this.institutionService.findByIdOrFail(input);
@@ -99,7 +99,7 @@ export class GroupService implements Permission<Group, Institution> {
     const data: Create<Group> = {
       id: null,
       name,
-      ownerId,
+      trainerIds,
       membersIds,
       institutionId,
       cycles: [],
@@ -139,7 +139,7 @@ export class GroupService implements Permission<Group, Institution> {
     }
 
     // validate owner
-    if (input.ownerId)
+    if (input.trainerIds && input.trainerIds.length > 0)
       if (
         !this.firebase.isManager(user) ||
         group.institution.ownerId !== user.uid
@@ -149,7 +149,7 @@ export class GroupService implements Permission<Group, Institution> {
     // update group
     const data: Update<Group> = {
       name: input.name,
-      ownerId: input.ownerId,
+      trainerIds: input.trainerIds,
       cycles: input.cycles,
     };
 
@@ -408,7 +408,7 @@ export class GroupService implements Permission<Group, Institution> {
 
   canView(user: User, group: Group, institution?: Institution) {
     if (group.membersIds.includes(user.uid)) return true; // athlete is member
-    if (group.ownerId === user.uid) return true; // trainer is owner
+    if (group.trainerIds.includes(user.uid)) return true; // trainer is owner
 
     if (institution) {
       if (institution.ownerId === user.uid) return true; // institution owner
@@ -425,16 +425,10 @@ export class GroupService implements Permission<Group, Institution> {
   }
 
   canEdit(user: User, group: Group, institution: Institution) {
-    if (
-      this.firebase.isTrainer(user) &&
-      institution.trainerIds.includes(user.uid)
-    )
-      return true; // owner of the group (trainer) can edit group
-
     if (this.firebase.isManager(user) && institution.ownerId === user.uid)
-      // manager can edit all groups
-      return true;
+      return true; // manager can edit all groups
 
+    if (group.trainerIds.includes(user.uid)) return true; // owner of the group (trainer) can edit group
     return false;
   }
 

@@ -8,20 +8,20 @@ import TrainingInProgressExerciseControls from './exercise-controls';
 import ExerciseVideoModal from './modals/exercise-video-modal';
 import TrainingInProgressExerciseSet from './training-in-progress-exercise-set';
 import MobileMovementValidation from '@/components/mobile-movement-validation/mobile-movement-validation';
+import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
 import { lib } from '@/lib';
 import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
+import { useMain } from '@/store/main.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 
 export default function TrainingInProgressExerciseCard() {
+  const { activeTraining } = useMain();
   const theme = useTheme();
-
   const trainingContext = useTraining();
   const trainingInProgressContext = useTrainingInProgress();
-
-  const { trainingInProgress } = trainingContext;
 
   const {
     selectedExercise,
@@ -30,6 +30,7 @@ export default function TrainingInProgressExerciseCard() {
     setIndex,
     setSetIndex,
   } = trainingInProgressContext;
+  const { trainingInProgress } = trainingContext;
 
   const { selectedTrackingMethod, setSelectedTrackingMethod } =
     useAthleteHeader();
@@ -176,13 +177,21 @@ export default function TrainingInProgressExerciseCard() {
           }}
         >
           {selectedExercise.sets.map((s, i) => {
-            const isSetDone = trainingInProgress.exerciseSetTrackingState.some(
-              (state) =>
-                state.exerciseId === selectedExercise.id &&
-                state.completedSetNumbers.some(
-                  (set) => set.setNumber === s.setNumber
-                )
-            );
+            const isSetDone =
+              supersetIndex !== undefined &&
+              setIndex !== undefined &&
+              activeTraining
+                ? ExerciseSetService.isSetCompleted(
+                    {
+                      trainingId: trainingInProgress.training.id,
+                      componentId: trainingInProgress.selectedComponent.id,
+                      exerciseId: selectedExercise.id,
+                      supersetIndex: supersetIndex,
+                      setIndex: s.setNumber - 1,
+                    },
+                    activeTraining.workloads
+                  )
+                : false;
 
             const isSetSelected = setIndex === i;
 
@@ -251,6 +260,7 @@ export default function TrainingInProgressExerciseCard() {
                     Set {i + 1}
                   </Typography>
                 </Box>
+
                 {isSetDone ? (
                   <Check
                     sx={{

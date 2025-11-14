@@ -1,7 +1,6 @@
 import type { MainSet } from '../enum/main-set.enum';
 import type {
   TrainingExercise,
-  TrainingExerciseRecording,
   UpdateTrainingExercise,
 } from './training-exercise.type';
 
@@ -17,8 +16,4 @@ export type UpdateSuperset = Pick<
   'mainSet' | 'warmup' | 'cooldown'
 > & {
   exercises: UpdateTrainingExercise[];
-};
-
-export type SupersetRecording = Omit<Superset, 'exercises'> & {
-  exercises: TrainingExerciseRecording[];
 };

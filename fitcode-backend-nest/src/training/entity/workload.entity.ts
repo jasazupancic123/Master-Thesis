@@ -12,6 +12,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 
+import { DateRangeDto } from '@src/common/dto/date-range.dto';
 import { IdEntity } from '@src/common/entity/id.entity';
 
 import { SetStatus } from '../enum/set-status.enum';
@@ -144,7 +145,11 @@ export class WorkloadValue extends IntersectionType(
   photoURLs?: string[];
 }
 
-export class Workload extends IntersectionType(WorkloadMeta, WorkloadValue) {
+export class Workload extends IntersectionType(
+  WorkloadMeta,
+  WorkloadValue,
+  DateRangeDto,
+) {
   @ValidateNested()
   @Type(() => ExerciseSet)
   @ApiProperty({ type: ExerciseSet })

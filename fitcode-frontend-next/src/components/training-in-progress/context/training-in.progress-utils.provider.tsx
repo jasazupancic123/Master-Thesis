@@ -1,11 +1,18 @@
-import dayjs from 'dayjs';
-import { createContext, useContext, useEffect, useState } from 'react';
+'use client';
 
-import { ExerciseTrainingView } from '@/core/training/enum/exercise-training-view.enum';
+import dayjs from 'dayjs';
+import { useRouter } from 'next/navigation';
+import { createContext, useContext, useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
+
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
+import { TrainingStatus } from '@/core/training/enum/training-status.enum';
+import { TrainingController } from '@/core/training/training.controller';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
+import { LINK_TRAININGS } from '@/lib/common/const/nav.const';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
+import { useMain } from '@/store/main.provider';
 import { useTraining } from '@/store/training.provider';
 
 export interface ITrainingInProgressUtilsCtx {
@@ -13,13 +20,17 @@ export interface ITrainingInProgressUtilsCtx {
   setShowUndoneSetsError: SetState<boolean>;
   openCancelTrainingModal: boolean;
   setOpenCancelTrainingModal: SetState<boolean>;
+  openFinishTrainingModal: boolean;
+  setOpenFinishTrainingModal: SetState<boolean>;
   anchorEl: HTMLElement | null;
   setAnchorEl: SetState<HTMLElement | null>;
   open: boolean;
   handleOpenMenu: (event: React.MouseEvent<HTMLElement>) => void;
   handleCloseMenu: () => void;
+  handleFinish: () => void;
   handleCancel: () => void;
-  handleCancelTraining: () => Promise<void>;
+  handlePauseTraining: () => Promise<void>;
+  handleCompleteTraining: () => Promise<void>;
 }
 
 const TrainingInProgressUtilsContext =
@@ -31,17 +42,17 @@ export const useTrainingInProgressUtils = () =>
 export function TrainingInProgressUtilsProvider({
   children,
 }: React.PropsWithChildren) {
-  const {
-    trainingInProgress,
-    setTrainingInProgress,
-    setView,
-    clearTrainingState,
-  } = useTraining();
+  const router = useRouter();
+
+  const { setActiveTraining } = useMain();
+  const { trainingInProgress, setTrainingInProgress, clearTrainingState } =
+    useTraining();
 
   const { selectedTrackingMethod } = useAthleteHeader();
 
   const [showUndoneSetsError, setShowUndoneSetsError] = useState(false);
   const [openCancelTrainingModal, setOpenCancelTrainingModal] = useState(false);
+  const [openFinishTrainingModal, setOpenFinishTrainingModal] = useState(false);
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const open = Boolean(anchorEl);
 
@@ -54,20 +65,73 @@ export function TrainingInProgressUtilsProvider({
     }
   }, [trainingInProgress?.startOfTraining]);
 
-  const handleCancelTraining = async () => {
+  const handlePauseTraining = async () => {
+    const training = trainingInProgress?.training;
+    const component = trainingInProgress?.selectedComponent;
+    if (!training || !component) return;
+
+    try {
+      await TrainingController.getInstance().pauseTrainingComponent(
+        training.id,
+        component.id
+      );
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to pause training');
+    }
+
+    setActiveTraining((prev) => {
+      if (!prev) return prev;
+
+      return {
+        ...prev,
+        statuses: prev.statuses.map((s) => {
+          if (s.componentId === component.id && s.trainingId === training.id)
+            return { ...s, status: TrainingStatus.PAUSED };
+
+          return s;
+        }),
+      };
+    });
+
+    router.push(LINK_TRAININGS.href);
+    // await clearTrainingState();
+  };
+
+  const handleCompleteTraining = async () => {
+    const training = trainingInProgress?.training;
+    const component = trainingInProgress?.selectedComponent;
+    if (!training || !component) return;
+
+    try {
+      await TrainingController.getInstance().completeTrainingComponent(
+        training.id,
+        component.id
+      );
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to complete training');
+    }
+
+    router.push(LINK_TRAININGS.href);
+
+    setActiveTraining(null);
     await clearTrainingState();
-    setView(ExerciseTrainingView.ExerciseView);
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleOpenMenu = (event: any) => {
     if (selectedTrackingMethod === TrackingMethod.CAMERA) return;
-
     setAnchorEl(event.currentTarget);
   };
 
   const handleCloseMenu = () => {
     setAnchorEl(null);
+  };
+
+  const handleFinish = () => {
+    handleCloseMenu();
+    setOpenFinishTrainingModal(true);
   };
 
   const handleCancel = () => {
@@ -80,13 +144,17 @@ export function TrainingInProgressUtilsProvider({
     setShowUndoneSetsError,
     openCancelTrainingModal,
     setOpenCancelTrainingModal,
+    openFinishTrainingModal,
+    setOpenFinishTrainingModal,
     anchorEl,
     setAnchorEl,
     open,
     handleOpenMenu,
     handleCloseMenu,
+    handleFinish,
     handleCancel,
-    handleCancelTraining,
+    handlePauseTraining,
+    handleCompleteTraining,
   };
 
   return (

@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 import { IsBoolean, IsNotEmpty, IsString } from 'class-validator';
 
@@ -9,6 +9,8 @@ export class UserIdDto {
   @Expose()
   userId: string;
 }
+
+export class OptionalUserIdDto extends PartialType(UserIdDto) {}
 
 export class UpdateMemberDto extends UserIdDto {
   @IsBoolean()

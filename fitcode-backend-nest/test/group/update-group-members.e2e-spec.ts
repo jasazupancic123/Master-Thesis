@@ -31,7 +31,7 @@ describe('Update Group (e2e)', () => {
     groupId = await db.groups.save(
       generateGroupStub({
         institutionId,
-        ownerId: global.trainer.uid,
+        trainerIds: [global.trainer.uid],
         membersIds: athletes.map((a) => a.uid),
       }),
     );
@@ -286,7 +286,7 @@ describe('Update Group (e2e)', () => {
     const otherGroupId = await db.groups.save(
       generateGroupStub({
         institutionId,
-        ownerId: global.trainer.uid,
+        trainerIds: [global.trainer.uid],
         membersIds: athletes.map((a) => a.uid),
       }),
     );

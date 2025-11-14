@@ -6,7 +6,9 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { ElapsedTime } from './training-in-progress-elapsed-time';
 import { theme } from '@/app/style';
+import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
 import { STRING_CONST } from '@/lib/common/const/string.const';
+import { useMain } from '@/store/main.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import { PieCenterLabel } from '@/ui/mui-charts';
@@ -16,11 +18,13 @@ interface Props {
 }
 
 export default function SWControl(props: Props) {
+  const { activeTraining } = useMain();
+
   const { startOfTraining } = props;
 
   const { trainingInProgress } = useTraining();
 
-  const { setIndex, selectedExercise } = useTrainingInProgress();
+  const { setIndex, selectedExercise, supersetIndex } = useTrainingInProgress();
 
   const [now, setNow] = useState(() => Date.now());
 
@@ -33,19 +37,18 @@ export default function SWControl(props: Props) {
     return () => clearInterval(id);
   }, []);
 
-  const exerciseTracking = trainingInProgress?.exerciseSetTrackingState.find(
-    (est) => est.exerciseId === selectedExercise?.id
-  );
+  const lastCompletedWorkload =
+    trainingInProgress && activeTraining
+      ? ExerciseSetService.findLastCompletedWorkload(
+          {
+            trainingId: trainingInProgress.training.id,
+            componentId: trainingInProgress.selectedComponent.id,
+          },
+          activeTraining.workloads
+        )
+      : undefined;
 
-  const isSetCompleted = exerciseTracking?.completedSetNumbers.some(
-    (csn) => csn.setNumber === (setIndex || 0) + 1
-  );
-
-  const lastCompletedSet = exerciseTracking?.completedSetNumbers.sort(
-    (a, b) => dayjs(b.timestamp).valueOf() - dayjs(a.timestamp).valueOf()
-  )[0];
-
-  const lastSetCompletedAt = lastCompletedSet?.timestamp;
+  const lastSetCompletedAt = lastCompletedWorkload?.timestamp;
 
   const elapsedSinceLastSet = useMemo(() => {
     return lastSetCompletedAt === undefined
@@ -56,7 +59,25 @@ export default function SWControl(props: Props) {
         );
   }, [now, lastSetCompletedAt, trainingInProgress]);
 
-  if (setIndex === undefined || !selectedExercise) return null;
+  if (
+    !activeTraining ||
+    !selectedExercise ||
+    supersetIndex === undefined ||
+    setIndex === undefined ||
+    !trainingInProgress
+  )
+    return null;
+
+  const isSetCompleted = ExerciseSetService.isSetCompleted(
+    {
+      trainingId: trainingInProgress.training.id,
+      componentId: trainingInProgress.selectedComponent.id,
+      exerciseId: selectedExercise.id,
+      supersetIndex: supersetIndex,
+      setIndex: setIndex,
+    },
+    activeTraining.workloads
+  );
 
   const lastSetRecTimeS = selectedExercise.sets[setIndex].recTime;
 
@@ -127,8 +148,8 @@ export default function SWControl(props: Props) {
 
       {lastSetCompletedAt !== undefined &&
         lastSetRecTimeS !== undefined &&
-        lastCompletedSet &&
-        lastCompletedSet.setNumber !== setIndex + 1 &&
+        lastCompletedWorkload &&
+        lastCompletedWorkload.setNumber !== setIndex + 1 &&
         !isSetCompleted && (
           <>
             <PieChart

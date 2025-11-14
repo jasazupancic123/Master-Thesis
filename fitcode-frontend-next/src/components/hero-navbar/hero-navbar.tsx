@@ -214,18 +214,14 @@ export default function HeroNavbar(props: HeroNavbarProps) {
                       backgroundColor: theme.palette.primary.main,
                     }}
                   >
-                    <Box
-                      sx={{
-                        flexGrow: 1,
-                      }}
-                    >
+                    <Box sx={{ flexGrow: 1 }}>
                       {links.map((item) => (
                         <MenuItem
                           key={item.id}
                           sx={{ p: 1, zIndex: 1000 }}
                           onClick={() => {
                             if (
-                              item.id === SIGN_OUT_LINK_ID &&
+                              item.label === 'Sign Out' &&
                               auth.status === 'authenticated'
                             )
                               auth.logout();

@@ -12,7 +12,6 @@ import { YearsSliderProvider } from '@/components/trainer-group-year-view/contex
 import TrainerYearView from '@/components/trainer-group-year-view/trainer-group-year-view';
 import type { GroupDateFilter } from '@/lib/common/type/filter.type';
 import { useGroup } from '@/store/group.provider';
-import { TrainerDayViewProvider } from '@/store/trainer-day-view.provider';
 
 export default function TrainerGroupPage() {
   const context = useGroup();
@@ -33,17 +32,8 @@ export default function TrainerGroupPage() {
 
   return (
     <Box sx={{ overflowX: 'hidden' }} width="100%">
-      {filter === 'day' ? (
-        <TrainerDayViewProvider {...context}>
-          <GroupSidebar />
-          <Box mt="50px">{mapper[filter]}</Box>
-        </TrainerDayViewProvider>
-      ) : (
-        <>
-          <GroupSidebar />
-          <Box mt="50px">{mapper[filter]}</Box>
-        </>
-      )}
+      <GroupSidebar />
+      <Box mt="50px">{mapper[filter]}</Box>
     </Box>
   );
 }

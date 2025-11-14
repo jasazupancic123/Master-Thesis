@@ -5,7 +5,7 @@ import type { BaseEntity, IdEntity } from '@/core/entity.type';
 
 export type Group = BaseEntity & {
   institutionId: string;
-  ownerId: string;
+  trainerIds: string[];
   name: string;
   membersIds: string[];
   cycles: Cycle[];
@@ -17,10 +17,12 @@ export type Group = BaseEntity & {
 
 export type CreateGroup = Pick<
   Group,
-  'institutionId' | 'name' | 'ownerId' | 'membersIds'
+  'institutionId' | 'name' | 'trainerIds' | 'membersIds'
 >;
 
-export type UpdateGroup = Partial<Pick<Group, 'ownerId' | 'name' | 'cycles'>>;
+export type UpdateGroup = Partial<
+  Pick<Group, 'trainerIds' | 'name' | 'cycles'>
+>;
 
 export type BatchUpdateOneGroup = IdEntity & UpdateGroup;
 

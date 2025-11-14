@@ -1,8 +1,12 @@
+'use client';
+
 import { createContext, useContext, useEffect, useState } from 'react';
 
 import { useTrainingInProgressUtils } from './training-in.progress-utils.provider';
+import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
 import type { TrainingExerciseExtended } from '@/core/training/type/training-exercise.type';
 import type { SetState } from '@/lib/common/type/state.type';
+import { useMain } from '@/store/main.provider';
 import { useTraining } from '@/store/training.provider';
 
 export interface IUndoneExercisesCtx {
@@ -15,6 +19,7 @@ const UndoneExercisesContext = createContext<IUndoneExercisesCtx | null>(null);
 export const useUndoneExercises = () => useContext(UndoneExercisesContext)!;
 
 export function UndoneExercisesProvider({ children }: React.PropsWithChildren) {
+  const { activeTraining } = useMain();
   const { trainingInProgress } = useTraining();
   const { setShowUndoneSetsError } = useTrainingInProgressUtils();
 
@@ -31,15 +36,19 @@ export function UndoneExercisesProvider({ children }: React.PropsWithChildren) {
     if (!trainingInProgress) return;
 
     undoneExercises.forEach((undoneExercise) => {
-      const setTrackingState = trainingInProgress.exerciseSetTrackingState.find(
-        (state) => state.exerciseId === undoneExercise.id
+      const supersetIndex = trainingInProgress.supersets.findIndex((s) =>
+        s.exercises.some((e) => e.id === undoneExercise.id)
       );
 
-      if (!setTrackingState) return;
-
-      const hasUndoneSets =
-        setTrackingState.completedSetNumbers.length <
-        undoneExercise.sets.length;
+      const hasUndoneSets = ExerciseSetService.hasExerciseGotUndoneSets(
+        undoneExercise,
+        {
+          trainingId: trainingInProgress.training.id,
+          supersetIndex,
+          componentId: trainingInProgress.selectedComponent.id,
+        },
+        activeTraining?.workloads || []
+      );
 
       if (!hasUndoneSets) {
         setUndoneExercises((prev) => {

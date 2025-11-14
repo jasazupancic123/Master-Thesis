@@ -1,16 +1,8 @@
 import { Circle } from '@mui/icons-material';
-import CloseIcon from '@mui/icons-material/Close';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import {
-  Box,
-  Fab,
-  LinearProgress,
-  Menu,
-  MenuItem,
-  Typography,
-} from '@mui/material';
+import { Box, LinearProgress, Typography } from '@mui/material';
 import { linearProgressClasses } from '@mui/material';
 import { useTheme } from '@mui/material';
+import dayjs from 'dayjs';
 import Image from 'next/image';
 import React, { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 
@@ -18,28 +10,34 @@ import AthleteHeader from '../athlete/athlete-header';
 import { handleInitTrainingInProgressComponent } from './actions/actions-training-in-progress';
 import { useTrainingInProgressUtils } from './context/training-in.progress-utils.provider';
 import { useUndoneExercises } from './context/undone-exercises.provider';
-import CancelTrainingModal from './modals/cancel-training-modal';
+import FinishPauseTrainingModal from './modals/finish-pause-training-modal';
 import UndoneSetsErrorModal from './modals/undone-sets-error-modal';
 import TrainingInProgressExerciseContainer from './training-in-progress-exercise-container';
+import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
+import { TrainingStatus } from '@/core/training/enum/training-status.enum';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
 import { lib } from '@/lib';
 import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
 import { preloadPoseLandmarker } from '@/lib/pose-detection/util/pose-landmarker-loader.util';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useMain } from '@/store/main.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 
 export default function TrainingInProgress() {
   const theme = useTheme();
 
+  const { user } = useAuthenticatedAuth();
+  const { activeTraining } = useMain();
   const trainingContext = useTraining();
   const trainingInProgressContext = useTrainingInProgress();
   const trainingInProgressUtilsContext = useTrainingInProgressUtils();
   const athleteHeaderContext = useAthleteHeader();
   const undoneExercisesContext = useUndoneExercises();
 
-  const { trainingInProgress } = trainingContext;
+  const { trainingInProgress, clearTrainingState } = trainingContext;
 
   const {
     supersetIndex,
@@ -49,13 +47,10 @@ export default function TrainingInProgress() {
   } = trainingInProgressContext;
 
   const {
-    anchorEl,
-    open,
-    handleOpenMenu,
-    handleCloseMenu,
-    handleCancel,
     openCancelTrainingModal,
     setOpenCancelTrainingModal,
+    openFinishTrainingModal,
+    setOpenFinishTrainingModal,
     showUndoneSetsError,
     setShowUndoneSetsError,
   } = trainingInProgressUtilsContext;
@@ -75,6 +70,47 @@ export default function TrainingInProgress() {
     []
   );
 
+  useEffect(() => {
+    const redirectToTrainings = async () => {
+      await clearTrainingState();
+      window.location.href = '/trainings';
+    };
+
+    if (!activeTraining || !activeTraining.statuses?.length) {
+      redirectToTrainings();
+      return;
+    }
+
+    if (activeTraining && activeTraining.statuses) {
+      const status = activeTraining.statuses.find(
+        (s) => s.status === TrainingStatus.IN_PROGRESS
+      );
+
+      const component = activeTraining.components.find(
+        (c) => c.id === status?.componentId
+      );
+
+      if (!status || !component) {
+        redirectToTrainings();
+        return;
+      }
+
+      const trainingInProgress: TrainingInProgress = {
+        userId: user.uid,
+        training: activeTraining,
+        recordedSets: [],
+        startOfTraining: dayjs(),
+        supersets: [],
+        selectedComponent: component,
+      };
+
+      handleInitTrainingInProgressComponent({
+        useTraining: { ...trainingContext, trainingInProgress },
+        useTrainingInProgressContext: trainingInProgressContext,
+      });
+    }
+  }, [activeTraining]);
+
   /* Preload pose landmarker */
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -82,14 +118,14 @@ export default function TrainingInProgress() {
   }, []);
 
   /* Init training in progress for selected component */
-  useEffect(() => {
+  /* useEffect(() => {
     if (!trainingInProgress) return;
 
     handleInitTrainingInProgressComponent({
       useTraining: { ...trainingContext, trainingInProgress },
       useTrainingInProgressContext: trainingInProgressContext,
     });
-  }, [trainingInProgress?.selectedComponent]);
+  }, [trainingInProgress?.selectedComponent]); */
 
   // keep scroll position in case the whole list remounts
   useEffect(() => {
@@ -117,11 +153,12 @@ export default function TrainingInProgress() {
     const elCenter = el.offsetLeft + el.offsetWidth / 2;
     const target = elCenter - scroller.clientWidth / 2;
 
-    scroller.scrollLeft = Math.max(0, target);
-    lastScrollLeft.current = scroller.scrollLeft;
+    const next = Math.max(0, target);
+    scroller.scrollTo({ left: next, behavior: 'smooth' });
+    lastScrollLeft.current = next;
   }, [selectedExercise, trainingInProgress, supersetIndex]);
 
-  if (!trainingInProgress) return null;
+  if (!trainingInProgress || !trainingInProgress.training) return null;
 
   return (
     <Box
@@ -174,6 +211,7 @@ export default function TrainingInProgress() {
                     noWrap
                     sx={{
                       flex: '0 0 auto',
+                      textTransform: isSelected ? 'uppercase' : undefined,
                       color: isSelected
                         ? theme.palette.primary.main
                         : undefined,
@@ -191,27 +229,36 @@ export default function TrainingInProgress() {
                     )}
                     Block {i + 1}
                   </Typography>
+
                   <Box display="flex" justifyContent="center" gap={0.5}>
                     {superset.exercises.map((e) => {
                       const isSelected = selectedExercise?.id === e.id;
 
                       const exercise = e.exercise;
 
-                      if (!exercise) return null;
+                      if (
+                        !exercise ||
+                        supersetIndex === undefined ||
+                        !activeTraining
+                      )
+                        return null;
 
                       const width = 75;
                       const height = 50;
 
-                      const completedSetsTracking =
-                        trainingInProgress.exerciseSetTrackingState.find(
-                          (s) => s.exerciseId === e.id
+                      const completedSets =
+                        ExerciseSetService.getCompletedExerciseSetsCount(
+                          {
+                            trainingId: trainingInProgress.training.id,
+                            componentId:
+                              trainingInProgress.selectedComponent.id,
+                            exerciseId: e.id,
+                            supersetIndex: i,
+                          },
+                          activeTraining.workloads
                         );
 
-                      const progress =
-                        ((completedSetsTracking?.completedSetNumbers.length ||
-                          0) /
-                          e.sets.length) *
-                        100;
+                      const progress = (completedSets / e.sets.length) * 100;
 
                       return (
                         <Box
@@ -239,6 +286,7 @@ export default function TrainingInProgress() {
                             height,
                             flex: '0 0 auto',
                             position: 'relative',
+                            scrollBehavior: 'smooth',
                           }}
                         >
                           <Box
@@ -308,7 +356,9 @@ export default function TrainingInProgress() {
           </Box>
         </>
       )}
-      {trainingInProgress && trainingInProgress.supersets ? (
+      {trainingInProgress &&
+      trainingInProgress.supersets &&
+      trainingInProgress.supersets.length ? (
         <TrainingInProgressExerciseContainer />
       ) : (
         <Box
@@ -319,35 +369,17 @@ export default function TrainingInProgress() {
           justifyContent="center"
         >
           <Typography variant="h6">No exercises</Typography>
-          <Fab
-            sx={{
-              backgroundColor: theme.palette.primary.main,
-              position: 'absolute',
-              bottom: 60,
-              left: 16,
-            }}
-            onClick={handleOpenMenu}
-          >
-            <MoreVertIcon />
-          </Fab>
-          <Menu
-            anchorEl={anchorEl}
-            open={open}
-            onClose={handleCloseMenu}
-            anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-            transformOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-            PaperProps={{ sx: { mb: 1 } }}
-          >
-            <MenuItem onClick={handleCancel} sx={{ color: 'error.main' }}>
-              <CloseIcon sx={{ marginRight: 1 }} />
-              Cancel Training
-            </MenuItem>
-          </Menu>
         </Box>
       )}
-      <CancelTrainingModal
+      <FinishPauseTrainingModal
         open={openCancelTrainingModal}
         setOpen={setOpenCancelTrainingModal}
+        finish={false}
+      />
+      <FinishPauseTrainingModal
+        open={openFinishTrainingModal}
+        setOpen={setOpenFinishTrainingModal}
+        finish={true}
       />
       <UndoneSetsErrorModal
         open={showUndoneSetsError}

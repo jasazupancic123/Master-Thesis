@@ -96,8 +96,14 @@ export async function handleDeleteCycle(
 
   const { setGroups } = useMain;
 
-  const { selectedGroup, setSelectedGroup, setGroup, cycle, setCycle } =
-    useGroup;
+  const {
+    selectedGroup,
+    setSelectedGroup,
+    setGroup,
+    setTrainings,
+    cycle,
+    setCycle,
+  } = useGroup;
 
   const { editCycle, setEditCycle } = useSliderCycles;
 
@@ -108,6 +114,8 @@ export async function handleDeleteCycle(
     () => controller.removeCycle(selectedGroup.id, editCycle.id),
     () => {
       if (cycle && editCycle.id === cycle?.id) setCycle(undefined);
+
+      setTrainings((prev) => prev.filter((t) => t.cycleId !== editCycle.id));
 
       setSelectedGroup((prev) => ({
         ...prev,

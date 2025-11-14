@@ -2,7 +2,9 @@ import dayjs from 'dayjs';
 import { useEffect } from 'react';
 
 import { ExerciseParamFieldEnum } from '@/core/exercise/enum/exercise-param-field.enum';
+import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
 import type { SetState } from '@/lib/common/type/state.type';
+import { useMain } from '@/store/main.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 
@@ -12,8 +14,11 @@ export default function useRecoveryTime(
   setValue: SetState<number | string>,
   trainingInProgressSecondaryItem?: boolean
 ) {
+  const { activeTraining } = useMain();
+
   const { trainingInProgress } = useTraining() || {};
-  const { selectedExercise, setIndex } = useTrainingInProgress() || {};
+  const { selectedExercise, setIndex, supersetIndex } =
+    useTrainingInProgress() || {};
 
   const isRecTime = selected === ExerciseParamFieldEnum.REC_TIME;
 
@@ -23,16 +28,21 @@ export default function useRecoveryTime(
       !trainingInProgressSecondaryItem ||
       !trainingInProgress ||
       !selectedExercise ||
-      setIndex === undefined
+      setIndex === undefined ||
+      supersetIndex === undefined ||
+      !activeTraining
     )
       return;
 
-    const exerciseTracking = trainingInProgress?.exerciseSetTrackingState.find(
-      (est) => est.exerciseId === selectedExercise.id
-    );
-
-    const isSetCompleted = exerciseTracking?.completedSetNumbers.some(
-      (csn) => csn.setNumber === setIndex + 1
+    const isSetCompleted = ExerciseSetService.isSetCompleted(
+      {
+        trainingId: trainingInProgress.training.id,
+        componentId: trainingInProgress.selectedComponent.id,
+        exerciseId: selectedExercise.id,
+        supersetIndex: supersetIndex,
+        setIndex: setIndex,
+      },
+      activeTraining.workloads
     );
 
     if (isSetCompleted) {
@@ -40,13 +50,17 @@ export default function useRecoveryTime(
       return;
     }
 
-    const lastCompletedSet = exerciseTracking?.completedSetNumbers.sort(
-      (a, b) => dayjs(b.timestamp).valueOf() - dayjs(a.timestamp).valueOf()
-    )[0];
+    if (!activeTraining) return;
 
-    if (!lastCompletedSet) return;
+    const lastCompletedWorkload = ExerciseSetService.findLastCompletedWorkload(
+      {
+        trainingId: trainingInProgress.training.id,
+        componentId: trainingInProgress.selectedComponent.id,
+      },
+      activeTraining.workloads
+    );
 
-    const lastSetCompletedAt = lastCompletedSet.timestamp;
+    const lastSetCompletedAt = lastCompletedWorkload?.timestamp;
 
     // here update every second and every second decrease value by 1 until 0
     const intervalId: NodeJS.Timeout = setInterval(() => {

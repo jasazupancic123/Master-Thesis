@@ -1,6 +1,6 @@
 'use client';
 
-import { Close, Done, Menu as MenuIcon } from '@mui/icons-material';
+import { Done, Menu as MenuIcon, Pause } from '@mui/icons-material';
 import {
   Avatar,
   Divider,
@@ -20,7 +20,6 @@ import Link from 'next/link';
 import * as React from 'react';
 import { useState } from 'react';
 
-import { handleFinishSuperset } from '../training-in-progress/actions/actions-superset';
 import type { ITrainingInProgressUtilsCtx } from '../training-in-progress/context/training-in.progress-utils.provider';
 import type { IUndoneExercisesCtx } from '../training-in-progress/context/undone-exercises.provider';
 import BottomNavigation from './bottom-navigation';
@@ -67,6 +66,7 @@ export default function AthleteHeader(props: Props) {
     anchorEl,
     open: openTrainingControls,
     handleCancel,
+    handleFinish,
     handleOpenMenu,
     handleCloseMenu,
   } = trainingInProgressUtilsContext || {};
@@ -118,18 +118,7 @@ export default function AthleteHeader(props: Props) {
           trainingInProgressContext && (
             <>
               <ListItem
-                onClick={async () =>
-                  await handleFinishSuperset({
-                    useTraining: {
-                      ...trainingContext,
-                      trainingInProgress,
-                    },
-                    useUndoneExercises:
-                      trainingInProgressUndoneExercisesContext,
-                    useTrainingInProgress: trainingInProgressContext,
-                    useTrainingInProgressUtils: trainingInProgressUtilsContext,
-                  })
-                }
+                onClick={handleFinish}
                 sx={{
                   cursor: 'pointer',
                 }}
@@ -142,12 +131,12 @@ export default function AthleteHeader(props: Props) {
               <ListItem
                 onClick={handleCancel}
                 sx={{
-                  color: 'error.main',
+                  color: 'warning.main',
                   cursor: 'pointer',
                 }}
               >
-                <Close sx={{ marginRight: 1 }} />
-                Cancel Training
+                <Pause sx={{ marginRight: 1 }} />
+                Pause Training
               </ListItem>
             </>
           )}
@@ -199,10 +188,7 @@ export default function AthleteHeader(props: Props) {
         >
           <Avatar
             src={user?.photoURL || USER_AVATAR_IMG_URL}
-            sx={{
-              width: 32,
-              height: 32,
-            }}
+            sx={{ width: 32, height: 32 }}
           />
 
           {!screenSize.isLandscapeMobile && !screenSize.isMobile ? (
@@ -230,6 +216,7 @@ export default function AthleteHeader(props: Props) {
                     <IconButton sx={{ p: 0, m: 0 }} onClick={handleOpenMenu}>
                       <MenuIcon style={{ cursor: 'pointer' }} />
                     </IconButton>
+
                     <Menu
                       anchorEl={anchorEl}
                       open={openTrainingControls}
@@ -241,32 +228,19 @@ export default function AthleteHeader(props: Props) {
                       }}
                       PaperProps={{ sx: { mb: 1 } }}
                     >
-                      <MenuItem
-                        onClick={async () =>
-                          await handleFinishSuperset({
-                            useTraining: {
-                              ...trainingContext,
-                              trainingInProgress,
-                            },
-                            useUndoneExercises:
-                              trainingInProgressUndoneExercisesContext,
-                            useTrainingInProgress: trainingInProgressContext,
-                            useTrainingInProgressUtils:
-                              trainingInProgressUtilsContext,
-                          })
-                        }
-                      >
+                      <MenuItem onClick={handleFinish}>
                         <>
                           <Done sx={{ marginRight: 1 }} />
                           Finish Training
                         </>
                       </MenuItem>
+
                       <MenuItem
                         onClick={handleCancel}
-                        sx={{ color: 'error.main' }}
+                        sx={{ color: 'warning.main' }}
                       >
-                        <Close sx={{ marginRight: 1 }} />
-                        Cancel Training
+                        <Pause sx={{ marginRight: 1 }} />
+                        Pause Training
                       </MenuItem>
                     </Menu>
                   </>

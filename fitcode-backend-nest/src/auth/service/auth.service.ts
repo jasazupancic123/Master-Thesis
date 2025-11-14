@@ -72,7 +72,11 @@ export class AuthService {
     res.clearCookie(SESSION_COOKIE_NAME);
   }
 
-  async createMagicLink(user: User, uid: string): Promise<string> {
+  async createMagicLink(
+    user: User,
+    uid: string,
+    redirectPath?: string,
+  ): Promise<string> {
     const found = await this.findOneBy('id', uid);
     if (!found) throw new NotFoundException('User not found');
 
@@ -87,19 +91,25 @@ export class AuthService {
 
     const jwtSecret = this.common.env.getKey('JWT_SECRET');
     const customToken = await this.firebase.auth.createCustomToken(found.uid);
-    const magicJwt = jwt.sign({ token: customToken }, jwtSecret, {
-      expiresIn: '15m',
-    });
+    const payload: { token: string; redirect?: string } = {
+      token: customToken,
+      redirect: redirectPath,
+    };
 
+    const magicJwt = jwt.sign(payload, jwtSecret, { expiresIn: '15m' });
     return this.common.env.getFrontendUrl(`/auth/magic?token=${magicJwt}`);
   }
 
   // Returns firebase custom token
-  async verifyMagicLink(token: string): Promise<string> {
+  async verifyMagicLink(
+    token: string,
+  ): Promise<{ token: string; redirect?: string }> {
     try {
       const jwtSecret = this.common.env.getKey('JWT_SECRET');
-      const payload = jwt.verify(token, jwtSecret) as { token: string };
-      return payload.token;
+      return jwt.verify(token, jwtSecret) as {
+        token: string;
+        redirect?: string;
+      };
     } catch {
       throw new BadRequestException('Link expired');
     }

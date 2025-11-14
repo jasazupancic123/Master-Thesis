@@ -149,27 +149,26 @@ describe('Get Trainings (e2e)', () => {
     await testApp.close();
   });
 
-  function url(query: FilterTrainingQueryDto = {}) {
-    const q = stringify(query, {
-      addQueryPrefix: true,
-      skipNulls: true,
-    });
-
+  function url(query: FilterTrainingQueryDto) {
+    const q = stringify(query, { addQueryPrefix: true, skipNulls: true });
     return `/training${q}`;
   }
 
-  async function req(query: FilterTrainingQueryDto = {}, token: string) {
-    return testApp.http.get(url(query), token);
+  async function req(query: Partial<FilterTrainingQueryDto>, token: string) {
+    return testApp.http.get(
+      url({ institutionId: institution.id, ...query }),
+      token,
+    );
   }
 
   it('should return all trainings by trainer', async () => {
-    const response1 = await req({ groupId: group.id }, trainer1.token);
+    const response1 = await req({}, trainer1.token);
     expect(response1.status).toBe(200);
-    expect(response1.body.length).toBe(5);
+    expect(response1.body.length).toBe(9);
 
-    const response2 = await req({ groupId: group.id }, trainer2.token);
+    const response2 = await req({}, trainer2.token);
     expect(response2.status).toBe(200);
-    expect(response2.body.length).toBe(5);
+    expect(response2.body.length).toBe(9);
   });
 
   it('should return trainings by athlete', async () => {
@@ -189,9 +188,9 @@ describe('Get Trainings (e2e)', () => {
   });
 
   it('should filter by group', async () => {
-    const response1 = await req({ groupId: group.id }, trainer1.token);
+    const response1 = await req({}, trainer1.token);
     expect(response1.status).toBe(200);
-    expect(response1.body.length).toBe(5);
+    expect(response1.body.length).toBe(9);
 
     const response2 = await req({ groupId: 'test-group' }, trainer1.token);
     expect(response2.status).toBe(200);
@@ -229,24 +228,18 @@ describe('Get Trainings (e2e)', () => {
 
   it('should filter by only start date range', async () => {
     const today = new Date();
-    const response1 = await req(
-      { from: getTime(today, 0, 0), groupId: group.id },
-      trainer1.token,
-    );
+    const response1 = await req({ from: getTime(today, 0, 0) }, trainer1.token);
 
     expect(response1.status).toBe(200);
-    expect(response1.body.length).toBe(2);
+    expect(response1.body.length).toBe(6);
   });
 
   it('should filter by only end date range', async () => {
     const today = new Date();
-    const response1 = await req(
-      { to: getTime(today, 23, 59), groupId: group.id },
-      trainer1.token,
-    );
+    const response1 = await req({ to: getTime(today, 23, 59) }, trainer1.token);
 
     expect(response1.status).toBe(200);
-    expect(response1.body.length).toBe(5);
+    expect(response1.body.length).toBe(6);
   });
 
   it('should filter by multiple properties', async () => {

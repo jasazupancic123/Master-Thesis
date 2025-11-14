@@ -82,7 +82,7 @@ export default function GroupsDataGrid({
       id: `temp-id-${Math.random().toString(36).substring(2, 9)}`,
       institutionId: institution.id,
       name: 'New Group',
-      ownerId: institution.trainers[0]?.uid ?? institution.owner.uid,
+      trainerIds: [institution.trainers[0]?.uid ?? institution.owner.uid],
       membersIds: [],
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -114,6 +114,8 @@ export default function GroupsDataGrid({
   const processRowUpdate = async (newRow: GridRowModel) => {
     const oldRow = rows.find((r) => r.id === newRow.id);
     if (!oldRow) return newRow;
+
+    newRow.trainerIds = [newRow.trainerIds];
 
     setRows((prev) =>
       prev.map((r) => (r.id === newRow.id ? (newRow as Group) : r))
@@ -185,8 +187,8 @@ export default function GroupsDataGrid({
       editable: true,
     },
     {
-      field: 'ownerId',
-      headerName: 'Trainer',
+      field: 'trainerIds',
+      headerName: 'Trainers',
       flex: 1,
       minWidth: 150,
       editable: true,
@@ -196,9 +198,17 @@ export default function GroupsDataGrid({
         label: t.displayName,
       })),
       renderCell: (params) => {
-        const trainer = users.find((u) => u.uid === params.value);
-        return trainer ? (
-          <Chip label={trainer.displayName?.[0]} size="small" />
+        const trainers = users.filter((u) => params.value?.includes(u.uid));
+        return trainers?.length > 0 ? (
+          <>
+            {trainers.map((trainer) => (
+              <Chip
+                label={trainer.displayName?.[0]}
+                size="small"
+                key={trainer.uid}
+              />
+            ))}
+          </>
         ) : null;
       },
     },

@@ -1,27 +1,28 @@
-import { Check, Circle } from '@mui/icons-material';
+import { Check, Circle, Pause } from '@mui/icons-material';
 import { Box, Collapse, IconButton, SvgIcon } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Typography from '@mui/material/Typography';
+import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
 import AthleteSuperset from './athlete-superset';
 import { core } from '@/core/core.service';
 import { Components } from '@/core/exercise/constant/components.constant';
-import { ExerciseTrainingView } from '@/core/training/enum/exercise-training-view.enum';
+import { TrainingStatus } from '@/core/training/enum/training-status.enum';
 import { TrainingController } from '@/core/training/training.controller';
 import { TrainingService } from '@/core/training/training.service';
-import type { ExerciseSetTracking } from '@/core/training/type/exercise-set-tracking-state.type';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
-import { TrainingComponentStatus } from '@/core/training/type/training-report.type';
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
-import { handleApiRequest } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
-import { useTraining } from '@/store/training.provider';
+import {
+  TRAINING_IN_PROGRESS_STORAGE_KEY,
+  useTraining,
+} from '@/store/training.provider';
 import MyModal from '@/ui/modal';
 
 interface Props {
@@ -52,8 +53,8 @@ export default function AthleteTrainingComponents(props: Props) {
     timeout,
   } = props;
 
-  const { reports, setTrainingInProgress, setView } = useTraining();
-  const { exercises } = useMain();
+  const { reports, setTrainingInProgress } = useTraining();
+  const { exercises, activeTraining, setActiveTraining } = useMain();
   const { user } = useAuthenticatedAuth();
 
   return (
@@ -75,15 +76,10 @@ export default function AthleteTrainingComponents(props: Props) {
           {components.map((component) => {
             const IconComponent = lib.common.component.getIcon(component.id);
 
-            let componentStatus: TrainingComponentStatus | undefined;
-            const trainingReport = reports.find(
-              (r) => r.trainingId === training.id
-            );
-
-            if (trainingReport)
-              componentStatus = trainingReport.componentStatuses.find(
-                (cs) => cs.componentId === component.id
-              )?.status;
+            const componentStatus = activeTraining?.statuses?.find(
+              (s) =>
+                s.componentId === component.id && s.trainingId === training.id
+            )?.status;
 
             return (
               <Box key={component.id} minWidth="48px">
@@ -128,7 +124,19 @@ export default function AthleteTrainingComponents(props: Props) {
                     />
                   )}
 
-                  {componentStatus === TrainingComponentStatus.IN_PROGRESS && (
+                  {componentStatus === TrainingStatus.PAUSED && (
+                    <Pause
+                      sx={{
+                        position: 'absolute',
+                        bottom: 2,
+                        right: 0,
+                        color: theme.palette.error.main,
+                        fontSize: 12,
+                      }}
+                    />
+                  )}
+
+                  {componentStatus === TrainingStatus.IN_PROGRESS && (
                     <Circle
                       sx={{
                         position: 'absolute',
@@ -140,7 +148,7 @@ export default function AthleteTrainingComponents(props: Props) {
                     />
                   )}
 
-                  {componentStatus === TrainingComponentStatus.COMPLETED && (
+                  {componentStatus === TrainingStatus.COMPLETED && (
                     <Check
                       sx={{
                         position: 'absolute',
@@ -186,80 +194,167 @@ export default function AthleteTrainingComponents(props: Props) {
           )}
         </Box>
       </Collapse>
+
       <MyModal
         isOpen={modal}
         setIsOpen={(open) => setModal(open)}
         cancelText="Cancel"
         onCancel={() => setModal(false)}
-        onConfirm={() => {
-          if (!user) {
-            toast.error('Authentication error.');
-            return;
-          }
-
+        onConfirm={async () => {
           if (!selectedComponent) {
             toast.error('No component selected.');
             return;
           }
 
-          handleApiRequest(
-            router,
-            () =>
-              TrainingController.getInstance().getPrescribedTraining(
-                training.id,
-                user.uid
-              ),
-            (training) => {
-              if (!training) {
-                toast.error('Failed to start training. Please try again.');
-                return;
-              }
-              TrainingService.mapData(training, { exercises });
+          let trainingToStart: Training | null = null;
+          const controller = TrainingController.getInstance();
 
-              const component = training.components.find(
-                (c) => c.id === selectedComponent.id
-              );
+          try {
+            if (activeTraining && activeTraining.id === training.id) {
+              const isCompleted =
+                activeTraining.statuses?.find(
+                  (s) =>
+                    s.componentId === selectedComponent.id &&
+                    s.trainingId === training.id
+                )?.status === TrainingStatus.COMPLETED;
 
-              if (!component) {
+              if (isCompleted) {
                 toast.error(
-                  'Selected component not found in training. Please try again.'
+                  'This training component has already been completed.'
                 );
 
+                setModal(false);
                 return;
               }
+            }
 
-              const state: ExerciseSetTracking[] =
-                component.supersets
-                  .map((s, sIndex) => {
-                    return s.exercises.map((e) => {
-                      return {
-                        exerciseId: e.id,
-                        supersetIndex: sIndex,
-                        completedSetNumbers: [] as {
-                          setNumber: number;
-                          timestamp: Date;
-                        }[],
-                      };
-                    });
-                  })
-                  .flat() || [];
+            const isDifferentActiveTraining = activeTraining?.statuses.some(
+              (a) => a.trainingId !== training.id
+            );
 
-              setTrainingInProgress({
-                training,
-                selectedComponent: component,
-                userId: user.uid,
-                exerciseSetTrackingState: state,
-              } as TrainingInProgress);
-
-              lib.common.audio.playSound(
-                '/sounds/training-in-progress-start.mp3'
+            if (isDifferentActiveTraining) {
+              toast.error(
+                'Another training is already in progress. Please finish it before starting a new one.'
               );
 
-              setView(ExerciseTrainingView.TrainingView);
               setModal(false);
-            },
-            undefined,
-            'Failed to start training'
+
+              return;
+            }
+
+            // restart training with new component
+            const result = await controller.startTrainingComponent(
+              training.id,
+              selectedComponent.id
+            );
+
+            trainingToStart = result.trainings[user.uid];
+
+            const errors = result.errors as unknown as {
+              field: string;
+              message: string;
+            }[];
+
+            if (errors && errors.length > 0) {
+              toast.error(`Error: ${errors[0].message}`);
+              setModal(false);
+
+              return;
+            }
+          } catch (e) {
+            console.error(e);
+            toast.error((e as Error).message || 'An error occurred.');
+            return;
+          }
+
+          if (!trainingToStart) {
+            toast.error('Failed to start training. Please try again.');
+            return;
+          }
+
+          trainingToStart = TrainingService.mapData(trainingToStart, {
+            exercises,
+          });
+
+          const component = trainingToStart.components.find(
+            (c) => c.id === selectedComponent.id
+          );
+
+          if (!component) {
+            toast.error(
+              'Selected component not found in training. Please try again.'
+            );
+
+            return;
+          }
+
+          setActiveTraining((prev) => {
+            if (!prev)
+              return {
+                ...trainingToStart,
+                workloads: [],
+                statuses: [
+                  {
+                    id: `${trainingToStart.id}-${component.id}-${user.uid}`,
+                    trainingId: trainingToStart.id,
+                    componentId: component.id,
+                    status: TrainingStatus.IN_PROGRESS,
+                    userId: user.uid,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                  },
+                ],
+              };
+
+            return {
+              ...prev,
+              statuses: prev.statuses
+                ? prev.statuses.map((s) =>
+                    s.componentId === component.id &&
+                    s.trainingId === trainingToStart.id
+                      ? {
+                          ...s,
+                          status: TrainingStatus.IN_PROGRESS,
+                          updatedAt: new Date(),
+                        }
+                      : s
+                  )
+                : [],
+            };
+          });
+
+          const foundTrainingInProgressObject =
+            await lib.common.indexedDb.items.get(
+              `${TRAINING_IN_PROGRESS_STORAGE_KEY}_${trainingToStart.id}_${component.id}`
+            );
+
+          const foundTrainingInProgress = foundTrainingInProgressObject
+            ? JSON.parse(foundTrainingInProgressObject.payload)
+            : null;
+
+          setTrainingInProgress({
+            training: trainingToStart,
+            selectedComponent: component,
+            supersets: component.supersets,
+            userId: user.uid,
+            recordedSets: foundTrainingInProgress
+              ? foundTrainingInProgress.recordedSets
+              : [],
+            startOfTraining:
+              foundTrainingInProgress?.startOfTraining || dayjs(),
+          } as TrainingInProgress);
+
+          setModal(false);
+
+          lib.common.audio.playSound('/sounds/training-in-progress-start.mp3');
+
+          console.log(
+            'pushing to',
+            `/trainings/${training.id}/components/${selectedComponent.id}`
+          );
+
+          router.push(
+            `/trainings/${training.id}/components/${selectedComponent.id}`
           );
         }}
       >

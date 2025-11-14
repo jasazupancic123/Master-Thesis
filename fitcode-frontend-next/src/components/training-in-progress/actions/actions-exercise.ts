@@ -1,4 +1,4 @@
-import type { TrainingExerciseRecording } from '@/core/training/type/training-exercise.type';
+import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { ITrainingContextDefined } from '@/store/training.provider';
 import type { ITrainingInProgressContext } from '@/store/training-in-progress.provider';
 
@@ -7,7 +7,7 @@ export function updateTrainingExerciseWithAI(
   repsCountR: number | undefined,
   tempoL: string | null,
   tempoR: string | null | undefined,
-  passedExercise: TrainingExerciseRecording | undefined,
+  passedExercise: TrainingExercise | undefined,
   updateSelectedExercise: boolean | undefined,
   trainingCtx: ITrainingContextDefined,
   trainingInProgressCtx: ITrainingInProgressContext
