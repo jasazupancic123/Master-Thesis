@@ -6,6 +6,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
+import { TrainingStatus } from '@/core/training/enum/training-status.enum';
 import { TrainingController } from '@/core/training/training.controller';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
 import { LINK_TRAININGS } from '@/lib/common/const/nav.const';
@@ -13,7 +14,6 @@ import type { SetState } from '@/lib/common/type/state.type';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useMain } from '@/store/main.provider';
 import { useTraining } from '@/store/training.provider';
-import { TrainingStatus } from '@/core/training/enum/training-status.enum';
 
 export interface ITrainingInProgressUtilsCtx {
   showUndoneSetsError: boolean;
@@ -85,22 +85,10 @@ export function TrainingInProgressUtilsProvider({
 
       return {
         ...prev,
-        activeStatuses: prev.activeStatuses.map((s) => {
-          if (s.componentId === component.id && s.trainingId === training.id) {
-            return {
-              ...s,
-              status: TrainingStatus.PAUSED,
-            };
-          }
-          return s;
-        }),
         statuses: prev.statuses.map((s) => {
-          if (s.componentId === component.id && s.trainingId === training.id) {
-            return {
-              ...s,
-              status: TrainingStatus.PAUSED,
-            };
-          }
+          if (s.componentId === component.id && s.trainingId === training.id)
+            return { ...s, status: TrainingStatus.PAUSED };
+
           return s;
         }),
       };

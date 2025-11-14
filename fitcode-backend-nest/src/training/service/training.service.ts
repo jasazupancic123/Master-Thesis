@@ -140,14 +140,28 @@ export class TrainingService implements Permission<Training, Institution> {
     filter?: Filter<Training>,
     options?: { limit?: number },
     populate?: boolean,
-  ): Promise<Training[]> {
-    const trainings = await this.repository.findAll((_) =>
+  ): Promise<(Training & { statuses?: TrainingComponentUserStatus[] })[]> {
+    const trainings = (await this.repository.findAll((_) =>
       this.repository.buildGetQuery(
         { uid: user.uid, role: this.firebase.getRole(user), institutionId },
         filter,
         options,
       ),
-    );
+    )) as (Training & { statuses?: TrainingComponentUserStatus[] })[];
+
+    // for today's trainings for athlete, also fetch statuses
+    if (this.firebase.isAthlete(user)) {
+      const statuses =
+        await this.trainingComponentUserStatusRepository.getAllForUserToday(
+          user.uid,
+          { institutionId },
+        );
+
+      // map all statuses to corresponding training
+      for (const training of trainings)
+        training.statuses =
+          statuses.filter((s) => s.trainingId === training.id) || [];
+    }
 
     if (populate) {
       const start = performance.now();
@@ -714,16 +728,12 @@ export class TrainingService implements Permission<Training, Institution> {
 
     // check if any other training is already active
     for (const { uid } of input) {
-      const active =
-        await this.trainingComponentUserStatusRepository.getActiveComponents(
+      const activeTrainingId =
+        await this.trainingComponentUserStatusRepository.getActiveTrainingId(
           uid,
-          true,
         );
 
-      console.log('active', active);
-      console.log('input training id', input[0].training.id);
-
-      if (active.length > 0 && active[0].trainingId !== input[0].training.id) {
+      if (activeTrainingId && activeTrainingId !== input[0].training.id) {
         errors.push({ field: uid, message: 'ACTIVE_TRAINING_EXISTS' });
         continue;
       }
@@ -834,6 +844,15 @@ export class TrainingService implements Permission<Training, Institution> {
       await this.trainingComponentUserStatusRepository.update(statusRef, {
         status: TrainingStatus.COMPLETED,
         realization: report.realization,
+        sets: report.sets,
+        reps: report.reps,
+        dist: report.dist,
+        time: report.time,
+        recTime: report.recTime,
+        recDist: report.recDist,
+        exercises: report.exercises,
+        tonnage: report.tonnage,
+        tut: report.tut,
       });
     }
 
@@ -952,35 +971,31 @@ export class TrainingService implements Permission<Training, Institution> {
   ): Promise<
     | (Training & {
         workloads: Workload[];
-        activeStatuses: TrainingComponentUserStatus[];
         statuses: TrainingComponentUserStatus[];
       })
     | null
   > {
     const athlete = await this.getAthlete(user, athleteId);
-
-    const activeStatuses =
-      await this.trainingComponentUserStatusRepository.getActiveComponents(
+    const trainingId =
+      await this.trainingComponentUserStatusRepository.getActiveTrainingId(
         athlete.uid,
-        true,
       );
+
+    if (!trainingId) return null;
+
+    const training = await this.findOneByIdOrFail(user, { trainingId });
+    const individualTraining = await this.getTrainingByAthlete(
+      athlete.uid,
+      training,
+    );
 
     const statuses =
-      await this.trainingComponentUserStatusRepository.getActiveComponents(
+      await this.trainingComponentUserStatusRepository.findAllByUserTraining(
         athlete.uid,
+        trainingId,
       );
 
-    const training = activeStatuses.length
-      ? await this.findOneById(user, {
-          trainingId: activeStatuses[0].trainingId,
-        })
-      : null;
-
-    const individualTraining = training
-      ? await this.getTrainingByAthlete(athlete.uid, training)
-      : null;
-
-    return { ...individualTraining, activeStatuses, statuses };
+    return { ...individualTraining, statuses };
   }
 
   async getTrainingByAthlete(

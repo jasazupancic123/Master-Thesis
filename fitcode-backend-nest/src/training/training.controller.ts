@@ -98,7 +98,6 @@ export class TrainingController {
   async getActiveTraining(@RequestUser() user: User): Promise<
     | (Training & {
         workloads: Workload[];
-        activeStatuses: TrainingComponentUserStatus[];
         statuses: TrainingComponentUserStatus[];
       })
     | null

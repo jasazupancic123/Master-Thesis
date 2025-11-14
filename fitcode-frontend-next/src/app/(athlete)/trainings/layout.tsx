@@ -33,9 +33,9 @@ function TrainingContent({ children }: React.PropsWithChildren) {
   const includeHeader = !pathname.includes('/components/');
 
   useEffect(() => {
-    if (!activeTraining?.activeStatuses?.length) return;
+    if (!activeTraining?.statuses?.length) return;
 
-    const inProgress = activeTraining.activeStatuses.find(
+    const inProgress = activeTraining.statuses.find(
       (s) => s.status === TrainingStatus.IN_PROGRESS
     );
 

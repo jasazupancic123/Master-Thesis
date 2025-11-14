@@ -59,6 +59,5 @@ export type CopyTraining = Pick<DateRange, 'from'> &
 
 export type ActiveTraining = Training & {
   workloads: Workload[];
-  activeStatuses: TrainingComponentUserStatus[];
   statuses: TrainingComponentUserStatus[];
 };

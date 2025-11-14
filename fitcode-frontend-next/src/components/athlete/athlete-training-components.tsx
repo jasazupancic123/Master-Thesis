@@ -1,4 +1,4 @@
-import { Check, Circle, Pause, Preview } from '@mui/icons-material';
+import { Check, Circle, Pause } from '@mui/icons-material';
 import { Box, Collapse, IconButton, SvgIcon } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Typography from '@mui/material/Typography';
@@ -11,7 +11,6 @@ import { core } from '@/core/core.service';
 import { Components } from '@/core/exercise/constant/components.constant';
 import { TrainingStatus } from '@/core/training/enum/training-status.enum';
 import { TrainingController } from '@/core/training/training.controller';
-import { TrainingReportService } from '@/core/training/training.report.service';
 import { TrainingService } from '@/core/training/training.service';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
@@ -229,10 +228,9 @@ export default function AthleteTrainingComponents(props: Props) {
               }
             }
 
-            const isDifferentActiveTraining =
-              activeTraining?.activeStatuses.some(
-                (a) => a.trainingId !== training.id
-              );
+            const isDifferentActiveTraining = activeTraining?.statuses.some(
+              (a) => a.trainingId !== training.id
+            );
 
             if (isDifferentActiveTraining) {
               toast.error(
@@ -295,7 +293,6 @@ export default function AthleteTrainingComponents(props: Props) {
               return {
                 ...trainingToStart,
                 workloads: [],
-                activeStatuses: [],
                 statuses: [
                   {
                     id: `${trainingToStart.id}-${component.id}-${user.uid}`,
@@ -323,33 +320,6 @@ export default function AthleteTrainingComponents(props: Props) {
                       : s
                   )
                 : [],
-              activeStatuses: prev.activeStatuses.some(
-                (s) =>
-                  s.componentId === component.id &&
-                  s.trainingId === trainingToStart.id
-              )
-                ? prev.activeStatuses.map((s) =>
-                    s.componentId === component.id &&
-                    s.trainingId === trainingToStart.id
-                      ? {
-                          ...s,
-                          status: TrainingStatus.IN_PROGRESS,
-                          updatedAt: new Date(),
-                        }
-                      : s
-                  )
-                : [
-                    ...(prev.activeStatuses || []),
-                    {
-                      id: `${trainingToStart.id}-${component.id}-${user.uid}`,
-                      trainingId: trainingToStart.id,
-                      componentId: component.id,
-                      status: TrainingStatus.IN_PROGRESS,
-                      userId: user.uid,
-                      createdAt: new Date(),
-                      updatedAt: new Date(),
-                    },
-                  ],
             };
           });
 

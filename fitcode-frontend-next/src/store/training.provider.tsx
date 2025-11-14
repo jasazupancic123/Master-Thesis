@@ -44,9 +44,6 @@ export const TrainingProvider = (
   props: TrainingProviderProps & React.PropsWithChildren
 ) => {
   const { activeTraining } = useMain();
-
-  console.log('activeTraining in training provider', activeTraining);
-
   const { children, trainings, reports } = props;
 
   const [trainingInProgress, setTrainingInProgress] =

@@ -38,7 +38,7 @@ export class TrainingController extends BaseController {
     );
   }
 
-  async getActiveForAthlete(options?: FetchOptions) {
+  async getActiveTrainingByAthlete(options?: FetchOptions) {
     return this.api.get<ActiveTraining | null>(`/get/active`, options);
   }
 

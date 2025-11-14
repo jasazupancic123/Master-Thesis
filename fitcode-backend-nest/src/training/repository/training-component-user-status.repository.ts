@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { startOfDay } from 'date-fns';
+import { endOfDay, startOfDay } from 'date-fns';
 import {
   CollectionGroup,
   CollectionReference,
@@ -80,16 +80,13 @@ export class TrainingComponentUserStatusRepository extends FirestoreRepository<
     );
   }
 
-  async getAllByUser(
+  async getAllForUserToday(
     userId: string,
-    filter: { institutionId?: string; from?: Date; to?: Date },
+    filter: { institutionId?: string },
   ): Promise<TrainingComponentUserStatus[]> {
     let q = this.collectionGroup().where('userId', '==', userId);
     if (filter?.institutionId)
       q = q.where('institutionId', '==', filter.institutionId);
-
-    if (filter?.from) q = q.where('createdAt', '>=', filter.from);
-    if (filter?.to) q = q.where('createdAt', '<=', filter.to);
 
     const snapshot = await q.get();
     return snapshot.docs.map((doc) =>
@@ -104,21 +101,18 @@ export class TrainingComponentUserStatusRepository extends FirestoreRepository<
    * are only those that are on the current day. If there are multiple active
    * trainings for the current day, return the one that was started the earliest.
    */
-  async getActiveComponents(
-    athleteId: string,
-    getActiveOnly?: boolean,
-  ): Promise<TrainingComponentUserStatus[]> {
-    const statuses = [TrainingStatus.IN_PROGRESS, TrainingStatus.PAUSED].concat(
-      getActiveOnly ? [] : [TrainingStatus.COMPLETED],
-    );
-
+  async getActiveTrainingId(athleteId: string): Promise<string | null> {
     const snapshot = await this.collectionGroup()
       .where('userId', '==', athleteId)
-      .where('status', 'in', statuses)
+      .where('status', 'in', [
+        TrainingStatus.IN_PROGRESS,
+        TrainingStatus.PAUSED,
+      ])
       .where('from', '>=', Timestamp.fromDate(startOfDay(new Date())))
+      .where('from', '<=', Timestamp.fromDate(endOfDay(new Date())))
       .get();
 
-    if (snapshot.empty) return [];
+    if (snapshot.empty) return null;
 
     const active = snapshot.docs.map((doc) =>
       this.firebase.serialize(
@@ -128,6 +122,21 @@ export class TrainingComponentUserStatusRepository extends FirestoreRepository<
 
     return active.sort(
       (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime(),
+    )[0].trainingId;
+  }
+
+  async findAllByUserTraining(
+    userId: string,
+    trainingId: string,
+  ): Promise<TrainingComponentUserStatus[]> {
+    const snapshot = await this.collection({ trainingId })
+      .where('userId', '==', userId)
+      .get();
+
+    return snapshot.docs.map((doc) =>
+      this.firebase.serialize(
+        doc.data() as FirestoreEntity<TrainingComponentUserStatus>,
+      ),
     );
   }
 
@@ -141,8 +150,9 @@ export class TrainingComponentUserStatusRepository extends FirestoreRepository<
     const query =
       this.firebase.buildCreateQuery<TrainingComponentUserStatus>(data);
 
-    await this.doc(ref).set(query);
-    return this.getKey(ref);
+    const id = this.getKey(ref);
+    await this.doc(ref).set({ ...query, id });
+    return id;
   }
 
   async update(
