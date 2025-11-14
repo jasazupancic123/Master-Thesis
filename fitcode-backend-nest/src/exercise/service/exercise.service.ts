@@ -43,6 +43,21 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     private readonly exerciseParamService: ExerciseParamService,
   ) {}
 
+  async findAllGlobalCached(user: User) {
+    const cached =
+      await this.cacheManagerService.get<Exercise[]>(CACHE_KEY_EXERCISES);
+
+    if (cached) {
+      let exercises = cached.filter((e) => e.ownerId === GLOBAL_EXERCISE_OWNER);
+      if (!this.firebaseService.isAdmin(user))
+        exercises = exercises.filter((e) => !e.disabled);
+
+      return exercises;
+    }
+
+    return await this.findAllGlobal(user);
+  }
+
   async findAllGlobal(user: User, filter?: Record<string, string>) {
     return await this.findAllBy('ownerId', GLOBAL_EXERCISE_OWNER, user, filter);
   }
@@ -303,6 +318,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
       return { ref, data: query, operation: 'update' };
     });
 
+    await this.cacheManagerService.del(CACHE_KEY_EXERCISES);
     await this.firebaseService.paginateBatches(operations);
   }
 

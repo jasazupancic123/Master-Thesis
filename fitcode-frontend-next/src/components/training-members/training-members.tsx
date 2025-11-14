@@ -9,9 +9,7 @@ import { DEFAULT_SUBGROUP_ID } from '../trainer-group-day-view/constant/subgroup
 import { handleOnDragEnd } from './actions/actions-dnd';
 import { updateSelectedAthleteSubgroup } from './actions/actions-subgroups';
 import useTrainingMembers from './hooks/use-members.hook';
-import { useQRCode } from './hooks/use-qr-code.hook';
 import useTrainingMembersSubgroups from './hooks/use-subgroups.hook';
-import QrCodeContextMenu from './qr-code-context-menu';
 import TrainingMembersSubgroup from './training-members-subgroups';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { useGroup } from '@/store/group.provider';
@@ -40,17 +38,6 @@ export default function TrainingMembers(props: TrainingMembersProps) {
   const { members, sortedMembers, item } = trainingMembersContext;
   const { subgroups } = trainingMembersSubgroupsContext;
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const {
-    contextMenu,
-    toggleContextMenu,
-    closeContextMenu,
-    qrOpen,
-    setQrOpen,
-    qrAnchorEl,
-    qrDataUrl,
-    generateQRCode,
-  } = useQRCode();
-
   if (selectedAthlete) return null;
 
   return (
@@ -143,7 +130,6 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                               trainerDayViewContext
                             );
                           }}
-                          onContextMenu={(e) => toggleContextMenu(e, member)}
                           zIndex={1000}
                         >
                           <Avatar
@@ -199,16 +185,6 @@ export default function TrainingMembers(props: TrainingMembersProps) {
           </DragDropContext>
         </Stack>
       </Stack>
-
-      <QrCodeContextMenu
-        contextMenu={contextMenu}
-        closeContextMenu={closeContextMenu}
-        generateQRCode={generateQRCode}
-        qrOpen={qrOpen}
-        setQrOpen={setQrOpen}
-        qrAnchorEl={qrAnchorEl}
-        qrDataUrl={qrDataUrl}
-      />
     </>
   );
 }

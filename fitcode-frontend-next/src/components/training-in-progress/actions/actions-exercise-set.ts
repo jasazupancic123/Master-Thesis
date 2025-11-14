@@ -1,34 +1,45 @@
-import toast from 'react-hot-toast';
-
-import type { ExerciseSetTracking } from '@/core/training/type/exercise-set-tracking-state.type';
-import type { TrainingExerciseRecording } from '@/core/training/type/training-exercise.type';
+import type {
+  TrainingExercise,
+  TrainingExerciseRecordedSet,
+} from '@/core/training/type/training-exercise.type';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
+import { ActiveTraining } from '@/core/training/type/training.type';
 import type { CreateWorkload } from '@/core/training/type/workload.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { KeypointHistory } from '@/lib/pose-detection/class/keypoint-history';
 import type { Rep } from '@/lib/pose-detection/type/rep.type';
 
 export const finishSet = async (state: {
-  exercise: TrainingExerciseRecording;
+  exercise: TrainingExercise;
+  supersetIndex: number;
   setIndex: number;
   trainingInProgress: TrainingInProgress;
+  newRecordedSets?: TrainingExerciseRecordedSet[];
   setTrainingInProgress: SetState<TrainingInProgress | null>;
   handleUpsertSet: (
     body: CreateWorkload,
-    state: { exerciseId: string; supersetIndex: number; setIndex: number }
+    state: {
+      exerciseId: string;
+      supersetIndex: number;
+      setIndex: number;
+      isAiRecorded?: boolean;
+    }
   ) => Promise<void>;
-  setManually?: boolean;
+  isAiRecorded?: boolean;
 }) => {
   const {
     exercise,
+    supersetIndex,
     setIndex,
     trainingInProgress,
+    newRecordedSets,
     setTrainingInProgress,
     handleUpsertSet,
-    setManually,
+    isAiRecorded,
   } = state;
 
   const set = exercise.sets[setIndex];
+
   const workload: CreateWorkload = {
     userId: trainingInProgress.userId,
     timestamp: new Date(),
@@ -43,14 +54,14 @@ export const finishSet = async (state: {
     loadKgR: set.loadKgR,
     vel: set.vel,
     velR: set.velR,
-    tempoEcc: set.tempoEcc,
-    tempoIso: set.tempoIso,
-    tempoCon: set.tempoCon,
-    tempoIdle: set.tempoIdle,
-    tempoEccR: set.tempoEccR,
-    tempoIsoR: set.tempoIsoR,
-    tempoConR: set.tempoConR,
-    tempoIdleR: set.tempoIdleR,
+    tempoEcc: set.tempoEcc || 0,
+    tempoIso: set.tempoIso || 0,
+    tempoCon: set.tempoCon || 0,
+    tempoIdle: set.tempoIdle || 0,
+    tempoEccR: set.tempoEccR || 0,
+    tempoIsoR: set.tempoIsoR || 0,
+    tempoConR: set.tempoConR || 0,
+    tempoIdleR: set.tempoIdleR || 0,
     eff: set.eff,
     effR: set.effR,
     recTime: set.recTime,
@@ -62,138 +73,61 @@ export const finishSet = async (state: {
     rirR: undefined,
     rom: undefined,
     romR: undefined,
+    from: new Date(),
+    to: new Date(),
   };
 
-  if (exercise.recordedSets && exercise.recordedSets.length) {
-    const currentSet = exercise.recordedSets.find(
-      (s) => s.setIndex === setIndex
-    );
-
-    if (currentSet) {
-      if (currentSet.imagesL)
-        workload.photoURLs!.push(...currentSet.imagesL.map((img) => img.url));
-
-      if (currentSet.imagesR)
-        workload.photoURLs!.push(...currentSet.imagesR.map((img) => img.url));
-    }
-  }
-
   markExerciseSetAsCompleted(
-    { exerciseId: exercise.id },
-    setIndex + 1,
-    trainingInProgress.exerciseSetTrackingState,
     setTrainingInProgress,
     exercise.sets[setIndex].recTime,
-    setManually
+    newRecordedSets
   );
-
-  const supersetIndex =
-    trainingInProgress.selectedComponent.supersets.findIndex((superset) =>
-      superset.exercises.find((ex) => ex.id === exercise.id)
-    );
-
-  if (supersetIndex === -1) {
-    toast.error('Superset not found');
-    return;
-  }
 
   await handleUpsertSet(workload, {
     exerciseId: exercise.id,
     setIndex,
     supersetIndex,
+    isAiRecorded,
   });
 };
 
-export const isExerciseSetCompleted = (
-  exerciseIdentifier: { exerciseId: string },
-  setNumber: number,
-  exerciseSetTrackingState: ExerciseSetTracking[]
-) => {
-  for (const key of Array.from(exerciseSetTrackingState)) {
-    if (key.exerciseId === exerciseIdentifier.exerciseId)
-      return (
-        key.completedSetNumbers.find((s) => s.setNumber === setNumber) !==
-        undefined
-      );
-  }
-  return false;
-};
-
-export const markExerciseSetAsCompleted = (
-  exerciseIdentifier: { exerciseId: string },
-  setNumber: number,
-  exerciseSetTrackingState: ExerciseSetTracking[],
+const markExerciseSetAsCompleted = (
   setTrainingInProgress: SetState<TrainingInProgress | null>,
   recTime?: number,
-  setManually?: boolean // not by ai
+  newRecordedSets?: TrainingExerciseRecordedSet[]
 ) => {
-  const key = Array.from(exerciseSetTrackingState).find(
-    (k) => k.exerciseId === exerciseIdentifier.exerciseId
-  );
-
-  if (key) {
-    const completedSets = key.completedSetNumbers || [];
-    if (!completedSets.find((s) => s.setNumber === setNumber)) {
-      completedSets.push(
-        setManually
-          ? {
-              setNumber,
-              timestamp: new Date(),
-              isBeenSetToCompleted: true,
-            }
-          : {
-              setNumber,
-              timestamp: new Date(),
-            }
-      );
-      key.completedSetNumbers = completedSets;
-    }
-  } else
-    exerciseSetTrackingState.push({
-      ...exerciseIdentifier,
-      completedSetNumbers: [
-        setManually
-          ? { setNumber, timestamp: new Date(), isBeenSetToCompleted: true }
-          : { setNumber, timestamp: new Date() },
-      ],
-    });
-
   setTrainingInProgress((prev) => {
     if (!prev) return prev;
 
     return {
       ...prev,
-      exerciseSetTrackingState,
       lastSetCompletedAt: recTime ? new Date() : prev.lastSetCompletedAt,
       lastSetRecTimeS: recTime ?? prev.lastSetRecTimeS,
+      recordedSets: newRecordedSets ? newRecordedSets : prev.recordedSets,
     } as TrainingInProgress;
   });
 };
 
 export const unmarkExerciseSetAsCompleted = (
-  exerciseIdentifier: { exerciseId: string },
-  setNumber: number,
-  exerciseSetTrackingState: ExerciseSetTracking[],
-  setTrainingInProgress: SetState<TrainingInProgress | null>
+  id: {
+    exerciseId: string;
+    supersetIndex: number;
+    setIndex: number;
+  },
+  setActiveTraining: SetState<ActiveTraining | null>
 ) => {
-  const key = Array.from(exerciseSetTrackingState).find(
-    (k) => k.exerciseId === exerciseIdentifier.exerciseId
-  );
-  if (!key) return;
-
-  const completedSets = key.completedSetNumbers || [];
-  const index = completedSets.findIndex((s) => s.setNumber === setNumber);
-  if (index > -1) {
-    completedSets.splice(index, 1);
-    key.completedSetNumbers = completedSets;
-  }
-
-  setTrainingInProgress((prev) => {
+  setActiveTraining((prev) => {
     if (!prev) return prev;
+
     return {
-      ...prev,
-      exerciseSetTrackingState,
-    } as TrainingInProgress;
+      workloads: prev.workloads.filter((workload) => {
+        return !(
+          workload.exerciseId === id.exerciseId &&
+          workload.supersetIndex === id.supersetIndex &&
+          workload.setNumber === id.setIndex + 1
+        );
+      }),
+    } as ActiveTraining;
   });
 };
 

@@ -6,12 +6,12 @@ import {
   ChartsTooltip,
   PieChart,
 } from '@mui/x-charts';
+import { differenceInMinutes } from 'date-fns';
 import React from 'react';
 
 import AthleteTrainingCardHeader from './athlete-training-card-header';
 import { theme } from '@/app/style';
-import { Components } from '@/core/exercise/constant/components.constant';
-import type { TrainingReport } from '@/core/training/type/training-report.type';
+import type { TrainingReport } from '@/core/training/type/training-stats.type';
 import { PieCenterLabel } from '@/ui/mui-charts';
 
 interface Props {
@@ -21,7 +21,7 @@ interface Props {
 export default function TrainingReportCard({ report }: Props) {
   const theme = useTheme();
 
-  const duration = report.duration * 60; // duration in seconds
+  const duration = differenceInMinutes(report.from, report.to);
   const realizationScore = Math.round(report.realization * 100);
   const tonnageScore = Math.round((report.tonnage / report.tonnage) * 100) || 0;
   const densityScore =
@@ -69,17 +69,16 @@ export default function TrainingReportCard({ report }: Props) {
         gap={2}
       >
         {/* Group name, cycle name, date */}
-        <AthleteTrainingCardHeader
-          components={report.prescribed.plannedComponents
-            .map(
-              (c) => Components.find((comp) => comp.field === c.componentId)!
-            )
-            .filter((c) => c !== undefined)}
-          group={report.group}
-          cycle={report.cycle}
-          from={report.from}
-          to={report.to}
-        />
+        {report && (
+          <AthleteTrainingCardHeader
+            report={report}
+            components={[]}
+            group={report.group}
+            cycle={report.cycle}
+            from={report.from}
+            to={report.to}
+          />
+        )}
 
         {/* Report charts */}
         <Box width="100%" display="flex" alignItems="flex-start" gap={'1%'}>
@@ -179,7 +178,7 @@ export default function TrainingReportCard({ report }: Props) {
             alignItems="center"
             gap={1}
           >
-            <CustomValueBox value={`${report.duration}’`} title="Duration" />
+            <CustomValueBox value={`${duration}’`} title="Duration" />
             <CustomValueBox value={`72%`} title="Intensity" />
           </Box>
         </Box>

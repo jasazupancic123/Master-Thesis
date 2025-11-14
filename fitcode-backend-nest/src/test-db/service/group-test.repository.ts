@@ -17,13 +17,13 @@ export class GroupTestRepository extends TestRepositoryMixin<Group>()(
     institution: TestInstitution,
     input?: {
       manager?: TestUser;
-      trainerId?: string;
+      trainerIds?: string[];
       membersIds?: string[];
       cycleLengthInWeeks?: number;
     },
   ) {
     const {
-      trainerId = institution.trainerIds[0],
+      trainerIds = institution.trainerIds,
       membersIds = institution.athleteIds,
       cycleLengthInWeeks = 1,
     } = input || {};
@@ -32,7 +32,7 @@ export class GroupTestRepository extends TestRepositoryMixin<Group>()(
     let groupId = await this.save(
       generateGroupStub({
         institutionId: institution.id,
-        ownerId: trainerId,
+        trainerIds,
         membersIds,
         cycles: [
           generateCycleStub({

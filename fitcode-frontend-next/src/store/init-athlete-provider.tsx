@@ -1,4 +1,4 @@
-import { endOfDay, startOfDay, subDays } from 'date-fns';
+import { startOfDay } from 'date-fns';
 import { cookies } from 'next/headers';
 
 import { AthleteProvider } from './athlete.provider';
@@ -32,15 +32,27 @@ export default async function InitAthleteProvider({
       sleep(LOADING_ANIMATION_MIN_DURATION_MS),
     ]);
 
+    if (data.activeTraining && data.activeTraining?.id) {
+      TrainingService.mapData(data.activeTraining, {
+        exercises: data.exercises,
+      });
+    } else {
+      data.activeTraining = null;
+    }
+
+    const institutionId = data.institutions?.[0]?.id;
+
     let [trainings, reports] = await Promise.all([
       controller.training.findAll(
-        { from: startOfDay(new Date()), populate: true, limit: 100 },
+        {
+          institutionId,
+          from: startOfDay(new Date()),
+          populate: true,
+          limit: 100,
+        },
         { session }
       ),
-      controller.training.findReports(
-        { from: subDays(new Date(), 30), to: endOfDay(new Date()) },
-        { session }
-      ),
+      controller.training.findReports(institutionId!, { session }),
     ]);
 
     trainings = trainings

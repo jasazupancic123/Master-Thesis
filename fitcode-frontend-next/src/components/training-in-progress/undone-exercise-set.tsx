@@ -300,6 +300,7 @@ export default function UndoneExerciseSet(props: Props) {
         <TrainingExerciseSetDoneCheckbox
           exercise={exercise}
           setIndex={set.setNumber - 1}
+          supersetIndex={supersetIndex!}
         />
       )}
     </Box>

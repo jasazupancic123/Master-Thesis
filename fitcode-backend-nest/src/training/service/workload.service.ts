@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+} from '@nestjs/common';
 import { CollectionGroup, Query } from 'firebase-admin/firestore';
 
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
@@ -8,6 +12,7 @@ import {
   CycleRef,
   ExerciseRef,
   InstitutionRef,
+  TrainingComponentUserStatusRef,
   TrainingRef,
   WorkloadRef,
 } from '@src/common/type/firestore.type';
@@ -25,15 +30,18 @@ import {
 } from '@src/training/entity/workload.entity';
 import { SetStatus } from '@src/training/enum/set-status.enum';
 
+import { TrainingStatus } from '../enum/training-status.enum';
+import { TrainingComponentUserStatusRepository } from '../repository/training-component-user-status.repository';
 import { WorkloadRepository } from '../repository/workload.repository';
 
 @Injectable()
 export class WorkloadService {
   constructor(
     private readonly common: CommonService,
-    private readonly firebaseService: FirebaseService,
+    private readonly firebase: FirebaseService,
     private readonly repository: WorkloadRepository,
     private readonly exerciseService: ExerciseService,
+    private readonly trainingComponentUserStatusRepository: TrainingComponentUserStatusRepository,
   ) {}
 
   getDoc(id: WorkloadRef) {
@@ -50,7 +58,7 @@ export class WorkloadService {
   ): Promise<Workload[]> {
     const snapshot = await query(this.repository.collection(ref)).get();
     return snapshot.docs.map((doc) =>
-      this.firebaseService.serialize(doc.data() as FirestoreEntity<Workload>),
+      this.firebase.serialize(doc.data() as FirestoreEntity<Workload>),
     );
   }
 
@@ -59,7 +67,7 @@ export class WorkloadService {
   }
 
   async findHistory(ref: ExerciseRef & { userId: string }) {
-    return await this.firebaseService.firestore
+    return await this.firebase.firestore
       .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
       .where('userId', '==', ref.userId)
       .where('exerciseId', '==', ref.exerciseId)
@@ -68,9 +76,7 @@ export class WorkloadService {
       .get()
       .then(({ docs }) =>
         docs.map((doc) =>
-          this.firebaseService.serialize(
-            doc.data() as FirestoreEntity<Workload>,
-          ),
+          this.firebase.serialize(doc.data() as FirestoreEntity<Workload>),
         ),
       );
   }
@@ -82,13 +88,13 @@ export class WorkloadService {
    * so on.
    */
   async findAllByUserTraining(
-    userId: string,
+    userId: string | undefined,
     ref: Partial<
       Pick<WorkloadRef, 'trainingId' | 'componentId' | 'exerciseId'>
     >,
   ): Promise<Workload[]> {
     const { trainingId, componentId, exerciseId } = ref;
-    let query = this.firebaseService.firestore.collectionGroup(
+    let query = this.firebase.firestore.collectionGroup(
       FirestoreCollection.TRAINING_WORKLOAD,
     );
 
@@ -104,11 +110,25 @@ export class WorkloadService {
       .get()
       .then(({ docs }) =>
         docs.map((doc) =>
-          this.firebaseService.serialize(
-            doc.data() as FirestoreEntity<Workload>,
-          ),
+          this.firebase.serialize(doc.data() as FirestoreEntity<Workload>),
         ),
       );
+  }
+
+  async findAllByUserTrainingIds(
+    userId: string,
+    trainingIds: string[],
+  ): Promise<Workload[]> {
+    const collection = this.firebase.firestore.collectionGroup(
+      FirestoreCollection.TRAINING_WORKLOAD,
+    );
+
+    return await this.firebase.batchIn<Workload>(
+      'trainingId',
+      trainingIds,
+      collection,
+      (q) => q.where('userId', '==', userId),
+    );
   }
 
   async upsert(
@@ -129,6 +149,15 @@ export class WorkloadService {
       ...completed,
       prescribed,
     };
+
+    const existing = await this.repository.findById(ref);
+    if (existing) {
+      delete workload.from;
+      delete workload.to;
+
+      await this.repository.update(ref, workload);
+      return { ...existing, ...workload, updatedAt: new Date() };
+    }
 
     await this.repository.save(ref, workload);
     return { ...workload, createdAt: new Date(), updatedAt: new Date() };
@@ -193,6 +222,13 @@ export class WorkloadService {
       };
     }
 
+    if (componentId !== 'other')
+      await this.checkTrainingStatus({
+        trainingId: ref.trainingId,
+        componentId,
+        uid: ref.userId,
+      });
+
     return await this.upsert(
       {
         institutionId: training.institutionId,
@@ -221,6 +257,12 @@ export class WorkloadService {
     if (!component)
       throw new BadRequestException('Component not found in training');
 
+    await this.checkTrainingStatus({
+      trainingId: ref.trainingId,
+      componentId: ref.componentId,
+      uid: ref.userId,
+    });
+
     const superset = component.supersets[ref.supersetIndex];
     if (!superset) throw new BadRequestException('Superset not found');
 
@@ -229,7 +271,7 @@ export class WorkloadService {
     );
 
     if (!prescribedExercise)
-      throw new BadRequestException('Exercise not found in training');
+      throw new BadRequestException('Exercise not found in superset');
 
     const prescribedSet = prescribedExercise?.sets.find(
       (s) => s.setNumber === ref.setNumber,
@@ -249,6 +291,24 @@ export class WorkloadService {
       prescribedSet,
       input,
     );
+  }
+
+  async checkTrainingStatus(ref: TrainingComponentUserStatusRef) {
+    const status =
+      await this.trainingComponentUserStatusRepository.findById(ref);
+
+    if (!status || status.status === TrainingStatus.NOT_STARTED)
+      throw new ConflictException(
+        'Training component has not been started yet',
+      );
+
+    if (status.status === TrainingStatus.COMPLETED)
+      throw new ConflictException(
+        'Training component has already been completed',
+      );
+
+    if (status.status === TrainingStatus.PAUSED)
+      throw new ConflictException('Training component has been paused');
   }
 
   async validateWorkloads(

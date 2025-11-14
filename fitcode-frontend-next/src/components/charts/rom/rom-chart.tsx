@@ -2,41 +2,36 @@ import { axisClasses, LineChart } from '@mui/x-charts';
 import dayjs from 'dayjs';
 
 import { theme } from '@/app/style';
-import type { TrainingExerciseRecording } from '@/core/training/type/training-exercise.type';
+import type {
+  TrainingExercise,
+  TrainingExerciseRecordedSet,
+} from '@/core/training/type/training-exercise.type';
 import { lib } from '@/lib';
 
 interface Props {
-  selectedExercise: TrainingExerciseRecording;
-  setIndex: number;
+  selectedExercise: TrainingExercise;
+  completedSet: TrainingExerciseRecordedSet;
   width: number;
   height?: number;
 }
 
 export default function RomChart({
   selectedExercise,
-  setIndex,
+  completedSet,
   width,
   height = 300,
 }: Props) {
-  if (!selectedExercise.recordedSets) return null;
-
-  const currentSet = selectedExercise.recordedSets.find(
-    (s) => s.setIndex === setIndex
-  );
-
-  if (!currentSet) return null;
-
   const earliestRepStart = Math.min(
-    ...(currentSet.repsL?.map(
+    ...(completedSet.repsL?.map(
       (r) => new Date(r.startTimestamp).getTime() || 0
     ) || []),
-    ...(currentSet.repsR?.map(
+    ...(completedSet.repsR?.map(
       (r) => new Date(r.startTimestamp).getTime() || 0
     ) || [])
   );
 
   const romL = lib.ai.keypoint.smoothKeypointValues(
-    currentSet.romL
+    completedSet.romL
       ?.filter(
         (r) =>
           new Date(r.timestamp).getTime() >=
@@ -46,7 +41,7 @@ export default function RomChart({
   ) as number[];
 
   let romR = lib.ai.keypoint.smoothKeypointValues(
-    currentSet.romR
+    completedSet.romR
       ?.filter(
         (r) =>
           new Date(r.timestamp).getTime() >=
@@ -69,11 +64,11 @@ export default function RomChart({
     romR = romR.map((r) => r + offset);
   }
 
-  if (!currentSet.romL && !currentSet.romR) return null;
+  if (!completedSet.romL && !completedSet.romR) return null;
 
   const dataset = (romR && romR.length > romL.length ? romR : romL).map(
     (v, i) => {
-      const currentRom = currentSet.romL?.[i] || currentSet.romR?.[i];
+      const currentRom = completedSet.romL?.[i] || completedSet.romR?.[i];
 
       return {
         index: i,

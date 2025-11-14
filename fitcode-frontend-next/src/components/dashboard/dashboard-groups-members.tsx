@@ -61,9 +61,6 @@ export default function DashboardGroupsMembers(props: Props) {
     setSearch('');
   }, [group]);
 
-  const owner = users.find((u) => u.uid === group?.ownerId);
-  const ownerNames = owner?.displayName ? owner.displayName.split(' ') : [];
-
   return (
     <Box
       width="100%"
@@ -132,65 +129,75 @@ export default function DashboardGroupsMembers(props: Props) {
             <Typography>No groups yet</Typography>
           ) : (
             <>
-              <Box
-                key={owner?.uid}
-                display="flex"
-                flexDirection="column"
-                gap={1}
-                sx={{ position: 'relative' }}
-              >
-                <Avatar
-                  className="avatar-border"
-                  src={
-                    users.find((m) => m.uid === group?.ownerId)?.photoURL ||
-                    USER_AVATAR_IMG_URL
-                  }
-                  sx={{
-                    width: screenSize.isMobile ? 70 : 80,
-                    height: screenSize.isMobile ? 70 : 80,
-                  }}
-                  onClick={() => {
-                    setOpenEditAthleteModal(true);
-                  }}
-                />
-                <Typography
-                  variant="body2"
-                  sx={{
-                    textAlign: 'center',
-                    fontWeight: 400,
-                    fontSize: screenSize.isMobile ? 12 : 14,
-                  }}
-                >
-                  {ownerNames.length > 1 ? (
-                    <>
-                      {ownerNames[0]}
-                      <br />
-                      {ownerNames[1].toUpperCase()}
-                    </>
-                  ) : (
-                    <>{(owner?.displayName || '').toUpperCase()}</>
-                  )}
-                </Typography>
-                <Typography
-                  fontWeight={600}
-                  sx={{
-                    position: 'absolute',
-                    top: 0,
-                    right: 0,
-                    backgroundColor: theme.palette.primary.main,
-                    borderRadius: '50%',
-                    width: 16,
-                    height: 16,
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    fontSize: 10,
-                    color: theme.palette.background.default,
-                  }}
-                >
-                  T
-                </Typography>
-              </Box>
+              {group.trainerIds.map((userId) => {
+                const owner = users.find((u) => u.uid === userId);
+                const ownerNames = owner?.displayName
+                  ? owner.displayName.split(' ')
+                  : [];
+
+                return (
+                  <Box
+                    key={owner?.uid}
+                    display="flex"
+                    flexDirection="column"
+                    gap={1}
+                    sx={{ position: 'relative' }}
+                  >
+                    <Avatar
+                      className="avatar-border"
+                      src={
+                        users.find((m) => m.uid === userId)?.photoURL ||
+                        USER_AVATAR_IMG_URL
+                      }
+                      sx={{
+                        width: screenSize.isMobile ? 70 : 80,
+                        height: screenSize.isMobile ? 70 : 80,
+                      }}
+                      onClick={() => {
+                        setOpenEditAthleteModal(true);
+                      }}
+                    />
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        textAlign: 'center',
+                        fontWeight: 400,
+                        fontSize: screenSize.isMobile ? 12 : 14,
+                      }}
+                    >
+                      {ownerNames.length > 1 ? (
+                        <>
+                          {ownerNames[0]}
+                          <br />
+                          {ownerNames[1].toUpperCase()}
+                        </>
+                      ) : (
+                        <>{(owner?.displayName || '').toUpperCase()}</>
+                      )}
+                    </Typography>
+                    <Typography
+                      fontWeight={600}
+                      sx={{
+                        position: 'absolute',
+                        top: 0,
+                        right: 0,
+                        backgroundColor: theme.palette.primary.main,
+                        borderRadius: '50%',
+                        width: 16,
+                        height: 16,
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        fontSize: 10,
+                        color: theme.palette.background.default,
+                      }}
+                    >
+                      T
+                    </Typography>
+                  </Box>
+                );
+              })}
+
               {(filteredMembers || []).map((user) => {
                 if (!user || !user.displayName) return;
                 const names = user.displayName.split(' ');

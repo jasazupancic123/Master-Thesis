@@ -20,10 +20,11 @@ export class Group extends BaseEntity {
   institutionId: string; // institution id
   institution?: Institution | null;
 
-  @IsString()
+  @IsString({ each: true })
+  @IsNotEmpty({ each: true })
   @ApiProperty()
   @Expose()
-  ownerId: string; // owner of the group (trainer, added by manager)
+  trainerIds: string[]; // all trainers of the group
 
   @IsString()
   @ApiProperty()

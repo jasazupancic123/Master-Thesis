@@ -6,30 +6,16 @@ import { useEffect, useRef, useState } from 'react';
 import AthleteOptionsContainer from '@/components/athlete/athlete-options-container';
 import AthleteTrainingCard from '@/components/athlete/athlete-training-card';
 import TrainingReportCard from '@/components/athlete/training-report-card';
-import { TrainingInProgressUtilsProvider } from '@/components/training-in-progress/context/training-in.progress-utils.provider';
-import { UndoneExercisesProvider } from '@/components/training-in-progress/context/undone-exercises.provider';
-import TrainingInProgress from '@/components/training-in-progress/training-in-progress';
 import { CompletedPlanned } from '@/core/training/enum/completed-planned.enum';
-import { ExerciseTrainingView } from '@/core/training/enum/exercise-training-view.enum';
 import type { Training } from '@/core/training/type/training.type';
 import { lib } from '@/lib';
 import type { Pagination } from '@/lib/common/type/paginate.type';
 import { useTraining } from '@/store/training.provider';
-import { TrainingInProgressProvider } from '@/store/training-in-progress.provider';
 
 const PAGE_SIZE = 3;
 
 export default function TrainingPage() {
-  const {
-    view,
-    setView,
-    trainings: plannedTrainings,
-    reports,
-    clearTrainingState,
-    trainingInProgress,
-    isLoaded,
-  } = useTraining();
-
+  const { trainings: plannedTrainings, reports } = useTraining();
   const [filteredPlannedTrainings, setFilteredPlannedTrainings] = useState<
     Training[]
   >([]);
@@ -55,24 +41,6 @@ export default function TrainingPage() {
   useEffect(() => {
     handlePaginateTrainings().then();
   }, [filter, plannedTrainings, reports]);
-
-  useEffect(() => {
-    if (!isLoaded) return;
-
-    const onLoad = async () => {
-      if (
-        trainingInProgress &&
-        trainingInProgress.training &&
-        trainingInProgress.selectedComponent
-      ) {
-        setView(ExerciseTrainingView.TrainingView);
-      } else {
-        await clearTrainingState();
-      }
-    };
-
-    onLoad();
-  }, [isLoaded]);
 
   const handlePaginateTrainings = async () => {
     if (filter !== CompletedPlanned.PLANNED) return;
@@ -113,7 +81,7 @@ export default function TrainingPage() {
     }
   };
 
-  return view === ExerciseTrainingView.ExerciseView ? (
+  return (
     <Box display="flex" flexDirection="column" width="100%">
       <AthleteOptionsContainer
         items={[CompletedPlanned.COMPLETED, CompletedPlanned.PLANNED]}
@@ -142,13 +110,5 @@ export default function TrainingPage() {
         <Box ref={sentinelRef} height={'1px'} />
       </Box>
     </Box>
-  ) : (
-    <TrainingInProgressProvider>
-      <TrainingInProgressUtilsProvider>
-        <UndoneExercisesProvider>
-          <TrainingInProgress />
-        </UndoneExercisesProvider>
-      </TrainingInProgressUtilsProvider>
-    </TrainingInProgressProvider>
   );
 }

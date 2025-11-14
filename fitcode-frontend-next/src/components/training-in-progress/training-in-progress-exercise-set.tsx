@@ -7,22 +7,29 @@ import UnilateralParamsRow from './unilateral-params-row';
 import { theme } from '@/app/style';
 import { core } from '@/core/core.service';
 import { KG } from '@/core/exercise/constant/exercise-param.constant';
-import type { TrainingExerciseRecording } from '@/core/training/type/training-exercise.type';
+import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
+import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import { useMain } from '@/store/main.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import LeftRightExerciseText from '@/ui/left-right-exercise-text';
 
 interface Props {
-  exercise: TrainingExerciseRecording;
+  exercise: TrainingExercise;
   setIndex: number;
 }
 
 export default function TrainingInProgressExerciseSet(props: Props) {
+  const { activeTraining } = useMain();
+
   const { trainingInProgress, updateTrainingInProgress } = useTraining();
 
-  const { supersetIndex } = useTrainingInProgress();
+  const { supersetIndex, selectedExercise } = useTrainingInProgress();
 
   const { exercise, setIndex } = props;
+
+  if (!selectedExercise || supersetIndex === undefined || !activeTraining)
+    return null;
 
   const uni = exercise.exercise?.isUnilateral;
   const volType = core.training.set.getVolType(exercise.sets[0]);
@@ -46,10 +53,15 @@ export default function TrainingInProgressExerciseSet(props: Props) {
 
   if (!trainingInProgress) return null;
 
-  const isSetCompleted = trainingInProgress.exerciseSetTrackingState.find(
-    (s) =>
-      s.exerciseId === exercise.id &&
-      s.completedSetNumbers.some((se) => se.setNumber === setIndex + 1)
+  const isSetCompleted = ExerciseSetService.isSetCompleted(
+    {
+      trainingId: trainingInProgress.training.id,
+      componentId: trainingInProgress.selectedComponent.id,
+      exerciseId: selectedExercise.id,
+      supersetIndex: supersetIndex,
+      setIndex: setIndex,
+    },
+    activeTraining.workloads
   );
 
   return (
@@ -375,6 +387,7 @@ export default function TrainingInProgressExerciseSet(props: Props) {
             <TrainingExerciseSetDoneCheckbox
               exercise={exercise}
               setIndex={setIndex}
+              supersetIndex={supersetIndex}
             />
           </Box>
         </Grid2>

@@ -11,6 +11,7 @@ import type {
   Workload,
 } from '@src/training/entity/workload.entity';
 import { SetStatus } from '@src/training/enum/set-status.enum';
+import { TrainingStatus } from '@src/training/enum/training-status.enum';
 import {
   generateExerciseSet,
   generateSubgroup,
@@ -132,14 +133,8 @@ describe('Complete Next Set (e2e)', () => {
   });
 
   afterAll(async () => {
-    await Promise.all([
-      db.trainings.clear(),
-      db.groups.delete(group.id),
-      db.institutions.remove(institution.id),
-      db.trainings.delete(trainingId),
-      db.exercises.clear(),
-    ]);
-
+    await db.institutions.remove(institution.id);
+    await db.clear();
     await testApp.close();
   });
 
@@ -156,6 +151,18 @@ describe('Complete Next Set (e2e)', () => {
     );
   }
 
+  async function startTrainingComponentReq(
+    token: string,
+    trainingId: string,
+    componentId: string,
+  ) {
+    return await testApp.http.post(
+      `/training/${trainingId}/component/${componentId}/start`,
+      token,
+      {},
+    );
+  }
+
   it('should throw error if training not found', async () => {
     const res = await req(
       global.trainer.token,
@@ -164,6 +171,8 @@ describe('Complete Next Set (e2e)', () => {
       {
         userId: global.athlete.uid,
         timestamp: new Date(),
+        from: new Date(),
+        to: new Date(),
         reps: 1,
         recTime: 0,
         photoURLs: [],
@@ -187,6 +196,8 @@ describe('Complete Next Set (e2e)', () => {
       await req(token, trainingId, 'invalid-exercise-id', {
         userId: global.athlete.uid,
         timestamp: new Date(),
+        from: new Date(),
+        to: new Date(),
         reps: 1,
         recTime: 0,
         photoURLs: [],
@@ -210,6 +221,8 @@ describe('Complete Next Set (e2e)', () => {
       {
         userId: global.athlete.uid,
         timestamp: new Date(),
+        from: new Date(),
+        to: new Date(),
         reps: 1,
         recTime: 0,
         photoURLs: [],
@@ -230,6 +243,8 @@ describe('Complete Next Set (e2e)', () => {
     const res = await req(global.trainer.token, trainingId, exercise.id, {
       userId: global.athlete.uid,
       timestamp: new Date(),
+      from: new Date(),
+      to: new Date(),
       reps: 1,
       recTime: 0,
       photoURLs: [],
@@ -256,6 +271,8 @@ describe('Complete Next Set (e2e)', () => {
     const res = await req(global.trainer.token, pastTrainingId, 'squat', {
       userId: global.athlete.uid,
       timestamp: new Date(),
+      from: new Date(),
+      to: new Date(),
       reps: 1,
       recTime: 0,
       photoURLs: [],
@@ -265,12 +282,57 @@ describe('Complete Next Set (e2e)', () => {
     expect(res.body.message).toBe('Training is not scheduled for today');
   });
 
+  it('should fail if component has not been started yet', async () => {
+    const res = await req(global.trainer.token, trainingId, 'squat', {
+      userId: global.athlete.uid,
+      timestamp: new Date(),
+      from: new Date(),
+      to: new Date(),
+      recTime: 0,
+      reps: 1,
+    });
+
+    expect(res.status).toBe(409);
+    expect(res.body.message).toBe(
+      'Training component has not been started yet',
+    );
+  });
+
+  it('should fail if component is already completed', async () => {
+    await startTrainingComponentReq(global.trainer.token, trainingId, 'c1');
+
+    await db.trainingComponentUserStatus.updateStatus(
+      { trainingId, uid: global.athlete.uid, componentId: 'c1' },
+      TrainingStatus.COMPLETED,
+    );
+
+    const res = await req(global.trainer.token, trainingId, 'squat', {
+      userId: global.athlete.uid,
+      timestamp: new Date(),
+      from: new Date(),
+      to: new Date(),
+      recTime: 0,
+      reps: 1,
+    });
+
+    expect(res.status).toBe(409);
+    expect(res.body.message).toBe(
+      'Training component has already been completed',
+    );
+
+    await db.trainingComponentUserStatus.deleteAllByTraining(trainingId);
+  });
+
   it('should complete first set of exercise (when no workloads are in the database)', async () => {
+    await startTrainingComponentReq(global.trainer.token, trainingId, 'c1');
+
     const from = new Date();
     const spy = jest.spyOn(workloadService, 'findAllByUserTraining');
     const res = await req(global.trainer.token, trainingId, 'squat', {
       userId: global.athlete.uid,
       timestamp: from,
+      from,
+      to: from,
       notes: 'left hip too low',
       reps: 12,
       loadKg: 100,
@@ -331,17 +393,21 @@ describe('Complete Next Set (e2e)', () => {
     expect(workloads[0].id).toBe(result.id);
 
     // it should create report as well
-    const report = await db.trainingReports.findById({
+    const report = await db.trainingComponentUserStatus.findById({
       trainingId,
-      userId: global.athlete.uid,
+      componentId: 'c1',
+      uid: global.athlete.uid,
     });
 
     expect(report).toBeDefined();
 
     await db.workloads.deleteAll(trainingId);
+    await db.trainingComponentUserStatus.deleteAllByTraining(trainingId);
   });
 
   it('should complete the next set of same exercise when some workloads already exist', async () => {
+    await startTrainingComponentReq(global.trainer.token, trainingId, 'c1');
+
     await db.workloads.createMany([
       {
         trainingId,
@@ -362,6 +428,8 @@ describe('Complete Next Set (e2e)', () => {
     const res = await req(global.trainer.token, trainingId, 'squat', {
       userId: global.athlete.uid,
       timestamp: from,
+      from,
+      to: from,
       reps: 10,
       loadKg: 80,
       recTime: 90,
@@ -413,6 +481,7 @@ describe('Complete Next Set (e2e)', () => {
     expect(workloads).toHaveLength(2);
 
     await db.workloads.deleteAll(trainingId);
+    await db.trainingComponentUserStatus.deleteAllByTraining(trainingId);
   });
 
   it('should put over sets into other component', async () => {
@@ -433,9 +502,13 @@ describe('Complete Next Set (e2e)', () => {
       })),
     );
 
+    await startTrainingComponentReq(global.trainer.token, trainingId, 'c1');
+
     const res = await req(global.trainer.token, trainingId, 'squat', {
       userId: global.athlete.uid,
       timestamp: new Date(),
+      from: new Date(),
+      to: new Date(),
       reps: 8,
       loadKg: 60,
       recTime: 120,
@@ -456,6 +529,7 @@ describe('Complete Next Set (e2e)', () => {
     const workloads = await db.workloads.getAll(trainingId);
     expect(workloads).toHaveLength(9);
     await db.workloads.deleteAll(trainingId);
+    await db.trainingComponentUserStatus.deleteAllByTraining(trainingId);
   });
 
   it('should save correct prescribed workload values (if user is in subgroup or has RM, BW prescription)', async () => {
@@ -515,9 +589,13 @@ describe('Complete Next Set (e2e)', () => {
       },
     ]);
 
+    await startTrainingComponentReq(global.trainer.token, trainingId2, 'c1');
+
     const res1 = await req(global.trainer.token, trainingId2, 'squat', {
       userId: global.athlete.uid,
       timestamp: new Date(),
+      from: new Date(),
+      to: new Date(),
       reps: 6,
       loadKg: 90,
       recTime: 0,
@@ -539,6 +617,8 @@ describe('Complete Next Set (e2e)', () => {
     const res2 = await req(global.trainer.token, trainingId2, 'squat', {
       userId: global.athlete.uid,
       timestamp: new Date(),
+      from: new Date(),
+      to: new Date(),
       reps: 4,
       loadKg: 70,
       recTime: 0,
@@ -559,8 +639,10 @@ describe('Complete Next Set (e2e)', () => {
 
     const workloads = await db.workloads.getAll(trainingId2);
     expect(workloads).toHaveLength(2);
+    await db.workloads.deleteAll(trainingId);
     await db.workloads.deleteAll(trainingId2);
     await db.trainings.delete(trainingId2);
+    await db.trainingComponentUserStatus.deleteAllByTraining(trainingId2);
   });
 
   it('should fail if exercise is unilateral and both sides are not specified', async () => {
@@ -598,9 +680,13 @@ describe('Complete Next Set (e2e)', () => {
       }),
     );
 
+    await startTrainingComponentReq(global.trainer.token, trainingId3, 'c1');
+
     const res = await req(global.trainer.token, trainingId3, exercise.id, {
       userId: global.athlete.uid,
       timestamp: addHours(new Date(), 1),
+      from: addHours(new Date(), 1),
+      to: addHours(new Date(), 1),
       reps: 12,
       repsR: 11,
       loadKg: 60,
@@ -620,5 +706,39 @@ describe('Complete Next Set (e2e)', () => {
     );
 
     await db.trainings.delete(trainingId3);
+    await db.exercises.delete(exercise.id);
+    await db.trainingComponentUserStatus.deleteAllByTraining(trainingId3);
+  });
+
+  it('should throw error if component is paused', async () => {
+    await startTrainingComponentReq(global.trainer.token, trainingId, 'c1');
+
+    await db.trainingComponentUserStatus.updateStatus(
+      { trainingId, uid: global.athlete.uid, componentId: 'c1' },
+      TrainingStatus.COMPLETED,
+    );
+
+    const existing = await db.workloads.getAll(trainingId);
+    expect(existing).toHaveLength(0);
+
+    const from = new Date();
+    const res = await req(global.trainer.token, trainingId, 'squat', {
+      userId: global.athlete.uid,
+      timestamp: from,
+      from,
+      to: from,
+      reps: 8,
+      loadKg: 70,
+      recTime: 90,
+      tempoEcc: 2,
+      tempoIso: 0,
+      tempoCon: 2,
+      tempoIdle: 0,
+    });
+
+    expect(res.status).toBe(409);
+    expect(res.body.message).toBe(
+      'Training component has already been completed',
+    );
   });
 });

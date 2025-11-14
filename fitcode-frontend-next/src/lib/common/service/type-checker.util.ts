@@ -37,7 +37,9 @@ export class TypeCheckerUtil {
       obj !== null &&
       'x' in obj &&
       'y' in obj &&
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       typeof (obj as any).x === 'number' &&
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       typeof (obj as any).y === 'number'
     )
       return true;

@@ -22,12 +22,13 @@ import {
 } from '@nestjs/swagger';
 import { endOfDay, startOfDay } from 'date-fns';
 
-import { DateFilterDto } from '@src/common/dto/date-filter.dto';
 import { DateRangeDto } from '@src/common/dto/date-range.dto';
-import { UserIdDto } from '@src/common/dto/user-id.dto';
-import { WorkloadRef } from '@src/common/type/firestore.type';
+import { OptionalUserIdDto, UserIdDto } from '@src/common/dto/user-id.dto';
+import {
+  TrainingComponentRef,
+  WorkloadRef,
+} from '@src/common/type/firestore.type';
 import { InstitutionService } from '@src/institution/service/institution.service';
-import { TrainingReportService } from '@src/training/service/training-report.service';
 
 import { UserRole } from '../auth/enum/user-role.enum';
 import { Auth } from '../common/decorator/auth.decorator';
@@ -40,6 +41,7 @@ import { FilterTrainingQueryDto } from './dto/filter-training-query.dto';
 import { PeriodizeTrainingsDto } from './dto/periodize-training.dto';
 import { UpdateTrainingDto } from './dto/update-training.dto';
 import { Training } from './entity/training.entity';
+import { TrainingComponentUserStatus } from './entity/training-component-user-status.entity';
 import { CreateWorkload, Workload } from './entity/workload.entity';
 import { TrainingService } from './service/training.service';
 
@@ -49,7 +51,6 @@ export class TrainingController {
   constructor(
     private readonly commonService: CommonService,
     private readonly trainingService: TrainingService,
-    private readonly trainingReportService: TrainingReportService,
     private readonly institutionService: InstitutionService,
   ) {}
 
@@ -59,51 +60,102 @@ export class TrainingController {
     @RequestUser() user: User,
     @Query() filter: FilterTrainingQueryDto,
   ) {
-    filter = this.commonService.object.clean(filter);
+    let { institutionId, ...rest } = filter;
+    rest = this.commonService.object.clean(rest);
 
     return await this.trainingService.findAll(
       user,
+      institutionId,
       {
-        groupId: filter.groupId,
-        ...(filter.cycleId && { cycleId: filter.cycleId }),
-        ...(filter.from && { from: filter.from }),
-        ...(filter.to && { to: filter.to }),
+        groupId: rest.groupId,
+        ...(rest.cycleId && { cycleId: rest.cycleId }),
+        ...(rest.from && { from: rest.from }),
+        ...(rest.to && { to: rest.to }),
       },
-      { limit: filter?.limit },
-      filter?.populate,
+      { limit: rest?.limit },
+      rest?.populate,
     );
   }
 
-  @Get(':trainingId')
-  @Auth()
-  async findOneById(
+  @Get(':trainingId/individual')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER])
+  async findAllIndividual(
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
-  ) {
-    const ref = { trainingId, userId: user.uid };
-    const training = await this.trainingService.findOneByIdOrFail(user, ref, {
-      skipInstitution: true,
+  ): Promise<Record<string, Training>> {
+    const training = await this.trainingService.findOneByIdOrFail(user, {
+      trainingId,
     });
 
-    const report = await this.trainingReportService.findById(ref);
-    return { training, report };
+    return await this.trainingService.findAllIndividual(
+      training,
+      training.membersIds,
+    );
+  }
+
+  @Get('get/active')
+  @Auth([UserRole.ATHLETE])
+  async getActiveTraining(@RequestUser() user: User): Promise<
+    | (Training & {
+        workloads: Workload[];
+        statuses: TrainingComponentUserStatus[];
+      })
+    | null
+  > {
+    return await this.trainingService.getActiveTrainingByAthlete(
+      user,
+      user.uid,
+    );
+  }
+
+  @Get('report/attendance')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER])
+  async getAttendanceReport(
+    @RequestUser() user: User,
+    @Query('groupId') groupId: string,
+    @Query('componentId') componentId: string,
+  ) {
+    return await this.trainingService.getGroupAttendance(
+      user,
+      groupId,
+      componentId,
+    );
+  }
+
+  @Post(':trainingId/component/:cId/generate-qr-code')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER])
+  async generateQRCode(
+    @RequestUser() user: User,
+    @Param('trainingId') trainingId: string,
+    @Param('cId') componentId: string,
+    @Body() { userId }: UserIdDto,
+  ) {
+    const link = await this.trainingService.generateQRCode(user, {
+      trainingId,
+      componentId,
+      uid: userId,
+    });
+
+    return { link };
   }
 
   @Get('report/athlete')
   @Auth()
-  async findReports(@RequestUser() user: User, @Query() filter: DateFilterDto) {
-    filter = this.commonService.object.clean(filter);
-    return await this.trainingService.findReportsByUser(user, {
-      ...(filter.from && { from: filter.from }),
-      ...(filter.to && { to: filter.to }),
-    });
+  async findReports(
+    @RequestUser() user: User,
+    @Query() filter: FilterTrainingQueryDto,
+  ) {
+    return await this.trainingService.findReportsByUser(
+      user,
+      filter.institutionId,
+    );
   }
 
   /**
    * Endpoint for Smart Wall service to get all trainings for institution
    * for today
    */
-  @Get('/institution/today')
+  @Get('institution/today')
   @Auth([UserRole.MANAGER])
   @ApiBearerAuth()
   @ApiOperation({
@@ -125,6 +177,7 @@ export class TrainingController {
 
     return await this.trainingService.findAll(
       user,
+      institution.id,
       {
         institutionId: institution.id,
         from: startOfDay(new Date()),
@@ -133,17 +186,6 @@ export class TrainingController {
       {},
       false,
     );
-  }
-
-  @Get(':trainingId/athlete/:athleteId/prescribed')
-  @Auth()
-  async getPrescribedTraining(
-    @RequestUser() user: User,
-    @Param('trainingId') trainingId: string,
-    @Param('athleteId') uid: string,
-  ) {
-    const ref = { trainingId, uid };
-    return await this.trainingService.getPrescribedTraining(user, ref);
   }
 
   @Get(':trainingId/athlete/:athleteId/workloads')
@@ -292,6 +334,51 @@ export class TrainingController {
     };
 
     return await this.trainingService.upsertSet(user, ref, body);
+  }
+
+  @Post(':trainingId/component/:cId/start')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
+  async startTrainingComponent(
+    @RequestUser() user: User,
+    @Param('trainingId') trainingId: string,
+    @Param('cId') componentId: string,
+    @Body() { userId }: OptionalUserIdDto,
+  ) {
+    const ref: TrainingComponentRef = { trainingId, componentId };
+    return await this.trainingService.startTrainingComponent(user, ref, userId);
+  }
+
+  /**
+   * Finalize a training component by updating the training reports' statuses.
+   */
+  @Post(':trainingId/component/:cId/complete')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
+  async completeTrainingComponent(
+    @RequestUser() user: User,
+    @Param('trainingId') trainingId: string,
+    @Param('cId') componentId: string,
+    @Body() { userId }: OptionalUserIdDto,
+  ) {
+    const ref: TrainingComponentRef = { trainingId, componentId };
+    return await this.trainingService.completeTrainingComponent(
+      user,
+      ref,
+      userId,
+    );
+  }
+
+  /**
+   * Only allows updating training component status, does not finalize reports.
+   */
+  @Patch(':trainingId/component/:cId/pause')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
+  async pauseTrainingComponent(
+    @RequestUser() user: User,
+    @Param('trainingId') trainingId: string,
+    @Param('cId') componentId: string,
+  ) {
+    const ref: TrainingComponentRef = { trainingId, componentId };
+    return await this.trainingService.pauseComponent(user, ref);
   }
 
   @Post(':trainingId/component')

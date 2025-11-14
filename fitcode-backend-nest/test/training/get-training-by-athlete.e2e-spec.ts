@@ -22,6 +22,7 @@ import {
 } from '@src/training/mock/training.stub';
 import { generateWorkloadStub } from '@src/training/mock/workload.stub';
 import { WorkloadRepository } from '@src/training/repository/workload.repository';
+import { TrainingService } from '@src/training/service/training.service';
 
 jest.mock('@src/exercise/constant/components.constant', () => {
   const {
@@ -36,13 +37,14 @@ jest.mock('@src/exercise/constant/components.constant', () => {
   return { Components: [c1] };
 });
 
-describe('Get prescribed training (e2e)', () => {
+describe('Get Training By Athlete (e2e)', () => {
   let testApp: TestApp;
   let db: TestDbService;
 
   let exerciseService: ExerciseService;
   let wellnessService: WellnessService;
   let workloadRepository: WorkloadRepository;
+  let trainingService: TrainingService;
 
   let institution: TestInstitution;
   let group: Group;
@@ -56,6 +58,7 @@ describe('Get prescribed training (e2e)', () => {
     exerciseService = testApp.module.get(ExerciseService);
     wellnessService = testApp.module.get(WellnessService);
     workloadRepository = testApp.module.get(WorkloadRepository);
+    trainingService = testApp.module.get(TrainingService);
 
     await exerciseService.upsertMany(global.admin, [
       generateExerciseStub({ name: 'Squat', components: ['c1'] }),
@@ -174,19 +177,15 @@ describe('Get prescribed training (e2e)', () => {
     );
   }
 
-  async function req(user: TestUser, trainingId: string) {
-    return await testApp.http.get(
-      `/training/${trainingId}/athlete/${global.athlete.uid}/prescribed`,
-      user.token,
-    );
-  }
-
   it('should get prescribed training for athlete for main group', async () => {
     const training = await db.trainings.findById(trainingId);
-    const response = await req(global.athlete, trainingId);
-    expect(response.status).toBe(200);
+    // const response = await req(global.athlete, trainingId);
+    const result = await trainingService.getTrainingByAthlete(
+      global.athlete.uid,
+      training,
+    );
 
-    const trainingComponents = response.body.components;
+    const trainingComponents = result.components;
     expect(trainingComponents).toHaveLength(1);
 
     const trainingComponent = trainingComponents[0] as TrainingComponent;
@@ -228,10 +227,9 @@ describe('Get prescribed training (e2e)', () => {
 
   it('should get prescribed training for athlete for subgroup', async () => {
     const training = await db.trainings.findById(trainingId);
-    const response = await req(b, trainingId);
-    expect(response.status).toBe(200);
+    const result = await trainingService.getTrainingByAthlete(b.uid, training);
 
-    const trainingComponents = response.body.components;
+    const trainingComponents = result.components;
     expect(trainingComponents).toHaveLength(1);
 
     const trainingComponent = trainingComponents[0] as TrainingComponent;
@@ -329,10 +327,9 @@ describe('Get prescribed training (e2e)', () => {
 
   it('should get prescribed training for athlete for child subgroup', async () => {
     const training = await db.trainings.findById(trainingId);
-    const response = await req(a, trainingId);
-    expect(response.status).toBe(200);
+    const result = await trainingService.getTrainingByAthlete(a.uid, training);
 
-    const trainingComponents = response.body.components;
+    const trainingComponents = result.components;
     expect(trainingComponents).toHaveLength(1);
 
     const trainingComponent = trainingComponents[0] as TrainingComponent;
@@ -435,14 +432,16 @@ describe('Get prescribed training (e2e)', () => {
     const spy = jest.spyOn(wellnessService, 'getLastBodyweight');
 
     // insert wellness weight for athlete
-    const response = await req(global.athlete, trainingId);
-    expect(response.status).toBe(200);
+    // const response = await req(global.athlete, trainingId);
+    const trainingAfter = await trainingService.getTrainingByAthlete(
+      global.athlete.uid,
+      trainingBefore,
+    );
 
     const spyResult = (await spy.mock.results[0].value) as Wellness;
     expect(spyResult).toBe(85);
     spy.mockRestore();
 
-    const trainingAfter = response.body as Training;
     deadlift = findExercise(trainingAfter, 'deadlift');
     bench = findExercise(trainingAfter, 'bench');
 
@@ -491,9 +490,10 @@ describe('Get prescribed training (e2e)', () => {
       }),
     );
 
+    const training = await db.trainings.findById(trainingId);
     const spy = jest.spyOn(wellnessService, 'getLatestByUser');
-    const response = await req(global.athlete, trainingId);
-    expect(response.status).toBe(200);
+    await trainingService.getTrainingByAthlete(global.athlete.uid, training);
+
     expect(spy).not.toHaveBeenCalled();
     spy.mockRestore();
 
@@ -613,8 +613,10 @@ describe('Get prescribed training (e2e)', () => {
     });
 
     const spy = jest.spyOn(workloadRepository, 'findExerciseMax');
-    const response = await req(global.athlete, trainingId);
-    expect(response.status).toBe(200);
+    const trainingAfter = await trainingService.getTrainingByAthlete(
+      global.athlete.uid,
+      trainingBefore,
+    );
 
     expect(spy).toHaveBeenCalledTimes(3); // deadlift, bench, and squat
     const spyResults = await Promise.all(
@@ -629,7 +631,6 @@ describe('Get prescribed training (e2e)', () => {
 
     // 150 * 0.8 = 120 for deadlift
     // 70 * 0.65 = 45.5 for bench
-    const trainingAfter = response.body as Training;
     deadlift = findExercise(trainingAfter, 'deadlift');
     bench = findExercise(trainingAfter, 'bench');
     squat = findExercise(trainingAfter, 'squat');

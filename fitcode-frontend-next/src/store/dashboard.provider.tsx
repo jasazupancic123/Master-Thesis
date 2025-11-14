@@ -186,7 +186,7 @@ export function DashboardProvider(props: Props) {
         return {
           ...group,
           name: input.name ?? group.name,
-          ownerId: input.ownerId ?? group.ownerId,
+          trainerIds: input.trainerIds ?? group.trainerIds,
         };
       }
 

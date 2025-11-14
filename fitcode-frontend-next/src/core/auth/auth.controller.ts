@@ -56,12 +56,8 @@ export class AuthController extends BaseController {
     return this.api.post<AuthUser>('/register', input, options);
   }
 
-  async createLink(userId: string, options?: FetchOptions) {
-    return this.api.post<{ link: string }>('/link', { userId }, options);
-  }
-
   async verifyLink(token: string, options?: FetchOptions) {
-    return this.api.post<{ firebaseToken: string }>(
+    return this.api.post<{ token: string; redirect?: string }>(
       '/link/verify',
       { token },
       options

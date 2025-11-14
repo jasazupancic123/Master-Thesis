@@ -1,6 +1,7 @@
 import { BaseController } from '../base.controller';
 import type { UserId } from '../institution/type/institution.type';
 import type {
+  ActiveTraining,
   CreateTraining,
   FilterTrainings,
   PeriodizeTrainings,
@@ -8,10 +9,11 @@ import type {
   UpdateTraining,
 } from './type/training.type';
 import type { TrainingComponent } from './type/training-component.type';
-import type { TrainingReport } from './type/training-report.type';
+import type { TrainingReport } from './type/training-stats.type';
 import type { CreateWorkload, Workload } from './type/workload.type';
 import type { FetchOptions } from '@/lib/common/type/api.type';
 import type { DateRange } from '@/lib/common/type/date-range.type';
+import type { ValidateError } from '@/lib/common/type/validate-row-error.type';
 
 export class TrainingController extends BaseController {
   private static instance: TrainingController;
@@ -25,37 +27,49 @@ export class TrainingController extends BaseController {
     return this.instance;
   }
 
-  async findAll(query?: FilterTrainings, options?: FetchOptions) {
+  async findAll(query: FilterTrainings, options?: FetchOptions) {
     return this.api.get<Training[]>('/', { query, ...options });
   }
 
-  async findOneById(trainingId: string, options?: FetchOptions) {
-    return this.api.get<{ training: Training; report: TrainingReport }>(
-      `/${trainingId}`,
+  async findAllIndividual(trainingId: string, options?: FetchOptions) {
+    return this.api.get<Record<string, Training>>(
+      `/${trainingId}/individual`,
       options
     );
   }
 
-  async findReports(query?: DateRange, options?: FetchOptions) {
+  async getActiveTrainingByAthlete(options?: FetchOptions) {
+    return this.api.get<ActiveTraining | null>(`/get/active`, options);
+  }
+
+  async getGroupAttendance(groupId: string, componentId?: string) {
+    return await this.api.get<Record<string, number>>(`/report/attendance`, {
+      query: { groupId, ...(componentId ? { componentId } : {}) },
+    });
+  }
+
+  async generateQRCode(
+    trainingId: string,
+    componentId: string,
+    athleteId: string,
+    options?: FetchOptions
+  ) {
+    return this.api.post<{ link: string }>(
+      `/${trainingId}/component/${componentId}/generate-qr-code`,
+      { userId: athleteId },
+      options
+    );
+  }
+
+  async findReports(institutionId: string, options?: FetchOptions) {
     return this.api.get<TrainingReport[]>('/report/athlete', {
-      query,
+      query: { institutionId },
       ...options,
     });
   }
 
   async findAllByInstitutionToday(options?: FetchOptions) {
     return this.api.get<Training[]>('/institution/today', options);
-  }
-
-  async getPrescribedTraining(
-    trainingId: string,
-    userId: string,
-    options?: FetchOptions
-  ): Promise<Training | null> {
-    return this.api.get<Training | null>(
-      `/${trainingId}/athlete/${userId}/prescribed`,
-      options
-    );
   }
 
   async completeNextSet(
@@ -83,6 +97,49 @@ export class TrainingController extends BaseController {
     return this.api.post<Workload>(
       `/${trainingId}/component/${componentId}/exercise/${exerciseId}/superset/${supersetIndex}/set/${setNumber}`,
       body,
+      options
+    );
+  }
+
+  async startTrainingComponent(
+    trainingId: string,
+    componentId: string,
+    athleteId?: string,
+    options?: FetchOptions
+  ) {
+    return this.api.post<{
+      errors: ValidateError<Record<string, unknown>>;
+      trainings: Record<string, Training>;
+    }>(
+      `/${trainingId}/component/${componentId}/start`,
+      { userId: athleteId },
+      options
+    );
+  }
+
+  async completeTrainingComponent(
+    trainingId: string,
+    componentId: string,
+    athleteId?: string,
+    options?: FetchOptions
+  ) {
+    return this.api.post<{
+      errors: ValidateError<Record<string, unknown>>;
+    }>(
+      `/${trainingId}/component/${componentId}/complete`,
+      { userId: athleteId },
+      options
+    );
+  }
+
+  async pauseTrainingComponent(
+    trainingId: string,
+    componentId: string,
+    options?: FetchOptions
+  ) {
+    return this.api.patch<void>(
+      `/${trainingId}/component/${componentId}/pause`,
+      {},
       options
     );
   }

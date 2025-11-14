@@ -1,6 +1,8 @@
+'use client';
+
 import { isSameDay } from 'date-fns';
 import dayjs from 'dayjs';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { unstable_batchedUpdates } from 'react-dom';
 import toast from 'react-hot-toast';
@@ -8,10 +10,7 @@ import toast from 'react-hot-toast';
 import { useGroup } from './group.provider';
 import { useMain } from './main.provider';
 import { useScreenSize } from './screen-size.provider';
-import type {
-  GroupContextProps,
-  TrainerDayViewContextProps,
-} from '@/app/(trainer)/groups/[group_id]/props';
+import type { TrainerDayViewContextProps } from '@/app/(trainer)/groups/[group_id]/props';
 import type { AuthUser } from '@/core/auth/type/user.type';
 import { Controller } from '@/core/controller';
 import { core } from '@/core/core.service';
@@ -37,8 +36,6 @@ import type { Day } from '@/lib/common/service/date.util';
 import type { Pagination } from '@/lib/common/type/paginate.type';
 import { handleApiRequest } from '@/lib/common/type/state.type';
 
-interface Props extends GroupContextProps, React.PropsWithChildren {}
-
 // eslint-disable-next-line
 export interface ITrainerDayViewContext extends TrainerDayViewContextProps {}
 
@@ -52,14 +49,22 @@ export type TrainerDayViewCtxExtended = Omit<
   'training' | 'component'
 > & { training: Training; component: TrainingComponent };
 
-export function TrainerDayViewProvider(props: Props) {
-  const { children, cycle, dateFrom, dateTo, group, trainings, setTrainings } =
-    props;
-
+export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
   const router = useRouter();
   const screenSize = useScreenSize();
   const { exercises } = useMain();
-  const { setCycle } = useGroup();
+  const {
+    cycle,
+    setCycle,
+    dateFrom,
+    dateTo,
+    group,
+    trainings,
+    setTrainings,
+    filter,
+  } = useGroup();
+
+  const params = useSearchParams();
   const controller = Controller.getInstance();
 
   // filtering selected component exercises
@@ -101,6 +106,29 @@ export function TrainerDayViewProvider(props: Props) {
   ] = useState<Workload[]>([]);
 
   const [expandedExercisesView, setExpandedExercisesView] = useState(false);
+
+  useEffect(() => {
+    if (filter !== 'day') return;
+
+    const trainingId = params.get('training');
+    const componentId = params.get('component');
+
+    const training = trainings.find((t) => t.id === trainingId);
+    if (!training) return;
+
+    const day = lib.common.date.getDay(training.from);
+    const period = core.training.getPeriod(training);
+    const mapped = TrainingService.mapData(training, { exercises });
+
+    setDay(day);
+    setSelectedPeriod(period);
+    setTraining(mapped);
+
+    if (componentId) {
+      setComponent(mapped.components.find((c) => c.id === componentId));
+      setExpandedExercisesView(true);
+    }
+  }, [filter]);
 
   useEffect(() => {
     const cycleInDate = group.cycles.find((c) =>
@@ -314,9 +342,10 @@ export function TrainerDayViewProvider(props: Props) {
     setLoading(false);
 
     // put training id in url, but don't push to history
-    const url = `/groups/${group.id}/training/${training.id}`;
+    const url = `/groups/${group.id}?training=${training.id}`;
+    if (component) url.concat(`&component=${component.id}`);
     window.history.replaceState(null, '', url);
-  }, [selectedPeriod]);
+  }, [selectedPeriod, trainings]);
 
   useEffect(() => {
     // if there's only one training on day, always first show the period with the training
@@ -324,14 +353,12 @@ export function TrainerDayViewProvider(props: Props) {
       dayjs(t.from).isSame(day.date, 'day')
     );
 
-    let period: 'AM' | 'PM' = new Date().getHours() >= 12 ? 'PM' : 'AM';
+    let period: 'AM' | 'PM' = day.date.toDate().getHours() >= 12 ? 'PM' : 'AM';
     if (todaysTrainings.length === 1) {
       period = new Date(todaysTrainings[0].from).getHours() >= 12 ? 'PM' : 'AM';
     }
 
-    const newPeriod = { key: new Date(), value: period };
-
-    setSelectedPeriod(newPeriod);
+    setSelectedPeriod({ key: new Date(), value: period });
   }, [day]);
 
   useEffect(() => {

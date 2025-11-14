@@ -54,7 +54,7 @@ export default function AddGroupModal(props: Props) {
         const input = {
           name: groupName,
           membersIds: [],
-          ownerId: selectedInstitution.trainerIds[0],
+          trainerIds: [selectedInstitution.trainerIds[0]],
           institutionId: selectedInstitution.id,
         };
 

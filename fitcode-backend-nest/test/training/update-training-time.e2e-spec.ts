@@ -73,6 +73,21 @@ describe('Update Training (e2e)', () => {
     );
   }
 
+  it('should fail if trainer that is not in group trainers tries to update training', async () => {
+    const institution2 = await db.institutions.createTest({ random: true });
+    const response = await req(
+      { from: new Date(), to: new Date() },
+      trainingId,
+      'c1',
+      institution2.trainers[0].token,
+    );
+
+    expect(response.status).toBe(401);
+    expect(response.body.message).toBe('You cannot view this training');
+
+    await db.institutions.remove(institution2.id);
+  });
+
   it('should fail if component is invalid', async () => {
     const response = await req(
       { from: new Date(), to: new Date() },
@@ -127,6 +142,7 @@ describe('Update Training (e2e)', () => {
       generateTrainingStub({
         ownerId: global.trainer.uid,
         membersIds: [],
+        institutionId: institution.id,
         groupId: group.id,
         cycleId: group.cycles[0].id,
         from: getTime(in3Days, 9, 30),
@@ -139,6 +155,7 @@ describe('Update Training (e2e)', () => {
       generateTrainingStub({
         ownerId: global.trainer.uid,
         membersIds: [],
+        institutionId: institution.id,
         groupId: group.id,
         cycleId: group.cycles[0].id,
         from: getTime(in3Days, 11, 0),

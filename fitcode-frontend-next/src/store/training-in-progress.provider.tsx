@@ -1,18 +1,24 @@
+'use client';
+
 import { useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
+import { useMain } from './main.provider';
 import { useTraining } from './training.provider';
 import { TrainingController } from '@/core/training/training.controller';
-import type { TrainingExerciseRecording } from '@/core/training/type/training-exercise.type';
-import type { CreateWorkload } from '@/core/training/type/workload.type';
+import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import type {
+  CreateWorkload,
+  Workload,
+} from '@/core/training/type/workload.type';
 import { lib } from '@/lib';
 import { INDEXED_DB_FIELDS } from '@/lib/common/const/indexed-db-fields.const';
 import { handleApiRequest, type SetState } from '@/lib/common/type/state.type';
 
 export interface ITrainingInProgressContext {
-  selectedExercise: TrainingExerciseRecording | undefined;
-  setSelectedExercise: SetState<TrainingExerciseRecording | undefined>;
+  selectedExercise: TrainingExercise | undefined;
+  setSelectedExercise: SetState<TrainingExercise | undefined>;
   supersetIndex: number | undefined;
   setSupersetIndex: SetState<number | undefined>;
   setIndex: number | undefined;
@@ -21,9 +27,16 @@ export interface ITrainingInProgressContext {
   initedAudioEnabled: boolean;
   setInitedAudioEnabled: SetState<boolean>;
   setSetIndex: SetState<number | undefined>;
+  currentAiRecordedWorkload: Workload | null;
+  setCurrentAiRecordedWorkload: SetState<Workload | null>;
   handleUpsertSet: (
     body: Omit<CreateWorkload, 'userId'>,
-    state: { exerciseId: string; supersetIndex: number; setIndex: number }
+    state: {
+      exerciseId: string;
+      supersetIndex: number;
+      setIndex: number;
+      setCurrentAiRecordedWorkload?: SetState<Workload | null>;
+    }
   ) => Promise<void>;
 }
 
@@ -36,12 +49,13 @@ export const useTrainingInProgress = () =>
 export const TrainingInProgressProvider = ({
   children,
 }: React.PropsWithChildren) => {
-  const { trainingInProgress, refetchTraining } = useTraining();
+  const { setActiveTraining } = useMain();
+  const { trainingInProgress } = useTraining();
 
   const router = useRouter();
 
   const [selectedExercise, setSelectedExercise] = useState<
-    TrainingExerciseRecording | undefined
+    TrainingExercise | undefined
   >(undefined);
 
   const [supersetIndex, setSupersetIndex] = useState<number | undefined>(
@@ -50,17 +64,38 @@ export const TrainingInProgressProvider = ({
 
   const [setIndex, setSetIndex] = useState<number | undefined>(undefined);
 
+  const [currentAiRecordedWorkload, setCurrentAiRecordedWorkload] =
+    useState<Workload | null>(null);
+
   const [audioEnabled, setAudioEnabled] = useState<boolean>(true);
   const [initedAudioEnabled, setInitedAudioEnabled] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (
+      !currentAiRecordedWorkload ||
+      !selectedExercise ||
+      setIndex === undefined
+    )
+      return;
+
+    const isSameExercise =
+      currentAiRecordedWorkload.componentId ===
+        trainingInProgress?.selectedComponent.id &&
+      currentAiRecordedWorkload.exerciseId === selectedExercise.id &&
+      currentAiRecordedWorkload.supersetIndex === supersetIndex &&
+      currentAiRecordedWorkload.setNumber === setIndex + 1;
+
+    if (!isSameExercise) setCurrentAiRecordedWorkload(null);
+  }, [selectedExercise, supersetIndex, setIndex]);
 
   useEffect(() => {
     const fetchAudioSetting = async () => {
       const item = await lib.common.indexedDb.items.get(
         INDEXED_DB_FIELDS.trainingInProgressAudio
       );
-      if (item && typeof item.payload === 'boolean') {
+
+      if (item && typeof item.payload === 'boolean')
         setAudioEnabled(item.payload);
-      }
       setInitedAudioEnabled(true);
     };
 
@@ -81,12 +116,18 @@ export const TrainingInProgressProvider = ({
 
   async function handleUpsertSet(
     body: Omit<CreateWorkload, 'userId'>,
-    state: { exerciseId: string; supersetIndex: number; setIndex: number }
+    state: {
+      exerciseId: string;
+      supersetIndex: number;
+      setIndex: number;
+      isAiRecorded?: boolean;
+    }
   ) {
     const {
       exerciseId,
       supersetIndex: stateSupersetIndex,
       setIndex: stateSetIndex,
+      isAiRecorded,
     } = state || {};
 
     if (
@@ -107,9 +148,25 @@ export const TrainingInProgressProvider = ({
           stateSetIndex + 1,
           { ...body, userId: trainingInProgress.userId }
         ),
-      (_workload) => {
+      (workload) => {
+        if (isAiRecorded) setCurrentAiRecordedWorkload(workload);
+
+        setActiveTraining((prev) => {
+          if (!prev) return prev;
+
+          const workloadExists = prev.workloads.find(
+            (w) => w.id === workload.id
+          );
+
+          return {
+            ...prev,
+            workloads: workloadExists
+              ? prev.workloads.map((w) => (w.id === workload.id ? workload : w))
+              : [...prev.workloads, workload],
+          };
+        });
+
         toast.success('Saved');
-        refetchTraining(trainingInProgress.training.id);
       }
     );
   }
@@ -128,6 +185,8 @@ export const TrainingInProgressProvider = ({
         setAudioEnabled,
         initedAudioEnabled,
         setInitedAudioEnabled,
+        currentAiRecordedWorkload,
+        setCurrentAiRecordedWorkload,
       }}
     >
       {children}

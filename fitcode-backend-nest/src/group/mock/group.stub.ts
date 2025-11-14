@@ -11,7 +11,7 @@ export function generateGroupStub(data?: Partial<Group>): Group {
     updatedAt: new Date(),
     deletedAt: null,
     name: data?.name ?? generateRandomName(),
-    ownerId: data?.ownerId || global.trainer.uid,
+    trainerIds: data?.trainerIds || [global.trainer.uid],
     membersIds: data?.membersIds || [global.athlete.uid],
     institutionId: data?.institutionId || v4(),
     cycles: data?.cycles || [],

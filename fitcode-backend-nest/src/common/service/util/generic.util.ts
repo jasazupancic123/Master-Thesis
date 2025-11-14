@@ -27,6 +27,22 @@ export class GenericUtil {
       (errors.length > 1 ? ` (and ${errors.length - 1} more errors)` : '')
     );
   }
+
+  async measure<T>(
+    label: string,
+    fn: () => Promise<T>,
+    round: (n: number) => number = (n) => Math.round(n),
+  ): Promise<T> {
+    const start = performance.now();
+    try {
+      return await fn();
+    } finally {
+      const duration = performance.now() - start;
+      if (process.env.NODE_ENV !== 'test')
+        // eslint-disable-next-line no-console
+        console.log(`${label} took ${round(duration)}ms`);
+    }
+  }
 }
 
 export function parseQueryArray(value: string): string[] {

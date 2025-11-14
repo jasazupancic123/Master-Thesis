@@ -1,4 +1,7 @@
+'use client';
+
 import { Box, Divider, Typography } from '@mui/material';
+import { useEffect, useState } from 'react';
 
 import RomChart from '../charts/rom/rom-chart';
 import RomStatistic from '../charts/rom/rom-statistics';
@@ -8,6 +11,7 @@ import { CONTROLS_TEXT_PLACEHOLDERS } from './constant/exercise-controls-text-pl
 import { TrainingInProgressExerciseControl } from './enum/exercise-controls.enum';
 import SWControl from './sw-control';
 import { theme } from '@/app/style';
+import type { TrainingExerciseRecordedSet } from '@/core/training/type/training-exercise.type';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import ImageGallery from '@/ui/image-gallery';
@@ -22,16 +26,47 @@ export default function ExercieseControlSelected(props: Props) {
   const trainingContext = useTraining();
   const trainingInProgressContext = useTrainingInProgress();
 
-  const { selectedExercise, setIndex } = trainingInProgressContext;
+  const { selectedExercise, setIndex, supersetIndex } =
+    trainingInProgressContext;
 
   const { trainingInProgress } = trainingContext;
 
-  if (setIndex === undefined || !selectedExercise || !trainingInProgress)
-    return null;
-
-  const isSetCompleted = selectedExercise.recordedSets?.some(
-    (set) => set.setIndex === setIndex
+  const [completedSet, setCompletedSet] = useState<
+    TrainingExerciseRecordedSet | undefined
+  >(
+    trainingInProgress?.recordedSets?.find(
+      (set) =>
+        set.setIndex === setIndex &&
+        set.exerciseId === selectedExercise?.id &&
+        set.supersetIndex === supersetIndex
+    )
   );
+
+  useEffect(() => {
+    if (!trainingInProgress || !selectedExercise) return;
+
+    const foundSet = trainingInProgress.recordedSets?.find(
+      (set) =>
+        set.setIndex === setIndex &&
+        set.exerciseId === selectedExercise.id &&
+        set.supersetIndex === supersetIndex
+    );
+
+    setCompletedSet(foundSet);
+  }, [
+    trainingInProgress?.recordedSets,
+    setIndex,
+    supersetIndex,
+    selectedExercise,
+  ]);
+
+  if (
+    setIndex === undefined ||
+    supersetIndex === undefined ||
+    !selectedExercise ||
+    !trainingInProgress
+  )
+    return null;
 
   switch (selectedControl) {
     case TrainingInProgressExerciseControl.TEMPO: {
@@ -43,11 +78,11 @@ export default function ExercieseControlSelected(props: Props) {
           alignItems="center"
           gap={2}
         >
-          {isSetCompleted ? (
+          {completedSet ? (
             <>
               <TempoChart
                 selectedExercise={selectedExercise}
-                setIndex={setIndex}
+                completedSet={completedSet}
                 width={
                   window !== undefined
                     ? Math.min(window.innerWidth * 0.95, 360) // max 360px
@@ -55,10 +90,7 @@ export default function ExercieseControlSelected(props: Props) {
                 }
                 isUnilateral={selectedExercise.exercise?.isUnilateral || false}
               />
-              <TempoStatistic
-                selectedExercise={selectedExercise}
-                setIndex={setIndex}
-              />
+              <TempoStatistic recordedSet={completedSet} />
             </>
           ) : (
             <ControlsTextPlaceholder selectedControl={selectedControl} />
@@ -75,17 +107,14 @@ export default function ExercieseControlSelected(props: Props) {
           alignItems="center"
           gap={1}
         >
-          {isSetCompleted ? (
+          {completedSet ? (
             <>
               <RomChart
                 selectedExercise={selectedExercise}
-                setIndex={setIndex}
+                completedSet={completedSet}
                 width={Math.min(window.innerWidth * 0.95, 620)} // max 620px
               />
-              <RomStatistic
-                selectedExercise={selectedExercise}
-                setIndex={setIndex}
-              />
+              <RomStatistic completedSet={completedSet} />
             </>
           ) : (
             <ControlsTextPlaceholder selectedControl={selectedControl} />
@@ -94,18 +123,10 @@ export default function ExercieseControlSelected(props: Props) {
       );
     }
     case TrainingInProgressExerciseControl.GALLERY: {
-      return isSetCompleted ? (
+      return completedSet ? (
         <ImageGallery
-          imagesL={
-            (selectedExercise.recordedSets || []).find(
-              (set) => set.setIndex === setIndex
-            )?.imagesL || []
-          }
-          imagesR={
-            (selectedExercise.recordedSets || []).find(
-              (set) => set.setIndex === setIndex
-            )?.imagesR || []
-          }
+          imagesL={completedSet.imagesL || []}
+          imagesR={completedSet.imagesR || []}
           enableImagePickerSlider
         />
       ) : (

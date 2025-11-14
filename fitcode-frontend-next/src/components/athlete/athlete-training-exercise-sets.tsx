@@ -6,10 +6,11 @@ import { NumberExerciseParam } from '../exercise-param/number-exercise-param';
 import { TempoExerciseParam } from '../exercise-param/tempo-exercise-param';
 import { core } from '@/core/core.service';
 import { KG } from '@/core/exercise/constant/exercise-param.constant';
+import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
 import type { ExerciseSet } from '@/core/training/type/exercise-set.type';
-import type { ExerciseSetTracking } from '@/core/training/type/exercise-set-tracking-state.type';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import LeftRightExerciseText from '@/ui/left-right-exercise-text';
@@ -23,7 +24,8 @@ interface Props {
   passedSet?: ExerciseSet;
   setIndex?: number;
   supersetIndex?: number;
-  exerciseSetTrackingState?: ExerciseSetTracking[];
+  componentId?: string;
+  trainingId?: string;
   dissableBottomPadding?: boolean;
   aiDetectionView?: boolean;
 }
@@ -35,10 +37,13 @@ export default function AthleteTrainingExerciseSets({
   passedSet,
   setIndex,
   supersetIndex,
-  exerciseSetTrackingState,
+  componentId,
+  trainingId,
   dissableBottomPadding,
   trainingInProgressView,
 }: Props) {
+  const { activeTraining } = useMain();
+
   const theme = useTheme();
   const screenSize = useScreenSize();
   const { updateTrainingInProgress } = useTraining();
@@ -402,13 +407,20 @@ export default function AthleteTrainingExerciseSets({
             </Grid2>
 
             <Grid2 size={0.5} display="flex" alignItems="flex-end">
-              {exerciseSetTrackingState &&
-                exerciseSetTrackingState.find(
-                  (setState) =>
-                    setState.exerciseId === exercise.id &&
-                    setState.completedSetNumbers.some(
-                      (s) => s.setNumber === set.setNumber
-                    )
+              {supersetIndex !== undefined &&
+                setIndex !== undefined &&
+                componentId &&
+                trainingId &&
+                activeTraining &&
+                ExerciseSetService.isSetCompleted(
+                  {
+                    trainingId,
+                    componentId,
+                    exerciseId: exercise.id,
+                    supersetIndex: supersetIndex,
+                    setIndex: setIndex,
+                  },
+                  activeTraining.workloads
                 ) && (
                   <CheckCircle
                     fontSize="small"
