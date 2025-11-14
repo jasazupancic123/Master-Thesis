@@ -21,7 +21,7 @@ interface Props {
 export default function TrainingReportCard({ report }: Props) {
   const theme = useTheme();
 
-  const duration = differenceInMinutes(report.to, report.from);
+  const duration = differenceInMinutes(report.from, report.to);
   const realizationScore = Math.round(report.realization * 100);
   const tonnageScore = Math.round((report.tonnage / report.tonnage) * 100) || 0;
   const densityScore =

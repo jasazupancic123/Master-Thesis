@@ -19,13 +19,9 @@ import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 
 export default function TrainingInProgressExerciseCard() {
   const { activeTraining } = useMain();
-
   const theme = useTheme();
-
   const trainingContext = useTraining();
   const trainingInProgressContext = useTrainingInProgress();
-
-  const { trainingInProgress } = trainingContext;
 
   const {
     selectedExercise,
@@ -34,6 +30,7 @@ export default function TrainingInProgressExerciseCard() {
     setIndex,
     setSetIndex,
   } = trainingInProgressContext;
+  const { trainingInProgress } = trainingContext;
 
   const { selectedTrackingMethod, setSelectedTrackingMethod } =
     useAthleteHeader();
@@ -263,6 +260,7 @@ export default function TrainingInProgressExerciseCard() {
                     Set {i + 1}
                   </Typography>
                 </Box>
+
                 {isSetDone ? (
                   <Check
                     sx={{

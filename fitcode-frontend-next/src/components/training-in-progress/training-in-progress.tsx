@@ -2,6 +2,7 @@ import { Circle } from '@mui/icons-material';
 import { Box, LinearProgress, Typography } from '@mui/material';
 import { linearProgressClasses } from '@mui/material';
 import { useTheme } from '@mui/material';
+import dayjs from 'dayjs';
 import Image from 'next/image';
 import React, { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 
@@ -14,25 +15,21 @@ import UndoneSetsErrorModal from './modals/undone-sets-error-modal';
 import TrainingInProgressExerciseContainer from './training-in-progress-exercise-container';
 import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
+import { TrainingStatus } from '@/core/training/enum/training-status.enum';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
 import { lib } from '@/lib';
 import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
 import { preloadPoseLandmarker } from '@/lib/pose-detection/util/pose-landmarker-loader.util';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
-import {
-  TRAINING_IN_PROGRESS_STORAGE_KEY,
-  useTraining,
-} from '@/store/training.provider';
+import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
-import { TrainingService } from '@/core/training/training.service';
-import { TrainingStatus } from '@/core/training/enum/training-status.enum';
-import { usePathname } from 'next/navigation';
 
 export default function TrainingInProgress() {
   const theme = useTheme();
-  const pathname = usePathname();
 
+  const { user } = useAuthenticatedAuth();
   const { activeTraining } = useMain();
   const trainingContext = useTraining();
   const trainingInProgressContext = useTrainingInProgress();
@@ -40,8 +37,7 @@ export default function TrainingInProgress() {
   const athleteHeaderContext = useAthleteHeader();
   const undoneExercisesContext = useUndoneExercises();
 
-  const { trainingInProgress, clearTrainingState, setTrainingInProgress } =
-    trainingContext;
+  const { trainingInProgress, clearTrainingState } = trainingContext;
 
   const {
     supersetIndex,
@@ -80,8 +76,39 @@ export default function TrainingInProgress() {
       window.location.href = '/trainings';
     };
 
-    if (!activeTraining || !activeTraining.activeStatuses?.length)
+    if (!activeTraining || !activeTraining.statuses?.length) {
       redirectToTrainings();
+      return;
+    }
+
+    if (activeTraining && activeTraining.statuses) {
+      const status = activeTraining.statuses.find(
+        (s) => s.status === TrainingStatus.IN_PROGRESS
+      );
+
+      const component = activeTraining.components.find(
+        (c) => c.id === status?.componentId
+      );
+
+      if (!status || !component) {
+        redirectToTrainings();
+        return;
+      }
+
+      const trainingInProgress: TrainingInProgress = {
+        userId: user.uid,
+        training: activeTraining,
+        recordedSets: [],
+        startOfTraining: dayjs(),
+        supersets: [],
+        selectedComponent: component,
+      };
+
+      handleInitTrainingInProgressComponent({
+        useTraining: { ...trainingContext, trainingInProgress },
+        useTrainingInProgressContext: trainingInProgressContext,
+      });
+    }
   }, [activeTraining]);
 
   /* Preload pose landmarker */
@@ -91,14 +118,14 @@ export default function TrainingInProgress() {
   }, []);
 
   /* Init training in progress for selected component */
-  useEffect(() => {
+  /* useEffect(() => {
     if (!trainingInProgress) return;
 
     handleInitTrainingInProgressComponent({
       useTraining: { ...trainingContext, trainingInProgress },
       useTrainingInProgressContext: trainingInProgressContext,
     });
-  }, [trainingInProgress?.selectedComponent]);
+  }, [trainingInProgress?.selectedComponent]); */
 
   // keep scroll position in case the whole list remounts
   useEffect(() => {
@@ -127,17 +154,11 @@ export default function TrainingInProgress() {
     const target = elCenter - scroller.clientWidth / 2;
 
     const next = Math.max(0, target);
-
-    // ⭐ Smooth scroll here
-    scroller.scrollTo({
-      left: next,
-      behavior: 'smooth',
-    });
-
+    scroller.scrollTo({ left: next, behavior: 'smooth' });
     lastScrollLeft.current = next;
   }, [selectedExercise, trainingInProgress, supersetIndex]);
 
-  if (!trainingInProgress) return null;
+  if (!trainingInProgress || !trainingInProgress.training) return null;
 
   return (
     <Box
@@ -208,6 +229,7 @@ export default function TrainingInProgress() {
                     )}
                     Block {i + 1}
                   </Typography>
+
                   <Box display="flex" justifyContent="center" gap={0.5}>
                     {superset.exercises.map((e) => {
                       const isSelected = selectedExercise?.id === e.id;
