@@ -62,6 +62,7 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
     trainings,
     setTrainings,
     filter,
+    setDetectedChanges,
   } = useGroup();
 
   const params = useSearchParams();
@@ -621,6 +622,7 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
       setComponent(newComponent);
       setTraining(newTraining);
       setSelectedSubgroup((prev) => (prev ? { ...prev, supersets } : null));
+      setDetectedChanges(true);
     });
   }
 

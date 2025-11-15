@@ -1,7 +1,4 @@
-import dayjs from 'dayjs';
-
 import type { AuthUser } from '../auth/type/user.type';
-import { TrainingStatus } from './enum/training-status.enum';
 import type { ExerciseSet } from './type/exercise-set.type';
 import type { Training } from './type/training.type';
 import type { TrainingComponent } from './type/training-component.type';

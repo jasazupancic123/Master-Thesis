@@ -9,8 +9,8 @@ import type { Group } from '@/core/group/type/group.type';
 import type { Institution } from '@/core/institution/type/institution.type';
 import { UserRole } from '@/core/profile/enum/user-role.enum';
 import type { Profile } from '@/core/profile/type/user.type';
+import type { ActiveTraining } from '@/core/training/type/training.type';
 import type { SetState, SetStateNullable } from '@/lib/common/type/state.type';
-import { ActiveTraining } from '@/core/training/type/training.type';
 
 export interface MainProviderProps extends React.PropsWithChildren {
   profile: Profile;
