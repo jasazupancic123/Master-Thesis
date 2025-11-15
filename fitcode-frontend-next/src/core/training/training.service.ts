@@ -3,7 +3,7 @@ import type { Exercise } from '../exercise/type/exercise.type';
 import type { Group } from '../group/type/group.type';
 import type { Institution } from '../institution/type/institution.type';
 import type { Training } from './type/training.type';
-import type { TrainingReport } from './type/training-stats.type';
+import type { TrainingReport } from './type/training-report.type';
 
 export class TrainingService {
   static mapData<T extends Training>(

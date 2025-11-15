@@ -1,10 +1,13 @@
 'use client';
 
-import { Avatar, Box, Tooltip, Typography } from '@mui/material';
+import { Avatar, Box, Tab, Tabs, Tooltip, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 
 import ExerciseChips from '../exercise-chips/exercise-chips';
-import GroupAttendanceChart from '../reports/group-attendance-report';
+import AthleteExerciseReport from '../reports/athlete-exercise-report';
+import AthleteTrainingsRealizationChart from '../reports/athlete-trainings-realization-chart';
+import GroupTrainingReportChart from '../reports/group-training-report-chart';
+import WellnessChart from '../reports/wellness-chart';
 import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
 import { DASHBOARD_MIDDLE_HEADER_HEIGHT } from './constant/dashboard.const';
 import DashboardPageContainer from './dashboard-page-container';
@@ -18,16 +21,23 @@ import type { SetState } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 
+enum ReportTab {
+  Realization = 'Realization',
+  Wellness = 'Wellness',
+  Exercise = 'Exercise',
+}
+
 export default function DashboardReports() {
   const screenSize = useScreenSize();
 
-  const { trainings, selectedInstitution } = useDashboard();
+  const { selectedInstitution } = useDashboard();
   const { selectedGroup, setSelectedGroup } = useDashboardGroupView();
   const [selectedUser, setSelectedUser] = useState<AuthUser | null>(null);
   const [selectedComponent, setSelectedComponent] = useState<Component | null>(
     null
   );
 
+  const [tab, setTab] = useState<ReportTab>(ReportTab.Realization);
   const groups = selectedInstitution?.groups || [];
 
   useEffect(() => {
@@ -37,6 +47,7 @@ export default function DashboardReports() {
   return (
     <DashboardPageContainer>
       <Box
+        mt={3}
         width="100%"
         height={DASHBOARD_MIDDLE_HEADER_HEIGHT}
         display="flex"
@@ -159,13 +170,10 @@ export default function DashboardReports() {
             );
           })}
         </Box>
-      </Box>
 
-      <Box display="flex" alignItems="center" width="60%">
         <ExerciseChips
           tooltip
           iconSize={20}
-          direction="column"
           disabledComponents={['other']}
           gap={0}
           selected={selectedComponent}
@@ -175,13 +183,62 @@ export default function DashboardReports() {
             >
           }
         />
+      </Box>
 
-        <GroupAttendanceChart
+      {/* Tabs */}
+      <Tabs
+        value={tab}
+        onChange={(_, newValue) => setTab(newValue as ReportTab)}
+        textColor="primary"
+        indicatorColor="primary"
+        aria-label="secondary tabs example"
+        sx={{ mt: 10 }}
+      >
+        {Object.values(ReportTab).map((t) => (
+          <Tab
+            key={t}
+            value={t}
+            label={t}
+            sx={{
+              textTransform: 'none',
+              color: theme.palette.text.primary,
+            }}
+          />
+        ))}
+      </Tabs>
+
+      {tab === ReportTab.Realization && (
+        <Box>
+          <GroupTrainingReportChart
+            groupId={selectedGroup?.id}
+            selectedUserId={selectedUser?.uid}
+            selectedComponentId={selectedComponent?.field}
+          />
+
+          {selectedUser && (
+            <AthleteTrainingsRealizationChart
+              institutionId={selectedInstitution!.id}
+              athleteId={selectedUser.uid}
+              componentId={
+                selectedComponent && !Array.isArray(selectedComponent)
+                  ? selectedComponent.field
+                  : undefined
+              }
+            />
+          )}
+        </Box>
+      )}
+
+      {tab === ReportTab.Wellness && (
+        <WellnessChart
           groupId={selectedGroup?.id}
           selectedUserId={selectedUser?.uid}
-          selectedComponentId={selectedComponent?.field}
         />
-      </Box>
+      )}
+
+      {tab === ReportTab.Exercise && (
+        <AthleteExerciseReport selectedUserId={selectedUser?.uid} />
+      )}
     </DashboardPageContainer>
   );
 }

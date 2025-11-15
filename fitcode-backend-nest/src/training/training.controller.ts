@@ -108,17 +108,49 @@ export class TrainingController {
     );
   }
 
-  @Get('report/attendance')
+  @Get('report/group')
   @Auth([UserRole.MANAGER, UserRole.TRAINER])
-  async getAttendanceReport(
+  async getGroupReport(
     @RequestUser() user: User,
     @Query('groupId') groupId: string,
     @Query('componentId') componentId: string,
   ) {
-    return await this.trainingService.getGroupAttendance(
+    return await this.trainingService.getGroupReport(
       user,
       groupId,
       componentId,
+    );
+  }
+
+  @Get('report/athlete/trainings-realization')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER])
+  async getUserTrainingsRealizationReport(
+    @RequestUser() user: User,
+    @Query('institutionId') institutionId: string,
+    @Query('athleteId') athleteId: string,
+    @Query('componentId') componentId?: string,
+  ) {
+    return await this.trainingService.getTrainingsRealizationReport(
+      user,
+      institutionId,
+      athleteId,
+      componentId,
+    );
+  }
+
+  @Get('report/athlete/exercise/:exerciseId')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
+  async getUserExerciseReport(
+    @RequestUser() user: User,
+    @Param('exerciseId') exerciseId: string,
+    @Query('institutionId') institutionId: string,
+    @Query('athleteId') athleteId: string,
+  ) {
+    return await this.trainingService.getUserExerciseReport(
+      user,
+      institutionId,
+      exerciseId,
+      athleteId,
     );
   }
 

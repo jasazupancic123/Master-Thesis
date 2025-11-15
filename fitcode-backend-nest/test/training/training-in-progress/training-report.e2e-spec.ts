@@ -16,7 +16,7 @@ import {
   generateTrainingStub,
 } from '@src/training/mock/training.stub';
 import { TrainingReportService } from '@src/training/service/training-report.service';
-import type { PrescribedTrainingStats } from '@src/training/type/training-stats.type';
+import type { PrescribedTrainingStats } from '@src/training/type/training-report.type';
 
 jest.mock('@src/exercise/constant/components.constant', () => {
   const {

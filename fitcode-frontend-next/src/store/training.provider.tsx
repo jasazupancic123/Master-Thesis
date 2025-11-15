@@ -9,7 +9,7 @@ import type { Training } from '@/core/training/type/training.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
 import type { TrainingInProgressIndexDB } from '@/core/training/type/training-in-progress-indexdb';
-import type { TrainingReport } from '@/core/training/type/training-stats.type';
+import type { TrainingReport } from '@/core/training/type/training-report.type';
 import { lib } from '@/lib';
 import { type SetState } from '@/lib/common/type/state.type';
 
