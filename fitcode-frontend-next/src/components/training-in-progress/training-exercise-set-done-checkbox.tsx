@@ -6,12 +6,12 @@ import {
   unmarkExerciseSetAsCompleted,
 } from './actions/actions-exercise-set';
 import { handleAdvanceInSuperset } from './actions/actions-superset';
+import { useTrainingInProgressUtils } from './context/training-in.progress-utils.provider';
 import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import { useMain } from '@/store/main.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
-import { useTrainingInProgressUtils } from './context/training-in.progress-utils.provider';
 
 interface Props {
   exercise: TrainingExercise;

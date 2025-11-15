@@ -1,4 +1,4 @@
-import {
+import type {
   Training,
   TrainingWithStatuses,
 } from '@/core/training/type/training.type';

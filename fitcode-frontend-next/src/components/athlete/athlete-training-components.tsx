@@ -53,7 +53,7 @@ export default function AthleteTrainingComponents(props: Props) {
     timeout,
   } = props;
 
-  const { reports, setTrainingInProgress } = useTraining();
+  const { setTrainingInProgress } = useTraining();
   const { exercises, activeTraining, setActiveTraining } = useMain();
   const { user } = useAuthenticatedAuth();
 

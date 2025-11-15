@@ -54,12 +54,10 @@ export function handleInitTrainingInProgressComponent(context: {
     setSetIndex(0);
   }
 
-  setTrainingInProgress((prev) => {
-    return {
-      ...useTraining.trainingInProgress,
-      selectedComponent: component,
-      supersets: component.supersets,
-      startOfTraining: newTrainingInProgress.startOfTraining,
-    } as TrainingInProgress;
-  });
+  setTrainingInProgress({
+    ...useTraining.trainingInProgress,
+    selectedComponent: component,
+    supersets: component.supersets,
+    startOfTraining: newTrainingInProgress.startOfTraining,
+  } as TrainingInProgress);
 }
