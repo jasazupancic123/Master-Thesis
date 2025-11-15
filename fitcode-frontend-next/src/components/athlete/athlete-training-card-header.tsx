@@ -1,5 +1,5 @@
 import { MoreVert } from '@mui/icons-material';
-import { Box, IconButton, Typography, useTheme } from '@mui/material';
+import { Box, IconButton, Typography } from '@mui/material';
 
 import ComponentsAvatar from './components-avatar';
 import type { Component } from '@/core/exercise/type/component.type';
@@ -25,8 +25,6 @@ export default function AthleteTrainingCardHeader({
   cycle,
   from,
 }: Props) {
-  const theme = useTheme();
-
   const isTrainingComponentArray = (
     components: TrainingComponent[] | Component[]
   ): components is TrainingComponent[] => {

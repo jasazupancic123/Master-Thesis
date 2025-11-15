@@ -12,8 +12,8 @@ import React from 'react';
 import AthleteTrainingCardHeader from './athlete-training-card-header';
 import { theme } from '@/app/style';
 import type { TrainingReport } from '@/core/training/type/training-stats.type';
-import { PieCenterLabel } from '@/ui/mui-charts';
 import { lib } from '@/lib';
+import { PieCenterLabel } from '@/ui/mui-charts';
 
 interface Props {
   report: TrainingReport;

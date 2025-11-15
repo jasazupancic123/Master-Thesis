@@ -21,7 +21,7 @@ import { useScreenSize } from '@/store/screen-size.provider';
 export default function DashboardReports() {
   const screenSize = useScreenSize();
 
-  const { trainings, selectedInstitution } = useDashboard();
+  const { selectedInstitution } = useDashboard();
   const { selectedGroup, setSelectedGroup } = useDashboardGroupView();
   const [selectedUser, setSelectedUser] = useState<AuthUser | null>(null);
   const [selectedComponent, setSelectedComponent] = useState<Component | null>(

@@ -66,7 +66,6 @@ export default function DashboardTrainingsList(props: Props) {
         const group = groups.find((g) => g.id === training.groupId);
         if (!group) return null;
 
-        const isGroupTrainer = group.trainerIds.includes(user.uid);
         const shortGroupName = group.name.substring(0, 3);
 
         return (
