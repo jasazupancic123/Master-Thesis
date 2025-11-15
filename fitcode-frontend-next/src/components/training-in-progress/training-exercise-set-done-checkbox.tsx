@@ -11,6 +11,7 @@ import type { TrainingExercise } from '@/core/training/type/training-exercise.ty
 import { useMain } from '@/store/main.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
+import { useTrainingInProgressUtils } from './context/training-in.progress-utils.provider';
 
 interface Props {
   exercise: TrainingExercise;
@@ -25,6 +26,8 @@ export default function TrainingExerciseSetDoneCheckbox(props: Props) {
   const { activeTraining, setActiveTraining } = mainContext;
   const trainingContext = useTraining();
   const trainingInProgressContext = useTrainingInProgress();
+
+  const trainingInProgressUtilsContext = useTrainingInProgressUtils();
 
   const { trainingInProgress, setTrainingInProgress } = trainingContext;
 
@@ -121,6 +124,7 @@ export default function TrainingExerciseSetDoneCheckbox(props: Props) {
               useMain: mainContext,
               useTraining: { ...trainingContext, trainingInProgress },
               useTrainingInProgress: trainingInProgressContext,
+              useTrainingInProgressUtils: trainingInProgressUtilsContext,
             });
             return;
           }
@@ -140,12 +144,17 @@ export default function TrainingExerciseSetDoneCheckbox(props: Props) {
                 useMain: mainContext,
                 useTraining: { ...trainingContext, trainingInProgress },
                 useTrainingInProgress: trainingInProgressContext,
+                useTrainingInProgressUtils: trainingInProgressUtilsContext,
               },
               true
             );
           } else {
             unmarkExerciseSetAsCompleted(
-              { exerciseId: exercise.id, setIndex, supersetIndex },
+              {
+                exerciseId: exercise.id,
+                setIndex,
+                supersetIndex,
+              },
               setActiveTraining
             );
           }

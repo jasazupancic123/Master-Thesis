@@ -56,7 +56,7 @@ export function handleInitTrainingInProgressComponent(context: {
 
   setTrainingInProgress((prev) => {
     return {
-      ...prev,
+      ...useTraining.trainingInProgress,
       selectedComponent: component,
       supersets: component.supersets,
       startOfTraining: newTrainingInProgress.startOfTraining,

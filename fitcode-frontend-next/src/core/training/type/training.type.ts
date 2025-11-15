@@ -61,3 +61,7 @@ export type ActiveTraining = Training & {
   workloads: Workload[];
   statuses: TrainingComponentUserStatus[];
 };
+
+export type TrainingWithStatuses = Training & {
+  statuses: TrainingComponentUserStatus[];
+};

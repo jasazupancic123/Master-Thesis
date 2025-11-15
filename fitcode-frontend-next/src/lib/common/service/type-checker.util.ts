@@ -1,3 +1,7 @@
+import {
+  Training,
+  TrainingWithStatuses,
+} from '@/core/training/type/training.type';
 import { KeypointId } from '@/lib/pose-detection/enum/keypoint-id';
 import type { Keypoint } from '@/lib/pose-detection/type/keypoint.type';
 import type { Point2D } from '@/lib/pose-detection/type/point.type';
@@ -63,5 +67,9 @@ export class TypeCheckerUtil {
 
     if (array.every((v) => typeof v === 'number')) return true;
     return false;
+  }
+
+  isTrainingWithStatuses(t: Training): t is TrainingWithStatuses {
+    return (t as TrainingWithStatuses).statuses !== undefined;
   }
 }
