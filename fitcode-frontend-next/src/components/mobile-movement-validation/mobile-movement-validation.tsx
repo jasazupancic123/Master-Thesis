@@ -14,7 +14,6 @@ import dayjs from 'dayjs';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
-import AthleteTrainingExerciseSets from '../athlete/athlete-training-exercise-sets';
 import TempoChart from '../charts/tempo/tempo-chart';
 import { updateTrainingExerciseWithAI } from '../training-in-progress/actions/actions-exercise';
 import { finishSet } from '../training-in-progress/actions/actions-exercise-set';
@@ -62,11 +61,11 @@ import type {
 import type { RepState } from '@/lib/pose-detection/type/rep-state.type';
 import { getPoseLandmarker } from '@/lib/pose-detection/util/pose-landmarker-loader.util';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import LoadingOverlay from '@/ui/loading-overlay';
-import { useMain } from '@/store/main.provider';
 
 const DEBUG = false;
 

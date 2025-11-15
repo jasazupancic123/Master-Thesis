@@ -1,11 +1,13 @@
 'use client';
 
+import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { useMain } from './main.provider';
 import { useTraining } from './training.provider';
+import { core } from '@/core/core.service';
 import { TrainingController } from '@/core/training/training.controller';
 import type {
   TrainingExercise,
@@ -18,8 +20,6 @@ import type {
 import { lib } from '@/lib';
 import { INDEXED_DB_FIELDS } from '@/lib/common/const/indexed-db-fields.const';
 import { handleApiRequest, type SetState } from '@/lib/common/type/state.type';
-import dayjs from 'dayjs';
-import { core } from '@/core/core.service';
 
 export interface ITrainingInProgressContext {
   selectedExercise: TrainingExercise | undefined;
@@ -58,6 +58,8 @@ export const TrainingInProgressProvider = ({
 }: React.PropsWithChildren) => {
   const { setActiveTraining } = useMain();
   const { trainingInProgress } = useTraining();
+
+  console.log('trainingInProgress', trainingInProgress);
 
   const router = useRouter();
 
@@ -159,10 +161,12 @@ export const TrainingInProgressProvider = ({
       const currentSetStart = currentRecordedSet.repsL
         .concat(currentRecordedSet.repsR || [])
         .sort(
-          (a, b) => a.startTimestamp.getTime() - b.startTimestamp.getTime()
+          (a, b) =>
+            new Date(a.startTimestamp).getTime() -
+            new Date(b.startTimestamp).getTime()
         )[0]?.startTimestamp;
 
-      if (currentSetStart) body.from = currentSetStart;
+      if (currentSetStart) body.from = new Date(currentSetStart);
     }
 
     if (!body.from) {
@@ -186,13 +190,19 @@ export const TrainingInProgressProvider = ({
           w.setNumber === stateSetIndex // previous set (setNumber is 1-based, setIndex is 0-based)
       );
 
+      console.log('body.from', body.from);
+      console.log('prevWorkload', prevWorkload);
+
       if (prevWorkload) {
-        prevWorkload.recTime = Math.abs(
+        const recTime = Math.abs(
           dayjs(body.from).diff(
             dayjs(prevWorkload.to || prevWorkload.timestamp),
             'second'
           )
         );
+
+        prevWorkload.recTime = recTime;
+        if (prevWorkload.repsR) prevWorkload.recTimeR = recTime;
 
         handleApiRequest(
           router,
